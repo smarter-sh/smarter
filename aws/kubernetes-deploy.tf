@@ -1,0 +1,206 @@
+
+locals {
+  env_script = "${path.module}/../scripts/env.sh"
+
+  template_db_init = templatefile("${path.module}/templates/db-init.sh.tpl", {
+    mysql_user = var.PRODUCTION_DATABASE_USER
+    mysql_password = var.PRODUCTION_DATABASE_PASSWORD
+    mysql_host = var.PRODUCTION_DATABASE_HOST
+    mysql_port = var.PRODUCTION_DATABASE_PORT
+    mysql_database = local.mysql_database
+    smarter_mysql_user = local.smarter_mysql_username
+    smarter_mysql_password = random_password.mysql_smarter.result
+  })
+}
+
+resource "null_resource" "env" {
+  triggers = {
+    always_recreate = "${timestamp()}"
+  }
+
+  provisioner "local-exec" {
+    interpreter = ["/bin/bash"]
+    command     = local.env_script
+  }
+
+}
+
+
+resource "kubernetes_service" "smarter" {
+  metadata {
+    name = var.shared_resource_identifier
+    namespace = kubernetes_namespace.smarter.metadata[0].name
+  }
+
+  spec {
+    selector = {
+      App = var.shared_resource_identifier
+    }
+
+    port {
+      port        = 8080
+      target_port = 8080
+    }
+
+    type = "LoadBalancer"
+  }
+}
+
+resource "kubernetes_deployment" "smarter" {
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  metadata {
+    name = var.shared_resource_identifier
+    namespace = kubernetes_namespace.smarter.metadata[0].name
+    labels = {
+      App = var.shared_resource_identifier
+    }
+  }
+
+  spec {
+    replicas = 2
+
+    selector {
+      match_labels = {
+        App = var.shared_resource_identifier
+      }
+    }
+
+    template {
+      metadata {
+        labels = {
+          App = var.shared_resource_identifier
+        }
+      }
+
+      spec {
+        container {
+          image = local.ecr_repository_image
+          name  = var.shared_resource_identifier
+
+          port {
+            container_port = 8080
+          }
+
+          env {
+            name = "ENVIRONMENT"
+            value = "production"
+          }
+          env {
+            name = "DEBUG_MODE"
+            value = "false"
+          }
+          env {
+            name = "DUMP_DEFAULTS"
+            value = var.DUMP_DEFAULTS
+          }
+          env {
+            name = "MYSQL_HOST"
+            value = local.smarter_mysql_host
+          }
+          env {
+            name = "MYSQL_PORT"
+            value = local.smarter_mysql_port
+          }
+          env {
+            name = "MYSQL_USER"
+            value = local.smarter_mysql_username
+          }
+          env {
+            name = "MYSQL_PASSWORD"
+            value = random_password.mysql_smarter.result
+          }
+          env {
+            name = "OPENAI_API_KEY"
+            value = var.OPENAI_API_KEY
+          }
+          env {
+            name = "PINECONE_API_KEY"
+            value = var.PINECONE_API_KEY
+          }
+          env {
+            name = "PINECONE_ENVIRONMENT"
+            value = var.PINECONE_ENVIRONMENT
+          }
+          env {
+            name = "GOOGLE_MAPS_API_KEY"
+            value = var.GOOGLE_MAPS_API_KEY
+          }
+
+        }
+      }
+    }
+  }
+  depends_on = [
+    null_resource.env,
+    null_resource.smarter,
+    kubernetes_namespace.smarter,
+    aws_ecr_repository.smarter,
+    aws_route53_zone.environment_domain
+  ]
+}
+
+resource "kubernetes_job" "db_migration" {
+  metadata {
+    name = "${var.shared_resource_identifier}-job"
+    namespace = kubernetes_namespace.smarter.metadata[0].name
+  }
+
+  spec {
+    template {
+      metadata {
+        labels = {
+          App = "${var.shared_resource_identifier}-job"
+        }
+      }
+
+      spec {
+        container {
+          name  = "${var.shared_resource_identifier}-db-job"
+          image = local.ecr_repository_image
+
+          command = ["/bin/sh", "-c"]
+          args = [local.template_db_init]
+
+          env {
+            name = "ENVIRONMENT"
+            value = "production"
+          }
+          env {
+            name = "DEBUG_MODE"
+            value = "false"
+          }
+          env {
+            name = "MYSQL_HOST"
+            value = local.smarter_mysql_host
+          }
+          env {
+            name = "MYSQL_PORT"
+            value = local.smarter_mysql_port
+          }
+          env {
+            name = "MYSQL_USER"
+            value = local.smarter_mysql_username
+          }
+          env {
+            name = "MYSQL_PASSWORD"
+            value = random_password.mysql_smarter.result
+          }
+
+        }
+
+        restart_policy = "Never"
+      }
+    }
+
+    backoff_limit = 4
+  }
+
+  depends_on = [
+    null_resource.smarter,
+    null_resource.env,
+    kubernetes_deployment.smarter
+  ]
+}

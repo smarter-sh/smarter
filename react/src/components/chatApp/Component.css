@@ -1,0 +1,22 @@
+.chat-app {
+  position: relative;
+  height: 100%;
+}
+
+.cs-message-separator::before,
+.cs-message-separator::after {
+  background-color: lightgray !important;
+}
+
+.cs-conversation-header {
+  text-align: center;
+}
+
+div.cs-message__html-content a {
+  text-decoration: underline !important;
+  color: #333333;
+}
+div.cs-message__html-content a:hover {
+  text-decoration: underline;
+  color: midnightblue;
+}

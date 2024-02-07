@@ -1,0 +1,43 @@
+.about-page {
+  height: 100vh;
+}
+
+.app-stack {
+  text-align: center;
+}
+.app-stack a {
+  text-decoration: underline;
+  color: inherit;
+}
+.app-stack h2 {
+  margin: 25px, 0;
+  padding: 0;
+}
+.app-stack img {
+  width: 60%;
+}
+
+.about-title {
+  text-align: center;
+  width: 100%;
+  margin: 25px auto 0 auto;
+  padding: 0;
+  color: #333;
+}
+
+.about-title a {
+  text-align: center;
+  color: #333;
+  font-family: "Courier New", Courier, monospace;
+}
+
+.fswl {
+  margin-top: 5%;
+  display: flex;
+  justify-content: center;
+  background-image: url("/youtube-banner.jpeg");
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 35%;
+}

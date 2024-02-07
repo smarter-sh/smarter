@@ -1,0 +1,59 @@
+_aws_lambda
+db.sqlite3
+
+
+.coverage
+.coverage.*
+htmlcov
+
+# Jupyter Notebook
+.ipynb_checkpoints
+build
+dist
+
+.DS_Store
+
+#  Local .terraform directories
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+.terraform/
+.env
+lambda_dist_pkg
+*.zip
+__pycache__
+.pytest_cache
+.cache.sqlite
+
+# Python
+venv
+.venv
+.pytest_cache
+*.pyc
+*.pyo
+*.pyd
+*.swp
+*.log
+
+# .tfstate files
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+
+
+# ignore this file
+!tfmodule-template.tf
+
+# tardigrade-ci
+tardigrade-ci/
+.tardigrade-ci
+
+# go tests
+tests/go.*
+
+# ReactJS
+node_modules
+package-lock.json
+
+client/node_modules/
+client/package-lock.json
