@@ -8,9 +8,16 @@ import json
 import logging
 
 from openai_api.lambda_info.lambda_handler import handler as lambda_info_handler
-from openai_api.lambda_langchain.lambda_handler import handler as lambda_langchain_handler
-from openai_api.lambda_openai_function.lambda_handler import handler as lambda_openai_function_handler
-from openai_api.lambda_openai_v2.lambda_handler import handler as lambda_openai_v2_handler
+from openai_api.lambda_langchain.lambda_handler import (
+    handler as lambda_langchain_handler,
+)
+from openai_api.lambda_openai_function.lambda_handler import (
+    handler as lambda_openai_function_handler,
+)
+from openai_api.lambda_openai_v2.lambda_handler import (
+    handler as lambda_openai_v2_handler,
+)
+
 
 LAMBDA_HANDLERS = {
     "lambda_info": lambda_info_handler,
@@ -20,6 +27,7 @@ LAMBDA_HANDLERS = {
 }
 
 log = logging.getLogger(__name__)
+
 
 def handler(event, context):
     """Passes the event to the appropriate handler based on the python_handler key in the event"""

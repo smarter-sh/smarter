@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 URL configuration for smarter project.
 
@@ -15,18 +16,18 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework import routers
 
-from smarter.apps.api.hello_world.views import UserViewSet, HelloWorldViewSet
+from smarter.apps.api.hello_world.views import HelloWorldViewSet, UserViewSet
+
 
 # Routers provide an easy way of automatically determining the URL conf.
 router = routers.DefaultRouter()
-router.register(r'users', UserViewSet)
-router.register(r'hello-world', HelloWorldViewSet)
+router.register(r"users", UserViewSet)
+router.register(r"hello-world", HelloWorldViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+    path("", include(router.urls)),
+    path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
 ]
-

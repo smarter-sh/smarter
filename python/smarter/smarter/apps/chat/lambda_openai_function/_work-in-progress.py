@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """scaffolding for nlp functions"""
 
 # -*- coding: utf-8 -*-

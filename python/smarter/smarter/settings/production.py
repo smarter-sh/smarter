@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Django settings for smarter project.
 
@@ -10,8 +11,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
-from pathlib import Path
 import os
+from pathlib import Path
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -26,7 +28,11 @@ SECRET_KEY = "django-insecure-zp722j6hm29(=kro+i*)7p+f=@s)wlhj%8r!k#3qke(yb8%m_j
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "dev.smarter.sh",
+    "api.smarter.sh",
+    "web.smarter.sh",
+]
 
 
 # Application definition
@@ -38,7 +44,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
+    # 3rd party apps
+    # -------------------------------
+    "rest_framework",
     # smarter apps
     # -------------------------------
     "smarter.apps.chat",
@@ -80,13 +88,13 @@ WSGI_APPLICATION = "smarter.wsgi.application"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'smarter_dev',
-        'USER': os.getenv('MYSQL_USER'),
-        'PASSWORD': os.getenv('MYSQL_PASSWORD'),
-        'HOST': os.getenv('MYSQL_HOST'),
-        'PORT': os.getenv('MYSQL_PORT', '3306'),  # default MySQL port
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "smarter_dev",
+        "USER": os.getenv("MYSQL_USER"),
+        "PASSWORD": os.getenv("MYSQL_PASSWORD"),
+        "HOST": os.getenv("MYSQL_HOST"),
+        "PORT": os.getenv("MYSQL_PORT", "3306"),  # default MySQL port
     }
 }
 
@@ -125,6 +133,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field

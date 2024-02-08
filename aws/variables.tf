@@ -77,7 +77,7 @@ variable "logging_level" {
 
 variable "eks_cluster_name" {
   description = "name of the existing EKS cluster"
-  type = string
+  type        = string
 }
 
 
@@ -87,24 +87,24 @@ variable "eks_cluster_name" {
 ###############################################################################
 variable "DUMP_DEFAULTS" {
   description = "environment variable: value of the DUMP_DEFAULTS environment variable"
-  type = string
-  default = "false"
+  type        = string
+  default     = "false"
 }
 variable "OPENAI_API_KEY" {
   description = "environment variable: value of the OPENAI_API_KEY environment"
-  type = string
+  type        = string
 }
 variable "PINECONE_API_KEY" {
   description = "environment variable: value of the PINECONE_API_KEY environment"
-  type = string
+  type        = string
 }
 variable "PINECONE_ENVIRONMENT" {
   description = "environment variable: value of the PINECONE_ENVIRONMENT environment"
-  type = string
+  type        = string
 }
 variable "GOOGLE_MAPS_API_KEY" {
   description = "environment variable: value of the GOOGLE_MAPS_API_KEY environment"
-  type = string
+  type        = string
 }
 
 variable "PRODUCTION_DATABASE_USER" {

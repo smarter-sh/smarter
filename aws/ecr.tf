@@ -8,9 +8,9 @@
 #         to AWS Elastic Container Registry (ECR)
 #------------------------------------------------------------------------------
 locals {
-  ecr_repo             = var.shared_resource_identifier
-  ecr_build_path   = "${path.module}/docker"
-  ecr_build_script = "${local.ecr_build_path}/build.sh"
+  ecr_repo          = var.shared_resource_identifier
+  ecr_build_path    = "${path.module}/docker"
+  ecr_build_script  = "${local.ecr_build_path}/build.sh"
   docker_files_hash = join(",", [for f in fileset("./docker", "*.*") : filesha256("./docker/${f}")])
   python_files_hash = join(",", [for f in fileset("../python", "*.*") : filesha256("../python/${f}")])
 }
@@ -32,8 +32,8 @@ resource "aws_ecr_repository" "smarter" {
 resource "null_resource" "smarter" {
   triggers = {
     always_recreate = "${timestamp()}"
-    docker_files = local.docker_files_hash
-    python_files = local.python_files_hash
+    docker_files    = local.docker_files_hash
+    python_files    = local.python_files_hash
   }
 
   provisioner "local-exec" {
