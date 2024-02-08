@@ -131,7 +131,10 @@ resource "kubernetes_deployment" "smarter" {
             name  = "GOOGLE_MAPS_API_KEY"
             value = var.GOOGLE_MAPS_API_KEY
           }
-
+          env {
+            name = "SECRET_KEY"
+            value = random_password.django_secret_key.result
+          }
         }
       }
     }
@@ -191,7 +194,10 @@ resource "kubernetes_job" "db_migration" {
             name  = "MYSQL_PASSWORD"
             value = random_password.mysql_smarter.result
           }
-
+          env {
+            name = "SECRET_KEY"
+            value = random_password.django_secret_key.result
+          }
         }
 
         restart_policy = "Never"

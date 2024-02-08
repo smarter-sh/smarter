@@ -47,11 +47,6 @@ variable "openai_endpoint_image_size" {
   default     = "1024x768"
 }
 
-variable "hosted_zone_id" {
-  description = "The Route53 hosted zone ID"
-  type        = string
-}
-
 variable "root_domain" {
   description = "a valid Internet domain name which you directly control using AWS Route53 in this account"
   type        = string
@@ -62,12 +57,6 @@ variable "subdomain" {
   description = "a valid Internet domain name which you directly control using AWS Route53 in this account"
   type        = string
   default     = "dev"
-}
-
-variable "stage" {
-  description = "Examples: dev, staging, prod, v0, v1, etc."
-  type        = string
-  default     = "v1"
 }
 
 variable "logging_level" {

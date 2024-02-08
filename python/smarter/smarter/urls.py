@@ -22,12 +22,20 @@ from django.contrib import admin
 from django.urls import include, path
 
 # smarter apps
+from smarter.apps.api.api_admin import urls as api_admin_urls
 from smarter.apps.api.hello_world import urls as hello_world_urls
 
+# system urls
+urlpatterns = static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+urlpatterns += api_admin_urls.urlpatterns
 
-urlpatterns = [
+# application urls
+urlpatterns += [
+    # django admin console
     path("admin/", admin.site.urls),
-]
 
-urlpatterns += hello_world_urls.urlpatterns
-urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+    # all v0 endpoints belong here.
+    # ----------------------------
+    path("v0/", include((hello_world_urls, 'hello_world'), namespace='v0')),
+]

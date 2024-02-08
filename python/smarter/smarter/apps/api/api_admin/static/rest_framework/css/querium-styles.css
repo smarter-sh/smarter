@@ -1,0 +1,6 @@
+.navbar.navbar-static-top.navbar-inverse {
+  background-color: #ff5733 !important;
+}
+.navbar.navbar-inverse .navbar-brand {
+  color: white;
+}

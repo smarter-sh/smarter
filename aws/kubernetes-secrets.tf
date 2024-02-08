@@ -61,8 +61,31 @@ resource "kubernetes_secret" "smarter_admin_password" {
 
   data = {
     SMARTER_USERNAME       = "admin"
-    SMARTER_MYSQL_PASSWORD = random_password.mysql_smarter.result
+    SMARTER_MYSQL_PASSWORD = random_password.smarter_admin_password.result
     SMARTER_LOGIN_URL      = "https://${local.environment_domain}/api-auth/login/"
+  }
+
+  depends_on = [kubernetes_namespace.smarter]
+}
+
+
+resource "random_password" "django_secret_key" {
+  length           = 16
+  special          = true
+  override_special = "_%@"
+  keepers = {
+    version = "1"
+  }
+}
+
+resource "kubernetes_secret" "django_secret_key" {
+  metadata {
+    name      = "smarter-django-secret-key"
+    namespace = local.environment_namespace
+  }
+
+  data = {
+    SECRET_KEY = random_password.django_secret_key.result
   }
 
   depends_on = [kubernetes_namespace.smarter]
