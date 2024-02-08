@@ -16,26 +16,18 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-from django.conf import settings
-from django.conf.urls.static import static
-from django.contrib import admin
 from django.urls import include, path
+from rest_framework import routers
 
-# smarter apps
-from smarter.apps.api.api_admin import urls as api_admin_urls
-from smarter.apps.api.hello_world import urls as hello_world_urls
-
-# system urls
-urlpatterns = static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-urlpatterns += api_admin_urls.urlpatterns
-
-# application urls
-urlpatterns += [
-    # django admin console
-    path("admin/", admin.site.urls),
+from smarter.apps.api.api_admin.views import UserViewSet, LogoutView
 
 
-    # all v0 endpoints belong here.
-    # ----------------------------
-    path("v0/", include((hello_world_urls, 'hello_world'), namespace='v0')),
+# Routers provide an easy way of automatically determining the URL conf.
+router = routers.DefaultRouter()
+router.register(r"users", UserViewSet)
+
+urlpatterns = [
+    path("", include(router.urls)),
+    path("api-auth/logout/", LogoutView.as_view(), name="logout"),
+    path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
 ]
