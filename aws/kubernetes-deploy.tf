@@ -10,6 +10,9 @@ locals {
     mysql_database         = local.mysql_database
     smarter_mysql_user     = local.smarter_mysql_username
     smarter_mysql_password = random_password.mysql_smarter.result
+    admin_username         = "admin"
+    admin_email            = "admin@smarter.sh"
+    admin_password         = random_password.mysql_smarter.result
   })
 }
 
