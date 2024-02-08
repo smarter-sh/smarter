@@ -25,7 +25,7 @@ spec:
               service:
                 name: ${service_name}
                 port:
-                  number: 80
+                  number: 8000
             path: /
             pathType: Prefix
   tls:

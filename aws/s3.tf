@@ -6,7 +6,7 @@ module "environment_storage" {
   acl                      = "private"
   control_object_ownership = true
   object_ownership         = "ObjectWriter"
-  tags = var.tags
+  tags                     = var.tags
 
   # attach_policy = true
   # policy        = data.aws_iam_policy_document.bucket_policy.json

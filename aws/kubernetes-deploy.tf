@@ -3,12 +3,12 @@ locals {
   env_script = "${path.module}/../scripts/env.sh"
 
   template_db_init = templatefile("${path.module}/templates/db-init.sh.tpl", {
-    mysql_user = var.PRODUCTION_DATABASE_USER
-    mysql_password = var.PRODUCTION_DATABASE_PASSWORD
-    mysql_host = var.PRODUCTION_DATABASE_HOST
-    mysql_port = var.PRODUCTION_DATABASE_PORT
-    mysql_database = local.mysql_database
-    smarter_mysql_user = local.smarter_mysql_username
+    mysql_user             = var.PRODUCTION_DATABASE_USER
+    mysql_password         = var.PRODUCTION_DATABASE_PASSWORD
+    mysql_host             = var.PRODUCTION_DATABASE_HOST
+    mysql_port             = var.PRODUCTION_DATABASE_PORT
+    mysql_database         = local.mysql_database
+    smarter_mysql_user     = local.smarter_mysql_username
     smarter_mysql_password = random_password.mysql_smarter.result
   })
 }
@@ -28,18 +28,18 @@ resource "null_resource" "env" {
 
 resource "kubernetes_service" "smarter" {
   metadata {
-    name = var.shared_resource_identifier
+    name      = var.shared_resource_identifier
     namespace = kubernetes_namespace.smarter.metadata[0].name
   }
 
   spec {
     selector = {
-      App = var.shared_resource_identifier
+      "app.kubernetes.io/name" = var.shared_resource_identifier
     }
 
     port {
-      port        = 8080
-      target_port = 8080
+      port        = 8000
+      target_port = 8000
     }
 
     type = "LoadBalancer"
@@ -52,7 +52,7 @@ resource "kubernetes_deployment" "smarter" {
   }
 
   metadata {
-    name = var.shared_resource_identifier
+    name      = var.shared_resource_identifier
     namespace = kubernetes_namespace.smarter.metadata[0].name
     labels = {
       App = var.shared_resource_identifier
@@ -64,14 +64,14 @@ resource "kubernetes_deployment" "smarter" {
 
     selector {
       match_labels = {
-        App = var.shared_resource_identifier
+        "app.kubernetes.io/name" = var.shared_resource_identifier
       }
     }
 
     template {
       metadata {
         labels = {
-          App = var.shared_resource_identifier
+          "app.kubernetes.io/name" = var.shared_resource_identifier
         }
       }
 
@@ -81,51 +81,51 @@ resource "kubernetes_deployment" "smarter" {
           name  = var.shared_resource_identifier
 
           port {
-            container_port = 8080
+            container_port = 8000
           }
 
           env {
-            name = "ENVIRONMENT"
+            name  = "ENVIRONMENT"
             value = "production"
           }
           env {
-            name = "DEBUG_MODE"
+            name  = "DEBUG_MODE"
             value = "false"
           }
           env {
-            name = "DUMP_DEFAULTS"
+            name  = "DUMP_DEFAULTS"
             value = var.DUMP_DEFAULTS
           }
           env {
-            name = "MYSQL_HOST"
+            name  = "MYSQL_HOST"
             value = local.smarter_mysql_host
           }
           env {
-            name = "MYSQL_PORT"
+            name  = "MYSQL_PORT"
             value = local.smarter_mysql_port
           }
           env {
-            name = "MYSQL_USER"
+            name  = "MYSQL_USER"
             value = local.smarter_mysql_username
           }
           env {
-            name = "MYSQL_PASSWORD"
+            name  = "MYSQL_PASSWORD"
             value = random_password.mysql_smarter.result
           }
           env {
-            name = "OPENAI_API_KEY"
+            name  = "OPENAI_API_KEY"
             value = var.OPENAI_API_KEY
           }
           env {
-            name = "PINECONE_API_KEY"
+            name  = "PINECONE_API_KEY"
             value = var.PINECONE_API_KEY
           }
           env {
-            name = "PINECONE_ENVIRONMENT"
+            name  = "PINECONE_ENVIRONMENT"
             value = var.PINECONE_ENVIRONMENT
           }
           env {
-            name = "GOOGLE_MAPS_API_KEY"
+            name  = "GOOGLE_MAPS_API_KEY"
             value = var.GOOGLE_MAPS_API_KEY
           }
 
@@ -144,7 +144,7 @@ resource "kubernetes_deployment" "smarter" {
 
 resource "kubernetes_job" "db_migration" {
   metadata {
-    name = "${var.shared_resource_identifier}-job"
+    name      = "${var.shared_resource_identifier}-job"
     namespace = kubernetes_namespace.smarter.metadata[0].name
   }
 
@@ -152,7 +152,7 @@ resource "kubernetes_job" "db_migration" {
     template {
       metadata {
         labels = {
-          App = "${var.shared_resource_identifier}-job"
+          "app.kubernetes.io/name" = "${var.shared_resource_identifier}-job"
         }
       }
 
@@ -162,30 +162,30 @@ resource "kubernetes_job" "db_migration" {
           image = local.ecr_repository_image
 
           command = ["/bin/sh", "-c"]
-          args = [local.template_db_init]
+          args    = [local.template_db_init]
 
           env {
-            name = "ENVIRONMENT"
+            name  = "ENVIRONMENT"
             value = "production"
           }
           env {
-            name = "DEBUG_MODE"
+            name  = "DEBUG_MODE"
             value = "false"
           }
           env {
-            name = "MYSQL_HOST"
+            name  = "MYSQL_HOST"
             value = local.smarter_mysql_host
           }
           env {
-            name = "MYSQL_PORT"
+            name  = "MYSQL_PORT"
             value = local.smarter_mysql_port
           }
           env {
-            name = "MYSQL_USER"
+            name  = "MYSQL_USER"
             value = local.smarter_mysql_username
           }
           env {
-            name = "MYSQL_PASSWORD"
+            name  = "MYSQL_PASSWORD"
             value = random_password.mysql_smarter.result
           }
 
