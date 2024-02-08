@@ -40,4 +40,4 @@ subdomain                  = "dev"
 shared_resource_identifier = "smarter"
 stage                      = "v1"
 eks_cluster_name           = "apps-hosting-service"
-hosted_zone_id             = "Z05313073M3RAC5F5VMVZ"
+hosted_zone_id             = "Z03310911QZ599UFVDRNJ"    # FIX ME
