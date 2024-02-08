@@ -5,4 +5,3 @@ resource "kubernetes_namespace" "smarter" {
     name = local.environment_namespace
   }
 }
-

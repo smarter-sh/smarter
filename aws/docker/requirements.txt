@@ -11,10 +11,11 @@
 # Django
 # ------------
 Django==3.2.16
-djangorestframework
+djangorestframework==3.14.0
 markdown
-django-filter
+django-filter==23.5
 mysqlclient==2.2.3
+gunicorn==21.2.0
 
 # misc
 # ------------
@@ -50,6 +51,3 @@ googlemaps==4.10.0
 openmeteo-requests==1.1.0
 requests-cache==1.1.1
 retry-requests==2.0.0
-
-
-

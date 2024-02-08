@@ -28,7 +28,10 @@ RUN pip install -r requirements.txt
 # Add our source code
 COPY smarter .
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Collect static files
+RUN python manage.py collectstatic --noinput
+
+
+CMD ["gunicorn", "smarter.wsgi:application", "-b", "0.0.0.0:8000"]
 
 EXPOSE 8000
-

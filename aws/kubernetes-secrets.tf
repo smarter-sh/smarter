@@ -11,10 +11,10 @@
 # 9. mysql secret
 locals {
 
-    smarter_mysql_database = substr("${var.shared_resource_identifier}_${local.environment}", -64, -1)
-    smarter_mysql_username = substr("${var.shared_resource_identifier}_${local.environment}", -32, -1)
-    smarter_mysql_host     = "mysql.service.lawrencemcdaniel.com"
-    smarter_mysql_port     = "3306"
+  smarter_mysql_database = substr("${var.shared_resource_identifier}_${local.environment}", -64, -1)
+  smarter_mysql_username = substr("${var.shared_resource_identifier}_${local.environment}", -32, -1)
+  smarter_mysql_host     = "mysql.service.lawrencemcdaniel.com"
+  smarter_mysql_port     = "3306"
 
 }
 
@@ -42,6 +42,5 @@ resource "kubernetes_secret" "mysql_smarter" {
     MYSQL_PORT             = local.smarter_mysql_port
   }
 
-  depends_on = [ kubernetes_namespace.smarter ]
+  depends_on = [kubernetes_namespace.smarter]
 }
-
