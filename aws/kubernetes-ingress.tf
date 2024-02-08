@@ -3,7 +3,7 @@ locals {
     root_domain        = var.root_domain
     environment_domain = local.environment_domain
     aws_region         = var.aws_region
-    hosted_zone_id     = var.hosted_zone_id
+    hosted_zone_id     = aws_route53_zone.environment_domain.zone_id
   })
 
   template_ingress = templatefile("${path.module}/templates/ingress.yaml.tpl", {

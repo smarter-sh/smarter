@@ -38,6 +38,4 @@ logging_level = "INFO"
 root_domain                = "smarter.sh"
 subdomain                  = "dev"
 shared_resource_identifier = "smarter"
-stage                      = "v1"
 eks_cluster_name           = "apps-hosting-service"
-hosted_zone_id             = "Z03310911QZ599UFVDRNJ"    # FIX ME

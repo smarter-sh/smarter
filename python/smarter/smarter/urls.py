@@ -23,11 +23,13 @@ from django.urls import include, path
 
 # smarter apps
 from smarter.apps.api.hello_world import urls as hello_world_urls
-
+from smarter.apps.api.api_admin import urls as api_admin_urls
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("v0/", include((hello_world_urls, 'hello_world'), namespace='v0')),
 ]
 
-urlpatterns += hello_world_urls.urlpatterns
+# unversioned urls
+urlpatterns += api_admin_urls.urlpatterns
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

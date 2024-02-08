@@ -19,12 +19,15 @@ Including another URLconf
 from django.urls import include, path
 from rest_framework import routers
 
-from smarter.apps.api.hello_world.views import HelloWorldViewSet
+from smarter.apps.api.api_admin.views import UserViewSet, LogoutView
 
 
+# Routers provide an easy way of automatically determining the URL conf.
 router = routers.DefaultRouter()
-router.register(r"hello-world", HelloWorldViewSet)
+router.register(r"users", UserViewSet)
 
 urlpatterns = [
     path("", include(router.urls)),
+    path("api-auth/logout/", LogoutView.as_view(), name="logout"),
+    path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
 ]
