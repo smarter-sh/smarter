@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     # -------------------------------
     "smarter.apps.chat",
     "smarter.apps.api.hello_world",
+    "smarter.apps.api.api_admin",
 ]
 
 MIDDLEWARE = [
