@@ -27,7 +27,6 @@ resource "random_password" "mysql_smarter" {
   }
 }
 
-
 resource "kubernetes_secret" "mysql_smarter" {
   metadata {
     name      = "mysql-smarter"
@@ -40,6 +39,30 @@ resource "kubernetes_secret" "mysql_smarter" {
     SMARTER_MYSQL_PASSWORD = random_password.mysql_smarter.result
     MYSQL_HOST             = local.smarter_mysql_host
     MYSQL_PORT             = local.smarter_mysql_port
+  }
+
+  depends_on = [kubernetes_namespace.smarter]
+}
+
+resource "random_password" "smarter_admin_password" {
+  length           = 16
+  special          = true
+  override_special = "_%@"
+  keepers = {
+    version = "1"
+  }
+}
+
+resource "kubernetes_secret" "smarter_admin_password" {
+  metadata {
+    name      = "smarter-admin"
+    namespace = local.environment_namespace
+  }
+
+  data = {
+    SMARTER_USERNAME       = "admin"
+    SMARTER_MYSQL_PASSWORD = random_password.mysql_smarter.result
+    SMARTER_LOGIN_URL      = "https://${local.environment_domain}/api-auth/login/"
   }
 
   depends_on = [kubernetes_namespace.smarter]

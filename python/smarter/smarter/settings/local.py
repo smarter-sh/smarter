@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     # -------------------------------
     "smarter.apps.chat",
     "smarter.apps.api.hello_world",
+    "smarter.apps.api.api_admin",
 ]
 
 MIDDLEWARE = [
@@ -86,8 +87,7 @@ WSGI_APPLICATION = "smarter.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        # "NAME": BASE_DIR / "db.sqlite3",
-        "NAME": "/Users/mcdaniel/desktop/gh/smarter/smarter/db.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
 
