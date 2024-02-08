@@ -31,8 +31,9 @@ resource "aws_ecr_repository" "smarter" {
 ###############################################################################
 resource "null_resource" "smarter" {
   triggers = {
+    always_recreate = "${timestamp()}"
     docker_files    = local.docker_files_hash
-    python_files    = local.python_files_hash     # FIX ME
+    python_files    = local.python_files_hash
   }
 
   provisioner "local-exec" {
