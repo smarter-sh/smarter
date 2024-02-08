@@ -29,8 +29,8 @@ SECRET_KEY = "django-insecure-zp722j6hm29(=kro+i*)7p+f=@s)wlhj%8r!k#3qke(yb8%m_j
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    "dev.smarter.sh",
-    "api.smarter.sh",
+    "dev.api.smarter.sh",
+    "api.smarter.sh",           # FIX ME
     "web.smarter.sh",
 ]
 
