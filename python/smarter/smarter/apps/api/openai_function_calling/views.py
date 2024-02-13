@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=R0801
 """All Django views for the OpenAI Function Calling API app."""
 import json
 
@@ -149,6 +150,6 @@ class FunctionCallingViewSet(viewsets.ViewSet):
     permission_classes = [permissions.AllowAny]  # change this line
 
     # pylint: disable=W0613
-    def list(self, request):
-        """override the list method to return a custom JSON response."""
+    def create(self, request):
+        """override the create method to handle POST requests."""
         return Response(handler(event=request.data, context=None))

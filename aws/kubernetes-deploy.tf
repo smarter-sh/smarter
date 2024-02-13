@@ -88,6 +88,18 @@ resource "kubernetes_deployment" "smarter" {
           }
 
           env {
+            name  = "AWS_ACCESS_KEY_ID"
+            value = var.AWS_ACCESS_KEY_ID
+          }
+          env {
+            name  = "AWS_SECRET_ACCESS_KEY"
+            value = var.AWS_SECRET_ACCESS_KEY
+          }
+          env {
+            name  = "AWS_REGION"
+            value = var.aws_region
+          }
+          env {
             name  = "ENVIRONMENT"
             value = "production"
           }
@@ -174,6 +186,18 @@ resource "kubernetes_job" "db_migration" {
           command = ["/bin/sh", "-c"]
           args    = [local.template_db_init]
 
+          env {
+            name  = "AWS_ACCESS_KEY_ID"
+            value = var.AWS_ACCESS_KEY_ID
+          }
+          env {
+            name  = "AWS_SECRET_ACCESS_KEY"
+            value = var.AWS_SECRET_ACCESS_KEY
+          }
+          env {
+            name  = "AWS_REGION"
+            value = var.aws_region
+          }
           env {
             name  = "ENVIRONMENT"
             value = "production"
