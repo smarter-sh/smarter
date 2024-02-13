@@ -10,8 +10,8 @@
 
 # dev and test
 # ------------
-boto3==1.34.34
-botocore==1.34.34
+boto3==1.34.37
+botocore==1.34.37
 pytest==8.0.0
 pytest_mock==3.12.0
 requests==2.31.0
@@ -29,7 +29,7 @@ bandit==1.7.7
 pydocstringformatter==0.7.3
 tox==4.12.1
 codespell==2.2.6
-coverage==7.4.0
+coverage==7.4.1
 
 # Django
 # ------------
@@ -45,7 +45,7 @@ openai==1.11.1
 # Lambda layer: common
 # ------------
 python-dotenv==1.0.1
-pydantic==2.6.0
+pydantic==2.6.1
 pydantic-settings==2.1.0
 python-hcl2==4.3.2
 
@@ -61,7 +61,7 @@ pyyaml
 
 # weather function
 googlemaps==4.10.0
-openmeteo-requests==1.1.0
+openmeteo-requests==1.2.0
 requests-cache==1.1.1
 retry-requests==2.0.0
 pandas==2.2.0
