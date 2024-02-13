@@ -22,8 +22,7 @@ from django.contrib import admin
 from django.urls import include, path
 
 # smarter apps
-from smarter.apps.api.api_admin import urls as api_admin_urls
-from smarter.apps.api.hello_world import urls as hello_world_urls
+from smarter.apps.api import urls as api_admin_urls
 
 
 # system urls
@@ -36,5 +35,5 @@ urlpatterns += [
     path("admin/", admin.site.urls),
     # all v0 endpoints belong here.
     # ----------------------------
-    path("v0/", include((hello_world_urls, "hello_world"), namespace="v0")),
+    path("v0/", include("smarter.apps.api.urls")),
 ]

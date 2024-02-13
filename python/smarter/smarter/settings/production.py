@@ -46,9 +46,11 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # smarter apps
     # -------------------------------
-    "smarter.apps.chat",
     "smarter.apps.api.hello_world",
     "smarter.apps.api.api_admin",
+    "smarter.apps.api.openai_api",
+    "smarter.apps.api.openai_function_calling",
+    "smarter.apps.api.openai_langchain",
     # 3rd party apps
     # -------------------------------
     "rest_framework",
