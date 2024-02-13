@@ -8,7 +8,6 @@
 #         to AWS Elastic Container Registry (ECR)
 #------------------------------------------------------------------------------
 locals {
-  ecr_repo          = var.shared_resource_identifier
   ecr_build_path    = "${path.module}/docker"
   ecr_build_script  = "${local.ecr_build_path}/build.sh"
   docker_files_hash = join(",", [for f in fileset("./docker", "*.*") : filesha256("./docker/${f}")])
@@ -16,7 +15,7 @@ locals {
 }
 
 resource "aws_ecr_repository" "smarter" {
-  name                 = local.ecr_repo
+  name                 = local.ecr_repository_name
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
@@ -41,9 +40,9 @@ resource "null_resource" "smarter" {
     command     = local.ecr_build_script
 
     environment = {
-      REPO_NAME      = local.ecr_repo
+      REPO_NAME      = local.ecr_repository_name
       BUILD_PATH     = local.ecr_build_path
-      CONTAINER_NAME = local.ecr_repo
+      CONTAINER_NAME = local.ecr_repository_name
       AWS_REGION     = var.aws_region
       AWS_ACCOUNT_ID = var.aws_account_id
     }

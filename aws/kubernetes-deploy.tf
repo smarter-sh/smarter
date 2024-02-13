@@ -8,7 +8,7 @@ locals {
     mysql_host             = var.PRODUCTION_DATABASE_HOST
     mysql_port             = var.PRODUCTION_DATABASE_PORT
     mysql_database         = local.mysql_database
-    smarter_mysql_user     = local.smarter_mysql_username
+    smarter_mysql_user     = local.mysql_username
     smarter_mysql_password = random_password.mysql_smarter.result
     admin_username         = "admin"
     admin_email            = "admin@smarter.sh"
@@ -101,15 +101,19 @@ resource "kubernetes_deployment" "smarter" {
           }
           env {
             name  = "MYSQL_HOST"
-            value = local.smarter_mysql_host
+            value = var.mysql_host
           }
           env {
             name  = "MYSQL_PORT"
-            value = local.smarter_mysql_port
+            value = var.mysql_port
+          }
+          env {
+            name  = "MYSQL_DATABASE"
+            value = local.mysql_database
           }
           env {
             name  = "MYSQL_USER"
-            value = local.smarter_mysql_username
+            value = local.mysql_username
           }
           env {
             name  = "MYSQL_PASSWORD"
@@ -132,7 +136,7 @@ resource "kubernetes_deployment" "smarter" {
             value = var.GOOGLE_MAPS_API_KEY
           }
           env {
-            name = "SECRET_KEY"
+            name  = "SECRET_KEY"
             value = random_password.django_secret_key.result
           }
         }
@@ -180,22 +184,26 @@ resource "kubernetes_job" "db_migration" {
           }
           env {
             name  = "MYSQL_HOST"
-            value = local.smarter_mysql_host
+            value = var.mysql_host
           }
           env {
             name  = "MYSQL_PORT"
-            value = local.smarter_mysql_port
+            value = var.mysql_port
+          }
+          env {
+            name  = "MYSQL_DATABASE"
+            value = local.mysql_database
           }
           env {
             name  = "MYSQL_USER"
-            value = local.smarter_mysql_username
+            value = local.mysql_username
           }
           env {
             name  = "MYSQL_PASSWORD"
             value = random_password.mysql_smarter.result
           }
           env {
-            name = "SECRET_KEY"
+            name  = "SECRET_KEY"
             value = random_password.django_secret_key.result
           }
         }
