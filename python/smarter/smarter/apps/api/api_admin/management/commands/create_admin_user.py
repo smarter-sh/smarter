@@ -1,13 +1,13 @@
+# -*- coding: utf-8 -*-
 from django.contrib.auth.models import User
-
 from django.core.management.base import BaseCommand
-from django.contrib.auth.models import User
+
 
 class Command(BaseCommand):
     def add_arguments(self, parser):
-        parser.add_argument('--username', type=str, help='The username for the new superuser')
-        parser.add_argument('--email', type=str, help='The email address for the new superuser')
-        parser.add_argument('--password', type=str, help='The password for the new superuser')
+        parser.add_argument("--username", type=str, help="The username for the new superuser")
+        parser.add_argument("--email", type=str, help="The email address for the new superuser")
+        parser.add_argument("--password", type=str, help="The password for the new superuser")
 
     def change_password(self, username, new_password):
         try:
@@ -19,9 +19,9 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f"User {username} does not exist."))
 
     def handle(self, *args, **options):
-        username = options['username']
-        email = options['email']
-        password = options['password']
+        username = options["username"]
+        email = options["email"]
+        password = options["password"]
         if username and email and password:
             if not User.objects.filter(username=username).exists():
                 User.objects.create_superuser(username=username, email=email, password=password)
