@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=no-member,no-self-argument,unused-argument
+# pylint: disable=no-member,no-self-argument,unused-argument,R0801
 """
 Configuration for Lambda functions.
 
@@ -190,7 +190,7 @@ class SettingsDefaults:
 
 AWS_REGIONS = []
 if Services.enabled(Services.AWS_EC2):
-    ec2 = boto3.Session().client("ec2")
+    ec2 = boto3.Session(region_name=os.environ.get("AWS_REGION")).client("ec2")
     regions = ec2.describe_regions()
     AWS_REGIONS = [region["RegionName"] for region in regions["Regions"]]
 
@@ -239,7 +239,7 @@ class Settings(BaseSettings):
             logger.info("running inside AWS Lambda")
             self._aws_access_key_id_source: str = "overridden by IAM role-based security"
             self._aws_secret_access_key_source: str = "overridden by IAM role-based security"
-            self._aws_session = boto3.Session()
+            self._aws_session = boto3.Session(region_name=self.aws_region)
             self._initialized = True
 
         if not self.initialized and bool(os.environ.get("GITHUB_ACTIONS", False)):
