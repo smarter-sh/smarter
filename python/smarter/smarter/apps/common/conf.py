@@ -167,11 +167,13 @@ class SettingsDefaults:
     AWS_APIGATEWAY_CONNECT_TIMEOUT: int = TFVARS.get("aws_apigateway_connect_timeout", 70)
     AWS_APIGATEWAY_MAX_ATTEMPTS: int = TFVARS.get("aws_apigateway_max_attempts", 10)
 
-    GOOGLE_MAPS_API_KEY: str = TFVARS.get("google_maps_api_key", None)
+    GOOGLE_MAPS_API_KEY: str = TFVARS.get("google_maps_api_key", None) or os.environ.get(
+        "TF_VAR_GOOGLE_MAPS_API_KEY", None
+    )
 
     LANGCHAIN_MEMORY_KEY = "chat_history"
     OPENAI_API_ORGANIZATION: str = None
-    OPENAI_API_KEY = SecretStr(None)
+    OPENAI_API_KEY = SecretStr(os.environ.get("TF_VAR_OPENAI_API_KEY", None))
     OPENAI_ENDPOINT_IMAGE_N = 4
     OPENAI_ENDPOINT_IMAGE_SIZE = "1024x768"
     PINECONE_API_KEY = SecretStr(None)
@@ -354,7 +356,7 @@ class Settings(BaseSettings):
     )
     google_maps_api_key: Optional[str] = Field(
         SettingsDefaults.GOOGLE_MAPS_API_KEY,
-        env="GOOGLE_MAPS_API_KEY",
+        env=["GOOGLE_MAPS_API_KEY", "TF_VAR_GOOGLE_MAPS_API_KEY"],
     )
     langchain_memory_key: Optional[str] = Field(SettingsDefaults.LANGCHAIN_MEMORY_KEY, env="LANGCHAIN_MEMORY_KEY")
     openai_api_organization: Optional[str] = Field(
