@@ -108,7 +108,7 @@
         "aws_apigateway_create_custom_domaim": false,
         "aws_apigateway_domain_name": "wkducky96g.execute-api.us-east-1.amazonaws.com",
         "aws_apigateway_name": "openai-api",
-        "aws_apigateway_root_domain": null
+        "root_domain": null
       },
       "aws_auth": {
         "aws_access_key_id_source": "overridden by IAM role-based security",

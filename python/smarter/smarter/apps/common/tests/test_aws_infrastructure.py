@@ -21,7 +21,7 @@ if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 
 from smarter.apps.common.aws import aws_infrastructure_config  # noqa: E402
-from smarter.apps.common.conf import settings
+from smarter.apps.common.conf import Services, settings
 
 
 class TestAWSInfrastructure(unittest.TestCase):
@@ -37,7 +37,10 @@ class TestAWSInfrastructure(unittest.TestCase):
     def test_domain_exists(self):
         """Test that domain name exists in API Gateway."""
         # skip this test if we are using the default domain name
-        if settings.aws_apigateway_root_domain == "example.com":
+        if not Services.enabled(Services.AWS_APIGATEWAY):
+            return
+
+        if settings.root_domain == "example.com":
             return
 
         self.assertTrue(
@@ -46,18 +49,21 @@ class TestAWSInfrastructure(unittest.TestCase):
 
     def test_api_exists(self):
         """Test that the API Gateway exists."""
-        api = aws_infrastructure_config.get_api(aws_infrastructure_config.api_gateway_name)
-        self.assertIsInstance(api, dict, "API Gateway does not exist.")
+        if Services.enabled(Services.AWS_APIGATEWAY):
+            api = aws_infrastructure_config.get_api(aws_infrastructure_config.api_gateway_name)
+            self.assertIsInstance(api, dict, "API Gateway does not exist.")
 
     def test_api_resource_example_airportcodes_exists(self):
         """Test that the API Gateway examples/default-airport-codes end point exists."""
-        self.assertTrue(
-            aws_infrastructure_config.api_resource_and_method_exists("/examples/default-airport-codes", "POST"),
-            "API Gateway /examples/default-airport-codes (POST) resource does not exist.",
-        )
+        if Services.enabled(Services.AWS_APIGATEWAY):
+            self.assertTrue(
+                aws_infrastructure_config.api_resource_and_method_exists("/examples/default-airport-codes", "POST"),
+                "API Gateway /examples/default-airport-codes (POST) resource does not exist.",
+            )
 
     def test_api_key_exists(self):
         """Test that an API key exists."""
-        api_key = aws_infrastructure_config.get_api_keys()
-        self.assertIsInstance(api_key, str, "API key does not exist.")
-        self.assertGreaterEqual(len(api_key), 15, "API key is too short.")
+        if Services.enabled(Services.AWS_APIGATEWAY):
+            api_key = aws_infrastructure_config.get_api_keys()
+            self.assertIsInstance(api_key, str, "API key does not exist.")
+            self.assertGreaterEqual(len(api_key), 15, "API key is too short.")

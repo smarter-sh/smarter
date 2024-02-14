@@ -88,7 +88,7 @@ resource "kubernetes_deployment" "smarter" {
           }
           env {
             name  = "ENVIRONMENT"
-            value = "production"
+            value = "prod"
           }
           env {
             name  = "DEBUG_MODE"
@@ -184,7 +184,7 @@ resource "kubernetes_job" "db_migration" {
           }
           env {
             name  = "ENVIRONMENT"
-            value = "production"
+            value = "prod"
           }
           env {
             name  = "DEBUG_MODE"

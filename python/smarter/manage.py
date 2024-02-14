@@ -15,7 +15,7 @@ def main():
     """Run administrative tasks."""
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smarter.settings.local")
     environment = os.getenv("ENVIRONMENT")
-    if environment == "production":
+    if environment == "prod":
         os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings.production"
     try:
         from django.core.management import execute_from_command_line

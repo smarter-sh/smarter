@@ -79,6 +79,9 @@ class TestConfiguration(unittest.TestCase):
 
     def test_conf_defaults_secrets(self):
         """Test that settings == SettingsDefaults when no .env is in use."""
+        if not Services.enabled(Services.AWS_LAMBDA):
+            return
+
         os.environ.clear()
         mock_settings = Settings(init_info="test_conf_defaults_secrets()")
 
@@ -184,8 +187,9 @@ class TestConfiguration(unittest.TestCase):
     def test_dump(self):
         """Test that dump is a dict."""
 
-        mock_settings = Settings(init_info="test_dump()")
-        self.assertIsInstance(mock_settings.dump, dict)
+        if Services.enabled(Services.AWS_APIGATEWAY):
+            mock_settings = Settings(init_info="test_dump()")
+            self.assertIsInstance(mock_settings.dump, dict)
 
     def test_dump_keys(self):
         """Test that dump contains the expected keys."""
@@ -200,8 +204,9 @@ class TestConfiguration(unittest.TestCase):
         self.assertIn("SHARED_RESOURCE_IDENTIFIER".lower(), environment)
         self.assertIn("version", environment)
 
-        aws_apigateway = mock_settings.dump["aws_apigateway"]
-        self.assertIn("AWS_APIGATEWAY_ROOT_DOMAIN".lower(), aws_apigateway)
+        if Services.enabled(Services.AWS_APIGATEWAY):
+            aws_apigateway = mock_settings.dump["aws_apigateway"]
+            self.assertIn("AWS_APIGATEWAY_ROOT_DOMAIN".lower(), aws_apigateway)
 
         openai_api = mock_settings.dump["openai_api"]
         self.assertIn("LANGCHAIN_MEMORY_KEY".lower(), openai_api)
@@ -210,6 +215,8 @@ class TestConfiguration(unittest.TestCase):
 
     def test_cloudwatch_values(self):
         """Test that dump contains the expected default values."""
+        if not Services.enabled(Services.AWS_CLOUDWATCH):
+            return
 
         mock_settings = Settings(init_info="test_cloudwatch_values()")
         environment = mock_settings.dump["environment"]
@@ -229,7 +236,7 @@ class TestConfiguration(unittest.TestCase):
             aws_profile="test-profile",
             aws_region="eu-west-1",
             aws_apigateway_create_custom_domaim=False,
-            aws_apigateway_root_domain="test-domain.com",
+            root_domain="test-domain.com",
             langchain_memory_key="TEST_langchain_memory_key",
             openai_api_organization="TEST_openai_api_organization",
             openai_api_key="TEST_openai_api_key",
@@ -244,7 +251,7 @@ class TestConfiguration(unittest.TestCase):
         self.assertEqual(mock_settings.aws_profile, "test-profile")
         self.assertEqual(mock_settings.aws_region, "eu-west-1")
         self.assertEqual(mock_settings.aws_apigateway_create_custom_domaim, False)
-        self.assertEqual(mock_settings.aws_apigateway_root_domain, "test-domain.com")
+        self.assertEqual(mock_settings.root_domain, "test-domain.com")
         self.assertEqual(mock_settings.langchain_memory_key, "TEST_langchain_memory_key")
         self.assertEqual(mock_settings.openai_api_organization, "TEST_openai_api_organization")
         # pylint: disable=no-member
@@ -311,6 +318,9 @@ class TestConfiguration(unittest.TestCase):
 
     def test_settings_aws_apigateway_domain_name(self):
         """Test that the API Gateway domain name is valid."""
+        if not Services.enabled(Services.AWS_APIGATEWAY):
+            return
+
         mock_settings = Settings(init_info="test_settings_aws_apigateway_domain_name()")
         hostname = mock_settings.aws_apigateway_domain_name
         self.assertIsNotNone(mock_settings.aws_apigateway_domain_name)

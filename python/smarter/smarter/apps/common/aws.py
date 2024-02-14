@@ -41,7 +41,7 @@ class AWSInfrastructureConfig:
             retval["iam"] = {"policies": self.get_iam_policies(), "roles": self.get_iam_roles()}
         if Services.enabled(Services.AWS_LAMBDA):
             retval["lambda"] = self.get_lambdas()
-        if Services.enabled(Services.AWS_ROUTE53):
+        if Services.enabled(Services.AWS_ROUTE53) and Services.enabled(Services.AWS_APIGATEWAY):
             retval["route53"] = self.get_dns_record_from_hosted_zone()
         return recursive_sort_dict(retval)
 
@@ -131,8 +131,7 @@ class AWSInfrastructureConfig:
         if not self._domain:
             if settings.aws_apigateway_create_custom_domaim:
                 self._domain = (
-                    os.getenv(key="DOMAIN")
-                    or "api." + settings.shared_resource_identifier + "." + settings.aws_apigateway_root_domain
+                    os.getenv(key="DOMAIN") or "api." + settings.shared_resource_identifier + "." + settings.root_domain
                 )
                 return self._domain
 
@@ -252,7 +251,7 @@ class AWSInfrastructureConfig:
 
     def get_dns_record_from_hosted_zone(self) -> str:
         """Return the DNS record from the hosted zone."""
-        hosted_zone_id = self.get_hosted_zone(settings.aws_apigateway_root_domain)
+        hosted_zone_id = self.get_hosted_zone(settings.root_domain)
         if hosted_zone_id:
             response = settings.aws_route53_client.list_resource_record_sets(HostedZoneId=hosted_zone_id)
             for record in response["ResourceRecordSets"]:
