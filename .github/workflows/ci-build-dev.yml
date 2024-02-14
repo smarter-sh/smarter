@@ -2,11 +2,12 @@ name: Docker build staging
 
 on:
   workflow_dispatch:
-  # push:
-  #   branches: [next]
+  push:
+    branches: [dev]
 
 env:
-  AWS_ECR_REPO: smarter-api-dev
+  ENVIRONMENT: dev
+  AWS_ECR_REPO: smarter-api
   AWS_REGION: us-east-2
   EKS_CLUSTER_NAME: apps-hosting-service
   KUBECTL_VERSION: "1.29"
@@ -16,6 +17,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Initialize locals
+        shell: bash
+        run: |-
+          echo "NAMESPACE=${NAMESPACE}-${{ env.ENVIRONMENT }}" >> $GITHUB_ENV
+
       - name: Checkout code
         id: checkout_code
         uses: actions/checkout@v4
@@ -51,7 +57,7 @@ jobs:
         id: create-repo
         shell: bash
         run: |
-          aws ecr describe-repositories --repository-names ${{ env.AWS_ECR_REPO }} || aws ecr create-repository --repository-name ${{ env.AWS_ECR_REPO }}
+          aws ecr describe-repositories --repository-names ${NAMESPACE} || aws ecr create-repository --repository-name ${NAMESPACE}
 
       - name: Get the date
         run: echo "DATESTAMP=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
@@ -62,7 +68,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest, ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ github.run_id }}, ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.DATESTAMP }}
+          tags: ${{ steps.login-ecr.outputs.registry }}/${NAMESPACE}:latest, ${{ steps.login-ecr.outputs.registry }}/${NAMESPACE}:${{ github.run_id }}, ${{ steps.login-ecr.outputs.registry }}/${NAMESPACE}:${DATESTAMP}
 
   deploy:
     needs: build
