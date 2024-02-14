@@ -20,7 +20,7 @@ jobs:
       - name: Initialize locals
         shell: bash
         run: |-
-          echo "NAMESPACE=${NAMESPACE}-${{ env.ENVIRONMENT }}" >> $GITHUB_ENV
+          echo "NAMESPACE=${{ env.AWS_ECR_REPO }}-${{ env.ENVIRONMENT }}" >> $GITHUB_ENV
 
       - name: Checkout code
         id: checkout_code
