@@ -5,7 +5,6 @@
 import base64
 import datetime
 import json  # library for interacting with JSON data https://www.json.org/json-en.html
-import logging
 import sys  # libraries for error management
 import traceback  # libraries for error management
 
@@ -13,6 +12,7 @@ from pydantic import SecretStr
 
 from smarter.apps.common.const import LANGCHAIN_MESSAGE_HISTORY_ROLES, OpenAIObjectTypes
 from smarter.apps.common.exceptions import OpenAIAPIValueError
+from smarter.apps.common.logger import get_logger
 from smarter.apps.common.validators import (
     validate_endpoint,
     validate_item,
@@ -24,7 +24,7 @@ from smarter.apps.common.validators import (
 )
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class DateTimeEncoder(json.JSONEncoder):
@@ -54,6 +54,9 @@ def cloudwatch_handler(
     if debug_mode and not quiet:
         print(json.dumps(dump, cls=DateTimeEncoder))
         print(json.dumps({"event": event}, cls=DateTimeEncoder))
+
+        logger.info(json.dumps(dump, cls=DateTimeEncoder))
+        logger.info(json.dumps({"event": event}, cls=DateTimeEncoder))
 
 
 def http_response_factory(status_code: int, body: json, debug_mode: bool = False) -> json:
@@ -157,19 +160,19 @@ def parse_request(request_body: dict):
     chat_history = request_body.get("chat_history")
 
     if not object_type:
-        logging.warning("object_type key not found in request body. defaulting to ChatCompletion")
+        logger.warning("object_type key not found in request body. defaulting to ChatCompletion")
         object_type = OpenAIObjectTypes.ChatCompletion
 
     if not model:
-        logging.warning("model key not found in request body. defaulting to gpt-3.5-turbo")
+        logger.warning("model key not found in request body. defaulting to gpt-3.5-turbo")
         model = "gpt-3.5-turbo"
 
     if temperature < 0:
-        logging.warning("temperature key not found in request body. defaulting to 0.5")
+        logger.warning("temperature key not found in request body. defaulting to 0.5")
         temperature = 0.5
 
     if not max_tokens:
-        logging.warning("max_tokens key not found in request body. defaulting to 150")
+        logger.warning("max_tokens key not found in request body. defaulting to 150")
         max_tokens = 150
 
     validate_item(
