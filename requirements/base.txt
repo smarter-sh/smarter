@@ -7,8 +7,8 @@ django-filter==23.5
 
 # misc
 # ------------
-boto3==1.34.25
-botocore==1.34.29
+boto3==1.34.37
+botocore==1.34.39
 requests==2.31.0
 
 # Lambda layer: openai
