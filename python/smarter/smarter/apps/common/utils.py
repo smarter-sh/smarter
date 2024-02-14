@@ -52,11 +52,8 @@ def cloudwatch_handler(
 ):
     """Create a CloudWatch log entry for the event and dump the event to stdout."""
     if debug_mode and not quiet:
-        print(json.dumps(dump, cls=DateTimeEncoder))
-        print(json.dumps({"event": event}, cls=DateTimeEncoder))
-
-        logger.info(json.dumps(dump, cls=DateTimeEncoder))
-        logger.info(json.dumps({"event": event}, cls=DateTimeEncoder))
+        logger.debug(json.dumps(dump, cls=DateTimeEncoder))
+        logger.debug(json.dumps({"event": event}, cls=DateTimeEncoder))
 
 
 def http_response_factory(status_code: int, body: json, debug_mode: bool = False) -> json:

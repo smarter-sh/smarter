@@ -105,7 +105,7 @@ resource "kubernetes_deployment" "smarter" {
           }
           env {
             name  = "DEBUG_MODE"
-            value = "false"
+            value = "true"
           }
           env {
             name  = "DUMP_DEFAULTS"
@@ -204,7 +204,7 @@ resource "kubernetes_job" "db_migration" {
           }
           env {
             name  = "DEBUG_MODE"
-            value = "false"
+            value = "true"
           }
           env {
             name  = "MYSQL_HOST"
