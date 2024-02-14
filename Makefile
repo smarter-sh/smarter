@@ -75,7 +75,7 @@ python-init:
 	$(PYTHON) -m venv venv && \
 	$(ACTIVATE_VENV) && \
 	$(PIP) install --upgrade pip && \
-	$(PIP) install -r requirements.txt && \
+	$(PIP) install -r requirements/local.txt && \
 	pre-commit install
 
 python-test:

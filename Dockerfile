@@ -21,9 +21,9 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Add all Python package dependencies
-COPY requirements.txt .
+COPY requirement .
 RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+RUN pip install -r requirements/deploy.txt
 
 # Add our source code
 COPY smarter .
