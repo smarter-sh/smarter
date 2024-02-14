@@ -2,12 +2,14 @@ name: Docker build staging
 
 on:
   workflow_dispatch:
-  push:
-    branches: [next]
+  # push:
+  #   branches: [next]
 
 env:
   AWS_ECR_REPO: smarter-api-dev
   AWS_REGION: us-east-2
+  EKS_CLUSTER_NAME: apps-hosting-service
+  KUBECTL_VERSION: "1.29"
 
 jobs:
   build:
@@ -25,6 +27,17 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: Check awscli version
+        shell: bash
+        run: |-
+          echo "aws cli version:"
+          echo "----------------"
+          aws --version
+          echo
+          echo "aws IAM user:"
+          echo "-------------"
+          aws sts get-caller-identity
 
       - name: Set up Docker Buildx
         id: buildx
@@ -50,3 +63,33 @@ jobs:
           context: .
           push: true
           tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest, ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ github.run_id }}, ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.DATESTAMP }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check awscli version
+        shell: bash
+        run: |-
+          echo "aws cli version:"
+          echo "----------------"
+          aws --version
+          echo
+          echo "aws IAM user:"
+          echo "-------------"
+          aws sts get-caller-identity
+
+      - name: Configure kubectl
+        id: kubectl-configure
+        shell: bash
+        run: |-
+          sudo apt-get update
+          curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+          echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+          sudo apt-get update
+          sudo apt-get install -y kubectl
+
+          aws eks --region ${{ env.AWS_REGION }} update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --alias ${{ env.EKS_CLUSTER_NAME }}
+          echo "kubectl version and diagnostic info:"
+          echo "------------------------------------"
+          kubectl version
