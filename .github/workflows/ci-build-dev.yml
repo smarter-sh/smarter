@@ -74,6 +74,23 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Initialize locals
+        shell: bash
+        run: |-
+          echo "NAMESPACE=${{ env.AWS_ECR_REPO }}-${{ env.ENVIRONMENT }}" >> $GITHUB_ENV
+
+      - name: Checkout code
+        id: checkout_code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        id: aws-credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
       - name: Check awscli version
         shell: bash
         run: |-
