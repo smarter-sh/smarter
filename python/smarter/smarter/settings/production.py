@@ -30,7 +30,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     "dev.api.smarter.sh",
-    "api.smarter.sh",           # FIX ME
+    "api.smarter.sh",  # FIX ME
     "web.smarter.sh",
 ]
 
@@ -44,13 +44,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     # smarter apps
     # -------------------------------
-    "smarter.apps.chat",
     "smarter.apps.api.hello_world",
     "smarter.apps.api.api_admin",
-
+    "smarter.apps.api.openai_api",
+    "smarter.apps.api.openai_function_calling",
+    "smarter.apps.api.openai_langchain",
     # 3rd party apps
     # -------------------------------
     "rest_framework",
@@ -71,7 +71,7 @@ ROOT_URLCONF = "smarter.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, 'templates')],
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -93,7 +93,7 @@ WSGI_APPLICATION = "smarter.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "smarter_dev",
+        "NAME": os.getenv("MYSQL_DATABASE"),
         "USER": os.getenv("MYSQL_USER"),
         "PASSWORD": os.getenv("MYSQL_PASSWORD"),
         "HOST": os.getenv("MYSQL_HOST"),
@@ -133,7 +133,7 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, "static"),
 ]
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -144,4 +144,19 @@ REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"]
+}
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "DEBUG",
+    },
 }

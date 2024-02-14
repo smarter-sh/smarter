@@ -1,0 +1,118 @@
+name: Docker build staging
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [dev]
+
+env:
+  ENVIRONMENT: dev
+  AWS_ECR_REPO: smarter-api
+  AWS_REGION: us-east-2
+  EKS_CLUSTER_NAME: apps-hosting-service
+  KUBECTL_VERSION: "1.29"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Initialize locals
+        shell: bash
+        run: |-
+          echo "NAMESPACE=${{ env.AWS_ECR_REPO }}-${{ env.ENVIRONMENT }}" >> $GITHUB_ENV
+
+      - name: Checkout code
+        id: checkout_code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        id: aws-credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Check awscli version
+        shell: bash
+        run: |-
+          echo "aws cli version:"
+          echo "----------------"
+          aws --version
+          echo
+          echo "aws IAM user:"
+          echo "-------------"
+          aws sts get-caller-identity
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Create the repository
+        id: create-repo
+        shell: bash
+        run: |
+          aws ecr describe-repositories --repository-names ${{ env.NAMESPACE }} || aws ecr create-repository --repository-name ${{ env.NAMESPACE }}
+
+      - name: Get the date
+        run: echo "DATESTAMP=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+
+      - name: Build and push
+        id: docker-build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.NAMESPACE }}:latest, ${{ steps.login-ecr.outputs.registry }}/${{ env.NAMESPACE }}:${{ github.run_id }}, ${{ steps.login-ecr.outputs.registry }}/${{ env.NAMESPACE }}:${{ env.DATESTAMP }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Initialize locals
+        shell: bash
+        run: |-
+          echo "NAMESPACE=${{ env.AWS_ECR_REPO }}-${{ env.ENVIRONMENT }}" >> $GITHUB_ENV
+
+      - name: Checkout code
+        id: checkout_code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        id: aws-credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Check awscli version
+        shell: bash
+        run: |-
+          echo "aws cli version:"
+          echo "----------------"
+          aws --version
+          echo
+          echo "aws IAM user:"
+          echo "-------------"
+          aws sts get-caller-identity
+
+      - name: Configure kubectl
+        id: kubectl-configure
+        shell: bash
+        run: |-
+          sudo apt-get update
+          curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+          echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+          sudo apt-get update
+          sudo apt-get install -y kubectl
+
+          aws eks --region ${{ env.AWS_REGION }} update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --alias ${{ env.EKS_CLUSTER_NAME }}
+          echo "kubectl version and diagnostic info:"
+          echo "------------------------------------"
+          kubectl version

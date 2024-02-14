@@ -19,7 +19,7 @@ Including another URLconf
 from django.urls import include, path
 from rest_framework import routers
 
-from smarter.apps.api.api_admin.views import UserViewSet, LogoutView
+from smarter.apps.api.api_admin.views.views import LogoutView, UserViewSet
 
 
 # Routers provide an easy way of automatically determining the URL conf.

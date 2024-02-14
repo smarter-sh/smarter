@@ -7,12 +7,12 @@ branding:
   icon: "git-pull-request"
   color: "orange"
 inputs:
-  python-version:
-    description: "The version of Python to use, such as 3.11.0"
+  root-domain:
+    description: "The root domain of the project"
     required: true
     type: string
-  openai-api-organization:
-    description: "The OpenAI API organization"
+  python-version:
+    description: "The version of Python to use, such as 3.11.0"
     required: true
     type: string
   openai-api-key:
@@ -39,35 +39,11 @@ runs:
       id: checkout
       uses: actions/checkout@v4
 
-    - name: Check for openai in requirements
-      shell: bash
-      run: |
-        if ! grep -q "openai" ./requirements.txt; then
-          echo "openai not found in requirements.txt" >&2
-          exit 1
-        fi
-
-    - name: Check for langchain in requirements
-      shell: bash
-      run: |
-        if ! grep -q "langchain" ./requirements.txt; then
-          echo "langchain not found in requirements.txt" >&2
-          exit 1
-        fi
-
-    - name: Check for langchain-experimental in requirements
-      shell: bash
-      run: |
-        if ! grep -q "langchain-experimental" ./requirements.txt; then
-          echo "langchain-experimental not found in requirements.txt" >&2
-          exit 1
-        fi
-
     - name: Cache Python dependencies
       uses: actions/cache@v3
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('./requirements/**/*.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip
 
@@ -89,7 +65,7 @@ runs:
     - name: Install dependencies
       shell: bash
       run: |
-        pip install -r ./requirements.txt
+        pip install -r ./requirements/local.txt
       env:
         SITE_PACKAGES_PATH: ${{ env.SITE_PACKAGES_PATH }}
 
@@ -103,8 +79,10 @@ runs:
         echo "PINECONE_API_KEY=${{ env.PINECONE_API_KEY }}" >> ./.env
         echo "PINECONE_ENVIRONMENT=${{ env.PINECONE_ENVIRONMENT }}" >> ./.env
         echo "DEBUG_MODE=False" >> ./.env
+        echo "ENVIRONMENT=dev" >> ./.env
+        echo "ROOT_DOMAIN=${{ inputs.root-domain }}" >> ./.env
+
       env:
-        OPENAI_API_ORGANIZATION: ${{ inputs.openai-api-organization }}
         OPENAI_API_KEY: ${{ inputs.openai-api-key }}
         PINECONE_API_KEY: ${{ inputs.pinecone-api-key }}
         PINECONE_ENVIRONMENT: ${{ inputs.pinecone-environment }}
@@ -116,4 +94,4 @@ runs:
         GITHUB_ACTIONS: "true"
         DEBUG_MODE: "true"
       run: |
-        make api-test
+        make python-test

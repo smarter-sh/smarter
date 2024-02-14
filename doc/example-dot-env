@@ -1,5 +1,5 @@
 # Local dev settings
-ENVIRONMENT=development
+ENVIRONMENT=dev
 DEBUG_MODE=True
 DUMP_DEFAULTS=True
 

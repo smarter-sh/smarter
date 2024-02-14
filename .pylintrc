@@ -1,5 +1,5 @@
 [MASTER]
-ignore-paths=venv,node_modules
+ignore-paths=venv,node_modules,python/smarter/smarter/apps/api/hello_world/
 ignore=__version__.py
 
 [FORMAT]

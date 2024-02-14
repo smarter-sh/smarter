@@ -45,8 +45,8 @@ analyze:
 	cloc . --exclude-ext=svg,json,zip --vcs=git
 
 coverage:
-	coverage run --source=api/terraform/python/openai_api \
-				 -m unittest discover -s api/terraform/python/openai_api/
+	coverage run --source=python/smarter \
+				 -m unittest discover -s python/smarter/
 	coverage report -m
 	coverage html
 
@@ -75,18 +75,18 @@ python-init:
 	$(PYTHON) -m venv venv && \
 	$(ACTIVATE_VENV) && \
 	$(PIP) install --upgrade pip && \
-	$(PIP) install -r requirements.txt && \
+	$(PIP) install -r requirements/local.txt && \
 	pre-commit install
 
 python-test:
-	python -m unittest discover -s api/terraform/python/openai_api/
+	cd python/smarter && python manage.py test
 
 python-lint:
 	terraform fmt -recursive
 	pre-commit run --all-files
-	black ./api/terraform/python/
+	black ./python/
 	flake8 api/terraform/python/
-	pylint api/terraform/python/openai_api/**/*.py
+	pylint python/smarter/**/*.py
 
 python-clean:
 	rm -rf venv
