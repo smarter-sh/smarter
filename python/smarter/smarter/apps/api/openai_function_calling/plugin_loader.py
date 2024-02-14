@@ -5,7 +5,6 @@ This module contains the Plugin class, which is used to parse YAML plugin object
 plugin.function_calling_plugin().
 """
 import json
-import logging
 import os
 from typing import Optional
 
@@ -14,9 +13,10 @@ from pydantic import BaseModel, Field, ValidationError, field_validator, root_va
 
 from smarter.apps.common.conf import settings
 from smarter.apps.common.const import PYTHON_ROOT, VALID_CHAT_COMPLETION_MODELS
+from smarter.apps.common.logger import get_logger
 
 
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 CONFIG_PATH = PYTHON_ROOT + "/smarter/apps/api/openai_function_calling/plugins/"
 VALID_PLUGIN_VERSIONS = ["0.1.0"]
 VALID_DIRECTIVES = ["search_terms", "always_load"]

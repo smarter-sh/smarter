@@ -4,6 +4,11 @@
 import logging
 import sys
 
+from django.conf import settings
+
+
+logging.basicConfig(level=logging.DEBUG, handlers=[logging.StreamHandler()])
+
 
 def get_logger(name):
     """Create a logger object."""
@@ -16,6 +21,6 @@ def get_logger(name):
     logger.addHandler(handler)
 
     # Set the log level.
-    logger.setLevel(logging.INFO)
+    logger.setLevel(settings.LOGGING["root"]["level"])
 
     return logger
