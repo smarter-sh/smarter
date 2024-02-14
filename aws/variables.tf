@@ -26,7 +26,15 @@ variable "aws_profile" {
   type        = string
   default     = "default"
 }
+variable "AWS_ACCESS_KEY_ID" {
+  description = "AWS access key ID"
+  type        = string
 
+}
+variable "AWS_SECRET_ACCESS_KEY" {
+  description = "AWS secret access key"
+  type        = string
+}
 variable "tags" {
   description = "A map of tags to add to all resources. Tags added to launch configuration or templates override these values."
   type        = map(string)
@@ -59,6 +67,12 @@ variable "subdomain" {
   default     = "dev"
 }
 
+variable "environment" {
+  description = "the environment name (e.g. dev, stage, prod)"
+  type        = string
+  default     = "dev"
+}
+
 variable "logging_level" {
   type    = string
   default = "INFO"
@@ -69,6 +83,16 @@ variable "eks_cluster_name" {
   type        = string
 }
 
+variable "mysql_host" {
+  description = "hostname of the existing MySQL database"
+  type        = string
+}
+
+variable "mysql_port" {
+  description = "port number of the existing MySQL database"
+  type        = string
+  default     = "3306"
+}
 
 
 ###############################################################################

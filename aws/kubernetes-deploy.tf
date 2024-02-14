@@ -8,26 +8,13 @@ locals {
     mysql_host             = var.PRODUCTION_DATABASE_HOST
     mysql_port             = var.PRODUCTION_DATABASE_PORT
     mysql_database         = local.mysql_database
-    smarter_mysql_user     = local.smarter_mysql_username
+    smarter_mysql_user     = local.mysql_username
     smarter_mysql_password = random_password.mysql_smarter.result
     admin_username         = "admin"
     admin_email            = "admin@smarter.sh"
     admin_password         = random_password.mysql_smarter.result
   })
 }
-
-resource "null_resource" "env" {
-  triggers = {
-    always_recreate = "${timestamp()}"
-  }
-
-  provisioner "local-exec" {
-    interpreter = ["/bin/bash"]
-    command     = local.env_script
-  }
-
-}
-
 
 resource "kubernetes_service" "smarter" {
   metadata {
@@ -88,12 +75,24 @@ resource "kubernetes_deployment" "smarter" {
           }
 
           env {
+            name  = "AWS_ACCESS_KEY_ID"
+            value = var.AWS_ACCESS_KEY_ID
+          }
+          env {
+            name  = "AWS_SECRET_ACCESS_KEY"
+            value = var.AWS_SECRET_ACCESS_KEY
+          }
+          env {
+            name  = "AWS_REGION"
+            value = var.aws_region
+          }
+          env {
             name  = "ENVIRONMENT"
-            value = "production"
+            value = "prod"
           }
           env {
             name  = "DEBUG_MODE"
-            value = "false"
+            value = "true"
           }
           env {
             name  = "DUMP_DEFAULTS"
@@ -101,15 +100,19 @@ resource "kubernetes_deployment" "smarter" {
           }
           env {
             name  = "MYSQL_HOST"
-            value = local.smarter_mysql_host
+            value = var.mysql_host
           }
           env {
             name  = "MYSQL_PORT"
-            value = local.smarter_mysql_port
+            value = var.mysql_port
+          }
+          env {
+            name  = "MYSQL_DATABASE"
+            value = local.mysql_database
           }
           env {
             name  = "MYSQL_USER"
-            value = local.smarter_mysql_username
+            value = local.mysql_username
           }
           env {
             name  = "MYSQL_PASSWORD"
@@ -132,7 +135,7 @@ resource "kubernetes_deployment" "smarter" {
             value = var.GOOGLE_MAPS_API_KEY
           }
           env {
-            name = "SECRET_KEY"
+            name  = "SECRET_KEY"
             value = random_password.django_secret_key.result
           }
         }
@@ -140,10 +143,7 @@ resource "kubernetes_deployment" "smarter" {
     }
   }
   depends_on = [
-    null_resource.env,
-    null_resource.smarter,
     kubernetes_namespace.smarter,
-    aws_ecr_repository.smarter,
     aws_route53_zone.environment_domain
   ]
 }
@@ -171,31 +171,47 @@ resource "kubernetes_job" "db_migration" {
           args    = [local.template_db_init]
 
           env {
+            name  = "AWS_ACCESS_KEY_ID"
+            value = var.AWS_ACCESS_KEY_ID
+          }
+          env {
+            name  = "AWS_SECRET_ACCESS_KEY"
+            value = var.AWS_SECRET_ACCESS_KEY
+          }
+          env {
+            name  = "AWS_REGION"
+            value = var.aws_region
+          }
+          env {
             name  = "ENVIRONMENT"
-            value = "production"
+            value = "prod"
           }
           env {
             name  = "DEBUG_MODE"
-            value = "false"
+            value = "true"
           }
           env {
             name  = "MYSQL_HOST"
-            value = local.smarter_mysql_host
+            value = var.mysql_host
           }
           env {
             name  = "MYSQL_PORT"
-            value = local.smarter_mysql_port
+            value = var.mysql_port
+          }
+          env {
+            name  = "MYSQL_DATABASE"
+            value = local.mysql_database
           }
           env {
             name  = "MYSQL_USER"
-            value = local.smarter_mysql_username
+            value = local.mysql_username
           }
           env {
             name  = "MYSQL_PASSWORD"
             value = random_password.mysql_smarter.result
           }
           env {
-            name = "SECRET_KEY"
+            name  = "SECRET_KEY"
             value = random_password.django_secret_key.result
           }
         }
@@ -208,8 +224,6 @@ resource "kubernetes_job" "db_migration" {
   }
 
   depends_on = [
-    null_resource.smarter,
-    null_resource.env,
     kubernetes_deployment.smarter
   ]
 }

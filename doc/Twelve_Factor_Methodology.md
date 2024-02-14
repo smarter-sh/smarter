@@ -3,8 +3,8 @@
 This project conforms to [12-factor methodology](https://12factor.net/). The 12-Factor methodology is a set of best practices for building modern, scalable, maintainable software-as-a-service apps. These principles were first presented by engineers at Heroku, a cloud platform as a service (PaaS) company. Following are the salient points of how this project adopts these best practices.
 
 - 1. **Codebase**: [✅] One codebase tracked in revision control, many deploys
-- 2. **Dependencies**: [✅] Explicitly declare and isolate dependencies. We're using Terraform's built-in package lock, Python's requirements.txt, and NPM's package.json to declare dependencies.
-- 3. **Config**: [✅] Store config in the environment. This project implements a special [Settings](../api/terraform/python/openai_api/common/conf.py) class, which both validates and stores all configuration information for the package.
+- 2. **Dependencies**: [✅] Explicitly declare and isolate dependencies. We're using Terraform's built-in package lock, Python's requirements files, and NPM's package.json to declare dependencies.
+- 3. **Config**: [✅] Store config in the environment. This project implements a special [Settings](../python/openai_api/common/conf.py) class, which both validates and stores all configuration information for the package.
 - 4. **Backing services**: [✅] Treat backing services as attached resources. We're using [LangChain](https://www.langchain.com/) in this project to further abstract the code from the technical specifics of whichever LLM we use for prompting.
 - 5. **Build, release, run**: [✅] Strictly separate build and run stages. `Build` is implemented in Makefile, `release` is implemented as a GitHub Action, and `run` is independently managed by AWS API Gateway.
 - 6. **Processes**: [✅] Execute the app as one or more stateless processes. This REST API as well as the Lambda functions it calls are stateless.
