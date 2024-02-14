@@ -17,6 +17,7 @@ from smarter.apps.common.exceptions import EXCEPTION_MAP
 from smarter.apps.common.utils import (
     cloudwatch_handler,
     exception_response_factory,
+    get_logger,
     get_request_body,
     http_response_factory,
     parse_request,
@@ -38,6 +39,7 @@ from .plugin_manager import (
 )
 
 
+logger = get_logger(__name__)
 openai.organization = settings.openai_api_organization
 openai.api_key = settings.openai_api_key.get_secret_value()
 

@@ -56,7 +56,7 @@ def cloudwatch_handler(
         logger.debug(json.dumps({"event": event}, cls=DateTimeEncoder))
 
 
-def http_response_factory(status_code: int, body: json, debug_mode: bool = False) -> json:
+def http_response_factory(status_code: int, body, debug_mode: bool = False) -> json:
     """
     Generate a standardized JSON return dictionary for all possible response scenarios.
 
@@ -68,23 +68,23 @@ def http_response_factory(status_code: int, body: json, debug_mode: bool = False
     if status_code < 100 or status_code > 599:
         raise ValueError(f"Invalid HTTP response code received: {status_code}")
 
-    if debug_mode:
-        retval = {
-            "isBase64Encoded": False,
-            "statusCode": status_code,
-            "headers": {"Content-Type": "application/json"},
-            "body": body,
-        }
-        # log our output to the CloudWatch log for this Lambda
-        print(json.dumps({"retval": retval}, cls=DateTimeEncoder))
-
-    # see https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html
     retval = {
         "isBase64Encoded": False,
         "statusCode": status_code,
         "headers": {"Content-Type": "application/json"},
-        "body": json.dumps(body, cls=DateTimeEncoder),
     }
+
+    if status_code != 200:
+        logger.error("Error: %s", body)
+        return retval
+
+    if debug_mode:
+        retval["body"] = body
+        # log our output to the CloudWatch log for this Lambda
+        logger.info(json.dumps({"retval": retval}, cls=DateTimeEncoder))
+
+    # see https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html
+    retval["body"] = json.dumps(body, cls=DateTimeEncoder)
 
     return retval
 

@@ -53,7 +53,7 @@ function_calling:
         description: >
           Wonka Bars are a fictional brand of chocolate made by Willy Wonka, and also a chocolate bar inspired by the Willy Wonka Bar from the novel and the films Willy Wonka & the Chocolate Factory and Charlie and the Chocolate Factory.
         price: $1.00
-        image: https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Everlasting_Gobstopper.jpg/220px-Everlasting_Gobstopper.jpg
+        image: https://m.media-amazon.com/images/I/81E-734cMzL._AC_UF894,1000_QL80_.jpg
     coupon_codes:
       - name: 10% off
         code: 10OFF

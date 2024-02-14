@@ -163,7 +163,7 @@ class TestLambdaOpenaiFunctionRefersTo(unittest.TestCase):
         """Test aws_s3_bucket."""
 
         # If the aws_s3_bucket_name is example.com, then we don't need to test it.
-        if settings.aws_apigateway_root_domain == "example.com":
+        if settings.root_domain == "example.com":
             return
 
         aws_s3_bucket_name = settings.aws_s3_bucket_name

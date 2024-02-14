@@ -93,15 +93,15 @@ class Services:
 
     # enabled
     AWS_CLI = ("aws-cli", True)
-    AWS_APIGATEWAY = ("apigateway", True)
-    AWS_CLOUDWATCH = ("cloudwatch", True)
-    AWS_EC2 = ("ec2", True)
-    AWS_IAM = ("iam", True)
-    AWS_LAMBDA = ("lambda", True)
     AWS_ROUTE53 = ("route53", True)
     AWS_S3 = ("s3", True)
+    AWS_EC2 = ("ec2", True)
+    AWS_IAM = ("iam", True)
+    AWS_CLOUDWATCH = ("cloudwatch", True)
 
     # disabled
+    AWS_LAMBDA = ("lambda", False)
+    AWS_APIGATEWAY = ("apigateway", False)
     AWS_SNS = ("sns", False)
     AWS_SQS = ("sqs", False)
     AWS_SES = ("ses", False)
@@ -151,7 +151,9 @@ class SettingsDefaults:
     """Default values for Settings"""
 
     # defaults for this Python package
-    SHARED_RESOURCE_IDENTIFIER = TFVARS.get("shared_resource_identifier", "openai")
+    ENVIRONMENT = os.environ.get("ENVIRONMENT", "dev")
+    ROOT_DOMAIN = TFVARS.get("root_domain", None)
+    SHARED_RESOURCE_IDENTIFIER = TFVARS.get("shared_resource_identifier", "smarter")
     DEBUG_MODE: bool = bool(TFVARS.get("debug_mode", False))
     DUMP_DEFAULTS: bool = bool(TFVARS.get("dump_defaults", True))
 
@@ -163,7 +165,6 @@ class SettingsDefaults:
 
     # aws api gateway defaults
     AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN = TFVARS.get("create_custom_domain", False)
-    AWS_APIGATEWAY_ROOT_DOMAIN = TFVARS.get("root_domain", None)
     AWS_APIGATEWAY_READ_TIMEOUT: int = TFVARS.get("aws_apigateway_read_timeout", 70)
     AWS_APIGATEWAY_CONNECT_TIMEOUT: int = TFVARS.get("aws_apigateway_connect_timeout", 70)
     AWS_APIGATEWAY_MAX_ATTEMPTS: int = TFVARS.get("aws_apigateway_max_attempts", 10)
@@ -342,9 +343,13 @@ class Settings(BaseSettings):
         pre=True,
         getter=lambda v: empty_str_to_bool_default(v, SettingsDefaults.AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN),
     )
-    aws_apigateway_root_domain: Optional[str] = Field(
-        SettingsDefaults.AWS_APIGATEWAY_ROOT_DOMAIN,
-        env="AWS_APIGATEWAY_ROOT_DOMAIN",
+    environment: Optional[str] = Field(
+        SettingsDefaults.ENVIRONMENT,
+        env="ENVIRONMENT",
+    )
+    root_domain: Optional[str] = Field(
+        SettingsDefaults.ROOT_DOMAIN,
+        env="ROOT_DOMAIN",
     )
     init_info: Optional[str] = Field(
         None,
@@ -478,7 +483,7 @@ class Settings(BaseSettings):
     def aws_apigateway_domain_name(self) -> str:
         """Return the API domain."""
         if self.aws_apigateway_create_custom_domaim:
-            return "api." + self.shared_resource_identifier + "." + self.aws_apigateway_root_domain
+            return "api." + self.shared_resource_identifier + "." + self.root_domain
 
         response = self.aws_apigateway_client.get_rest_apis()
         for item in response["items"]:
@@ -488,11 +493,14 @@ class Settings(BaseSettings):
         return None
 
     @property
+    def environment_domain(self) -> str:
+        """Return the complete domain name."""
+        return self.environment + ".api." + self.root_domain
+
+    @property
     def aws_s3_bucket_name(self) -> str:
         """Return the S3 bucket name."""
-        if self.shared_resource_identifier and self.aws_apigateway_root_domain:
-            return "api." + self.shared_resource_identifier + "." + self.aws_apigateway_root_domain
-        return None
+        return self.environment_domain
 
     @property
     def is_using_dotenv_file(self) -> bool:
@@ -561,12 +569,6 @@ class Settings(BaseSettings):
                 "python_installed_packages": packages_dict,
             },
             "aws_auth": self.aws_auth,
-            "aws_apigateway": {
-                "aws_apigateway_create_custom_domaim": self.aws_apigateway_create_custom_domaim,
-                "aws_apigateway_name": self.aws_apigateway_name,
-                "aws_apigateway_root_domain": self.aws_apigateway_root_domain,
-                "aws_apigateway_domain_name": self.aws_apigateway_domain_name,
-            },
             "aws_lambda": {},
             "google": {
                 "google_maps_api_key": self.google_maps_api_key,
@@ -578,6 +580,14 @@ class Settings(BaseSettings):
                 "openai_endpoint_image_size": self.openai_endpoint_image_size,
             },
         }
+        if Services.enabled(Services.AWS_APIGATEWAY):
+            self._dump["aws_apigateway"] = {
+                "aws_apigateway_create_custom_domaim": self.aws_apigateway_create_custom_domaim,
+                "aws_apigateway_name": self.aws_apigateway_name,
+                "root_domain": self.root_domain,
+                "aws_apigateway_domain_name": self.aws_apigateway_domain_name,
+            }
+
         if self.dump_defaults:
             settings_defaults = SettingsDefaults.to_dict()
             self._dump["settings_defaults"] = settings_defaults
@@ -649,11 +659,18 @@ class Settings(BaseSettings):
             raise OpenAIAPIValueError(f"aws_region {v} not in aws_regions")
         return v
 
-    @field_validator("aws_apigateway_root_domain")
-    def validate_aws_apigateway_root_domain(cls, v) -> str:
-        """Validate aws_apigateway_root_domain"""
+    @field_validator("environment")
+    def validate_environment(cls, v) -> str:
+        """Validate environment"""
         if v in [None, ""]:
-            return SettingsDefaults.AWS_APIGATEWAY_ROOT_DOMAIN
+            return SettingsDefaults.ENVIRONMENT
+        return v
+
+    @field_validator("root_domain")
+    def validate_aws_apigateway_root_domain(cls, v) -> str:
+        """Validate root_domain"""
+        if v in [None, ""]:
+            return SettingsDefaults.ROOT_DOMAIN
         return v
 
     @field_validator("aws_apigateway_create_custom_domaim")

@@ -464,7 +464,7 @@ class Plugins:
     def verify_bucket(self, bucket_name: str):
         """Verify that the remote host is valid"""
         # If the bucket name is the default, then skip the validation
-        if settings.aws_apigateway_root_domain == "example.com":
+        if settings.root_domain == "example.com":
             return
 
         if not bucket_name:
