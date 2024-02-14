@@ -39,10 +39,11 @@ from smarter.apps.common.exceptions import (
     OpenAIAPIConfigurationError,
     OpenAIAPIValueError,
 )
+from smarter.apps.common.logger import get_logger
 from smarter.apps.common.utils import recursive_sort_dict
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 TFVARS = TFVARS or {}
 DOT_ENV_LOADED = load_dotenv()
 
@@ -243,11 +244,6 @@ class Settings(BaseSettings):
             self._initialized = True
 
         if not self.initialized and bool(os.environ.get("GITHUB_ACTIONS", False)):
-            console_handler = logging.StreamHandler()
-            console_handler.setLevel(logging.DEBUG)
-            logger.addHandler(console_handler)
-            logger.setLevel(logging.DEBUG)
-
             logger.info("running inside GitHub Actions")
             aws_access_key_id = os.environ.get("AWS_ACCESS_KEY_ID", None)
             aws_secret_access_key = os.environ.get("AWS_SECRET_ACCESS_KEY", None)

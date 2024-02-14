@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=E1101
 """A module containing constants for the OpenAI API."""
-import logging
 import os
 from pathlib import Path
 
 import hcl2
 import openai
+
+from smarter.apps.common.logger import get_logger
 
 
 MODULE_NAME = "openai_api"
@@ -23,7 +24,7 @@ if not os.path.exists(TERRAFORM_TFVARS):
 TFVARS = {}
 IS_USING_TFVARS = False
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 try:
     with open(TERRAFORM_TFVARS, "r", encoding="utf-8") as f:
