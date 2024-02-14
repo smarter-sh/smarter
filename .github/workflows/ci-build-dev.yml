@@ -68,7 +68,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.NAMESPACE }}:latest, ${{ steps.login-ecr.outputs.registry }}/${{ env.NAMESPACE }}:${{ github.run_id }}, ${{ steps.login-ecr.outputs.registry }}/${{ env.NAMESPACE }}:${DATESTAMP}
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.NAMESPACE }}:latest, ${{ steps.login-ecr.outputs.registry }}/${{ env.NAMESPACE }}:${{ github.run_id }}, ${{ steps.login-ecr.outputs.registry }}/${{ env.NAMESPACE }}:${{ env.DATESTAMP }}
 
   deploy:
     needs: build
