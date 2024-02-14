@@ -92,4 +92,4 @@ runs:
         GITHUB_ACTIONS: "true"
         DEBUG_MODE: "true"
       run: |
-        make api-test
+        make python-test

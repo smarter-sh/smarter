@@ -79,10 +79,7 @@ python-init:
 	pre-commit install
 
 python-test:
-	cd python/smarter &&
-	python manage.py test
-	cd ../..
-	# python -m unittest discover -s python/smarter/
+	cd python/smarter && python manage.py test
 
 python-lint:
 	terraform fmt -recursive
