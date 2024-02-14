@@ -16,19 +16,6 @@ locals {
   })
 }
 
-resource "null_resource" "env" {
-  triggers = {
-    always_recreate = "${timestamp()}"
-  }
-
-  provisioner "local-exec" {
-    interpreter = ["/bin/bash"]
-    command     = local.env_script
-  }
-
-}
-
-
 resource "kubernetes_service" "smarter" {
   metadata {
     name      = var.shared_resource_identifier
@@ -156,10 +143,7 @@ resource "kubernetes_deployment" "smarter" {
     }
   }
   depends_on = [
-    null_resource.env,
-    null_resource.smarter,
     kubernetes_namespace.smarter,
-    aws_ecr_repository.smarter,
     aws_route53_zone.environment_domain
   ]
 }
@@ -240,8 +224,6 @@ resource "kubernetes_job" "db_migration" {
   }
 
   depends_on = [
-    null_resource.smarter,
-    null_resource.env,
     kubernetes_deployment.smarter
   ]
 }
