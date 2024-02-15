@@ -17,7 +17,7 @@ from smarter.apps.common.logger import get_logger
 
 
 log = get_logger(__name__)
-CONFIG_PATH = PYTHON_ROOT + "/smarter/apps/api/openai_function_calling/plugins/"
+CONFIG_PATH = PYTHON_ROOT + "/smarter/apps/openai_function_calling/plugins/"
 VALID_PLUGIN_VERSIONS = ["0.1.0"]
 VALID_DIRECTIVES = ["search_terms", "always_load"]
 

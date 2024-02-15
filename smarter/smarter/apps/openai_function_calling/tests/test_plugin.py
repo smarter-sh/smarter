@@ -20,8 +20,10 @@ if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 
 
+from smarter.apps.common.conf import settings
+
 # pylint: disable=no-name-in-module
-from smarter.apps.api.openai_function_calling.plugin_loader import (
+from smarter.apps.openai_function_calling.plugin_loader import (
     AdditionalInformation,
     FunctionCalling,
     Plugin,
@@ -30,11 +32,10 @@ from smarter.apps.api.openai_function_calling.plugin_loader import (
     Selector,
     validate_required_keys,
 )
-from smarter.apps.api.openai_function_calling.tests.test_setup import (  # noqa: E402
+from smarter.apps.openai_function_calling.tests.test_setup import (  # noqa: E402
     get_test_file_path,
     get_test_file_yaml,
 )
-from smarter.apps.common.conf import settings
 
 
 class TestLambdaOpenaiFunctionRefersTo(unittest.TestCase):

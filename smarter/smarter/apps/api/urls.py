@@ -4,9 +4,9 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from smarter.apps.api.api_admin import urls as admin_urls
-from smarter.apps.api.openai_api.views import OpenAIViewSet
-from smarter.apps.api.openai_function_calling.views import FunctionCallingViewSet
-from smarter.apps.api.openai_langchain.views import LanchainViewSet
+from smarter.apps.openai_api.views import OpenAIViewSet
+from smarter.apps.openai_function_calling.views import FunctionCallingViewSet
+from smarter.apps.openai_langchain.views import LanchainViewSet
 
 
 router = DefaultRouter()

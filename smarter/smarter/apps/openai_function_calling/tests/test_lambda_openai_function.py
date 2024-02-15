@@ -19,18 +19,18 @@ PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
 if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 
-from smarter.apps.api.openai_function_calling.natural_language_processing import (
+from smarter.apps.openai_function_calling.natural_language_processing import (
     does_refer_to,
 )
-from smarter.apps.api.openai_function_calling.plugin_loader import Plugin
-from smarter.apps.api.openai_function_calling.plugin_manager import (
+from smarter.apps.openai_function_calling.plugin_loader import Plugin
+from smarter.apps.openai_function_calling.plugin_manager import (
     search_terms_are_in_messages,
 )
-from smarter.apps.api.openai_function_calling.tests.test_setup import (
+from smarter.apps.openai_function_calling.tests.test_setup import (
     get_test_file,
     get_test_file_path,
 )
-from smarter.apps.api.openai_function_calling.views import handler
+from smarter.apps.openai_function_calling.views import handler
 
 
 class TestLambdaOpenai(unittest.TestCase):
