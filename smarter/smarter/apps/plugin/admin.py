@@ -47,7 +47,7 @@ class PluginFunctionInline(admin.StackedInline):
     extra = 0  # This will not show extra empty forms
 
 
-class PluginModelAdmin(admin.ModelAdmin):
+class PluginAdmin(admin.ModelAdmin):
     """Plugin model admin."""
 
     inlines = [PluginSelectorInline, PluginPromptInline, PluginFunctionInline]
@@ -58,5 +58,5 @@ class PluginModelAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(Plugin, PluginModelAdmin)
+admin.site.register(Plugin, PluginAdmin)
 admin.site.register(PluginSelector, PluginSelectorAdmin)
