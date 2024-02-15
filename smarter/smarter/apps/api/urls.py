@@ -3,6 +3,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
+from smarter.apps.api.api_admin import urls as admin_urls
 from smarter.apps.api.openai_api.views import OpenAIViewSet
 from smarter.apps.api.openai_function_calling.views import FunctionCallingViewSet
 from smarter.apps.api.openai_langchain.views import LanchainViewSet
@@ -16,3 +17,5 @@ router.register(r"chat/langchain", LanchainViewSet, basename="langchain")
 urlpatterns = [
     path("", include(router.urls)),
 ]
+
+urlpatterns += admin_urls.urlpatterns
