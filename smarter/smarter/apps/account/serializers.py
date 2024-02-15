@@ -2,7 +2,7 @@
 """Account serializers for smarter api"""
 from rest_framework import serializers
 
-from .models import AccountModel, PaymentMethodModel, UserProfile
+from .models import Account, PaymentMethodModel, UserProfile
 
 
 class AccountSerializer(serializers.ModelSerializer):
@@ -10,7 +10,7 @@ class AccountSerializer(serializers.ModelSerializer):
 
     # pylint: disable=missing-class-docstring
     class Meta:
-        model = AccountModel
+        model = Account
         fields = "__all__"
 
 

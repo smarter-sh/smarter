@@ -10,12 +10,20 @@ from smarter.apps.common.model_utils import TimestampedModel
 User = settings.AUTH_USER_MODEL
 
 
-class AccountModel(TimestampedModel):
+class Account(TimestampedModel):
     """Account model."""
 
     company_name = models.CharField(max_length=255)
     phone_number = models.CharField(max_length=20)
     address = models.CharField(max_length=255)
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        verbose_name = "Smarter Account"
+        verbose_name_plural = "Smarter Account"
+
+    def __str__(self):
+        return str(self.company_name)
 
 
 class UserProfile(TimestampedModel):
@@ -23,16 +31,22 @@ class UserProfile(TimestampedModel):
 
     # Add more fields here as needed
     user = models.OneToOneField(User, unique=True, db_index=True, related_name="user_profile", on_delete=models.CASCADE)
-    account = models.ForeignKey(AccountModel, on_delete=models.CASCADE, related_name="users")
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="users")
+
+    def __str__(self):
+        return str(self.user.email)
 
 
 class PaymentMethodModel(TimestampedModel):
     """Payment method model."""
 
-    account = models.ForeignKey(AccountModel, on_delete=models.CASCADE, related_name="payment_methods")
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="payment_methods")
     stripe_id = models.CharField(max_length=255)
     card_type = models.CharField(max_length=255)
     card_last_4 = models.CharField(max_length=4)
     card_exp_month = models.CharField(max_length=2)
     card_exp_year = models.CharField(max_length=4)
     is_default = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.card_type + " " + self.card_last_4
