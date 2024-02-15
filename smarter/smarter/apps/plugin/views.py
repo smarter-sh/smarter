@@ -1,4 +1,13 @@
 # -*- coding: utf-8 -*-
-# from django.shortcuts import render
+"""Plugin views."""
+from rest_framework import viewsets
 
-# Create your views here.
+from .models import Plugin
+from .serializers import PluginModelSerializer
+
+
+class PluginModelViewSet(viewsets.ModelViewSet):
+    """Plugin model view set."""
+
+    queryset = Plugin.objects.all()
+    serializer_class = PluginModelSerializer

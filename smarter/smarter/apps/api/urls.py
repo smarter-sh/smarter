@@ -24,6 +24,7 @@ from smarter.apps.api.views.views import LogoutView
 from smarter.apps.openai_api.views import OpenAIViewSet
 from smarter.apps.openai_function_calling.views import FunctionCallingViewSet
 from smarter.apps.openai_langchain.views import LanchainViewSet
+from smarter.apps.plugin.views import PluginModelViewSet
 
 
 # Routers provide an easy way of automatically determining the URL conf.
@@ -32,6 +33,7 @@ router = DefaultRouter()
 router.register(r"chat", FunctionCallingViewSet, basename="chat")
 router.register(r"chat/chatgpt", OpenAIViewSet, basename="chatgpt")
 router.register(r"chat/langchain", LanchainViewSet, basename="langchain")
+router.register(r"plugin", PluginModelViewSet, basename="plugin")
 
 urlpatterns = [
     path("", include(router.urls)),
