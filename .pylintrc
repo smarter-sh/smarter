@@ -6,4 +6,4 @@ ignore=__version__.py
 max-line-length=120
 
 [MESSAGES CONTROL]
-disable=too-few-public-methods,invalid-name,line-too-long,no-self-argument,missing-function-docstring
+disable=too-few-public-methods,invalid-name,line-too-long,no-self-argument,missing-function-docstring,too-many-ancestors,no-member
