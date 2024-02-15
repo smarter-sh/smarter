@@ -28,8 +28,8 @@ from smarter.apps.openai_langchain.views import LanchainViewSet
 # Routers provide an easy way of automatically determining the URL conf.
 router = DefaultRouter()
 router.register(r"users", UserViewSet)
-router.register(r"chat/chatgpt", OpenAIViewSet, basename="chatgpt")
 router.register(r"chat", FunctionCallingViewSet, basename="chat")
+router.register(r"chat/chatgpt", OpenAIViewSet, basename="chatgpt")
 router.register(r"chat/langchain", LanchainViewSet, basename="langchain")
 
 urlpatterns = [

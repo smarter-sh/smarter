@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     # -------------------------------
     "smarter.apps.api",
     "smarter.apps.account",
+    "smarter.apps.plugin",
     "smarter.apps.openai_api",
     "smarter.apps.openai_function_calling",
     "smarter.apps.openai_langchain",
