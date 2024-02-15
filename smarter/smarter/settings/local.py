@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # smarter apps
     # -------------------------------
-    "smarter.apps.api.api_admin",
+    "smarter.apps.api",
     "smarter.apps.account",
     "smarter.apps.openai_api",
     "smarter.apps.openai_function_calling",

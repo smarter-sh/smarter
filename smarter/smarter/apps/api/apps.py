@@ -3,8 +3,8 @@
 from django.apps import AppConfig
 
 
-class AdminConfig(AppConfig):
+class ApiConfig(AppConfig):
     """AdminConfig class. This class is used to configure the Smarter Admin app."""
 
     default_auto_field = "django.db.models.BigAutoField"
-    name = "smarter.apps.api.api_admin"
+    name = "smarter.apps.api"

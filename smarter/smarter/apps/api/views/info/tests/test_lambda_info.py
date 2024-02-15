@@ -19,9 +19,7 @@ if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 
 
-from smarter.apps.api.api_admin.views.info.lambda_handler import (  # noqa: E402; handler,
-    handler,
-)
+from smarter.apps.api.views.info.lambda_handler import handler  # noqa: E402; handler,
 
 
 class TestLambdaInfo(unittest.TestCase):
