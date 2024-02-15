@@ -1,7 +1,7 @@
 [run]
 omit =
-    python/smarter/common/tests/*
-    python/smarter/lambda_info/tests/*
-    python/smarter/openai_langchain/tests/*
-    python/smarter/openai_function_calling/tests/*
-    python/smarter/openai_api/tests/*
+    smarter/apps/common/tests/*
+    smarter/apps/api/api_admin/views/info/tests/*
+    smarter/apps/api/openai_function_calling/tests/*
+    smarter/apps/api/openai_function_calling/tests/*
+    smarter/apps/api/openai_langchain/tests/*
