@@ -1,9 +1,10 @@
 # Django
 # ------------
-Django==3.2.16
+Django==5.0.2
 djangorestframework==3.14.0
 markdown
 django-filter==23.5
+django-taggit==5.0.1
 
 # misc
 # ------------
