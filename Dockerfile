@@ -33,7 +33,7 @@ RUN pip install --upgrade pip
 RUN pip install -r requirements/deploy.txt
 
 # Add our source code
-COPY python/smarter .
+COPY smarter .
 
 # Collect static files
 RUN python manage.py collectstatic --noinput

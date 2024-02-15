@@ -45,8 +45,8 @@ analyze:
 	cloc . --exclude-ext=svg,json,zip --vcs=git
 
 coverage:
-	coverage run --source=python/smarter \
-				 -m unittest discover -s python/smarter/
+	coverage run --source=smarter \
+				 -m unittest discover -s smarter/
 	coverage report -m
 	coverage html
 
@@ -79,21 +79,21 @@ python-init:
 	pre-commit install
 
 python-test:
-	cd python/smarter && python manage.py test
+	cd smarter && python manage.py test
 
 python-lint:
 	terraform fmt -recursive
 	pre-commit run --all-files
 	black ./python/
 	flake8 api/terraform/python/
-	pylint python/smarter/**/*.py
+	pylint smarter/**/*.py
 
 python-clean:
 	rm -rf venv
 	find python/ -name __pycache__ -type d -exec rm -rf {} +
 
 python-run:
-	cd python/smarter && python manage.py runserver
+	cd smarter && python manage.py runserver
 
 ######################
 # React app
