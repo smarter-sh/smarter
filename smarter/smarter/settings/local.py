@@ -43,9 +43,10 @@ INSTALLED_APPS = [
     # smarter apps
     # -------------------------------
     "smarter.apps.api.api_admin",
-    "smarter.apps.api.openai_api",
-    "smarter.apps.api.openai_function_calling",
-    "smarter.apps.api.openai_langchain",
+    "smarter.apps.account",
+    "smarter.apps.openai_api",
+    "smarter.apps.openai_function_calling",
+    "smarter.apps.openai_langchain",
     # 3rd party apps
     # -------------------------------
     "rest_framework",

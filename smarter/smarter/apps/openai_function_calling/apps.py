@@ -7,4 +7,4 @@ class OpenaiFunctionCallingConfig(AppConfig):
     """Django Config for the OpenAI Function Calling app."""
 
     default_auto_field = "django.db.models.BigAutoField"
-    name = "smarter.apps.api.openai_function_calling"
+    name = "smarter.apps.openai_function_calling"
