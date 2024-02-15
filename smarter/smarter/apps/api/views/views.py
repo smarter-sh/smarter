@@ -9,7 +9,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from smarter.apps.api.api_admin.serializers import UserSerializer
+from smarter.apps.api.serializers import UserSerializer
 
 
 # from django.shortcuts import render

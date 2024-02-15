@@ -35,5 +35,5 @@ urlpatterns += [
     path("admin/", admin.site.urls),
     # all v0 endpoints belong here.
     # ----------------------------
-    path("v0/", include("smarter.apps.urls")),
+    path("v0/", include("smarter.apps.api.urls")),
 ]
