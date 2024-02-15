@@ -92,6 +92,9 @@ python-clean:
 	rm -rf venv
 	find python/ -name __pycache__ -type d -exec rm -rf {} +
 
+python-run:
+	cd python/smarter && python manage.py runserver
+
 ######################
 # React app
 ######################
