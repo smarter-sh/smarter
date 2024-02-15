@@ -6,7 +6,7 @@ from .models import Account, PaymentMethodModel, UserProfile
 
 
 # Register your models here.
-class AccountModelAdmin(admin.ModelAdmin):
+class AccountAdmin(admin.ModelAdmin):
     """Account model admin."""
 
     readonly_fields = (
@@ -33,6 +33,6 @@ class PaymentMethodModelAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(Account, AccountModelAdmin)
+admin.site.register(Account, AccountAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(PaymentMethodModel, PaymentMethodModelAdmin)
