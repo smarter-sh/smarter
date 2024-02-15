@@ -20,6 +20,7 @@ from smarter.apps.api.serializers import UserSerializer
 class UserViewSet(viewsets.ModelViewSet):
     """Viewset for the User model."""
 
+    # FIX NOTE: filter this by account.
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
