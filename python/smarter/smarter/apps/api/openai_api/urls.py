@@ -27,7 +27,7 @@ from smarter.apps.api.openai_api.views import OpenAIViewSet
 
 
 router = routers.DefaultRouter()
-router.register(r"openai", OpenAIViewSet, basename="openai")
+router.register(r"chatgpt", OpenAIViewSet, basename="chatgpt")
 
 urlpatterns = [
     path("", include(router.urls)),

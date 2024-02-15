@@ -27,7 +27,7 @@ from smarter.apps.api.openai_function_calling.views import FunctionCallingViewSe
 
 
 router = routers.DefaultRouter()
-router.register(r"function-calling", FunctionCallingViewSet, basename="function-calling")
+router.register(r"plugins", FunctionCallingViewSet, basename="plugins")
 
 urlpatterns = [
     path("", include(router.urls)),
