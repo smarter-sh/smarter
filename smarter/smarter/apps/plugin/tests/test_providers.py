@@ -14,8 +14,13 @@ from django.contrib.auth.models import User
 
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.plugin.models import Plugin, PluginData, PluginPrompt, PluginSelector
-from smarter.apps.plugin.providers import PluginProvider
+from smarter.apps.plugin.models import (
+    PluginData,
+    PluginMeta,
+    PluginPrompt,
+    PluginSelector,
+)
+from smarter.apps.plugin.providers import Plugin
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 
 
@@ -56,12 +61,12 @@ class TestPluginProvider(unittest.TestCase):
 
     # pylint: disable=broad-exception-caught
     def test_create(self):
-        """Test that we can create a plugin using the PluginProvider."""
-        plugin = PluginProvider.create(self.plugin_json)
+        """Test that we can create a plugin using the Plugin."""
+        plugin = Plugin.create(self.plugin_json)
 
-        self.assertIsInstance(plugin, Plugin)
+        self.assertIsInstance(plugin, PluginMeta)
 
-        plugin_meta = Plugin.objects.get(pk=plugin.id)
+        plugin_meta = PluginMeta.objects.get(pk=plugin.id)
         self.assertIsNotNone(plugin_meta)
         self.assertEqual(plugin_meta.name, self.plugin_json["meta_data"]["name"])
 
@@ -82,9 +87,9 @@ class TestPluginProvider(unittest.TestCase):
         self.assertEqual(plugin_data.return_data, self.plugin_json["plugin_data"]["return_data"])
 
     def test_to_json(self):
-        """Test that the PluginProvider generates correct JSON output."""
-        plugin = PluginProvider.create(self.plugin_json)
-        plugin_provider = PluginProvider(plugin.id)
+        """Test that the Plugin generates correct JSON output."""
+        plugin = Plugin.create(self.plugin_json)
+        plugin_provider = Plugin(plugin.id)
         to_json = plugin_provider.to_json()
 
         self.assertIsInstance(to_json, dict)
@@ -96,13 +101,13 @@ class TestPluginProvider(unittest.TestCase):
         self.assertEqual(to_json["prompt"]["max_tokens"], self.plugin_json["prompt"]["max_tokens"])
 
     def test_delete(self):
-        """Test that we can delete a plugin using the PluginProvider."""
-        plugin = PluginProvider.create(self.plugin_json)
+        """Test that we can delete a plugin using the Plugin."""
+        plugin = Plugin.create(self.plugin_json)
         self.plugin_json["plugin_id"] = plugin.id
-        PluginProvider().delete(data=self.plugin_json)
+        Plugin().delete(data=self.plugin_json)
 
-        with self.assertRaises(Plugin.DoesNotExist):
-            Plugin.objects.get(pk=plugin.id)
+        with self.assertRaises(PluginMeta.DoesNotExist):
+            PluginMeta.objects.get(pk=plugin.id)
 
         with self.assertRaises(PluginSelector.DoesNotExist):
             PluginSelector.objects.get(plugin=plugin)

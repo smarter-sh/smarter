@@ -2,7 +2,7 @@
 """Plugin admin."""
 from django.contrib import admin
 
-from .models import Plugin, PluginData, PluginPrompt, PluginSelector
+from .models import PluginData, PluginMeta, PluginPrompt, PluginSelector
 
 
 # Register your models here.
@@ -38,4 +38,4 @@ class PluginAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(Plugin, PluginAdmin)
+admin.site.register(PluginMeta, PluginAdmin)

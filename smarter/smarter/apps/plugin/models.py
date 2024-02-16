@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Plugin app models."""
+"""PluginMeta app models."""
 from django.contrib.auth import get_user_model
 from django.db import models
 from taggit.managers import TaggableManager
@@ -11,11 +11,11 @@ from smarter.apps.common.model_utils import TimestampedModel
 User = get_user_model()
 
 
-class Plugin(TimestampedModel):
-    """Plugin model."""
+class PluginMeta(TimestampedModel):
+    """PluginMeta model."""
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="plugins", null=True, blank=True)
-    name = models.CharField(max_length=255, default="Plugin")
+    name = models.CharField(max_length=255, default="PluginMeta")
     description = models.TextField(null=True, blank=True)
     version = models.CharField(max_length=255, default="1.0.0")
     author = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="plugins", null=True, blank=True)
@@ -25,11 +25,16 @@ class Plugin(TimestampedModel):
     def __str__(self):
         return str(self.name) or ""
 
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        verbose_name = "Plugin"
+        verbose_name_plural = "Plugins"
+
 
 class PluginSelector(TimestampedModel):
     """PluginSelector model."""
 
-    plugin = models.OneToOneField(Plugin, on_delete=models.CASCADE, related_name="selector")
+    plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="selector")
     directive = models.CharField(max_length=255, default="search_terms")
     search_terms = models.JSONField(default=list)
 
@@ -40,7 +45,7 @@ class PluginSelector(TimestampedModel):
 class PluginPrompt(TimestampedModel):
     """PluginPrompt model."""
 
-    plugin = models.OneToOneField(Plugin, on_delete=models.CASCADE, related_name="prompt")
+    plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="prompt")
     system_role = models.TextField(null=True, blank=True)
     model = models.CharField(max_length=255, default="gpt-3.5-turbo-1106")
     temperature = models.FloatField(default=0.5)
@@ -53,7 +58,7 @@ class PluginPrompt(TimestampedModel):
 class PluginData(TimestampedModel):
     """PluginData model."""
 
-    plugin = models.OneToOneField(Plugin, on_delete=models.CASCADE, related_name="plugin_data")
+    plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_data")
     description = models.TextField(null=True, blank=True)
     return_data = models.JSONField(default=dict)
 

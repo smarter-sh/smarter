@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Plugin serializers."""
+"""PluginMeta serializers."""
 from rest_framework import serializers
 from taggit.models import TaggedItem
 
-from .models import Plugin, PluginData, PluginPrompt, PluginSelector
+from .models import PluginData, PluginMeta, PluginPrompt, PluginSelector
 
 
 class TaggedItemSerializer(serializers.ModelSerializer):
@@ -16,13 +16,13 @@ class TaggedItemSerializer(serializers.ModelSerializer):
 
 
 class PluginSerializer(serializers.ModelSerializer):
-    """Plugin model serializer."""
+    """PluginMeta model serializer."""
 
     tags = TaggedItemSerializer(many=True, read_only=True)
 
     # pylint: disable=missing-class-docstring
     class Meta:
-        model = Plugin
+        model = PluginMeta
         fields = ["name", "description", "version", "author", "tags"]
 
 
