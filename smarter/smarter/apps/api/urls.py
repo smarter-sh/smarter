@@ -17,6 +17,7 @@ Including another URLconf
 """
 
 from django.urls import include, path
+from django.views.decorators.http import require_http_methods
 from rest_framework.routers import DefaultRouter
 
 from smarter.apps.account.urls import urlpatterns as account_urls
@@ -30,6 +31,7 @@ from smarter.apps.plugin.views import (
     PluginSelectorSearchStringsViewSet,
     PluginSelectorViewSet,
     PluginViewSet,
+    manage_plugin,
 )
 
 
@@ -51,6 +53,7 @@ urlpatterns = [
     path("", include(router.urls)),
     path("api-auth/logout/", LogoutView.as_view(), name="logout"),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
+    path("plugins/", require_http_methods(["GET", "POST", "PATCH", "DELETE"])(manage_plugin), name="manage_plugin"),
 ]
 
 urlpatterns += account_urls
