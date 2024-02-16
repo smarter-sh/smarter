@@ -14,16 +14,16 @@ from .models import PluginData, PluginMeta, PluginPrompt, PluginSelector
 from .providers import AccountProvider, Plugin
 from .serializers import (
     PluginDataSerializer,
+    PluginMetaSerializer,
     PluginPromptSerializer,
     PluginSelectorSerializer,
-    PluginSerializer,
 )
 
 
 class PluginViewSet(viewsets.ModelViewSet):
     """PluginMeta model view set."""
 
-    serializer_class = PluginSerializer
+    serializer_class = PluginMetaSerializer
 
     def get_queryset(self):
         """

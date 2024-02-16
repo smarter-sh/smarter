@@ -3,6 +3,8 @@
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 
+from smarter.apps.account.models import Account, UserProfile
+
 
 # pylint: disable=E1101
 class Command(BaseCommand):
@@ -29,6 +31,7 @@ class Command(BaseCommand):
         username = options["username"]
         email = options["email"]
         password = options["password"]
+
         if username and email and password:
             if not User.objects.filter(username=username).exists():
                 User.objects.create_superuser(username=username, email=email, password=password)
@@ -36,3 +39,6 @@ class Command(BaseCommand):
                 self.change_password(username, password)
         else:
             self.stdout.write(self.style.ERROR("Username, email, and password are required."))
+
+        account, _ = Account.objects.get_or_create(company_name="Smarter")
+        UserProfile.objects.get_or_create(user=User.objects.get(username=username), account=account)
