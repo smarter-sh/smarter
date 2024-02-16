@@ -3,24 +3,18 @@
 
 from django.http import JsonResponse
 from rest_framework import viewsets
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from smarter.apps.account.models import UserProfile
 
-from .models import (
-    Plugin,
-    PluginFunction,
-    PluginPrompt,
-    PluginSelector,
-    PluginSelectorSearchStrings,
-)
+from .models import Plugin, PluginData, PluginPrompt, PluginSelector
 from .providers import AccountProvider, PluginProvider
 from .serializers import (
-    PluginFunctionSerializer,
+    PluginDataSerializer,
     PluginPromptSerializer,
-    PluginSelectorSearchStringsSerializer,
     PluginSelectorSerializer,
     PluginSerializer,
 )
@@ -64,13 +58,6 @@ class PluginSelectorViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-class PluginSelectorSearchStringsViewSet(viewsets.ModelViewSet):
-    """PluginSelectorSearchStrings model view set."""
-
-    queryset = PluginSelectorSearchStrings.objects.all()
-    serializer_class = PluginSelectorSearchStringsSerializer
-
-
 class PluginPromptViewSet(viewsets.ModelViewSet):
     """PluginPrompt model view set."""
 
@@ -90,17 +77,17 @@ class PluginPromptViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-class PluginFunctionViewSet(viewsets.ModelViewSet):
-    """PluginFunction model view set."""
+class PluginDataViewSet(viewsets.ModelViewSet):
+    """PluginData model view set."""
 
-    serializer_class = PluginFunctionSerializer
+    serializer_class = PluginDataSerializer
 
     def get_queryset(self):
         """
         Optionally restricts the returned PluginSelectors to a given Plugin,
         by filtering against a `plugin_id` query parameter in the URL.
         """
-        queryset = PluginFunction.objects.all()
+        queryset = PluginData.objects.all()
         plugin_id = self.request.query_params.get("plugin_id", None)
         if plugin_id is not None:
             queryset = queryset.filter(plugin_id=plugin_id)
@@ -109,8 +96,11 @@ class PluginFunctionViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-@api_view(["POST", "PATCH", "DELETE"])
+@api_view(["GET", "POST", "PATCH", "DELETE"])
+@permission_classes([IsAuthenticated])
 def manage_plugin(request):
+    if request.method == "GET":
+        return get_plugin(request)
     if request.method == "POST":
         return create_plugin(request)
     if request.method == "PATCH":

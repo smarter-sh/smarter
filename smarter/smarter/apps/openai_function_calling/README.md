@@ -27,14 +27,14 @@ The following two sample plugins are included in this project:
 
 ```yaml
 meta_data:
-  plugin_name: ExampleConfiguration
-  plugin_description: A 'hello world' style plugin.
-  plugin_version: 0.1.0
-  plugin_author: Lawrence McDaniel
+  name: ExampleConfiguration
+  description: A 'hello world' style plugin.
+  version: 0.1.0
+  author: Lawrence McDaniel
 selector:
   directive: search_terms
   search_terms:
-    strings:
+    search_terms:
       - example function calling configuration
     pairs:
       - - Example
@@ -42,12 +42,12 @@ selector:
       - - example
         - function calling
 prompting:
-  system_prompt: >
+  system_role: >
     Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response:
     "Congratulations!!! OpenAI API Function Calling chose to call this function. Here is the additional information that you requested:"
-function_calling:
-  function_description: an example plugin to integrate with OpenAI API Function Calling additional information function, in this module.
-  additional_information:
+plugin_data:
+  description: an example plugin to integrate with OpenAI API Function Calling additional information function, in this module.
+  return_data:
     platform_provider: OpenAI
     about: >
       In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the function; instead, the model generates JSON that you can use to call the function in your code.

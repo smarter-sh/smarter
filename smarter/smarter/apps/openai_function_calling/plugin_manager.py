@@ -37,10 +37,10 @@ def customized_prompt(plugin: Plugin, messages: list) -> list:
 
     for i, message in enumerate(messages):
         if message.get("role") == "system":
-            system_prompt = message.get("content")
+            system_role = message.get("content")
             custom_prompt = {
                 "role": "system",
-                "content": system_prompt + "\n\n and also " + plugin.prompting.system_prompt,
+                "content": system_role + "\n\n and also " + plugin.prompting.system_role,
             }
             messages[i] = custom_prompt
             break
@@ -54,8 +54,8 @@ def function_calling_plugin(inquiry_type: str) -> str:
 
     for plugin in plugins:
         try:
-            additional_information = plugin.function_calling.additional_information.to_json()
-            retval = additional_information[inquiry_type]
+            return_data = plugin.plugin_data.return_data.to_json()
+            retval = return_data[inquiry_type]
             return json.dumps(retval)
         except KeyError:
             pass
@@ -71,13 +71,13 @@ def plugin_tool_factory(plugin: Plugin):
         "type": "function",
         "function": {
             "name": "function_calling_plugin",
-            "description": plugin.function_calling.function_description,
+            "description": plugin.plugin_data.description,
             "parameters": {
                 "type": "object",
                 "properties": {
                     "inquiry_type": {
                         "type": "string",
-                        "enum": plugin.function_calling.additional_information.keys,
+                        "enum": plugin.plugin_data.return_data.keys,
                     },
                 },
                 "required": ["inquiry_type"],

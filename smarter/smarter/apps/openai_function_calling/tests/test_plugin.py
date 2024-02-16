@@ -48,7 +48,7 @@ class TestLambdaOpenaiFunctionRefersTo(unittest.TestCase):
 
     def test_validate_required_keys(self):
         """Test validate_required_keys."""
-        required_keys = ["meta_data", "prompting", "function_calling"]
+        required_keys = ["meta_data", "prompting", "plugin_data"]
         validate_required_keys(
             class_name="Plugin", plugin_json=self.everlasting_gobbstopper, required_keys=required_keys
         )
@@ -68,7 +68,7 @@ class TestLambdaOpenaiFunctionRefersTo(unittest.TestCase):
         self.assertDictEqual(
             search_terms.to_json(),
             {
-                "strings": ["Gobstopper", "Gobstoppers", "Gobbstopper", "Gobbstoppers"],
+                "search_terms": ["Gobstopper", "Gobstoppers", "Gobbstopper", "Gobbstoppers"],
                 "pairs": [["everlasting", "gobstopper"], ["everlasting", "gobstoppers"]],
             },
         )
@@ -80,25 +80,23 @@ class TestLambdaOpenaiFunctionRefersTo(unittest.TestCase):
             SearchTerms(plugin_json=plugin_json)
 
     def test_additional_information(self):
-        """Test additional_information."""
-        plugin_json = self.everlasting_gobbstopper["function_calling"]["additional_information"]
+        """Test return_data."""
+        plugin_json = self.everlasting_gobbstopper["plugin_data"]["return_data"]
         print("test_additional_information type plugin_json: ", type(plugin_json))
-        additional_information = AdditionalInformation(plugin_json=plugin_json)
+        return_data = AdditionalInformation(plugin_json=plugin_json)
         print(
-            "test_additional_information type additional_information.plugin_json: ",
-            type(additional_information.plugin_json),
+            "test_additional_information type return_data.plugin_json: ",
+            type(return_data.plugin_json),
         )
 
-        self.assertTrue(isinstance(additional_information, AdditionalInformation))
-        self.assertTrue(isinstance(additional_information.plugin_json, dict))
-        self.assertTrue(isinstance(additional_information.keys, list))
-        self.assertListEqual(
-            additional_information.keys, ["contact", "biographical", "sales_promotions", "coupon_codes"]
-        )
+        self.assertTrue(isinstance(return_data, AdditionalInformation))
+        self.assertTrue(isinstance(return_data.plugin_json, dict))
+        self.assertTrue(isinstance(return_data.keys, list))
+        self.assertListEqual(return_data.keys, ["contact", "biographical", "sales_promotions", "coupon_codes"])
 
     def test_additional_information_invalid(self):
-        """Test additional_information."""
-        plugin_json = self.everlasting_gobbstopper_invalid["function_calling"]["additional_information"]
+        """Test return_data."""
+        plugin_json = self.everlasting_gobbstopper_invalid["plugin_data"]["return_data"]
         with self.assertRaises(ValueError):
             AdditionalInformation(plugin_json=plugin_json)
 
@@ -116,22 +114,20 @@ class TestLambdaOpenaiFunctionRefersTo(unittest.TestCase):
         self.assertDictEqual(
             refers_to.selector.search_terms.to_json(),
             {
-                "strings": ["Gobstopper", "Gobstoppers", "Gobbstopper", "Gobbstoppers"],
+                "search_terms": ["Gobstopper", "Gobstoppers", "Gobbstopper", "Gobbstoppers"],
                 "pairs": [["everlasting", "gobstopper"], ["everlasting", "gobstoppers"]],
             },
         )
         self.assertEqual(
-            refers_to.prompting.system_prompt,
+            refers_to.prompting.system_role,
             "You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com).\n",
         )
 
-        additional_information = refers_to.function_calling.additional_information
-        self.assertTrue(isinstance(additional_information, AdditionalInformation))
-        self.assertTrue(isinstance(additional_information.plugin_json, dict))
-        self.assertTrue(isinstance(additional_information.keys, list))
-        self.assertListEqual(
-            additional_information.keys, ["contact", "biographical", "sales_promotions", "coupon_codes"]
-        )
+        return_data = refers_to.plugin_data.return_data
+        self.assertTrue(isinstance(return_data, AdditionalInformation))
+        self.assertTrue(isinstance(return_data.plugin_json, dict))
+        self.assertTrue(isinstance(return_data.keys, list))
+        self.assertListEqual(return_data.keys, ["contact", "biographical", "sales_promotions", "coupon_codes"])
 
     def test_prompting(self):
         """Test prompting."""
@@ -152,9 +148,9 @@ class TestLambdaOpenaiFunctionRefersTo(unittest.TestCase):
             Selector(plugin_json={})
 
     def test_function_calling(self):
-        """Test function_calling."""
+        """Test plugin_data."""
         plugin = Plugin(plugin_json=self.everlasting_gobbstopper)
-        function_calling_config_json = plugin.function_calling.to_json()
+        function_calling_config_json = plugin.plugin_data.to_json()
         FunctionCalling(plugin_json=function_calling_config_json)
 
         with self.assertRaises(ValueError):
