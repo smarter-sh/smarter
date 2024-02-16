@@ -12,9 +12,9 @@ from smarter.apps.account.models import Account, UserProfile
 from .models import PluginData, PluginMeta, PluginPrompt, PluginSelector
 from .serializers import (
     PluginDataSerializer,
+    PluginMetaSerializer,
     PluginPromptSerializer,
     PluginSelectorSerializer,
-    PluginSerializer,
 )
 
 
@@ -26,7 +26,7 @@ class Plugin:
     """A class for working with plugins."""
 
     plugin: PluginMeta
-    plugin_serializer: PluginSerializer
+    plugin_meta_serializer: PluginMetaSerializer
     plugin_selector: PluginSelector
     plugin_selector_serializer: PluginSelectorSerializer
     plugin_prompt: PluginPrompt
@@ -43,7 +43,7 @@ class Plugin:
         self.plugin_id = plugin_id
 
         self.plugin = PluginMeta.objects.get(pk=plugin_id)
-        self.plugin_serializer = PluginSerializer(self.plugin)
+        self.plugin_meta_serializer = PluginMetaSerializer(self.plugin)
 
         self.plugin_selector = PluginSelector.objects.get(pk=plugin_id)
         self.plugin_selector_serializer = PluginSelectorSerializer(self.plugin_selector)
@@ -67,25 +67,32 @@ class Plugin:
         """Validate a plugin."""
         user = data.get("user")
         user_profile = UserProfile.objects.get(user_id=user.id)
-        account = data.get("account")
         plugin = data.get("plugin")
+
+        # plugin is optional, but if its provided then the account value supersedes
+        # the account value passed in the data dictionary.
+        if plugin:
+            if not isinstance(plugin, PluginMeta):
+                raise ValidationError("Invalid plugin. Must be a PluginMeta instance.")
+            account = plugin.account
+        else:
+            account = data.get("account")
 
         if not isinstance(user, User):
             raise ValidationError("Invalid user. Must be a User instance.")
         if not user_profile:
             raise ValidationError("User not found.")
 
-        account = Account.objects.get(pk=account.id)
+        if not isinstance(account, Account):
+            raise ValidationError("Invalid account. Must be an Account instance.")
         if not account:
             raise ValidationError("Account not found.")
 
+        # Ensure the user is associated with the account, or is a superuser, or is
+        # the author of the plugin.
         if not UserProfile.objects.get(user_id=user_profile.user.id, account=account):
-            if not user.is_superuser:
+            if not user.is_superuser and not user.id == plugin.author.id:
                 raise ValidationError("User is not associated with this account.")
-
-        if plugin:
-            if plugin.account.id != account.id:
-                raise ValidationError("PluginMeta is not associated with this account.")
 
         return True
 
@@ -97,12 +104,11 @@ class Plugin:
         plugin_data = data.get("plugin_data")
 
         # Validate plugin meta_data
-        plugin_serializer = PluginSerializer(data=meta_data)
-        if not plugin_serializer:
+        plugin_meta_serializer = PluginMetaSerializer(data=meta_data)
+        if not plugin_meta_serializer:
             raise ValidationError("Invalid plugin.")
-        if not plugin_serializer.is_valid():
-            # raise ValidationError(plugin_serializer.errors)
-            raise serializers.ValidationError(plugin_serializer.errors)
+        if not plugin_meta_serializer.is_valid():
+            raise serializers.ValidationError(plugin_meta_serializer.errors)
 
         # Validate plugin selector
         selector = data.get("selector")
@@ -214,7 +220,7 @@ class Plugin:
         """Return a plugin in JSON format."""
 
         retval = {
-            "meta_data": self.plugin_serializer.data,
+            "meta_data": self.plugin_meta_serializer.data,
             "selector": self.plugin_selector_serializer.data,
             "prompt": self.plugin_prompt_serializer.data,
             "plugin_data": self.plugin_data_serializer.data,

@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """Account models."""
+import random
+
 from django.contrib.auth import get_user_model
+from django.core.validators import RegexValidator
 from django.db import models
 
 # our stuff
@@ -13,9 +16,35 @@ User = get_user_model()
 class Account(TimestampedModel):
     """Account model."""
 
+    account_number_format = RegexValidator(
+        regex=r"^\d{4}-\d{4}-\d{4}", message="Account number must be entered in the format: '9999-9999-9999'."
+    )
+
+    account_number = models.CharField(
+        validators=[account_number_format], max_length=255, unique=True, default="default_value"
+    )
     company_name = models.CharField(max_length=255)
     phone_number = models.CharField(max_length=20)
     address = models.CharField(max_length=255)
+
+    def save(self, *args, **kwargs):
+        if self.account_number == "default_value":
+            prefix = "1860-6722-"
+            prev_instances = Account.objects.all().order_by("-id")
+            while True:
+                if prev_instances.exists():
+                    last_instance = prev_instances.first()
+                    last_num = int(last_instance.account_number.split("-")[-1])
+                    new_account_number = prefix + str(last_num + 1).zfill(4)
+                else:
+                    s = "".join(random.sample("0001", 4))
+                    new_account_number = prefix + s
+
+                if not Account.objects.filter(account_number=new_account_number).exists():
+                    break
+
+            self.account_number = new_account_number
+        super().save(*args, **kwargs)
 
     # pylint: disable=missing-class-docstring
     class Meta:

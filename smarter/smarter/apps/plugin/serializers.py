@@ -15,7 +15,7 @@ class TaggedItemSerializer(serializers.ModelSerializer):
         fields = ["tag"]
 
 
-class PluginSerializer(serializers.ModelSerializer):
+class PluginMetaSerializer(serializers.ModelSerializer):
     """PluginMeta model serializer."""
 
     tags = TaggedItemSerializer(many=True, read_only=True)
