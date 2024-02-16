@@ -1,18 +1,24 @@
 # -*- coding: utf-8 -*-
 """Plugin serializers."""
 from rest_framework import serializers
+from taggit.models import TaggedItem
 
-from .models import (
-    Plugin,
-    PluginFunction,
-    PluginPrompt,
-    PluginSelector,
-    PluginSelectorSearchStrings,
-)
+from .models import Plugin, PluginData, PluginPrompt, PluginSelector
+
+
+class TaggedItemSerializer(serializers.ModelSerializer):
+    """TaggedItem model serializer."""
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = TaggedItem
+        fields = ["tag"]
 
 
 class PluginSerializer(serializers.ModelSerializer):
     """Plugin model serializer."""
+
+    tags = TaggedItemSerializer(many=True, read_only=True)
 
     # pylint: disable=missing-class-docstring
     class Meta:
@@ -29,28 +35,19 @@ class PluginSelectorSerializer(serializers.ModelSerializer):
         fields = ["directive"]
 
 
-class PluginSelectorSearchStringsSerializer(serializers.ModelSerializer):
-    """PluginSelectorSearchStrings model serializer."""
-
-    # pylint: disable=missing-class-docstring
-    class Meta:
-        model = PluginSelectorSearchStrings
-        fields = ["strings"]
-
-
 class PluginPromptSerializer(serializers.ModelSerializer):
     """PluginPrompt model serializer."""
 
     # pylint: disable=missing-class-docstring
     class Meta:
         model = PluginPrompt
-        fields = ["system_prompt", "model", "temperature", "max_tokens"]
+        fields = ["system_role", "model", "temperature", "max_tokens"]
 
 
-class PluginFunctionSerializer(serializers.ModelSerializer):
-    """PluginFunction model serializer."""
+class PluginDataSerializer(serializers.ModelSerializer):
+    """PluginData model serializer."""
 
     # pylint: disable=missing-class-docstring
     class Meta:
-        model = PluginFunction
-        fields = ["description", "yaml"]
+        model = PluginData
+        fields = ["description", "return_data"]

@@ -1,8 +1,18 @@
 # -*- coding: utf-8 -*-
 """Account serializers for smarter api"""
+from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from .models import Account, PaymentMethodModel, UserProfile
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """User serializer for smarter api."""
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = User
+        fields = ["id", "username", "email"]  # add more fields if needed
 
 
 class AccountSerializer(serializers.ModelSerializer):
@@ -17,10 +27,13 @@ class AccountSerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     """User profile serializer for smarter api."""
 
+    user = UserSerializer()
+    account = AccountSerializer()
+
     # pylint: disable=missing-class-docstring
     class Meta:
         model = UserProfile
-        fields = "__all__"
+        fields = ["user", "account"]
 
 
 class PaymentMethodSerializer(serializers.ModelSerializer):

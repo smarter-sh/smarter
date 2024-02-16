@@ -1,28 +1,19 @@
 ---
 meta_data:
-  # The name of your chatbot.
   name: EverlastingGobstopper
-  # The description of your chatbot.
   description: Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.
-  # The version of your chatbot.
   version: 0.1.0
-  # The author of your chatbot.
-  author: Lawrence McDaniel
+  tags: candy, treats, chocolate, Gogstoppers, Willy Wonka
+
 selector:
   directive: search_terms
   # Complete search terms that will trigger the chatbot to use your customized system prompt.
   search_terms:
-    search_terms:
-      - Gobstopper
-      - Gobstoppers
-      - Gobbstopper
-      - Gobbstoppers
-    pairs:
-      - - everlasting
-        - gobstopper
-      - - everlasting
-        - gobstoppers
-prompting:
+    - Gobstopper
+    - Gobstoppers
+    - Gobbstopper
+    - Gobbstoppers
+prompt:
   system_role: >
     You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com).
   model: gpt-3.5-turbo-1106

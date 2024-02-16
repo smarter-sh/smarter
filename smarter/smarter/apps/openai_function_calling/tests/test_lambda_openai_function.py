@@ -98,7 +98,7 @@ class TestLambdaOpenai(unittest.TestCase):
             self.assertFalse(
                 search_terms_are_in_messages(
                     messages=list_factory(content),
-                    search_terms=self.plugin.selector.search_terms.strings,
+                    search_terms=self.plugin.selector.search_terms.search_terms,
                     search_pairs=self.plugin.selector.search_terms.pairs,
                 )
             )
@@ -107,7 +107,7 @@ class TestLambdaOpenai(unittest.TestCase):
             self.assertTrue(
                 search_terms_are_in_messages(
                     messages=list_factory(content),
-                    search_terms=self.plugin.selector.search_terms.strings,
+                    search_terms=self.plugin.selector.search_terms.search_terms,
                     search_pairs=self.plugin.selector.search_terms.pairs,
                 )
             )

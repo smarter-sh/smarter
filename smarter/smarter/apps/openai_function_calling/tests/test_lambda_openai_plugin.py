@@ -44,13 +44,11 @@ class TestLambdaOpenaiFunctionRefersTo(unittest.TestCase):
         """Test default return value of function_calling_plugin()"""
         try:
             # pylint: disable=no-value-for-parameter
-            additional_information = function_calling_plugin(
-                inquiry_type=self.plugin.function_calling.additional_information.keys[0]
-            )
+            return_data = function_calling_plugin(inquiry_type=self.plugin.plugin_data.return_data.keys[0])
         except Exception:
             self.fail("function_calling_plugin() raised ExceptionType")
 
-        self.assertTrue(additional_information is not None)
+        self.assertTrue(return_data is not None)
 
     def test_info_tool_factory(self):
         """Test integrity plugin_tool_factory()"""

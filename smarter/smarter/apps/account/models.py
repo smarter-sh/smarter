@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """Account models."""
-from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import models
 
 # our stuff
 from smarter.apps.common.model_utils import TimestampedModel
 
 
-User = settings.AUTH_USER_MODEL
+User = get_user_model()
 
 
 class Account(TimestampedModel):
@@ -33,8 +33,13 @@ class UserProfile(TimestampedModel):
     user = models.OneToOneField(User, unique=True, db_index=True, related_name="user_profile", on_delete=models.CASCADE)
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="users")
 
+    def save(self, *args, **kwargs):
+        if self.user is None or self.account is None:
+            raise ValueError("User and Account cannot be null")
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return str(self.user.email)
+        return str(self.account.company_name) + "-" + str(self.user.email or self.user.username)
 
 
 class PaymentMethodModel(TimestampedModel):

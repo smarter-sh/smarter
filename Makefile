@@ -69,6 +69,17 @@ aws-build:
 # ---------------------------------------------------------
 # Python Djanog API
 # ---------------------------------------------------------
+django-init:
+	rm smarter/db.sqlite3 && \
+	cd smarter && python manage.py makemigrations && \
+	python manage.py migrate && \
+	python manage.py create_admin_user --username admin --email admin@smarter.sh --password blah && \
+	python manage.py changepassword admin
+
+python-run:
+	cd smarter && python manage.py runserver
+
+
 python-init:
 	make python-clean
 	npm install && \
@@ -76,7 +87,11 @@ python-init:
 	$(ACTIVATE_VENV) && \
 	$(PIP) install --upgrade pip && \
 	$(PIP) install -r requirements/local.txt && \
-	pre-commit install
+	pre-commit install && \
+	cd smarter && python manage.py makemigrations && \
+	python manage.py migrate && \
+	python manage.py create_admin_user --username admin --email admin@smarter.sh --password blah && \
+	python manage.py changepassword admin
 
 python-test:
 	cd smarter && python manage.py test
@@ -84,16 +99,13 @@ python-test:
 python-lint:
 	terraform fmt -recursive
 	pre-commit run --all-files
-	black ./python/
+	black ./smarter/
 	flake8 api/terraform/python/
 	pylint smarter/**/*.py
 
 python-clean:
 	rm -rf venv
 	find python/ -name __pycache__ -type d -exec rm -rf {} +
-
-python-run:
-	cd smarter && python manage.py runserver
 
 ######################
 # React app
