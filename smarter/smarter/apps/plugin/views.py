@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Plugin views."""
+"""PluginMeta views."""
 
 from django.http import JsonResponse
 from rest_framework import viewsets
@@ -10,8 +10,8 @@ from rest_framework.response import Response
 
 from smarter.apps.account.models import UserProfile
 
-from .models import Plugin, PluginData, PluginPrompt, PluginSelector
-from .providers import AccountProvider, PluginProvider
+from .models import PluginData, PluginMeta, PluginPrompt, PluginSelector
+from .providers import AccountProvider, Plugin
 from .serializers import (
     PluginDataSerializer,
     PluginPromptSerializer,
@@ -21,16 +21,16 @@ from .serializers import (
 
 
 class PluginViewSet(viewsets.ModelViewSet):
-    """Plugin model view set."""
+    """PluginMeta model view set."""
 
     serializer_class = PluginSerializer
 
     def get_queryset(self):
         """
-        Optionally restricts the returned PluginSelectors to a given Plugin,
+        Optionally restricts the returned PluginSelectors to a given PluginMeta,
         by filtering against a `plugin_id` query parameter in the URL.
         """
-        queryset = Plugin.objects.all()
+        queryset = PluginMeta.objects.all()
         account_id = self.request.query_params.get("account_id", None)
         if account_id is not None:
             queryset = queryset.filter(account_id=account_id)
@@ -46,7 +46,7 @@ class PluginSelectorViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """
-        Optionally restricts the returned PluginSelectors to a given Plugin,
+        Optionally restricts the returned PluginSelectors to a given PluginMeta,
         by filtering against a `plugin_id` query parameter in the URL.
         """
         queryset = PluginSelector.objects.all()
@@ -65,7 +65,7 @@ class PluginPromptViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """
-        Optionally restricts the returned PluginSelectors to a given Plugin,
+        Optionally restricts the returned PluginSelectors to a given PluginMeta,
         by filtering against a `plugin_id` query parameter in the URL.
         """
         queryset = PluginPrompt.objects.all()
@@ -84,7 +84,7 @@ class PluginDataViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """
-        Optionally restricts the returned PluginSelectors to a given Plugin,
+        Optionally restricts the returned PluginSelectors to a given PluginMeta,
         by filtering against a `plugin_id` query parameter in the URL.
         """
         queryset = PluginData.objects.all()
@@ -116,7 +116,7 @@ def get_plugin(request):
     plugin_id = request.data.get("plugin_id")
 
     if plugin_id:
-        plugin = PluginProvider(plugin_id)
+        plugin = Plugin(plugin_id)
         return Response(plugin.to_json())
 
     account = AccountProvider(account_id)
@@ -131,8 +131,8 @@ def create_plugin(request):
     data["user_id"] = request.user.id
 
     # Process the data...
-    plugin = PluginProvider.create(data=data)
-    plugin = PluginProvider(plugin.id)
+    plugin = Plugin.create(data=data)
+    plugin = Plugin(plugin.id)
 
     return Response(plugin.to_json())
 
@@ -145,8 +145,8 @@ def update_plugin(request):
     data["plugin_id"] = request.data.get("plugin_id")
 
     # Process the data...
-    plugin = PluginProvider.update(data=data)
-    plugin = PluginProvider(plugin.id)
+    plugin = Plugin.update(data=data)
+    plugin = Plugin(plugin.id)
 
     return Response(plugin.to_json())
 
@@ -159,7 +159,7 @@ def delete_plugin(request):
     data["plugin_id"] = request.data.get("plugin_id")
 
     # Process the data...
-    plugin = PluginProvider.delete(data=data)
-    plugin = PluginProvider(plugin_id=plugin.id)
+    plugin = Plugin.delete(data=data)
+    plugin = Plugin(plugin_id=plugin.id)
 
     return Response(plugin.to_json())

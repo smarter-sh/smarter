@@ -9,7 +9,7 @@ from rest_framework import serializers
 
 from smarter.apps.account.models import Account, UserProfile
 
-from .models import Plugin, PluginData, PluginPrompt, PluginSelector
+from .models import PluginData, PluginMeta, PluginPrompt, PluginSelector
 from .serializers import (
     PluginDataSerializer,
     PluginPromptSerializer,
@@ -22,10 +22,10 @@ User = get_user_model()
 
 
 # pylint: disable=too-many-instance-attributes
-class PluginProvider:
+class Plugin:
     """A class for working with plugins."""
 
-    plugin: Plugin
+    plugin: PluginMeta
     plugin_serializer: PluginSerializer
     plugin_selector: PluginSelector
     plugin_selector_serializer: PluginSelectorSerializer
@@ -42,7 +42,7 @@ class PluginProvider:
 
         self.plugin_id = plugin_id
 
-        self.plugin = Plugin.objects.get(pk=plugin_id)
+        self.plugin = PluginMeta.objects.get(pk=plugin_id)
         self.plugin_serializer = PluginSerializer(self.plugin)
 
         self.plugin_selector = PluginSelector.objects.get(pk=plugin_id)
@@ -85,7 +85,7 @@ class PluginProvider:
 
         if plugin:
             if plugin.account.id != account.id:
-                raise ValidationError("Plugin is not associated with this account.")
+                raise ValidationError("PluginMeta is not associated with this account.")
 
         return True
 
@@ -159,7 +159,7 @@ class PluginProvider:
         del selector["search_terms"]
 
         with transaction.atomic():
-            plugin = Plugin.objects.create(**meta_data)
+            plugin = PluginMeta.objects.create(**meta_data)
             selector["plugin_id"] = plugin.id
             PluginSelector.objects.create(**selector)
 
@@ -183,7 +183,7 @@ class PluginProvider:
         plugin_data = data.get("plugin_data")
 
         with transaction.atomic():
-            plugin_id = Plugin.objects.update(**meta_data)
+            plugin_id = PluginMeta.objects.update(**meta_data)
             PluginSelector.objects.update(**selector)
             PluginPrompt.objects.update(**prompt)
             PluginData.objects.update(**plugin_data)
@@ -195,9 +195,9 @@ class PluginProvider:
         """Delete a plugin."""
         cls.validate_operation(data)
         plugin_id = data.get("plugin_id")
-        plugin = Plugin.objects.get(pk=plugin_id)
+        plugin = PluginMeta.objects.get(pk=plugin_id)
         if not plugin:
-            raise ValidationError("Plugin not found.")
+            raise ValidationError("PluginMeta not found.")
 
         with transaction.atomic():
             selector = PluginSelector.objects.get(plugin=plugin)
@@ -231,12 +231,12 @@ class AccountProvider:
         self.account_id = account_id
 
     @property
-    def plugins(self) -> list[PluginProvider]:
+    def plugins(self) -> list[Plugin]:
         """Return a list of plugins for an account."""
-        plugins = Plugin.objects.filter(account_id=self.account_id)
+        plugins = PluginMeta.objects.filter(account_id=self.account_id)
 
         retval = []
         for plugin in plugins:
-            retval.append(PluginProvider(plugin_id=plugin.id).to_json)
+            retval.append(Plugin(plugin_id=plugin.id).to_json)
 
         return retval
