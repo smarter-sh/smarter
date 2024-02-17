@@ -3,6 +3,8 @@
 from rest_framework import serializers
 from taggit.models import TaggedItem
 
+from smarter.apps.account.serializers import UserProfileSerializer
+
 from .models import PluginData, PluginMeta, PluginPrompt, PluginSelector
 
 
@@ -19,6 +21,7 @@ class PluginMetaSerializer(serializers.ModelSerializer):
     """PluginMeta model serializer."""
 
     tags = TaggedItemSerializer(many=True, read_only=True)
+    author = UserProfileSerializer(read_only=True)
 
     # pylint: disable=missing-class-docstring
     class Meta:
