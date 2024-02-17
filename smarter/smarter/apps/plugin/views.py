@@ -131,9 +131,7 @@ def create_plugin(request):
     data["user_id"] = request.user.id
 
     # Process the data...
-    plugin = Plugin.create(data=data)
-    plugin = Plugin(plugin.id)
-
+    plugin = Plugin(data=data)
     return Response(plugin.to_json())
 
 
@@ -145,9 +143,7 @@ def update_plugin(request):
     data["plugin_id"] = request.data.get("plugin_id")
 
     # Process the data...
-    plugin = Plugin.update(data=data)
-    plugin = Plugin(plugin.id)
-
+    plugin = Plugin(data=data)
     return Response(plugin.to_json())
 
 
@@ -159,7 +155,7 @@ def delete_plugin(request):
     data["plugin_id"] = request.data.get("plugin_id")
 
     # Process the data...
-    plugin = Plugin.delete(data=data)
-    plugin = Plugin(plugin_id=plugin.id)
+    plugin = Plugin(data=data)
+    plugin.delete()
 
-    return Response(plugin.to_json())
+    return Response({"result": "success"})

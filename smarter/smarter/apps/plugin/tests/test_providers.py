@@ -62,35 +62,31 @@ class TestPluginProvider(unittest.TestCase):
     # pylint: disable=broad-exception-caught
     def test_create(self):
         """Test that we can create a plugin using the Plugin."""
-        plugin = Plugin.create(self.plugin_json)
+        plugin = Plugin(data=self.plugin_json)
 
-        self.assertIsInstance(plugin, PluginMeta)
+        self.assertIsInstance(plugin, Plugin)
+        self.assertIsInstance(plugin.plugin_meta, PluginMeta)
 
-        plugin_meta = PluginMeta.objects.get(pk=plugin.id)
-        self.assertIsNotNone(plugin_meta)
-        self.assertEqual(plugin_meta.name, self.plugin_json["meta_data"]["name"])
+        self.assertIsNotNone(plugin.plugin_meta)
+        self.assertEqual(plugin.plugin_meta.name, self.plugin_json["meta_data"]["name"])
 
-        plugin_selector = PluginSelector.objects.get(plugin=plugin_meta)
-        self.assertIsNotNone(plugin_selector)
-        self.assertEqual(plugin_selector.directive, self.plugin_json["selector"]["directive"])
+        self.assertIsNotNone(plugin.plugin_selector)
+        self.assertEqual(plugin.plugin_selector.directive, self.plugin_json["selector"]["directive"])
 
-        plugin_prompt = PluginPrompt.objects.get(plugin_id=plugin.id)
-        self.assertIsNotNone(plugin_prompt)
-        self.assertEqual(plugin_prompt.system_role, self.plugin_json["prompt"]["system_role"])
-        self.assertEqual(plugin_prompt.model, self.plugin_json["prompt"]["model"])
-        self.assertEqual(plugin_prompt.temperature, self.plugin_json["prompt"]["temperature"])
-        self.assertEqual(plugin_prompt.max_tokens, self.plugin_json["prompt"]["max_tokens"])
+        self.assertIsNotNone(plugin.plugin_prompt)
+        self.assertEqual(plugin.plugin_prompt.system_role, self.plugin_json["prompt"]["system_role"])
+        self.assertEqual(plugin.plugin_prompt.model, self.plugin_json["prompt"]["model"])
+        self.assertEqual(plugin.plugin_prompt.temperature, self.plugin_json["prompt"]["temperature"])
+        self.assertEqual(plugin.plugin_prompt.max_tokens, self.plugin_json["prompt"]["max_tokens"])
 
-        plugin_data = PluginData.objects.get(plugin_id=plugin.id)
-        self.assertIsNotNone(plugin_data)
-        self.assertEqual(plugin_data.description, self.plugin_json["plugin_data"]["description"])
-        self.assertEqual(plugin_data.return_data, self.plugin_json["plugin_data"]["return_data"])
+        self.assertIsNotNone(plugin.plugin_data)
+        self.assertEqual(plugin.plugin_data.description, self.plugin_json["plugin_data"]["description"])
+        self.assertEqual(plugin.plugin_data.return_data, self.plugin_json["plugin_data"]["return_data"])
 
     def test_to_json(self):
         """Test that the Plugin generates correct JSON output."""
-        plugin = Plugin.create(self.plugin_json)
-        plugin_provider = Plugin(plugin.id)
-        to_json = plugin_provider.to_json()
+        plugin = Plugin(data=self.plugin_json)
+        to_json = plugin.to_json()
 
         self.assertIsInstance(to_json, dict)
         self.assertEqual(to_json["meta_data"]["name"], self.plugin_json["meta_data"]["name"])
@@ -102,18 +98,18 @@ class TestPluginProvider(unittest.TestCase):
 
     def test_delete(self):
         """Test that we can delete a plugin using the Plugin."""
-        plugin = Plugin.create(self.plugin_json)
-        self.plugin_json["plugin_id"] = plugin.id
-        Plugin().delete(data=self.plugin_json)
+        plugin = Plugin(data=self.plugin_json)
+        plugin_id = plugin.id
+        plugin.delete()
 
         with self.assertRaises(PluginMeta.DoesNotExist):
-            PluginMeta.objects.get(pk=plugin.id)
+            PluginMeta.objects.get(pk=plugin_id)
 
         with self.assertRaises(PluginSelector.DoesNotExist):
-            PluginSelector.objects.get(plugin=plugin)
+            PluginSelector.objects.get(plugin_id=plugin_id)
 
         with self.assertRaises(PluginPrompt.DoesNotExist):
-            PluginPrompt.objects.get(plugin=plugin)
+            PluginPrompt.objects.get(plugin_id=plugin_id)
 
         with self.assertRaises(PluginData.DoesNotExist):
-            PluginData.objects.get(plugin=plugin)
+            PluginData.objects.get(plugin_id=plugin_id)

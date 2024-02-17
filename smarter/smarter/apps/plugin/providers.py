@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """A Pythonic interface for working with plugins."""
 
+import logging
+
 import yaml
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -19,52 +21,96 @@ from .serializers import (
 
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 # pylint: disable=too-many-instance-attributes
 class Plugin:
     """A class for working with plugins."""
 
-    plugin: PluginMeta
-    plugin_meta_serializer: PluginMetaSerializer
+    plugin_meta: PluginMeta
     plugin_selector: PluginSelector
-    plugin_selector_serializer: PluginSelectorSerializer
     plugin_prompt: PluginPrompt
-    plugin_prompt_serializer: PluginPromptSerializer
     plugin_data: PluginData
+
     plugin_data_serializer: PluginDataSerializer
+    plugin_prompt_serializer: PluginPromptSerializer
+    plugin_selector_serializer: PluginSelectorSerializer
+    plugin_meta_serializer: PluginMetaSerializer
 
-    def __init__(self, plugin_id: int = None):
-        """Initialize the class."""
+    def __init__(self, plugin_id: int = None, plugin_meta: PluginMeta = None, data=None):
+        """
+        Initialize the class.
 
-        if not plugin_id:
+        id: pk of PluginMeta
+        plugin_meta: a PluginMeta instance
+        data: yaml or dict representation of a plugin
+        """
+        if plugin_id:
+            self.id = plugin_id
+            logger.info("Initialized using plugin_id.")
             return
 
-        self.plugin_id = plugin_id
+        if data:
+            self.create(data)
+            self.id = self.plugin_meta.id
+            logger.info("Initialed with data.")
+            return
 
-        self.plugin = PluginMeta.objects.get(pk=plugin_id)
-        self.plugin_meta_serializer = PluginMetaSerializer(self.plugin)
+        if plugin_meta:
+            self.id = plugin_meta.id
+            logger.info("Initialized with plugin_meta.")
+            return
 
-        self.plugin_selector = PluginSelector.objects.get(pk=plugin_id)
+    @property
+    def id(self) -> int:
+        """Return the id of the plugin."""
+        if self.plugin_meta:
+            return self.plugin_meta.id
+        return None
+
+    @id.setter
+    def id(self, value: int):
+        """Set the id of the plugin."""
+        self.plugin_meta = PluginMeta.objects.get(pk=value)
+        self.plugin_meta_serializer = PluginMetaSerializer(self.plugin_meta)
+
+        self.plugin_selector = PluginSelector.objects.get(pk=value)
         self.plugin_selector_serializer = PluginSelectorSerializer(self.plugin_selector)
 
-        self.plugin_prompt = PluginPrompt.objects.get(pk=plugin_id)
+        self.plugin_prompt = PluginPrompt.objects.get(pk=value)
         self.plugin_prompt_serializer = PluginPromptSerializer(self.plugin_prompt)
 
-        self.plugin_data = PluginData.objects.get(pk=plugin_id)
+        self.plugin_data = PluginData.objects.get(pk=value)
         self.plugin_data_serializer = PluginDataSerializer(self.plugin_data)
 
-    @classmethod
-    def is_valid_yaml(cls, data):
+    @property
+    def name(self) -> str:
+        """Return the name of the plugin."""
+        if self.plugin_meta:
+            return self.plugin_meta.name
+        return None
+
+    @property
+    def account(self) -> Account:
+        """Return the account of the plugin."""
+        if self.plugin_meta:
+            return self.plugin_meta.account
+        return None
+
+    def is_valid_yaml(self, data):
+        """Validate a yaml string."""
         try:
             yaml.safe_load(data)
             return True
         except yaml.YAMLError:
             return False
 
-    @classmethod
-    def validate_operation(cls, data: dict) -> bool:
-        """Validate a plugin."""
+    def validate_operation(self, data: dict) -> bool:
+        """
+        Validate business rules. Namely, we want to ensure that the user is
+        associated with the account, or is a superuser, or is the author of the plugin.
+        """
         user = data.get("user")
         user_profile = UserProfile.objects.get(user_id=user.id)
         plugin = data.get("plugin")
@@ -96,8 +142,8 @@ class Plugin:
 
         return True
 
-    @classmethod
-    def validate_write_operation(cls, data: dict) -> bool:
+    def validate_write_operation(self, data: dict) -> bool:
+        """Validate the structural integrity of the input dict."""
         meta_data = data.get("meta_data")
         selector = data.get("selector")
         prompt = data.get("prompt")
@@ -134,22 +180,23 @@ class Plugin:
         if not plugin_data_serializer.is_valid():
             raise ValidationError(plugin_data_serializer.errors)
 
-    @classmethod
-    def create(cls, data):
-        """Create a plugin"""
+    def create(self, data):
+        """Create a plugin from either yaml or a dictionary."""
 
         if not isinstance(data, dict):
-            if cls.is_valid_yaml(data):
+            # assume that we received a yaml string.
+            # validate it and convert it to a dictionary.
+            if self.is_valid_yaml(data):
                 data = yaml.safe_load(data)
             else:
                 raise ValidationError("Invalid data: must be a dictionary or valid YAML.")
 
-        cls.validate_operation(data)
-        cls.validate_write_operation(data)
+        self.validate_operation(data)
+        self.validate_write_operation(data)
 
         account = data.get("account")
-        plugin = data.get("plugin")
 
+        # initialize the major sections of the plugin yaml file
         meta_data = data.get("meta_data")
         selector = data.get("selector")
         prompt = data.get("prompt")
@@ -161,27 +208,33 @@ class Plugin:
         meta_data["author"] = author
         meta_data["account"] = account
 
-        # remove search_terms from selector
-        del selector["search_terms"]
+        # account/name is unique, so if the plugin already exists,
+        # then update it instead of creating a new one.
+        plugin_meta = PluginMeta.objects.filter(account=account, name=meta_data["name"]).first()
+        if plugin_meta:
+            logger.info("Plugin %s already exists. Updating plugin %s.", meta_data["name"], plugin_meta.id)
+            return self.update(data)
 
         with transaction.atomic():
-            plugin = PluginMeta.objects.create(**meta_data)
-            selector["plugin_id"] = plugin.id
-            PluginSelector.objects.create(**selector)
+            self.plugin_meta = PluginMeta.objects.create(**meta_data)
 
-            prompt["plugin_id"] = plugin.id
-            PluginPrompt.objects.create(**prompt)
+            selector["plugin_id"] = self.plugin_meta.id
+            prompt["plugin_id"] = self.plugin_meta.id
+            plugin_data["plugin_id"] = self.plugin_meta.id
 
-            plugin_data["plugin_id"] = plugin.id
-            PluginData.objects.create(**plugin_data)
+            self.plugin_selector = PluginSelector.objects.create(**selector)
+            self.plugin_prompt = PluginPrompt.objects.create(**prompt)
+            self.plugin_data = PluginData.objects.create(**plugin_data)
 
-        return plugin
+            self.id = self.plugin_meta.id
+            logger.info("Created plugin %s: %s.", meta_data["name"], plugin_meta.id)
 
-    @classmethod
-    def update(cls, data: dict):
+        return True
+
+    def update(self, data: dict):
         """Update a plugin."""
-        cls.validate_operation(data)
-        cls.validate_write_operation(data)
+        self.validate_operation(data)
+        self.validate_write_operation(data)
 
         meta_data = data.get("meta_data")
         selector = data.get("selector")
@@ -189,30 +242,46 @@ class Plugin:
         plugin_data = data.get("plugin_data")
 
         with transaction.atomic():
-            plugin_id = PluginMeta.objects.update(**meta_data)
-            PluginSelector.objects.update(**selector)
-            PluginPrompt.objects.update(**prompt)
-            PluginData.objects.update(**plugin_data)
+            for key, value in meta_data.items():
+                setattr(self.plugin_meta, key, value)
+            self.plugin_data.save()
 
-        return cls(plugin_id=plugin_id)
+            for key, value in selector.items():
+                setattr(self.plugin_selector, key, value)
+            self.plugin_selector.save()
 
-    @classmethod
-    def delete(cls, data: dict):
+            for key, value in prompt.items():
+                setattr(self.plugin_prompt, key, value)
+            self.plugin_prompt.save()
+
+            for key, value in plugin_data.items():
+                setattr(self.plugin_data, key, value)
+            self.plugin_data.save()
+            logger.info("Updated plugin %s: %s.", self.name, self.id)
+
+        return True
+
+    def delete(self):
         """Delete a plugin."""
-        cls.validate_operation(data)
-        plugin_id = data.get("plugin_id")
-        plugin = PluginMeta.objects.get(pk=plugin_id)
-        if not plugin:
-            raise ValidationError("PluginMeta not found.")
-
+        plugin_id = self.id
+        plugin_name = self.name
         with transaction.atomic():
-            selector = PluginSelector.objects.get(plugin=plugin)
-            prompt = PluginPrompt.objects.get(plugin=plugin)
-            data = PluginData.objects.get(plugin=plugin)
-            selector.delete()
-            prompt.delete()
-            data.delete()
-            plugin.delete()
+            self.plugin_data.delete()
+            self.plugin_prompt.delete()
+            self.plugin_selector.delete()
+            self.plugin_meta.delete()
+
+            self.plugin_data = None
+            self.plugin_prompt = None
+            self.plugin_selector = None
+            self.plugin_meta = None
+
+            self.plugin_data_serializer = None
+            self.plugin_prompt_serializer = None
+            self.plugin_selector_serializer = None
+            self.plugin_meta_serializer = None
+
+            logger.info("Updated plugin %s: %s.", plugin_id, plugin_name)
 
         return True
 
