@@ -38,8 +38,7 @@ class Command(BaseCommand):
             data["user_profile"] = user_profile
             data["meta_data"]["author"] = user_profile.id
 
-            plugin = Plugin.create(data=data)
-            plugin = Plugin(plugin_id=plugin.id)
+            plugin = Plugin(data=data)
             print(plugin.to_json())
         else:
             self.stdout.write(self.style.ERROR("Could not open the file."))

@@ -27,6 +27,10 @@ class PluginMeta(TimestampedModel):
 
     # pylint: disable=missing-class-docstring
     class Meta:
+        unique_together = (
+            "account",
+            "name",
+        )
         verbose_name = "Plugin"
         verbose_name_plural = "Plugins"
 
