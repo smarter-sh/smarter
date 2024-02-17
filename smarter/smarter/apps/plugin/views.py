@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from smarter.apps.account.models import UserProfile
 
 from .models import PluginData, PluginMeta, PluginPrompt, PluginSelector
-from .providers import AccountProvider, Plugin
+from .plugin import Plugin
 from .serializers import (
     PluginDataSerializer,
     PluginMetaSerializer,
@@ -112,15 +112,10 @@ def manage_plugin(request):
 
 def get_plugin(request):
     # Access the JSON data sent in the request body
-    account_id = UserProfile.objects.get(user=request.user).account.id
     plugin_id = request.data.get("plugin_id")
 
-    if plugin_id:
-        plugin = Plugin(plugin_id)
-        return Response(plugin.to_json())
-
-    account = AccountProvider(account_id)
-    return account.plugins
+    plugin = Plugin(plugin_id)
+    return Response(plugin.to_json())
 
 
 def create_plugin(request):

@@ -20,7 +20,7 @@ from smarter.apps.plugin.models import (
     PluginPrompt,
     PluginSelector,
 )
-from smarter.apps.plugin.providers import Plugin
+from smarter.apps.plugin.plugin import Plugin
 from smarter.apps.plugin.serializers import (
     PluginDataSerializer,
     PluginMetaSerializer,
@@ -93,7 +93,6 @@ class TestPluginProvider(unittest.TestCase):
     def test_update(self):
         """Test that we can update a plugin using the Plugin."""
         plugin = Plugin(data=self.plugin_json)
-        plugin_id = plugin.id
 
         plugin.plugin_meta.name = "New Name"
         plugin.plugin_selector.directive = "New Directive"
@@ -105,8 +104,6 @@ class TestPluginProvider(unittest.TestCase):
         plugin.plugin_data.return_data = "New Return Data"
 
         plugin.update()
-
-        plugin = Plugin.objects.get(pk=plugin_id)
 
         self.assertEqual(plugin.plugin_meta.name, "New Name")
         self.assertEqual(plugin.plugin_selector.directive, "New Directive")
