@@ -396,6 +396,9 @@ class Plugin:
 class Plugins:
     """A class for working with multiple plugins."""
 
+    account: Account = None
+    plugins: list[Plugin] = []
+
     def __init__(self, user_id: int = None, account_id: int = None):
 
         if user_id:
@@ -411,5 +414,5 @@ class Plugins:
         """Return a list of plugins in JSON format."""
         retval = []
         for plugin in self.plugins:
-            retval.append(plugin.to_json)
+            retval.append(plugin.to_json())
         return retval

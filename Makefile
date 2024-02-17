@@ -76,7 +76,7 @@ django-init:
 	python manage.py create_admin_user --username admin --email admin@smarter.sh --password blah && \
 	python manage.py changepassword admin
 
-python-run:
+django-run:
 	cd smarter && python manage.py runserver
 
 
