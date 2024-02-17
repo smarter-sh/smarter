@@ -58,6 +58,13 @@ class Account(TimestampedModel):
 class UserProfile(TimestampedModel):
     """User profile model."""
 
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        unique_together = (
+            "user",
+            "account",
+        )
+
     # Add more fields here as needed
     user = models.OneToOneField(User, unique=True, db_index=True, related_name="user_profile", on_delete=models.CASCADE)
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="users")
