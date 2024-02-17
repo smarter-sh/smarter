@@ -384,10 +384,11 @@ class Plugin:
         """Return a plugin in JSON format."""
         if self.ready:
             retval = {
-                "meta_data": self.plugin_meta_serializer.data,
-                "selector": self.plugin_selector_serializer.data,
-                "prompt": self.plugin_prompt_serializer.data,
-                "plugin_data": self.plugin_data_serializer.data,
+                "id": self.id,
+                "meta_data": {**self.plugin_meta_serializer.data, "id": self.plugin_meta.id},
+                "selector": {**self.plugin_selector_serializer.data, "id": self.plugin_selector.id},
+                "prompt": {**self.plugin_prompt_serializer.data, "id": self.plugin_prompt.id},
+                "plugin_data": {**self.plugin_data_serializer.data, "id": self.plugin_data.id},
             }
             return retval
         return None
@@ -414,5 +415,6 @@ class Plugins:
         """Return a list of plugins in JSON format."""
         retval = []
         for plugin in self.plugins:
-            retval.append(plugin.to_json())
+            if plugin.ready:
+                retval.append(plugin.to_json())
         return retval
