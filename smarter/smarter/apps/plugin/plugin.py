@@ -56,16 +56,16 @@ class Plugin:
         """
         if plugin_id:
             self.id = plugin_id
-            logger.info("Initialized using plugin_id.")
+            logger.debug("Initialized using plugin_id.")
 
         if data and not self.id:
             self.create(data)
             self.id = self.plugin_meta.id
-            logger.info("Initialed with data.")
+            logger.debug("Initialed with data.")
 
         if plugin_meta and not self.id:
             self.id = plugin_meta.id
-            logger.info("Initialized with plugin_meta.")
+            logger.debug("Initialized with plugin_meta.")
 
         if user_id and account_id:
             account = Account.objects.get(pk=account_id)
@@ -84,6 +84,10 @@ class Plugin:
                 UserProfile.objects.get(user_id=user.id, account_id=account.id)
             except UserProfile.DoesNotExist:
                 raise ValidationError("User is not associated with this account.")
+
+    def __str__(self) -> str:
+        """Return the name of the plugin."""
+        return self.name
 
     @property
     def id(self) -> int:
@@ -148,6 +152,20 @@ class Plugin:
             return False
 
         return True
+
+    @property
+    def data(self) -> dict:
+        """Return the plugin as a dictionary."""
+        if self.ready:
+            return self.to_json()
+        return None
+
+    @property
+    def yaml(self) -> str:
+        """Return the plugin as a yaml string."""
+        if self.ready:
+            return yaml.dump(self.to_json())
+        return None
 
     def is_valid_yaml(self, data):
         """Validate a yaml string."""
@@ -378,14 +396,17 @@ class Plugin:
 class Plugins:
     """A class for working with multiple plugins."""
 
-    def __init__(self, account_id: int):
-        self.account = Account.objects.get(pk=account_id)
+    def __init__(self, user_id: int = None, account_id: int = None):
+
+        if user_id:
+            self.account = UserProfile.objects.get(user_id=user_id).account
+        else:
+            self.account = Account.objects.get(pk=account_id)
 
         self.plugins = []
         for plugin in PluginMeta.objects.filter(account_id=self.account.id):
             self.plugins.append(Plugin(plugin_id=plugin.id))
 
-    @property
     def to_json(self) -> list[dict]:
         """Return a list of plugins in JSON format."""
         retval = []
