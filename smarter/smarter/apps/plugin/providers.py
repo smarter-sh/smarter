@@ -84,6 +84,8 @@ class Plugin:
         self.plugin_data = PluginData.objects.get(pk=value)
         self.plugin_data_serializer = PluginDataSerializer(self.plugin_data)
 
+        self.validate()
+
     @property
     def name(self) -> str:
         """Return the name of the plugin."""
@@ -98,6 +100,32 @@ class Plugin:
             return self.plugin_meta.account
         return None
 
+    @property
+    # pylint: disable=too-many-return-statements
+    def ready(self) -> bool:
+        """Return whether the plugin is ready."""
+        # validate the models
+        if not isinstance(self.plugin_meta, PluginMeta):
+            return False
+        if not isinstance(self.plugin_selector, PluginSelector):
+            return False
+        if not isinstance(self.plugin_prompt, PluginPrompt):
+            return False
+        if not isinstance(self.plugin_data, PluginData):
+            return False
+
+        # validate the serializers
+        if not isinstance(self.plugin_meta_serializer, PluginMetaSerializer):
+            return False
+        if not isinstance(self.plugin_selector_serializer, PluginSelectorSerializer):
+            return False
+        if not isinstance(self.plugin_prompt_serializer, PluginPromptSerializer):
+            return False
+        if not isinstance(self.plugin_data_serializer, PluginDataSerializer):
+            return False
+
+        return True
+
     def is_valid_yaml(self, data):
         """Validate a yaml string."""
         try:
@@ -105,6 +133,17 @@ class Plugin:
             return True
         except yaml.YAMLError:
             return False
+
+    def validate(self):
+        """Validate the plugin."""
+        if not self.ready:
+            raise ValidationError("Plugin is not ready.")
+
+        # pylint: disable=W0707
+        try:
+            UserProfile.objects.get(user_id=self.plugin_meta.author.id, account=self.plugin_meta.account)
+        except UserProfile.DoesNotExist:
+            raise ValidationError("Plugin author is not associated with this account.")
 
     def validate_operation(self, data: dict) -> bool:
         """
@@ -227,12 +266,17 @@ class Plugin:
             self.plugin_data = PluginData.objects.create(**plugin_data)
 
             self.id = self.plugin_meta.id
-            logger.info("Created plugin %s: %s.", meta_data["name"], plugin_meta.id)
+            logger.info("Created plugin %s: %s.", meta_data["name"], self.plugin_meta.id)
 
         return True
 
-    def update(self, data: dict):
+    def update(self, data: dict = None):
         """Update a plugin."""
+
+        if not data:
+            self.save()
+            return True
+
         self.validate_operation(data)
         self.validate_write_operation(data)
 
@@ -261,6 +305,16 @@ class Plugin:
 
         return True
 
+    def save(self):
+        """Save a plugin."""
+        with transaction.atomic():
+            self.plugin_meta.save()
+            self.plugin_selector.save()
+            self.plugin_prompt.save()
+            self.plugin_data.save()
+            logger.info("Saved plugin %s: %s.", self.name, self.id)
+        return True
+
     def delete(self):
         """Delete a plugin."""
         plugin_id = self.id
@@ -287,15 +341,15 @@ class Plugin:
 
     def to_json(self) -> dict:
         """Return a plugin in JSON format."""
-
-        retval = {
-            "meta_data": self.plugin_meta_serializer.data,
-            "selector": self.plugin_selector_serializer.data,
-            "prompt": self.plugin_prompt_serializer.data,
-            "plugin_data": self.plugin_data_serializer.data,
-        }
-
-        return retval
+        if self.ready:
+            retval = {
+                "meta_data": self.plugin_meta_serializer.data,
+                "selector": self.plugin_selector_serializer.data,
+                "prompt": self.plugin_prompt_serializer.data,
+                "plugin_data": self.plugin_data_serializer.data,
+            }
+            return retval
+        return None
 
 
 class AccountProvider:
