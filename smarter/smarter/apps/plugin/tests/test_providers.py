@@ -21,6 +21,12 @@ from smarter.apps.plugin.models import (
     PluginSelector,
 )
 from smarter.apps.plugin.providers import Plugin
+from smarter.apps.plugin.serializers import (
+    PluginDataSerializer,
+    PluginMetaSerializer,
+    PluginPromptSerializer,
+    PluginSelectorSerializer,
+)
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 
 
@@ -65,23 +71,51 @@ class TestPluginProvider(unittest.TestCase):
         plugin = Plugin(data=self.plugin_json)
 
         self.assertIsInstance(plugin, Plugin)
+        self.assertTrue(plugin.ready)
         self.assertIsInstance(plugin.plugin_meta, PluginMeta)
+        self.assertIsInstance(plugin.plugin_selector, PluginSelector)
+        self.assertIsInstance(plugin.plugin_prompt, PluginPrompt)
+        self.assertIsInstance(plugin.plugin_data, PluginData)
+        self.assertIsInstance(plugin.plugin_data_serializer, PluginDataSerializer)
+        self.assertIsInstance(plugin.plugin_meta_serializer, PluginMetaSerializer)
+        self.assertIsInstance(plugin.plugin_prompt_serializer, PluginPromptSerializer)
+        self.assertIsInstance(plugin.plugin_selector_serializer, PluginSelectorSerializer)
 
-        self.assertIsNotNone(plugin.plugin_meta)
         self.assertEqual(plugin.plugin_meta.name, self.plugin_json["meta_data"]["name"])
-
-        self.assertIsNotNone(plugin.plugin_selector)
         self.assertEqual(plugin.plugin_selector.directive, self.plugin_json["selector"]["directive"])
-
-        self.assertIsNotNone(plugin.plugin_prompt)
         self.assertEqual(plugin.plugin_prompt.system_role, self.plugin_json["prompt"]["system_role"])
         self.assertEqual(plugin.plugin_prompt.model, self.plugin_json["prompt"]["model"])
         self.assertEqual(plugin.plugin_prompt.temperature, self.plugin_json["prompt"]["temperature"])
         self.assertEqual(plugin.plugin_prompt.max_tokens, self.plugin_json["prompt"]["max_tokens"])
-
-        self.assertIsNotNone(plugin.plugin_data)
         self.assertEqual(plugin.plugin_data.description, self.plugin_json["plugin_data"]["description"])
         self.assertEqual(plugin.plugin_data.return_data, self.plugin_json["plugin_data"]["return_data"])
+
+    def test_update(self):
+        """Test that we can update a plugin using the Plugin."""
+        plugin = Plugin(data=self.plugin_json)
+        plugin_id = plugin.id
+
+        plugin.plugin_meta.name = "New Name"
+        plugin.plugin_selector.directive = "New Directive"
+        plugin.plugin_prompt.system_role = "New System Role"
+        plugin.plugin_prompt.model = "New Model"
+        plugin.plugin_prompt.temperature = 0.5
+        plugin.plugin_prompt.max_tokens = 100
+        plugin.plugin_data.description = "New Description"
+        plugin.plugin_data.return_data = "New Return Data"
+
+        plugin.update()
+
+        plugin = Plugin.objects.get(pk=plugin_id)
+
+        self.assertEqual(plugin.plugin_meta.name, "New Name")
+        self.assertEqual(plugin.plugin_selector.directive, "New Directive")
+        self.assertEqual(plugin.plugin_prompt.system_role, "New System Role")
+        self.assertEqual(plugin.plugin_prompt.model, "New Model")
+        self.assertEqual(plugin.plugin_prompt.temperature, 0.5)
+        self.assertEqual(plugin.plugin_prompt.max_tokens, 100)
+        self.assertEqual(plugin.plugin_data.description, "New Description")
+        self.assertEqual(plugin.plugin_data.return_data, "New Return Data")
 
     def test_to_json(self):
         """Test that the Plugin generates correct JSON output."""
