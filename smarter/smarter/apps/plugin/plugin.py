@@ -28,17 +28,25 @@ logger = logging.getLogger(__name__)
 class Plugin:
     """A class for working with plugins."""
 
-    plugin_meta: PluginMeta
-    plugin_selector: PluginSelector
-    plugin_prompt: PluginPrompt
-    plugin_data: PluginData
+    plugin_meta: PluginMeta = None
+    plugin_selector: PluginSelector = None
+    plugin_prompt: PluginPrompt = None
+    plugin_data: PluginData = None
 
-    plugin_data_serializer: PluginDataSerializer
-    plugin_prompt_serializer: PluginPromptSerializer
-    plugin_selector_serializer: PluginSelectorSerializer
-    plugin_meta_serializer: PluginMetaSerializer
+    plugin_data_serializer: PluginDataSerializer = None
+    plugin_prompt_serializer: PluginPromptSerializer = None
+    plugin_selector_serializer: PluginSelectorSerializer = None
+    plugin_meta_serializer: PluginMetaSerializer = None
 
-    def __init__(self, plugin_id: int = None, plugin_meta: PluginMeta = None, data=None):
+    # pylint: disable=too-many-arguments
+    def __init__(
+        self,
+        user_id: int = None,
+        account_id: int = None,
+        plugin_id: int = None,
+        plugin_meta: PluginMeta = None,
+        data=None,
+    ):
         """
         Initialize the class.
 
@@ -49,18 +57,33 @@ class Plugin:
         if plugin_id:
             self.id = plugin_id
             logger.info("Initialized using plugin_id.")
-            return
 
-        if data:
+        if data and not self.id:
             self.create(data)
             self.id = self.plugin_meta.id
             logger.info("Initialed with data.")
-            return
 
-        if plugin_meta:
+        if plugin_meta and not self.id:
             self.id = plugin_meta.id
             logger.info("Initialized with plugin_meta.")
-            return
+
+        if user_id and account_id:
+            account = Account.objects.get(pk=account_id)
+            user = User.objects.get(pk=user_id)
+            if user.is_superuser:
+                return
+
+            if user_id != self.plugin_meta.author.id:
+                raise ValidationError("User does not own this plugin.")
+
+            if account_id != self.plugin_meta.account.id:
+                raise ValidationError("Account provided does not own this plugin.")
+
+            # pylint: disable=W0707
+            try:
+                UserProfile.objects.get(user_id=user.id, account_id=account.id)
+            except UserProfile.DoesNotExist:
+                raise ValidationError("User is not associated with this account.")
 
     @property
     def id(self) -> int:
@@ -352,20 +375,20 @@ class Plugin:
         return None
 
 
-class AccountProvider:
-    """A class for working with plugins."""
+class Plugins:
+    """A class for working with multiple plugins."""
 
     def __init__(self, account_id: int):
-        """Initialize the class."""
-        self.account_id = account_id
+        self.account = Account.objects.get(pk=account_id)
+
+        self.plugins = []
+        for plugin in PluginMeta.objects.filter(account_id=self.account.id):
+            self.plugins.append(Plugin(plugin_id=plugin.id))
 
     @property
-    def plugins(self) -> list[Plugin]:
-        """Return a list of plugins for an account."""
-        plugins = PluginMeta.objects.filter(account_id=self.account_id)
-
+    def to_json(self) -> list[dict]:
+        """Return a list of plugins in JSON format."""
         retval = []
-        for plugin in plugins:
-            retval.append(Plugin(plugin_id=plugin.id).to_json)
-
+        for plugin in self.plugins:
+            retval.append(plugin.to_json)
         return retval
