@@ -28,6 +28,10 @@ logger = logging.getLogger(__name__)
 class Plugin:
     """A class for working with plugins."""
 
+    user = None
+    user_profile: UserProfile = None
+    account: Account = None
+
     plugin_meta: PluginMeta = None
     plugin_selector: PluginSelector = None
     plugin_prompt: PluginPrompt = None
@@ -54,6 +58,23 @@ class Plugin:
         plugin_meta: a PluginMeta instance
         data: yaml or dict representation of a plugin
         """
+        if user_id:
+            self.user = User.objects.get(pk=user_id)
+            self.user_profile = UserProfile.objects.get(user_id=user_id)
+            self.account = self.user_profile.account
+
+        if account_id:
+            account = Account.objects.get(pk=account_id)
+            if self.account and account.id != self.account.id:
+                raise ValidationError("Account provided does not match user account.")
+
+        if self.user and self.account:
+            # pylint: disable=W0707
+            try:
+                UserProfile.objects.get(user_id=self.user.id, account_id=self.account.id)
+            except UserProfile.DoesNotExist:
+                raise ValidationError("User is not associated with this account.")
+
         if plugin_id:
             self.id = plugin_id
             logger.debug("Initialized using plugin_id.")
@@ -67,23 +88,15 @@ class Plugin:
             self.id = plugin_meta.id
             logger.debug("Initialized with plugin_meta.")
 
-        if user_id and account_id:
-            account = Account.objects.get(pk=account_id)
-            user = User.objects.get(pk=user_id)
-            if user.is_superuser:
+        if self.user and self.account:
+            if self.user.is_superuser:
                 return
 
-            if user_id != self.plugin_meta.author.id:
+            if self.user.id != self.plugin_meta.author.id:
                 raise ValidationError("User does not own this plugin.")
 
-            if account_id != self.plugin_meta.account.id:
+            if self.account.id != self.plugin_meta.account.id:
                 raise ValidationError("Account provided does not own this plugin.")
-
-            # pylint: disable=W0707
-            try:
-                UserProfile.objects.get(user_id=user.id, account_id=account.id)
-            except UserProfile.DoesNotExist:
-                raise ValidationError("User is not associated with this account.")
 
     def __str__(self) -> str:
         """Return the name of the plugin."""
@@ -118,13 +131,6 @@ class Plugin:
         """Return the name of the plugin."""
         if self.plugin_meta:
             return self.plugin_meta.name
-        return None
-
-    @property
-    def account(self) -> Account:
-        """Return the account of the plugin."""
-        if self.plugin_meta:
-            return self.plugin_meta.account
         return None
 
     @property
@@ -191,8 +197,8 @@ class Plugin:
         Validate business rules. Namely, we want to ensure that the user is
         associated with the account, or is a superuser, or is the author of the plugin.
         """
-        user = data.get("user")
-        user_profile = UserProfile.objects.get(user_id=user.id)
+        user = self.user or data.get("user")
+        user_profile = self.user_profile or UserProfile.objects.get(user_id=user.id)
         plugin = data.get("plugin")
 
         # plugin is optional, but if its provided then the account value supersedes
@@ -202,7 +208,7 @@ class Plugin:
                 raise ValidationError("Invalid plugin. Must be a PluginMeta instance.")
             account = plugin.account
         else:
-            account = data.get("account")
+            account = self.account or data.get("account")
 
         if not isinstance(user, User):
             raise ValidationError("Invalid user. Must be a User instance.")
@@ -274,7 +280,7 @@ class Plugin:
         self.validate_operation(data)
         self.validate_write_operation(data)
 
-        account = data.get("account")
+        account = self.account or data.get("account")
 
         # initialize the major sections of the plugin yaml file
         meta_data = data.get("meta_data")
@@ -283,7 +289,7 @@ class Plugin:
         plugin_data = data.get("plugin_data")
 
         # Convert author_id to author
-        author_id = meta_data.get("author")
+        author_id = self.user_profile.id or meta_data.get("author")
         author = UserProfile.objects.get(id=author_id)
         meta_data["author"] = author
         meta_data["account"] = account

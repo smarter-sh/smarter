@@ -7,7 +7,6 @@ meta_data:
   name: ExampleConfiguration
   description: A 'hello world' style plugin. This is an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.
   version: 0.1.0
-  author: Lawrence McDaniel
   tags: red, green, blue
 
 # ------------------------------------------------------------
@@ -28,7 +27,7 @@ selector:
         - configuration
       - - example
         - plugin_data calling
-prompting:
+prompt:
   #------------------------------------------------------------
   # if this module is able to locate any of the search terms in the user prompt
   # then this system prompt text will will be added.
