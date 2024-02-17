@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """PluginMeta app models."""
+import yaml
 from django.contrib.auth import get_user_model
 from django.db import models
 from taggit.managers import TaggableManager
@@ -65,6 +66,10 @@ class PluginData(TimestampedModel):
     plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_data")
     description = models.TextField(null=True, blank=True)
     return_data = models.JSONField(default=dict)
+
+    @property
+    def data(self) -> dict:
+        return yaml.dump(self.return_data)
 
     def __str__(self) -> str:
         return str(self.plugin.name)

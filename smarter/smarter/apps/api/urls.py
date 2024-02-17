@@ -17,7 +17,6 @@ Including another URLconf
 """
 
 from django.urls import include, path
-from django.views.decorators.http import require_http_methods
 from rest_framework.routers import DefaultRouter
 
 from smarter.apps.account.urls import urlpatterns as account_urls
@@ -25,13 +24,7 @@ from smarter.apps.api.views.views import LogoutView
 from smarter.apps.openai_api.views import OpenAIViewSet
 from smarter.apps.openai_function_calling.views import FunctionCallingViewSet
 from smarter.apps.openai_langchain.views import LanchainViewSet
-from smarter.apps.plugin.views import (
-    PluginDataViewSet,
-    PluginPromptViewSet,
-    PluginSelectorViewSet,
-    PluginViewSet,
-    manage_plugin,
-)
+from smarter.apps.plugin.urls import urlpatterns as plugin_urls
 
 
 # Routers provide an easy way of automatically determining the URL conf.
@@ -40,16 +33,12 @@ router = DefaultRouter()
 router.register(r"chat", FunctionCallingViewSet, basename="chat")
 router.register(r"chat/chatgpt", OpenAIViewSet, basename="chatgpt")
 router.register(r"chat/langchain", LanchainViewSet, basename="langchain")
-router.register(r"plugin", PluginViewSet, basename="plugin")
-router.register(r"plugin_selector", PluginSelectorViewSet, basename="plugin_selector")
-router.register(r"plugin_prompt", PluginPromptViewSet, basename="plugin_prompt")
-router.register(r"plugin_data", PluginDataViewSet, basename="plugin_data")
 
 urlpatterns = [
     path("", include(router.urls)),
     path("api-auth/logout/", LogoutView.as_view(), name="logout"),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
-    path("plugins/", require_http_methods(["GET", "POST", "PATCH", "DELETE"])(manage_plugin), name="manage_plugin"),
 ]
 
 urlpatterns += account_urls
+urlpatterns += plugin_urls
