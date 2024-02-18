@@ -9,6 +9,8 @@ from django.db import models
 # our stuff
 from smarter.apps.common.model_utils import TimestampedModel
 
+from .signals import new_user_created
+
 
 User = get_user_model()
 
@@ -70,9 +72,13 @@ class UserProfile(TimestampedModel):
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="users")
 
     def save(self, *args, **kwargs):
+        is_new = self._state.adding
+
         if self.user is None or self.account is None:
             raise ValueError("User and Account cannot be null")
         super().save(*args, **kwargs)
+        if is_new:
+            new_user_created.send(sender=self.__class__, user_profile=self)
 
     def __str__(self):
         return str(self.account.company_name) + "-" + str(self.user.email or self.user.username)
