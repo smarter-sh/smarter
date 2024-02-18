@@ -417,6 +417,15 @@ class Plugins:
         for plugin in PluginMeta.objects.filter(account_id=self.account.id):
             self.plugins.append(Plugin(plugin_id=plugin.id))
 
+    @property
+    def data(self) -> list[dict]:
+        """Return a list of plugins in dictionary format."""
+        retval = []
+        for plugin in self.plugins:
+            if plugin.ready:
+                retval.append(plugin.data)
+        return retval
+
     def to_json(self) -> list[dict]:
         """Return a list of plugins in JSON format."""
         retval = []
