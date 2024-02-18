@@ -26,7 +26,7 @@ class Command(BaseCommand):
             user = User.objects.get(username=username)
             user.set_password(new_password)
             user.save()
-            self.stdout.write(self.style.SUCCESS(f"Password for user {username} has been changed."))
+            self.stdout.write(self.style.SUCCESS(f"Password for user {username} has been changed to {new_password}."))
         except User.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"User {username} does not exist."))
 
@@ -41,11 +41,12 @@ class Command(BaseCommand):
             alphabet = string.ascii_letters + string.digits + string.punctuation
             password = "".join(secrets.choice(alphabet) for _ in range(password_length))
 
-        password = make_password(password)
+        hashed_password = make_password(password)
 
         if username and email:
             if not User.objects.filter(username=username).exists():
-                User.objects.create_superuser(username=username, email=email, password=password)
+                print(f"Creating superuser account: {username} {email}")
+                User.objects.create_superuser(username=username, email=email, password=hashed_password)
             else:
                 self.change_password(username, password)
             if not options["password"]:
