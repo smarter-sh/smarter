@@ -3,8 +3,12 @@ meta_data:
   name: EverlastingGobstopper
   description: Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.
   version: 0.1.0
-  tags: candy, treats, chocolate, Gogstoppers, Willy Wonka
-
+  tags:
+    - candy
+    - treats
+    - chocolate
+    - Gogstoppers
+    - Willy Wonka
 selector:
   directive: search_terms
   # Complete search terms that will trigger the chatbot to use your customized system prompt.
@@ -22,7 +26,9 @@ prompt:
 
 plugin_data:
   description: Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.
+  # ---------------------------------------------------------------------------
   # Information provided to the OpenAI "Function Calling" algorithm to help it generate custom responses.
+  # ---------------------------------------------------------------------------
   return_data:
     contact:
       - name: Willy Wonka
