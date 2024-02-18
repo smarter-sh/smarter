@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Account models."""
+import logging
 import random
 
 from django.contrib.auth import get_user_model
@@ -13,6 +14,7 @@ from .signals import new_user_created
 
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 class Account(TimestampedModel):
@@ -72,12 +74,15 @@ class UserProfile(TimestampedModel):
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="users")
 
     def save(self, *args, **kwargs):
-        is_new = self._state.adding
+        is_new = self.pk is None
 
         if self.user is None or self.account is None:
             raise ValueError("User and Account cannot be null")
         super().save(*args, **kwargs)
         if is_new:
+            logger.info(
+                "New user profile created for %s %s. Sending signal.", self.account.company_name, self.user.email
+            )
             new_user_created.send(sender=self.__class__, user_profile=self)
 
     def __str__(self):
@@ -88,6 +93,7 @@ class PaymentMethodModel(TimestampedModel):
     """Payment method model."""
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="payment_methods")
+    name = models.CharField(max_length=255)
     stripe_id = models.CharField(max_length=255)
     card_type = models.CharField(max_length=255)
     card_last_4 = models.CharField(max_length=4)

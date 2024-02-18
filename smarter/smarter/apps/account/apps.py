@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 """Account app configuration."""
+import logging
+
 from django.apps import AppConfig
+
+
+logger = logging.getLogger(__name__)
 
 
 class AccountConfig(AppConfig):
@@ -8,3 +13,10 @@ class AccountConfig(AppConfig):
 
     default_auto_field = "django.db.models.BigAutoField"
     name = "smarter.apps.account"
+
+    # pylint: disable=import-outside-toplevel,W0611
+    def ready(self):
+        """Import signals."""
+        import smarter.apps.account.signals  # noqa
+
+        logger.info("Account app is ready")

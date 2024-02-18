@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""A Pythonic interface for working with plugins."""
+"""A Compound Model class for managing plugins."""
 
 import logging
 

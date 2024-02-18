@@ -73,8 +73,7 @@ django-init:
 	rm smarter/db.sqlite3 && \
 	cd smarter && python manage.py makemigrations && \
 	python manage.py migrate && \
-	python manage.py create_admin_user --username admin --email admin@smarter.sh --password blah && \
-	python manage.py changepassword admin
+	python manage.py create_admin_user --username admin --email admin@smarter.sh
 
 django-run:
 	cd smarter && python manage.py runserver
@@ -88,10 +87,7 @@ python-init:
 	$(PIP) install --upgrade pip && \
 	$(PIP) install -r requirements/local.txt && \
 	pre-commit install && \
-	cd smarter && python manage.py makemigrations && \
-	python manage.py migrate && \
-	python manage.py create_admin_user --username admin --email admin@smarter.sh --password blah && \
-	python manage.py changepassword admin
+	make django-init
 
 python-test:
 	cd smarter && python manage.py test
