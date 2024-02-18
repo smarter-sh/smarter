@@ -79,6 +79,7 @@ class Plugin:
             self.id = plugin_id
             logger.debug("Initialized using plugin_id.")
 
+        # creating a new plugin from data
         if data and not self.id:
             self.create(data)
             self.id = self.plugin_meta.id
@@ -288,8 +289,35 @@ class Plugin:
         prompt = data.get("prompt")
         plugin_data = data.get("plugin_data")
 
+        data_author = meta_data.get("author")
+        data_user = data.get("user")
+        data_account = data.get("account")
+        if self.user and data_user and self.user.id != data_user.id:
+            logger.warning(
+                "Inconsistent User data received: %s != %s. Using %s",
+                self.user.get_username(),
+                data_user.username,
+                self.user.get_username(),
+            )
+
+        if self.account and data_account and self.account.id != data_account.id:
+            logger.warning(
+                "Inconsistent Account data received: %s != %s. Using %s",
+                self.account.company_name,
+                data_account.company_name,
+                self.account.company_name,
+            )
+
+        if self.user_profile and data_author and self.user_profile.id != data_author.id:
+            logger.warning(
+                "Inconsistent Author data received: %s != %s. Using %s",
+                self.user_profile.user.get_username(),
+                data_author.user.username,
+                self.user_profile.user.get_username(),
+            )
+
         # Convert author_id to author
-        author_id = self.user_profile.id or meta_data.get("author")
+        author_id = self.user_profile.id if self.user_profile else meta_data.get("author")
         author = UserProfile.objects.get(id=author_id)
         meta_data["author"] = author
         meta_data["account"] = account
