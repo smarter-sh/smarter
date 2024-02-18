@@ -37,5 +37,5 @@ class Command(BaseCommand):
         else:
             accounts = Account.objects.all()
 
-        serializer = AccountSerializer(data=accounts, many=True)
+        serializer = AccountSerializer(accounts, many=True)
         print(serializer.data)
