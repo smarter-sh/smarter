@@ -18,6 +18,7 @@ from .serializers import (
     PluginPromptSerializer,
     PluginSelectorSerializer,
 )
+from .signals import plugin_created, plugin_deleted, plugin_updated
 
 
 User = get_user_model()
@@ -341,6 +342,7 @@ class Plugin:
             self.plugin_data = PluginData.objects.create(**plugin_data)
 
             self.id = self.plugin_meta.id
+            plugin_created.send(sender=self.__class__, plugin=self)
             logger.info("Created plugin %s: %s.", meta_data["name"], self.plugin_meta.id)
 
         return True
@@ -376,6 +378,7 @@ class Plugin:
             for key, value in plugin_data.items():
                 setattr(self.plugin_data, key, value)
             self.plugin_data.save()
+            plugin_updated.send(sender=self.__class__, plugin=self)
             logger.info("Updated plugin %s: %s.", self.name, self.id)
 
         return True
@@ -410,6 +413,7 @@ class Plugin:
             self.plugin_selector_serializer = None
             self.plugin_meta_serializer = None
 
+            plugin_deleted.send(sender=self.__class__, plugin=self)
             logger.info("Updated plugin %s: %s.", plugin_id, plugin_name)
 
         return True
