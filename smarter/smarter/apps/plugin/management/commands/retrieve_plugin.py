@@ -31,9 +31,9 @@ class Command(BaseCommand):
             return
 
         try:
-            plugin_meta = PluginMeta.objects.get(name=options["name"], account_id=account.id)
+            plugin_meta = PluginMeta.objects.get(name=options["name"], account=account)
         except PluginMeta.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"Plugin {name} does not exist."))
 
-        plugin = Plugin(plugin_id=plugin_meta.id, account_id=account.id)
+        plugin = Plugin(plugin_id=plugin_meta.id)
         print(plugin.data)

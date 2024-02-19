@@ -10,6 +10,7 @@ from pathlib import Path
 
 import yaml
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
@@ -34,8 +35,6 @@ class TestPlugin(unittest.TestCase):
     """Test OpenAI Function Calling hook for refers_to."""
 
     data: dict
-    account: Account
-    user: User
     user_profile: UserProfile
 
     def setUp(self):
@@ -48,9 +47,7 @@ class TestPlugin(unittest.TestCase):
         self.account, _ = Account.objects.get_or_create(company_name="Test Account")
         self.user_profile, _ = UserProfile.objects.get_or_create(user=self.user, account=self.account)
 
-        self.data["user"] = self.user
-        self.data["account"] = self.account
-        self.data["meta_data"]["author"] = self.user_profile.id
+        self.data["user_profile"] = self.user_profile
 
     def tearDown(self):
         """Clean up test fixtures."""
@@ -156,3 +153,91 @@ class TestPlugin(unittest.TestCase):
         # and are in a ready state.
         for plugin in plugins:
             self.assertTrue(Plugin(plugin_meta=plugin).ready)
+
+    # pylint: disable=too-many-statements
+    def test_validation_bad_structure(self):
+        """Test that the Plugin raises an error when given bad data."""
+        with self.assertRaises(ValidationError):
+            Plugin(data={})
+
+        bad_data = self.data.copy()
+        bad_data.pop("meta_data")
+        with self.assertRaises(ValidationError):
+            Plugin(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data.pop("selector")
+        with self.assertRaises(ValidationError):
+            Plugin(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data.pop("prompt")
+        with self.assertRaises(ValidationError):
+            Plugin(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data.pop("plugin_data")
+        with self.assertRaises(ValidationError):
+            Plugin(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data["meta_data"].pop("name")
+        with self.assertRaises(ValidationError):
+            Plugin(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data["selector"].pop("directive")
+        with self.assertRaises(ValidationError):
+            Plugin(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data["prompt"].pop("system_role")
+        with self.assertRaises(ValidationError):
+            Plugin(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data["prompt"].pop("model")
+        with self.assertRaises(ValidationError):
+            Plugin(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data["prompt"].pop("temperature")
+        with self.assertRaises(ValidationError):
+            Plugin(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data["prompt"].pop("max_tokens")
+        with self.assertRaises(ValidationError):
+            Plugin(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data["plugin_data"].pop("description")
+        with self.assertRaises(ValidationError):
+            Plugin(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data["plugin_data"].pop("return_data")
+        with self.assertRaises(ValidationError):
+            Plugin(data=bad_data)
+
+    def test_validation_bad_data_types(self):
+        """Test that the Plugin raises an error when given bad data."""
+        bad_data = self.data.copy()
+        bad_data["meta_data"]["tags"] = "not a list"
+        with self.assertRaises(ValidationError):
+            Plugin(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data["selector"]["search_terms"] = "not a list"
+        with self.assertRaises(ValidationError):
+            Plugin(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data["prompt"]["temperature"] = "not a float"
+        with self.assertRaises(ValidationError):
+            Plugin(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data["prompt"]["max_tokens"] = "not an int"
+        with self.assertRaises(ValidationError):
+            Plugin(data=bad_data)

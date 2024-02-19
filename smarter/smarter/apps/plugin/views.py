@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 """PluginMeta views."""
 
+from http import HTTPStatus
+
 from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
+from smarter.apps.account.models import UserProfile
 
 from .plugin import Plugin, Plugins
 
@@ -25,17 +29,19 @@ def plugin_view(request, plugin_id):
 @permission_classes([IsAuthenticated])
 def plugin_create_view(request):
     """Create a plugin from a json representation in the body of the request."""
+    user_profile = UserProfile.objects.get(user=request.user)
     data = request.data
-    plugin = Plugin(user_id=request.user.id, data=data)
-    return JsonResponse(plugin.to_json(), status=405)
+    data["user_profile"] = user_profile
+    plugin = Plugin(data=data)
+    return JsonResponse(plugin.to_json(), status=HTTPStatus.OK)
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def plugins_view(request):
     """Get a json list[dict] of all plugins for the current user."""
-    plugins = Plugins(user_id=request.user.id)
-    return Response(plugins.to_json())
+    plugins = Plugins(user=request.user)
+    return Response(plugins.to_json(), status=HTTPStatus.OK)
 
 
 # -----------------------------------------------------------------------
@@ -43,20 +49,23 @@ def plugins_view(request):
 # -----------------------------------------------------------------------
 def get_plugin(request, plugin_id):
     """Get a plugin json representation by id."""
-    plugin = Plugin(plugin_id=plugin_id, user_id=request.user.id)
-    return Response(plugin.to_json())
+    user_profile = UserProfile.objects.get(user=request.user)
+    plugin = Plugin(plugin_id=plugin_id, user_profile=user_profile)
+    return Response(plugin.to_json(), status=HTTPStatus.OK)
 
 
 def update_plugin(request):
     """update a plugin from a json representation in the body of the request."""
+    user_profile = UserProfile.objects.get(user=request.user)
     data = request.data
-    data["user"] = request.user.id
+    data["user_profile"] = user_profile
     plugin = Plugin(data=data)
-    return Response(plugin.to_json())
+    return Response(plugin.to_json(), status=HTTPStatus.OK)
 
 
 def delete_plugin(request, plugin_id):
     """delete a plugin by id."""
-    plugin = Plugin(user_id=request.user.id, plugin_id=plugin_id)
+    user_profile = UserProfile.objects.get(user=request.user)
+    plugin = Plugin(plugin_id=plugin_id, user_profile=user_profile)
     plugin.delete()
-    return Response({"result": "success"})
+    return Response({"result": "success"}, status=HTTPStatus.OK)

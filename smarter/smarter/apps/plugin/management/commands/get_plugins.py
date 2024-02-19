@@ -26,6 +26,6 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f"Account {account_number} does not exist."))
             return
 
-        plugins = Plugins(account_id=account.id)
+        plugins = Plugins(account=account)
         retval = [{"id": plugin["id"], "name": plugin["meta_data"]["name"]} for plugin in plugins.data]
         print(retval)
