@@ -24,9 +24,5 @@ def add_example_plugins(user_profile: UserProfile) -> bool:
             with open(os.path.join(PLUGINS_PATH, file), "r", encoding="utf-8") as file:
                 data = yaml.safe_load(file.read())
 
-            data["meta_data"]["author"] = user_profile.id
-            data["account"] = user_profile.account
-            data["user"] = user_profile.user
             data["user_profile"] = user_profile
-
             Plugin(data=data)

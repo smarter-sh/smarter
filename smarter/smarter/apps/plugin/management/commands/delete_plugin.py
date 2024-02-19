@@ -13,21 +13,21 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
-        parser.add_argument("account_id", type=str, help="The Account ID of the plugin to delete.")
+        parser.add_argument("account_number", type=str, help="The Account number of the plugin to delete.")
         parser.add_argument("name", type=str, help="The name of the plugin to delete.")
 
     def handle(self, *args, **options):
         """delete the plugin."""
-        account_id = options["account_id"]
+        account_number = options["account_number"]
         name = options["name"]
 
         account: Account = None
         plugin_meta: PluginMeta = None
 
         try:
-            account = Account.objects.get(account_id=account_id)
+            account = Account.objects.get(account_number=account_number)
         except Account.DoesNotExist:
-            self.stdout.write(self.style.ERROR(f"Account {account_id} does not exist."))
+            self.stdout.write(self.style.ERROR(f"Account {account_number} does not exist."))
             return
 
         try:
@@ -35,6 +35,6 @@ class Command(BaseCommand):
         except PluginMeta.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"Plugin {name} does not exist."))
 
-        plugin = Plugin(plugin_id=plugin_meta.id, account_id=account.id)
+        plugin = Plugin(plugin_id=plugin_meta.id)
         plugin.delete()
         self.stdout.write(self.style.SUCCESS(f"Plugin {name} has been deleted."))

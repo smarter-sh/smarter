@@ -5,7 +5,7 @@ import json
 import logging
 
 import yaml
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from rest_framework import serializers
@@ -22,84 +22,54 @@ from .serializers import (
 from .signals import plugin_created, plugin_deleted, plugin_updated
 
 
-User = get_user_model()
 logger = logging.getLogger(__name__)
 
 
-# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-instance-attributes,too-many-public-methods
 class Plugin:
     """A class for working with plugins."""
 
-    user = None
-    user_profile: UserProfile = None
-    account: Account = None
+    _user_profile: UserProfile = None
 
-    plugin_meta: PluginMeta = None
-    plugin_selector: PluginSelector = None
-    plugin_prompt: PluginPrompt = None
-    plugin_data: PluginData = None
+    _plugin_meta: PluginMeta = None
+    _plugin_selector: PluginSelector = None
+    _plugin_prompt: PluginPrompt = None
+    _plugin_data: PluginData = None
 
-    plugin_data_serializer: PluginDataSerializer = None
-    plugin_prompt_serializer: PluginPromptSerializer = None
-    plugin_selector_serializer: PluginSelectorSerializer = None
-    plugin_meta_serializer: PluginMetaSerializer = None
+    _plugin_data_serializer: PluginDataSerializer = None
+    _plugin_prompt_serializer: PluginPromptSerializer = None
+    _plugin_selector_serializer: PluginSelectorSerializer = None
+    _plugin_meta_serializer: PluginMetaSerializer = None
 
-    # pylint: disable=too-many-arguments
     def __init__(
         self,
-        user_id: int = None,
-        account_id: int = None,
         plugin_id: int = None,
+        user_profile: UserProfile = None,
         plugin_meta: PluginMeta = None,
         data=None,
     ):
         """
         Initialize the class.
-
-        id: pk of PluginMeta
-        plugin_meta: a PluginMeta instance
         data: yaml or dict representation of a plugin
         """
-        if user_id:
-            self.user = User.objects.get(pk=user_id)
-            self.user_profile = UserProfile.objects.get(user_id=user_id)
-            self.account = self.user_profile.account
-
-        if account_id:
-            account = Account.objects.get(pk=account_id)
-            if self.account and account.id != self.account.id:
-                raise ValidationError("Account provided does not match user account.")
-
-        if self.user and self.account:
-            # pylint: disable=W0707
-            try:
-                UserProfile.objects.get(user_id=self.user.id, account_id=self.account.id)
-            except UserProfile.DoesNotExist:
-                raise ValidationError("User is not associated with this account.")
-
         if plugin_id:
             self.id = plugin_id
-            logger.debug("Initialized using plugin_id.")
+            return
+
+        if user_profile and plugin_meta:
+            if plugin_meta.author != user_profile:
+                raise ValidationError("User is not the author of this plugin.")
+
+        if plugin_meta:
+            self.id = plugin_meta.id
+            return
+
+        if user_profile:
+            self._user_profile = user_profile
 
         # creating a new plugin from data
-        if data and not self.id:
+        if data is not None:
             self.create(data)
-            self.id = self.plugin_meta.id
-            logger.debug("Initialed with data.")
-
-        if plugin_meta and not self.id:
-            self.id = plugin_meta.id
-            logger.debug("Initialized with plugin_meta.")
-
-        if self.user and self.account:
-            if self.user.is_superuser:
-                return
-
-            if self.user.id != self.plugin_meta.author.id:
-                raise ValidationError("User does not own this plugin.")
-
-            if self.account.id != self.plugin_meta.account.id:
-                raise ValidationError("Account provided does not own this plugin.")
 
     def __str__(self) -> str:
         """Return the name of the plugin."""
@@ -115,19 +85,64 @@ class Plugin:
     @id.setter
     def id(self, value: int):
         """Set the id of the plugin."""
-        self.plugin_meta = PluginMeta.objects.get(pk=value)
-        self.plugin_meta_serializer = PluginMetaSerializer(self.plugin_meta)
+        self._plugin_meta = PluginMeta.objects.get(pk=value)
+        self._plugin_meta_serializer = PluginMetaSerializer(self.plugin_meta)
 
-        self.plugin_selector = PluginSelector.objects.get(pk=value)
-        self.plugin_selector_serializer = PluginSelectorSerializer(self.plugin_selector)
+        self._plugin_selector = PluginSelector.objects.get(pk=value)
+        self._plugin_selector_serializer = PluginSelectorSerializer(self.plugin_selector)
 
-        self.plugin_prompt = PluginPrompt.objects.get(pk=value)
-        self.plugin_prompt_serializer = PluginPromptSerializer(self.plugin_prompt)
+        self._plugin_prompt = PluginPrompt.objects.get(pk=value)
+        self._plugin_prompt_serializer = PluginPromptSerializer(self.plugin_prompt)
 
-        self.plugin_data = PluginData.objects.get(pk=value)
-        self.plugin_data_serializer = PluginDataSerializer(self.plugin_data)
+        self._plugin_data = PluginData.objects.get(pk=value)
+        self._plugin_data_serializer = PluginDataSerializer(self.plugin_data)
 
-        self.validate()
+        self._user_profile = self.plugin_meta.author
+
+    @property
+    def plugin_meta(self) -> PluginMeta:
+        """Return the plugin meta."""
+        return self._plugin_meta
+
+    @property
+    def plugin_meta_serializer(self) -> PluginMetaSerializer:
+        """Return the plugin meta serializer."""
+        return self._plugin_meta_serializer
+
+    @property
+    def plugin_selector(self) -> PluginSelector:
+        """Return the plugin selector."""
+        return self._plugin_selector
+
+    @property
+    def plugin_selector_serializer(self) -> PluginSelectorSerializer:
+        """Return the plugin selector serializer."""
+        return self._plugin_selector_serializer
+
+    @property
+    def plugin_prompt(self) -> PluginPrompt:
+        """Return the plugin prompt."""
+        return self._plugin_prompt
+
+    @property
+    def plugin_prompt_serializer(self) -> PluginPromptSerializer:
+        """Return the plugin prompt serializer."""
+        return self._plugin_prompt_serializer
+
+    @property
+    def plugin_data(self) -> PluginData:
+        """Return the plugin data."""
+        return self._plugin_data
+
+    @property
+    def plugin_data_serializer(self) -> PluginDataSerializer:
+        """Return the plugin data serializer."""
+        return self._plugin_data_serializer
+
+    @property
+    def user_profile(self) -> UserProfile:
+        """Return the user profile."""
+        return self._user_profile
 
     @property
     def name(self) -> str:
@@ -140,6 +155,10 @@ class Plugin:
     # pylint: disable=too-many-return-statements
     def ready(self) -> bool:
         """Return whether the plugin is ready."""
+        if not self.user_profile:
+            return False
+        if not isinstance(self.user_profile, UserProfile):
+            return False
         # validate the models
         if not isinstance(self.plugin_meta, PluginMeta):
             return False
@@ -176,6 +195,13 @@ class Plugin:
             return yaml.dump(self.to_json())
         return None
 
+    def yaml_to_json(self, yaml_string: str) -> dict:
+        """Convert a yaml string to a dictionary."""
+
+        if self.is_valid_yaml(yaml_string):
+            return yaml.safe_load(yaml_string)
+        raise ValidationError("Invalid data: must be a dictionary or valid YAML.")
+
     def is_valid_yaml(self, data):
         """Validate a yaml string."""
         try:
@@ -183,19 +209,6 @@ class Plugin:
             return True
         except yaml.YAMLError:
             return False
-
-    def validate(self):
-        """Validate the plugin."""
-        if not self.ready:
-            raise ValidationError("Plugin is not ready.")
-
-        # pylint: disable=W0707
-        try:
-            UserProfile.objects.get(user_id=self.plugin_meta.author.id, account=self.plugin_meta.account)
-        except UserProfile.DoesNotExist:
-            raise ValidationError("Plugin author is not associated with this account.")
-
-        logger.debug("Plugin is valid.")
 
     def validate_data_structure(self, data: dict) -> bool:
         """Validate the data dict."""
@@ -208,13 +221,33 @@ class Plugin:
                     if subkey not in data[key]:
                         raise ValidationError(f"Invalid data: missing {key}['{subkey}']")
 
+        # top-level required keys
         if not isinstance(data, dict):
             raise ValidationError("Invalid data. Must be a dictionary.")
-        if not isinstance(data, dict):
-            raise ValidationError("Invalid data. Must be a dictionary.")
+        if not data.get("user_profile"):
+            raise ValidationError("Invalid data. Missing data['user_profile'].")
+        if not isinstance(data["user_profile"], UserProfile):
+            raise ValidationError("Invalid data. data['user_profile'] must be a UserProfile instance.")
+
+        # plugin required keys
+        if not data.get("meta_data"):
+            raise ValidationError("Invalid data. Missing meta_data.")
+        if not data.get("selector"):
+            raise ValidationError("Invalid data. Missing selector.")
+        if not data.get("prompt"):
+            raise ValidationError("Invalid data. Missing prompt.")
+        if not data.get("plugin_data"):
+            raise ValidationError("Invalid data. Missing plugin_data.")
+
+        # top-level prohibited keys
+        if data.get("id"):
+            raise ValidationError("Invalid data. dict key data['id'] is not writable.")
+        meta_data = data.get("meta_data")
+        if meta_data.get("author"):
+            raise ValidationError("Invalid data. dict key data['meta_data']['author'] is not writable.")
 
         # validate the structure of the data
-        validate_key(data, "meta_data", ["name", "author", "description", "version", "tags"])
+        validate_key(data, "meta_data", ["name", "description", "version", "tags"])
         validate_key(data, "selector", ["search_terms"])
         validate_key(data, "prompt", ["system_role", "model", "temperature", "max_tokens"])
         validate_key(data, "plugin_data", ["description", "return_data"])
@@ -244,7 +277,6 @@ class Plugin:
 
         # validate the data types
         validate_data_type(data["meta_data"], "name", str)
-        validate_data_type(data["meta_data"], "author", UserProfile)
         validate_data_type(data["meta_data"], "description", str)
         validate_data_type(data["meta_data"], "version", str)
         validate_data_type(data["meta_data"], "tags", list, required=False)
@@ -287,43 +319,6 @@ class Plugin:
 
         raise ValidationError("Invalid data: return_data must be a string, json or yaml.")
 
-    def validate_operation(self, data: dict) -> bool:
-        """
-        Validate business rules. Namely, we want to ensure that the user is
-        associated with the account, or is a superuser, or is the author of the plugin.
-        """
-        user = self.user or data.get("user")
-        user_profile = self.user_profile or UserProfile.objects.get(user_id=user.id)
-        plugin = data.get("plugin")
-
-        # plugin is optional, but if its provided then the account value supersedes
-        # the account value passed in the data dictionary.
-        if plugin:
-            if not isinstance(plugin, PluginMeta):
-                raise ValidationError("Invalid plugin. Must be a PluginMeta instance.")
-            account = plugin.account
-        else:
-            account = self.account or data.get("account")
-
-        if not isinstance(user, User):
-            raise ValidationError("Invalid user. Must be a User instance.")
-        if not user_profile:
-            raise ValidationError("User not found.")
-
-        if not isinstance(account, Account):
-            raise ValidationError("Invalid account. Must be an Account instance.")
-        if not account:
-            raise ValidationError("Account not found.")
-
-        # Ensure the user is associated with the account, or is a superuser, or is
-        # the author of the plugin.
-        if not UserProfile.objects.get(user_id=user_profile.user.id, account=account):
-            if not user.is_superuser and not user.id == plugin.author.id:
-                raise ValidationError("User is not associated with this account.")
-
-        logger.debug("Operation is valid.")
-        return True
-
     def validate_write_operation(self, data: dict) -> bool:
         """Validate the structural integrity of the input dict."""
         meta_data = data.get("meta_data")
@@ -365,116 +360,73 @@ class Plugin:
         logger.debug("Write operation is valid.")
         return True
 
-    def validate_account_integrity(self, data: dict) -> bool:
-        meta_data = data.get("meta_data")
-
-        data_author = meta_data.get("author")
-        data_user = data.get("user")
-        data_account = data.get("account")
-        if self.user and data_user and self.user.id != data_user.id:
-            logger.warning(
-                "Inconsistent User data received: %s != %s. Using %s",
-                self.user.get_username(),
-                data_user.username,
-                self.user.get_username(),
-            )
-
-        if self.account and data_account and self.account.id != data_account.id:
-            logger.warning(
-                "Inconsistent Account data received: %s != %s. Using %s",
-                self.account.company_name,
-                data_account.company_name,
-                self.account.company_name,
-            )
-
-        if self.user_profile and data_author and self.user_profile.id != data_author.id:
-            logger.warning(
-                "Inconsistent Author data received: %s != %s. Using %s",
-                self.user_profile.user.get_username(),
-                data_author.user.username,
-                self.user_profile.user.get_username(),
-            )
-
-        logger.debug("Account integrity is valid.")
-        return True
-
     def create(self, data):
         """Create a plugin from either yaml or a dictionary."""
 
+        # expected use case is that we received a yaml string.
+        # validate it and convert it to a dictionary.
         if not isinstance(data, dict):
-            # assume that we received a yaml string.
-            # validate it and convert it to a dictionary.
-            if self.is_valid_yaml(data):
-                data = yaml.safe_load(data)
-            else:
-                raise ValidationError("Invalid data: must be a dictionary or valid YAML.")
+            data = self.yaml_to_json(yaml_string=data)
+
+        # extract anything that might have been set
+        # in the constructor.
+        if self.user_profile:
+            data["user_profile"] = self.user_profile
+        else:
+            if data.get("user_profile"):
+                self._user_profile = data.get("user_profile")
 
         self.validate_data_structure(data)
-        self.validate_operation(data)
+        self.validate_data_types(data)
         self.validate_write_operation(data)
-        self.validate_account_integrity(data)
-
-        account = self.account or data.get("account")
 
         # initialize the major sections of the plugin yaml file
         meta_data = data.get("meta_data")
+        meta_data["author"] = self.user_profile if self.user_profile else meta_data.get("author")
         selector = data.get("selector")
         prompt = data.get("prompt")
         plugin_data = data.get("plugin_data")
 
-        # Convert author_id to author
-        author_id = self.user_profile.id if self.user_profile else meta_data.get("author")
-        author = UserProfile.objects.get(id=author_id)
-        meta_data["author"] = author
-        meta_data["account"] = account
-
-        self.validate_data_types(data)
-
         # account/name is unique, so if the plugin already exists,
         # then update it instead of creating a new one.
-        plugin_meta = PluginMeta.objects.filter(account=account, name=meta_data["name"]).first()
+        plugin_meta = PluginMeta.objects.filter(account=self.user_profile.account, name=meta_data["name"]).first()
         if plugin_meta:
-            self.plugin_meta = plugin_meta
+            self.id = plugin_meta.id
             logger.info("Plugin %s already exists. Updating plugin %s.", meta_data["name"], plugin_meta.id)
             return self.update(data)
 
         with transaction.atomic():
-            self.plugin_meta = PluginMeta.objects.create(**meta_data)
+            plugin_meta = PluginMeta.objects.create(**meta_data)
 
-            selector["plugin_id"] = self.plugin_meta.id
-            prompt["plugin_id"] = self.plugin_meta.id
-            plugin_data["plugin_id"] = self.plugin_meta.id
+            selector["plugin_id"] = plugin_meta.id
+            prompt["plugin_id"] = plugin_meta.id
+            plugin_data["plugin_id"] = plugin_meta.id
 
-            self.plugin_selector = PluginSelector.objects.create(**selector)
-            self.plugin_prompt = PluginPrompt.objects.create(**prompt)
-            self.plugin_data = PluginData.objects.create(**plugin_data)
+            PluginSelector.objects.create(**selector)
+            PluginPrompt.objects.create(**prompt)
+            PluginData.objects.create(**plugin_data)
 
-            self.id = self.plugin_meta.id
-            plugin_created.send(sender=self.__class__, plugin=self)
-            logger.debug("Created plugin %s: %s.", meta_data["name"], self.plugin_meta.id)
-
+        self.id = plugin_meta.id
+        plugin_created.send(sender=self.__class__, plugin=self)
+        logger.debug("Created plugin %s: %s.", self.plugin_meta.name, self.plugin_meta.id)
         return True
 
     def update(self, data: dict = None):
         """Update a plugin."""
 
         if not data:
-            self.save()
-            return True
+            return self.save()
 
         self.validate_data_structure(data)
         self.validate_data_types(data)
-        self.validate_operation(data)
         self.validate_write_operation(data)
-        self.validate_account_integrity(data)
 
         meta_data = data.get("meta_data")
         selector = data.get("selector")
         prompt = data.get("prompt")
         plugin_data = data.get("plugin_data")
 
-        account = self.account or data.get("account")
-        self.plugin_meta = PluginMeta.objects.filter(account=account, name=meta_data["name"]).first()
+        self.plugin_meta = PluginMeta.objects.filter(account=self.user_profile.account, name=meta_data["name"]).first()
         self.plugin_prompt = PluginPrompt.objects.get(pk=self.plugin_meta.id)
         self.plugin_selector = PluginSelector.objects.get(pk=self.plugin_meta.id)
         self.plugin_data = PluginData.objects.get(pk=self.plugin_meta.id)
@@ -502,6 +454,9 @@ class Plugin:
 
     def save(self):
         """Save a plugin."""
+        if not self.ready:
+            return False
+
         with transaction.atomic():
             self.plugin_meta.save()
             self.plugin_selector.save()
@@ -512,6 +467,9 @@ class Plugin:
 
     def delete(self):
         """Delete a plugin."""
+        if not self.ready:
+            return False
+
         plugin_id = self.id
         plugin_name = self.name
         with transaction.atomic():
@@ -520,15 +478,15 @@ class Plugin:
             self.plugin_selector.delete()
             self.plugin_meta.delete()
 
-            self.plugin_data = None
-            self.plugin_prompt = None
-            self.plugin_selector = None
-            self.plugin_meta = None
+            self._plugin_data = None
+            self._plugin_prompt = None
+            self._plugin_selector = None
+            self._plugin_meta = None
 
-            self.plugin_data_serializer = None
-            self.plugin_prompt_serializer = None
-            self.plugin_selector_serializer = None
-            self.plugin_meta_serializer = None
+            self._plugin_data_serializer = None
+            self._plugin_prompt_serializer = None
+            self._plugin_selector_serializer = None
+            self._plugin_meta_serializer = None
 
             plugin_deleted.send(sender=self.__class__, plugin=self)
             logger.debug("Deleted plugin %s: %s.", plugin_id, plugin_name)
@@ -555,16 +513,14 @@ class Plugins:
     account: Account = None
     plugins: list[Plugin] = []
 
-    def __init__(self, user_id: int = None, account_id: int = None):
-
-        if user_id:
-            self.account = UserProfile.objects.get(user_id=user_id).account
-        else:
-            self.account = Account.objects.get(pk=account_id)
+    def __init__(self, user: User = None, account: Account = None):
 
         self.plugins = []
-        for plugin in PluginMeta.objects.filter(account_id=self.account.id):
-            self.plugins.append(Plugin(plugin_id=plugin.id))
+        if user or account:
+            self.account = account or UserProfile.objects.get(user=user).account
+
+            for plugin in PluginMeta.objects.filter(account=self.account):
+                self.plugins.append(Plugin(plugin_id=plugin.id))
 
     @property
     def data(self) -> list[dict]:
