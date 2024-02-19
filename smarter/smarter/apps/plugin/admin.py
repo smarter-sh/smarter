@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """Plugin admin."""
+import re
+
 from django.contrib import admin
 
 from .models import PluginData, PluginMeta, PluginPrompt, PluginSelector
@@ -30,12 +32,23 @@ class PluginDataInline(admin.StackedInline):
 class PluginAdmin(admin.ModelAdmin):
     """Plugin model admin."""
 
+    def author_company_name(self, obj):
+        return obj.author
+
+    def plugin_name(self, obj):
+        name = obj.name
+        formatted_name = re.sub(r"(?<!^)(?=[A-Z])", " ", name)
+        return formatted_name
+
+    author_company_name.short_description = "Account-User"
+
     inlines = [PluginSelectorInline, PluginPromptInline, PluginDataInline]
 
     readonly_fields = (
         "created_at",
         "updated_at",
     )
+    list_display = ("author_company_name", "plugin_name", "version", "created_at", "updated_at")
 
 
 admin.site.register(PluginMeta, PluginAdmin)
