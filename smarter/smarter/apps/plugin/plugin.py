@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """A Compound Model class for managing plugins."""
 
+import copy
 import json
 import logging
+import re
 
 import yaml
 from django.contrib.auth.models import User
@@ -19,7 +21,7 @@ from .serializers import (
     PluginPromptSerializer,
     PluginSelectorSerializer,
 )
-from .signals import plugin_created, plugin_deleted, plugin_updated
+from .signals import plugin_cloned, plugin_created, plugin_deleted, plugin_updated
 
 
 logger = logging.getLogger(__name__)
@@ -90,13 +92,13 @@ class Plugin:
         self._plugin_meta = PluginMeta.objects.get(pk=value)
         self._plugin_meta_serializer = PluginMetaSerializer(self.plugin_meta)
 
-        self._plugin_selector = PluginSelector.objects.get(pk=value)
+        self._plugin_selector = PluginSelector.objects.get(plugin=self.plugin_meta)
         self._plugin_selector_serializer = PluginSelectorSerializer(self.plugin_selector)
 
-        self._plugin_prompt = PluginPrompt.objects.get(pk=value)
+        self._plugin_prompt = PluginPrompt.objects.get(plugin=self.plugin_meta)
         self._plugin_prompt_serializer = PluginPromptSerializer(self.plugin_prompt)
 
-        self._plugin_data = PluginData.objects.get(pk=value)
+        self._plugin_data = PluginData.objects.get(plugin=self.plugin_meta)
         self._plugin_data_serializer = PluginDataSerializer(self.plugin_data)
 
         self._user_profile = self.plugin_meta.author
@@ -365,6 +367,11 @@ class Plugin:
     def create(self, data):
         """Create a plugin from either yaml or a dictionary."""
 
+        def committed(plugin_id: int):
+            self.id = plugin_id
+            plugin_created.send(sender=self.__class__, plugin=self)
+            logger.debug("Created plugin %s: %s.", self.plugin_meta.name, self.plugin_meta.id)
+
         # expected use case is that we received a yaml string.
         # validate it and convert it to a dictionary.
         if not isinstance(data, dict):
@@ -408,13 +415,16 @@ class Plugin:
             PluginPrompt.objects.create(**prompt)
             PluginData.objects.create(**plugin_data)
 
-        self.id = plugin_meta.id
-        plugin_created.send(sender=self.__class__, plugin=self)
-        logger.debug("Created plugin %s: %s.", self.plugin_meta.name, self.plugin_meta.id)
+        transaction.on_commit(lambda: committed(plugin_id=plugin_meta.id))
+
         return True
 
     def update(self, data: dict = None):
         """Update a plugin."""
+
+        def committed():
+            plugin_updated.send(sender=self.__class__, plugin=self)
+            logger.debug("Updated plugin %s: %s.", self.name, self.id)
 
         if not data:
             return self.save()
@@ -449,13 +459,17 @@ class Plugin:
             for key, value in plugin_data.items():
                 setattr(self.plugin_data, key, value)
             self.plugin_data.save()
-            plugin_updated.send(sender=self.__class__, plugin=self)
-            logger.debug("Updated plugin %s: %s.", self.name, self.id)
+
+        transaction.on_commit(committed)
 
         return True
 
     def save(self):
         """Save a plugin."""
+
+        def committed():
+            logger.debug("Saved plugin %s: %s.", self.name, self.id)
+
         if not self.ready:
             return False
 
@@ -464,11 +478,17 @@ class Plugin:
             self.plugin_selector.save()
             self.plugin_prompt.save()
             self.plugin_data.save()
-            logger.debug("Saved plugin %s: %s.", self.name, self.id)
+
+        transaction.on_commit(committed)
         return True
 
     def delete(self):
         """Delete a plugin."""
+
+        def committed():
+            plugin_deleted.send(sender=self.__class__, plugin=self)
+            logger.debug("Deleted plugin %s: %s.", plugin_id, plugin_name)
+
         if not self.ready:
             return False
 
@@ -490,10 +510,56 @@ class Plugin:
             self._plugin_selector_serializer = None
             self._plugin_meta_serializer = None
 
-            plugin_deleted.send(sender=self.__class__, plugin=self)
-            logger.debug("Deleted plugin %s: %s.", plugin_id, plugin_name)
-
+        transaction.on_commit(committed)
         return True
+
+    def clone(self, new_name: str = None):
+        """Clone a plugin."""
+
+        def committed(new_plugin_id: int):
+            plugin_cloned.send(sender=self.__class__, plugin_id=new_plugin_id)
+            logger.debug(
+                "Cloned plugin %s: %s to %s: %s", self.id, self.name, plugin_meta_copy.id, plugin_meta_copy.name
+            )
+
+        def get_new_name(plugin_name, new_name=None):
+            """Get a new name for the plugin."""
+            if new_name is None:
+                match = re.search(r"\(copy(\d*)\)$", plugin_name)
+                if match:
+                    copy_number = match.group(1)
+                    if copy_number == "":
+                        new_name = re.sub(r"\(copy\)$", "(copy2)", plugin_name)
+                    else:
+                        new_name = re.sub(r"\(copy\d*\)$", f"(copy{int(copy_number)+1})", plugin_name)
+                else:
+                    new_name = f"{plugin_name} (copy)"
+            return new_name
+
+        if not self.ready:
+            return False
+
+        with transaction.atomic():
+            plugin_meta_copy = copy.deepcopy(self.plugin_meta)
+            plugin_meta_copy.id = None
+            plugin_meta_copy.name = new_name or get_new_name(plugin_name=self.name)
+            plugin_meta_copy.save()
+            plugin_meta_copy.refresh_from_db()
+
+            plugin_selector_copy = copy.deepcopy(self.plugin_selector)
+            plugin_selector_copy.plugin_id = plugin_meta_copy.id
+            plugin_selector_copy.save()
+
+            plugin_prompt_copy = copy.deepcopy(self.plugin_prompt)
+            plugin_prompt_copy.plugin_id = plugin_meta_copy.id
+            plugin_prompt_copy.save()
+
+            plugin_data_copy = copy.deepcopy(self.plugin_data)
+            plugin_data_copy.plugin_id = plugin_meta_copy.id
+            plugin_data_copy.save()
+
+        transaction.on_commit(lambda: committed(new_plugin_id=plugin_meta_copy.id))
+        return plugin_meta_copy.id
 
     def to_json(self) -> dict:
         """Return a plugin in JSON format."""

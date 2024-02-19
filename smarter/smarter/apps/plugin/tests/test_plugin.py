@@ -241,3 +241,30 @@ class TestPlugin(unittest.TestCase):
         bad_data["prompt"]["max_tokens"] = "not an int"
         with self.assertRaises(ValidationError):
             Plugin(data=bad_data)
+
+    def test_clone(self):
+        """Test that we can clone a plugin using the Plugin."""
+        plugin = Plugin(data=self.data)
+        clone_id = plugin.clone()
+        plugin_clone = Plugin(plugin_id=clone_id)
+
+        self.assertNotEqual(plugin.id, plugin_clone.id)
+        self.assertNotEqual(plugin.plugin_meta.name, plugin_clone.plugin_meta.name)
+        self.assertNotEqual(plugin.plugin_meta.created_at, plugin_clone.plugin_meta.created_at)
+
+        self.assertEqual(plugin.plugin_meta.author, plugin_clone.plugin_meta.author)
+        self.assertListEqual(list(plugin.plugin_meta.tags.all()), list(plugin_clone.plugin_meta.tags.all()))
+
+        self.assertEqual(plugin.plugin_selector.directive, plugin_clone.plugin_selector.directive)
+        self.assertEqual(plugin.plugin_selector.search_terms, plugin_clone.plugin_selector.search_terms)
+
+        self.assertEqual(plugin.plugin_prompt.system_role, plugin_clone.plugin_prompt.system_role)
+        self.assertEqual(plugin.plugin_prompt.model, plugin_clone.plugin_prompt.model)
+        self.assertEqual(plugin.plugin_prompt.temperature, plugin_clone.plugin_prompt.temperature)
+        self.assertEqual(plugin.plugin_prompt.max_tokens, plugin_clone.plugin_prompt.max_tokens)
+
+        self.assertEqual(plugin.plugin_data.description, plugin_clone.plugin_data.description)
+        self.assertEqual(plugin.plugin_data.return_data, plugin_clone.plugin_data.return_data)
+
+        plugin.delete()
+        plugin_clone.delete()
