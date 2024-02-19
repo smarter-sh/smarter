@@ -15,13 +15,13 @@ User = get_user_model()
 class PluginMeta(TimestampedModel):
     """PluginMeta model."""
 
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="plugins", null=True, blank=True)
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="plugins")
     name = models.CharField(max_length=255, default="PluginMeta")
-    description = models.TextField(null=True, blank=True)
+    description = models.TextField()
     version = models.CharField(max_length=255, default="1.0.0")
-    author = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="plugins", null=True, blank=True)
+    author = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="plugins")
 
-    tags = TaggableManager()
+    tags = TaggableManager(blank=True)
 
     def __str__(self):
         return str(self.name) or ""
