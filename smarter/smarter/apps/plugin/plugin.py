@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """A Compound Model class for managing plugins."""
 
+import json
 import logging
 
 import yaml
@@ -194,6 +195,99 @@ class Plugin:
         except UserProfile.DoesNotExist:
             raise ValidationError("Plugin author is not associated with this account.")
 
+        logger.debug("Plugin is valid.")
+
+    def validate_data_structure(self, data: dict) -> bool:
+        """Validate the data dict."""
+
+        def validate_key(data, key, subkeys=None):
+            if key not in data:
+                raise ValidationError(f"Invalid data. Missing {key}.")
+            if subkeys:
+                for subkey in subkeys:
+                    if subkey not in data[key]:
+                        raise ValidationError(f"Invalid data: missing {key}['{subkey}']")
+
+        if not isinstance(data, dict):
+            raise ValidationError("Invalid data. Must be a dictionary.")
+        if not isinstance(data, dict):
+            raise ValidationError("Invalid data. Must be a dictionary.")
+
+        # validate the structure of the data
+        validate_key(data, "meta_data", ["name", "author", "description", "version", "tags"])
+        validate_key(data, "selector", ["search_terms"])
+        validate_key(data, "prompt", ["system_role", "model", "temperature", "max_tokens"])
+        validate_key(data, "plugin_data", ["description", "return_data"])
+
+        return True
+
+    def validate_data_types(self, data: dict) -> bool:
+        """Validate the data dict."""
+        logger.info("Validating data types.")
+
+        def validate_data_type(data, key, data_type, required=True):
+            if required and key not in data:
+                raise ValidationError(f"Invalid data. Missing {key}.")
+            if required and not data[key]:
+                # Python interprets zero values as None in this case.
+                if data_type in [int, float]:
+                    return True
+                raise ValidationError(f"Invalid data: {key} is required but is empty.")
+
+            if not required and key not in data:
+                return True
+
+            if not isinstance(data[key], data_type):
+                raise ValidationError(
+                    f"Invalid data: {key} must be a {data_type} but received {type(data[key])}: {data[key]}"
+                )
+            return True
+
+        # validate the data types
+        validate_data_type(data["meta_data"], "name", str)
+        validate_data_type(data["meta_data"], "author", UserProfile)
+        validate_data_type(data["meta_data"], "description", str)
+        validate_data_type(data["meta_data"], "version", str)
+        validate_data_type(data["meta_data"], "tags", list, required=False)
+
+        validate_data_type(data["selector"], "directive", str)
+        validate_data_type(data["selector"], "search_terms", list)
+
+        validate_data_type(data["prompt"], "system_role", str)
+        validate_data_type(data["prompt"], "model", str)
+        validate_data_type(data["prompt"], "temperature", float)
+        validate_data_type(data["prompt"], "max_tokens", int)
+
+        validate_data_type(data["plugin_data"], "description", str)
+
+        # finally, validate the return_data, which should be yaml, json or a string.
+        return_data = data["plugin_data"]["return_data"]
+        if isinstance(return_data, str):
+            logger.debug("Data is valid.")
+            return True
+        if isinstance(return_data, dict):
+            logger.debug("Data is valid.")
+            return True
+        if isinstance(return_data, list):
+            logger.debug("Data is valid.")
+            return True
+
+        try:
+            yaml.safe_load(return_data)
+            logger.debug("Data is valid.")
+            return True
+        except yaml.YAMLError:
+            pass
+
+        try:
+            json.loads(return_data)
+            logger.debug("Data is valid.")
+            return True
+        except json.JSONDecodeError:
+            pass
+
+        raise ValidationError("Invalid data: return_data must be a string, json or yaml.")
+
     def validate_operation(self, data: dict) -> bool:
         """
         Validate business rules. Namely, we want to ensure that the user is
@@ -228,6 +322,7 @@ class Plugin:
             if not user.is_superuser and not user.id == plugin.author.id:
                 raise ValidationError("User is not associated with this account.")
 
+        logger.debug("Operation is valid.")
         return True
 
     def validate_write_operation(self, data: dict) -> bool:
@@ -268,27 +363,11 @@ class Plugin:
         if not plugin_data_serializer.is_valid():
             raise ValidationError(plugin_data_serializer.errors)
 
-    def create(self, data):
-        """Create a plugin from either yaml or a dictionary."""
+        logger.debug("Write operation is valid.")
+        return True
 
-        if not isinstance(data, dict):
-            # assume that we received a yaml string.
-            # validate it and convert it to a dictionary.
-            if self.is_valid_yaml(data):
-                data = yaml.safe_load(data)
-            else:
-                raise ValidationError("Invalid data: must be a dictionary or valid YAML.")
-
-        self.validate_operation(data)
-        self.validate_write_operation(data)
-
-        account = self.account or data.get("account")
-
-        # initialize the major sections of the plugin yaml file
+    def validate_account_integrity(self, data: dict) -> bool:
         meta_data = data.get("meta_data")
-        selector = data.get("selector")
-        prompt = data.get("prompt")
-        plugin_data = data.get("plugin_data")
 
         data_author = meta_data.get("author")
         data_user = data.get("user")
@@ -317,16 +396,46 @@ class Plugin:
                 self.user_profile.user.get_username(),
             )
 
+        logger.debug("Account integrity is valid.")
+        return True
+
+    def create(self, data):
+        """Create a plugin from either yaml or a dictionary."""
+
+        if not isinstance(data, dict):
+            # assume that we received a yaml string.
+            # validate it and convert it to a dictionary.
+            if self.is_valid_yaml(data):
+                data = yaml.safe_load(data)
+            else:
+                raise ValidationError("Invalid data: must be a dictionary or valid YAML.")
+
+        self.validate_data_structure(data)
+        self.validate_operation(data)
+        self.validate_write_operation(data)
+        self.validate_account_integrity(data)
+
+        account = self.account or data.get("account")
+
+        # initialize the major sections of the plugin yaml file
+        meta_data = data.get("meta_data")
+        selector = data.get("selector")
+        prompt = data.get("prompt")
+        plugin_data = data.get("plugin_data")
+
         # Convert author_id to author
         author_id = self.user_profile.id if self.user_profile else meta_data.get("author")
         author = UserProfile.objects.get(id=author_id)
         meta_data["author"] = author
         meta_data["account"] = account
 
+        self.validate_data_types(data)
+
         # account/name is unique, so if the plugin already exists,
         # then update it instead of creating a new one.
         plugin_meta = PluginMeta.objects.filter(account=account, name=meta_data["name"]).first()
         if plugin_meta:
+            self.plugin_meta = plugin_meta
             logger.info("Plugin %s already exists. Updating plugin %s.", meta_data["name"], plugin_meta.id)
             return self.update(data)
 
@@ -354,13 +463,22 @@ class Plugin:
             self.save()
             return True
 
+        self.validate_data_structure(data)
+        self.validate_data_types(data)
         self.validate_operation(data)
         self.validate_write_operation(data)
+        self.validate_account_integrity(data)
 
         meta_data = data.get("meta_data")
         selector = data.get("selector")
         prompt = data.get("prompt")
         plugin_data = data.get("plugin_data")
+
+        account = self.account or data.get("account")
+        self.plugin_meta = PluginMeta.objects.filter(account=account, name=meta_data["name"]).first()
+        self.plugin_prompt = PluginPrompt.objects.get(pk=self.plugin_meta.id)
+        self.plugin_selector = PluginSelector.objects.get(pk=self.plugin_meta.id)
+        self.plugin_data = PluginData.objects.get(pk=self.plugin_meta.id)
 
         with transaction.atomic():
             for key, value in meta_data.items():

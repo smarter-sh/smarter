@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 """Account app configuration."""
-import logging
-
 from django.apps import AppConfig
-
-
-logger = logging.getLogger(__name__)
 
 
 class AccountConfig(AppConfig):
@@ -18,5 +13,3 @@ class AccountConfig(AppConfig):
     def ready(self):
         """Import signals."""
         import smarter.apps.account.signals  # noqa
-
-        logger.info("Account app is ready")
