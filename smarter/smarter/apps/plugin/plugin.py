@@ -391,7 +391,8 @@ class Plugin:
 
         # initialize the major sections of the plugin yaml file
         meta_data = data.get("meta_data")
-        meta_data["author"] = self.user_profile if self.user_profile else meta_data.get("author")
+        meta_data["account"] = self.user_profile.account
+        meta_data["author"] = self.user_profile
         selector = data.get("selector")
         prompt = data.get("prompt")
         plugin_data = data.get("plugin_data")
