@@ -50,7 +50,8 @@ class Plugin:
     ):
         """
         Initialize the class.
-        data: yaml or dict representation of a plugin
+        data: yaml or dict representation of a plugin.
+              see ./data/sample-plugins/everlasting-gobstopper.yaml for an example.
         """
         if plugin_id:
             self.id = plugin_id
@@ -67,7 +68,8 @@ class Plugin:
         if user_profile:
             self._user_profile = user_profile
 
-        # creating a new plugin from data
+        # creating a new plugin or updating an existing plugin from
+        # yaml or json data.
         if data is not None:
             self.create(data)
 
