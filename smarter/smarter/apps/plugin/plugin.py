@@ -223,7 +223,6 @@ class Plugin:
 
     def validate_data_types(self, data: dict) -> bool:
         """Validate the data dict."""
-        logger.info("Validating data types.")
 
         def validate_data_type(data, key, data_type, required=True):
             if required and key not in data:
