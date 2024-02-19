@@ -67,13 +67,14 @@ aws-build:
 	terraform apply
 
 # ---------------------------------------------------------
-# Python Djanog API
+# Python Django Back End
 # ---------------------------------------------------------
 django-init:
 	rm smarter/db.sqlite3 && \
 	cd smarter && python manage.py makemigrations && \
 	python manage.py migrate && \
-	python manage.py create_admin_user --username admin --email admin@smarter.sh
+	python manage.py create_admin_user --username admin --email admin@smarter.sh && \
+	python manage.py add_plugin_examples admin
 
 django-run:
 	cd smarter && python manage.py runserver
