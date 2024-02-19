@@ -5,7 +5,6 @@
 
 # python stuff
 import os
-import sys
 import unittest
 from pathlib import Path
 
@@ -27,14 +26,8 @@ from smarter.apps.plugin.serializers import (
     PluginPromptSerializer,
     PluginSelectorSerializer,
 )
-from smarter.apps.plugin.tests.test_setup import get_test_file_path
-
-
-HERE = os.path.abspath(os.path.dirname(__file__))
-PROJECT_ROOT = str(Path(HERE).parent.parent)
-PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
-if PYTHON_ROOT not in sys.path:
-    sys.path.append(PYTHON_ROOT)  # noqa: E402
+from smarter.apps.plugin.tests.test_setup import PROJECT_ROOT, get_test_file_path
+from smarter.apps.plugin.utils import add_example_plugins
 
 
 class TestPlugin(unittest.TestCase):
@@ -144,3 +137,22 @@ class TestPlugin(unittest.TestCase):
 
         with self.assertRaises(PluginData.DoesNotExist):
             PluginData.objects.get(plugin_id=plugin_id)
+
+    def test_add_sample_plugins(self):
+        """Test utility function to add sample plugins to a user account."""
+        plugins_path = os.path.join(PROJECT_ROOT, "smarter/apps/plugin/data/sample-plugins/")
+
+        # the number of sample plugins in the sample-plugins directory
+        sample_plugins_count = sum(1 for _ in Path(plugins_path).rglob("*.yaml"))
+
+        # add the sample plugins to the user account
+        add_example_plugins(user_profile=self.user_profile)
+
+        # verify that all of the sample plugins were added to the user account
+        plugins = PluginMeta.objects.filter(author=self.user_profile)
+        self.assertEqual(len(plugins), sample_plugins_count)
+
+        # verify that all of the sample plugins were correctdly created
+        # and are in a ready state.
+        for plugin in plugins:
+            self.assertTrue(Plugin(plugin_meta=plugin).ready)

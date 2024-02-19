@@ -9,13 +9,14 @@ import base64
 import json
 import os
 import sys
+from pathlib import Path
 
 import yaml
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-PYTHON_ROOT = os.path.dirname(HERE)
-sys.path.append(PYTHON_ROOT)  # noqa: E402
+PROJECT_ROOT = str(Path(HERE).parent.parent.parent.parent)
+sys.path.append(PROJECT_ROOT)  # noqa: E402
 
 
 def noop():

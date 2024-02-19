@@ -238,14 +238,14 @@ class Settings(BaseSettings):
 
         if bool(os.environ.get("AWS_DEPLOYED", False)):
             # If we're running inside AWS Lambda, then we don't need to set the AWS credentials.
-            logger.info("running inside AWS Lambda")
+            logger.debug("running inside AWS Lambda")
             self._aws_access_key_id_source: str = "overridden by IAM role-based security"
             self._aws_secret_access_key_source: str = "overridden by IAM role-based security"
             self._aws_session = boto3.Session(region_name=self.aws_region)
             self._initialized = True
 
         if not self.initialized and bool(os.environ.get("GITHUB_ACTIONS", False)):
-            logger.info("running inside GitHub Actions")
+            logger.debug("running inside GitHub Actions")
             aws_access_key_id = os.environ.get("AWS_ACCESS_KEY_ID", None)
             aws_secret_access_key = os.environ.get("AWS_SECRET_ACCESS_KEY", None)
             if not aws_access_key_id or not aws_secret_access_key and not self.aws_profile:

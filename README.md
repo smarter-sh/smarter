@@ -1,12 +1,12 @@
-# OpenAI Code Samples
+# Querium Smarter
 
 [![OpenAI](https://a11ybadges.com/badge?logo=openai)](https://platform.openai.com/)
 [![LangChain](https://a11ybadges.com/badge?text=LangChain&badgeColor=0834ac)](https://www.langchain.com/)
 [![Amazon AWS](https://a11ybadges.com/badge?logo=amazonaws)](https://aws.amazon.com/)
 [![ReactJS](https://a11ybadges.com/badge?logo=react)](https://react.dev/)
 [![Python](https://a11ybadges.com/badge?logo=python)](https://www.python.org/)
+[![Django](https://a11ybadges.com/badge?logo=django)](https://www.djangoproject.com/)
 [![Terraform](https://a11ybadges.com/badge?logo=terraform)](https://www.terraform.io/)<br>
-[![12-Factor](https://img.shields.io/badge/12--Factor-Compliant-green.svg)](./doc/Twelve_Factor_Methodology.md)
 ![Unit Tests](https://github.com/QueriumCorp/smarter/actions/workflows/testsPython.yml/badge.svg?branch=main)
 ![GHA pushMain Status](https://img.shields.io/github/actions/workflow/status/QueriumCorp/smarter/pushMain.yml?branch=main)
 ![Auto Assign](https://github.com/QueriumCorp/smarter/actions/workflows/auto-assign.yml/badge.svg)
@@ -73,7 +73,8 @@ A Python Django project implementing Querium's proprietary Plugin model, along w
 - [/v0/chat/langchain/](./smarter/smarter/apps/api/urls.py)
 - [/v0/account](./smarter/smarter/apps/account/urls.py)
 - [/v0/account/users/](./smarter/smarter/apps/account/urls.py)
-- [/v0/account/payment-methods/](./smarter/smarter/apps/account/urls.py)
+- [/v0/account/users/{username}/add-example-plugins](./smarter/smarter/apps/account/urls.py) - PENDING
+- [/v0/account/payment-methods/](./smarter/smarter/apps/account/urls.py) - STRIPE INTEGRATION PENDING
 - [/v0/plugins/](./smarter/smarter/apps/plugin/urls.py)
 - [/v0/plugins/create](./smarter/smarter/apps/plugin/urls.py)
 - [/v0/plugins/](./smarter/smarter/apps/plugin/urls.py)

@@ -451,7 +451,7 @@ class Plugin:
 
             self.id = self.plugin_meta.id
             plugin_created.send(sender=self.__class__, plugin=self)
-            logger.info("Created plugin %s: %s.", meta_data["name"], self.plugin_meta.id)
+            logger.debug("Created plugin %s: %s.", meta_data["name"], self.plugin_meta.id)
 
         return True
 
@@ -496,7 +496,7 @@ class Plugin:
                 setattr(self.plugin_data, key, value)
             self.plugin_data.save()
             plugin_updated.send(sender=self.__class__, plugin=self)
-            logger.info("Updated plugin %s: %s.", self.name, self.id)
+            logger.debug("Updated plugin %s: %s.", self.name, self.id)
 
         return True
 
@@ -507,7 +507,7 @@ class Plugin:
             self.plugin_selector.save()
             self.plugin_prompt.save()
             self.plugin_data.save()
-            logger.info("Saved plugin %s: %s.", self.name, self.id)
+            logger.debug("Saved plugin %s: %s.", self.name, self.id)
         return True
 
     def delete(self):
@@ -531,7 +531,7 @@ class Plugin:
             self.plugin_meta_serializer = None
 
             plugin_deleted.send(sender=self.__class__, plugin=self)
-            logger.info("Updated plugin %s: %s.", plugin_id, plugin_name)
+            logger.debug("Deleted plugin %s: %s.", plugin_id, plugin_name)
 
         return True
 
