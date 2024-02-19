@@ -7,7 +7,10 @@ meta_data:
   name: ExampleConfiguration
   description: A 'hello world' style plugin. This is an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.
   version: 0.1.0
-  tags: red, green, blue
+  tags:
+    - red
+    - green
+    - blue
 
 # ------------------------------------------------------------
 # 2. Required field: prompting
@@ -20,13 +23,9 @@ selector:
   # search terms that will trigger the chatbot to use this customized configuration.
   #------------------------------------------------------------
   search_terms:
-    search_terms:
-      - example plugin_data calling configuration
-    pairs:
-      - - Example
-        - configuration
-      - - example
-        - plugin_data calling
+    - example function calling configuration
+    - Example configuration
+    - example function calling
 prompt:
   #------------------------------------------------------------
   # if this module is able to locate any of the search terms in the user prompt
