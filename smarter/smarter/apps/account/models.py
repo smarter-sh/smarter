@@ -80,7 +80,7 @@ class UserProfile(TimestampedModel):
             raise ValueError("User and Account cannot be null")
         super().save(*args, **kwargs)
         if is_new:
-            logger.info(
+            logger.debug(
                 "New user profile created for %s %s. Sending signal.", self.account.company_name, self.user.email
             )
             new_user_created.send(sender=self.__class__, user_profile=self)
