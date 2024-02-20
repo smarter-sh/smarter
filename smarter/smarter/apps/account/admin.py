@@ -23,6 +23,7 @@ class UserProfileAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+    list_display = ("user", "account", "created_at", "updated_at")
 
 
 class PaymentMethodModelAdmin(admin.ModelAdmin):
@@ -32,6 +33,7 @@ class PaymentMethodModelAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+    list_display = ("name", "created_at", "updated_at")
 
 
 admin.site.register(Account, AccountAdmin)

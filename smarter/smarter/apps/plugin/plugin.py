@@ -372,6 +372,13 @@ class Plugin:
             plugin_created.send(sender=self.__class__, plugin=self)
             logger.debug("Created plugin %s: %s.", self.plugin_meta.name, self.plugin_meta.id)
 
+        def proper_name(name: str) -> str:
+            """Return a proper name."""
+
+            # convert a string like 'HR policy update'
+            # to HR-Policy-Update
+            return name.title().replace(" ", "-").strip()
+
         # expected use case is that we received a yaml string.
         # validate it and convert it to a dictionary.
         if not isinstance(data, dict):
@@ -393,6 +400,7 @@ class Plugin:
         meta_data = data.get("meta_data")
         meta_data["account"] = self.user_profile.account
         meta_data["author"] = self.user_profile
+        meta_data["name"] = proper_name(meta_data["name"])
         meta_data_tags = meta_data.pop("tags")
         selector = data.get("selector")
         prompt = data.get("prompt")

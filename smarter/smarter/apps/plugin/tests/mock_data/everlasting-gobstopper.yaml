@@ -7,7 +7,7 @@ meta_data:
     - candy
     - treats
     - chocolate
-    - Gogstoppers
+    - Gobstoppers
     - Willy Wonka
 selector:
   directive: search_terms
