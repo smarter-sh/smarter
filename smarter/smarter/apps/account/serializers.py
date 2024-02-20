@@ -3,7 +3,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from .models import Account, PaymentMethodModel, UserProfile
+from .models import Account, PaymentMethod, UserProfile
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -41,5 +41,5 @@ class PaymentMethodSerializer(serializers.ModelSerializer):
 
     # pylint: disable=missing-class-docstring
     class Meta:
-        model = PaymentMethodModel
+        model = PaymentMethod
         fields = "__all__"

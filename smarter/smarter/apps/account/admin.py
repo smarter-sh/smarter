@@ -2,7 +2,7 @@
 """Account admin."""
 from django.contrib import admin
 
-from .models import Account, PaymentMethodModel, UserProfile
+from .models import Account, PaymentMethod, UserProfile
 
 
 # Register your models here.
@@ -38,4 +38,4 @@ class PaymentMethodModelAdmin(admin.ModelAdmin):
 
 admin.site.register(Account, AccountAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
-admin.site.register(PaymentMethodModel, PaymentMethodModelAdmin)
+admin.site.register(PaymentMethod, PaymentMethodModelAdmin)
