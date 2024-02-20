@@ -1,26 +1,30 @@
 # -*- coding: utf-8 -*-
 """PluginMeta serializers."""
 from rest_framework import serializers
-from taggit.models import TaggedItem
+from taggit.models import Tag
 
 from smarter.apps.account.serializers import UserProfileSerializer
 
 from .models import PluginData, PluginMeta, PluginPrompt, PluginSelector
 
 
-class TaggedItemSerializer(serializers.ModelSerializer):
-    """TaggedItem model serializer."""
+class TagListSerializerField(serializers.ListField):
+    """Tag list serializer."""
 
-    # pylint: disable=missing-class-docstring
-    class Meta:
-        model = TaggedItem
-        fields = ["tag"]
+    child = serializers.CharField()
+
+    def to_representation(self, data):
+        return [tag.name for tag in data.all()]
+
+    def to_internal_value(self, data):
+        return [Tag.objects.get_or_create(name=name)[0] for name in data]
 
 
 class PluginMetaSerializer(serializers.ModelSerializer):
     """PluginMeta model serializer."""
 
-    tags = TaggedItemSerializer(many=True, read_only=True)
+    tags = TagListSerializerField()
+    # tags = serializers.StringRelatedField(many=True)
     author = UserProfileSerializer(read_only=True)
 
     # pylint: disable=missing-class-docstring

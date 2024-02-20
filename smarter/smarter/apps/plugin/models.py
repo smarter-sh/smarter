@@ -20,7 +20,6 @@ class PluginMeta(TimestampedModel):
     description = models.TextField()
     version = models.CharField(max_length=255, default="1.0.0")
     author = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="plugins")
-
     tags = TaggableManager(blank=True)
 
     def __str__(self):
