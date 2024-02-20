@@ -19,12 +19,10 @@ Including another URLconf
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from smarter.apps.account.urls import urlpatterns as account_urls
 from smarter.apps.api.views.views import LogoutView
 from smarter.apps.openai_api.views import OpenAIViewSet
 from smarter.apps.openai_function_calling.views import FunctionCallingViewSet
 from smarter.apps.openai_langchain.views import LanchainViewSet
-from smarter.apps.plugin.urls import urlpatterns as plugin_urls
 
 
 # Routers provide an easy way of automatically determining the URL conf.
@@ -39,6 +37,3 @@ urlpatterns = [
     path("api-auth/logout/", LogoutView.as_view(), name="logout"),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
 ]
-
-urlpatterns += account_urls
-urlpatterns += plugin_urls
