@@ -4,6 +4,7 @@
 
 from http import HTTPStatus
 
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
@@ -12,9 +13,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from smarter.apps.account.models import UserProfile
-
-from .models import PluginMeta
-from .plugin import Plugin, Plugins
+from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.plugin.plugin import Plugin, Plugins
+from smarter.apps.plugin.utils import add_example_plugins
 
 
 @api_view(["GET", "PATCH", "DELETE"])
@@ -46,6 +47,25 @@ def plugins_list_view(request):
     """Get a json list[dict] of all plugins for the current user."""
     plugins = Plugins(user=request.user)
     return Response(plugins.to_json(), status=HTTPStatus.OK)
+
+
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated])
+def add_plugin_examples(request, user_id: int):
+    """Add example plugins for a user."""
+
+    try:
+        user = User.objects.get(id=user_id) if user_id else request.user
+        user_profile = UserProfile.objects.get(user=user)
+    except User.DoesNotExist:
+        return JsonResponse({"error": "User not found"}, status=HTTPStatus.BAD_REQUEST)
+
+    try:
+        add_example_plugins(user_profile=user_profile)
+    except Exception as e:
+        return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+    return HttpResponseRedirect("/plugins/")
 
 
 # -----------------------------------------------------------------------

@@ -10,6 +10,7 @@ from smarter.apps.account.views.payment_methods import (
     payment_methods_list_view,
 )
 from smarter.apps.account.views.user import user_view, users_list_view
+from smarter.apps.plugin.views import add_plugin_examples
 
 
 urlpatterns = [
@@ -25,9 +26,14 @@ urlpatterns = [
     # account users
     # -----------------------------------------------------------------------
     path("account/users/", require_http_methods(["GET", "POST", "PATCH", "DELETE"])(user_view), name="user_view"),
-    path("accounts/users/", require_http_methods(["GET"])(users_list_view), name="users_list_view"),
+    path("account/users/", require_http_methods(["GET"])(users_list_view), name="users_list_view"),
     path(
-        "accounts/users/<int:user_id>/",
+        "account/users/<int:user_id>/add-example-plugins/",
+        require_http_methods(["GET", "POST"])(add_plugin_examples),
+        name="add_plugin_examples",
+    ),
+    path(
+        "account/users/<int:user_id>/",
         require_http_methods(["GET", "POST", "PATCH", "DELETE"])(user_view),
         name="user_view",
     ),

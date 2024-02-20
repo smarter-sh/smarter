@@ -258,18 +258,23 @@ class Plugin:
         if not data.get("plugin_data"):
             raise ValidationError("Invalid data. Missing plugin_data.")
 
+        # validate the structure of the data
+        validate_key(data, "meta_data", ["name", "description", "version", "tags"])
+        validate_key(data, "selector", ["search_terms"])
+        validate_key(data, "prompt", ["system_role", "model", "temperature", "max_tokens"])
+        validate_key(data, "plugin_data", ["description", "return_data"])
+
+        return True
+
+    def validate_data_policy(self, data: dict) -> bool:
+        """Validate the data dict."""
+
         # top-level prohibited keys
         if data.get("id"):
             raise ValidationError("Invalid data. dict key data['id'] is not writable.")
         meta_data = data.get("meta_data")
         if meta_data.get("author"):
             raise ValidationError("Invalid data. dict key data['meta_data']['author'] is not writable.")
-
-        # validate the structure of the data
-        validate_key(data, "meta_data", ["name", "description", "version", "tags"])
-        validate_key(data, "selector", ["search_terms"])
-        validate_key(data, "prompt", ["system_role", "model", "temperature", "max_tokens"])
-        validate_key(data, "plugin_data", ["description", "return_data"])
 
         return True
 
@@ -413,10 +418,7 @@ class Plugin:
 
         # initialize the major sections of the plugin yaml file
         meta_data = data.get("meta_data")
-        meta_data["account"] = self.user_profile.account
-        meta_data["author"] = self.user_profile
         meta_data["name"] = proper_name(meta_data["name"])
-        meta_data_tags = meta_data.pop("tags")
         selector = data.get("selector")
         prompt = data.get("prompt")
         plugin_data = data.get("plugin_data")
@@ -428,6 +430,10 @@ class Plugin:
             self.id = plugin_meta.id
             logger.info("Plugin %s already exists. Updating plugin %s.", meta_data["name"], plugin_meta.id)
             return self.update(data)
+
+        meta_data["account"] = self.user_profile.account
+        meta_data["author"] = self.user_profile
+        meta_data_tags = meta_data.pop("tags")
 
         with transaction.atomic():
             plugin_meta = PluginMeta.objects.create(**meta_data)
@@ -459,20 +465,25 @@ class Plugin:
         self.validate_data_types(data)
         self.validate_write_operation(data)
 
+        # don't want the author field to be writable.
         meta_data = data.get("meta_data")
+        meta_data.pop("author", None)
+        meta_data_tags = meta_data.pop("tags")
+
         selector = data.get("selector")
         prompt = data.get("prompt")
         plugin_data = data.get("plugin_data")
 
-        self.plugin_meta = PluginMeta.objects.filter(account=self.user_profile.account, name=meta_data["name"]).first()
-        self.plugin_prompt = PluginPrompt.objects.get(pk=self.plugin_meta.id)
-        self.plugin_selector = PluginSelector.objects.get(pk=self.plugin_meta.id)
-        self.plugin_data = PluginData.objects.get(pk=self.plugin_meta.id)
+        self.validate_data_policy(data)
+
+        plugin_meta = PluginMeta.objects.filter(account=self.user_profile.account, name=meta_data["name"]).first()
+        self.id = plugin_meta.id
 
         with transaction.atomic():
             for key, value in meta_data.items():
                 setattr(self.plugin_meta, key, value)
-            self.plugin_data.save()
+            self.plugin_meta.tags.set(meta_data_tags)
+            self.plugin_meta.save()
 
             for key, value in selector.items():
                 setattr(self.plugin_selector, key, value)
