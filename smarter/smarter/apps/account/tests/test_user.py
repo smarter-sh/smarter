@@ -62,6 +62,9 @@ class TestUser(unittest.TestCase):
         plugins = Plugins(user=self.user)
         self.assertEqual(len(plugins.plugins), num_plugins)
 
+        for plugin in plugins.plugins:
+            plugin.delete()
+
         profile.delete()
         account.delete()
 

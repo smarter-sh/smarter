@@ -65,7 +65,7 @@ def add_plugin_examples(request, user_id: int):
     except Exception as e:
         return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-    return HttpResponseRedirect("/plugins/")
+    return HttpResponseRedirect("/v0/plugins/")
 
 
 # -----------------------------------------------------------------------
