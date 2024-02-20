@@ -18,8 +18,10 @@ from smarter.apps.account.serializers import UserSerializer
 @api_view(["GET", "POST", "PATCH", "DELETE"])
 @permission_classes([IsAuthenticated])
 def user_view(request, user_id: int = None):
-    if request.method == "GET":
+    if request.method == "GET" and user_id is not None:
         return get_user(request, user_id)
+    if request.method == "GET" and user_id is None:
+        return users_list_view(request)
     if request.method == "POST":
         return create_user(request)
     if request.method == "PATCH":
@@ -29,8 +31,9 @@ def user_view(request, user_id: int = None):
     return JsonResponse({"error": "Invalid HTTP method"}, status=405)
 
 
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
+# -----------------------------------------------------------------------
+# handlers for users
+# -----------------------------------------------------------------------
 def users_list_view(request):
     """Get a json list[dict] of all users for the current user."""
     if request.user.is_superuser:
@@ -49,9 +52,6 @@ def users_list_view(request):
     return Response(serializer.data, status=HTTPStatus.OK)
 
 
-# -----------------------------------------------------------------------
-# handlers for users
-# -----------------------------------------------------------------------
 def validate_request_body(request):
     # do a cursory check of the request data
     try:
