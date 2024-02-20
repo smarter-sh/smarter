@@ -89,7 +89,7 @@ class UserProfile(TimestampedModel):
         return str(self.account.company_name) + "-" + str(self.user.email or self.user.username)
 
 
-class PaymentMethodModel(TimestampedModel):
+class PaymentMethod(TimestampedModel):
     """Payment method model."""
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="payment_methods")
