@@ -21,19 +21,16 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-# smarter apps
-from smarter.apps.api import urls as api_admin_urls
-
 
 # system urls
 urlpatterns = static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-urlpatterns += api_admin_urls.urlpatterns
-
 # application urls
 urlpatterns += [
     # django admin console
     path("admin/", admin.site.urls),
     # all v0 endpoints belong here.
     # ----------------------------
-    path("v0/", include("smarter.apps.api.urls")),
+    path("v0/", include("smarter.apps.api.v0_urls")),
+    path("v0/", include("smarter.apps.account.v0_urls")),
+    path("v0/", include("smarter.apps.plugin.v0_urls")),
 ]
