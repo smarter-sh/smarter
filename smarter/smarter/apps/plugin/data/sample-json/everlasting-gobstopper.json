@@ -1,7 +1,16 @@
 {
-  "id": 9,
+  "id": 1,
   "meta_data": {
     "name": "EverlastingGobstopper",
+    "account": {
+      "id": 1,
+      "created_at": "2024-02-19T23:41:18.605013Z",
+      "updated_at": "2024-02-19T23:41:18.605023Z",
+      "account_number": "1860-6722-0100",
+      "company_name": "Smarter",
+      "phone_number": "",
+      "address": ""
+    },
     "description": "Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
     "version": "0.1.0",
     "author": {
@@ -12,27 +21,39 @@
       },
       "account": {
         "id": 1,
-        "created_at": "2024-02-19T22:20:06.725169Z",
-        "updated_at": "2024-02-19T22:20:06.725181Z",
-        "account_number": "1860-6722-0010",
+        "created_at": "2024-02-19T23:41:18.605013Z",
+        "updated_at": "2024-02-19T23:41:18.605023Z",
+        "account_number": "1860-6722-0100",
         "company_name": "Smarter",
         "phone_number": "",
         "address": ""
       }
     },
-    "tags": [],
-    "id": 9
+    "tags": [
+      "candy",
+      "Willy Wonka",
+      "Gogstoppers",
+      "chocolate",
+      "treats"
+    ],
+    "id": 1
   },
   "selector": {
     "directive": "search_terms",
-    "id": 8
+    "search_terms": [
+      "Gobstopper",
+      "Gobstoppers",
+      "Gobbstopper",
+      "Gobbstoppers"
+    ],
+    "id": 1
   },
   "prompt": {
     "system_role": "You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com).\n",
     "model": "gpt-3.5-turbo-1106",
     "temperature": 1.0,
     "max_tokens": 256,
-    "id": 8
+    "id": 1
   },
   "plugin_data": {
     "description": "Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
@@ -88,6 +109,6 @@
         }
       ]
     },
-    "id": 8
+    "id": 1
   }
 }

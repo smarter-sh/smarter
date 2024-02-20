@@ -3,7 +3,7 @@
 from rest_framework import serializers
 from taggit.models import Tag
 
-from smarter.apps.account.serializers import UserProfileSerializer
+from smarter.apps.account.serializers import AccountSerializer, UserProfileSerializer
 
 from .models import PluginData, PluginMeta, PluginPrompt, PluginSelector
 
@@ -26,11 +26,12 @@ class PluginMetaSerializer(serializers.ModelSerializer):
     tags = TagListSerializerField()
     # tags = serializers.StringRelatedField(many=True)
     author = UserProfileSerializer(read_only=True)
+    account = AccountSerializer(read_only=True)
 
     # pylint: disable=missing-class-docstring
     class Meta:
         model = PluginMeta
-        fields = ["name", "description", "version", "author", "tags"]
+        fields = ["name", "account", "description", "version", "author", "tags"]
 
 
 class PluginSelectorSerializer(serializers.ModelSerializer):
@@ -39,7 +40,7 @@ class PluginSelectorSerializer(serializers.ModelSerializer):
     # pylint: disable=missing-class-docstring
     class Meta:
         model = PluginSelector
-        fields = ["directive"]
+        fields = ["directive", "search_terms"]
 
 
 class PluginPromptSerializer(serializers.ModelSerializer):
