@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=W0718
 """PluginMeta views."""
 
 from http import HTTPStatus
 
+from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from rest_framework.decorators import api_view, permission_classes
@@ -11,6 +13,7 @@ from rest_framework.response import Response
 
 from smarter.apps.account.models import UserProfile
 
+from .models import PluginMeta
 from .plugin import Plugin, Plugins
 
 
@@ -50,32 +53,101 @@ def plugins_list_view(request):
 # -----------------------------------------------------------------------
 def get_plugin(request, plugin_id):
     """Get a plugin json representation by id."""
-    user_profile = UserProfile.objects.get(user=request.user)
-    plugin = Plugin(plugin_id=plugin_id, user_profile=user_profile)
-    return Response(plugin.to_json(), status=HTTPStatus.OK)
+    plugin: Plugin = None
+
+    try:
+        user_profile = UserProfile.objects.get(user=request.user)
+    except UserProfile.DoesNotExist:
+        return JsonResponse({"error": "User not found"}, status=404)
+
+    try:
+        plugin = Plugin(plugin_id=plugin_id, user_profile=user_profile)
+    except PluginMeta.DoesNotExist:
+        return JsonResponse({"error": "Plugin not found"}, status=HTTPStatus.NOT_FOUND)
+    except ValidationError as e:
+        return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
+    except Exception as e:
+        return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+    if plugin.ready:
+        return JsonResponse(plugin.to_json(), status=HTTPStatus.OK)
+    return JsonResponse({"error": "Internal plugin error."}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
 
 def create_plugin(request):
     """Create a plugin from a json representation in the body of the request."""
-    user_profile = UserProfile.objects.get(user=request.user)
-    data = request.data
-    data["user_profile"] = user_profile
-    plugin = Plugin(data=data)
-    return JsonResponse(plugin.to_json(), status=HTTPStatus.OK)
+    data: dict = None
+
+    try:
+        user_profile = UserProfile.objects.get(user=request.user)
+    except UserProfile.DoesNotExist:
+        return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
+
+    try:
+        data = request.data
+        if not isinstance(data, dict):
+            return JsonResponse(
+                {"error": f"Invalid request data. Expected a JSON dict in request body but received {type(data)}"},
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        data["user_profile"] = user_profile
+    except Exception as e:
+        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
+
+    try:
+        plugin = Plugin(data=data)
+    except ValidationError as e:
+        return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
+    except Exception as e:
+        return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+    return JsonResponse(plugin.to_json(), status=HTTPStatus.CREATED)
 
 
 def update_plugin(request):
     """update a plugin from a json representation in the body of the request."""
-    user_profile = UserProfile.objects.get(user=request.user)
-    data = request.data
-    data["user_profile"] = user_profile
-    plugin = Plugin(data=data)
+    plugin: Plugin = None
+
+    try:
+        user_profile = UserProfile.objects.get(user=request.user)
+    except UserProfile.DoesNotExist:
+        return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
+
+    try:
+        data = request.data
+        if not isinstance(data, dict):
+            return JsonResponse(
+                {"error": f"Invalid request data. Expected a JSON dict in request body but received {type(data)}"},
+                status=HTTPStatus.BAD_REQUEST,
+            )
+
+        data["user_profile"] = user_profile
+    except Exception as e:
+        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
+
+    try:
+        plugin = Plugin(data=data)
+    except ValidationError as e:
+        return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
+    except Exception as e:
+        return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
     return Response(plugin.to_json(), status=HTTPStatus.OK)
 
 
 def delete_plugin(request, plugin_id):
     """delete a plugin by id."""
-    user_profile = UserProfile.objects.get(user=request.user)
-    plugin = Plugin(plugin_id=plugin_id, user_profile=user_profile)
+    try:
+        user_profile = UserProfile.objects.get(user=request.user)
+    except UserProfile.DoesNotExist:
+        return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
+
+    try:
+        plugin = Plugin(plugin_id=plugin_id, user_profile=user_profile)
+    except PluginMeta.DoesNotExist:
+        return JsonResponse({"error": "Plugin not found"}, status=HTTPStatus.NOT_FOUND)
+    except Exception as e:
+        return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
     plugin.delete()
     return Response({"result": "success"}, status=HTTPStatus.OK)
