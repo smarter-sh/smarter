@@ -558,15 +558,22 @@ class Plugin:
             plugin_meta_copy.tags.set(self.plugin_meta.tags.all())
             plugin_meta_copy.refresh_from_db()
 
+            # for each 1:1 relationship, create a new instance
+            # setting the pk to None so that the new isn't
+            # simply the old instance re-assigned to a new plugin_meta.
+            # also, set the fk plugin_id to the new plugin_meta id.
             plugin_selector_copy = copy.deepcopy(self.plugin_selector)
+            plugin_selector_copy.id = None
             plugin_selector_copy.plugin_id = plugin_meta_copy.id
             plugin_selector_copy.save()
 
             plugin_prompt_copy = copy.deepcopy(self.plugin_prompt)
+            plugin_prompt_copy.id = None
             plugin_prompt_copy.plugin_id = plugin_meta_copy.id
             plugin_prompt_copy.save()
 
             plugin_data_copy = copy.deepcopy(self.plugin_data)
+            plugin_data_copy.id = None
             plugin_data_copy.plugin_id = plugin_meta_copy.id
             plugin_data_copy.save()
 
