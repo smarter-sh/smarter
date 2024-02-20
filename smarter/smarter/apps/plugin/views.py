@@ -5,7 +5,7 @@
 from http import HTTPStatus
 
 from django.core.exceptions import ValidationError
-from django.http import JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -101,12 +101,11 @@ def create_plugin(request):
     except Exception as e:
         return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-    return JsonResponse(plugin.to_json(), status=HTTPStatus.CREATED)
+    return HttpResponseRedirect(request.path_info + str(plugin.id) + "/")
 
 
 def update_plugin(request):
     """update a plugin from a json representation in the body of the request."""
-    plugin: Plugin = None
 
     try:
         user_profile = UserProfile.objects.get(user=request.user)
@@ -126,13 +125,13 @@ def update_plugin(request):
         return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
 
     try:
-        plugin = Plugin(data=data)
+        Plugin(data=data)
     except ValidationError as e:
         return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
     except Exception as e:
         return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-    return Response(plugin.to_json(), status=HTTPStatus.OK)
+    return HttpResponseRedirect(request.path_info)
 
 
 def delete_plugin(request, plugin_id):
@@ -149,5 +148,10 @@ def delete_plugin(request, plugin_id):
     except Exception as e:
         return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-    plugin.delete()
-    return Response({"result": "success"}, status=HTTPStatus.OK)
+    try:
+        plugin.delete()
+    except Exception as e:
+        return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+    plugins_path = request.path_info.rsplit("/", 2)[0]
+    return HttpResponseRedirect(plugins_path)

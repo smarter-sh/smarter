@@ -5,6 +5,7 @@ from django.urls import path
 from django.views.decorators.http import require_http_methods
 
 from smarter.apps.account.views.account import account_view, accounts_list_view
+from smarter.apps.account.views.user import user_view, users_list_view
 
 
 urlpatterns = [
@@ -14,5 +15,12 @@ urlpatterns = [
         "accounts/<int:account_id>/",
         require_http_methods(["GET", "POST", "PATCH", "DELETE"])(account_view),
         name="plugins_view",
+    ),
+    path("account/users/", require_http_methods(["GET", "POST", "PATCH", "DELETE"])(user_view), name="users_view"),
+    path("accounts/users/", require_http_methods(["GET"])(users_list_view), name="users_list_view"),
+    path(
+        "accounts/users/<int:user_id>/",
+        require_http_methods(["GET", "POST", "PATCH", "DELETE"])(user_view),
+        name="users_view",
     ),
 ]

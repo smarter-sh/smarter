@@ -5,7 +5,7 @@ from http import HTTPStatus
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.http import JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -74,8 +74,7 @@ def create_account(request):
     except Exception as e:
         return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
 
-    serializer = AccountSerializer(account)
-    return Response(serializer.data, status=HTTPStatus.CREATED)
+    return HttpResponseRedirect(request.path_info + str(account.id) + "/")
 
 
 def update_account(request, account_id: int = None):
@@ -111,8 +110,7 @@ def update_account(request, account_id: int = None):
     except Exception as e:
         return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-    serializer = AccountSerializer(account)
-    return Response(serializer.data, status=HTTPStatus.OK)
+    return HttpResponseRedirect(request.path_info)
 
 
 def delete_account(request, account_id: int = None):
@@ -132,4 +130,5 @@ def delete_account(request, account_id: int = None):
     except Exception as e:
         return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-    return Response({"result": "Account has been deleted. Sorry to see you go :("}, status=HTTPStatus.OK)
+    plugins_path = request.path_info.rsplit("/", 2)[0]
+    return HttpResponseRedirect(plugins_path)
