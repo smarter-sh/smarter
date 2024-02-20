@@ -48,7 +48,7 @@ class PluginAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
-    list_display = ("author_company_name", "plugin_name", "version", "created_at", "updated_at")
+    list_display = ("id", "author_company_name", "plugin_name", "version", "created_at", "updated_at")
 
 
 admin.site.register(PluginMeta, PluginAdmin)
