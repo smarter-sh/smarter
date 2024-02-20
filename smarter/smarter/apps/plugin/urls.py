@@ -7,6 +7,7 @@ from smarter.apps.plugin.views import plugin_clone_view, plugins_list_view, plug
 
 
 urlpatterns = [
+    path("plugins/", require_http_methods(["GET"])(plugins_list_view), name="plugins_list_view"),
     path("plugins/", require_http_methods(["POST"])(plugins_view), name="plugins_view"),
     path(
         "plugins/<int:plugin_id>/",
@@ -18,5 +19,4 @@ urlpatterns = [
         require_http_methods(["GET", "POST"])(plugin_clone_view),
         name="plugin_clone_view",
     ),
-    path("plugins/", require_http_methods(["GET"])(plugins_list_view), name="plugins_list_view"),
 ]

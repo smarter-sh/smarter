@@ -91,17 +91,32 @@ class Plugin:
         """Set the id of the plugin."""
         self._plugin_meta = PluginMeta.objects.get(pk=value)
         self._plugin_meta_serializer = PluginMetaSerializer(self.plugin_meta)
-
-        self._plugin_selector = PluginSelector.objects.get(plugin=self.plugin_meta)
-        self._plugin_selector_serializer = PluginSelectorSerializer(self.plugin_selector)
-
-        self._plugin_prompt = PluginPrompt.objects.get(plugin=self.plugin_meta)
-        self._plugin_prompt_serializer = PluginPromptSerializer(self.plugin_prompt)
-
-        self._plugin_data = PluginData.objects.get(plugin=self.plugin_meta)
-        self._plugin_data_serializer = PluginDataSerializer(self.plugin_data)
-
         self._user_profile = self.plugin_meta.author
+
+        # we expect that all of these 1:1 relationships exist. but, there's
+        # no benefit to raising an exception if they don't as this will
+        # result in the 'ready' property returning False, and the plugin
+        # being excluded in results from Plugins.data.
+        try:
+            self._plugin_selector = PluginSelector.objects.get(plugin=self.plugin_meta)
+            self._plugin_selector_serializer = PluginSelectorSerializer(self.plugin_selector)
+        except PluginSelector.DoesNotExist:
+            self._plugin_selector = None
+            self._plugin_selector_serializer = None
+
+        try:
+            self._plugin_prompt = PluginPrompt.objects.get(plugin=self.plugin_meta)
+            self._plugin_prompt_serializer = PluginPromptSerializer(self.plugin_prompt)
+        except PluginPrompt.DoesNotExist:
+            self._plugin_prompt = None
+            self._plugin_prompt_serializer = None
+
+        try:
+            self._plugin_data = PluginData.objects.get(plugin=self.plugin_meta)
+            self._plugin_data_serializer = PluginDataSerializer(self.plugin_data)
+        except PluginData.DoesNotExist:
+            self._plugin_data = None
+            self._plugin_data_serializer = None
 
     @property
     def plugin_meta(self) -> PluginMeta:
