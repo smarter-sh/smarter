@@ -4,6 +4,7 @@
 """Test providers."""
 
 # python stuff
+import json
 import os
 import unittest
 from pathlib import Path
@@ -268,3 +269,20 @@ class TestPlugin(unittest.TestCase):
 
         plugin.delete()
         plugin_clone.delete()
+
+    def test_json_serialization(self):
+        """Test that the Plugin generates correct JSON output."""
+        plugin = Plugin(data=self.data)
+        to_json = plugin.to_json()
+
+        # ensure that we can go from json output to a string and back to json without error
+        to_json = json.loads(json.dumps(to_json))
+
+        # ensure that the json output still matches the original data
+        self.assertIsInstance(to_json, dict)
+        self.assertEqual(to_json["meta_data"]["name"], self.data["meta_data"]["name"])
+        self.assertEqual(to_json["selector"]["directive"], self.data["selector"]["directive"])
+        self.assertEqual(to_json["prompt"]["system_role"], self.data["prompt"]["system_role"])
+        self.assertEqual(to_json["prompt"]["model"], self.data["prompt"]["model"])
+        self.assertEqual(to_json["prompt"]["temperature"], self.data["prompt"]["temperature"])
+        self.assertEqual(to_json["prompt"]["max_tokens"], self.data["prompt"]["max_tokens"])

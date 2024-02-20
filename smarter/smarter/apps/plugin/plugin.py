@@ -393,6 +393,7 @@ class Plugin:
         meta_data = data.get("meta_data")
         meta_data["account"] = self.user_profile.account
         meta_data["author"] = self.user_profile
+        meta_data_tags = meta_data.pop("tags")
         selector = data.get("selector")
         prompt = data.get("prompt")
         plugin_data = data.get("plugin_data")
@@ -407,6 +408,7 @@ class Plugin:
 
         with transaction.atomic():
             plugin_meta = PluginMeta.objects.create(**meta_data)
+            plugin_meta.tags.add(*meta_data_tags)
 
             selector["plugin_id"] = plugin_meta.id
             prompt["plugin_id"] = plugin_meta.id
@@ -545,6 +547,7 @@ class Plugin:
             plugin_meta_copy.id = None
             plugin_meta_copy.name = new_name or get_new_name(plugin_name=self.name)
             plugin_meta_copy.save()
+            plugin_meta_copy.tags.set(self.plugin_meta.tags.all())
             plugin_meta_copy.refresh_from_db()
 
             plugin_selector_copy = copy.deepcopy(self.plugin_selector)
@@ -572,7 +575,7 @@ class Plugin:
                 "prompt": {**self.plugin_prompt_serializer.data, "id": self.plugin_prompt.id},
                 "plugin_data": {**self.plugin_data_serializer.data, "id": self.plugin_data.id},
             }
-            return retval
+            return json.loads(json.dumps(retval))
         return None
 
 
