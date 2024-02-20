@@ -74,11 +74,11 @@ A Python Django project implementing Querium's proprietary Plugin model, along w
 - [/v0/chat/chatgpt/](./smarter/smarter/apps/api/urls.py)
 - [/v0/chat/langchain/](./smarter/smarter/apps/api/urls.py)
 - [/v0/accounts](./smarter/smarter/apps/account/urls.py) - PENDING
-- [/v0/accounts/<str:account_number>/payment-methods](./smarter/smarter/apps/account/urls.py) - PENDING
+- [/v0/accounts/<str:account_number>/payment-methods](./smarter/smarter/apps/account/urls.py)
 - [/v0/account](./smarter/smarter/apps/account/urls.py)
 - [/v0/account/users/](./smarter/smarter/apps/account/urls.py)
-- [/v0/account/users/<str:username>/add-example-plugins](./smarter/smarter/apps/account/urls.py) - PENDING
-- [/v0/account/payment-methods/](./smarter/smarter/apps/account/urls.py) - STRIPE INTEGRATION PENDING
+- [/v0/account/users/<str:username>/add-example-plugins](./smarter/smarter/apps/account/urls.py)
+- [/v0/account/payment-methods/](./smarter/smarter/apps/account/urls.py)
 - [/v0/plugins/](./smarter/smarter/apps/plugin/urls.py)
 - [/v0/plugins/<int:plugin_id>](./smarter/smarter/apps/plugin/urls.py)
 - [/v0/plugins/<int:plugin_id>/clone/<str:new_name>](./smarter/smarter/apps/plugin/urls.py)
