@@ -12,6 +12,7 @@ from django.test import Client
 # our stuff
 from smarter.apps.account.models import Account, PaymentMethod, UserProfile
 from smarter.apps.account.tests.test_setup import PROJECT_ROOT
+from smarter.apps.plugin.plugin import Plugins
 from smarter.apps.plugin.utils import add_example_plugins
 
 
@@ -97,7 +98,7 @@ class TestUrls(unittest.TestCase):
         self.assertEqual(json_data.get("account_number"), self.account.account_number)
 
     def test_account_users_view(self):
-        """test that we can see an account from inside the list view and that it matches the account data."""
+        """test that we can see users associated with an account and that one of these matches the account data."""
         response = self.client.get("/v0/account/users/")
 
         self.assertEqual(response.status_code, 200)
@@ -108,6 +109,23 @@ class TestUrls(unittest.TestCase):
                 self.assertEqual(user.get("email"), self.user.email)
                 break
 
+    def test_account_users_add_plugins_view(self):
+        """test that we can add example plugins using the api end point."""
+        response = self.client.get("/v0/account/users/" + str(self.user.id) + "/add-example-plugins/")
+
+        # we should have been redirected to a list of the plugins for the user
+        self.assertEqual(response.status_code, 302)
+        if "application/json" in response["Content-Type"]:
+            json_data = response.json()
+            self.assertIsInstance(json_data, dict)
+            self.assertGreaterEqual(len(json_data), 1)
+
+        plugins = Plugins(user=self.user).plugins
+        self.assertGreaterEqual(len(plugins), 1)
+
+        for plugin in plugins:
+            plugin.delete()
+
     def test_account_users_index_view(self):
         """test that we can see an account from inside the list view and that it matches the account data."""
         response = self.client.get("/v0/account/users/" + str(self.user.id) + "/")
@@ -117,3 +135,31 @@ class TestUrls(unittest.TestCase):
         self.assertIsInstance(json_data, dict)
         self.assertEqual(json_data.get("email"), self.user.email)
         self.assertEqual(json_data.get("username"), self.user.username)
+
+    def test_account_payment_methods(self):
+        """test that we can see the payment methods associated with an account."""
+        response = self.client.get("/v0/account/payment-methods/")
+
+        self.assertEqual(response.status_code, 200)
+        json_data = response.json()
+        self.assertIsInstance(json_data, list)
+        for payment_method in json_data:
+            if payment_method.get("name") == self.payment_method.name:
+                self.assertEqual(payment_method.get("card_type"), self.payment_method.card_type)
+                break
+            self.fail("payment method not found in list")
+
+    def test_account_payment_methods_index(self):
+        """test that we can see the payment methods associated with an account."""
+        response = self.client.get("/v0/account/payment-methods/" + str(self.payment_method.id) + "/")
+
+        self.assertEqual(response.status_code, 200)
+        json_data = response.json()
+        self.assertIsInstance(json_data, list)
+
+        self.assertEqual(json_data.get("name"), self.payment_method.name)
+        self.assertEqual(json_data.get("card_type"), self.payment_method.card_type)
+        self.assertEqual(json_data.get("card_last_4"), self.payment_method.card_last_4)
+        self.assertEqual(json_data.get("card_exp_month"), self.payment_method.card_exp_month)
+        self.assertEqual(json_data.get("card_exp_year"), self.payment_method.card_exp_year)
+        self.assertEqual(json_data.get("is_default"), self.payment_method.is_default)
