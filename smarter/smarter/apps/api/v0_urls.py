@@ -19,7 +19,7 @@ Including another URLconf
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from smarter.apps.api.views.views import LogoutView
+from smarter.apps.api.views.views import custom_api_root_v0
 from smarter.apps.openai_api.views import OpenAIViewSet
 from smarter.apps.openai_function_calling.views import FunctionCallingViewSet
 from smarter.apps.openai_langchain.views import LanchainViewSet
@@ -33,7 +33,8 @@ router.register(r"chat/chatgpt", OpenAIViewSet, basename="chatgpt")
 router.register(r"chat/langchain", LanchainViewSet, basename="langchain")
 
 urlpatterns = [
+    path("", custom_api_root_v0, name="custom_api_root_v0"),
     path("", include(router.urls)),
-    path("api-auth/logout/", LogoutView.as_view(), name="logout"),
-    path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
+    path("", include("smarter.apps.account.v0_urls")),
+    path("", include("smarter.apps.plugin.v0_urls")),
 ]
