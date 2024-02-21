@@ -678,6 +678,8 @@ class PluginExample:
         """Return the plugin as a yaml string."""
         return self._yaml
 
+    # FIX NOTE: this fails on Plugin.create() due to missing tags
+    # django.core.exceptions.ValidationError: ["Invalid data: missing meta_data['tags']"]
     def to_json(self) -> dict:
         """Return the plugin as a dictionary."""
         return self._json
@@ -692,12 +694,12 @@ class PluginExamples:
 
     def __init__(self):
         """Initialize the class."""
+        self._plugin_examples = []
         for file in os.listdir(self.PLUGINS_PATH):
             if file.endswith(".yaml"):
                 plugin_example = PluginExample(filepath=self.PLUGINS_PATH, filename=file)
                 self._plugin_examples.append(plugin_example)
 
-    @property
     def count(self) -> int:
         """Return the number of plugins."""
         return len(self._plugin_examples)

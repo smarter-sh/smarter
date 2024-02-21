@@ -3,6 +3,7 @@
 """Test Account."""
 
 # python stuff
+import os
 import unittest
 
 from django.contrib.auth.models import User
@@ -18,7 +19,8 @@ class TestAccount(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        self.user, _ = User.objects.get_or_create(username="testuser", password="12345")
+        username = "testuser_" + os.urandom(4).hex()
+        self.user = User.objects.create(username=username, password="12345")
 
     def tearDown(self):
         """Clean up test fixtures."""

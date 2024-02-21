@@ -3,6 +3,7 @@
 """Test API end points."""
 
 # python stuff
+import os
 import unittest
 
 from django.contrib.auth.models import User
@@ -21,8 +22,9 @@ class TestUrls(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
+        username = "testuser_" + os.urandom(4).hex()
         self.user = User.objects.create(
-            username="testuser", password="12345", is_staff=True, is_active=True, is_superuser=True
+            username=username, password="12345", is_staff=True, is_active=True, is_superuser=True
         )
         self.account = Account.objects.create(
             company_name="Test Company",
@@ -76,8 +78,8 @@ class TestUrls(unittest.TestCase):
 
         # iterate the list and try to match a dict to the company_name and account_number
         for account in json_data:
-            if account.get("company_name") == self.account.company_name:
-                self.assertEqual(account.get("account_number"), self.account.account_number)
+            if account.get("account_number") == self.account.account_number:
+                self.assertEqual(account.get("company_name"), self.account.company_name)
                 break
         else:
             self.fail("account not found in list")
@@ -150,7 +152,7 @@ class TestUrls(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         json_data = response.json()
-        self.assertIsInstance(json_data, list)
+        self.assertTrue(type(json_data) in (list, dict))
 
         self.assertEqual(json_data.get("name"), self.payment_method.name)
         self.assertEqual(json_data.get("card_type"), self.payment_method.card_type)
