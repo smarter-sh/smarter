@@ -45,8 +45,8 @@ analyze:
 	cloc . --exclude-ext=svg,json,zip --vcs=git
 
 coverage:
-	coverage run --source=python/smarter \
-				 -m unittest discover -s python/smarter/
+	coverage run --source=smarter \
+				 -m unittest discover -s smarter/
 	coverage report -m
 	coverage html
 
@@ -67,8 +67,19 @@ aws-build:
 	terraform apply
 
 # ---------------------------------------------------------
-# Python Djanog API
+# Python Django Back End
 # ---------------------------------------------------------
+django-init:
+	if [ -f smarter/db.sqlite3 ]; then rm smarter/db.sqlite3; fi && \
+	cd smarter && python manage.py makemigrations && \
+	python manage.py migrate && \
+	python manage.py create_admin_user --username admin --email admin@smarter.sh && \
+	python manage.py add_plugin_examples admin
+
+django-run:
+	cd smarter && python manage.py runserver
+
+
 python-init:
 	make python-clean
 	npm install && \
@@ -76,17 +87,18 @@ python-init:
 	$(ACTIVATE_VENV) && \
 	$(PIP) install --upgrade pip && \
 	$(PIP) install -r requirements/local.txt && \
-	pre-commit install
+	pre-commit install && \
+	make django-init
 
 python-test:
-	cd python/smarter && python manage.py test
+	cd smarter && python manage.py test
 
 python-lint:
 	terraform fmt -recursive
 	pre-commit run --all-files
-	black ./python/
+	black ./smarter/
 	flake8 api/terraform/python/
-	pylint python/smarter/**/*.py
+	pylint smarter/**/*.py
 
 python-clean:
 	rm -rf venv
@@ -156,19 +168,21 @@ react-release:
 
 help:
 	@echo '===================================================================='
-	@echo 'clean               - remove all build, test, coverage and Python artifacts'
-	@echo 'lint                - run all code linters and formatters'
-	@echo 'init                - create environments for Python, NPM and pre-commit and install dependencies'
-	@echo 'build               - create and configure AWS infrastructure resources and build the React app'
-	@echo 'run                 - run the web app in development mode'
-	@echo 'analyze             - generate code analysis report'
-	@echo 'coverage            - generate code coverage analysis report'
-	@echo 'release             - force a new release'
-	@echo '-- AWS API Gateway + Lambda --'
-	@echo 'python-init            - create a Python virtual environment and install dependencies'
-	@echo 'python-test            - run Python unit tests'
-	@echo 'python-lint            - run Python linting'
-	@echo 'python-clean           - destroy the Python virtual environment'
+	@echo 'clean              - remove all build, test, coverage and Python artifacts'
+	@echo 'lint               - run all code linters and formatters'
+	@echo 'init               - create environments for Python, NPM and pre-commit and install dependencies'
+	@echo 'build              - create and configure AWS infrastructure resources and build the React app'
+	@echo 'run                - run the web app in development mode'
+	@echo 'analyze            - generate code analysis report'
+	@echo 'coverage           - generate code coverage analysis report'
+	@echo 'release            - force a new release'
+	@echo '-- AWS --'
+	@echo 'aws-build          - run Terraform to create AWS infrastructure'
+	@echo '-- Python-Django API --'
+	@echo 'python-init        - create a Python virtual environment and install dependencies'
+	@echo 'python-test        - run Python unit tests'
+	@echo 'python-lint        - run Python linting'
+	@echo 'python-clean       - destroy the Python virtual environment'
 	@echo '-- React App --'
 	@echo 'react-clean        - destroy npm environment'
 	@echo 'react-init         - run npm install'

@@ -75,6 +75,10 @@ resource "kubernetes_deployment" "smarter" {
           }
 
           env {
+            name  = "ROOT_DOMAIN"
+            value = var.root_domain
+          }
+          env {
             name  = "AWS_ACCESS_KEY_ID"
             value = var.AWS_ACCESS_KEY_ID
           }
@@ -170,6 +174,10 @@ resource "kubernetes_job" "db_migration" {
           command = ["/bin/sh", "-c"]
           args    = [local.template_db_init]
 
+          env {
+            name  = "ROOT_DOMAIN"
+            value = var.root_domain
+          }
           env {
             name  = "AWS_ACCESS_KEY_ID"
             value = var.AWS_ACCESS_KEY_ID

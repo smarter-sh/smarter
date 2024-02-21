@@ -20,6 +20,9 @@ jobs:
       - name: Checkout code
         id: checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          token: ${{ env.GITHUB_TOKEN }}
 
       - name: Merge main into next
         uses: ./.github/actions/merge-branch

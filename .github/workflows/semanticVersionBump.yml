@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VERSION_FILE: __version__.py
-      PACKAGE_PATH: ${{ github.workspace }}/python/smarter/
+      PACKAGE_PATH: ${{ github.workspace }}/smarter/
 
     steps:
       - uses: actions/checkout@v4
