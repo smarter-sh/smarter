@@ -30,10 +30,14 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     "dev.api.smarter.sh",
-    "api.smarter.sh",  # FIX ME
+    "staging.api.smarter.sh",
+    "api.smarter.sh",
     "web.smarter.sh",
+    "localhost",
 ]
-CSRF_TRUSTED_ORIGINS = ALLOWED_HOSTS
+CSRF_TRUSTED_ORIGINS = (
+    ALLOWED_HOSTS + [f"http://{host}" for host in ALLOWED_HOSTS] + [f"https://{host}" for host in ALLOWED_HOSTS]
+)
 
 # Application definition
 
