@@ -21,16 +21,16 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from smarter.apps.api.views.views import LogoutView, custom_api_root
+
 
 # system urls
 urlpatterns = static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 # application urls
 urlpatterns += [
-    # django admin console
+    path("", custom_api_root, name="custom_api_root"),
+    path("api-auth/logout/", LogoutView.as_view(), name="logout"),
+    path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     path("admin/", admin.site.urls),
-    # all v0 endpoints belong here.
-    # ----------------------------
     path("v0/", include("smarter.apps.api.v0_urls")),
-    path("v0/", include("smarter.apps.account.v0_urls")),
-    path("v0/", include("smarter.apps.plugin.v0_urls")),
 ]

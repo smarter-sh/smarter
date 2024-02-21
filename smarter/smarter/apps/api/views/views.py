@@ -1,28 +1,18 @@
 # -*- coding: utf-8 -*-
 """Django REST framework views for the API admin app."""
 from django.contrib.auth import logout
-from django.contrib.auth.models import User
-
-# Create your views here.
-from rest_framework import viewsets
+from django.shortcuts import render
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from smarter.apps.api.serializers import UserSerializer
+
+def custom_api_root(request):
+    return render(request, "rest_framework/root_page_template.html")
 
 
-# from django.shortcuts import render
-
-
-# ViewSets define the view behavior.
-# pylint: disable=too-many-ancestors
-class UserViewSet(viewsets.ModelViewSet):
-    """Viewset for the User model."""
-
-    # FIX NOTE: filter this by account.
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+def custom_api_root_v0(request):
+    return render(request, "rest_framework/root_page_template_v0.html")
 
 
 class LogoutView(APIView):

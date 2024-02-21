@@ -16,6 +16,9 @@ import yaml
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 PROJECT_ROOT = str(Path(HERE).parent.parent.parent.parent)
+PLUGINS_PATH = os.path.join(PROJECT_ROOT, "smarter", "app", "plugins", "data", "sample-plugins")
+
+
 sys.path.append(PROJECT_ROOT)  # noqa: E402
 
 

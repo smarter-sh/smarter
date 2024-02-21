@@ -3,7 +3,6 @@
 """Test API end points."""
 
 # python stuff
-import os
 import unittest
 
 from django.contrib.auth.models import User
@@ -11,12 +10,8 @@ from django.test import Client
 
 # our stuff
 from smarter.apps.account.models import Account, PaymentMethod, UserProfile
-from smarter.apps.account.tests.test_setup import PROJECT_ROOT
 from smarter.apps.plugin.plugin import Plugins
 from smarter.apps.plugin.utils import add_example_plugins
-
-
-PLUGINS_PATH = os.path.join(PROJECT_ROOT, "smarter", "app", "plugins", "data", "sample-plugins")
 
 
 class TestUrls(unittest.TestCase):
