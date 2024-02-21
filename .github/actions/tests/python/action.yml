@@ -94,4 +94,5 @@ runs:
         GITHUB_ACTIONS: "true"
         DEBUG_MODE: "true"
       run: |
+        make django-init
         make python-test
