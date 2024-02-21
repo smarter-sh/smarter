@@ -19,14 +19,14 @@ if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 
 
-from smarter.apps.openai_function_calling.plugin_loader import Plugin
+from smarter.apps.openai_function_calling.tests.test_setup import get_test_file_path
 
 # pylint: disable=no-name-in-module
-from smarter.apps.openai_function_calling.plugin_manager import (
+from smarter.apps.openai_function_calling.utils import (
     function_calling_plugin,
     plugin_tool_factory,
 )
-from smarter.apps.openai_function_calling.tests.test_setup import get_test_file_path
+from smarter.apps.plugin.plugin import Plugin
 
 
 class TestLambdaOpenaiFunctionRefersTo(unittest.TestCase):
@@ -37,7 +37,7 @@ class TestLambdaOpenaiFunctionRefersTo(unittest.TestCase):
         config_path = get_test_file_path("plugins/everlasting-gobbstopper.yaml")
         with open(config_path, "r", encoding="utf-8") as file:
             plugin_json = yaml.safe_load(file)
-        self.plugin = Plugin(plugin_json=plugin_json)
+        self.plugin = Plugin(data=plugin_json)
 
     # pylint: disable=broad-exception-caught
     def test_get_additional_info(self):

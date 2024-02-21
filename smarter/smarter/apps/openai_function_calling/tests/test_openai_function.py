@@ -11,6 +11,7 @@ import unittest
 from pathlib import Path
 
 import yaml
+from django.contrib.auth.models import User
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -22,15 +23,13 @@ if PYTHON_ROOT not in sys.path:
 from smarter.apps.openai_function_calling.natural_language_processing import (
     does_refer_to,
 )
-from smarter.apps.openai_function_calling.plugin_loader import Plugin
-from smarter.apps.openai_function_calling.plugin_manager import (
-    search_terms_are_in_messages,
-)
 from smarter.apps.openai_function_calling.tests.test_setup import (
     get_test_file,
     get_test_file_path,
 )
+from smarter.apps.openai_function_calling.utils import search_terms_are_in_messages
 from smarter.apps.openai_function_calling.views import handler
+from smarter.apps.plugin.plugin import Plugin
 
 
 class TestLambdaOpenai(unittest.TestCase):
@@ -41,7 +40,19 @@ class TestLambdaOpenai(unittest.TestCase):
         config_path = get_test_file_path("plugins/everlasting-gobbstopper.yaml")
         with open(config_path, "r", encoding="utf-8") as file:
             plugin_json = yaml.safe_load(file)
-        self.plugin = Plugin(plugin_json=plugin_json)
+        self.plugin = Plugin(data=plugin_json)
+        self.user = User.objects.create_user(
+            username="testuser",
+            email="mail@mail.com",
+            password="testpassword",
+            is_active=True,
+            is_staff=True,
+            is_superuser=True,
+        )
+
+    def tearDown(self):
+        """Tear down test fixtures."""
+        self.user.delete()
 
     def check_response(self, response):
         """Check response structure from lambda_handler."""
@@ -98,8 +109,7 @@ class TestLambdaOpenai(unittest.TestCase):
             self.assertFalse(
                 search_terms_are_in_messages(
                     messages=list_factory(content),
-                    search_terms=self.plugin.selector.search_terms.search_terms,
-                    search_pairs=self.plugin.selector.search_terms.pairs,
+                    search_terms=self.plugin.plugin_selector.search_terms,
                 )
             )
 
@@ -107,8 +117,7 @@ class TestLambdaOpenai(unittest.TestCase):
             self.assertTrue(
                 search_terms_are_in_messages(
                     messages=list_factory(content),
-                    search_terms=self.plugin.selector.search_terms.search_terms,
-                    search_pairs=self.plugin.selector.search_terms.pairs,
+                    search_terms=self.plugin.plugin_selector.search_terms,
                 )
             )
 
@@ -132,7 +141,7 @@ class TestLambdaOpenai(unittest.TestCase):
         event_about_gobstoppers = get_test_file("json/prompt_about_everlasting_gobstoppers.json")
 
         try:
-            response = handler(event_about_gobstoppers, None)
+            response = handler(user=self.user, data=event_about_gobstoppers)
         except Exception as error:
             self.fail(f"handler() raised {error}")
         self.check_response(response)
@@ -143,7 +152,7 @@ class TestLambdaOpenai(unittest.TestCase):
         event_about_weather = get_test_file("json/prompt_about_weather.json")
 
         try:
-            response = handler(event_about_weather, None)
+            response = handler(user=self.user, data=event_about_weather)
         except Exception as error:
             self.fail(f"handler() raised {error}")
         self.check_response(response)
@@ -154,7 +163,7 @@ class TestLambdaOpenai(unittest.TestCase):
         event_about_recipes = get_test_file("json/prompt_about_recipes.json")
 
         try:
-            response = handler(event_about_recipes, None)
+            response = handler(user=self.user, data=event_about_recipes)
         except Exception as error:
             self.fail(f"handler() raised {error}")
         self.check_response(response)

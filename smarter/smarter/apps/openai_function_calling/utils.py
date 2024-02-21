@@ -5,11 +5,16 @@ b.) how to call a function from the model
 """
 import json
 
+from django.contrib.auth.models import User
+
+# from .plugin_loader import Plugin, plugins
+from smarter.apps.plugin.plugin import Plugin
+from smarter.apps.plugin.utils import plugins_for_user
+
 from .natural_language_processing import does_refer_to
-from .plugin_loader import Plugin, plugins
 
 
-def search_terms_are_in_messages(messages: list, search_terms: list, search_pairs: list) -> bool:
+def search_terms_are_in_messages(messages: list, search_terms: list) -> bool:
     """
     Return True the user has mentioned Lawrence McDaniel or FullStackWithLawrence
     at any point in the history of the conversation.
@@ -23,10 +28,6 @@ def search_terms_are_in_messages(messages: list, search_terms: list, search_pair
             content = message["content"]
             for term in search_terms:
                 if does_refer_to(prompt=content, refers_to=term):
-                    return True
-
-            for lst in search_pairs:
-                if does_refer_to(prompt=content, refers_to=lst[0]) and does_refer_to(prompt=content, refers_to=lst[1]):
                     return True
 
     return False
@@ -49,12 +50,12 @@ def customized_prompt(plugin: Plugin, messages: list) -> list:
 
 
 # pylint: disable=too-many-return-statements
-def function_calling_plugin(inquiry_type: str) -> str:
+def function_calling_plugin(user: User, inquiry_type: str) -> str:
     """Return select info from custom plugin object"""
 
-    for plugin in plugins:
+    for plugin in plugins_for_user(user=user):
         try:
-            return_data = plugin.plugin_data.return_data.to_json()
+            return_data = plugin.plugin_data.return_data
             retval = return_data[inquiry_type]
             return json.dumps(retval)
         except KeyError:
