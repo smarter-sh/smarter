@@ -20,6 +20,7 @@ PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
 if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 
+from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.openai_function_calling.natural_language_processing import (
     does_refer_to,
 )
@@ -32,27 +33,28 @@ from smarter.apps.openai_function_calling.views import handler
 from smarter.apps.plugin.plugin import Plugin
 
 
-class TestLambdaOpenai(unittest.TestCase):
+class TestOpenaiFunctionCalling(unittest.TestCase):
     """Test Index Lambda function."""
 
     def setUp(self):
         """Set up test fixtures."""
-        config_path = get_test_file_path("plugins/everlasting-gobbstopper.yaml")
+        self.user, _ = User.objects.get_or_create(username="testuser", password="12345")
+        self.account, _ = Account.objects.get_or_create(company_name="Test Account")
+        self.user_profile, _ = UserProfile.objects.get_or_create(user=self.user, account=self.account)
+
+        config_path = get_test_file_path("plugins/everlasting-gobstopper.yaml")
         with open(config_path, "r", encoding="utf-8") as file:
             plugin_json = yaml.safe_load(file)
+        plugin_json["user_profile"] = self.user_profile
+
         self.plugin = Plugin(data=plugin_json)
-        self.user = User.objects.create_user(
-            username="testuser",
-            email="mail@mail.com",
-            password="testpassword",
-            is_active=True,
-            is_staff=True,
-            is_superuser=True,
-        )
 
     def tearDown(self):
         """Tear down test fixtures."""
+        self.user_profile.delete()
         self.user.delete()
+        self.account.delete()
+        self.plugin.delete()
 
     def check_response(self, response):
         """Check response structure from lambda_handler."""

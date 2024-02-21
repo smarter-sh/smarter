@@ -41,7 +41,7 @@ def customized_prompt(plugin: Plugin, messages: list) -> list:
             system_role = message.get("content")
             custom_prompt = {
                 "role": "system",
-                "content": system_role + "\n\n and also " + plugin.prompting.system_role,
+                "content": system_role + "\n\n and also " + plugin.plugin_prompt.system_role,
             }
             messages[i] = custom_prompt
             break
@@ -78,7 +78,7 @@ def plugin_tool_factory(plugin: Plugin):
                 "properties": {
                     "inquiry_type": {
                         "type": "string",
-                        "enum": plugin.plugin_data.return_data.keys,
+                        "enum": plugin.plugin_data.return_data_keys,
                     },
                 },
                 "required": ["inquiry_type"],

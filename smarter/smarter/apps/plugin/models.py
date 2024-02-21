@@ -96,6 +96,10 @@ class PluginData(TimestampedModel):
     )
 
     @property
+    def return_data_keys(self) -> list:
+        return list(self.return_data.keys())
+
+    @property
     def data(self) -> dict:
         return yaml.dump(self.return_data)
 
