@@ -31,23 +31,26 @@ class Account(TimestampedModel):
     phone_number = models.CharField(max_length=20)
     address = models.CharField(max_length=255)
 
+    def randomized_account_number(self):
+        """
+        Generate a random account number of the format ####-####-####.
+        """
+
+        # Generate three 4-digit numbers
+        def account_number_generator():
+            parts = [str(random.randint(0, 9999)).zfill(4) for _ in range(3)]
+            retval = "-".join(parts)
+            return retval
+
+        account_number = account_number_generator()
+        while Account.objects.filter(account_number=account_number).exists():
+            account_number = account_number_generator()
+
+        return account_number
+
     def save(self, *args, **kwargs):
         if self.account_number == "default_value":
-            prefix = "1860-6722-"
-            prev_instances = Account.objects.all().order_by("-id")
-            while True:
-                if prev_instances.exists():
-                    last_instance = prev_instances.first()
-                    last_num = int(last_instance.account_number.split("-")[-1])
-                    new_account_number = prefix + str(last_num + 1).zfill(4)
-                else:
-                    s = "".join(random.sample("0001", 4))
-                    new_account_number = prefix + s
-
-                if not Account.objects.filter(account_number=new_account_number).exists():
-                    break
-
-            self.account_number = new_account_number
+            self.account_number = self.randomized_account_number()
         super().save(*args, **kwargs)
 
     # pylint: disable=missing-class-docstring
