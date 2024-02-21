@@ -8,7 +8,7 @@ django-taggit==5.0.1
 
 # misc
 # ------------
-boto3==1.34.44
+boto3==1.34.46
 botocore
 requests==2.31.0
 
