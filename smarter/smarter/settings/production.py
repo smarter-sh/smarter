@@ -33,7 +33,7 @@ ALLOWED_HOSTS = [
     "api.smarter.sh",  # FIX ME
     "web.smarter.sh",
 ]
-
+CSRF_TRUSTED_ORIGINS = ALLOWED_HOSTS
 
 # Application definition
 
