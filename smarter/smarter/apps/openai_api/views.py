@@ -29,7 +29,7 @@ openai.api_key = settings.openai_api_key.get_secret_value()
 
 
 # pylint: disable=too-many-locals
-def handler(request):
+def handler(data: dict):
     """
     Main Lambda handler function.
 
@@ -38,7 +38,7 @@ def handler(request):
     """
     try:
         openai_results = {}
-        request_body = get_request_body(data=request.data)
+        request_body = get_request_body(data=data)
         object_type, model, messages, input_text, temperature, max_tokens = parse_request(request_body)
         request_meta_data = request_meta_data_factory(model, object_type, temperature, max_tokens, input_text)
 
@@ -110,4 +110,4 @@ class OpenAIViewSet(viewsets.ViewSet):
     # pylint: disable=W0613
     def create(self, request):
         """override the create method to handle POST requests."""
-        return Response(handler(request))
+        return Response(handler(data=request.data))

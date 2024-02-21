@@ -69,7 +69,7 @@ def handler(user: User, data: dict):
                 custom_tool = plugin_tool_factory(plugin=plugin)
                 tools.append(custom_tool)
                 print(
-                    f"Adding plugin: {plugin.name} {plugin.plugin_meta.version} created by {plugin.plugin_meta.author.user.get_username}"
+                    f"Adding plugin: {plugin.name} {plugin.plugin_meta.version} created by {plugin.plugin_meta.author.user.username}"
                 )
 
         # https://platform.openai.com/docs/guides/gpt/chat-completions-api

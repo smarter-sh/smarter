@@ -64,7 +64,7 @@ from smarter.apps.common.validators import (  # validate_embedding_request,
 
 
 # pylint: disable=too-many-locals
-def handler(request):
+def handler(data: dict):
     """
     Process incoming requests and invoking the appropriate
     OpenAI API endpoint based on the contents of the request.
@@ -75,7 +75,7 @@ def handler(request):
         # ----------------------------------------------------------------------
         # initialize, parse and validate the request
         # ----------------------------------------------------------------------
-        request_body = get_request_body(data=request.data)
+        request_body = get_request_body(data=data)
         validate_request_body(request_body=request_body)
         object_type, model, messages, input_text, temperature, max_tokens = parse_request(request_body)
         request_meta_data = request_meta_data_factory(model, object_type, temperature, max_tokens, input_text)
@@ -196,4 +196,4 @@ class LanchainViewSet(viewsets.ViewSet):
     # pylint: disable=W0613
     def create(self, request):
         """override the create method to handle POST requests."""
-        return Response(handler(request))
+        return Response(handler(data=request.data))
