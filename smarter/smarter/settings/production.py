@@ -35,9 +35,10 @@ ALLOWED_HOSTS = [
     "web.smarter.sh",
     "localhost",
 ]
-CSRF_TRUSTED_ORIGINS = (
-    ALLOWED_HOSTS + [f"http://{host}" for host in ALLOWED_HOSTS] + [f"https://{host}" for host in ALLOWED_HOSTS]
-)
+
+# (4_0.E001) As of Django 4.0, the values in the CSRF_TRUSTED_ORIGINS setting must start with a scheme
+# (usually http:// or https://) but found api.smarter.sh. See the release notes for details.
+CSRF_TRUSTED_ORIGINS = [f"http://{host}" for host in ALLOWED_HOSTS] + [f"https://{host}" for host in ALLOWED_HOSTS]
 
 # Application definition
 
