@@ -12,7 +12,6 @@ from smarter.apps.common.const import (  # VALID_EMBEDDING_MODELS,
 )
 from smarter.apps.common.exceptions import EXCEPTION_MAP
 from smarter.apps.common.utils import (
-    cloudwatch_handler,
     exception_response_factory,
     get_request_body,
     http_response_factory,
@@ -29,19 +28,17 @@ openai.organization = settings.openai_api_organization
 openai.api_key = settings.openai_api_key.get_secret_value()
 
 
-# pylint: disable=unused-argument
 # pylint: disable=too-many-locals
-def handler(event, context):
+def handler(request):
     """
     Main Lambda handler function.
 
     Responsible for processing incoming requests and invoking the appropriate
     OpenAI API endpoint based on the contents of the request.
     """
-    cloudwatch_handler(event, settings.dump, debug_mode=settings.debug_mode)
     try:
         openai_results = {}
-        request_body = get_request_body(event=event)
+        request_body = get_request_body(data=request.data)
         object_type, model, messages, input_text, temperature, max_tokens = parse_request(request_body)
         request_meta_data = request_meta_data_factory(model, object_type, temperature, max_tokens, input_text)
 
@@ -113,4 +110,4 @@ class OpenAIViewSet(viewsets.ViewSet):
     # pylint: disable=W0613
     def create(self, request):
         """override the create method to handle POST requests."""
-        return Response(handler(event=request.data, context=None))
+        return Response(handler(request))

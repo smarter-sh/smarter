@@ -35,10 +35,14 @@ class Account(TimestampedModel):
         """
         Generate a random account number of the format ####-####-####.
         """
+        ACCOUNT_NUMBER_SEGMENTS = 3
+        ACCOUNT_NUMBER_SEGMENT_LENGTH = 4
 
-        # Generate three 4-digit numbers
         def account_number_generator():
-            parts = [str(random.randint(0, 9999)).zfill(4) for _ in range(3)]
+            parts = [
+                str(random.randint(0, 9999)).zfill(ACCOUNT_NUMBER_SEGMENT_LENGTH)
+                for _ in range(ACCOUNT_NUMBER_SEGMENTS)
+            ]
             retval = "-".join(parts)
             return retval
 
@@ -55,8 +59,8 @@ class Account(TimestampedModel):
 
     # pylint: disable=missing-class-docstring
     class Meta:
-        verbose_name = "Smarter Account"
-        verbose_name_plural = "Smarter Account"
+        verbose_name = "Account"
+        verbose_name_plural = "Accounts"
 
     def __str__(self):
         return str(self.company_name)

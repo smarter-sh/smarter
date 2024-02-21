@@ -4,6 +4,7 @@
 import json
 
 import openai
+from django.contrib.auth.models import User
 from rest_framework import permissions, viewsets
 from rest_framework.response import Response
 
@@ -11,7 +12,6 @@ from smarter.apps.common.conf import settings
 from smarter.apps.common.const import VALID_CHAT_COMPLETION_MODELS, OpenAIResponseCodes
 from smarter.apps.common.exceptions import EXCEPTION_MAP
 from smarter.apps.common.utils import (
-    cloudwatch_handler,
     exception_response_factory,
     get_logger,
     get_request_body,
@@ -25,9 +25,10 @@ from smarter.apps.common.validators import (  # validate_embedding_request,
 )
 
 # OpenAI functions
+from smarter.apps.plugin.utils import plugins_for_user
+
 from .function_weather import get_current_weather, weather_tool_factory
-from .plugin_loader import plugins
-from .plugin_manager import (
+from .utils import (
     customized_prompt,
     function_calling_plugin,
     plugin_tool_factory,
@@ -40,40 +41,36 @@ openai.organization = settings.openai_api_organization
 openai.api_key = settings.openai_api_key.get_secret_value()
 
 
-# pylint: disable=unused-argument
 # pylint: disable=too-many-locals
-def handler(event, context):
+def handler(user: User, data: dict):
     """
     Main Lambda handler function.
 
     Responsible for processing incoming requests and invoking the appropriate
     OpenAI API endpoint based on the contents of the request.
     """
-    cloudwatch_handler(event, settings.dump, debug_mode=settings.debug_mode)
     weather_tool = weather_tool_factory()
     tools = [weather_tool]
 
     try:
         openai_results = {}
-        request_body = get_request_body(event=event)
+        request_body = get_request_body(data=data)
         object_type, model, messages, input_text, temperature, max_tokens = parse_request(request_body)
         request_meta_data = request_meta_data_factory(model, object_type, temperature, max_tokens, input_text)
 
         # does the prompt have anything to do with any of the search terms defined in a plugin?
         # FIX NOTE: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_tokens
-        for plugin in plugins:
-            if search_terms_are_in_messages(
-                messages=messages,
-                search_terms=plugin.selector.search_terms.search_terms,
-                search_pairs=plugin.selector.search_terms.pairs,
-            ):
-                model = plugin.prompting.model
-                temperature = plugin.prompting.temperature
-                max_tokens = plugin.prompting.max_tokens
+        for plugin in plugins_for_user(user):
+            if search_terms_are_in_messages(messages=messages, search_terms=plugin.plugin_selector.search_terms):
+                model = plugin.plugin_prompt.model
+                temperature = plugin.plugin_prompt.temperature
+                max_tokens = plugin.plugin_prompt.max_tokens
                 messages = customized_prompt(plugin=plugin, messages=messages)
                 custom_tool = plugin_tool_factory(plugin=plugin)
                 tools.append(custom_tool)
-                print(f"Adding plugin: {plugin.name} {plugin.meta_data.version} created by {plugin.meta_data.author}")
+                print(
+                    f"Adding plugin: {plugin.name} {plugin.plugin_meta.version} created by {plugin.plugin_meta.author.user.get_username}"
+                )
 
         # https://platform.openai.com/docs/guides/gpt/chat-completions-api
         validate_item(
@@ -148,4 +145,4 @@ class FunctionCallingViewSet(viewsets.ViewSet):
     # pylint: disable=W0613
     def create(self, request):
         """override the create method to handle POST requests."""
-        return Response(handler(event=request.data, context=None))
+        return Response(handler(user=request.user, data=request.data))

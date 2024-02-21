@@ -44,18 +44,6 @@ def recursive_sort_dict(d):
     return {k: recursive_sort_dict(v) if isinstance(v, dict) else v for k, v in sorted(d.items())}
 
 
-def cloudwatch_handler(
-    event,
-    dump,
-    debug_mode: bool = False,
-    quiet: bool = False,
-):
-    """Create a CloudWatch log entry for the event and dump the event to stdout."""
-    if debug_mode and not quiet:
-        logger.debug(json.dumps(dump, cls=DateTimeEncoder))
-        logger.debug(json.dumps({"event": event}, cls=DateTimeEncoder))
-
-
 def http_response_factory(status_code: int, body, debug_mode: bool = False) -> json:
     """
     Generate a standardized JSON return dictionary for all possible response scenarios.
@@ -105,7 +93,7 @@ def exception_response_factory(exception) -> json:
     return retval
 
 
-def get_request_body(event) -> dict:
+def get_request_body(data) -> dict:
     """
     Returns the request body as a dictionary.
 
@@ -115,14 +103,14 @@ def get_request_body(event) -> dict:
     Returns:
         A dictionary representing the request body.
     """
-    if hasattr(event, "isBase64Encoded") and bool(event["isBase64Encoded"]):
+    if hasattr(data, "isBase64Encoded") and bool(data["isBase64Encoded"]):
         # pylint: disable=line-too-long
         #  https://stackoverflow.com/questions/9942594/unicodeencodeerror-ascii-codec-cant-encode-character-u-xa0-in-position-20
         #  https://stackoverflow.com/questions/53340627/typeerror-expected-bytes-like-object-not-str
-        request_body = str(event["body"]).encode("ascii")
+        request_body = str(data["body"]).encode("ascii")
         request_body = base64.b64decode(request_body)
     else:
-        request_body = event
+        request_body = data
 
     validate_request_body(request_body=request_body)
 

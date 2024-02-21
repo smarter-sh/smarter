@@ -90,6 +90,7 @@ A Python Django project implementing Querium's proprietary Plugin model, along w
 - [Terraform](https://www.terraform.io/) fully automated and [parameterized](./api/terraform/terraform.tfvars) build. Usually builds your infrastructure in less than a minute.
 - Secure: uses AWS role-based security and custom IAM policies. Best practice handling of secrets and sensitive data in all environments (dev, test, CI-CD, prod). Proxy-based API that hides your OpenAI API calls and credentials. Runs on https with AWS-managed SSL/TLS certificate.
 - Excellent [documentation](./doc/)
+- Token-based authentication using [Django-rest-knox](https://jazzband.github.io/django-rest-knox/) <-- PENDING
 - Runs on Kubernetes.
 
 ## Requirements

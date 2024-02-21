@@ -4,6 +4,7 @@
 import copy
 import json
 import logging
+import os
 import re
 
 import yaml
@@ -651,3 +652,57 @@ class Plugins:
             if plugin.ready:
                 retval.append(plugin.to_json())
         return retval
+
+
+class PluginExample:
+    """A class for working with built-in yaml-based plugin examples."""
+
+    _name: str = None
+    _json: json = None
+    _yaml: str = None
+
+    def __init__(self, filepath: str, filename: str):
+        """Initialize the class from a yaml file"""
+        with open(os.path.join(filepath, filename), "r", encoding="utf-8") as file:
+            self._yaml = file.read()
+            self._json = yaml.safe_load(self._yaml)
+
+        self._name = filename
+
+    @property
+    def name(self) -> str:
+        """Return the name of the plugin."""
+        return self._name
+
+    def to_yaml(self) -> str:
+        """Return the plugin as a yaml string."""
+        return self._yaml
+
+    def to_json(self) -> dict:
+        """Return the plugin as a dictionary."""
+        return self._json
+
+
+class PluginExamples:
+    """A class for working with a collection of PluginExample instances."""
+
+    _plugin_examples: list[PluginExample] = []
+    HERE = os.path.abspath(os.path.dirname(__file__))
+    PLUGINS_PATH = os.path.join(HERE, "data", "sample-plugins")
+
+    def __init__(self):
+        """Initialize the class."""
+        for file in os.listdir(self.PLUGINS_PATH):
+            if file.endswith(".yaml"):
+                plugin_example = PluginExample(filepath=self.PLUGINS_PATH, filename=file)
+                self._plugin_examples.append(plugin_example)
+
+    @property
+    def count(self) -> int:
+        """Return the number of plugins."""
+        return len(self._plugin_examples)
+
+    @property
+    def plugins(self) -> list[PluginExample]:
+        """Return a list of plugins in dictionary format."""
+        return self._plugin_examples
