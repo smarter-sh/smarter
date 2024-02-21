@@ -7,7 +7,6 @@
 import json
 import os
 import unittest
-from pathlib import Path
 
 import yaml
 from django.contrib.auth.models import User
@@ -21,14 +20,14 @@ from smarter.apps.plugin.models import (
     PluginPrompt,
     PluginSelector,
 )
-from smarter.apps.plugin.plugin import Plugin
+from smarter.apps.plugin.plugin import Plugin, PluginExamples
 from smarter.apps.plugin.serializers import (
     PluginDataSerializer,
     PluginMetaSerializer,
     PluginPromptSerializer,
     PluginSelectorSerializer,
 )
-from smarter.apps.plugin.tests.test_setup import PROJECT_ROOT, get_test_file_path
+from smarter.apps.plugin.tests.test_setup import get_test_file_path
 from smarter.apps.plugin.utils import add_example_plugins
 
 
@@ -44,9 +43,11 @@ class TestPlugin(unittest.TestCase):
         with open(config_path, "r", encoding="utf-8") as file:
             self.data = yaml.safe_load(file)
 
-        self.user, _ = User.objects.get_or_create(username="testuser", password="12345")
-        self.account, _ = Account.objects.get_or_create(company_name="Test Account")
-        self.user_profile, _ = UserProfile.objects.get_or_create(user=self.user, account=self.account)
+        # create a 4-digit random string of alphanumeric characters
+        username = "testuser_" + os.urandom(4).hex()
+        self.user = User.objects.create(username=username, password="12345")
+        self.account = Account.objects.create(company_name="Test Account")
+        self.user_profile = UserProfile.objects.create(user=self.user, account=self.account)
 
         self.data["user_profile"] = self.user_profile
 
@@ -138,17 +139,13 @@ class TestPlugin(unittest.TestCase):
 
     def test_add_sample_plugins(self):
         """Test utility function to add sample plugins to a user account."""
-        plugins_path = os.path.join(PROJECT_ROOT, "smarter/apps/plugin/data/sample-plugins/")
-
-        # the number of sample plugins in the sample-plugins directory
-        sample_plugins_count = sum(1 for _ in Path(plugins_path).rglob("*.yaml"))
 
         # add the sample plugins to the user account
         add_example_plugins(user_profile=self.user_profile)
 
         # verify that all of the sample plugins were added to the user account
         plugins = PluginMeta.objects.filter(author=self.user_profile)
-        self.assertEqual(len(plugins), sample_plugins_count)
+        self.assertEqual(len(plugins), PluginExamples().count())
 
         # verify that all of the sample plugins were correctdly created
         # and are in a ready state.

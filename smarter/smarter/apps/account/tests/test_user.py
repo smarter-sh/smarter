@@ -10,8 +10,7 @@ from django.contrib.auth.models import User
 
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.tests.test_setup import PLUGINS_PATH
-from smarter.apps.plugin.plugin import Plugins
+from smarter.apps.plugin.plugin import PluginExamples, Plugins
 from smarter.apps.plugin.utils import add_example_plugins
 
 
@@ -22,7 +21,8 @@ class TestUser(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        self.user, _ = User.objects.get_or_create(username="testuser", password="12345")
+        username = "testuser_" + os.urandom(4).hex()
+        self.user = User.objects.create(username=username, password="12345")
 
     def tearDown(self):
         """Clean up test fixtures."""
@@ -30,15 +30,6 @@ class TestUser(unittest.TestCase):
 
     def test_create(self):
         """Test that we can create an account."""
-
-        def count_plugins() -> int:
-            num_plugins = 0
-            for file in os.listdir(PLUGINS_PATH):
-                if file.endswith(".yaml"):
-                    num_plugins += 1
-            return num_plugins
-
-        num_plugins = count_plugins()
 
         account = Account.objects.create(
             company_name="Test Company",
@@ -57,7 +48,7 @@ class TestUser(unittest.TestCase):
         add_example_plugins(user_profile=profile)
 
         plugins = Plugins(user=self.user)
-        self.assertEqual(len(plugins.plugins), num_plugins)
+        self.assertEqual(len(plugins.plugins), PluginExamples().count())
 
         for plugin in plugins.plugins:
             plugin.delete()

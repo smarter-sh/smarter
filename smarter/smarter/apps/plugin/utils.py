@@ -3,6 +3,7 @@
 
 import os
 
+import yaml
 from django.contrib.auth.models import User
 
 from smarter.apps.account.models import UserProfile
@@ -11,7 +12,6 @@ from .plugin import Plugin, PluginExamples, Plugins
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-PLUGINS_PATH = os.path.join(HERE, "data", "sample-plugins")
 
 
 # pylint: disable=W0613,C0415
@@ -22,7 +22,8 @@ def add_example_plugins(user_profile: UserProfile) -> bool:
     data: dict = None
 
     for plugin in plugin_examples.plugins:
-        data = plugin.to_json()
+        data = plugin.to_yaml()
+        data = yaml.safe_load(data)
         data["user_profile"] = user_profile
         Plugin(data=data)
 
