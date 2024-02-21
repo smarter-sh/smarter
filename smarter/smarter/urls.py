@@ -24,13 +24,10 @@ from django.urls import include, path
 from smarter.apps.api.views.views import LogoutView, custom_api_root
 
 
-# system urls
-urlpatterns = static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-# application urls
-urlpatterns += [
+urlpatterns = [
     path("", custom_api_root, name="custom_api_root"),
     path("api-auth/logout/", LogoutView.as_view(), name="logout"),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     path("admin/", admin.site.urls),
     path("v0/", include("smarter.apps.api.v0_urls")),
-]
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
