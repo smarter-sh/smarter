@@ -1,6 +1,5 @@
 
 locals {
-  env_script = "${path.module}/../scripts/env.sh"
 
   template_db_init = templatefile("${path.module}/templates/db-init.sh.tpl", {
     mysql_user             = var.PRODUCTION_DATABASE_USER
@@ -96,7 +95,7 @@ resource "kubernetes_deployment" "smarter" {
           }
           env {
             name  = "DEBUG_MODE"
-            value = "true"
+            value = "false"
           }
           env {
             name  = "DUMP_DEFAULTS"
