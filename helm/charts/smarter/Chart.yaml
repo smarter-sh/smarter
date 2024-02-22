@@ -1,0 +1,21 @@
+apiVersion: v2
+name: smarter
+description: A Helm chart for deploying Querium smarter api
+type: application
+version: 0.1.0
+home: https://smarter.sh
+sources:
+  - https://github.com/QueriumCorp/smarter
+maintainers:
+  - name: Lawrence McDaniel
+    email: lawrence@querium.com
+  - name: Kent Fuka
+    email: kent@querium.com
+dependencies:
+icon: https://www.querium.com/wp-content/uploads/2022/04/Querium-logo_white_transparency.png
+keywords:
+  - Querium
+  - smarter
+  - plugins
+annotations:
+  "helm.sh/chart": "smarter-0.1.0"
