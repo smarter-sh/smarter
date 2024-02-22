@@ -78,8 +78,9 @@ env:
   SMARTER_ADMIN_PASSWORD: SET-ME-PLEASE
   SMARTER_ADMIN_USERNAME: SET-ME-PLEASE
 
-jobs:
-  deploy:
+runs:
+  using: "composite"
+  steps:
     # -------------------------------------------------------------------------
     # This action is designed to be run on an ephemeral Ubuntu Linux runner.
     # We start with a clean environment and install and configure all the
@@ -88,7 +89,6 @@ jobs:
     # The runner is destroyed after the job completes, so we don't need to
     # worry about cleaning up after ourselves.
     # -------------------------------------------------------------------------
-    runs-on: ubuntu-latest
     steps:
       # Initialize environment variables that are derived from the inputs
       - name: Initialize environment variables
