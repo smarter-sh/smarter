@@ -13,6 +13,8 @@ spec:
   parallelism: 1
   podReplacementPolicy: TerminatingOrFailed
   selector:
+    matchLabels:
+      app.kubernetes.io/name: "{{ .Values.appJobName }}"
   suspend: false
   template:
     metadata:
