@@ -99,7 +99,7 @@ runs:
       env:
         EKS_CLUSTER_NAME: apps-hosting-service
 
-    # install jq, which tutor-k8s-get-secret will use to parse the Kubernetes secret
+    # install jq, which k8s-get-secret will use to parse the Kubernetes secret
     # and set the environment variables
     - name: Install jq
       shell: bash
@@ -135,7 +135,7 @@ runs:
     # MYSQL_PASSWORD: top-secret-password
     - name: Configure MySQL from Kubernetes secret
       id: get-mysql-secret
-      uses: ./.github/actions/tutor-k8s-get-secret@v1
+      uses: ./.github/actions/k8s-get-secret@v1
       with:
         eks-namespace: ${{ env.NAMESPACE }}
         eks-secret-name: mysql-smarter
@@ -148,7 +148,7 @@ runs:
     # MYSQL_ROOT_PASSWORD: top-secret-password
     - name: Configure MySQL from Kubernetes secret
       id: get-mysql-root-secret
-      uses: openedx-actions/tutor-k8s-get-secret@v1
+      uses: ./.github/actions/k8s-get-secret@v1
       with:
         eks-namespace: apps-hosting-service
         eks-secret-name: mysql-root
@@ -162,7 +162,7 @@ runs:
     # SMARTER_ADMIN_PASSWORD: top-secret-password
     - name: Configure admin user from Kubernetes secret
       id: get-admin-secret
-      uses: openedx-actions/tutor-k8s-get-secret@v1
+      uses: ./.github/actions/k8s-get-secret@v1
       with:
         eks-namespace: ${{ env.NAMESPACE }}
         eks-secret-name: smarter-admin
@@ -174,7 +174,7 @@ runs:
     # SECRET_KEY: top-secret-key
     - name: Configure django secret from Kubernetes secret
       id: get-django-secret
-      uses: openedx-actions/tutor-k8s-get-secret@v1
+      uses: ./.github/actions/k8s-get-secret@v1
       with:
         eks-namespace: ${{ env.NAMESPACE }}
         eks-secret-name: smarter-django-secret-key
