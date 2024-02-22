@@ -1,10 +1,9 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  generation: 1
   labels:
     app.kubernetes.io/name: "{{ .Values.appName }}-db-init-job"
-  name: "{{ .Values.appName }}-job"
+  name: "{{ .Values.appName }}-db-init-job"
   namespace: "{{ .Values.env.NAMESPACE }}"
 spec:
   backoffLimit: 4
