@@ -225,9 +225,9 @@ runs:
         --set env.GOOGLE_MAPS_API_KEY=${{ inputs.google-maps-api-key }} \
         --set env.MYSQL_HOST=${{ env.MYSQL_HOST }} \
         --set env.MYSQL_PORT=${{ env.MYSQL_PORT }} \
-        --set env.MYSQL_DATABASE=${{ env.MYSQL_DATABASE }} \
-        --set env.MYSQL_USER=${{ env.MYSQL_USER }} \
-        --set env.MYSQL_PASSWORD=${{ env.MYSQL_PASSWORD }} \
+        --set env.MYSQL_DATABASE=${{ env.SMARTER_MYSQL_DATABASE }} \
+        --set env.MYSQL_USER=${{ env.SMARTER_MYSQL_USERNAME }} \
+        --set env.MYSQL_PASSWORD=${{ env.SMARTER_MYSQL_PASSWORD }} \
         --set env.MYSQL_ROOT_USERNAME=${{ env.MYSQL_ROOT_USERNAME }} \
         --set env.MYSQL_ROOT_PASSWORD=${{ env.MYSQL_ROOT_PASSWORD }} \
         --set env.SECRET_KEY=${{ env.SECRET_KEY }} \
