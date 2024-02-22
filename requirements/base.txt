@@ -38,6 +38,6 @@ textblob==0.17.1
 # weather function
 googlemaps==4.10.0
 openmeteo-requests==1.1.0
-requests-cache==1.1.1
+requests-cache==1.2.0
 retry-requests==2.0.0
 pandas==2.2.0
