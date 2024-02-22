@@ -7,7 +7,7 @@ import sys
 from django.conf import settings
 
 
-logging.basicConfig(level=logging.DEBUG, handlers=[logging.StreamHandler()])
+logging.basicConfig(level=logging.INFO, handlers=[logging.StreamHandler()])
 
 
 def get_logger(name):
