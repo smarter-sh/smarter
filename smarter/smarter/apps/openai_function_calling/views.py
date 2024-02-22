@@ -109,7 +109,7 @@ def handler(user: User, data: dict):
                         unit=function_args.get("unit"),
                     )
                 elif function_name == "function_calling_plugin":
-                    function_response = function_to_call(inquiry_type=function_args.get("inquiry_type"))
+                    function_response = function_to_call(user=user, inquiry_type=function_args.get("inquiry_type"))
                 messages.append(
                     {
                         "tool_call_id": tool_call.id,
