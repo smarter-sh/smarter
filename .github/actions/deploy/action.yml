@@ -99,17 +99,13 @@ runs:
       env:
         EKS_CLUSTER_NAME: apps-hosting-service
 
-    # install jq and yq, which openedx-actions/tutor-k8s-get-secret will use to parse the Kubernetes secret
+    # install jq, which openedx-actions/tutor-k8s-get-secret will use to parse the Kubernetes secret
     # and set the environment variables
-    - name: Install jq and yq
+    - name: Install jq
       shell: bash
       run: |
         sudo apt-get update
         sudo apt-get install -y jq
-        sudo wget https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/${YQ_BINARY}.tar.gz -O - | tar xz && mv ${YQ_BINARY} /usr/bin/yq && sudo chmod +x /usr/bin/yq
-      env:
-        YQ_VERSION: 4.41.1
-        YQ_BINARY: yq_linux_amd64
 
     # connect to Amazon ECR so that we can programmatically
     # figure out the Docker image to add to the Helm values for the
