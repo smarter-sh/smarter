@@ -29,55 +29,6 @@ inputs:
     description: "The Google Maps API key"
     required: true
 
-env:
-  NAMESPACE_BASE: smarter-api
-  EKS_CLUSTER_NAME: apps-hosting-service
-  YQ_VERSION: "v4.41.1"
-  YQ_BINARY: "yq_linux_amd64"
-
-  # helm values
-  # see: ./helm/charts/smarter/values.yaml
-  # ------------------------------
-  ROOT_DOMAIN: smarter.sh
-  DEBUG_MODE: "false"
-  DUMP_DEFAULTS: "True"
-
-  # helm sensitive values from Github secrets
-  # ------------------------------
-
-  # -----------------------------------------------------------
-  # Helm sensitive values from Kubernetes secrets
-  # these are placeholders, mostly for documentation purposes.
-  #
-  # Actual values are set in the Kubernetes secret and retrieved
-  # by the Github Action openedx-actions/tutor-k8s-get-secret.
-  # -----------------------------------------------------------
-
-  # helm sensitive values from Kubernetes secret - mysql-smarter
-  K8S_SECRET_MYSQL: mysql-smarter
-  MYSQL_HOST: SET-ME-PLEASE
-  MYSQL_PORT: SET-ME-PLEASE
-  MYSQL_DATABASE: SET-ME-PLEASE
-  MYSQL_USER: SET-ME-PLEASE
-  MYSQL_PASSWORD: SET-ME-PLEASE
-
-  # helm sensitive values from Kubernetes secret - apps-hosting-service/mysql-root
-  K8S_SECRET_MYSQL_ROOT: mysql-root
-  MYSQL_ROOT_USERNAME: SET-ME-PLEASE
-  MYSQL_ROOT_PASSWORD: SET-ME-PLEASE
-
-  # helm sensitive values from Kubernetes secret - smarter-django-secret-key
-  # ------------------------------
-  K8S_SECRET_DJANGO: smarter-django-secret-key
-  SECRET_KEY: SET-ME-PLEASE
-
-  # helm sensitive values from Kubernetes secret - smarter-admin
-  # ------------------------------
-  K8S_SECRET_ADMIN: smarter-admin
-  SMARTER_LOGIN_URL: SET-ME-PLEASE
-  SMARTER_ADMIN_PASSWORD: SET-ME-PLEASE
-  SMARTER_ADMIN_USERNAME: SET-ME-PLEASE
-
 runs:
   using:
     "composite"
@@ -89,6 +40,55 @@ runs:
     # The runner is destroyed after the job completes, so we don't need to
     # worry about cleaning up after ourselves.
     # -------------------------------------------------------------------------
+  env:
+    NAMESPACE_BASE: smarter-api
+    EKS_CLUSTER_NAME: apps-hosting-service
+    YQ_VERSION: "v4.41.1"
+    YQ_BINARY: "yq_linux_amd64"
+
+    # helm values
+    # see: ./helm/charts/smarter/values.yaml
+    # ------------------------------
+    ROOT_DOMAIN: smarter.sh
+    DEBUG_MODE: "false"
+    DUMP_DEFAULTS: "True"
+
+    # helm sensitive values from Github secrets
+    # ------------------------------
+
+    # -----------------------------------------------------------
+    # Helm sensitive values from Kubernetes secrets
+    # these are placeholders, mostly for documentation purposes.
+    #
+    # Actual values are set in the Kubernetes secret and retrieved
+    # by the Github Action openedx-actions/tutor-k8s-get-secret.
+    # -----------------------------------------------------------
+
+    # helm sensitive values from Kubernetes secret - mysql-smarter
+    K8S_SECRET_MYSQL: mysql-smarter
+    MYSQL_HOST: SET-ME-PLEASE
+    MYSQL_PORT: SET-ME-PLEASE
+    MYSQL_DATABASE: SET-ME-PLEASE
+    MYSQL_USER: SET-ME-PLEASE
+    MYSQL_PASSWORD: SET-ME-PLEASE
+
+    # helm sensitive values from Kubernetes secret - apps-hosting-service/mysql-root
+    K8S_SECRET_MYSQL_ROOT: mysql-root
+    MYSQL_ROOT_USERNAME: SET-ME-PLEASE
+    MYSQL_ROOT_PASSWORD: SET-ME-PLEASE
+
+    # helm sensitive values from Kubernetes secret - smarter-django-secret-key
+    # ------------------------------
+    K8S_SECRET_DJANGO: smarter-django-secret-key
+    SECRET_KEY: SET-ME-PLEASE
+
+    # helm sensitive values from Kubernetes secret - smarter-admin
+    # ------------------------------
+    K8S_SECRET_ADMIN: smarter-admin
+    SMARTER_LOGIN_URL: SET-ME-PLEASE
+    SMARTER_ADMIN_PASSWORD: SET-ME-PLEASE
+    SMARTER_ADMIN_USERNAME: SET-ME-PLEASE
+
   steps:
     # Initialize environment variables that are derived from the inputs
     - name: Initialize environment variables
