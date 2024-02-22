@@ -1,28 +1,18 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
+  name: "{{ .Release.Name }}-smarter-job-db-init"
   labels:
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     app.kubernetes.io/name: "{{ .Values.appJobName }}"
-  name: "{{ .Values.appJobName }}"
-  namespace: "{{ .Values.env.NAMESPACE }}"
+  annotations:
+    "helm.sh/hook": post-upgrade,post-install
+    "helm.sh/hook-delete-policy": hook-succeeded
 spec:
-  backoffLimit: 4
-  completionMode: NonIndexed
-  completions: 1
-  manualSelector: false
-  parallelism: 1
-  podReplacementPolicy: TerminatingOrFailed
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: "{{ .Values.appJobName }}"
-  suspend: false
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app.kubernetes.io/name: "{{ .Values.appJobName }}"
-        batch.kubernetes.io/job-name: "{{ .Values.appJobName }}"
-        job-name: "{{ .Values.appJobName }}"
     spec:
       automountServiceAccountToken: true
       containers:
