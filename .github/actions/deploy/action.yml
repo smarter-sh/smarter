@@ -205,15 +205,18 @@ runs:
         kubectl delete job smarter-db-init-job --namespace ${{ env.NAMESPACE }} || true
 
     # Deploy the application to Kubernetes using Helm
+    # note that we pin the environment to "prod" and set DEBUG_MODE to "false"
+    # regardless of the actual environment. This is because we want to ensure
+    # that the production environment is always deployed with DEBUG_MODE set to "false"
     - name: Deploy
       id: deploy
       shell: bash
       run: |-
         helm upgrade --install --force smarter ./helm/charts/smarter/ --namespace ${{ env.NAMESPACE }} \
+        --set env.ENVIRONMENT="prod" \
         --set env.AWS_REGION=${{ inputs.aws-region }} \
         --set env.AWS_ACCESS_KEY_ID=${{ inputs.aws-access-key-id }} \
         --set env.AWS_SECRET_ACCESS_KEY=${{ inputs.aws-secret-access-key }} \
-        --set env.ENVIRONMENT=${{ env.ENVIRONMENT }} \
         --set env.NAMESPACE=${{ env.NAMESPACE }} \
         --set env.SMARTER_DOCKER_IMAGE=${{ env.SMARTER_DOCKER_IMAGE }} \
         --set env.ROOT_DOMAIN=smarter.sh \
