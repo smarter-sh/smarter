@@ -120,9 +120,9 @@ runs:
       id: docker-build
       shell: bash
       run: |-
-        echo "SMARTER_DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.NAMESPACE_BASE }}:latest" >> $GITHUB_ENV
+        echo "SMARTER_DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest" >> $GITHUB_ENV
       env:
-        NAMESPACE_BASE: smarter-api
+        AWS_ECR_REPO: ${{ env.NAMESPACE }}
 
     # extract the mysql configuration from the Kubernetes secret.
     # these will be set as environment variables for the Helm deployment
