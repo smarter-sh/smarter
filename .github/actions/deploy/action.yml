@@ -79,8 +79,8 @@ env:
   SMARTER_ADMIN_USERNAME: SET-ME-PLEASE
 
 runs:
-  using: "composite"
-  steps:
+  using:
+    "composite"
     # -------------------------------------------------------------------------
     # This action is designed to be run on an ephemeral Ubuntu Linux runner.
     # We start with a clean environment and install and configure all the
@@ -89,184 +89,184 @@ runs:
     # The runner is destroyed after the job completes, so we don't need to
     # worry about cleaning up after ourselves.
     # -------------------------------------------------------------------------
-    steps:
-      # Initialize environment variables that are derived from the inputs
-      - name: Initialize environment variables
-        shell: bash
-        run: |-
-          echo "NAMESPACE=${{ env.NAMESPACE_BASE }}-${{ inputs.environment }}" >> $GITHUB_ENV
+  steps:
+    # Initialize environment variables that are derived from the inputs
+    - name: Initialize environment variables
+      shell: bash
+      run: |-
+        echo "NAMESPACE=${{ env.NAMESPACE_BASE }}-${{ inputs.environment }}" >> $GITHUB_ENV
 
-      # Checkout all code referenced by this action
-      - name: Checkout code
-        id: checkout_code
-        uses: actions/checkout@v4
+    # Checkout all code referenced by this action
+    - name: Checkout code
+      id: checkout_code
+      uses: actions/checkout@v4
 
-      # authenticate AWS CLI
-      - name: Configure AWS credentials
-        id: aws-credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ inputs.aws-access-key-id }}
-          aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
-          aws-region: ${{ inputs.aws-region }}
+    # authenticate AWS CLI
+    - name: Configure AWS credentials
+      id: aws-credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-region: ${{ inputs.aws-region }}
 
-      # put an entry in the run log to show the aws cli version and the IAM user
-      - name: Check awscli version and identity
-        id: awscli-version
-        shell: bash
-        run: |-
-          echo "aws cli version:"
-          echo "----------------"
-          aws --version
-          echo
-          echo "aws IAM user:"
-          echo "-------------"
-          aws sts get-caller-identity
+    # put an entry in the run log to show the aws cli version and the IAM user
+    - name: Check awscli version and identity
+      id: awscli-version
+      shell: bash
+      run: |-
+        echo "aws cli version:"
+        echo "----------------"
+        aws --version
+        echo
+        echo "aws IAM user:"
+        echo "-------------"
+        aws sts get-caller-identity
 
-      # install kubectl, which Helm will use to deploy the application
-      - name: Install kubectl
-        id: kubectl-install
-        shell: bash
-        run: |-
-          sudo apt-get update
-          curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-          echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
-          sudo apt-get update
-          sudo apt-get install -y kubectl
+    # install kubectl, which Helm will use to deploy the application
+    - name: Install kubectl
+      id: kubectl-install
+      shell: bash
+      run: |-
+        sudo apt-get update
+        curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+        echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+        sudo apt-get update
+        sudo apt-get install -y kubectl
 
-      # setup kubeconfig using the aws eks helper command, 'update-kubeconfig'
-      - name: Configure kubectl
-        id: kubectl-configure
-        shell: bash
-        run: |-
-          aws eks --region ${{ inputs.aws-region }} update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --alias ${{ env.EKS_CLUSTER_NAME }}
-          echo "kubectl version and diagnostic info:"
-          echo "------------------------------------"
-          kubectl version
+    # setup kubeconfig using the aws eks helper command, 'update-kubeconfig'
+    - name: Configure kubectl
+      id: kubectl-configure
+      shell: bash
+      run: |-
+        aws eks --region ${{ inputs.aws-region }} update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --alias ${{ env.EKS_CLUSTER_NAME }}
+        echo "kubectl version and diagnostic info:"
+        echo "------------------------------------"
+        kubectl version
 
-      # install jq and yq, which openedx-actions/tutor-k8s-get-secret will use to parse the Kubernetes secret
-      # and set the environment variables
-      - name: Install jq and yq
-        shell: bash
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y jq
-          sudo wget https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/${YQ_BINARY}.tar.gz -O - | tar xz && mv ${YQ_BINARY} /usr/bin/yq && sudo chmod +x /usr/bin/yq
+    # install jq and yq, which openedx-actions/tutor-k8s-get-secret will use to parse the Kubernetes secret
+    # and set the environment variables
+    - name: Install jq and yq
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jq
+        sudo wget https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/${YQ_BINARY}.tar.gz -O - | tar xz && mv ${YQ_BINARY} /usr/bin/yq && sudo chmod +x /usr/bin/yq
 
-      # connect to Amazon ECR so that we can programmatically
-      # figure out the Docker image to add to the Helm values for the
-      # Kubernetes deployment manifest.
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+    # connect to Amazon ECR so that we can programmatically
+    # figure out the Docker image to add to the Helm values for the
+    # Kubernetes deployment manifest.
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
 
-      # set the Docker image to the environment variable SMARTER_DOCKER_IMAGE
-      # example:  012345678903.dkr.ecr.us-east-2.amazonaws.com/smarter-api-dev:latest
-      - name: Set Docker image
-        id: docker-build
-        shell: bash
-        run: |-
-          echo "SMARTER_DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.NAMESPACE_BASE }}:latest" >> $GITHUB_ENV
+    # set the Docker image to the environment variable SMARTER_DOCKER_IMAGE
+    # example:  012345678903.dkr.ecr.us-east-2.amazonaws.com/smarter-api-dev:latest
+    - name: Set Docker image
+      id: docker-build
+      shell: bash
+      run: |-
+        echo "SMARTER_DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.NAMESPACE_BASE }}:latest" >> $GITHUB_ENV
 
-      # extract the mysql configuration from the Kubernetes secret.
-      # these will be set as environment variables for the Helm deployment
-      #
-      # example:
-      # MYSQL_HOST: mysql.service.lawrencemcdaniel.com
-      # MYSQL_PORT: 3306
-      # MYSQL_DATABASE: smarter_api_dev
-      # MYSQL_USER: smarter_api_dev
-      # MYSQL_PASSWORD: top-secret-password
-      - name: Configure MySQL from Kubernetes secret
-        id: get-mysql-secret
-        uses: openedx-actions/tutor-k8s-get-secret@v1
-        with:
-          eks-namespace: ${{ env.NAMESPACE }}
-          eks-secret-name: ${{ env.K8S_SECRET_MYSQL }}
+    # extract the mysql configuration from the Kubernetes secret.
+    # these will be set as environment variables for the Helm deployment
+    #
+    # example:
+    # MYSQL_HOST: mysql.service.lawrencemcdaniel.com
+    # MYSQL_PORT: 3306
+    # MYSQL_DATABASE: smarter_api_dev
+    # MYSQL_USER: smarter_api_dev
+    # MYSQL_PASSWORD: top-secret-password
+    - name: Configure MySQL from Kubernetes secret
+      id: get-mysql-secret
+      uses: openedx-actions/tutor-k8s-get-secret@v1
+      with:
+        eks-namespace: ${{ env.NAMESPACE }}
+        eks-secret-name: ${{ env.K8S_SECRET_MYSQL }}
 
-      # extract the mysql root configuration from the Kubernetes secret.
-      # these will be set as environment variables for the Helm deployment
-      #
-      # example:
-      # MYMYSQL_ROOT_USERNAMESQL_USER: root
-      # MYSQL_ROOT_PASSWORD: top-secret-password
-      - name: Configure MySQL from Kubernetes secret
-        id: get-mysql-secret
-        uses: openedx-actions/tutor-k8s-get-secret@v1
-        with:
-          eks-namespace: apps-hosting-service
-          eks-secret-name: ${{ env.K8S_SECRET_MYSQL_ROOT }}
+    # extract the mysql root configuration from the Kubernetes secret.
+    # these will be set as environment variables for the Helm deployment
+    #
+    # example:
+    # MYMYSQL_ROOT_USERNAMESQL_USER: root
+    # MYSQL_ROOT_PASSWORD: top-secret-password
+    - name: Configure MySQL from Kubernetes secret
+      id: get-mysql-secret
+      uses: openedx-actions/tutor-k8s-get-secret@v1
+      with:
+        eks-namespace: apps-hosting-service
+        eks-secret-name: ${{ env.K8S_SECRET_MYSQL_ROOT }}
 
-      # extract the Django admin user credentials from the Kubernetes secret.
-      # these will be set as environment variables for the Helm deployment
-      #
-      # example:
-      # SMARTER_LOGIN_URL: https://dev.api.smarter.sh/api-auth/login/
-      # SMARTER_ADMIN_USERNAME: admin
-      # SMARTER_ADMIN_PASSWORD: top-secret-password
-      - name: Configure admin user from Kubernetes secret
-        id: get-admin-secret
-        uses: openedx-actions/tutor-k8s-get-secret@v1
-        with:
-          eks-namespace: ${{ env.NAMESPACE }}
-          eks-secret-name: ${{ env.K8S_SECRET_ADMIN }}
+    # extract the Django admin user credentials from the Kubernetes secret.
+    # these will be set as environment variables for the Helm deployment
+    #
+    # example:
+    # SMARTER_LOGIN_URL: https://dev.api.smarter.sh/api-auth/login/
+    # SMARTER_ADMIN_USERNAME: admin
+    # SMARTER_ADMIN_PASSWORD: top-secret-password
+    - name: Configure admin user from Kubernetes secret
+      id: get-admin-secret
+      uses: openedx-actions/tutor-k8s-get-secret@v1
+      with:
+        eks-namespace: ${{ env.NAMESPACE }}
+        eks-secret-name: ${{ env.K8S_SECRET_ADMIN }}
 
-      # extract the Django application secret from the Kubernetes secret.
-      # these will be set as environment variables for the Helm deployment
-      #
-      # example:
-      # SECRET_KEY: top-secret-key
-      - name: Configure django secret from Kubernetes secret
-        id: get-admin-secret
-        uses: openedx-actions/tutor-k8s-get-secret@v1
-        with:
-          eks-namespace: ${{ env.NAMESPACE }}
-          eks-secret-name: ${{ env.K8S_SECRET_DJANGO }}
+    # extract the Django application secret from the Kubernetes secret.
+    # these will be set as environment variables for the Helm deployment
+    #
+    # example:
+    # SECRET_KEY: top-secret-key
+    - name: Configure django secret from Kubernetes secret
+      id: get-admin-secret
+      uses: openedx-actions/tutor-k8s-get-secret@v1
+      with:
+        eks-namespace: ${{ env.NAMESPACE }}
+        eks-secret-name: ${{ env.K8S_SECRET_DJANGO }}
 
-      # see: https://github.com/helm/helm
-      #      we're installing directly from the github repo amd64 binary
-      - name: Install Helm
-        id: helm-install
-        shell: bash
-        run: |-
-          curl -LO https://get.helm.sh/helm-v3.14.2-linux-amd64.tar.gz
-          tar -zxvf helm-v3.14.2-linux-amd64.tar.gz
-          sudo mv linux-amd64/helm /usr/local/bin/helm
+    # see: https://github.com/helm/helm
+    #      we're installing directly from the github repo amd64 binary
+    - name: Install Helm
+      id: helm-install
+      shell: bash
+      run: |-
+        curl -LO https://get.helm.sh/helm-v3.14.2-linux-amd64.tar.gz
+        tar -zxvf helm-v3.14.2-linux-amd64.tar.gz
+        sudo mv linux-amd64/helm /usr/local/bin/helm
 
-      # Dump all of our environment variables to the run log
-      - name: Dump environment variables
-        id: dump-env
-        shell: bash
-        run: |-
-          echo "env"
-          echo "-------------------------------"
-          env
+    # Dump all of our environment variables to the run log
+    - name: Dump environment variables
+      id: dump-env
+      shell: bash
+      run: |-
+        echo "env"
+        echo "-------------------------------"
+        env
 
-      # Deploy the application to Kubernetes using Helm
-      - name: Deploy
-        id: deploy
-        shell: bash
-        run: |-
-          helm install smarter ./helm/charts/smarter/ --namespace ${{ env.NAMESPACE }} \
-          --set env.${{ inputs.aws-region }}=${{ env.${{ inputs.aws-region }} }} \
-          --set env.ENVIRONMENT=${{ env.ENVIRONMENT }} \
-          --set env.NAMESPACE=${{ env.NAMESPACE }} \
-          --set env.SMARTER_DOCKER_IMAGE=${{ env.SMARTER_DOCKER_IMAGE }} \
-          --set env.ROOT_DOMAIN=${{ env.ROOT_DOMAIN }} \
-          --set env.DEBUG_MODE=${{ env.DEBUG_MODE }} \
-          --set env.DUMP_DEFAULTS=${{ env.DUMP_DEFAULTS }} \
-          --set env.${{ inputs.openai-api-key }}=${{ env.${{ inputs.openai-api-key }} }} \
-          --set env.${{ inputs.pinecone-api-key }}=${{ env.${{ inputs.pinecone-api-key }} }} \
-          --set env.${{ inputs.pinecone-environment }}=${{ env.${{ inputs.pinecone-environment }} }} \
-          --set env.${{ inputs.google-maps-api-key }}=${{ env.${{ inputs.google-maps-api-key }} }} \
-          --set env.MYSQL_HOST=${{ env.MYSQL_HOST }} \
-          --set env.MYSQL_PORT=${{ env.MYSQL_PORT }} \
-          --set env.MYSQL_DATABASE=${{ env.MYSQL_DATABASE }} \
-          --set env.MYSQL_USER=${{ env.MYSQL_USER }} \
-          --set env.MYSQL_PASSWORD=${{ env.MYSQL_PASSWORD }} \
-          --set env.MYSQL_ROOT_USERNAME=${{ env.MYSQL_ROOT_USERNAME }} \
-          --set env.MYSQL_ROOT_PASSWORD=${{ env.MYSQL_ROOT_PASSWORD }} \
-          --set env.SECRET_KEY=${{ env.SECRET_KEY }} \
-          --set env.SMARTER_LOGIN_URL=${{ env.SMARTER_LOGIN_URL }} \
-          --set env.SMARTER_ADMIN_PASSWORD=${{ env.SMARTER_ADMIN_PASSWORD }} \
-          --set env.SMARTER_ADMIN_USERNAME=${{ env.SMARTER_ADMIN_USERNAME }} \
+    # Deploy the application to Kubernetes using Helm
+    - name: Deploy
+      id: deploy
+      shell: bash
+      run: |-
+        helm install smarter ./helm/charts/smarter/ --namespace ${{ env.NAMESPACE }} \
+        --set env.${{ inputs.aws-region }}=${{ env.${{ inputs.aws-region }} }} \
+        --set env.ENVIRONMENT=${{ env.ENVIRONMENT }} \
+        --set env.NAMESPACE=${{ env.NAMESPACE }} \
+        --set env.SMARTER_DOCKER_IMAGE=${{ env.SMARTER_DOCKER_IMAGE }} \
+        --set env.ROOT_DOMAIN=${{ env.ROOT_DOMAIN }} \
+        --set env.DEBUG_MODE=${{ env.DEBUG_MODE }} \
+        --set env.DUMP_DEFAULTS=${{ env.DUMP_DEFAULTS }} \
+        --set env.${{ inputs.openai-api-key }}=${{ env.${{ inputs.openai-api-key }} }} \
+        --set env.${{ inputs.pinecone-api-key }}=${{ env.${{ inputs.pinecone-api-key }} }} \
+        --set env.${{ inputs.pinecone-environment }}=${{ env.${{ inputs.pinecone-environment }} }} \
+        --set env.${{ inputs.google-maps-api-key }}=${{ env.${{ inputs.google-maps-api-key }} }} \
+        --set env.MYSQL_HOST=${{ env.MYSQL_HOST }} \
+        --set env.MYSQL_PORT=${{ env.MYSQL_PORT }} \
+        --set env.MYSQL_DATABASE=${{ env.MYSQL_DATABASE }} \
+        --set env.MYSQL_USER=${{ env.MYSQL_USER }} \
+        --set env.MYSQL_PASSWORD=${{ env.MYSQL_PASSWORD }} \
+        --set env.MYSQL_ROOT_USERNAME=${{ env.MYSQL_ROOT_USERNAME }} \
+        --set env.MYSQL_ROOT_PASSWORD=${{ env.MYSQL_ROOT_PASSWORD }} \
+        --set env.SECRET_KEY=${{ env.SECRET_KEY }} \
+        --set env.SMARTER_LOGIN_URL=${{ env.SMARTER_LOGIN_URL }} \
+        --set env.SMARTER_ADMIN_PASSWORD=${{ env.SMARTER_ADMIN_PASSWORD }} \
+        --set env.SMARTER_ADMIN_USERNAME=${{ env.SMARTER_ADMIN_USERNAME }} \
