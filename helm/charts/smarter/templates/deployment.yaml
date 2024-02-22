@@ -31,6 +31,10 @@ spec:
               value: "{{ .Values.env.ROOT_DOMAIN }}"
             - name: AWS_REGION
               value: "{{ .Values.env.AWS_REGION }}"
+            - name: AWS_ACCESS_KEY_ID
+              value: "{{ .Values.env.AWS_ACCESS_KEY_ID }}"
+            - name: AWS_SECRET_ACCESS_KEY
+              value: "{{ .Values.env.AWS_SECRET_ACCESS_KEY}}"
             - name: ENVIRONMENT
               value: "{{ .Values.env.ENVIRONMENT }}"
             - name: DEBUG_MODE
