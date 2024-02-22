@@ -8,8 +8,8 @@ spec:
   selector:
     app.kubernetes.io/name: "{{ .Values.appName }}"
   ports:
-    - port: { { .Values.service.port } }
+    - port: {{ .Values.service.port }}
       protocol: TCP
-      targetPort: { { .Values.service.targetPort } }
+      targetPort: {{ .Values.service.targetPort }}
   sessionAffinity: None
   type: LoadBalancer
