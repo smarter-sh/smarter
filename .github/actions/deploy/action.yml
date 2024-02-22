@@ -191,7 +191,7 @@ runs:
     # MYMYSQL_ROOT_USERNAMESQL_USER: root
     # MYSQL_ROOT_PASSWORD: top-secret-password
     - name: Configure MySQL from Kubernetes secret
-      id: get-mysql-secret
+      id: get-mysql-root-secret
       uses: openedx-actions/tutor-k8s-get-secret@v1
       with:
         eks-namespace: apps-hosting-service
@@ -217,7 +217,7 @@ runs:
     # example:
     # SECRET_KEY: top-secret-key
     - name: Configure django secret from Kubernetes secret
-      id: get-admin-secret
+      id: get-django-secret
       uses: openedx-actions/tutor-k8s-get-secret@v1
       with:
         eks-namespace: ${{ env.NAMESPACE }}
