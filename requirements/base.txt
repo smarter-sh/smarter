@@ -5,7 +5,6 @@ djangorestframework==3.14.0
 markdown
 django-filter==23.5
 django-taggit==5.0.1
-whitenoise==6.6.0
 
 # misc
 # ------------
