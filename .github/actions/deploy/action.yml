@@ -248,17 +248,17 @@ runs:
       shell: bash
       run: |-
         helm install smarter ./helm/charts/smarter/ --namespace ${{ env.NAMESPACE }} \
-        --set env.${{ inputs.aws-region }}=${{ env.${{ inputs.aws-region }} }} \
+        --set env.AWS_REGION=${{ ${{ inputs.aws-region }} \
         --set env.ENVIRONMENT=${{ env.ENVIRONMENT }} \
         --set env.NAMESPACE=${{ env.NAMESPACE }} \
         --set env.SMARTER_DOCKER_IMAGE=${{ env.SMARTER_DOCKER_IMAGE }} \
         --set env.ROOT_DOMAIN=${{ env.ROOT_DOMAIN }} \
         --set env.DEBUG_MODE=${{ env.DEBUG_MODE }} \
         --set env.DUMP_DEFAULTS=${{ env.DUMP_DEFAULTS }} \
-        --set env.${{ inputs.openai-api-key }}=${{ env.${{ inputs.openai-api-key }} }} \
-        --set env.${{ inputs.pinecone-api-key }}=${{ env.${{ inputs.pinecone-api-key }} }} \
-        --set env.${{ inputs.pinecone-environment }}=${{ env.${{ inputs.pinecone-environment }} }} \
-        --set env.${{ inputs.google-maps-api-key }}=${{ env.${{ inputs.google-maps-api-key }} }} \
+        --set env.OPENAI_API_KEY=${{ inputs.openai-api-key }} \
+        --set env.PINECONE_API_KEY=${{ inputs.pinecone-api-key }} \
+        --set env.PINECONE_ENVIRONMENT=${{ inputs.pinecone-environment }} \
+        --set env.GOOGLE_MAPS_API_KEY=${{ inputs.google-maps-api-key }} \
         --set env.MYSQL_HOST=${{ env.MYSQL_HOST }} \
         --set env.MYSQL_PORT=${{ env.MYSQL_PORT }} \
         --set env.MYSQL_DATABASE=${{ env.MYSQL_DATABASE }} \
