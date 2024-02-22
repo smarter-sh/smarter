@@ -3,9 +3,7 @@ kind: Job
 metadata:
   generation: 1
   labels:
-    app.kubernetes.io/name: "{{ .Values.appName }}-job"
-    batch.kubernetes.io/job-name: "{{ .Values.appName }}-job"
-    job-name: "{{ .Values.appName }}-job"
+    app.kubernetes.io/name: "{{ .Values.appName }}-db-init-job"
   name: "{{ .Values.appName }}-job"
   namespace: "{{ .Values.env.NAMESPACE }}"
 spec:
