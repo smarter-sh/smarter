@@ -2,8 +2,8 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   labels:
-    app.kubernetes.io/name: "{{ .Values.appName }}-db-init-job"
-  name: "{{ .Values.appName }}-db-init-job"
+    app.kubernetes.io/name: "{{ .Values.appJobName }}"
+  name: "{{ .Values.appJobName }}"
   namespace: "{{ .Values.env.NAMESPACE }}"
 spec:
   backoffLimit: 4
@@ -18,9 +18,9 @@ spec:
     metadata:
       creationTimestamp: null
       labels:
-        app.kubernetes.io/name: "{{ .Values.appName }}-job"
-        batch.kubernetes.io/job-name: "{{ .Values.appName }}-job"
-        job-name: "{{ .Values.appName }}-job"
+        app.kubernetes.io/name: "{{ .Values.appJobName }}"
+        batch.kubernetes.io/job-name: "{{ .Values.appJobName }}"
+        job-name: "{{ .Values.appJobName }}"
     spec:
       automountServiceAccountToken: true
       containers:
@@ -67,7 +67,7 @@ spec:
               value: "{{ .Values.env.SECRET_KEY }}"
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
           imagePullPolicy: Always
-          name: smarter-db-job
+          name: "{{ .Values.appJobName }}"
       dnsPolicy: ClusterFirst
       enableServiceLinks: true
       restartPolicy: Never
