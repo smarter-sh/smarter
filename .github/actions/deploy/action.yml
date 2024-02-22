@@ -203,7 +203,7 @@ runs:
       id: deploy
       shell: bash
       run: |-
-        helm install smarter ./helm/charts/smarter/ --namespace ${{ env.NAMESPACE }} \
+        helm upgrade --install --force smarter ./helm/charts/smarter/ --namespace ${{ env.NAMESPACE }} \
         --set env.AWS_REGION=${{ inputs.aws-region }} \
         --set env.ENVIRONMENT=${{ env.ENVIRONMENT }} \
         --set env.NAMESPACE=${{ env.NAMESPACE }} \
