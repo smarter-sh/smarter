@@ -1,5 +1,5 @@
 appName: smarter
-appJobName: smarter-db-init-job
+appJobName: smarter-job-db-init
 deployment:
   containerPort: 8000
 service:
