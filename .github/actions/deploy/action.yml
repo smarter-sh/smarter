@@ -99,7 +99,7 @@ runs:
       env:
         EKS_CLUSTER_NAME: apps-hosting-service
 
-    # install jq, which openedx-actions/tutor-k8s-get-secret will use to parse the Kubernetes secret
+    # install jq, which tutor-k8s-get-secret will use to parse the Kubernetes secret
     # and set the environment variables
     - name: Install jq
       shell: bash
@@ -135,7 +135,7 @@ runs:
     # MYSQL_PASSWORD: top-secret-password
     - name: Configure MySQL from Kubernetes secret
       id: get-mysql-secret
-      uses: openedx-actions/tutor-k8s-get-secret@v1
+      uses: ./.github/actions/tutor-k8s-get-secret@v1
       with:
         eks-namespace: ${{ env.NAMESPACE }}
         eks-secret-name: mysql-smarter

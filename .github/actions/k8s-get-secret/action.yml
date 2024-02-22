@@ -1,0 +1,55 @@
+---
+#------------------------------------------------------------------------------
+# written by: mcdaniel
+# date: june-2022
+#
+# - Extract a secret from a k8s namespace
+# - unpack and decode the data values
+# - format into a collection of bash environment variables that can be
+#   consumed by tutor on the command line during a ´tutor config save´ operation
+# - add a mask for the password values so that these do not leak into the console
+# - echo k8s secret meta data to console
+# - echo masked secret to the console
+#------------------------------------------------------------------------------
+name: k8s get environment secret
+description: Github Action to convert k8s secrets into tutor config variables.
+branding:
+  icon: "cloud"
+  color: "orange"
+inputs:
+  eks-namespace:
+    description: "The Kubernetes namespace to which the environment will be deployed. Example: apps-host-service"
+    required: true
+    type: string
+  eks-secret-name:
+    description: "The name of a secret stored in the Kubernetes cluster. Example: mysql-root"
+    required: true
+    type: string
+
+runs:
+  using: "composite"
+  steps:
+    # - fetch from Kubernetes secrets
+    # - dump secret metadata to console
+    # - parse data and decode values
+    # - output in JSON format
+    - name: Fetch secret meta data from k8s and echo to the console
+      id: fetch-metadata
+      shell: bash
+      run: |-
+        echo "k8s secret:"
+        echo "=================================================="
+        kubectl get secret ${{ inputs.eks-secret-name }} -n ${{ inputs.eks-namespace }}  -o json | jq  .metadata | jq -r 'keys[] as $k | "\($k)=\(.[$k])"'
+        echo "=================================================="
+
+    # Fetch, decode, and transpose into environment variables consumable by Helm
+    - name: Fetch decode and transform into tutor environment variables
+      id: transform-secret
+      shell: bash
+      run: kubectl get secret ${{ inputs.eks-secret-name }} -n ${{ inputs.eks-namespace }}  -o json | jq  '.data | map_values(@base64d)' | jq -r 'keys[] as $k | "\($k|ascii_upcase)=\(.[$k])"' >> $GITHUB_ENV
+
+    # Echo the same output to the console
+    - name: dump masked output to the console
+      id: masked-dump
+      shell: bash
+      run: kubectl get secret ${{ inputs.eks-secret-name }} -n ${{ inputs.eks-namespace }}  -o json | jq  '.data | map_values(@base64d)' | jq -r 'keys[] as $k | "\($k|ascii_upcase)=\(.[$k])"'
