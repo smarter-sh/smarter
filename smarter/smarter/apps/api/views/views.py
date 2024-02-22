@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=W0613
 """Django REST framework views for the API admin app."""
 from django.contrib.auth import logout
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
 from rest_framework.views import APIView
 
 
@@ -20,7 +20,10 @@ class LogoutView(APIView):
 
     permission_classes = [AllowAny]
 
-    def get(self, request):
-        """Log out the user."""
+    def get(self, request, *args, **kwargs):
         logout(request)
-        return Response({"detail": "Logged out"})
+        return redirect("/")
+
+    def post(self, request, *args, **kwargs):
+        logout(request)
+        return redirect("/")

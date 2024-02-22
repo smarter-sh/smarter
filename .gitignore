@@ -1,24 +1,49 @@
 db.sqlite3
 staticfiles
 
+# build
+**/build/
+# But don't ignore '.github/actions/build'
+!.github/actions/build/
 
+# coverage
 .coverage
 .coverage.*
 htmlcov
 
 # Jupyter Notebook
 .ipynb_checkpoints
-build
 dist
 
+# os files
 .DS_Store
+Thumbs.db
+Desktop.ini
 
-#  Local .terraform directories
+# log data
+*.log
+*.db
+*.out
+
+# typical secrets files
+.env
+secrets.json
+config.json
+*.key
+*.pem
+*.p12
+*.pfx
+*.cer
+*.crt
+*.der
+*.p7b
+*.p7c
+
+# Local .terraform directories
 .terraform.lock.hcl
 *.tfstate
 *.tfstate.*
 .terraform/
-.env
 lambda_dist_pkg
 *.zip
 __pycache__

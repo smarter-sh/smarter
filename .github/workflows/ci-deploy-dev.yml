@@ -1,0 +1,20 @@
+name: Deploy dev
+
+on:
+  workflow_dispatch:
+
+env:
+  ENVIRONMENT: dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        id: checkout_code
+        uses: actions/checkout@v4
+
+      - name: Deploy
+        uses: ./.github/actions/deploy
+        with:
+          environment: ${{ env.ENVIRONMENT }}

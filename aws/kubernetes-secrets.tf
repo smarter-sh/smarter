@@ -52,8 +52,8 @@ resource "kubernetes_secret" "smarter_admin_password" {
   }
 
   data = {
-    SMARTER_USERNAME       = "admin"
-    SMARTER_MYSQL_PASSWORD = random_password.smarter_admin_password.result
+    SMARTER_ADMIN_USERNAME = "admin"
+    SMARTER_ADMIN_PASSWORD = random_password.smarter_admin_password.result
     SMARTER_LOGIN_URL      = "https://${local.environment_domain}/api-auth/login/"
   }
 
