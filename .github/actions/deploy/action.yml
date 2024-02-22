@@ -40,61 +40,14 @@ runs:
     # The runner is destroyed after the job completes, so we don't need to
     # worry about cleaning up after ourselves.
     # -------------------------------------------------------------------------
-  env:
-    NAMESPACE_BASE: smarter-api
-    EKS_CLUSTER_NAME: apps-hosting-service
-    YQ_VERSION: "v4.41.1"
-    YQ_BINARY: "yq_linux_amd64"
-
-    # helm values
-    # see: ./helm/charts/smarter/values.yaml
-    # ------------------------------
-    ROOT_DOMAIN: smarter.sh
-    DEBUG_MODE: "false"
-    DUMP_DEFAULTS: "True"
-
-    # helm sensitive values from Github secrets
-    # ------------------------------
-
-    # -----------------------------------------------------------
-    # Helm sensitive values from Kubernetes secrets
-    # these are placeholders, mostly for documentation purposes.
-    #
-    # Actual values are set in the Kubernetes secret and retrieved
-    # by the Github Action openedx-actions/tutor-k8s-get-secret.
-    # -----------------------------------------------------------
-
-    # helm sensitive values from Kubernetes secret - mysql-smarter
-    K8S_SECRET_MYSQL: mysql-smarter
-    MYSQL_HOST: SET-ME-PLEASE
-    MYSQL_PORT: SET-ME-PLEASE
-    MYSQL_DATABASE: SET-ME-PLEASE
-    MYSQL_USER: SET-ME-PLEASE
-    MYSQL_PASSWORD: SET-ME-PLEASE
-
-    # helm sensitive values from Kubernetes secret - apps-hosting-service/mysql-root
-    K8S_SECRET_MYSQL_ROOT: mysql-root
-    MYSQL_ROOT_USERNAME: SET-ME-PLEASE
-    MYSQL_ROOT_PASSWORD: SET-ME-PLEASE
-
-    # helm sensitive values from Kubernetes secret - smarter-django-secret-key
-    # ------------------------------
-    K8S_SECRET_DJANGO: smarter-django-secret-key
-    SECRET_KEY: SET-ME-PLEASE
-
-    # helm sensitive values from Kubernetes secret - smarter-admin
-    # ------------------------------
-    K8S_SECRET_ADMIN: smarter-admin
-    SMARTER_LOGIN_URL: SET-ME-PLEASE
-    SMARTER_ADMIN_PASSWORD: SET-ME-PLEASE
-    SMARTER_ADMIN_USERNAME: SET-ME-PLEASE
-
   steps:
     # Initialize environment variables that are derived from the inputs
     - name: Initialize environment variables
       shell: bash
       run: |-
         echo "NAMESPACE=${{ env.NAMESPACE_BASE }}-${{ inputs.environment }}" >> $GITHUB_ENV
+      env:
+        NAMESPACE_BASE: smarter-api
 
     # Checkout all code referenced by this action
     - name: Checkout code
@@ -143,6 +96,8 @@ runs:
         echo "kubectl version and diagnostic info:"
         echo "------------------------------------"
         kubectl version
+      env:
+        EKS_CLUSTER_NAME: apps-hosting-service
 
     # install jq and yq, which openedx-actions/tutor-k8s-get-secret will use to parse the Kubernetes secret
     # and set the environment variables
@@ -152,6 +107,9 @@ runs:
         sudo apt-get update
         sudo apt-get install -y jq
         sudo wget https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/${YQ_BINARY}.tar.gz -O - | tar xz && mv ${YQ_BINARY} /usr/bin/yq && sudo chmod +x /usr/bin/yq
+      env:
+        YQ_VERSION: "4.6.3"
+        YQ_BINARY: yq_linux_amd64
 
     # connect to Amazon ECR so that we can programmatically
     # figure out the Docker image to add to the Helm values for the
@@ -167,6 +125,8 @@ runs:
       shell: bash
       run: |-
         echo "SMARTER_DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.NAMESPACE_BASE }}:latest" >> $GITHUB_ENV
+      env:
+        NAMESPACE_BASE: smarter-api
 
     # extract the mysql configuration from the Kubernetes secret.
     # these will be set as environment variables for the Helm deployment
@@ -182,7 +142,7 @@ runs:
       uses: openedx-actions/tutor-k8s-get-secret@v1
       with:
         eks-namespace: ${{ env.NAMESPACE }}
-        eks-secret-name: ${{ env.K8S_SECRET_MYSQL }}
+        eks-secret-name: mysql-smarter
 
     # extract the mysql root configuration from the Kubernetes secret.
     # these will be set as environment variables for the Helm deployment
@@ -195,7 +155,7 @@ runs:
       uses: openedx-actions/tutor-k8s-get-secret@v1
       with:
         eks-namespace: apps-hosting-service
-        eks-secret-name: ${{ env.K8S_SECRET_MYSQL_ROOT }}
+        eks-secret-name: mysql-root
 
     # extract the Django admin user credentials from the Kubernetes secret.
     # these will be set as environment variables for the Helm deployment
@@ -209,7 +169,7 @@ runs:
       uses: openedx-actions/tutor-k8s-get-secret@v1
       with:
         eks-namespace: ${{ env.NAMESPACE }}
-        eks-secret-name: ${{ env.K8S_SECRET_ADMIN }}
+        eks-secret-name: smarter-admin
 
     # extract the Django application secret from the Kubernetes secret.
     # these will be set as environment variables for the Helm deployment
@@ -221,7 +181,7 @@ runs:
       uses: openedx-actions/tutor-k8s-get-secret@v1
       with:
         eks-namespace: ${{ env.NAMESPACE }}
-        eks-secret-name: ${{ env.K8S_SECRET_DJANGO }}
+        eks-secret-name: smarter-django-secret-key
 
     # see: https://github.com/helm/helm
     #      we're installing directly from the github repo amd64 binary
@@ -252,9 +212,9 @@ runs:
         --set env.ENVIRONMENT=${{ env.ENVIRONMENT }} \
         --set env.NAMESPACE=${{ env.NAMESPACE }} \
         --set env.SMARTER_DOCKER_IMAGE=${{ env.SMARTER_DOCKER_IMAGE }} \
-        --set env.ROOT_DOMAIN=${{ env.ROOT_DOMAIN }} \
-        --set env.DEBUG_MODE=${{ env.DEBUG_MODE }} \
-        --set env.DUMP_DEFAULTS=${{ env.DUMP_DEFAULTS }} \
+        --set env.ROOT_DOMAIN=smarter.sh \
+        --set env.DEBUG_MODE="false" \
+        --set env.DUMP_DEFAULTS="True" \
         --set env.OPENAI_API_KEY=${{ inputs.openai-api-key }} \
         --set env.PINECONE_API_KEY=${{ inputs.pinecone-api-key }} \
         --set env.PINECONE_ENVIRONMENT=${{ inputs.pinecone-environment }} \
