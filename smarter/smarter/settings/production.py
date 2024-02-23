@@ -11,6 +11,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+import glob
 import os
 from datetime import timedelta
 from pathlib import Path
@@ -54,6 +55,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # smarter apps
     # -------------------------------
+    "smarter.apps.hello_world",
     "smarter.apps.api",
     "smarter.apps.account",
     "smarter.apps.plugin",
@@ -84,8 +86,13 @@ TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [os.path.join(BASE_DIR, "templates")],
-        "APP_DIRS": True,
+        "APP_DIRS": False,
         "OPTIONS": {
+            "loaders": [
+                "smarter.template_loader.ReactAppLoader",
+                "django.template.loaders.filesystem.Loader",
+                "django.template.loaders.app_directories.Loader",
+            ],
             "context_processors": [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
@@ -144,9 +151,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
-]
+
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+
+# ReactJS integration with Django. Add all reactapp/dist directories in Django apps
+django_apps_dir = os.path.join(BASE_DIR, "smarter", "apps")
+reactapp_dirs = glob.glob(os.path.join(django_apps_dir, "*", "reactapp", "dist"))
+STATICFILES_DIRS.extend(reactapp_dirs)
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
