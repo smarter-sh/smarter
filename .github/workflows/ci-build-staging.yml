@@ -17,7 +17,7 @@ jobs:
         id: checkout_code
         uses: actions/checkout@v4
 
-      - name: Deploy
+      - name: Build and push to AWS ECR
         uses: ./.github/actions/build
         with:
           environment: ${{ env.ENVIRONMENT }}
