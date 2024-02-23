@@ -7,7 +7,12 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import HttpResponseRedirect, JsonResponse
-from rest_framework.decorators import api_view, permission_classes
+from knox.auth import TokenAuthentication
+from rest_framework.decorators import (
+    api_view,
+    authentication_classes,
+    permission_classes,
+)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -17,6 +22,7 @@ from smarter.apps.account.serializers import PaymentMethodSerializer
 
 @api_view(["GET", "POST", "PATCH", "DELETE"])
 @permission_classes([IsAuthenticated])
+@authentication_classes([TokenAuthentication])
 def payment_method_view(request, payment_method_id: int = None):
     if request.method == "GET":
         return get_payment_method(request, payment_method_id)
@@ -31,6 +37,7 @@ def payment_method_view(request, payment_method_id: int = None):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+@authentication_classes([TokenAuthentication])
 def payment_methods_list_view(request):
     """Get a json list[dict] of all payment methods for the account."""
     if request.user.is_superuser or request.user.is_staff:
