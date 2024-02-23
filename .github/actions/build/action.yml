@@ -69,6 +69,7 @@ runs:
         aws ecr describe-repositories --repository-names ${{ env.AWS_ECR_REPO }} || aws ecr create-repository --repository-name ${{ env.AWS_ECR_REPO }}
 
     - name: Get the date
+      shell: bash
       run: echo "DATESTAMP=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
 
     - name: Build and push
