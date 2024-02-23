@@ -8,7 +8,12 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
-from rest_framework.decorators import api_view, permission_classes
+from knox.auth import TokenAuthentication
+from rest_framework.decorators import (
+    api_view,
+    authentication_classes,
+    permission_classes,
+)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -20,6 +25,7 @@ from smarter.apps.plugin.utils import add_example_plugins
 
 @api_view(["GET", "PATCH", "DELETE"])
 @permission_classes([IsAuthenticated])
+@authentication_classes([TokenAuthentication])
 def plugins_view(request, plugin_id):
     if request.method == "GET":
         return get_plugin(request, plugin_id)
@@ -34,6 +40,7 @@ def plugins_view(request, plugin_id):
 
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
+@authentication_classes([TokenAuthentication])
 def plugin_clone_view(request, plugin_id: int, new_name: str):
     user_profile = UserProfile.objects.get(user=request.user)
     plugin = Plugin(plugin_id=plugin_id, user_profile=user_profile)
@@ -43,6 +50,7 @@ def plugin_clone_view(request, plugin_id: int, new_name: str):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+@authentication_classes([TokenAuthentication])
 def plugins_list_view(request):
     """Get a json list[dict] of all plugins for the current user."""
     plugins = Plugins(user=request.user)
@@ -51,6 +59,7 @@ def plugins_list_view(request):
 
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
+@authentication_classes([TokenAuthentication])
 def add_plugin_examples(request, user_id: int):
     """Add example plugins for a user."""
 

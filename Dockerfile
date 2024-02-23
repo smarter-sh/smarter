@@ -21,9 +21,11 @@ ARG SECRET_KEY
 
 WORKDIR /app
 
-# Install MySQL Client
-RUN apt-get update && \
-    apt-get install -y default-mysql-client && \
+# Install MySQL Client, cryptography dependencies for django-rest-knox,
+# and update apt packages.
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y default-mysql-client -y && \
+    apt-get install build-essential libssl-dev libffi-dev python3-dev python-dev -y && \
     rm -rf /var/lib/apt/lists/*
 
 # Add all Python package dependencies
