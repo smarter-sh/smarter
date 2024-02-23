@@ -79,6 +79,9 @@ django-init:
 django-run:
 	cd smarter && python manage.py runserver
 
+django-collectstatic:
+	(cd smarter/smarter/apps/hello_world/reactapp/ && npm run build)
+	(cd smarter && python manage.py collectstatic --noinput)
 
 python-init:
 	make python-clean

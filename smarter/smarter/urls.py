@@ -29,5 +29,6 @@ urlpatterns = [
     path("api-auth/logout/", LogoutView.as_view(), name="logout"),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     path("admin/", admin.site.urls),
+    path("hello-world/", include("smarter.apps.hello_world.urls")),
     path("v0/", include("smarter.apps.api.v0_urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
