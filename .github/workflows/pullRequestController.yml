@@ -49,7 +49,7 @@ on:
       - "**.tf"
       - "**.js"
       - "**.jsx"
-      - "./requirements/**"
+      - "./smarter/requirements/**"
       - "**.package.json"
       - "./client/**"
       - "./api/terraform/**"
