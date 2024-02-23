@@ -1,13 +1,14 @@
-name: Build dev
+name: Build staging
 
 on:
   workflow_dispatch:
   push:
-    branches: [dev]
+    branches: [next]
     paths:
       - "smarter/**"
+
 env:
-  ENVIRONMENT: dev
+  ENVIRONMENT: staging
 
 jobs:
   build:
