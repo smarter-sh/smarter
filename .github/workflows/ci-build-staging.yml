@@ -1,0 +1,23 @@
+name: Build staging
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [next]
+
+env:
+  ENVIRONMENT: staging
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        id: checkout_code
+        uses: actions/checkout@v4
+
+      - name: Deploy
+        uses: ./.github/actions/build
+        with:
+          environment: ${{ env.ENVIRONMENT }}
