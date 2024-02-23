@@ -17,7 +17,7 @@ module.exports = {
           "CHANGELOG.md",
           "client/package.json",
           "client/package-lock.json",
-          "requirements/**/*",
+          "smarter/requirements/**/*",
         ],
         message:
           "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}",

@@ -86,7 +86,7 @@ python-init:
 	$(PYTHON) -m venv venv && \
 	$(ACTIVATE_VENV) && \
 	$(PIP) install --upgrade pip && \
-	$(PIP) install -r requirements/local.txt && \
+	$(PIP) install -r smarter/requirements/local.txt && \
 	pre-commit install && \
 	make django-init
 

@@ -30,7 +30,7 @@ RUN apt-get update && \
 RUN mkdir requirements
 COPY requirements ./requirements
 RUN pip install --upgrade pip
-RUN pip install -r requirements/deploy.txt
+RUN pip install -r smarter/requirements/deploy.txt
 
 # Add our source code
 COPY smarter .
