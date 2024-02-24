@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     # smarter apps
     # -------------------------------
     "smarter.apps.hello_world",
+    "smarter.apps.web_platform",
     "smarter.apps.api",
     "smarter.apps.account",
     "smarter.apps.plugin",

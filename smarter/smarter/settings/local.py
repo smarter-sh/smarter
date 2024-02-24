@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     # smarter apps
     # -------------------------------
     "smarter.apps.hello_world",
+    "smarter.apps.web_platform",
     "smarter.apps.api",
     "smarter.apps.account",
     "smarter.apps.plugin",
@@ -142,6 +143,11 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 django_apps_dir = os.path.join(BASE_DIR, "smarter", "apps")
 reactapp_dirs = glob.glob(os.path.join(django_apps_dir, "*", "reactapp", "dist"))
 STATICFILES_DIRS.extend(reactapp_dirs)
+
+# dev only:
+# Bootstrap theme source files and static assets.
+keen_source = glob.glob(os.path.join(django_apps_dir, "*", "keen_demo1"))
+STATICFILES_DIRS.extend(keen_source)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
