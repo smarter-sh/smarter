@@ -14,5 +14,5 @@ urlpatterns = [
     # the web platform
     path("", include("smarter.apps.web_platform.urls")),
     # the API
-    path("v0/", include("smarter.apps.api.v0_urls")),
+    path("api/v0/", include("smarter.apps.api.v0_urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
