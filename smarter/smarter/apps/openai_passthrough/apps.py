@@ -7,4 +7,4 @@ class OpenaiApiConfig(AppConfig):
     """Django application configuration for the OpenAI API."""
 
     default_auto_field = "django.db.models.BigAutoField"
-    name = "smarter.apps.openai_api"
+    name = "smarter.apps.openai_passthrough"

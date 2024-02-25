@@ -10,7 +10,7 @@ import openai
 from smarter.apps.common.logger import get_logger
 
 
-MODULE_NAME = "openai_api"
+MODULE_NAME = "openai_passthrough"
 HERE = os.path.abspath(os.path.dirname(__file__))
 PROJECT_ROOT = str(Path(HERE).parent.parent)
 PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)

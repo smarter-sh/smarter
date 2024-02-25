@@ -96,9 +96,9 @@
         }
       },
       "lambda": {
-        "openai_function_calling": "arn:aws:lambda:us-east-1:090511222473:function:openai_function_calling",
+        "chat": "arn:aws:lambda:us-east-1:090511222473:function:chat",
         "lambda_openai_info": "arn:aws:lambda:us-east-1:090511222473:function:lambda_openai_info",
-        "openai_api": "arn:aws:lambda:us-east-1:090511222473:function:openai_api",
+        "openai_passthrough": "arn:aws:lambda:us-east-1:090511222473:function:openai_passthrough",
         "openai_cors_preflight_handler": "arn:aws:lambda:us-east-1:090511222473:function:openai_cors_preflight_handler"
       },
       "route53": null
@@ -281,7 +281,7 @@
       "google": {
         "google_maps_api_key": null
       },
-      "openai_api": {
+      "openai_passthrough": {
         "langchain_memory_key": "chat_history",
         "openai_endpoint_image_n": 4,
         "openai_endpoint_image_size": "1024x768"

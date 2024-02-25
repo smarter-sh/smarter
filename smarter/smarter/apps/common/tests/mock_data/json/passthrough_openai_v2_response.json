@@ -30,7 +30,7 @@
         "total_tokens": 24
       },
       "request_meta_data": {
-        "lambda": "openai_api",
+        "lambda": "openai_passthrough",
         "model": "gpt-3.5-turbo",
         "object_type": "chat.completion",
         "temperature": 0,

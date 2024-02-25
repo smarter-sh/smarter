@@ -21,13 +21,10 @@ if PYTHON_ROOT not in sys.path:
 
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.openai_function_calling.tests.test_setup import get_test_file_path
+from smarter.apps.chat.tests.test_setup import get_test_file_path
 
 # pylint: disable=no-name-in-module
-from smarter.apps.openai_function_calling.utils import (
-    function_calling_plugin,
-    plugin_tool_factory,
-)
+from smarter.apps.chat.utils import function_calling_plugin, plugin_tool_factory
 from smarter.apps.plugin.plugin import Plugin
 
 

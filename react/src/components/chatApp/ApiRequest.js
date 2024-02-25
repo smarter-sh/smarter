@@ -39,7 +39,7 @@ function mapResponse(response) {
   if (
     response &&
     response["request_meta_data"] &&
-    response["request_meta_data"]["lambda"] == "openai_langchain"
+    response["request_meta_data"]["lambda"] == "langchain_passthrough"
   ) {
     const messages = response["chat_memory"]["messages"];
     let aiMessages = messages.filter((message) => message.type === "ai");

@@ -17,7 +17,7 @@ from smarter.apps.common.logger import get_logger
 
 
 log = get_logger(__name__)
-CONFIG_PATH = PYTHON_ROOT + "/smarter/apps/openai_function_calling/plugins/"
+CONFIG_PATH = PYTHON_ROOT + "/smarter/apps/chat/plugins/"
 VALID_PLUGIN_VERSIONS = ["0.1.0"]
 VALID_DIRECTIVES = ["search_terms", "always_load"]
 
@@ -405,7 +405,7 @@ class Plugins:
 
     _custom_plugins: list[Plugin] = None
     _aws_bucket_name: str = None
-    _aws_bucket_path: str = "smarter/openai_function_calling/plugins/"
+    _aws_bucket_path: str = "smarter/chat/plugins/"
     _aws_bucket_path_validated: bool = False
 
     def __init__(self, plugin_path: str = None, aws_s3_bucket_name: str = None):

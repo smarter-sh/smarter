@@ -20,9 +20,9 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from smarter.apps.api.views.views import custom_api_root_v0
-from smarter.apps.openai_api.views import OpenAIViewSet
-from smarter.apps.openai_function_calling.views import FunctionCallingViewSet
-from smarter.apps.openai_langchain.views import LanchainViewSet
+from smarter.apps.chat.views import FunctionCallingViewSet
+from smarter.apps.langchain_passthrough.views import LanchainViewSet
+from smarter.apps.openai_passthrough.views import OpenAIViewSet
 
 
 # Routers provide an easy way of automatically determining the URL conf.

@@ -7,6 +7,8 @@ import json
 
 from django.contrib.auth.models import User
 
+from smarter.apps.chat.signals import plugin_called
+
 # from .plugin_loader import Plugin, plugins
 from smarter.apps.plugin.plugin import Plugin
 from smarter.apps.plugin.utils import plugins_for_user
@@ -53,6 +55,7 @@ def customized_prompt(plugin: Plugin, messages: list) -> list:
 def function_calling_plugin(user: User, inquiry_type: str) -> str:
     """Return select info from custom plugin object"""
 
+    plugin_called.send(sender=function_calling_plugin, user=user, inquiry_type=inquiry_type)
     for plugin in plugins_for_user(user=user):
         try:
             return_data = plugin.plugin_data.return_data
