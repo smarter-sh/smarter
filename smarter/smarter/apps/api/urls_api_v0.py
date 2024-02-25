@@ -17,24 +17,13 @@ Including another URLconf
 """
 
 from django.urls import include, path
-from rest_framework.routers import DefaultRouter
 
 from smarter.apps.api.views.views import custom_api_root_v0
-from smarter.apps.chat.views import FunctionCallingViewSet
-from smarter.apps.langchain_passthrough.views import LanchainViewSet
-from smarter.apps.openai_passthrough.views import OpenAIViewSet
 
-
-# Routers provide an easy way of automatically determining the URL conf.
-router = DefaultRouter()
-
-router.register(r"chat", FunctionCallingViewSet, basename="chat")
-router.register(r"chat/chatgpt", OpenAIViewSet, basename="chatgpt")
-router.register(r"chat/langchain", LanchainViewSet, basename="langchain")
 
 urlpatterns = [
     path("", custom_api_root_v0, name="custom_api_root_v0"),
-    path("", include(router.urls)),
-    path("", include("smarter.apps.account.v0_urls")),
-    path("", include("smarter.apps.plugin.v0_urls")),
+    path("account/", include("smarter.apps.account.urls_api_v0")),
+    path("plugin/", include("smarter.apps.plugin.urls_api_v0")),
+    path("chat/", include("smarter.apps.chat.urls_api_v0")),
 ]

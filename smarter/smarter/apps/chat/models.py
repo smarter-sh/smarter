@@ -21,11 +21,11 @@ class ChatHistory(TimestampedModel):
     user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
     input_text = models.TextField(blank=True, null=True)
     model = models.CharField(max_length=255, blank=True, null=True)
-    messages = models.TextField(blank=True, null=True)
-    tools = models.CharField(max_length=255, blank=True, null=True)
+    messages = models.JSONField(blank=True, null=True)
+    tools = models.JSONField(max_length=255, blank=True, null=True)
     temperature = models.FloatField(blank=True, null=True)
     max_tokens = models.IntegerField(blank=True, null=True)
-    results = models.TextField(blank=True, null=True)
+    results = models.JSONField(blank=True, null=True)
 
     def save(self, *args, **kwargs):
         chat_completion_history_created.send(sender=ChatHistory, user=self.user, data=self)
@@ -50,8 +50,8 @@ class ChatToolCallHistory(TimestampedModel):
     event = models.CharField(max_length=255, choices=EVENT_CHOICES, blank=True, null=True)
     input_text = models.TextField(blank=True, null=True)
     model = models.CharField(max_length=255, blank=True, null=True)
-    messages = models.TextField(blank=True, null=True)
-    results = models.TextField(blank=True, null=True)
+    messages = models.JSONField(blank=True, null=True)
+    results = models.JSONField(blank=True, null=True)
 
     def save(self, *args, **kwargs):
         chat_completion_tool_call_history_created.send(sender=ChatToolCallHistory, user=self.user, data=self)
@@ -69,10 +69,10 @@ class PluginSelectionHistory(TimestampedModel):
 
     plugin = models.ForeignKey(PluginMeta, on_delete=models.CASCADE)
     user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
-    data = models.TextField(blank=True, null=True)
+    data = models.JSONField(blank=True, null=True)
     model = models.CharField(max_length=255, blank=True, null=True)
-    messages = models.TextField(blank=True, null=True)
-    tools = models.CharField(max_length=255, blank=True, null=True)
+    messages = models.JSONField(blank=True, null=True)
+    tools = models.JSONField(max_length=255, blank=True, null=True)
     temperature = models.FloatField(blank=True, null=True)
     max_tokens = models.IntegerField(blank=True, null=True)
     custom_tool = models.JSONField(blank=True, null=True)

@@ -8,11 +8,8 @@ from django.urls import include, path
 
 
 urlpatterns = [
-    # Django admin console
-    path("admin/", admin.site.urls),
     path("hello-world/", include("smarter.apps.hello_world.urls")),
-    # the web platform
     path("", include("smarter.apps.web_platform.urls")),
-    # the API
-    path("api/v0/", include("smarter.apps.api.v0_urls")),
+    path("admin/", admin.site.urls),
+    path("api/", include("smarter.apps.api.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
