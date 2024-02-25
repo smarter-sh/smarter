@@ -74,7 +74,8 @@ django-init:
 	cd smarter && python manage.py makemigrations && \
 	python manage.py migrate && \
 	python manage.py create_admin_user --username admin --email admin@smarter.sh && \
-	python manage.py add_plugin_examples admin
+	python manage.py add_plugin_examples admin && \
+	python manage.py changepassword admin
 
 django-run:
 	cd smarter && python manage.py runserver
