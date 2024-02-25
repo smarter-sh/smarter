@@ -2,6 +2,7 @@
 # pylint: disable=wrong-import-position
 # pylint: disable=R0801,E1101
 # pylint: disable=broad-exception-caught
+# pylint: disable=W0613
 """Test lambda_openai_v2 function."""
 
 # python stuff
@@ -21,20 +22,93 @@ if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.openai_function_calling.natural_language_processing import (
-    does_refer_to,
+from smarter.apps.chat.models import (
+    ChatHistory,
+    ChatToolCallHistory,
+    PluginSelectionHistory,
 )
-from smarter.apps.openai_function_calling.tests.test_setup import (
-    get_test_file,
-    get_test_file_path,
+from smarter.apps.chat.natural_language_processing import does_refer_to
+from smarter.apps.chat.signals import (
+    chat_completion_called,
+    chat_completion_failed,
+    chat_completion_history_created,
+    chat_completion_returned,
+    chat_completion_tool_call_created,
+    chat_completion_tool_call_history_created,
+    chat_completion_tool_call_received,
+    chat_invoked,
+    plugin_called,
+    plugin_selected,
+    plugin_selection_history_created,
 )
-from smarter.apps.openai_function_calling.utils import search_terms_are_in_messages
-from smarter.apps.openai_function_calling.views import handler
+from smarter.apps.chat.tests.test_setup import get_test_file, get_test_file_path
+from smarter.apps.chat.utils import search_terms_are_in_messages
+from smarter.apps.chat.views import handler
 from smarter.apps.plugin.plugin import Plugin
 
 
+# pylint: disable=too-many-public-methods,too-many-instance-attributes
 class TestOpenaiFunctionCalling(unittest.TestCase):
     """Test Index Lambda function."""
+
+    _plugin_selected = False
+    _plugin_called = False
+    _plugin_selection_history_created = False
+    _chat_invoked = False
+    _chat_completion_called = False
+    _chat_completion_returned = False
+    _chat_completion_failed = False
+    _chat_completion_history_created = False
+    _chat_completion_tool_call_created = False
+    _chat_completion_tool_call_received = False
+    _chat_completion_tool_call_history_created = False
+
+    signals = {
+        "plugin_selected": _plugin_selected,
+        "plugin_called": _plugin_called,
+        "plugin_selection_history_created": _plugin_selection_history_created,
+        "chat_invoked": _chat_invoked,
+        "chat_completion_called": _chat_completion_called,
+        "chat_completion_returned": _chat_completion_returned,
+        "chat_completion_failed": _chat_completion_failed,
+        "chat_completion_history_created": _chat_completion_history_created,
+        "chat_completion_tool_call_created": _chat_completion_tool_call_created,
+        "chat_completion_tool_call_received": _chat_completion_tool_call_received,
+        "chat_completion_tool_call_history_created": _chat_completion_tool_call_history_created,
+    }
+
+    def plugin_selected_signal_handler(self, *args, **kwargs):
+        self._plugin_selected = True
+
+    def plugin_called_signal_handler(self, *args, **kwargs):
+        self._plugin_called = True
+
+    def plugin_selection_history_created_signal_handler(self, *args, **kwargs):
+        self._plugin_selection_history_created = True
+
+    def chat_invoked_signal_handler(self, *args, **kwargs):
+        self._chat_invoked = True
+
+    def chat_completion_called_signal_handler(self, *args, **kwargs):
+        self._chat_completion_called = True
+
+    def chat_completion_returned_signal_handler(self, *args, **kwargs):
+        self._chat_completion_returned = True
+
+    def chat_completion_failed_signal_handler(self, *args, **kwargs):
+        self._chat_completion_failed = True
+
+    def chat_completion_history_created_signal_handler(self, *args, **kwargs):
+        self._chat_completion_history_created = True
+
+    def chat_completion_tool_call_created_signal_handler(self, *args, **kwargs):
+        self._chat_completion_tool_call_created = True
+
+    def chat_completion_tool_call_received_signal_handler(self, *args, **kwargs):
+        self._chat_completion_tool_call_received = True
+
+    def chat_completion_tool_call_history_created_signal_handler(self, *args, **kwargs):
+        self._chat_completion_tool_call_history_created = True
 
     def setUp(self):
         """Set up test fixtures."""
@@ -138,8 +212,22 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         true_assertion("do you spell everlasting gobstopper with one b or two?")
         true_assertion("everlasting gobstopper")
 
-    def test_lambda_handler_gobstoppers(self):
+    def test_handler_gobstoppers(self):
         """Test lambda_handler."""
+
+        # setup receivers for all signals to check if they are called
+        plugin_selected.connect(self.plugin_selected_signal_handler)
+        plugin_called.connect(self.plugin_called_signal_handler)
+        plugin_selection_history_created.connect(self.plugin_selection_history_created_signal_handler)
+        chat_invoked.connect(self.chat_invoked_signal_handler)
+        chat_completion_called.connect(self.chat_completion_called_signal_handler)
+        chat_completion_returned.connect(self.chat_completion_returned_signal_handler)
+        chat_completion_failed.connect(self.chat_completion_failed_signal_handler)
+        chat_completion_history_created.connect(self.chat_completion_history_created_signal_handler)
+        chat_completion_tool_call_created.connect(self.chat_completion_tool_call_created_signal_handler)
+        chat_completion_tool_call_received.connect(self.chat_completion_tool_call_received_signal_handler)
+        chat_completion_tool_call_history_created.connect(self.chat_completion_tool_call_history_created_signal_handler)
+
         response = None
         event_about_gobstoppers = get_test_file("json/prompt_about_everlasting_gobstoppers.json")
 
@@ -149,7 +237,26 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
             self.fail(f"handler() raised {error}")
         self.check_response(response)
 
-    def test_lambda_handler_weather(self):
+        # assert that every key in self.signals is True
+        for key, value in self.signals.items():
+            if key != "chat_completion_failed":
+                self.assertTrue(value)
+            else:
+                self.assertFalse(value)
+
+        # assert that ChatHistory has one or more records for self.user
+        chat_histories = ChatHistory.objects.filter(user=self.user)
+        self.assertTrue(chat_histories.exists())
+
+        # assert that PluginSelectionHistory has one or more records for self.user
+        plugin_selection_histories = PluginSelectionHistory.objects.filter(user=self.user)
+        self.assertTrue(plugin_selection_histories.exists())
+
+        # assert that ChatToolCallHistory has one or more records for self.user
+        chat_tool_call_histories = ChatToolCallHistory.objects.filter(user=self.user)
+        self.assertTrue(chat_tool_call_histories.exists())
+
+    def test_handler_weather(self):
         """Test lambda_handler."""
         response = None
         event_about_weather = get_test_file("json/prompt_about_weather.json")
@@ -160,7 +267,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
             self.fail(f"handler() raised {error}")
         self.check_response(response)
 
-    def test_lambda_handler_recipes(self):
+    def test_handler_recipes(self):
         """Test lambda_handler."""
         response = None
         event_about_recipes = get_test_file("json/prompt_about_recipes.json")

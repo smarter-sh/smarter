@@ -208,10 +208,10 @@ class TestConfiguration(unittest.TestCase):
             aws_apigateway = mock_settings.dump["aws_apigateway"]
             self.assertIn("AWS_APIGATEWAY_ROOT_DOMAIN".lower(), aws_apigateway)
 
-        openai_api = mock_settings.dump["openai_api"]
-        self.assertIn("LANGCHAIN_MEMORY_KEY".lower(), openai_api)
-        self.assertIn("OPENAI_ENDPOINT_IMAGE_N".lower(), openai_api)
-        self.assertIn("OPENAI_ENDPOINT_IMAGE_SIZE".lower(), openai_api)
+        openai_passthrough = mock_settings.dump["openai_passthrough"]
+        self.assertIn("LANGCHAIN_MEMORY_KEY".lower(), openai_passthrough)
+        self.assertIn("OPENAI_ENDPOINT_IMAGE_N".lower(), openai_passthrough)
+        self.assertIn("OPENAI_ENDPOINT_IMAGE_SIZE".lower(), openai_passthrough)
 
     def test_cloudwatch_values(self):
         """Test that dump contains the expected default values."""
@@ -221,12 +221,14 @@ class TestConfiguration(unittest.TestCase):
         mock_settings = Settings(init_info="test_cloudwatch_values()")
         environment = mock_settings.dump["environment"]
         # aws_apigateway = mock_settings.dump["aws_apigateway"]
-        openai_api = mock_settings.dump["openai_api"]
+        openai_passthrough = mock_settings.dump["openai_passthrough"]
 
         self.assertEqual(environment["DEBUG_MODE".lower()], mock_settings.debug_mode)
-        self.assertEqual(openai_api["LANGCHAIN_MEMORY_KEY".lower()], mock_settings.langchain_memory_key)
-        self.assertEqual(openai_api["OPENAI_ENDPOINT_IMAGE_N".lower()], mock_settings.openai_endpoint_image_n)
-        self.assertEqual(openai_api["OPENAI_ENDPOINT_IMAGE_SIZE".lower()], mock_settings.openai_endpoint_image_size)
+        self.assertEqual(openai_passthrough["LANGCHAIN_MEMORY_KEY".lower()], mock_settings.langchain_memory_key)
+        self.assertEqual(openai_passthrough["OPENAI_ENDPOINT_IMAGE_N".lower()], mock_settings.openai_endpoint_image_n)
+        self.assertEqual(
+            openai_passthrough["OPENAI_ENDPOINT_IMAGE_SIZE".lower()], mock_settings.openai_endpoint_image_size
+        )
 
     def test_initialize_with_values(self):
         """test that we can set values with the class constructor"""

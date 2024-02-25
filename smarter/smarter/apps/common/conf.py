@@ -573,7 +573,7 @@ class Settings(BaseSettings):
             "google": {
                 "google_maps_api_key": self.google_maps_api_key,
             },
-            "openai_api": {
+            "openai_passthrough": {
                 "aws_s3_bucket_name": self.aws_s3_bucket_name,
                 "langchain_memory_key": self.langchain_memory_key,
                 "openai_endpoint_image_n": self.openai_endpoint_image_n,

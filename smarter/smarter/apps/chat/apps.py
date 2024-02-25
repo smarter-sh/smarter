@@ -3,8 +3,9 @@
 from django.apps import AppConfig
 
 
-class OpenaiFunctionCallingConfig(AppConfig):
+class ChatConfig(AppConfig):
     """Django Config for the OpenAI Function Calling app."""
 
     default_auto_field = "django.db.models.BigAutoField"
-    name = "smarter.apps.openai_function_calling"
+    name = "smarter.apps.chat"
+    verbose_name = "Chat"
