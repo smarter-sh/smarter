@@ -3,15 +3,9 @@
 a.) how to customize the system prompt to adapt to keywords in the user's message
 b.) how to call a function from the model
 """
-import json
-
-from django.contrib.auth.models import User
-
-from smarter.apps.chat.signals import plugin_called
 
 # from .plugin_loader import Plugin, plugins
 from smarter.apps.plugin.plugin import Plugin
-from smarter.apps.plugin.utils import plugins_for_user
 
 from .natural_language_processing import does_refer_to
 
@@ -49,43 +43,3 @@ def customized_prompt(plugin: Plugin, messages: list) -> list:
             break
 
     return messages
-
-
-# pylint: disable=too-many-return-statements
-def function_calling_plugin(user: User, inquiry_type: str) -> str:
-    """Return select info from custom plugin object"""
-
-    plugin_called.send(sender=function_calling_plugin, user=user, inquiry_type=inquiry_type)
-    for plugin in plugins_for_user(user=user):
-        try:
-            return_data = plugin.plugin_data.return_data
-            retval = return_data[inquiry_type]
-            return json.dumps(retval)
-        except KeyError:
-            pass
-
-    raise KeyError(f"Invalid inquiry_type: {inquiry_type}")
-
-
-def plugin_tool_factory(plugin: Plugin):
-    """
-    Return a dictionary of chat completion tools.
-    """
-    tool = {
-        "type": "function",
-        "function": {
-            "name": "function_calling_plugin",
-            "description": plugin.plugin_data.description,
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "inquiry_type": {
-                        "type": "string",
-                        "enum": plugin.plugin_data.return_data_keys,
-                    },
-                },
-                "required": ["inquiry_type"],
-            },
-        },
-    }
-    return tool

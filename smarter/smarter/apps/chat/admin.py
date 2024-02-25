@@ -7,7 +7,7 @@ from django.contrib import admin
 from smarter.apps.chat.models import (
     ChatHistory,
     ChatToolCallHistory,
-    PluginSelectionHistory,
+    PluginUsageHistory,
 )
 
 
@@ -28,7 +28,7 @@ class PluginSelectionHistoryAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
-    list_display = [field.name for field in PluginSelectionHistory._meta.fields]
+    list_display = [field.name for field in PluginUsageHistory._meta.fields]
 
 
 class ChatToolCallHistoryAdmin(admin.ModelAdmin):
@@ -42,5 +42,5 @@ class ChatToolCallHistoryAdmin(admin.ModelAdmin):
 
 
 admin.site.register(ChatHistory, ChatHistoryAdmin)
-admin.site.register(PluginSelectionHistory, PluginSelectionHistoryAdmin)
+admin.site.register(PluginUsageHistory, PluginSelectionHistoryAdmin)
 admin.site.register(ChatToolCallHistory, ChatToolCallHistoryAdmin)

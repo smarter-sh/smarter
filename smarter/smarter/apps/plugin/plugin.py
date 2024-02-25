@@ -215,6 +215,37 @@ class Plugin:
             return yaml.dump(self.to_json())
         return None
 
+    @property
+    def function_calling_plugin(self) -> str:
+        """Return the function calling plugin."""
+        if self.ready:
+            suffix = str(self.id).zfill(4)
+            return f"function_calling_plugin_{suffix}"
+        return None
+
+    @property
+    def custom_tool(self) -> dict:
+        """Return the plugin tool."""
+        if self.ready:
+            return {
+                "type": "function",
+                "function": {
+                    "name": self.function_calling_plugin,
+                    "description": self.plugin_data.description,
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "inquiry_type": {
+                                "type": "string",
+                                "enum": self.plugin_data.return_data_keys,
+                            },
+                        },
+                        "required": ["inquiry_type"],
+                    },
+                },
+            }
+        return None
+
     def yaml_to_json(self, yaml_string: str) -> dict:
         """Convert a yaml string to a dictionary."""
 
