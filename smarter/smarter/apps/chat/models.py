@@ -25,7 +25,8 @@ class ChatHistory(TimestampedModel):
     tools = models.JSONField(max_length=255, blank=True, null=True)
     temperature = models.FloatField(blank=True, null=True)
     max_tokens = models.IntegerField(blank=True, null=True)
-    results = models.JSONField(blank=True, null=True)
+    response = models.JSONField(blank=True, null=True)
+    response_id = models.CharField(max_length=255, blank=True, null=True)
 
     def save(self, *args, **kwargs):
         chat_completion_history_created.send(sender=ChatHistory, user=self.user, data=self)
@@ -46,12 +47,14 @@ class ChatToolCallHistory(TimestampedModel):
         ("received", "Received"),
     ]
 
+    plugin = models.ForeignKey(PluginMeta, on_delete=models.CASCADE)
     user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
     event = models.CharField(max_length=255, choices=EVENT_CHOICES, blank=True, null=True)
     input_text = models.TextField(blank=True, null=True)
     model = models.CharField(max_length=255, blank=True, null=True)
     messages = models.JSONField(blank=True, null=True)
-    results = models.JSONField(blank=True, null=True)
+    response = models.JSONField(blank=True, null=True)
+    response_id = models.CharField(max_length=255, blank=True, null=True)
 
     def save(self, *args, **kwargs):
         chat_completion_tool_call_history_created.send(sender=ChatToolCallHistory, user=self.user, data=self)
@@ -64,22 +67,29 @@ class ChatToolCallHistory(TimestampedModel):
         verbose_name_plural = "Chat Tool Call History"
 
 
-class PluginSelectionHistory(TimestampedModel):
+class PluginUsageHistory(TimestampedModel):
     """Plugin selection history model."""
+
+    EVENT_CHOICES = [
+        ("selected", "Selected"),
+        ("called", "Called"),
+    ]
 
     plugin = models.ForeignKey(PluginMeta, on_delete=models.CASCADE)
     user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+    event = models.CharField(max_length=255, choices=EVENT_CHOICES, blank=True, null=True)
     data = models.JSONField(blank=True, null=True)
     model = models.CharField(max_length=255, blank=True, null=True)
     messages = models.JSONField(blank=True, null=True)
-    tools = models.JSONField(max_length=255, blank=True, null=True)
+    custom_tool = models.JSONField(max_length=255, blank=True, null=True)
     temperature = models.FloatField(blank=True, null=True)
     max_tokens = models.IntegerField(blank=True, null=True)
     custom_tool = models.JSONField(blank=True, null=True)
     input_text = models.TextField(blank=True, null=True)
+    inquiry_type = models.CharField(max_length=255, blank=True, null=True)
 
     def save(self, *args, **kwargs):
-        plugin_selection_history_created.send(sender=PluginSelectionHistory, user=self.user, data=self)
+        plugin_selection_history_created.send(sender=PluginUsageHistory, user=self.user, data=self)
         super().save(*args, **kwargs)
 
     def __str__(self):

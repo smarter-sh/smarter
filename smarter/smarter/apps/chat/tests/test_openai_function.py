@@ -25,7 +25,7 @@ from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.chat.models import (
     ChatHistory,
     ChatToolCallHistory,
-    PluginSelectionHistory,
+    PluginUsageHistory,
 )
 from smarter.apps.chat.natural_language_processing import does_refer_to
 from smarter.apps.chat.signals import (
@@ -248,8 +248,8 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         chat_histories = ChatHistory.objects.filter(user=self.user)
         self.assertTrue(chat_histories.exists())
 
-        # assert that PluginSelectionHistory has one or more records for self.user
-        plugin_selection_histories = PluginSelectionHistory.objects.filter(user=self.user)
+        # assert that PluginUsageHistory has one or more records for self.user
+        plugin_selection_histories = PluginUsageHistory.objects.filter(user=self.user)
         self.assertTrue(plugin_selection_histories.exists())
 
         # assert that ChatToolCallHistory has one or more records for self.user
