@@ -18,7 +18,10 @@ if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 
 
-from smarter.apps.chat.function_weather import get_current_weather, weather_tool_factory
+from smarter.apps.chat.functions.function_weather import (
+    get_current_weather,
+    weather_tool_factory,
+)
 
 
 class TestLambdaOpenaiFunctionWeather(unittest.TestCase):

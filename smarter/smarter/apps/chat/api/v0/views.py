@@ -2,13 +2,17 @@
 # pylint: disable=R0801
 """All Django views for the OpenAI Function Calling API app."""
 import json
+from http import HTTPStatus
 
 import openai
 from django.contrib.auth.models import User
 from rest_framework import permissions, viewsets
 from rest_framework.response import Response
 
-from smarter.apps.chat.function_weather import get_current_weather, weather_tool_factory
+from smarter.apps.chat.functions.function_weather import (
+    get_current_weather,
+    weather_tool_factory,
+)
 from smarter.apps.chat.signals import (
     chat_completion_called,
     chat_completion_failed,
@@ -166,7 +170,7 @@ def handler(user: User, data: dict):
     # pylint: disable=broad-exception-caught
     except Exception as e:
         chat_completion_failed.send(sender=handler, user=user, exception=e, data=data)
-        status_code, _message = EXCEPTION_MAP.get(type(e), (500, "Internal server error"))
+        status_code, _message = EXCEPTION_MAP.get(type(e), (HTTPStatus.INTERNAL_SERVER_ERROR, "Internal server error"))
         return http_response_factory(status_code=status_code, body=exception_response_factory(e))
 
     # success!! return the response
