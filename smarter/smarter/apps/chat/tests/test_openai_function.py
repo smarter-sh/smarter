@@ -22,7 +22,7 @@ if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.chat.api.v0.views import handler
+from smarter.apps.chat.api.v0.views.chat import handler
 from smarter.apps.chat.models import (
     ChatHistory,
     ChatToolCallHistory,
