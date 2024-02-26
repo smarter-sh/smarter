@@ -7,7 +7,7 @@ from rest_framework.routers import DefaultRouter
 from smarter.apps.langchain_passthrough.views import LanchainViewSet
 from smarter.apps.openai_passthrough.views import OpenAIViewSet
 
-from .views import FunctionCallingViewSet
+from .views.chat import FunctionCallingViewSet
 
 
 # Routers provide an easy way of automatically determining the URL conf.
