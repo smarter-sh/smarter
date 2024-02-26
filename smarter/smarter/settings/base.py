@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 import glob
+import logging.config
 import os
 from pathlib import Path
 
@@ -179,7 +180,7 @@ LOGGING = {
         "level": "INFO",
     },
 }
-
+logging.config.dictConfig(LOGGING)
 
 # https://dj-stripe.dev/dj-stripe/2.7/installation/
 STRIPE_LIVE_SECRET_KEY = os.environ.get("STRIPE_LIVE_SECRET_KEY", "<your secret key>")

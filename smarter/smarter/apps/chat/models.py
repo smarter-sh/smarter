@@ -47,7 +47,7 @@ class ChatToolCallHistory(TimestampedModel):
         ("received", "Received"),
     ]
 
-    plugin = models.ForeignKey(PluginMeta, on_delete=models.CASCADE)
+    plugin = models.ForeignKey(PluginMeta, on_delete=models.CASCADE, blank=True, null=True)
     user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
     event = models.CharField(max_length=255, choices=EVENT_CHOICES, blank=True, null=True)
     input_text = models.TextField(blank=True, null=True)

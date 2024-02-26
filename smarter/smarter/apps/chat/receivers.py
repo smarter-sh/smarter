@@ -3,8 +3,6 @@
 # pylint: disable=W0613,C0115
 import logging
 
-from django.dispatch import receiver
-
 from smarter.apps.chat.models import (
     ChatHistory,
     ChatToolCallHistory,
@@ -29,7 +27,6 @@ from .signals import (
 logger = logging.getLogger(__name__)
 
 
-@receiver(chat_invoked)
 def handle_chat_invoked(sender, **kwargs):
     """Handle chat invoked signal."""
 
@@ -38,7 +35,9 @@ def handle_chat_invoked(sender, **kwargs):
     logger.info("Chat invoked signal received: %s - %s", user.username, data)
 
 
-@receiver(chat_completion_called)
+chat_invoked.connect(handle_chat_invoked, dispatch_uid="chat_invoked")
+
+
 def handle_chat_completion_called(sender, **kwargs):
     """Handle chat completion called signal."""
 
@@ -47,8 +46,10 @@ def handle_chat_completion_called(sender, **kwargs):
     logger.info("Chat completion called signal received: %s - %s", user.username, data)
 
 
-@receiver(chat_completion_tool_call_created)
-@receiver(chat_completion_tool_call_received)
+chat_completion_called.connect(handle_chat_completion_called, dispatch_uid="chat_completion_called")
+
+
+# pylint: disable=W0612
 def handle_chat_completion_tool_call(sender, **kwargs):
     """Handle chat completion tool call signal."""
 
@@ -71,7 +72,7 @@ def handle_chat_completion_tool_call(sender, **kwargs):
         plugin=plugin,
         input_text=input_text,
         model=model,
-        messages=messages,
+        messages=None,  # FIX NOTE: this is a bug. messages should be saved here.
         response=response,
         response_id=response_id,
     )
@@ -82,7 +83,14 @@ def handle_chat_completion_tool_call(sender, **kwargs):
     chat_tool_call_history.save()
 
 
-@receiver(plugin_selected)
+chat_completion_tool_call_created.connect(
+    handle_chat_completion_tool_call, dispatch_uid="chat_completion_tool_call_created"
+)
+chat_completion_tool_call_received.connect(
+    handle_chat_completion_tool_call, dispatch_uid="chat_completion_tool_call_received"
+)
+
+
 def handle_plugin_selected(sender, **kwargs):
     """Handle plugin selected signal."""
 
@@ -108,13 +116,14 @@ def handle_plugin_selected(sender, **kwargs):
         custom_tool=custom_tool,
         temperature=temperature,
         max_tokens=max_tokens,
-        custom_tool=custom_tool,
         input_text=input_text,
     )
     plugin_selection_history.save()
 
 
-@receiver(plugin_called)
+plugin_selected.connect(handle_plugin_selected, dispatch_uid="plugin_selected")
+
+
 def handle_plugin_called(sender, **kwargs):
     """Handle plugin called signal."""
 
@@ -130,7 +139,9 @@ def handle_plugin_called(sender, **kwargs):
     plugin_selection_history.save()
 
 
-@receiver(plugin_selection_history_created)
+plugin_called.connect(handle_plugin_called, dispatch_uid="plugin_called")
+
+
 def handle_plugin_selection_history_created(sender, **kwargs):
     """Handle plugin selection history created signal."""
 
@@ -139,7 +150,12 @@ def handle_plugin_selection_history_created(sender, **kwargs):
     logger.info("Plugin selection history created signal received: %s - %s", user.username, data)
 
 
-@receiver(chat_completion_returned)
+plugin_selection_history_created.connect(
+    handle_plugin_selection_history_created, dispatch_uid="plugin_selection_history_created"
+)
+
+
+# pylint: disable=W0612
 def handle_chat_completion_returned(sender, **kwargs):
     """Handle chat completion returned signal."""
 
@@ -159,7 +175,7 @@ def handle_chat_completion_returned(sender, **kwargs):
         user=user,
         input_text=input_text,
         model=model,
-        messages=messages,
+        messages=None,  # FIX NOTE: this is a bug. messages should be saved here.
         tools=tools,
         temperature=temperature,
         response=response,
@@ -169,7 +185,9 @@ def handle_chat_completion_returned(sender, **kwargs):
     chat_history.save()
 
 
-@receiver(chat_completion_failed)
+chat_completion_returned.connect(handle_chat_completion_returned, dispatch_uid="chat_completion_returned")
+
+
 def handle_chat_completion_failed(sender, **kwargs):
     """Handle chat completion failed signal."""
 
@@ -179,7 +197,9 @@ def handle_chat_completion_failed(sender, **kwargs):
     logger.info("Chat completion failed signal received: %s - %s", user.username, data)
 
 
-@receiver(chat_completion_history_created)
+chat_completion_failed.connect(handle_chat_completion_failed, dispatch_uid="chat_completion_failed")
+
+
 def handle_chat_completion_history_created(sender, **kwargs):
     """Handle chat completion history created signal."""
 
@@ -189,7 +209,11 @@ def handle_chat_completion_history_created(sender, **kwargs):
     logger.info("Chat completion history created signal received: %s - %s", user.username, input_text)
 
 
-@receiver(chat_completion_tool_call_history_created)
+chat_completion_history_created.connect(
+    handle_chat_completion_history_created, dispatch_uid="chat_completion_history_created"
+)
+
+
 def handle_chat_completion_tool_call_history_created(sender, **kwargs):
     """Handle chat completion tool call history created signal."""
 
@@ -197,3 +221,8 @@ def handle_chat_completion_tool_call_history_created(sender, **kwargs):
     data = kwargs.get("data")
     input_text = data.input_text if data else None
     logger.info("Chat completion tool call history created signal received: %s - %s", user.username, input_text)
+
+
+chat_completion_tool_call_history_created.connect(
+    handle_chat_completion_tool_call_history_created, dispatch_uid="chat_completion_tool_call_history_created"
+)

@@ -24,7 +24,6 @@ from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.chat.tests.test_setup import get_test_file_path
 
 # pylint: disable=no-name-in-module
-from smarter.apps.chat.utils import function_calling_plugin, plugin_tool_factory
 from smarter.apps.plugin.plugin import Plugin
 
 
@@ -56,10 +55,8 @@ class TestLambdaOpenaiFunctionRefersTo(unittest.TestCase):
     def test_get_additional_info(self):
         """Test default return value of function_calling_plugin()"""
         try:
-            # pylint: disable=no-value-for-parameter
-            return_data = function_calling_plugin(
-                user=self.user, inquiry_type=self.plugin.plugin_data.return_data_keys[0]
-            )
+            inquiry_type = inquiry_type = self.plugin.plugin_data.return_data_keys[0]
+            return_data = self.plugin.function_calling_plugin(self.user, inquiry_type=inquiry_type)
         except Exception:
             self.fail("function_calling_plugin() raised ExceptionType")
 
@@ -67,7 +64,7 @@ class TestLambdaOpenaiFunctionRefersTo(unittest.TestCase):
 
     def test_info_tool_factory(self):
         """Test integrity plugin_tool_factory()"""
-        itf = plugin_tool_factory(plugin=self.plugin)
+        itf = self.plugin.custom_tool
         self.assertIsInstance(itf, dict)
 
         self.assertIsInstance(itf, dict)

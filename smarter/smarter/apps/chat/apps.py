@@ -9,3 +9,9 @@ class ChatConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "smarter.apps.chat"
     verbose_name = "Chat"
+
+    # pylint: disable=C0415,W0611
+    def ready(self):
+        """Handle signals."""
+        import smarter.apps.chat.receivers  # noqa
+        import smarter.apps.chat.signals  # noqa
