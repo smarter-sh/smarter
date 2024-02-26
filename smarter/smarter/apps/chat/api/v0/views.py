@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from rest_framework import permissions, viewsets
 from rest_framework.response import Response
 
+from smarter.apps.chat.function_weather import get_current_weather, weather_tool_factory
 from smarter.apps.chat.signals import (
     chat_completion_called,
     chat_completion_failed,
@@ -17,6 +18,7 @@ from smarter.apps.chat.signals import (
     chat_invoked,
     plugin_selected,
 )
+from smarter.apps.chat.utils import customized_prompt, search_terms_are_in_messages
 from smarter.apps.common.conf import settings
 from smarter.apps.common.const import VALID_CHAT_COMPLETION_MODELS, OpenAIResponseCodes
 from smarter.apps.common.exceptions import EXCEPTION_MAP
@@ -33,9 +35,6 @@ from smarter.apps.common.validators import (  # validate_embedding_request,
 )
 from smarter.apps.plugin.plugin import Plugin
 from smarter.apps.plugin.utils import plugins_for_user
-
-from .function_weather import get_current_weather, weather_tool_factory
-from .utils import customized_prompt, search_terms_are_in_messages
 
 
 openai.organization = settings.openai_api_organization

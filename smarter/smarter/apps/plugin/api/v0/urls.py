@@ -3,7 +3,7 @@
 from django.urls import path
 from django.views.decorators.http import require_http_methods
 
-from smarter.apps.plugin.views import plugin_clone_view, plugins_list_view, plugins_view
+from .views import plugin_clone_view, plugins_list_view, plugins_view
 
 
 urlpatterns = [
