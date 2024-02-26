@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """PluginMeta app models."""
+from functools import lru_cache
+
 import yaml
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -96,8 +98,21 @@ class PluginData(TimestampedModel):
     )
 
     @property
+    @lru_cache(maxsize=128)
     def return_data_keys(self) -> list:
-        return list(self.return_data.keys())
+        """Return all keys in the return_data."""
+
+        def find_keys(data, keys=None):
+            if keys is None:
+                keys = []
+            for key, value in data.items():
+                keys.append(key)
+                if isinstance(value, dict):
+                    find_keys(value, keys)
+            return keys
+
+        retval = find_keys(self.return_data)
+        return list(retval)
 
     @property
     def data(self) -> dict:
