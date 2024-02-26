@@ -87,6 +87,7 @@ class PluginUsageHistory(TimestampedModel):
     custom_tool = models.JSONField(blank=True, null=True)
     input_text = models.TextField(blank=True, null=True)
     inquiry_type = models.CharField(max_length=255, blank=True, null=True)
+    inquiry_return = models.TextField(blank=True, null=True)
 
     def save(self, *args, **kwargs):
         plugin_selection_history_created.send(sender=PluginUsageHistory, user=self.user, data=self)

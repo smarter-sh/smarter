@@ -10,6 +10,7 @@ from smarter.apps.chat.models import (
     ChatToolCallHistory,
     PluginUsageHistory,
 )
+from smarter.apps.plugin.signals import plugin_called
 
 from .signals import (
     chat_completion_called,
@@ -20,7 +21,6 @@ from .signals import (
     chat_completion_tool_call_history_created,
     chat_completion_tool_call_received,
     chat_invoked,
-    plugin_called,
     plugin_selected,
     plugin_selection_history_created,
 )
@@ -121,13 +121,11 @@ def handle_plugin_called(sender, **kwargs):
     user = kwargs.get("user")
     plugin = kwargs.get("plugin")
     inquiry_type = kwargs.get("inquiry_type")
+    inquiry_return = kwargs.get("inquiry_return")
     logger.info("Plugin called signal received: %s - %s", user.username, inquiry_type)
 
     plugin_selection_history = PluginUsageHistory(
-        user=user,
-        plugin=plugin,
-        event="called",
-        inquiry_type=inquiry_type,
+        user=user, plugin=plugin, event="called", inquiry_type=inquiry_type, inquiry_return=inquiry_return
     )
     plugin_selection_history.save()
 
