@@ -1,6 +1,6 @@
 locals {
   environment           = var.environment
-  environment_domain    = local.environment == "prod" ? "${var.root_domain}" : "${var.subdomain}.${var.root_domain}"
+  environment_domain    = "${var.subdomain}.${var.root_domain}"
   environment_namespace = lower("${var.shared_resource_identifier}-platform-${local.environment}")
   ecr_repository_name   = local.environment_namespace
   ecr_repository_image  = "${var.aws_account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/${local.ecr_repository_name}:latest"
