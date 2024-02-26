@@ -14,7 +14,6 @@ from django.db import transaction
 from rest_framework import serializers
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.chat.signals import plugin_called
 
 from .models import PluginData, PluginMeta, PluginPrompt, PluginSelector
 from .serializers import (
@@ -23,7 +22,13 @@ from .serializers import (
     PluginPromptSerializer,
     PluginSelectorSerializer,
 )
-from .signals import plugin_cloned, plugin_created, plugin_deleted, plugin_updated
+from .signals import (
+    plugin_called,
+    plugin_cloned,
+    plugin_created,
+    plugin_deleted,
+    plugin_updated,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -252,13 +257,26 @@ class Plugin:
         if not self.ready:
             return None
 
-        plugin_called.send(sender=self.function_calling_plugin, user=user, plugin=self, inquiry_type=inquiry_type)
         try:
             return_data = self.plugin_data.return_data
             retval = return_data[inquiry_type]
-            return json.dumps(retval)
+            retval = json.dumps(retval)
+            plugin_called.send(
+                sender=self.function_calling_plugin,
+                user=user,
+                plugin=self,
+                inquiry_type=inquiry_type,
+                inquiry_return=retval,
+            )
+            return retval
         except KeyError:
-            pass
+            plugin_called.send(
+                sender=self.function_calling_plugin,
+                user=user,
+                plugin=self,
+                inquiry_type=inquiry_type,
+                inquiry_return="KeyError",
+            )
 
         raise KeyError(f"Invalid inquiry_type: {inquiry_type}")
 
