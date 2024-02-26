@@ -42,6 +42,7 @@ config.json
 *.p7c
 
 # Local .terraform directories
+.terragrunt-cache/
 .terraform.lock.hcl
 *.tfstate
 *.tfstate.*

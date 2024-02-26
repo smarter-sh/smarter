@@ -14,6 +14,6 @@ resource "aws_ecr_repository" "smarter" {
   image_scanning_configuration {
     scan_on_push = true
   }
-  tags = var.tags
+  tags = local.tags
 
 }

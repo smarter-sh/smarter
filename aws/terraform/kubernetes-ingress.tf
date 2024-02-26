@@ -13,14 +13,6 @@ locals {
   })
 
 }
-resource "kubernetes_manifest" "cluster-issuer" {
-  manifest = yamldecode(local.template_cluster_issuer)
-
-  depends_on = [
-    aws_route53_zone.environment_domain,
-    kubernetes_namespace.smarter,
-  ]
-}
 
 
 resource "kubernetes_manifest" "ingress" {
@@ -30,3 +22,13 @@ resource "kubernetes_manifest" "ingress" {
     aws_route53_zone.environment_domain
   ]
 }
+
+# resource "kubernetes_manifest" "cluster-issuer" {
+#   manifest = yamldecode(local.template_cluster_issuer)
+
+#   depends_on = [
+#     aws_route53_zone.environment_domain,
+#     kubernetes_namespace.smarter,
+#     kubernetes_manifest.ingress,
+#   ]
+# }

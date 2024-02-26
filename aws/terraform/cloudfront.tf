@@ -68,5 +68,5 @@ module "cdn_environment_domain" {
     ssl_support_method  = "sni-only"
   }
 
-  tags = var.tags
+  tags = local.tags
 }
