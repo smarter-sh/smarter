@@ -8,10 +8,6 @@ from rest_framework.views import APIView
 
 
 def custom_api_root(request):
-    return render(request, "rest_framework/root_page_template.html")
-
-
-def custom_api_root_v0(request):
     return render(request, "rest_framework/root_page_template_v0.html")
 
 
