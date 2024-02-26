@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import HttpResponseRedirect, JsonResponse
 from knox.auth import TokenAuthentication
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import (
     api_view,
     authentication_classes,
@@ -22,7 +23,7 @@ from smarter.apps.account.serializers import UserSerializer
 
 @api_view(["GET", "POST", "PATCH", "DELETE"])
 @permission_classes([IsAuthenticated])
-@authentication_classes([TokenAuthentication])
+@authentication_classes([TokenAuthentication, SessionAuthentication])
 def user_view(request, user_id: int = None):
     if request.method == "GET" and user_id is not None:
         return get_user(request, user_id)

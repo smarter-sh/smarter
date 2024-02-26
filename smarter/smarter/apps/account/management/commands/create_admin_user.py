@@ -3,7 +3,6 @@
 import secrets
 import string
 
-from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 from knox.models import AuthToken
@@ -44,12 +43,13 @@ class Command(BaseCommand):
             alphabet = string.ascii_letters + string.digits + string.punctuation
             password = "".join(secrets.choice(alphabet) for _ in range(password_length))
 
-        hashed_password = make_password(password)
-
         if username and email:
             if not User.objects.filter(username=username).exists():
-                user = User.objects.create_superuser(username=username, email=email, password=hashed_password)
+                user = User.objects.create_superuser(username=username, email=email)
+                user.set_password(password)
+                user.save()
                 self.stdout.write(self.style.SUCCESS(f"Creating admin account: {username} {email}"))
+                self.stdout.write(self.style.SUCCESS(f"Password: {password}"))
             else:
                 user = self.change_password(username, password)
         else:
