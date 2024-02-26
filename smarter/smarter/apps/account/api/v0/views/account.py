@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import HttpResponseRedirect, JsonResponse
 from knox.auth import TokenAuthentication
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import (
     api_view,
     authentication_classes,
@@ -21,7 +22,7 @@ from smarter.apps.account.serializers import AccountSerializer
 
 @api_view(["GET", "POST", "PATCH", "DELETE"])
 @permission_classes([IsAuthenticated])
-@authentication_classes([TokenAuthentication])
+@authentication_classes([TokenAuthentication, SessionAuthentication])
 def account_view(request, account_id: int = None):
     if request.method == "GET":
         return get_account(request, account_id)
@@ -36,7 +37,7 @@ def account_view(request, account_id: int = None):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-@authentication_classes([TokenAuthentication])
+@authentication_classes([TokenAuthentication, SessionAuthentication])
 def accounts_list_view(request):
     """Get a json list[dict] of all accounts for the current user."""
     if not request.user.is_superuser:

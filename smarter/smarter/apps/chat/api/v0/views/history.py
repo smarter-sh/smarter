@@ -5,6 +5,7 @@ from http import HTTPStatus
 
 from django.http import JsonResponse
 from knox.auth import TokenAuthentication
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import (
     api_view,
     authentication_classes,
@@ -28,7 +29,7 @@ from smarter.apps.chat.serializers import (
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-@authentication_classes([TokenAuthentication])
+@authentication_classes([TokenAuthentication, SessionAuthentication])
 def chat_history_view(request, account_id: int = None):
     if request.method == "GET":
         return get_chat_history(request, account_id)
@@ -37,7 +38,7 @@ def chat_history_view(request, account_id: int = None):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-@authentication_classes([TokenAuthentication])
+@authentication_classes([TokenAuthentication, SessionAuthentication])
 def plugin_usage_history_view(request, plugin_id: int = None):
     if request.method == "GET":
         return get_plugin_usage_history(request, plugin_id=plugin_id)
@@ -46,7 +47,7 @@ def plugin_usage_history_view(request, plugin_id: int = None):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-@authentication_classes([TokenAuthentication])
+@authentication_classes([TokenAuthentication, SessionAuthentication])
 def chat_tool_call_history_view(request, plugin_id: int = None):
     if request.method == "GET":
         return get_chat_tool_call_history(request, plugin_id=plugin_id)
