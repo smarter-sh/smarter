@@ -5,5 +5,5 @@ from django.urls import include, path
 
 
 urlpatterns = [
-    path("v0/", include("smarter.apps.api.urls_api_v0")),
+    path("v0/", include("smarter.apps.api.v0.urls")),
 ]

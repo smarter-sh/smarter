@@ -18,12 +18,12 @@ Including another URLconf
 
 from django.urls import include, path
 
-from smarter.apps.api.views.views import custom_api_root_v0
+from .views import custom_api_root_v0
 
 
 urlpatterns = [
     path("", custom_api_root_v0, name="custom_api_root_v0"),
-    path("account/", include("smarter.apps.account.urls_api_v0")),
-    path("plugin/", include("smarter.apps.plugin.urls_api_v0")),
-    path("chat/", include("smarter.apps.chat.urls_api_v0")),
+    path("account/", include("smarter.apps.account.api.v0.urls")),
+    path("plugin/", include("smarter.apps.plugin.api.v0.urls")),
+    path("chat/", include("smarter.apps.chat.api.v0.urls")),
 ]

@@ -4,13 +4,14 @@
 from django.urls import path
 from django.views.decorators.http import require_http_methods
 
-from smarter.apps.account.views.account import account_view, accounts_list_view
-from smarter.apps.account.views.payment_methods import (
+from smarter.apps.account.api.v0.views.account import account_view, accounts_list_view
+from smarter.apps.account.api.v0.views.payment_methods import (
     payment_method_view,
     payment_methods_list_view,
 )
-from smarter.apps.account.views.user import user_view
-from smarter.apps.plugin.views import add_plugin_examples
+from smarter.apps.plugin.api.v0.views import add_plugin_examples
+
+from .views.user import user_view
 
 
 urlpatterns = [
