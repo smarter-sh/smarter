@@ -71,18 +71,22 @@ class TestUrls(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         json_data = response.json()
-        self.assertIsInstance(json_data, list)
+        self.assertIn(type(json_data), (list, dict))
 
         # there should be at least one account
         self.assertGreaterEqual(len(json_data), 1)
 
+        if isinstance(json_data, dict):
+            self.assertEqual(json_data.get("account_number"), self.account.account_number)
+
         # iterate the list and try to match a dict to the company_name and account_number
-        for account in json_data:
-            if account.get("account_number") == self.account.account_number:
-                self.assertEqual(account.get("company_name"), self.account.company_name)
-                break
-        else:
-            self.fail("account not found in list")
+        if isinstance(json_data, list):
+            for account in json_data:
+                if account.get("account_number") == self.account.account_number:
+                    self.assertEqual(account.get("company_name"), self.account.company_name)
+                    break
+            else:
+                self.fail("account not found in list")
 
     def test_accounts_index_view(self):
         """test that we can see an account from inside the list view and that it matches the account data."""

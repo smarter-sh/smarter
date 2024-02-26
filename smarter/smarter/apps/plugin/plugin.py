@@ -264,7 +264,7 @@ class Plugin:
             plugin_called.send(
                 sender=self.function_calling_plugin,
                 user=user,
-                plugin=self,
+                plugin=self.plugin_meta,
                 inquiry_type=inquiry_type,
                 inquiry_return=retval,
             )
@@ -273,7 +273,7 @@ class Plugin:
             plugin_called.send(
                 sender=self.function_calling_plugin,
                 user=user,
-                plugin=self,
+                plugin=self.plugin_meta,
                 inquiry_type=inquiry_type,
                 inquiry_return="KeyError",
             )

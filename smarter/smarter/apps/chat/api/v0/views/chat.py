@@ -79,7 +79,7 @@ def handler(user: User, data: dict):
                 available_functions[plugin.function_calling_identifier] = plugin.function_calling_plugin
                 plugin_selected.send(
                     sender=handler,
-                    plugin=plugin,
+                    plugin=plugin.plugin_meta if plugin else None,
                     user=user,
                     data=data,
                     model=model,
@@ -143,7 +143,7 @@ def handler(user: User, data: dict):
                 )  # extend conversation with function response
             chat_completion_tool_call_created.send(
                 sender=handler,
-                plugin=plugin,
+                plugin=plugin.plugin_meta if plugin else None,
                 user=user,
                 data=data,
                 input_text=input_text,
@@ -157,7 +157,7 @@ def handler(user: User, data: dict):
             openai_response = second_response.model_dump()
             chat_completion_tool_call_received.send(
                 sender=handler,
-                plugin=plugin,
+                plugin=plugin.plugin_meta if plugin else None,
                 user=user,
                 data=data,
                 input_text=input_text,
