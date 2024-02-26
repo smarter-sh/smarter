@@ -6,6 +6,7 @@ markdown
 django-filter==23.5
 django-taggit==5.0.1
 django-rest-knox==4.2.0
+dj-stripe==2.8.3
 
 # misc
 # ------------

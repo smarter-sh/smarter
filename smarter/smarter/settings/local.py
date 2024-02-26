@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "smarter.apps.langchain_passthrough",
     # 3rd party apps
     # -------------------------------
+    "djstripe",
     "rest_framework",
     "knox",
     "taggit",
@@ -183,3 +184,14 @@ LOGGING = {
         "level": "INFO",
     },
 }
+
+
+# https://dj-stripe.dev/dj-stripe/2.7/installation/
+STRIPE_LIVE_SECRET_KEY = os.environ.get("STRIPE_LIVE_SECRET_KEY", "<your secret key>")
+STRIPE_TEST_SECRET_KEY = os.environ.get("STRIPE_TEST_SECRET_KEY", "<your secret key>")
+STRIPE_LIVE_MODE = False  # Change to True in production
+DJSTRIPE_WEBHOOK_SECRET = (
+    "whsec_xxx"  # Get it from the section in the Stripe dashboard where you added the webhook endpoint
+)
+DJSTRIPE_USE_NATIVE_JSONFIELD = True  # We recommend setting to True for new installations
+DJSTRIPE_FOREIGN_KEY_TO_FIELD = "id"
