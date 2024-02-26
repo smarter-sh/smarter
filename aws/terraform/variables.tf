@@ -26,15 +26,15 @@ variable "aws_profile" {
   type        = string
   default     = "default"
 }
-variable "AWS_ACCESS_KEY_ID" {
-  description = "AWS access key ID"
-  type        = string
+# variable "AWS_ACCESS_KEY_ID" {
+#   description = "AWS access key ID"
+#   type        = string
 
-}
-variable "AWS_SECRET_ACCESS_KEY" {
-  description = "AWS secret access key"
-  type        = string
-}
+# }
+# variable "AWS_SECRET_ACCESS_KEY" {
+#   description = "AWS secret access key"
+#   type        = string
+# }
 variable "tags" {
   description = "A map of tags to add to all resources. Tags added to launch configuration or templates override these values."
   type        = map(string)

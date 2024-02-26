@@ -35,6 +35,6 @@ module "acm_environment_domain" {
 
   # adding the Usage tag as a way to differentiate this cert from the one created by
   # the eks clb ingress, of which we have no control.
-  tags = var.tags
+  tags = local.tags
 
 }

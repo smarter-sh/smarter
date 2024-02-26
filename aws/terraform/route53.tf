@@ -12,7 +12,7 @@ data "aws_route53_zone" "root_domain" {
 
 resource "aws_route53_zone" "environment_domain" {
   name = local.environment_domain
-  tags = var.tags
+  tags = local.tags
 }
 
 resource "aws_route53_record" "environment_domain-ns" {

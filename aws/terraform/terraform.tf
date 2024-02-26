@@ -9,14 +9,6 @@
 
 terraform {
   required_version = "~> 1.5"
-  backend "s3" {
-    bucket         = "090511222473-tfstate-openai"
-    key            = "smarter/terraform.tfstate"
-    region         = "us-east-1"
-    dynamodb_table = "090511222473-tfstate-lock-openai"
-    profile        = "lawrence"
-    encrypt        = false
-  }
 
   required_providers {
     aws = {
