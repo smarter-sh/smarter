@@ -10,7 +10,6 @@ from smarter.apps.chat.models import (
     ChatToolCallHistory,
     PluginUsageHistory,
 )
-from smarter.apps.plugin.plugin import Plugin
 
 from .signals import (
     chat_completion_called,
@@ -54,14 +53,12 @@ def handle_chat_completion_tool_call(sender, **kwargs):
     """Handle chat completion tool call signal."""
 
     user = kwargs.get("user")
-    plugin_id = kwargs.get("plugin_id")
-    plugin = Plugin(plugin_id=plugin_id) if plugin_id else None
+    plugin = kwargs.get("plugin")
     input_text = kwargs.get("input_text")
     model = kwargs.get("model")
     messages = kwargs.get("messages")
     response = kwargs.get("response")
     response_id = response.get("id") if response else None
-
     event_type = "received" if "chat_completion_tool_call_received" in sender.__name__ else "called"
 
     logger.info(

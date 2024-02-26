@@ -14,6 +14,7 @@ from django.db import transaction
 from rest_framework import serializers
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.chat.signals import plugin_called
 
 from .models import PluginData, PluginMeta, PluginPrompt, PluginSelector
 from .serializers import (
@@ -216,7 +217,7 @@ class Plugin:
         return None
 
     @property
-    def function_calling_plugin(self) -> str:
+    def function_calling_identifier(self) -> str:
         """Return the function calling plugin."""
         if self.ready:
             suffix = str(self.id).zfill(4)
@@ -230,7 +231,7 @@ class Plugin:
             return {
                 "type": "function",
                 "function": {
-                    "name": self.function_calling_plugin,
+                    "name": self.function_calling_identifier,
                     "description": self.plugin_data.description,
                     "parameters": {
                         "type": "object",
@@ -245,6 +246,21 @@ class Plugin:
                 },
             }
         return None
+
+    def function_calling_plugin(self, user: User, inquiry_type: str) -> str:
+        """Return select info from custom plugin object"""
+        if not self.ready:
+            return None
+
+        plugin_called.send(sender=self.function_calling_plugin, user=user, plugin=self, inquiry_type=inquiry_type)
+        try:
+            return_data = self.plugin_data.return_data
+            retval = return_data[inquiry_type]
+            return json.dumps(retval)
+        except KeyError:
+            pass
+
+        raise KeyError(f"Invalid inquiry_type: {inquiry_type}")
 
     def yaml_to_json(self, yaml_string: str) -> dict:
         """Convert a yaml string to a dictionary."""

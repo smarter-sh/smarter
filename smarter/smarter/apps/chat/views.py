@@ -15,7 +15,6 @@ from smarter.apps.chat.signals import (
     chat_completion_tool_call_created,
     chat_completion_tool_call_received,
     chat_invoked,
-    plugin_called,
     plugin_selected,
 )
 from smarter.apps.common.conf import settings
@@ -33,8 +32,6 @@ from smarter.apps.common.validators import (  # validate_embedding_request,
     validate_item,
 )
 from smarter.apps.plugin.plugin import Plugin
-
-# OpenAI functions
 from smarter.apps.plugin.utils import plugins_for_user
 
 from .function_weather import get_current_weather, weather_tool_factory
@@ -53,21 +50,6 @@ def handler(user: User, data: dict):
     Responsible for processing incoming requests and invoking the appropriate
     OpenAI API endpoint based on the contents of the request.
     """
-
-    # pylint: disable=too-many-return-statements
-    def function_calling_plugin(user: User, inquiry_type: str, plugin_id: int = None) -> str:
-        """Return select info from custom plugin object"""
-        plugin = Plugin(plugin_id=plugin_id)
-        plugin_called.send(sender=function_calling_plugin, user=user, plugin=plugin, inquiry_type=inquiry_type)
-        try:
-            return_data = plugin.plugin_data.return_data
-            retval = return_data[inquiry_type]
-            return json.dumps(retval)
-        except KeyError:
-            pass
-
-        raise KeyError(f"Invalid inquiry_type: {inquiry_type}")
-
     chat_invoked.send(sender=handler, user=user, data=data)
     weather_tool = weather_tool_factory()
     tools = [weather_tool]
@@ -76,7 +58,7 @@ def handler(user: User, data: dict):
     }
 
     try:
-        openai_results = {}
+        openai_response = {}
         request_body = get_request_body(data=data)
         object_type, model, messages, input_text, temperature, max_tokens = parse_request(request_body)
         request_meta_data = request_meta_data_factory(model, object_type, temperature, max_tokens, input_text)
@@ -91,7 +73,7 @@ def handler(user: User, data: dict):
                 messages = customized_prompt(plugin=plugin, messages=messages)
                 custom_tool = plugin.custom_tool
                 tools.append(custom_tool)
-                available_functions[plugin.function_calling_plugin] = function_calling_plugin
+                available_functions[plugin.function_calling_identifier] = plugin.function_calling_plugin
                 plugin_selected.send(
                     sender=handler,
                     plugin=plugin,
@@ -113,15 +95,15 @@ def handler(user: User, data: dict):
         )
         validate_completion_request(request_body)
         chat_completion_called.send(sender=handler, user=user, data=data)
-        openai_results = openai.chat.completions.create(
+        openai_response = openai.chat.completions.create(
             model=model,
             messages=messages,
             tools=tools,
             temperature=temperature,
             max_tokens=max_tokens,
         )
-        response_message = openai_results.choices[0].message
-        openai_results = openai_results.model_dump()
+        response_message = openai_response.choices[0].message
+        openai_response = openai_response.model_dump()
         tool_calls = response_message.tool_calls
         if tool_calls:
             # Step 3: call the function
@@ -129,7 +111,7 @@ def handler(user: User, data: dict):
             messages.append(response_message)  # extend conversation with assistant's reply
             # Step 4: send the info for each function call and function response to the model
             for tool_call in tool_calls:
-                plugin_id: int = None
+                plugin: Plugin = None
                 function_name = tool_call.function.name
                 function_to_call = available_functions[function_name]
                 function_args = json.loads(tool_call.function.arguments)
@@ -140,9 +122,13 @@ def handler(user: User, data: dict):
                         unit=function_args.get("unit"),
                     )
                 elif function_name.startswith("function_calling_plugin"):
+                    # FIX NOTE: we should revisit this. technically, we're supposed to be calling
+                    # function_to_call, assigned above. but just to play it safe,
+                    # we're directly invoking the plugin's function_calling_plugin() method.
                     plugin_id = int(function_name[-4:])
-                    function_response = function_to_call(
-                        user=user, inquiry_type=function_args.get("inquiry_type"), plugin_id=plugin_id
+                    plugin = Plugin(plugin_id=plugin_id)
+                    function_response = plugin.function_calling_plugin(
+                        user=user, inquiry_type=function_args.get("inquiry_type")
                     )
                 messages.append(
                     {
@@ -154,7 +140,7 @@ def handler(user: User, data: dict):
                 )  # extend conversation with function response
             chat_completion_tool_call_created.send(
                 sender=handler,
-                plugin_id=plugin_id,
+                plugin=plugin,
                 user=user,
                 data=data,
                 input_text=input_text,
@@ -165,16 +151,16 @@ def handler(user: User, data: dict):
                 model=model,
                 messages=messages,
             )  # get a new response from the model where it can see the function response
-            openai_results = second_response.model_dump()
+            openai_response = second_response.model_dump()
             chat_completion_tool_call_received.send(
                 sender=handler,
-                plugin_id=plugin_id,
+                plugin=plugin,
                 user=user,
                 data=data,
                 input_text=input_text,
                 messages=messages,
                 model=model,
-                response=openai_results,
+                response=openai_response,
             )
 
     # handle anything that went wrong
@@ -194,12 +180,12 @@ def handler(user: User, data: dict):
         tools=tools,
         temperature=temperature,
         max_tokens=max_tokens,
-        response=openai_results,
+        response=openai_response,
         data=data,
     )
     return http_response_factory(
         status_code=OpenAIResponseCodes.HTTP_RESPONSE_OK,
-        body={**openai_results, **request_meta_data},
+        body={**openai_response, **request_meta_data},
     )
 
 
