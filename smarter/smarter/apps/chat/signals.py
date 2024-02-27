@@ -5,9 +5,8 @@ from django.dispatch import Signal
 
 
 # plugin signals
-plugin_selected = Signal()
-plugin_called = Signal()
-plugin_selection_history_created = Signal()
+chat_completion_plugin_selected = Signal()
+chat_completion_plugin_selection_history_created = Signal()
 
 # chat signals
 chat_invoked = Signal()
