@@ -17,6 +17,7 @@ chat_completion_failed = Signal()
 
 # chat history signals
 chat_completion_history_created = Signal()
+chat_completion_tools_call = Signal()
 chat_completion_tool_call_created = Signal()
 chat_completion_tool_call_received = Signal()
 chat_completion_tool_call_history_created = Signal()
