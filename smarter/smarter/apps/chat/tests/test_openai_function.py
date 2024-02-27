@@ -14,6 +14,7 @@ from time import sleep
 
 import yaml
 from django.contrib.auth.models import User
+from django.test import Client
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -115,6 +116,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
+        self.client = Client()
         username = "testuser_" + os.urandom(4).hex()
         self.user = User.objects.create(username=username, password="12345")
         self.account = Account.objects.create(company_name="Test Account")
@@ -253,6 +255,11 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         # assert that ChatHistory has one or more records for self.user
         chat_histories = ChatHistory.objects.filter(user=self.user)
         self.assertTrue(chat_histories.exists())
+
+        # test url api endpoint for chat history
+        response = self.client.get("/api/v0/chat/history/chats/")
+        self.assertEqual(response.status_code, 200)
+        print("/api/v0/chat/history/chats/ response:", response.json())
 
         # assert that PluginUsageHistory has one or more records for self.user
         plugin_selection_histories = PluginUsageHistory.objects.filter(user=self.user)

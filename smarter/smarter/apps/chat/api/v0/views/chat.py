@@ -6,7 +6,9 @@ from http import HTTPStatus
 
 import openai
 from django.contrib.auth.models import User
+from knox.auth import TokenAuthentication
 from rest_framework import permissions, viewsets
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
 
 from smarter.apps.chat.functions.function_weather import (
@@ -19,6 +21,7 @@ from smarter.apps.chat.signals import (
     chat_completion_returned,
     chat_completion_tool_call_created,
     chat_completion_tool_call_received,
+    chat_completion_tools_call,
     chat_invoked,
     plugin_selected,
 )
@@ -85,9 +88,7 @@ def handler(user: User, data: dict):
                     model=model,
                     temperature=temperature,
                     max_tokens=max_tokens,
-                    messages=messages,
                     custom_tool=custom_tool,
-                    input_text=input_text,
                 )
 
         # https://platform.openai.com/docs/guides/gpt/chat-completions-api
@@ -97,7 +98,7 @@ def handler(user: User, data: dict):
             item_type="ChatCompletion models",
         )
         validate_completion_request(request_body)
-        chat_completion_called.send(sender=handler, user=user, data=data)
+        chat_completion_called.send(sender=handler, user=user, data=data, action="request")
         openai_response = openai.chat.completions.create(
             model=model,
             messages=messages,
@@ -105,10 +106,21 @@ def handler(user: User, data: dict):
             temperature=temperature,
             max_tokens=max_tokens,
         )
+        openai_response_dict = json.loads(openai_response.model_dump_json())
         response_message = openai_response.choices[0].message
+        chat_completion_called.send(sender=handler, user=user, data=openai_response_dict, action="response")
         openai_response = openai_response.model_dump()
         tool_calls = response_message.tool_calls
         if tool_calls:
+            chat_completion_tools_call.send(
+                sender=handler,
+                user=user,
+                model=model,
+                tools=tools,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                response=openai_response_dict,
+            )
             # Step 3: call the function
             # Note: the JSON response may not always be valid; be sure to handle errors
             messages.append(response_message)  # extend conversation with assistant's reply
@@ -146,8 +158,6 @@ def handler(user: User, data: dict):
                 plugin=plugin.plugin_meta if plugin else None,
                 user=user,
                 data=data,
-                input_text=input_text,
-                messages=messages,
                 model=model,
             )
             second_response = openai.chat.completions.create(
@@ -155,15 +165,14 @@ def handler(user: User, data: dict):
                 messages=messages,
             )  # get a new response from the model where it can see the function response
             openai_response = second_response.model_dump()
+            openai_response_dict = json.loads(second_response.model_dump_json())
             chat_completion_tool_call_received.send(
                 sender=handler,
                 plugin=plugin.plugin_meta if plugin else None,
                 user=user,
                 data=data,
-                input_text=input_text,
-                messages=messages,
                 model=model,
-                response=openai_response,
+                response=openai_response_dict,
             )
 
     # handle anything that went wrong
@@ -177,9 +186,7 @@ def handler(user: User, data: dict):
     chat_completion_returned.send(
         sender=handler,
         user=user,
-        input_text=input_text,
         model=model,
-        messages=messages,
         tools=tools,
         temperature=temperature,
         max_tokens=max_tokens,
@@ -195,6 +202,7 @@ def handler(user: User, data: dict):
 class FunctionCallingViewSet(viewsets.ViewSet):
     """top-level viewset for openai api function calling"""
 
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def create(self, request):

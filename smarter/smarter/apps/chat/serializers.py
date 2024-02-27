@@ -43,4 +43,4 @@ class ChatToolCallHistorySerializer(serializers.HyperlinkedModelSerializer):
         """Meta class for the ChatToolCallHistorySerializer."""
 
         model = ChatToolCallHistory
-        fields = ["url", "plugin", "user", "event", "input_text", "model", "messages", "response", "response_id"]
+        fields = ["url", "plugin", "user", "event", "model", "messages", "response", "response_id"]

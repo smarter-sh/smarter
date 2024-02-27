@@ -3,6 +3,7 @@
 """Account views for smarter api."""
 from http import HTTPStatus
 
+from django.contrib.auth.models import User
 from django.http import JsonResponse
 from knox.auth import TokenAuthentication
 from rest_framework.authentication import SessionAuthentication
@@ -30,9 +31,11 @@ from smarter.apps.chat.serializers import (
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 @authentication_classes([TokenAuthentication, SessionAuthentication])
-def chat_history_view(request, account_id: int = None):
+def chat_history_view(request):
+    user_profile = UserProfile.objects.get(user=request.user)
+    account = user_profile.account
     if request.method == "GET":
-        return get_chat_history(request, account_id)
+        return get_chat_history(request, account_id=account.id)
     return JsonResponse({"error": "Invalid HTTP method"}, status=405)
 
 
@@ -73,14 +76,20 @@ def get_plugin_usage_history(request, plugin_id: int = None):
 
 def get_chat_history(request, account_id: int = None):
     """Get an account json representation by id."""
+    users = [User]
     try:
         if account_id:
             account = Account.objects.get(id=account_id)
+            users = [user_profile.user for user_profile in UserProfile.objects.filter(account=account)]
+            print("yeah")
         else:
-            account = UserProfile.objects.get(user=request.user).account
+            users = [UserProfile.objects.get(user=request.user).user]
+            print("no")
     except UserProfile.DoesNotExist:
         return JsonResponse({"error": "User not found"}, status=404)
 
-    chat_history = ChatHistory.objects.filter(user=account.user)
-    serializer = ChatHistorySerializer(chat_history)
+    print("users: ", users)
+
+    chat_history = ChatHistory.objects.filter(user__in=users)
+    serializer = ChatHistorySerializer(chat_history, many=True, context={"request": request})
     return Response(serializer.data, status=HTTPStatus.OK)
