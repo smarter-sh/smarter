@@ -15,16 +15,16 @@ from smarter.apps.plugin.signals import plugin_called
 
 from .signals import (
     chat_completion_called,
-    chat_completion_failed,
     chat_completion_history_created,
     chat_completion_plugin_selected,
     chat_completion_plugin_selection_history_created,
-    chat_completion_returned,
     chat_completion_tool_call_created,
     chat_completion_tool_call_history_created,
     chat_completion_tool_call_received,
     chat_completion_tools_call,
     chat_invoked,
+    chat_response_failure,
+    chat_response_success,
 )
 
 
@@ -245,7 +245,7 @@ def handle_chat_completion_returned(sender, **kwargs):
     response = kwargs.get("response")
     response_id = response.get("id") if response else None
 
-    logger.info("%s signal received: %s model: %s", formatted_text("chat_completion_returned"), user.username, model)
+    logger.info("%s signal received: %s model: %s", formatted_text("chat_response_success"), user.username, model)
     chat_history = ChatHistory(
         user=user,
         model=model,
@@ -258,7 +258,7 @@ def handle_chat_completion_returned(sender, **kwargs):
     chat_history.save()
 
 
-chat_completion_returned.connect(handle_chat_completion_returned, dispatch_uid="chat_completion_returned")
+chat_response_success.connect(handle_chat_completion_returned, dispatch_uid="chat_response_success")
 
 
 def handle_chat_completion_failed(sender, **kwargs):
@@ -267,10 +267,10 @@ def handle_chat_completion_failed(sender, **kwargs):
     user = kwargs.get("user")
     data = kwargs.get("data")
 
-    logger.info("%s signal received: %s data: %s", formatted_text("chat_completion_failed"), user.username, data)
+    logger.info("%s signal received: %s data: %s", formatted_text("chat_response_failure"), user.username, data)
 
 
-chat_completion_failed.connect(handle_chat_completion_failed, dispatch_uid="chat_completion_failed")
+chat_response_failure.connect(handle_chat_completion_failed, dispatch_uid="chat_response_failure")
 
 
 def handle_chat_completion_history_created(sender, **kwargs):

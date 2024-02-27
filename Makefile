@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-S3_BUCKET := smarter.sh
+S3_BUCKET := dev.platform.smarter.sh
 CLOUDFRONT_DISTRIBUTION_ID := E3AIBM1KMSJOP1
 
 ifeq ($(OS),Windows_NT)
@@ -45,9 +45,9 @@ analyze:
 	cloc . --exclude-ext=svg,json,zip --vcs=git
 
 coverage:
-	coverage run --source=smarter \
-				 -m unittest discover -s smarter/
-	coverage report -m
+	cd smarter && \
+	coverage run manage.py test && \
+	coverage report -m && \
 	coverage html
 
 release:
@@ -73,9 +73,9 @@ django-init:
 	if [ -f smarter/db.sqlite3 ]; then rm smarter/db.sqlite3; fi && \
 	cd smarter && python manage.py makemigrations && \
 	python manage.py migrate && \
-	python manage.py create_admin_user --username admin --email admin@smarter.sh && \
+	python manage.py create_admin_user --username admin --email admin@smarter.sh --password smarter && \
 	python manage.py add_plugin_examples admin && \
-	python manage.py changepassword admin
+	python manage.py seed_chat_history
 
 django-run:
 	cd smarter && python manage.py runserver
@@ -83,6 +83,10 @@ django-run:
 django-collectstatic:
 	(cd smarter/smarter/apps/hello_world/reactapp/ && npm run build)
 	(cd smarter && python manage.py collectstatic --noinput)
+
+django-test:
+	cd smarter && python manage.py test
+
 
 python-init:
 	make python-clean
@@ -93,9 +97,6 @@ python-init:
 	$(PIP) install -r smarter/requirements/local.txt && \
 	pre-commit install && \
 	make django-init
-
-python-test:
-	cd smarter && python manage.py test
 
 python-lint:
 	terraform fmt -recursive
