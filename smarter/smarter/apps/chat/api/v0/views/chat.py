@@ -17,13 +17,13 @@ from smarter.apps.chat.functions.function_weather import (
 )
 from smarter.apps.chat.signals import (
     chat_completion_called,
-    chat_completion_failed,
     chat_completion_plugin_selected,
-    chat_completion_returned,
     chat_completion_tool_call_created,
     chat_completion_tool_call_received,
     chat_completion_tools_call,
     chat_invoked,
+    chat_response_failure,
+    chat_response_success,
 )
 from smarter.apps.common.conf import settings
 from smarter.apps.common.const import VALID_CHAT_COMPLETION_MODELS, OpenAIResponseCodes
@@ -177,12 +177,12 @@ def handler(user: User, data: dict):
     # handle anything that went wrong
     # pylint: disable=broad-exception-caught
     except Exception as e:
-        chat_completion_failed.send(sender=handler, user=user, exception=e, data=data)
+        chat_response_failure.send(sender=handler, user=user, exception=e, data=data)
         status_code, _message = EXCEPTION_MAP.get(type(e), (HTTPStatus.INTERNAL_SERVER_ERROR, "Internal server error"))
         return http_response_factory(status_code=status_code, body=exception_response_factory(e))
 
     # success!! return the response
-    chat_completion_returned.send(
+    chat_response_success.send(
         sender=handler,
         user=user,
         model=model,

@@ -32,15 +32,15 @@ from smarter.apps.chat.models import (
 )
 from smarter.apps.chat.signals import (
     chat_completion_called,
-    chat_completion_failed,
     chat_completion_history_created,
     chat_completion_plugin_selected,
     chat_completion_plugin_selection_history_created,
-    chat_completion_returned,
     chat_completion_tool_call_created,
     chat_completion_tool_call_history_created,
     chat_completion_tool_call_received,
     chat_invoked,
+    chat_response_failure,
+    chat_response_success,
 )
 from smarter.apps.chat.tests.test_setup import get_test_file, get_test_file_path
 from smarter.apps.plugin.nlp import does_refer_to
@@ -110,8 +110,8 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
             "chat_completion_plugin_selected": self._chat_completion_plugin_selected,
             "chat_completion_plugin_selection_history_created": self._chat_completion_plugin_selection_history_created,
             "chat_completion_called": self._chat_completion_called,
-            "chat_completion_returned": self._chat_completion_returned,
-            "chat_completion_failed": self._chat_completion_failed,
+            "chat_response_success": self._chat_completion_returned,
+            "chat_response_failure": self._chat_completion_failed,
             "chat_completion_history_created": self._chat_completion_history_created,
             "chat_completion_tool_call_created": self._chat_completion_tool_call_created,
             "chat_completion_tool_call_received": self._chat_completion_tool_call_received,
@@ -225,8 +225,8 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
             self.chat_completion_plugin_selection_history_created_signal_handler
         )
         chat_completion_called.connect(self.chat_completion_called_signal_handler)
-        chat_completion_returned.connect(self.chat_completion_returned_signal_handler)
-        chat_completion_failed.connect(self.chat_completion_failed_signal_handler)
+        chat_response_success.connect(self.chat_completion_returned_signal_handler)
+        chat_response_failure.connect(self.chat_completion_failed_signal_handler)
         chat_completion_history_created.connect(self.chat_completion_history_created_signal_handler)
         chat_completion_tool_call_created.connect(self.chat_completion_tool_call_created_signal_handler)
         chat_completion_tool_call_received.connect(self.chat_completion_tool_call_received_signal_handler)
@@ -244,7 +244,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
 
         # assert that every key in self.signals is True
         for key, value in self.signals.items():
-            if key != "chat_completion_failed":
+            if key != "chat_response_failure":
                 print("assertTrue key:", key, "value:", value)
                 # self.assertTrue(value)
             else:
