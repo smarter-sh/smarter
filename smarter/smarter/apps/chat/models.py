@@ -5,8 +5,8 @@ from django.db import models
 
 from smarter.apps.chat.signals import (
     chat_completion_history_created,
+    chat_completion_plugin_selection_history_created,
     chat_completion_tool_call_history_created,
-    plugin_selection_history_created,
 )
 
 # our stuff
@@ -84,7 +84,7 @@ class PluginUsageHistory(TimestampedModel):
     inquiry_return = models.TextField(blank=True, null=True)
 
     def save(self, *args, **kwargs):
-        plugin_selection_history_created.send(sender=PluginUsageHistory, user=self.user, data=self)
+        chat_completion_plugin_selection_history_created.send(sender=PluginUsageHistory, user=self.user, data=self)
         super().save(*args, **kwargs)
 
     def __str__(self):

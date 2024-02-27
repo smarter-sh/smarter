@@ -27,12 +27,17 @@ def lower_case_splitter(string_of_words: str) -> list:
     return [word.lower() for word in string_of_words.split()]
 
 
-def simple_search(prompt: str, refers_to: str) -> bool:
+def simple_search(prompt: str, search_term: str) -> bool:
     """Check if the prompt contains the target string."""
+
+    # simplest possible case: the search term is in the prompt
+    if search_term.lower() in prompt.lower():
+        return True
+
     prompt_words = lower_case_splitter(prompt)
-    token_count = len(refers_to.split())
+    token_count = len(search_term.split())
     found_count = 0
-    for token in lower_case_splitter(refers_to):
+    for token in lower_case_splitter(search_term):
         if token in prompt_words:
             found_count += 1
         if found_count >= token_count:
@@ -40,26 +45,26 @@ def simple_search(prompt: str, refers_to: str) -> bool:
     return False
 
 
-def within_levenshtein_distance(prompt: str, refers_to: str, threshold: int = 3) -> bool:
+def within_levenshtein_distance(prompt: str, search_term: str, threshold: int = 3) -> bool:
     """Check if the prompt is within the given Levenshtein distance of the target string."""
     words = lower_case_splitter(prompt)
     names = [word for word in words if word.istitle()]
     for name in names:
-        distance = Levenshtein.distance(refers_to, name)
+        distance = Levenshtein.distance(search_term, name)
         if distance <= threshold:
             return True
     return False
 
 
-def does_refer_to(prompt: str, refers_to: str, threshold=3) -> bool:
+def does_refer_to(prompt: str, search_term: str, threshold=3) -> bool:
     """Check if the prompt refers to the given string."""
 
     prompt = clean_prompt(prompt)
 
-    if simple_search(prompt, refers_to):
+    if simple_search(prompt=prompt, search_term=search_term):
         return True
 
-    if within_levenshtein_distance(prompt, refers_to, threshold):
+    if within_levenshtein_distance(prompt=prompt, search_term=search_term, threshold=threshold):
         return True
 
     # bust. we didn't find the target string in the prompt

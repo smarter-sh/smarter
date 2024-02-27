@@ -30,33 +30,33 @@ from smarter.apps.chat.models import (
     ChatToolCallHistory,
     PluginUsageHistory,
 )
-from smarter.apps.chat.natural_language_processing import does_refer_to
 from smarter.apps.chat.signals import (
     chat_completion_called,
     chat_completion_failed,
     chat_completion_history_created,
+    chat_completion_plugin_selected,
+    chat_completion_plugin_selection_history_created,
     chat_completion_returned,
     chat_completion_tool_call_created,
     chat_completion_tool_call_history_created,
     chat_completion_tool_call_received,
     chat_invoked,
-    plugin_called,
-    plugin_selected,
-    plugin_selection_history_created,
 )
 from smarter.apps.chat.tests.test_setup import get_test_file, get_test_file_path
-from smarter.apps.chat.utils import search_terms_are_in_messages
+from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.plugin import Plugin
+from smarter.apps.plugin.signals import plugin_called, plugin_selected
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes
 class TestOpenaiFunctionCalling(unittest.TestCase):
     """Test Index Lambda function."""
 
-    _plugin_selected = False
     _plugin_called = False
-    _plugin_selection_history_created = False
+    _plugin_selected = False
     _chat_invoked = False
+    _chat_completion_plugin_selected = False
+    _chat_completion_plugin_selection_history_created = False
     _chat_completion_called = False
     _chat_completion_returned = False
     _chat_completion_failed = False
@@ -65,14 +65,17 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
     _chat_completion_tool_call_received = False
     _chat_completion_tool_call_history_created = False
 
-    def plugin_selected_signal_handler(self, *args, **kwargs):
-        self._plugin_selected = True
-
     def plugin_called_signal_handler(self, *args, **kwargs):
         self._plugin_called = True
 
-    def plugin_selection_history_created_signal_handler(self, *args, **kwargs):
-        self._plugin_selection_history_created = True
+    def plugin_selected_signal_handler(self, *args, **kwargs):
+        self._plugin_selected = True
+
+    def chat_completion_plugin_selected_signal_handler(self, *args, **kwargs):
+        self._chat_completion_plugin_selected = True
+
+    def chat_completion_plugin_selection_history_created_signal_handler(self, *args, **kwargs):
+        self._chat_completion_plugin_selection_history_created = True
 
     def chat_invoked_signal_handler(self, *args, **kwargs):
         self._chat_invoked = True
@@ -101,10 +104,11 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
     @property
     def signals(self):
         return {
-            "plugin_selected": self._plugin_selected,
             "plugin_called": self._plugin_called,
-            "plugin_selection_history_created": self._plugin_selection_history_created,
+            "plugin_selected": self._plugin_selected,
             "chat_invoked": self._chat_invoked,
+            "chat_completion_plugin_selected": self._chat_completion_plugin_selected,
+            "chat_completion_plugin_selection_history_created": self._chat_completion_plugin_selection_history_created,
             "chat_completion_called": self._chat_completion_called,
             "chat_completion_returned": self._chat_completion_returned,
             "chat_completion_failed": self._chat_completion_failed,
@@ -190,20 +194,10 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
             ]
 
         def false_assertion(content: str):
-            self.assertFalse(
-                search_terms_are_in_messages(
-                    messages=list_factory(content),
-                    search_terms=self.plugin.plugin_selector.search_terms,
-                )
-            )
+            self.assertFalse(self.plugin.selected(self.user, list_factory(content)))
 
         def true_assertion(content: str):
-            self.assertTrue(
-                search_terms_are_in_messages(
-                    messages=list_factory(content),
-                    search_terms=self.plugin.plugin_selector.search_terms,
-                )
-            )
+            self.assertTrue(self.plugin.selected(self.user, list_factory(content)))
 
         # false cases
         false_assertion("when was leisure suit larry released?")
@@ -225,8 +219,11 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         # setup receivers for all signals to check if they are called
         plugin_selected.connect(self.plugin_selected_signal_handler)
         plugin_called.connect(self.plugin_called_signal_handler)
-        plugin_selection_history_created.connect(self.plugin_selection_history_created_signal_handler)
         chat_invoked.connect(self.chat_invoked_signal_handler)
+        chat_completion_plugin_selected.connect(self.chat_completion_plugin_selected_signal_handler)
+        chat_completion_plugin_selection_history_created.connect(
+            self.chat_completion_plugin_selection_history_created_signal_handler
+        )
         chat_completion_called.connect(self.chat_completion_called_signal_handler)
         chat_completion_returned.connect(self.chat_completion_returned_signal_handler)
         chat_completion_failed.connect(self.chat_completion_failed_signal_handler)

@@ -11,6 +11,8 @@ from taggit.managers import TaggableManager
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.common.model_utils import TimestampedModel
 
+from .signals import plugin_selector_history_created
+
 
 User = get_user_model()
 
@@ -58,6 +60,22 @@ class PluginSelector(TimestampedModel):
 
     def __str__(self) -> str:
         return str(self.directive) or ""
+
+
+class PluginSelectorHistory(TimestampedModel):
+    """PluginSelectorHistory model."""
+
+    plugin_selector = models.ForeignKey(PluginSelector, on_delete=models.CASCADE, related_name="history")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="plugin_selector_history")
+    search_term = models.CharField(max_length=255, blank=True, null=True, default="")
+    messages = models.JSONField(help_text="The user prompt messages.", default=list, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        plugin_selector_history_created.send(sender=self.__class__, plugin_selector_history=self)
+
+    def __str__(self) -> str:
+        return str(self.user.username) or ""
 
 
 class PluginPrompt(TimestampedModel):

@@ -18,14 +18,13 @@ from smarter.apps.chat.functions.function_weather import (
 from smarter.apps.chat.signals import (
     chat_completion_called,
     chat_completion_failed,
+    chat_completion_plugin_selected,
     chat_completion_returned,
     chat_completion_tool_call_created,
     chat_completion_tool_call_received,
     chat_completion_tools_call,
     chat_invoked,
-    plugin_selected,
 )
-from smarter.apps.chat.utils import customized_prompt, search_terms_are_in_messages
 from smarter.apps.common.conf import settings
 from smarter.apps.common.const import VALID_CHAT_COMPLETION_MODELS, OpenAIResponseCodes
 from smarter.apps.common.exceptions import EXCEPTION_MAP
@@ -72,15 +71,15 @@ def handler(user: User, data: dict):
         # does the prompt have anything to do with any of the search terms defined in a plugin?
         # FIX NOTE: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_tokens
         for plugin in plugins_for_user(user):
-            if search_terms_are_in_messages(messages=messages, search_terms=plugin.plugin_selector.search_terms):
+            if plugin.selected(user=user, messages=messages):
                 model = plugin.plugin_prompt.model
                 temperature = plugin.plugin_prompt.temperature
                 max_tokens = plugin.plugin_prompt.max_tokens
-                messages = customized_prompt(plugin=plugin, messages=messages)
+                messages = plugin.customize_prompt(messages)
                 custom_tool = plugin.custom_tool
                 tools.append(custom_tool)
                 available_functions[plugin.function_calling_identifier] = plugin.function_calling_plugin
-                plugin_selected.send(
+                chat_completion_plugin_selected.send(
                     sender=handler,
                     plugin=plugin.plugin_meta if plugin else None,
                     user=user,

@@ -16,6 +16,7 @@ from rest_framework import serializers
 from smarter.apps.account.models import Account, UserProfile
 
 from .models import PluginData, PluginMeta, PluginPrompt, PluginSelector
+from .nlp import does_refer_to
 from .serializers import (
     PluginDataSerializer,
     PluginMetaSerializer,
@@ -27,6 +28,9 @@ from .signals import (
     plugin_cloned,
     plugin_created,
     plugin_deleted,
+    plugin_ready,
+    plugin_selected,
+    plugin_selected_called,
     plugin_updated,
 )
 
@@ -50,12 +54,16 @@ class Plugin:
     _plugin_selector_serializer: PluginSelectorSerializer = None
     _plugin_meta_serializer: PluginMetaSerializer = None
 
+    _selected: bool = False
+
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         plugin_id: int = None,
         user_profile: UserProfile = None,
         plugin_meta: PluginMeta = None,
         data=None,
+        selected: bool = False,
     ):
         """
         Initialize the class.
@@ -77,10 +85,13 @@ class Plugin:
         if user_profile:
             self._user_profile = user_profile
 
+        self._selected = selected
         # creating a new plugin or updating an existing plugin from
         # yaml or json data.
         if data is not None:
             self.create(data)
+            if self.ready:
+                plugin_ready.send(sender=self.__class__, plugin=self)
 
     def __str__(self) -> str:
         """Return the name of the plugin."""
@@ -251,6 +262,55 @@ class Plugin:
                 },
             }
         return None
+
+    def selected(self, user: User, messages: list[dict]) -> bool:
+        """
+        Return True the user has mentioned Lawrence McDaniel or FullStackWithLawrence
+        at any point in the history of the conversation.
+
+        messages: [{"role": "user", "content": "some text"}]
+        search_terms: ["Lawrence McDaniel", "FullStackWithLawrence"]
+        search_pairs: [["Lawrence", "McDaniel"], ["FullStackWithLawrence", "Lawrence McDaniel"]]
+        """
+
+        plugin_selected_called.send(sender=self.selected, plugin=self, messages=messages)
+
+        if not self.ready:
+            return False
+        if self._selected:
+            return True
+
+        search_terms = self.plugin_selector.search_terms
+        for message in messages:
+            if "role" in message and str(message["role"]).lower() == "user":
+                content = message["content"]
+                for search_term in search_terms:
+                    if does_refer_to(prompt=content, search_term=search_term):
+                        self._selected = True
+                        plugin_selected.send(
+                            sender=self.selected, plugin=self, user=user, messages=messages, search_term=search_term
+                        )
+                        return True
+
+        return False
+
+    def customize_prompt(self, messages: list[dict]) -> list[dict]:
+        """Modify the system prompt based on the plugin object"""
+
+        if not self.ready:
+            raise ValidationError("Plugin is not ready.")
+
+        for i, message in enumerate(messages):
+            if message.get("role") == "system":
+                system_role = message.get("content")
+                custom_prompt = {
+                    "role": "system",
+                    "content": system_role + "\n\n and also " + self.plugin_prompt.system_role,
+                }
+                messages[i] = custom_prompt
+                break
+
+        return messages
 
     def function_calling_plugin(self, user: User, inquiry_type: str) -> str:
         """Return select info from custom plugin object"""
@@ -571,6 +631,7 @@ class Plugin:
         """Save a plugin."""
 
         def committed():
+            plugin_updated.send(sender=self.__class__, plugin=self)
             logger.debug("Saved plugin %s: %s.", self.name, self.id)
 
         if not self.ready:
@@ -589,7 +650,7 @@ class Plugin:
         """Delete a plugin."""
 
         def committed():
-            plugin_deleted.send(sender=self.__class__, plugin=self)
+            plugin_deleted.send(sender=self.__class__, plugin_id=plugin_id, plugin_name=plugin_name)
             logger.debug("Deleted plugin %s: %s.", plugin_id, plugin_name)
 
         if not self.ready:

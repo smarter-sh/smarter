@@ -17,14 +17,14 @@ from .signals import (
     chat_completion_called,
     chat_completion_failed,
     chat_completion_history_created,
+    chat_completion_plugin_selected,
+    chat_completion_plugin_selection_history_created,
     chat_completion_returned,
     chat_completion_tool_call_created,
     chat_completion_tool_call_history_created,
     chat_completion_tool_call_received,
     chat_completion_tools_call,
     chat_invoked,
-    plugin_selected,
-    plugin_selection_history_created,
 )
 
 
@@ -155,7 +155,7 @@ chat_completion_tool_call_received.connect(
 )
 
 
-def handle_plugin_selected(sender, **kwargs):
+def handle_chat_completion_plugin_selected(sender, **kwargs):
     """Handle plugin selected signal."""
 
     plugin = kwargs.get("plugin")
@@ -166,7 +166,9 @@ def handle_plugin_selected(sender, **kwargs):
     max_tokens = kwargs.get("max_tokens")
     custom_tool = kwargs.get("custom_tool")
 
-    logger.info("%s signal received: %s plugin: %s", formatted_text("plugin_selected"), user.username, plugin)
+    logger.info(
+        "%s signal received: %s plugin: %s", formatted_text("chat_completion_plugin_selected"), user.username, plugin
+    )
 
     plugin_selection_history = PluginUsageHistory(
         user=user,
@@ -181,7 +183,9 @@ def handle_plugin_selected(sender, **kwargs):
     plugin_selection_history.save()
 
 
-plugin_selected.connect(handle_plugin_selected, dispatch_uid="plugin_selected")
+chat_completion_plugin_selected.connect(
+    handle_chat_completion_plugin_selected, dispatch_uid="chat_completion_plugin_selected"
+)
 
 
 def handle_plugin_called(sender, **kwargs):
@@ -218,14 +222,14 @@ def handle_plugin_selection_history_created(sender, **kwargs):
     data_dict = model_to_dict(data)
     logger.info(
         "%s signal received: %s data: %s",
-        formatted_text("plugin_selection_history_created"),
+        formatted_text("chat_completion_plugin_selection_history_created"),
         user.username,
         formatted_json(data_dict),
     )
 
 
-plugin_selection_history_created.connect(
-    handle_plugin_selection_history_created, dispatch_uid="plugin_selection_history_created"
+chat_completion_plugin_selection_history_created.connect(
+    handle_plugin_selection_history_created, dispatch_uid="chat_completion_plugin_selection_history_created"
 )
 
 
