@@ -215,11 +215,12 @@ def handle_plugin_selection_history_created(sender, **kwargs):
 
     user = kwargs.get("user")
     data = kwargs.get("data")
+    data_dict = model_to_dict(data)
     logger.info(
         "%s signal received: %s data: %s",
         formatted_text("plugin_selection_history_created"),
         user.username,
-        formatted_json(data),
+        formatted_json(data_dict),
     )
 
 

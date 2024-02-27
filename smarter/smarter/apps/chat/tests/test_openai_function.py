@@ -116,7 +116,6 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        self.client = Client()
         username = "testuser_" + os.urandom(4).hex()
         self.user = User.objects.create(username=username, password="12345")
         self.account = Account.objects.create(company_name="Test Account")
@@ -128,6 +127,9 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         plugin_json["user_profile"] = self.user_profile
 
         self.plugin = Plugin(data=plugin_json)
+
+        self.client = Client()
+        self.client.force_login(self.user)
 
     def tearDown(self):
         """Tear down test fixtures."""
