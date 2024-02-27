@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 """URL configuration for the web platform."""
 
-from django.urls import path
+from django.urls import include, path
 
-from smarter.apps.web_platform.views.account import (
+from .views.account import (
     account,
     account_limits,
     account_organization,
     account_profile,
     account_team,
 )
-from smarter.apps.web_platform.views.dashboard import (
+from .views.authentication import LogoutView, login_redirector
+from .views.dashboard import (
     api_keys,
     dashboard,
     documentation,
@@ -19,11 +20,14 @@ from smarter.apps.web_platform.views.dashboard import (
     plugins,
     usage,
 )
-from smarter.apps.web_platform.views.profile import language, profile, sign_out
+from .views.profile import language, profile, sign_out
 
 
 urlpatterns = [
     path("", dashboard, name="home"),
+    path("login/", login_redirector, name="login_redirector"),
+    path("api-auth/logout/", LogoutView.as_view(), name="logout"),
+    path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     path("api-keys/", api_keys, name="api_keys"),
     path("plugins/", plugins, name="plugins"),
     path("usage/", usage, name="usage"),
