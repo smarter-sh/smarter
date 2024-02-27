@@ -26,7 +26,8 @@ from .views.profile import language, profile, sign_out
 urlpatterns = [
     path("", dashboard, name="home"),
     path("login/", login_redirector, name="login_redirector"),
-    path("api-auth/logout/", LogoutView.as_view(), name="logout"),
+    path("logout/", LogoutView.as_view(), name="logout"),
+    path("api-auth/logout/", LogoutView.as_view(), name="api_logout"),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     path("api-keys/", api_keys, name="api_keys"),
     path("plugins/", plugins, name="plugins"),
