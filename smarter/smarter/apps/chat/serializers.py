@@ -1,46 +1,28 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=C0115
 """Django REST framework serializers for the API admin app."""
 from rest_framework import serializers
 
 from .models import ChatHistory, ChatToolCallHistory, PluginUsageHistory
 
 
-class ChatHistorySerializer(serializers.HyperlinkedModelSerializer):
-    """Serializer for the ChatHistory model."""
-
+class ChatHistorySerializer(serializers.ModelSerializer):
     class Meta:
-        """Meta class for the ChatHistorySerializer."""
-
         model = ChatHistory
-        fields = [
-            "url",
-            "user",
-            "input_text",
-            "model",
-            "messages",
-            "tools",
-            "temperature",
-            "max_tokens",
-            "response",
-            "response_id",
-        ]
+        fields = "__all__"
 
 
-class PluginUsageHistorySerializer(serializers.HyperlinkedModelSerializer):
+class PluginUsageHistorySerializer(serializers.ModelSerializer):
     """Serializer for the PluginUsageHistory model."""
 
     class Meta:
-        """Meta class for the PluginUsageHistorySerializer."""
-
         model = PluginUsageHistory
-        fields = ["url", "plugin", "user", "event", "input_text", "model", "messages", "response", "response_id"]
+        fields = "__all__"
 
 
-class ChatToolCallHistorySerializer(serializers.HyperlinkedModelSerializer):
+class ChatToolCallHistorySerializer(serializers.ModelSerializer):
     """Serializer for the ChatToolCallHistory model."""
 
     class Meta:
-        """Meta class for the ChatToolCallHistorySerializer."""
-
         model = ChatToolCallHistory
-        fields = ["url", "plugin", "user", "event", "model", "messages", "response", "response_id"]
+        fields = "__all__"
