@@ -1,9 +1,0 @@
-
-
-npm create vite@latest
- choose TypeScript + SWC
-cd hello-world
-npm install
-npm run dev
-
-npm run build
