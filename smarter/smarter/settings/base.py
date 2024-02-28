@@ -18,7 +18,10 @@ from pathlib import Path
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(os.path.join(PROJECT_ROOT, "smarter")).resolve()
+print("PROJECT_ROOT", PROJECT_ROOT)
+print("BASE_DIR", BASE_DIR)
 
 LOGIN_URL = "/api-auth/login/"
 LOGIN_REDIRECT_URL = "/"
@@ -77,14 +80,11 @@ ROOT_URLCONF = "smarter.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "templates")],
-        "APP_DIRS": False,
+        "DIRS": [
+            BASE_DIR / "templates",
+        ],
+        "APP_DIRS": True,
         "OPTIONS": {
-            "loaders": [
-                "smarter.template_loader.ReactAppLoader",
-                "django.template.loaders.filesystem.Loader",
-                "django.template.loaders.app_directories.Loader",
-            ],
             "context_processors": [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
@@ -94,6 +94,25 @@ TEMPLATES = [
             ],
         },
     },
+    # {
+    #     "NAME": "react",
+    #     "BACKEND": "django.template.backends.django.DjangoTemplates",
+    #     "DIRS": [],
+    #     "APP_DIRS": False,
+    #     "OPTIONS": {
+    #         "loaders": [
+    #             "django.template.loaders.filesystem.Loader",
+    #             "smarter.template_loader.ReactAppLoader",
+    #         ],
+    #         "context_processors": [
+    #             "django.template.context_processors.debug",
+    #             "django.template.context_processors.request",
+    #             "django.contrib.auth.context_processors.auth",
+    #             "django.contrib.messages.context_processors.messages",
+    #             "smarter.apps.web_platform.context_processors.base",
+    #         ],
+    #     },
+    # },
 ]
 
 WSGI_APPLICATION = "smarter.wsgi.application"
@@ -140,12 +159,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 # ReactJS integration with Django. Add all reactapp/dist directories in Django apps
-django_apps_dir = os.path.join(BASE_DIR, "smarter", "apps")
+django_apps_dir = BASE_DIR / "apps"
 reactapp_dirs = glob.glob(os.path.join(django_apps_dir, "*", "reactapp", "dist"))
 STATICFILES_DIRS.extend(reactapp_dirs)
 
