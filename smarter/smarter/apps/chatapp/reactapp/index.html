@@ -1,27 +1,10 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link
-      rel="icon"
-      type="image/svg+xml"
-      href="https://www.querium.com/wp-content/uploads/2022/03/cropped-favicon-1-1-192x192.png"
-    />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Querium Smarter</title>
-		<meta charset="utf-8" />
-		<meta name="description" content="A plugin-based chat solution." />
-		<meta name="keywords" content="Querium, Smarter, chatGPT" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<meta property="og:locale" content="en_US" />
-		<meta property="og:type" content="article" />
-		<meta property="og:title" content="Querium Smarter" />
-		<meta property="og:url" content="https://smarter.sh" />
-		<meta property="og:site_name" content="Querium Smarter" />
+{% extends "smarter/base.html" %}
 
-  </head>
-  <body>
+{% block canonical %}
+<link rel="canonical" href="/api-keys" />
+{% endblock %}
+
+{% block content %}
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-  </body>
-</html>
+{% endblock %}
