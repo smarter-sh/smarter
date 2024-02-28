@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=missing-module-docstring,missing-class-docstring,missing-function-docstring
+# pylint: disable=missing-class-docstring,missing-function-docstring
+"""Rebuild the admin site to restrict access to certain apps and models."""
 from django.apps import apps
 from django.contrib import admin
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import Group, Permission, User
 
 from smarter.__version__ import __version__
+from smarter.apps.account.models import Account, PaymentMethod, UserProfile
 
 
 class RestrictedAdminSite(admin.AdminSite):
@@ -18,22 +20,21 @@ class RestrictedModelAdmin(admin.ModelAdmin):
         return request.user.is_superuser
 
 
-class CustomGroupAdmin(admin.ModelAdmin):
-    def has_module_permission(self, request):
-        return request.user.is_superuser
-
-
 restricted_site = RestrictedAdminSite(name="restricted_admin_site")
 
 restricted_site.register(User, RestrictedModelAdmin)
 restricted_site.register(Group, RestrictedModelAdmin)
+restricted_site.register(Permission, RestrictedModelAdmin)
+restricted_site.register(Account, RestrictedModelAdmin)
+restricted_site.register(UserProfile, RestrictedModelAdmin)
+restricted_site.register(PaymentMethod, RestrictedModelAdmin)
 
-# Get all models
 models = apps.get_models()
 
-# Register all models with the custom admin site
+# Register all remaining models with the custom admin site,
+# but using the regular ModelAdmin class
 for model in models:
     try:
-        restricted_site.register(model, RestrictedModelAdmin)
+        restricted_site.register(model, admin.ModelAdmin)
     except admin.sites.AlreadyRegistered:
         pass

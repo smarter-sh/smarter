@@ -6,7 +6,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from smarter.apps.web_platform.admin import restricted_site
+from smarter.apps.dashboard.admin import restricted_site
 
 
 admin.site = restricted_site
@@ -17,8 +17,8 @@ admin.autodiscover()
 
 
 urlpatterns = [
-    path("hello-world/", include("smarter.apps.hello_world.urls")),
-    path("", include("smarter.apps.web_platform.urls")),
+    path("chatapp/", include("smarter.apps.chatapp.urls")),
+    path("", include("smarter.apps.dashboard.urls")),
     path("admin/", admin.site.urls),
     path("api/", include("smarter.apps.api.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

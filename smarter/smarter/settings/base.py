@@ -49,13 +49,13 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # smarter apps
     # -------------------------------
-    "smarter.apps.hello_world",
-    "smarter.apps.web_platform",
+    "smarter.apps.chat",
+    "smarter.apps.chatapp",
+    "smarter.apps.dashboard",
     "smarter.apps.api",
     "smarter.apps.account",
     "smarter.apps.plugin",
     "smarter.apps.openai_passthrough",
-    "smarter.apps.chat",
     "smarter.apps.langchain_passthrough",
     # 3rd party apps
     # -------------------------------
@@ -90,29 +90,22 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "smarter.apps.web_platform.context_processors.base",
+                "smarter.apps.dashboard.context_processors.base",
             ],
         },
     },
-    # {
-    #     "NAME": "react",
-    #     "BACKEND": "django.template.backends.django.DjangoTemplates",
-    #     "DIRS": [],
-    #     "APP_DIRS": False,
-    #     "OPTIONS": {
-    #         "loaders": [
-    #             "django.template.loaders.filesystem.Loader",
-    #             "smarter.template_loader.ReactAppLoader",
-    #         ],
-    #         "context_processors": [
-    #             "django.template.context_processors.debug",
-    #             "django.template.context_processors.request",
-    #             "django.contrib.auth.context_processors.auth",
-    #             "django.contrib.messages.context_processors.messages",
-    #             "smarter.apps.web_platform.context_processors.base",
-    #         ],
-    #     },
-    # },
+    {
+        "NAME": "react",
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": False,
+        "OPTIONS": {
+            "loaders": [
+                "smarter.template_loader.ReactAppLoader",
+            ],
+            "context_processors": [],
+        },
+    },
 ]
 
 WSGI_APPLICATION = "smarter.wsgi.application"
