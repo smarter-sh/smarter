@@ -44,6 +44,34 @@ Contact: support@keenthemes.com
 		<!--end::Global Stylesheets Bundle-->
 		<script>// Frame-busting to prevent site from being loaded within a frame without permission (click-jacking) if (window.top != window.self) { window.top.location.replace(window.self.location.href); }</script>
     {% endblock %}
+
+    <style>
+      .app-sidebar-logo,
+      .app-sidebar-menu,
+      .app-sidebar-footer {
+        background-color: rgba(255, 87, 51, 0.75);
+      }
+
+      [data-kt-app-layout=dark-sidebar] .app-sidebar .menu .menu-item .menu-heading,
+      [data-kt-app-layout=dark-sidebar] .app-sidebar .menu .menu-item .menu-icon,
+      [data-kt-app-layout=dark-sidebar] .app-sidebar .menu .menu-item .menu-link .menu-title,
+      #kt_app_sidebar_footer > a > span {
+      color: #dddddd !important;
+      }
+
+      [data-kt-app-layout=dark-sidebar] .app-sidebar .menu .menu-item .menu-heading:hover,
+      [data-kt-app-layout=dark-sidebar] .app-sidebar .menu .menu-item .menu-icon:hover,
+      [data-kt-app-layout=dark-sidebar] .app-sidebar .menu .menu-item .menu-link .menu-title:hover,
+      #kt_app_sidebar_footer > a > span:hover {
+      color: #888888 !important;
+      }
+
+      #kt_app_sidebar_toggle {
+        background-color: #eeeeee;
+      }
+
+
+</style>
 	</head>
 	<!--end::Head-->
 
@@ -1115,7 +1143,7 @@ Contact: support@keenthemes.com
 										<!--begin:Menu item-->
 										<div class="menu-item">
 											<!--begin:Menu link-->
-											<a class="menu-link" href="/chat/" target="_blank">
+											<a class="menu-link" href="/chatapp/" target="_self">
 												<span class="menu-icon">
 													<i class="ki-duotone ki-message-text-2 fs-2">
 														<span class="path1"></span>
@@ -1348,17 +1376,13 @@ Contact: support@keenthemes.com
 						<!--end::sidebar menu-->
 						<!--begin::Footer-->
 						<div class="app-sidebar-footer flex-column-auto pt-2 pb-6 px-6" id="kt_app_sidebar_footer">
-							<a href="https://www.querium.com/" class="btn btn-flex flex-center btn-custom btn-primary overflow-hidden text-nowrap px-0 h-40px w-100" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-dismiss-="click" title="About Querium">
+							<a href="https://www.querium.com/" class="btn btn-flex flex-center overflow-hidden text-nowrap px-0 h-40px w-100">
 								<span class="btn-label">
                   Querium Corp.<br>
                   <span style="font-size: 0.7em; font-family: 'Courier New', Courier, monospace;">
                     {{ footer_message }}
                   </span>
                 </span>
-								<i class="ki-duotone ki-document btn-icon fs-2 m-0">
-									<span class="path1"></span>
-									<span class="path2"></span>
-								</i>
 							</a>
 						</div>
 						<!--end::Footer-->

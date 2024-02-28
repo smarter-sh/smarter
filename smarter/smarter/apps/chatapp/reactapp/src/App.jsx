@@ -37,7 +37,15 @@ const App = () => {
   };
   return (
     <div className="App">
-      <h1 className="app-title hide-small">Smarter Sandbox</h1>
+      <div style={{position: 'relative', display: 'flex', alignItems: 'center'}}>
+        <a href="/" target="_self">
+          <img
+            src="https://www.querium.com/wp-content/uploads/2022/04/Querium-logo_white_transparency.png"
+            style={{position: 'absolute', top: 0, left: 5, maxWidth: '285px', maxHeight: '50px'}} alt="logo" />
+        </a>
+        <h1 className="app-title hide-small">Smarter Sandbox</h1>
+      </div>
+
       <ContainerLayout>
         <ContentLayout>
           {selectedItem === APPLICATIONS.SarcasticChat && (
