@@ -3,5 +3,5 @@
 from django.shortcuts import render
 
 
-def hello_world(request):
+def chatapp(request):
     return render(request, "index.html")

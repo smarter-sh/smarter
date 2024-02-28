@@ -2,7 +2,7 @@
 """Account admin."""
 from django.contrib import admin
 
-from smarter.apps.web_platform.admin import RestrictedModelAdmin
+from smarter.apps.dashboard.admin import RestrictedModelAdmin
 
 from .models import Account, PaymentMethod, UserProfile
 
