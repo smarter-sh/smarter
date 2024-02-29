@@ -3,12 +3,12 @@ import {
   AWS_API_GATEWAY_KEY,
   INFO_URL,
 } from "../config";
-
-const SLUG = "langchain";
+const SLUG = "chat";
+const api_url = new URL(SLUG, BACKEND_API_URL).href;
 
 const OpenaiPassthrough = {
   sidebar_title: "Langchain OpenAI",
-  api_url: BACKEND_API_URL + SLUG,
+  api_url: api_url,
   api_key: AWS_API_GATEWAY_KEY,
   app_name: "Langchain OpenAI",
   assistant_name: "Lance",

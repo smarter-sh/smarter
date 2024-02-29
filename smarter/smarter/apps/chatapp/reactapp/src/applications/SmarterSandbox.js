@@ -3,12 +3,17 @@ import {
   AWS_API_GATEWAY_KEY,
   INFO_URL,
 } from "../config";
+const SLUG = "chat";
 
-const SLUG = "chatapp";
+let api_url = new URL(SLUG, BACKEND_API_URL).href;
+if (!api_url.endsWith('/')) {
+  api_url += '/';
+}
+console.log("api_url", api_url);
 
 const SmarterSandbox = {
   sidebar_title: "Smarter Sandbox",
-  api_url: BACKEND_API_URL + SLUG,
+  api_url: api_url,
   api_key: AWS_API_GATEWAY_KEY,
   app_name: "Smarter Sandbox",
   assistant_name: "Sam",
