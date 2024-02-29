@@ -5,8 +5,8 @@ There are several considerations for getting React to work inside a Django proje
 ## React App Setup
 
 - **placement within folder structure.** The React app was scaffolded with ViteJS and is added to the Django app [chatapp](./smarter/smarter/apps/chatapp/reactapp/).
-- **vite.config.ts.** Note that a.) Django's collectstatic procedure must be able to discover the existence of React builds, and that b.) The url scheme in the React-generated templates need to account for how Django serves static assets in both dev and production environments. We leverage the vite.config.ts resource to prefix all paths with whatever path we've decided in Django settings for serving static assets.
-- **index.html.** The original [index.html](./smarter/smarter/apps/chatapp/reactapp/index.html) created by Vite is completely replaced by a django template that a.) inherits our custom base_react.html template, b.) contains Django template blocks to ensure correct placement of React's elements within the DOM.
+- **vite.config.ts.** Note that a.) Django's collectstatic procedure must be able to discover the existence of React builds, and that b.) The url scheme in the React-generated templates need to account for how Django serves static assets in both dev and production environments. We leverage the [vite.config.ts](../smarter/smarter/apps/chatapp/reactapp/vite.config.ts) resource to prefix all paths with whatever path we've decided in Django settings for serving static assets. More on this, and a code sample, below.
+- **index.html.** The original [index.html](./smarter/smarter/apps/chatapp/reactapp/index.html) created by Vite is completely replaced by a django template that a.) inherits our custom base_react.html template, b.) contains Django template blocks to ensure correct placement of React's elements within the DOM. More on this, and a code sample, below.
 
 ## Django Template Configuration
 
@@ -15,6 +15,27 @@ The Django template engine needs to know how to find React-rendered html templat
 ### React index.html template
 
 The original `index.html` created by Vite is replaced with this Django template. Note that this template is first processed by React's build process, which will convert the `main.jsx` reference to an actual js bundle filename. And then afterwards, Django's collectstatic procedure will copy the `dist` folder contents to the staticfiles folder, to be served by Django's static asset server.
+
+smarter/base_react.html:
+
+```django
+{% extends "smarter/base.html" %}
+
+{% block content %}
+{% endblock %}
+
+{% block react_content %}
+  {{ block.super }}
+  <div id="root"></div>
+{% endblock %}
+
+{% block react_javascript %}
+  {{ block.super }}
+  {{ react_config|json_script:'react-config' }}
+{% endblock %}
+```
+
+Example Django view template for serving a React app:
 
 ```django
 {% extends "smarter/base_react.html" %}
