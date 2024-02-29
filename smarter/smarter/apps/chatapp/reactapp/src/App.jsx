@@ -14,30 +14,31 @@ import ChatApp from "./components/chatApp/Component";
 import { APPLICATIONS } from "./config";
 
 // chatApp definitions
-import FunctionCalling from "./applications/FunctionCalling";
-import SarcasticChat from "./applications/SarcasticChat";
-
-const currentYear = new Date().getFullYear();
+import SmarterSandbox from "./applications/SmarterSandbox";
+import OpenaiPassthrough from "./applications/OpenaiPassthrough";
+import LangchainPassthrough from "./applications/LangchainPassthrough";
 
 const App = () => {
   const [selectedItem, setSelectedItem] = useState(
-    APPLICATIONS.FunctionCalling,
+    APPLICATIONS.SmarterSandbox,
   );
 
-  const handleItemClick = (item) => {
-    setSelectedItem(item);
-  };
   return (
     <div className="App">
       <ContainerLayout>
         <ContentLayout>
-          {selectedItem === APPLICATIONS.SarcasticChat && (
-            <ChatApp {...SarcasticChat} />
+          {selectedItem === APPLICATIONS.SmarterSandbox && (
+            <ChatApp {...SmarterSandbox} />
           )}
         </ContentLayout>
         <ContentLayout>
-          {selectedItem === APPLICATIONS.FunctionCalling && (
-            <ChatApp {...FunctionCalling} />
+          {selectedItem === APPLICATIONS.OpenaiPassthrough && (
+            <ChatApp {...OpenaiPassthrough} />
+          )}
+        </ContentLayout>
+        <ContentLayout>
+          {selectedItem === APPLICATIONS.LangchainPassthrough && (
+            <ChatApp {...LangchainPassthrough} />
           )}
         </ContentLayout>
       </ContainerLayout>

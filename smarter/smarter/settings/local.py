@@ -27,6 +27,19 @@ DEBUG = True
 keen_source = glob.glob(os.path.join(django_apps_dir, "*", "keen_demo1"))
 STATICFILES_DIRS.extend(keen_source)
 
+INSTALLED_APPS += [
+    "debug_toolbar",
+    "django_extensions",
+]
+
+MIDDLEWARE += [
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+]
+
 # https://dj-stripe.dev/dj-stripe/2.7/installation/
 STRIPE_LIVE_SECRET_KEY = os.environ.get("STRIPE_LIVE_SECRET_KEY", "<your secret key>")
 STRIPE_TEST_SECRET_KEY = os.environ.get("STRIPE_TEST_SECRET_KEY", "<your secret key>")

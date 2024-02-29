@@ -19,7 +19,6 @@ import {
   Message,
   MessageInput,
   TypingIndicator,
-  Avatar,
   ConversationHeader,
   InfoButton,
   VoiceCallButton,
@@ -45,37 +44,22 @@ function ChatApp(props) {
   const api_key = props.api_key;
   const app_name = props.app_name;
   const assistant_name = props.assistant_name;
-  const avatar_url = props.avatar_url;
-  const background_image_url = props.background_image_url;
   const info_url = props.info_url;
   const example_prompts = props.example_prompts;
   const file_attach_button = props.file_attach_button;
-  const uses_openai = props.uses_openai;
-  const uses_openai_api = props.uses_openai_api;
-  const uses_langchain = props.uses_langchain;
-  const uses_memory = props.uses_memory;
+
+  // const application_logo = props.application_logo;
+  // const background_image_url = props.background_image_url;
+  // const uses_openai = props.uses_openai;
+  // const uses_openai_api = props.uses_openai_api;
+  // const uses_langchain = props.uses_langchain;
+  // const uses_memory = props.uses_memory;
 
   const [isTyping, setIsTyping] = useState(false);
   const [llm, setLLM] = useState("");
 
   function conversationHeaderFactory() {
-    let conversation_header = "";
-    if (uses_openai_api) {
-      conversation_header = "OpenAI API";
-    }
-    if (uses_langchain) {
-      conversation_header = "Langchain";
-      if (uses_memory && uses_langchain) {
-        conversation_header = conversation_header + " with Memory";
-      }
-      if (uses_openai) {
-        conversation_header = conversation_header + " running OpenAI LLM";
-      }
-    }
-    if (llm != "") {
-      conversation_header = conversation_header + " " + llm;
-    }
-    return conversation_header;
+    return app_name;
   }
 
   function convertMarkdownLinksToHTML(message) {
@@ -246,10 +230,10 @@ function ChatApp(props) {
     color: "lightgray",
   };
   const MainContainerStyle = {
-    backgroundImage:
-      "linear-gradient(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, .75)), url('" +
-      background_image_url +
-      "')",
+    // backgroundImage:
+    //   "linear-gradient(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, .75)), url('" +
+    //   background_image_url +
+    //   "')",
     backgroundSize: "cover",
     backgroundPosition: "center",
     height: "100%",
@@ -270,8 +254,8 @@ function ChatApp(props) {
         <ChatContainer style={transparentBackgroundStyle}>
           <ConversationHeader>
             <ConversationHeader.Content
-              userName="Username"
-              info="info about this configuration"
+              userName={app_name}
+              info={app_name}
             />
             <ConversationHeader.Actions>
               <VoiceCallButton disabled />
@@ -322,15 +306,15 @@ ChatApp.propTypes = {
   api_key: PropTypes.string.isRequired,
   app_name: PropTypes.string.isRequired,
   assistant_name: PropTypes.string.isRequired,
-  avatar_url: PropTypes.string.isRequired,
-  background_image_url: PropTypes.string.isRequired,
   info_url: PropTypes.string.isRequired,
   example_prompts: PropTypes.array.isRequired,
   file_attach_button: PropTypes.bool.isRequired,
-  uses_openai: PropTypes.bool.isRequired,
-  uses_openai_api: PropTypes.bool.isRequired,
-  uses_langchain: PropTypes.bool.isRequired,
-  uses_memory: PropTypes.bool.isRequired,
+  // background_image_url: PropTypes.string.isRequired,
+  // application_logo: PropTypes.string.isRequired,
+  // uses_openai: PropTypes.bool.isRequired,
+  // uses_openai_api: PropTypes.bool.isRequired,
+  // uses_langchain: PropTypes.bool.isRequired,
+  // uses_memory: PropTypes.bool.isRequired,
 };
 
 export default ChatApp;
