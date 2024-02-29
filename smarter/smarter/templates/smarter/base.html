@@ -1391,6 +1391,8 @@ Contact: support@keenthemes.com
           {% block content %}
             <div>PAGE CONTENT GOES HERE.</div>
           {% endblock %}
+          {% block react_content %}
+          {% endblock %}
           <!--end:::Main-->
 				</div>
 				<!--end::Wrapper-->
@@ -5224,6 +5226,7 @@ Contact: support@keenthemes.com
 		<!--end::Modal - Invite Friend-->
 		<!--end::Modals-->
 		<!--begin::Javascript-->
+    {% block javascript %}
 		<script>var hostUrl = "/static/assets/";</script>
 		<!--begin::Global Javascript Bundle(mandatory for all pages)-->
 		<script src="{% static 'assets/plugins/global/plugins.bundle.js' %}"></script>
@@ -5251,7 +5254,10 @@ Contact: support@keenthemes.com
 		<script src="{% static 'assets/js/custom/utilities/modals/create-campaign.js' %}"></script>
 		<script src="{% static 'assets/js/custom/utilities/modals/users-search.js' %}"></script>
 		<!--end::Custom Javascript-->
+    {% block react_javascript %}
+    {% endblock %}
 		<!--end::Javascript-->
+    {% endblock %}
   {% endblock %}
 	</body>
 	<!--end::Body-->

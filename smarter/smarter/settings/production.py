@@ -67,13 +67,23 @@ TEMPLATES = [
     {
         "NAME": "react",
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [
+            BASE_DIR / "templates",
+        ],
         "APP_DIRS": False,
         "OPTIONS": {
             "loaders": [
                 "smarter.template_loader.ReactAppLoader",
+                "django.template.loaders.filesystem.Loader",
             ],
-            "context_processors": [],
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+                "smarter.apps.dashboard.context_processors.base",
+                "smarter.apps.dashboard.context_processors.react",
+            ],
         },
     },
 ]

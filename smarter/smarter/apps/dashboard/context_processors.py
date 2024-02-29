@@ -7,6 +7,10 @@ from smarter.apps.account.models import Account, UserProfile
 
 
 def base(request):
+    """
+    Base context processor for all templates that inherit
+    from base.html, which renders the dashboard layout
+    """
     current_year = datetime.now().year
     base_keys = {
         "smarter_version": __version__,
@@ -25,3 +29,15 @@ def base(request):
         }
         return {**base_keys, **user_keys}
     return base_keys
+
+
+def react(request):
+    """
+    React context processor for all templates that render
+    a React app.
+    """
+    base_url = f"{request.scheme}://{request.get_host}"
+    return {
+        "react": True,
+        "react_config": {"BASE_URL": base_url, "API_URL": f"{base_url}/api/v0", "CHAT_ID": "SET-ME-PLEASE"},
+    }
