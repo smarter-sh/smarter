@@ -1,10 +1,15 @@
-{% extends "smarter/base.html" %}
+{% extends "smarter/base_react.html" %}
 
 {% block canonical %}
-<link rel="canonical" href="/api-keys" />
+<link rel="canonical" href="/chatapp/" />
 {% endblock %}
 
-{% block content %}
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+{#
+  IMPORTANT: THIS MUST BE PLACED HERE, NOT IN THE BASE TEMPLATE.
+  THE REASON IS THAT THE REACT APP BUNDLE PATH IS LOCATED IN THIS
+  SAME PARENT FOLDER.
+#}
+{% block react_javascript %}
+  {{ block.super }}
+  <script type="module" src="/src/main.jsx"></script>
 {% endblock %}

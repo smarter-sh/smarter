@@ -112,6 +112,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "smarter.apps.dashboard.context_processors.base",
+                "smarter.apps.dashboard.context_processors.react",
             ],
         },
     },
