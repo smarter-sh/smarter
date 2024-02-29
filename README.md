@@ -44,9 +44,127 @@ make run    # run the web app locally in your dev environment
 
 ## ReactJS chat application
 
-Complete source code and documentation is located [here](./client/).
+The chat app in the dashboard sandbox is written in React. Complete source code and documentation is located [here](./smarter/smarter/apps/chatapp/reactapp/).
 
 React app that leverages [Vite.js](https://github.com/QueriumCorp/smarter), [@chatscope/chat-ui-kit-react](https://www.npmjs.com/package/@chatscope/chat-ui-kit-react), and [react-pro-sidebar](https://www.npmjs.com/package/react-pro-sidebar).
+
+### Django Integration
+
+There are several considerations for getting React to work inside a Django project. Please note the following:
+
+- **Django Template Configuration.** Django template engine needs to know how to find React-rendered html templates. Note that React's builds are generated in a subfolder named `dist` and that it's `index.html` entry point file contains links to auto-generated css and js bundles. We therefore need a way to gracefully enable Django's templating engine to 'discover' these apps in whichever Django apps they might exist. To this endz we've created a custom React [template loader](./smarter/smarter/template_loader.py) and a 2nd template engine located in [base.py](./smarter/smarter/settings/base.py) that reference the custom loader. We additionally created this custom [base template](./smarter/smarter/templates//smarter/base_react.html) for React. that ensure that's React's `<div id="root"></div>` DOM element and it's js entry point bundle are correctly placed with the DOM.
+- **React App configuration**
+  - placement within folder structure. The React app was scaffolded with ViteJS and is added to the Django app [chatapp](./smarter/smarter/apps/chatapp/reactapp/).
+  - vite.config.ts. Note that a.) Django's collectstatic procedure must be able to discover the existence of React builds, and that b.) The url scheme in the React-generated templates need to account for how Django serves static assets in both dev and production environments. We leverage the vite.config.ts resource to prefix all paths with whatever path we've decided in Django settings for serving static assets.
+  - index.html. The original [index.html](./smarter/smarter/apps/chatapp/reactapp/index.html) created by Vite is completely replaced by a django template that a.) inherits our custom base_react.html template, b.) contains Django template blocks to ensure correct placement of React's elements within the DOM.
+- **Backend integration via template context.** High level React app configuration such as the url for the API for example, are passed from a [Django template context](./smarter/smarter/apps/dashboard/context_processors.py) to a [Django base template](./smarter/smarter/templates/smarter/base_react.html) for React in the form of javascript element, which is then [consumed by the React app](./smarter/smarter/apps/chatapp/reactapp/src/config.js) as a const. The custom React context processor is added to the custom React template engine, described above.
+
+#### vite.config.ts
+
+Note the addition of `/static/`:
+
+```javascript
+export default defineConfig({
+  plugins: [react()],
+  base: "/static/",
+  build: {
+    sourcemap: true,
+  },
+});
+```
+
+#### React index.html template
+
+The original index.html created by Vite is replaced with this Django template. Note that this template is first processed by React's build process, which will convert the `main.jsx` reference to an actual js bundle filename. And then afterwards, Django's collectstatic procedure will copy the dist folder contents to the staticfiles folder, to be served by Django's static asset server.
+
+```django
+{% extends "smarter/base_react.html" %}
+
+{% block canonical %}
+<link rel="canonical" href="/chatapp/" />
+{% endblock %}
+
+{% block react_javascript %}
+  {{ block.super }}
+  <script type="module" src="/src/main.jsx"></script>
+{% endblock %}
+```
+
+#### Django context generation
+
+```python
+def react(request):
+  """
+  React context processor for all templates that render
+  a React app.
+  """
+  base_url = f"{request.scheme}://{request.get_host}"
+  return {
+      "react": True,
+      "react_config": {"BASE_URL": base_url, "API_URL": f"{base_url}/api/v0", "CHAT_ID": "SET-ME-PLEASE"},
+  }
+```
+
+#### Django TEMPLATES settings
+
+We created this second template engine that is customized for React.
+
+```python
+  {
+      "NAME": "react",
+      "BACKEND": "django.template.backends.django.DjangoTemplates",
+      "DIRS": [
+          BASE_DIR / "templates",
+      ],
+      "APP_DIRS": False,
+      "OPTIONS": {
+          "loaders": [
+              "smarter.template_loader.ReactAppLoader",
+              "django.template.loaders.filesystem.Loader",
+          ],
+          "context_processors": [
+              "smarter.apps.dashboard.context_processors.react",
+              "django.template.context_processors.request",
+              #
+              # other context processors ...
+              #
+          ],
+      },
+  },
+```
+
+### Django base template setup
+
+The Django templating code:
+
+```django
+{% block react_javascript %}
+  {{ block.super }}
+  {{ react_config|json_script:'react-config' }}
+{% endblock %}
+```
+
+Which will render a DOM element like the following:
+
+```html
+<script id="react-config" type="application/json">
+  {
+    "BASE_URL": "http://127.0.0.1:8000",
+    "API_URL": "http://127.0.0.1:8000/api/v0",
+    "CHAT_ID": "SET-ME-PLEASE"
+  }
+</script>
+```
+
+#### React app consumption
+
+The DOM element can be consumed by JS/React like this:
+
+```javascript
+export const REACT_CONFIG = JSON.parse(
+  document.getElementById("react-config").textContent,
+);
+```
 
 ### Webapp Key features
 
