@@ -16,6 +16,12 @@ import logging.config
 import os
 from pathlib import Path
 
+from corsheaders.defaults import default_headers
+
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "x-api-key",
+]
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -63,6 +69,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "knox",
     "taggit",
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
@@ -73,6 +80,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
 ]
 
 ROOT_URLCONF = "smarter.urls"
