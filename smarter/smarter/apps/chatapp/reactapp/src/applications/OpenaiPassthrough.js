@@ -3,12 +3,12 @@ import {
   AWS_API_GATEWAY_KEY,
   INFO_URL,
 } from "../config";
-
-const SLUG = "chatgpt";
+const SLUG = "chat";
+const api_url = new URL(SLUG, BACKEND_API_URL).href;
 
 const OpenaiPassthrough = {
   sidebar_title: "ChatGPT-3.5",
-  api_url: BACKEND_API_URL + SLUG,
+  api_url: api_url,
   api_key: AWS_API_GATEWAY_KEY,
   app_name: "ChatGPT-3.5",
   assistant_name: "Chester",

@@ -21,6 +21,12 @@
     v0.1.0 - v0.4.0:  ./test/events/openai.response.v0.4.0.json
     v0.5.0:       ./test/events/langchain.response.v0.5.0.json
 -----------------------------------------------------------------------------*/
+import {
+  BACKEND_API_DEFAULT_MODEL_TYPE,
+  BACKEND_API_DEFAULT_MODEL,
+  BACKEND_API_DEFAULT_TEMPERATURE,
+  BACKEND_API_DEFAULT_MAX_TOKENS
+} from "../../config";
 
 function mapResponse(response) {
   /*
@@ -68,27 +74,62 @@ function mapResponse(response) {
   return response;
 }
 
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+          }
+      }
+  }
+  return cookieValue;
+}
+
+function api_request_body(messages) {
+
+  const retval = {
+    "model": BACKEND_API_DEFAULT_MODEL,
+    "end_point": BACKEND_API_DEFAULT_MODEL_TYPE,
+    "temperature": BACKEND_API_DEFAULT_TEMPERATURE,
+    "max_tokens": BACKEND_API_DEFAULT_MAX_TOKENS,
+    "messages": messages,
+    "chat_history": [
+        {
+            "message": "Hello, How can I help you?",
+            "direction": "incoming",
+            "sentTime": "11/16/2023, 5:53:32 PM",
+            "sender": "system"
+        }
+    ]
+  };
+  return JSON.stringify(retval);
+}
+
 export async function processApiRequest(
-  chatMessage,
-  chatHistory,
+  messages,
   apiURL,
-  apiKey,
   openChatModal,
 ) {
+
+  const csrftoken = getCookie('csrftoken');
+  const headers = {
+    "Accept": "*/*",
+    "Content-Type": "application/json",
+    "X-CSRFToken": csrftoken,
+    "Origin": window.location.origin,
+  };
   const init = {
     method: "POST",
+    credentials: 'include',
     mode: "cors",
-    headers: {
-      "x-api-key": apiKey,
-      Accept: "*/*",
-      "Content-Type": "application/json",
-      Origin: window.location.origin,
-    },
-    body: JSON.stringify({
-      input_text: chatMessage,
-      chat_history: chatHistory,
-    }),
+    headers: headers,
+    body: api_request_body(messages),
   };
+  console.log("init", init);
   try {
     const response = await fetch(apiURL, init);
     const status = await response.status;

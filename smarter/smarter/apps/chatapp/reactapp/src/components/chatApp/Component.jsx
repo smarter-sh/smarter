@@ -70,10 +70,8 @@ function ChatApp(props) {
   function messageFactory(message, direction, sender) {
     const converted_message = convertMarkdownLinksToHTML(message);
     return {
-      message: converted_message,
-      direction: direction,
-      sentTime: new Date().toLocaleString(),
-      sender: sender,
+      role: sender,
+      content: converted_message,
     };
   }
 
@@ -107,11 +105,11 @@ function ChatApp(props) {
 
   // message thread content
   const examples = examplePrompts(example_prompts);
-  let message_items = [messageFactory(welcome_message, "incoming", "system")];
+  let intro_messages = [messageFactory(welcome_message, "incoming", "system")];
   if (examples) {
-    message_items.push(messageFactory(examples, "incoming", "system"));
+    intro_messages.push(messageFactory(examples, "incoming", "system"));
   }
-  const [messages, setMessages] = useState(message_items);
+  const [messages, setMessages] = useState(intro_messages);
 
   // UI widget event handlers
   const handleInfoButtonClick = () => {
@@ -120,31 +118,28 @@ function ChatApp(props) {
 
   // API request handler
   async function handleRequest(input_text, base64_encode = true) {
-    const newMessage = messageFactory(input_text, "outgoing", "user");
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
+
+    let newMessage;
+    if (base64_encode) {
+      newMessage = messageFactory(btoa(input_text), "outgoing", "user");
+    } else {
+      newMessage = messageFactory(input_text, "outgoing", "user");
+    }
+
+    let updatedMessages;
+    setMessages((prevMessages) => {
+      updatedMessages = [...prevMessages, newMessage];
+      return updatedMessages;
+    });
     setIsTyping(true);
 
     try {
-      let response;
-      if (base64_encode) {
-        // uploaded files need to be base64 encoded.
-        response = await processApiRequest(
-          btoa(input_text),
-          messages,
-          api_url,
-          api_key,
-          openChatModal,
-        );
-      } else {
-        // everything else is passed as plain text
-        response = await processApiRequest(
-          input_text,
-          messages,
-          api_url,
-          api_key,
-          openChatModal,
-        );
-      }
+      const response = await processApiRequest(
+        updatedMessages,
+        api_url,
+        openChatModal,
+      );
+
       // FIX NOTE: THIS IS A HACK, AND ITS STUPIDLY REPETITIVE. REFACTOR THIS.
       // Legacy OpenAI API
       if (

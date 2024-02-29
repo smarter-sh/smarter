@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Django context processors for base.html"""
 from datetime import datetime
+from urllib.parse import urljoin
 
 from smarter.__version__ import __version__
 from smarter.apps.account.models import Account, UserProfile
@@ -36,8 +37,9 @@ def react(request):
     React context processor for all templates that render
     a React app.
     """
-    base_url = f"{request.scheme}://{request.get_host}"
+    base_url = f"{request.scheme}://{request.get_host()}/"
+    api_url = urljoin(base_url, "/api/v0/")
     return {
         "react": True,
-        "react_config": {"BASE_URL": base_url, "API_URL": f"{base_url}/api/v0", "CHAT_ID": "SET-ME-PLEASE"},
+        "react_config": {"BACKEND_BASE_URL": base_url, "BACKEND_API_URL": api_url, "CHAT_ID": "SET-ME-PLEASE"},
     }
