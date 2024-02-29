@@ -156,49 +156,38 @@ function ChatApp(props) {
 
   // API request handler
   async function handleRequest(input_text, base64_encode = true) {
-
-    const newMessage = messageFactory(input_text, MESSAGE_DIRECTION.OUTGOING, SENDER_ROLE:USER);
-    const newChatHistoryRequest = chatHistoryFactory(
-      input_text,
-      MESSAGE_DIRECTION.OUTGOING,
-      'user',
-      new Date().toLocaleString()
-    );
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
-    setChatHistory((prevChatHistory) => [...prevChatHistory, newChatHistoryRequest]);
-
+    const newMessage = messageFactory(input_text, MESSAGE_DIRECTION.OUTGOING, SENDER_ROLE.USER);
     if (base64_encode) {
       console.log("base64 encoding input_text");
     }
 
-    setIsTyping(true);
-    try {
-      const msgs = chatMessages2RequestMessages(messages);
-      const response = await processApiRequest(
-        msgs,
-        chatHistory,
-        api_url,
-        openChatModal,
-      );
+    setMessages((prevMessages) => {
+      const updatedMessages = [...prevMessages, newMessage];
+      setIsTyping(true);
 
-      if (response) {
-        const assistantResponse = response.choices.find(message => message.message.role === 'assistant');
-        const newResponseMessage = messageFactory(assistantResponse.message.content, MESSAGE_DIRECTION.INCOMING, SENDER_ROLE.ASSISTANT);
-        const newChatHistoryResponse = chatHistoryFactory(
-          assistantResponse.message.content,
-          MESSAGE_DIRECTION.INCOMING,
-          'assistant',
-          new Date().toLocaleString()
-        );
-        setMessages((prevMessages) => [...prevMessages, newResponseMessage]);
-        setChatHistory((prevChatHistory) => [...prevChatHistory, newChatHistoryResponse]);
-      }
-    } catch (error) {
-      // FIX NOTE: ADD MODAL HERE
-      console.error("Exception:", error);
-    } finally {
-      setIsTyping(false);
-    }
+      (async () => {
+        try {
+          const msgs = chatMessages2RequestMessages(updatedMessages);
+          const response = await processApiRequest(
+            msgs,
+            chatHistory,
+            api_url,
+            openChatModal,
+          );
+
+          if (response) {
+            const assistantResponse = response.choices.find(message => message.message.role === 'assistant');
+            const newResponseMessage = messageFactory(assistantResponse.message.content, MESSAGE_DIRECTION.INCOMING, SENDER_ROLE.ASSISTANT);
+            setMessages((prevMessages) => [...prevMessages, newResponseMessage]);
+            setIsTyping(false);
+          }
+        } catch (error) {
+          // handle error
+        }
+      })();
+
+      return updatedMessages;
+    });
   }
 
   // file upload event handlers
@@ -280,14 +269,14 @@ function ChatApp(props) {
           </ConversationHeader>
           <MessageList
             style={transparentBackgroundStyle}
-            scrollBehavior="smooth"
+            scrollBehavior="auto"
             typingIndicator={
               isTyping ? (
                 <TypingIndicator content={assistant_name + " is typing"} />
               ) : null
             }
           >
-            {messages.map((message, i) => {
+            {messages.filter(message => message.sender !== 'system').map((message, i) => {
               return <Message key={i} model={message} />;
             })}
           </MessageList>
