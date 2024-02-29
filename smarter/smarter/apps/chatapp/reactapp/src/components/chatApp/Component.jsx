@@ -31,6 +31,16 @@ import { ChatModal } from "./Modal.jsx";
 import { processApiRequest } from "./ApiRequest.js";
 import { ErrorBoundary } from "./errorBoundary.jsx";
 
+const MESSAGE_DIRECTION = {
+  INCOMING: "incoming",
+  OUTGOING: "outgoing",
+}
+const SENDER_ROLE = {
+  SYSTEM: "system",
+  ASSISTANT: "assistant",
+  USER: "user",
+};
+
 function ChatApp(props) {
   const fileInputRef = useRef(null);
 
@@ -43,6 +53,7 @@ function ChatApp(props) {
   const api_url = props.api_url;
   const api_key = props.api_key;
   const app_name = props.app_name;
+  const system_role = props.system_role;
   const assistant_name = props.assistant_name;
   const info_url = props.info_url;
   const example_prompts = props.example_prompts;
@@ -56,7 +67,6 @@ function ChatApp(props) {
   // const uses_memory = props.uses_memory;
 
   const [isTyping, setIsTyping] = useState(false);
-  const [llm, setLLM] = useState("");
 
   function conversationHeaderFactory() {
     return app_name;
@@ -70,8 +80,31 @@ function ChatApp(props) {
   function messageFactory(message, direction, sender) {
     const converted_message = convertMarkdownLinksToHTML(message);
     return {
-      role: sender,
-      content: converted_message,
+      message: converted_message,
+      direction: direction,
+      sentTime: new Date().toLocaleString(),
+      sender: sender,
+    };
+  }
+  function requestMessageFactory(role, content) {
+    return {
+      role: role,
+      content: content,
+    };
+  }
+
+  function chatMessages2RequestMessages(messages) {
+    return messages.map((message, index) => {
+      return requestMessageFactory(message.sender, message.message);
+    });
+  }
+
+  function chatHistoryFactory(message, direction, sender, sentTime) {
+    return {
+      message: message,
+      direction: direction,
+      sentTime: sentTime,
+      sender: sender,
     };
   }
 
@@ -104,12 +137,17 @@ function ChatApp(props) {
   };
 
   // message thread content
+  let intro_messages = [messageFactory(system_role, MESSAGE_DIRECTION.INCOMING, SENDER_ROLE.SYSTEM)];
+
+  intro_messages.push(messageFactory(welcome_message, MESSAGE_DIRECTION.INCOMING, SENDER_ROLE.ASSISTANT));
+
   const examples = examplePrompts(example_prompts);
-  let intro_messages = [messageFactory(welcome_message, "incoming", "system")];
   if (examples) {
-    intro_messages.push(messageFactory(examples, "incoming", "system"));
+    intro_messages.push(messageFactory(examples, MESSAGE_DIRECTION.INCOMING, SENDER_ROLE.ASSISTANT));
   }
+
   const [messages, setMessages] = useState(intro_messages);
+  const [chatHistory, setChatHistory] = useState([]);
 
   // UI widget event handlers
   const handleInfoButtonClick = () => {
@@ -119,64 +157,41 @@ function ChatApp(props) {
   // API request handler
   async function handleRequest(input_text, base64_encode = true) {
 
-    let newMessage;
+    const newMessage = messageFactory(input_text, MESSAGE_DIRECTION.OUTGOING, SENDER_ROLE:USER);
+    const newChatHistoryRequest = chatHistoryFactory(
+      input_text,
+      MESSAGE_DIRECTION.OUTGOING,
+      'user',
+      new Date().toLocaleString()
+    );
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
+    setChatHistory((prevChatHistory) => [...prevChatHistory, newChatHistoryRequest]);
+
     if (base64_encode) {
-      newMessage = messageFactory(btoa(input_text), "outgoing", "user");
-    } else {
-      newMessage = messageFactory(input_text, "outgoing", "user");
+      console.log("base64 encoding input_text");
     }
 
-    let updatedMessages;
-    setMessages((prevMessages) => {
-      updatedMessages = [...prevMessages, newMessage];
-      return updatedMessages;
-    });
     setIsTyping(true);
-
     try {
+      const msgs = chatMessages2RequestMessages(messages);
       const response = await processApiRequest(
-        updatedMessages,
+        msgs,
+        chatHistory,
         api_url,
         openChatModal,
       );
 
-      // FIX NOTE: THIS IS A HACK, AND ITS STUPIDLY REPETITIVE. REFACTOR THIS.
-      // Legacy OpenAI API
-      if (
-        response &&
-        "chat_memory" in response &&
-        "messages" in response.chat_memory
-      ) {
-        const aiMessage = response.chat_memory.messages.find(
-          (message) => message.type === "ai",
+      if (response) {
+        const assistantResponse = response.choices.find(message => message.message.role === 'assistant');
+        const newResponseMessage = messageFactory(assistantResponse.message.content, MESSAGE_DIRECTION.INCOMING, SENDER_ROLE.ASSISTANT);
+        const newChatHistoryResponse = chatHistoryFactory(
+          assistantResponse.message.content,
+          MESSAGE_DIRECTION.INCOMING,
+          'assistant',
+          new Date().toLocaleString()
         );
-        if (aiMessage) {
-          const content = aiMessage.content;
-          if (content) {
-            const chatGPTResponse = messageFactory(
-              content,
-              "incoming",
-              "assistant",
-            );
-            setMessages((prevMessages) => [...prevMessages, chatGPTResponse]);
-          }
-          const llm_response = response.request_meta_data.model;
-          setLLM(llm_response);
-        }
-      }
-      // LangChain
-      if (response && "choices" in response) {
-        const content = response.choices[0]?.message?.content;
-        if (content) {
-          const chatGPTResponse = messageFactory(
-            content,
-            "incoming",
-            "assistant",
-          );
-          setMessages((prevMessages) => [...prevMessages, chatGPTResponse]);
-        }
-        const llm_response = response.request_meta_data.model;
-        setLLM(llm_response);
+        setMessages((prevMessages) => [...prevMessages, newResponseMessage]);
+        setChatHistory((prevChatHistory) => [...prevChatHistory, newChatHistoryResponse]);
       }
     } catch (error) {
       // FIX NOTE: ADD MODAL HERE
@@ -220,24 +235,29 @@ function ChatApp(props) {
   // UI widget styles
   // note that most styling is intended to be created in Component.css
   // these are outlying cases where inline styles are required in order to override the default styles
+  const fullWidthStyle = {
+    width: "100%",
+  }
   const transparentBackgroundStyle = {
     backgroundColor: "rgba(0,0,0,0.10)",
     color: "lightgray",
   };
-  const MainContainerStyle = {
+  const mainContainerStyle = {
     // backgroundImage:
     //   "linear-gradient(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, .75)), url('" +
     //   background_image_url +
     //   "')",
-    backgroundSize: "cover",
-    backgroundPosition: "center",
+    // backgroundSize: "cover",
+    // backgroundPosition: "center",
+    width: "100%",
     height: "100%",
   };
+  const chatContainerStyle = {...fullWidthStyle, ...transparentBackgroundStyle};
 
   // render the chat app
   return (
     <div className="chat-app">
-      <MainContainer style={MainContainerStyle}>
+      <MainContainer style={mainContainerStyle}>
         <ErrorBoundary>
           <ChatModal
             isModalOpen={isModalOpen}
@@ -246,7 +266,7 @@ function ChatApp(props) {
             onCloseClick={closeChatModal}
           />
         </ErrorBoundary>
-        <ChatContainer style={transparentBackgroundStyle}>
+        <ChatContainer style={chatContainerStyle}>
           <ConversationHeader>
             <ConversationHeader.Content
               userName={app_name}
@@ -300,6 +320,7 @@ ChatApp.propTypes = {
   api_url: PropTypes.string.isRequired,
   api_key: PropTypes.string.isRequired,
   app_name: PropTypes.string.isRequired,
+  system_role: PropTypes.string.isRequired,
   assistant_name: PropTypes.string.isRequired,
   info_url: PropTypes.string.isRequired,
   example_prompts: PropTypes.array.isRequired,

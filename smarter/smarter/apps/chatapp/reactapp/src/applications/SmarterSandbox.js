@@ -9,7 +9,6 @@ let api_url = new URL(SLUG, BACKEND_API_URL).href;
 if (!api_url.endsWith('/')) {
   api_url += '/';
 }
-console.log("api_url", api_url);
 
 const SmarterSandbox = {
   sidebar_title: "Smarter Sandbox",
@@ -17,6 +16,7 @@ const SmarterSandbox = {
   api_key: AWS_API_GATEWAY_KEY,
   app_name: "Smarter Sandbox",
   assistant_name: "Sam",
+  system_role: "You are a helpful assistant.",
   welcome_message: `Hello, I'm Sam, the Smarter sandbox assistant.`,
   example_prompts: [],
   placeholder_text: `say something to Sam`,

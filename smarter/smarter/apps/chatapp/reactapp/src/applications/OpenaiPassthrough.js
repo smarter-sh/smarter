@@ -12,6 +12,7 @@ const OpenaiPassthrough = {
   api_key: AWS_API_GATEWAY_KEY,
   app_name: "ChatGPT-3.5",
   assistant_name: "Chester",
+  system_role: "You are a helpful assistant.",
   welcome_message: `Hello, I'm Chester, a ChatGPT assistant.`,
   example_prompts: [],
   placeholder_text: `say something to Chester`,

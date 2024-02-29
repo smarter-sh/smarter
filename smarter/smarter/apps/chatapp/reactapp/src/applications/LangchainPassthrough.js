@@ -12,6 +12,7 @@ const OpenaiPassthrough = {
   api_key: AWS_API_GATEWAY_KEY,
   app_name: "Langchain OpenAI",
   assistant_name: "Lance",
+  system_role: "You are a helpful assistant.",
   welcome_message: `Hello, I'm Lance, a Langchain-based OpenAI ChatGPT assistant.`,
   example_prompts: [],
   placeholder_text: `say something to Lance`,

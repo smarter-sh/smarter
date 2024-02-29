@@ -28,51 +28,6 @@ import {
   BACKEND_API_DEFAULT_MAX_TOKENS
 } from "../../config";
 
-function mapResponse(response) {
-  /*
-    note: to maintain backward compatibility with the original OpenAI API response format.
-    - OpenAI API responses are JSON objects of the format ./test/events/openai.response.v0.4.0.json
-    - LangChain API responses are text/plain of the format ./test/events/langchain.response.v0.5.0.json
-  */
-  if (typeof response === "string") {
-    try {
-      response = JSON.parse(response);
-    } catch (e) {
-      console.error("Failed to parse response as JSON", e);
-      return;
-    }
-  }
-  if (
-    response &&
-    response["request_meta_data"] &&
-    response["request_meta_data"]["lambda"] == "lambda_langchain"
-  ) {
-    const messages = response["chat_memory"]["messages"];
-    let aiMessages = messages.filter((message) => message.type === "ai");
-    let ai_response = "";
-
-    if (aiMessages.length > 0) {
-      ai_response = aiMessages[aiMessages.length - 1];
-    }
-
-    return {
-      choices: [
-        {
-          index: 0,
-          message: {
-            role: "assistant",
-            content: ai_response.content,
-          },
-          finish_reason: "stop",
-        },
-      ],
-      request_meta_data: response["request_meta_data"],
-    };
-  }
-
-  // legacy OpenAI response format
-  return response;
-}
 
 function getCookie(name) {
   let cookieValue = null;
@@ -89,7 +44,7 @@ function getCookie(name) {
   return cookieValue;
 }
 
-function api_request_body(messages) {
+function requestBodyFactory(messages, chatHistory) {
 
   const retval = {
     "model": BACKEND_API_DEFAULT_MODEL,
@@ -97,20 +52,13 @@ function api_request_body(messages) {
     "temperature": BACKEND_API_DEFAULT_TEMPERATURE,
     "max_tokens": BACKEND_API_DEFAULT_MAX_TOKENS,
     "messages": messages,
-    "chat_history": [
-        {
-            "message": "Hello, How can I help you?",
-            "direction": "incoming",
-            "sentTime": "11/16/2023, 5:53:32 PM",
-            "sender": "system"
-        }
-    ]
   };
   return JSON.stringify(retval);
 }
 
 export async function processApiRequest(
   messages,
+  chatHistory,
   apiURL,
   openChatModal,
 ) {
@@ -127,9 +75,9 @@ export async function processApiRequest(
     credentials: 'include',
     mode: "cors",
     headers: headers,
-    body: api_request_body(messages),
+    body: requestBodyFactory(messages, chatHistory),
   };
-  console.log("init", init);
+
   try {
     const response = await fetch(apiURL, init);
     const status = await response.status;
@@ -137,7 +85,7 @@ export async function processApiRequest(
     const response_body = await response_json.body; // ditto
 
     if (response.ok) {
-      return mapResponse(response_body);
+      return JSON.parse(response_body);
     } else {
       /*
         note:
