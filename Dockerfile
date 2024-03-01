@@ -29,6 +29,7 @@ RUN apt-get update && apt-get upgrade -y && \
     rm -rf /var/lib/apt/lists/*
 
 # Add all Python package dependencies
+RUN mkdir smarter
 RUN mkdir smarter/requirements
 COPY smarter/requirements ./smarter/requirements
 RUN pip install --upgrade pip
