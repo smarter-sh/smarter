@@ -29,7 +29,7 @@ runs:
           echo "AWS_ECR_REPO=${{ env.BASE_REPO_NAME }}-${{ inputs.environment }}" >> $GITHUB_ENV
         fi
       env:
-        BASE_REPO_NAME: "smarter-api"
+        BASE_REPO_NAME: "smarter-platform"
 
     - name: Checkout code
       id: checkout_code
