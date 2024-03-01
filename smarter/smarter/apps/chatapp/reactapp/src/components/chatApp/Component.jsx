@@ -2,7 +2,7 @@
 //  written by: Lawrence McDaniel
 //              https://lawrencemcdaniel.com
 //
-//  date:       Oct-2023
+//  date:       Mar-2024
 //---------------------------------------------------------------------------------
 
 // React stuff
@@ -15,6 +15,7 @@ import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 import {
   MainContainer,
   ChatContainer,
+  //ChatComponentPropsChildren,
   MessageList,
   Message,
   MessageInput,
@@ -27,22 +28,20 @@ import {
 
 // Our stuff
 import "./Component.css";
+import {
+  BACKEND_CHAT_ID,
+  BACKEND_CHAT_HISTORY,
+  BACKEND_CHAT_MOST_RECENT_RESPONSE,
+} from "../../config";
+
+import { messageFactory, chatMessages2RequestMessages, chat_init } from "./utils.jsx";
+import { MESSAGE_DIRECTION, SENDER_ROLE } from "./constants.js";
 import { ChatModal } from "./Modal.jsx";
 import { processApiRequest } from "./ApiRequest.js";
 import { ErrorBoundary } from "./errorBoundary.jsx";
 
-const MESSAGE_DIRECTION = {
-  INCOMING: "incoming",
-  OUTGOING: "outgoing",
-}
-const SENDER_ROLE = {
-  SYSTEM: "system",
-  ASSISTANT: "assistant",
-  USER: "user",
-};
 
 function ChatApp(props) {
-  const fileInputRef = useRef(null);
 
   // props. These are passed in from the parent component.
   // In all fairness this probably isn't necessary, but it's a good practice
@@ -59,106 +58,39 @@ function ChatApp(props) {
   const example_prompts = props.example_prompts;
   const file_attach_button = props.file_attach_button;
 
-  // const application_logo = props.application_logo;
-  // const background_image_url = props.background_image_url;
-  // const uses_openai = props.uses_openai;
-  // const uses_openai_api = props.uses_openai_api;
-  // const uses_langchain = props.uses_langchain;
-  // const uses_memory = props.uses_memory;
-
   const [isTyping, setIsTyping] = useState(false);
+  const fileInputRef = useRef(null);
 
-  function conversationHeaderFactory() {
-    return app_name;
-  }
-
-  function convertMarkdownLinksToHTML(message) {
-    const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
-    return message.replace(markdownLinkRegex, '<a href="$2">$1</a>');
-  }
-
-  function messageFactory(message, direction, sender) {
-    const converted_message = convertMarkdownLinksToHTML(message);
-    return {
-      message: converted_message,
-      direction: direction,
-      sentTime: new Date().toLocaleString(),
-      sender: sender,
-    };
-  }
-  function requestMessageFactory(role, content) {
-    return {
-      role: role,
-      content: content,
-    };
-  }
-
-  function chatMessages2RequestMessages(messages) {
-    return messages.map((message, index) => {
-      return requestMessageFactory(message.sender, message.message);
-    });
-  }
-
-  function chatHistoryFactory(message, direction, sender, sentTime) {
-    return {
-      message: message,
-      direction: direction,
-      sentTime: sentTime,
-      sender: sender,
-    };
-  }
+  const message_thread = chat_init(welcome_message, system_role, example_prompts, BACKEND_CHAT_ID, BACKEND_CHAT_HISTORY, BACKEND_CHAT_MOST_RECENT_RESPONSE);
+  const [messages, setMessages] = useState(message_thread);
 
   // Error modal state management
   function openChatModal(title, msg) {
     setIsModalOpen(true);
     setmodalTitle(title);
     setmodalMessage(msg);
-  }
+  };
+
   function closeChatModal() {
     setIsModalOpen(false);
-  }
+  };
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMessage, setmodalMessage] = useState("");
   const [modalTitle, setmodalTitle] = useState("");
-
-  // prompt hints
-  const examplePrompts = (prompts) => {
-    if (prompts.length == 0) {
-      return "";
-    } else
-      return (
-        "Some example prompts to get you started:\r\n\r\n" +
-        prompts
-          .map((prompt) => {
-            return prompt + "\r\n";
-          })
-          .join("")
-      );
-  };
-
-  // message thread content
-  let intro_messages = [messageFactory(system_role, MESSAGE_DIRECTION.INCOMING, SENDER_ROLE.SYSTEM)];
-
-  intro_messages.push(messageFactory(welcome_message, MESSAGE_DIRECTION.INCOMING, SENDER_ROLE.ASSISTANT));
-
-  const examples = examplePrompts(example_prompts);
-  if (examples) {
-    intro_messages.push(messageFactory(examples, MESSAGE_DIRECTION.INCOMING, SENDER_ROLE.ASSISTANT));
-  }
-
-  const [messages, setMessages] = useState(intro_messages);
-  const [chatHistory, setChatHistory] = useState([]);
 
   // UI widget event handlers
   const handleInfoButtonClick = () => {
     window.open(info_url, "_blank");
   };
 
-  // API request handler
-  async function handleRequest(input_text, base64_encode = true) {
+  async function handleApiRequest(input_text, base64_encode = true) {
+    // API request handler. This function is indirectly called by UI event handlers
+    // inside this module. It asynchronously sends the user's input to the
+    // backend API using the fetch() function. The response from the API is
+    // then used to update the chat message thread and the UI via React state.
     const newMessage = messageFactory(input_text, MESSAGE_DIRECTION.OUTGOING, SENDER_ROLE.USER);
     if (base64_encode) {
-      console.log("base64 encoding input_text");
+      console.error("base64 encoding not implemented yet.");
     }
 
     setMessages((prevMessages) => {
@@ -170,7 +102,6 @@ function ChatApp(props) {
           const msgs = chatMessages2RequestMessages(updatedMessages);
           const response = await processApiRequest(
             msgs,
-            chatHistory,
             api_url,
             openChatModal,
           );
@@ -182,7 +113,9 @@ function ChatApp(props) {
             setIsTyping(false);
           }
         } catch (error) {
-          // handle error
+          setIsTyping(false);
+          console.error("API Error: ", error);
+          openChatModal("API Error", error.message);
         }
       })();
 
@@ -200,13 +133,13 @@ function ChatApp(props) {
 
     reader.onload = (event) => {
       const fileContent = event.target.result;
-      handleRequest(fileContent, true);
+      handleApiRequest(fileContent, true);
     };
     reader.readAsText(file);
   }
 
   // send button event handler
-  const handleSendRequest = (input_text) => {
+  const handleSend = (input_text) => {
     // remove any HTML tags from the input_text. Pasting text into the
     // input box (from any source) tends to result in HTML span tags being included
     // in the input_text. This is a problem because the API doesn't know how to
@@ -217,8 +150,7 @@ function ChatApp(props) {
     if (!sanitized_input_text.trim()) {
       return;
     }
-
-    handleRequest(sanitized_input_text, false);
+    handleApiRequest(sanitized_input_text, false);
   };
 
   // UI widget styles
@@ -259,7 +191,7 @@ function ChatApp(props) {
           <ConversationHeader>
             <ConversationHeader.Content
               userName={app_name}
-              info={app_name}
+              info={BACKEND_CHAT_ID}
             />
             <ConversationHeader.Actions>
               <VoiceCallButton disabled />
@@ -282,7 +214,7 @@ function ChatApp(props) {
           </MessageList>
           <MessageInput
             placeholder={placeholder_text}
-            onSend={handleSendRequest}
+            onSend={handleSend}
             onAttachClick={handleAttachClick}
             attachButton={file_attach_button}
             fancyScroll={false}
@@ -314,12 +246,6 @@ ChatApp.propTypes = {
   info_url: PropTypes.string.isRequired,
   example_prompts: PropTypes.array.isRequired,
   file_attach_button: PropTypes.bool.isRequired,
-  // background_image_url: PropTypes.string.isRequired,
-  // application_logo: PropTypes.string.isRequired,
-  // uses_openai: PropTypes.bool.isRequired,
-  // uses_openai_api: PropTypes.bool.isRequired,
-  // uses_langchain: PropTypes.bool.isRequired,
-  // uses_memory: PropTypes.bool.isRequired,
 };
 
 export default ChatApp;

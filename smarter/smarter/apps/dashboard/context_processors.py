@@ -45,14 +45,14 @@ def react(request):
 
     base_url = f"{request.scheme}://{request.get_host()}/"
     api_url = urljoin(base_url, "/api/v0/")
-
+    context_prefix = "BACKEND_"
     return {
         "react": True,
         "react_config": {
-            "BACKEND_BASE_URL": base_url,
-            "BACKEND_API_URL": api_url,
-            "CHAT_ID": chat_id,
-            "CHAT_HISTORY": messages,
-            "CHAT_MOST_RECENT_RESPONSE": most_recent_response,
+            context_prefix + "BASE_URL": base_url,
+            context_prefix + "API_URL": api_url,
+            context_prefix + "CHAT_ID": chat_id,
+            context_prefix + "CHAT_HISTORY": messages,
+            context_prefix + "CHAT_MOST_RECENT_RESPONSE": most_recent_response,
         },
     }

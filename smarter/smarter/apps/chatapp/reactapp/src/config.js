@@ -17,9 +17,16 @@ export const REACT_CONFIG = element ? JSON.parse(element.textContent) : {
   BACKEND_API_URL: "http://127.0.0.1:8000/api/v0/"
 };
 
-// API setup
+// Django Context Integrations
+export const BACKEND_BASE_URL = REACT_CONFIG.BACKEND_BASE_URL;
 export const BACKEND_API_URL = REACT_CONFIG.BACKEND_API_URL;
 export const BACKEND_API_TEST_URL = BACKEND_API_URL;
+export const BACKEND_CHAT_ID = REACT_CONFIG.BACKEND_CHAT_ID;
+export const BACKEND_CHAT_HISTORY = REACT_CONFIG.BACKEND_CHAT_HISTORY;
+export const BACKEND_CHAT_MOST_RECENT_RESPONSE = REACT_CONFIG.BACKEND_CHAT_MOST_RECENT_RESPONSE;
+
+
+// Backend API ai model defaults
 export const BACKEND_API_DEFAULT_MODEL = "gpt-3.5-turbo";
 export const BACKEND_API_DEFAULT_MODEL_VERSION = "latest";
 export const BACKEND_API_DEFAULT_MODEL_ENGINE = "openai";
