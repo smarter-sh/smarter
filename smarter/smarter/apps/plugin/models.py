@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=C0114,C0115
 """PluginMeta app models."""
 from functools import lru_cache
 
@@ -77,6 +78,9 @@ class PluginSelectorHistory(TimestampedModel):
     def __str__(self) -> str:
         return str(self.user.username) or ""
 
+    class Meta:
+        verbose_name_plural = "Plugin Selector Histories"
+
 
 class PluginPrompt(TimestampedModel):
     """PluginPrompt model."""
@@ -138,3 +142,7 @@ class PluginData(TimestampedModel):
 
     def __str__(self) -> str:
         return str(self.plugin.name)
+
+    class Meta:
+        verbose_name = "Plugin Data"
+        verbose_name_plural = "Plugin Data"
