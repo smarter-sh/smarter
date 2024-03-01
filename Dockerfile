@@ -30,7 +30,7 @@ RUN apt-get update && apt-get upgrade -y && \
 
 # Add all Python package dependencies
 RUN mkdir requirements
-COPY requirements ./requirements
+COPY requirements ./smarter/requirements
 RUN pip install --upgrade pip
 RUN pip install -r smarter/requirements/deploy.txt
 
