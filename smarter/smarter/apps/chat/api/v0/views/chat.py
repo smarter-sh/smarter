@@ -123,6 +123,7 @@ def handler(user: User, data: dict):
             # Step 3: call the function
             # Note: the JSON response may not always be valid; be sure to handle errors
             messages.append(response_message)  # extend conversation with assistant's reply
+
             # Step 4: send the info for each function call and function response to the model
             for tool_call in tool_calls:
                 plugin: Plugin = None
@@ -181,6 +182,15 @@ def handler(user: User, data: dict):
         status_code, _message = EXCEPTION_MAP.get(type(e), (HTTPStatus.INTERNAL_SERVER_ERROR, "Internal server error"))
         return http_response_factory(status_code=status_code, body=exception_response_factory(e))
 
+    def messages_serializer_generator(messages):
+        for message in messages:
+            if isinstance(message, dict):
+                yield message
+            else:
+                yield message.model_dump()
+
+    serialized_messages = list(messages_serializer_generator(messages))
+
     # success!! return the response
     chat_response_success.send(
         sender=handler,
@@ -189,6 +199,7 @@ def handler(user: User, data: dict):
         tools=tools,
         temperature=temperature,
         max_tokens=max_tokens,
+        messages=serialized_messages,
         response=openai_response,
         data=data,
     )

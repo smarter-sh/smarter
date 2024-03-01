@@ -5,6 +5,7 @@ from urllib.parse import urljoin
 
 from smarter.__version__ import __version__
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.chat.models import ChatHistory
 
 
 def base(request):
@@ -37,9 +38,21 @@ def react(request):
     React context processor for all templates that render
     a React app.
     """
+    chat_history = ChatHistory.objects.filter(user=request.user).order_by("-created_at").first()
+    chat_id = chat_history.chat_id if chat_history else "undefined"
+    messages = chat_history.messages if chat_history else []
+    most_recent_response = chat_history.response if chat_history else None
+
     base_url = f"{request.scheme}://{request.get_host()}/"
     api_url = urljoin(base_url, "/api/v0/")
+
     return {
         "react": True,
-        "react_config": {"BACKEND_BASE_URL": base_url, "BACKEND_API_URL": api_url, "CHAT_ID": "SET-ME-PLEASE"},
+        "react_config": {
+            "BACKEND_BASE_URL": base_url,
+            "BACKEND_API_URL": api_url,
+            "CHAT_ID": chat_id,
+            "CHAT_HISTORY": messages,
+            "CHAT_MOST_RECENT_RESPONSE": most_recent_response,
+        },
     }

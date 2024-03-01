@@ -242,17 +242,21 @@ def handle_chat_completion_returned(sender, **kwargs):
     tools = kwargs.get("tools")
     temperature = kwargs.get("temperature")
     max_tokens = kwargs.get("max_tokens")
+    messages = kwargs.get("messages")
     response = kwargs.get("response")
-    response_id = response.get("id") if response else None
+    chat_id = response.get("id") if response else None
 
-    logger.info("%s signal received: %s model: %s", formatted_text("chat_response_success"), user.username, model)
+    logger.info(
+        "%s signal received:%s %s model: %s", formatted_text("chat_response_success"), chat_id, user.username, model
+    )
     chat_history = ChatHistory(
+        chat_id=chat_id,
         user=user,
         model=model,
         tools=tools,
         temperature=temperature,
+        messages=messages,
         response=response,
-        response_id=response_id,
         max_tokens=max_tokens,
     )
     chat_history.save()

@@ -18,20 +18,22 @@ from smarter.apps.plugin.models import PluginMeta
 class ChatHistory(TimestampedModel):
     """Chat history model."""
 
+    chat_id = models.CharField(max_length=255, blank=True, null=True)
     user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
     model = models.CharField(max_length=255, blank=True, null=True)
     tools = models.JSONField(max_length=255, blank=True, null=True)
     temperature = models.FloatField(blank=True, null=True)
     max_tokens = models.IntegerField(blank=True, null=True)
+    messages = models.JSONField(blank=True, null=True)
     response = models.JSONField(blank=True, null=True)
-    response_id = models.CharField(max_length=255, blank=True, null=True)
 
     def save(self, *args, **kwargs):
         chat_completion_history_created.send(sender=ChatHistory, user=self.user, data=self)
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.user} - {self.input_text[:50] if self.input_text else ''}"
+        # pylint: disable=E1136
+        return f"{self.user} - {self.chat_id[:50] if self.chat_id else ''}"
 
     class Meta:
         verbose_name_plural = "Chat History"
