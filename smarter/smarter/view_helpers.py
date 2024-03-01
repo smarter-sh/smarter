@@ -5,7 +5,7 @@ import re
 from django import template
 from django.conf import settings
 from django.http import HttpResponse
-from django.template import loader
+from django.shortcuts import render
 from django.views.decorators.cache import cache_page
 
 
@@ -21,7 +21,7 @@ def remove_comments(html):
 @cache_page(settings.SMARTER_CACHE_EXPIRATION)
 def cached_clean_http_response(request, template_path):
     """Render a template and return an HttpResponse with comments removed."""
-    loaded_template = loader.get_template(template_path)
-    html = loaded_template.render()
+    response = render(request, template_path)
+    html = response.content.decode(response.charset)
     html_no_comments = remove_comments(html)
     return HttpResponse(html_no_comments)
