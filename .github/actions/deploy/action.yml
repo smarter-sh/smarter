@@ -47,7 +47,7 @@ runs:
       run: |-
         echo "NAMESPACE=${{ env.NAMESPACE_BASE }}-${{ inputs.environment }}" >> $GITHUB_ENV
       env:
-        NAMESPACE_BASE: smarter-api
+        NAMESPACE_BASE: smarter-platform
 
     # Checkout all code referenced by this action
     - name: Checkout code
