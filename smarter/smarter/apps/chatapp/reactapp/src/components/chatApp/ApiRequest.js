@@ -44,7 +44,7 @@ function getCookie(name) {
   return cookieValue;
 }
 
-function requestBodyFactory(messages, chatHistory) {
+function requestBodyFactory(messages) {
 
   const retval = {
     "model": BACKEND_API_DEFAULT_MODEL,
@@ -58,7 +58,6 @@ function requestBodyFactory(messages, chatHistory) {
 
 export async function processApiRequest(
   messages,
-  chatHistory,
   apiURL,
   openChatModal,
 ) {
@@ -75,7 +74,7 @@ export async function processApiRequest(
     credentials: 'include',
     mode: "cors",
     headers: headers,
-    body: requestBodyFactory(messages, chatHistory),
+    body: requestBodyFactory(messages),
   };
 
   try {
