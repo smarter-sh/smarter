@@ -19,6 +19,6 @@ application = get_wsgi_application()
 
 if environment == "prod":
     os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings.production"
-    application = WhiteNoise(application, root="/app/staticfiles")
+    application = WhiteNoise(application, root="/app/smarter/staticfiles")
 else:
     application = WhiteNoise(application, root=os.path.join(BASE_DIR, "staticfiles"))
