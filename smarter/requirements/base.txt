@@ -8,6 +8,8 @@ django-taggit==5.0.1
 django-rest-knox==4.2.0
 dj-stripe==2.8.3
 django-cors-headers==4.3.1
+django-debug-toolbar==4.3.0     # FIX NOTE: GET RID OF THIS. IT'S A SECURITY RISK
+django-extensions==3.2.3
 
 # misc
 # ------------
