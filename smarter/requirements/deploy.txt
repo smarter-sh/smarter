@@ -10,6 +10,6 @@
 
 -r base.txt
 
-mysqlclient==2.2.3
+mysqlclient==2.2.4
 gunicorn==21.2.0
 whitenoise==6.6.0
