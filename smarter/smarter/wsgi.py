@@ -13,12 +13,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv()
 environment = os.getenv("ENVIRONMENT")
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smarter.settings.local")
+
+if environment == "prod":
+    os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings.production"
+else:
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smarter.settings.local")
 
 application = get_wsgi_application()
 
 if environment == "prod":
-    os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings.production"
     application = WhiteNoise(application, root="/app/smarter/staticfiles")
 else:
     application = WhiteNoise(application, root=os.path.join(BASE_DIR, "staticfiles"))
