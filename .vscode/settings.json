@@ -2,5 +2,19 @@
   "cornflakes.linter.executablePath": "venv/bin/flake8",
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "search.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/node_modules": true,
+    "**/.tox": true,
+    "**/.terraform": true,
+    "**/venv": true,
+    "**/dist": true,
+    "**/keen_v3.0.6": true,
+    "**/staticfiles": true
   }
 }

@@ -2,7 +2,7 @@
 # pylint: disable=wrong-import-position
 # pylint: disable=R0801
 # pylint: disable=broad-exception-caught
-"""Test openai_api function."""
+"""Test openai_passthrough function."""
 
 # python stuff
 import json

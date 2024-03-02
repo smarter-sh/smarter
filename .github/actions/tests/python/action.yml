@@ -43,7 +43,7 @@ runs:
       uses: actions/cache@v3
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('./requirements/**/*.txt') }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('./smarter/requirements/**/*.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip
 
@@ -65,7 +65,7 @@ runs:
     - name: Install dependencies
       shell: bash
       run: |
-        pip install -r ./requirements/local.txt
+        pip install -r ./smarter/requirements/local.txt
       env:
         SITE_PACKAGES_PATH: ${{ env.SITE_PACKAGES_PATH }}
 

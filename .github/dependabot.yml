@@ -13,7 +13,7 @@ updates:
     reviewers:
       - "lpm0073"
   - package-ecosystem: "pip"
-    directory: "/"
+    directory: "/smarter"
     schedule:
       interval: "weekly"
     labels:
@@ -49,7 +49,7 @@ updates:
     reviewers:
       - "lpm0073"
   - package-ecosystem: "github-actions"
-    directory: "/"
+    directory: "/.github"
     labels:
       - "dependencies"
       - "automated pr"

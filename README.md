@@ -44,9 +44,13 @@ make run    # run the web app locally in your dev environment
 
 ## ReactJS chat application
 
-Complete source code and documentation is located [here](./client/).
+The chat app in the dashboard sandbox is written in React. Complete source code and documentation is located [here](./smarter/smarter/apps/chatapp/reactapp/).
 
 React app that leverages [Vite.js](https://github.com/QueriumCorp/smarter), [@chatscope/chat-ui-kit-react](https://www.npmjs.com/package/@chatscope/chat-ui-kit-react), and [react-pro-sidebar](https://www.npmjs.com/package/react-pro-sidebar).
+
+### Django Integration
+
+Be aware that there are many considerations for getting React to work inside a Django project. You can read more [here](./doc/DJANGO-REACT-INTEGRATION.md).
 
 ### Webapp Key features
 
@@ -76,9 +80,9 @@ A Python Django project implementing Querium's proprietary Plugin model, along w
 - [/v0/accounts](./smarter/smarter/apps/account/urls.py) - PENDING
 - [/v0/accounts/<str:account_id>/payment-methods](./smarter/smarter/apps/account/urls.py)
 - [/v0/account](./smarter/smarter/apps/account/urls.py)
-- [/v0/account/users/](./smarter/smarter/apps/account/urls.py)
-- [/v0/account/users/<str:username>/add-example-plugins](./smarter/smarter/apps/account/urls.py)
-- [/v0/account/payment-methods/](./smarter/smarter/apps/account/urls.py)
+- [/v0/accounts/users/](./smarter/smarter/apps/account/urls.py)
+- [/v0/accounts/users/<str:username>/add-example-plugins](./smarter/smarter/apps/account/urls.py)
+- [/v0/accounts/payment-methods/](./smarter/smarter/apps/account/urls.py)
 - [/v0/plugins/](./smarter/smarter/apps/plugin/urls.py)
 - [/v0/plugins/<int:plugin_id>](./smarter/smarter/apps/plugin/urls.py)
 - [/v0/plugins/<int:plugin_id>/clone/<str:new_name>](./smarter/smarter/apps/plugin/urls.py)

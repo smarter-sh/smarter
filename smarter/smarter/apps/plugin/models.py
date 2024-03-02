@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=C0114,C0115
 """PluginMeta app models."""
+from functools import lru_cache
+
 import yaml
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -8,6 +11,8 @@ from taggit.managers import TaggableManager
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.common.model_utils import TimestampedModel
+
+from .signals import plugin_selector_history_created
 
 
 User = get_user_model()
@@ -58,6 +63,25 @@ class PluginSelector(TimestampedModel):
         return str(self.directive) or ""
 
 
+class PluginSelectorHistory(TimestampedModel):
+    """PluginSelectorHistory model."""
+
+    plugin_selector = models.ForeignKey(PluginSelector, on_delete=models.CASCADE, related_name="history")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="plugin_selector_history")
+    search_term = models.CharField(max_length=255, blank=True, null=True, default="")
+    messages = models.JSONField(help_text="The user prompt messages.", default=list, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        plugin_selector_history_created.send(sender=self.__class__, plugin_selector_history=self)
+
+    def __str__(self) -> str:
+        return str(self.user.username) or ""
+
+    class Meta:
+        verbose_name_plural = "Plugin Selector Histories"
+
+
 class PluginPrompt(TimestampedModel):
     """PluginPrompt model."""
 
@@ -96,8 +120,21 @@ class PluginData(TimestampedModel):
     )
 
     @property
+    @lru_cache(maxsize=128)
     def return_data_keys(self) -> list:
-        return list(self.return_data.keys())
+        """Return all keys in the return_data."""
+
+        def find_keys(data, keys=None):
+            if keys is None:
+                keys = []
+            for key, value in data.items():
+                keys.append(key)
+                if isinstance(value, dict):
+                    find_keys(value, keys)
+            return keys
+
+        retval = find_keys(self.return_data)
+        return list(retval)
 
     @property
     def data(self) -> dict:
@@ -105,3 +142,7 @@ class PluginData(TimestampedModel):
 
     def __str__(self) -> str:
         return str(self.plugin.name)
+
+    class Meta:
+        verbose_name = "Plugin Data"
+        verbose_name_plural = "Plugin Data"

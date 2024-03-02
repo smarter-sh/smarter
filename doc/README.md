@@ -12,7 +12,7 @@
 
 ## Lambda Functions
 
-These lambdas are designed to work exclusively as back ends for an AWS API Gateway end point resource. PyPi dependencies for these Lambdas are stored in this [AWS Lambda Layer](../python/layer_genai/). Additionally, a locally sourced package named [common](../python/openai_api/common/) is a shared code library used by all Lambdas in this project.
+These lambdas are designed to work exclusively as back ends for an AWS API Gateway end point resource. PyPi dependencies for these Lambdas are stored in this [AWS Lambda Layer](../python/layer_genai/). Additionally, a locally sourced package named [common](../python/openai_passthrough/common/) is a shared code library used by all Lambdas in this project.
 
 ### OpenAI Lambda
 
