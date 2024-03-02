@@ -32,12 +32,15 @@ RUN apt-get update && apt-get upgrade -y && \
 RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
 RUN apt-get install -y nodejs
 
-# Add our source code
-COPY smarter .
-
 # Add all Python package dependencies
+RUN mkdir smarter
+RUN mkdir smarter/requirements
+COPY smarter/requirements ./smarter/requirements
 RUN pip install --upgrade pip
 RUN pip install -r smarter/requirements/deploy.txt
+
+# Add our source code
+COPY smarter .
 
 
 # Build the React app and collect static files
