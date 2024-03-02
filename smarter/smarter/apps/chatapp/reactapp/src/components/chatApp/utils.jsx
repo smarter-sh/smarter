@@ -1,4 +1,4 @@
-import { MESSAGE_DIRECTION, SENDER_ROLE } from "./constants.js";
+import { MESSAGE_DIRECTION, SENDER_ROLE, VALID_MESSAGE_ROLES } from "./constants.js";
 
 export function chat_restore_from_backend(chat_history, last_response) {
   /*
@@ -8,8 +8,12 @@ export function chat_restore_from_backend(chat_history, last_response) {
     const messages = (chat_history ? chat_history : []).map((chat) => {
       if (chat.role === SENDER_ROLE.USER) {
         return messageFactory(chat.content, MESSAGE_DIRECTION.OUTGOING, chat.role);
+      } else if (chat.role === SENDER_ROLE.SYSTEM) {
+        return messageFactory(chat.content, MESSAGE_DIRECTION.INCOMING, chat.role);
+      } else if (chat.role === SENDER_ROLE.ASSISTANT) {
+        return messageFactory(chat.content, MESSAGE_DIRECTION.INCOMING, chat.role);
       }
-      return messageFactory(chat.content, MESSAGE_DIRECTION.INCOMING, chat.role);
+      console.error(`chat_restore_from_backend() Invalid role received: ${chat.role}`);
     });
     if (last_response?.choices?.[0]?.message?.content) {
       const last_message_content = last_response.choices[0].message.content;
