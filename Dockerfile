@@ -28,18 +28,20 @@ RUN apt-get update && apt-get upgrade -y && \
     apt-get install build-essential libssl-dev libffi-dev python3-dev python-dev -y && \
     rm -rf /var/lib/apt/lists/*
 
-# Add all Python package dependencies
-RUN mkdir smarter
-RUN mkdir smarter/requirements
-COPY smarter/requirements ./smarter/requirements
-RUN pip install --upgrade pip
-RUN pip install -r smarter/requirements/deploy.txt
+# Install Node.js and npm
+RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
+RUN apt-get install -y nodejs
 
 # Add our source code
 COPY smarter .
 
+# Add all Python package dependencies
+RUN pip install --upgrade pip
+RUN pip install -r smarter/requirements/deploy.txt
+
+
 # Build the React app and collect static files
-RUN cd smarter/apps/chatapp/reactapp/ && npm install && npm run build && cd ../../../../ && python manage.py collectstatic --noinput
+RUN cd smarter/apps/chatapp/reactapp/ && npm install && npm run build && cd ../../../../
 RUN python manage.py collectstatic --noinput
 
 
