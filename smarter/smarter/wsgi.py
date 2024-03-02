@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """WSGI config for smarter project."""
 # wsgi.py
+import logging
 import os
 from pathlib import Path
 
@@ -22,6 +23,12 @@ static_root = BASE_DIR / "staticfiles"
 application = get_wsgi_application()
 application = WhiteNoise(application, root=static_root)
 
-print(f"BASE_DIR: {BASE_DIR}")
-print(f"Environment: {environment}")
-print(f"Static root: {static_root}")
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+logger.info("WSGI config for smarter project.")
+logger.info("Environment: %s", environment)
+logger.info("WSGI application: %s", application)
+logger.info("BASE_DIR: %s", BASE_DIR)
+logger.info("DJANGO_SETTINGS_MODULE: %s", os.getenv("DJANGO_SETTINGS_MODULE"))
