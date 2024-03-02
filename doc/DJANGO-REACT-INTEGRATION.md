@@ -261,3 +261,7 @@ const headers = {
   Origin: window.location.origin,
 };
 ```
+
+## Mixed Content Errors
+
+Be mindful that if the platform is deployed to Kubernetes then Django will interpret it's schema as 'http' rather than as 'https' due to the fact that the pods are running behind a load balancer. To work around this we created a custom Django parameter `SMARTER_API_SCHEMA` which defaults to 'http' and is set to 'https' in production.
