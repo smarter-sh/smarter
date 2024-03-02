@@ -9,21 +9,19 @@ from dotenv import load_dotenv
 from whitenoise import WhiteNoise
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smarter.settings.local")
 
 load_dotenv()
 environment = os.getenv("ENVIRONMENT")
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smarter.settings.local")
-
 if environment == "prod":
     os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings.production"
 
-print(f"Environment: {environment}")
+static_root = BASE_DIR / "staticfiles"
 application = get_wsgi_application()
-
-static_root = "staticfiles"
-if environment == "prod":
-    static_root = "/app/smarter/staticfiles"
-
-print(f"Static root: {static_root}")
 application = WhiteNoise(application, root=static_root)
+
+print(f"BASE_DIR: {BASE_DIR}")
+print(f"Environment: {environment}")
+print(f"Static root: {static_root}")
