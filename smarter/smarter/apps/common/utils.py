@@ -170,7 +170,7 @@ def parse_request(request_body: dict):
         raise OpenAIAPIValueError("A value for either messages or input_text is required")
 
     if chat_history and input_text:
-        # memory-enabled request assumed to be destined for openai_langchain
+        # memory-enabled request assumed to be destined for langchain_passthrough
         # we'll need to rebuild the messages list from the chat_history
         messages = []
         for chat in chat_history:
@@ -211,7 +211,7 @@ def request_meta_data_factory(model, object_type, temperature, max_tokens, input
     """
     return {
         "request_meta_data": {
-            "lambda": "openai_api",
+            "lambda": "openai_passthrough",
             "model": model,
             "object_type": object_type,
             "temperature": temperature,
