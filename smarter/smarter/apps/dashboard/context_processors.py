@@ -3,6 +3,8 @@
 from datetime import datetime
 from urllib.parse import urljoin
 
+from django.conf import settings
+
 from smarter.__version__ import __version__
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.chat.models import ChatHistory
@@ -43,7 +45,7 @@ def react(request):
     messages = chat_history.messages if chat_history else []
     most_recent_response = chat_history.response if chat_history else None
 
-    base_url = f"{request.scheme}://{request.get_host()}/"
+    base_url = f"{settings.SMARTER_API_SCHEMA}://{request.get_host()}/"
     api_url = urljoin(base_url, "/api/v0/")
     context_prefix = "BACKEND_"
     return {
