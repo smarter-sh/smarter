@@ -33,8 +33,7 @@ RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
 RUN apt-get install -y nodejs
 
 # Add all Python package dependencies
-RUN mkdir smarter
-RUN mkdir smarter/requirements
+RUN mkdir -p smarter/requirements
 COPY smarter/requirements ./smarter/requirements
 RUN pip install --upgrade pip
 RUN pip install -r smarter/requirements/deploy.txt
