@@ -4,18 +4,23 @@ export function chat_restore_from_backend(chat_history, last_response) {
   /*
   Rebuild the message thread from the most recently persisted chat history.
   */
-  const messages = (chat_history ? chat_history : []).map((chat) => {
-    if (chat.role === SENDER_ROLE.USER) {
-      return messageFactory(chat.content, MESSAGE_DIRECTION.OUTGOING, chat.role);
+  try {
+    const messages = (chat_history ? chat_history : []).map((chat) => {
+      if (chat.role === SENDER_ROLE.USER) {
+        return messageFactory(chat.content, MESSAGE_DIRECTION.OUTGOING, chat.role);
+      }
+      return messageFactory(chat.content, MESSAGE_DIRECTION.INCOMING, chat.role);
+    });
+    if (last_response?.choices?.[0]?.message?.content) {
+      const last_message_content = last_response.choices[0].message.content;
+      messages.push(messageFactory(last_message_content, MESSAGE_DIRECTION.INCOMING, SENDER_ROLE.ASSISTANT));
     }
-    return messageFactory(chat.content, MESSAGE_DIRECTION.INCOMING, chat.role);
-  });
-  if (last_response?.choices?.[0]?.message?.content) {
-    const last_message_content = last_response.choices[0].message.content;
-    messages.push(messageFactory(last_message_content, MESSAGE_DIRECTION.INCOMING, SENDER_ROLE.ASSISTANT));
-  }
 
-  return messages;
+    return messages;
+  } catch (error) {
+    console.error(`chat_restore_from_backend() Error occurred while restoring chat from backend: ${error}`);
+    return []; // return an empty array in case of error
+  }
 };
 
 
@@ -58,6 +63,11 @@ export function convertMarkdownLinksToHTML(message) {
   /*
   Convert markdown links to HTML links.
    */
+  if (typeof message !== 'string') {
+    console.error(`convertMarkdownLinksToHTML() Expected a string but received ${typeof message}`);
+    return message; // or return a default value
+  }
+
   const markdownLinkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
   return message.replace(markdownLinkRegex, '<a href="$2">$1</a>');
 };
