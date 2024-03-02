@@ -38,8 +38,8 @@ RUN pip install -r smarter/requirements/deploy.txt
 # Add our source code
 COPY smarter .
 
-# Collect static files
-RUN cd smarter/smarter/apps/chatapp/reactapp/ && npm install && npm run build && cd ../../../../../ && python manage.py collectstatic --noinput
+# Build the React app and collect static files
+RUN cd smarter/apps/chatapp/reactapp/ && npm install && npm run build && cd ../../../../ && python manage.py collectstatic --noinput
 RUN python manage.py collectstatic --noinput
 
 
