@@ -3,7 +3,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from .models import Account, PaymentMethod, UserProfile
+from smarter.apps.account.models import Account, PaymentMethod, UserProfile
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -12,7 +12,15 @@ class UserSerializer(serializers.ModelSerializer):
     # pylint: disable=missing-class-docstring
     class Meta:
         model = User
-        fields = ["id", "username", "email"]  # add more fields if needed
+        fields = [
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "is_staff",
+            "is_superuser",
+        ]  # add more fields if needed
 
 
 class AccountSerializer(serializers.ModelSerializer):
@@ -33,7 +41,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     # pylint: disable=missing-class-docstring
     class Meta:
         model = UserProfile
-        fields = ["user", "account"]
+        fields = "__all__"
 
 
 class PaymentMethodSerializer(serializers.ModelSerializer):

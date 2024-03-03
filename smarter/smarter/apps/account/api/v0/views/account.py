@@ -9,16 +9,16 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
+from smarter.apps.account.api.v0.serializers import AccountSerializer
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.serializers import AccountSerializer
-from smarter.view_helpers import SmarterAPIListView, SmarterAPIView
+from smarter.view_helpers import SmarterAPIAdminView, SmarterAPIListAdminView
 
 
-class AccountView(SmarterAPIView):
+class AccountView(SmarterAPIAdminView):
     """Account view for smarter api."""
 
-    def get(self, request, account_number: str = None):
-        return get_account(request, account_number)
+    def get(self, request, account_id: int):
+        return get_account(request, account_id)
 
     def post(self, request):
         return create_account(request)
@@ -30,22 +30,19 @@ class AccountView(SmarterAPIView):
         return delete_account(request, account_number)
 
 
-class AccountListView(SmarterAPIListView):
+class AccountListView(SmarterAPIListAdminView):
     """Account list view for smarter api."""
 
-    queryset = Account.objects.all()
     serializer_class = AccountSerializer
 
     def get_queryset(self):
         if self.request.user.is_superuser:
             return Account.objects.all()
 
-        if self.request.user.is_staff:
-            try:
-                return UserProfile.objects.get(user=self.request.user).account
-            except UserProfile.DoesNotExist:
-                return Response({"error": "User not found"}, status=HTTPStatus.NOT_FOUND)
-        return Response({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
+        try:
+            return UserProfile.objects.get(user=self.request.user).account
+        except UserProfile.DoesNotExist:
+            return Response({"error": "User not found"}, status=HTTPStatus.NOT_FOUND)
 
 
 # -----------------------------------------------------------------------
@@ -53,7 +50,7 @@ class AccountListView(SmarterAPIListView):
 # -----------------------------------------------------------------------
 def get_account(request, account_id: int = None):
     """Get an account json representation by id."""
-    if account_id:
+    if account_id and request.user.is_superuser:
         account = get_object_or_404(Account, pk=account_id)
     else:
         account = get_object_or_404(UserProfile, user=request.user).account

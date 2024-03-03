@@ -14,28 +14,69 @@ from htmlmin.main import minify
 from knox.auth import TokenAuthentication
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.generics import ListAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.views import APIView
+
+from smarter.decorators import superuser_required
 
 
 register = template.Library()
 
 
-class SmarterAPIView(APIView):
-    """Account view for smarter api."""
+# ------------------------------------------------------------------------------
+# API Views
+# ------------------------------------------------------------------------------
+class IsStaffUser(BasePermission):
+    """
+    Custom permission to only allow access to staff users.
+    """
 
-    permission_classes = [IsAuthenticated]
+    def has_permission(self, request, view):
+        return request.user and request.user.is_staff
+
+
+class SmarterAPIAuthenticated(IsAuthenticated):
+    """
+    Allows access only to authenticated users.
+    """
+
+
+class SmarterAPIAdmin(SmarterAPIAuthenticated, IsStaffUser):
+    """
+    Allows access only to superusers.
+    """
+
+
+class SmarterAPIView(APIView):
+    """Base API view for smarter."""
+
+    permission_classes = [SmarterAPIAuthenticated]
     authentication_classes = [TokenAuthentication, SessionAuthentication]
 
 
 class SmarterAPIListView(ListAPIView):
-    """Account list view for smarter api."""
+    """Base API listview for smarter."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [SmarterAPIAuthenticated]
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     http_method_names = ["get"]
 
 
+class SmarterAPIAdminView(SmarterAPIView):
+    """Base admin-only API view."""
+
+    permission_classes = [SmarterAPIAdmin]
+
+
+class SmarterAPIListAdminView(SmarterAPIListView):
+    """Base admin-only API list view."""
+
+    permission_classes = [SmarterAPIAdmin]
+
+
+# ------------------------------------------------------------------------------
+# Web Views
+# ------------------------------------------------------------------------------
 class SmarterWebView(View):
     """
     Base view for smarter web views.
@@ -69,6 +110,11 @@ class SmarterWebView(View):
 @method_decorator(login_required, name="dispatch")
 class SmarterAuthenticatedWebView(SmarterWebView):
     """Base view for smarter authenticated web views."""
+
+
+@method_decorator(superuser_required, name="dispatch")
+class SmarterAdminWebView(SmarterAuthenticatedWebView):
+    """Base view for smarter admin web views."""
 
 
 @method_decorator(cache_control(max_age=settings.SMARTER_CACHE_EXPIRATION), name="dispatch")

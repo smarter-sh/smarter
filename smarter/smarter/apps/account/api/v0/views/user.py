@@ -10,12 +10,12 @@ from django.http import Http404, HttpResponseRedirect, JsonResponse
 from rest_framework import status
 from rest_framework.response import Response
 
+from smarter.apps.account.api.v0.serializers import UserSerializer
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.serializers import UserSerializer
-from smarter.view_helpers import SmarterAPIListView, SmarterAPIView
+from smarter.view_helpers import SmarterAPIAdminView, SmarterAPIListAdminView
 
 
-class UserView(SmarterAPIView):
+class UserView(SmarterAPIAdminView):
     """User view for smarter api."""
 
     def get(self, request, user_id: int):
@@ -36,24 +36,20 @@ class UserView(SmarterAPIView):
         return super().handle_exception(exc)
 
 
-class UserListView(SmarterAPIListView):
+class UserListView(SmarterAPIListAdminView):
     """User list view for smarter api."""
 
     serializer_class = UserSerializer
 
     def get_queryset(self):
         if self.request.user.is_superuser:
-            return UserProfile.objects.all()
+            return User.objects.all()
 
-        if self.request.user.is_staff:
-            try:
-                account_users = UserProfile.objects.filter(account__user=self.request.user).values_list(
-                    "user", flat=True
-                )
-                return User.objects.filter(id__in=account_users)
-            except UserProfile.DoesNotExist:
-                return Response({"error": "User not found"}, status=HTTPStatus.NOT_FOUND)
-        return Response({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
+        try:
+            account_users = UserProfile.objects.filter(account__user=self.request.user).values_list("user", flat=True)
+            return User.objects.filter(id__in=account_users)
+        except UserProfile.DoesNotExist:
+            return Response({"error": "User not found"}, status=HTTPStatus.NOT_FOUND)
 
 
 # -----------------------------------------------------------------------

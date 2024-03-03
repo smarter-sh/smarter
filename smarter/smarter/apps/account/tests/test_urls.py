@@ -62,6 +62,8 @@ class TestUrls(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         json_data = response.json()
+        if isinstance(json_data, list):
+            json_data = json_data[-1]
         self.assertEqual(json_data.get("company_name"), self.account.company_name)
         self.assertEqual(json_data.get("account_number"), self.account.account_number)
 
@@ -112,7 +114,7 @@ class TestUrls(unittest.TestCase):
 
     def test_account_users_add_plugins_view(self):
         """test that we can add example plugins using the api end point."""
-        response = self.client.get("/api/v0/accounts/users/" + str(self.user.id) + "/add-example-plugins/")
+        response = self.client.post("/api/v0/accounts/users/" + str(self.user.id) + "/add-example-plugins/")
 
         # we should have been redirected to a list of the plugins for the user
         self.assertEqual(response.status_code, 302)
