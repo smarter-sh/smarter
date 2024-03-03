@@ -17,7 +17,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.views import APIView
 
-from smarter.decorators import superuser_required
+from smarter.decorators import staff_required
 
 
 register = template.Library()
@@ -112,7 +112,7 @@ class SmarterAuthenticatedWebView(SmarterWebView):
     """Base view for smarter authenticated web views."""
 
 
-@method_decorator(superuser_required, name="dispatch")
+@method_decorator(staff_required, name="dispatch")
 class SmarterAdminWebView(SmarterAuthenticatedWebView):
     """Base view for smarter admin web views."""
 

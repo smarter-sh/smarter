@@ -1,27 +1,19 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=C0115
 """Django views"""
 import logging
 
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from smarter.view_helpers import SmarterAPIAdminView
 
 
 logger = logging.getLogger(__name__)
 
 
-@login_required
-def profile(request):
-    logger.info("Profile view")
-    return render(request, "dashboard-default.html")
+class ProfileView(SmarterAPIAdminView):
+
+    template_path = "dashboard-default.html"
 
 
-@login_required
-def language(request):
-    logger.info("Language view")
-    return render(request, "dashboard-default.html")
+class ProfileLanguageView(SmarterAPIAdminView):
 
-
-@login_required
-def sign_out(request):
-    logger.info("Sign Out view")
-    return render(request, "dashboard-default.html")
+    template_path = "dashboard-default.html"

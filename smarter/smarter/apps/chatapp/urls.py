@@ -2,9 +2,9 @@
 """Django URL patterns for the chatapp"""
 from django.urls import path
 
-from .views import chatapp
+from .views import ChatAppView
 
 
 urlpatterns = [
-    path("", chatapp, name="chatapp"),
+    path("", ChatAppView.as_view(), name="chatapp"),
 ]
