@@ -6,23 +6,16 @@ from http import HTTPStatus
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.http import Http404, HttpResponseRedirect, JsonResponse
-from knox.auth import TokenAuthentication
 from rest_framework import status
-from rest_framework.authentication import SessionAuthentication
-from rest_framework.generics import ListAPIView
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.serializers import AccountSerializer
+from smarter.view_helpers import SmarterAPIListView, SmarterAPIView
 
 
-class AccountView(APIView):
+class AccountView(SmarterAPIView):
     """Account view for smarter api."""
-
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [TokenAuthentication, SessionAuthentication]
 
     def get(self, request, account_number: str = None):
         return get_account(request, account_number)
@@ -44,14 +37,11 @@ class AccountView(APIView):
         return Response({"error": "Invalid HTTP method"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
-class AccountListView(ListAPIView):
+class AccountListView(SmarterAPIListView):
     """Account list view for smarter api."""
 
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [TokenAuthentication, SessionAuthentication]
     queryset = Account.objects.all()
     serializer_class = AccountSerializer
-    http_method_names = ["get"]
 
     def get_queryset(self):
         if self.request.user.is_superuser:

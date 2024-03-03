@@ -1,22 +1,20 @@
 # -*- coding: utf-8 -*-
 """Plugin urls."""
 from django.urls import path
-from django.views.decorators.http import require_http_methods
 
-from .views import plugin_clone_view, plugins_list_view, plugins_view
+from .views import PluginCloneView, PluginsListView, PluginView
 
 
 urlpatterns = [
-    path("", require_http_methods(["GET"])(plugins_list_view), name="plugins_list_view"),
-    path("", require_http_methods(["POST"])(plugins_view), name="plugins_view"),
+    path("", PluginsListView.as_view(), name="plugins_list_view"),
     path(
         "<int:plugin_id>/",
-        require_http_methods(["GET", "POST", "PATCH", "DELETE"])(plugins_view),
-        name="plugins_view",
+        PluginView.as_view(),
+        name="plugin_view",
     ),
     path(
         "<int:plugin_id>/clone/<str:new_name>",
-        require_http_methods(["GET", "POST"])(plugin_clone_view),
+        PluginCloneView.as_view(),
         name="plugin_clone_view",
     ),
 ]

@@ -2,14 +2,13 @@
 """Account urls for smarter api"""
 
 from django.urls import path
-from django.views.decorators.http import require_http_methods
 
 from smarter.apps.account.api.v0.views.account import AccountListView, AccountView
 from smarter.apps.account.api.v0.views.payment_methods import (
     PaymentMethodsListView,
     PaymentMethodView,
 )
-from smarter.apps.plugin.api.v0.views import add_plugin_examples
+from smarter.apps.plugin.api.v0.views import AddPluginExamplesView
 
 from .views.user import UserListView, UserView
 
@@ -33,7 +32,7 @@ urlpatterns = [
     ),
     path(
         "users/<int:user_id>/add-example-plugins/",
-        require_http_methods(["GET", "POST"])(add_plugin_examples),
+        AddPluginExamplesView.as_view(),
         name="add_plugin_examples",
     ),
     # account payment methods
