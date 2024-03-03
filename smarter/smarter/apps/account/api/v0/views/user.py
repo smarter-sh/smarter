@@ -6,57 +6,68 @@ from http import HTTPStatus
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import Http404, HttpResponseRedirect, JsonResponse
 from knox.auth import TokenAuthentication
+from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.decorators import (
-    api_view,
-    authentication_classes,
-    permission_classes,
-)
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.serializers import UserSerializer
 
 
-@api_view(["GET", "POST", "PATCH", "DELETE"])
-@permission_classes([IsAuthenticated])
-@authentication_classes([TokenAuthentication, SessionAuthentication])
-def user_view(request, user_id: int = None):
-    if request.method == "GET" and user_id is not None:
+class UserView(APIView):
+    """User view for smarter api."""
+
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+
+    def get(self, request, user_id: int):
         return get_user(request, user_id)
-    if request.method == "GET" and user_id is None:
-        return users_list_view(request)
-    if request.method == "POST":
+
+    def post(self, request):
         return create_user(request)
-    if request.method == "PATCH":
+
+    def patch(self, request):
         return update_user(request)
-    if request.method == "DELETE":
+
+    def delete(self, request, user_id):
         return delete_user(request, user_id)
-    return JsonResponse({"error": "Invalid HTTP method"}, status=405)
+
+    def handle_exception(self, exc):
+        if isinstance(exc, Http404):
+            return Response({"error": "Invalid HTTP method"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().handle_exception(exc)
+
+
+class UserListView(ListAPIView):
+    """User list view for smarter api."""
+
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return UserProfile.objects.all()
+
+        if self.request.user.is_staff:
+            try:
+                account_users = UserProfile.objects.filter(account__user=self.request.user).values_list(
+                    "user", flat=True
+                )
+                return User.objects.filter(id__in=account_users)
+            except UserProfile.DoesNotExist:
+                return Response({"error": "User not found"}, status=HTTPStatus.NOT_FOUND)
+        return Response({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
 
 
 # -----------------------------------------------------------------------
 # handlers for users
 # -----------------------------------------------------------------------
-def users_list_view(request):
-    """Get a json list[dict] of all users for the current user."""
-    if request.user.is_superuser:
-        users = User.objects.all()
-    elif request.user.is_staff:
-        try:
-            account = UserProfile.objects.get(user=request.user).account
-            users = UserProfile.objects.filter(account=account).values_list("user", flat=True)
-        except UserProfile.DoesNotExist:
-            users = User.objects.filter(id=request.user.id)
-    else:
-        # mere mortals can only get their own account
-        users = User.objects.filter(id=request.user.id)
-
-    serializer = UserSerializer(users, many=True)
-    return Response(serializer.data, status=HTTPStatus.OK)
 
 
 def validate_request_body(request):

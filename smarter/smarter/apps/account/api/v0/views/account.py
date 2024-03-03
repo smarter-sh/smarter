@@ -3,54 +3,66 @@
 """Account views for smarter api."""
 from http import HTTPStatus
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import Http404, HttpResponseRedirect, JsonResponse
 from knox.auth import TokenAuthentication
+from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.decorators import (
-    api_view,
-    authentication_classes,
-    permission_classes,
-)
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.serializers import AccountSerializer
 
 
-@api_view(["GET", "POST", "PATCH", "DELETE"])
-@permission_classes([IsAuthenticated])
-@authentication_classes([TokenAuthentication, SessionAuthentication])
-def account_view(request, account_id: int = None):
-    if request.method == "GET":
-        return get_account(request, account_id)
-    if request.method == "POST":
+class AccountView(APIView):
+    """Account view for smarter api."""
+
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+
+    def get(self, request, account_number: str = None):
+        return get_account(request, account_number)
+
+    def post(self, request):
         return create_account(request)
-    if request.method == "PATCH":
-        return update_account(request, account_id)
-    if request.method == "DELETE":
-        return delete_account(request, account_id)
-    return JsonResponse({"error": "Invalid HTTP method"}, status=405)
+
+    def patch(self, request, account_number: str = None):
+        return update_account(request, account_number)
+
+    def delete(self, request, account_number: str = None):
+        return delete_account(request, account_number)
+
+    def handle_exception(self, exc):
+        if isinstance(exc, Http404):
+            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
+        if isinstance(exc, PermissionDenied):
+            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+        return Response({"error": "Invalid HTTP method"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-@authentication_classes([TokenAuthentication, SessionAuthentication])
-def accounts_list_view(request):
-    """Get a json list[dict] of all accounts for the current user."""
-    if not request.user.is_superuser:
-        try:
-            account = UserProfile.objects.get(user=request.user).account
-        except UserProfile.DoesNotExist:
-            return JsonResponse({"error": "User not found"}, status=404)
-        serializer = AccountSerializer(account)
-        return Response(serializer.data, status=HTTPStatus.OK)
+class AccountListView(ListAPIView):
+    """Account list view for smarter api."""
 
-    accounts = Account.objects.all()
-    serializer = AccountSerializer(accounts, many=True)
-    return Response(serializer.data, status=HTTPStatus.OK)
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    queryset = Account.objects.all()
+    serializer_class = AccountSerializer
+    http_method_names = ["get"]
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return Account.objects.all()
+
+        if self.request.user.is_staff:
+            try:
+                return UserProfile.objects.get(user=self.request.user).account
+            except UserProfile.DoesNotExist:
+                return Response({"error": "User not found"}, status=HTTPStatus.NOT_FOUND)
+        return Response({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
 
 
 # -----------------------------------------------------------------------
