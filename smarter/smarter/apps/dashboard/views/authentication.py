@@ -5,14 +5,15 @@ from django.conf import settings
 from django.contrib.auth import logout
 from django.shortcuts import redirect
 from rest_framework.permissions import AllowAny
-from rest_framework.views import APIView
+
+from smarter.view_helpers import SmarterAPIView
 
 
 def login_redirector(request):
     return redirect(settings.LOGIN_URL)
 
 
-class LogoutView(APIView):
+class LogoutView(SmarterAPIView):
     """View for logging out browser session."""
 
     permission_classes = [AllowAny]

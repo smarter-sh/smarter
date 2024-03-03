@@ -3,12 +3,14 @@
 
 from django.urls import include, path
 
+from smarter.apps.dashboard.views.authentication import LogoutView
+
 from .views.account import (
-    account,
-    account_limits,
-    account_organization,
-    account_profile,
-    account_team,
+    AccountLimitsView,
+    AccountOrganizationView,
+    AccountProfileView,
+    AccountTeamView,
+    AccountView,
 )
 from .views.authentication import LogoutView, login_redirector
 from .views.dashboard import (
@@ -20,7 +22,7 @@ from .views.dashboard import (
     PluginsView,
     UsageView,
 )
-from .views.profile import language, profile, sign_out
+from .views.profile import ProfileLanguageView, ProfileView
 
 
 urlpatterns = [
@@ -33,14 +35,14 @@ urlpatterns = [
     path("plugins/", PluginsView.as_view(), name="plugins"),
     path("usage/", UsageView.as_view(), name="usage"),
     path("notifications/", NotificationsView.as_view(), name="notifications"),
-    path("account/", account, name="account"),
-    path("account/limits/", account_limits, name="account_limits"),
-    path("account/organization/", account_organization, name="account_organization"),
-    path("account/profile/", account_profile, name="account_profile"),
-    path("account/team/", account_team, name="account_team"),
+    path("account/", AccountView.as_view(), name="account"),
+    path("account/limits/", AccountLimitsView.as_view(), name="account_limits"),
+    path("account/organization/", AccountOrganizationView.as_view(), name="account_organization"),
+    path("account/profile/", AccountProfileView.as_view(), name="account_profile"),
+    path("account/team/", AccountTeamView.as_view(), name="account_team"),
     path("documentation/", DocumentationView.as_view(), name="documentation"),
     path("help/", PlatformHelpView.as_view(), name="help"),
-    path("profile/", profile, name="profile"),
-    path("language/", language, name="language"),
-    path("sign-out/", sign_out, name="sign_out"),
+    path("profile/", ProfileView.as_view(), name="profile"),
+    path("profile/language/", ProfileLanguageView.as_view(), name="language"),
+    path("sign-out/", LogoutView.as_view(), name="sign_out"),
 ]
