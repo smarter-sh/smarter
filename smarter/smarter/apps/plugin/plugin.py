@@ -15,14 +15,14 @@ from rest_framework import serializers
 
 from smarter.apps.account.models import Account, UserProfile
 
-from .models import PluginData, PluginMeta, PluginPrompt, PluginSelector
-from .nlp import does_refer_to
-from .serializers import (
+from .api.v0.serializers import (
     PluginDataSerializer,
     PluginMetaSerializer,
     PluginPromptSerializer,
     PluginSelectorSerializer,
 )
+from .models import PluginData, PluginMeta, PluginPrompt, PluginSelector
+from .nlp import does_refer_to
 from .signals import (
     plugin_called,
     plugin_cloned,

@@ -55,14 +55,13 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # smarter apps
     # -------------------------------
+    "smarter.apps.account",
+    "smarter.apps.plugin",
     "smarter.apps.chat",
     "smarter.apps.chatapp",
     "smarter.apps.dashboard",
     "smarter.apps.api",
-    "smarter.apps.account",
-    "smarter.apps.plugin",
-    "smarter.apps.openai_passthrough",
-    "smarter.apps.langchain_passthrough",
+    "smarter.apps.chatbot",
     # 3rd party apps
     # -------------------------------
     "djstripe",
