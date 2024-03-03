@@ -2,8 +2,6 @@
 # pylint: disable=W0707,W0718,C0115
 """Account views for smarter api."""
 
-from rest_framework import generics
-
 from smarter.apps.chat.models import (
     ChatHistory,
     ChatToolCallHistory,
@@ -14,33 +12,34 @@ from smarter.apps.chat.serializers import (
     ChatToolCallHistorySerializer,
     PluginUsageHistorySerializer,
 )
+from smarter.view_helpers import SmarterAPIListView, SmarterAPIView
 
 
-class ChatToolCallHistoryListCreateView(generics.ListCreateAPIView):
+class ChatToolCallHistoryListView(SmarterAPIListView):
     queryset = ChatToolCallHistory.objects.all()
     serializer_class = ChatToolCallHistorySerializer
 
 
-class ChatToolCallHistoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+class ChatToolCallHistoryView(SmarterAPIView):
     queryset = ChatToolCallHistory.objects.all()
     serializer_class = ChatToolCallHistorySerializer
 
 
-class PluginUsageHistoryListCreateView(generics.ListCreateAPIView):
+class PluginUsageHistoryListView(SmarterAPIListView):
     queryset = PluginUsageHistory.objects.all()
     serializer_class = PluginUsageHistorySerializer
 
 
-class PluginUsageHistoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+class PluginUsageHistoryView(SmarterAPIView):
     queryset = PluginUsageHistory.objects.all()
     serializer_class = PluginUsageHistorySerializer
 
 
-class ChatHistoryListCreateView(generics.ListCreateAPIView):
+class ChatHistoryListView(SmarterAPIListView):
     queryset = ChatHistory.objects.all()
     serializer_class = ChatHistorySerializer
 
 
-class ChatHistoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+class ChatHistoryView(SmarterAPIView):
     queryset = ChatHistory.objects.all()
     serializer_class = ChatHistorySerializer

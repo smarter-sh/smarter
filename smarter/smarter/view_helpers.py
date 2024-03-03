@@ -17,6 +17,10 @@ from rest_framework.views import APIView
 register = template.Library()
 
 
+class SmarterWebView:
+    """Account view for smarter web."""
+
+
 class SmarterAPIView(APIView):
     """Account view for smarter api."""
 
