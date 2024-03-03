@@ -5,15 +5,14 @@ from django.conf import settings
 from django.contrib.auth import logout
 from django.shortcuts import redirect
 from rest_framework.permissions import AllowAny
-
-from smarter.view_helpers import SmarterAPIView
+from rest_framework.views import APIView
 
 
 def login_redirector(request):
     return redirect(settings.LOGIN_URL)
 
 
-class LogoutView(SmarterAPIView):
+class LogoutView(APIView):
     """View for logging out browser session."""
 
     permission_classes = [AllowAny]
@@ -24,4 +23,8 @@ class LogoutView(SmarterAPIView):
 
     def post(self, request, *args, **kwargs):
         logout(request)
+        response = redirect("/")
+        response["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response["Pragma"] = "no-cache"
+        response["Expires"] = "0"
         return redirect("/")

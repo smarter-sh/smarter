@@ -3,17 +3,17 @@
 """Django views"""
 import logging
 
-from smarter.view_helpers import SmarterAPIAdminView
+from smarter.view_helpers import SmarterAuthenticatedWebView
 
 
 logger = logging.getLogger(__name__)
 
 
-class ProfileView(SmarterAPIAdminView):
+class ProfileView(SmarterAuthenticatedWebView):
 
     template_path = "dashboard-default.html"
 
 
-class ProfileLanguageView(SmarterAPIAdminView):
+class ProfileLanguageView(SmarterAuthenticatedWebView):
 
     template_path = "dashboard-default.html"
