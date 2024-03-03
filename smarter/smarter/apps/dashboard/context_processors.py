@@ -17,7 +17,11 @@ def base(request):
     """
     current_year = datetime.now().year
     base_keys = {
+        "product_name": "Smarter",
+        "company_name": "Querium, Corp",
         "smarter_version": __version__,
+        "current_year": current_year,
+        "product_description": "Smarter is an enterprise class plugin-based chat solution.",
         "footer_message": f"Copyright {current_year}. All rights reserved.",
     }
     if request.user.is_authenticated:
