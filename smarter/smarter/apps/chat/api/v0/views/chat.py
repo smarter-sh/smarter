@@ -207,9 +207,8 @@ def handler(user: User, data: dict):
     )
 
 
-class FunctionCallingViewSet(SmarterAPIView):
+class SmarterChatViewSet(SmarterAPIView):
     """top-level viewset for openai api function calling"""
 
-    def create(self, request):
-        """override the create method to handle POST requests."""
+    def post(self, request):
         return Response(handler(user=request.user, data=request.data))

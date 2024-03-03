@@ -37,6 +37,7 @@ class SmarterAPIListView(ListAPIView):
 
 @method_decorator(login_required, name="dispatch")
 @method_decorator(cache_control(max_age=settings.SMARTER_CACHE_EXPIRATION), name="dispatch")
+@method_decorator(cache_page(settings.SMARTER_CACHE_EXPIRATION), name="dispatch")
 class SmarterWebView(View):
     """Base view for smarter web views."""
 
@@ -45,7 +46,6 @@ class SmarterWebView(View):
         return re.sub(r"<!--.*?-->", "", html)
 
     # pylint: disable=W0613
-    @cache_page(settings.SMARTER_CACHE_EXPIRATION)
     def cached_clean_http_response(self, request, template_path):
         """Render a template and return an HttpResponse with comments removed."""
         response = render(request=request, template_name=template_path, context={})

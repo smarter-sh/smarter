@@ -12,7 +12,7 @@ class DashboardView(SmarterWebView):
     """Dashboard view"""
 
     def get(self, request):
-        return self.cached_clean_http_response(request=request, template_path="dashboard/dashboard.html")
+        return self.cached_clean_http_response(request, "dashboard/dashboard.html")
 
 
 class APIKeysView(SmarterWebView):

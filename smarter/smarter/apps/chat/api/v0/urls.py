@@ -3,7 +3,7 @@
 
 from django.urls import path
 
-from .views.chat import FunctionCallingViewSet
+from .views.chat import SmarterChatViewSet
 from .views.history import (
     ChatHistoryListView,
     ChatHistoryView,
@@ -15,7 +15,7 @@ from .views.history import (
 
 
 urlpatterns = [
-    path("", FunctionCallingViewSet.as_view(), name="chat"),
+    path("", SmarterChatViewSet.as_view(), name="chat"),
     path("history/chats/", ChatHistoryListView.as_view(), name="chathistory_list"),
     path(
         "history/chats/<int:pk>/",
