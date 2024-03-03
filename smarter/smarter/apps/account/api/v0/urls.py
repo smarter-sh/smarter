@@ -16,7 +16,7 @@ from .views.user import UserListView, UserView
 urlpatterns = [
     # account
     # -----------------------------------------------------------------------
-    path("<str:account_number>/", AccountView.as_view(), name="account_view"),
+    path("<int:account_id>/", AccountView.as_view(), name="account_view"),
     path("", AccountListView.as_view(), name="accounts_list_view"),
     # account users
     # -----------------------------------------------------------------------
