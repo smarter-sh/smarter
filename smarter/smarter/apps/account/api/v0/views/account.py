@@ -3,10 +3,10 @@
 """Account views for smarter api."""
 from http import HTTPStatus
 
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.http import Http404, HttpResponseRedirect, JsonResponse
-from rest_framework import status
+from django.http import HttpResponseRedirect, JsonResponse
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
 from smarter.apps.account.models import Account, UserProfile
@@ -28,13 +28,6 @@ class AccountView(SmarterAPIView):
 
     def delete(self, request, account_number: str = None):
         return delete_account(request, account_number)
-
-    def handle_exception(self, exc):
-        if isinstance(exc, Http404):
-            return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
-        if isinstance(exc, PermissionDenied):
-            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
-        return Response({"error": "Invalid HTTP method"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class AccountListView(SmarterAPIListView):
@@ -60,14 +53,10 @@ class AccountListView(SmarterAPIListView):
 # -----------------------------------------------------------------------
 def get_account(request, account_id: int = None):
     """Get an account json representation by id."""
-    try:
-        if account_id:
-            account = Account.objects.get(id=account_id)
-        else:
-            account = UserProfile.objects.get(user=request.user).account
-    except UserProfile.DoesNotExist:
-        return JsonResponse({"error": "User not found"}, status=404)
-
+    if account_id:
+        account = get_object_or_404(Account, pk=account_id)
+    else:
+        account = get_object_or_404(UserProfile, user=request.user).account
     serializer = AccountSerializer(account)
     return Response(serializer.data, status=HTTPStatus.OK)
 
@@ -125,13 +114,10 @@ def update_account(request, account_id: int = None):
 
 def delete_account(request, account_id: int = None):
     """delete a plugin by id."""
-    try:
-        if account_id:
-            account = Account.objects.get(id=account_id)
-        else:
-            account = UserProfile.objects.get(user=request.user).account
-    except UserProfile.DoesNotExist:
-        return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
+    if account_id:
+        account = get_object_or_404(Account, pk=account_id)
+    else:
+        account = get_object_or_404(UserProfile, user=request.user).account
 
     try:
         with transaction.atomic():

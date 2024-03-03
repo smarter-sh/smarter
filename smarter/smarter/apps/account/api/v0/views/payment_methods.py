@@ -7,9 +7,8 @@ from http import HTTPStatus
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.http import HttpResponseRedirect, JsonResponse
-from rest_framework import status
-from rest_framework.exceptions import MethodNotAllowed
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
 from smarter.apps.account.models import Account, PaymentMethod, UserProfile
@@ -23,12 +22,6 @@ logger = logging.getLogger(__name__)
 class PaymentMethodView(SmarterAPIView):
     """Payment method view for smarter api."""
 
-    def http_method_not_allowed(self, request, *args, **kwargs):
-        return Response(
-            {"error": "PaymentMethodView.http_method_not_allowed() Invalid HTTP method"},
-            status=status.HTTP_405_METHOD_NOT_ALLOWED,
-        )
-
     def get(self, request, payment_method_id: int = None):
         return get_payment_method(request, payment_method_id)
 
@@ -41,12 +34,6 @@ class PaymentMethodView(SmarterAPIView):
     def delete(self, request, payment_method_id: int = None):
         return delete_payment_method(request, payment_method_id)
 
-    def handle_exception(self, exc):
-        logger.info("payment method view get method")
-        if isinstance(exc, MethodNotAllowed):
-            return Response({"error": "Invalid HTTP method: "}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().handle_exception(exc)
-
 
 class PaymentMethodsListView(SmarterAPIListView):
     """Payment methods list view for smarter api."""
@@ -55,14 +42,9 @@ class PaymentMethodsListView(SmarterAPIListView):
 
     def get_queryset(self):
         if self.request.user.is_superuser or self.request.user.is_staff:
-            try:
-                account = UserProfile.objects.get(user=self.request.user).account
-            except UserProfile.DoesNotExist:
-                return Response({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
-        else:
-            return Response({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
-
-        return PaymentMethod.objects.filter(account=account)
+            account = get_object_or_404(UserProfile, user=self.request.user).account
+            return PaymentMethod.objects.filter(account=account)
+        return HttpResponse("Unauthorized", status=HTTPStatus.UNAUTHORIZED)
 
 
 # -----------------------------------------------------------------------
