@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import render
+from django.utils.cache import patch_vary_headers
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.cache import cache_control, cache_page
@@ -121,3 +122,8 @@ class SmarterAdminWebView(SmarterAuthenticatedWebView):
 @method_decorator(cache_page(settings.SMARTER_CACHE_EXPIRATION), name="dispatch")
 class SmarterAuthenticatedCachedWebView(SmarterAuthenticatedWebView):
     """Base view for cached authenticated smarter web views."""
+
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        patch_vary_headers(response, ["Cookie"])
+        return response
