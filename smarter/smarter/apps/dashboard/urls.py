@@ -24,7 +24,7 @@ from .views.profile import language, profile, sign_out
 
 
 urlpatterns = [
-    path("", DashboardView.as_view, name="home"),
+    path("", DashboardView.as_view(), name="dashboard"),
     path("login/", login_redirector, name="login_redirector"),
     path("logout/", LogoutView.as_view(), name="logout"),
     path("api-auth/logout/", LogoutView.as_view(), name="api_logout"),
