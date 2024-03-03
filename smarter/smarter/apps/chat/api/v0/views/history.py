@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=W0707,W0718,C0115
+# pylint: disable=W0707,W0718,C0115,W0613
 """Account views for smarter api."""
+from django.shortcuts import get_object_or_404
+from rest_framework.response import Response
 
 from smarter.apps.chat.models import (
     ChatHistory,
@@ -21,8 +23,11 @@ class ChatToolCallHistoryListView(SmarterAPIListView):
 
 
 class ChatToolCallHistoryView(SmarterAPIView):
-    queryset = ChatToolCallHistory.objects.all()
-    serializer_class = ChatToolCallHistorySerializer
+
+    def get(self, request, *args, **kwargs):
+        instance = get_object_or_404(ChatToolCallHistory, pk=kwargs["pk"])
+        serializer = ChatToolCallHistorySerializer(instance)
+        return Response(serializer.data)
 
 
 class PluginUsageHistoryListView(SmarterAPIListView):
@@ -31,8 +36,11 @@ class PluginUsageHistoryListView(SmarterAPIListView):
 
 
 class PluginUsageHistoryView(SmarterAPIView):
-    queryset = PluginUsageHistory.objects.all()
-    serializer_class = PluginUsageHistorySerializer
+
+    def get(self, request, *args, **kwargs):
+        instance = get_object_or_404(PluginUsageHistoryView, pk=kwargs["pk"])
+        serializer = PluginUsageHistorySerializer(instance)
+        return Response(serializer.data)
 
 
 class ChatHistoryListView(SmarterAPIListView):
@@ -41,5 +49,8 @@ class ChatHistoryListView(SmarterAPIListView):
 
 
 class ChatHistoryView(SmarterAPIView):
-    queryset = ChatHistory.objects.all()
-    serializer_class = ChatHistorySerializer
+
+    def get(self, request, *args, **kwargs):
+        instance = get_object_or_404(ChatHistory, pk=kwargs["pk"])
+        serializer = ChatHistorySerializer(instance)
+        return Response(serializer.data)
