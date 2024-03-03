@@ -8,27 +8,20 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import HttpResponseRedirect, JsonResponse
-from knox.auth import TokenAuthentication
 from rest_framework import status
-from rest_framework.authentication import SessionAuthentication
 from rest_framework.exceptions import MethodNotAllowed
-from rest_framework.generics import ListAPIView
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from smarter.apps.account.models import Account, PaymentMethod, UserProfile
 from smarter.apps.account.serializers import PaymentMethodSerializer
+from smarter.view_helpers import SmarterAPIListView, SmarterAPIView
 
 
 logger = logging.getLogger(__name__)
 
 
-class PaymentMethodView(APIView):
+class PaymentMethodView(SmarterAPIView):
     """Payment method view for smarter api."""
-
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [TokenAuthentication, SessionAuthentication]
 
     def http_method_not_allowed(self, request, *args, **kwargs):
         return Response(
@@ -55,13 +48,10 @@ class PaymentMethodView(APIView):
         return super().handle_exception(exc)
 
 
-class PaymentMethodsListView(ListAPIView):
+class PaymentMethodsListView(SmarterAPIListView):
     """Payment methods list view for smarter api."""
 
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [TokenAuthentication, SessionAuthentication]
     serializer_class = PaymentMethodSerializer
-    http_method_names = ["get"]
 
     def get_queryset(self):
         if self.request.user.is_superuser or self.request.user.is_staff:

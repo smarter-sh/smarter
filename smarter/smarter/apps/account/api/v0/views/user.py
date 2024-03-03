@@ -7,23 +7,16 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import Http404, HttpResponseRedirect, JsonResponse
-from knox.auth import TokenAuthentication
 from rest_framework import status
-from rest_framework.authentication import SessionAuthentication
-from rest_framework.generics import ListAPIView
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.serializers import UserSerializer
+from smarter.view_helpers import SmarterAPIListView, SmarterAPIView
 
 
-class UserView(APIView):
+class UserView(SmarterAPIView):
     """User view for smarter api."""
-
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [TokenAuthentication, SessionAuthentication]
 
     def get(self, request, user_id: int):
         return get_user(request, user_id)
@@ -43,12 +36,10 @@ class UserView(APIView):
         return super().handle_exception(exc)
 
 
-class UserListView(ListAPIView):
+class UserListView(SmarterAPIListView):
     """User list view for smarter api."""
 
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [TokenAuthentication, SessionAuthentication]
 
     def get_queryset(self):
         if self.request.user.is_superuser:

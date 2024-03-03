@@ -7,9 +7,29 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.decorators.cache import cache_page
+from knox.auth import TokenAuthentication
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.generics import ListAPIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
 
 
 register = template.Library()
+
+
+class SmarterAPIView(APIView):
+    """Account view for smarter api."""
+
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+
+
+class SmarterAPIListView(ListAPIView):
+    """Account list view for smarter api."""
+
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    http_method_names = ["get"]
 
 
 @register.filter
