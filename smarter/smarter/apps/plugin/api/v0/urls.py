@@ -1,12 +1,22 @@
 # -*- coding: utf-8 -*-
 """Plugin urls."""
 from django.urls import path
+from django.views import View
 
-from .views import PluginCloneView, PluginsListView, PluginView
+from .views import PluginCloneView, PluginsListView, PluginUploadView, PluginView
+
+
+class RequestRouter(View):
+    """http method-based request router."""
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.method.lower() == "post":
+            return PluginView.as_view()(request, *args, **kwargs)
+        return PluginsListView.as_view()(request, *args, **kwargs)
 
 
 urlpatterns = [
-    path("", PluginsListView.as_view(), name="plugins_list_view"),
+    path("", RequestRouter.as_view(), name="plugins_list_view"),
     path(
         "<int:plugin_id>/",
         PluginView.as_view(),
@@ -17,4 +27,5 @@ urlpatterns = [
         PluginCloneView.as_view(),
         name="plugin_clone_view",
     ),
+    path("upload/", PluginUploadView.as_view(), name="plugin_upload"),
 ]
