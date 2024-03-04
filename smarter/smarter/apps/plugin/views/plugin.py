@@ -8,6 +8,9 @@ from smarter.view_helpers import SmarterAuthenticatedWebView
 logger = logging.getLogger(__name__)
 
 
+# ------------------------------------------------------------------------------
+# Protected Views
+# ------------------------------------------------------------------------------
 class PluginView(SmarterAuthenticatedWebView):
     """Plugins view"""
 

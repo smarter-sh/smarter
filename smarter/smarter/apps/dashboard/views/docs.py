@@ -2,13 +2,16 @@
 """Django docs views"""
 import logging
 
-from smarter.view_helpers import SmarterAuthenticatedWebView
+from smarter.view_helpers import SmarterWebView
 
 
 logger = logging.getLogger(__name__)
 
 
-class GettingStartedView(SmarterAuthenticatedWebView):
+# ------------------------------------------------------------------------------
+# Public Access Views
+# ------------------------------------------------------------------------------
+class GettingStartedView(SmarterWebView):
     """Top level legal view"""
 
     template_path = "dashboard/docs/getting-started.html"

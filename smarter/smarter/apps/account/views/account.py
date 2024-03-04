@@ -9,6 +9,9 @@ from smarter.view_helpers import SmarterAuthenticatedWebView
 logger = logging.getLogger(__name__)
 
 
+# ------------------------------------------------------------------------------
+# Protected Views
+# ------------------------------------------------------------------------------
 class AccountView(SmarterAuthenticatedWebView):
 
     template_path = "account/account.html"
