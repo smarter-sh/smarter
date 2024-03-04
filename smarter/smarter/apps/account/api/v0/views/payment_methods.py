@@ -1,57 +1,50 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=W0707,W0718
 """Account Payment method views for smarter api."""
+import logging
 from http import HTTPStatus
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.http import HttpResponseRedirect, JsonResponse
-from knox.auth import TokenAuthentication
-from rest_framework.authentication import SessionAuthentication
-from rest_framework.decorators import (
-    api_view,
-    authentication_classes,
-    permission_classes,
-)
-from rest_framework.permissions import IsAuthenticated
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
+from smarter.apps.account.api.v0.serializers import PaymentMethodSerializer
 from smarter.apps.account.models import Account, PaymentMethod, UserProfile
-from smarter.apps.account.serializers import PaymentMethodSerializer
+from smarter.view_helpers import SmarterAPIListView, SmarterAPIView
 
 
-@api_view(["GET", "POST", "PATCH", "DELETE"])
-@permission_classes([IsAuthenticated])
-@authentication_classes([TokenAuthentication, SessionAuthentication])
-def payment_method_view(request, payment_method_id: int = None):
-    if request.method == "GET":
+logger = logging.getLogger(__name__)
+
+
+class PaymentMethodView(SmarterAPIView):
+    """Payment method view for smarter api."""
+
+    def get(self, request, payment_method_id: int = None):
         return get_payment_method(request, payment_method_id)
-    if request.method == "POST":
+
+    def post(self, request):
         return create_payment_method(request)
-    if request.method == "PATCH":
+
+    def patch(self, request):
         return update_payment_method(request)
-    if request.method == "DELETE":
+
+    def delete(self, request, payment_method_id: int = None):
         return delete_payment_method(request, payment_method_id)
-    return JsonResponse({"error": "Invalid HTTP method"}, status=405)
 
 
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-@authentication_classes([TokenAuthentication, SessionAuthentication])
-def payment_methods_list_view(request):
-    """Get a json list[dict] of all payment methods for the account."""
-    if request.user.is_superuser or request.user.is_staff:
-        try:
-            account = UserProfile.objects.get(user=request.user).account
-        except UserProfile.DoesNotExist:
-            return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
-    else:
-        return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
+class PaymentMethodsListView(SmarterAPIListView):
+    """Payment methods list view for smarter api."""
 
-    payment_methods = PaymentMethod.objects.filter(account=account)
-    serializer = PaymentMethodSerializer(payment_methods, many=True)
-    return Response(serializer.data, status=HTTPStatus.OK)
+    serializer_class = PaymentMethodSerializer
+
+    def get_queryset(self):
+        if self.request.user.is_superuser or self.request.user.is_staff:
+            account = get_object_or_404(UserProfile, user=self.request.user).account
+            return PaymentMethod.objects.filter(account=account)
+        return HttpResponse("Unauthorized", status=HTTPStatus.UNAUTHORIZED)
 
 
 # -----------------------------------------------------------------------

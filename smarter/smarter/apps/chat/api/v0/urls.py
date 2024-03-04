@@ -1,48 +1,37 @@
 # -*- coding: utf-8 -*-
 """URL configuration for chat app."""
 
-from django.urls import include, path
-from rest_framework.routers import DefaultRouter
+from django.urls import path
 
-from smarter.apps.langchain_passthrough.views import LanchainViewSet
-from smarter.apps.openai_passthrough.views import OpenAIViewSet
-
-from .views.chat import FunctionCallingViewSet
+from .views.chat import SmarterChatViewSet
 from .views.history import (
-    ChatHistoryListCreateView,
-    ChatHistoryRetrieveUpdateDestroyView,
-    ChatToolCallHistoryListCreateView,
-    ChatToolCallHistoryRetrieveUpdateDestroyView,
-    PluginUsageHistoryListCreateView,
-    PluginUsageHistoryRetrieveUpdateDestroyView,
+    ChatHistoryListView,
+    ChatHistoryView,
+    ChatToolCallHistoryListView,
+    ChatToolCallHistoryView,
+    PluginUsageHistoryListView,
+    PluginUsageHistoryView,
 )
 
 
-# Routers provide an easy way of automatically determining the URL conf.
-router = DefaultRouter()
-
-router.register(r"", FunctionCallingViewSet, basename="chat")
-router.register(r"chatgpt", OpenAIViewSet, basename="chatgpt")
-router.register(r"langchain", LanchainViewSet, basename="langchain")
-
 urlpatterns = [
-    path("", include(router.urls)),
-    path("history/chats/", ChatHistoryListCreateView.as_view(), name="chathistory_list_create"),
+    path("", SmarterChatViewSet.as_view(), name="chat"),
+    path("history/chats/", ChatHistoryListView.as_view(), name="chathistory_list"),
     path(
         "history/chats/<int:pk>/",
-        ChatHistoryRetrieveUpdateDestroyView.as_view(),
-        name="chathistory_retrieve_update_destroy",
+        ChatHistoryView.as_view(),
+        name="chathistory",
     ),
-    path("history/tool-calls/", ChatToolCallHistoryListCreateView.as_view(), name="chattoolcallhistory_list_create"),
+    path("history/tool-calls/", ChatToolCallHistoryListView.as_view(), name="chattoolcallhistory_list"),
     path(
         "history/tool-calls/<int:pk>/",
-        ChatToolCallHistoryRetrieveUpdateDestroyView.as_view(),
-        name="chattoolcallhistory_retrieve_update_destroy",
+        ChatToolCallHistoryView.as_view(),
+        name="chattoolcallhistory",
     ),
-    path("history/plugin-usage/", PluginUsageHistoryListCreateView.as_view(), name="pluginusagehistory_list_create"),
+    path("history/plugin-usage/", PluginUsageHistoryListView.as_view(), name="pluginusagehistory_list"),
     path(
         "history/plugin-usage/<int:pk>/",
-        PluginUsageHistoryRetrieveUpdateDestroyView.as_view(),
-        name="pluginusagehistory_retrieve_update_destroy",
+        PluginUsageHistoryView.as_view(),
+        name="pluginusagehistory",
     ),
 ]

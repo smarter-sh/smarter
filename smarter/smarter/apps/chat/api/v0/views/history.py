@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=W0707,W0718,C0115
+# pylint: disable=W0707,W0718,C0115,W0613
 """Account views for smarter api."""
-
-from rest_framework import generics
+from django.shortcuts import get_object_or_404
+from rest_framework.response import Response
 
 from smarter.apps.chat.models import (
     ChatHistory,
@@ -14,33 +14,43 @@ from smarter.apps.chat.serializers import (
     ChatToolCallHistorySerializer,
     PluginUsageHistorySerializer,
 )
+from smarter.view_helpers import SmarterAPIListView, SmarterAPIView
 
 
-class ChatToolCallHistoryListCreateView(generics.ListCreateAPIView):
+class ChatToolCallHistoryListView(SmarterAPIListView):
     queryset = ChatToolCallHistory.objects.all()
     serializer_class = ChatToolCallHistorySerializer
 
 
-class ChatToolCallHistoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = ChatToolCallHistory.objects.all()
-    serializer_class = ChatToolCallHistorySerializer
+class ChatToolCallHistoryView(SmarterAPIView):
+
+    def get(self, request, *args, **kwargs):
+        instance = get_object_or_404(ChatToolCallHistory, pk=kwargs["pk"])
+        serializer = ChatToolCallHistorySerializer(instance)
+        return Response(serializer.data)
 
 
-class PluginUsageHistoryListCreateView(generics.ListCreateAPIView):
+class PluginUsageHistoryListView(SmarterAPIListView):
     queryset = PluginUsageHistory.objects.all()
     serializer_class = PluginUsageHistorySerializer
 
 
-class PluginUsageHistoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = PluginUsageHistory.objects.all()
-    serializer_class = PluginUsageHistorySerializer
+class PluginUsageHistoryView(SmarterAPIView):
+
+    def get(self, request, *args, **kwargs):
+        instance = get_object_or_404(PluginUsageHistoryView, pk=kwargs["pk"])
+        serializer = PluginUsageHistorySerializer(instance)
+        return Response(serializer.data)
 
 
-class ChatHistoryListCreateView(generics.ListCreateAPIView):
+class ChatHistoryListView(SmarterAPIListView):
     queryset = ChatHistory.objects.all()
     serializer_class = ChatHistorySerializer
 
 
-class ChatHistoryRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = ChatHistory.objects.all()
-    serializer_class = ChatHistorySerializer
+class ChatHistoryView(SmarterAPIView):
+
+    def get(self, request, *args, **kwargs):
+        instance = get_object_or_404(ChatHistory, pk=kwargs["pk"])
+        serializer = ChatHistorySerializer(instance)
+        return Response(serializer.data)

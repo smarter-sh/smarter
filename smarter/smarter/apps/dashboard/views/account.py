@@ -1,39 +1,34 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=C0115
 """Django views"""
 import logging
 
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from smarter.view_helpers import SmarterAPIAdminView
 
 
 logger = logging.getLogger(__name__)
 
 
-@login_required
-def account(request):
-    logger.info("Account view")
-    return render(request, "account/account.html")
+class AccountView(SmarterAPIAdminView):
+
+    template_path = "account/account.html"
 
 
-@login_required
-def account_organization(request):
-    logger.info("Account-organization view")
-    return render(request, "account/organization.html")
+class AccountOrganizationView(SmarterAPIAdminView):
+
+    template_path = "account/organization.html"
 
 
-@login_required
-def account_team(request):
-    logger.info("Account-team view")
-    return render(request, "account/team.html")
+class AccountTeamView(SmarterAPIAdminView):
+
+    template_path = "account/team.html"
 
 
-@login_required
-def account_limits(request):
-    logger.info("Account-limits view")
-    return render(request, "account/limits.html")
+class AccountLimitsView(SmarterAPIAdminView):
+
+    template_path = "account/limits.html"
 
 
-@login_required
-def account_profile(request):
-    logger.info("Account-profile view")
-    return render(request, "account/profile.html")
+class AccountProfileView(SmarterAPIAdminView):
+
+    template_path = "account/profile.html"

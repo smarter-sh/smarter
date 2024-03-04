@@ -6,137 +6,123 @@ from http import HTTPStatus
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import HttpResponseRedirect, JsonResponse
-from knox.auth import TokenAuthentication
-from rest_framework.authentication import SessionAuthentication
-from rest_framework.decorators import (
-    api_view,
-    authentication_classes,
-    permission_classes,
-)
-from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
+from smarter.apps.account.api.v0.serializers import AccountSerializer
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.serializers import AccountSerializer
+from smarter.view_helpers import SmarterAPIAdminView, SmarterAPIListAdminView
 
 
-@api_view(["GET", "POST", "PATCH", "DELETE"])
-@permission_classes([IsAuthenticated])
-@authentication_classes([TokenAuthentication, SessionAuthentication])
-def account_view(request, account_id: int = None):
-    if request.method == "GET":
-        return get_account(request, account_id)
-    if request.method == "POST":
-        return create_account(request)
-    if request.method == "PATCH":
-        return update_account(request, account_id)
-    if request.method == "DELETE":
-        return delete_account(request, account_id)
-    return JsonResponse({"error": "Invalid HTTP method"}, status=405)
+class AccountViewBase(SmarterAPIAdminView):
+    """Base class for account views."""
+
+    user_profile: UserProfile = None
+    serializer_class = AccountSerializer
+
+    def dispatch(self, request, *args, **kwargs):
+        self.user_profile = get_object_or_404(UserProfile, user=request.user)
+        response = super().dispatch(request, *args, **kwargs)
+        return response
+
+    def is_superuser_or_unauthorized(self):
+        if not self.request.user.is_superuser:
+            return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
+        return True
 
 
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-@authentication_classes([TokenAuthentication, SessionAuthentication])
-def accounts_list_view(request):
-    """Get a json list[dict] of all accounts for the current user."""
-    if not request.user.is_superuser:
-        try:
-            account = UserProfile.objects.get(user=request.user).account
-        except UserProfile.DoesNotExist:
-            return JsonResponse({"error": "User not found"}, status=404)
-        serializer = AccountSerializer(account)
+class AccountListViewBase(SmarterAPIListAdminView):
+    """Base class for account list views."""
+
+    user_profile: UserProfile = None
+    serializer_class = AccountSerializer
+
+    def dispatch(self, request, *args, **kwargs):
+        self.user_profile = get_object_or_404(UserProfile, user=request.user)
+        response = super().dispatch(request, *args, **kwargs)
+        return response
+
+
+class AccountView(AccountViewBase):
+    """Account view for smarter api."""
+
+    def get(self, request, account_id: int):
+        if account_id and request.user.is_superuser:
+            account = get_object_or_404(Account, pk=account_id)
+        else:
+            account = self.user_profile.account
+        serializer = self.serializer_class(account)
         return Response(serializer.data, status=HTTPStatus.OK)
 
-    accounts = Account.objects.all()
-    serializer = AccountSerializer(accounts, many=True)
-    return Response(serializer.data, status=HTTPStatus.OK)
+    def post(self, request):
+        try:
+            data = request.data
+            with transaction.atomic():
+                account = Account.objects.create(**data)
+                UserProfile.objects.create(user=request.user, account=account)
+        except Exception as e:
+            return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
+        return HttpResponseRedirect(request.path_info + str(account.id) + "/")
 
+    def patch(self, request, account_id: int = None):
+        account: Account = None
+        data: dict = None
 
-# -----------------------------------------------------------------------
-# handlers for accounts
-# -----------------------------------------------------------------------
-def get_account(request, account_id: int = None):
-    """Get an account json representation by id."""
-    try:
-        if account_id:
-            account = Account.objects.get(id=account_id)
-        else:
-            account = UserProfile.objects.get(user=request.user).account
-    except UserProfile.DoesNotExist:
-        return JsonResponse({"error": "User not found"}, status=404)
+        try:
+            if account_id and self.is_superuser_or_unauthorized():
+                account = Account.objects.get(id=account_id)
+            else:
+                account = self.user_profile.account
+        except UserProfile.DoesNotExist:
+            return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
 
-    serializer = AccountSerializer(account)
-    return Response(serializer.data, status=HTTPStatus.OK)
+        try:
+            data = request.data
+            if not isinstance(data, dict):
+                return JsonResponse(
+                    {"error": f"Invalid request data. Expected a JSON dict in request body but received {type(data)}"},
+                    status=HTTPStatus.BAD_REQUEST,
+                )
+        except Exception as e:
+            return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
 
-
-def create_account(request):
-    """Create an account from a json representation in the body of the request."""
-    data: dict = None
-
-    try:
-        data = request.data
-        with transaction.atomic():
-            account = Account.objects.create(**data)
-            UserProfile.objects.create(user=request.user, account=account)
-    except Exception as e:
-        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
-
-    return HttpResponseRedirect(request.path_info + str(account.id) + "/")
-
-
-def update_account(request, account_id: int = None):
-    """update an account from a json representation in the body of the request."""
-    account: Account = None
-    data: dict = None
-
-    try:
-        if account_id:
-            account = Account.objects.get(id=account_id)
-        else:
-            account = UserProfile.objects.get(user=request.user).account
-    except UserProfile.DoesNotExist:
-        return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
-
-    try:
-        data = request.data
-        if not isinstance(data, dict):
+        try:
+            for key, value in data.items():
+                if hasattr(account, key):
+                    setattr(account, key, value)
+            account.save()
+        except ValidationError as e:
+            return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
+        except Exception as e:
             return JsonResponse(
-                {"error": f"Invalid request data. Expected a JSON dict in request body but received {type(data)}"},
-                status=HTTPStatus.BAD_REQUEST,
+                {"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR
             )
-    except Exception as e:
-        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
 
-    try:
-        for key, value in data.items():
-            if hasattr(account, key):
-                setattr(account, key, value)
-        account.save()
-    except ValidationError as e:
-        return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
-    except Exception as e:
-        return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+        return HttpResponseRedirect(request.path_info)
 
-    return HttpResponseRedirect(request.path_info)
-
-
-def delete_account(request, account_id: int = None):
-    """delete a plugin by id."""
-    try:
-        if account_id:
-            account = Account.objects.get(id=account_id)
+    def delete(self, request, account_id: int = None):
+        if account_id and self.is_superuser_or_unauthorized():
+            account = get_object_or_404(Account, pk=account_id)
         else:
-            account = UserProfile.objects.get(user=request.user).account
-    except UserProfile.DoesNotExist:
-        return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
+            account = self.user_profile.account
 
-    try:
-        with transaction.atomic():
-            account.delete()
-            UserProfile.objects.get(user=request.user).delete()
-    except Exception as e:
-        return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+        try:
+            with transaction.atomic():
+                account.delete()
+                UserProfile.objects.get(user=request.user).delete()
+        except Exception as e:
+            return JsonResponse(
+                {"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR
+            )
 
-    plugins_path = request.path_info.rsplit("/", 2)[0]
-    return HttpResponseRedirect(plugins_path)
+        plugins_path = request.path_info.rsplit("/", 2)[0]
+        return HttpResponseRedirect(plugins_path)
+
+
+class AccountListView(AccountListViewBase):
+    """Account list view for smarter api."""
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return Account.objects.all()
+        return self.user_profile.account
