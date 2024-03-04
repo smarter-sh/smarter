@@ -8,6 +8,12 @@ from smarter.view_helpers import SmarterAuthenticatedWebView
 logger = logging.getLogger(__name__)
 
 
+class LegalView(SmarterAuthenticatedWebView):
+    """Top level legal view"""
+
+    template_path = "dashboard/legal/index.html"
+
+
 class TOSView(SmarterAuthenticatedWebView):
     """Terms of service view"""
 

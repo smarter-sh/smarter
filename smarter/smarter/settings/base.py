@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     "knox",
     "taggit",
     "corsheaders",
+    "drf_yasg",
 ]
 
 MIDDLEWARE = [
@@ -228,3 +229,7 @@ DJSTRIPE_FOREIGN_KEY_TO_FIELD = "id"
 # SMARTER settings
 SMARTER_CACHE_EXPIRATION = 600
 SMARTER_API_SCHEMA = "http"
+
+SMARTER_API_NAME = "Smarter API"
+SMARTER_API_DESCRIPTION = "An enterprise class plugin-based AI chatbot platform"
+SMARTER_API_VERSION = "v0"
