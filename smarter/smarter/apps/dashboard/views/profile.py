@@ -11,9 +11,9 @@ logger = logging.getLogger(__name__)
 
 class ProfileView(SmarterAuthenticatedWebView):
 
-    template_path = "dashboard-default.html"
+    template_path = "dashboard/profile/profile.html"
 
 
 class ProfileLanguageView(SmarterAuthenticatedWebView):
 
-    template_path = "dashboard-default.html"
+    template_path = "dashboard/profile/language.html"

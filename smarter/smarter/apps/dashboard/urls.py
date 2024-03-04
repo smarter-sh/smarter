@@ -13,7 +13,6 @@ from .views.dashboard import (
     NotificationsView,
     PlatformHelpView,
 )
-from .views.profile import ProfileLanguageView, ProfileView
 
 
 urlpatterns = [
@@ -26,12 +25,11 @@ urlpatterns = [
     path("account/", include("smarter.apps.account.urls")),
     path("plugins/", include("smarter.apps.plugin.urls")),
     path("legal/", include("smarter.apps.dashboard.urls_legal")),
+    path("profile/", include("smarter.apps.dashboard.urls_profile")),
     path("help/", PlatformHelpView.as_view(), name="help"),
     path("support/", PlatformHelpView.as_view(), name="support"),
     path("documentation/", DocumentationView.as_view(), name="documentation"),
     path("docs/", DocumentationView.as_view(), name="docs"),
     path("changelog/", ChangeLogView.as_view(), name="changelog"),
     path("notifications/", NotificationsView.as_view(), name="notifications"),
-    path("profile/", ProfileView.as_view(), name="profile"),
-    path("profile/language/", ProfileLanguageView.as_view(), name="language"),
 ]
