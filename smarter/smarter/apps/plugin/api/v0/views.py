@@ -2,9 +2,12 @@
 # pylint: disable=W0718
 """PluginMeta views."""
 
+import json
 from http import HTTPStatus
+from urllib.parse import urljoin
 
 import yaml
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.http import HttpResponseRedirect, JsonResponse
@@ -14,8 +17,9 @@ from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 
 from smarter.apps.account.models import UserProfile
+from smarter.apps.plugin.api.v0.serializers import PluginMetaSerializer
 from smarter.apps.plugin.models import PluginMeta
-from smarter.apps.plugin.plugin import Plugin, Plugins
+from smarter.apps.plugin.plugin import Plugin
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.view_helpers import SmarterAPIListView, SmarterAPIView
 
@@ -25,6 +29,9 @@ class PluginView(SmarterAPIView):
 
     def get(self, request, plugin_id):
         return get_plugin(request, plugin_id)
+
+    def put(self, request):
+        return create_plugin(request)
 
     def post(self, request):
         return create_plugin(request)
@@ -49,9 +56,11 @@ class PluginCloneView(SmarterAPIView):
 class PluginsListView(SmarterAPIListView):
     """Plugins list view for smarter api."""
 
+    serializer_class = PluginMetaSerializer
+
     def get_queryset(self):
-        plugins = Plugins(user=self.request.user)
-        return plugins.to_json()
+        plugins = PluginMeta.objects.filter(author__user=self.request.user)
+        return plugins
 
 
 class AddPluginExamplesView(SmarterAPIView):
@@ -80,17 +89,35 @@ class PluginUploadView(SmarterAPIView):
     parser_class = (FileUploadParser,)
 
     @staticmethod
-    def parse_yaml_file(file):
-        data = file.read()
+    def parse_yaml_file(data):
 
-        data = yaml.safe_load(data)
+        if type(data) in [dict, list]:
+            return data
 
-        return data
+        if isinstance(data, str):
+            data = data.encode("utf-8")
+
+        try:
+            return yaml.safe_load(data)
+        except yaml.YAMLError:
+            pass
+
+        try:
+            return json.loads(data)
+        except json.JSONDecodeError:
+            pass
+
+        raise ValueError("Invalid data format: expected JSON or YAML.")
+
+    def _create(self, request):
+        data = self.parse_yaml_file(data=request.data)
+        return create_plugin(request=request, data=data)
 
     def put(self, request):
-        file_obj = request.data["file"]
-        data = self.parse_yaml_file(file_obj)
-        return create_plugin(request=request, data=data)
+        return self._create(request)
+
+    def post(self, request):
+        return self._create(request)
 
 
 # -----------------------------------------------------------------------
@@ -121,7 +148,6 @@ def get_plugin(request, plugin_id):
 
 def create_plugin(request, data: dict = None):
     """Create a plugin from a json representation in the body of the request."""
-
     try:
         user_profile = UserProfile.objects.get(user=request.user)
     except UserProfile.DoesNotExist:
@@ -135,9 +161,11 @@ def create_plugin(request, data: dict = None):
                     {"error": f"Invalid request data. Expected a JSON dict in request body but received {type(data)}"},
                     status=HTTPStatus.BAD_REQUEST,
                 )
-            data["user_profile"] = user_profile
         except Exception as e:
             return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
+
+    if "user_profile" not in data:
+        data["user_profile"] = user_profile
 
     try:
         plugin = Plugin(data=data)
@@ -146,7 +174,10 @@ def create_plugin(request, data: dict = None):
     except Exception as e:
         return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-    return HttpResponseRedirect(request.path_info + str(plugin.id) + "/")
+    base_url = f"{settings.SMARTER_API_SCHEMA}://{request.get_host()}/"
+    plugins_api_url = urljoin(base_url, "/api/v0/plugins/")
+
+    return HttpResponseRedirect(plugins_api_url + str(plugin.id) + "/")
 
 
 def update_plugin(request):
