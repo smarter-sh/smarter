@@ -36,7 +36,7 @@ RUN apt-get install -y nodejs
 RUN mkdir -p smarter/requirements
 COPY smarter/requirements ./smarter/requirements
 RUN pip install --upgrade pip
-RUN pip install -r smarter/requirements/deploy.txt
+RUN pip install -r smarter/requirements/production.txt
 
 # Add our source code
 COPY smarter .

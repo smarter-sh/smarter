@@ -2,14 +2,14 @@
 """Django views"""
 import logging
 
-from smarter.view_helpers import SmarterAuthenticatedWebView
+from smarter.view_helpers import SmarterAuthenticatedWebView, SmarterWebView
 
 
 logger = logging.getLogger(__name__)
 
 
-class DashboardView(SmarterAuthenticatedWebView):
-    """Dashboard view"""
+class DashboardView(SmarterWebView):
+    """Public Access Dashboard view"""
 
     template_path = "dashboard/dashboard.html"
 
