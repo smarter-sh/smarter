@@ -263,6 +263,13 @@ class Plugin:
             }
         return None
 
+    def refresh(self):
+        """Refresh the plugin."""
+        if self.ready:
+            self.id = self.id
+            return self.ready
+        return False
+
     def selected(self, user: User, messages: list[dict]) -> bool:
         """
         Return True the user has mentioned Lawrence McDaniel or FullStackWithLawrence

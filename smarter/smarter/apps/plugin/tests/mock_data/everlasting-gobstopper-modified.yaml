@@ -1,0 +1,21 @@
+---
+meta_data:
+  name: EverlastingGobstopper
+  description: MODIFIED
+  version: 0.1.1
+  tags:
+    - MODIFIED
+selector:
+  directive: search_terms
+  search_terms:
+    - MODIFIED
+prompt:
+  system_role: >
+    MODIFIED
+  model: gpt-3.5-turbo-1106
+  temperature: 1.0
+  max_tokens: 256
+
+plugin_data:
+  description: MODIFIED
+  return_data: MODIFIED
