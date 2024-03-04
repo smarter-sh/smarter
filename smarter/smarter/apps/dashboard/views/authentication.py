@@ -8,6 +8,9 @@ from django.shortcuts import redirect
 from smarter.view_helpers import SmarterWebView, redirect_and_expire_cache
 
 
+# ------------------------------------------------------------------------------
+# Public Access Views
+# ------------------------------------------------------------------------------
 class LoginRedirectView(SmarterWebView):
     """View for redirecting to login page."""
 

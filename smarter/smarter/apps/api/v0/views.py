@@ -4,6 +4,9 @@
 from smarter.view_helpers import SmarterAuthenticatedWebView
 
 
+# ------------------------------------------------------------------------------
+# Protected Views
+# ------------------------------------------------------------------------------
 class CustomAPIView(SmarterAuthenticatedWebView):
     """Custom API view for the API admin app."""
 

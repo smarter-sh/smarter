@@ -2,49 +2,52 @@
 """Django views"""
 import logging
 
-from smarter.view_helpers import SmarterAuthenticatedWebView
+from smarter.view_helpers import SmarterWebView
 
 
 logger = logging.getLogger(__name__)
 
 
-class LegalView(SmarterAuthenticatedWebView):
+# ------------------------------------------------------------------------------
+# Public Access Views
+# ------------------------------------------------------------------------------
+class LegalView(SmarterWebView):
     """Top level legal view"""
 
     template_path = "dashboard/legal/index.html"
 
 
-class TOSView(SmarterAuthenticatedWebView):
+class TOSView(SmarterWebView):
     """Terms of service view"""
 
     template_path = "dashboard/legal/tos.html"
 
 
-class SLAView(SmarterAuthenticatedWebView):
+class SLAView(SmarterWebView):
     """Service level agreement view"""
 
     template_path = "dashboard/legal/sla.html"
 
 
-class AcceptableUseView(SmarterAuthenticatedWebView):
+class AcceptableUseView(SmarterWebView):
     """Acceptable Use view"""
 
     template_path = "dashboard/legal/acceptable-use.html"
 
 
-class PrivacyPolicyView(SmarterAuthenticatedWebView):
+class PrivacyPolicyView(SmarterWebView):
     """Privacy policy view"""
 
     template_path = "dashboard/legal/privacy-policy.html"
 
 
-class CookiePolicyView(SmarterAuthenticatedWebView):
+class CookiePolicyView(SmarterWebView):
     """Cookie policy view"""
 
     template_path = "dashboard/legal/cookie-policy.html"
 
 
-class PCIComplianceView(SmarterAuthenticatedWebView):
+class PCIComplianceView(SmarterWebView):
     """PCI Compliance view"""
 
     template_path = "dashboard/legal/pci-compliance.html"

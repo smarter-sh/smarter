@@ -9,6 +9,9 @@ from smarter.view_helpers import SmarterAuthenticatedWebView
 logger = logging.getLogger(__name__)
 
 
+# ------------------------------------------------------------------------------
+# Protected Views
+# ------------------------------------------------------------------------------
 class ProfileView(SmarterAuthenticatedWebView):
 
     template_path = "dashboard/profile/profile.html"

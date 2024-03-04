@@ -3,6 +3,9 @@
 from smarter.view_helpers import SmarterAuthenticatedWebView
 
 
+# ------------------------------------------------------------------------------
+# Protected Views
+# ------------------------------------------------------------------------------
 class ChatAppView(SmarterAuthenticatedWebView):
     """Chat app view for smarter web."""
 
