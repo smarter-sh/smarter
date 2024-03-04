@@ -14,24 +14,6 @@ class DashboardView(SmarterAuthenticatedCachedWebView):
     template_path = "dashboard/dashboard.html"
 
 
-class APIKeysView(SmarterAuthenticatedCachedWebView):
-    """API keys view"""
-
-    template_path = "dashboard/api-keys.html"
-
-
-class PluginsView(SmarterAuthenticatedCachedWebView):
-    """Plugins view"""
-
-    template_path = "dashboard/plugins.html"
-
-
-class UsageView(SmarterAuthenticatedCachedWebView):
-    """Usage view"""
-
-    template_path = "dashboard/usage.html"
-
-
 class DocumentationView(SmarterAuthenticatedCachedWebView):
     """Documentation view"""
 
