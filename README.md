@@ -138,3 +138,8 @@ Please see:
 - and these [commit comment guidelines](./doc/SEMANTIC_VERSIONING.md) 😬😬😬 for managing CI rules for automated semantic releases.
 
 You can also contact [Lawrence McDaniel](https://lawrencemcdaniel.com/contact) directly.
+
+## Features Wish List
+
+- a news function. see [News API](https://newsapi.org/)
+- Azure Cognitive Services [content moderation](https://learn.microsoft.com/en-us/azure/ai-services/content-safety/)

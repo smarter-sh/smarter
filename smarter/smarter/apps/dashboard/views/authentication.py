@@ -4,18 +4,22 @@
 from django.conf import settings
 from django.contrib.auth import logout
 from django.shortcuts import redirect
-from rest_framework.permissions import AllowAny
-from rest_framework.views import APIView
+
+from smarter.view_helpers import SmarterWebView, redirect_and_expire_cache
 
 
-def login_redirector(request):
-    return redirect(settings.LOGIN_URL)
+class LoginRedirectView(SmarterWebView):
+    """View for redirecting to login page."""
+
+    def get(self, request, *args, **kwargs):
+        return redirect(settings.LOGIN_URL)
+
+    def post(self, request, *args, **kwargs):
+        return redirect(settings.LOGIN_URL)
 
 
-class LogoutView(APIView):
+class LogoutView(SmarterWebView):
     """View for logging out browser session."""
-
-    permission_classes = [AllowAny]
 
     def get(self, request, *args, **kwargs):
         logout(request)
@@ -23,4 +27,4 @@ class LogoutView(APIView):
 
     def post(self, request, *args, **kwargs):
         logout(request)
-        return redirect("/")
+        return redirect_and_expire_cache(path="/")

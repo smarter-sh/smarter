@@ -6,9 +6,6 @@ from http import HTTPStatus
 
 import openai
 from django.contrib.auth.models import User
-from knox.auth import TokenAuthentication
-from rest_framework import permissions, viewsets
-from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
 
 from smarter.apps.chat.functions.function_weather import (
@@ -41,6 +38,7 @@ from smarter.apps.common.validators import (  # validate_embedding_request,
 )
 from smarter.apps.plugin.plugin import Plugin
 from smarter.apps.plugin.utils import plugins_for_user
+from smarter.view_helpers import SmarterAPIView
 
 
 openai.organization = settings.openai_api_organization
@@ -209,12 +207,8 @@ def handler(user: User, data: dict):
     )
 
 
-class FunctionCallingViewSet(viewsets.ViewSet):
+class SmarterChatViewSet(SmarterAPIView):
     """top-level viewset for openai api function calling"""
 
-    authentication_classes = [TokenAuthentication, SessionAuthentication]
-    permission_classes = [permissions.IsAuthenticated]
-
-    def create(self, request):
-        """override the create method to handle POST requests."""
+    def post(self, request):
         return Response(handler(user=request.user, data=request.data))

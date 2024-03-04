@@ -15,6 +15,12 @@ from django.core.exceptions import ValidationError
 
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.plugin.api.v0.serializers import (
+    PluginDataSerializer,
+    PluginMetaSerializer,
+    PluginPromptSerializer,
+    PluginSelectorSerializer,
+)
 from smarter.apps.plugin.models import (
     PluginData,
     PluginMeta,
@@ -22,12 +28,6 @@ from smarter.apps.plugin.models import (
     PluginSelector,
 )
 from smarter.apps.plugin.plugin import Plugin, PluginExamples
-from smarter.apps.plugin.serializers import (
-    PluginDataSerializer,
-    PluginMetaSerializer,
-    PluginPromptSerializer,
-    PluginSelectorSerializer,
-)
 from smarter.apps.plugin.signals import (
     plugin_called,
     plugin_cloned,

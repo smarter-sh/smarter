@@ -4,78 +4,93 @@
 
 from http import HTTPStatus
 
+import yaml
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
-from knox.auth import TokenAuthentication
-from rest_framework.authentication import SessionAuthentication
-from rest_framework.decorators import (
-    api_view,
-    authentication_classes,
-    permission_classes,
-)
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin import Plugin, Plugins
 from smarter.apps.plugin.utils import add_example_plugins
+from smarter.view_helpers import SmarterAPIListView, SmarterAPIView
 
 
-@api_view(["GET", "PATCH", "DELETE"])
-@permission_classes([IsAuthenticated])
-@authentication_classes([TokenAuthentication, SessionAuthentication])
-def plugins_view(request, plugin_id):
-    if request.method == "GET":
+class PluginView(SmarterAPIView):
+    """Plugin view for smarter api."""
+
+    def get(self, request, plugin_id):
         return get_plugin(request, plugin_id)
-    if request.method == "POST":
+
+    def post(self, request):
         return create_plugin(request)
-    if request.method == "PATCH":
+
+    def patch(self, request):
         return update_plugin(request)
-    if request.method == "DELETE":
+
+    def delete(self, request, plugin_id):
         return delete_plugin(request, plugin_id)
-    return JsonResponse({"error": "Invalid HTTP method"}, status=405)
 
 
-@api_view(["GET", "POST"])
-@permission_classes([IsAuthenticated])
-@authentication_classes([TokenAuthentication, SessionAuthentication])
-def plugin_clone_view(request, plugin_id: int, new_name: str):
-    user_profile = UserProfile.objects.get(user=request.user)
-    plugin = Plugin(plugin_id=plugin_id, user_profile=user_profile)
-    new_id = plugin.clone(new_name)
-    return redirect("/plugins/" + str(new_id) + "/")
+class PluginCloneView(SmarterAPIView):
+    """Plugin clone view for smarter api."""
+
+    def post(self, request, plugin_id, new_name):
+        user_profile = UserProfile.objects.get(user=request.user)
+        plugin = Plugin(plugin_id=plugin_id, user_profile=user_profile)
+        new_id = plugin.clone(new_name)
+        return redirect("/plugins/" + str(new_id) + "/")
 
 
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-@authentication_classes([TokenAuthentication, SessionAuthentication])
-def plugins_list_view(request):
-    """Get a json list[dict] of all plugins for the current user."""
-    plugins = Plugins(user=request.user)
-    return Response(plugins.to_json(), status=HTTPStatus.OK)
+class PluginsListView(SmarterAPIListView):
+    """Plugins list view for smarter api."""
+
+    def get_queryset(self):
+        plugins = Plugins(user=self.request.user)
+        return plugins.to_json()
 
 
-@api_view(["GET", "POST"])
-@permission_classes([IsAuthenticated])
-@authentication_classes([TokenAuthentication, SessionAuthentication])
-def add_plugin_examples(request, user_id: int):
-    """Add example plugins for a user."""
+class AddPluginExamplesView(SmarterAPIView):
+    """Add example plugins to a user profile."""
 
-    try:
-        user = User.objects.get(id=user_id) if user_id else request.user
-        user_profile = UserProfile.objects.get(user=user)
-    except User.DoesNotExist:
-        return JsonResponse({"error": "User not found"}, status=HTTPStatus.BAD_REQUEST)
+    def post(self, request, user_id=None):
+        try:
+            user = User.objects.get(id=user_id) if user_id else request.user
+            user_profile = UserProfile.objects.get(user=user)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_400_BAD_REQUEST)
 
-    try:
-        add_example_plugins(user_profile=user_profile)
-    except Exception as e:
-        return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+        try:
+            add_example_plugins(user_profile=user_profile)
+        except Exception as e:
+            return Response(
+                {"error": "Internal error", "exception": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
-    return HttpResponseRedirect("/v0/plugins/")
+        return HttpResponseRedirect("/v0/plugins/")
+
+
+class PluginUploadView(SmarterAPIView):
+    """Plugin view for smarter api."""
+
+    parser_class = (FileUploadParser,)
+
+    @staticmethod
+    def parse_yaml_file(file):
+        data = file.read()
+
+        data = yaml.safe_load(data)
+
+        return data
+
+    def put(self, request):
+        file_obj = request.data["file"]
+        data = self.parse_yaml_file(file_obj)
+        return create_plugin(request=request, data=data)
 
 
 # -----------------------------------------------------------------------
@@ -104,25 +119,25 @@ def get_plugin(request, plugin_id):
     return JsonResponse({"error": "Internal plugin error."}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
 
-def create_plugin(request):
+def create_plugin(request, data: dict = None):
     """Create a plugin from a json representation in the body of the request."""
-    data: dict = None
 
     try:
         user_profile = UserProfile.objects.get(user=request.user)
     except UserProfile.DoesNotExist:
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
 
-    try:
-        data = request.data
-        if not isinstance(data, dict):
-            return JsonResponse(
-                {"error": f"Invalid request data. Expected a JSON dict in request body but received {type(data)}"},
-                status=HTTPStatus.BAD_REQUEST,
-            )
-        data["user_profile"] = user_profile
-    except Exception as e:
-        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
+    if not data:
+        try:
+            data = request.data
+            if not isinstance(data, dict):
+                return JsonResponse(
+                    {"error": f"Invalid request data. Expected a JSON dict in request body but received {type(data)}"},
+                    status=HTTPStatus.BAD_REQUEST,
+                )
+            data["user_profile"] = user_profile
+        except Exception as e:
+            return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
 
     try:
         plugin = Plugin(data=data)

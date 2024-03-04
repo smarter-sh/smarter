@@ -1,6 +1,13 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+	<!--
+    Product Name: {{ product_name }}
+    Version: '{{ smarter_version }}'
+    Author: {{ company_name }}
+    Copyright: © {{ current_year }} {{ company_name }}. All rights reserved.
+    Description: {{ product_description }}
+  -->
+  <html lang="en">
 	<!--begin::Head-->
 	<head>
     {% block head %}
@@ -60,8 +67,6 @@
       #kt_app_sidebar_toggle {
         background-color: #eeeeee;
       }
-
-
 </style>
 	</head>
 	<!--end::Head-->
@@ -1366,7 +1371,7 @@
 						</div>
 						<!--end::sidebar menu-->
 						<!--begin::Footer-->
-						<div class="app-sidebar-footer flex-column-auto pt-2 pb-6 px-6" id="kt_app_sidebar_footer">
+						<div class="app-sidebar-footer footer-hide flex-column-auto pt-2 pb-6 px-6" id="kt_app_sidebar_footer">
 							<a href="https://www.querium.com/" class="btn btn-flex flex-center overflow-hidden text-nowrap px-0 h-40px w-100">
 								<span class="btn-label">
                   Querium Corp.<br>

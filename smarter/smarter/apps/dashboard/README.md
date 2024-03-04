@@ -1,4 +1,4 @@
-# Smarter Web Platform
+# Smarter Web Dashboard
 
 ## Bootstrap Theme - Keen
 
