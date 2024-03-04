@@ -6,7 +6,7 @@ from django import template
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.utils.cache import patch_vary_headers
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -22,6 +22,15 @@ from smarter.decorators import staff_required
 
 
 register = template.Library()
+
+
+def redirect_and_expire_cache(path: str = "/"):
+    """Redirect to the given path and expire the cache."""
+    response = redirect(path)
+    response["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response["Pragma"] = "no-cache"
+    response["Expires"] = "0"
+    return response
 
 
 # ------------------------------------------------------------------------------
