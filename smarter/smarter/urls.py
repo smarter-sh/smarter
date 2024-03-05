@@ -24,8 +24,8 @@ urlpatterns = [
     path("api/", include("smarter.apps.api.urls")),
     # shortcuts for authentication views
     # -----------------------------------
-    path("login/", LoginView.as_view(), name="login"),
-    path("logout/", LogoutView.as_view(), name="logout"),
-    path("register/", SignUpView.as_view(), name="register"),
+    path("login/", LoginView.as_view(), name="login_view"),
+    path("logout/", LogoutView.as_view(), name="logout_view"),
+    path("register/", SignUpView.as_view(), name="register_view"),
     # -----------------------------------
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
