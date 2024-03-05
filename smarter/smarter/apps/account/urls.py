@@ -7,11 +7,13 @@ from smarter.apps.account.views.account import (  # AccountAPIKeysView,; Account
     AccountView,
 )
 from smarter.apps.account.views.authentication import (
+    AccountDeactivateView,
     LoginView,
     LogoutView,
     NewPasswordView,
     ResetPasswordView,
     SignUpView,
+    WelcomeView,
 )
 
 
@@ -22,6 +24,8 @@ urlpatterns = [
     path("register/", SignUpView.as_view(), name="register"),
     path("reset-password/", ResetPasswordView.as_view(), name="reset-password"),
     path("new-password/", NewPasswordView.as_view(), name="new-password"),
+    path("welcome/", WelcomeView.as_view(), name="welcome"),
+    path("deactivate/", AccountDeactivateView.as_view(), name="deactivate"),
     # path("limits/", AccountLimitsView.as_view(), name="account_limits"),
     # path("organization/", AccountOrganizationView.as_view(), name="account_organization"),
     # path("profile/", AccountProfileView.as_view(), name="account_profile"),
