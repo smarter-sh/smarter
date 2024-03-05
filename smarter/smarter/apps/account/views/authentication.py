@@ -8,28 +8,27 @@ from django.shortcuts import redirect
 from smarter.view_helpers import SmarterWebView, redirect_and_expire_cache
 
 
-class LoginForm(forms.Form):
-    """Form for the sign-in page."""
-
-    email = forms.EmailField()
-    password = forms.CharField(widget=forms.PasswordInput)
-
-
 # ------------------------------------------------------------------------------
 # Public Access Views
 # ------------------------------------------------------------------------------
 class LoginView(SmarterWebView):
     """View for logging in browser session."""
 
+    class LoginForm(forms.Form):
+        """Form for the sign-in page."""
+
+        email = forms.EmailField()
+        password = forms.CharField(widget=forms.PasswordInput)
+
     template_path = "account/authentication/sign-in.html"
 
     def get(self, request):
-        form = LoginForm()
+        form = LoginView.LoginForm()
         context = {"form": form}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
     def post(self, request):
-        form = LoginForm(request.POST)
+        form = LoginView.LoginForm(request.POST)
         if form.is_valid():
             user = authenticate(request, username=form.cleaned_data["email"], password=form.cleaned_data["password"])
             if user is not None:

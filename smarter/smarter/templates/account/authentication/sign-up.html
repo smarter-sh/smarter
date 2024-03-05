@@ -7,7 +7,7 @@
 						<!--begin::Wrapper-->
 						<div class="w-lg-500px p-10">
 							<!--begin::Form-->
-							<form class="form w-100" novalidate="novalidate" id="kt_sign_up_form" data-kt-redirect-url="/login/" action="#">
+							<form class="form w-100" novalidate="novalidate" id="kt_sign_up_form" data-kt-redirect-url="{{ account_authentication.login_url }}" action="#">
 								<!--begin::Heading-->
 								<div class="text-center mb-11">
 									<!--begin::Title-->
@@ -109,7 +109,7 @@
 								<!--end::Submit button-->
 								<!--begin::Sign up-->
 								<div class="text-gray-500 text-center fw-semibold fs-6">Already have an Account?
-								<a href="/login/" class="link-primary fw-semibold">Sign in</a></div>
+								<a href="{{ account_authentication.login_url }}" class="link-primary fw-semibold">Sign in</a></div>
 								<!--end::Sign up-->
 							</form>
 							<!--end::Form-->
