@@ -1,6 +1,14 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block head_extra %}
+<style>
+  .bw-background {
+      filter: grayscale(100%);
+  }
+</style>
+{% endblock %}
+
 {% block root %}
       <!--begin::Authentication - Sign-in -->
 			<div class="d-flex flex-column flex-lg-row flex-column-fluid">
