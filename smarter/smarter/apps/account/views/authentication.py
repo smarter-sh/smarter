@@ -67,6 +67,12 @@ class NewPasswordView(SmarterWebView):
     template_path = "account/authentication/new-password.html"
 
 
+class ConfirmPasswordView(SmarterWebView):
+    """View for resetting password."""
+
+    template_path = "account/authentication/password-confirmation.html"
+
+
 class SignUpView(SmarterWebView):
     """View for signing up."""
 
@@ -95,6 +101,12 @@ class SignUpView(SmarterWebView):
             login(request, user)
             return redirect_and_expire_cache(path="/welcome/")
         return self.get(request=request)
+
+
+class VerifyEmailView(SmarterWebView):
+    """View for verifying email."""
+
+    template_path = "account/authentication/verify-email.html"
 
 
 # ------------------------------------------------------------------------------

@@ -2,8 +2,6 @@
 {% load static %}
 
     {% block root %}
-    <!--begin::Root-->
-		<div class="d-flex flex-column flex-root" id="kt_app_root">
 			<!--begin::Page bg image-->
 			<style>body { background-image: url("{% static "assets/media/auth/bg17.jpg" %}"); } [data-bs-theme="dark"] body { background-image: url("{% static "assets/media/auth/bg17-dark.jpg" %}"); }</style>
 			<!--end::Page bg image-->
@@ -46,6 +44,4 @@
 				<!--end::Content-->
 			</div>
 			<!--end::Authentication - Signup Welcome Message-->
-		</div>
-		<!--end::Root-->
     {% endblock %}
