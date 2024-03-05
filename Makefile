@@ -42,7 +42,7 @@ run:
 	make react-run
 
 analyze:
-	cloc . --exclude-ext=svg,json,zip --vcs=git
+	cloc . --exclude-ext=svg,json,zip --fullpath --not-match-d=smarter/smarter/static --vcs=git
 
 coverage:
 	cd smarter && \
