@@ -7,11 +7,17 @@ from smarter.apps.account.models import Account, UserProfile
 
 def base(request):
     """Base context processor for templates that inherit from account/base.html"""
+    account = {
+        "account": {
+            "registration_url": "/register/",
+            "welcome_url": "/account/welcome/",
+            "deactivate_url": "/account/deactivate/",
+        }
+    }
     account_authentication = {
         "account_authentication": {
             "login_url": settings.LOGIN_URL,
             "logout_url": "/logout/",
-            "registration_url": "/register/",
             "password_reset_url": "/account/reset-password/",
             "new_password_url": "/account/new-password/",
         }
@@ -25,5 +31,5 @@ def base(request):
                 "account_authentication_account": account,
             }
         }
-        return {**account_authentication, **account_authenticated}
-    return account_authentication
+        return {**account, **account_authentication, **account_authenticated}
+    return {**account, **account_authentication}

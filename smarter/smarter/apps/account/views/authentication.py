@@ -3,9 +3,14 @@
 """Django REST framework views for the API admin app."""
 from django import forms
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
 from django.shortcuts import redirect
 
-from smarter.view_helpers import SmarterWebView, redirect_and_expire_cache
+from smarter.view_helpers import (
+    SmarterAuthenticatedWebView,
+    SmarterWebView,
+    redirect_and_expire_cache,
+)
 
 
 # ------------------------------------------------------------------------------
@@ -41,11 +46,11 @@ class LoginView(SmarterWebView):
 class LogoutView(SmarterWebView):
     """View for logging out browser session."""
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request):
         logout(request)
         return redirect("/")
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         logout(request)
         return redirect_and_expire_cache(path="/")
 
@@ -65,4 +70,43 @@ class NewPasswordView(SmarterWebView):
 class SignUpView(SmarterWebView):
     """View for signing up."""
 
+    class SignUpForm(forms.Form):
+        """Form for the sign-in page."""
+
+        email = forms.EmailField()
+        password = forms.CharField(widget=forms.PasswordInput)
+
     template_path = "account/authentication/sign-up.html"
+
+    def get(self, request):
+        if request.user.is_authenticated:
+            return redirect_and_expire_cache(path="/")
+
+        form = SignUpView.SignUpForm()
+        context = {"form": form}
+        return self.clean_http_response(request, template_path=self.template_path, context=context)
+
+    def post(self, request):
+        form = SignUpView.SignUpForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data["email"]
+            password = form.cleaned_data["password"]
+            user = User.objects.create_user(username, password=password)
+            login(request, user)
+            return redirect_and_expire_cache(path="/welcome/")
+        return self.get(request=request)
+
+
+# ------------------------------------------------------------------------------
+# Private Access Views
+# ------------------------------------------------------------------------------
+class WelcomeView(SmarterAuthenticatedWebView):
+    """View for the welcome page."""
+
+    template_path = "account/welcome.html"
+
+
+class AccountDeactivateView(SmarterAuthenticatedWebView):
+    """View for the account deactivation page."""
+
+    template_path = "account/account-deactivated.html"
