@@ -22,6 +22,9 @@ SECRET_KEY = "django-insecure-zp722j6hm29(=kro+i*)7p+f=@s)wlhj%8r!k#3qke(yb8%m_j
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+if not DEBUG:
+    ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+
 # dev only:
 # Bootstrap theme source files and static assets.
 keen_source = glob.glob(os.path.join(django_apps_dir, "*", "keen_demo1"))

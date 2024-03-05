@@ -39,7 +39,7 @@ LOGIN_REDIRECT_URL = "/"
 SECRET_KEY = "SET-ME-PLEASE"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = []
 

@@ -21,7 +21,7 @@
 						<!--end::sidebar mobile toggle-->
 						<!--begin::Mobile logo-->
 						<div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0">
-							<a href="index.html" class="d-lg-none">
+							<a href="/" class="d-lg-none">
 								<img alt="Logo" src="{% static 'querium/querium-logo-orange-transparent.png' %}" class="theme-light-show h-60px" />
 								<img alt="Logo" src="{% static 'querium/querium-logo-white-transparent.png' %}" class="theme-dark-show h-60px" />
 							</a>
@@ -1044,7 +1044,7 @@
 						<!--begin::Logo-->
 						<div class="app-sidebar-logo px-6" id="kt_app_sidebar_logo">
 							<!--begin::Logo image-->
-							<a href="index.html">
+							<a href="/">
 								<img alt="Logo" src="{% static 'querium/querium-logo-white-transparent.png' %}" class="h-75px app-sidebar-logo-default" />
 							</a>
 							<!--end::Logo image-->
@@ -1360,7 +1360,7 @@
 												<!--begin:Menu item-->
 												<div class="menu-item">
 													<!--begin:Menu link-->
-													<a class="menu-link" href="index.html">
+													<a class="menu-link" href="/">
 														<span class="menu-bullet">
 															<span class="bullet bullet-dot"></span>
 														</span>
@@ -4195,7 +4195,7 @@
 										<ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-7 my-0 pt-1">
 											<!--begin::Item-->
 											<li class="breadcrumb-item text-muted">
-												<a href="index.html" class="text-muted text-hover-primary">Home</a>
+												<a href="/" class="text-muted text-hover-primary">Home</a>
 											</li>
 											<!--end::Item-->
 											<!--begin::Item-->
@@ -7119,6 +7119,7 @@
 			<!--end::Page-->
 {% endblock %}
 
+{% block javascript_extra %}
 		<!--begin::Vendors Javascript(used for this page only)-->
 		<script src="{% static 'assets/plugins/custom/fullcalendar/fullcalendar.bundle.js' %}"></script>
 		<script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
@@ -7130,3 +7131,4 @@
 		<script src="{% static 'assets/js/custom/utilities/modals/create-campaign.js' %}"></script>
 		<script src="{% static 'assets/js/custom/utilities/modals/users-search.js' %}"></script>
 		<!--end::Custom Javascript-->
+{% endblock %}

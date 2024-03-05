@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class DashboardView(SmarterWebView):
     """Public Access Dashboard view"""
 
-    template_path = "dashboard/unauthenticated.html"
+    template_path = "landing-page.html"
 
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:
