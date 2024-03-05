@@ -7,14 +7,14 @@ from smarter.apps.account.models import Account, UserProfile
 
 def base(request):
     """Base context processor for templates that inherit from account/base.html"""
-    account = {
+    account_context = {
         "account": {
             "registration_url": "/register/",
             "welcome_url": "/account/welcome/",
             "deactivate_url": "/account/deactivate/",
         }
     }
-    account_authentication = {
+    account_authentication_context = {
         "account_authentication": {
             "login_url": settings.LOGIN_URL,
             "logout_url": "/logout/",
@@ -25,11 +25,11 @@ def base(request):
     if request.user.is_authenticated:
         user_profile = UserProfile.objects.get(user=request.user)
         account = Account.objects.get(id=user_profile.account_id)
-        account_authenticated = {
+        account_authenticated_context = {
             "account_authenticated": {
                 "account_authentication_user": request.user,
                 "account_authentication_account": account,
             }
         }
-        return {**account, **account_authentication, **account_authenticated}
-    return {**account, **account_authentication}
+        return {**account_context, **account_authentication_context, **account_authenticated_context}
+    return {**account_context, **account_authentication_context}
