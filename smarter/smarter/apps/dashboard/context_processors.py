@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=W0613
 """Django context processors for base.html"""
 from datetime import datetime
 from urllib.parse import urljoin
@@ -6,7 +7,6 @@ from urllib.parse import urljoin
 from django.conf import settings
 
 from smarter.__version__ import __version__
-from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.chat.models import ChatHistory
 
 
@@ -16,27 +16,17 @@ def base(request):
     from base.html, which renders the dashboard layout
     """
     current_year = datetime.now().year
-    base_keys = {
-        "product_name": "Smarter",
-        "company_name": "Querium, Corp",
-        "smarter_version": __version__,
-        "current_year": current_year,
-        "product_description": "Smarter is an enterprise class plugin-based chat solution.",
-        "footer_message": f"Copyright {current_year}. All rights reserved.",
-    }
-    if request.user.is_authenticated:
-        user_profile = UserProfile.objects.get(user=request.user)
-        account = Account.objects.get(id=user_profile.account_id)
-        user_keys = {
-            "user_name": request.user.username,
-            "user_first_name": request.user.first_name,
-            "user_last_name": request.user.last_name,
-            "user_email": request.user.email,
-            "my_plugins": 12,
-            "django_admin_title": "Account Administration - " + account.company_name,
+    context = {
+        "dashboard": {
+            "product_name": "Smarter",
+            "company_name": "Querium, Corp",
+            "smarter_version": __version__,
+            "current_year": current_year,
+            "product_description": "Smarter is an enterprise class plugin-based chat solution.",
+            "footer_message": f"Copyright {current_year}. All rights reserved.",
         }
-        return {**base_keys, **user_keys}
-    return base_keys
+    }
+    return context
 
 
 def react(request):
