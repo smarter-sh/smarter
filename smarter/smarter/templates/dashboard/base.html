@@ -1064,9 +1064,282 @@
 							<div id="kt_app_sidebar_menu_wrapper" class="app-sidebar-wrapper">
 								<!--begin::Scroll wrapper-->
 								<div id="kt_app_sidebar_menu_scroll" class="hover-scroll-y my-5 mx-3" data-kt-scroll="true" data-kt-scroll-activate="true" data-kt-scroll-height="auto" data-kt-scroll-dependencies="#kt_app_sidebar_logo, #kt_app_sidebar_footer" data-kt-scroll-wrappers="#kt_app_sidebar_menu" data-kt-scroll-offset="5px" data-kt-scroll-save-state="true">
-									<!--begin::Menu-->
-									<div class="menu menu-column menu-rounded menu-sub-indention fw-semibold" id="#kt_app_sidebar_menu" data-kt-menu="true" data-kt-menu-expand="false">
-										<!--begin:Menu item-->
+                    <!--begin::Menu-->
+                    <div class="menu menu-column menu-rounded menu-sub-indention fw-semibold" id="#kt_app_sidebar_menu" data-kt-menu="true" data-kt-menu-expand="false">
+                    <!--begin::Menu-->
+                    {% block menu %}
+                    <div class="menu menu-column menu-rounded menu-sub-indention fw-semibold" id="#kt_app_sidebar_menu" data-kt-menu="true" data-kt-menu-expand="false">
+                      <!--begin:Menu item-->
+                      <div class="here menu-item pt-5">
+                        <!--begin:Menu content-->
+                        <div class="menu-content">
+                          <span class="menu-icon">
+                            <i class="ki-duotone ki-category fs-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                              <span class="path3"></span>
+                              <span class="path4"></span>
+                            </i>
+                          </span>
+                          <span class="menu-heading here fw-bold text-uppercase fs-7">Chat</span>
+                        </div>
+                        <!--end:Menu content-->
+                      </div>
+                      <!--end:Menu item-->
+
+                      <!--end:Menu item-->
+                      <!--begin:Menu item-->
+                      <div class="menu-item">
+                        <!--begin:Menu link-->
+                        <a class="menu-link active" href="/chat/" target="_blank">
+                          <span class="menu-icon">
+                            <i class="ki-duotone ki-cube-2 fs-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                              <span class="path3"></span>
+                              <span class="path4"></span>
+                              <span class="path5"></span>
+                              <span class="path6"></span>
+                              <span class="path7"></span>
+                              <span class="path8"></span>
+                              <span class="path9"></span>
+                              <span class="path10"></span>
+                            </i>
+                          </span>
+                          <span class="menu-title">Plugins</span>
+                        </a>
+                        <!--end:Menu link-->
+                      </div>
+                      <!--end:Menu item-->
+                      <!--begin:Menu item-->
+                      <div class="menu-item">
+                        <!--begin:Menu link-->
+                        <a class="menu-link" href="/chatapp/" target="_self">
+                          <span class="menu-icon">
+                            <i class="ki-duotone ki-message-text-2 fs-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                              <span class="path3"></span>
+                            </i>
+                          </span>
+                          <span class="menu-title">Sandbox</span>
+                        </a>
+                        <!--end:Menu link-->
+                      </div>
+                      <!--end:Menu item-->
+                      <!--begin:Menu item-->
+                      <div class="menu-item">
+                        <!--begin:Menu link-->
+                        <a class="menu-link" href="/chat/langchain/" target="_blank">
+                          <span class="menu-icon">
+                            <i class="ki-duotone ki-tablet-text-down fs-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                              <span class="path3"></span>
+                            </i>
+                          </span>
+                          <span class="menu-title">Langchain</span>
+                        </a>
+                        <!--end:Menu link-->
+                      </div>
+                      <!--end:Menu item-->
+                      <!--begin:Menu item-->
+                      <div class="menu-item">
+                        <!--begin:Menu link-->
+                        <a class="menu-link" href="/chat/chatgpt/" target="_blank">
+                          <span class="menu-icon">
+                            <i class="ki-duotone ki-files-tablet fs-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                              <span class="path3"></span>
+                            </i>
+                          </span>
+                          <span class="menu-title">ChatGPT</span>
+                        </a>
+                        <!--end:Menu link-->
+                      </div>
+                      <!--end:Menu item-->
+                      <!--begin:Menu item-->
+                      <div class="menu-item">
+                        <!--begin:Menu link-->
+                        <a class="menu-link" href="/api/" target="_self">
+                          <span class="menu-icon">
+                            <i class="ki-duotone ki-devices-2 fs-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                              <span class="path3"></span>
+                            </i>
+                          </span>
+                          <span class="menu-title">API</span>
+                        </a>
+                        <!--end:Menu link-->
+                        <!--begin:Menu link-->
+                        <a class="menu-link" href="/admin/" target="_self">
+                          <span class="menu-icon">
+                            <i class="ki-duotone ki-devices-2 fs-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                              <span class="path3"></span>
+                            </i>
+                          </span>
+                          <span class="menu-title">Admin</span>
+                        </a>
+                        <!--end:Menu link-->
+                      </div>
+                      <!--end:Menu item-->
+
+                      <!--begin:Menu item-->
+                      <div class="menu-item pt-5">
+                        <!--begin:Menu content-->
+                        <div class="menu-content">
+                          <span class="menu-heading fw-bold text-uppercase fs-7">Help</span>
+                        </div>
+                        <!--end:Menu content-->
+                      </div>
+                      <!--end:Menu item-->
+                      <div class="menu-item">
+                        <!--begin:Menu link-->
+                        <a class="menu-link" href="/support/" target="_blank">
+                          <span class="menu-icon">
+                            <i class="ki-duotone ki-rocket fs-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                            </i>
+                          </span>
+                          <span class="menu-title">Support Center</span>
+                        </a>
+                        <!--end:Menu link-->
+                      </div>
+                      <!--end:Menu item-->
+                      <!--begin:Menu item-->
+                      <div class="menu-item">
+                        <!--begin:Menu link-->
+                        <a class="menu-link" href="/docs/" target="_blank">
+                          <span class="menu-icon">
+                            <i class="ki-duotone ki-abstract-26 fs-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                            </i>
+                          </span>
+                          <span class="menu-title">Documentation</span>
+                        </a>
+                        <!--end:Menu link-->
+                      </div>
+                      <!--end:Menu item-->
+                      <!--begin:Menu item-->
+                      <div class="menu-item">
+                        <!--begin:Menu link-->
+                        <a class="menu-link" href="https://preview.keenthemes.com/html/keen/docs/getting-started/changelog" target="_blank">
+                          <span class="menu-icon">
+                            <i class="ki-duotone ki-code fs-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                              <span class="path3"></span>
+                              <span class="path4"></span>
+                            </i>
+                          </span>
+                          <span class="menu-title">Changelog v{{ smarter_version }}</span>
+                        </a>
+                        <!--end:Menu link-->
+                      </div>
+                      <!--end:Menu item-->
+                      <!--begin:Menu item-->
+                      <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
+                        <!--begin:Menu link-->
+                        <span class="menu-link">
+                          <span class="menu-icon">
+                            <i class="ki-duotone ki-bank fs-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                            </i>
+                          </span>
+                          <span class="menu-title">Legal</span>
+                          <span class="menu-arrow"></span>
+                        </span>
+                        <!--end:Menu link-->
+                        <!--begin:Menu sub-->
+                        <div class="menu-sub menu-sub-accordion menu-active-bg">
+                          <!--begin:Menu item-->
+                          <div class="menu-item">
+                            <!--begin:Menu link-->
+                            <a class="menu-link" href="pages/blog/home.html">
+                              <span class="menu-bullet">
+                                <span class="bullet bullet-dot"></span>
+                              </span>
+                              <span class="menu-title">Terms of Service</span>
+                            </a>
+                            <!--end:Menu link-->
+                          </div>
+                          <!--end:Menu item-->
+                          <!--begin:Menu item-->
+                          <div class="menu-item">
+                            <!--begin:Menu link-->
+                            <a class="menu-link" href="pages/blog/post.html">
+                              <span class="menu-bullet">
+                                <span class="bullet bullet-dot"></span>
+                              </span>
+                              <span class="menu-title">Service Level Agreement</span>
+                            </a>
+                            <!--end:Menu link-->
+                          </div>
+                          <!--end:Menu item-->
+                          <!--begin:Menu item-->
+                          <div class="menu-item">
+                            <!--begin:Menu link-->
+                            <a class="menu-link" href="pages/blog/post.html">
+                              <span class="menu-bullet">
+                                <span class="bullet bullet-dot"></span>
+                              </span>
+                              <span class="menu-title">Acceptable Use Policy</span>
+                            </a>
+                            <!--end:Menu link-->
+                          </div>
+                          <!--end:Menu item-->
+                          <!--begin:Menu item-->
+                          <div class="menu-item">
+                            <!--begin:Menu link-->
+                            <a class="menu-link" href="pages/blog/post.html">
+                              <span class="menu-bullet">
+                                <span class="bullet bullet-dot"></span>
+                              </span>
+                              <span class="menu-title">Privacy Policy</span>
+                            </a>
+                            <!--end:Menu link-->
+                          </div>
+                          <!--end:Menu item-->
+                          <!--begin:Menu item-->
+                          <div class="menu-item">
+                            <!--begin:Menu link-->
+                            <a class="menu-link" href="pages/blog/post.html">
+                              <span class="menu-bullet">
+                                <span class="bullet bullet-dot"></span>
+                              </span>
+                              <span class="menu-title">Cookie Policy</span>
+                            </a>
+                            <!--end:Menu link-->
+                          </div>
+                          <!--end:Menu item-->
+                          <!--begin:Menu item-->
+                          <div class="menu-item">
+                            <!--begin:Menu link-->
+                            <a class="menu-link" href="pages/blog/post.html">
+                              <span class="menu-bullet">
+                                <span class="bullet bullet-dot"></span>
+                              </span>
+                              <span class="menu-title">PCI Compliance</span>
+                            </a>
+                            <!--end:Menu link-->
+                          </div>
+                          <!--end:Menu item-->
+                        </div>
+                        <!--end:Menu sub-->
+                      </div>
+                      <!--end:Menu item-->
+
+                    </div>
+                    {% endblock %}
+                    <!--end::Menu-->
+                    <!--begin:Menu item-->
 										<div data-kt-menu-trigger="click" class="menu-item menu-accordion">
 											<!--begin:Menu link-->
 											<span class="menu-link">
@@ -1214,7 +1487,7 @@
 										<!--begin:Menu item-->
 										<div data-kt-menu-trigger="click" class="menu-item menu-accordion">
 											<!--begin:Menu link-->
-											<span class="menu-link active">
+											<span class="menu-link">
 												<span class="menu-icon">
 													<i class="ki-duotone ki-address-book fs-2">
 														<span class="path1"></span>
