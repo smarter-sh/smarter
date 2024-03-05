@@ -67,7 +67,7 @@ aws-build:
 	terraform apply
 
 # ---------------------------------------------------------
-# Python Django Back End
+# Django Back End
 # ---------------------------------------------------------
 django-init:
 	if [ -f smarter/db.sqlite3 ]; then rm smarter/db.sqlite3; fi && \
@@ -88,6 +88,9 @@ django-test:
 	cd smarter && python manage.py test
 
 
+# ---------------------------------------------------------
+# Python
+# ---------------------------------------------------------
 python-init:
 	make python-clean
 	npm install && \
@@ -108,6 +111,24 @@ python-lint:
 python-clean:
 	rm -rf venv
 	find python/ -name __pycache__ -type d -exec rm -rf {} +
+
+# ---------------------------------------------------------
+# Keen
+# ---------------------------------------------------------
+keen-init:
+	cd keen_v3.0.6/tools && npm install --globar yarn && \
+	npm install gulp@^4.0.2 && \
+	npm install gulp-cli && \
+	gulp --version
+
+keen-build:
+	cd keen_v3.0.6/tools && \
+	yarn && \
+	gulp --demo1
+
+keen-server:
+	cd keen_v3.0.6/tools && \
+	gulp localhost
 
 ######################
 # React app
