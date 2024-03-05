@@ -1,0 +1,84 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <!--
+  Author: Keenthemes
+  Product Name: Keen
+  Product Version: 3.0.6
+  Purchase: https://themes.getbootstrap.com/product/keen-the-ultimate-bootstrap-admin-theme/
+  Website: http://www.keenthemes.com
+  Contact: support@keenthemes.com
+  -->
+	<!--begin::Head-->
+	<head>
+    {% block head %}
+
+    <link rel="shortcut icon" type="image/png"  href="{% static 'querium/querium-favicon-192x192.png' %}" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Querium Smarter</title>
+
+		<meta charset="utf-8" />
+		<meta name="description" content="A plugin-based chat solution." />
+		<meta name="keywords" content="Querium, Smarter, chatGPT" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta property="og:locale" content="en_US" />
+		<meta property="og:type" content="article" />
+		<meta property="og:title" content="Querium Smarter" />
+		<meta property="og:url" content="https://smarter.sh" />
+		<meta property="og:site_name" content="Querium Smarter" />
+
+    {% block canonical %}
+		<link rel="canonical" href="/" />
+    {% endblock %}
+
+		<!--begin::Fonts(mandatory for all pages)-->
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
+		<!--end::Fonts-->
+		<!--begin::Global Stylesheets Bundle(mandatory for all pages)-->
+		<link href="{% static 'assets/plugins/global/plugins.bundle.css' %}" rel="stylesheet" type="text/css" />
+		<link href="{% static 'assets/css/style.bundle.css' %}" rel="stylesheet" type="text/css" />
+		<!--end::Global Stylesheets Bundle-->
+		<script>// Frame-busting to prevent site from being loaded within a frame without permission (click-jacking) if (window.top != window.self) { window.top.location.replace(window.self.location.href); }</script>
+    <style>
+      .bw-background {
+        filter: grayscale(100%);
+      }
+    </style>
+    {% endblock %}
+    {% block head_extra %}
+    {% endblock %}
+  </head>
+	<!--end::Head-->
+	<!--begin::Body-->
+	<body id="kt_body" class="app-blank app-blank">
+		<!--begin::Theme mode setup on page load-->
+		<script>var defaultThemeMode = "light"; var themeMode; if ( document.documentElement ) { if ( document.documentElement.hasAttribute("data-bs-theme-mode")) { themeMode = document.documentElement.getAttribute("data-bs-theme-mode"); } else { if ( localStorage.getItem("data-bs-theme") !== null ) { themeMode = localStorage.getItem("data-bs-theme"); } else { themeMode = defaultThemeMode; } } if (themeMode === "system") { themeMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; } document.documentElement.setAttribute("data-bs-theme", themeMode); }</script>
+		<!--end::Theme mode setup on page load-->
+		<!--begin::Root-->
+		<div class="d-flex flex-column flex-root" id="kt_app_root">
+      {% block root %}
+
+      <h2 style="text-align: center;">Extend base.html and add your content inside of Django template block 'root'</h2>
+
+      {% endblock %}
+    </div>
+		<!--end::Root-->
+    {% block javascript %}
+		<!--begin::Javascript-->
+		<script>var hostUrl = "assets/";</script>
+		<!--begin::Global Javascript Bundle(mandatory for all pages)-->
+		<script src="{% static 'assets/plugins/global/plugins.bundle.js' %}"></script>
+		<script src="{% static 'assets/js/scripts.bundle.js' %}"></script>
+		<!--end::Global Javascript Bundle-->
+		<!--begin::Custom Javascript(used for this page only)-->
+		<script src="{% static 'assets/js/custom/authentication/sign-in/general.js' %}"></script>
+		<!--end::Custom Javascript-->
+    {% block javascript_extra %}
+    {% endblock %}
+    {% block react_javascript %}
+    {% endblock %}
+		<!--end::Javascript-->
+    {% endblock %}
+	</body>
+	<!--end::Body-->
+</html>

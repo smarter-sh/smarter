@@ -29,7 +29,7 @@ BASE_DIR = Path(os.path.join(PROJECT_ROOT, "smarter")).resolve()
 print("PROJECT_ROOT", PROJECT_ROOT)
 print("BASE_DIR", BASE_DIR)
 
-LOGIN_URL = "/api-auth/login/"
+LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/"
 
 # Quick-start development settings - unsuitable for production
