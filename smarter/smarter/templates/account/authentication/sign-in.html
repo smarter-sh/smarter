@@ -62,7 +62,7 @@
 								<div class="d-flex flex-stack flex-wrap gap-3 fs-base fw-semibold mb-8">
 									<div></div>
 									<!--begin::Link-->
-									<a href="/account/reset-password/" class="link-primary">Forgot Password ?</a>
+									<a href="{{ account_authentication.password_reset_url }}" class="link-primary">Forgot Password ?</a>
 									<!--end::Link-->
 								</div>
 								<!--end::Wrapper-->
@@ -81,7 +81,7 @@
 								<!--end::Submit button-->
 								<!--begin::Sign up-->
 								<div class="text-gray-500 text-center fw-semibold fs-6">Not a Member yet?
-								<a href="/register/" class="link-primary">Sign up</a></div>
+								<a href="{{ account_authentication.registration_url }}" class="link-primary">Sign up</a></div>
 								<!--end::Sign up-->
 							</form>
 							<!--end::Form-->
