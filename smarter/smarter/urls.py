@@ -6,6 +6,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from smarter.apps.account.views.authentication import LoginView, LogoutView, SignUpView
 from smarter.apps.dashboard.admin import restricted_site
 
 
@@ -21,4 +22,10 @@ urlpatterns = [
     path("", include("smarter.apps.dashboard.urls")),
     path("admin/", admin.site.urls),
     path("api/", include("smarter.apps.api.urls")),
+    # shortcuts for authentication views
+    # -----------------------------------
+    path("login/", LoginView.as_view(), name="login"),
+    path("logout/", LogoutView.as_view(), name="logout"),
+    path("register/", SignUpView.as_view(), name="register"),
+    # -----------------------------------
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
