@@ -1,0 +1,62 @@
+# -*- coding: utf-8 -*-
+# pylint: disable=wrong-import-position
+"""Test API end points."""
+
+# python stuff
+import os
+import unittest
+
+from django.contrib.auth.models import User
+from django.test import Client
+
+# our stuff
+from smarter.apps.account.models import Account, UserProfile
+
+
+class TestUrls(unittest.TestCase):
+    """Test OpenAI Function Calling hook for refers_to."""
+
+    user: User
+
+    def setUp(self):
+        """Set up test fixtures."""
+        self.client = None
+        username = "testuser_" + os.urandom(4).hex()
+        self.user = User.objects.create(
+            username=username, password="12345", is_staff=True, is_active=True, is_superuser=True
+        )
+        self.account = Account.objects.create(
+            company_name="Test Company",
+            phone_number="1234567890",
+            address="123 Test St",
+        )
+        self.user_profile = UserProfile.objects.create(
+            user=self.user,
+            account=self.account,
+        )
+
+    def tearDown(self):
+        """Clean up test fixtures."""
+        self.user.delete()
+        self.account.delete()
+        self.user_profile.delete()
+
+    def test_account_view(self):
+        """test that we can see the account view and that it matches the account data."""
+        self.client = Client()
+
+        def verify_response(url, status_code):
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, status_code)
+
+        verify_response("/login/", 200)
+        verify_response("/logout/", 302)
+        verify_response("/register/", 200)
+        verify_response("/account/reset-password/", 200)
+        verify_response("/account/new-password/", 200)
+        verify_response("/account/confirm-password/", 200)
+
+        self.client.force_login(self.user)
+        verify_response("/welcome/", 200)
+        verify_response("/account/deactivate/", 200)
+        verify_response("/account/verify-email/", 200)
