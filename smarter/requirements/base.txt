@@ -21,7 +21,7 @@ htmlmin==0.1.12
 
 # Lambda layer: openai
 # ------------
-openai==1.10.0
+openai==1.13.3
 pyyaml==6.0.1
 
 # Lambda layer: common
