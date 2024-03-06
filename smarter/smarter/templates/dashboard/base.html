@@ -109,7 +109,7 @@
 														<a href="#" class="d-flex text-gray-900 text-hover-primary align-items-center mb-5">
 															<!--begin::Symbol-->
 															<div class="symbol symbol-40px me-4">
-																<img src="assets/media/avatars/300-6.jpg" alt="" />
+																<img src="{% static 'assets/media/avatars/300-6.jpg' %}" alt="" />
 															</div>
 															<!--end::Symbol-->
 															<!--begin::Title-->
@@ -124,7 +124,7 @@
 														<a href="#" class="d-flex text-gray-900 text-hover-primary align-items-center mb-5">
 															<!--begin::Symbol-->
 															<div class="symbol symbol-40px me-4">
-																<img src="assets/media/avatars/300-2.jpg" alt="" />
+																<img src="{% static 'assets/media/avatars/300-2.jpg' %}" alt="" />
 															</div>
 															<!--end::Symbol-->
 															<!--begin::Title-->
@@ -139,7 +139,7 @@
 														<a href="#" class="d-flex text-gray-900 text-hover-primary align-items-center mb-5">
 															<!--begin::Symbol-->
 															<div class="symbol symbol-40px me-4">
-																<img src="assets/media/avatars/300-9.jpg" alt="" />
+																<img src="{% static 'assets/media/avatars/300-9.jpg' %}" alt="" />
 															</div>
 															<!--end::Symbol-->
 															<!--begin::Title-->
@@ -154,7 +154,7 @@
 														<a href="#" class="d-flex text-gray-900 text-hover-primary align-items-center mb-5">
 															<!--begin::Symbol-->
 															<div class="symbol symbol-40px me-4">
-																<img src="assets/media/avatars/300-14.jpg" alt="" />
+																<img src="{% static 'assets/media/avatars/300-14.jpg' %}" alt="" />
 															</div>
 															<!--end::Symbol-->
 															<!--begin::Title-->
@@ -169,7 +169,7 @@
 														<a href="#" class="d-flex text-gray-900 text-hover-primary align-items-center mb-5">
 															<!--begin::Symbol-->
 															<div class="symbol symbol-40px me-4">
-																<img src="assets/media/avatars/300-11.jpg" alt="" />
+																<img src="{% static 'assets/media/avatars/300-11.jpg' %}" alt="" />
 															</div>
 															<!--end::Symbol-->
 															<!--begin::Title-->
@@ -188,7 +188,7 @@
 															<!--begin::Symbol-->
 															<div class="symbol symbol-40px me-4">
 																<span class="symbol-label bg-light">
-																	<img class="w-20px h-20px" src="assets/media/svg/brand-logos/volicity-9.svg" alt="" />
+																	<img class="w-20px h-20px" src="{% static 'assets/media/svg/brand-logos/volicity-9.svg' %}" alt="" />
 																</span>
 															</div>
 															<!--end::Symbol-->
@@ -205,7 +205,7 @@
 															<!--begin::Symbol-->
 															<div class="symbol symbol-40px me-4">
 																<span class="symbol-label bg-light">
-																	<img class="w-20px h-20px" src="assets/media/svg/brand-logos/tvit.svg" alt="" />
+																	<img class="w-20px h-20px" src="{% static 'assets/media/svg/brand-logos/tvit.svg' %}" alt="" />
 																</span>
 															</div>
 															<!--end::Symbol-->
@@ -222,7 +222,7 @@
 															<!--begin::Symbol-->
 															<div class="symbol symbol-40px me-4">
 																<span class="symbol-label bg-light">
-																	<img class="w-20px h-20px" src="assets/media/svg/misc/infography.svg" alt="" />
+																	<img class="w-20px h-20px" src="{% static 'assets/media/svg/misc/infography.svg' %}" alt="" />
 																</span>
 															</div>
 															<!--end::Symbol-->
@@ -239,7 +239,7 @@
 															<!--begin::Symbol-->
 															<div class="symbol symbol-40px me-4">
 																<span class="symbol-label bg-light">
-																	<img class="w-20px h-20px" src="assets/media/svg/brand-logos/leaf.svg" alt="" />
+																	<img class="w-20px h-20px" src="{% static 'assets/media/svg/brand-logos/leaf.svg' %}" alt="" />
 																</span>
 															</div>
 															<!--end::Symbol-->
@@ -256,7 +256,7 @@
 															<!--begin::Symbol-->
 															<div class="symbol symbol-40px me-4">
 																<span class="symbol-label bg-light">
-																	<img class="w-20px h-20px" src="assets/media/svg/brand-logos/tower.svg" alt="" />
+																	<img class="w-20px h-20px" src="{% static 'assets/media/svg/brand-logos/tower.svg' %}" alt="" />
 																</span>
 															</div>
 															<!--end::Symbol-->
@@ -844,7 +844,7 @@
 								<div class="app-navbar-item ms-2 ms-1 ms-lg-3" id="kt_header_user_menu_toggle">
 									<!--begin::Menu wrapper-->
 									<div class="cursor-pointer symbol symbol-35px symbol-md-40px" data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
-										<img src="assets/media/avatars/300-3.jpg" alt="user" />
+										<img src="{% static 'assets/media/avatars/300-3.jpg' %}" alt="user" />
 									</div>
 									<!--begin::User account menu-->
 									<div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg menu-state-color fw-semibold py-4 fs-6 w-275px" data-kt-menu="true">
@@ -853,7 +853,7 @@
 											<div class="menu-content d-flex align-items-center px-3">
 												<!--begin::Avatar-->
 												<div class="symbol symbol-50px me-5">
-													<img alt="Logo" src="assets/media/avatars/300-3.jpg" />
+													<img alt="Logo" src="{% static 'assets/media/avatars/300-3.jpg' %}" />
 												</div>
 												<!--end::Avatar-->
 												<!--begin::Username-->
@@ -999,7 +999,7 @@
 										<!--end::Menu item-->
 										<!--begin::Menu item-->
 										<div class="menu-item px-5 my-1">
-											<a href="account/settings.html" class="menu-link px-5">Account Settings</a>
+											<a href="/account/dashboard/settings/" class="menu-link px-5">Account Settings</a>
 										</div>
 										<!--end::Menu item-->
 										<!--begin::Menu item-->
@@ -1220,198 +1220,24 @@
                             <!--end:Menu link-->
                           </div>
                           <!--end:Menu item-->
-                          <!--begin:Menu item-->
-                          <div class="menu-item">
-                            <!--begin:Menu link-->
-                            <a class="menu-link" href="pages/user-profile/projects.html">
-                              <span class="menu-bullet">
-                                <span class="bullet bullet-dot"></span>
-                              </span>
-                              <span class="menu-title">Projects</span>
-                            </a>
-                            <!--end:Menu link-->
-                          </div>
-                          <!--end:Menu item-->
-                          <!--begin:Menu item-->
-                          <div class="menu-item">
-                            <!--begin:Menu link-->
-                            <a class="menu-link" href="pages/user-profile/campaigns.html">
-                              <span class="menu-bullet">
-                                <span class="bullet bullet-dot"></span>
-                              </span>
-                              <span class="menu-title">Campaigns</span>
-                            </a>
-                            <!--end:Menu link-->
-                          </div>
-                          <!--end:Menu item-->
-                          <!--begin:Menu item-->
-                          <div class="menu-item">
-                            <!--begin:Menu link-->
-                            <a class="menu-link" href="pages/user-profile/documents.html">
-                              <span class="menu-bullet">
-                                <span class="bullet bullet-dot"></span>
-                              </span>
-                              <span class="menu-title">Documents</span>
-                            </a>
-                            <!--end:Menu link-->
-                          </div>
-                          <!--end:Menu item-->
-                          <!--begin:Menu item-->
-                          <div class="menu-item">
-                            <!--begin:Menu link-->
-                            <a class="menu-link" href="pages/user-profile/followers.html">
-                              <span class="menu-bullet">
-                                <span class="bullet bullet-dot"></span>
-                              </span>
-                              <span class="menu-title">Followers</span>
-                            </a>
-                            <!--end:Menu link-->
-                          </div>
-                          <!--end:Menu item-->
-                          <!--begin:Menu item-->
-                          <div class="menu-item">
-                            <!--begin:Menu link-->
-                            <a class="menu-link" href="pages/user-profile/activity.html">
-                              <span class="menu-bullet">
-                                <span class="bullet bullet-dot"></span>
-                              </span>
-                              <span class="menu-title">Activity</span>
-                            </a>
-                            <!--end:Menu link-->
-                          </div>
-                          <!--end:Menu item-->
                         </div>
                         <!--end:Menu sub-->
                       </div>
                       <!--end:Menu item-->
                       <!--begin:Menu item Account-->
-                      <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
+                      <div class="menu-item">
                         <!--begin:Menu link-->
-                        <span class="menu-link">
+                        <a class="menu-link" href="/account/dashboard/overview/" target="_blank">
                           <span class="menu-icon">
-                            <i class="ki-duotone ki-educare fs-2">
+                            <i class="ki-duotone ki-tablet-text-down fs-2">
                               <span class="path1"></span>
                               <span class="path2"></span>
                               <span class="path3"></span>
-                              <span class="path4"></span>
                             </i>
                           </span>
                           <span class="menu-title">Account</span>
-                          <span class="menu-arrow"></span>
-                        </span>
+                        </a>
                         <!--end:Menu link-->
-                        <!--begin:Menu sub-->
-                        <div class="menu-sub menu-sub-accordion">
-                          <!--begin:Menu item-->
-                          <div class="menu-item">
-                            <!--begin:Menu link-->
-                            <a class="menu-link" href="account/overview.html">
-                              <span class="menu-bullet">
-                                <span class="bullet bullet-dot"></span>
-                              </span>
-                              <span class="menu-title">Overview</span>
-                            </a>
-                            <!--end:Menu link-->
-                          </div>
-                          <!--end:Menu item-->
-                          <!--begin:Menu item-->
-                          <div class="menu-item">
-                            <!--begin:Menu link-->
-                            <a class="menu-link" href="account/settings.html">
-                              <span class="menu-bullet">
-                                <span class="bullet bullet-dot"></span>
-                              </span>
-                              <span class="menu-title">Settings</span>
-                            </a>
-                            <!--end:Menu link-->
-                          </div>
-                          <!--end:Menu item-->
-                          <!--begin:Menu item-->
-                          <div class="menu-item">
-                            <!--begin:Menu link-->
-                            <a class="menu-link" href="account/security.html">
-                              <span class="menu-bullet">
-                                <span class="bullet bullet-dot"></span>
-                              </span>
-                              <span class="menu-title">Security</span>
-                            </a>
-                            <!--end:Menu link-->
-                          </div>
-                          <!--end:Menu item-->
-                          <!--begin:Menu item-->
-                          <div class="menu-item">
-                            <!--begin:Menu link-->
-                            <a class="menu-link" href="account/activity.html">
-                              <span class="menu-bullet">
-                                <span class="bullet bullet-dot"></span>
-                              </span>
-                              <span class="menu-title">Activity</span>
-                            </a>
-                            <!--end:Menu link-->
-                          </div>
-                          <!--end:Menu item-->
-                          <!--begin:Menu item-->
-                          <div class="menu-item">
-                            <!--begin:Menu link-->
-                            <a class="menu-link" href="account/billing.html">
-                              <span class="menu-bullet">
-                                <span class="bullet bullet-dot"></span>
-                              </span>
-                              <span class="menu-title">Billing</span>
-                            </a>
-                            <!--end:Menu link-->
-                          </div>
-                          <!--end:Menu item-->
-                          <!--begin:Menu item-->
-                          <div class="menu-item">
-                            <!--begin:Menu link-->
-                            <a class="menu-link" href="account/statements.html">
-                              <span class="menu-bullet">
-                                <span class="bullet bullet-dot"></span>
-                              </span>
-                              <span class="menu-title">Statements</span>
-                            </a>
-                            <!--end:Menu link-->
-                          </div>
-                          <!--end:Menu item-->
-                          <!--begin:Menu item-->
-                          <div class="menu-item">
-                            <!--begin:Menu link-->
-                            <a class="menu-link" href="account/referrals.html">
-                              <span class="menu-bullet">
-                                <span class="bullet bullet-dot"></span>
-                              </span>
-                              <span class="menu-title">Referrals</span>
-                            </a>
-                            <!--end:Menu link-->
-                          </div>
-                          <!--end:Menu item-->
-                          <!--begin:Menu item-->
-                          <div class="menu-item">
-                            <!--begin:Menu link-->
-                            <a class="menu-link" href="account/api-keys.html">
-                              <span class="menu-bullet">
-                                <span class="bullet bullet-dot"></span>
-                              </span>
-                              <span class="menu-title">API Keys</span>
-                            </a>
-                            <!--end:Menu link-->
-                          </div>
-                          <!--end:Menu item-->
-                          <!--begin:Menu item-->
-                          <div class="menu-item">
-                            <!--begin:Menu link-->
-                            <a class="menu-link" href="account/logs.html">
-                              <span class="menu-bullet">
-                                <span class="bullet bullet-dot"></span>
-                              </span>
-                              <span class="menu-title">Logs</span>
-                            </a>
-                            <!--end:Menu link-->
-                          </div>
-                          <!--end:Menu item-->
-                        </div>
-                        <!--end:Menu sub-->
                       </div>
                       <!--end:Menu item-->
 
