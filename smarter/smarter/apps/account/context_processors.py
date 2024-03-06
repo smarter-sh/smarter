@@ -27,8 +27,8 @@ def base(request):
         account = Account.objects.get(id=user_profile.account_id)
         account_authenticated_context = {
             "account_authenticated": {
-                "account_authentication_user": request.user,
-                "account_authentication_account": account,
+                "user": request.user,
+                "account": account,
             }
         }
         return {**account_context, **account_authentication_context, **account_authenticated_context}
