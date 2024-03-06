@@ -7,6 +7,7 @@ from smarter.apps.account.views.dashboard import (
     ActivityView,
     APIKeysView,
     BillingView,
+    CardDeclinedView,
     LogsView,
     OverviewView,
     SettingsView,
@@ -22,4 +23,5 @@ urlpatterns = [
     path("statements/", StatementsView.as_view(), name="account_statements"),
     path("api-keys/", APIKeysView.as_view(), name="account_api_keys"),
     path("logs/", LogsView.as_view(), name="account_logs"),
+    path("card-declined/", CardDeclinedView.as_view(), name="card_declined"),
 ]
