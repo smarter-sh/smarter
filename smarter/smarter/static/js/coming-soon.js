@@ -2,6 +2,19 @@
 
 // Lawrence McDaniel -- https://lawrencemcdaniel.com
 // Mar-2024
+function emailAdded(nextPage) {
+  Swal.fire({
+    text: "",
+    icon: "success",
+    buttonsStyling: false,
+    confirmButtonText: "Added",
+    customClass: {
+        confirmButton: "btn btn-primary"
+    }
+  }).then(function (result) {
+    document.documentElement.innerHTML = nextPage;
+  });
+}
 
 // Class Definition
 var KTSignupComingSoon = function() {
@@ -83,18 +96,22 @@ var KTSignupComingSoon = function() {
                         .then(response => response.json())
                         .then(data => {
                             if (data.redirect) {
-
+                              const context = data.context;
                               fetch(data.redirect, {
                                 method: 'POST',
                                 headers: {
                                   'X-CSRFToken': csrftoken,
                                   'Content-Type': 'application/json'
                                 },
-                                body: JSON.stringify(data.context)
+                                body: JSON.stringify(context)
                             })
                             .then(response => response.text())
                             .then(data => {
-                                document.documentElement.innerHTML = data;
+                              if (context.email_added.created) {
+                                emailAdded(data);
+                            } else {
+                              document.documentElement.innerHTML = data;
+                              }
                             })
                             .catch((error) => console.error('Error:', error));
 
