@@ -14,7 +14,7 @@
 						<div class="card-body py-15 py-lg-20">
 							<!--begin::Logo-->
 							<div class="mb-13">
-								<a href="index.html" class="">
+								<a href="/" class="">
 									<img alt="Logo" src="{% static 'querium/querium-logo-orange-transparent.png' %}" class="h-200px" />
 								</a>
 							</div>
@@ -49,3 +49,21 @@
 			</div>
 			<!--end::Authentication - Signup Welcome Message-->
       {% endblock %}
+      {% block javascript_extra %}
+      <script >
+        $(document).ready(function(){
+          Swal.fire({
+              text: "We have received your request. You will be notified once we go live.",
+              icon: "success",
+              buttonsStyling: false,
+              confirmButtonText: "Dismiss",
+              customClass: {
+                  confirmButton: "btn btn-primary"
+              }
+          }).then(function (result) {
+            // more stuff.
+          });
+
+        });
+      </script>
+    {% endblock %}
