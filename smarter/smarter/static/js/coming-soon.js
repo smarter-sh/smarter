@@ -83,37 +83,32 @@ var KTSignupComingSoon = function() {
                         .then(response => response.json())
                         .then(data => {
                             if (data.redirect) {
-                                window.location.href = data.redirect;
+
+                              fetch(data.redirect, {
+                                method: 'POST',
+                                headers: {
+                                  'X-CSRFToken': csrftoken,
+                                  'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(data.context)
+                            })
+                            .then(response => response.text())
+                            .then(data => {
+                                document.documentElement.innerHTML = data;
+                            })
+                            .catch((error) => console.error('Error:', error));
+
                             } else {
-                                  // Show error message inside of existing form element
-                                  // validator object, above.
-                                  var errorMessage = JSON.parse(data.error);
-                                  document.querySelector('div[data-field="email"][data-validator="regexp"]').innerText = errorMessage;
+                              // Show error message inside of existing form element
+                              // validator object, above.
+                              var errorMessage = JSON.parse(data.error);
+                              document.querySelector('div[data-field="email"][data-validator="regexp"]').innerText = errorMessage;
                             }
                         })
                         .catch((error) => {
                           console.error('Error:', error);
                         });
 
-
-                        // Show message popup. For more info check the plugin's official documentation: https://sweetalert2.github.io/
-                        Swal.fire({
-                            text: "We have received your request. You will be notified once we go live.",
-                            icon: "success",
-                            buttonsStyling: false,
-                            confirmButtonText: "Dismiss",
-                            customClass: {
-                                confirmButton: "btn btn-primary"
-                            }
-                        }).then(function (result) {
-                            if (result.isConfirmed) {
-                                form.querySelector('[name="email"]').value= "";
-                                var redirectUrl = form.getAttribute('data-kt-redirect-url');
-                                if (redirectUrl) {
-                                    location.href = redirectUrl;
-                                }
-                            }
-                        });
                     }, 750);
                 } else {
                     // Show error popup. For more info check the plugin's official documentation: https://sweetalert2.github.io/

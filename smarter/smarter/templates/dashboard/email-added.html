@@ -20,11 +20,15 @@
 							</div>
 							<!--end::Logo-->
 							<!--begin::Title-->
-							<h1 class="fw-bolder text-gray-900 mb-7">Email Address Added.</h1>
+              {% if email_added.created %}
+              <h1 class="fw-bolder text-gray-900 mb-7">Email Address Added.</h1>
+              {% else %}
+              <h1 class="fw-bolder text-gray-900 mb-7">You're All Set!</h1>
+              {% endif %}
 							<!--end::Title-->
 							<!--begin::Text-->
               <div class="fw-semibold fs-6 text-gray-500 mb-7">
-                We'll notify you when the launch date nears.
+                {{ email_added.message}}
               </div>
 							<!--end::Text-->
 							<!--begin::Form-->
