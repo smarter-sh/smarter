@@ -53,7 +53,8 @@
               </div>
 							<!--end::Text-->
 							<!--begin::Form-->
-							<form class="w-md-350px mb-2 mx-auto" action="#" id="kt_coming_soon_form">
+							<form class="w-md-350px mb-2 mx-auto " action="#" id="smarter_submit_email">
+                {% csrf_token %}
 								<div class="fv-row text-start">
 									<div class="d-flex flex-column flex-md-row justify-content-center gap-3">
 										<!--end::Input=-->
@@ -93,4 +94,28 @@
 		<!--begin::Custom Javascript(used for this page only)-->
 		<script src="{% static 'assets/js/custom/authentication/sign-up/coming-soon.js' %}"></script>
 		<!--end::Custom Javascript-->
+    <script>
+    document.getElementById('smarter_submit_email').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      var formData = new FormData(this);
+
+      fetch('/', { // replace '#' with your server-side script URL
+          method: 'POST',
+          body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+          if (data.redirect) {
+              window.location.href = data.redirect;
+          } else {
+              console.error(data.error);
+          }
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+    });
+
+    </script>
   {% endblock %}

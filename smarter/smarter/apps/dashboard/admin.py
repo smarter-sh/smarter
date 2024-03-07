@@ -7,6 +7,7 @@ from django.contrib.auth.models import Group, Permission, User
 
 from smarter.__version__ import __version__
 from smarter.apps.account.models import Account, PaymentMethod, UserProfile
+from smarter.apps.dashboard.models import EmailContactList
 
 
 class RestrictedAdminSite(admin.AdminSite):
@@ -20,6 +21,11 @@ class RestrictedModelAdmin(admin.ModelAdmin):
         return request.user.is_superuser
 
 
+class EmailContactListAdmin(RestrictedModelAdmin):
+    list_display = ["email", "created_at", "updated_at"]
+    ordering = ("-created_at",)
+
+
 restricted_site = RestrictedAdminSite(name="restricted_admin_site")
 
 restricted_site.register(User, RestrictedModelAdmin)
@@ -28,6 +34,7 @@ restricted_site.register(Permission, RestrictedModelAdmin)
 restricted_site.register(Account, RestrictedModelAdmin)
 restricted_site.register(UserProfile, RestrictedModelAdmin)
 restricted_site.register(PaymentMethod, RestrictedModelAdmin)
+restricted_site.register(EmailContactList, EmailContactListAdmin)
 
 models = apps.get_models()
 
