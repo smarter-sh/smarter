@@ -39,8 +39,23 @@ class LandingPage(SmarterWebView):
         form = LandingPage.EmailForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data["email"]
-            EmailContactList.objects.get_or_create(email=email)
-            return JsonResponse({"redirect": "/email-added/"})
+            email_contact_list, created = EmailContactList.objects.get_or_create(email=email)
+            if created:
+                message = "We'll notify you when the launch date nears."
+            else:
+                message = f"{email_contact_list.email} is already in our contact list. We'll keep you updated."
+            return JsonResponse(
+                {
+                    "redirect": "/email-added/",
+                    "context": {
+                        "email_added": {
+                            "created": created,
+                            "message": message,
+                            "email": email_contact_list.email,
+                        }
+                    },
+                }
+            )
         html_error = html.escape(form.errors)
         return JsonResponse({"error": json.dumps(html_error)})
 
@@ -49,6 +64,10 @@ class EmailAdded(SmarterWebView):
     """Confirmation view for email added to contact list."""
 
     template_path = "dashboard/email-added.html"
+
+    def post(self, request):
+        context = json.loads(request.body.decode("utf-8"))
+        return self.clean_http_response(request, template_path=self.template_path, context=context)
 
 
 class DocumentationView(SmarterWebView):
