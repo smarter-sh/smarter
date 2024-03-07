@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """Django views"""
+import html
+import json
 import logging
 
 from django import forms
@@ -23,7 +25,7 @@ class LandingPage(SmarterWebView):
 
         email = forms.EmailField()
 
-    template_path = "landing-page.html"
+    template_path = "coming-soon.html"
 
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:
@@ -39,7 +41,8 @@ class LandingPage(SmarterWebView):
             email = form.cleaned_data["email"]
             EmailContactList.objects.get_or_create(email=email)
             return JsonResponse({"redirect": "/email-added/"})
-        return JsonResponse({"error": "Invalid form"})
+        html_error = html.escape(form.errors)
+        return JsonResponse({"error": json.dumps(html_error)})
 
 
 class EmailAdded(SmarterWebView):
