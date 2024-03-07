@@ -70,7 +70,7 @@ aws-build:
 # Django Back End
 # ---------------------------------------------------------
 django-init:
-	if [ -f smarter/db.sqlite3 ]; then rm smarter/db.sqlite3; fi && \
+	if [ -f smarter/smarter/db.sqlite3 ]; then rm smarter/smarter/db.sqlite3; fi && \
 	cd smarter && python manage.py makemigrations && \
 	python manage.py migrate && \
 	python manage.py create_admin_user --username admin --email admin@smarter.sh --password smarter && \
