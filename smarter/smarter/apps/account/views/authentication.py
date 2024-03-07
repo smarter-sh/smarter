@@ -4,7 +4,7 @@
 from django import forms
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
-from django.shortcuts import redirect
+from django.shortcuts import HttpResponse, redirect
 
 from smarter.view_helpers import (
     SmarterAuthenticatedWebView,
@@ -34,13 +34,22 @@ class LoginView(SmarterWebView):
 
     def post(self, request):
         form = LoginView.LoginForm(request.POST)
-        if form.is_valid():
-            user = authenticate(request, username=form.cleaned_data["email"], password=form.cleaned_data["password"])
-            if user is not None:
-                login(request, user)
-                return redirect("/")
+        authenticated_user: User = None
 
-        return self.get(request=request)
+        if form.is_valid():
+
+            try:
+                user = User.objects.get(email=form.cleaned_data["email"])
+                password = form.cleaned_data["password"]
+                authenticated_user = authenticate(request, username=user.username, password=password)
+                if authenticated_user is not None:
+                    login(request, authenticated_user)
+                    return redirect("/")
+            except User.DoesNotExist:
+                HttpResponse("Invalid login attempt.", status=403)
+
+        print("Invalid login attempt.")
+        return HttpResponse("Invalid login attempt.", status=401)
 
 
 class LogoutView(SmarterWebView):
