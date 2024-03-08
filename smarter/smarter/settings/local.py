@@ -52,3 +52,7 @@ DJSTRIPE_WEBHOOK_SECRET = (
 )
 DJSTRIPE_USE_NATIVE_JSONFIELD = True  # We recommend setting to True for new installations
 DJSTRIPE_FOREIGN_KEY_TO_FIELD = "id"
+
+SMTP_SENDER = "dev.platform.smarter.sh"
+SMTP_PASSWORD = "BJjrYJwcYWmlnlk+Z4rJvptBd05Ff47D9Q4jbsV55vRz"
+SMTP_USERNAME = "AKIARKEXDU3E24FQQEUY"
