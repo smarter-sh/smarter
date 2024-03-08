@@ -228,6 +228,15 @@ DJSTRIPE_WEBHOOK_SECRET = (
 DJSTRIPE_USE_NATIVE_JSONFIELD = True  # We recommend setting to True for new installations
 DJSTRIPE_FOREIGN_KEY_TO_FIELD = "id"
 
+SMTP_SENDER = "dev.platform.smarter.sh"
+SMTP_FROM_EMAIL = "no-reply@" + SMTP_SENDER
+SMTP_HOST = "email-smtp.us-east-2.amazonaws.com"
+SMTP_PASSWORD = "SET-ME-PLEASE"
+SMTP_PORT = "587"
+SMTP_USE_SSL = False
+SMTP_USE_TLS = True
+SMTP_USERNAME = "SET-ME-PLEASE"
+
 # SMARTER settings
 SMARTER_CACHE_EXPIRATION = 600
 SMARTER_API_SCHEMA = "http"

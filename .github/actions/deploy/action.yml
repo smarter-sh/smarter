@@ -163,6 +163,23 @@ runs:
         eks-namespace: ${{ env.NAMESPACE }}
         eks-secret-name: smarter-admin
 
+    # extract the Django SMTP email from the Kubernetes secret.
+    # these will be set as environment variables for the Helm deployment
+    #
+    # example:
+    # SMTP_HOST: email-smtp.us-east-2.amazonaws.com
+    # SMTP_PORT: "587"
+    # SMTP_USE_SSL: "false"
+    # SMTP_USE_TLS: "true"
+    # SMTP_USERNAME: an IAM key-pair id
+    # SMTP_PASSWORD: an IAM key-pair secret
+    - name: Configure SMTP email credentials from Kubernetes secret
+      id: get-aws-ses-secret
+      uses: ./.github/actions/k8s-get-secret
+      with:
+        eks-namespace: ${{ env.NAMESPACE }}
+        eks-secret-name: aws-ses-config
+
     # extract the Django application secret from the Kubernetes secret.
     # these will be set as environment variables for the Helm deployment
     #

@@ -6,6 +6,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.shortcuts import HttpResponse, redirect
 
+from smarter.email_helpers import EmailHelper
 from smarter.view_helpers import (
     SmarterAuthenticatedWebView,
     SmarterWebView,
@@ -68,7 +69,31 @@ class LogoutView(SmarterWebView):
 class ResetPasswordView(SmarterWebView):
     """View for resetting password."""
 
+    class EmailForm(forms.Form):
+        """Form for the sign-in page."""
+
+        email = forms.EmailField()
+
     template_path = "account/authentication/reset-password.html"
+    email_template_path = "account/authentication/email/reset-password.html"
+
+    def get(self, request):
+        form = ResetPasswordView.EmailForm()
+        context = {"form": form}
+        return self.clean_http_response(request, template_path=self.template_path, context=context)
+
+    def post(self, request):
+        print("ResetPasswordView.post(): ")
+        form = ResetPasswordView.EmailForm(request.POST)
+        if not form.is_valid():
+            return HttpResponse("Email address is invalid.", status=400)
+
+        email = form.cleaned_data["email"]
+        body = self.render_clean_html(request, template_path=self.email_template_path)
+        subject = "Reset your password"
+        to = email
+        EmailHelper.send_email(subject=subject, body=body, to=to, html=True)
+        return HttpResponse("Email sent.", status=200)
 
 
 class NewPasswordView(SmarterWebView):
