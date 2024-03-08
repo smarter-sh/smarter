@@ -35,9 +35,8 @@ class LoginView(SmarterWebView):
     def post(self, request):
         form = LoginView.LoginForm(request.POST)
         authenticated_user: User = None
-
         if form.is_valid():
-
+            email = form.cleaned_data["email"]
             try:
                 user = User.objects.get(email=form.cleaned_data["email"])
                 password = form.cleaned_data["password"]
@@ -45,11 +44,13 @@ class LoginView(SmarterWebView):
                 if authenticated_user is not None:
                     login(request, authenticated_user)
                     return redirect("/")
+                return HttpResponse("Username and/or password do not match.", status=401)
             except User.DoesNotExist:
-                HttpResponse("Invalid login attempt.", status=403)
-
-        print("Invalid login attempt.")
-        return HttpResponse("Invalid login attempt.", status=401)
+                return HttpResponse(f"Invalid login attempt. Unknown user {email}", status=403)
+            # pylint: disable=W0718
+            except Exception as e:
+                return HttpResponse(f"An unknown error occurred {e.description}", status=500)
+        return HttpResponse("Received invalid responses.", status=400)
 
 
 class LogoutView(SmarterWebView):
