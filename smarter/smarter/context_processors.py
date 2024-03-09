@@ -12,7 +12,7 @@ def branding(request):
     from base.html, which renders the dashboard layout
     """
     current_year = datetime.now().year
-    root_url = request.build_absolute_uri("/")
+    root_url = request.build_absolute_uri("/").rstrip("/")
     context = {
         "branding": {
             "root_url": root_url,
