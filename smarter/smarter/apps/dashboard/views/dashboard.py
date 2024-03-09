@@ -25,8 +25,7 @@ class LandingPage(SmarterWebView):
 
         email = forms.EmailField()
 
-    # template_path = "coming-soon.html"
-    template_path = "account/authentication/email/password-reset.html"
+    template_path = "coming-soon.html"
 
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:
