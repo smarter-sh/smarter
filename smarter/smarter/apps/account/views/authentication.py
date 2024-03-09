@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=W0613
-"""Django REST framework views for the API admin app."""
+"""Django Authentication views."""
+
 from django import forms
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.shortcuts import HttpResponse, redirect
 
-from smarter.email_helpers import EmailHelper
 from smarter.view_helpers import (
     SmarterAuthenticatedWebView,
     SmarterWebView,
@@ -66,49 +66,7 @@ class LogoutView(SmarterWebView):
         return redirect_and_expire_cache(path="/")
 
 
-class ResetPasswordView(SmarterWebView):
-    """View for resetting password."""
-
-    class EmailForm(forms.Form):
-        """Form for the sign-in page."""
-
-        email = forms.EmailField()
-
-    template_path = "account/authentication/reset-password.html"
-    email_template_path = "account/authentication/email/reset-password.html"
-
-    def get(self, request):
-        form = ResetPasswordView.EmailForm()
-        context = {"form": form}
-        return self.clean_http_response(request, template_path=self.template_path, context=context)
-
-    def post(self, request):
-        print("ResetPasswordView.post(): ")
-        form = ResetPasswordView.EmailForm(request.POST)
-        if not form.is_valid():
-            return HttpResponse("Email address is invalid.", status=400)
-
-        email = form.cleaned_data["email"]
-        body = self.render_clean_html(request, template_path=self.email_template_path)
-        subject = "Reset your password"
-        to = email
-        EmailHelper.send_email(subject=subject, body=body, to=to, html=True)
-        return HttpResponse("Email sent.", status=200)
-
-
-class NewPasswordView(SmarterWebView):
-    """View for resetting password."""
-
-    template_path = "account/authentication/new-password.html"
-
-
-class ConfirmPasswordView(SmarterWebView):
-    """View for resetting password."""
-
-    template_path = "account/authentication/password-confirmation.html"
-
-
-class SignUpView(SmarterWebView):
+class AccountRegisterView(SmarterWebView):
     """View for signing up."""
 
     class SignUpForm(forms.Form):
@@ -123,12 +81,12 @@ class SignUpView(SmarterWebView):
         if request.user.is_authenticated:
             return redirect_and_expire_cache(path="/")
 
-        form = SignUpView.SignUpForm()
+        form = AccountRegisterView.SignUpForm()
         context = {"form": form}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
     def post(self, request):
-        form = SignUpView.SignUpForm(request.POST)
+        form = AccountRegisterView.SignUpForm(request.POST)
         if form.is_valid():
             username = form.cleaned_data["email"]
             password = form.cleaned_data["password"]
@@ -138,7 +96,7 @@ class SignUpView(SmarterWebView):
         return self.get(request=request)
 
 
-class VerifyEmailView(SmarterWebView):
+class EmailVerifyView(SmarterWebView):
     """View for verifying email."""
 
     template_path = "account/authentication/verify-email.html"
@@ -147,7 +105,7 @@ class VerifyEmailView(SmarterWebView):
 # ------------------------------------------------------------------------------
 # Private Access Views
 # ------------------------------------------------------------------------------
-class WelcomeView(SmarterAuthenticatedWebView):
+class AccountWelcomeView(SmarterAuthenticatedWebView):
     """View for the welcome page."""
 
     template_path = "account/welcome.html"

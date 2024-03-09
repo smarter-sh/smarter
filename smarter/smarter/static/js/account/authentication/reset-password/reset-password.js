@@ -57,10 +57,6 @@ var KTAuthResetPassword = (function () {
               "X-CSRFToken": csrftoken,
             }
           }
-          console.log(url, formData, context);
-          for (let pair of formData.entries()) {
-            console.log("js form data: ", pair[0]+ ', '+ pair[1]);
-          }
 
           // Check axios library docs: https://axios-http.com/docs/intro
           axios.post(url, formData, context)
