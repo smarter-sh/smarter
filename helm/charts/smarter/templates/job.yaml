@@ -6,6 +6,7 @@ metadata:
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     app.kubernetes.io/name: "{{ .Values.appJobName }}"
   annotations:
+    "helm.sh/hook": pre-upgrade
     "helm.sh/hook": post-upgrade,post-install
     "helm.sh/hook-delete-policy": hook-succeeded
 spec:
