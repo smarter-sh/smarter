@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "{{ .Release.Name }}-smarter-job-db-init"
+  name: "{{ .Release.Name }}-smarter-job-db-init-{{ now | unixEpoch }}"
   labels:
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     app.kubernetes.io/name: "{{ .Values.appJobName }}"
