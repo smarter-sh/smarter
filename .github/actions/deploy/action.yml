@@ -250,3 +250,9 @@ runs:
         --set env.SMARTER_LOGIN_URL=${{ env.SMARTER_LOGIN_URL }} \
         --set env.SMARTER_ADMIN_PASSWORD=${{ env.SMARTER_ADMIN_PASSWORD }} \
         --set env.SMARTER_ADMIN_USERNAME=${{ env.SMARTER_ADMIN_USERNAME }} \
+        --set env.SMTP_HOST=${{ env.SMTP_HOST }} \
+        --set env.SMTP_PORT=${{ env.SMTP_PORT }} \
+        --set env.SMTP_USE_SSL=${{ env.SMTP_USE_SSL }} \
+        --set env.SMTP_USE_TLS=${{ env.SMTP_USE_TLS }} \
+        --set env.SMTP_USERNAME=${{ env.SMTP_USERNAME }} \
+        --set env.SMTP_PASSWORD=${{ env.SMTP_PASSWORD }} \
