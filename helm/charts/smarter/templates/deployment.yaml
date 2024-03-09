@@ -4,8 +4,6 @@ metadata:
   annotations:
     meta.helm.sh/release-name: {{ .Values.appName }}
     meta.helm.sh/release-namespace: {{ .Values.namespace }}
-    "helm.sh/hook": pre-upgrade
-    "helm.sh/hook-delete-policy": hook-succeeded
   labels:
     App: {{ .Values.appName }}
   name: {{ .Values.appName }}

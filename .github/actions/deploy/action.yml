@@ -226,6 +226,7 @@ runs:
       shell: bash
       run: |-
         helm upgrade --install --force smarter ./helm/charts/smarter/ --namespace ${{ env.NAMESPACE }} \
+        --set deployTimestamp="$(date +%s)" \
         --set env.ENVIRONMENT="prod" \
         --set env.AWS_REGION=${{ inputs.aws-region }} \
         --set env.AWS_ACCESS_KEY_ID=${{ inputs.aws-access-key-id }} \
