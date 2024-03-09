@@ -18,8 +18,7 @@ def base(request):
         "account_authentication": {
             "login_url": settings.LOGIN_URL,
             "logout_url": "/logout/",
-            "password_reset_url": "/account/reset-password/",
-            "new_password_url": "/account/new-password/",
+            "forgot_password_url": "/account/password-reset-request/",
         }
     }
     if request.user.is_authenticated:
