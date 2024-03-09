@@ -13,6 +13,7 @@ on:
       - "**.py"
 
 env:
+  AWS_REGION: us-east-2
   ROOT_DOMAIN: "smarter.sh"
   python-version: "3.11"
 
@@ -24,26 +25,12 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
 
-      - name: Set environment
-        id: set-env
-        run: |
-          BRANCH_NAME=${GITHUB_REF#refs/heads/}
-          if [[ "$BRANCH_NAME" == "main" ]]; then
-            echo "ENVIRONMENT=production" >> $GITHUB_ENV
-          elif [[ "$BRANCH_NAME" == "next" ]]; then
-            echo "ENVIRONMENT=staging" >> $GITHUB_ENV
-          elif [[ "$BRANCH_NAME" == "dev" ]]; then
-            echo "ENVIRONMENT=dev" >> $GITHUB_ENV
-          else
-            echo "ENVIRONMENT=dev" >> $GITHUB_ENV
-          fi
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Get IAM user info
         run: |
@@ -52,7 +39,6 @@ jobs:
       - name: Run Python tests
         uses: ./.github/actions/tests/python
         with:
-          environment: "${{ env.ENVIRONMENT }}"
           root-domain: "${{ env.ROOT_DOMAIN }}"
           python-version: "${{ env.python-version}}"
           google-maps-api-key: "${{ secrets.GOOGLE_MAPS_API_KEY }}"
