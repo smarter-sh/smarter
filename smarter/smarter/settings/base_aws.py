@@ -13,10 +13,6 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-# (4_0.E001) As of Django 4.0, the values in the CSRF_TRUSTED_ORIGINS setting must start with a scheme
-# (usually http:// or https://) but found platform.smarter.sh. See the release notes for details.
-CSRF_TRUSTED_ORIGINS = [f"http://{host}" for host in ALLOWED_HOSTS] + [f"https://{host}" for host in ALLOWED_HOSTS]
-
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
