@@ -52,6 +52,7 @@ runs:
           ${{ runner.os }}-pip
 
     - name: Echo environment variables
+      shell: bash
       run: |
         echo "Using Django ${{ inputs.environment }} settings"
 
