@@ -12,8 +12,10 @@ def branding(request):
     from base.html, which renders the dashboard layout
     """
     current_year = datetime.now().year
+    root_url = request.build_absolute_uri("/")
     context = {
         "branding": {
+            "root_url": root_url,
             "support_phone_number": settings.SMARTER_BRANDING_SUPPORT_PHONE_NUMBER,
             "corporate_name": settings.SMARTER_BRANDING_CORPORATE_NAME,
             "support_email": settings.SMARTER_BRANDING_SUPPORT_EMAIL,
