@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------
 # Public Access Views
 # ------------------------------------------------------------------------------
-class LandingPage(SmarterWebView):
+class ComingSoon(SmarterWebView):
     """Public Access Dashboard view"""
 
     class EmailForm(forms.Form):
@@ -31,12 +31,12 @@ class LandingPage(SmarterWebView):
         if request.user.is_authenticated:
             self.template_path = "dashboard/authenticated.html"
             return super().get(request, *args, **kwargs)
-        form = LandingPage.EmailForm()
+        form = ComingSoon.EmailForm()
         context = {"form": form}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
     def post(self, request):
-        form = LandingPage.EmailForm(request.POST)
+        form = ComingSoon.EmailForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data["email"]
             email_contact_list, created = EmailContactList.objects.get_or_create(email=email)
