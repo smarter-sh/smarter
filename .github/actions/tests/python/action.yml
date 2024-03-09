@@ -7,6 +7,10 @@ branding:
   icon: "git-pull-request"
   color: "orange"
 inputs:
+  environment:
+    description: "The environment to deploy"
+    required: true
+    default: "dev"
   root-domain:
     description: "The root domain of the project"
     required: true
@@ -47,6 +51,10 @@ runs:
         restore-keys: |
           ${{ runner.os }}-pip
 
+    - name: Echo environment variables
+      run: |
+        echo "Using Django ${{ inputs.environment }} settings"
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -79,7 +87,7 @@ runs:
         echo "PINECONE_API_KEY=${{ env.PINECONE_API_KEY }}" >> ./.env
         echo "PINECONE_ENVIRONMENT=${{ env.PINECONE_ENVIRONMENT }}" >> ./.env
         echo "DEBUG_MODE=False" >> ./.env
-        echo "ENVIRONMENT=dev" >> ./.env
+        echo "ENVIRONMENT=${{ inputs.environment }}" >> ./.env
         echo "ROOT_DOMAIN=${{ inputs.root-domain }}" >> ./.env
 
       env:

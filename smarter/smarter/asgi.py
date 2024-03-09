@@ -15,10 +15,9 @@ from dotenv import load_dotenv
 
 
 load_dotenv()
-environment = os.getenv("ENVIRONMENT")
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smarter.settings.local")
 
-if environment == "prod":
-    os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings.production"
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smarter.settings.local")
+environment = os.getenv("ENVIRONMENT")
+os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings." + environment
 
 application = get_asgi_application()
