@@ -17,8 +17,10 @@ import os
 from pathlib import Path
 
 from corsheaders.defaults import default_headers
+from dotenv import load_dotenv
 
 
+load_dotenv()
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "x-api-key",
 ]

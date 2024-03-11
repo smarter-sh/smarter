@@ -14,18 +14,21 @@
 						<div class="card-body py-15 py-lg-20">
 							<!--begin::Logo-->
 							<div class="mb-14">
-								<a href="index.html" class="">
+								<a href="/" class="">
 									<img alt="Logo" src="{% static 'querium/querium-logo-orange-transparent.png' %}" class="h-200px" />
 								</a>
 							</div>
 							<!--end::Logo-->
 							<!--begin::Title-->
-							<h1 class="fw-bolder text-gray-900 mb-5">Verify your email</h1>
+							<h1 class="fw-bolder text-gray-900 mb-5">Activate Your Account.</h1>
 							<!--end::Title-->
 							<!--begin::Action-->
+							<div class="mb-11">
+								<p>Look for an email from us with instructions on how to activate your account.</p>
+							</div>
 							<div class="fs-6 mb-8">
 								<span class="fw-semibold text-gray-500">Did’t receive an email? </span>
-								<a href="{{ account_authentication.login_url }}" class="link-primary fw-bold">Try Again</a>
+								<a href="{{ account_activation.resend }}" class="link-primary fw-bold">Try Again</a>
 							</div>
 							<!--end::Action-->
 							<!--begin::Link-->
