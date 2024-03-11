@@ -36,7 +36,6 @@ class PasswordResetRequestView(SmarterWebView):
     email_template_path = "account/authentication/email/password-reset.html"
 
     def get_password_reset_link(self, user, request):
-        print("PasswordResetRequestView.get_password_reset_link()")
         token = password_reset_token.make_token(user=user)
         domain = get_current_site(request).domain
         uid = urlsafe_base64_encode(force_bytes(user.pk))
@@ -118,7 +117,6 @@ class PasswordResetView(SmarterWebView):
         password_confirm = form.cleaned_data["password_confirm"]
 
         if password != password_confirm:
-            print("Passwords do not match.")
             return HttpResponse("Passwords do not match.", status=400)
 
         try:

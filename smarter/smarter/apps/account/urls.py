@@ -5,10 +5,10 @@ from django.urls import include, path
 
 from smarter.apps.account.views.account import AccountView
 from smarter.apps.account.views.authentication import (
+    AccountActivateView,
+    AccountActivationEmailView,
     AccountDeactivateView,
     AccountRegisterView,
-    AccountWelcomeView,
-    EmailVerifyView,
     LoginView,
     LogoutView,
 )
@@ -21,14 +21,14 @@ from smarter.apps.account.views.password_management import (
 
 urlpatterns = [
     path("", AccountView.as_view(), name="account"),
-    path("login/", LoginView.as_view(), name="login"),
-    path("logout/", LogoutView.as_view(), name="logout"),
+    path("login/", LoginView.as_view(), name="account_login"),
+    path("logout/", LogoutView.as_view(), name="account_logout"),
     path("dashboard/", include("smarter.apps.account.urls_dashboard")),
     # account lifecycle
-    path("register/", AccountRegisterView.as_view(), name="register"),
-    path("welcome/", AccountWelcomeView.as_view(), name="welcome"),
-    path("deactivate/", AccountDeactivateView.as_view(), name="deactivate"),
-    path("email-verify/", EmailVerifyView.as_view(), name="verify-email"),
+    path("register/", AccountRegisterView.as_view(), name="account_register"),
+    path("activation/", AccountActivationEmailView.as_view(), name="account_activation"),
+    path("activate/<uidb64>/<token>/", AccountActivateView.as_view(), name="account_activate"),
+    path("deactivate/", AccountDeactivateView.as_view(), name="account_deactivate"),
     # password management
     path("password-reset-request/", PasswordResetRequestView.as_view(), name="password_reset_request"),
     path("password-confirm/", PasswordConfirmView.as_view(), name="password_confirm"),

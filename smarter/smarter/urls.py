@@ -8,7 +8,6 @@ from django.urls import include, path
 
 from smarter.apps.account.views.authentication import (
     AccountRegisterView,
-    AccountWelcomeView,
     LoginView,
     LogoutView,
 )
@@ -32,6 +31,5 @@ urlpatterns = [
     path("login/", LoginView.as_view(), name="login_view"),
     path("logout/", LogoutView.as_view(), name="logout_view"),
     path("register/", AccountRegisterView.as_view(), name="register_view"),
-    path("welcome/", AccountWelcomeView.as_view(), name="welcome_view"),
     # -----------------------------------
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
