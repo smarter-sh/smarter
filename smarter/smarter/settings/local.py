@@ -16,6 +16,8 @@ import os
 from .base import *
 
 
+ENVIRONMENT_DOMAIN = "dev.platform.smarter.sh"
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-zp722j6hm29(=kro+i*)7p+f=@s)wlhj%8r!k#3qke(yb8%m_j"
 
@@ -53,6 +55,5 @@ DJSTRIPE_WEBHOOK_SECRET = (
 DJSTRIPE_USE_NATIVE_JSONFIELD = True  # We recommend setting to True for new installations
 DJSTRIPE_FOREIGN_KEY_TO_FIELD = "id"
 
-SMTP_SENDER = "dev.platform.smarter.sh"
-SMTP_PASSWORD = "BJjrYJwcYWmlnlk+Z4rJvptBd05Ff47D9Q4jbsV55vRz"
-SMTP_USERNAME = "AKIARKEXDU3E24FQQEUY"
+SMTP_SENDER = os.environ.get("SMTP_SENDER", ENVIRONMENT_DOMAIN)
+SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", "no-reply@" + SMTP_SENDER)

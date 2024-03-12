@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=unused-wildcard-import,wildcard-import
-"""Django settings for platform.smarter.sh"""
+"""Django settings for staging.platform.smarter.sh"""
 
 from .base_aws import *
 
 
-ENVIRONMENT_DOMAIN = "platform.smarter.sh"
+ENVIRONMENT_DOMAIN = "staging.platform.smarter.sh"
 
 ALLOWED_HOSTS = [ENVIRONMENT_DOMAIN]
 

@@ -3,32 +3,34 @@
 
 from django.urls import include, path
 
-from smarter.apps.account.views.account import (  # AccountAPIKeysView,; AccountLimitsView,; AccountOrganizationView,; AccountProfileView,; AccountTeamView,; AccountUsageView,
-    AccountView,
-)
+from smarter.apps.account.views.account import AccountView
 from smarter.apps.account.views.authentication import (
+    AccountActivateView,
+    AccountActivationEmailView,
     AccountDeactivateView,
-    ConfirmPasswordView,
+    AccountRegisterView,
     LoginView,
     LogoutView,
-    NewPasswordView,
-    ResetPasswordView,
-    SignUpView,
-    VerifyEmailView,
-    WelcomeView,
+)
+from smarter.apps.account.views.password_management import (
+    PasswordConfirmView,
+    PasswordResetRequestView,
+    PasswordResetView,
 )
 
 
 urlpatterns = [
     path("", AccountView.as_view(), name="account"),
-    path("login/", LoginView.as_view(), name="login"),
-    path("logout/", LogoutView.as_view(), name="logout"),
-    path("register/", SignUpView.as_view(), name="register"),
-    path("reset-password/", ResetPasswordView.as_view(), name="reset-password"),
-    path("new-password/", NewPasswordView.as_view(), name="new-password"),
-    path("confirm-password/", ConfirmPasswordView.as_view(), name="confirm-password"),
-    path("welcome/", WelcomeView.as_view(), name="welcome"),
-    path("deactivate/", AccountDeactivateView.as_view(), name="deactivate"),
-    path("verify-email/", VerifyEmailView.as_view(), name="verify-email"),
+    path("login/", LoginView.as_view(), name="account_login"),
+    path("logout/", LogoutView.as_view(), name="account_logout"),
     path("dashboard/", include("smarter.apps.account.urls_dashboard")),
+    # account lifecycle
+    path("register/", AccountRegisterView.as_view(), name="account_register"),
+    path("activation/", AccountActivationEmailView.as_view(), name="account_activation"),
+    path("activate/<uidb64>/<token>/", AccountActivateView.as_view(), name="account_activate"),
+    path("deactivate/", AccountDeactivateView.as_view(), name="account_deactivate"),
+    # password management
+    path("password-reset-request/", PasswordResetRequestView.as_view(), name="password_reset_request"),
+    path("password-confirm/", PasswordConfirmView.as_view(), name="password_confirm"),
+    path("password-reset-link/<uidb64>/<token>/", PasswordResetView.as_view(), name="password_reset_link"),
 ]
