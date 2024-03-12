@@ -3,7 +3,11 @@
 
 from django.urls import path
 
-from smarter.apps.account.views.dashboard.billing import BillingView
+from smarter.apps.account.views.dashboard.billing import (
+    BillingAddressesView,
+    BillingView,
+    PaymentMethodsView,
+)
 from smarter.apps.account.views.dashboard.dashboard import (
     ActivityView,
     APIKeysView,
@@ -20,6 +24,8 @@ urlpatterns = [
     path("settings/", SettingsView.as_view(), name="account_settings"),
     path("activity/", ActivityView.as_view(), name="account_activity"),
     path("billing/", BillingView.as_view(), name="account_billing"),
+    path("billing/payment-methods", PaymentMethodsView.as_view(), name="account_billing_payment_methods"),
+    path("billing/billing-addresses", BillingAddressesView.as_view(), name="account_billing_addresses"),
     path("statements/", StatementsView.as_view(), name="account_statements"),
     path("api-keys/", APIKeysView.as_view(), name="account_api_keys"),
     path("logs/", LogsView.as_view(), name="account_logs"),

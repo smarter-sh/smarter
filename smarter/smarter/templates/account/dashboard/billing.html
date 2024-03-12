@@ -415,7 +415,7 @@
 										<div class="card-header">
 											<!--begin::Title-->
 											<div class="card-title">
-												<h3>Billing Address</h3>
+												<h3>Billing Addresses</h3>
 											</div>
 											<!--end::Title-->
 										</div>
@@ -424,6 +424,8 @@
 										<div class="card-body">
 											<!--begin::Addresses-->
 											<div class="row gx-9 gy-6">
+
+                        {% for address in billing.billing_addresses %}
 												<!--begin::Col-->
 												<div class="col-xl-6" data-kt-billing-element="address">
 													<!--begin::Address-->
@@ -431,10 +433,12 @@
 														<!--begin::Details-->
 														<div class="d-flex flex-column py-2">
 															<div class="d-flex align-items-center fs-5 fw-bold mb-5">Address 1
-															<span class="badge badge-light-success fs-7 ms-2">Primary</span></div>
-															<div class="fs-6 fw-semibold text-gray-600">Ap #285-7193 Ullamcorper Avenue
-															<br />Amesbury HI 93373
-															<br />US</div>
+                                {% if address.is_primary %}
+                                <span class="badge badge-light-success fs-7 ms-2">Primary</span></div>
+                                {% endif %}
+                                <div class="fs-6 fw-semibold text-gray-600">{{ address.address1 }} {{ address.address2 }}
+															<br />{{ address.city }} {{ address.state }} {{ address.zip }}
+															<br />{{ address.country }}</div>
 														</div>
 														<!--end::Details-->
 														<!--begin::Actions-->
@@ -455,66 +459,8 @@
 													<!--end::Address-->
 												</div>
 												<!--end::Col-->
-												<!--begin::Col-->
-												<div class="col-xl-6" data-kt-billing-element="address">
-													<!--begin::Address-->
-													<div class="card card-dashed h-xl-100 flex-row flex-stack flex-wrap p-6">
-														<!--begin::Details-->
-														<div class="d-flex flex-column py-2">
-															<div class="d-flex align-items-center fs-5 fw-bold mb-3">Address 2</div>
-															<div class="fs-6 fw-semibold text-gray-600">Ap #285-7193 Ullamcorper Avenue
-															<br />Amesbury HI 93373
-															<br />US</div>
-														</div>
-														<!--end::Details-->
-														<!--begin::Actions-->
-														<div class="d-flex align-items-center py-2">
-															<button class="btn btn-sm btn-light btn-active-light-primary me-3" data-kt-billing-action="address-delete">
-																<!--begin::Indicator label-->
-																<span class="indicator-label">Delete</span>
-																<!--end::Indicator label-->
-																<!--begin::Indicator progress-->
-																<span class="indicator-progress">Please wait...
-																<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-																<!--end::Indicator progress-->
-															</button>
-															<button class="btn btn-sm btn-light btn-active-light-primary" data-bs-toggle="modal" data-bs-target="#kt_modal_new_address">Edit</button>
-														</div>
-														<!--end::Actions-->
-													</div>
-													<!--end::Address-->
-												</div>
-												<!--end::Col-->
-												<!--begin::Col-->
-												<div class="col-xl-6" data-kt-billing-element="address">
-													<!--begin::Address-->
-													<div class="card card-dashed h-xl-100 flex-row flex-stack flex-wrap p-6">
-														<!--begin::Details-->
-														<div class="d-flex flex-column py-2">
-															<div class="d-flex align-items-center fs-5 fw-bold mb-3">Address 3</div>
-															<div class="fs-6 fw-semibold text-gray-600">Ap #285-7193 Ullamcorper Avenue
-															<br />Amesbury HI 93373
-															<br />US</div>
-														</div>
-														<!--end::Details-->
-														<!--begin::Actions-->
-														<div class="d-flex align-items-center py-2">
-															<button class="btn btn-sm btn-light btn-active-light-primary me-3" data-kt-billing-action="address-delete">
-																<!--begin::Indicator label-->
-																<span class="indicator-label">Delete</span>
-																<!--end::Indicator label-->
-																<!--begin::Indicator progress-->
-																<span class="indicator-progress">Please wait...
-																<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-																<!--end::Indicator progress-->
-															</button>
-															<button class="btn btn-sm btn-light btn-active-light-primary" data-bs-toggle="modal" data-bs-target="#kt_modal_new_address">Edit</button>
-														</div>
-														<!--end::Actions-->
-													</div>
-													<!--end::Address-->
-												</div>
-												<!--end::Col-->
+                        {% endfor %}
+
 												<!--begin::Col-->
 												<div class="col-xl-6">
 													<!--begin::Notice-->
@@ -995,7 +941,8 @@
 					<!--begin::Modal body-->
 					<div class="modal-body scroll-y mx-5 mx-xl-15 my-7">
 						<!--begin::Form-->
-						<form id="kt_modal_new_card_form" class="form" action="#">
+						<form id="kt_modal_new_card_form" class="form" action="/account/billing/payment-methods">
+              {% csrf_token %}
 							<!--begin::Input group-->
 							<div class="d-flex flex-column mb-7 fv-row">
 								<!--begin::Label-->
@@ -1010,7 +957,7 @@
 									</span>
 								</label>
 								<!--end::Label-->
-								<input type="text" class="form-control form-control-solid" placeholder="Full name" name="card_name" value="" />
+								<input type="text" class="form-control form-control-solid" placeholder="Full name" name="{{ billing.payment_method_form.card_name.name }}" value="" />
 							</div>
 							<!--end::Input group-->
 							<!--begin::Input group-->
@@ -1021,7 +968,7 @@
 								<!--begin::Input wrapper-->
 								<div class="position-relative">
 									<!--begin::Input-->
-									<input type="text" class="form-control form-control-solid" placeholder="xxxx xxxx xxxx xxxx" name="card_number" value="" />
+									<input type="text" class="form-control form-control-solid" placeholder="xxxx xxxx xxxx xxxx" name="{{ billing.payment_method_form.card_number.name }}" value="" />
 									<!--end::Input-->
 									<!--begin::Card logos-->
 									<div class="position-absolute translate-middle-y top-50 end-0 me-5">
@@ -1045,7 +992,7 @@
 									<div class="row fv-row">
 										<!--begin::Col-->
 										<div class="col-6">
-											<select name="card_expiry_month" class="form-select form-select-solid" data-control="select2" data-hide-search="true" data-placeholder="Month">
+											<select name="{{ billing.payment_method_form.card_expiry_month.name }}" class="form-select form-select-solid" data-control="select2" data-hide-search="true" data-placeholder="Month">
 												<option></option>
 												<option value="1">1</option>
 												<option value="2">2</option>
@@ -1064,7 +1011,7 @@
 										<!--end::Col-->
 										<!--begin::Col-->
 										<div class="col-6">
-											<select name="card_expiry_year" class="form-select form-select-solid" data-control="select2" data-hide-search="true" data-placeholder="Year">
+											<select name="{{ billing.payment_method_form.card_expiry_year.name }}" class="form-select form-select-solid" data-control="select2" data-hide-search="true" data-placeholder="Year">
 												<option></option>
 												<option value="2023">2023</option>
 												<option value="2024">2024</option>
@@ -1101,7 +1048,7 @@
 									<!--begin::Input wrapper-->
 									<div class="position-relative">
 										<!--begin::Input-->
-										<input type="text" class="form-control form-control-solid" minlength="3" maxlength="4" placeholder="CVV" name="card_cvv" />
+										<input type="text" class="form-control form-control-solid" minlength="3" maxlength="4" placeholder="CVV" name="{{ billing.payment_method_form.card_cvv.name }}" />
 										<!--end::Input-->
 										<!--begin::CVV icon-->
 										<div class="position-absolute translate-middle-y top-50 end-0 me-3">
@@ -1144,7 +1091,7 @@
 				<!--begin::Modal content-->
 				<div class="modal-content">
 					<!--begin::Form-->
-					<form class="form" action="#" id="kt_modal_new_address_form">
+					<form class="form" action="/account/billing/billing-addresses" id="kt_modal_new_address_form">
 						<!--begin::Modal header-->
 						<div class="modal-header" id="kt_modal_new_address_header">
 							<!--begin::Modal title-->
@@ -1196,7 +1143,7 @@
 										<label class="required fs-5 fw-semibold mb-2">First name</label>
 										<!--end::Label-->
 										<!--begin::Input-->
-										<input type="text" class="form-control form-control-solid" placeholder="" name="first-name" />
+										<input type="text" class="form-control form-control-solid" placeholder="" name="{{ billing.billing_address_form.first_name.name }}">
 										<!--end::Input-->
 									</div>
 									<!--end::Col-->
@@ -1206,7 +1153,7 @@
 										<label class="required fs-5 fw-semibold mb-2">Last name</label>
 										<!--end::Label-->
 										<!--end::Input-->
-										<input type="text" class="form-control form-control-solid" placeholder="" name="last-name" />
+										<input type="text" class="form-control form-control-solid" placeholder="" name="{{ billing.billing_address_form.last_name.name }}" />
 										<!--end::Input-->
 									</div>
 									<!--end::Col-->
@@ -1227,7 +1174,7 @@
 									</label>
 									<!--end::Label-->
 									<!--begin::Select-->
-									<select name="country" data-control="select2" data-dropdown-parent="#kt_modal_new_address" data-placeholder="Select a Country..." class="form-select form-select-solid">
+									<select name="{{ billing.billing_address_form.country.name }}" data-control="select2" data-dropdown-parent="#kt_modal_new_address" data-placeholder="Select a Country..." class="form-select form-select-solid">
 										<option value="">Select a Country...</option>
 										<option value="AF">Afghanistan</option>
 										<option value="AX">Aland Islands</option>
@@ -1463,7 +1410,7 @@
 									<label class="required fs-5 fw-semibold mb-2">Address Line 1</label>
 									<!--end::Label-->
 									<!--begin::Input-->
-									<input class="form-control form-control-solid" placeholder="" name="address1" />
+									<input class="form-control form-control-solid" placeholder="" name="{{ billing.billing_address_form.address1.name }}" />
 									<!--end::Input-->
 								</div>
 								<!--end::Input group-->
@@ -1473,17 +1420,17 @@
 									<label class="required fs-5 fw-semibold mb-2">Address Line 2</label>
 									<!--end::Label-->
 									<!--begin::Input-->
-									<input class="form-control form-control-solid" placeholder="" name="address2" />
+									<input class="form-control form-control-solid" placeholder="" name="{{ billing.billing_address_form.address2.name }}" />
 									<!--end::Input-->
 								</div>
 								<!--end::Input group-->
 								<!--begin::Input group-->
 								<div class="d-flex flex-column mb-5 fv-row">
 									<!--begin::Label-->
-									<label class="fs-5 fw-semibold mb-2">Town</label>
+									<label class="fs-5 fw-semibold mb-2">City</label>
 									<!--end::Label-->
 									<!--begin::Input-->
-									<input class="form-control form-control-solid" placeholder="" name="city" />
+									<input class="form-control form-control-solid" placeholder="" name="{{ billing.billing_address_form.city.name }}" />
 									<!--end::Input-->
 								</div>
 								<!--end::Input group-->
@@ -1495,7 +1442,7 @@
 										<label class="fs-5 fw-semibold mb-2">State / Province</label>
 										<!--end::Label-->
 										<!--begin::Input-->
-										<input class="form-control form-control-solid" placeholder="" name="state" />
+										<input class="form-control form-control-solid" placeholder="" name="{{ billing.billing_address_form.state.name }}" />
 										<!--end::Input-->
 									</div>
 									<!--end::Col-->
@@ -1505,7 +1452,7 @@
 										<label class="fs-5 fw-semibold mb-2">Post Code</label>
 										<!--end::Label-->
 										<!--begin::Input-->
-										<input class="form-control form-control-solid" placeholder="" name="postcode" />
+										<input class="form-control form-control-solid" placeholder="" name="{{ billing.billing_address_form.postcode.name }}" />
 										<!--end::Input-->
 									</div>
 									<!--end::Col-->
@@ -1515,26 +1462,6 @@
 								<div class="fv-row mb-5">
 									<!--begin::Wrapper-->
 									<div class="d-flex flex-stack">
-										<!--begin::Label-->
-										<div class="me-5">
-											<!--begin::Label-->
-											<label class="fs-5 fw-semibold">Use as a billing address?</label>
-											<!--end::Label-->
-											<!--begin::Input-->
-											<div class="fs-7 fw-semibold text-muted">If you need more info, please check budget planning</div>
-											<!--end::Input-->
-										</div>
-										<!--end::Label-->
-										<!--begin::Switch-->
-										<label class="form-check form-switch form-check-custom form-check-solid">
-											<!--begin::Input-->
-											<input class="form-check-input" name="billing" type="checkbox" value="1" checked="checked" />
-											<!--end::Input-->
-											<!--begin::Label-->
-											<span class="form-check-label fw-semibold text-muted">Yes</span>
-											<!--end::Label-->
-										</label>
-										<!--end::Switch-->
 									</div>
 									<!--begin::Wrapper-->
 								</div>
@@ -1570,8 +1497,8 @@
   {{ block.super }}
     <!--begin::Javascript-->
 		<!--begin::Custom Javascript(used for this page only)-->
-		<script src="{% static 'assets/js/custom/utilities/modals/new-card.js' %}"></script>
-		<script src="{% static 'assets/js/custom/utilities/modals/new-address.js' %}"></script>
+		<script src="{% static 'js/account/billing/new-card.js' %}"></script>
+		<script src="{% static 'js/account/billing/new-address.js' %}"></script>
 		<!--end::Custom Javascript-->
 		<!--end::Javascript-->
 {% endblock %}
