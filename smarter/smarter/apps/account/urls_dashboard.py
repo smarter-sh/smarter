@@ -3,10 +3,10 @@
 
 from django.urls import path
 
-from smarter.apps.account.views.dashboard import (
+from smarter.apps.account.views.dashboard.billing import BillingView
+from smarter.apps.account.views.dashboard.dashboard import (
     ActivityView,
     APIKeysView,
-    BillingView,
     CardDeclinedView,
     LogsView,
     OverviewView,
