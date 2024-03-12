@@ -5,11 +5,8 @@
 from django import forms
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
-from django.contrib.sites.shortcuts import get_current_site
 from django.shortcuts import HttpResponse, redirect
 from django.urls import reverse
-from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 
 from smarter.email_helpers import EmailHelper
 from smarter.token_generators import (
@@ -24,10 +21,6 @@ from smarter.view_helpers import (
     SmarterWebView,
     redirect_and_expire_cache,
 )
-
-
-RESET_LINK_EXPIRATION = 86400
-account_activation_token = ExpiringTokenGenerator()
 
 
 # ------------------------------------------------------------------------------
@@ -117,21 +110,13 @@ class AccountActivationEmailView(SmarterWebView):
 
     template_path = "account/activation.html"
     email_template_path = "account/authentication/email/account-activation.html"
-
-    def get_activation_link(self, user, request):
-        token = account_activation_token.make_token(user=user)
-        domain = get_current_site(request).domain
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        link = reverse("account_activate", kwargs={"uidb64": uid, "token": token})
-        protocol = "https" if request.is_secure() else "http"
-        url = protocol + "://" + domain + link
-        return url
+    expiring_token = ExpiringTokenGenerator()
 
     def get(self, request):
 
         # generate and send the activation email
         user = request.user
-        url = self.get_activation_link(user=user, request=request)
+        url = self.expiring_token.encode_link(request, user, "account_activate")
         context = {
             "account_activation": {
                 "url": url,
@@ -151,20 +136,14 @@ class AccountActivateView(SmarterWebView):
     """View for welcoming a newly activated user to the platform."""
 
     template_path = "account/welcome.html"
-
-    def get_user_and_validate(self, uidb64, token) -> User:
-        """Get the user from the uid and token and validate."""
-        uid = urlsafe_base64_decode(uidb64)
-        user = User.objects.get(pk=uid)
-        account_activation_token.validate(user, token, expiration=RESET_LINK_EXPIRATION)
-        return user
+    expiring_token = ExpiringTokenGenerator()
 
     def get(self, request, *args, **kwargs):
         uidb64 = kwargs.get("uidb64", None)
         token = kwargs.get("token", None)
 
         try:
-            user = self.get_user_and_validate(uidb64, token)
+            user = self.expiring_token.decode_link(uidb64, token)
             user.is_active = True
             user.save()
         except User.DoesNotExist:
