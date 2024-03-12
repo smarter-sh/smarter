@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Billing Views for the account dashboard."""
-import http
+from http import HTTPStatus
 
-from django import forms
+from django import forms, http
 
 from smarter.view_helpers import SmarterAuthenticatedWebView
 
@@ -101,13 +101,16 @@ class PaymentMethodsView(SmarterAuthenticatedWebView):
             card_expiry_month = form.cleaned_data["card_expiry_month"]
             card_expiry_year = form.cleaned_data["card_expiry_year"]
             card_cvc = form.cleaned_data["card_cvc"]
-            return http.JsonResponse(status=http.HTTPStatus.OK)
-        return http.JsonResponse(status=http.HTTPStatus.BAD_REQUEST)
+            return http.JsonResponse(status=HTTPStatus.OK, data={})
+        return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data={})
 
     def post(self, request):
         self.process_form(request)
 
     def patch(self, request):
+        self.process_form(request)
+
+    def put(self, request):
         self.process_form(request)
 
 
@@ -127,11 +130,14 @@ class BillingAddressesView(SmarterAuthenticatedWebView):
             state = form.cleaned_data["state"]
             postcode = form.cleaned_data["postcode"]
             country = form.cleaned_data["country"]
-            return http.JsonResponse(status=http.HTTPStatus.OK)
-        return http.JsonResponse(status=http.HTTPStatus.BAD_REQUEST)
+            return http.JsonResponse(status=HTTPStatus.OK, data={})
+        return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data={})
 
     def post(self, request):
         self.process_form(request)
 
     def patch(self, request):
+        self.process_form(request)
+
+    def put(self, request):
         self.process_form(request)
