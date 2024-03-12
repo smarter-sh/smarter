@@ -52,11 +52,8 @@ class TestUrls(unittest.TestCase):
         verify_response("/login/", 200)
         verify_response("/logout/", 302)
         verify_response("/register/", 200)
-        verify_response("/account/reset-password/", 200)
-        verify_response("/account/new-password/", 200)
-        verify_response("/account/confirm-password/", 200)
+        verify_response("/account/password-reset-request/", 200)
+        verify_response("/account/password-confirm/", 200)
 
         self.client.force_login(self.user)
-        verify_response("/welcome/", 200)
         verify_response("/account/deactivate/", 200)
-        verify_response("/account/verify-email/", 200)
