@@ -45,6 +45,6 @@ class TestExpiringTokens(unittest.TestCase):
         self.assertEqual(decoded_user, self.user)
 
         # create an encoded link for a url pattern that expects a uidb64 and token
-        uidb64_user = expiring_token.uidb64_user(self.user)
-        decoded_user = expiring_token.decode_link(uidb64_user, token)
+        user_to_uidb64 = expiring_token.user_to_uidb64(self.user)
+        decoded_user = expiring_token.decode_link(user_to_uidb64, token)
         self.assertEqual(decoded_user, self.user)

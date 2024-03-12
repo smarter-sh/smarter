@@ -45,14 +45,18 @@ class ExpiringTokenGenerator(PasswordResetTokenGenerator):
         self.expiration = expiration
         super().__init__()
 
-    def uidb64_user(self, user: User) -> str:
+    def user_to_uidb64(self, user: User) -> str:
         return urlsafe_base64_encode(force_bytes(user.pk))
+
+    def uidb64_to_user(self, uidb64: str) -> User:
+        uid = urlsafe_base64_decode(uidb64)
+        return User.objects.get(pk=uid)
 
     def encode_link(self, request, user, reverse_link) -> str:
         """Create an encoded url link that expires after a certain amount of time."""
         token = self.make_token(user=user)
         domain = get_current_site(request).domain
-        uid = self.uidb64_user(user)
+        uid = self.user_to_uidb64(user)
         slug = reverse(reverse_link, kwargs={"uidb64": uid, "token": token})
         protocol = "https" if request.is_secure() else "http"
         url = protocol + "://" + domain + slug
@@ -60,8 +64,7 @@ class ExpiringTokenGenerator(PasswordResetTokenGenerator):
 
     def decode_link(self, uidb64, token) -> User:
         """Extract the user from the uid and token and validate."""
-        uid = urlsafe_base64_decode(uidb64)
-        user = User.objects.get(pk=uid)
+        user = self.uidb64_to_user(uidb64)
         self.validate(user, token)
         return user
 
