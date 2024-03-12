@@ -79,3 +79,4 @@ runs:
         context: .
         push: true
         tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest, ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ github.run_id }}, ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.DATESTAMP }}
+        build-args: ENVIRONMENT=${{ inputs.environment }}

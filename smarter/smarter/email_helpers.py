@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 """Helper class for sending email via AWS Simple Email Service using SMTP."""
+import logging
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from django.conf import settings
+
+
+logger = logging.getLogger(__name__)
 
 
 class EmailHelper:
@@ -26,3 +30,4 @@ class EmailHelper:
                 server.starttls()
             server.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
             server.sendmail(msg["From"], [msg["To"]], msg.as_string())
+            logger.info("smtp email sent to %s: %s", to, subject)
