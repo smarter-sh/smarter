@@ -4,3 +4,8 @@
 {% block canonical %}
 <link rel="canonical" href="/account/" />
 {% endblock %}
+
+{% block javascript_extra %}
+    {{ block.super }}
+		<script src="{% static 'assets/js/custom/account/billing/general.js' %}"></script>
+{% endblock %}

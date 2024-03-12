@@ -1090,7 +1090,7 @@
                       <!--begin:Menu item-->
                       <div class="menu-item">
                         <!--begin:Menu link-->
-                        <a class="menu-link active" href="/chat/" target="_blank">
+                        <a class="menu-link active" href="/chat/" target="_self">
                           <span class="menu-icon">
                             <i class="ki-duotone ki-cube-2 fs-2">
                               <span class="path1"></span>
@@ -1129,7 +1129,7 @@
                       <!--begin:Menu item-->
                       <div class="menu-item">
                         <!--begin:Menu link-->
-                        <a class="menu-link" href="/chat/langchain/" target="_blank">
+                        <a class="menu-link" href="/chat/langchain/" target="_self">
                           <span class="menu-icon">
                             <i class="ki-duotone ki-tablet-text-down fs-2">
                               <span class="path1"></span>
@@ -1145,7 +1145,7 @@
                       <!--begin:Menu item-->
                       <div class="menu-item">
                         <!--begin:Menu link-->
-                        <a class="menu-link" href="/chat/chatgpt/" target="_blank">
+                        <a class="menu-link" href="/chat/chatgpt/" target="_self">
                           <span class="menu-icon">
                             <i class="ki-duotone ki-files-tablet fs-2">
                               <span class="path1"></span>
@@ -1227,7 +1227,7 @@
                       <!--begin:Menu item Account-->
                       <div class="menu-item">
                         <!--begin:Menu link-->
-                        <a class="menu-link" href="/account/dashboard/overview/" target="_blank">
+                        <a class="menu-link" href="/account/dashboard/overview/" target="_self">
                           <span class="menu-icon">
                             <i class="ki-duotone ki-tablet-text-down fs-2">
                               <span class="path1"></span>
@@ -1252,7 +1252,7 @@
                       <!--end:Menu item-->
                       <div class="menu-item">
                         <!--begin:Menu link-->
-                        <a class="menu-link" href="/support/" target="_blank">
+                        <a class="menu-link" href="/support/" target="_self">
                           <span class="menu-icon">
                             <i class="ki-duotone ki-rocket fs-2">
                               <span class="path1"></span>
@@ -1267,7 +1267,7 @@
                       <!--begin:Menu item-->
                       <div class="menu-item">
                         <!--begin:Menu link-->
-                        <a class="menu-link" href="/docs/" target="_blank">
+                        <a class="menu-link" href="/docs/" target="_self">
                           <span class="menu-icon">
                             <i class="ki-duotone ki-abstract-26 fs-2">
                               <span class="path1"></span>
@@ -1282,7 +1282,7 @@
                       <!--begin:Menu item-->
                       <div class="menu-item">
                         <!--begin:Menu link-->
-                        <a class="menu-link" href="https://preview.keenthemes.com/html/keen/docs/getting-started/changelog" target="_blank">
+                        <a class="menu-link" href="https://preview.keenthemes.com/html/keen/docs/getting-started/changelog" target="_self">
                           <span class="menu-icon">
                             <i class="ki-duotone ki-code fs-2">
                               <span class="path1"></span>
@@ -1417,16 +1417,20 @@
 			<!--end::Page-->
 {% endblock %}
 
+		<!--begin::Scrolltop-->
+		<div id="kt_scrolltop" class="scrolltop" data-kt-scrolltop="true">
+			<i class="ki-duotone ki-arrow-up">
+				<span class="path1"></span>
+				<span class="path2"></span>
+			</i>
+		</div>
+		<!--end::Scrolltop-->
+
+{% block modal %}
+      <!--begin::html for all modals-->
+      <!--end::html for all modals-->
+{% endblock %}
 {% block javascript_extra %}
-		<!--begin::Vendors Javascript(used for this page only)-->
-		<script src="{% static 'assets/plugins/custom/fullcalendar/fullcalendar.bundle.js' %}"></script>
-		<script src="{% static 'assets/plugins/custom/datatables/datatables.bundle.js' %}"></script>
-		<!--end::Vendors Javascript-->
-		<!--begin::Custom Javascript(used for this page only)-->
+    {{ block.super }}
 		<script src="{% static 'assets/js/widgets.bundle.js' %}"></script>
-		<script src="{% static 'assets/js/custom/apps/chat/chat.js' %}"></script>
-		<script src="{% static 'assets/js/custom/utilities/modals/upgrade-plan.js' %}"></script>
-		<script src="{% static 'assets/js/custom/utilities/modals/create-campaign.js' %}"></script>
-		<script src="{% static 'assets/js/custom/utilities/modals/users-search.js' %}"></script>
-		<!--end::Custom Javascript-->
 {% endblock %}
