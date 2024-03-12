@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """Django password management views."""
+import http
+
 from django import forms
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -37,7 +39,7 @@ class PasswordResetRequestView(SmarterWebView):
     def post(self, request):
         form = PasswordResetRequestView.EmailForm(request.POST)
         if not form.is_valid():
-            return HttpResponse("Email address is invalid.", status=400)
+            return HttpResponse("Email address is invalid.", status=http.HTTPStatus.BAD_REQUEST)
         email = form.cleaned_data["email"]
         try:
             user = User.objects.get(email=email)
@@ -80,9 +82,9 @@ class PasswordResetView(SmarterWebView):
         except User.DoesNotExist:
             return HttpResponse("Invalid password reset link. User does not exist.", status=404)
         except (TypeError, ValueError, OverflowError, TokenParseError, TokenConversionError, TokenIntegrityError) as e:
-            return HttpResponse(e, status=400)
+            return HttpResponse(e, status=http.HTTPStatus.BAD_REQUEST)
         except TokenExpiredError as e:
-            return HttpResponse(e, status=401)
+            return HttpResponse(e, status=http.HTTPStatus.UNAUTHORIZED)
 
         context = {"form": form, "password_reset": {"uidb64": uidb64, "token": token, "user": user}}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
@@ -92,22 +94,22 @@ class PasswordResetView(SmarterWebView):
         token = kwargs.get("token", None)
         form = PasswordResetView.NewPasswordForm(request.POST)
         if not form.is_valid():
-            return HttpResponse("input form is invalid.", status=400)
+            return HttpResponse("input form is invalid.", status=http.HTTPStatus.BAD_REQUEST)
 
         password = form.cleaned_data["password"]
         password_confirm = form.cleaned_data["password_confirm"]
 
         if password != password_confirm:
-            return HttpResponse("Passwords do not match.", status=400)
+            return HttpResponse("Passwords do not match.", status=http.HTTPStatus.BAD_REQUEST)
 
         try:
             user = self.expiring_token.decode_link(uidb64, token)
         except User.DoesNotExist:
             return HttpResponse("Invalid password reset link. User does not exist.", status=404)
         except (TypeError, ValueError, OverflowError, TokenParseError, TokenConversionError, TokenIntegrityError) as e:
-            return HttpResponse(e, status=400)
+            return HttpResponse(e, status=http.HTTPStatus.BAD_REQUEST)
         except TokenExpiredError as e:
-            return HttpResponse(e, status=401)
+            return HttpResponse(e, status=http.HTTPStatus.UNAUTHORIZED)
 
         user.set_password(password)
         user.save()

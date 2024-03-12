@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=W0613
 """Django Authentication views."""
+import http
 
 from django import forms
 from django.contrib.auth import authenticate, login, logout
@@ -60,7 +61,7 @@ class LoginView(SmarterWebView):
             # pylint: disable=W0718
             except Exception as e:
                 return HttpResponse(f"An unknown error occurred {e.description}", status=500)
-        return HttpResponse("Received invalid responses.", status=400)
+        return HttpResponse("Received invalid responses.", status=http.HTTPStatus.BAD_REQUEST)
 
 
 class LogoutView(SmarterWebView):
@@ -149,9 +150,9 @@ class AccountActivateView(SmarterWebView):
         except User.DoesNotExist:
             return HttpResponse("Invalid password reset link. User does not exist.", status=404)
         except (TypeError, ValueError, OverflowError, TokenParseError, TokenConversionError, TokenIntegrityError) as e:
-            return HttpResponse(e, status=400)
+            return HttpResponse(e, status=http.HTTPStatus.BAD_REQUEST)
         except TokenExpiredError as e:
-            return HttpResponse(e, status=401)
+            return HttpResponse(e, status=http.HTTPStatus.UNAUTHORIZED)
 
         return self.clean_http_response(request, template_path=self.template_path)
 
