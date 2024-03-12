@@ -32,4 +32,8 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(), name="logout_view"),
     path("register/", AccountRegisterView.as_view(), name="register_view"),
     # -----------------------------------
+    # -----------------------------------
+    # see: https://dj-stripe.dev/dj-stripe/
+    path("stripe/", include("djstripe.urls", namespace="djstripe")),
+    # -----------------------------------
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

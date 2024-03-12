@@ -302,6 +302,8 @@
 												<!--end::Title-->
 												<!--begin::Row-->
 												<div class="row gx-9 gy-6">
+
+                          {% for payment_method in billing.payment_methods %}
 													<!--begin::Col-->
 													<div class="col-xl-6" data-kt-billing-element="card">
 														<!--begin::Card-->
@@ -309,18 +311,20 @@
 															<!--begin::Info-->
 															<div class="d-flex flex-column py-2">
 																<!--begin::Owner-->
-																<div class="d-flex align-items-center fs-4 fw-bold mb-5">Marcus Morris
+																<div class="d-flex align-items-center fs-4 fw-bold mb-5">{{ payment_method.owner }}
+                                {% if payment_method.is_primary %}
 																<span class="badge badge-light-success fs-7 ms-2">Primary</span></div>
+                                {% endif %}
 																<!--end::Owner-->
 																<!--begin::Wrapper-->
 																<div class="d-flex align-items-center">
 																	<!--begin::Icon-->
-																	<img src="{% static 'assets/media/svg/card-logos/visa.svg' %}" alt="" class="me-4" />
+																	<img src="{% static 'assets/media/svg/card-logos/'|add:payment_method.type|add:'.svg' %}" />
 																	<!--end::Icon-->
 																	<!--begin::Details-->
 																	<div>
-																		<div class="fs-4 fw-bold">Visa **** 1679</div>
-																		<div class="fs-6 fw-semibold text-gray-500">Card expires at 09/24</div>
+																		<div class="fs-4 fw-bold">{{ payment_method.description }}</div>
+																		<div class="fs-6 fw-semibold text-gray-500">Expires {{ payment_method.expiration }}</div>
 																	</div>
 																	<!--end::Details-->
 																</div>
@@ -345,90 +349,8 @@
 														<!--end::Card-->
 													</div>
 													<!--end::Col-->
-													<!--begin::Col-->
-													<div class="col-xl-6" data-kt-billing-element="card">
-														<!--begin::Card-->
-														<div class="card card-dashed h-xl-100 flex-row flex-stack flex-wrap p-6">
-															<!--begin::Info-->
-															<div class="d-flex flex-column py-2">
-																<!--begin::Owner-->
-																<div class="d-flex align-items-center fs-4 fw-bold mb-5">Jacob Holder</div>
-																<!--end::Owner-->
-																<!--begin::Wrapper-->
-																<div class="d-flex align-items-center">
-																	<!--begin::Icon-->
-																	<img src="{% static 'assets/media/svg/card-logos/american-express.svg' %}" alt="" class="me-4" />
-																	<!--end::Icon-->
-																	<!--begin::Details-->
-																	<div>
-																		<div class="fs-4 fw-bold">Mastercard **** 2040</div>
-																		<div class="fs-6 fw-semibold text-gray-500">Card expires at 10/22</div>
-																	</div>
-																	<!--end::Details-->
-																</div>
-																<!--end::Wrapper-->
-															</div>
-															<!--end::Info-->
-															<!--begin::Actions-->
-															<div class="d-flex align-items-center py-2">
-																<button class="btn btn-sm btn-light btn-active-light-primary me-3" data-kt-billing-action="card-delete">
-																	<!--begin::Indicator label-->
-																	<span class="indicator-label">Delete</span>
-																	<!--end::Indicator label-->
-																	<!--begin::Indicator progress-->
-																	<span class="indicator-progress">Please wait...
-																	<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-																	<!--end::Indicator progress-->
-																</button>
-																<button class="btn btn-sm btn-light btn-active-light-primary" data-bs-toggle="modal" data-bs-target="#kt_modal_new_card">Edit</button>
-															</div>
-															<!--end::Actions-->
-														</div>
-														<!--end::Card-->
-													</div>
-													<!--end::Col-->
-													<!--begin::Col-->
-													<div class="col-xl-6" data-kt-billing-element="card">
-														<!--begin::Card-->
-														<div class="card card-dashed h-xl-100 flex-row flex-stack flex-wrap p-6">
-															<!--begin::Info-->
-															<div class="d-flex flex-column py-2">
-																<!--begin::Owner-->
-																<div class="d-flex align-items-center fs-4 fw-bold mb-5">Jhon Larson</div>
-																<!--end::Owner-->
-																<!--begin::Wrapper-->
-																<div class="d-flex align-items-center">
-																	<!--begin::Icon-->
-																	<img src="{% static 'assets/media/svg/card-logos/mastercard.svg' %}" alt="" class="me-4" />
-																	<!--end::Icon-->
-																	<!--begin::Details-->
-																	<div>
-																		<div class="fs-4 fw-bold">Mastercard **** 1290</div>
-																		<div class="fs-6 fw-semibold text-gray-500">Card expires at 03/23</div>
-																	</div>
-																	<!--end::Details-->
-																</div>
-																<!--end::Wrapper-->
-															</div>
-															<!--end::Info-->
-															<!--begin::Actions-->
-															<div class="d-flex align-items-center py-2">
-																<button class="btn btn-sm btn-light btn-active-light-primary me-3" data-kt-billing-action="card-delete">
-																	<!--begin::Indicator label-->
-																	<span class="indicator-label">Delete</span>
-																	<!--end::Indicator label-->
-																	<!--begin::Indicator progress-->
-																	<span class="indicator-progress">Please wait...
-																	<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-																	<!--end::Indicator progress-->
-																</button>
-																<button class="btn btn-sm btn-light btn-active-light-primary" data-bs-toggle="modal" data-bs-target="#kt_modal_new_card">Edit</button>
-															</div>
-															<!--end::Actions-->
-														</div>
-														<!--end::Card-->
-													</div>
-													<!--end::Col-->
+                          {% endfor %}
+
 													<!--begin::Col-->
 													<div class="col-xl-6">
 														<!--begin::Notice-->
