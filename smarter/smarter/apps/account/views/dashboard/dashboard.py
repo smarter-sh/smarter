@@ -15,16 +15,6 @@ class OverviewView(SmarterAuthenticatedWebView):
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
 
-class SettingsView(SmarterAuthenticatedWebView):
-    """View for the account settings."""
-
-    template_path = "account/dashboard/settings.html"
-
-    def get(self, request):
-        context = {}
-        return self.clean_http_response(request, template_path=self.template_path, context=context)
-
-
 class ActivityView(SmarterAuthenticatedWebView):
     """View for the account activity."""
 
