@@ -4,7 +4,7 @@ from http import HTTPStatus
 
 from django import forms, http
 
-from smarter.view_helpers import SmarterAuthenticatedWebView
+from smarter.view_helpers import SmarterAdminWebView
 
 
 class PaymentMethodForm(forms.Form):
@@ -31,7 +31,7 @@ class BillingAddressesForm(forms.Form):
 
 
 # pylint: disable=W0511,C0415
-class BillingView(SmarterAuthenticatedWebView):
+class BillingView(SmarterAdminWebView):
     """View for the account billing."""
 
     template_path = "account/dashboard/billing.html"
@@ -88,7 +88,7 @@ class BillingView(SmarterAuthenticatedWebView):
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
 
-class PaymentMethodsView(SmarterAuthenticatedWebView):
+class PaymentMethodsView(SmarterAdminWebView):
     """View for the account billing payment methods."""
 
     # pylint: disable=W0612
@@ -114,7 +114,7 @@ class PaymentMethodsView(SmarterAuthenticatedWebView):
         self.process_form(request)
 
 
-class BillingAddressesView(SmarterAuthenticatedWebView):
+class BillingAddressesView(SmarterAdminWebView):
     """View for the account billing payment methods."""
 
     # pylint: disable=W0612
