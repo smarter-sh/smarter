@@ -29,7 +29,15 @@ class Account(TimestampedModel):
     )
     company_name = models.CharField(max_length=255)
     phone_number = models.CharField(max_length=20)
-    address = models.CharField(max_length=255)
+    address1 = models.CharField(max_length=255)
+    address2 = models.CharField(max_length=255)
+    city = models.CharField(max_length=255)
+    state = models.CharField(max_length=255)
+    postal_code = models.CharField(max_length=20)
+    country = models.CharField(max_length=255)
+    language = models.CharField(max_length=255)
+    timezone = models.CharField(max_length=255)
+    currency = models.CharField(max_length=255)
 
     def randomized_account_number(self):
         """

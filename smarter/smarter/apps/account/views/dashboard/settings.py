@@ -10,11 +10,15 @@ from smarter.view_helpers import SmarterAuthenticatedWebView
 class ProfileForm(forms.Form):
     """Form for Payment methods modal."""
 
-    first_name = forms.CharField()
-    last_name = forms.CharField()
+    account_number = forms.CharField()
     company_name = forms.CharField()
-    phone = forms.CharField()
+    address1 = forms.CharField()
+    address2 = forms.CharField()
+    city = forms.CharField()
+    state = forms.CharField()
+    postal_code = forms.CharField()
     country = forms.CharField()
+    phone = forms.CharField()
     language = forms.CharField()
     timezone = forms.CharField()
     currency = forms.CharField()
@@ -43,11 +47,15 @@ class ProfileView(SmarterAuthenticatedWebView):
         # TODO: persist this
         form = ProfileForm(request.POST)
         if form.is_valid():
-            first_name = form.cleaned_data["first_name"]
-            last_name = form.cleaned_data["last_name"]
+            account_number = form.cleaned_data["account_number"]
             company_name = form.cleaned_data["company_name"]
-            phone = form.cleaned_data["phone"]
+            address1 = form.cleaned_data["address1"]
+            address2 = form.cleaned_data["address2"]
+            city = form.cleaned_data["city"]
+            state = form.cleaned_data["state"]
+            postal_code = form.cleaned_data["postal_code"]
             country = form.cleaned_data["country"]
+            phone = form.cleaned_data["phone"]
             language = form.cleaned_data["language"]
             timezone = form.cleaned_data["timezone"]
             currency = form.cleaned_data["currency"]
