@@ -14,26 +14,25 @@ from smarter.view_helpers import SmarterAuthenticatedWebView
 logger = logging.getLogger(__name__)
 HERE = os.path.abspath(os.path.dirname(__file__))
 
-# Open and read the CSV file
+
+def get_from_csv(file_path):
+    """Reads a CSV file and returns a list of dictionaries."""
+    with open(file_path, mode="r", encoding="utf-8") as file:
+        reader = csv.DictReader(file)
+        return list(reader)
+
+
 countries_csv = os.path.join(HERE, "./data/countries.csv")
-with open(countries_csv, mode="r", encoding="utf-8") as file:
-    reader = csv.DictReader(file)
-    COUNTRIES = list(reader)
+COUNTRIES = get_from_csv(countries_csv)
 
 languages_csv = os.path.join(HERE, "./data/languages.csv")
-with open(languages_csv, mode="r", encoding="utf-8") as file:
-    reader = csv.DictReader(file)
-    LANGUAGES = list(reader)
+LANGUAGES = get_from_csv(languages_csv)
 
 timezones_csv = os.path.join(HERE, "./data/timezones.csv")
-with open(timezones_csv, mode="r", encoding="utf-8") as file:
-    reader = csv.DictReader(file)
-    TIMEZONES = list(reader)
+TIMEZONES = get_from_csv(timezones_csv)
 
 currencies_csv = os.path.join(HERE, "./data/currencies.csv")
-with open(currencies_csv, mode="r", encoding="utf-8") as file:
-    reader = csv.DictReader(file)
-    CURRENCIES = list(reader)
+CURRENCIES = get_from_csv(currencies_csv)
 
 
 class AccountForm(forms.ModelForm):
@@ -51,8 +50,33 @@ class SettingsView(SmarterAuthenticatedWebView):
 
     template_path = "account/dashboard/settings.html"
 
+    def _exists(self, key: str, value: str, db: list) -> bool:
+        for item in db:
+            if item[key] == value:
+                return True
+        return False
+
+    def _handle_write(self, request):
+        user_profile = UserProfile.objects.get(user=request.user)
+        account_form = AccountForm(request.POST, instance=user_profile.account)
+        if account_form.is_valid():
+            if not self._exists("value", str(account_form.instance.currency), CURRENCIES):
+                return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data={"currency": "Invalid currency."})
+            if not self._exists("code", str(account_form.instance.country), COUNTRIES):
+                return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data={"country": "Invalid country."})
+            if not self._exists("value", str(account_form.instance.language), LANGUAGES):
+                return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data={"language": "Invalid language."})
+            if not self._exists("value", str(account_form.instance.timezone), TIMEZONES):
+                return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data={"timezone": "Invalid timezone."})
+
+            account_form.save()
+            return http.JsonResponse(status=HTTPStatus.OK, data={})
+        return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data=account_form.errors)
+
+    # -------------------------------------------------------------------------
+    # HTTP override methods
+    # -------------------------------------------------------------------------
     def get(self, request):
-        logger.info("Handling get request w %s languages", len(LANGUAGES))
         user_profile = UserProfile.objects.get(user=request.user)
         account_form = AccountForm(instance=user_profile.account)
         context = {
@@ -65,15 +89,6 @@ class SettingsView(SmarterAuthenticatedWebView):
             }
         }
         return self.clean_http_response(request, template_path=self.template_path, context=context)
-
-    def _handle_write(self, request):
-        logger.info("Handling write request: %s", request.POST)
-        user_profile = UserProfile.objects.get(user=request.user)
-        account_form = AccountForm(request.POST, instance=user_profile.account)
-        if account_form.is_valid():
-            account_form.save()
-            return http.JsonResponse(status=HTTPStatus.OK, data={})
-        return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data=account_form.errors)
 
     def post(self, request):
         return self._handle_write(request)

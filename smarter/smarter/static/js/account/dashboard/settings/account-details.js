@@ -185,7 +185,7 @@ var KTAccountDetails = function () {
     // Public methods
     return {
         init: function () {
-            form = document.getElementById('kt_account_profile_details_form');
+            form = document.getElementById('kt_account_details_form');
             editButton = $('#kt_settings_form_edit_btn');
             saveButton = $(form).find('#kt_settings_form_save_btn');
             cancelButton = $(form).find('#kt_settings_form_cancel_btn');
