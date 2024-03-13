@@ -23,7 +23,7 @@
       </div>
       <!--end::Card title-->
       <!--begin::Action-->
-      <a href="/account/dashboard/settings/" class="btn btn-sm btn-primary align-self-center">Edit Profile</a>
+      <a id="kt_settings_form_edit_btn" href="/account/dashboard/settings/" class="btn btn-sm btn-primary align-self-center">Edit Profile</a>
       <!--end::Action-->
     </div>
     <!--begin::Card header-->
@@ -31,6 +31,7 @@
     <div id="kt_account_settings_profile_details" class="collapse show">
       <!--begin::Form-->
       <form id="kt_account_profile_details_form" class="form">
+        {% csrf_token %}
         <!--begin::Card body-->
         <div class="card-body border-top p-9">
           <!--begin::Input group-->
@@ -44,12 +45,12 @@
               <div class="row">
                 <!--begin::Col-->
                 <div class="col-lg-6 fv-row">
-                  <input type="text" name="fname" class="form-control form-control-lg form-control-solid mb-3 mb-lg-0" placeholder="First name" value="Max" />
+                  <input type="text" name="{{ account_settings.profile_form.first_name.name }}" class="form-control form-control-lg form-control-solid mb-3 mb-lg-0" placeholder="First name" value="{{ account_settings.profile_form.first_name.value }}" />
                 </div>
                 <!--end::Col-->
                 <!--begin::Col-->
                 <div class="col-lg-6 fv-row">
-                  <input type="text" name="lname" class="form-control form-control-lg form-control-solid" placeholder="Last name" value="Smith" />
+                  <input type="text" name="{{ account_settings.profile_form.last_name.name }}" class="form-control form-control-lg form-control-solid" placeholder="Last name" value="{{ account_settings.profile_form.last_name.value }}" />
                 </div>
                 <!--end::Col-->
               </div>
@@ -65,7 +66,7 @@
             <!--end::Label-->
             <!--begin::Col-->
             <div class="col-lg-8 fv-row">
-              <input type="text" name="company" class="form-control form-control-lg form-control-solid" placeholder="Company name" value="Keenthemes" />
+              <input type="text" name="{{ account_settings.profile_form.company_name.name }}" class="form-control form-control-lg form-control-solid" placeholder="Company name" value="{{ account_settings.profile_form.company_name.value }}" />
             </div>
             <!--end::Col-->
           </div>
@@ -86,19 +87,7 @@
             <!--end::Label-->
             <!--begin::Col-->
             <div class="col-lg-8 fv-row">
-              <input type="tel" name="phone" class="form-control form-control-lg form-control-solid" placeholder="Phone number" value="044 3276 454 935" />
-            </div>
-            <!--end::Col-->
-          </div>
-          <!--end::Input group-->
-          <!--begin::Input group-->
-          <div class="row mb-6">
-            <!--begin::Label-->
-            <label class="col-lg-4 col-form-label fw-semibold fs-6">Company Site</label>
-            <!--end::Label-->
-            <!--begin::Col-->
-            <div class="col-lg-8 fv-row">
-              <input type="text" name="website" class="form-control form-control-lg form-control-solid" placeholder="Company website" value="keenthemes.com" />
+              <input type="tel" name="{{ account_settings.profile_form.phone.name }}" class="form-control form-control-lg form-control-solid" placeholder="Phone number" value="{{ account_settings.profile_form.phone.value }}" />
             </div>
             <!--end::Col-->
           </div>
@@ -119,7 +108,7 @@
             <!--end::Label-->
             <!--begin::Col-->
             <div class="col-lg-8 fv-row">
-              <select name="country" aria-label="Select a Country" data-control="select2" data-placeholder="Select a country..." class="form-select form-select-solid form-select-lg fw-semibold">
+              <select name="{{ account_settings.profile_form.country.name }}" aria-label="Select a Country" data-control="select2" data-placeholder="Select a country..." class="form-select form-select-solid form-select-lg fw-semibold" >
                 <option value="">Select a Country...</option>
                 <option data-kt-flag="flags/afghanistan.svg" value="AF">Afghanistan</option>
                 <option data-kt-flag="flags/aland-islands.svg" value="AX">Aland Islands</option>
@@ -358,7 +347,7 @@
             <!--begin::Col-->
             <div class="col-lg-8 fv-row">
               <!--begin::Input-->
-              <select name="language" aria-label="Select a Language" data-control="select2" data-placeholder="Select a language..." class="form-select form-select-solid form-select-lg">
+              <select name="{{ account_settings.profile_form.language.name }}" aria-label="Select a Language" data-control="select2" data-placeholder="Select a language..." class="form-select form-select-solid form-select-lg">
                 <option value="">Select a Language...</option>
                 <option data-kt-flag="flags/indonesia.svg" value="id">Bahasa Indonesia - Indonesian</option>
                 <option data-kt-flag="flags/malaysia.svg" value="msa">Bahasa Melayu - Malay</option>
@@ -422,7 +411,7 @@
             <!--end::Label-->
             <!--begin::Col-->
             <div class="col-lg-8 fv-row">
-              <select name="timezone" aria-label="Select a Timezone" data-control="select2" data-placeholder="Select a timezone.." class="form-select form-select-solid form-select-lg">
+              <select name="{{ account_settings.profile_form.timezone.name }}" aria-label="Select a Timezone" data-control="select2" data-placeholder="Select a timezone.." class="form-select form-select-solid form-select-lg">
                 <option value="">Select a Timezone..</option>
                 <option data-bs-offset="-39600" value="International Date Line West">(GMT-11:00) International Date Line West</option>
                 <option data-bs-offset="-39600" value="Midway Island">(GMT-11:00) Midway Island</option>
@@ -579,7 +568,7 @@
             <!--end::Label-->
             <!--begin::Col-->
             <div class="col-lg-8 fv-row">
-              <select name="currnecy" aria-label="Select a Currency" data-control="select2" data-placeholder="Select a currency.." class="form-select form-select-solid form-select-lg">
+              <select name="{{ account_settings.profile_form.currency.name }}" aria-label="Select a Currency" data-control="select2" data-placeholder="Select a currency.." class="form-select form-select-solid form-select-lg">
                 <option value="">Select a currency..</option>
                 <option data-kt-flag="flags/united-states.svg" value="USD">
                 <b>USD</b>&nbsp;-&nbsp;USA dollar</option>
@@ -604,8 +593,8 @@
         <!--end::Card body-->
         <!--begin::Actions-->
         <div class="card-footer d-flex justify-content-end py-6 px-9">
-          <button type="reset" class="btn btn-light btn-active-light-primary me-2">Discard</button>
-          <button type="submit" class="btn btn-primary" id="kt_account_profile_details_submit">Save Changes</button>
+          <button id="kt_settings_form_cancel_btn" type="reset" class="btn btn-light btn-active-light-primary me-2" style="display: none;">Cancel</button>
+          <button id="kt_settings_form_save_btn" type="submit" class="btn btn-primary" id="kt_account_profile_details_submit" style="display: none;">Save Changes</button>
         </div>
         <!--end::Actions-->
       </form>
@@ -1170,9 +1159,9 @@
 {% block javascript_extra %}
   {{ block.super }}
 		<!--begin::Custom Javascript(used for this page only)-->
-		<script src="{% static 'assets/js/custom/account/settings/signin-methods.js' %}"></script>
-		<script src="{% static 'assets/js/custom/account/settings/profile-details.js' %}"></script>
-		<script src="{% static 'assets/js/custom/account/settings/deactivate-account.js' %}"></script>
+		<script src="{% static 'js/account/dashboard/settings/signin-methods.js' %}"></script>
+		<script src="{% static 'js/account/dashboard/settings/profile-details.js' %}"></script>
+		<script src="{% static 'js/account/dashboard/settings/deactivate-account.js' %}"></script>
 		<script src="{% static 'assets/js/custom/utilities/modals/two-factor-authentication.js' %}"></script>
 		<!--end::Custom Javascript-->
 {% endblock %}
