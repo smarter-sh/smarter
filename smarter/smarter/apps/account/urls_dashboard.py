@@ -16,13 +16,12 @@ from smarter.apps.account.views.dashboard.dashboard import (
     OverviewView,
     StatementsView,
 )
-from smarter.apps.account.views.dashboard.settings import ProfileView, SettingsView
+from smarter.apps.account.views.dashboard.settings import SettingsView
 
 
 urlpatterns = [
     path("overview/", OverviewView.as_view(), name="account_overview"),
     path("settings/", SettingsView.as_view(), name="account_settings"),
-    path("settings/profile/", ProfileView.as_view(), name="account_settings_profile"),
     path("activity/", ActivityView.as_view(), name="account_activity"),
     path("billing/", BillingView.as_view(), name="account_billing"),
     path("billing/payment-methods", PaymentMethodsView.as_view(), name="account_billing_payment_methods"),
