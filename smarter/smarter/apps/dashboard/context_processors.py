@@ -23,7 +23,6 @@ def base(request):
             "smarter_version": __version__,
             "current_year": current_year,
             "product_description": "Smarter is an enterprise class plugin-based chat solution.",
-            "footer_message": f"Copyright {current_year}. All rights reserved.",
         }
     }
     return context
