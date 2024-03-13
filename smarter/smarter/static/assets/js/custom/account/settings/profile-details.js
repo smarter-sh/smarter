@@ -136,7 +136,7 @@ var KTAccountSettingsProfileDetails = function () {
     // Public methods
     return {
         init: function () {
-            form = document.getElementById('kt_account_profile_details_form');
+            form = document.getElementById('kt_account_details_form');
 
             if (!form) {
                 return;

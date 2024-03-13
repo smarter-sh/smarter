@@ -16,21 +16,21 @@
   <!--begin::Basic info-->
   <div class="card mb-5 mb-xl-10">
     <!--begin::Card header-->
-    <div class="card-header border-0 cursor-pointer" role="button" data-bs-toggle="collapse" data-bs-target="#kt_account_profile_details" aria-expanded="true" aria-controls="kt_account_profile_details">
+    <div class="card-header border-0 cursor-pointer" role="button" data-bs-toggle="collapse" data-bs-target="#kt_account_details" aria-expanded="true" aria-controls="kt_account_details">
       <!--begin::Card title-->
       <div class="card-title m-0">
-        <h3 class="fw-bold m-0">Profile Details</h3>
+        <h3 class="fw-bold m-0">Account Details</h3>
       </div>
       <!--end::Card title-->
       <!--begin::Action-->
-      <a id="kt_settings_form_edit_btn" href="#" class="btn btn-sm btn-primary align-self-center">Edit Profile</a>
+      <a id="kt_settings_form_edit_btn" href="#" class="btn btn-sm btn-primary align-self-center">Edit</a>
       <!--end::Action-->
     </div>
     <!--begin::Card header-->
     <!--begin::Content-->
-    <div id="kt_account_settings_profile_details" class="collapse show">
+    <div id="kt_account_settings_details" class="collapse show">
       <!--begin::Form-->
-      <form id="kt_account_profile_details_form" class="form">
+      <form id="kt_account_details_form" class="form">
         {% csrf_token %}
         <!--begin::Card body-->
         <div class="card-body border-top p-9">
@@ -46,7 +46,6 @@
                 type="text"
                 name="{{ account_settings.account_form.account_number.name }}"
                 class="form-control"
-                placeholder="Company name"
                 value="{% if account_settings.account_form.account_number.value != None %}{{ account_settings.account_form.account_number.value }}{% endif %}"
                 readonly
                  />
@@ -59,8 +58,17 @@
           <!--begin::Input group-->
           <div class="row mb-6">
             <!--begin::Label-->
-            <label class="col-lg-4 col-form-label required fw-semibold fs-6">Company</label>
-            <!--end::Label-->
+            <label class="col-lg-4 col-form-label fw-semibold fs-6">Company
+              <span class="required">Company</span>
+              <span class="ms-1" data-bs-toggle="tooltip" title="We will use this legal name for invoices and contracts.">
+                <i class="ki-duotone ki-information-5 text-gray-500 fs-6">
+                  <span class="path1"></span>
+                  <span class="path2"></span>
+                  <span class="path3"></span>
+                </i>
+              </span>
+            </label>
+          <!--end::Label-->
             <!--begin::Col-->
             <div class="col-lg-8 fv-row">
               <input
@@ -124,7 +132,7 @@
                 </div>
                 <!--end::Col-->
                 <!--begin::Col-->
-                <div class="col-lg-2 fv-row pb-4">
+                <div class="col-lg-3 fv-row pb-4">
                   <input
                     id="input_{{ account_settings.account_form.state.name }}"
                     type="text"
@@ -135,7 +143,7 @@
                 </div>
                 <!--end::Col-->
                 <!--begin::Col-->
-                <div class="col-lg-4 fv-row pb-4">
+                <div class="col-lg-3 fv-row pb-4">
                   <input
                     id="input_{{ account_settings.account_form.postal_code.name }}"
                     type="text"
@@ -175,13 +183,6 @@
             <!--begin::Label-->
             <label class="col-lg-4 col-form-label fw-semibold fs-6">
               <span class="required">Contact Phone</span>
-              <span class="ms-1" data-bs-toggle="tooltip" title="Phone number must be active">
-                <i class="ki-duotone ki-information-5 text-gray-500 fs-6">
-                  <span class="path1"></span>
-                  <span class="path2"></span>
-                  <span class="path3"></span>
-                </i>
-              </span>
             </label>
             <!--end::Label-->
             <!--begin::Col-->
@@ -851,7 +852,7 @@
   {{ block.super }}
 		<!--begin::Custom Javascript(used for this page only)-->
 		<script src="{% static 'js/account/dashboard/settings/signin-methods.js' %}"></script>
-		<script src="{% static 'js/account/dashboard/settings/profile-details.js' %}"></script>
+		<script src="{% static 'js/account/dashboard/settings/account-details.js' %}"></script>
 		<script src="{% static 'js/account/dashboard/settings/deactivate-account.js' %}"></script>
 		<script src="{% static 'assets/js/custom/utilities/modals/two-factor-authentication.js' %}"></script>
 		<!--end::Custom Javascript-->
