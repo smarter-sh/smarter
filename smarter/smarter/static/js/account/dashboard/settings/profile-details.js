@@ -1,11 +1,38 @@
 "use strict";
 
 // Class definition
-var KTAccountSettingsProfileDetails = function () {
+var KTAccountDetails = function () {
     // Private variables
     var form;
-    var submitButton;
+    var editButton;
+    var saveButton;
+    var cancelButton;
     var validation;
+
+    function toggleFormReadonly(isReadonly) {
+      var inputs = form.querySelectorAll('input, textarea');
+      var selects = form.querySelectorAll('select');
+
+      for (var i = 0; i < inputs.length; i++) {
+        if (inputs[i].id === 'input_account_number') {
+          inputs[i].readOnly = true;
+        } else {
+          inputs[i].readOnly = isReadonly;
+        }
+      }
+
+      for (var i = 0; i < selects.length; i++) {
+          selects[i].disabled = isReadonly;
+      }
+
+      if (isReadonly) {
+        saveButton.hide();
+        cancelButton.hide();
+      } else {
+        saveButton.show();
+        cancelButton.show();
+      }
+    }
 
     // Private functions
     var initValidation = function () {
@@ -73,7 +100,7 @@ var KTAccountSettingsProfileDetails = function () {
                 },
                 plugins: {
                     trigger: new FormValidation.plugins.Trigger(),
-                    submitButton: new FormValidation.plugins.SubmitButton(),
+                    saveButton: new FormValidation.plugins.SubmitButton(),
                     //defaultSubmit: new FormValidation.plugins.DefaultSubmit(), // Uncomment this line to enable normal button submit after form validation
                     bootstrap: new FormValidation.plugins.Bootstrap5({
                         rowSelector: '.fv-row',
@@ -102,33 +129,55 @@ var KTAccountSettingsProfileDetails = function () {
     }
 
     var handleForm = function () {
-        submitButton.addEventListener('click', function (e) {
-            e.preventDefault();
-
+        saveButton.on('click', function (e) {
+          console.log("handleForm saveButton on Click: ");
+          e.preventDefault();
             validation.validate().then(function (status) {
-                if (status == 'Valid') {
+              if (status == "Valid") {
+                // Show loading indication
+                saveButton.attr("data-kt-indicator", "on");
 
-                    swal.fire({
-                        text: "Thank you! You've updated your basic info",
-                        icon: "success",
-                        buttonsStyling: false,
-                        confirmButtonText: "Ok, got it!",
-                        customClass: {
-                            confirmButton: "btn fw-bold btn-light-primary"
-                        }
-                    });
-
-                } else {
-                    swal.fire({
-                        text: "Sorry, looks like there are some errors detected, please try again.",
-                        icon: "error",
-                        buttonsStyling: false,
-                        confirmButtonText: "Ok, got it!",
-                        customClass: {
-                            confirmButton: "btn fw-bold btn-light-primary"
-                        }
-                    });
+                // Disable button to avoid multiple click
+                saveButton.prop("disabled", true);
+                const csrftoken = getSmarterCsrfToken();
+                const url = "/account/dashboard/settings/";
+                const formData = new FormData(form);
+                const context = {
+                  headers: {
+                    'Content-Type': 'multipart/form-data',
+                    "X-CSRFToken": csrftoken,
+                  }
                 }
+
+                // Check axios library docs: https://axios-http.com/docs/intro
+                axios
+                  .post(url, formData, context)
+                  .then(function (response) {
+                    if (response) {
+                      console.log("handleForm saveButton success: ", response);
+                      toggleFormReadonly(true);
+                    }
+                  })
+                  .catch(function (error) {
+                    console.log("handleForm saveButton error: ", error);
+                    Swal.fire({
+                      text: JSON.stringify(error.response.data),
+                      icon: "error",
+                      buttonsStyling: false,
+                      confirmButtonText: "Dismiss",
+                      customClass: {
+                        confirmButton: "btn btn-primary",
+                      },
+                    });
+                  })
+                  .then(() => {
+                    // Hide loading indication
+                    saveButton.removeAttr("data-kt-indicator");
+
+                    // Enable button
+                    saveButton.prop("disabled", false);
+                  });
+              }
             });
         });
     }
@@ -137,51 +186,33 @@ var KTAccountSettingsProfileDetails = function () {
     return {
         init: function () {
             form = document.getElementById('kt_account_profile_details_form');
+            editButton = $('#kt_settings_form_edit_btn');
+            saveButton = $(form).find('#kt_settings_form_save_btn');
+            cancelButton = $(form).find('#kt_settings_form_cancel_btn');
 
-            if (!form) {
-                return;
+            function initForm() {
+                location.reload();
             }
+              window.onload = function() {
+                    toggleFormReadonly(true);
+              }
+              cancelButton.click(function() {
+                  toggleFormReadonly(true);
+                  initForm();
+              });
 
-            submitButton = form.querySelector('#kt_account_profile_details_submit');
+              editButton.click(function() {
+                toggleFormReadonly(false);
+              });
 
-            initValidation();
+              initValidation();
+              handleForm();
         }
     }
 }();
 
-function toggleFormReadonly(isReadonly) {
-  var form = document.getElementById('kt_account_profile_details_form');
-  var inputs = form.querySelectorAll('input, textarea');
-  var selects = form.querySelectorAll('select');
-
-  for (var i = 0; i < inputs.length; i++) {
-      inputs[i].readOnly = isReadonly;
-  }
-
-  for (var i = 0; i < selects.length; i++) {
-      selects[i].disabled = isReadonly;
-  }
-
-  if (isReadonly) {
-    $('#kt_settings_form_cancel_btn').hide();
-    $('#kt_settings_form_save_btn').hide();
-  } else {
-    $('#kt_settings_form_cancel_btn').show();
-    $('#kt_settings_form_save_btn').show();
-  }
-}
-
-$('#kt_settings_form_edit_btn').click(function() {
-  toggleFormReadonly(false);
-});
-$('#kt_settings_form_cancel_btn').click(function() {
-  toggleFormReadonly(true);
-});
-window.onload = function() {
-    toggleFormReadonly(true);
-}
 
 // On document ready
 KTUtil.onDOMContentLoaded(function() {
-    KTAccountSettingsProfileDetails.init();
+    KTAccountDetails.init();
 });

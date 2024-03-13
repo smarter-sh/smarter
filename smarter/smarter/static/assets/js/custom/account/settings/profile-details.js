@@ -142,7 +142,7 @@ var KTAccountSettingsProfileDetails = function () {
                 return;
             }
 
-            submitButton = form.querySelector('#kt_account_profile_details_submit');
+            submitButton = form.querySelector('#kt_settings_form_save_btn');
 
             initValidation();
         }
