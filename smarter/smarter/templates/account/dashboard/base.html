@@ -5,7 +5,147 @@
 <link rel="canonical" href="/account/" />
 {% endblock %}
 
+{% block dashboard_content %}
+					<!--begin::Main-->
+					<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+						<!--begin::Content wrapper-->
+						<div class="d-flex flex-column flex-column-fluid">
+							<!--begin::Toolbar-->
+							<div id="kt_app_toolbar" class="app-toolbar py-3 py-lg-6">
+								<!--begin::Toolbar container-->
+								<div id="kt_app_toolbar_container" class="app-container container-xxl d-flex flex-stack">
+									<!--begin::Page title-->
+									<div class="page-title d-flex flex-column justify-content-center flex-wrap me-3">
+										<!--begin::Title-->
+
+                    <h1 class="page-heading d-flex text-gray-900 fw-bold fs-3 flex-column justify-content-center my-0">{% block dashboard_title %}Account Overview{% endblock %}</h1>
+
+										<!--end::Title-->
+										<!--begin::Breadcrumb-->
+										<ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-7 my-0 pt-1">
+                      {% block dashboard_title_breadcrumbs %}
+											<!--begin::Item-->
+											<li class="breadcrumb-item text-muted">
+												<a href="/" class="text-muted text-hover-primary">Home</a>
+											</li>
+											<!--end::Item-->
+											<!--begin::Item-->
+											<li class="breadcrumb-item text-muted">
+												<a href="/account/dashboard/overview/" class="text-muted text-hover-primary">Account</a>
+											</li>
+											<!--end::Item-->
+                      {% endblock %}
+										</ul>
+										<!--end::Breadcrumb-->
+									</div>
+									<!--end::Page title-->
+
+									<!--begin::Actions-->
+									<div class="d-flex align-items-center gap-2 gap-lg-3">
+										<!--begin::Filter menu-->
+										<div class="d-flex">
+											<select name="campaign-type" data-control="select2" data-hide-search="true" class="form-select form-select-sm bg-body border-body w-175px">
+												<option value="Twitter" selected="selected">Select Campaign</option>
+												<option value="Twitter">Twitter Campaign</option>
+												<option value="Twitter">Facebook Campaign</option>
+												<option value="Twitter">Adword Campaign</option>
+												<option value="Twitter">Carbon Campaign</option>
+											</select>
+											<a href="#" class="btn btn-icon btn-sm btn-success flex-shrink-0 ms-4" data-bs-toggle="modal" data-bs-target="#kt_modal_create_campaign">
+												<i class="ki-duotone ki-plus fs-2"></i>
+											</a>
+										</div>
+										<!--end::Filter menu-->
+										<!--begin::Secondary button-->
+										<!--end::Secondary button-->
+										<!--begin::Primary button-->
+										<!--end::Primary button-->
+									</div>
+									<!--end::Actions-->
+								</div>
+								<!--end::Toolbar container-->
+							</div>
+							<!--end::Toolbar-->
+							<!--begin::Content-->
+							<div id="kt_app_content" class="app-content flex-column-fluid">
+								<!--begin::Content container-->
+								<div id="kt_app_content_container" class="app-container container-xxl">
+									<!--begin::Nav items-->
+									<div id="kt_user_profile_nav" class="rounded bg-gray-200 d-flex flex-stack flex-wrap mb-9 p-2" data-kt-sticky="true" data-kt-sticky-name="sticky-profile-navs" data-kt-sticky-offset="{default: false, lg: '200px'}" data-kt-sticky-width="{target: '#kt_app_content_container'}" data-kt-sticky-left="auto" data-kt-sticky-top="70px" data-kt-sticky-animation="false" data-kt-sticky-zindex="95">
+										<!--begin::Nav-->
+										<ul class="nav flex-wrap border-transparent">
+											<!--begin::Nav item-->
+											<li class="nav-item my-1">
+												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/account/dashboard/overview/">Overview</a>
+											</li>
+											<!--end::Nav item-->
+											<!--begin::Nav item-->
+											<li class="nav-item my-1">
+												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/account/dashboard/settings/">Settings</a>
+											</li>
+											<!--end::Nav item-->
+											<!--begin::Nav item-->
+											<li class="nav-item my-1">
+												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/account/dashboard/activity/">Activity</a>
+											</li>
+											<!--end::Nav item-->
+											<!--begin::Nav item-->
+											<li class="nav-item my-1">
+												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/account/dashboard/billing/">Billing</a>
+											</li>
+											<!--end::Nav item-->
+											<!--begin::Nav item-->
+											<li class="nav-item my-1">
+												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/account/dashboard/statements/">Statements</a>
+											</li>
+											<!--end::Nav item-->
+											<!--begin::Nav item-->
+											<li class="nav-item my-1">
+												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/account/dashboard/api-keys/">API Keys</a>
+											</li>
+											<!--end::Nav item-->
+											<!--begin::Nav item-->
+											<li class="nav-item my-1">
+												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/account/dashboard/logs/">Logs</a>
+											</li>
+											<!--end::Nav item-->
+										</ul>
+										<!--end::Nav-->
+									</div>
+									<!--end::Nav items-->
+
+                  {% block dashboard_detail_view %}
+									<!--begin::details View-->
+									<!--end::details View-->
+                  {% endblock %}
+
+								</div>
+								<!--end::Content container-->
+							</div>
+							<!--end::Content-->
+						</div>
+						<!--end::Content wrapper-->
+					</div>
+					<!--end:::Main-->
+{% endblock %}
+
 {% block javascript_extra %}
     {{ block.super }}
+		<!--begin::Custom Javascript(used for this page only)-->
 		<script src="{% static 'assets/js/custom/account/billing/general.js' %}"></script>
+		<script src="{% static 'js/account/dashboard/general.js' %}"></script>
+		<script src="{% static 'assets/js/widgets.bundle.js' %}"></script>
+		<script src="{% static 'assets/js/custom/apps/chat/chat.js' %}"></script>
+		<script src="{% static 'assets/js/custom/utilities/modals/users-search.js' %}"></script>
+		<!--end::Custom Javascript-->
+    <script>
+      $(document).ready(function() {
+          $('.nav-item a').on('click', function() {
+              $('.nav-item a.active').removeClass('active'); // Remove the 'active' class from the currently active tab
+              $(this).addClass('active'); // Add the 'active' class to the clicked tab
+              window.location.href = this.href; // Navigate to the href target
+          });
+      });
+
+    </script>
 {% endblock %}
