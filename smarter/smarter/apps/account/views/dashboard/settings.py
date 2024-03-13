@@ -8,7 +8,7 @@ from http import HTTPStatus
 from django import forms, http
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.view_helpers import SmarterAuthenticatedWebView
+from smarter.view_helpers import SmarterAdminWebView
 
 
 logger = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ CURRENCIES = get_from_csv(currencies_csv)
 
 
 class AccountForm(forms.ModelForm):
-    """Form for Payment methods modal."""
+    """Form for Account editing."""
 
     class Meta:
         """Meta class for AccountForm with all fields."""
@@ -45,7 +45,7 @@ class AccountForm(forms.ModelForm):
         fields = "__all__"
 
 
-class SettingsView(SmarterAuthenticatedWebView):
+class SettingsView(SmarterAdminWebView):
     """View for the account settings."""
 
     template_path = "account/dashboard/settings.html"

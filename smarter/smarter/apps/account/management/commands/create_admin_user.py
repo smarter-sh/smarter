@@ -45,7 +45,10 @@ class Command(BaseCommand):
 
         if username and email:
             if not User.objects.filter(username=username).exists():
-                user = User.objects.create_superuser(username=username, email=email)
+                user = User.objects.create_user(username=username, email=email)
+                user.is_superuser = False
+                user.is_staff = True
+                user.is_active = True
                 user.set_password(password)
                 user.save()
                 self.stdout.write(self.style.SUCCESS(f"Creating admin account: {username} {email}"))

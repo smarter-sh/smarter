@@ -1,0 +1,66 @@
+{% extends 'account/dashboard/base.html' %}
+{% load static %}
+
+{% block dashboard_title %}Account Users{% endblock %}
+
+    {% block dashboard_title_breadcrumbs %}
+      {{ block.super }}
+      <!--begin::Item-->
+      <li class="breadcrumb-item text-muted">
+        <a href="/account/dashboard/users/" class="text-muted text-hover-primary">Users</a>
+      </li>
+    {% endblock %}
+
+    {% block dashboard_detail_view %}
+    <!--begin::Login sessions-->
+    <div class="card mb-5 mb-lg-10">
+      <!--begin::Card body-->
+      <div class="card-body p-0">
+        <!--begin::Table wrapper-->
+        <div class="table-responsive">
+          <p>account_users.users</p>
+          <!--begin::Table-->
+          <table class="table align-middle table-row-bordered table-row-solid gy-4 gs-9">
+            <!--begin::Thead-->
+            <thead class="border-gray-200 fs-5 fw-semibold bg-lighten">
+              <tr>
+                <th class="min-w-150px">Username</th>
+                <th class="min-w-150px">Email</th>
+                <th class="min-w-150px">First</th>
+                <th class="min-w-150px">Last</th>
+                <th class="min-w-150px">Last Login</th>
+              </tr>
+            </thead>
+            <!--end::Thead-->
+            <!--begin::Tbody-->
+            <tbody class="fw-6 fw-semibold text-gray-600">
+              {% for user in account_users.users %}
+              <tr>
+                <td>
+                  <a href="/account/dashboard/users/{{ user.id }}" class="text-hover-primary text-gray-600">{{ user.username }}</a>
+                </td>
+                <td>
+                  <span class="email">{{ user.email }}</span>
+                </td>
+                <td>{{ user.first_name }}</td>
+                <td>{{ user.last_name }}</td>
+                <td>{{ user.last_login }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <!--end::Tbody-->
+          </table>
+          <!--end::Table-->
+        </div>
+        <!--end::Table wrapper-->
+      </div>
+      <!--end::Card body-->
+    </div>
+    <!--end::Login sessions-->
+    {% endblock %}
+
+
+
+{% block javascript_extra %}
+    {{ block.super }}
+{% endblock %}
