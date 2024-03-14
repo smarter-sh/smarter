@@ -20,7 +20,7 @@ class UserForm(forms.ModelForm):
     """Form for User edits."""
 
     class Meta:
-        """Meta class for UserForm with all fields."""
+        """Meta class for UserForm with editable fields."""
 
         model = User
         # pylint: disable=W0212

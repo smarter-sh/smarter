@@ -6,6 +6,7 @@ import random
 from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
 from django.db import models
+from knox.models import AuthToken, AuthTokenManager
 
 # our stuff
 from smarter.apps.common.model_utils import TimestampedModel
@@ -118,3 +119,47 @@ class PaymentMethod(TimestampedModel):
 
     def __str__(self):
         return self.card_type + " " + self.card_last_4
+
+
+class APIKeyManager(AuthTokenManager):
+    """API Key manager."""
+
+    def create(self, *args, **kwargs):
+        description = kwargs.pop("description", None)
+        is_active = kwargs.pop("is_active", True)
+        api_key, token = super().create(*args, **kwargs)
+        if description is not None:
+            api_key.description = description
+        api_key.is_active = is_active
+        api_key.save()
+        return api_key, token
+
+
+class APIKey(AuthToken, TimestampedModel):
+    """API Key model."""
+
+    objects = APIKeyManager()
+
+    # pylint: disable=C0115
+    class Meta:
+        verbose_name = "API Key"
+        verbose_name_plural = "API Keys"
+
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="api_keys", blank=True, null=True)
+    description = models.CharField(max_length=255, blank=True, null=True)
+    last_used_at = models.DateTimeField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+
+    @property
+    def identifier(self):
+        if self.digest is not None:
+            return "******" + str(self.digest)[:8]
+        return ""
+
+    def save(self, *args, **kwargs):
+        user_profile = UserProfile.objects.get(user=self.user)
+        self.account = user_profile.account
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.identifier

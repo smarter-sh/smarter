@@ -35,16 +35,6 @@ class StatementsView(SmarterAuthenticatedWebView):
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
 
-class APIKeysView(SmarterAuthenticatedWebView):
-    """View for the account API keys."""
-
-    template_path = "account/dashboard/api-keys.html"
-
-    def get(self, request):
-        context = {}
-        return self.clean_http_response(request, template_path=self.template_path, context=context)
-
-
 class LogsView(SmarterAuthenticatedWebView):
     """View for the account logs."""
 
