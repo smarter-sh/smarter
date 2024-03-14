@@ -8,7 +8,7 @@ from urllib.parse import urljoin
 
 import yaml
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
@@ -22,6 +22,9 @@ from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin import Plugin
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.view_helpers import SmarterAPIListView, SmarterAPIView
+
+
+User = get_user_model()
 
 
 class PluginView(SmarterAPIView):

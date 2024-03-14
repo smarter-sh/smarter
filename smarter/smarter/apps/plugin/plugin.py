@@ -8,7 +8,7 @@ import os
 import re
 
 import yaml
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from rest_framework import serializers
@@ -35,6 +35,7 @@ from .signals import (
 )
 
 
+User = get_user_model()
 logger = logging.getLogger(__name__)
 
 

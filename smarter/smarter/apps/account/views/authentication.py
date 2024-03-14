@@ -4,8 +4,7 @@
 from http import HTTPStatus
 
 from django import forms
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.shortcuts import HttpResponse, redirect
 from django.urls import reverse
 
@@ -22,6 +21,9 @@ from smarter.view_helpers import (
     SmarterWebView,
     redirect_and_expire_cache,
 )
+
+
+User = get_user_model()
 
 
 # ------------------------------------------------------------------------------

@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 """Account serializers for smarter api"""
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from smarter.apps.account.models import Account, PaymentMethod, UserProfile
+
+
+User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):

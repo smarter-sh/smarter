@@ -4,12 +4,13 @@ import logging
 from http import HTTPStatus
 
 from django import forms, http
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
 from smarter.apps.account.models import UserProfile
 from smarter.view_helpers import SmarterAdminWebView
 
 
+User = get_user_model()
 logger = logging.getLogger(__name__)
 excluded_fields = ["password", "date_joined"]
 

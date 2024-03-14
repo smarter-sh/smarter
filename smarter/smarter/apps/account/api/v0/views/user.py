@@ -3,7 +3,7 @@
 """User views for smarter api."""
 from http import HTTPStatus
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import Http404, HttpResponseRedirect, JsonResponse
@@ -13,6 +13,9 @@ from rest_framework.response import Response
 from smarter.apps.account.api.v0.serializers import UserSerializer
 from smarter.apps.account.models import Account, UserProfile
 from smarter.view_helpers import SmarterAPIAdminView, SmarterAPIListAdminView
+
+
+User = get_user_model()
 
 
 class UserView(SmarterAPIAdminView):
