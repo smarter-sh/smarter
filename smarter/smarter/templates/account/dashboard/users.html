@@ -23,11 +23,12 @@
             <!--begin::Thead-->
             <thead class="border-gray-200 fs-5 fw-semibold bg-lighten">
               <tr>
-                <th class="min-w-150px">Username</th>
-                <th class="min-w-150px">Email</th>
-                <th class="min-w-150px">First</th>
-                <th class="min-w-150px">Last</th>
-                <th class="min-w-150px">Last Login</th>
+                <th class="min-w-125px">Username</th>
+                <th class="min-w-125px">Email</th>
+                <th class="min-w-125px">First</th>
+                <th class="min-w-125px">Last</th>
+                <th class="min-w-125px">Last Login</th>
+                <th class="min-w-50px">Admin</th>
               </tr>
             </thead>
             <!--end::Thead-->
@@ -36,7 +37,7 @@
               {% for user in account_users.users %}
               <tr>
                 <td>
-                  <a href="/account/dashboard/users/{{ user.id }}" class="text-hover-primary text-gray-600">{{ user.username }}</a>
+                  <a href="/account/dashboard/users/{{ user.id }}" class="text-hover-primary">{{ user.username }}</a>
                 </td>
                 <td>
                   <span class="email">{{ user.email }}</span>
@@ -44,7 +45,17 @@
                 <td>{{ user.first_name }}</td>
                 <td>{{ user.last_name }}</td>
                 <!-- see: https://docs.djangoproject.com/en/3.2/ref/templates/builtins/#date -->
-                <td>{% if user.last_login %}{{ user.last_login|date:"N j, Y" }}{% else %}Never{% endif %}</td>              </tr>
+                <td>{% if user.last_login %}{{ user.last_login|date:"N j, Y" }}{% else %}Never{% endif %}</td>
+                <td>
+                  {% if user.is_staff %}
+                  <div style="color: green;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle-fill" viewBox="0 0 16 16">
+                      <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.07.02l-3.99 4.99-2.29-2.29a.75.75 0 0 0-1.07 1.05l2.99 2.99a.75.75 0 0 0 1.08-.02l4.37-5.43a.75.75 0 0 0-.02-1.06z"/>
+                    </svg>
+                  </div>
+                  {% endif %}
+                </td>
+              </tr>
               {% endfor %}
             </tbody>
             <!--end::Tbody-->
