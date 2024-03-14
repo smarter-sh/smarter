@@ -31,7 +31,7 @@ urlpatterns = [
     path("billing/billing-addresses", BillingAddressesView.as_view(), name="account_billing_addresses"),
     path("statements/", StatementsView.as_view(), name="account_statements"),
     path("api-keys/", APIKeysView.as_view(), name="account_api_keys"),
-    path("api-keys/<int:apikey_id>/", APIKeyView.as_view(), name="account_api_key"),
+    path("api-keys/<str:token_key>/", APIKeyView.as_view(), name="account_api_key"),
     path("logs/", LogsView.as_view(), name="account_logs"),
     path("card-declined/", CardDeclinedView.as_view(), name="card_declined"),
 ]

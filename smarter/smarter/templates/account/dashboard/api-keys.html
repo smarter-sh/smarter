@@ -23,6 +23,7 @@
         </div>
         <!--end::Title-->
         <!--begin::Toolbar-->
+        {% csrf_token %}
         <div class="card-toolbar">
           <label class="form-check form-switch form-switch-sm form-check-custom form-check-solid">
             <input id="input_sandbox_mode_checkbox" class="form-check-input" type="checkbox" checked="checked" value="1" />
@@ -116,20 +117,27 @@
               {% for api_key in account_apikeys.api_keys %}
               <tr>
                 <td class="ps-9">{{ api_key.user.username }}{% if api_key.description %} - {% endif %}{{ api_key.description }}</td>
-                <td class="ps-0">{{ api_key.identifier }}</td>
+                <td class="ps-0">{{ api_key }}</td>
                 <td class="ps-0">{{ api_key.created_at }}</td>
                 <td class="ps-0">{% if api_key.last_used_at %}{{ api_key.last_used_at }}{% else %}Never{% endif %}</td>
                 <td>
                   {% if api_key.is_active %}
-                  <span class="badge badge-light-success fs-7 fw-semibold">Active</span>
+                  <button id="button_api_key_deactivate" data-action="disable" data-record-id="{{ api_key.token_key }}" class="btn btn-icon btn-sm ">
+                    <span class="badge badge-light-success fs-7 fw-semibold">Deactivate</span>
+                  </button>
                   {% else %}
-                  <span class="badge badge-light-danger fs-7 fw-semibold">Inactive</span>
+                  <button id="button_api_key_activate" data-action="enable" data-record-id="{{ api_key.token_key }}" class="btn btn-icon btn-sm ">
+                    <span class="badge badge-light-secondary fs-7 fw-semibold">Activate</span>
+                  </button>
                   {% endif %}
                 </td>
                 <td>
-                  <button data-action="copy" class="btn btn-color-gray-500 btn-active-color-primary btn-icon btn-sm btn-outline-light">
-                    <i class="ki-solid ki-copy fs-2"></i>
+                  {% if api_key.is_active %}
+                  {% else %}
+                  <button id="button_api_key_delete" data-action="delete" data-record-id="{{ api_key.token_key }}" class="btn btn-icon btn-sm ">
+                    <span class="badge badge-light-danger fs-7 fw-semibold">Delete</span>
                   </button>
+                  {% endif %}
                 </td>
               </tr>
               {% endfor %}
