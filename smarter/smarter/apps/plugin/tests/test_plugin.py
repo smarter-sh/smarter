@@ -48,7 +48,7 @@ User = get_user_model()
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes
 class TestPlugin(unittest.TestCase):
-    """Test OpenAI Function Calling hook for refers_to."""
+    """Test plugin."""
 
     data: dict
     user_profile: UserProfile

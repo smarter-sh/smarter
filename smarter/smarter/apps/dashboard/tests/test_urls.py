@@ -16,8 +16,8 @@ from smarter.apps.account.models import Account, UserProfile
 User = get_user_model()
 
 
-class TestUrls(unittest.TestCase):
-    """Test OpenAI Function Calling hook for refers_to."""
+class TestDashboard(unittest.TestCase):
+    """Test dashboard views."""
 
     user: User
 

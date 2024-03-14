@@ -19,7 +19,7 @@ User = get_user_model()
 
 
 class TestUrls(unittest.TestCase):
-    """Test OpenAI Function Calling hook for refers_to."""
+    """Test Account API end points."""
 
     user: User
 

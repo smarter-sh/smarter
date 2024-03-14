@@ -21,7 +21,7 @@ User = get_user_model()
 
 
 class TestContextProcessor(unittest.TestCase):
-    """Test OpenAI Function Calling hook for refers_to."""
+    """Test Dashboard context processor."""
 
     def setUp(self):
         """Set up test fixtures."""
