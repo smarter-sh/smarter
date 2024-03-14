@@ -6,6 +6,57 @@ var KTAccountAPIKeys = function () {
     var sandboxCheckBox;
     var sandboxLabel;
     var sandboxNotice;
+    var buttonApiKeyActivate;
+    var buttonApiKeyDeactivate;
+    var buttonApiKeyDelete;
+    var primaryKey;
+
+    function handleAction(action, button) {
+      console.log('handleAction: ', action);
+
+      button.attr("data-kt-indicator", "on");
+      button.prop("disabled", true);
+      primaryKey = button.data('record-id');
+      const url = "/account/dashboard/api-keys/" + primaryKey + "/";
+
+      const csrfToken = getSmarterCsrfToken();
+      console.log('csrfToken', csrfToken);
+      const context = {
+        headers: {
+          'Content-Type': 'application/json',
+          "X-CSRFToken": csrfToken,
+        }
+      }
+
+      let jsonBody = {
+        'action': action
+      }
+
+      axios
+      .post(url, jsonBody, context)
+      .then(function (response) {
+        if (response) {
+          console.log('response', response);
+          window.location.reload();
+        }
+      })
+      .catch(function (error) {
+        Swal.fire({
+          text: JSON.stringify(error.response.data),
+          icon: "error",
+          buttonsStyling: false,
+          confirmButtonText: "Dismiss",
+          customClass: {
+            confirmButton: "btn btn-primary",
+          },
+        });
+      })
+      .then(() => {
+        button.removeAttr("data-kt-indicator");
+        button.prop("disabled", false);
+      });
+
+    }
 
     // Private functions
     var initAPIKeyCopy = function() {
@@ -58,6 +109,24 @@ var KTAccountAPIKeys = function () {
             });
         });
     }
+    var initAPIKeyActivate = function() {
+      buttonApiKeyActivate.click(function() {
+        console.log('buttonApiKeyActivate clicked');
+        handleAction('activate', buttonApiKeyActivate);
+      });
+    }
+    var initAPIKeyDeactivate = function() {
+      buttonApiKeyDeactivate.click(function() {
+        console.log('buttonApiKeyDeactivate clicked');
+        handleAction('deactivate', buttonApiKeyDeactivate);
+      });
+    }
+    var initAPIKeyDelete = function() {
+      buttonApiKeyDelete.click(function() {
+        console.log('buttonApiKeyDelete clicked');
+        handleAction('delete', buttonApiKeyDelete);
+      });
+    }
 
     // Public methods
     return {
@@ -65,6 +134,9 @@ var KTAccountAPIKeys = function () {
           sandboxCheckBox = $('#input_sandbox_mode_checkbox');
           sandboxLabel = $('#label_sandbox_mode');
           sandboxNotice = $('#notice_sandbox_mode');
+          buttonApiKeyActivate = $('#button_api_key_activate');
+          buttonApiKeyDeactivate = $('#button_api_key_deactivate');
+          buttonApiKeyDelete = $('#button_api_key_delete');
 
           sandboxCheckBox.click(function() {
             console.log('sandboxCheckBox clicked');
@@ -82,6 +154,9 @@ var KTAccountAPIKeys = function () {
           });
 
           initAPIKeyCopy();
+          initAPIKeyActivate();
+          initAPIKeyDeactivate();
+          initAPIKeyDelete();
         }
     }
 }();

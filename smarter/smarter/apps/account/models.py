@@ -2,6 +2,7 @@
 """Account models."""
 import logging
 import random
+from datetime import datetime, timedelta
 
 from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
@@ -152,14 +153,40 @@ class APIKey(AuthToken, TimestampedModel):
 
     @property
     def identifier(self):
-        if self.digest is not None:
-            return "******" + str(self.digest)[:8]
-        return ""
+        return "******" + str(self.digest)[:8]
 
     def save(self, *args, **kwargs):
+        if not self.user.is_staff:
+            raise ValueError("API Keys can only be created for staff users.")
         user_profile = UserProfile.objects.get(user=self.user)
         self.account = user_profile.account
         super().save(*args, **kwargs)
+
+    def has_permissions(self, user) -> bool:
+        """Determine if the authenticated user has permissions to manage this key."""
+        account = UserProfile.objects.get(user=user).account
+        return user.is_staff and account == self.account
+
+    def activate(self):
+        """Activate the API key."""
+        self.is_active = True
+        self.save()
+
+    def deactivate(self):
+        """Deactivate the API key."""
+        self.is_active = False
+        self.save()
+
+    def toggle_active(self):
+        """Toggle the active status of the API key."""
+        self.is_active = not self.is_active
+        self.save()
+
+    def accessed(self):
+        """Update the last used time."""
+        if self.last_used_at is None or (datetime.now() - self.last_used_at) > timedelta(minutes=5):
+            self.last_used_at = datetime.now()
+            self.save()
 
     def __str__(self):
         return self.identifier
