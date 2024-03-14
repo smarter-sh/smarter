@@ -5,6 +5,7 @@ var KTAccountDetails = function () {
     // Private variables
     var form;
     var primaryKey;
+    var dataEntryMode;
     var editButton;
     var saveButton;
     var cancelButton;
@@ -198,15 +199,28 @@ var KTAccountDetails = function () {
             saveButton = $(form).find('#kt_user_form_save_btn');
             cancelButton = $(form).find('#kt_user_form_cancel_btn');
 
+            // this attribute is added if the Django context
+            // account_users.user is None
+            dataEntryMode = form.getAttribute('data-entry-mode');
+
             function initForm() {
                 location.reload();
             }
               window.onload = function() {
-                    toggleFormReadonly(true);
+                if (!dataEntryMode) {
+                  toggleFormReadonly(true);
+                } else {
+                  saveButton.show();
+                  cancelButton.show();
+                }
               }
               cancelButton.click(function() {
+                if (dataEntryMode) {
+                  window.location.href = "/account/dashboard/overview/";
+                } else {
                   toggleFormReadonly(true);
                   initForm();
+                }
               });
 
               editButton.click(function() {

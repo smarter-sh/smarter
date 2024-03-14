@@ -19,18 +19,30 @@
     <div class="card-header border-0 cursor-pointer" role="button" data-bs-toggle="collapse" data-bs-target="#kt_account_details" aria-expanded="true" aria-controls="kt_account_details">
       <!--begin::Card title-->
       <div class="card-title m-0">
-        <h3 class="fw-bold m-0">{{ account_users.user.username }} - {{ account_users.user.email }}</h3>
+        <h3 class="fw-bold m-0">
+          {% if account_users.user %}{{ account_users.user.username }} - {{ account_users.user.email }}
+          {% else %}
+          Create New User
+          {% endif %}
+        </h3>
       </div>
       <!--end::Card title-->
       <!--begin::Action-->
+      {% if account_users.user %}
       <a id="kt_user_form_edit_btn" href="#" class="btn btn-sm btn-primary align-self-center">Edit</a>
+      {% endif %}
       <!--end::Action-->
     </div>
     <!--begin::Card header-->
     <!--begin::Content-->
     <div id="kt_account_settings_details" class="collapse show">
       <!--begin::Form-->
-      <form id="kt_user_detail_form" class="form" data-primary-key="{{ account_users.user.id }}">
+      <form
+        id="kt_user_detail_form"
+        class="form"
+        data-primary-key="{% if account_users.user %}{{ account_users.user.id }}{% else%}0{% endif %}"
+        {% if not account_users.user %}data-entry-mode="true"{% endif %}
+      >
         {% csrf_token %}
         <!--begin::Card body-->
         <div class="card-body border-top p-9">
@@ -45,9 +57,13 @@
                 id="input_{{ account_users.user_form.username.name }}"
                 type="text"
                 name="{{ account_users.user_form.username.name }}"
+                {% if account_users.user %}
                 class="form-control"
-                value="{% if account_users.user_form.username.value != None %}{{ account_users.user_form.username.value }}{% endif %}"
                 readonly
+                {% else %}
+                class="form-control form-control-lg form-control-solid"
+                {% endif %}
+                value="{% if account_users.user_form.username.value != None %}{{ account_users.user_form.username.value }}{% endif %}"
                  />
 
             </div>
