@@ -5,6 +5,7 @@ from http import HTTPStatus
 
 from django import forms, http
 from django.contrib.auth import get_user_model
+from django.shortcuts import redirect
 
 from smarter.apps.account.models import UserProfile
 from smarter.view_helpers import SmarterAdminWebView
@@ -55,10 +56,25 @@ class UserView(SmarterAdminWebView):
 
     template_path = "account/dashboard/user.html"
 
-    def _handle_write(self, request, user_id):
-        target_user = User.objects.get(id=user_id)
-        target_user_profile = UserProfile.objects.get(user=target_user)
+    def _handle_create(self, request):
         user_profile = UserProfile.objects.get(user=request.user)
+        user_form = UserForm(request.POST)
+        if user_form.is_valid():
+            target_user = user_form.save()
+            target_user_profile = UserProfile.objects.create(user=target_user, account=user_profile.account)
+            target_user_profile.save()
+            return redirect("account_user", user_id=target_user.id)
+        return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data=user_form.errors)
+
+    def _handle_write(self, request, user_id):
+        user_profile = UserProfile.objects.get(user=request.user)
+
+        try:
+            target_user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return self._handle_create(request)
+
+        target_user_profile = UserProfile.objects.get(user=target_user)
         if target_user_profile.account != user_profile.account:
             return http.JsonResponse(
                 status=HTTPStatus.FORBIDDEN, data={"User": "User not associated with your account."}
@@ -72,8 +88,14 @@ class UserView(SmarterAdminWebView):
 
     # pylint: disable=W0221
     def get(self, request, user_id):
-        user = User.objects.get(id=user_id)
-        user_form = UserForm(instance=user)
+        """Get the user for the account. We also use this to create a new user."""
+        try:
+            user = User.objects.get(id=user_id)
+            user_form = UserForm(instance=user)
+        except User.DoesNotExist:
+            user = None
+            user_form = UserForm()
+
         context = {
             "account_users": {
                 "user": user,

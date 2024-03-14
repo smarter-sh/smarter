@@ -31,6 +31,7 @@ if not DEBUG:
 # Bootstrap theme source files and static assets.
 keen_source = glob.glob(os.path.join(django_apps_dir, "*", "keen_demo1"))
 STATICFILES_DIRS.extend(keen_source)
+STATICFILES_STORAGE = "whitenoise.storage.StaticFilesStorage"
 
 INSTALLED_APPS += [
     "debug_toolbar",
