@@ -16,7 +16,7 @@ User = get_user_model()
 
 
 class TestAccount(unittest.TestCase):
-    """Test OpenAI Function Calling hook for refers_to."""
+    """Test Account model"""
 
     def setUp(self):
         """Set up test fixtures."""

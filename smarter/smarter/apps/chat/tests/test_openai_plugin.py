@@ -28,8 +28,8 @@ from smarter.apps.chat.tests.test_setup import get_test_file_path
 from smarter.apps.plugin.plugin import Plugin
 
 
-class TestLambdaOpenaiFunctionRefersTo(unittest.TestCase):
-    """Test OpenAI Function Calling hook for refers_to."""
+class TestPlugin(unittest.TestCase):
+    """Test Plugin."""
 
     def setUp(self):
         """Set up test fixtures."""

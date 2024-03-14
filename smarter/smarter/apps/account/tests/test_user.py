@@ -17,8 +17,8 @@ from smarter.apps.plugin.utils import add_example_plugins
 User = get_user_model()
 
 
-class TestUser(unittest.TestCase):
-    """Test OpenAI Function Calling hook for refers_to."""
+class TestAccount(unittest.TestCase):
+    """Test Account model"""
 
     def setUp(self):
         """Set up test fixtures."""
