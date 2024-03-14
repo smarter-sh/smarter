@@ -53,8 +53,9 @@ resource "kubernetes_secret" "smarter_admin_password" {
 
   data = {
     SMARTER_ADMIN_USERNAME = "admin"
+    SMARTER_ADMIN_EMAIL    = "admin@${var.root_domain}"
     SMARTER_ADMIN_PASSWORD = random_password.smarter_admin_password.result
-    SMARTER_LOGIN_URL      = "https://${local.environment_domain}/api-auth/login/"
+    SMARTER_LOGIN_URL      = "https://${local.environment_domain}/login/"
   }
 
   depends_on = [kubernetes_namespace.smarter]

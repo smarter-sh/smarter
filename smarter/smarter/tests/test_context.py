@@ -8,12 +8,15 @@ import random
 # python stuff
 import unittest
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.test import RequestFactory
 
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
 from smarter.context_processors import branding
+
+
+User = get_user_model()
 
 
 class TestContext(unittest.TestCase):

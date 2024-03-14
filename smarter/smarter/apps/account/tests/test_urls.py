@@ -6,11 +6,14 @@
 import os
 import unittest
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.test import Client
 
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
+
+
+User = get_user_model()
 
 
 class TestUrls(unittest.TestCase):
@@ -28,7 +31,11 @@ class TestUrls(unittest.TestCase):
         self.account = Account.objects.create(
             company_name="Test Company",
             phone_number="1234567890",
-            address="123 Test St",
+            address1="123 Test St",
+            address2="Apt 1",
+            city="Test City",
+            state="TX",
+            postal_code="12345",
         )
         self.user_profile = UserProfile.objects.create(
             user=self.user,

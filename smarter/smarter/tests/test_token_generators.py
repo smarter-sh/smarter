@@ -7,11 +7,14 @@ import hashlib
 import random
 import unittest
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.test import RequestFactory
 
 # our stuff
 from smarter.token_generators import ExpiringTokenGenerator
+
+
+User = get_user_model()
 
 
 class TestExpiringTokens(unittest.TestCase):

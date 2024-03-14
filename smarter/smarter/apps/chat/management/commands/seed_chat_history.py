@@ -6,12 +6,13 @@ import json
 import os
 from pathlib import Path
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
 from smarter.apps.chat.api.v0.views.chat import handler
 
 
+User = get_user_model()
 HERE = Path(__file__).resolve().parent
 
 

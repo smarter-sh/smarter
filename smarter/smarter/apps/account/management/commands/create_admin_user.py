@@ -3,11 +3,14 @@
 import secrets
 import string
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from knox.models import AuthToken
 
 from smarter.apps.account.models import Account, UserProfile
+
+
+User = get_user_model()
 
 
 # pylint: disable=E1101

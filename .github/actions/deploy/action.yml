@@ -153,7 +153,7 @@ runs:
     # these will be set as environment variables for the Helm deployment
     #
     # example:
-    # SMARTER_LOGIN_URL: https://dev.api.smarter.sh/api-auth/login/
+    # SMARTER_LOGIN_URL: https://dev.api.smarter.sh/login/
     # SMARTER_ADMIN_USERNAME: admin
     # SMARTER_ADMIN_PASSWORD: top-secret-password
     - name: Configure admin user from Kubernetes secret
@@ -248,6 +248,7 @@ runs:
         --set env.SMARTER_LOGIN_URL=${{ env.SMARTER_LOGIN_URL }} \
         --set env.SMARTER_ADMIN_PASSWORD=${{ env.SMARTER_ADMIN_PASSWORD }} \
         --set env.SMARTER_ADMIN_USERNAME=${{ env.SMARTER_ADMIN_USERNAME }} \
+        --set env.SMARTER_ADMIN_EMAIL=${{ env.SMARTER_ADMIN_EMAIL }} \
         --set env.SMTP_HOST=${{ env.SMTP_HOST }} \
         --set env.SMTP_PORT=${{ env.SMTP_PORT }} \
         --set env.SMTP_USE_SSL=${{ env.SMTP_USE_SSL }} \

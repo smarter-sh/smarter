@@ -4,7 +4,7 @@ from http import HTTPStatus
 
 from django import forms
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.shortcuts import HttpResponse, redirect
 
 from smarter.email_helpers import EmailHelper
@@ -16,6 +16,9 @@ from smarter.token_generators import (
     TokenParseError,
 )
 from smarter.view_helpers import SmarterWebView
+
+
+User = get_user_model()
 
 
 class PasswordResetRequestView(SmarterWebView):

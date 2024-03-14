@@ -17,7 +17,11 @@ class TestPaymentMethods(unittest.TestCase):
         self.account = Account.objects.create(
             company_name="Test Company",
             phone_number="1234567890",
-            address="123 Test St",
+            address1="123 Test St",
+            address2="Apt 1",
+            city="Test City",
+            state="TX",
+            postal_code="12345",
         )
 
     def tearDown(self):
