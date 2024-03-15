@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=W0613
 """Django context processors for base.html"""
+import time
 from datetime import datetime
 
 from django.conf import settings
@@ -29,3 +30,8 @@ def branding(request):
         }
     }
     return context
+
+
+def cache_buster(request):
+    """For local development, prevent browser caching of static assets."""
+    return {"cache_buster": "v=" + str(time.time())}

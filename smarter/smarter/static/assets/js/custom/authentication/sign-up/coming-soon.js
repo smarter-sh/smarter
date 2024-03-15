@@ -69,7 +69,7 @@ var KTSignupComingSoon = function() {
                         submitButton.disabled = false;
 
                         // custom Smarter handler.
-                        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                        const csrftoken = getSmarterCsrfToken();
                         fetch('/', {
                           method: 'POST',
                           headers: {

@@ -39,19 +39,19 @@ urlpatterns = [
     # -------------------------------------------
     path("billing/", BillingView.as_view(), name="account_billing"),
     path("billing/payment-methods/", PaymentMethodsView.as_view(), name="account_billing_payment_methods"),
+    path("billing/payment-methods/new/", PaymentMethodView.as_view(), name="account_billing_payment_method_new"),
     path(
-        "billing/payment-methods/<int:payment_method_id>/",
+        "billing/payment-methods/<str:payment_method_id>/",
         PaymentMethodView.as_view(),
         name="account_billing_payment_method",
     ),
-    path("billing/payment-methods/new/", PaymentMethodView.as_view(), name="account_billing_payment_method_new"),
     path("billing/billing-addresses/", BillingAddressesView.as_view(), name="account_billing_addresses"),
+    path("billing/billing-addresses/new/", BillingAddressView.as_view(), name="account_billing_address_new"),
     path(
-        "billing/billing-addresses/<int:billing_address_id>",
+        "billing/billing-addresses/<str:billing_address_id>",
         BillingAddressView.as_view(),
         name="account_billing_address",
     ),
-    path("billing/billing-addresses/new/", BillingAddressView.as_view(), name="account_billing_address_new"),
     path("statements/", StatementsView.as_view(), name="account_statements"),
     # api keys
     # -------------------------------------------
