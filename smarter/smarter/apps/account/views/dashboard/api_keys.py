@@ -103,7 +103,6 @@ class APIKeyView(SmarterAdminWebView):
     # pylint: disable=W0221
     def get(self, request, token_key):
         """Get the api key. We also use this to create a new api key."""
-        logger.info("get(): token_key: %s", token_key)
 
         try:
             apikey = APIKey.objects.get(token_key=token_key)
@@ -122,20 +121,22 @@ class APIKeyView(SmarterAdminWebView):
         }
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
-    def post(self, request, token_key):
-        logger.info("post(): token_key: %s", token_key)
+    def post(self, request, token_key=None):
+        if token_key is None:
+            return self._handle_create(request)
         return self._handle_write_request(request, token_key)
 
-    def patch(self, request, token_key):
-        logger.info("patch(): token_key: %s", token_key)
+    def patch(self, request, token_key=None):
+        if token_key is None:
+            return self._handle_create(request)
         return self._handle_write_request(request, token_key)
 
-    def put(self, request, token_key):
-        logger.info("put(): token_key: %s", token_key)
+    def put(self, request, token_key=None):
+        if token_key is None:
+            return self._handle_create(request)
         return self._handle_write_request(request, token_key)
 
     def delete(self, request, token_key):
-        logger.info("delete(): token_key: %s", token_key)
         try:
             apikey = APIKey.objects.get(token_key=token_key)
         except APIKey.DoesNotExist:
