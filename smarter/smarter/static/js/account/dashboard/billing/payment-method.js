@@ -267,6 +267,16 @@ var KTModalPaymentMethod = (function () {
               console.log("response.data.card_expiration_month", response.data.card_expiration_month);
               let expirationMonth = response.data.card_expiration_month;
 
+              let images = document.querySelectorAll('img[name="card_type"]');
+              for (let image of images) {
+                if(image.getAttribute("data-kt-image-type") == response.data.card_type) {
+                  image.style.display = "block";
+                } else {
+                  console.log("data-kt-image-type", image.getAttribute("data-kt-image-type"), response.data.card_type);
+                  image.style.display = "none";
+                }
+              }
+
               for(let option of optionsMonth) {
                 if(option.value == expirationMonth) {
                   option.selected = true;
