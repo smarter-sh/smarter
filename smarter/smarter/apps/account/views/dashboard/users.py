@@ -87,7 +87,7 @@ class UserView(SmarterAdminWebView):
         return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data=user_form.errors)
 
     # pylint: disable=W0221
-    def get(self, request, user_id):
+    def get(self, request, user_id=None):
         """Get the user for the account. We also use this to create a new user."""
         try:
             user = User.objects.get(id=user_id)
@@ -104,11 +104,17 @@ class UserView(SmarterAdminWebView):
         }
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
-    def post(self, request, user_id):
+    def post(self, request, user_id=None):
+        if user_id is None:
+            return self._handle_create(request)
         return self._handle_write(request, user_id)
 
-    def patch(self, request, user_id):
+    def patch(self, request, user_id=None):
+        if user_id is None:
+            return self._handle_create(request)
         return self._handle_write(request, user_id)
 
-    def put(self, request, user_id):
+    def put(self, request, user_id=None):
+        if user_id is None:
+            return self._handle_create(request)
         return self._handle_write(request, user_id)

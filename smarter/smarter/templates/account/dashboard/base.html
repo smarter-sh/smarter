@@ -44,13 +44,20 @@
 									<div class="d-flex align-items-center gap-2 gap-lg-3">
 										<!--begin::Filter menu-->
 										<div class="d-flex">
-											<select name="campaign-type" data-control="select2" data-hide-search="true" class="form-select form-select-sm bg-body border-body w-175px">
-												<option value="Twitter" selected="selected">New User</option>
-												<option value="Twitter">New API Key</option>
-												<option value="Twitter">New Payment Method</option>
+											<select
+                        id="shortcut_select"
+                        name="shortcut_select"
+                        data-control="select2"
+                        class="form-select form-select-sm bg-body border-body w-175px">
+												<option id="shortcut_option_user" value="user" selected="selected">New User</option>
+												<option id="shortcut_option_api_key" value="api_key">New API Key</option>
+												<option id="shortcut_option_payment_method" value="payment_method">New Payment Method</option>
 											</select>
                       <!-- TO DO: make this dynamic based on drop-down selection -->
-											<a href="/account/dashboard/users/0" class="btn btn-icon btn-sm btn-success flex-shrink-0 ms-4">
+											<a
+                        id="shortcut_link"
+                        href="/account/dashboard/users/new/"
+                        class="btn btn-icon btn-sm btn-success flex-shrink-0 ms-4">
 												<i class="ki-duotone ki-plus fs-2"></i>
 											</a>
 										</div>
@@ -137,10 +144,8 @@
     {{ block.super }}
 		<!--begin::Custom Javascript(used for this page only)-->
 		<script src="{% static 'assets/js/custom/account/billing/general.js' %}"></script>
-		<script src="{% static 'js/account/dashboard/general.js' %}"></script>
+		<script src="{% static 'js/account/dashboard/base.js' %}"></script>
 		<script src="{% static 'assets/js/widgets.bundle.js' %}"></script>
-		<script src="{% static 'assets/js/custom/apps/chat/chat.js' %}"></script>
-		<script src="{% static 'assets/js/custom/utilities/modals/users-search.js' %}"></script>
 		<!--end::Custom Javascript-->
     <script>
       $(document).ready(function() {
