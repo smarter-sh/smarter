@@ -10,7 +10,7 @@ var KTModalNewAddress = function () {
 	var modalEl;
 
 	// Init form inputs
-	var initForm = function() {
+	var initAddressForm = function() {
 		// Team assign. For more info, plase visit the official plugin site: https://select2.org/
         $(form.querySelector('[name="country"]')).select2().on('change', function() {
             // Revalidate the field when an option is chosen
@@ -19,7 +19,7 @@ var KTModalNewAddress = function () {
 	}
 
 	// Handle form validation and submittion
-	var handleForm = function() {
+	var handleAddressEdit = function() {
 		// Stepper custom navigation
 
 		// Init form validation rules. For more info check the FormValidation plugin's official documentation:https://formvalidation.io/
@@ -183,6 +183,47 @@ var KTModalNewAddress = function () {
 		});
 	}
 
+  var handleAddressDelete = function() {
+    KTUtil.on(document.body,  '[data-kt-billing-action="address-delete"]', 'click', function(e) {
+        e.preventDefault();
+
+        var el = this;
+
+        swal.fire({
+            text: "Are you sure you would like to delete selected address ?",
+            icon: "warning",
+            buttonsStyling: false,
+            showDenyButton: true,
+            confirmButtonText: "Yes",
+            denyButtonText: 'No',
+            customClass: {
+                confirmButton: "btn btn-primary",
+                denyButton: "btn btn-light-danger"
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                el.setAttribute('data-kt-indicator', 'on');
+                el.disabled = true;
+
+                setTimeout(function() {
+                    Swal.fire({
+                        text: 'Your selected address has been successfully deleted',
+                        icon: 'success',
+                        confirmButtonText: "Ok",
+                        buttonsStyling: false,
+                        customClass: {
+                            confirmButton: "btn btn-light-primary"
+                        }
+                    }).then((result) => {
+                        el.closest('[data-kt-billing-element="address"]').remove();
+                    });
+                }, 2000);
+            }
+        });
+    });
+  }
+
+
 	return {
 		// Public functions
 		init: function () {
@@ -199,13 +240,16 @@ var KTModalNewAddress = function () {
 			submitButton = document.getElementById('kt_modal_new_address_submit');
 			cancelButton = document.getElementById('kt_modal_new_address_cancel');
 
-			initForm();
-			handleForm();
+			initAddressForm();
+			handleAddressEdit();
+      handleAddressDelete();
+
 		}
 	};
 }();
 
 // On document ready
 KTUtil.onDOMContentLoaded(function () {
+  console.log("billing-address.js - KTUtil.onDOMContentLoaded")
 	KTModalNewAddress.init();
 });

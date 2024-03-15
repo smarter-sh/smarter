@@ -23,7 +23,7 @@ urlpatterns = [
     path("", AccountView.as_view(), name="account"),
     path("login/", LoginView.as_view(), name="account_login"),
     path("logout/", LogoutView.as_view(), name="account_logout"),
-    path("dashboard/", include("smarter.apps.account.urls_dashboard")),
+    path("dashboard/", include("smarter.apps.account.views.dashboard.urls")),
     # account lifecycle
     path("register/", AccountRegisterView.as_view(), name="account_register"),
     path("activation/", AccountActivationEmailView.as_view(), name="account_activation"),

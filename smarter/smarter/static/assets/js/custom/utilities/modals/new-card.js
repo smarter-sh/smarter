@@ -192,7 +192,7 @@ var KTModalNewCard = (function () {
     // Public functions
     init: function () {
       // Elements
-      modalEl = document.querySelector("#kt_modal_new_card");
+      modalEl = document.querySelector("#kt_modal_payment_method");
 
       if (!modalEl) {
         return;
@@ -200,9 +200,9 @@ var KTModalNewCard = (function () {
 
       modal = new bootstrap.Modal(modalEl);
 
-      form = document.querySelector("#kt_modal_new_card_form");
-      submitButton = document.getElementById("kt_modal_new_card_submit");
-      cancelButton = document.getElementById("kt_modal_new_card_cancel");
+      form = document.querySelector("#kt_modal_payment_method_form");
+      submitButton = document.getElementById("kt_modal_payment_method_submit");
+      cancelButton = document.getElementById("kt_modal_payment_method_cancel");
 
       initForm();
       handleForm();

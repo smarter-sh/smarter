@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=W0511
+# pylint: disable=W0511,W0613
 """Billing Views for the account dashboard."""
 from http import HTTPStatus
 
 from django import forms, http
 
+from smarter.apps.account.tests.factories import billing_address_factory
 from smarter.view_helpers import SmarterAdminWebView
 
 
@@ -24,6 +25,15 @@ class BillingAddressForm(forms.Form):
 class BillingAddressesView(SmarterAdminWebView):
     """View for the account billing payment methods."""
 
+    # TODO: Replace this with actual billing addresses
+    def get(self, request):
+        retval = [billing_address_factory(), billing_address_factory(), billing_address_factory()]
+        return http.JsonResponse(data=retval, safe=False, status=HTTPStatus.OK)
+
+
+class BillingAddressView(SmarterAdminWebView):
+    """View for the account billing detail payment method."""
+
     # pylint: disable=W0612
     def process_form(self, request):
         # TODO: Add payment method to user's account
@@ -40,15 +50,20 @@ class BillingAddressesView(SmarterAdminWebView):
             return http.JsonResponse(status=HTTPStatus.OK, data={})
         return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data={})
 
-    def post(self, request):
+    # pylint: disable=W0221
+    def get(self, request, billing_address_id: str):
+        """View for the payment method."""
+        retval = billing_address_factory()
+        return http.JsonResponse(data=retval, safe=False, status=HTTPStatus.OK)
+
+    def post(self, request, billing_address_id: str = None):
         self.process_form(request)
 
-    def patch(self, request):
+    def patch(self, request, billing_address_id: str = None):
         self.process_form(request)
 
-    def put(self, request):
+    def put(self, request, billing_address_id: str = None):
         self.process_form(request)
 
-
-class BillingAddressView(SmarterAdminWebView):
-    """View for the account billing detail payment method."""
+    def delete(self, request, billing_address_id: str):
+        return http.JsonResponse(data={}, status=HTTPStatus.OK)
