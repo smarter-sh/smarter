@@ -5,6 +5,7 @@
 [![Amazon AWS](https://a11ybadges.com/badge?logo=amazonaws)](https://aws.amazon.com/)
 [![Bootstrap](https://a11ybadges.com/badge?logo=bootstrap)](https://getbootstrap.com/)
 [![ReactJS](https://a11ybadges.com/badge?logo=react)](https://react.dev/)
+[![NPM](https://a11ybadges.com/badge?logo=npm)](https://www.npmjs.com/)
 [![Python](https://a11ybadges.com/badge?logo=python)](https://www.python.org/)
 [![Django](https://a11ybadges.com/badge?logo=django)](https://www.djangoproject.com/)
 [![Terraform](https://a11ybadges.com/badge?logo=terraform)](https://www.terraform.io/)<br>
