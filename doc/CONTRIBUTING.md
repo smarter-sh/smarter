@@ -1,6 +1,19 @@
-# Contributing - Developer Setup Guide
+# Developer Setup Guide
 
-This repository contains four distinct projects, respectively, written in
+[![OpenAI](https://a11ybadges.com/badge?logo=openai)](https://platform.openai.com/)
+[![LangChain](https://a11ybadges.com/badge?text=LangChain&badgeColor=0834ac)](https://www.langchain.com/)
+[![Amazon AWS](https://a11ybadges.com/badge?logo=amazonaws)](https://aws.amazon.com/)
+[![Bootstrap](https://a11ybadges.com/badge?logo=bootstrap)](https://getbootstrap.com/)
+[![ReactJS](https://a11ybadges.com/badge?logo=react)](https://react.dev/)
+[![NPM](https://a11ybadges.com/badge?logo=npm)](https://www.npmjs.com/)
+[![Yarn](https://a11ybadges.com/badge?logo=yarn)](https://yarnpkg.com/)
+[![Gulp](https://a11ybadges.com/badge?logo=gulp)](https://gulpjs.com/)
+[![SASS](https://a11ybadges.com/badge?logo=sass)](https://sass-lang.com/)
+[![Python](https://a11ybadges.com/badge?logo=python)](https://www.python.org/)
+[![Django](https://a11ybadges.com/badge?logo=django)](https://www.djangoproject.com/)
+[![Terraform](https://a11ybadges.com/badge?logo=terraform)](https://www.terraform.io/)
+
+You should be able to work unencumbered in any of Linux, macOS or Windows. This repository contains four distinct projects, respectively, written in:
 
 - [Python](#python-setup)
 - [ReactJS](#reactjs-setup)
@@ -11,7 +24,15 @@ In each case there are various technology-specific resources that you'll need to
 
 ## Quick Start
 
-Smarter follows opinionated code style policies for most of the technologies in this repo. With that in mind, following is how to correctly setup your local development environment.
+Smarter follows opinionated code style policies for most of the technologies in this repo. With that in mind, following is how to correctly setup your local development environment. Before attempting to setup this project you should ensure that the following prerequisites are installed in your local environment:
+
+- npm: 10.4 or later
+- python: 3.11 or later
+- terraform 1.7 or later
+- terragrunt 0.54 or later
+- awscli: 2.15 or later
+- git: 2.x or later
+- make: 3.8 or later
 
 ```console
 git clone https://github.com/QueriumCorp/smarter.git
@@ -89,7 +110,7 @@ Smarter is built on the [Django](https://www.djangoproject.com/) web development
 - Python requirements: [smarter/requirements](../smarter/requirements/).
 - Django settings: [smarter/smarter/settings](../smarter/smarter/settings/)
 - Dependabot configuration: [.github/dependabot.yml](../.github/dependabot.yml)
-- Mergify configuration: [.mergify.yaml](../.mergify.yml)
+- Mergify configuration: [.mergify.yml](../.mergify.yml)
 
 ```console
 git pull
