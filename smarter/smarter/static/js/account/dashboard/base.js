@@ -39,15 +39,15 @@ var KTProfileGeneral = (function () {
       var newHref = shortcutLink.href;
 
       if (selectedOption === "user") {
-        newHref = "/account/users/new/";
+        newHref = "/account/dashboard/users/new/";
       }
 
       if (selectedOption === "api_key") {
-        newHref = "/account/api-keys/new/";
+        newHref = "/account/dashboard/api-keys/new/";
       }
 
       if (selectedOption === "payment_method") {
-        newHref = "/account/payment-methods/new/";
+        newHref = "/account/dashboard/payment-methods/new/";
       }
       shortcutLink.href = newHref;
     });

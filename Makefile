@@ -42,7 +42,7 @@ run:
 	make react-run
 
 analyze:
-	cloc . --exclude-ext=svg,json,zip --fullpath --not-match-d=smarter/smarter/static --vcs=git
+	cloc . --exclude-ext=svg,json,zip --fullpath --not-match-d=smarter/smarter/static/assets/ --vcs=git
 
 coverage:
 	cd smarter && \
@@ -102,6 +102,7 @@ python-init:
 	make django-init
 
 python-lint:
+	make pre-commit
 	terraform fmt -recursive
 	pre-commit run --all-files
 	black ./smarter/
@@ -116,7 +117,7 @@ python-clean:
 # Keen
 # ---------------------------------------------------------
 keen-init:
-	cd keen_v3.0.6/tools && npm install --globar yarn && \
+	cd keen_v3.0.6/tools && npm install --global yarn && \
 	npm install gulp@^4.0.2 && \
 	npm install gulp-cli && \
 	gulp --version

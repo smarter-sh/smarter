@@ -2,6 +2,7 @@
 """Account models."""
 import logging
 import random
+import uuid
 from datetime import datetime, timedelta
 
 from django.contrib.auth import get_user_model
@@ -146,6 +147,7 @@ class APIKey(AuthToken, TimestampedModel):
         verbose_name = "API Key"
         verbose_name_plural = "API Keys"
 
+    key_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="api_keys", blank=True, null=True)
     description = models.CharField(max_length=255, blank=True, null=True)
     last_used_at = models.DateTimeField(blank=True, null=True)
