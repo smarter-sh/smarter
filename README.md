@@ -143,8 +143,3 @@ You can also contact [Lawrence McDaniel](https://lawrencemcdaniel.com/contact) d
 
 - a news function. see [News API](https://newsapi.org/)
 - Azure Cognitive Services [content moderation](https://learn.microsoft.com/en-us/azure/ai-services/content-safety/)
-
-## Keen Theme Notes
-
-- build commands are added to Makefile
-- [SASS variables](./keen_v3.0.6/demo1/src/sass/layout/_variables.custom.scss)
