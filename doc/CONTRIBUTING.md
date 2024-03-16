@@ -89,7 +89,7 @@ Smarter is built on the [Django](https://www.djangoproject.com/) web development
 - Python requirements: [smarter/requirements](../smarter/requirements/).
 - Django settings: [smarter/smarter/settings](../smarter/smarter/settings/)
 - Dependabot configuration: [.github/dependabot.yml](../.github/dependabot.yml)
-- Mergify configuration: [.mergify.yaml](../.mergify.yaml)
+- Mergify configuration: [.mergify.yaml](../.mergify.yml)
 
 ```console
 git pull
