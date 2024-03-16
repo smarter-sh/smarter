@@ -2,9 +2,10 @@
 
 This repository contains three distinct projects, respectively, written in
 
-- [ReactJS](#reactjs-setup)
 - [Python](#python-setup)
+- [ReactJS](#reactjs-setup)
 - [Terraform](#terraform-setup)
+- [Keen Bootstrap Theme](#keen-bootstrap-theme-setup)
 
 In each case there are various technology-specific resources that you'll need to initialize in your development environment.
 
