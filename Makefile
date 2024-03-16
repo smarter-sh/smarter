@@ -117,7 +117,7 @@ python-clean:
 # Keen
 # ---------------------------------------------------------
 keen-init:
-	cd keen_v3.0.6/tools && npm install --globar yarn && \
+	cd keen_v3.0.6/tools && npm install --global yarn && \
 	npm install gulp@^4.0.2 && \
 	npm install gulp-cli && \
 	gulp --version
