@@ -95,6 +95,20 @@ make python-lint
 source venv/bin/activate
 ```
 
+### Unit Tests
+
+We're using `unittest` combined with `django.test` in this project. There's a shortcut for running all tests: `make django-test`. You should create relevant unit tests for your new features, sufficient to achieve a [Coverage](https://coverage.readthedocs.io/) analysis of at least 75%.
+
+### Coverage
+
+Coverage.py is a tool for measuring code coverage of Python programs. It monitors your program, noting which parts of the code have been executed, then analyzes the source to identify code that could have been executed but was not.
+
+Coverage measurement is typically used to gauge the effectiveness of tests. It can show which parts of your code are being exercised by tests, and which are not.
+
+Note the following shortcut for running a Coverage report: `make coverage`.
+
+**Our goal for this project is to maintain an overall Coverage score of at least 80%.**
+
 ## ReactJS Setup
 
 Please refer to this detailed [ReactJS setup guide](./client/README.md) for how to use vite.js to initialize the ReactJS development environment.
@@ -128,6 +142,8 @@ The complete, unmodified original set of resource files are located in this [kee
 
 These assets have been fully integrated into Django's templating system, which means that the html has been normalized, and that other static assets like fonts, svg, css, js and images are served from this [static](../smarter/smarter/static/) folder.
 
+[SASS variables](../keen_v3.0.6/demo1/src/sass/layout/_variables.custom.scss)
+
 Note the following helper commands:
 
 ```console
@@ -135,5 +151,3 @@ make keen-init      # locally installs npm, yarn and gulp requirements
 make keen-build     # compile Sass and javascript into css and js bundles
 make keen-server    # locally run the demo site
 ```
-
-- [SASS variables](./keen_v3.0.6/demo1/src/sass/layout/_variables.custom.scss)
