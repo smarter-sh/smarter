@@ -105,14 +105,19 @@ class SmarterWebView(View):
         """Minify an html string."""
         return minify(html, remove_empty_space=True)
 
-    # pylint: disable=W0613
-    def clean_http_response(self, request, template_path, context=None):
-        """Render a template and return an HttpResponse with comments removed."""
+    def render_clean_html(self, request, template_path, context=None):
+        """Render a template as a string, with comments removed and minified."""
         context = context or self.context
         response = render(request=request, template_name=template_path, context=context)
         html = response.content.decode(response.charset)
         html_no_comments = self.remove_comments(html=html)
         minified_html = self.minify_html(html=html_no_comments)
+        return minified_html
+
+    # pylint: disable=W0613
+    def clean_http_response(self, request, template_path, context=None):
+        """Render a template and return an HttpResponse with comments removed."""
+        minified_html = self.render_clean_html(request, template_path, context)
         return HttpResponse(content=minified_html, content_type="text/html")
 
     def get(self, request):

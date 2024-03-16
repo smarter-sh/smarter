@@ -6,16 +6,17 @@
 import os
 import unittest
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
 
 
-class TestAccount(unittest.TestCase):
-    """Test OpenAI Function Calling hook for refers_to."""
+User = get_user_model()
 
-    user: User
+
+class TestAccount(unittest.TestCase):
+    """Test Account model"""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -31,7 +32,11 @@ class TestAccount(unittest.TestCase):
         account = Account.objects.create(
             company_name="Test Company",
             phone_number="1234567890",
-            address="123 Test St",
+            address1="123 Test St",
+            address2="Apt 1",
+            city="Test City",
+            state="TX",
+            postal_code="12345",
         )
 
         account.delete()
@@ -41,7 +46,11 @@ class TestAccount(unittest.TestCase):
         account = Account.objects.create(
             company_name="Test Company",
             phone_number="1234567890",
-            address="123 Test St",
+            address1="123 Test St",
+            address2="Apt 1",
+            city="Test City",
+            state="TX",
+            postal_code="12345",
         )
 
         account_to_update = Account.objects.get(id=account.id)
@@ -50,7 +59,7 @@ class TestAccount(unittest.TestCase):
 
         self.assertEqual(account_to_update.company_name, "New Company")
         self.assertEqual(account_to_update.phone_number, "1234567890")
-        self.assertEqual(account_to_update.address, "123 Test St")
+        self.assertEqual(account_to_update.address1, "123 Test St")
         self.assertEqual(account_to_update.account_number, account.account_number)
 
         account.delete()
@@ -60,7 +69,11 @@ class TestAccount(unittest.TestCase):
         account = Account.objects.create(
             company_name="Test Company",
             phone_number="1234567890",
-            address="123 Test St",
+            address1="123 Test St",
+            address2="Apt 1",
+            city="Test City",
+            state="TX",
+            postal_code="12345",
         )
 
         profile = UserProfile.objects.create(

@@ -2,10 +2,12 @@
 """Account models."""
 import logging
 import random
+from datetime import datetime, timedelta
 
 from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
 from django.db import models
+from knox.models import AuthToken, AuthTokenManager
 
 # our stuff
 from smarter.apps.common.model_utils import TimestampedModel
@@ -29,7 +31,15 @@ class Account(TimestampedModel):
     )
     company_name = models.CharField(max_length=255)
     phone_number = models.CharField(max_length=20)
-    address = models.CharField(max_length=255)
+    address1 = models.CharField(max_length=255)
+    address2 = models.CharField(max_length=255)
+    city = models.CharField(max_length=255)
+    state = models.CharField(max_length=255)
+    postal_code = models.CharField(max_length=20)
+    country = models.CharField(max_length=255)
+    language = models.CharField(max_length=255)
+    timezone = models.CharField(max_length=255)
+    currency = models.CharField(max_length=255)
 
     def randomized_account_number(self):
         """
@@ -110,3 +120,73 @@ class PaymentMethod(TimestampedModel):
 
     def __str__(self):
         return self.card_type + " " + self.card_last_4
+
+
+class APIKeyManager(AuthTokenManager):
+    """API Key manager."""
+
+    def create(self, *args, **kwargs):
+        description = kwargs.pop("description", None)
+        is_active = kwargs.pop("is_active", True)
+        api_key, token = super().create(*args, **kwargs)
+        if description is not None:
+            api_key.description = description
+        api_key.is_active = is_active
+        api_key.save()
+        return api_key, token
+
+
+class APIKey(AuthToken, TimestampedModel):
+    """API Key model."""
+
+    objects = APIKeyManager()
+
+    # pylint: disable=C0115
+    class Meta:
+        verbose_name = "API Key"
+        verbose_name_plural = "API Keys"
+
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="api_keys", blank=True, null=True)
+    description = models.CharField(max_length=255, blank=True, null=True)
+    last_used_at = models.DateTimeField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+
+    @property
+    def identifier(self):
+        return "******" + str(self.digest)[:8]
+
+    def save(self, *args, **kwargs):
+        if not self.user.is_staff:
+            raise ValueError("API Keys can only be created for staff users.")
+        user_profile = UserProfile.objects.get(user=self.user)
+        self.account = user_profile.account
+        super().save(*args, **kwargs)
+
+    def has_permissions(self, user) -> bool:
+        """Determine if the authenticated user has permissions to manage this key."""
+        account = UserProfile.objects.get(user=user).account
+        return user.is_staff and account == self.account
+
+    def activate(self):
+        """Activate the API key."""
+        self.is_active = True
+        self.save()
+
+    def deactivate(self):
+        """Deactivate the API key."""
+        self.is_active = False
+        self.save()
+
+    def toggle_active(self):
+        """Toggle the active status of the API key."""
+        self.is_active = not self.is_active
+        self.save()
+
+    def accessed(self):
+        """Update the last used time."""
+        if self.last_used_at is None or (datetime.now() - self.last_used_at) > timedelta(minutes=5):
+            self.last_used_at = datetime.now()
+            self.save()
+
+    def __str__(self):
+        return self.identifier

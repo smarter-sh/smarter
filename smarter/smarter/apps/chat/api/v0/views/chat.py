@@ -5,7 +5,7 @@ import json
 from http import HTTPStatus
 
 import openai
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from rest_framework.response import Response
 
 from smarter.apps.chat.functions.function_weather import (
@@ -41,6 +41,7 @@ from smarter.apps.plugin.utils import plugins_for_user
 from smarter.view_helpers import SmarterAPIView
 
 
+User = get_user_model()
 openai.organization = settings.openai_api_organization
 openai.api_key = settings.openai_api_key.get_secret_value()
 

@@ -13,3 +13,4 @@ class AccountConfig(AppConfig):
     def ready(self):
         """Import signals."""
         import smarter.apps.account.signals  # noqa
+        import smarter.apps.account.stripe  # noqa

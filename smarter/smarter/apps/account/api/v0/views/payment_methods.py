@@ -4,7 +4,7 @@
 import logging
 from http import HTTPStatus
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
@@ -16,6 +16,7 @@ from smarter.apps.account.models import Account, PaymentMethod, UserProfile
 from smarter.view_helpers import SmarterAPIListView, SmarterAPIView
 
 
+User = get_user_model()
 logger = logging.getLogger(__name__)
 
 

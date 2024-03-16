@@ -9,7 +9,7 @@ import unittest
 from urllib.parse import urlparse
 
 import yaml
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.http import HttpResponsePermanentRedirect, HttpResponseRedirect
 from django.test import Client
 
@@ -17,6 +17,9 @@ from django.test import Client
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.plugin import Plugin
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
+
+
+User = get_user_model()
 
 
 class TestPluginAPI(unittest.TestCase):

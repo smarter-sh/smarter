@@ -153,7 +153,7 @@ runs:
     # these will be set as environment variables for the Helm deployment
     #
     # example:
-    # SMARTER_LOGIN_URL: https://dev.api.smarter.sh/api-auth/login/
+    # SMARTER_LOGIN_URL: https://dev.api.smarter.sh/login/
     # SMARTER_ADMIN_USERNAME: admin
     # SMARTER_ADMIN_PASSWORD: top-secret-password
     - name: Configure admin user from Kubernetes secret
@@ -162,6 +162,23 @@ runs:
       with:
         eks-namespace: ${{ env.NAMESPACE }}
         eks-secret-name: smarter-admin
+
+    # extract the Django SMTP email from the Kubernetes secret.
+    # these will be set as environment variables for the Helm deployment
+    #
+    # example:
+    # SMTP_HOST: email-smtp.us-east-2.amazonaws.com
+    # SMTP_PORT: "587"
+    # SMTP_USE_SSL: "false"
+    # SMTP_USE_TLS: "true"
+    # SMTP_USERNAME: an IAM key-pair id
+    # SMTP_PASSWORD: an IAM key-pair secret
+    - name: Configure SMTP email credentials from Kubernetes secret
+      id: get-aws-ses-secret
+      uses: ./.github/actions/k8s-get-secret
+      with:
+        eks-namespace: ${{ env.NAMESPACE }}
+        eks-secret-name: aws-ses-config
 
     # extract the Django application secret from the Kubernetes secret.
     # these will be set as environment variables for the Helm deployment
@@ -201,15 +218,13 @@ runs:
         kubectl delete job smarter-db-init-job --namespace ${{ env.NAMESPACE }} || true
 
     # Deploy the application to Kubernetes using Helm
-    # note that we pin the environment to "prod" and set DEBUG_MODE to "false"
-    # regardless of the actual environment. This is because we want to ensure
-    # that the production environment is always deployed with DEBUG_MODE set to "false"
     - name: Deploy
       id: deploy
       shell: bash
       run: |-
         helm upgrade --install --force smarter ./helm/charts/smarter/ --namespace ${{ env.NAMESPACE }} \
-        --set env.ENVIRONMENT="prod" \
+        --set deployTimestamp="$(date +%s)" \
+        --set env.ENVIRONMENT=${{ inputs.environment }} \
         --set env.AWS_REGION=${{ inputs.aws-region }} \
         --set env.AWS_ACCESS_KEY_ID=${{ inputs.aws-access-key-id }} \
         --set env.AWS_SECRET_ACCESS_KEY=${{ inputs.aws-secret-access-key }} \
@@ -233,3 +248,10 @@ runs:
         --set env.SMARTER_LOGIN_URL=${{ env.SMARTER_LOGIN_URL }} \
         --set env.SMARTER_ADMIN_PASSWORD=${{ env.SMARTER_ADMIN_PASSWORD }} \
         --set env.SMARTER_ADMIN_USERNAME=${{ env.SMARTER_ADMIN_USERNAME }} \
+        --set env.SMARTER_ADMIN_EMAIL=${{ env.SMARTER_ADMIN_EMAIL }} \
+        --set env.SMTP_HOST=${{ env.SMTP_HOST }} \
+        --set env.SMTP_PORT=${{ env.SMTP_PORT }} \
+        --set env.SMTP_USE_SSL=${{ env.SMTP_USE_SSL }} \
+        --set env.SMTP_USE_TLS=${{ env.SMTP_USE_TLS }} \
+        --set env.SMTP_USERNAME=${{ env.SMTP_USERNAME }} \
+        --set env.SMTP_PASSWORD=${{ env.SMTP_PASSWORD }} \

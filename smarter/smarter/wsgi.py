@@ -10,12 +10,11 @@ from dotenv import load_dotenv
 from whitenoise import WhiteNoise
 
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smarter.settings.local")
-
 load_dotenv()
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smarter.settings.local")
 environment = os.getenv("ENVIRONMENT")
-if environment == "prod":
-    os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings.production"
+os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings." + environment
 
 application = get_wsgi_application()
 application = WhiteNoise(application, root=settings.STATIC_ROOT)

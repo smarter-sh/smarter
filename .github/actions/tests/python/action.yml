@@ -79,7 +79,7 @@ runs:
         echo "PINECONE_API_KEY=${{ env.PINECONE_API_KEY }}" >> ./.env
         echo "PINECONE_ENVIRONMENT=${{ env.PINECONE_ENVIRONMENT }}" >> ./.env
         echo "DEBUG_MODE=False" >> ./.env
-        echo "ENVIRONMENT=dev" >> ./.env
+        echo "ENVIRONMENT=local" >> ./.env
         echo "ROOT_DOMAIN=${{ inputs.root-domain }}" >> ./.env
 
       env:

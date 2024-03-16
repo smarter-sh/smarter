@@ -1,0 +1,200 @@
+{% extends 'account/dashboard/base.html' %}
+{% load static %}
+
+{% block dashboard_title %}Account Settings{% endblock %}
+
+    {% block dashboard_title_breadcrumbs %}
+      {{ block.super }}
+      <!--begin::Item-->
+      <li class="breadcrumb-item text-muted">
+        <a href="/account/dashboard/settings/" class="text-muted text-hover-primary">Settings</a>
+      </li>
+    {% endblock %}
+
+
+  {% block dashboard_detail_view %}
+  <!--begin::Basic info-->
+  <div class="card mb-5 mb-xl-10">
+    <!--begin::Card header-->
+    <div class="card-header border-0 cursor-pointer" role="button" data-bs-toggle="collapse" data-bs-target="#kt_account_details" aria-expanded="true" aria-controls="kt_account_details">
+      <!--begin::Card title-->
+      <div class="card-title m-0">
+        <h3 class="fw-bold m-0">
+          {% if account_users.user %}{{ account_users.user.username }} - {{ account_users.user.email }}
+          {% else %}
+          Create New User
+          {% endif %}
+        </h3>
+      </div>
+      <!--end::Card title-->
+      <!--begin::Action-->
+      {% if account_users.user %}
+      <a id="kt_user_form_edit_btn" href="#" class="btn btn-sm btn-primary align-self-center">Edit</a>
+      {% endif %}
+      <!--end::Action-->
+    </div>
+    <!--begin::Card header-->
+    <!--begin::Content-->
+    <div id="kt_account_settings_details" class="collapse show">
+      <!--begin::Form-->
+      <form
+        id="kt_user_detail_form"
+        class="form"
+        data-primary-key="{% if account_users.user %}{{ account_users.user.id }}{% else%}0{% endif %}"
+        {% if not account_users.user %}data-entry-mode="true"{% endif %}
+      >
+        {% csrf_token %}
+        <!--begin::Card body-->
+        <div class="card-body border-top p-9">
+          <!--begin::Input group-->
+          <div class="row mb-6">
+            <!--begin::Label-->
+            <label class="col-lg-4 col-form-label fw-semibold fs-6">Username</label>
+            <!--end::Label-->
+            <!--begin::Col-->
+            <div class="col-lg-8 fv-row">
+              <input
+                id="input_{{ account_users.user_form.username.name }}"
+                type="text"
+                name="{{ account_users.user_form.username.name }}"
+                {% if account_users.user %}
+                class="form-control"
+                readonly
+                {% else %}
+                class="form-control form-control-lg form-control-solid"
+                {% endif %}
+                value="{% if account_users.user_form.username.value != None %}{{ account_users.user_form.username.value }}{% endif %}"
+                 />
+
+            </div>
+            <!--end::Col-->
+          </div>
+          <!--end::Input group-->
+
+          <!--begin::Input group-->
+          <div class="row mb-6">
+            <!--begin::Label-->
+            <label class="col-lg-4 col-form-label fw-semibold fs-6">
+              <span class="required">Email</span>
+              <span class="ms-1" data-bs-toggle="tooltip" title="Your data remains private.">
+                <i class="ki-duotone ki-information-5 text-gray-500 fs-6">
+                  <span class="path1"></span>
+                  <span class="path2"></span>
+                  <span class="path3"></span>
+                </i>
+              </span>
+            </label>
+          <!--end::Label-->
+            <!--begin::Col-->
+            <div class="col-lg-8 fv-row">
+              <input
+                id="input_{{ account_users.user_form.email.name }}"
+                type="text"
+                name="{{ account_users.user_form.email.name }}"
+                class="form-control form-control-lg form-control-solid email"
+                placeholder="Email address"
+                value="{% if account_users.user_form.email.value != None %}{{ account_users.user_form.email.value }}{% endif %}" />
+            </div>
+            <!--end::Col-->
+          </div>
+          <!--end::Input group-->
+
+          <!--begin::Input group-->
+          <div class="row mb-6">
+            <!--begin::Label-->
+            <label class="col-lg-4 col-form-label fw-semibold fs-6">
+              <span class="required">First Name</span>
+            </label>
+            <!--end::Label-->
+            <!--begin::Col-->
+            <div class="col-lg-8 fv-row">
+              <input
+                id="input_{{ account_users.user_form.first_name.name }}"
+                type="tel"
+                name="{{ account_users.user_form.first_name.name }}"
+                class="form-control form-control-lg form-control-solid"
+                placeholder="First name"
+                value="{% if account_users.user_form.first_name.value != None %}{{ account_users.user_form.first_name.value }}{% endif %}" />
+              </div>
+            <!--end::Col-->
+          </div>
+          <!--end::Input group-->
+          <!--begin::Input group-->
+          <div class="row mb-6">
+            <!--begin::Label-->
+            <label class="col-lg-4 col-form-label required fw-semibold fs-6">Last Name</label>
+            <!--end::Label-->
+            <!--begin::Col-->
+            <div class="col-lg-8 fv-row">
+              <!--begin::Input-->
+              <input
+                id="input_{{ account_users.user_form.last_name.name }}"
+                type="tel"
+                name="{{ account_users.user_form.last_name.name }}"
+                class="form-control form-control-lg form-control-solid"
+                placeholder="Last name"
+                value="{% if account_users.user_form.last_name.value != None %}{{ account_users.user_form.last_name.value }}{% endif %}" />
+              <!--end::Input-->
+            </div>
+            <!--end::Col-->
+          </div>
+          <!--end::Input group-->
+
+
+          <!--begin::Input group-->
+          <div class="row mb-6">
+            <!--begin::Label-->
+            <label class="col-lg-4 col-form-label required fw-semibold fs-6">Admin</label>
+            <!--end::Label-->
+            <!--begin::Col-->
+            <div class="col-lg-8 fv-row">
+              <!--begin::Input-->
+              <div class="form-check form-check-solid form-check-custom form-switch">
+                <input
+                  id="input_{{ account_users.user_form.is_staff.name }}"
+                  name="{{ account_users.user_form.is_staff.name }}"
+                  class="form-check-input w-45px h-30px"
+                  type="checkbox"
+                  {% if account_users.user_form.is_staff.value %} checked {% endif %}
+                   />
+                <label class="form-check-label" for="googleswitch"></label>
+              </div>
+              <!--end::Input-->
+            </div>
+            <!--end::Col-->
+          </div>
+          <!--end::Input group-->
+        </div>
+        <!--end::Card body-->
+        <!--begin::Actions-->
+        <div class="card-footer d-flex justify-content-end py-6 px-9">
+          <button
+            id="kt_user_form_cancel_btn"
+            type="reset"
+            class="btn btn-light btn-active-light-primary me-2"
+            style="display: none;"
+            >Cancel</button>
+          <button
+            id="kt_user_form_save_btn"
+            type="submit"
+            class="btn btn-primary"
+            style="display: none;"
+            >Save Changes</button>
+        </div>
+        <!--end::Actions-->
+      </form>
+      <!--end::Form-->
+    </div>
+    <!--end::Content-->
+  </div>
+  <!--end::Basic info-->
+
+  {% endblock %}
+
+
+{% block javascript_extra %}
+  {{ block.super }}
+		<!--begin::Custom Javascript(used for this page only)-->
+		<script src="{% static 'js/account/dashboard/user-detail.js' %}"></script>
+		<!--end::Custom Javascript-->
+{% endblock %}

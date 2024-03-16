@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 """Account utilities."""
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
 from smarter.apps.account.models import Account, UserProfile
 
 
-def account_for_user(user: User) -> Account:
+User = get_user_model()
+
+
+def account_for_user(user) -> Account:
     """
     Locates the account for a given user, or None if no account exists.
     """

@@ -59,7 +59,8 @@ var KTSignupComingSoon = function() {
                     // Disable button to avoid multiple click
                     submitButton.disabled = true;
 
-                    // Simulate ajax request
+                    var formData = new FormData(form);
+
                     setTimeout(function() {
                         // Hide loading indication
                         submitButton.removeAttribute('data-kt-indicator');
@@ -67,28 +68,50 @@ var KTSignupComingSoon = function() {
                         // Enable button
                         submitButton.disabled = false;
 
+                        // custom Smarter handler.
+                        const csrftoken = getSmarterCsrfToken();
+                        fetch('/', {
+                          method: 'POST',
+                          headers: {
+                            'X-CSRFToken': csrftoken
+                          },
+                          body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.redirect) {
+                                window.location.href = data.redirect;
+                            } else {
+                                  // Show error message inside of existing form element
+                                  // validator object, above.
+                                  var errorMessage = JSON.parse(data.error);
+                                  document.querySelector('div[data-field="email"][data-validator="regexp"]').innerText = errorMessage;
+                            }
+                        })
+                        .catch((error) => {
+                          console.error('Error:', error);
+                        });
+
+
                         // Show message popup. For more info check the plugin's official documentation: https://sweetalert2.github.io/
                         Swal.fire({
                             text: "We have received your request. You will be notified once we go live.",
                             icon: "success",
                             buttonsStyling: false,
-                            confirmButtonText: "Ok, got it!",
+                            confirmButtonText: "Dismiss",
                             customClass: {
                                 confirmButton: "btn btn-primary"
                             }
                         }).then(function (result) {
                             if (result.isConfirmed) {
                                 form.querySelector('[name="email"]').value= "";
-                                //form.submit();
-
-                                //form.submit(); // submit form
                                 var redirectUrl = form.getAttribute('data-kt-redirect-url');
                                 if (redirectUrl) {
                                     location.href = redirectUrl;
                                 }
                             }
                         });
-                    }, 2000);
+                    }, 750);
                 } else {
                     // Show error popup. For more info check the plugin's official documentation: https://sweetalert2.github.io/
                     Swal.fire({

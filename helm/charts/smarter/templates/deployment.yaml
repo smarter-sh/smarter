@@ -24,6 +24,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: {{ .Values.appName }}
+        deploymentTimestamp: "{{ now | unixEpoch }}"
     spec:
       containers:
         - env:
@@ -61,6 +62,18 @@ spec:
               value: "{{ .Values.env.GOOGLE_MAPS_API_KEY }}"
             - name: SECRET_KEY
               value: "{{ .Values.env.SECRET_KEY }}"
+            - name: SMTP_HOST
+              value: "{{ .Values.env.SMTP_HOST }}"
+            - name: SMTP_PORT
+              value: "{{ .Values.env.SMTP_PORT }}"
+            - name: SMTP_USE_SSL
+              value: "{{ .Values.env.SMTP_USE_SSL }}"
+            - name: SMTP_USE_TLS
+              value: "{{ .Values.env.SMTP_USE_TLS }}"
+            - name: SMTP_USERNAME
+              value: "{{ .Values.env.SMTP_USERNAME }}"
+            - name: SMTP_PASSWORD
+              value: "{{ .Values.env.SMTP_PASSWORD }}"
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
           imagePullPolicy: Always
           name: {{ .Values.appName }}
