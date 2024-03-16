@@ -1,13 +1,13 @@
 # Contributing - Developer Setup Guide
 
-This repository contains three distinct projects, respectively, written in
+This repository contains four distinct projects, respectively, written in
 
 - [Python](#python-setup)
 - [ReactJS](#reactjs-setup)
 - [Terraform](#terraform-setup)
 - [Keen Bootstrap Theme](#keen-bootstrap-theme-setup)
 
-In each case there are various technology-specific resources that you'll need to initialize in your development environment.
+In each case there are various technology-specific resources that you'll need to initialize in your development environment. See setup instructions below for each technology.
 
 ## Quick Start
 
@@ -31,8 +31,7 @@ make build      # deploy AWS cloud infrastructure, build ReactJS web app
 make run        # run the web app locally in your dev environment
 ```
 
-To preserve your own sanity, don't spend time formatting your Python and JS source code, because pre-commit invokes black and prettier on all local commits, and these will reformat the code in your commit based on several policy
-configurations found in the root of this repo.
+To preserve your own sanity, don't spend time formatting your Python, Terraform, JS or any other source code because pre-commit invokes automatic code formatting utilities such as black, flake8 and prettier, on all local commits, and these will reformat the code in your commit based on policy configuration files found in the root of this repo.
 
 ## Repository Setup
 
