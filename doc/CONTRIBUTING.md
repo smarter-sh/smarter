@@ -119,6 +119,14 @@ make python-lint
 source venv/bin/activate
 ```
 
+### Configuration Data
+
+Smarter generally follows Django's convention of storing most configuration data in python modules that are accessible via `django.conf.settings`. However, in light of the fact that Smarter uses a **LOT** of configuration data, and that this configuration data necessarily lives in many different locations, we also have our own propriety configuration module which is based on [Pydantic](https://docs.pydantic.dev/). The module can be found [here](../smarter/smarter/apps/common/conf.py) and is accessed as follows:
+
+```python
+from smarter.apps.common.conf import settings as smarter_settings
+```
+
 ### Unit Tests
 
 We're using `unittest` combined with `django.test` in this project. There's a shortcut for running all tests: `make django-test`. You should create relevant unit tests for your new features, sufficient to achieve a [Coverage](https://coverage.readthedocs.io/) analysis of at least 75%.
