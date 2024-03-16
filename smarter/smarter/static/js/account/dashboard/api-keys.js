@@ -12,7 +12,6 @@ var KTAccountAPIKeys = function () {
     var primaryKey;
 
     function handleAction(action, button) {
-      console.log('handleAction: ', action);
 
       button.attr("data-kt-indicator", "on");
       button.prop("disabled", true);
@@ -20,7 +19,6 @@ var KTAccountAPIKeys = function () {
       const url = "/account/dashboard/api-keys/" + primaryKey + "/";
 
       const csrfToken = getSmarterCsrfToken();
-      console.log('csrfToken', csrfToken);
       const context = {
         headers: {
           'Content-Type': 'application/json',
