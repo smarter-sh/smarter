@@ -113,7 +113,6 @@ Smarter is built on the [Django](https://www.djangoproject.com/) web development
 - Mergify configuration: [.mergify.yml](../.mergify.yml)
 
 ```console
-git pull
 make django-init
 make python-lint
 source venv/bin/activate
@@ -121,7 +120,7 @@ source venv/bin/activate
 
 ### Configuration Data
 
-Smarter generally follows Django's convention of storing most configuration data in python modules that are accessible via `django.conf.settings`. However, in light of the fact that Smarter uses a **LOT** of configuration data, and that this configuration data necessarily lives in many different locations, we also have our own propriety configuration module which is based on [Pydantic](https://docs.pydantic.dev/). The module can be found [here](../smarter/smarter/apps/common/conf.py) and is accessed as follows:
+Smarter generally follows Django's convention of storing most configuration data in environment-specific python modules that are accessible via `django.conf.settings`. However, in light of the fact that Smarter uses a **LOT** of configuration data, and that this configuration data necessarily lives in many different locations, we also have our own propriety configuration module which is based on [Pydantic](https://docs.pydantic.dev/). The module can be found [here](../smarter/smarter/apps/common/conf.py) and is accessed as follows:
 
 ```python
 from smarter.apps.common.conf import settings as smarter_settings
@@ -148,22 +147,22 @@ Please refer to this detailed [ReactJS setup guide](./client/README.md) for how 
 Note that this project leverages Dependabot for managing version numbers of all NPM packages that are used in this project, regardless of where and how. Versions should always be up to date at the moment that you clone the repo. It therefore should never be necessary for you to manually bump package.json version numbers.
 
 ```console
-git pull
 make react-init
 ```
 
 ## Terraform Setup
 
-Please refer to this [Terraform setup guide](../api/README.md) for detailed instructions.
+If you're new to Terraform then refer to this [Terraform Getting Started Guide](./TERRAFORM_GETTING_STARTED_GUIDE.md) for detailed setup instructions.
 
-Note that this project leverages Dependabot for managing version numbers of all Terraform modules that are used in this project. Versions should always be up to date at the moment that you clone the repo. It therefore should never be necessary for you to manually bump module version numbers.
+Note that this project leverages Dependabot for managing version numbers of all Terraform modules that are used in this project. Versions should always be up to date at the moment that you clone the repo. It therefore should not be necessary for you to manually bump module version numbers.
+
+Also be aware that Terraform is a high-level scripting tool running on top of [AWS CLI](https://aws.amazon.com/cli/), and hence, it's capabilities are ultimately limited to the permissions granted to the [AWS IAM](https://aws.amazon.com/iam/) user account that you're using in your AWS CLI configuration.
 
 ```console
-git pull
-cd api/terraform
-terraform init
-terraform plan
-terraform apply
+cd aws/dev
+terragrunt init
+terragrunt plan
+terragrunt apply
 ```
 
 ## Keen Bootstrap Theme Setup
