@@ -6,7 +6,7 @@ from http import HTTPStatus
 
 from django import forms, http
 from django.contrib.auth import get_user_model
-from django.shortcuts import redirect
+from django.forms.models import model_to_dict
 
 from smarter.apps.account.models import APIKey, UserProfile
 from smarter.view_helpers import SmarterAdminWebView
@@ -24,7 +24,7 @@ class APIKeyForm(forms.ModelForm):
         """Meta class for APIKeyForm with all fields."""
 
         model = APIKey
-        fields = "__all__"
+        fields = ["user", "description", "is_active"]
 
 
 class APIKeysView(SmarterAdminWebView):
@@ -51,31 +51,39 @@ class APIKeyView(SmarterAdminWebView):
     template_path = "account/dashboard/api-key.html"
 
     def _handle_create(self, request):
-        apikey_form = APIKeyForm(request.POST)
+        post_data = request.POST.copy()  # Make a mutable copy
+        post_data["user"] = request.user.id  # Set the user field's value
+        apikey_form = APIKeyForm(post_data)
         if apikey_form.is_valid():
             apikey = apikey_form.save()
-            return redirect("account_user", token_key=apikey.token_key)
+            new_api_key = APIKey.objects.get(digest=apikey.digest)
+            api_key_dict = model_to_dict(new_api_key)
+            api_key_dict["key_id"] = new_api_key.key_id
+
+            return http.JsonResponse(status=HTTPStatus.CREATED, data=api_key_dict)
         return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data=apikey_form.errors)
 
-    def _handle_multipart_form(self, request, token_key):
+    def _handle_multipart_form(self, request, key_id):
 
         try:
-            apikey = APIKey.objects.get(token_key=token_key)
+            apikey = APIKey.objects.get(key_id=key_id)
         except APIKey.DoesNotExist:
             return self._handle_create(request)
 
         if not apikey.has_permissions(user=request.user):
-            return http.HttpResponseForbidden({"error": "You are not allowed to view this api key"})
+            return http.JsonResponse(
+                status=HTTPStatus.FORBIDDEN, data={"error": "You are not allowed to view this api key"}
+            )
 
         apikey_form = APIKeyForm(request.POST, instance=apikey)
         if apikey_form.is_valid():
             apikey_form.save()
-            return http.JsonResponse(status=HTTPStatus.OK, data={})
+            return http.JsonResponse(status=HTTPStatus.OK, data=apikey_form.data)
         return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data=apikey_form.errors)
 
-    def _handle_json(self, request, token_key):
+    def _handle_json(self, request, key_id):
         try:
-            api_key = APIKey.objects.get(token_key=token_key)
+            api_key = APIKey.objects.get(key_id=key_id)
         except APIKey.DoesNotExist:
             return http.JsonResponse(status=HTTPStatus.NOT_FOUND, data={"error": "API Key not found"})
 
@@ -91,24 +99,26 @@ class APIKeyView(SmarterAdminWebView):
         if event_func is None:
             return http.JsonResponse({"error": "Unrecognized action"}, status=400)
         event_func()
+
         return http.JsonResponse(status=HTTPStatus.OK, data={})
 
-    def _handle_write_request(self, request, token_key):
+    def _handle_write_request(self, request, key_id):
         if request.content_type == "multipart/form-data":
-            return self._handle_multipart_form(request, token_key)
+            return self._handle_multipart_form(request, key_id)
         if request.content_type == "application/json":
-            return self._handle_json(request, token_key)
+            return self._handle_json(request, key_id)
         return http.JsonResponse({"error": "Invalid content type"}, status=400)
 
     # pylint: disable=W0221
-    def get(self, request, token_key):
+    def get(self, request, key_id):
         """Get the api key. We also use this to create a new api key."""
-
         try:
-            apikey = APIKey.objects.get(token_key=token_key)
+            apikey = APIKey.objects.get(key_id=key_id)
             apikey_form = APIKeyForm(instance=apikey)
             if not apikey.has_permissions(user=request.user):
-                return http.HttpResponseForbidden({"error": "You are not allowed to view this api key"})
+                return http.JsonResponse(
+                    status=HTTPStatus.FORBIDDEN, data={"error": "You are not allowed to view this api key"}
+                )
         except APIKey.DoesNotExist:
             apikey = None
             apikey_form = APIKeyForm()
@@ -121,24 +131,24 @@ class APIKeyView(SmarterAdminWebView):
         }
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
-    def post(self, request, token_key=None):
-        if token_key is None:
+    def post(self, request, key_id=None):
+        if key_id is None:
             return self._handle_create(request)
-        return self._handle_write_request(request, token_key)
+        return self._handle_write_request(request, key_id)
 
-    def patch(self, request, token_key=None):
-        if token_key is None:
+    def patch(self, request, key_id=None):
+        if key_id is None:
             return self._handle_create(request)
-        return self._handle_write_request(request, token_key)
+        return self._handle_write_request(request, key_id)
 
-    def put(self, request, token_key=None):
-        if token_key is None:
+    def put(self, request, key_id=None):
+        if key_id is None:
             return self._handle_create(request)
-        return self._handle_write_request(request, token_key)
+        return self._handle_write_request(request, key_id)
 
-    def delete(self, request, token_key):
+    def delete(self, request, key_id):
         try:
-            apikey = APIKey.objects.get(token_key=token_key)
+            apikey = APIKey.objects.get(key_id=key_id)
         except APIKey.DoesNotExist:
             return http.JsonResponse(status=HTTPStatus.NOT_FOUND, data={"error": "API Key not found"})
         if not apikey.has_permissions(user=request.user):
