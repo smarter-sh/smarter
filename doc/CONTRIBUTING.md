@@ -84,9 +84,7 @@ A typical pull request will look like the following:
 
 ## Python Setup
 
-This project includes four distinct Python project, all located in api/terraform/python. They are located here because each of these projects is deployed to AWS Lambda, which in turn is being actively managed by Terraform.
-
-Note that this project leverages Dependabot for managing version numbers of all Python packages that are used in this project, regardless of where and how. Versions should always be up to date at the moment that you clone the repo. It therefore should never be necessary for you to manually bump PyPi package version numbers.
+Smarter is built on the [Django](https://www.djangoproject.com/) web development framework for Python. Moreover, the API is implemented with [Django REST Framework](https://www.django-rest-framework.org/). Smarter strictly follows generally accepted best practices and coding conventions for both of these. Thus, to work effectively on this project you'll need familiarity with both of these third party code libraries. Also note that this project leverages [Dependabot](https://github.com/dependabot) and [Mergify](https://mergify.com/) for managing version numbers of all Python packages that are used in this project. Versions should always be up to date at the moment that you clone the repo. It therefore should never be necessary for you to manually bump PyPi package version numbers inside the Python requirements files for each environment.
 
 ```console
 git pull
