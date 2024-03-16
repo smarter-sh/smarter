@@ -84,7 +84,12 @@ A typical pull request will look like the following:
 
 ## Python Setup
 
-Smarter is built on the [Django](https://www.djangoproject.com/) web development framework for Python. Moreover, the API is implemented with [Django REST Framework](https://www.django-rest-framework.org/). Smarter strictly follows generally accepted best practices and coding conventions for both of these. Thus, to work effectively on this project you'll need familiarity with both of these third party code libraries. Also note that this project leverages [Dependabot](https://github.com/dependabot) and [Mergify](https://mergify.com/) for managing version numbers of all Python packages that are used in this project. These two services monitor all of the Python, NPM and Terraform dependencies for the project, automatically bumping package versions as well as running unit-tests in order to guard the main branch against breaking changes. Versions should therefore always be up to date at the moment that you clone the repo. It therefore should never be necessary for you to manually bump PyPi package version numbers inside the Python requirements files for each environment.
+Smarter is built on the [Django](https://www.djangoproject.com/) web development framework for Python. Moreover, the API is implemented with [Django REST Framework](https://www.django-rest-framework.org/). Smarter strictly follows generally accepted best practices and coding conventions for both of these. Thus, to work effectively on this project you'll need familiarity with both of these third party code libraries. Also note that this project leverages [Dependabot](https://github.com/dependabot) and [Mergify](https://mergify.com/) for managing version numbers of all Python dependencies that are used in this project. These two services monitor all of the Python (and NPM and Terraform) dependencies for the project, automatically bumping package versions as well as running unit-tests in order to guard the main branch against breaking changes. Versions should therefore always be up to date at the moment that you clone the repo, and it should not be necessary for you to manually bump PyPi package version numbers inside the Python requirements files.
+
+- Python requirements: [smarter/requirements](../smarter/requirements/).
+- Django settings: [smarter/smarter/settings](../smarter/smarter/settings/)
+- Dependabot configuration: [.github/dependabot.yml](../.github/dependabot.yml)
+- Mergify configuration: [.mergify.yaml](../.mergify.yaml)
 
 ```console
 git pull
