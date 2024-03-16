@@ -3,16 +3,11 @@
 [![OpenAI](https://a11ybadges.com/badge?logo=openai)](https://platform.openai.com/)
 [![LangChain](https://a11ybadges.com/badge?text=LangChain&badgeColor=0834ac)](https://www.langchain.com/)
 [![Amazon AWS](https://a11ybadges.com/badge?logo=amazonaws)](https://aws.amazon.com/)
+[![Bootstrap](https://a11ybadges.com/badge?logo=bootstrap)](https://getbootstrap.com/)
 [![ReactJS](https://a11ybadges.com/badge?logo=react)](https://react.dev/)
 [![Python](https://a11ybadges.com/badge?logo=python)](https://www.python.org/)
 [![Django](https://a11ybadges.com/badge?logo=django)](https://www.djangoproject.com/)
-[![Terraform](https://a11ybadges.com/badge?logo=terraform)](https://www.terraform.io/)<br>
-![Unit Tests](https://github.com/QueriumCorp/smarter/actions/workflows/testsPython.yml/badge.svg?branch=main)
-![GHA pushMain Status](https://img.shields.io/github/actions/workflow/status/QueriumCorp/smarter/pushMain.yml?branch=main)
-![Auto Assign](https://github.com/QueriumCorp/smarter/actions/workflows/auto-assign.yml/badge.svg)
-[![Release Notes](https://img.shields.io/github/release/QueriumCorp/smarter)](https://github.com/QueriumCorp/smarter/releases)
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![hack.d Lawrence McDaniel](https://img.shields.io/badge/hack.d-Lawrence%20McDaniel-orange.svg)](https://lawrencemcdaniel.com)
+[![Terraform](https://a11ybadges.com/badge?logo=terraform)](https://www.terraform.io/)
 
 You should be able to work unencumbered in any of Linux, macOS or Windows. This repository contains four distinct projects, respectively, written in:
 
