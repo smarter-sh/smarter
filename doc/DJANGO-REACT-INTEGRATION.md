@@ -255,11 +255,34 @@ Web-based session authentication managed by Django, which is nice as it's one le
 ```javascript
 const csrftoken = getCookie("csrftoken");
 const headers = {
-  Accept: "*/*",
-  "Content-Type": "application/json",
   "X-CSRFToken": csrftoken, // <---- add this to all request headers
-  Origin: window.location.origin,
 };
+```
+
+So, for example, suppose that you have a Django template that includes a form. The server-side and client-side code, respectively, would look like the following:
+
+Django template:
+
+```django
+<form>
+  {% csrf_token %}
+  <input type="text" placeholder="Type something..." name="my_input" />
+  <button>Submit</button>
+</form>
+```
+
+JS event handler:
+
+```javascript
+  const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  fetch('/', {
+    method: 'POST',
+    headers: {
+      // other headers ...
+      'X-CSRFToken': csrftoken
+    },
+    body: new FormData(form);
+  })
 ```
 
 ## Mixed Content Errors

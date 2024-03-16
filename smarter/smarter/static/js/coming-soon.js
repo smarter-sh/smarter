@@ -1,0 +1,202 @@
+"use strict";
+
+// Lawrence McDaniel -- https://lawrencemcdaniel.com
+// Mar-2024
+function emailAdded(nextPage) {
+  Swal.fire({
+    text: "",
+    icon: "success",
+    buttonsStyling: false,
+    confirmButtonText: "Added",
+    customClass: {
+        confirmButton: "btn btn-primary"
+    }
+  }).then(function (result) {
+    document.documentElement.innerHTML = nextPage;
+  });
+}
+
+// Class Definition
+var KTSignupComingSoon = function() {
+    // Elements
+    var form;
+    var submitButton;
+	var validator;
+
+    var counterDays;
+    var counterHours;
+    var counterMinutes;
+    var counterSeconds;
+
+    var handleForm = function(e) {
+        var validation;
+
+        if( !form ) {
+            return;
+        }
+
+        // Init form validation rules. For more info check the FormValidation plugin's official documentation:https://formvalidation.io/
+        validator = FormValidation.formValidation(
+			form,
+			{
+				fields: {
+					'email': {
+                        validators: {
+                            regexp: {
+                                regexp: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                                message: 'The value is not a valid email address',
+                            },
+							notEmpty: {
+								message: 'Email address is required'
+							}
+						}
+					}
+				},
+				plugins: {
+					trigger: new FormValidation.plugins.Trigger(),
+					bootstrap: new FormValidation.plugins.Bootstrap5({
+                        rowSelector: '.fv-row',
+                        eleInvalidClass: '',
+                        eleValidClass: ''
+                    })
+				}
+			}
+		);
+
+        submitButton.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            // Validate form
+            validator.validate().then(function (status) {
+                if (status == 'Valid') {
+                    // Show loading indication
+                    submitButton.setAttribute('data-kt-indicator', 'on');
+
+                    // Disable button to avoid multiple click
+                    submitButton.disabled = true;
+
+                    var formData = new FormData(form);
+
+                    setTimeout(function() {
+                        // Hide loading indication
+                        submitButton.removeAttribute('data-kt-indicator');
+
+                        // Enable button
+                        submitButton.disabled = false;
+
+                        // custom Smarter handler.
+                        const csrftoken = getSmarterCsrfToken();
+                        fetch('/', {
+                          method: 'POST',
+                          headers: {
+                            'X-CSRFToken': csrftoken
+                          },
+                          body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.redirect) {
+                              const context = data.context;
+                              fetch(data.redirect, {
+                                method: 'POST',
+                                headers: {
+                                  'X-CSRFToken': csrftoken,
+                                  'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(context)
+                            })
+                            .then(response => response.text())
+                            .then(data => {
+                              if (context.email_added.created) {
+                                emailAdded(data);
+                            } else {
+                              document.documentElement.innerHTML = data;
+                              }
+                            })
+                            .catch((error) => console.error('Error:', error));
+
+                            } else {
+                              // Show error message inside of existing form element
+                              // validator object, above.
+                              var errorMessage = JSON.parse(data.error);
+                              document.querySelector('div[data-field="email"][data-validator="regexp"]').innerText = errorMessage;
+                            }
+                        })
+                        .catch((error) => {
+                          console.error('Error:', error);
+                        });
+
+                    }, 750);
+                } else {
+                    // Show error popup. For more info check the plugin's official documentation: https://sweetalert2.github.io/
+                    Swal.fire({
+                        text: "Sorry, looks like there are some errors detected, please try again.",
+                        icon: "error",
+                        buttonsStyling: false,
+                        confirmButtonText: "Ok, got it!",
+                        customClass: {
+                            confirmButton: "btn btn-primary"
+                        }
+                    });
+                }
+            });
+		});
+    }
+
+    var initCounter = function() {
+        // Set the date we're counting down to
+        var currentTime = new Date();
+        var countDownDate = new Date(currentTime.getTime() + 1000 * 60 * 60 * 24 * 15 + 1000 * 60 * 60 * 10 + 1000 * 60 * 15).getTime();
+
+        var count = function() {
+            // Get todays date and time
+            var now = new Date().getTime();
+
+            // Find the distance between now an the count down date
+            var distance = countDownDate - now;
+
+            // Time calculations for days, hours, minutes and seconds
+            var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            // Display the result
+            if(counterDays) counterDays.innerHTML = days;
+            if(counterHours) counterHours.innerHTML = hours;
+            if(counterMinutes) counterMinutes.innerHTML = minutes;
+            if(counterSeconds) counterSeconds.innerHTML = seconds;
+        };
+
+        // Update the count down every 1 second
+        var x = setInterval(count, 1000);
+
+        // Initial count
+        count();
+    }
+
+    // Public Functions
+    return {
+        // public functions
+        init: function() {
+            form = document.querySelector('#kt_coming_soon_form');
+            submitButton = document.querySelector('#kt_coming_soon_submit');
+
+            handleForm();
+
+            counterDays = document.querySelector('#kt_coming_soon_counter_days');
+            if (counterDays) {
+                counterHours = document.querySelector('#kt_coming_soon_counter_hours');
+                counterMinutes = document.querySelector('#kt_coming_soon_counter_minutes');
+                counterSeconds = document.querySelector('#kt_coming_soon_counter_seconds');
+
+                initCounter();
+            }
+        }
+    };
+}();
+
+// On document ready
+KTUtil.onDOMContentLoaded(function() {
+    KTSignupComingSoon.init();
+});

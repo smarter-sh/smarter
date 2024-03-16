@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load static %}
+
+      {% block root %}
+			<!--begin::Page bg image-->
+			<style>body { background-image: url("{% static 'assets/media/auth/bg12.jpg' %}"); } [data-bs-theme="dark"] body { background-image: url("{% static 'assets/media/auth/bg12-dark.jpg' %}"); }</style>
+			<!--end::Page bg image-->
+			<!--begin::Authentication - Signup Welcome Message -->
+			<div class="d-flex flex-column flex-center flex-column-fluid">
+				<!--begin::Content-->
+				<div class="d-flex flex-column flex-center text-center p-10">
+					<!--begin::Wrapper-->
+					<div class="card card-flush w-lg-650px py-5">
+						<div class="card-body py-15 py-lg-20">
+							<!--begin::Logo-->
+							<div class="mb-13">
+								<a href="/" class="">
+									<img alt="Logo" src="{% static 'querium/querium-logo-orange-transparent.png' %}" class="h-200px" />
+								</a>
+							</div>
+							<!--end::Logo-->
+							<!--begin::Title-->
+							<h1 class="fw-bolder text-gray-900 mb-7">Smarter Is Launching Soon</h1>
+							<!--end::Title-->
+							<!--begin::Counter-->
+							<!--(uncomment to display coming soon counter)
+              <div class="d-flex flex-center pb-10 pt-lg-5 pb-lg-12">
+                  <div class="w-65px rounded-3 bg-body shadow-sm py-4 px-5 mx-3">
+                      <div class="fs-2 fw-bold text-gray-800" id="kt_coming_soon_counter_days"></div>
+                      <div class="fs-7 fw-semibold text-muted">days</div>
+                  </div>
+
+                  <div class="w-65px rounded-3 bg-body shadow-sm py-4 px-5 mx-3">
+                      <div class="fs-2 fw-bold text-gray-800" id="kt_coming_soon_counter_hours"></div>
+                      <div class="fs-7 text-muted">hrs</div>
+                  </div>
+
+                  <div class="w-65px rounded-3 bg-body shadow-sm py-4 px-5 mx-3">
+                      <div class="fs-2 fw-bold text-gray-800" id="kt_coming_soon_counter_minutes"></div>
+                      <div class="fs-7 text-muted">min</div>
+                  </div>
+
+                  <div class="w-65px rounded-3 bg-body shadow-sm py-4 px-5 mx-3">
+                      <div class="fs-2 fw-bold text-gray-800" id="kt_coming_soon_counter_seconds"></div>
+                      <div class="fs-7 text-muted">sec</div>
+                  </div>
+              </div>
+              -->
+							<!--end::Counter-->
+							<!--begin::Text-->
+              <div class="fw-semibold fs-6 text-gray-500 mb-7">
+                An enterprise class plugin-based AI chat solution
+              </div>
+							<!--end::Text-->
+							<!--begin::Form-->
+							<form class="w-md-350px mb-2 mx-auto "
+                    action="/"
+                    id="kt_coming_soon_form"
+                    method="post"
+                    data-kt-redirect-url="/email-added/"
+                    >
+                {% csrf_token %}
+								<div class="fv-row text-start">
+									<div class="d-flex flex-column flex-md-row justify-content-center gap-3">
+										<!--end::Input=-->
+										<input type="text" placeholder="Email" name="email" autocomplete="off" class="form-control" />
+										<!--end::Input=-->
+										<!--begin::Submit-->
+										<button class="btn btn-primary text-nowrap" id="kt_coming_soon_submit">
+											<!--begin::Indicator label-->
+											<span class="indicator-label">Notify Me</span>
+											<!--end::Indicator label-->
+											<!--begin::Indicator progress-->
+											<span class="indicator-progress">Please wait...
+											<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+											<!--end::Indicator progress-->
+										</button>
+										<!--end::Submit-->
+									</div>
+								</div>
+							</form>
+							<!--end::Form-->
+							<!--begin::Illustration-->
+							<div class="mb-n5">
+								<img src="assets/media/auth/coming-soon.png" class="mw-100 mh-300px theme-light-show" alt="" />
+								<img src="assets/media/auth/coming-soon-dark.png" class="mw-100 mh-300px theme-dark-show" alt="" />
+							</div>
+							<!--end::Illustration-->
+						</div>
+					</div>
+					<!--end::Wrapper-->
+				</div>
+				<!--end::Content-->
+			</div>
+			<!--end::Authentication - Signup Welcome Message-->
+      {% endblock %}
+
+  {% block javascript_extra %}
+		<script src="{% static 'js/coming-soon.js' %}"></script>
+  {% endblock %}

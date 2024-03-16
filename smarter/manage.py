@@ -8,15 +8,14 @@ import sys
 from dotenv import load_dotenv
 
 
-load_dotenv()
-
-
 def main():
     """Run administrative tasks."""
+    load_dotenv()
+
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smarter.settings.local")
     environment = os.getenv("ENVIRONMENT")
-    if environment == "prod":
-        os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings.production"
+    os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings." + environment
+
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

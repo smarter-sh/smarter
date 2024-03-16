@@ -6,7 +6,7 @@
 import os
 import unittest
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.test import Client
 
 # our stuff
@@ -15,8 +15,11 @@ from smarter.apps.plugin.plugin import Plugins
 from smarter.apps.plugin.utils import add_example_plugins
 
 
+User = get_user_model()
+
+
 class TestUrls(unittest.TestCase):
-    """Test OpenAI Function Calling hook for refers_to."""
+    """Test Account API end points."""
 
     user: User
 
@@ -29,7 +32,10 @@ class TestUrls(unittest.TestCase):
         self.account = Account.objects.create(
             company_name="Test Company",
             phone_number="1234567890",
-            address="123 Test St",
+            address1="123 Test St",
+            address2="Apt 1",
+            city="Test City",
+            state="TX",
         )
         self.user_profile = UserProfile.objects.create(
             user=self.user,

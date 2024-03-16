@@ -3,11 +3,13 @@
 import secrets
 import string
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
-from knox.models import AuthToken
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account, APIKey, UserProfile
+
+
+User = get_user_model()
 
 
 # pylint: disable=E1101
@@ -45,7 +47,13 @@ class Command(BaseCommand):
 
         if username and email:
             if not User.objects.filter(username=username).exists():
-                user = User.objects.create_superuser(username=username, email=email)
+                user = User.objects.create_user(username=username, email=email)
+                if username == "admin":
+                    user.is_superuser = True
+                else:
+                    user.is_superuser = False
+                user.is_staff = True
+                user.is_active = True
                 user.set_password(password)
                 user.save()
                 self.stdout.write(self.style.SUCCESS(f"Creating admin account: {username} {email}"))
@@ -59,6 +67,6 @@ class Command(BaseCommand):
         UserProfile.objects.get_or_create(user=User.objects.get(username=username), account=account)
 
         # ensure that the admin user has at least one auth token (api key)
-        if AuthToken.objects.filter(user=user).count() == 0:
-            _, token_key = AuthToken.objects.create(user=user)
+        if APIKey.objects.filter(user=user).count() == 0:
+            _, token_key = APIKey.objects.create(user=user, description="created by manage.py", expiry=None)
             self.stdout.write(self.style.SUCCESS(f"created API key: {token_key}"))

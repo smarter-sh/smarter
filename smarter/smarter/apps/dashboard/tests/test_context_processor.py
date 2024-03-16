@@ -9,7 +9,7 @@ import random
 # python stuff
 import unittest
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.test import RequestFactory
 
 # our stuff
@@ -17,8 +17,11 @@ from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.dashboard.context_processors import base, react
 
 
+User = get_user_model()
+
+
 class TestContextProcessor(unittest.TestCase):
-    """Test OpenAI Function Calling hook for refers_to."""
+    """Test Dashboard context processor."""
 
     def setUp(self):
         """Set up test fixtures."""

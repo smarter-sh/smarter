@@ -25,7 +25,7 @@ from smarter.apps.chat.functions.function_weather import (
 
 
 class TestLambdaOpenaiFunctionWeather(unittest.TestCase):
-    """Test OpenAI Function Calling hook for refers_to."""
+    """Test OpenAI Function Weather."""
 
     def setUp(self):
         """Set up test fixtures."""

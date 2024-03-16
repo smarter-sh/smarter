@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 """This module is used to create a new plugin using manage.py"""
 import yaml
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.plugin import Plugin
+
+
+User = get_user_model()
 
 
 # pylint: disable=E1101

@@ -6,15 +6,18 @@
 import os
 import unittest
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.test import Client
 
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
 
 
+User = get_user_model()
+
+
 class TestUrls(unittest.TestCase):
-    """Test OpenAI Function Calling hook for refers_to."""
+    """Test Account views."""
 
     user: User
 
@@ -28,7 +31,11 @@ class TestUrls(unittest.TestCase):
         self.account = Account.objects.create(
             company_name="Test Company",
             phone_number="1234567890",
-            address="123 Test St",
+            address1="123 Test St",
+            address2="Apt 1",
+            city="Test City",
+            state="TX",
+            postal_code="12345",
         )
         self.user_profile = UserProfile.objects.create(
             user=self.user,
@@ -52,11 +59,8 @@ class TestUrls(unittest.TestCase):
         verify_response("/login/", 200)
         verify_response("/logout/", 302)
         verify_response("/register/", 200)
-        verify_response("/account/reset-password/", 200)
-        verify_response("/account/new-password/", 200)
-        verify_response("/account/confirm-password/", 200)
+        verify_response("/account/password-reset-request/", 200)
+        verify_response("/account/password-confirm/", 200)
 
         self.client.force_login(self.user)
-        verify_response("/welcome/", 200)
         verify_response("/account/deactivate/", 200)
-        verify_response("/account/verify-email/", 200)
