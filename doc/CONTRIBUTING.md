@@ -11,7 +11,7 @@ In each case there are various technology-specific resources that you'll need to
 
 ## Quick Start
 
-Smarter follows highly opinionated policies for most of the technologies in this repo. With that in mind, following is how to correctly setup your local development environment.
+Smarter follows opinionated code style policies for most of the technologies in this repo. With that in mind, following is how to correctly setup your local development environment.
 
 ```console
 git clone https://github.com/QueriumCorp/smarter.git
@@ -31,8 +31,7 @@ make build      # deploy AWS cloud infrastructure, build ReactJS web app
 make run        # run the web app locally in your dev environment
 ```
 
-To preserve your own sanity, don't spend time formatting your Python and JS source code, because pre-commit calls
-black and prettier on each local commit, and these will reformat the code in your commit based on several policy
+To preserve your own sanity, don't spend time formatting your Python and JS source code, because pre-commit invokes black and prettier on all local commits, and these will reformat the code in your commit based on several policy
 configurations found in the root of this repo.
 
 ## Repository Setup
@@ -71,10 +70,12 @@ The Terraform code in this repo generates several sets of sensitive data that ar
 
 ### GitHub Actions
 
-As a 1-person operation this project depends heavily on GitHub Actions to automate routine activities, so that hopefully, the source code is always well-documented and easy to read, and everything works perfectly. We automate the following in this project:
+This project depends heavily on GitHub Actions to automate routine activities, so that hopefully, the source code is always well-documented and easy to read, and everything works perfectly. We automate the following in this project:
 
-- Code linting checks, during both pre-commit as well as triggered on pushes to the main branch
+- Code style and linting checks, during both pre-commit as well as triggered on pushes to the main branch
 - Unit tests for Python, React and Terraform
+- Docker builds
+- Environment-specific deployments to Kubernetes
 - Semantic Version releases
 - version bumps from npm, PyPi and Terraform Registry
 
@@ -135,3 +136,5 @@ make keen-init      # locally installs npm, yarn and gulp requirements
 make keen-build     # compile Sass and javascript into css and js bundles
 make keen-server    # locally run the demo site
 ```
+
+- [SASS variables](./keen_v3.0.6/demo1/src/sass/layout/_variables.custom.scss)
