@@ -44,7 +44,7 @@ Smarter uses a **LOT** of configuration data. You'll find a pre-formatted quick-
 
 This project uses pre-commit as a first-pass automated code review / QC process. pre-commit runs a multitude of utilities and checks for code formatting, linting, syntax checking, and ensuring that you don't accidentally push something to GitHub which you'd later regret. Broadly speaking, these checks are aimed at minimizing the extent of commits that contain various kinds of defects and stylistic imperfections that don't belong on the main branch of the project.
 
-Note that many of the pre-commit commands are actually executed by Python which in turn is calling pip-installed packages listed in smarter/requirements/local.txt located in the root of the repo. It therefore is important that you first create the Python virtual environment using `make api-init`. It also is a good idea to do a complete 'dry run' of pre-commit, to ensure that your developer environment is correctly setup:
+Note that many of the pre-commit commands are actually executed by Python which in turn is calling pip-installed packages listed in smarter/requirements/local.txt located in the root of the repo. It therefore is important that you first create the Python virtual environment using `make pre-commit`. It also is a good idea to do a complete 'dry run' of pre-commit, to ensure that your developer environment is correctly setup:
 
 ```console
 make pre-commit
@@ -89,7 +89,8 @@ Note that this project leverages Dependabot for managing version numbers of all 
 
 ```console
 git pull
-make api-init
+make django-init
+make python-lint
 source venv/bin/activate
 ```
 
@@ -101,7 +102,7 @@ Note that this project leverages Dependabot for managing version numbers of all 
 
 ```console
 git pull
-make client-init
+make react-init
 ```
 
 ## Terraform Setup
@@ -116,4 +117,20 @@ cd api/terraform
 terraform init
 terraform plan
 terraform apply
+```
+
+## Keen Bootstrap Theme Setup
+
+The Smarter dashboard UX is created with this [Bootstrap-based theme package](https://themes.getbootstrap.com/product/keen-the-ultimate-bootstrap-admin-theme/) authored and maintained by [KeenThemes](https://keenthemes.com/).
+
+The complete, unmodified original set of resource files are located in this [keen_v3.0.6](../keen_v3.0.6/) folder in this repo.
+
+These assets have been fully integrated into Django's templating system, which means that the html has been normalized, and that other static assets like fonts, svg, css, js and images are served from this [static](../smarter/smarter/static/) folder.
+
+Note the following helper commands:
+
+```console
+make keen-init      # locally installs npm, yarn and gulp requirements
+make keen-build     # compile Sass and javascript into css and js bundles
+make keen-server    # locally run the demo site
 ```
