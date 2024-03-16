@@ -102,6 +102,7 @@ python-init:
 	make django-init
 
 python-lint:
+	make pre-commit
 	terraform fmt -recursive
 	pre-commit run --all-files
 	black ./smarter/
