@@ -120,8 +120,7 @@ class APIKeyView(SmarterAdminWebView):
                     status=HTTPStatus.FORBIDDEN, data={"error": "You are not allowed to view this api key"}
                 )
         except APIKey.DoesNotExist:
-            apikey = None
-            apikey_form = APIKeyForm()
+            return http.HttpResponseNotFound({"error": "API Key not found"})
 
         context = {
             "account_apikeys": {
@@ -132,6 +131,7 @@ class APIKeyView(SmarterAdminWebView):
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
     def post(self, request, key_id=None):
+        print("APIKeyView.post")
         if key_id is None:
             return self._handle_create(request)
         return self._handle_write_request(request, key_id)
