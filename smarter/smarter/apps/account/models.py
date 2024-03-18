@@ -130,7 +130,6 @@ class APIKeyManager(AuthTokenManager):
     """API Key manager."""
 
     def create(self, user, expiry=None, description: str = None, is_active: bool = False, **kwargs):
-        print(f"APIKeyManager.create: {user}, {expiry}, {description}, {is_active}, {kwargs}")
         api_key, token = super().create(user, expiry=expiry, **kwargs)
         api_key.description = description
         api_key.is_active = is_active
