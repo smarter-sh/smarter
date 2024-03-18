@@ -10,7 +10,7 @@ from django.db import transaction
 from django.shortcuts import redirect
 
 from smarter.apps.account.models import UserProfile
-from smarter.view_helpers import SmarterAdminWebView
+from smarter.apps.common.view_helpers import SmarterAdminWebView
 
 
 User = get_user_model()

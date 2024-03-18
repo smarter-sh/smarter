@@ -18,7 +18,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.views import APIView
 
-from smarter.decorators import staff_required
+from smarter.apps.common.decorators import staff_required
 
 
 register = template.Library()

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Django views"""
-from smarter.view_helpers import SmarterAuthenticatedWebView
+from smarter.apps.common.view_helpers import SmarterAuthenticatedWebView
 
 
 # ------------------------------------------------------------------------------

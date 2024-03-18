@@ -11,7 +11,7 @@ from django.contrib.auth import get_user_model
 from django.test import RequestFactory
 
 # our stuff
-from smarter.token_generators import ExpiringTokenGenerator
+from smarter.apps.common.token_generators import ExpiringTokenGenerator
 
 
 User = get_user_model()
