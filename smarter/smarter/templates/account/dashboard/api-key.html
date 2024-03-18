@@ -77,7 +77,7 @@
           </div>
           <!--end::Input group is_active -->
 
-          <!--begin::Input group new_api_key -->
+          <!--begin::Input group api_key -->
           <div class="row mb-6">
             <!--begin::Label-->
             <label class="col-lg-4 col-form-label fw-semibold fs-6">
@@ -95,18 +95,20 @@
             <div class="col-lg-8 fv-row" style="display: flex;">
               <input
                 readonly
-                id="input_new_api_key"
+                id="input_api_key"
                 type="text"
-                name="new_api_key"
+                name="api_key"
                 class="form-control form-control-lg form-control-solid text-muted"
-                value="{{ account_apikeys.new_api_key }}" />
+                value="{{ account_apikeys.token_key }}" />
+              {% if account_apikeys.is_new %}
               <button id="button_api_key_copy" data-action="copy" class="btn btn-active-color-primary btn-color-gray-400 btn-icon btn-lg btn-outline-light">
                 <i class="ki-duotone ki-copy fs-2"></i>
               </button>
+              {% endif %}
             </div>
           <!--end::Col-->
           </div>
-          <!--end::Input group new_api_key -->
+          <!--end::Input group api_key -->
         </div>
         <!--end::Card body-->
         <!--begin::Actions-->

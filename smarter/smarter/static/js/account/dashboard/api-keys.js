@@ -11,7 +11,7 @@ var KTAccountAPIKeys = function () {
     var buttonsApiKeyDelete;
     var primaryKey;
 
-    function handleDelete(action, button) {
+    function handleDelete(button) {
 
       button.attr("data-kt-indicator", "on");
       button.prop("disabled", true);
@@ -26,11 +26,10 @@ var KTAccountAPIKeys = function () {
         }
       }
 
-      let jsonBody = {
-      }
+      console.log('context', context);
 
       axios
-      .delete(url, jsonBody, context)
+      .delete(url, context)
       .then(function (response) {
         if (response) {
           console.log('response', response);
@@ -69,6 +68,8 @@ var KTAccountAPIKeys = function () {
           "X-CSRFToken": csrfToken,
         }
       }
+
+      console.log('context', context);
 
       let jsonBody = {
         'action': action
@@ -178,7 +179,7 @@ var KTAccountAPIKeys = function () {
       buttonsApiKeyDelete.click(function() {
         var recordId = $(this).data('record-id');
         console.log('buttonsApiKeyDelete clicked', 'Record ID:', recordId);
-        handleDelete(buttonsApiKeyDelete);
+        handleDelete($(this));
       });
     }
 
