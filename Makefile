@@ -73,7 +73,7 @@ django-init:
 	if [ -f smarter/smarter/db.sqlite3 ]; then rm smarter/smarter/db.sqlite3; fi && \
 	cd smarter && python manage.py makemigrations && \
 	python manage.py migrate && \
-	python manage.py create_admin_user --username admin --email admin@smarter.sh --password smarter && \
+	python manage.py create_user --username admin --email admin@smarter.sh --password smarter --admin && \
 	python manage.py add_plugin_examples admin && \
 	python manage.py seed_chat_history
 

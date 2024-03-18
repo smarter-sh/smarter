@@ -22,7 +22,7 @@ class Command(BaseCommand):
         parser.add_argument("--email", type=str, help="The email address for the new superuser")
         parser.add_argument("--password", type=str, help="The password for the new superuser")
         parser.add_argument(
-            "--admin", type=bool, default=False, help="True if the new user is an admin, False otherwise."
+            "--admin", action="store_true", default=False, help="True if the new user is an admin, False otherwise."
         )
 
     def change_password(self, username, new_password):
