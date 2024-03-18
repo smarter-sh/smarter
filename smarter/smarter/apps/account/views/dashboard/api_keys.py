@@ -110,7 +110,6 @@ class APIKeyView(SmarterAdminWebView):
                 api_key.description = apikey_form.cleaned_data["description"]
                 api_key.is_active = apikey_form.cleaned_data["is_active"]
                 api_key.save()
-                return http.JsonResponse(status=HTTPStatus.OK, data=apikey_form.data)
 
         return http.JsonResponse(status=HTTPStatus.OK, data={})
 

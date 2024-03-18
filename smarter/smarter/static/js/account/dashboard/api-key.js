@@ -155,6 +155,7 @@ var KTAccountAPIKey = (function () {
             formData.forEach((value, key) => object[key] = value);
             let json_body = JSON.stringify(object);
 
+            console.log(json_body);
 
             // Log the entries in the FormData object
             for (let pair of formData.entries()) {
@@ -179,7 +180,7 @@ var KTAccountAPIKey = (function () {
               })
               .catch(function (error) {
                 Swal.fire({
-                  text: JSON.stringify(error.response.data),
+                  text: error.response ? JSON.stringify(error.response.data) : 'An error occurred',
                   icon: "error",
                   buttonsStyling: false,
                   confirmButtonText: "Dismiss",
