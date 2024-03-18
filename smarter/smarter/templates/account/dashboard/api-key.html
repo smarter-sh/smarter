@@ -57,6 +57,26 @@
           </div>
           <!--end::Input group Description -->
 
+          <!--begin::Input group is_active -->
+          <div class="row mb-6">
+            <!--begin::Label-->
+            <label class="col-lg-4 col-form-label fw-semibold fs-6" style="text-transform: capitalize;">{{ account_apikeys.apikey_form.is_active.name }}</label>
+            <!--end::Label-->
+            <!--begin::Col-->
+            <div class="col-lg-2 fv-row">
+              <select
+                  id="input_{{ account_apikeys.apikey_form.is_active.name }}"
+                  name="{{ account_apikeys.apikey_form.is_active.name }}"
+                  class="form-select form-select-solid form-select-lg fw-semibold fs-6 text-gray-700"
+              >
+                  <option value="True" {% if account_apikeys.apikey_form.is_active.value != None and account_apikeys.apikey_form.is_active.value == True %}selected{% endif %}>True</option>
+                  <option value="False" {% if account_apikeys.apikey_form.is_active.value != None and account_apikeys.apikey_form.is_active.value == False %}selected{% endif %}>False</option>
+              </select>
+            </div>
+            <!--end::Col-->
+          </div>
+          <!--end::Input group is_active -->
+
           <!--begin::Input group new_api_key -->
           <div class="row mb-6">
             <!--begin::Label-->
