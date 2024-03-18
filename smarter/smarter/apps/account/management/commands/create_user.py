@@ -54,12 +54,14 @@ class Command(BaseCommand):
                 user = User.objects.create_user(username=username, email=email)
                 if username == "admin":
                     user.is_superuser = True
-                else:
-                    user.is_superuser = False
-                if is_admin:
                     user.is_staff = True
                 else:
-                    user.is_staff = False
+                    if is_admin:
+                        user.is_superuser = False
+                        user.is_staff = True
+                    else:
+                        user.is_superuser = False
+                        user.is_staff = False
                 user.is_active = True
                 user.set_password(password)
                 user.save()
