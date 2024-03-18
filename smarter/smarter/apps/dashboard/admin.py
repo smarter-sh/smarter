@@ -29,7 +29,7 @@ class EmailContactListAdmin(RestrictedModelAdmin):
 class RestrictedAPIKeyAdmin(RestrictedModelAdmin):
 
     list_display = [
-        "created_at",
+        "created",
         "is_active",
         "last_used_at",
         "expiry",
@@ -37,8 +37,8 @@ class RestrictedAPIKeyAdmin(RestrictedModelAdmin):
         "description",
         "user",
     ]
-    readonly_fields = ("created_at", "updated_at", "token_key", "last_used_at", "digest", "user", "account")
-    ordering = ("-created_at",)
+    readonly_fields = ("created", "token_key", "last_used_at", "digest", "user", "account")
+    ordering = ("-created",)
 
 
 restricted_site = RestrictedAdminSite(name="restricted_admin_site")
