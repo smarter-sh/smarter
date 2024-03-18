@@ -49,7 +49,7 @@ CORS_ALLOWED_ORIGINS = [
 # prevent browser caching in dev.
 for template in TEMPLATES:
     if "OPTIONS" in template and "context_processors" in template["OPTIONS"]:
-        template["OPTIONS"]["context_processors"].append("smarter.context_processors.cache_buster")
+        template["OPTIONS"]["context_processors"].append("smarter.apps.common.context_processors.cache_buster")
 
 # https://dj-stripe.dev/dj-stripe/2.7/installation/
 STRIPE_LIVE_SECRET_KEY = os.environ.get("STRIPE_LIVE_SECRET_KEY", "<your secret key>")

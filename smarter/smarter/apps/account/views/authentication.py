@@ -8,15 +8,15 @@ from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.shortcuts import HttpResponse, redirect
 from django.urls import reverse
 
-from smarter.email_helpers import EmailHelper
-from smarter.token_generators import (
+from smarter.apps.common.email_helpers import EmailHelper
+from smarter.apps.common.token_generators import (
     ExpiringTokenGenerator,
     TokenConversionError,
     TokenExpiredError,
     TokenIntegrityError,
     TokenParseError,
 )
-from smarter.view_helpers import (
+from smarter.apps.common.view_helpers import (
     SmarterAuthenticatedWebView,
     SmarterWebView,
     redirect_and_expire_cache,

@@ -7,8 +7,8 @@ import logging
 from django import forms
 from django.http import JsonResponse
 
+from smarter.apps.common.view_helpers import SmarterAuthenticatedWebView, SmarterWebView
 from smarter.apps.dashboard.models import EmailContactList
-from smarter.view_helpers import SmarterAuthenticatedWebView, SmarterWebView
 
 
 logger = logging.getLogger(__name__)

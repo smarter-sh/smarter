@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 from django.forms.models import model_to_dict
 
 from smarter.apps.account.models import APIKey, UserProfile
-from smarter.view_helpers import SmarterAdminWebView
+from smarter.apps.common.view_helpers import SmarterAdminWebView
 
 
 User = get_user_model()

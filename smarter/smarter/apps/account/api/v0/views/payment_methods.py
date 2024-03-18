@@ -13,7 +13,7 @@ from rest_framework.response import Response
 
 from smarter.apps.account.api.v0.serializers import PaymentMethodSerializer
 from smarter.apps.account.models import Account, PaymentMethod, UserProfile
-from smarter.view_helpers import SmarterAPIListView, SmarterAPIView
+from smarter.apps.common.view_helpers import SmarterAPIListView, SmarterAPIView
 
 
 User = get_user_model()

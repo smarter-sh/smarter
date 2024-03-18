@@ -68,7 +68,7 @@ class ReactAppLoader(FilesystemLoader):
       "OPTIONS": {
           "loaders": [
               # our custom template loader goes here...
-              "smarter.template_loader.ReactAppLoader",
+              "smarter.apps.common.template_loader.ReactAppLoader",
               "django.template.loaders.filesystem.Loader",
           ],
           "context_processors": [
@@ -135,7 +135,7 @@ We created this second template engine that is customized for React.
       "APP_DIRS": False,
       "OPTIONS": {
           "loaders": [
-              "smarter.template_loader.ReactAppLoader",
+              "smarter.apps.common.template_loader.ReactAppLoader",
               "django.template.loaders.filesystem.Loader",
           ],
           "context_processors": [

@@ -36,9 +36,9 @@ from smarter.apps.common.validators import (  # validate_embedding_request,
     validate_completion_request,
     validate_item,
 )
+from smarter.apps.common.view_helpers import SmarterAPIView
 from smarter.apps.plugin.plugin import Plugin
 from smarter.apps.plugin.utils import plugins_for_user
-from smarter.view_helpers import SmarterAPIView
 
 
 User = get_user_model()
