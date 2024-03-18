@@ -148,7 +148,7 @@ var KTAccountAPIKey = (function () {
             saveButton.prop("disabled", true);
             const csrftoken = getSmarterCsrfToken();
             const formData = new FormData(form);
-            formData.delete('new_api_key');
+            formData.delete('api_key');
 
             // convert to json
             let object = {};
@@ -208,7 +208,7 @@ var KTAccountAPIKey = (function () {
       cancelButton = $(form).find('#kt_apikey_form_cancel_btn');
 
       buttonApiKeyCopy = $(form).find('#button_api_key_copy');
-      inputApiKey = $(form).find('#input_new_api_key');
+      inputApiKey = $(form).find('#input_api_key');
 
       initValidation();
       initAPIKeyCopy();

@@ -146,7 +146,8 @@ class APIKeyView(SmarterAdminWebView):
         context = {
             "account_apikeys": {
                 "api_key": apikey,
-                "new_api_key": new_api_key,
+                "token_key": new_api_key or "****" + apikey.token_key,
+                "is_new": new_api_key is not None,
                 "apikey_form": apikey_form,
             }
         }
@@ -161,6 +162,7 @@ class APIKeyView(SmarterAdminWebView):
         return self._handle_write_request(request, key_id)
 
     def delete(self, request, key_id):
+        logger.info("Received DELETE request: %s", request)
         try:
             apikey = APIKey.objects.get(key_id=key_id)
         except APIKey.DoesNotExist:
