@@ -25,7 +25,7 @@ class APIKeyForm(forms.ModelForm):
         """Meta class for APIKeyForm with all fields."""
 
         model = APIKey
-        fields = ["user", "description", "is_active"]
+        fields = ["description", "is_active"]
 
 
 class APIKeysView(SmarterAdminWebView):
@@ -76,9 +76,13 @@ class APIKeyView(SmarterAdminWebView):
                 status=HTTPStatus.FORBIDDEN, data={"error": "You are not allowed to view this api key"}
             )
 
-        apikey_form = APIKeyForm(request.POST, instance=apikey)
+        data = request.POST
+        apikey_form = APIKeyForm(data, instance=apikey)
         if apikey_form.is_valid():
-            apikey_form.save()
+            api_key = APIKey.objects.get(key_id=key_id)
+            api_key.description = apikey_form.cleaned_data["description"]
+            api_key.is_active = apikey_form.cleaned_data["is_active"]
+            api_key.save()
             return http.JsonResponse(status=HTTPStatus.OK, data=apikey_form.data)
         return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data=apikey_form.errors)
 
@@ -89,17 +93,24 @@ class APIKeyView(SmarterAdminWebView):
             return http.JsonResponse(status=HTTPStatus.NOT_FOUND, data={"error": "API Key not found"})
 
         data = json.loads(request.body)
-        action = str(data.get("action", "")).lower()
-
-        events = {
-            "activate": api_key.activate,
-            "deactivate": api_key.deactivate,
-            "toggle_active": api_key.toggle_active,
-        }
-        event_func = events.get(action)
-        if event_func is None:
-            return http.JsonResponse({"error": "Unrecognized action"}, status=400)
-        event_func()
+        if "action" in data:
+            action = str(data.get("action", "")).lower()
+            events = {
+                "activate": api_key.activate,
+                "deactivate": api_key.deactivate,
+                "toggle_active": api_key.toggle_active,
+            }
+            event_func = events.get(action)
+            if event_func is None:
+                return http.JsonResponse({"error": f"Unrecognized action: {event_func}"}, status=400)
+            event_func()
+        else:
+            apikey_form = APIKeyForm(data, instance=api_key)
+            if apikey_form.is_valid():
+                api_key.description = apikey_form.cleaned_data["description"]
+                api_key.is_active = apikey_form.cleaned_data["is_active"]
+                api_key.save()
+                return http.JsonResponse(status=HTTPStatus.OK, data=apikey_form.data)
 
         return http.JsonResponse(status=HTTPStatus.OK, data={})
 
@@ -146,6 +157,8 @@ class APIKeyView(SmarterAdminWebView):
         return self._handle_create(request)
 
     def patch(self, request, key_id):
+        logger.info("Received PATCH request: %s", request)
+
         return self._handle_write_request(request, key_id)
 
     def delete(self, request, key_id):

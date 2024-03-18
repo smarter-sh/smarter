@@ -28,7 +28,7 @@
     <div id="kt_apikey_details" class="collapse show">
       <!--begin::Form-->
       <form
-        id="kt_user_detail_form"
+        id="kt_apikey_detail_form"
         class="form"
         data-primary-key="{{ account_apikeys.api_key.key_id }}"
         data-entry-mode="true"
@@ -72,7 +72,7 @@
             </label>
           <!--end::Label-->
             <!--begin::Col-->
-            <div class="col-lg-8 fv-row">
+            <div class="col-lg-8 fv-row" style="display: flex;">
               <input
                 readonly
                 id="input_new_api_key"
@@ -80,8 +80,11 @@
                 name="new_api_key"
                 class="form-control form-control-lg form-control-solid text-muted"
                 value="{{ account_apikeys.new_api_key }}" />
+              <button id="button_api_key_copy" data-action="copy" class="btn btn-active-color-primary btn-color-gray-400 btn-icon btn-lg btn-outline-light">
+                <i class="ki-duotone ki-copy fs-2"></i>
+              </button>
             </div>
-            <!--end::Col-->
+          <!--end::Col-->
           </div>
           <!--end::Input group new_api_key -->
         </div>
@@ -113,6 +116,6 @@
 {% block javascript_extra %}
   {{ block.super }}
 		<!--begin::Custom Javascript(used for this page only)-->
-		<script src="{% static 'js/account/dashboard/settings/user-detail.js' %}"></script>
+		<script src="{% static 'js/account/dashboard/api-key.js' %}"></script>
 		<!--end::Custom Javascript-->
 {% endblock %}
