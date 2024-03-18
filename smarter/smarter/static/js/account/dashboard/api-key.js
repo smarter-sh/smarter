@@ -155,8 +155,6 @@ var KTAccountAPIKey = (function () {
             formData.forEach((value, key) => object[key] = value);
             let json_body = JSON.stringify(object);
 
-            console.log(json_body);
-
             // Log the entries in the FormData object
             for (let pair of formData.entries()) {
               console.log(pair[0]+ ', '+ pair[1]);
@@ -175,7 +173,7 @@ var KTAccountAPIKey = (function () {
               .patch(url, json_body, context)
               .then(function (response) {
                 if (response) {
-                  toggleFormReadonly(true);
+                  window.location.href = '/account/dashboard/api-keys/';
                 }
               })
               .catch(function (error) {
@@ -198,6 +196,10 @@ var KTAccountAPIKey = (function () {
               });
           }
         });
+    });
+
+    cancelButton.on('click', function (e) {
+      window.location.href = '/account/dashboard/api-keys/';
     });
 }
 // Public methods
