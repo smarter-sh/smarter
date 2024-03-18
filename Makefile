@@ -103,11 +103,6 @@ python-init:
 
 python-lint:
 	make pre-commit
-	terraform fmt -recursive
-	pre-commit run --all-files
-	black ./smarter/
-	flake8 api/terraform/python/
-	pylint smarter/**/*.py
 
 python-clean:
 	rm -rf venv

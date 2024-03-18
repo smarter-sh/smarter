@@ -56,6 +56,7 @@ urlpatterns = [
     # api keys
     # -------------------------------------------
     path("api-keys/", APIKeysView.as_view(), name="account_api_keys"),
-    path("api-keys/<str:key_id>/", APIKeyView.as_view(), name="account_api_key"),
     path("api-keys/new/", APIKeyView.as_view(), name="account_api_key_new"),
+    path("api-keys/<str:key_id>/", APIKeyView.as_view(), name="account_api_key"),
+    path("api-keys/<str:key_id>/<str:new_api_key>/", APIKeyView.as_view(), name="account_new_api_key"),
 ]

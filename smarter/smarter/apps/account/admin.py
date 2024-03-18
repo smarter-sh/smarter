@@ -41,10 +41,7 @@ class PaymentMethodModelAdmin(admin.ModelAdmin):
 class APIKeyModelAdmin(admin.ModelAdmin):
     """API Key model admin."""
 
-    readonly_fields = (
-        "created_at",
-        "updated_at",
-    )
+    readonly_fields = ("created",)
     # pylint: disable=W0212
     list_display = [field.name for field in APIKey._meta.get_fields()]
 

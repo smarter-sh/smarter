@@ -8,7 +8,10 @@ from datetime import datetime, timedelta
 from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
 from django.db import models
+from django.utils import timezone
+from knox.auth import TokenAuthentication
 from knox.models import AuthToken, AuthTokenManager
+from rest_framework.exceptions import AuthenticationFailed
 
 # our stuff
 from smarter.apps.common.model_utils import TimestampedModel
@@ -126,18 +129,16 @@ class PaymentMethod(TimestampedModel):
 class APIKeyManager(AuthTokenManager):
     """API Key manager."""
 
-    def create(self, *args, **kwargs):
-        description = kwargs.pop("description", None)
-        is_active = kwargs.pop("is_active", True)
-        api_key, token = super().create(*args, **kwargs)
-        if description is not None:
-            api_key.description = description
+    def create(self, user, expiry=None, description: str = None, is_active: bool = False, **kwargs):
+        print(f"APIKeyManager.create: {user}, {expiry}, {description}, {is_active}, {kwargs}")
+        api_key, token = super().create(user, expiry=expiry, **kwargs)
+        api_key.description = description
         api_key.is_active = is_active
         api_key.save()
         return api_key, token
 
 
-class APIKey(AuthToken, TimestampedModel):
+class APIKey(AuthToken):
     """API Key model."""
 
     objects = APIKeyManager()
@@ -162,6 +163,8 @@ class APIKey(AuthToken, TimestampedModel):
             raise ValueError("API Keys can only be created for staff users.")
         user_profile = UserProfile.objects.get(user=self.user)
         self.account = user_profile.account
+        if self.created is None:
+            self.created = timezone.now()
         super().save(*args, **kwargs)
 
     def has_permissions(self, user) -> bool:
@@ -189,6 +192,18 @@ class APIKey(AuthToken, TimestampedModel):
         if self.last_used_at is None or (datetime.now() - self.last_used_at) > timedelta(minutes=5):
             self.last_used_at = datetime.now()
             self.save()
+
+    @classmethod
+    def validate_token(cls, token_str: str) -> bool:
+        """
+        Validate a token by authenticating with Django using Knox's TokenAuthentication
+        """
+        try:
+            token_bytes = token_str.encode("utf-8")
+            TokenAuthentication().authenticate_credentials(token_bytes)
+            return True
+        except AuthenticationFailed:
+            return False
 
     def __str__(self):
         return self.identifier
