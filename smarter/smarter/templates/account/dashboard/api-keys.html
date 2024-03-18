@@ -122,11 +122,11 @@
                 <td class="ps-0">{% if api_key.last_used_at %}{{ api_key.last_used_at }}{% else %}Never{% endif %}</td>
                 <td>
                   {% if api_key.is_active %}
-                  <button id="button_api_key_deactivate" data-action="disable" data-record-id="{{ api_key.key_id }}" class="btn btn-icon btn-sm ">
+                  <button data-action="disable" data-record-id="{{ api_key.key_id }}" class="button_api_key_deactivate btn btn-icon btn-sm ">
                     <span class="badge badge-light-success fs-7 fw-semibold">Deactivate</span>
                   </button>
                   {% else %}
-                  <button id="button_api_key_activate" data-action="enable" data-record-id="{{ api_key.key_id }}" class="btn btn-icon btn-sm ">
+                  <button data-action="enable" data-record-id="{{ api_key.key_id }}" class="button_api_key_activate btn btn-icon btn-sm ">
                     <span class="badge badge-light-secondary fs-7 fw-semibold">Activate</span>
                   </button>
                   {% endif %}
@@ -134,7 +134,7 @@
                 <td>
                   {% if api_key.is_active %}
                   {% else %}
-                  <button id="button_api_key_delete" data-action="delete" data-record-id="{{ api_key.key_id }}" class="btn btn-icon btn-sm ">
+                  <button data-action="delete" data-record-id="{{ api_key.key_id }}" class="button_api_key_delete btn btn-icon btn-sm ">
                     <span class="badge badge-light-danger fs-7 fw-semibold">Delete</span>
                   </button>
                   {% endif %}
