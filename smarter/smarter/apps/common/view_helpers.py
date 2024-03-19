@@ -14,10 +14,12 @@ from django.views.decorators.cache import cache_control, cache_page
 from htmlmin.main import minify
 from knox.auth import TokenAuthentication
 from rest_framework.authentication import SessionAuthentication
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.views import APIView
 
+from smarter.apps.account.models import APIKey
 from smarter.apps.common.decorators import staff_required
 
 
@@ -31,6 +33,29 @@ def redirect_and_expire_cache(path: str = "/"):
     response["Pragma"] = "no-cache"
     response["Expires"] = "0"
     return response
+
+
+class SmarterTokenAuthentication(TokenAuthentication):
+    """Custom token authentication for smarter."""
+
+    model = APIKey
+
+    def authenticate_credentials(self, token):
+        # authenticate the user using the normal token authentication
+        # this will raise an AuthenticationFailed exception if the token is invalid
+        user, auth_token = super().authenticate_credentials(token)
+
+        try:
+            # next, we need to ensure that the token is active, otherwise
+            # we should raise an exception that exactly matches the one
+            # raised by the default token authentication
+            APIKey.objects.get(token_key=auth_token.token_key, is_active=True)
+
+            # if the token is active, we can return the user and token as a tuple
+            # exactly as the default token authentication does.
+            return (user, auth_token)
+        except APIKey.DoesNotExist as e:
+            raise AuthenticationFailed from e
 
 
 # ------------------------------------------------------------------------------
@@ -61,14 +86,14 @@ class SmarterAPIView(APIView):
     """Base API view for smarter."""
 
     permission_classes = [SmarterAPIAuthenticated]
-    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
 
 
 class SmarterAPIListView(ListAPIView):
     """Base API listview for smarter."""
 
     permission_classes = [SmarterAPIAuthenticated]
-    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
     http_method_names = ["get"]
 
 
