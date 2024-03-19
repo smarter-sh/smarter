@@ -19,6 +19,14 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
     ensure that the browser doesn't cache the page itself, which could cause
     problems if the user logs out and then logs back in without refreshing the
     page.
+
+    template_path: Keep in mind that the index.html entry point for the React
+    app is served from the static directory, not the templates directory. This
+    is because the React app is built and served as a static asset. The
+    `template_path` attribute is used to specify the path to the final index.html file
+    which is first built by npm and then later copied to the Django static directory
+    via the Django manage.py `collectstatic` command. This is why the path is
+    relative to the static directory, not the templates directory.
     """
 
     template_path = "index.html"
