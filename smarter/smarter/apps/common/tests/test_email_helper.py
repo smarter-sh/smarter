@@ -6,7 +6,7 @@
 import unittest
 
 # our stuff
-from smarter.email_helpers import EmailHelper
+from smarter.apps.common.email_helpers import EmailHelper
 
 
 class TestSMTPEmail(unittest.TestCase):

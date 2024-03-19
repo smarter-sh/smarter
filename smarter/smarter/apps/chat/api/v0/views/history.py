@@ -14,7 +14,7 @@ from smarter.apps.chat.serializers import (
     ChatToolCallHistorySerializer,
     PluginUsageHistorySerializer,
 )
-from smarter.view_helpers import SmarterAPIListView, SmarterAPIView
+from smarter.apps.common.view_helpers import SmarterAPIListView, SmarterAPIView
 
 
 class ChatToolCallHistoryListView(SmarterAPIListView):

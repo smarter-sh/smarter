@@ -14,13 +14,16 @@ User = get_user_model()
 
 # pylint: disable=E1101
 class Command(BaseCommand):
-    """Django manage.py create_admin_user command. This command is used to create a new superuser account."""
+    """Django manage.py create_user command. This command is used to create a new user for an account."""
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
         parser.add_argument("--username", type=str, help="The username for the new superuser")
         parser.add_argument("--email", type=str, help="The email address for the new superuser")
         parser.add_argument("--password", type=str, help="The password for the new superuser")
+        parser.add_argument(
+            "--admin", action="store_true", default=False, help="True if the new user is an admin, False otherwise."
+        )
 
     def change_password(self, username, new_password):
         """Change the password for a user."""
@@ -39,6 +42,7 @@ class Command(BaseCommand):
         username = options["username"]
         email = options["email"]
         password = options["password"]
+        is_admin = options["admin"]
 
         if not password:
             password_length = 16
@@ -50,13 +54,19 @@ class Command(BaseCommand):
                 user = User.objects.create_user(username=username, email=email)
                 if username == "admin":
                     user.is_superuser = True
+                    user.is_staff = True
                 else:
-                    user.is_superuser = False
-                user.is_staff = True
+                    if is_admin:
+                        user.is_superuser = False
+                        user.is_staff = True
+                    else:
+                        user.is_superuser = False
+                        user.is_staff = False
                 user.is_active = True
                 user.set_password(password)
                 user.save()
-                self.stdout.write(self.style.SUCCESS(f"Creating admin account: {username} {email}"))
+                msg = "Admin user" if is_admin else "User" + f" {username} {email} has been created."
+                self.stdout.write(self.style.SUCCESS(msg))
                 self.stdout.write(self.style.SUCCESS(f"Password: {password}"))
             else:
                 user = self.change_password(username, password)

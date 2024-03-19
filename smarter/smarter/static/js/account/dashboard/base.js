@@ -67,6 +67,15 @@ var KTProfileGeneral = (function () {
 
       initTabHandler();
       initShortcutSelectHandler();
+
+      $(document).ready(function() {
+          $('.nav-item a').on('click', function() {
+              $('.nav-item a.active').removeClass('active'); // Remove the 'active' class from the currently active tab
+              $(this).addClass('active'); // Add the 'active' class to the clicked tab
+              window.location.href = this.href; // Navigate to the href target
+          });
+      });
+
     },
   };
 })();

@@ -6,12 +6,12 @@ var KTAccountAPIKeys = function () {
     var sandboxCheckBox;
     var sandboxLabel;
     var sandboxNotice;
-    var buttonApiKeyActivate;
-    var buttonApiKeyDeactivate;
-    var buttonApiKeyDelete;
+    var buttonsApiKeyActivate;
+    var buttonsApiKeyDeactivate;
+    var buttonsApiKeyDelete;
     var primaryKey;
 
-    function handleAction(action, button) {
+    function handleDelete(button) {
 
       button.attr("data-kt-indicator", "on");
       button.prop("disabled", true);
@@ -26,12 +26,10 @@ var KTAccountAPIKeys = function () {
         }
       }
 
-      let jsonBody = {
-        'action': action
-      }
+      console.log('context', context);
 
       axios
-      .post(url, jsonBody, context)
+      .delete(url, context)
       .then(function (response) {
         if (response) {
           console.log('response', response);
@@ -50,6 +48,62 @@ var KTAccountAPIKeys = function () {
         });
       })
       .then(() => {
+        button.removeAttr("data-kt-indicator");
+        button.prop("disabled", false);
+      });
+
+    }
+
+    function handleAction(action, button) {
+
+      button.attr("data-kt-indicator", "on");
+      button.prop("disabled", true);
+      primaryKey = button.data('record-id');
+      const url = "/account/dashboard/api-keys/" + primaryKey + "/";
+
+      const csrfToken = getSmarterCsrfToken();
+      const context = {
+        headers: {
+          'Content-Type': 'application/json',
+          "X-CSRFToken": csrfToken,
+        }
+      }
+
+      console.log('context', context);
+
+      let jsonBody = {
+        'action': action
+      }
+
+      axios
+      .patch(url, jsonBody, context)
+      .then(function (response) {
+        if (response) {
+          console.log('response', response);
+          window.location.reload();
+        }
+      })
+      .catch(function (error) {
+        Swal.fire({
+          text: JSON.stringify(error.response.data),
+          icon: "error",
+          buttonsStyling: false,
+          confirmButtonText: "Dismiss",
+          customClass: {
+            confirmButton: "btn btn-primary",
+          },
+        });
+      })
+      .then(() => {
+        if (action === 'activate') {
+          button.removeClass("button_api_key_activate");
+          button.addClass("button_api_key_deactivate");
+        } else {
+          button.addClass("button_api_key_activate");
+          button.removeClass("button_api_key_deactivate");
+        }
+        buttonsApiKeyActivate = $('.button_api_key_activate');
+        buttonsApiKeyDeactivate = $('.button_api_key_deactivate');
         button.removeAttr("data-kt-indicator");
         button.prop("disabled", false);
       });
@@ -108,21 +162,24 @@ var KTAccountAPIKeys = function () {
         });
     }
     var initAPIKeyActivate = function() {
-      buttonApiKeyActivate.click(function() {
-        console.log('buttonApiKeyActivate clicked');
-        handleAction('activate', buttonApiKeyActivate);
+      buttonsApiKeyActivate.click(function() {
+        var recordId = $(this).data('record-id');
+        console.log('buttonsApiKeyActivate clicked', 'Record ID:', recordId);
+        handleAction('activate', $(this));
       });
     }
     var initAPIKeyDeactivate = function() {
-      buttonApiKeyDeactivate.click(function() {
-        console.log('buttonApiKeyDeactivate clicked');
-        handleAction('deactivate', buttonApiKeyDeactivate);
+      buttonsApiKeyDeactivate.click(function() {
+        var recordId = $(this).data('record-id');
+        console.log('buttonsApiKeyDeactivate clicked', 'Record ID:', recordId);
+        handleAction('deactivate', $(this));
       });
     }
     var initAPIKeyDelete = function() {
-      buttonApiKeyDelete.click(function() {
-        console.log('buttonApiKeyDelete clicked');
-        handleAction('delete', buttonApiKeyDelete);
+      buttonsApiKeyDelete.click(function() {
+        var recordId = $(this).data('record-id');
+        console.log('buttonsApiKeyDelete clicked', 'Record ID:', recordId);
+        handleDelete($(this));
       });
     }
 
@@ -132,12 +189,11 @@ var KTAccountAPIKeys = function () {
           sandboxCheckBox = $('#input_sandbox_mode_checkbox');
           sandboxLabel = $('#label_sandbox_mode');
           sandboxNotice = $('#notice_sandbox_mode');
-          buttonApiKeyActivate = $('#button_api_key_activate');
-          buttonApiKeyDeactivate = $('#button_api_key_deactivate');
-          buttonApiKeyDelete = $('#button_api_key_delete');
+          buttonsApiKeyActivate = $('.button_api_key_activate');
+          buttonsApiKeyDeactivate = $('.button_api_key_deactivate');
+          buttonsApiKeyDelete = $('.button_api_key_delete');
 
           sandboxCheckBox.click(function() {
-            console.log('sandboxCheckBox clicked');
             var sandboxMode = sandboxCheckBox.is(':checked');
             if (sandboxMode) {
               sandboxLabel.text('Live Mode');
@@ -147,7 +203,6 @@ var KTAccountAPIKeys = function () {
               sandboxLabel.text('Sandbox Mode');
               sandboxNotice.attr('style', 'display: block !important');
             }
-            console.log('sandboxMode', sandboxMode);
 
           });
 
@@ -161,6 +216,5 @@ var KTAccountAPIKeys = function () {
 
 // On document ready
 KTUtil.onDOMContentLoaded(function() {
-    console.log('KTAccountAPIKeys.init');
     KTAccountAPIKeys.init();
 });

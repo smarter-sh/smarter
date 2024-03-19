@@ -13,7 +13,7 @@ from django.test import RequestFactory
 
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
-from smarter.context_processors import branding
+from smarter.apps.common.context_processors import branding
 
 
 User = get_user_model()
