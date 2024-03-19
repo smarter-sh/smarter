@@ -7,21 +7,21 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.shortcuts import HttpResponse, redirect
 
-from smarter.email_helpers import EmailHelper
-from smarter.token_generators import (
+from smarter.apps.common.email_helpers import EmailHelper
+from smarter.apps.common.token_generators import (
     ExpiringTokenGenerator,
     TokenConversionError,
     TokenExpiredError,
     TokenIntegrityError,
     TokenParseError,
 )
-from smarter.view_helpers import SmarterWebView
+from smarter.apps.common.view_helpers import SmarterNeverCachedWebView
 
 
 User = get_user_model()
 
 
-class PasswordResetRequestView(SmarterWebView):
+class PasswordResetRequestView(SmarterNeverCachedWebView):
     """View for requesting a password reset email."""
 
     expiring_token = ExpiringTokenGenerator()
@@ -61,7 +61,7 @@ class PasswordResetRequestView(SmarterWebView):
         return HttpResponse("Email sent.", status=200)
 
 
-class PasswordResetView(SmarterWebView):
+class PasswordResetView(SmarterNeverCachedWebView):
     """View for resetting password."""
 
     template_path = "account/authentication/new-password.html"
@@ -119,7 +119,7 @@ class PasswordResetView(SmarterWebView):
         return redirect(settings.LOGIN_URL)
 
 
-class PasswordConfirmView(SmarterWebView):
+class PasswordConfirmView(SmarterNeverCachedWebView):
     """View for resetting password."""
 
     template_path = "account/authentication/password-confirmation.html"

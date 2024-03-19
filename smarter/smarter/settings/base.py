@@ -101,7 +101,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "smarter.context_processors.branding",
+                "smarter.apps.common.context_processors.branding",
                 "smarter.apps.account.context_processors.base",
                 "smarter.apps.dashboard.context_processors.base",
             ],
@@ -116,7 +116,7 @@ TEMPLATES = [
         "APP_DIRS": False,
         "OPTIONS": {
             "loaders": [
-                "smarter.template_loader.ReactAppLoader",
+                "smarter.apps.chatapp.template_loaders.ReactAppLoader",
                 "django.template.loaders.filesystem.Loader",
             ],
             "context_processors": [

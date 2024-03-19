@@ -6,10 +6,11 @@ from http import HTTPStatus
 
 from django import forms, http
 from django.contrib.auth import get_user_model
-from django.forms.models import model_to_dict
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 
 from smarter.apps.account.models import APIKey, UserProfile
-from smarter.view_helpers import SmarterAdminWebView
+from smarter.apps.common.view_helpers import SmarterAdminWebView
 
 
 User = get_user_model()
@@ -24,7 +25,7 @@ class APIKeyForm(forms.ModelForm):
         """Meta class for APIKeyForm with all fields."""
 
         model = APIKey
-        fields = ["user", "description", "is_active"]
+        fields = ["description", "is_active"]
 
 
 class APIKeysView(SmarterAdminWebView):
@@ -35,7 +36,7 @@ class APIKeysView(SmarterAdminWebView):
     def get(self, request):
         account = UserProfile.objects.get(user=request.user).account
         api_keys = APIKey.objects.filter(account=account).only(
-            "user", "description", "created_at", "last_used_at", "is_active"
+            "user", "description", "created", "last_used_at", "is_active"
         )
         context = {
             "account_apikeys": {
@@ -51,17 +52,17 @@ class APIKeyView(SmarterAdminWebView):
     template_path = "account/dashboard/api-key.html"
 
     def _handle_create(self, request):
-        post_data = request.POST.copy()  # Make a mutable copy
-        post_data["user"] = request.user.id  # Set the user field's value
-        apikey_form = APIKeyForm(post_data)
-        if apikey_form.is_valid():
-            apikey = apikey_form.save()
-            new_api_key = APIKey.objects.get(digest=apikey.digest)
-            api_key_dict = model_to_dict(new_api_key)
-            api_key_dict["key_id"] = new_api_key.key_id
-
-            return http.JsonResponse(status=HTTPStatus.CREATED, data=api_key_dict)
-        return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data=apikey_form.errors)
+        new_api_key, token = APIKey.objects.create(
+            user=request.user, expiry=None, description=f"New API key created by {request.user}"
+        )
+        url = reverse(
+            "account_new_api_key",
+            kwargs={
+                "key_id": new_api_key.key_id,
+                "new_api_key": token,
+            },
+        )
+        return HttpResponseRedirect(url)
 
     def _handle_multipart_form(self, request, key_id):
 
@@ -75,9 +76,13 @@ class APIKeyView(SmarterAdminWebView):
                 status=HTTPStatus.FORBIDDEN, data={"error": "You are not allowed to view this api key"}
             )
 
-        apikey_form = APIKeyForm(request.POST, instance=apikey)
+        data = request.POST
+        apikey_form = APIKeyForm(data, instance=apikey)
         if apikey_form.is_valid():
-            apikey_form.save()
+            api_key = APIKey.objects.get(key_id=key_id)
+            api_key.description = apikey_form.cleaned_data["description"]
+            api_key.is_active = apikey_form.cleaned_data["is_active"]
+            api_key.save()
             return http.JsonResponse(status=HTTPStatus.OK, data=apikey_form.data)
         return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data=apikey_form.errors)
 
@@ -88,17 +93,23 @@ class APIKeyView(SmarterAdminWebView):
             return http.JsonResponse(status=HTTPStatus.NOT_FOUND, data={"error": "API Key not found"})
 
         data = json.loads(request.body)
-        action = str(data.get("action", "")).lower()
-
-        events = {
-            "activate": api_key.activate,
-            "deactivate": api_key.deactivate,
-            "toggle_active": api_key.toggle_active,
-        }
-        event_func = events.get(action)
-        if event_func is None:
-            return http.JsonResponse({"error": "Unrecognized action"}, status=400)
-        event_func()
+        if "action" in data:
+            action = str(data.get("action", "")).lower()
+            events = {
+                "activate": api_key.activate,
+                "deactivate": api_key.deactivate,
+                "toggle_active": api_key.toggle_active,
+            }
+            event_func = events.get(action)
+            if event_func is None:
+                return http.JsonResponse({"error": f"Unrecognized action: {event_func}"}, status=400)
+            event_func()
+        else:
+            apikey_form = APIKeyForm(data, instance=api_key)
+            if apikey_form.is_valid():
+                api_key.description = apikey_form.cleaned_data["description"]
+                api_key.is_active = apikey_form.cleaned_data["is_active"]
+                api_key.save()
 
         return http.JsonResponse(status=HTTPStatus.OK, data={})
 
@@ -110,43 +121,48 @@ class APIKeyView(SmarterAdminWebView):
         return http.JsonResponse({"error": "Invalid content type"}, status=400)
 
     # pylint: disable=W0221
-    def get(self, request, key_id):
+    def get(self, request, key_id: str = None, new_api_key: str = None):
         """Get the api key. We also use this to create a new api key."""
+
+        # in cases where we arrived here via api-keys/new/
+        if key_id is None:
+            return self._handle_create(request)
         try:
+            # cases where we received a uuid identifier for an existing api key
             apikey = APIKey.objects.get(key_id=key_id)
             apikey_form = APIKeyForm(instance=apikey)
             if not apikey.has_permissions(user=request.user):
                 return http.JsonResponse(
                     status=HTTPStatus.FORBIDDEN, data={"error": "You are not allowed to view this api key"}
                 )
+
+            # ensure that the string value we received is a valid token that
+            # can actually be used to authenticate via Django.
+            if new_api_key:
+                apikey.validate_token(new_api_key)
         except APIKey.DoesNotExist:
             return http.HttpResponseNotFound({"error": "API Key not found"})
 
         context = {
             "account_apikeys": {
                 "api_key": apikey,
+                "token_key": new_api_key or "****" + apikey.token_key,
+                "is_new": new_api_key is not None,
                 "apikey_form": apikey_form,
             }
         }
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
-    def post(self, request, key_id=None):
-        print("APIKeyView.post")
-        if key_id is None:
-            return self._handle_create(request)
-        return self._handle_write_request(request, key_id)
+    def post(self, request):
+        return self._handle_create(request)
 
-    def patch(self, request, key_id=None):
-        if key_id is None:
-            return self._handle_create(request)
-        return self._handle_write_request(request, key_id)
+    def patch(self, request, key_id):
+        logger.info("Received PATCH request: %s", request)
 
-    def put(self, request, key_id=None):
-        if key_id is None:
-            return self._handle_create(request)
         return self._handle_write_request(request, key_id)
 
     def delete(self, request, key_id):
+        logger.info("Received DELETE request: %s", request)
         try:
             apikey = APIKey.objects.get(key_id=key_id)
         except APIKey.DoesNotExist:

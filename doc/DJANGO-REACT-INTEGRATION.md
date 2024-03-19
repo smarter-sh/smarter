@@ -18,15 +18,15 @@ There are several considerations for getting React to work inside a Django proje
 
   ````
 
-- **index.html.** The original [index.html](./smarter/smarter/apps/chatapp/reactapp/index.html) created by Vite is completely replaced by a django template that a.) inherits our custom smarter/base.html template, b.) contains Django template blocks to ensure correct placement of React's elements within the DOM. More on this, and a code sample, below.
+- **index.html.** The original [index.html](./smarter/smarter/apps/chatapp/reactapp/index.html) created by Vite is completely replaced by a django template that a.) inherits our custom base.html template, b.) contains Django template blocks to ensure correct placement of React's elements within the DOM. More on this, and a code sample, below.
 
   ```django
-  {% extends "smarter/base.html" %}
+  {% extends "base.html" %}
 
   {% block content %}
   {% endblock %}
 
-  {% block react_content %}
+  {% block dashboard_content %}
     {{ block.super }}
     <div id="root"></div>
   {% endblock %}
@@ -68,7 +68,7 @@ class ReactAppLoader(FilesystemLoader):
       "OPTIONS": {
           "loaders": [
               # our custom template loader goes here...
-              "smarter.template_loader.ReactAppLoader",
+              "smarter.apps.common.template_loader.ReactAppLoader",
               "django.template.loaders.filesystem.Loader",
           ],
           "context_processors": [
@@ -95,7 +95,7 @@ smarter/base_react.html:
 {% block content %}
 {% endblock %}
 
-{% block react_content %}
+{% block dashboard_content %}
   {{ block.super }}
   <div id="root"></div>
 {% endblock %}
@@ -135,7 +135,7 @@ We created this second template engine that is customized for React.
       "APP_DIRS": False,
       "OPTIONS": {
           "loaders": [
-              "smarter.template_loader.ReactAppLoader",
+              "smarter.apps.common.template_loader.ReactAppLoader",
               "django.template.loaders.filesystem.Loader",
           ],
           "context_processors": [

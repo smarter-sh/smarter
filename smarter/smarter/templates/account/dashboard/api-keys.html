@@ -116,17 +116,17 @@
             <tbody class="fs-6 fw-semibold text-gray-600">
               {% for api_key in account_apikeys.api_keys %}
               <tr>
-                <td class="ps-9">{{ api_key.user.username }}{% if api_key.description %} - {% endif %}{{ api_key.description }}</td>
+                <td class="ps-9"><a href="/account/dashboard/api-keys/{{ api_key.key_id }}">{{ api_key.user.username }} - {{ api_key.description }}</a></td>
                 <td class="ps-0">{{ api_key }}</td>
-                <td class="ps-0">{{ api_key.created_at }}</td>
+                <td class="ps-0">{{ api_key.created }}</td>
                 <td class="ps-0">{% if api_key.last_used_at %}{{ api_key.last_used_at }}{% else %}Never{% endif %}</td>
                 <td>
                   {% if api_key.is_active %}
-                  <button id="button_api_key_deactivate" data-action="disable" data-record-id="{{ api_key.key_id }}" class="btn btn-icon btn-sm ">
+                  <button data-action="disable" data-record-id="{{ api_key.key_id }}" class="button_api_key_deactivate btn btn-icon btn-sm ">
                     <span class="badge badge-light-success fs-7 fw-semibold">Deactivate</span>
                   </button>
                   {% else %}
-                  <button id="button_api_key_activate" data-action="enable" data-record-id="{{ api_key.key_id }}" class="btn btn-icon btn-sm ">
+                  <button data-action="enable" data-record-id="{{ api_key.key_id }}" class="button_api_key_activate btn btn-icon btn-sm ">
                     <span class="badge badge-light-secondary fs-7 fw-semibold">Activate</span>
                   </button>
                   {% endif %}
@@ -134,7 +134,7 @@
                 <td>
                   {% if api_key.is_active %}
                   {% else %}
-                  <button id="button_api_key_delete" data-action="delete" data-record-id="{{ api_key.key_id }}" class="btn btn-icon btn-sm ">
+                  <button data-action="delete" data-record-id="{{ api_key.key_id }}" class="button_api_key_delete btn btn-icon btn-sm ">
                     <span class="badge badge-light-danger fs-7 fw-semibold">Delete</span>
                   </button>
                   {% endif %}
