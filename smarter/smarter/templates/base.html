@@ -49,6 +49,8 @@
 		<div class="d-flex flex-column flex-root app-root" id="kt_app_root">
       {% block root %}
       {% endblock %}
+      {% block react_content %}
+      {% endblock %}
 		</div>
     <!--end::Root-->
     <!--end::App-->
@@ -70,6 +72,10 @@
     {% block javascript_extra %}
     {% endblock %}
 		<script src="{% static 'js/smarter-base.js' %}"></script>
+    {% block react_javascript %}
+      {{ block.super }}
+      {{ react_config|json_script:'react-config' }}
+    {% endblock %}
 	</body>
 	<!--end::Body-->
 </html>

@@ -3,7 +3,7 @@
 """Django views"""
 import logging
 
-from smarter.apps.common.view_helpers import SmarterAuthenticatedWebView
+from smarter.apps.common.view_helpers import SmarterAuthenticatedNeverCachedWebView
 
 
 logger = logging.getLogger(__name__)
@@ -12,38 +12,38 @@ logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------
 # Protected Views
 # ------------------------------------------------------------------------------
-class AccountView(SmarterAuthenticatedWebView):
+class AccountView(SmarterAuthenticatedNeverCachedWebView):
 
     template_path = "account/account.html"
 
 
-class AccountOrganizationView(SmarterAuthenticatedWebView):
+class AccountOrganizationView(SmarterAuthenticatedNeverCachedWebView):
 
     template_path = "account/organization.html"
 
 
-class AccountTeamView(SmarterAuthenticatedWebView):
+class AccountTeamView(SmarterAuthenticatedNeverCachedWebView):
 
     template_path = "account/team.html"
 
 
-class AccountLimitsView(SmarterAuthenticatedWebView):
+class AccountLimitsView(SmarterAuthenticatedNeverCachedWebView):
 
     template_path = "account/limits.html"
 
 
-class AccountProfileView(SmarterAuthenticatedWebView):
+class AccountProfileView(SmarterAuthenticatedNeverCachedWebView):
 
     template_path = "account/profile.html"
 
 
-class AccountAPIKeysView(SmarterAuthenticatedWebView):
+class AccountAPIKeysView(SmarterAuthenticatedNeverCachedWebView):
     """API keys view"""
 
     template_path = "dashboard/api-keys.html"
 
 
-class AccountUsageView(SmarterAuthenticatedWebView):
+class AccountUsageView(SmarterAuthenticatedNeverCachedWebView):
     """Usage view"""
 
     template_path = "dashboard/usage.html"
