@@ -116,7 +116,7 @@ TEMPLATES = [
         "APP_DIRS": False,
         "OPTIONS": {
             "loaders": [
-                "smarter.apps.common.template_loader.ReactAppLoader",
+                "smarter.apps.chatapp.template_loaders.ReactAppLoader",
                 "django.template.loaders.filesystem.Loader",
             ],
             "context_processors": [
