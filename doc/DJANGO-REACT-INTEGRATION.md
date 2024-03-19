@@ -26,7 +26,7 @@ There are several considerations for getting React to work inside a Django proje
   {% block content %}
   {% endblock %}
 
-  {% block react_content %}
+  {% block dashboard_content %}
     {{ block.super }}
     <div id="root"></div>
   {% endblock %}
@@ -95,7 +95,7 @@ smarter/base_react.html:
 {% block content %}
 {% endblock %}
 
-{% block react_content %}
+{% block dashboard_content %}
   {{ block.super }}
   <div id="root"></div>
 {% endblock %}

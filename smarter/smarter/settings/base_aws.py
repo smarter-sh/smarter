@@ -20,6 +20,9 @@ CACHES = {
         },
     }
 }
+
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
