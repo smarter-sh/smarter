@@ -14,6 +14,9 @@ resource "helm_release" "redis" {
   # helm show values bitnami/wordpress
   values = [
     <<-EOF
+    global:
+      redis:
+        password: "smarter"
     replica:
       replicaCount: 0
     master:
