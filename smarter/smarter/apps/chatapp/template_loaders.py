@@ -10,9 +10,15 @@ from django.template.loaders.filesystem import Loader as FilesystemLoader
 class ReactAppLoader(FilesystemLoader):
     """A custom template loader that includes each django app's reactapp/dist directory in the search path."""
 
-    def get_dirs(self):
+    _dirs_cache = None
 
-        dirs = super().get_dirs()
+    def get_dirs(self):
+        if self._dirs_cache is not None:
+            return self._dirs_cache
+
+        self._dirs_cache = super().get_dirs()
         for app in apps.get_app_configs():
-            dirs.append(os.path.join(app.path, "reactapp", "dist"))
-        return dirs
+            path = os.path.join(app.path, "reactapp", "dist")
+            if os.path.exists(path):
+                self._dirs_cache.append(path)
+        return self._dirs_cache
