@@ -17,8 +17,8 @@ from smarter.apps.common.token_generators import (
     TokenParseError,
 )
 from smarter.apps.common.view_helpers import (
-    SmarterAuthenticatedWebView,
-    SmarterWebView,
+    SmarterAuthenticatedNeverCachedWebView,
+    SmarterNeverCachedWebView,
     redirect_and_expire_cache,
 )
 
@@ -29,7 +29,7 @@ User = get_user_model()
 # ------------------------------------------------------------------------------
 # Public Access Views
 # ------------------------------------------------------------------------------
-class LoginView(SmarterWebView):
+class LoginView(SmarterNeverCachedWebView):
     """View for logging in browser session."""
 
     class LoginForm(forms.Form):
@@ -66,7 +66,7 @@ class LoginView(SmarterWebView):
         return HttpResponse("Received invalid responses.", status=HTTPStatus.BAD_REQUEST)
 
 
-class LogoutView(SmarterWebView):
+class LogoutView(SmarterNeverCachedWebView):
     """View for logging out browser session."""
 
     def get(self, request):
@@ -78,7 +78,7 @@ class LogoutView(SmarterWebView):
         return redirect_and_expire_cache(path="/")
 
 
-class AccountRegisterView(SmarterWebView):
+class AccountRegisterView(SmarterNeverCachedWebView):
     """View for signing up."""
 
     class SignUpForm(forms.Form):
@@ -108,7 +108,7 @@ class AccountRegisterView(SmarterWebView):
         return self.get(request=request)
 
 
-class AccountActivationEmailView(SmarterWebView):
+class AccountActivationEmailView(SmarterNeverCachedWebView):
     """View for activating an account via an email with a single-use activation link."""
 
     template_path = "account/activation.html"
@@ -135,7 +135,7 @@ class AccountActivationEmailView(SmarterWebView):
         return self.clean_http_response(request, template_path=self.template_path)
 
 
-class AccountActivateView(SmarterWebView):
+class AccountActivateView(SmarterNeverCachedWebView):
     """View for welcoming a newly activated user to the platform."""
 
     template_path = "account/welcome.html"
@@ -162,7 +162,7 @@ class AccountActivateView(SmarterWebView):
 # ------------------------------------------------------------------------------
 # Private Access Views
 # ------------------------------------------------------------------------------
-class AccountDeactivateView(SmarterAuthenticatedWebView):
+class AccountDeactivateView(SmarterAuthenticatedNeverCachedWebView):
     """View for the account deactivation page."""
 
     template_path = "account/account-deactivated.html"

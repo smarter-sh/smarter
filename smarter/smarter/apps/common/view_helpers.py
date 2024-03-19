@@ -10,7 +10,7 @@ from django.shortcuts import redirect, render
 from django.utils.cache import patch_vary_headers
 from django.utils.decorators import method_decorator
 from django.views import View
-from django.views.decorators.cache import cache_control, cache_page
+from django.views.decorators.cache import cache_control, cache_page, never_cache
 from htmlmin.main import minify
 from knox.auth import TokenAuthentication
 from rest_framework.authentication import SessionAuthentication
@@ -36,7 +36,11 @@ def redirect_and_expire_cache(path: str = "/"):
 
 
 class SmarterTokenAuthentication(TokenAuthentication):
-    """Custom token authentication for smarter."""
+    """
+    Custom token authentication for smarter.
+    This is used to authenticate API keys. It is a subclass of the default knox
+    behavior, but it also checks that the API key is active.
+    """
 
     model = APIKey
 
@@ -67,7 +71,7 @@ class IsStaffUser(BasePermission):
     """
 
     def has_permission(self, request, view):
-        return request.user and request.user.is_staff
+        return request.user and (request.user.is_staff or request.user.is_superuser)
 
 
 class SmarterAPIAuthenticated(IsAuthenticated):
@@ -78,7 +82,7 @@ class SmarterAPIAuthenticated(IsAuthenticated):
 
 class SmarterAPIAdmin(SmarterAPIAuthenticated, IsStaffUser):
     """
-    Allows access only to superusers.
+    Allows access only to admins.
     """
 
 
@@ -149,22 +153,38 @@ class SmarterWebView(View):
         return self.clean_http_response(request, template_path=self.template_path)
 
 
+class SmarterNeverCachedWebView(SmarterWebView):
+    """An optimized web view that is never cached."""
+
+    @method_decorator(never_cache)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+
 @method_decorator(login_required, name="dispatch")
 class SmarterAuthenticatedWebView(SmarterWebView):
-    """Base view for smarter authenticated web views."""
-
-
-@method_decorator(staff_required, name="dispatch")
-class SmarterAdminWebView(SmarterAuthenticatedWebView):
-    """Base view for smarter admin web views."""
+    """An optimized view that requires authentication."""
 
 
 @method_decorator(cache_control(max_age=settings.SMARTER_CACHE_EXPIRATION), name="dispatch")
 @method_decorator(cache_page(settings.SMARTER_CACHE_EXPIRATION), name="dispatch")
 class SmarterAuthenticatedCachedWebView(SmarterAuthenticatedWebView):
-    """Base view for cached authenticated smarter web views."""
+    """An optimized and cached web view that requires authentication."""
 
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
         patch_vary_headers(response, ["Cookie"])
         return response
+
+
+class SmarterAuthenticatedNeverCachedWebView(SmarterAuthenticatedWebView):
+    """An optimized web view that requires authentication and is never cached."""
+
+    @method_decorator(never_cache)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+
+@method_decorator(staff_required, name="dispatch")
+class SmarterAdminWebView(SmarterAuthenticatedNeverCachedWebView):
+    """An admin-only optimized web view that is never cached."""
