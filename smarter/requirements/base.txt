@@ -14,6 +14,8 @@ django-debug-toolbar==4.3.0
 
 # misc
 # ------------
+celery==5.3.6
+django-celery-beat==2.6.0
 boto3==1.34.59
 botocore
 requests==2.31.0
