@@ -45,6 +45,13 @@ DEBUG = False
 
 ALLOWED_HOSTS = []
 
+# Default Celery Configuration
+CELERY_BROKER_URL = "django://"
+CELERY_RESULT_BACKEND = "django://"
+CELERY_ACCEPT_CONTENT = ["application/json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "UTC"
 
 # Application definition
 
@@ -72,6 +79,7 @@ INSTALLED_APPS = [
     "taggit",
     "corsheaders",
     "drf_yasg",
+    "django_celery_beat",
 ]
 
 MIDDLEWARE = [
