@@ -13,8 +13,9 @@
 [![Django](https://a11ybadges.com/badge?logo=django)](https://www.djangoproject.com/)
 [![Terraform](https://a11ybadges.com/badge?logo=terraform)](https://www.terraform.io/)
 
-You should be able to work unencumbered in any of Linux, macOS or Windows. This repository contains four distinct projects, respectively, written in:
+You should be able to work unencumbered in any of Linux, macOS or Windows. This repository contains five distinct projects, respectively, written in:
 
+- [Docker](#docker-setup)
 - [Python](#python-setup)
 - [ReactJS](#reactjs-setup)
 - [Terraform](#terraform-setup)
@@ -26,33 +27,50 @@ In each case there are various technology-specific resources that you'll need to
 
 Smarter follows opinionated code style policies for most of the technologies in this repo. With that in mind, following is how to correctly setup your local development environment. Before attempting to setup this project you should ensure that the following prerequisites are installed in your local environment:
 
+- Docker CE 25x or later
+- Docker Compose
 - npm: 10.4 or later
 - python: 3.11 or later
-- terraform 1.7 or later
-- terragrunt 0.54 or later
-- awscli: 2.15 or later
 - git: 2.x or later
 - make: 3.8 or later
 
+And if you work on cloud infrastructure then you'll also need these:
+
+- terraform 1.7 or later
+- terragrunt 0.54 or later
+- awscli: 2.15 or later
+
 ```console
 git clone https://github.com/QueriumCorp/smarter.git
-make            # scaffold a .env file in the root of the repo
-                #
-                # ****************************
-                # STOP HERE!
-                # ****************************
-                # Add your credentials to .env located in the project
-                # root folder.
+make                # scaffold a .env file in the root of the repo
+                    #
+                    # ****************************
+                    # STOP HERE!
+                    # ****************************
+                    # Add your credentials to .env located in the project
+                    # root folder.
 
-make init       # initialize Terraform, Python virtual environment and NPM
-make pre-commit # install code analyzers and linters
-make lint       # test run to ensure that everything in pre-commit is working.
+make init           # initialize Python and React environments
+make pre-commit     # install code analyzers and linters
+make lint           # test run to ensure that everything in pre-commit is working.
 
-make build      # deploy AWS cloud infrastructure, build ReactJS web app
-make run        # run the web app locally in your dev environment
+make docker-init    # deploy AWS cloud infrastructure, build ReactJS web app
+make docker-build   # run the web app locally in your dev environment
+make docker-run     #
 ```
 
 To preserve your own sanity, don't spend time formatting your Python, Terraform, JS or any other source code because pre-commit invokes automatic code formatting utilities such as black, flake8 and prettier, on all local commits, and these will reformat the code in your commit based on policy configuration files found in the root of this repo.
+
+Running `docker ps` you should see output similar to the following.
+
+```console
+CONTAINER ID   IMAGE          COMMAND                  CREATED              STATUS              PORTS                    NAMES
+7570286d11c0   smarter        "watchmedo auto-rest…"   About a minute ago   Up About a minute   0.0.0.0:8000->8000/tcp   smarter-app
+7df77367d1d5   smarter        "bash -c 'watchmedo …"   About a minute ago   Up About a minute   8000/tcp                 smarter-worker
+f3bf3acbd087   smarter        "bash -c 'watchmedo …"   About a minute ago   Up About a minute   8000/tcp                 smarter-beat
+7db0374bb2dc   mysql:latest   "docker-entrypoint.s…"   About a minute ago   Up About a minute   3306/tcp, 33060/tcp      smarter-mysql
+33c6673de559   redis:latest   "docker-entrypoint.s…"   About a minute ago   Up About a minute   6379/tcp                 smarter-redis
+```
 
 ## Repository Setup
 
@@ -102,6 +120,14 @@ This project depends heavily on GitHub Actions to automate routine activities, s
 A typical pull request will look like the following:
 
 ![Automated pull request](https://github.com/QueriumCorp/smarter/blob/main/doc/img/automated-pr.png)
+
+## Docker Setup
+
+You can leverage Docker Community Edition and Docker Compose to stand up the entire Smarter platforn in your local development environment. This closely approximates the Kubernetes production environment in which Smarter actually runs. Everything is substantially created with two files located in the root of this repo:
+
+- [Dockerfile](../Dockerfile): This defines the contents and configuration of the Docker container used to deploy the Smarter application, worker, and Celery Beat service in all Kubernetes environments as well as in your local Docker CE environment. Thus, think twice before pushing modifications to this file, as there could be unintended consequences.
+- [docker-compose.yml](../docker-compose.yml): This is used to approximately the Helm deployment charts used for Kubernetes based staging and production environment. It defines all services that makeup the application stack, including MySQL and Redis.
+- [Helm Chart](../helm/charts/smarter/): Smart is deployed to Kubernetes via this locally managed Helm chart. You can use this as a reference for questions regarding ports, network configuration, horizontal and vertical scaling configuration, and Docker Container configurations for each service.
 
 ## Python Setup
 

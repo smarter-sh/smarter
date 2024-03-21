@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=unused-wildcard-import,wildcard-import
+# pylint: disable=E0402,unused-wildcard-import,wildcard-import
 """Django base settings for environments deployed to AWS."""
 
 import os
@@ -14,7 +14,9 @@ DEBUG = False
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://:smarter@redis-master:6379/1",
+        "LOCATION": os.getenv(
+            "CACHES_LOCATION", "redis://:smarter@smarter-redis-master.smarter-platform-dev.svc.cluster.local:6379/1"
+        ),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
@@ -24,8 +26,12 @@ CACHES = {
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 
 # Celery Configuration
-CELERY_BROKER_URL = "redis://:smarter@redis-master:6379/1"
-CELERY_RESULT_BACKEND = "redis://:smarter@redis-master:6379/1"
+CELERY_BROKER_URL = os.getenv(
+    "CELERY_BROKER_URL", "redis://:smarter@smarter-redis-master.smarter-platform-dev.svc.cluster.local:6379/1"
+)
+CELERY_RESULT_BACKEND = os.getenv(
+    "CELERY_RESULT_BACKEND", "redis://:smarter@smarter-redis-master.smarter-platform-dev.svc.cluster.local:6379/1"
+)
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
