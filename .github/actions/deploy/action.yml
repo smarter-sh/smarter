@@ -46,7 +46,10 @@ runs:
       shell: bash
       run: |-
         echo "NAMESPACE=${{ env.NAMESPACE_BASE }}-${{ inputs.environment }}" >> $GITHUB_ENV
+        echo "DJANGO_SETTINGS_MODULE=${{ env.DJANGO_SETTINGS_BASE }}.${{ inputs.environment }}" >> $GITHUB_ENV
+
       env:
+        DJANGO_SETTINGS_BASE: smarter.settings
         NAMESPACE_BASE: smarter-platform
 
     # Checkout all code referenced by this action
@@ -224,6 +227,7 @@ runs:
       run: |-
         helm upgrade --install --force smarter ./helm/charts/smarter/ --namespace ${{ env.NAMESPACE }} \
         --set deployTimestamp="$(date +%s)" \
+        --set env.DJANGO_SETTINGS_MODULE=${{ env.DJANGO_SETTINGS_MODULE }} \
         --set env.ENVIRONMENT=${{ inputs.environment }} \
         --set env.AWS_REGION=${{ inputs.aws-region }} \
         --set env.AWS_ACCESS_KEY_ID=${{ inputs.aws-access-key-id }} \
