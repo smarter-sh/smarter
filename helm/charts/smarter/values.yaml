@@ -13,14 +13,13 @@ redis:
   global:
     redis:
       password: "smarter"
-  cluster:
-    enabled: false
-    slaveCount: 0
+  replica:
+    replicaCount: 0
   master:
     resources:
-      limits:
-        cpu: "500m"
-        memory: "250Mi"
       requests:
+        memory: "64Mi"
         cpu: "250m"
-        memory: "125Mi"
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
