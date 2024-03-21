@@ -34,11 +34,16 @@ services:
 
   worker:
     container_name: worker
+    x-build:
+      type: docker
     build:
       context: .
       dockerfile: Dockerfile
       args:
         ENVIRONMENT: local
+      cache_from:
+        - smarter
+    image: smarter
     command: >
       bash -c "watchmedo auto-restart --directory=./ --pattern='*.py' --recursive --
       celery -A smarter.celery.celery_app worker --loglevel=info"  image: smarter
@@ -52,11 +57,15 @@ services:
 
   beat:
     container_name: beat
+    x-build:
+      type: docker
     build:
       context: .
       dockerfile: Dockerfile
       args:
         ENVIRONMENT: local
+      cache_from:
+        - smarter
     command: >
       bash -c "celery -A smarter.celery.celery_app beat --loglevel=info"
     volumes:
@@ -69,11 +78,15 @@ services:
 
   app:
     container_name: app
+    x-build:
+      type: docker
     build:
       context: .
       dockerfile: Dockerfile
       args:
         ENVIRONMENT: local
+      cache_from:
+        - smarter
     command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- gunicorn smarter.wsgi:application -b 0.0.0.0:8000
     image: smarter
     volumes:
