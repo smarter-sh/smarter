@@ -1,3 +1,10 @@
+---
+#------------------------------------------------------------------------------
+# For local development, you can use the following docker-compose file
+# to run the application. This file will start a MySQL database, a Redis
+# server, a Celery worker, and the application itself. The application
+# will be available at http://localhost:8000.
+#------------------------------------------------------------------------------
 version: "3"
 
 services:
@@ -14,12 +21,16 @@ services:
       - ./mysql-data:/var/lib/mysql
     ports:
       - 3306:3306
+    mem_limit: 500m
+    cpus: "0.50"
 
   redis-master:
     image: redis:latest
     command: redis-server --requirepass smarter
     ports:
       - 6379:6379
+    mem_limit: 250m
+    cpus: "0.25"
 
   worker:
     build:
@@ -30,6 +41,22 @@ services:
     command: >
       bash -c "watchmedo auto-restart --directory=./ --pattern='*.py' --recursive --
       celery -A smarter.celery.celery_app worker --loglevel=info"  image: smarter
+    volumes:
+      - ./smarter:/app
+    depends_on:
+      - mysql
+      - redis-master
+    env_file:
+      - ./.env
+
+  beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        ENVIRONMENT: local
+    command: >
+      bash -c "celery -A smarter.celery.celery_app beat --loglevel=info"
     volumes:
       - ./smarter:/app
     depends_on:
@@ -54,5 +81,8 @@ services:
       - mysql
       - redis-master
       - worker
+      - beat
     env_file:
       - ./.env
+    mem_limit: 500m
+    cpus: "0.50"

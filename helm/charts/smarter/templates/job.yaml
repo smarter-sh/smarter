@@ -42,6 +42,8 @@ spec:
               value: "{{ .Values.env.ENVIRONMENT }}"
             - name: DEBUG_MODE
               value: "{{ .Values.env.DEBUG_MODE }}"
+            - name: DJANGO_SETTINGS_MODULE
+              value: "{{ .Values.env.DJANGO_SETTINGS_MODULE }}"
             - name: DUMP_DEFAULTS
               value: "{{ .Values.env.DUMP_DEFAULTS }}"
             - name: MYSQL_HOST
