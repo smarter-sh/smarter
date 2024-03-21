@@ -74,6 +74,7 @@ docker-build:
 	docker-compose up --build
 
 docker-run:
+	make docker-collectstatic
 	docker-compose up
 
 docker-collectstatic:
