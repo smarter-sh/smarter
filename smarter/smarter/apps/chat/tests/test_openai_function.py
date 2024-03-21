@@ -35,7 +35,7 @@ from smarter.apps.chat.signals import (
     chat_completion_called,
     chat_completion_history_created,
     chat_completion_plugin_selected,
-    chat_completion_plugin_selection_history_created,
+    chat_completion_plugin_usage_history_created,
     chat_completion_tool_call_created,
     chat_completion_tool_call_history_created,
     chat_completion_tool_call_received,
@@ -57,7 +57,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
     _plugin_selected = False
     _chat_invoked = False
     _chat_completion_plugin_selected = False
-    _chat_completion_plugin_selection_history_created = False
+    _chat_completion_plugin_usage_history_created = False
     _chat_completion_called = False
     _chat_completion_returned = False
     _chat_completion_failed = False
@@ -75,8 +75,8 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
     def chat_completion_plugin_selected_signal_handler(self, *args, **kwargs):
         self._chat_completion_plugin_selected = True
 
-    def chat_completion_plugin_selection_history_created_signal_handler(self, *args, **kwargs):
-        self._chat_completion_plugin_selection_history_created = True
+    def chat_completion_plugin_usage_history_created_signal_handler(self, *args, **kwargs):
+        self._chat_completion_plugin_usage_history_created = True
 
     def chat_invoked_signal_handler(self, *args, **kwargs):
         self._chat_invoked = True
@@ -109,7 +109,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
             "plugin_selected": self._plugin_selected,
             "chat_invoked": self._chat_invoked,
             "chat_completion_plugin_selected": self._chat_completion_plugin_selected,
-            "chat_completion_plugin_selection_history_created": self._chat_completion_plugin_selection_history_created,
+            "chat_completion_plugin_usage_history_created": self._chat_completion_plugin_usage_history_created,
             "chat_completion_called": self._chat_completion_called,
             "chat_response_success": self._chat_completion_returned,
             "chat_response_failure": self._chat_completion_failed,
@@ -222,8 +222,8 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         plugin_called.connect(self.plugin_called_signal_handler)
         chat_invoked.connect(self.chat_invoked_signal_handler)
         chat_completion_plugin_selected.connect(self.chat_completion_plugin_selected_signal_handler)
-        chat_completion_plugin_selection_history_created.connect(
-            self.chat_completion_plugin_selection_history_created_signal_handler
+        chat_completion_plugin_usage_history_created.connect(
+            self.chat_completion_plugin_usage_history_created_signal_handler
         )
         chat_completion_called.connect(self.chat_completion_called_signal_handler)
         chat_response_success.connect(self.chat_completion_returned_signal_handler)

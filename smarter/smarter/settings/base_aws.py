@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=unused-wildcard-import,wildcard-import
+# pylint: disable=E0402,unused-wildcard-import,wildcard-import
 """Django base settings for environments deployed to AWS."""
 
 import os
@@ -22,6 +22,10 @@ CACHES = {
 }
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+
+# Celery Configuration
+CELERY_BROKER_URL = "redis://:smarter@redis-master:6379/1"
+CELERY_RESULT_BACKEND = "redis://:smarter@redis-master:6379/1"
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
