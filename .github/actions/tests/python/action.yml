@@ -51,11 +51,13 @@ inputs:
 runs:
   using: "composite"
   steps:
+    # Set the Kubernetes namespace based on the environment
     - name: Initialize environment variables
       shell: bash
       run: |-
-        echo "NAMESPACE=${{ env.NAMESPACE_BASE }}-${{ inputs.environment }}" >> $GITHUB_ENV
+        echo "NAMESPACE=${{ env.NAMESPACE_BASE }}-${{ env.ENVIRONMENT }}" >> $GITHUB_ENV
       env:
+        ENVIRONMENT: dev
         NAMESPACE_BASE: smarter-platform
 
     - name: Checkout code
