@@ -33,6 +33,7 @@ services:
     cpus: "0.25"
 
   worker:
+    container_name: worker
     build:
       context: .
       dockerfile: Dockerfile
@@ -50,6 +51,7 @@ services:
       - ./.env
 
   beat:
+    container_name: beat
     build:
       context: .
       dockerfile: Dockerfile
@@ -66,6 +68,7 @@ services:
       - ./.env
 
   app:
+    container_name: app
     build:
       context: .
       dockerfile: Dockerfile

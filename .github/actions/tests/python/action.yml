@@ -71,7 +71,9 @@ runs:
 
     - name: Docker Compose up
       shell: bash
-      run: docker-compose up -d
+      run: |
+        docker-compose up -d
+        docker ps
 
     - name: Run Python unit tests
       shell: bash
