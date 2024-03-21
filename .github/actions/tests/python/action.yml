@@ -138,19 +138,6 @@ runs:
       env:
         AWS_ECR_REPO: ${{ env.NAMESPACE }}
 
-    # extract the mysql root configuration from the Kubernetes secret.
-    # these will be set as environment variables for the Helm deployment
-    #
-    # example:
-    # MYMYSQL_ROOT_USERNAMESQL_USER: root
-    # MYSQL_ROOT_PASSWORD: top-secret-password
-    - name: Configure MySQL from Kubernetes secret
-      id: get-mysql-root-secret
-      uses: ./.github/actions/k8s-get-secret
-      with:
-        eks-namespace: apps-hosting-service
-        eks-secret-name: mysql-root
-
     # extract the Django admin user credentials from the Kubernetes secret.
     # these will be set as environment variables for the Helm deployment
     #
