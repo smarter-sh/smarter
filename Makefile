@@ -61,6 +61,10 @@ aws-build:
 # ---------------------------------------------------------
 # Django Back End
 # ---------------------------------------------------------
+helm-update:
+	cd helm/charts/smarter && \
+	helm dependency update
+
 docker-init:
 	@echo "Initializing Docker..." && \
 	docker exec smarter-mysql bash -c "until echo '\q' | mysql -u smarter -psmarter; do sleep 1; done" && \
