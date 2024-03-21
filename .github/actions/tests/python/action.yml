@@ -51,6 +51,7 @@ runs:
       uses: docker/setup-buildx-action@v3
 
     - name: Docker Compose up
+      shell: bash
       run: docker-compose up -d
 
     - name: Create .env
