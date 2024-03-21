@@ -7,6 +7,22 @@ branding:
   icon: "git-pull-request"
   color: "orange"
 inputs:
+  environment:
+    description: "The environment to deploy"
+    required: true
+    default: "dev"
+  aws-access-key-id:
+    description: "The AWS access key ID"
+    required: true
+    type: string
+  aws-secret-access-key:
+    description: "The AWS secret access key"
+    required: true
+    type: string
+  aws-region:
+    description: "The AWS region to deploy to"
+    required: true
+    type: string
   root-domain:
     description: "The root domain of the project"
     required: true
@@ -35,6 +51,15 @@ inputs:
 runs:
   using: "composite"
   steps:
+    # Set the Kubernetes namespace based on the environment
+    - name: Initialize environment variables
+      shell: bash
+      run: |-
+        echo "NAMESPACE=${{ env.NAMESPACE_BASE }}-${{ env.ENVIRONMENT }}" >> $GITHUB_ENV
+      env:
+        ENVIRONMENT: dev
+        NAMESPACE_BASE: smarter-platform
+
     - name: Checkout code
       id: checkout
       uses: actions/checkout@v4
@@ -47,46 +72,171 @@ runs:
         restore-keys: |
           ${{ runner.os }}-pip
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
+    # authenticate AWS CLI
+    - name: Configure AWS credentials
+      id: aws-credentials
+      uses: aws-actions/configure-aws-credentials@v4
       with:
-        python-version: ${{ inputs.python-version }}
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-region: ${{ inputs.aws-region }}
 
-    - name: locate site-packages path
+    # put an entry in the run log to show the aws cli version and the IAM user
+    - name: Check awscli version and identity
+      id: awscli-version
       shell: bash
-      run: |
-        echo "SITE_PACKAGES_PATH=$(python -c 'import site; print(site.getsitepackages()[0])')" >> $GITHUB_ENV
+      run: |-
+        echo "aws cli version:"
+        echo "----------------"
+        aws --version
+        echo
+        echo "aws IAM user:"
+        echo "-------------"
+        aws sts get-caller-identity
 
-    - name: Install pip
+    # install kubectl, which Helm will use to deploy the application
+    - name: Install kubectl
+      id: kubectl-install
       shell: bash
-      run: |
-        python -m pip install --upgrade pip
+      run: |-
+        sudo snap install kubectl --classic
 
-    - name: Install dependencies
+    # setup kubeconfig using the aws eks helper command, 'update-kubeconfig'
+    - name: Configure kubectl
+      id: kubectl-configure
       shell: bash
-      run: |
-        pip install -r ./smarter/requirements/local.txt
+      run: |-
+        aws eks --region ${{ inputs.aws-region }} update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --alias ${{ env.EKS_CLUSTER_NAME }}
+        echo "kubectl version and diagnostic info:"
+        echo "------------------------------------"
+        kubectl version
       env:
-        SITE_PACKAGES_PATH: ${{ env.SITE_PACKAGES_PATH }}
+        EKS_CLUSTER_NAME: apps-hosting-service
+
+    # install jq, which k8s-get-secret will use to parse the Kubernetes secret
+    # and set the environment variables
+    - name: Install jq
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jq
+
+    # connect to Amazon ECR so that we can programmatically
+    # figure out the Docker image to add to the Helm values for the
+    # Kubernetes deployment manifest.
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    # set the Docker image to the environment variable SMARTER_DOCKER_IMAGE
+    # example:  012345678903.dkr.ecr.us-east-2.amazonaws.com/smarter-api-dev:latest
+    - name: Set Docker image
+      id: docker-build
+      shell: bash
+      run: |-
+        echo "SMARTER_DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest" >> $GITHUB_ENV
+      env:
+        AWS_ECR_REPO: ${{ env.NAMESPACE }}
+
+    # extract the Django SMTP email from the Kubernetes secret.
+    # these will be set as environment variables for the Helm deployment
+    #
+    # example:
+    # SMTP_HOST: email-smtp.us-east-2.amazonaws.com
+    # SMTP_PORT: "587"
+    # SMTP_USE_SSL: "false"
+    # SMTP_USE_TLS: "true"
+    # SMTP_USERNAME: an IAM key-pair id
+    # SMTP_PASSWORD: an IAM key-pair secret
+    - name: Configure SMTP email credentials from Kubernetes secret
+      id: get-aws-ses-secret
+      uses: ./.github/actions/k8s-get-secret
+      with:
+        eks-namespace: ${{ env.NAMESPACE }}
+        eks-secret-name: aws-ses-config
+
+    # extract the Django application secret from the Kubernetes secret.
+    # these will be set as environment variables for the Helm deployment
+    #
+    # example:
+    # SECRET_KEY: top-secret-key
+    - name: Configure django secret from Kubernetes secret
+      id: get-django-secret
+      uses: ./.github/actions/k8s-get-secret
+      with:
+        eks-namespace: ${{ env.NAMESPACE }}
+        eks-secret-name: smarter-django-secret-key
+
+    # see: https://github.com/helm/helm
+    #      we're installing directly from the github repo amd64 binary
+    - name: Install Helm
+      id: helm-install
+      shell: bash
+      run: |-
+        curl -LO https://get.helm.sh/helm-v3.14.2-linux-amd64.tar.gz
+        tar -zxvf helm-v3.14.2-linux-amd64.tar.gz
+        sudo mv linux-amd64/helm /usr/local/bin/helm
+
+    # Dump all of our environment variables to the run log
+    - name: Dump environment variables
+      id: dump-env
+      shell: bash
+      run: |-
+        echo "env"
+        echo "-------------------------------"
+        env
 
     - name: Create .env
       shell: bash
       run: |
         touch ./.env
-        echo "GOOGLE_MAPS_API_KEY=${{ env.GOOGLE_MAPS_API_KEY }}" >> ./.env
+        echo "GOOGLE_MAPS_API_KEY=${{ inputs.google-maps-api-key }}" >> ./.env
         echo "OPENAI_API_ORGANIZATION=${{ env.OPENAI_API_ORGANIZATION }}" >> ./.env
-        echo "OPENAI_API_KEY=${{ env.OPENAI_API_KEY }}" >> ./.env
-        echo "PINECONE_API_KEY=${{ env.PINECONE_API_KEY }}" >> ./.env
-        echo "PINECONE_ENVIRONMENT=${{ env.PINECONE_ENVIRONMENT }}" >> ./.env
-        echo "DEBUG_MODE=False" >> ./.env
-        echo "ENVIRONMENT=local" >> ./.env
+        echo "OPENAI_API_KEY=${{ inputs.openai-api-key }}" >> ./.env
+        echo "PINECONE_API_KEY=${{ inputs.pinecone-api-key }}" >> ./.env
+        echo "PINECONE_ENVIRONMENT=${{ inputs.pinecone-environment }}" >> ./.env
+        echo "DEBUG_MODE=${{ env.DEBUG_MODE }}" >> ./.env
+        echo "ENVIRONMENT=${{ inputs.environment }}" >> ./.env
         echo "ROOT_DOMAIN=${{ inputs.root-domain }}" >> ./.env
+        echo "DJANGO_SETTINGS_MODULE=${{ env.DJANGO_SETTINGS_MODULE }}" >> ./.env
+        echo "AWS_REGION=${{ inputs.aws-region }}" >> ./.env
+        echo "AWS_ACCESS_KEY_ID=${{ inputs.aws-access-key-id }}" >> ./.env
+        echo "AWS_SECRET_ACCESS_KEY=${{ inputs.aws-secret-access-key }}" >> ./.env
+        echo "NAMESPACE=${{ env.NAMESPACE }}" >> ./.env
+        echo "DUMP_DEFAULTS=True" >> ./.env
+        echo "SMARTER_DOCKER_IMAGE=${{ env.SMARTER_DOCKER_IMAGE }}" >> ./.env
+        echo "SECRET_KEY=${{ env.SECRET_KEY }}" >> ./.env
+        echo "SMARTER_LOGIN_URL=${{ env.SMARTER_LOGIN_URL }}" >> ./.env
+        echo "SMARTER_ADMIN_PASSWORD=${{ env.SMARTER_ADMIN_PASSWORD }}" >> ./.env
+        echo "SMARTER_ADMIN_USERNAME=${{ env.SMARTER_ADMIN_USERNAME }}" >> ./.env
+        echo "SMARTER_ADMIN_EMAIL=${{ env.SMARTER_ADMIN_EMAIL }}" >> ./.env
+        echo "SMTP_HOST=${{ env.SMTP_HOST }}" >> ./.env
+        echo "SMTP_PORT=${{ env.SMTP_PORT }}" >> ./.env
+        echo "SMTP_USE_SSL=${{ env.SMTP_USE_SSL }}" >> ./.env
+        echo "SMTP_USE_TLS=${{ env.SMTP_USE_TLS }}" >> ./.env
+        echo "SMTP_USERNAME=${{ env.SMTP_USERNAME }}" >> ./.env
+        echo "SMTP_PASSWORD=${{ env.SMTP_PASSWORD }}" >> ./.env
 
       env:
-        OPENAI_API_KEY: ${{ inputs.openai-api-key }}
-        PINECONE_API_KEY: ${{ inputs.pinecone-api-key }}
-        PINECONE_ENVIRONMENT: ${{ inputs.pinecone-environment }}
-        GOOGLE_MAPS_API_KEY: ${{ inputs.google-maps-api-key }}
+        DEBUG_MODE: False
+        DJANGO_SETTINGS_MODULE: smarter.settings.local
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Cache Docker layers
+      uses: actions/cache@v3
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+
+    - name: Docker Compose up
+      shell: bash
+      run: |
+        docker-compose up -d
+        docker ps
 
     - name: Run Python unit tests
       shell: bash
@@ -94,5 +244,5 @@ runs:
         GITHUB_ACTIONS: "true"
         DEBUG_MODE: "true"
       run: |
-        make django-init
-        make python-test
+        make docker-init
+        make docker-test

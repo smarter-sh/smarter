@@ -17,7 +17,7 @@ from .signals import (
     chat_completion_called,
     chat_completion_history_created,
     chat_completion_plugin_selected,
-    chat_completion_plugin_selection_history_created,
+    chat_completion_plugin_usage_history_created,
     chat_completion_tool_call_created,
     chat_completion_tool_call_history_created,
     chat_completion_tool_call_received,
@@ -222,14 +222,14 @@ def handle_plugin_selection_history_created(sender, **kwargs):
     data_dict = model_to_dict(data)
     logger.info(
         "%s signal received: %s data: %s",
-        formatted_text("chat_completion_plugin_selection_history_created"),
+        formatted_text("chat_completion_plugin_usage_history_created"),
         user.username,
         formatted_json(data_dict),
     )
 
 
-chat_completion_plugin_selection_history_created.connect(
-    handle_plugin_selection_history_created, dispatch_uid="chat_completion_plugin_selection_history_created"
+chat_completion_plugin_usage_history_created.connect(
+    handle_plugin_selection_history_created, dispatch_uid="chat_completion_plugin_usage_history_created"
 )
 
 

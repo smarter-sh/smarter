@@ -3,6 +3,7 @@
 import json
 import logging
 from http import HTTPStatus
+from uuid import UUID
 
 from django import forms, http
 from django.contrib.auth import get_user_model
@@ -65,7 +66,6 @@ class APIKeyView(SmarterAdminWebView):
         return HttpResponseRedirect(url)
 
     def _handle_multipart_form(self, request, key_id):
-
         try:
             apikey = APIKey.objects.get(key_id=key_id)
         except APIKey.DoesNotExist:
@@ -120,6 +120,17 @@ class APIKeyView(SmarterAdminWebView):
             return self._handle_json(request, key_id)
         return http.JsonResponse({"error": "Invalid content type"}, status=400)
 
+    def is_valid_uuid(self, uuid_to_test, version=4):
+        """Check if uuid_to_test is a valid UUID."""
+        if isinstance(uuid_to_test, UUID):
+            uuid_to_test = str(uuid_to_test)
+        try:
+            uuid_obj = UUID(uuid_to_test, version=version)
+        except ValueError:
+            return False
+
+        return str(uuid_obj) == uuid_to_test
+
     # pylint: disable=W0221
     def get(self, request, key_id: str = None, new_api_key: str = None):
         """Get the api key. We also use this to create a new api key."""
@@ -127,6 +138,9 @@ class APIKeyView(SmarterAdminWebView):
         # in cases where we arrived here via api-keys/new/
         if key_id is None:
             return self._handle_create(request)
+        if not self.is_valid_uuid(key_id):
+            return http.HttpResponseNotFound({"error": "Invalid key_id"})
+
         try:
             # cases where we received a uuid identifier for an existing api key
             apikey = APIKey.objects.get(key_id=key_id)
@@ -140,7 +154,7 @@ class APIKeyView(SmarterAdminWebView):
             # can actually be used to authenticate via Django.
             if new_api_key:
                 apikey.validate_token(new_api_key)
-        except APIKey.DoesNotExist:
+        except (APIKey.DoesNotExist, ValueError):
             return http.HttpResponseNotFound({"error": "API Key not found"})
 
         context = {
