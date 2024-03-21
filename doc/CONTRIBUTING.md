@@ -26,13 +26,18 @@ In each case there are various technology-specific resources that you'll need to
 
 Smarter follows opinionated code style policies for most of the technologies in this repo. With that in mind, following is how to correctly setup your local development environment. Before attempting to setup this project you should ensure that the following prerequisites are installed in your local environment:
 
+- Docker CE
+- Docker Compose
 - npm: 10.4 or later
 - python: 3.11 or later
+- git: 2.x or later
+- make: 3.8 or later
+
+And if you work on cloud infrastructure then you'll also need these:
+
 - terraform 1.7 or later
 - terragrunt 0.54 or later
 - awscli: 2.15 or later
-- git: 2.x or later
-- make: 3.8 or later
 
 ```console
 git clone https://github.com/QueriumCorp/smarter.git
@@ -53,6 +58,17 @@ make run        # run the web app locally in your dev environment
 ```
 
 To preserve your own sanity, don't spend time formatting your Python, Terraform, JS or any other source code because pre-commit invokes automatic code formatting utilities such as black, flake8 and prettier, on all local commits, and these will reformat the code in your commit based on policy configuration files found in the root of this repo.
+
+Running `docker ps` you should see output similar to the following.
+
+```console
+CONTAINER ID   IMAGE          COMMAND                  CREATED              STATUS              PORTS                    NAMES
+7570286d11c0   smarter        "watchmedo auto-rest…"   About a minute ago   Up About a minute   0.0.0.0:8000->8000/tcp   smarter-app
+7df77367d1d5   smarter        "bash -c 'watchmedo …"   About a minute ago   Up About a minute   8000/tcp                 smarter-worker
+f3bf3acbd087   smarter        "bash -c 'watchmedo …"   About a minute ago   Up About a minute   8000/tcp                 smarter-beat
+7db0374bb2dc   mysql:latest   "docker-entrypoint.s…"   About a minute ago   Up About a minute   3306/tcp, 33060/tcp      smarter-mysql
+33c6673de559   redis:latest   "docker-entrypoint.s…"   About a minute ago   Up About a minute   6379/tcp                 smarter-redis
+```
 
 ## Repository Setup
 

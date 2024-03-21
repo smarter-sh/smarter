@@ -45,7 +45,7 @@ analyze:
 	cloc . --exclude-ext=svg,json,zip --fullpath --not-match-d=smarter/smarter/static/assets/ --vcs=git
 
 coverage:
-	docker exec -it smarter-app-1 bash -c "coverage run manage.py test && coverage report -m && coverage html"
+	docker exec -it smarter-app bash -c "coverage run manage.py test && coverage report -m && coverage html"
 
 release:
 	git commit -m "fix: force a new release" --allow-empty && git push
@@ -67,8 +67,8 @@ aws-build:
 # Django Back End
 # ---------------------------------------------------------
 docker-init:
-	docker exec -it smarter-mysql-1 mysql -u smarter -psmarter -e 'DROP DATABASE IF EXISTS smarter; CREATE DATABASE smarter;' && \
-	docker exec -it smarter-app-1 bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py create_user --username admin --email admin@smarter.sh --password smarter --admin && python manage.py add_plugin_examples admin && python manage.py seed_chat_history"
+	docker exec -it smarter-mysql mysql -u smarter -psmarter -e 'DROP DATABASE IF EXISTS smarter; CREATE DATABASE smarter;' && \
+	docker exec -it smarter-app bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py create_user --username admin --email admin@smarter.sh --password smarter --admin && python manage.py add_plugin_examples admin && python manage.py seed_chat_history"
 
 docker-build:
 	docker-compose up --build
@@ -79,13 +79,10 @@ docker-run:
 
 docker-collectstatic:
 	(cd smarter/smarter/apps/chatapp/reactapp/ && npm run build)
-	(cd smarter && python manage.py collectstatic --noinput)
+	(docker exec smarter-app bash -c "python manage.py  collectstatic --noinput")
 
 docker-test:
-	docker exec -it smarter-app-1 bash -c "python manage.py test"
-
-docker-test-ubuntu:
-	docker exec app bash -c "python manage.py test"
+	docker exec -it smarter-app bash -c "python manage.py test"
 
 
 # ---------------------------------------------------------
