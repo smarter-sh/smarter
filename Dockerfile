@@ -71,6 +71,10 @@ RUN python manage.py collectstatic --noinput
 RUN adduser --disabled-password --gecos '' smarter_user
 USER smarter_user
 
+# Create a directory for the celerybeat-schedule file and change its ownership to smarter_user
+RUN mkdir /app/celerybeat && chown smarter_user:smarter_user /app/celerybeat
+
+
 CMD ["gunicorn", "smarter.wsgi:application", "-b", "0.0.0.0:8000"]
 
 EXPOSE 8000
