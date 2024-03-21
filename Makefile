@@ -67,8 +67,8 @@ aws-build:
 # Django Back End
 # ---------------------------------------------------------
 docker-init:
-	docker exec -it smarter-mysql mysql -u smarter -psmarter -e 'DROP DATABASE IF EXISTS smarter; CREATE DATABASE smarter;' && \
-	docker exec -it smarter-app bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py create_user --username admin --email admin@smarter.sh --password smarter --admin && python manage.py add_plugin_examples admin && python manage.py seed_chat_history"
+	docker exec smarter-mysql mysql -u smarter -psmarter -e 'DROP DATABASE IF EXISTS smarter; CREATE DATABASE smarter;' && \
+	docker exec smarter-app bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py create_user --username admin --email admin@smarter.sh --password smarter --admin && python manage.py add_plugin_examples admin && python manage.py seed_chat_history"
 
 docker-build:
 	docker-compose up --build
@@ -82,7 +82,7 @@ docker-collectstatic:
 	(docker exec smarter-app bash -c "python manage.py  collectstatic --noinput")
 
 docker-test:
-	docker exec -it smarter-app bash -c "python manage.py test"
+	docker exec smarter-app bash -c "python manage.py test"
 
 
 # ---------------------------------------------------------
