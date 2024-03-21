@@ -47,13 +47,6 @@ runs:
         restore-keys: |
           ${{ runner.os }}-pip
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Docker Compose up
-      shell: bash
-      run: docker-compose up -d
-
     - name: Create .env
       shell: bash
       run: |
@@ -72,6 +65,13 @@ runs:
         PINECONE_API_KEY: ${{ inputs.pinecone-api-key }}
         PINECONE_ENVIRONMENT: ${{ inputs.pinecone-environment }}
         GOOGLE_MAPS_API_KEY: ${{ inputs.google-maps-api-key }}
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Docker Compose up
+      shell: bash
+      run: docker-compose up -d
 
     - name: Run Python unit tests
       shell: bash
