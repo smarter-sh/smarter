@@ -15,7 +15,6 @@ dependencies:
   - name: redis
     version: 19.0.0
     repository: https://charts.bitnami.com/bitnami
-dependencies:
 icon: https://www.querium.com/wp-content/uploads/2022/04/Querium-logo_white_transparency.png
 keywords:
   - Querium
