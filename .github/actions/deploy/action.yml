@@ -51,7 +51,7 @@ runs:
         echo "CELERY_BROKER_URL=${{ env.REDIS_URL }}" >> $GITHUB_ENV
         echo "CELERY_RESULT_BACKEND=${{ env.REDIS_URL }}" >> $GITHUB_ENV
       env:
-        REDIS_URL: redis://:smarter@smarter-redis-master-0:6379/1
+        REDIS_URL: redis://:smarter@smarter-redis-master.smarter-platform-${{ inputs.environment }}.svc.cluster.local:6379/1
         DJANGO_SETTINGS_BASE: smarter.settings
         NAMESPACE_BASE: smarter-platform
 
