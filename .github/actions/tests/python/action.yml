@@ -136,22 +136,6 @@ runs:
       env:
         AWS_ECR_REPO: ${{ env.NAMESPACE }}
 
-    # extract the mysql configuration from the Kubernetes secret.
-    # these will be set as environment variables for the Helm deployment
-    #
-    # example:
-    # MYSQL_HOST: mysql.service.lawrencemcdaniel.com
-    # MYSQL_PORT: 3306
-    # MYSQL_DATABASE: smarter_api_dev
-    # MYSQL_USER: smarter_api_dev
-    # MYSQL_PASSWORD: top-secret-password
-    - name: Configure MySQL from Kubernetes secret
-      id: get-mysql-secret
-      uses: ./.github/actions/k8s-get-secret
-      with:
-        eks-namespace: ${{ env.NAMESPACE }}
-        eks-secret-name: mysql-smarter
-
     # extract the mysql root configuration from the Kubernetes secret.
     # these will be set as environment variables for the Helm deployment
     #
@@ -246,13 +230,6 @@ runs:
         echo "NAMESPACE=${{ env.NAMESPACE }}" >> ./.env
         echo "DUMP_DEFAULTS=True" >> ./.env
         echo "SMARTER_DOCKER_IMAGE=${{ env.SMARTER_DOCKER_IMAGE }}" >> ./.env
-        echo "MYSQL_HOST=${{ env.MYSQL_HOST }}" >> ./.env
-        echo "MYSQL_PORT=${{ env.MYSQL_PORT }}" >> ./.env
-        echo "MYSQL_DATABASE=${{ env.MYSQL_DATABASE }}" >> ./.env
-        echo "MYSQL_USER=${{ env.MYSQL_USER }}" >> ./.env
-        echo "MYSQL_PASSWORD=${{ env.MYSQL_PASSWORD }}" >> ./.env
-        echo "MYSQL_ROOT_USERNAME=${{ env.MYSQL_ROOT_USERNAME }}" >> ./.env
-        echo "MYSQL_ROOT_PASSWORD=${{ env.MYSQL_ROOT_PASSWORD }}" >> ./.env
         echo "SECRET_KEY=${{ env.SECRET_KEY }}" >> ./.env
         echo "SMARTER_LOGIN_URL=${{ env.SMARTER_LOGIN_URL }}" >> ./.env
         echo "SMARTER_ADMIN_PASSWORD=${{ env.SMARTER_ADMIN_PASSWORD }}" >> ./.env
@@ -292,4 +269,5 @@ runs:
         GITHUB_ACTIONS: "true"
         DEBUG_MODE: "true"
       run: |
-        make docker-test-ubuntu
+        make docker-init
+        make docker-test
