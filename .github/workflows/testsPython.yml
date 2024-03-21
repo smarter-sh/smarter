@@ -39,9 +39,13 @@ jobs:
       - name: Run Python tests
         uses: ./.github/actions/tests/python
         with:
+          environment: "local"
           root-domain: "${{ env.ROOT_DOMAIN }}"
           python-version: "${{ env.python-version}}"
           google-maps-api-key: "${{ secrets.GOOGLE_MAPS_API_KEY }}"
           openai-api-key: "${{ secrets.OPENAI_API_KEY }}"
           pinecone-api-key: "${{ secrets.PINECONE_API_KEY }}"
           pinecone-environment: "${{ secrets.PINECONE_ENVIRONMENT }}"
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}

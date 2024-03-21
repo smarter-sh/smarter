@@ -1,7 +1,15 @@
+---
+#------------------------------------------------------------------------------
+# For local development, you can use the following docker-compose file
+# to run the application. This file will start a MySQL database, a Redis
+# server, a Celery worker, and the application itself. The application
+# will be available at http://localhost:8000.
+#------------------------------------------------------------------------------
 version: "3"
 
 services:
-  mysql:
+  smarter-mysql:
+    container_name: smarter-mysql
     image: mysql:latest
     command: --default-authentication-plugin=mysql_native_password
     restart: always
@@ -12,38 +20,73 @@ services:
       MYSQL_PASSWORD: smarter
     volumes:
       - ./mysql-data:/var/lib/mysql
-    ports:
-      - 3306:3306
+    mem_limit: 500m
+    cpus: "0.50"
 
-  redis-master:
+  smarter-redis:
+    container_name: smarter-redis
     image: redis:latest
     command: redis-server --requirepass smarter
-    ports:
-      - 6379:6379
+    mem_limit: 250m
+    cpus: "0.25"
 
-  worker:
+  smarter-worker:
+    container_name: smarter-worker
+    x-build:
+      type: docker
     build:
       context: .
       dockerfile: Dockerfile
       args:
         ENVIRONMENT: local
+      cache_from:
+        - smarter
+    image: smarter
     command: >
       bash -c "watchmedo auto-restart --directory=./ --pattern='*.py' --recursive --
       celery -A smarter.celery.celery_app worker --loglevel=info"  image: smarter
     volumes:
       - ./smarter:/app
     depends_on:
-      - mysql
-      - redis-master
+      - smarter-mysql
+      - smarter-redis
     env_file:
       - ./.env
 
-  app:
+  smarter-beat:
+    container_name: smarter-beat
+    x-build:
+      type: docker
     build:
       context: .
       dockerfile: Dockerfile
       args:
         ENVIRONMENT: local
+      cache_from:
+        - smarter
+    command: >
+      bash -c "watchmedo auto-restart --directory=./ --pattern='*.py' --recursive --
+      celery -A smarter.celery.celery_app beat --loglevel=info" image: smarter
+    image: smarter
+    volumes:
+      - ./smarter:/app
+    depends_on:
+      - smarter-mysql
+      - smarter-redis
+    env_file:
+      - ./.env
+
+  smarter-app:
+    container_name: smarter-app
+    x-build:
+      type: docker
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        ENVIRONMENT: local
+      cache_from:
+        - smarter
     command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- gunicorn smarter.wsgi:application -b 0.0.0.0:8000
     image: smarter
     volumes:
@@ -51,8 +94,11 @@ services:
     ports:
       - 8000:8000
     depends_on:
-      - mysql
-      - redis-master
-      - worker
+      - smarter-mysql
+      - smarter-redis
+      - smarter-worker
+      - smarter-beat
     env_file:
       - ./.env
+    mem_limit: 500m
+    cpus: "0.50"
