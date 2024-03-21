@@ -56,11 +56,17 @@ runs:
         echo "OPENAI_API_KEY=${{ env.OPENAI_API_KEY }}" >> ./.env
         echo "PINECONE_API_KEY=${{ env.PINECONE_API_KEY }}" >> ./.env
         echo "PINECONE_ENVIRONMENT=${{ env.PINECONE_ENVIRONMENT }}" >> ./.env
-        echo "DEBUG_MODE=False" >> ./.env
-        echo "ENVIRONMENT=local" >> ./.env
+        echo "DEBUG_MODE=${{ env.DEBUG_MODE }}" >> ./.env
+        echo "ENVIRONMENT=${{ env.ENVIRONMENT }}" >> ./.env
         echo "ROOT_DOMAIN=${{ inputs.root-domain }}" >> ./.env
-
+        echo "DJANGO_SETTINGS_MODULE=${{ env.DJANGO_SETTINGS_MODULE }}" >> ./.env
+        echo "AWS_REGION=${{ env.AWS_REGION }}" >> ./.env
+        echo "AWS_ACCESS_KEY_ID=${{ env.AWS_ACCESS_KEY_ID }}" >> ./.env
+        echo "AWS_SECRET_ACCESS_KEY=${{ env.AWS_SECRET_ACCESS_KEY }}" >> ./.env
       env:
+        DEBUG_MODE: False
+        ENVIRONMENT: local
+        DJANGO_SETTINGS_MODULE: smarter.settings.local
         OPENAI_API_KEY: ${{ inputs.openai-api-key }}
         PINECONE_API_KEY: ${{ inputs.pinecone-api-key }}
         PINECONE_ENVIRONMENT: ${{ inputs.pinecone-environment }}

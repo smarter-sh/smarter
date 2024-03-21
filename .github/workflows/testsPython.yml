@@ -45,3 +45,7 @@ jobs:
           openai-api-key: "${{ secrets.OPENAI_API_KEY }}"
           pinecone-api-key: "${{ secrets.PINECONE_API_KEY }}"
           pinecone-environment: "${{ secrets.PINECONE_ENVIRONMENT }}"
+        env:
+          AWS_REGION: ${{ env.AWS_REGION }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
