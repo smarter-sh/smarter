@@ -85,7 +85,7 @@ docker-test:
 	docker exec -it smarter-app-1 bash -c "python manage.py test"
 
 docker-test-ubuntu:
-	docker exec -it smarter_app bash -c "python manage.py test"
+	docker exec app bash -c "python manage.py test"
 
 
 # ---------------------------------------------------------
