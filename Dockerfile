@@ -1,3 +1,12 @@
+#------------------------------------------------------------------------------
+# This Dockerfile is used to build
+# - a Docker image for the Smarter application.
+# - a Docker container for the Smarter Celery worker.
+# - a Docker container for the Smarter Celery beat.
+#
+# This image is used for all environments (local, dev, staging, and production).
+#------------------------------------------------------------------------------
+
 # Use the official Python image as a parent image
 FROM --platform=linux/amd64 python:3.11-buster
 
@@ -6,6 +15,7 @@ ARG AWS_ACCESS_KEY_ID
 ARG AWS_SECRET_ACCESS_KEY
 ARG AWS_REGION
 ARG ENVIRONMENT
+ARG DJANGO_SETTINGS_MODULE
 ARG DEBUG_MODE
 ARG DUMP_DEFAULTS
 ARG MYSQL_HOST
@@ -24,7 +34,6 @@ ARG SMTP_USE_SSL
 ARG SMTP_USE_TLS
 ARG SMTP_USERNAME
 ARG SMTP_PASSWORD
-
 
 WORKDIR /app
 
@@ -55,6 +64,9 @@ COPY smarter .
 RUN cd smarter/apps/chatapp/reactapp/ && npm install && npm run build && cd ../../../../
 RUN python manage.py collectstatic --noinput
 
+# Add a non-root user and switch to it
+RUN adduser --disabled-password --gecos '' smarter_user
+USER smarter_user
 
 CMD ["gunicorn", "smarter.wsgi:application", "-b", "0.0.0.0:8000"]
 
