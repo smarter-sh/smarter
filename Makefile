@@ -17,7 +17,7 @@ else
     $(shell cp ./doc/example-dot-env .env)
 endif
 
-.PHONY: analyze pre-commit python-init python-activate python-lint python-clean python-test react-init react-lint react-update react-run react-build react-release
+.PHONY: analyze pre-commit python-init python-activate python-lint python-clean python-test react-init react-lint react-update react-run react-build aws-build docker-init docker-build docker-run docker-collectstatic docker-test python-init python-lint python-clean keen-init keen-build keen-server react-clean react-init react-lint react-update react-run react-build help
 
 # Default target executed when no arguments are given to make.
 all: help
@@ -31,21 +31,16 @@ lint:
 	make react-lint
 
 init:
-	make python-init
-	make react-init
+	make docker-init
 
 build:
-	make aws-build
-	make react-build
-
-run:
-	make react-run
+	make docker-build
 
 analyze:
 	cloc . --exclude-ext=svg,json,zip --fullpath --not-match-d=smarter/smarter/static/assets/ --vcs=git
 
 coverage:
-	docker exec -it smarter-app bash -c "coverage run manage.py test && coverage report -m && coverage html"
+	docker exec smarter-app bash -c "coverage run manage.py test && coverage report -m && coverage html"
 
 release:
 	git commit -m "fix: force a new release" --allow-empty && git push
@@ -161,30 +156,34 @@ react-build:
 
 help:
 	@echo '===================================================================='
-	@echo 'clean              - remove all build, test, coverage and Python artifacts'
-	@echo 'lint               - run all code linters and formatters'
-	@echo 'init               - create environments for Python, NPM and pre-commit and install dependencies'
-	@echo 'build              - create and configure AWS infrastructure resources and build the React app'
-	@echo 'run                - run the web app in development mode'
-	@echo 'analyze            - generate code analysis report'
-	@echo 'coverage           - generate code coverage analysis report'
-	@echo 'release            - force a new release'
+	@echo 'clean              - Remove all build, test, coverage and Python artifacts'
+	@echo 'lint               - Run all code linters and formatters'
+	@echo 'init               - Initialize Docker MySQL database and Django migrations'
+	@echo 'build              - Build Docker containers'
+	@echo 'analyze            - Generate code analysis report using cloc'
+	@echo 'coverage           - Generate Docker-based code coverage analysis report'
+	@echo 'release            - Force a new Github release'
 	@echo '-- AWS --'
-	@echo 'aws-build          - run Terraform to create AWS infrastructure'
-	@echo '-- Python-Django API --'
-	@echo 'python-init        - create a Python virtual environment and install dependencies'
-	@echo 'python-test        - run Python unit tests'
-	@echo 'python-lint        - run Python linting'
-	@echo 'python-clean       - destroy the Python virtual environment'
+	@echo 'aws-build          - Run Terraform to create AWS infrastructure'
+	@echo '-- Python-Django Dashboard application --'
+	@echo 'python-init        - Create a Python virtual environment and install dependencies'
+	@echo 'python-lint        - Run Python linting using pre-commit'
+	@echo 'python-clean       - Destroy the Python virtual environment and remove __pycache__ directories'
+	@echo '-- Docker --'
+	@echo 'docker-init        - Initialize MySQL and create the smarter database'
+	@echo 'docker-build       - Build all Docker containers using docker-compose'
+	@echo 'docker-run         - Start all Docker containers using docker-compose'
+	@echo 'docker-collectstatic - Run Django collectstatic in Docker'
+	@echo 'docker-test        - Run Python-Django unit tests in Docker'
 	@echo '-- Keen --'
-	@echo 'keen-init          - install gulp, yarn and dependencies'
-	@echo 'keen-build         - build Keen app'
-	@echo 'keen-server        - start local Keen web server'
+	@echo 'keen-init          - Install gulp, yarn and dependencies for Keen'
+	@echo 'keen-build         - Build Keen app using gulp'
+	@echo 'keen-server        - Start local Keen web server using gulp'
 	@echo '-- React App --'
-	@echo 'react-clean        - destroy npm environment'
-	@echo 'react-init         - run npm install'
-	@echo 'react-lint         - run npm lint'
-	@echo 'react-update       - update npm packages'
-	@echo 'react-run          - run the React app in development mode'
-	@echo 'react-build        - build the React app for production'
-	@echo 'react-release      - deploy the React app to AWS S3 and invalidate the Cloudfront CDN'
+	@echo 'react-clean        - Remove node_modules directories for React app'
+	@echo 'react-init         - Run npm install for React app'
+	@echo 'react-lint         - Run npm lint for React app'
+	@echo 'react-update       - Update npm packages for React app'
+	@echo 'react-run          - Run the React app in development mode'
+	@echo 'react-build        - Build the React app for production'
+	@echo '===================================================================='
