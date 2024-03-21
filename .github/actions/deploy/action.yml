@@ -46,7 +46,13 @@ runs:
       shell: bash
       run: |-
         echo "NAMESPACE=${{ env.NAMESPACE_BASE }}-${{ inputs.environment }}" >> $GITHUB_ENV
+        echo "DJANGO_SETTINGS_MODULE=${{ env.DJANGO_SETTINGS_BASE }}.${{ inputs.environment }}" >> $GITHUB_ENV
+        echo "CACHES_LOCATION=${{ env.REDIS_URL }}" >> $GITHUB_ENV
+        echo "CELERY_BROKER_URL=${{ env.REDIS_URL }}" >> $GITHUB_ENV
+        echo "CELERY_RESULT_BACKEND=${{ env.REDIS_URL }}" >> $GITHUB_ENV
       env:
+        REDIS_URL: redis://:smarter@smarter-redis-master.smarter-platform-${{ inputs.environment }}.svc.cluster.local:6379/1
+        DJANGO_SETTINGS_BASE: smarter.settings
         NAMESPACE_BASE: smarter-platform
 
     # Checkout all code referenced by this action
@@ -217,6 +223,14 @@ runs:
       run: |-
         kubectl delete job smarter-db-init-job --namespace ${{ env.NAMESPACE }} || true
 
+    - name: Update Helm charts
+      id: helm-update
+      shell: bash
+      run: |-
+        cd helm/charts/smarter
+        helm repo add bitnami https://charts.bitnami.com/bitnami
+        helm dependency build
+
     # Deploy the application to Kubernetes using Helm
     - name: Deploy
       id: deploy
@@ -224,6 +238,7 @@ runs:
       run: |-
         helm upgrade --install --force smarter ./helm/charts/smarter/ --namespace ${{ env.NAMESPACE }} \
         --set deployTimestamp="$(date +%s)" \
+        --set env.DJANGO_SETTINGS_MODULE=${{ env.DJANGO_SETTINGS_MODULE }} \
         --set env.ENVIRONMENT=${{ inputs.environment }} \
         --set env.AWS_REGION=${{ inputs.aws-region }} \
         --set env.AWS_ACCESS_KEY_ID=${{ inputs.aws-access-key-id }} \
@@ -255,3 +270,6 @@ runs:
         --set env.SMTP_USE_TLS=${{ env.SMTP_USE_TLS }} \
         --set env.SMTP_USERNAME=${{ env.SMTP_USERNAME }} \
         --set env.SMTP_PASSWORD=${{ env.SMTP_PASSWORD }} \
+        --set env.CACHES_LOCATION=${{ env.CACHES_LOCATION }} \
+        --set env.CELERY_BROKER_URL=${{ env.CELERY_BROKER_URL }} \
+        --set env.CELERY_RESULT_BACKEND=${{ env.CELERY_RESULT_BACKEND }} \

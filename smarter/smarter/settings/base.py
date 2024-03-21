@@ -49,7 +49,7 @@ ALLOWED_HOSTS = []
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://:smarter@redis-master:6379/1",
+        "LOCATION": "redis://:smarter@smarter-redis:6379/1",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
@@ -59,8 +59,8 @@ CACHES = {
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 
 # Default Celery Configuration
-CELERY_BROKER_URL = "redis://:smarter@redis-master:6379/1"
-CELERY_RESULT_BACKEND = "redis://:smarter@redis-master:6379/1"
+CELERY_BROKER_URL = "redis://:smarter@smarter-redis:6379/1"
+CELERY_RESULT_BACKEND = "redis://:smarter@smarter-redis:6379/1"
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
@@ -164,7 +164,7 @@ DATABASES = {
         "NAME": "smarter",
         "USER": "smarter",
         "PASSWORD": "smarter",
-        "HOST": "mysql",  # Or an IP Address that your DB is hosted on
+        "HOST": "smarter-mysql",  # Or an IP Address that your DB is hosted on
         "PORT": "3306",
     }
 }

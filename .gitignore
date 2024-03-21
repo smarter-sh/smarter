@@ -1,34 +1,49 @@
 keen_**
 
+# application data
+# -------------------------------------
+celerybeat-schedule
 mysql-data
 db.sqlite3
+.cache.sqlite
 staticfiles
+*.swp
 
-# build
+# build artifacts
+# -------------------------------------
 **/build/
+**/dist/
+lambda_dist_pkg
+*.zip
 # But don't ignore '.github/actions/build'
 !.github/actions/build/
 
-# coverage
+
+# coverage artifacts
+# -------------------------------------
 .coverage
 .coverage.*
 htmlcov
 
 # Jupyter Notebook
+# -------------------------------------
 .ipynb_checkpoints
-dist
 
 # os files
+# -------------------------------------
 .DS_Store
 Thumbs.db
 Desktop.ini
 
 # log data
+# -------------------------------------
 *.log
 *.db
 *.out
 
+
 # typical secrets files
+# -------------------------------------
 .env
 secrets.json
 config.json
@@ -43,46 +58,30 @@ config.json
 *.p7c
 
 # Local .terraform directories
+# -------------------------------------
 .terragrunt-cache/
 .terraform.lock.hcl
 *.tfstate
 *.tfstate.*
 .terraform/
-lambda_dist_pkg
-*.zip
-__pycache__
-.pytest_cache
-.cache.sqlite
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+# don't ignore this file
+!tfmodule-template.tf
+
 
 # Python
+# -------------------------------------
+__pycache__
+.pytest_cache
 venv
 .venv
 .pytest_cache
 *.pyc
 *.pyo
 *.pyd
-*.swp
-*.log
-
-# .tfstate files
-.terraform.lock.hcl
-*.tfstate
-*.tfstate.*
-
-
-# ignore this file
-!tfmodule-template.tf
-
-# tardigrade-ci
-tardigrade-ci/
-.tardigrade-ci
-
-# go tests
-tests/go.*
 
 # ReactJS
 node_modules
 package-lock.json
-
-client/node_modules/
-client/package-lock.json
