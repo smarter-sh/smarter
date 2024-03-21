@@ -220,6 +220,13 @@ runs:
       run: |-
         kubectl delete job smarter-db-init-job --namespace ${{ env.NAMESPACE }} || true
 
+    - name: Update Helm charts
+      id: helm-update
+      shell: bash
+      run: |-
+        cd helm/charts/smarter
+        helm dependency build
+
     # Deploy the application to Kubernetes using Helm
     - name: Deploy
       id: deploy
