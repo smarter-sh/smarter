@@ -8,3 +8,18 @@ service:
   port: 8000
   targetPort: 8000
 ingress:
+redis:
+  fullnameOverride: "smarter-redis"
+  global:
+    redis:
+      password: "smarter"
+  cluster:
+    enabled: false
+  master:
+    resources:
+      limits:
+        cpu: "500m"
+        memory: "250Mi"
+      requests:
+        cpu: "250m"
+        memory: "125Mi"
