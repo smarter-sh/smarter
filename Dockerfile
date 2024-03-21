@@ -43,6 +43,8 @@ RUN apt-get install -y nodejs
 RUN mkdir -p smarter/requirements
 COPY smarter/requirements ./smarter/requirements
 RUN pip install --upgrade pip
+ENV ENVIRONMENT=$ENVIRONMENT
+RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r smarter/requirements/local.txt ; fi
 RUN pip install -r smarter/requirements/aws.txt
 
 # Add our source code

@@ -45,10 +45,7 @@ analyze:
 	cloc . --exclude-ext=svg,json,zip --fullpath --not-match-d=smarter/smarter/static/assets/ --vcs=git
 
 coverage:
-	cd smarter && \
-	coverage run manage.py test && \
-	coverage report -m && \
-	coverage html
+	docker exec -it smarter-app-1 bash -c "coverage run manage.py test && coverage report -m && coverage html"
 
 release:
 	git commit -m "fix: force a new release" --allow-empty && git push
@@ -69,44 +66,42 @@ aws-build:
 # ---------------------------------------------------------
 # Django Back End
 # ---------------------------------------------------------
-django-init:
-	if [ -f smarter/smarter/db.sqlite3 ]; then rm smarter/smarter/db.sqlite3; fi && \
-	cd smarter && python manage.py makemigrations && \
-	python manage.py migrate && \
-	python manage.py create_user --username admin --email admin@smarter.sh --password smarter --admin && \
-	python manage.py add_plugin_examples admin && \
-	python manage.py seed_chat_history
+docker-init:
+	docker exec -it smarter-mysql-1 mysql -u smarter -psmarter -e 'DROP DATABASE IF EXISTS smarter; CREATE DATABASE smarter;' && \
+	docker exec -it smarter-app-1 bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py create_user --username admin --email admin@smarter.sh --password smarter --admin && python manage.py add_plugin_examples admin && python manage.py seed_chat_history"
 
-django-run:
-	cd smarter && python manage.py runserver
+docker-build:
+	docker-compose up --build
 
-django-collectstatic:
+docker-run:
+	docker-compose up
+
+docker-collectstatic:
 	(cd smarter/smarter/apps/chatapp/reactapp/ && npm run build)
 	(cd smarter && python manage.py collectstatic --noinput)
 
-django-test:
-	cd smarter && python manage.py test
+docker-test:
+	docker exec -it smarter-app-1 bash -c "python manage.py test"
 
 
 # ---------------------------------------------------------
 # Python
 # ---------------------------------------------------------
 python-init:
-	make python-clean
+	make python-clean && \
 	npm install && \
 	$(PYTHON) -m venv venv && \
 	$(ACTIVATE_VENV) && \
 	$(PIP) install --upgrade pip && \
 	$(PIP) install -r smarter/requirements/local.txt && \
-	pre-commit install && \
-	make django-init
+	pre-commit install
 
 python-lint:
 	make pre-commit
 
 python-clean:
 	rm -rf venv
-	find python/ -name __pycache__ -type d -exec rm -rf {} +
+	find ./ -name __pycache__ -type d -exec rm -rf {} +
 
 # ---------------------------------------------------------
 # Keen

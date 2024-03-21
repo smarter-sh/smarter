@@ -1,0 +1,58 @@
+version: "3"
+
+services:
+  mysql:
+    image: mysql:latest
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: smarter
+      MYSQL_DATABASE: smarter
+      MYSQL_USER: smarter
+      MYSQL_PASSWORD: smarter
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+    ports:
+      - 3306:3306
+
+  redis-master:
+    image: redis:latest
+    command: redis-server --requirepass smarter
+    ports:
+      - 6379:6379
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        ENVIRONMENT: local
+    command: >
+      bash -c "watchmedo auto-restart --directory=./ --pattern='*.py' --recursive --
+      celery -A smarter.celery.celery_app worker --loglevel=info"  image: smarter
+    volumes:
+      - ./smarter:/app
+    depends_on:
+      - mysql
+      - redis-master
+    env_file:
+      - ./.env
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        ENVIRONMENT: local
+    command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- gunicorn smarter.wsgi:application -b 0.0.0.0:8000
+    image: smarter
+    volumes:
+      - ./smarter:/app
+    ports:
+      - 8000:8000
+    depends_on:
+      - mysql
+      - redis-master
+      - worker
+    env_file:
+      - ./.env

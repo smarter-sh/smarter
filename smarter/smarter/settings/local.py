@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=unused-wildcard-import,wildcard-import
+# pylint: disable=E0402,E0602,unused-wildcard-import,wildcard-import
 """
 Django local settings for smarter project.
 
@@ -16,6 +16,7 @@ import os
 from .base import *
 
 
+print("Loading smarter.settings.local")
 ENVIRONMENT_DOMAIN = "dev.platform.smarter.sh"
 
 # SECURITY WARNING: keep the secret key used in production secret!

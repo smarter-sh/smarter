@@ -22,6 +22,10 @@ from .signals import new_user_created
 User = get_user_model()
 logger = logging.getLogger(__name__)
 
+CHARGE_TYPE_PROMPT_COMPLETION = "completion"
+CHARGE_TYPE_PLUGIN = "plugin"
+CHARGE_TYPE_TOOL = "tool"
+
 
 class Account(TimestampedModel):
     """Account model."""
@@ -206,3 +210,42 @@ class APIKey(AuthToken):
 
     def __str__(self):
         return self.identifier
+
+
+class Charge(TimestampedModel):
+    """Charge model for periodic account billing."""
+
+    CHARGE_TYPES = [
+        (CHARGE_TYPE_PROMPT_COMPLETION, "Prompt Completion"),
+        (CHARGE_TYPE_PLUGIN, "Plugin"),
+        (CHARGE_TYPE_TOOL, "Tool"),
+    ]
+
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="charge")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="charge")
+    charge_type = models.CharField(
+        max_length=20,
+        choices=CHARGE_TYPES,
+        default=CHARGE_TYPE_PROMPT_COMPLETION,
+    )
+    prompt_tokens = models.IntegerField()
+    completion_tokens = models.IntegerField()
+    total_tokens = models.IntegerField()
+    model = models.CharField(max_length=255)
+    reference = models.CharField(max_length=255)
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+
+        if self.user is None or self.account is None:
+            raise ValueError("User and Account cannot be null")
+
+        super().save(*args, **kwargs)
+        if is_new:
+            logger.debug(
+                "New user charge created for %s %s. Sending signal.", self.account.company_name, self.user.email
+            )
+            # new_charge_created.send(sender=self.__class__, charge=self)
+
+    def __str__(self):
+        return str(self.id) + " - " + self.model + " - " + self.total_tokens

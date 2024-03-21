@@ -14,11 +14,16 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 import glob
 import logging.config
 import os
+import sys
 from pathlib import Path
 
 from corsheaders.defaults import default_headers
 from dotenv import load_dotenv
 
+
+# to disable redis/celery in collectstatic
+if "collectstatic" in sys.argv:
+    CELERY_TASK_ALWAYS_EAGER = True
 
 load_dotenv()
 CORS_ALLOW_HEADERS = list(default_headers) + [
@@ -37,14 +42,29 @@ LOGIN_REDIRECT_URL = "/"
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "SET-ME-PLEASE"
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
-
 ALLOWED_HOSTS = []
 
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://:smarter@redis-master:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+    }
+}
+
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+
+# Default Celery Configuration
+CELERY_BROKER_URL = "redis://:smarter@redis-master:6379/1"
+CELERY_RESULT_BACKEND = "redis://:smarter@redis-master:6379/1"
+CELERY_ACCEPT_CONTENT = ["application/json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "UTC"
 
 # Application definition
 
@@ -72,6 +92,7 @@ INSTALLED_APPS = [
     "taggit",
     "corsheaders",
     "drf_yasg",
+    "django_celery_beat",
 ]
 
 MIDDLEWARE = [
@@ -139,8 +160,12 @@ WSGI_APPLICATION = "smarter.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "smarter",
+        "USER": "smarter",
+        "PASSWORD": "smarter",
+        "HOST": "mysql",  # Or an IP Address that your DB is hosted on
+        "PORT": "3306",
     }
 }
 

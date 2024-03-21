@@ -2,10 +2,11 @@
 # pylint: disable=W0613,C0115
 """All models for the OpenAI Function Calling API app."""
 from django.db import models
+from django.forms.models import model_to_dict
 
 from smarter.apps.chat.signals import (
     chat_completion_history_created,
-    chat_completion_plugin_selection_history_created,
+    chat_completion_plugin_usage_history_created,
     chat_completion_tool_call_history_created,
 )
 
@@ -30,6 +31,12 @@ class ChatHistory(TimestampedModel):
     def save(self, *args, **kwargs):
         chat_completion_history_created.send(sender=ChatHistory, user=self.user, data=self)
         super().save(*args, **kwargs)
+
+    def to_dict(self):
+        """Return object as dictionary."""
+        data = model_to_dict(self)
+        data["user"] = model_to_dict(self.user) if self.user else None
+        return data
 
     def __str__(self):
         # pylint: disable=E1136
@@ -57,6 +64,13 @@ class ChatToolCallHistory(TimestampedModel):
     def save(self, *args, **kwargs):
         chat_completion_tool_call_history_created.send(sender=ChatToolCallHistory, user=self.user, data=self)
         super().save(*args, **kwargs)
+
+    def to_dict(self):
+        """Return object as dictionary."""
+        data = model_to_dict(self)
+        data["plugin"] = model_to_dict(self.plugin) if self.plugin else None
+        data["user"] = model_to_dict(self.user) if self.user else None
+        return data
 
     def __str__(self):
         return f"{self.user} - {self.input_text[:50] if self.input_text else ''}"
@@ -86,8 +100,19 @@ class PluginUsageHistory(TimestampedModel):
     inquiry_return = models.TextField(blank=True, null=True)
 
     def save(self, *args, **kwargs):
-        chat_completion_plugin_selection_history_created.send(sender=PluginUsageHistory, user=self.user, data=self)
+        chat_completion_plugin_usage_history_created.send(sender=PluginUsageHistory, user=self.user, data=self)
         super().save(*args, **kwargs)
+
+    def to_dict(self):
+        """Return object as dictionary."""
+        data = model_to_dict(self)
+        data["plugin"] = self.plugin.to_dict() if self.plugin else None
+        data["user"] = {
+            "id": self.user.id,
+            "username": self.user.username,
+            "email": self.user.email,
+        }
+        return data
 
     def __str__(self):
         return f"{self.plugin} - {self.inquiry_type}"

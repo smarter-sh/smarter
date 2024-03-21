@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=W0613,C0115
-"""Signals for account app."""
+"""Signals for chat app."""
 from django.dispatch import Signal
 
 
@@ -11,7 +11,7 @@ chat_response_failure = Signal()
 
 # chat completion plugin selection
 chat_completion_plugin_selected = Signal()
-chat_completion_plugin_selection_history_created = Signal()
+chat_completion_plugin_usage_history_created = Signal()
 
 # chat completion signals
 chat_completion_called = Signal()
