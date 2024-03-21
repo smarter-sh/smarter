@@ -84,7 +84,7 @@ spec:
               value: "{{ .Values.env.CELERY_RESULT_BACKEND }}"
 
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
-          command: ["celery", "-A", "smarter.celery.celery_app", "beat", "--loglevel=info"]
+          command: ["celery", "-A", "smarter.celery.celery_app", "beat", "--loglevel=info", "--schedule=/app/celerybeat/celerybeat-schedule"]
           imagePullPolicy: Always
           name: {{ .Values.beatName }}
           ports:
