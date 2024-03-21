@@ -138,20 +138,6 @@ runs:
       env:
         AWS_ECR_REPO: ${{ env.NAMESPACE }}
 
-    # extract the Django admin user credentials from the Kubernetes secret.
-    # these will be set as environment variables for the Helm deployment
-    #
-    # example:
-    # SMARTER_LOGIN_URL: https://dev.api.smarter.sh/login/
-    # SMARTER_ADMIN_USERNAME: admin
-    # SMARTER_ADMIN_PASSWORD: top-secret-password
-    - name: Configure admin user from Kubernetes secret
-      id: get-admin-secret
-      uses: ./.github/actions/k8s-get-secret
-      with:
-        eks-namespace: ${{ env.NAMESPACE }}
-        eks-secret-name: smarter-admin
-
     # extract the Django SMTP email from the Kubernetes secret.
     # these will be set as environment variables for the Helm deployment
     #
