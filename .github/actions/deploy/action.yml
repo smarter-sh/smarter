@@ -47,8 +47,11 @@ runs:
       run: |-
         echo "NAMESPACE=${{ env.NAMESPACE_BASE }}-${{ inputs.environment }}" >> $GITHUB_ENV
         echo "DJANGO_SETTINGS_MODULE=${{ env.DJANGO_SETTINGS_BASE }}.${{ inputs.environment }}" >> $GITHUB_ENV
-
+        echo "CACHES_LOCATION=${{ env.REDIS_URL }}" >> $GITHUB_ENV
+        echo "CELERY_BROKER_URL=${{ env.REDIS_URL }}" >> $GITHUB_ENV
+        echo "CELERY_RESULT_BACKEND=${{ env.REDIS_URL }}" >> $GITHUB_ENV
       env:
+        REDIS_URL: redis://:smarter@smarter-redis-master-0:6379/1
         DJANGO_SETTINGS_BASE: smarter.settings
         NAMESPACE_BASE: smarter-platform
 
@@ -267,3 +270,6 @@ runs:
         --set env.SMTP_USE_TLS=${{ env.SMTP_USE_TLS }} \
         --set env.SMTP_USERNAME=${{ env.SMTP_USERNAME }} \
         --set env.SMTP_PASSWORD=${{ env.SMTP_PASSWORD }} \
+        --set env.CACHES_LOCATION=${{ env.CACHES_LOCATION }} \
+        --set env.CELERY_BROKER_URL=${{ env.CELERY_BROKER_URL }} \
+        --set env.CELERY_RESULT_BACKEND=${{ env.CELERY_RESULT_BACKEND }} \
