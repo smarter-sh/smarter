@@ -208,3 +208,28 @@ make keen-init      # locally installs npm, yarn and gulp requirements
 make keen-build     # compile Sass and javascript into css and js bundles
 make keen-server    # locally run the demo site
 ```
+
+## AWS Cloud Infrastructure
+
+Smarter runs on AWS cloud infrastructure. Please take note that all Smarter cloud resources reside on a private network that is not publicly accessible to anyone; not even admins. To access this cluster to perform diagnostics and administrative activities you'll need ssh access to the Ubuntu bastion server, which is the sole publicly accessible host for this project. The operating system, system packages, license keys, and application software are all regularly updated, making this a convenient 1-stop shop for all your admin activities on this project.
+
+### Kubernetes
+
+A single, shared Kubernetes cluster hosts test, staging and production environments. The bastion server has preconfigured kubectl cli as well as a nice ascii gui-based application named k9s that is especially helpful if you're unfamiliar with the inner workings of Kubernetes.
+
+### MySQL
+
+Smarter persists most of its data to MySQL running on AWS RDS. For simple SQL tasks the bastion server provides shortcuts for connecting to the MySQL service from the command line. However, you can also connect to the service using Oracle's MySQL Workbench desktop software which conveniently, offers a means of connecting to database hosts via a bastion server.
+
+### Other Resources
+
+You can request an IAM user account in order to gain AWS console access to other cloud resources used by this project. But please be aware that all Smarter infrastructure is managed by Terraform meaning that -- best case scenario -- any changes that you might make from the console are assured to be overwritten at some point. Smarter leverages he following additional AWS resources:
+
+- Virtual Private Cloud
+- Certificate Manager
+- Cloudfront Content Delivery Network
+- Elastic Container Registry
+- Route 53 DNS management
+- S3 cloud storage service
+- SES SMTP email service
+- EC2 compute infrastructure and load balancers
