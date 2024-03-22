@@ -24,24 +24,25 @@ Works with Linux, Windows and macOS environments.
 
 1. Verify project requirements: [AWS Account](https://aws.amazon.com/free/) and [CLI](https://aws.amazon.com/cli/) access, [Terraform](https://www.terraform.io/), [Python 3.11](https://www.python.org/), [NPM](https://www.npmjs.com/) and [Docker Compose](https://docs.docker.com/compose/install/).
 
-2. Review and edit the master [Terraform configuration](./api/terraform/terraform.tfvars) file.
+2. Only if you work on cloud infrastructure: review and edit the master [Terraform configuration](./api/terraform/terraform.tfvars) file.
 
 3. Run `make` and add your credentials to the newly created `.env` file in the root of the repo.
 
-4. Initialize, build and run the application.
+4. Initialize, build and run the application locally.
 
 ```console
 git clone https://github.com/QueriumCorp/smarter.git
-make        # scaffold a .env file in the root of the repo
-            #
-            # ****************************
-            # STOP HERE!
-            # ****************************
-            # Add your credentials to .env
-            #
-make init   # initialize Terraform, Python virtual environment and NPM
-make build  # deploy AWS cloud infrastructure, build ReactJS web app
-make run    # run the web app locally in your dev environment
+make                # scaffold a .env file in the root of the repo
+                    #
+                    # ****************************
+                    # STOP HERE!
+                    # ****************************
+                    # Add your credentials to .env located in the project
+                    # root folder.
+
+make docker-init    # initializes MySQL for the docker environment
+make docker-build   # builds and configures all docker containers
+make docker-run     # runs all docker containers and starts a local web server on port 8000
 ```
 
 ## ReactJS chat application
@@ -54,7 +55,7 @@ React app that leverages [Vite.js](https://github.com/QueriumCorp/smarter), [@ch
 
 Be aware that there are many considerations for getting React to work inside a Django project. You can read more [here](./doc/DJANGO-REACT-INTEGRATION.md).
 
-### Webapp Key features
+### Webapp design features
 
 - robust, highly customizable chat features
 - A component model for implementing your own highly personalized OpenAI apps
@@ -89,7 +90,7 @@ A Python Django project implementing Querium's proprietary Plugin model, along w
 - [/v0/plugins/<int:plugin_id>](./smarter/smarter/apps/plugin/urls.py)
 - [/v0/plugins/<int:plugin_id>/clone/<str:new_name>](./smarter/smarter/apps/plugin/urls.py)
 
-### Design features
+### Architecture Design features
 
 - [OpenAI API](https://pypi.org/project/openai/) library for Python. [LangChain](https://www.langchain.com/) enabled API endpoints where designated.
 - [Pydantic](https://docs.pydantic.dev/latest/) based CI-CD friendly [Settings](./smarter/common/README.md) configuration class that consistently and automatically manages Python Lambda initializations from multiple sources including bash environment variables, `.env` and `terraform.tfvars` files.
@@ -143,5 +144,10 @@ You can also contact [Lawrence McDaniel](https://lawrencemcdaniel.com/contact) d
 
 ## Features Wish List
 
-- a news function. see [News API](https://newsapi.org/)
-- Azure Cognitive Services [content moderation](https://learn.microsoft.com/en-us/azure/ai-services/content-safety/)
+Things on my mind ...
+
+- a contexst-sensitive news function. see [News API](https://newsapi.org/)
+- a function-calling for Stepwise API front end processor to preclassify math problems
+- a function-calling that processes common statistical and Newtonian functions to NumPy
+- RAG pdf loader
+- a function calling that maps to Azure Cognitive Services [content moderation](https://learn.microsoft.com/en-us/azure/ai-services/content-safety/)
