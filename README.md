@@ -20,12 +20,12 @@ Smarter is an extensible web platform for developing knowledge domain specific g
 
 ## Business Model
 
-Smarter has a token-based costing model priced as a multiple of the "wholesale" cost of underlying LLM service provider like for example, OpenAI. Querium generates revenue by charging customers for use of the APIs that they deploy. Customers can manage multiple APIs for a broad range of use cases ranging from custom and sales support to human resources assistants.
+Smarter has a token-based costing model priced as a multiple of the "wholesale" cost of underlying LLM service providers like for example, OpenAI. Querium generates revenue by charging customers for use of the APIs that they deploy. Customers can manage multiple APIs for a broad range of use cases ranging from customer and sales support to human resources assistants.
 
 Querium also generates revenues by offering three kinds of professional services:
 
 1. Customer onboarding, technical training and go-live assistance.
-2. Using Smarter to develop custom APIs for customer who do lack in-house staff.
+2. Using Smarter to develop custom APIs for customers who lack in-house staff.
 3. Technical support.
 
 ## Customer-facing features
@@ -48,7 +48,7 @@ Works with Linux, Windows and macOS environments.
 
 1. Verify project requirements: [AWS Account](https://aws.amazon.com/free/) and [CLI](https://aws.amazon.com/cli/) access, [Terraform](https://www.terraform.io/), [Python 3.11](https://www.python.org/), [NPM](https://www.npmjs.com/) and [Docker Compose](https://docs.docker.com/compose/install/).
 
-2. Only if you work on cloud infrastructure: review and edit the master [Terraform configuration](./api/terraform/terraform.tfvars) file.
+2. (For AWS Infrastructure Engineers): review and edit the master [Terraform configuration](./api/terraform/terraform.tfvars) file.
 
 3. Run `make` and add your credentials to the newly created `.env` file in the root of the repo.
 
@@ -140,18 +140,21 @@ Not to be confused with Smarter's flagship product, customer-implemented custom 
 
 - [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git). _pre-installed on Linux and macOS_
 - [make](https://gnuwin32.sourceforge.net/packages/make.htm). _pre-installed on Linux and macOS._
-- [AWS account](https://aws.amazon.com/)
-- [AWS Command Line Interface](https://aws.amazon.com/cli/)
-- [Terraform](https://www.terraform.io/).
-  _If you're new to Terraform then see [Getting Started With AWS and Terraform](./doc/TERRAFORM_GETTING_STARTED_GUIDE.md)_
-- [OpenAI platform API key](https://platform.openai.com/).
-  _If you're new to OpenAI API then see [How to Get an OpenAI API Key](./doc/OPENAI_API_GETTING_STARTED_GUIDE.md)_
 - [Python 3.11](https://www.python.org/downloads/): for creating virtual environment used for building AWS Lambda Layer, and locally by pre-commit linters and code formatters.
 - [NodeJS](https://nodejs.org/en/download): used with NPM for local ReactJS developer environment, and for configuring/testing Semantic Release.
 - [Docker Compose](https://docs.docker.com/compose/install/): used by an automated Terraform process to create the AWS Lambda Layer for OpenAI and LangChain.
 
+Cloud engineers:
+
+- [AWS account](https://aws.amazon.com/)
+- [AWS Command Line Interface](https://aws.amazon.com/cli/)
+- [Terraform](https://www.terraform.io/).
+  _If you're new to Terraform then see [Getting Started With AWS and Terraform](./doc/TERRAFORM_GETTING_STARTED_GUIDE.md)_
+
 Optional requirements:
 
+- [OpenAI platform API key](https://platform.openai.com/).
+  _If you're new to OpenAI API then see [How to Get an OpenAI API Key](./doc/OPENAI_API_GETTING_STARTED_GUIDE.md)_
 - [Google Maps API key](https://developers.google.com/maps/documentation/geocoding/overview). This is used the OpenAI API Function Calling coding example, "[get_current_weather()](https://platform.openai.com/docs/guides/function-calling)".
 - [Pinecone API key](https://docs.pinecone.io/docs/quickstart). This is used for OpenAI API Embedding examples.
 
@@ -161,7 +164,7 @@ Detailed documentation for each endpoint is available here: [Documentation](./do
 
 ## Support
 
-To get community support, go to the official [Issues Page](https://github.com/QueriumCorp/smarter/issues) for this project.
+Please report bugs to the [GitHub Issues Page](https://github.com/QueriumCorp/smarter/issues) for this project.
 
 ## Good Coding Best Practices
 
