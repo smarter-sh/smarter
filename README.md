@@ -16,7 +16,9 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![hack.d Lawrence McDaniel](https://img.shields.io/badge/hack.d-Lawrence%20McDaniel-orange.svg)](https://lawrencemcdaniel.com)
 
-Smarter is an extensible web platform for developing knowledge domain specific generative AI text completion REST APIs. It provides users with a workbench approach to designing, prototyping, testing and deploying custom APIs in a standardized format that will be compatible with a wide variety of chatbot UIs for technology ecosystems such as NPM, Wordpress, Squarespace, Drupal, Office 365, .Net, salesforce.com, and SAP. It is developed for OEMs, and large business analyst & data science teams, and provides common enterprise features like security, accounting cost codes, and audit capabilities. Additionally It is envisioned being packaged and resold through large professional services firms and technology solutions providers. Smarter provides highly skilled non-programmers with a means of creating uncharacteristically accurate bots that are easy to manage, customizable, scalable, resilient, and secure.
+**Smarter provides highly skilled non-programmers with a means of creating uncharacteristically accurate and skilled chatbots, backed by their choice of LLM, and that are easy to manage, customizable, scalable, resilient, and secure.**
+
+Smarter is an extensible web platform for developing knowledge domain specific generative AI text completion REST APIs. It provides users with a workbench approach to designing, prototyping, testing and deploying custom APIs in a standardized format that will be compatible with a wide variety of chatbot UIs for technology ecosystems such as NPM, Wordpress, Squarespace, Drupal, Office 365, .Net, salesforce.com, and SAP. It is developed for OEMs, and large business analyst & data science teams, and provides common enterprise features like security, accounting cost codes, and audit capabilities. Additionally It is envisioned being packaged and resold through large professional services firms and technology solutions providers.
 
 ## Business Model
 
@@ -31,6 +33,7 @@ Querium also generates revenues by offering three kinds of professional services
 ## Customer-facing features
 
 - API developer workbench
+- Instant toolbox-style access to a range of LLM providers
 - A stand-in default web UI, which is the same React codebase that is used for the workbench
 - Unlimited sets of expirable secret API keys that they can optionally add to their custom REST API's
 - A yaml-based plugin feature that simplifies [LLM function calling](https://www.promptingguide.ai/applications/function_calling).
