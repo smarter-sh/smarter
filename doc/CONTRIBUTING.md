@@ -54,9 +54,9 @@ make init           # initialize Python and React environments
 make pre-commit     # install code analyzers and linters
 make lint           # test run to ensure that everything in pre-commit is working.
 
-make docker-init    # deploy AWS cloud infrastructure, build ReactJS web app
-make docker-build   # run the web app locally in your dev environment
-make docker-run     #
+make docker-init    # initializes MySQL for the docker environment
+make docker-build   # builds and configures all docker containers
+make docker-run     # runs all docker containers and starts a local web server on port 8000
 ```
 
 To preserve your own sanity, don't spend time formatting your Python, Terraform, JS or any other source code because pre-commit invokes automatic code formatting utilities such as black, flake8 and prettier, on all local commits, and these will reformat the code in your commit based on policy configuration files found in the root of this repo.
@@ -126,8 +126,8 @@ A typical pull request will look like the following:
 You can leverage Docker Community Edition and Docker Compose to stand up the entire Smarter platforn in your local development environment. This closely approximates the Kubernetes production environment in which Smarter actually runs. Everything is substantially created with two files located in the root of this repo:
 
 - [Dockerfile](../Dockerfile): This defines the contents and configuration of the Docker container used to deploy the Smarter application, worker, and Celery Beat service in all Kubernetes environments as well as in your local Docker CE environment. Thus, think twice before pushing modifications to this file, as there could be unintended consequences.
-- [docker-compose.yml](../docker-compose.yml): This is used to approximately the Helm deployment charts used for Kubernetes based staging and production environment. It defines all services that makeup the application stack, including MySQL and Redis.
-- [Helm Chart](../helm/charts/smarter/): Smart is deployed to Kubernetes via this locally managed Helm chart. You can use this as a reference for questions regarding ports, network configuration, horizontal and vertical scaling configuration, and Docker Container configurations for each service.
+- [docker-compose.yml](../docker-compose.yml): This simulates the Helm deployment charts used for Kubernetes based staging and production environment. It defines all services that makeup the application stack, including MySQL and Redis.
+- [Helm Chart](../helm/charts/smarter/): Smarter is deployed to Kubernetes via this locally managed Helm chart. You can use this as a reference for questions regarding ports, network configuration, horizontal and vertical scaling configuration, and Docker Container configurations for each service.
 
 ## Python Setup
 
