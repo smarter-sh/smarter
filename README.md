@@ -16,9 +16,33 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![hack.d Lawrence McDaniel](https://img.shields.io/badge/hack.d-Lawrence%20McDaniel-orange.svg)](https://lawrencemcdaniel.com)
 
-A [React](https://react.dev/) + [Python-Django](https://www.djangoproject.com/) implementation of Querium's proprietary Plugin technology for [LLM function calling](https://www.promptingguide.ai/applications/function_calling).
+Smarter is an extensible web platform for developing knowledge domain specific generative AI text completion REST APIs. It provides users with a workbench approach to designing, prototyping, testing and deploying custom APIs in a standardized format that will be compatible with a wide variety of chatbot UIs for technology ecosystems such as NPM, Wordpress, Squarespace, Drupal, Office 365, .Net, salesforce.com, and SAP. It is developed for OEMs, and large business analyst & data science teams, and provides common enterprise features like security, accounting cost codes, and audit capabilities. Additionally It is envisioned being packaged and resold through large professional services firms and technology solutions providers. Smarter provides highly skilled non-programmers with a means of creating uncharacteristically accurate bots that are easy to manage, customizable, scalable, resilient, and secure.
 
-## Quickstart
+## Business Model
+
+Smarter has a token-based costing model priced as a multiple of the "wholesale" cost of underlying LLM service provider like for example, OpenAI. Querium generates revenue by charging customers for use of the APIs that they deploy. Customers can manage multiple APIs for a broad range of use cases ranging from custom and sales support to human resources assistants.
+
+Querium also generates revenues by offering three kinds of professional services:
+
+1. Customer onboarding, technical training and go-live assistance.
+2. Using Smarter to develop custom APIs for customer who do lack in-house staff.
+3. Technical support.
+
+## Customer-facing features
+
+- API developer workbench
+- A stand-in default web UI, which is the same React codebase that is used for the workbench
+- Unlimited sets of expirable secret API keys that they can optionally add to their custom REST API's
+- A yaml-based plugin feature that simplifies [LLM function calling](https://www.promptingguide.ai/applications/function_calling).
+- Managed TLS/SSL certificate and DNS host records for custom API'S.
+- Email and push notifications for customers' communication with their end users
+- (PENDING) a context-sensitive news function. see [News API](https://newsapi.org/)
+- (PENDING) function-calling for Stepwise API front end processor to preclassify math problems
+- (PENDING) function-calling that processes common statistical and Newtonian functions to NumPy
+- (PENDING) RAG pdf loader
+- (PENDING) function calling that maps to Azure Cognitive Services [content moderation](https://learn.microsoft.com/en-us/azure/ai-services/content-safety/)
+
+## Developer Quickstart
 
 Works with Linux, Windows and macOS environments.
 
@@ -45,17 +69,39 @@ make docker-build   # builds and configures all docker containers
 make docker-run     # runs all docker containers and starts a local web server on port 8000
 ```
 
-## ReactJS chat application
+## Architecture at a glance
+
+- Scalable serverless Kubernetes compute infrastructure that is largely self-maintaining.
+- Countermeasures for common Internet and web intrusion strategies including SQL injection, cross-site request forgeries, brute force password attacks, distributed denial of service, cross-site scripting, clickjacking, host header corruptions. Additionally, Smarter goes to great pains to minimize its attack surface, primarily by only opening ports 80 and 443 to the public.
+- [Python-Django](https://www.djangoproject.com/) customer web dashboard application for developing plugin-based API's deployed to custom domains.
+- [LangChain](https://www.langchain.com/) managed LLM API requests. This provides a layer of abstraction between Smarter and underlying LLM vendor providers, and it also provides a simple means of standardizing Smarter customers' API format.
+- React sandbox chat UI for prototyping pre-production APIs. Also works as a skinnable stand-in production UI if customers want this.
+- customer api logging architecture implemented with Django models, signals and Celery tasks
+- Team management features
+- Configurable use-based billing features based on api calls as well as plugin usage.
+
+### Python Django
+
+Most of Smarter is developed using Python's Django web framework with the following noteworthy additions:
+
+- [Django-rest-knox](https://jazzband.github.io/django-rest-knox/), used for creating secure, performant REST APIs.
+- Django Celery. robust asynchronous compute layer using Celery, Redis and Kubernetes which can be leveraged for scheduled tasks like automated reports as well as real-time compute-intensive functions.
+- [Pydantic](https://docs.pydantic.dev/latest/), for extending Django's settings module to facilitate CI-CD friendly [configuration](./smarter/common/README.md) data from multiple sources: environment variable, terraform, Kubernetes secrets, Github Actions secrets, etc.
+- Pandas, NumPy, SciPy and Levenshtein
+- OpenAI
+- LangChain
+
+### ReactJS chat application
 
 The chat app in the dashboard sandbox is written in React. Complete source code and documentation is located [here](./smarter/smarter/apps/chatapp/reactapp/).
 
 React app that leverages [Vite.js](https://github.com/QueriumCorp/smarter), [@chatscope/chat-ui-kit-react](https://www.npmjs.com/package/@chatscope/chat-ui-kit-react), and [react-pro-sidebar](https://www.npmjs.com/package/react-pro-sidebar).
 
-### Django Integration
+#### Django Integration
 
 Be aware that there are many considerations for getting React to work inside a Django project. You can read more [here](./doc/DJANGO-REACT-INTEGRATION.md).
 
-### Webapp design features
+#### Webapp design features
 
 - robust, highly customizable chat features
 - A component model for implementing your own highly personalized OpenAI apps
@@ -67,13 +113,13 @@ Be aware that there are many considerations for getting React to work inside a D
 - Info link to the OpenAI API official code sample
 - Build-deploy managed with Vite
 
-## Custom OpenAI REST API Backend
+### Smarter REST API
 
 Source code is located [here](./smarter/)
 
-A Python Django project implementing Querium's proprietary Plugin model, along with additional models for commercializing the service.
+Not to be confused with Smarter's flagship product, customer-implemented custom REST API's, Smarter additionally has its own REST API, which is a Python Django project implementing Querium's proprietary Plugin model, along with additional models for commercializing the service.
 
-### API end points
+#### API end points
 
 - [/v0/api-auth/](./smarter/smarter/apps/api/urls.py)
 - [/v0/api-auth/logout](./smarter/smarter/apps/api/urls.py)
@@ -89,16 +135,6 @@ A Python Django project implementing Querium's proprietary Plugin model, along w
 - [/v0/plugins/](./smarter/smarter/apps/plugin/urls.py)
 - [/v0/plugins/<int:plugin_id>](./smarter/smarter/apps/plugin/urls.py)
 - [/v0/plugins/<int:plugin_id>/clone/<str:new_name>](./smarter/smarter/apps/plugin/urls.py)
-
-### Architecture Design features
-
-- [OpenAI API](https://pypi.org/project/openai/) library for Python. [LangChain](https://www.langchain.com/) enabled API endpoints where designated.
-- [Pydantic](https://docs.pydantic.dev/latest/) based CI-CD friendly [Settings](./smarter/common/README.md) configuration class that consistently and automatically manages Python Lambda initializations from multiple sources including bash environment variables, `.env` and `terraform.tfvars` files.
-- [Terraform](https://www.terraform.io/) fully automated and [parameterized](./api/terraform/terraform.tfvars) build. Usually builds your infrastructure in less than a minute.
-- Secure: uses AWS role-based security and custom IAM policies. Best practice handling of secrets and sensitive data in all environments (dev, test, CI-CD, prod). Proxy-based API that hides your OpenAI API calls and credentials. Runs on https with AWS-managed SSL/TLS certificate.
-- Excellent [documentation](./doc/)
-- Token-based authentication using [Django-rest-knox](https://jazzband.github.io/django-rest-knox/) <-- PENDING
-- Runs on Kubernetes.
 
 ## Requirements
 
@@ -141,13 +177,3 @@ Please see:
 - and these [commit comment guidelines](./doc/SEMANTIC_VERSIONING.md) 😬😬😬 for managing CI rules for automated semantic releases.
 
 You can also contact [Lawrence McDaniel](https://lawrencemcdaniel.com/contact) directly.
-
-## Features Wish List
-
-Things on my mind ...
-
-- a contexst-sensitive news function. see [News API](https://newsapi.org/)
-- a function-calling for Stepwise API front end processor to preclassify math problems
-- a function-calling that processes common statistical and Newtonian functions to NumPy
-- RAG pdf loader
-- a function calling that maps to Azure Cognitive Services [content moderation](https://learn.microsoft.com/en-us/azure/ai-services/content-safety/)
