@@ -12,5 +12,5 @@ class PluginConfig(AppConfig):
     # pylint: disable=import-outside-toplevel,unused-import
     def ready(self):
         """Import signals."""
-        # import .receivers  # noqa
-        # import .signals  # noqa
+        from . import receivers  # noqa
+        from . import signals  # noqa

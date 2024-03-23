@@ -13,5 +13,5 @@ class ChatConfig(AppConfig):
     # pylint: disable=C0415,W0611
     def ready(self):
         """Handle signals."""
-        # import .receivers  # noqa
-        # import .signals  # noqa
+        from . import receivers  # noqa
+        from . import signals  # noqa
