@@ -87,5 +87,3 @@ class SmarterAPIListAdminView(SmarterAPIListView):
     """Base admin-only API list view."""
 
     permission_classes = [SmarterAPIAdmin]
-
-
