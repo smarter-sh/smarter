@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client
 
 # our stuff
-from smarter.smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account, UserProfile
 
 from ..plugin import Plugins
 from ..utils import add_example_plugins

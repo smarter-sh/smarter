@@ -14,7 +14,7 @@ from knox.models import AuthToken, AuthTokenManager
 from rest_framework.exceptions import AuthenticationFailed
 
 # our stuff
-from smarter.smarter.common.model_utils import TimestampedModel
+from smarter.common.model_utils import TimestampedModel
 
 from .const import CHARGE_TYPE_PLUGIN, CHARGE_TYPE_PROMPT_COMPLETION, CHARGE_TYPE_TOOL
 from .signals import new_charge_created, new_user_created

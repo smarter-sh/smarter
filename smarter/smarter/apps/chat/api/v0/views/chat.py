@@ -8,23 +8,20 @@ import openai
 from django.contrib.auth import get_user_model
 from rest_framework.response import Response
 
-from smarter.smarter.apps.account.view_helpers import SmarterAPIView
-from smarter.smarter.apps.plugin.plugin import Plugin
-from smarter.smarter.apps.plugin.utils import plugins_for_user
-from smarter.smarter.common.conf import settings
-from smarter.smarter.common.const import (
-    VALID_CHAT_COMPLETION_MODELS,
-    OpenAIResponseCodes,
-)
-from smarter.smarter.common.exceptions import EXCEPTION_MAP
-from smarter.smarter.common.utils import (
+from smarter.apps.account.view_helpers import SmarterAPIView
+from smarter.apps.plugin.plugin import Plugin
+from smarter.apps.plugin.utils import plugins_for_user
+from smarter.common.conf import settings
+from smarter.common.const import VALID_CHAT_COMPLETION_MODELS, OpenAIResponseCodes
+from smarter.common.exceptions import EXCEPTION_MAP
+from smarter.common.utils import (
     exception_response_factory,
     get_request_body,
     http_response_factory,
     parse_request,
     request_meta_data_factory,
 )
-from smarter.smarter.common.validators import (  # validate_embedding_request,
+from smarter.common.validators import (  # validate_embedding_request,
     validate_completion_request,
     validate_item,
 )

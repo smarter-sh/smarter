@@ -4,7 +4,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
-from smarter.smarter.apps.account.view_helpers import SmarterAPIListView, SmarterAPIView
+from smarter.apps.account.view_helpers import SmarterAPIListView, SmarterAPIView
 
 from ....models import ChatHistory, ChatToolCallHistory, PluginUsageHistory
 from ....serializers import (

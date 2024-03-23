@@ -13,7 +13,7 @@ import os
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smarter.settings.local")
 
 # pylint: disable=wrong-import-position,unused-import
-from smarter.smarter.lib.celery_conf import APP as celery_app
+from smarter.lib.celery_conf import APP as celery_app
 
 
 __all__ = ("celery_app",)

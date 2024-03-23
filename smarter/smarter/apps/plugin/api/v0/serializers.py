@@ -3,7 +3,7 @@
 from rest_framework import serializers
 from taggit.models import Tag
 
-from smarter.smarter.apps.account.api.v0.serializers import (
+from smarter.apps.account.api.v0.serializers import (
     AccountSerializer,
     UserProfileSerializer,
 )

@@ -83,7 +83,6 @@ INSTALLED_APPS = [
     "smarter.apps.chatapp",
     "smarter.apps.dashboard",
     "smarter.apps.api",
-    "smarter.apps.chatbot",
     # 3rd party apps
     # -------------------------------
     "djstripe",

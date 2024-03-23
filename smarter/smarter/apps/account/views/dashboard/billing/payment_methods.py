@@ -6,7 +6,7 @@ from http import HTTPStatus
 
 from django import forms, http
 
-from smarter.smarter.common.view_helpers import SmarterAdminWebView
+from smarter.common.view_helpers import SmarterAdminWebView
 
 from ....tests.factories import payment_method_factory
 
