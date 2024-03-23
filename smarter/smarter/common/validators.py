@@ -2,11 +2,7 @@
 """Internal validation functions for requests from API Gateway."""
 import json
 
-from .const import (
-    OpenAIEndPoint,
-    OpenAIMessageKeys,
-    OpenAIObjectTypes,
-)
+from .const import OpenAIEndPoint, OpenAIMessageKeys, OpenAIObjectTypes
 from .exceptions import OpenAIAPIValueError
 
 

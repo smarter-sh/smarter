@@ -12,7 +12,6 @@ from django.contrib.auth import get_user_model
 from django.test import RequestFactory
 
 # our stuff
-from smarter.apps.account.models import Account, UserProfile
 from ..context_processors import branding
 
 
@@ -25,19 +24,11 @@ class TestContext(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         username = "testuser" + hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()
-        account_number = "" + hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()
-
         self.user = User.objects.create_user(username=username, password="12345")
-        self.account = Account.objects.create(
-            account_number=account_number, company_name="Test Company", phone_number="123-456-789"
-        )
-        self.user_profile = UserProfile.objects.create(user=self.user, account=self.account)
 
     def tearDown(self):
         """Clean up test fixtures."""
         self.user.delete()
-        self.account.delete()
-        self.user_profile.delete()
 
     def test_context(self):
         """test that we can instantiate the context."""
