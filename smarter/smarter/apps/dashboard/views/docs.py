@@ -2,7 +2,7 @@
 """Django docs views"""
 import logging
 
-from ....common.view_helpers import SmarterWebView
+from smarter.smarter.common.view_helpers import SmarterWebView
 
 
 logger = logging.getLogger(__name__)

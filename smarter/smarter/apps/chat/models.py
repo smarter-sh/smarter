@@ -7,7 +7,7 @@ from django.forms.models import model_to_dict
 from smarter.smarter.apps.plugin.models import PluginMeta
 
 # our stuff
-from ...common.model_utils import TimestampedModel
+from smarter.smarter.common.model_utils import TimestampedModel
 
 
 # Create your models here.

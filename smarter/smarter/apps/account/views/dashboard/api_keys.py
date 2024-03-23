@@ -10,7 +10,8 @@ from django.contrib.auth import get_user_model
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
-from .....common.view_helpers import SmarterAdminWebView
+from smarter.smarter.common.view_helpers import SmarterAdminWebView
+
 from ...models import APIKey, UserProfile
 
 

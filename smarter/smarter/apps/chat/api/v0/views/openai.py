@@ -4,21 +4,21 @@ import openai
 from rest_framework import permissions, viewsets
 from rest_framework.response import Response
 
-from ......common.conf import settings
-from ......common.const import (  # VALID_EMBEDDING_MODELS,
+from smarter.smarter.common.conf import settings
+from smarter.smarter.common.const import (  # VALID_EMBEDDING_MODELS,
     VALID_CHAT_COMPLETION_MODELS,
     OpenAIObjectTypes,
     OpenAIResponseCodes,
 )
-from ......common.exceptions import EXCEPTION_MAP
-from ......common.utils import (
+from smarter.smarter.common.exceptions import EXCEPTION_MAP
+from smarter.smarter.common.utils import (
     exception_response_factory,
     get_request_body,
     http_response_factory,
     parse_request,
     request_meta_data_factory,
 )
-from ......common.validators import (  # validate_embedding_request,
+from smarter.smarter.common.validators import (  # validate_embedding_request,
     validate_completion_request,
     validate_item,
 )

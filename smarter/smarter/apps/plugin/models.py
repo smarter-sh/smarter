@@ -10,8 +10,8 @@ from django.db import models
 from taggit.managers import TaggableManager
 
 from smarter.smarter.apps.account.models import Account, UserProfile
+from smarter.smarter.common.model_utils import TimestampedModel
 
-from ...common.model_utils import TimestampedModel
 from .signals import plugin_selector_history_created
 
 

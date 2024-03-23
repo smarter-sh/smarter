@@ -11,21 +11,24 @@ from rest_framework.response import Response
 from smarter.smarter.apps.account.view_helpers import SmarterAPIView
 from smarter.smarter.apps.plugin.plugin import Plugin
 from smarter.smarter.apps.plugin.utils import plugins_for_user
-
-from ......common.conf import settings
-from ......common.const import VALID_CHAT_COMPLETION_MODELS, OpenAIResponseCodes
-from ......common.exceptions import EXCEPTION_MAP
-from ......common.utils import (
+from smarter.smarter.common.conf import settings
+from smarter.smarter.common.const import (
+    VALID_CHAT_COMPLETION_MODELS,
+    OpenAIResponseCodes,
+)
+from smarter.smarter.common.exceptions import EXCEPTION_MAP
+from smarter.smarter.common.utils import (
     exception_response_factory,
     get_request_body,
     http_response_factory,
     parse_request,
     request_meta_data_factory,
 )
-from ......common.validators import (  # validate_embedding_request,
+from smarter.smarter.common.validators import (  # validate_embedding_request,
     validate_completion_request,
     validate_item,
 )
+
 from ....functions.function_weather import get_current_weather, weather_tool_factory
 from ....signals import (
     chat_completion_called,
