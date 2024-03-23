@@ -14,7 +14,7 @@ from django.http import HttpResponsePermanentRedirect, HttpResponseRedirect
 from django.test import Client
 
 # our stuff
-from smarter.apps.account.models import Account, UserProfile
+from smarter.smarter.apps.account.models import Account, UserProfile
 
 from ..plugin import Plugin
 from .test_setup import get_test_file_path

@@ -8,9 +8,9 @@ import openai
 from django.contrib.auth import get_user_model
 from rest_framework.response import Response
 
-from smarter.apps.account.view_helpers import SmarterAPIView
-from smarter.apps.plugin.plugin import Plugin
-from smarter.apps.plugin.utils import plugins_for_user
+from smarter.smarter.apps.account.view_helpers import SmarterAPIView
+from smarter.smarter.apps.plugin.plugin import Plugin
+from smarter.smarter.apps.plugin.utils import plugins_for_user
 
 from ......common.conf import settings
 from ......common.const import VALID_CHAT_COMPLETION_MODELS, OpenAIResponseCodes

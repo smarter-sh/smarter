@@ -21,10 +21,10 @@ if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.smarter.apps.account.models import Account, UserProfile
 
 # pylint: disable=no-name-in-module
-from smarter.apps.plugin.plugin import Plugin
+from smarter.smarter.apps.plugin.plugin import Plugin
 
 from .test_setup import get_test_file_path
 

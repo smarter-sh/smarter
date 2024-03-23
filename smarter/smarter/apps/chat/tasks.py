@@ -72,7 +72,7 @@ def create_chat_tool_call_history(event_type, user_id, plugin_id, model, respons
 def create_plugin_usage_history(user_id, plugin_id, event, data, model, custom_tool, temperature, max_tokens):
     """Create plugin usage history record."""
 
-    logger.info("Creating plugin usage history record for event: %s user_id: %s", event, user)
+    logger.info("Creating plugin usage history record for event: %s user_id: %s", event, user_id)
 
     plugin_selection_history = PluginUsageHistory(
         user_id=user_id,
