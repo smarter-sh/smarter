@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 """Django signal receivers for account app."""
@@ -6,7 +5,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from .models import UserProfile, Account
+from .models import Account, UserProfile
 
 
 @receiver(post_save, sender=UserProfile)
