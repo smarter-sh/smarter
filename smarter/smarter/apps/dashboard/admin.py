@@ -5,8 +5,13 @@ from django.apps import apps
 from django.contrib import admin
 from django.contrib.auth.models import Group, Permission, User
 
-from smarter.__version__ import __version__
-from smarter.apps.account.models import Account, APIKey, PaymentMethod, UserProfile
+from smarter.smarter.__version__ import __version__
+from smarter.smarter.apps.account.models import (
+    Account,
+    APIKey,
+    PaymentMethod,
+    UserProfile,
+)
 
 from .models import EmailContactList
 

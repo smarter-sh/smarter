@@ -2,7 +2,7 @@
 """This module retrieves a list of plugins for an account using manage.py on the command line."""
 from django.core.management.base import BaseCommand
 
-from smarter.apps.account.models import Account
+from smarter.smarter.apps.account.models import Account
 
 from ...plugin import Plugins
 

@@ -6,7 +6,7 @@ import os
 import yaml
 from django.contrib.auth import get_user_model
 
-from smarter.apps.account.models import UserProfile
+from smarter.smarter.apps.account.models import UserProfile
 
 from .plugin import Plugin, PluginExamples, Plugins
 

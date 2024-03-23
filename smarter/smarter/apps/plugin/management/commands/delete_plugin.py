@@ -2,7 +2,7 @@
 """This module deletes a plugin using manage.py on the command line."""
 from django.core.management.base import BaseCommand
 
-from smarter.apps.account.models import Account
+from smarter.smarter.apps.account.models import Account
 
 from ...models import PluginMeta
 from ...plugin import Plugin
