@@ -7,15 +7,15 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.shortcuts import HttpResponse, redirect
 
-from smarter.apps.common.email_helpers import EmailHelper
-from smarter.apps.common.token_generators import (
+from ....common.email_helpers import EmailHelper
+from ....common.token_generators import (
     ExpiringTokenGenerator,
     TokenConversionError,
     TokenExpiredError,
     TokenIntegrityError,
     TokenParseError,
 )
-from smarter.apps.common.view_helpers import SmarterNeverCachedWebView
+from ....common.view_helpers import SmarterNeverCachedWebView
 
 
 User = get_user_model()

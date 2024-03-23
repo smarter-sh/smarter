@@ -14,17 +14,13 @@ from knox.models import AuthToken, AuthTokenManager
 from rest_framework.exceptions import AuthenticationFailed
 
 # our stuff
-from smarter.apps.common.model_utils import TimestampedModel
-
-from .signals import new_user_created
+from ...common.model_utils import TimestampedModel
+from .const import CHARGE_TYPE_PLUGIN, CHARGE_TYPE_PROMPT_COMPLETION, CHARGE_TYPE_TOOL
+from .signals import new_charge_created, new_user_created
 
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
-
-CHARGE_TYPE_PROMPT_COMPLETION = "completion"
-CHARGE_TYPE_PLUGIN = "plugin"
-CHARGE_TYPE_TOOL = "tool"
 
 
 class Account(TimestampedModel):
@@ -245,7 +241,7 @@ class Charge(TimestampedModel):
             logger.debug(
                 "New user charge created for %s %s. Sending signal.", self.account.company_name, self.user.email
             )
-            # new_charge_created.send(sender=self.__class__, charge=self)
+            new_charge_created.send(sender=self.__class__, charge=self)
 
     def __str__(self):
         return str(self.id) + " - " + self.model + " - " + self.total_tokens

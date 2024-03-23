@@ -21,7 +21,8 @@ from pydantic_core import ValidationError as PydanticValidationError
 PYTHON_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 sys.path.append(PYTHON_ROOT)  # noqa: E402
 
-from smarter.apps.common.conf import (  # noqa: E402
+# our stuff
+from ..conf import (  # noqa: E402
     Services,
     Settings,
     SettingsDefaults,
@@ -30,8 +31,7 @@ from smarter.apps.common.conf import (  # noqa: E402
     get_semantic_version,
 )
 
-# our stuff
-from smarter.apps.common.exceptions import OpenAIAPIConfigurationError
+from ..exceptions import OpenAIAPIConfigurationError
 
 
 # pylint: disable=too-many-public-methods

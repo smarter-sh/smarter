@@ -16,11 +16,11 @@ PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
 if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 
-from smarter.apps.common.const import OpenAIMessageKeys  # noqa: E402
+from ..const import OpenAIMessageKeys  # noqa: E402
 
 # our stuff
-from smarter.apps.common.tests.test_setup import get_test_file  # noqa: E402
-from smarter.apps.common.utils import (  # noqa: E402
+from ..tests.test_setup import get_test_file  # noqa: E402
+from ..utils import (  # noqa: E402
     exception_response_factory,
     get_content_for_role,
     get_message_history,

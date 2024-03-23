@@ -9,12 +9,9 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
-from smarter.apps.account.api.v0.serializers import AccountSerializer
-from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.common.view_helpers import (
-    SmarterAPIAdminView,
-    SmarterAPIListAdminView,
-)
+from ....api.v0.serializers import AccountSerializer
+from ....models import Account, UserProfile
+from ....view_helpers import SmarterAPIAdminView, SmarterAPIListAdminView
 
 
 class AccountViewBase(SmarterAPIAdminView):

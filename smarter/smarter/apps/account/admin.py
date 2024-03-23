@@ -2,13 +2,11 @@
 """Account admin."""
 from django.contrib import admin
 
-from smarter.apps.dashboard.admin import RestrictedModelAdmin
-
 from .models import Account, APIKey, PaymentMethod, UserProfile
 
 
 # Register your models here.
-class AccountAdmin(RestrictedModelAdmin):
+class AccountAdmin(admin.ModelAdmin):
     """Account model admin."""
 
     readonly_fields = (

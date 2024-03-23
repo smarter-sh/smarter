@@ -12,5 +12,5 @@ class AccountConfig(AppConfig):
     # pylint: disable=import-outside-toplevel,W0611
     def ready(self):
         """Import signals."""
-        import smarter.apps.account.signals  # noqa
-        import smarter.apps.account.stripe  # noqa
+        # import .signals  # noqa
+        # import .stripe  # noqa

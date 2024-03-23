@@ -5,7 +5,8 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.plugin.plugin import Plugin
+
+from ...plugin import Plugin
 
 
 User = get_user_model()

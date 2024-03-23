@@ -3,7 +3,7 @@
 
 import openai
 
-from smarter.apps.common.const import OpenAIResponseCodes
+from .const import OpenAIResponseCodes
 
 
 class OpenAIAPIConfigurationError(Exception):

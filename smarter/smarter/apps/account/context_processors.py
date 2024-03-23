@@ -2,7 +2,7 @@
 """Django context processors for account/base.html"""
 from django.conf import settings
 
-from smarter.apps.account.models import Account, UserProfile
+from .models import Account, UserProfile
 
 
 def base(request):

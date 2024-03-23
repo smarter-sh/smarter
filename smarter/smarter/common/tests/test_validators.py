@@ -11,12 +11,12 @@ import unittest
 PYTHON_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 sys.path.append(PYTHON_ROOT)  # noqa: E402
 
-from smarter.apps.common.const import OpenAIEndPoint, OpenAIObjectTypes
+from ..const import OpenAIEndPoint, OpenAIObjectTypes
 
 # our stuff
-from smarter.apps.common.exceptions import OpenAIAPIValueError
-from smarter.apps.common.tests.test_setup import get_test_file  # noqa: E402
-from smarter.apps.common.validators import (
+from ..exceptions import OpenAIAPIValueError
+from ..tests.test_setup import get_test_file  # noqa: E402
+from ..validators import (
     validate_completion_request,
     validate_endpoint,
     validate_item,

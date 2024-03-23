@@ -7,7 +7,7 @@ from pathlib import Path
 import hcl2
 import openai
 
-from smarter.apps.common.logger import get_logger
+from .logger import get_logger
 
 
 MODULE_NAME = "openai_passthrough"

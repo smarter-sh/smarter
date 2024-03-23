@@ -8,11 +8,26 @@ import openai
 from django.contrib.auth import get_user_model
 from rest_framework.response import Response
 
-from smarter.apps.chat.functions.function_weather import (
-    get_current_weather,
-    weather_tool_factory,
+from smarter.apps.account.view_helpers import SmarterAPIView
+from smarter.apps.plugin.plugin import Plugin
+from smarter.apps.plugin.utils import plugins_for_user
+
+from ......common.conf import settings
+from ......common.const import VALID_CHAT_COMPLETION_MODELS, OpenAIResponseCodes
+from ......common.exceptions import EXCEPTION_MAP
+from ......common.utils import (
+    exception_response_factory,
+    get_request_body,
+    http_response_factory,
+    parse_request,
+    request_meta_data_factory,
 )
-from smarter.apps.chat.signals import (
+from ......common.validators import (  # validate_embedding_request,
+    validate_completion_request,
+    validate_item,
+)
+from ....functions.function_weather import get_current_weather, weather_tool_factory
+from ....signals import (
     chat_completion_called,
     chat_completion_plugin_selected,
     chat_completion_tool_call_created,
@@ -22,23 +37,6 @@ from smarter.apps.chat.signals import (
     chat_response_failure,
     chat_response_success,
 )
-from smarter.apps.common.conf import settings
-from smarter.apps.common.const import VALID_CHAT_COMPLETION_MODELS, OpenAIResponseCodes
-from smarter.apps.common.exceptions import EXCEPTION_MAP
-from smarter.apps.common.utils import (
-    exception_response_factory,
-    get_request_body,
-    http_response_factory,
-    parse_request,
-    request_meta_data_factory,
-)
-from smarter.apps.common.validators import (  # validate_embedding_request,
-    validate_completion_request,
-    validate_item,
-)
-from smarter.apps.common.view_helpers import SmarterAPIView
-from smarter.apps.plugin.plugin import Plugin
-from smarter.apps.plugin.utils import plugins_for_user
 
 
 User = get_user_model()

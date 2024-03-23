@@ -122,7 +122,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "smarter.apps.common.context_processors.branding",
+                "smarter.common.context_processors.branding",
                 "smarter.apps.account.context_processors.base",
                 "smarter.apps.dashboard.context_processors.base",
             ],

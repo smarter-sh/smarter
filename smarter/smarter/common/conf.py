@@ -34,13 +34,13 @@ from pydantic import Field, SecretStr, ValidationError, ValidationInfo, field_va
 from pydantic_settings import BaseSettings
 
 # our stuff
-from smarter.apps.common.const import IS_USING_TFVARS, PROJECT_ROOT, TFVARS
-from smarter.apps.common.exceptions import (
+from .const import IS_USING_TFVARS, PROJECT_ROOT, TFVARS
+from .exceptions import (
     OpenAIAPIConfigurationError,
     OpenAIAPIValueError,
 )
-from smarter.apps.common.logger import get_logger
-from smarter.apps.common.utils import recursive_sort_dict
+from .logger import get_logger
+from .utils import recursive_sort_dict
 
 
 logger = get_logger(__name__)

@@ -25,28 +25,21 @@ if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.chat.api.v0.views.chat import handler
-from smarter.apps.chat.models import (
-    ChatHistory,
-    ChatToolCallHistory,
-    PluginUsageHistory,
-)
-from smarter.apps.chat.signals import (
+from smarter.apps.plugin.nlp import does_refer_to
+from smarter.apps.plugin.plugin import Plugin
+from smarter.apps.plugin.signals import plugin_called, plugin_selected
+
+from ..api.v0.views.chat import handler
+from ..models import ChatHistory, PluginUsageHistory
+from ..signals import (
     chat_completion_called,
-    chat_completion_history_created,
     chat_completion_plugin_selected,
-    chat_completion_plugin_usage_history_created,
-    chat_completion_tool_call_created,
-    chat_completion_tool_call_history_created,
     chat_completion_tool_call_received,
     chat_invoked,
     chat_response_failure,
     chat_response_success,
 )
-from smarter.apps.chat.tests.test_setup import get_test_file, get_test_file_path
-from smarter.apps.plugin.nlp import does_refer_to
-from smarter.apps.plugin.plugin import Plugin
-from smarter.apps.plugin.signals import plugin_called, plugin_selected
+from ..tests.test_setup import get_test_file, get_test_file_path
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes
@@ -57,14 +50,10 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
     _plugin_selected = False
     _chat_invoked = False
     _chat_completion_plugin_selected = False
-    _chat_completion_plugin_usage_history_created = False
     _chat_completion_called = False
     _chat_completion_returned = False
     _chat_completion_failed = False
-    _chat_completion_history_created = False
-    _chat_completion_tool_call_created = False
     _chat_completion_tool_call_received = False
-    _chat_completion_tool_call_history_created = False
 
     def plugin_called_signal_handler(self, *args, **kwargs):
         self._plugin_called = True
@@ -74,9 +63,6 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
 
     def chat_completion_plugin_selected_signal_handler(self, *args, **kwargs):
         self._chat_completion_plugin_selected = True
-
-    def chat_completion_plugin_usage_history_created_signal_handler(self, *args, **kwargs):
-        self._chat_completion_plugin_usage_history_created = True
 
     def chat_invoked_signal_handler(self, *args, **kwargs):
         self._chat_invoked = True
@@ -90,17 +76,8 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
     def chat_completion_failed_signal_handler(self, *args, **kwargs):
         self._chat_completion_failed = True
 
-    def chat_completion_history_created_signal_handler(self, *args, **kwargs):
-        self._chat_completion_history_created = True
-
-    def chat_completion_tool_call_created_signal_handler(self, *args, **kwargs):
-        self._chat_completion_tool_call_created = True
-
     def chat_completion_tool_call_received_signal_handler(self, *args, **kwargs):
         self._chat_completion_tool_call_received = True
-
-    def chat_completion_tool_call_history_created_signal_handler(self, *args, **kwargs):
-        self._chat_completion_tool_call_history_created = True
 
     @property
     def signals(self):
@@ -109,14 +86,9 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
             "plugin_selected": self._plugin_selected,
             "chat_invoked": self._chat_invoked,
             "chat_completion_plugin_selected": self._chat_completion_plugin_selected,
-            "chat_completion_plugin_usage_history_created": self._chat_completion_plugin_usage_history_created,
             "chat_completion_called": self._chat_completion_called,
             "chat_response_success": self._chat_completion_returned,
             "chat_response_failure": self._chat_completion_failed,
-            "chat_completion_history_created": self._chat_completion_history_created,
-            "chat_completion_tool_call_created": self._chat_completion_tool_call_created,
-            "chat_completion_tool_call_received": self._chat_completion_tool_call_received,
-            "chat_completion_tool_call_history_created": self._chat_completion_tool_call_history_created,
         }
 
     def setUp(self):
@@ -222,16 +194,10 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         plugin_called.connect(self.plugin_called_signal_handler)
         chat_invoked.connect(self.chat_invoked_signal_handler)
         chat_completion_plugin_selected.connect(self.chat_completion_plugin_selected_signal_handler)
-        chat_completion_plugin_usage_history_created.connect(
-            self.chat_completion_plugin_usage_history_created_signal_handler
-        )
         chat_completion_called.connect(self.chat_completion_called_signal_handler)
         chat_response_success.connect(self.chat_completion_returned_signal_handler)
         chat_response_failure.connect(self.chat_completion_failed_signal_handler)
-        chat_completion_history_created.connect(self.chat_completion_history_created_signal_handler)
-        chat_completion_tool_call_created.connect(self.chat_completion_tool_call_created_signal_handler)
         chat_completion_tool_call_received.connect(self.chat_completion_tool_call_received_signal_handler)
-        chat_completion_tool_call_history_created.connect(self.chat_completion_tool_call_history_created_signal_handler)
 
         response = None
         event_about_gobstoppers = get_test_file("json/prompt_about_everlasting_gobstoppers.json")
@@ -264,12 +230,6 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         # assert that PluginUsageHistory has one or more records for self.user
         plugin_selection_histories = PluginUsageHistory.objects.filter(user=self.user)
         self.assertTrue(plugin_selection_histories.exists())
-
-        # assert that ChatToolCallHistory has one or more records for self.user
-        # NOTE: we can't be 100% certain that openai will actually choose to call the chat tool
-        if self.signals["chat_completion_tool_call_created"]:
-            chat_tool_call_histories = ChatToolCallHistory.objects.filter(user=self.user)
-            self.assertTrue(chat_tool_call_histories.exists())
 
     def test_handler_weather(self):
         """Test lambda_handler."""

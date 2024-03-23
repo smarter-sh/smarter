@@ -10,10 +10,10 @@ import traceback  # libraries for error management
 
 from pydantic import SecretStr
 
-from smarter.apps.common.const import LANGCHAIN_MESSAGE_HISTORY_ROLES, OpenAIObjectTypes
-from smarter.apps.common.exceptions import OpenAIAPIValueError
-from smarter.apps.common.logger import get_logger
-from smarter.apps.common.validators import (
+from .const import LANGCHAIN_MESSAGE_HISTORY_ROLES, OpenAIObjectTypes
+from .exceptions import OpenAIAPIValueError
+from .logger import get_logger
+from .validators import (
     validate_endpoint,
     validate_item,
     validate_max_tokens,

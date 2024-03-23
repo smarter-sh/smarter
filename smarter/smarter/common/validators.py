@@ -2,12 +2,12 @@
 """Internal validation functions for requests from API Gateway."""
 import json
 
-from smarter.apps.common.const import (
+from .const import (
     OpenAIEndPoint,
     OpenAIMessageKeys,
     OpenAIObjectTypes,
 )
-from smarter.apps.common.exceptions import OpenAIAPIValueError
+from .exceptions import OpenAIAPIValueError
 
 
 def validate_item(item, valid_items: list, item_type: str) -> None:

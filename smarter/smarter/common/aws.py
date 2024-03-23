@@ -6,8 +6,8 @@ import os
 import socket
 
 # our stuff
-from smarter.apps.common.conf import Services, settings
-from smarter.apps.common.utils import recursive_sort_dict
+from .conf import Services, settings
+from .utils import recursive_sort_dict
 
 
 # pylint: disable=too-many-public-methods

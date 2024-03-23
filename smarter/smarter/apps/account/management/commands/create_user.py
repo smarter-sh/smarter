@@ -6,7 +6,7 @@ import string
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
-from smarter.apps.account.models import Account, APIKey, UserProfile
+from ...models import Account, APIKey, UserProfile
 
 
 User = get_user_model()

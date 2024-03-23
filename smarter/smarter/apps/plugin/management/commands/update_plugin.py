@@ -4,7 +4,8 @@ import yaml
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import UserProfile
-from smarter.apps.plugin.plugin import Plugin
+
+from ...plugin import Plugin
 
 
 # pylint: disable=E1101
