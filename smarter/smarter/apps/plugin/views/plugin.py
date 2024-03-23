@@ -2,7 +2,7 @@
 """Plugin views"""
 import logging
 
-from ....common.view_helpers import SmarterAuthenticatedWebView
+from smarter.smarter.common.view_helpers import SmarterAuthenticatedWebView
 
 
 logger = logging.getLogger(__name__)

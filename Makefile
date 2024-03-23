@@ -92,11 +92,10 @@ docker-test:
 python-init:
 	make python-clean && \
 	npm install && \
-	cd smarter && \
 	$(PYTHON) -m venv venv && \
 	$(ACTIVATE_VENV) && \
 	$(PIP) install --upgrade pip && \
-	$(PIP) install -r requirements/local.txt && \
+	$(PIP) install -r smarter/requirements/local.txt && \
 	pre-commit install
 
 python-lint:

@@ -7,7 +7,8 @@ from http import HTTPStatus
 
 from django import forms, http
 
-from .....common.view_helpers import SmarterAdminWebView
+from smarter.smarter.common.view_helpers import SmarterAdminWebView
+
 from ...models import Account, UserProfile
 
 
