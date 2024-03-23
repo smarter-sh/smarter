@@ -3,8 +3,9 @@
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account
-from smarter.apps.plugin.models import PluginMeta
-from smarter.apps.plugin.plugin import Plugin
+
+from ...models import PluginMeta
+from ...plugin import Plugin
 
 
 # pylint: disable=E1101

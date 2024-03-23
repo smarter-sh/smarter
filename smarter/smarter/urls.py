@@ -6,12 +6,12 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from smarter.apps.account.views.authentication import (
+from .apps.account.views.authentication import (
     AccountRegisterView,
     LoginView,
     LogoutView,
 )
-from smarter.apps.dashboard.admin import restricted_site
+from .apps.dashboard.admin import restricted_site
 
 
 admin.site = restricted_site

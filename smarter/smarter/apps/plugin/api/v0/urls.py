@@ -3,7 +3,13 @@
 from django.urls import path
 from django.views import View
 
-from .views import PluginCloneView, PluginsListView, PluginUploadView, PluginView
+from .views import (
+    AddPluginExamplesView,
+    PluginCloneView,
+    PluginsListView,
+    PluginUploadView,
+    PluginView,
+)
 
 
 class RequestRouter(View):
@@ -26,6 +32,11 @@ urlpatterns = [
         "<int:plugin_id>/clone/<str:new_name>",
         PluginCloneView.as_view(),
         name="plugin_clone_view",
+    ),
+    path(
+        "add-example-plugins/",
+        AddPluginExamplesView.as_view(),
+        name="add_plugin_examples",
     ),
     path("upload/", PluginUploadView.as_view(), name="plugin_upload"),
 ]

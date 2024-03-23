@@ -4,11 +4,7 @@
 
 from django.contrib import admin
 
-from smarter.apps.chat.models import (
-    ChatHistory,
-    ChatToolCallHistory,
-    PluginUsageHistory,
-)
+from .models import ChatHistory, ChatToolCallHistory, PluginUsageHistory
 
 
 class ChatHistoryAdmin(admin.ModelAdmin):
