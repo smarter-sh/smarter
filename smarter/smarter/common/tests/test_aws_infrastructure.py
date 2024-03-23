@@ -16,8 +16,8 @@ PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
 if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 
-from .aws import aws_infrastructure_config  # noqa: E402
-from .conf import Services, settings
+from ..aws import aws_infrastructure_config  # noqa: E402
+from ..conf import Services, settings
 
 
 class TestAWSInfrastructure(unittest.TestCase):

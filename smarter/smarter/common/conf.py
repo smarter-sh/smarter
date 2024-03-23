@@ -35,10 +35,7 @@ from pydantic_settings import BaseSettings
 
 # our stuff
 from .const import IS_USING_TFVARS, PROJECT_ROOT, TFVARS
-from .exceptions import (
-    OpenAIAPIConfigurationError,
-    OpenAIAPIValueError,
-)
+from .exceptions import OpenAIAPIConfigurationError, OpenAIAPIValueError
 from .logger import get_logger
 from .utils import recursive_sort_dict
 

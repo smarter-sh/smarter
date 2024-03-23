@@ -30,7 +30,6 @@ from ..conf import (  # noqa: E402
     empty_str_to_int_default,
     get_semantic_version,
 )
-
 from ..exceptions import OpenAIAPIConfigurationError
 
 

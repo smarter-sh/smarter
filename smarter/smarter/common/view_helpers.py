@@ -4,6 +4,7 @@ import re
 
 from django import template
 from django.conf import settings
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
@@ -11,9 +12,8 @@ from django.utils.cache import patch_vary_headers
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.cache import cache_control, cache_page, never_cache
-from django.contrib.admin.views.decorators import staff_member_required
-
 from htmlmin.main import minify
+
 
 register = template.Library()
 
