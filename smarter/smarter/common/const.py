@@ -12,7 +12,7 @@ from .logger import get_logger
 
 MODULE_NAME = "openai_passthrough"
 HERE = os.path.abspath(os.path.dirname(__file__))
-PROJECT_ROOT = str(Path(HERE).parent.parent)
+PROJECT_ROOT = str(Path(HERE).parent)
 PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
 TERRAFORM_ROOT = str(Path(PROJECT_ROOT).parent.parent)
 REPO_ROOT = str(Path(TERRAFORM_ROOT).parent.parent)

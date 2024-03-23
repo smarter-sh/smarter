@@ -1,4 +1,6 @@
 SHELL := /bin/bash
+include .env
+export
 S3_BUCKET := dev.platform.smarter.sh
 CLOUDFRONT_DISTRIBUTION_ID := E3AIBM1KMSJOP1
 
