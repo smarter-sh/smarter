@@ -7,7 +7,7 @@ import logging
 import os
 from pathlib import Path
 
-from smarter.smarter.common.view_helpers import SmarterAdminWebView
+from smarter.common.view_helpers import SmarterAdminWebView
 
 from .billing_addresses import BillingAddressesView, BillingAddressForm
 from .payment_methods import PaymentMethodForm, PaymentMethodsView

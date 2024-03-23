@@ -4,10 +4,10 @@
 from django.db import models
 from django.forms.models import model_to_dict
 
-from smarter.smarter.apps.plugin.models import PluginMeta
+from smarter.apps.plugin.models import PluginMeta
 
 # our stuff
-from smarter.smarter.common.model_utils import TimestampedModel
+from smarter.common.model_utils import TimestampedModel
 
 
 # Create your models here.

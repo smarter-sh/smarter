@@ -24,10 +24,10 @@ PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
 if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 
-from smarter.smarter.apps.account.models import Account, UserProfile
-from smarter.smarter.apps.plugin.nlp import does_refer_to
-from smarter.smarter.apps.plugin.plugin import Plugin
-from smarter.smarter.apps.plugin.signals import plugin_called, plugin_selected
+from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.plugin.nlp import does_refer_to
+from smarter.apps.plugin.plugin import Plugin
+from smarter.apps.plugin.signals import plugin_called, plugin_selected
 
 from ..api.v0.views.chat import handler
 from ..models import ChatHistory, PluginUsageHistory

@@ -3,7 +3,7 @@
 Views for the React chat app. See doc/DJANGO-REACT-INTEGRATION.md for more
 information about how the React app is integrated into the Django app.
 """
-from smarter.smarter.common.view_helpers import SmarterAuthenticatedNeverCachedWebView
+from smarter.common.view_helpers import SmarterAuthenticatedNeverCachedWebView
 
 
 # ------------------------------------------------------------------------------

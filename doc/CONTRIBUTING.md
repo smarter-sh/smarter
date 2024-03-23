@@ -149,7 +149,7 @@ source venv/bin/activate
 Smarter generally follows Django's convention of storing most configuration data in environment-specific python modules that are accessible via `django.conf.settings`. However, in light of the fact that Smarter uses a **LOT** of configuration data, and that this configuration data necessarily lives in many different locations, we also have our own propriety configuration module which is based on [Pydantic](https://docs.pydantic.dev/). The module can be found [here](../smarter/smarter/apps/common/conf.py) and is accessed as follows:
 
 ```python
-from smarter.smarter.apps.common.conf import settings as smarter_settings
+from smarter.apps.common.conf import settings as smarter_settings
 ```
 
 ### Unit Tests

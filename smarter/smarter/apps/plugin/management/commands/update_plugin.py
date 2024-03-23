@@ -3,7 +3,7 @@
 import yaml
 from django.core.management.base import BaseCommand
 
-from smarter.smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import UserProfile
 
 from ...plugin import Plugin
 

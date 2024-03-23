@@ -13,7 +13,7 @@ from django.contrib.auth import get_user_model
 from django.test import RequestFactory
 
 # our stuff
-from smarter.smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account, UserProfile
 
 from ..context_processors import base, react
 

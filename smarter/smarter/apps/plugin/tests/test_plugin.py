@@ -14,7 +14,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 
 # our stuff
-from smarter.smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account, UserProfile
 
 from ..api.v0.serializers import (
     PluginDataSerializer,
