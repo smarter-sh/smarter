@@ -9,15 +9,14 @@ future high-traffic scenarios.
 """
 import logging
 
+from celery import shared_task as app
+
 from .models import (
     CHARGE_TYPE_PLUGIN,
     CHARGE_TYPE_PROMPT_COMPLETION,
     Charge,
     UserProfile,
 )
-
-
-# from celery import shared_task as app
 
 
 logger = logging.getLogger(__name__)
@@ -40,7 +39,7 @@ def _create_charge(charge_type, user_id, prompt_tokens, completion_tokens, total
     charge.save()
 
 
-# @app.task
+@app.task
 def create_prompt_completion_charge(user_id, prompt_tokens, completion_tokens, total_tokens, model, reference):
     """Create a charge record."""
     logger.info("Creating prompt completion charge record for user_id: %s", user_id)
@@ -50,7 +49,7 @@ def create_prompt_completion_charge(user_id, prompt_tokens, completion_tokens, t
     )
 
 
-# @app.task
+@app.task
 def create_plugin_charge(user_id, prompt_tokens, completion_tokens, total_tokens, model, reference):
     """Create a charge record."""
     logger.info("Creating plugin charge record for user_id: %s", user_id)
