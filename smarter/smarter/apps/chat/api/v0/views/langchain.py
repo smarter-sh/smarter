@@ -32,15 +32,15 @@ from langchain_openai import ChatOpenAI
 from rest_framework import permissions, viewsets
 from rest_framework.response import Response
 
-from smarter.apps.common.conf import settings
-from smarter.apps.common.const import (  # VALID_EMBEDDING_MODELS,
+from ......common.conf import settings
+from ......common.const import (  # VALID_EMBEDDING_MODELS,
     VALID_CHAT_COMPLETION_MODELS,
     OpenAIMessageKeys,
     OpenAIObjectTypes,
     OpenAIResponseCodes,
 )
-from smarter.apps.common.exceptions import EXCEPTION_MAP
-from smarter.apps.common.utils import (
+from ......common.exceptions import EXCEPTION_MAP
+from ......common.utils import (
     exception_response_factory,
     get_content_for_role,
     get_message_history,
@@ -50,7 +50,7 @@ from smarter.apps.common.utils import (
     parse_request,
     request_meta_data_factory,
 )
-from smarter.apps.common.validators import (  # validate_embedding_request,
+from ......common.validators import (  # validate_embedding_request,
     validate_completion_request,
     validate_item,
     validate_messages,

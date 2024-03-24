@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=W0613
 """Django REST framework views for the API admin app."""
-from smarter.apps.common.view_helpers import SmarterAuthenticatedWebView
+from smarter.common.view_helpers import SmarterAuthenticatedWebView
 
 
 # ------------------------------------------------------------------------------

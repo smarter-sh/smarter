@@ -9,7 +9,7 @@ future high-traffic scenarios.
 """
 import logging
 
-from smarter.celery import celery_app as app
+from celery import shared_task
 
 from .models import (
     CHARGE_TYPE_PLUGIN,
@@ -30,8 +30,8 @@ def _create_charge(charge_type, user_id, prompt_tokens, completion_tokens, total
         account=account,
         user=user,
         charge_type=charge_type,
-        prompt_tokens=prompt_tokens,
         completion_tokens=completion_tokens,
+        prompt_tokens=prompt_tokens,
         total_tokens=total_tokens,
         model=model,
         reference=reference,
@@ -39,7 +39,7 @@ def _create_charge(charge_type, user_id, prompt_tokens, completion_tokens, total
     charge.save()
 
 
-@app.task
+@shared_task
 def create_prompt_completion_charge(user_id, prompt_tokens, completion_tokens, total_tokens, model, reference):
     """Create a charge record."""
     logger.info("Creating prompt completion charge record for user_id: %s", user_id)
@@ -49,7 +49,7 @@ def create_prompt_completion_charge(user_id, prompt_tokens, completion_tokens, t
     )
 
 
-@app.task
+@shared_task
 def create_plugin_charge(user_id, prompt_tokens, completion_tokens, total_tokens, model, reference):
     """Create a charge record."""
     logger.info("Creating plugin charge record for user_id: %s", user_id)

@@ -19,7 +19,7 @@ sys.path.append(PYTHON_ROOT)  # noqa: E402
 
 
 def noop():
-    """Test to ensure that test suite setup works and that lambda_handler is importable."""
+    """Test to ensure that test suite setup works."""
 
 
 def get_test_file(filename: str):

@@ -16,8 +16,8 @@ from rest_framework import status
 from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 
+from smarter.apps.account.api.view_helpers import SmarterAPIListView, SmarterAPIView
 from smarter.apps.account.models import UserProfile
-from smarter.apps.common.view_helpers import SmarterAPIListView, SmarterAPIView
 from smarter.apps.plugin.api.v0.serializers import PluginMetaSerializer
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin import Plugin

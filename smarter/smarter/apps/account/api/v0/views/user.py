@@ -11,11 +11,11 @@ from rest_framework import status
 from rest_framework.response import Response
 
 from smarter.apps.account.api.v0.serializers import UserSerializer
-from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.common.view_helpers import (
+from smarter.apps.account.api.view_helpers import (
     SmarterAPIAdminView,
     SmarterAPIListAdminView,
 )
+from smarter.apps.account.models import Account, UserProfile
 
 
 User = get_user_model()

@@ -3,13 +3,8 @@
 
 from django.urls import path
 
-from smarter.apps.account.api.v0.views.account import AccountListView, AccountView
-from smarter.apps.account.api.v0.views.payment_methods import (
-    PaymentMethodsListView,
-    PaymentMethodView,
-)
-from smarter.apps.plugin.api.v0.views import AddPluginExamplesView
-
+from .views.account import AccountListView, AccountView
+from .views.payment_methods import PaymentMethodsListView, PaymentMethodView
 from .views.user import UserListView, UserView
 
 
@@ -29,11 +24,6 @@ urlpatterns = [
         "users/<int:user_id>/",
         UserView.as_view(),
         name="user_view",
-    ),
-    path(
-        "users/<int:user_id>/add-example-plugins/",
-        AddPluginExamplesView.as_view(),
-        name="add_plugin_examples",
     ),
     # account payment methods
     # -----------------------------------------------------------------------

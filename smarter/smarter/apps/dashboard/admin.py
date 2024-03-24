@@ -7,7 +7,8 @@ from django.contrib.auth.models import Group, Permission, User
 
 from smarter.__version__ import __version__
 from smarter.apps.account.models import Account, APIKey, PaymentMethod, UserProfile
-from smarter.apps.dashboard.models import EmailContactList
+
+from .models import EmailContactList
 
 
 class RestrictedAdminSite(admin.AdminSite):

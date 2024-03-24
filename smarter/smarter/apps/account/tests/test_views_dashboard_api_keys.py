@@ -12,8 +12,8 @@ from django.contrib.auth import authenticate, get_user_model
 from django.test import RequestFactory
 
 # our stuff
-from smarter.apps.account.models import Account, APIKey, UserProfile
-from smarter.apps.account.views.dashboard.api_keys import APIKeysView, APIKeyView
+from ..models import Account, APIKey, UserProfile
+from ..views.dashboard.api_keys import APIKeysView, APIKeyView
 
 
 User = get_user_model()

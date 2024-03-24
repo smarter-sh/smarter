@@ -3,8 +3,8 @@
 
 from django.urls import include, path
 
-from smarter.apps.account.views.account import AccountView
-from smarter.apps.account.views.authentication import (
+from .views.account import AccountView
+from .views.authentication import (
     AccountActivateView,
     AccountActivationEmailView,
     AccountDeactivateView,
@@ -12,7 +12,7 @@ from smarter.apps.account.views.authentication import (
     LoginView,
     LogoutView,
 )
-from smarter.apps.account.views.password_management import (
+from .views.password_management import (
     PasswordConfirmView,
     PasswordResetRequestView,
     PasswordResetView,

@@ -13,8 +13,8 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.test import RequestFactory
 
 # our stuff
-from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.views.dashboard.users import UsersView, UserView
+from ..models import Account, UserProfile
+from ..views.dashboard.users import UsersView, UserView
 
 
 User = get_user_model()
