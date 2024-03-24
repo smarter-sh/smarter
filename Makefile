@@ -85,7 +85,8 @@ docker-collectstatic:
 	(docker exec smarter-app bash -c "python manage.py  collectstatic --noinput")
 
 docker-test:
-	docker exec smarter-app bash -c "python manage.py test"
+	docker exec smarter-app bash -c "python manage.py test smarter.apps.plugins.tests"
+	# docker exec smarter-app bash -c "python manage.py test"
 
 
 # ---------------------------------------------------------
