@@ -8,7 +8,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.views import APIView
 
-from .models import APIKey
+from ..models import APIKey
 
 
 class SmarterTokenAuthentication(TokenAuthentication):

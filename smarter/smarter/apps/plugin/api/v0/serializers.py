@@ -7,8 +7,12 @@ from smarter.apps.account.api.v0.serializers import (
     AccountSerializer,
     UserProfileSerializer,
 )
-
-from ...models import PluginData, PluginMeta, PluginPrompt, PluginSelector
+from smarter.apps.plugin.models import (
+    PluginData,
+    PluginMeta,
+    PluginPrompt,
+    PluginSelector,
+)
 
 
 class TagListSerializerField(serializers.ListField):

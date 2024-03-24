@@ -6,9 +6,8 @@ from http import HTTPStatus
 
 from django import forms, http
 
+from smarter.apps.account.tests.factories import payment_method_factory
 from smarter.common.view_helpers import SmarterAdminWebView
-
-from ....tests.factories import payment_method_factory
 
 
 logger = logging.getLogger(__name__)

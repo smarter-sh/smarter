@@ -3,8 +3,8 @@
 
 from django.urls import path
 
-from ...api.v0.views.account import AccountListView, AccountView
-from ...api.v0.views.payment_methods import PaymentMethodsListView, PaymentMethodView
+from .views.account import AccountListView, AccountView
+from .views.payment_methods import PaymentMethodsListView, PaymentMethodView
 from .views.user import UserListView, UserView
 
 

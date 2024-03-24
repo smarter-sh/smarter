@@ -3,7 +3,11 @@
 """Django REST framework serializers for the API admin app."""
 from rest_framework import serializers
 
-from .models import ChatHistory, ChatToolCallHistory, PluginUsageHistory
+from smarter.apps.chat.models import (
+    ChatHistory,
+    ChatToolCallHistory,
+    PluginUsageHistory,
+)
 
 
 class ChatHistorySerializer(serializers.ModelSerializer):

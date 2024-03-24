@@ -7,8 +7,8 @@ from urllib.parse import urljoin
 
 from django.conf import settings
 
-from ...__version__ import __version__
-from ..chat.models import ChatHistory
+from smarter.__version__ import __version__
+from smarter.apps.chat.models import ChatHistory
 
 
 def base(request):
