@@ -4,6 +4,14 @@ ENVIRONMENT=local
 ROOT_DOMAIN=smarter.sh
 DEBUG_MODE=True
 TF_VAR_DUMP_DEFAULTS=True
+
+# for Pylint so that it can find the smarter module
+# in your local file system when running pylint, flake8, or Cornflakes
+# from inside of VS Code. Interestingly, the app itself seems
+# to run fine without this. Also note that this is not needed
+# when running the app from Docker because the app is
+# installed to /apps/smarter/ and the Python path includes
+# /apps/.
 PYTHONPATH=./smarter
 
 

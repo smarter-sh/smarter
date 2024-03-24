@@ -54,7 +54,7 @@ class TestPluginUrls(unittest.TestCase):
 
     def test_account_users_add_plugins_view(self):
         """test that we can add example plugins using the api end point."""
-        response = self.client.post("/api/v0/accounts/users/" + str(self.user.id) + "/add-example-plugins/")
+        response = self.client.post("/api/v0/plugins/add-example-plugins/" + str(self.user.id) + "/")
 
         # we should have been redirected to a list of the plugins for the user
         self.assertEqual(response.status_code, 302)

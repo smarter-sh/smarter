@@ -34,7 +34,7 @@ urlpatterns = [
         name="plugin_clone_view",
     ),
     path(
-        "add-example-plugins/",
+        "add-example-plugins/<int:user_id>/",
         AddPluginExamplesView.as_view(),
         name="add_plugin_examples",
     ),
