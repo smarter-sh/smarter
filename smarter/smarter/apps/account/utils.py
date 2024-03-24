@@ -3,7 +3,7 @@
 
 from django.contrib.auth import get_user_model
 
-from smarter.apps.account.models import Account, UserProfile
+from .models import Account, UserProfile
 
 
 User = get_user_model()

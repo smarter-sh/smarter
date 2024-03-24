@@ -22,10 +22,11 @@ if PYTHON_ROOT not in sys.path:
 
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.chat.tests.test_setup import get_test_file_path
 
 # pylint: disable=no-name-in-module
 from smarter.apps.plugin.plugin import Plugin
+
+from .test_setup import get_test_file_path
 
 
 class TestPlugin(unittest.TestCase):

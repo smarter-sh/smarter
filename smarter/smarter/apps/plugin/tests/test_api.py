@@ -15,8 +15,9 @@ from django.test import Client
 
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.plugin.plugin import Plugin
-from smarter.apps.plugin.tests.test_setup import get_test_file_path
+
+from ..plugin import Plugin
+from .test_setup import get_test_file_path
 
 
 User = get_user_model()

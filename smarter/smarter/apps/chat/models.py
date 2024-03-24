@@ -4,15 +4,10 @@
 from django.db import models
 from django.forms.models import model_to_dict
 
-from smarter.apps.chat.signals import (
-    chat_completion_history_created,
-    chat_completion_plugin_usage_history_created,
-    chat_completion_tool_call_history_created,
-)
+from smarter.apps.plugin.models import PluginMeta
 
 # our stuff
-from smarter.apps.common.model_utils import TimestampedModel
-from smarter.apps.plugin.models import PluginMeta
+from smarter.common.model_utils import TimestampedModel
 
 
 # Create your models here.
@@ -27,10 +22,6 @@ class ChatHistory(TimestampedModel):
     max_tokens = models.IntegerField(blank=True, null=True)
     messages = models.JSONField(blank=True, null=True)
     response = models.JSONField(blank=True, null=True)
-
-    def save(self, *args, **kwargs):
-        chat_completion_history_created.send(sender=ChatHistory, user=self.user, data=self)
-        super().save(*args, **kwargs)
 
     def to_dict(self):
         """Return object as dictionary."""
@@ -60,10 +51,6 @@ class ChatToolCallHistory(TimestampedModel):
     model = models.CharField(max_length=255, blank=True, null=True)
     response = models.JSONField(blank=True, null=True)
     response_id = models.CharField(max_length=255, blank=True, null=True)
-
-    def save(self, *args, **kwargs):
-        chat_completion_tool_call_history_created.send(sender=ChatToolCallHistory, user=self.user, data=self)
-        super().save(*args, **kwargs)
 
     def to_dict(self):
         """Return object as dictionary."""
@@ -98,10 +85,6 @@ class PluginUsageHistory(TimestampedModel):
     custom_tool = models.JSONField(blank=True, null=True)
     inquiry_type = models.CharField(max_length=255, blank=True, null=True)
     inquiry_return = models.TextField(blank=True, null=True)
-
-    def save(self, *args, **kwargs):
-        chat_completion_plugin_usage_history_created.send(sender=PluginUsageHistory, user=self.user, data=self)
-        super().save(*args, **kwargs)
 
     def to_dict(self):
         """Return object as dictionary."""

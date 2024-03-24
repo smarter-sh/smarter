@@ -11,10 +11,9 @@ import unittest
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory
 
-from smarter.apps.account.context_processors import base
-
 # our stuff
-from smarter.apps.account.models import Account, UserProfile
+from ..context_processors import base
+from ..models import Account, UserProfile
 
 
 User = get_user_model()

@@ -3,7 +3,7 @@
 """Django views"""
 import logging
 
-from smarter.apps.common.view_helpers import SmarterAuthenticatedWebView
+from smarter.common.view_helpers import SmarterAuthenticatedWebView
 
 
 logger = logging.getLogger(__name__)
