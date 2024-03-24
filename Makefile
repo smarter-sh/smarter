@@ -1,4 +1,6 @@
 SHELL := /bin/bash
+include .env
+export
 S3_BUCKET := dev.platform.smarter.sh
 CLOUDFRONT_DISTRIBUTION_ID := E3AIBM1KMSJOP1
 
@@ -102,7 +104,7 @@ python-lint:
 	make pre-commit
 
 python-clean:
-	rm -rf venv
+	rm -rf smarter/venv
 	find ./ -name __pycache__ -type d -exec rm -rf {} +
 
 # ---------------------------------------------------------

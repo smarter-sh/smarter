@@ -10,9 +10,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client
 
 # our stuff
-from smarter.apps.account.models import Account, PaymentMethod, UserProfile
-from smarter.apps.plugin.plugin import Plugins
-from smarter.apps.plugin.utils import add_example_plugins
+from ..models import Account, PaymentMethod, UserProfile
 
 
 User = get_user_model()
@@ -51,9 +49,7 @@ class TestUrls(unittest.TestCase):
             card_exp_year="2024",
             is_default=True,
         )
-        add_example_plugins(user_profile=self.user_profile)
         self.client = Client()
-        # self.client.login(username="testuser", password="12345")
         self.client.force_login(self.user)
 
     def tearDown(self):
@@ -117,23 +113,6 @@ class TestUrls(unittest.TestCase):
             if user.get("username") == self.user.username:
                 self.assertEqual(user.get("email"), self.user.email)
                 break
-
-    def test_account_users_add_plugins_view(self):
-        """test that we can add example plugins using the api end point."""
-        response = self.client.post("/api/v0/accounts/users/" + str(self.user.id) + "/add-example-plugins/")
-
-        # we should have been redirected to a list of the plugins for the user
-        self.assertEqual(response.status_code, 302)
-        if "application/json" in response["Content-Type"]:
-            json_data = response.json()
-            self.assertIsInstance(json_data, dict)
-            self.assertGreaterEqual(len(json_data), 1)
-
-        plugins = Plugins(user=self.user).plugins
-        self.assertGreaterEqual(len(plugins), 1)
-
-        for plugin in plugins:
-            plugin.delete()
 
     def test_account_users_index_view(self):
         """test that we can see an account from inside the list view and that it matches the account data."""

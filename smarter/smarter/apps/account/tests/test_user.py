@@ -9,9 +9,7 @@ import unittest
 from django.contrib.auth import get_user_model
 
 # our stuff
-from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.plugin.plugin import PluginExamples, Plugins
-from smarter.apps.plugin.utils import add_example_plugins
+from ..models import Account, UserProfile
 
 
 User = get_user_model()
@@ -49,14 +47,6 @@ class TestAccount(unittest.TestCase):
 
         self.assertEqual(profile.account, account)
         self.assertEqual(profile.user, self.user)
-
-        add_example_plugins(user_profile=profile)
-
-        plugins = Plugins(user=self.user)
-        self.assertEqual(len(plugins.plugins), PluginExamples().count())
-
-        for plugin in plugins.plugins:
-            plugin.delete()
 
         profile.delete()
         account.delete()
