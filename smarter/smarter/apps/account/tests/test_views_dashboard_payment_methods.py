@@ -11,10 +11,8 @@ from django.contrib.auth import authenticate, get_user_model
 from django.test import RequestFactory
 
 # our stuff
-from smarter.apps.account.models import Account, PaymentMethod
-from smarter.apps.account.views.dashboard.billing.payment_methods import (
-    PaymentMethodsView,
-)
+from ..models import Account, PaymentMethod
+from ..views.dashboard.billing.payment_methods import PaymentMethodsView
 
 
 User = get_user_model()

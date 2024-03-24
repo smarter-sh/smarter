@@ -14,7 +14,8 @@ from django.test import RequestFactory
 
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.dashboard.context_processors import base, react
+
+from ..context_processors import base, react
 
 
 User = get_user_model()

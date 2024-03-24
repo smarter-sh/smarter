@@ -65,6 +65,7 @@ CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "UTC"
+CELERY_TASK_TIME_LIMIT = 30 * 60
 
 # Application definition
 
@@ -83,7 +84,6 @@ INSTALLED_APPS = [
     "smarter.apps.chatapp",
     "smarter.apps.dashboard",
     "smarter.apps.api",
-    "smarter.apps.chatbot",
     # 3rd party apps
     # -------------------------------
     "djstripe",
@@ -122,8 +122,8 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "smarter.apps.common.context_processors.branding",
                 "smarter.apps.account.context_processors.base",
+                "smarter.apps.dashboard.context_processors.branding",
                 "smarter.apps.dashboard.context_processors.base",
             ],
         },

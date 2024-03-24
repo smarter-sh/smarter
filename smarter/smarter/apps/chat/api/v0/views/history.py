@@ -4,17 +4,17 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
+from smarter.apps.account.api.view_helpers import SmarterAPIListView, SmarterAPIView
+from smarter.apps.chat.api.v0.serializers import (
+    ChatHistorySerializer,
+    ChatToolCallHistorySerializer,
+    PluginUsageHistorySerializer,
+)
 from smarter.apps.chat.models import (
     ChatHistory,
     ChatToolCallHistory,
     PluginUsageHistory,
 )
-from smarter.apps.chat.serializers import (
-    ChatHistorySerializer,
-    ChatToolCallHistorySerializer,
-    PluginUsageHistorySerializer,
-)
-from smarter.apps.common.view_helpers import SmarterAPIListView, SmarterAPIView
 
 
 class ChatToolCallHistoryListView(SmarterAPIListView):

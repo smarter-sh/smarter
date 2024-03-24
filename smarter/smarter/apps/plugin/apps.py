@@ -12,5 +12,5 @@ class PluginConfig(AppConfig):
     # pylint: disable=import-outside-toplevel,unused-import
     def ready(self):
         """Import signals."""
-        import smarter.apps.plugin.receivers  # noqa
-        import smarter.apps.plugin.signals  # noqa
+        from . import receivers  # noqa
+        from . import signals  # noqa

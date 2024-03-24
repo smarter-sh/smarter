@@ -27,7 +27,7 @@ import pandas as pd
 import requests_cache
 from retry_requests import retry
 
-from smarter.apps.common.conf import settings
+from smarter.common.conf import settings
 
 
 # Google Maps API key

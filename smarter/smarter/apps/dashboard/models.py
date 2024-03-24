@@ -4,7 +4,7 @@
 from django.db import models
 
 # our stuff
-from smarter.apps.common.model_utils import TimestampedModel
+from smarter.common.model_utils import TimestampedModel
 
 
 class EmailContactList(TimestampedModel):
