@@ -3,7 +3,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from ...models import Account, PaymentMethod, UserProfile
+from smarter.apps.account.models import Account, PaymentMethod, UserProfile
 
 
 User = get_user_model()

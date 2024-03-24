@@ -10,9 +10,12 @@ from django.http import Http404, HttpResponseRedirect, JsonResponse
 from rest_framework import status
 from rest_framework.response import Response
 
-from ....api.v0.serializers import UserSerializer
-from ....models import Account, UserProfile
-from ....view_helpers import SmarterAPIAdminView, SmarterAPIListAdminView
+from smarter.apps.account.api.v0.serializers import UserSerializer
+from smarter.apps.account.api.view_helpers import (
+    SmarterAPIAdminView,
+    SmarterAPIListAdminView,
+)
+from smarter.apps.account.models import Account, UserProfile
 
 
 User = get_user_model()

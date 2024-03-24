@@ -8,7 +8,21 @@ import openai
 from django.contrib.auth import get_user_model
 from rest_framework.response import Response
 
-from smarter.apps.account.view_helpers import SmarterAPIView
+from smarter.apps.account.api.view_helpers import SmarterAPIView
+from smarter.apps.chat.functions.function_weather import (
+    get_current_weather,
+    weather_tool_factory,
+)
+from smarter.apps.chat.signals import (
+    chat_completion_called,
+    chat_completion_plugin_selected,
+    chat_completion_tool_call_created,
+    chat_completion_tool_call_received,
+    chat_completion_tools_call,
+    chat_invoked,
+    chat_response_failure,
+    chat_response_success,
+)
 from smarter.apps.plugin.plugin import Plugin
 from smarter.apps.plugin.utils import plugins_for_user
 from smarter.common.conf import settings
@@ -24,18 +38,6 @@ from smarter.common.utils import (
 from smarter.common.validators import (  # validate_embedding_request,
     validate_completion_request,
     validate_item,
-)
-
-from ....functions.function_weather import get_current_weather, weather_tool_factory
-from ....signals import (
-    chat_completion_called,
-    chat_completion_plugin_selected,
-    chat_completion_tool_call_created,
-    chat_completion_tool_call_received,
-    chat_completion_tools_call,
-    chat_invoked,
-    chat_response_failure,
-    chat_response_success,
 )
 
 
