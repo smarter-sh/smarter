@@ -1,4 +1,4 @@
-# Technical Overview of this Architecture
+# Smarter Docs
 
 Table of contents:
 
@@ -12,11 +12,13 @@ Table of contents:
 - [Getting Started With AWS and Terraform](./TERRAFORM_GETTING_STARTED_GUIDE.md)
 - [12-Factor Methodology](./Twelve_Factor_Methodology.md)
 
-## About This Repo
+## Stack
+
+![Python Classes](./img/smarter-codebase.png "Python Classes")
+
+## Repo
 
 ### Smarter Application
-
-![Python Classes](https://github.com/QueriumCorp/smarter/blob/main/doc/img/smarter-codebase.png "Python Classes")
 
 - **[Common](../smarter/smarter/common/)**: A collection of non-trivial helper functions ranging from interfaces to AWS backend services like SMTP email, to creation of expirable token-based urls. Of note is the [conf](../smarter/smarter/common/conf.py) module, built on [Pydantic](https://docs.pydantic.dev/), which handles the copious amount of configuration data on which Smarter depends.
 - **[lib](../smarter/smarter/lib/)**: configurations for backing services like Celery and Redis.
@@ -33,7 +35,7 @@ Table of contents:
 - **[aws](../aws/terraform/)**: A set of Terraform infrastructure-as-code scripts for managing AWS resources in test, staging and production.
 - **[Helm](../helm/charts/smarter/)**: A set of yaml 'charts' for configuring and deploying Smarter to Kubernetes.
 - **[Dockerfile](../Dockerfile)**: A single-file definition for building the Smarter application as a run-anywhere Docker container.
-- **[Docker-compose](../docker-compose.yml)**: A single-file definition for deploying the Smarter application and its backing services as integrated Docker containers.
+- **[Docker-compose](..ker-compose.yml)**: A single-file definition for deploying the Smarter application and its backing services as integrated Docker containers.
 - **[.github](../smarter/.github)**: GitHub Actions workflows for automated build and deployment to AWS
 - **[.env](../.env)**: A set of configuration data for local development.
 - **[Makefile](../Makefile)**: A set of scripts for use in local development that provide shortcuts for common chores.
@@ -122,7 +124,7 @@ _Why do we use it: as you scale, managing where to run individual containers bec
 
 [Helm](https://helm.sh/) helps you manage Kubernetes applications — Helm Charts help you define, install, and upgrade even the most complex Kubernetes application. Charts are easy to create, version, share, and publish.
 
-Why we use it: Helm is the Kubernetes equivalent of the [docker-compose.yml](../docker-compose.yml) file in this repo for deploying the application and its backing services locally on your dev machine. It serves exactly the same purpose, but also provides useful version management features as well.
+Why we use it: Helm is the Kubernetes equivalent of the [docker-compose.yml](..ker-compose.yml) file in this repo for deploying the application and its backing services locally on your dev machine. It serves exactly the same purpose, but also provides useful version management features as well.
 
 ### GitHub Actions
 
@@ -142,7 +144,7 @@ Why we use them: Some of the 3rd party packages on which we rely -- openai, lang
 
 TO DO: UPDATE ME PLEASE. WE MOVED TO KUBERNETES IN JAN-2024.
 
-![AWS Diagram](https://github.com/QueriumCorp/smarter/blob/main/doc/img/aws-diagram.png "AWS Diagram")
+![AWS Diagram](./img/aws-diagram.png "AWS Diagram")
 
 - **[IAM](https://aws.amazon.com/iam/)**: a web service that helps you securely control access to AWS resources. With IAM, you can centrally manage permissions that control which AWS resources users can access. You use IAM to control who is authenticated (signed in) and authorized (has permissions) to use resources.
 - **[S3](https://aws.amazon.com/s3/)**: Amazon Simple Storage Service is a service offered by Amazon Web Services that provides object storage through a web service interface. Amazon S3 uses the same scalable storage infrastructure that Amazon.com uses to run its e-commerce network.
