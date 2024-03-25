@@ -18,10 +18,11 @@ Table of contents:
 
 - **[Common](../smarter/smarter/common/)**: A collection of non-trivial helper functions ranging from interfaces to AWS backend services like SMTP email, to creation of expirable token-based urls. Of note is the [conf](../smarter/smarter/common/conf.py) module, built on Pydantic, which handles the copious amount of configuration data on which Smarter depends.
 - **[lib](../smarter/smarter/lib/)**: configurations for backing services like Celery and Redis.
-- **[Account](../smarter/smarter/apps/account/)**: A django app for managing enterprise accounts: user manager, permissions & roles, api keys, billing, payments, logs.
-- **[Plugin](../smarter/smarter/apps/plugin/)**: Smarter's extensibility model for LLM's offering a [function calling](https://platform.openai.com/docs/guides/function-calling) feature in their API.
-- **[Chat](../smarter/smarter/apps/chat/)**: Langchain implementation of LLM-agnostic chat-completion service with seamless integration to [Plugin](../smarter/smarter/apps/plugin/) and enterprise logging features.
+- **[Account](../smarter/smarter/apps/account/)**: A Django app for managing enterprise accounts: user manager, permissions & roles, api keys, billing, payments, logs.
+- **[Plugin](../smarter/smarter/apps/plugin/)**: A Django app implementing Smarter's extensibility model for LLM's offering a [function calling](https://platform.openai.com/docs/guides/function-calling) feature in their API.
+- **[Chat](../smarter/smarter/apps/chat/)**: A Django app Langchain implementation of LLM-agnostic chat-completion service with seamless integration to [Plugin](../smarter/smarter/apps/plugin/) and enterprise logging features.
 - **[Chatbot](../smarter/smarter/apps/chatbot)**: customer chat api deployment manager for custom domain, api keys and skinning options.
+- **[Chatapp](../smarter/smarter/apps/chat/)**: A Django app implementing a ReactJS web UI for plugin-enabled chat. This is included in the dashboard as a prototyping/testing tool and is also included as a default front-end for customer apis.
 - **[API](../smarter/smarter/apps/api/)**: Smarter's flagship product offering. Provides REST API endpoints for account management, plugin-enabled LLM requests, and customer api's.
 - **[dashboard](../smarter/smarter/apps/dashboard/)**: The customer dashboard for performing prompt engineering development and testing, and for managing an enterprise account.
 
