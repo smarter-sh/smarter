@@ -16,7 +16,7 @@ Table of contents:
 
 ### Smarter Application
 
-![Python Classes](https://github.com/QueriumCorp/smarter/blob/main/doc/img/smarter-codebase.png "Python Classes")
+![Python Classes](./doc/img/smarter-codebase.png "Python Classes")
 
 - **[Common](../smarter/smarter/common/)**: A collection of non-trivial helper functions ranging from interfaces to AWS backend services like SMTP email, to creation of expirable token-based urls. Of note is the [conf](../smarter/smarter/common/conf.py) module, built on [Pydantic](https://docs.pydantic.dev/), which handles the copious amount of configuration data on which Smarter depends.
 - **[lib](../smarter/smarter/lib/)**: configurations for backing services like Celery and Redis.
@@ -142,7 +142,7 @@ Why we use them: Some of the 3rd party packages on which we rely -- openai, lang
 
 TO DO: UPDATE ME PLEASE. WE MOVED TO KUBERNETES IN JAN-2024.
 
-![AWS Diagram](https://github.com/QueriumCorp/smarter/blob/main/doc/img/aws-diagram.png "AWS Diagram")
+![AWS Diagram](./doc/img/aws-diagram.png "AWS Diagram")
 
 - **[IAM](https://aws.amazon.com/iam/)**: a web service that helps you securely control access to AWS resources. With IAM, you can centrally manage permissions that control which AWS resources users can access. You use IAM to control who is authenticated (signed in) and authorized (has permissions) to use resources.
 - **[S3](https://aws.amazon.com/s3/)**: Amazon Simple Storage Service is a service offered by Amazon Web Services that provides object storage through a web service interface. Amazon S3 uses the same scalable storage infrastructure that Amazon.com uses to run its e-commerce network.
