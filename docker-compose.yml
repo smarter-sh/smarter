@@ -46,7 +46,7 @@ services:
       bash -c "watchmedo auto-restart --directory=./ --pattern='*.py' --recursive --
       celery -A smarter.smarter_celery.celery_app worker --loglevel=info"  image: smarter
     volumes:
-      - ./smarter:/app
+      - ./smarter:/smarter
     depends_on:
       - smarter-mysql
       - smarter-redis
@@ -69,7 +69,7 @@ services:
       celery -A smarter.smarter_celery.celery_app beat --loglevel=info" image: smarter
     image: smarter
     volumes:
-      - ./smarter:/app
+      - ./smarter:/smarter
     depends_on:
       - smarter-mysql
       - smarter-redis
@@ -90,7 +90,7 @@ services:
     command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- gunicorn smarter.wsgi:application -b 0.0.0.0:8000
     image: smarter
     volumes:
-      - ./smarter:/app
+      - ./smarter:/smarter
     ports:
       - 8000:8000
     depends_on:

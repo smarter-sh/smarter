@@ -67,6 +67,9 @@ helm-update:
 	cd helm/charts/smarter && \
 	helm dependency update
 
+docker-shell:
+	docker exec -it smarter-app /bin/bash
+
 docker-init:
 	@echo "Initializing Docker..." && \
 	docker exec smarter-mysql bash -c "until echo '\q' | mysql -u smarter -psmarter; do sleep 1; done" && \
