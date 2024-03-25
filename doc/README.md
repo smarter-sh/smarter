@@ -12,11 +12,13 @@ Table of contents:
 - [Getting Started With AWS and Terraform](./TERRAFORM_GETTING_STARTED_GUIDE.md)
 - [12-Factor Methodology](./Twelve_Factor_Methodology.md)
 
-## About This Repo
-
-### Smarter Application
+## Stack
 
 ![Python Classes](./img/smarter-codebase.png "Python Classes")
+
+## Repo
+
+### Smarter Application
 
 - **[Common](../smarter/smarter/common/)**: A collection of non-trivial helper functions ranging from interfaces to AWS backend services like SMTP email, to creation of expirable token-based urls. Of note is the [conf](../smarter/smarter/common/conf.py) module, built on [Pydantic](https://docs.pydantic.dev/), which handles the copious amount of configuration data on which Smarter depends.
 - **[lib](../smarter/smarter/lib/)**: configurations for backing services like Celery and Redis.
