@@ -14,7 +14,7 @@ Table of contents:
 
 ## Smarter Application Architecture
 
-![Python Classes](https://github.com/QueriumCorp/smarter/blob/main/doc/img/aws-diagram.png "Python Classes")
+![Python Classes](https://github.com/QueriumCorp/smarter/blob/main/doc/img/smarter-codebase.png "Python Classes")
 
 - **[Common](../smarter/smarter/common/)**: A collection of non-trivial helper functions ranging from interfaces to AWS backend services like SMTP email, to creation of expirable token-based urls. Of note is the [conf](../smarter/smarter/common/conf.py) module, built on Pydantic, which handles the copious amount of configuration data on which Smarter depends.
 - **[lib](../smarter/smarter/lib/)**: configurations for backing services like Celery and Redis.
