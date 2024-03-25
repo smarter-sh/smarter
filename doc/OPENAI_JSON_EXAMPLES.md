@@ -1,4 +1,4 @@
-# AWS Lambda - openai_text
+# OpenAI JSON Examples
 
 ## Environment Variables
 

@@ -1,32 +1,47 @@
 # Technical Overview of this Architecture
 
+Table of contents:
+
+- [Developer Setup Guide](./CONTRIBUTING.md)
+- [Django-React Integration](./DJANGO-REACT-INTEGRATION.md)
+- [Example .env](./example-dot-env)
+- [Code Management Best Practices](./GOOD_CODING_PRACTICE.md)
+- [OpenAI JSON Examples](./OPENAI_JSON_EXAMPLES.md)
+- [How to Get an OpenAI API Key](./OPENAI_API_GETTING_STARTED_GUIDE.md)
+- [Semantic Versioning Guide](./SEMANTIC_VERSIONING.md)
+- [Getting Started With AWS and Terraform](./TERRAFORM_GETTING_STARTED_GUIDE.md)
+- [12-Factor Methodology](./Twelve_Factor_Methodology.md)
+
+## Smarter Application Architecture
+
+![Python Classes](https://github.com/QueriumCorp/smarter/blob/main/doc/img/smarter-codebase.png "Python Classes")
+
+- **[Common](../smarter/smarter/common/)**: A collection of non-trivial helper functions ranging from interfaces to AWS backend services like SMTP email, to creation of expirable token-based urls. Of note is the [conf](../smarter/smarter/common/conf.py) module, built on Pydantic, which handles the copious amount of configuration data on which Smarter depends.
+- **[lib](../smarter/smarter/lib/)**: configurations for backing services like Celery and Redis.
+- **[Account](../smarter/smarter/apps/account/)**: A Django app for managing enterprise accounts: user manager, permissions & roles, api keys, billing, payments, logs.
+- **[Plugin](../smarter/smarter/apps/plugin/)**: A Django app implementing Smarter's extensibility model for LLM's offering a [function calling](https://platform.openai.com/docs/guides/function-calling) feature in their API.
+- **[Chat](../smarter/smarter/apps/chat/)**: A Django app Langchain implementation of LLM-agnostic chat-completion service with seamless integration to [Plugin](../smarter/smarter/apps/plugin/) and enterprise logging features.
+- **[Chatbot](../smarter/smarter/apps/chatbot)**: customer chat api deployment manager for custom domain, api keys and skinning options.
+- **[Chatapp](../smarter/smarter/apps/chat/)**: A Django app implementing a ReactJS web UI for plugin-enabled chat. This is included in the dashboard as a prototyping/testing tool and is also included as a default front-end for customer apis.
+- **[API](../smarter/smarter/apps/api/)**: Smarter's flagship product offering. Provides REST API endpoints for account management, plugin-enabled LLM requests, and customer api's.
+- **[dashboard](../smarter/smarter/apps/dashboard/)**: The customer dashboard for performing prompt engineering development and testing, and for managing an enterprise account.
+
+## Smarter API
+
+TO DO: DOCUMENT THE PRIMARY API ENDPOINT FOR HANDLING LLM REQUESTS
+
+## Deployment Infrastructure
+
+TO DO: UPDATE ME PLEASE. WE MOVED TO KUBERNETES IN JAN-2024.
+
 ![AWS Diagram](https://github.com/QueriumCorp/smarter/blob/main/doc/img/aws-diagram.png "AWS Diagram")
 
 - **[IAM](https://aws.amazon.com/iam/)**: a web service that helps you securely control access to AWS resources. With IAM, you can centrally manage permissions that control which AWS resources users can access. You use IAM to control who is authenticated (signed in) and authorized (has permissions) to use resources.
 - **[S3](https://aws.amazon.com/s3/)**: Amazon Simple Storage Service is a service offered by Amazon Web Services that provides object storage through a web service interface. Amazon S3 uses the same scalable storage infrastructure that Amazon.com uses to run its e-commerce network.
-- **[Lambda](https://aws.amazon.com/lambda/)**: an event-driven, serverless computing platform provided by Amazon as a part of Amazon Web Services. It is a computing service that runs code in response to events and automatically manages the computing resources required by that code. It was introduced on November 13, 2014.
-- **[API Gateway](https://aws.amazon.com/api-gateway/)**: an AWS service for creating, publishing, maintaining, monitoring, and securing REST, HTTP, and WebSocket APIs at any scale.
 - **[Certificate Manager](https://aws.amazon.com/certificate-manager/)**: handles the complexity of creating, storing, and renewing public and private SSL/TLS X.509 certificates and keys that protect your AWS websites and applications.
+- **[CloudFront](https://aws.amazon.com/cloudfront/)**: Amazon CloudFront is a content delivery network (CDN) service built for high performance, security, and developer convenience.
+- **[EKS](https://aws.amazon.com/eks/)**: Amazon Elastic Kubernetes Service (Amazon EKS) is a managed Kubernetes service to run Kubernetes in the AWS cloud and on-premises data centers. In the cloud, Amazon EKS automatically manages the availability and scalability of the Kubernetes control plane nodes responsible for scheduling containers, managing application availability, storing cluster data, and other key tasks.
+- **[ECR](https://aws.amazon.com/ecr/)**: Amazon Elastic Container Registry (Amazon ECR) is a fully managed container registry offering high-performance hosting, so you can reliably deploy application images and artifacts anywhere.
 - **[Route53](https://aws.amazon.com/route53/)**: a scalable and highly available Domain Name System service. Released on December 5, 2010.
+- **[SES](https://aws.amazon.com/ses/)**: Amazon Simple Email Service (Amazon SES) lets you reach customers confidently without an on-premises Simple Mail Transfer Protocol (SMTP) email server using the Amazon SES API or SMTP interface.
 - **[CloudWatch](https://aws.amazon.com/cloudwatch/)**: CloudWatch enables you to monitor your complete stack (applications, infrastructure, network, and services) and use alarms, logs, and events data to take automated actions and reduce mean time to resolution (MTTR).
-
-## Lambda Functions
-
-These lambdas are designed to work exclusively as back ends for an AWS API Gateway end point resource. PyPi dependencies for these Lambdas are stored in this [AWS Lambda Layer](../python/layer_genai/). Additionally, a locally sourced package named [common](../python/openai_passthrough/common/) is a shared code library used by all Lambdas in this project.
-
-### OpenAI Lambda
-
-Accepts a JSON event with a schema matching the input parameters found in each of the OpenAI API [example application code snippets](https://platform.openai.com/examples/default-grammar/).
-
-### LangChain Lambda
-
-Accepts a simplified JSON schema matching the [LangChain](https://www.langchain.com/) documentation.
-
-## Trouble Shooting and Logging
-
-The terraform scripts will automatically create a collection of CloudWatch Log Groups. Additionally, note the Terraform global variable 'debug_mode' (defaults to 'true') which will increase the verbosity of log entries in the [Lambda functions](./terraform/python/), which are implemented with Python.
-
-I refined the contents and formatting of each log group to suit my own needs while building this solution, and in particular while coding the Python Lambda functions.
-
-![CloudWatch Logs](https://github.com/QueriumCorp/smarter/blob/main/doc/img/cloudwatch-1.png "CloudWatch Logs")
-![CloudWatch Logs](https://github.com/QueriumCorp/smarter/blob/main/doc/img/cloudwatch-2.png "CloudWatch Logs")
