@@ -78,7 +78,7 @@ _Why do we use it: validating data is harder than it seems, and it's thankless w
 
 [Redis](https://redis.io/) is a source available in-memory storage, used as a distributed, in-memory key–value database, cache and message broker, with optional durability.
 
-_Why do we use it: a couple of reasons actually. First, in order to run Python at scale you need an effictive object caching strategy, which is a topic becomes surprisingly complex early on. Redis does this well, and so its common to see Python and Redis paired in large deployments. Additionally, Redis works well as a message broker. See 'Celery' below for details._
+_Why do we use it: a couple of reasons actually. First, in order to run Python at scale you need an effictive object caching strategy, which becomes surprisingly complex early on. Redis does this well, and so it's common to see Python and Redis paired in large deployments. Additionally, Redis works well as a message broker. See 'Celery' below for details._
 
 ### Celery
 
