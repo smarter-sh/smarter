@@ -1,4 +1,4 @@
-# Usage of Code Management Best Practices
+# Code Management Best Practices
 
 This microservice fully conforms to [12-Factor methodology](./Twelve_Factor_Methodology.md). Moreover, this repo is used as an instrutional tool for university courses as well as by multiple videos in my [YouTube Channel](https://youtube.com/@FullStackWithLawrence), including various tutorials about good coding practices and good code management. Of note:
 
