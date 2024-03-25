@@ -1,4 +1,4 @@
-# Technical Overview of this Architecture
+# Smarter Docs
 
 Table of contents:
 
