@@ -10,7 +10,7 @@ locals {
   global_vars = read_terragrunt_config(find_in_parent_folders("global.hcl"))
 
   # environment vars
-  environment           = "dev"
+  environment           = "test"
   subdomain             = "${local.environment}.platform"
 }
 
