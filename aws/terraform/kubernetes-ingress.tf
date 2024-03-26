@@ -23,7 +23,7 @@ resource "kubernetes_manifest" "ingress" {
   ]
 }
 
-resource "kubernetes_manifest" "cluster-issuer" {
+resource "kubernetes_manifest" "cluster_issuer" {
   manifest = yamldecode(local.template_cluster_issuer)
 
   depends_on = [
