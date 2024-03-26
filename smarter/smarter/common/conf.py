@@ -149,9 +149,9 @@ class SettingsDefaults:
 
     # defaults for this Python package
     ENVIRONMENT = os.environ.get("ENVIRONMENT", "dev")
-    ROOT_DOMAIN = TFVARS.get("root_domain", None)
+    ROOT_DOMAIN = TFVARS.get("root_domain", "example.com")
     SHARED_RESOURCE_IDENTIFIER = TFVARS.get("shared_resource_identifier", "smarter")
-    DEBUG_MODE: bool = bool(TFVARS.get("debug_mode", False))
+    DEBUG_MODE: bool = bool(TFVARS.get("debug_mode", True))
     DUMP_DEFAULTS: bool = bool(TFVARS.get("dump_defaults", True))
 
     # aws auth

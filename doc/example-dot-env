@@ -1,19 +1,24 @@
-# Local dev settings
-DJANGO_SETTINGS_MODULE=smarter.settings.local
-ENVIRONMENT=local
-ROOT_DOMAIN=smarter.sh
-DEBUG_MODE=True
-TF_VAR_DUMP_DEFAULTS=True
-
+# -----------------------------------
+# Smarter.sh Environment Variables
+#
+# Python:
+# We need to explicitly set the PYTHONPATH
 # for Pylint so that it can find the smarter module
 # in your local file system when running pylint, flake8, or Cornflakes
-# from inside of VS Code. Interestingly, the app itself seems
-# to run fine without this. Also note that this is not needed
-# when running the app from Docker because the app is
-# installed to /apps/smarter/ and the Python path includes
-# /apps/.
-PYTHONPATH=./smarter
+# from inside of VS Code. This is unrelated to actually
+# running the Django app from Docker, which sets the
+# PYTHONPATH in the Dockerfile.
+# -----------------------------------
 
+################################################################
+# For local development
+################################################################
+ENVIRONMENT=local
+PYTHONPATH=./venv:./smarter
+
+################################################################
+# For AWS, Helm, and Terraform
+################################################################
 
 # AWS settings
 AWS_REGION=SET-ME-PLEASE
