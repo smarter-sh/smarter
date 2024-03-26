@@ -42,21 +42,17 @@ And if you work on cloud infrastructure then you'll also need these:
 
 ```console
 git clone https://github.com/QueriumCorp/smarter.git
-make                # scaffold a .env file in the root of the repo
-                    #
-                    # ****************************
-                    # STOP HERE!
-                    # ****************************
-                    # Add your credentials to .env located in the project
-                    # root folder.
+make         # scaffold a .env file in the root of the repo
+             #
+             # ****************************
+             # STOP HERE!
+             # ****************************
+             # Add your credentials to .env located in the project
+             # root folder.
 
-make init           # initialize Python and React environments
-make pre-commit     # install code analyzers and linters
-make lint           # test run to ensure that everything in pre-commit is working.
-
-make docker-init    # initializes MySQL for the docker environment
-make docker-build   # builds and configures all docker containers
-make docker-run     # runs all docker containers and starts a local web server on port 8000
+make init    # initialize dev environment, build & init docker.
+make build   # builds and configures all docker containers
+make run     # runs all docker containers and starts a local web server on port 8000
 ```
 
 To preserve your own sanity, don't spend time formatting your Python, Terraform, JS or any other source code because pre-commit invokes automatic code formatting utilities such as black, flake8 and prettier, on all local commits, and these will reformat the code in your commit based on policy configuration files found in the root of this repo.

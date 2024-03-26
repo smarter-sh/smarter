@@ -49,28 +49,28 @@ Querium also generates revenues by offering three kinds of professional services
 
 Works with Linux, Windows and macOS environments.
 
-1. Verify project requirements: [AWS Account](https://aws.amazon.com/free/) and [CLI](https://aws.amazon.com/cli/) access, [Terraform](https://www.terraform.io/), [Python 3.11](https://www.python.org/), [NPM](https://www.npmjs.com/) and [Docker Compose](https://docs.docker.com/compose/install/).
+1. Verify project requirements: [Python 3.11](https://www.python.org/), [NPM](https://www.npmjs.com/) [Docker](https://www.docker.com/products/docker-desktop/), and [Docker Compose](https://docs.docker.com/compose/install/). Docker will need around 1 vCPU, 2Gib memory, and 30Gib of storage space.
 
-2. (For AWS Infrastructure Engineers): review and edit the master [Terraform configuration](./api/terraform/terraform.tfvars) file.
+2. Run `make` and add your credentials to the newly created `.env` file in the root of the repo.
 
-3. Run `make` and add your credentials to the newly created `.env` file in the root of the repo.
-
-4. Initialize, build and run the application locally.
+3. Initialize, build and run the application locally.
 
 ```console
 git clone https://github.com/QueriumCorp/smarter.git
-make                # scaffold a .env file in the root of the repo
-                    #
-                    # ****************************
-                    # STOP HERE!
-                    # ****************************
-                    # Add your credentials to .env located in the project
-                    # root folder.
+make         # scaffold a .env file in the root of the repo
+             #
+             # ****************************
+             # STOP HERE!
+             # ****************************
+             # Add your credentials to .env located in the project
+             # root folder.
 
-make docker-init    # initializes MySQL for the docker environment
-make docker-build   # builds and configures all docker containers
-make docker-run     # runs all docker containers and starts a local web server on port 8000
+make init    # initialize dev environment, build & init docker.
+make build   # builds and configures all docker containers
+make run     # runs all docker containers and starts a local web server http://127.0.0.1:8000/
 ```
+
+_AWS Infrastructure Engineers: you additionally will need [AWS Account](https://aws.amazon.com/free/) and [CLI](https://aws.amazon.com/cli/) access, and [Terraform](https://www.terraform.io/). Make sure to eview and edit the master [Terraform configuration](./api/terraform/terraform.tfvars) file._
 
 ## Architecture at a glance
 
