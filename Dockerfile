@@ -54,19 +54,26 @@ WORKDIR /smarter
 COPY ./smarter .
 RUN mkdir celerybeat && chown smarter_user:smarter_user celerybeat
 
+# bring Ubuntu up to date
+RUN apt-get update && apt-get install -y
+
+# install Node
+# see: https://deb.nodesource.com/
+RUN apt-get install -y ca-certificates curl gnupg && \
+    mkdir -p /etc/apt/keyrings/ && \
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg  && \
+    NODE_MAJOR=20  && \
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list  && \
+    apt-get update && apt-get install nodejs -y
+
 # Install system packages for the Smarter application.
-RUN apt-get update && apt-get upgrade -y && \
-    apt-get install -y default-mysql-client -y && \
-    apt-get install build-essential libssl-dev libffi-dev python3-dev python-dev -y && \
+RUN apt-get install default-mysql-client build-essential libssl-dev libffi-dev python3-dev python-dev -y && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Node.js and npm
-RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
-RUN apt-get install -y nodejs
 
 # Add all Python package dependencies
 RUN pip install --upgrade pip
-RUN pip install -r requirements/aws.txt
+RUN pip install -r requirements/docker.txt
 
 # Install Python dependencies for the local environment for cases where
 # we're going to run python unit tests in the Docker container.
