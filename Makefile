@@ -19,7 +19,7 @@ else
     $(shell cp ./doc/example-dot-env .env)
 endif
 
-.PHONY: init activate build run tear-down lint analyze coverage release pre-commit-init pre-commit-run python-init python-activate python-lint python-clean python-test react-init react-lint react-update react-run react-build aws-build docker-init docker-build docker-run docker-collectstatic docker-test python-init python-lint python-clean keen-init keen-build keen-server react-clean react-init react-lint react-update react-run react-build help
+.PHONY: init activate build run clean tear-down lint analyze coverage release pre-commit-init pre-commit-run python-init python-activate python-lint python-clean python-test react-init react-lint react-update react-run react-build terraform-build terraform-clean docker-init docker-build docker-run docker-collectstatic docker-test python-init python-lint python-clean keen-init keen-build keen-server react-clean react-init react-lint react-update react-run react-build help
 
 # Default target executed when no arguments are given to make.
 all: help
@@ -48,6 +48,12 @@ build:
 # takes around 30 seconds to complete
 run:
 	make docker-run
+
+clean:
+	make python-clean
+	make react-clean
+	make terraform-clean
+	make docker-prune
 
 # destroy all Docker build and local artifacts
 # takes around 1 minute to complete
@@ -202,10 +208,14 @@ react-build:
 # -------------------------------------------------------------------------
 # AWS and deployment
 # -------------------------------------------------------------------------
-aws-build:
+terraform-build:
 	cd aws
 	terraform init
 	terraform apply
+
+terraform-clean:
+	find ./ -name .terragrunt-cache -type d -exec rm -rf {} +
+	find ./ -name .terraform.lock.hcl -type f -exec rm {} +
 
 helm-update:
 	cd helm/charts/smarter && \
@@ -218,40 +228,42 @@ helm-update:
 
 help:
 	@echo '===================================================================='
-	@echo 'init               - Initialize local dev and Docker environments'
-	@echo 'activate           - activates Python virtual environment'
-	@echo 'build              - Build Docker containers'
-	@echo 'run                - run web application from Docker'
-	@echo 'tear-down          - destroy all docker build and local artifacts'
-	@echo '-- Code Management --'
-	@echo 'lint               - Run all code linters and formatters'
-	@echo 'analyze            - Generate code analysis report using cloc'
-	@echo 'coverage           - Generate Docker-based code coverage analysis report'
-	@echo 'pre-commit-init'   - install and configure pre-commit'
-	@echo 'pre-commit-run'    - runs all pre-commit hooks on all files'
-	@echo 'release            - Force a new Github release'
-	@echo '-- AWS --'
-	@echo 'aws-build          - Run Terraform to create AWS infrastructure'
-	@echo 'helm-update        - Update Helm chart dependencies'
-	@echo '-- Python-Django Dashboard application --'
-	@echo 'python-init        - Create a Python virtual environment and install dependencies'
-	@echo 'python-lint        - Run Python linting using pre-commit'
-	@echo 'python-clean       - Destroy the Python virtual environment and remove __pycache__ directories'
-	@echo '-- Docker --'
-	@echo 'docker-init        - Initialize MySQL and create the smarter database'
-	@echo 'docker-build       - Build all Docker containers using docker-compose'
-	@echo 'docker-run         - Start all Docker containers using docker-compose'
-	@echo 'docker-collectstatic - Run Django collectstatic in Docker'
-	@echo 'docker-test        - Run Python-Django unit tests in Docker'
-	@echo '-- Keen --'
-	@echo 'keen-init          - Install gulp, yarn and dependencies for Keen'
-	@echo 'keen-build         - Build Keen app using gulp'
-	@echo 'keen-server        - Start local Keen web server using gulp'
-	@echo '-- React App --'
-	@echo 'react-clean        - Remove node_modules directories for React app'
-	@echo 'react-init         - Run npm install for React app'
-	@echo 'react-lint         - Run npm lint for React app'
-	@echo 'react-update       - Update npm packages for React app'
-	@echo 'react-run          - Run the React app in development mode'
-	@echo 'react-build        - Build the React app for production'
+	@echo 'init                   - Initialize local dev and Docker environments'
+	@echo 'activate               - activates Python virtual environment'
+	@echo 'build                  - Build Docker containers'
+	@echo 'run                    - run web application from Docker'
+	@echo 'clean                  - delete all local artifacts, virtual environment, node_modules, and Docker containers'
+	@echo 'tear-down              - destroy all docker build and local artifacts'
+	@echo '<************************** Code Management **************************>'
+	@echo 'lint                   - Run all code linters and formatters'
+	@echo 'analyze                - Generate code analysis report using cloc'
+	@echo 'coverage               - Generate Docker-based code coverage analysis report'
+	@echo 'pre-commit-init        - install and configure pre-commit'
+	@echo 'pre-commit-run         - runs all pre-commit hooks on all files'
+	@echo 'release                - Force a new Github release'
+	@echo '<************************** AWS **************************>'
+	@echo 'terraform-build        - Run Terraform to create AWS infrastructure'
+	@echo 'terraform-clean        - Prune Terraform cache and lock files'
+	@echo 'helm-update            - Update Helm chart dependencies'
+	@echo '<************************** Python-Django Dashboard application **************************>'
+	@echo 'python-init            - Create a Python virtual environment and install dependencies'
+	@echo 'python-lint            - Run Python linting using pre-commit'
+	@echo 'python-clean           - Destroy the Python virtual environment and remove __pycache__ directories'
+	@echo '<************************** Docker **************************>'
+	@echo 'docker-init            - Initialize MySQL and create the smarter database'
+	@echo 'docker-build           - Build all Docker containers using docker-compose'
+	@echo 'docker-run             - Start all Docker containers using docker-compose'
+	@echo 'docker-collectstatic   - Run Django collectstatic in Docker'
+	@echo 'docker-test            - Run Python-Django unit tests in Docker'
+	@echo '<************************** Keen **************************>'
+	@echo 'keen-init              - Install gulp, yarn and dependencies for Keen'
+	@echo 'keen-build             - Build Keen app using gulp'
+	@echo 'keen-server            - Start local Keen web server using gulp'
+	@echo '<************************** React App **************************>'
+	@echo 'react-clean            - Remove node_modules directories for React app'
+	@echo 'react-init             - Run npm install for React app'
+	@echo 'react-lint             - Run npm lint for React app'
+	@echo 'react-update           - Update npm packages for React app'
+	@echo 'react-run              - Run the React app in development mode'
+	@echo 'react-build            - Build the React app for production'
 	@echo '===================================================================='
