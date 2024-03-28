@@ -6,8 +6,15 @@ import os
 
 from django.conf import settings
 from django.core.wsgi import get_wsgi_application
+from dotenv import load_dotenv
 from whitenoise import WhiteNoise
 
+
+load_dotenv()
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smarter.settings.local")
+environment = os.getenv("ENVIRONMENT")
+os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings." + environment
 
 application = get_wsgi_application()
 application = WhiteNoise(application, root=settings.STATIC_ROOT)
