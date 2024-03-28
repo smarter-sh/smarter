@@ -1,0 +1,11 @@
+{% extends "dashboard/base.html" %}
+
+{% block dashboard_content %}
+  {{ block.super }}
+  <div id="root"></div>
+{% endblock %}
+
+{% block react_javascript %}
+  {{ block.super }}
+  {{ react_config|json_script:'react-config' }}
+{% endblock %}

@@ -1,4 +1,4 @@
-# Usage of Code Management Best Practices
+# Code Management Best Practices
 
 This microservice fully conforms to [12-Factor methodology](./Twelve_Factor_Methodology.md). Moreover, this repo is used as an instrutional tool for university courses as well as by multiple videos in my [YouTube Channel](https://youtube.com/@FullStackWithLawrence), including various tutorials about good coding practices and good code management. Of note:
 
@@ -8,7 +8,7 @@ This project includes an extensive collection of Python unit tests for verifying
 
 ## Pydantic
 
-Originally created in 2017, [Pydantic](https://docs.pydantic.dev/latest/) has become the most widely used data validation library for Python. It is especially useful for data driven applications like this one, involving frequent integrations with a variety of cloud infrastructure services in a variety of environments, configured by a variety of different possible sources of data including environment variables, .env file, terraform.tfvars and system constants. We use it for the [Settings](../python/openai_api/common/conf.py) class in this project, and also for validating yaml [plugins](.smarter/openai_function_calling/custom_config.py) for the OpenAI Function Calling feature. It's an important addition because it enforces strong type and business rule validation checking of all of the configuration parameters for the AWS Lambdas, and it ensures that nothing ever changes these values at run-time once they've been set. And this in turn is important because erroneous automation code could otherwise lead to some wildly disastrous results. 😳
+Originally created in 2017, [Pydantic](https://docs.pydantic.dev/latest/) has become the most widely used data validation library for Python. It is especially useful for data driven applications like this one, involving frequent integrations with a variety of cloud infrastructure services in a variety of environments, configured by a variety of different possible sources of data including environment variables, .env file, terraform.tfvars and system constants. We use it for the [Settings](../python/openai_passthrough/common/conf.py) class in this project, and also for validating yaml [plugins](.smarter/chat/custom_config.py) for the OpenAI Function Calling feature. It's an important addition because it enforces strong type and business rule validation checking of all of the configuration parameters for the AWS Lambdas, and it ensures that nothing ever changes these values at run-time once they've been set. And this in turn is important because erroneous automation code could otherwise lead to some wildly disastrous results. 😳
 
 ## Automations
 
@@ -53,5 +53,5 @@ Linters and formatters are tools used in programming to analyze and improve the 
 
 ### Pre-commit hooks
 
-- [pre-commit Hooks](https://pre-commit.com/hooks.html): scripts that run automatically before each commit is made to a repository, checking your code for embedded passwords, errors, issues, and any of a multitude of configurable policies that you can optionally enforce. They're part of the git hooks system, which allows you to trigger actions at certain points in git's execution. This project uses many Hooks. See [pre-commit-config.yaml](https://github.com/QueriumCorp/smarter/blob/main/.pre-commit-config.yaml#L45).
+- [pre-commit Hooks](https://pre-commit.com/hooks.html): scripts that run automatically before each commit is made to a repository, checking your code for embedded passwords, errors, issues, and any of a multitude of configurable policies that you can optionally enforce. They're part of the git hooks system, which allows you to trigger actions at certain points in git's execution. This project uses many Hooks. See [pre-commit-config.yaml](./.pre-commit-config.yaml#L45).
 - [codespell](https://github.com/codespell-project/codespell): fixes common misspellings in text files. It's designed primarily for checking misspelled words in source code, but it can be used with other files as well.

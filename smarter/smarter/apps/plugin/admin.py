@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=C0114,C0115
 """Plugin admin."""
 import re
 
@@ -27,6 +28,10 @@ class PluginDataInline(admin.StackedInline):
 
     model = PluginData
     extra = 0  # This will not show extra empty forms
+
+    class Meta:
+        verbose_name = "Plugin Data"
+        verbose_name_plural = "Plugin Data"
 
 
 class PluginAdmin(admin.ModelAdmin):

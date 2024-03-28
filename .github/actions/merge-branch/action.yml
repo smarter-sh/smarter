@@ -52,7 +52,8 @@ runs:
         git pull
         git checkout ${{ inputs.target-branch }}
         git merge -Xtheirs ${{ inputs.source-branch }}
-        git push https://${{ inputs.github-token }}@github.com/${{ github.repository }}.git HEAD:${{ inputs.target-branch }}
+        git remote set-url origin https://x-access-token:${{ inputs.github-token }}@github.com/${{ github.repository }}.git
+        git push origin ${{ inputs.target-branch }}
 
     - name: Checkout current branch
       shell: bash

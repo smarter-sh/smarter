@@ -1,19 +1,26 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position
-# pylint: disable=R0801
+# pylint: disable=R0801,W0613
 """Test providers."""
 
 # python stuff
 import json
 import os
 import unittest
+from time import sleep
 
 import yaml
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.plugin.api.v0.serializers import (
+    PluginDataSerializer,
+    PluginMetaSerializer,
+    PluginPromptSerializer,
+    PluginSelectorSerializer,
+)
 from smarter.apps.plugin.models import (
     PluginData,
     PluginMeta,
@@ -21,21 +28,81 @@ from smarter.apps.plugin.models import (
     PluginSelector,
 )
 from smarter.apps.plugin.plugin import Plugin, PluginExamples
-from smarter.apps.plugin.serializers import (
-    PluginDataSerializer,
-    PluginMetaSerializer,
-    PluginPromptSerializer,
-    PluginSelectorSerializer,
+from smarter.apps.plugin.signals import (
+    plugin_called,
+    plugin_cloned,
+    plugin_created,
+    plugin_deleted,
+    plugin_ready,
+    plugin_selected,
+    plugin_selected_called,
+    plugin_selector_history_created,
+    plugin_updated,
 )
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 from smarter.apps.plugin.utils import add_example_plugins
 
 
+User = get_user_model()
+
+
+# pylint: disable=too-many-public-methods,too-many-instance-attributes
 class TestPlugin(unittest.TestCase):
-    """Test OpenAI Function Calling hook for refers_to."""
+    """Test plugin."""
 
     data: dict
     user_profile: UserProfile
+
+    _plugin_called = False
+    _plugin_cloned = False
+    _plugin_created = False
+    _plugin_deleted = False
+    _plugin_ready = False
+    _plugin_selected = False
+    _plugin_selected_called = False
+    _plugin_selector_history_created = False
+    _plugin_updated = False
+
+    def plugin_called_signal_handler(self, *args, **kwargs):
+        self._plugin_called = True
+
+    def plugin_cloned_signal_handler(self, *args, **kwargs):
+        self._plugin_cloned = True
+
+    def plugin_created_signal_handler(self, *args, **kwargs):
+        self._plugin_created = True
+
+    def plugin_deleted_signal_handler(self, *args, **kwargs):
+        self._plugin_deleted = True
+
+    def plugin_ready_signal_handler(self, *args, **kwargs):
+        self._plugin_ready = True
+
+    def plugin_selected_signal_handler(self, *args, **kwargs):
+        self._plugin_selected = True
+
+    def plugin_selected_called_signal_handler(self, *args, **kwargs):
+        self._plugin_selected_called = True
+
+    def plugin_selector_history_created_signal_handler(self, *args, **kwargs):
+        self._plugin_selector_history_created = True
+
+    def plugin_updated_signal_handler(self, *args, **kwargs):
+        self._plugin_updated = True
+
+    @property
+    def signals(self):
+        return {
+            "plugin_called": self._plugin_called,
+            "plugin_cloned": self._plugin_cloned,
+            "plugin_created": self._plugin_created,
+            "plugin_deleted": self._plugin_deleted,
+            "plugin_ready": self._plugin_ready,
+            "plugin_selected": self._plugin_selected,
+            "plugin_selected_called": self._plugin_selected_called,
+            "plugin_selector_history_created": self._plugin_selector_history_created,
+            "plugin_updated": self._plugin_updated,
+        }
 
     def setUp(self):
         """Set up test fixtures."""
@@ -60,7 +127,19 @@ class TestPlugin(unittest.TestCase):
     # pylint: disable=broad-exception-caught
     def test_create(self):
         """Test that we can create a plugin using the Plugin."""
+
+        plugin_created.connect(self.plugin_created_signal_handler, dispatch_uid="plugin_created_test_create")
+        plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_create")
+
         plugin = Plugin(data=self.data)
+
+        # sleep long enough to eliminate race situation
+        # between the asynchronous commit and our assertion
+        sleep(1)
+
+        # verify that the signals were sent
+        self.assertTrue(self.signals["plugin_created"])
+        self.assertTrue(self.signals["plugin_ready"])
 
         self.assertIsInstance(plugin, Plugin)
         self.assertTrue(plugin.ready)
@@ -84,7 +163,15 @@ class TestPlugin(unittest.TestCase):
 
     def test_update(self):
         """Test that we can update a plugin using the Plugin."""
+        plugin_created.connect(self.plugin_created_signal_handler, dispatch_uid="plugin_created_test_update")
+        plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_update")
+        plugin_updated.connect(self.plugin_updated_signal_handler, dispatch_uid="plugin_updated_test_update")
+
         plugin = Plugin(data=self.data)
+
+        # verify that the signals were sent
+        self.assertTrue(self.signals["plugin_created"])
+        self.assertTrue(self.signals["plugin_ready"])
 
         plugin.plugin_meta.name = "New Name"
         plugin.plugin_selector.directive = "New Directive"
@@ -106,10 +193,23 @@ class TestPlugin(unittest.TestCase):
         self.assertEqual(plugin.plugin_data.description, "New Description")
         self.assertEqual(plugin.plugin_data.return_data, "New Return Data")
 
+        # sleep long enough to eliminate race situation
+        # between the asynchronous commit and our assertion
+        sleep(1)
+
+        self.assertTrue(self.signals["plugin_updated"])
+
     def test_to_json(self):
         """Test that the Plugin generates correct JSON output."""
+        plugin_created.connect(self.plugin_created_signal_handler, dispatch_uid="plugin_created_test_to_json")
+        plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_to_json")
+
         plugin = Plugin(data=self.data)
         to_json = plugin.to_json()
+
+        # verify that signal was sent
+        self.assertTrue(self.signals["plugin_created"])
+        self.assertTrue(self.signals["plugin_ready"])
 
         self.assertIsInstance(to_json, dict)
         self.assertEqual(to_json["meta_data"]["name"], self.data["meta_data"]["name"])
@@ -121,9 +221,22 @@ class TestPlugin(unittest.TestCase):
 
     def test_delete(self):
         """Test that we can delete a plugin using the Plugin."""
+        plugin_created.connect(self.plugin_created_signal_handler, dispatch_uid="plugin_created_test_delete")
+        plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_delete")
+        plugin_deleted.connect(self.plugin_deleted_signal_handler, dispatch_uid="plugin_deleted_test_delete")
+
         plugin = Plugin(data=self.data)
         plugin_id = plugin.id
         plugin.delete()
+
+        # sleep long enough to eliminate race situation
+        # between the asynchronous commit and our assertion
+        sleep(1)
+
+        # verify that the signals were sent
+        self.assertTrue(self.signals["plugin_created"])
+        self.assertTrue(self.signals["plugin_ready"])
+        self.assertTrue(self.signals["plugin_deleted"])
 
         with self.assertRaises(PluginMeta.DoesNotExist):
             PluginMeta.objects.get(pk=plugin_id)
@@ -242,9 +355,20 @@ class TestPlugin(unittest.TestCase):
 
     def test_clone(self):
         """Test that we can clone a plugin using the Plugin."""
+        plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_clone")
+        plugin_cloned.connect(self.plugin_cloned_signal_handler, dispatch_uid="plugin_cloned_test_clone")
+
         plugin = Plugin(data=self.data)
         clone_id = plugin.clone()
         plugin_clone = Plugin(plugin_id=clone_id)
+
+        # sleep long enough to eliminate race situation
+        # between the asynchronous commit and our assertion
+        sleep(1)
+
+        # verify that the signals were sent
+        self.assertTrue(self.signals["plugin_ready"])
+        self.assertTrue(self.signals["plugin_cloned"])
 
         self.assertNotEqual(plugin.id, plugin_clone.id)
         self.assertNotEqual(plugin.plugin_meta.name, plugin_clone.plugin_meta.name)
@@ -269,8 +393,13 @@ class TestPlugin(unittest.TestCase):
 
     def test_json_serialization(self):
         """Test that the Plugin generates correct JSON output."""
+        plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_json_serialization")
+
         plugin = Plugin(data=self.data)
         to_json = plugin.to_json()
+
+        # verify that signal was sent
+        self.assertTrue(self.signals["plugin_ready"])
 
         # ensure that we can go from json output to a string and back to json without error
         to_json = json.loads(json.dumps(to_json))
@@ -283,3 +412,46 @@ class TestPlugin(unittest.TestCase):
         self.assertEqual(to_json["prompt"]["model"], self.data["prompt"]["model"])
         self.assertEqual(to_json["prompt"]["temperature"], self.data["prompt"]["temperature"])
         self.assertEqual(to_json["prompt"]["max_tokens"], self.data["prompt"]["max_tokens"])
+
+    def test_plugin_called_signal(self):
+        """Test the plugin_called signal."""
+        plugin_called.connect(self.plugin_called_signal_handler, dispatch_uid="plugin_called_test_plugin_called_signal")
+
+        plugin = Plugin(data=self.data)
+        plugin.function_calling_plugin(self.user, inquiry_type="sales_promotions")
+
+        self.assertTrue(self.signals["plugin_called"])
+
+    def test_plugin_selected_signal(self):
+        """Test the plugin_selected signal."""
+        plugin_selected_called.connect(
+            self.plugin_selected_called_signal_handler,
+            dispatch_uid="plugin_selected_test_plugin_selected_called_signal",
+        )
+        plugin_selected.connect(
+            self.plugin_selected_signal_handler, dispatch_uid="plugin_selected_test_plugin_selected_signal"
+        )
+        plugin_selector_history_created.connect(
+            self.plugin_selector_history_created_signal_handler,
+            dispatch_uid="plugin_selected_test_plugin_selector_history_created_signal",
+        )
+
+        messages = [
+            {"role": "system", "content": "you are a helpful chatbot."},
+            {"role": "user", "content": "have you ever heard of everlasting gobstoppers?"},
+        ]
+
+        plugin = Plugin(data=self.data)
+        plugin.selected(user=self.user, messages=messages)
+        self.assertTrue(self.signals["plugin_selected_called"])
+        self.assertTrue(self.signals["plugin_selected"])
+
+        sleep(1)
+        self.assertTrue(self.signals["plugin_selector_history_created"])
+
+        self._plugin_selected = False
+        messages = [
+            {"role": "system", "content": "you are a helpful chatbot."},
+            {"role": "user", "content": "this should return false."},
+        ]
+        self.assertFalse(self.signals["plugin_selected"])

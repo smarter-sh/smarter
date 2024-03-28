@@ -6,18 +6,17 @@
 import os
 import unittest
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
 # our stuff
-from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.plugin.plugin import PluginExamples, Plugins
-from smarter.apps.plugin.utils import add_example_plugins
+from ..models import Account, UserProfile
 
 
-class TestUser(unittest.TestCase):
-    """Test OpenAI Function Calling hook for refers_to."""
+User = get_user_model()
 
-    user: User
+
+class TestAccount(unittest.TestCase):
+    """Test Account model"""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -34,7 +33,11 @@ class TestUser(unittest.TestCase):
         account = Account.objects.create(
             company_name="Test Company",
             phone_number="1234567890",
-            address="123 Test St",
+            address1="123 Test St",
+            address2="Apt 1",
+            city="Test City",
+            state="TX",
+            postal_code="12345",
         )
 
         profile = UserProfile.objects.create(
@@ -45,14 +48,6 @@ class TestUser(unittest.TestCase):
         self.assertEqual(profile.account, account)
         self.assertEqual(profile.user, self.user)
 
-        add_example_plugins(user_profile=profile)
-
-        plugins = Plugins(user=self.user)
-        self.assertEqual(len(plugins.plugins), PluginExamples().count())
-
-        for plugin in plugins.plugins:
-            plugin.delete()
-
         profile.delete()
         account.delete()
 
@@ -62,7 +57,11 @@ class TestUser(unittest.TestCase):
         account = Account.objects.create(
             company_name="Test Company",
             phone_number="1234567890",
-            address="123 Test St",
+            address1="123 Test St",
+            address2="Apt 1",
+            city="Test City",
+            state="TX",
+            postal_code="12345",
         )
 
         account_to_update = Account.objects.get(id=account.id)
@@ -71,7 +70,7 @@ class TestUser(unittest.TestCase):
 
         self.assertEqual(account_to_update.company_name, "New Company")
         self.assertEqual(account_to_update.phone_number, "1234567890")
-        self.assertEqual(account_to_update.address, "123 Test St")
+        self.assertEqual(account_to_update.address1, "123 Test St")
         self.assertEqual(account_to_update.account_number, account.account_number)
 
         account.delete()

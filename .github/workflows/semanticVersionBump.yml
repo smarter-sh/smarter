@@ -16,6 +16,7 @@ on:
     branches:
       - alpha
       - beta
+      - test
       - next
       - next-major
 
@@ -24,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VERSION_FILE: __version__.py
-      PACKAGE_PATH: ${{ github.workspace }}/smarter/
+      PACKAGE_PATH: ${{ github.workspace }}/smarter/smarter/
 
     steps:
       - uses: actions/checkout@v4

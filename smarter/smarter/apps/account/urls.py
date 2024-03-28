@@ -1,0 +1,36 @@
+# -*- coding: utf-8 -*-
+"""URL configuration for the web platform."""
+
+from django.urls import include, path
+
+from .views.account import AccountView
+from .views.authentication import (
+    AccountActivateView,
+    AccountActivationEmailView,
+    AccountDeactivateView,
+    AccountRegisterView,
+    LoginView,
+    LogoutView,
+)
+from .views.password_management import (
+    PasswordConfirmView,
+    PasswordResetRequestView,
+    PasswordResetView,
+)
+
+
+urlpatterns = [
+    path("", AccountView.as_view(), name="account"),
+    path("login/", LoginView.as_view(), name="account_login"),
+    path("logout/", LogoutView.as_view(), name="account_logout"),
+    path("dashboard/", include("smarter.apps.account.views.dashboard.urls")),
+    # account lifecycle
+    path("register/", AccountRegisterView.as_view(), name="account_register"),
+    path("activation/", AccountActivationEmailView.as_view(), name="account_activation"),
+    path("activate/<uidb64>/<token>/", AccountActivateView.as_view(), name="account_activate"),
+    path("deactivate/", AccountDeactivateView.as_view(), name="account_deactivate"),
+    # password management
+    path("password-reset-request/", PasswordResetRequestView.as_view(), name="password_reset_request"),
+    path("password-confirm/", PasswordConfirmView.as_view(), name="password_confirm"),
+    path("password-reset-link/<uidb64>/<token>/", PasswordResetView.as_view(), name="password_reset_link"),
+]
