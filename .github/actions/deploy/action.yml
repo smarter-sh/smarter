@@ -119,7 +119,7 @@ runs:
     # set the Docker image to the environment variable SMARTER_DOCKER_IMAGE
     # example:  012345678903.dkr.ecr.us-east-2.amazonaws.com/smarter-api-dev:latest
     - name: Set Docker image
-      id: docker-build
+      id: set-docker-image
       shell: bash
       run: |-
         echo "SMARTER_DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest" >> $GITHUB_ENV
