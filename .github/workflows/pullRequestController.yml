@@ -46,10 +46,13 @@ on:
     types: [opened, synchronize]
     paths:
       - "**.py"
+      - "**.tf"
       - "**.js"
       - "**.jsx"
-      - "smarter/smarter/static/**"
-      - "smarter/smarter/templates/**"
+      - "./smarter/requirements/**"
+      - "**.package.json"
+      - "./client/**"
+      - "./api/terraform/**"
 
 env:
   python-version: "3.11"
@@ -74,10 +77,6 @@ jobs:
               'next',
               'next-major',
               {
-                name: 'test',
-                prerelease: true
-              },
-              {
                 name: 'beta',
                 prerelease: true
               },
@@ -99,19 +98,6 @@ jobs:
           echo ${{ steps.semantic.outputs.new_release_major_version }}
           echo ${{ steps.semantic.outputs.new_release_minor_version }}
           echo ${{ steps.semantic.outputs.new_release_patch_version }}
-
-  pre_commit_tests:
-    needs: check_for_pending_release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        id: checkout
-        uses: actions/checkout@v4
-
-      - name: Run pre-commit tests on entire codebase
-        shell: bash
-        run: |
-          make pre-commit
 
   python_tests:
     needs: check_for_pending_release
@@ -136,3 +122,50 @@ jobs:
           openai-api-key: "${{ secrets.OPENAI_API_KEY }}"
           pinecone-api-key: "${{ secrets.PINECONE_API_KEY }}"
           pinecone-environment: "${{ secrets.PINECONE_ENVIRONMENT }}"
+
+  terraform_tests:
+    needs: check_for_pending_release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Check for changed files
+        id: file_changes
+        run: |
+          echo "::set-output name=files_changed::$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '\.tf$' || true)"
+
+      - name: Run Terraform tests
+        if: steps.file_changes.outputs.files_changed != ''
+        uses: ./.github/actions/tests/reactjs
+
+  reactjs_tests:
+    needs: check_for_pending_release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Check for changed files
+        id: file_changes
+        run: |
+          echo "::set-output name=files_changed::$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} -- './client/' || true)"
+
+      - name: Run ReactJS tests
+        if: steps.file_changes.outputs.files_changed != ''
+        uses: ./.github/actions/tests/reactjs
+
+  pre_commit_tests:
+    needs: check_for_pending_release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Run pre-commit tests
+        uses: ./.github/actions/tests/pre-commit
+        with:
+          python-version: "${{ env.python-version}}"

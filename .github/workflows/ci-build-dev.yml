@@ -1,0 +1,27 @@
+name: Build dev
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [dev]
+    paths:
+      - "smarter/**"
+env:
+  ENVIRONMENT: dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        id: checkout_code
+        uses: actions/checkout@v4
+
+      - name: Build and push to AWS ECR
+        uses: ./.github/actions/build
+        with:
+          environment: ${{ env.ENVIRONMENT }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
