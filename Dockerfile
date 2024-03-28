@@ -38,10 +38,23 @@ ARG CACHES_LOCATION
 ARG CELERY_BROKER_URL
 ARG CELERY_RESULT_BACKEND
 
-WORKDIR /app
+# Set environment variables
+ENV ENVIRONMENT=$ENVIRONMENT
+ENV PYTHONPATH "${PYTHONPATH}:/smarter"
+ENV CELERY_APP "smarter.smarter_celery.celery_app"
 
-# Install MySQL Client, cryptography dependencies for django-rest-knox,
-# and update apt packages.
+# Create a non-root user to run the application
+RUN adduser --disabled-password --gecos '' smarter_user
+
+# Setup our file system.
+# - Add our source code and make the 'smarter' directory the working directory
+#   so that the Docker file system matches up with the local file system.
+# - Create a directory for the celerybeat-schedule file and change its ownership to smarter_user
+WORKDIR /smarter
+COPY ./smarter .
+RUN mkdir celerybeat && chown smarter_user:smarter_user celerybeat
+
+# Install system packages for the Smarter application.
 RUN apt-get update && apt-get upgrade -y && \
     apt-get install -y default-mysql-client -y && \
     apt-get install build-essential libssl-dev libffi-dev python3-dev python-dev -y && \
@@ -52,15 +65,12 @@ RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
 RUN apt-get install -y nodejs
 
 # Add all Python package dependencies
-RUN mkdir -p smarter/requirements
-COPY smarter/requirements ./smarter/requirements
 RUN pip install --upgrade pip
-ENV ENVIRONMENT=$ENVIRONMENT
-RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r smarter/requirements/local.txt ; fi
-RUN pip install -r smarter/requirements/aws.txt
+RUN pip install -r requirements/aws.txt
 
-# Add our source code
-COPY smarter .
+# Install Python dependencies for the local environment for cases where
+# we're going to run python unit tests in the Docker container.
+RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r requirements/local.txt ; fi
 
 
 # Build the React app and collect static files
@@ -68,14 +78,7 @@ RUN cd smarter/apps/chatapp/reactapp/ && npm install && npm run build && cd ../.
 RUN python manage.py collectstatic --noinput
 
 # Add a non-root user and switch to it
-RUN adduser --disabled-password --gecos '' smarter_user
-
-# Create a directory for the celerybeat-schedule file and change its ownership to smarter_user
-RUN mkdir /app/celerybeat && chown smarter_user:smarter_user /app/celerybeat
-
+# setup the run-time environment
 USER smarter_user
-
-
 CMD ["gunicorn", "smarter.wsgi:application", "-b", "0.0.0.0:8000"]
-
 EXPOSE 8000
