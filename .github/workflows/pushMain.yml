@@ -25,24 +25,28 @@ jobs:
       - name: Merge main into next
         uses: ./.github/actions/merge-branch
         with:
+          github-token: ${{ secrets.PAT }}
           source-branch: main
           target-branch: next
 
       - name: Merge main into next-major
         uses: ./.github/actions/merge-branch
         with:
+          github-token: ${{ secrets.PAT }}
           source-branch: main
           target-branch: next-major
 
       - name: Merge main into alpha
         uses: ./.github/actions/merge-branch
         with:
+          github-token: ${{ secrets.PAT }}
           source-branch: main
           target-branch: alpha
 
       - name: Merge main into beta
         uses: ./.github/actions/merge-branch
         with:
+          github-token: ${{ secrets.PAT }}
           source-branch: main
           target-branch: beta
 
