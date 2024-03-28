@@ -157,7 +157,6 @@ runs:
 
         # SMTP email configuration
         # -----------------------
-        echo "SMTP_SENDER=alpha.platform.smarter.sh" >> .env
         echo "SMTP_HOST=${{ env.SMTP_HOST }}" >> .env
         echo "SMTP_PORT=${{ env.SMTP_PORT }}" >> .env
         echo "SMTP_USE_SSL=${{ env.SMTP_USE_SSL }}" >> .env
