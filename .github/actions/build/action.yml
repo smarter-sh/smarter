@@ -142,11 +142,21 @@ runs:
         eks-namespace: ${{ env.NAMESPACE }}
         eks-secret-name: aws-ses-config
 
+    # NOTE: we're going to borrow the SMTP credentials from the Kubernetes secret
+    # for this environment, since unit tests will send a test email and we don't
+    # have a default set of credentials for the local environment.
     - name: Add to .env
       shell: bash
       run: |
         touch .env
+
+        # basic django configuration for local
+        # -----------------------
         echo "ROOT_DOMAIN=${{ inputs.root-domain }}" >> .env
+        echo "SECRET_KEY=top-secret-key-value" >> .env
+
+        # SMTP email configuration
+        # -----------------------
         echo "SMTP_SENDER=alpha.platform.smarter.sh" >> .env
         echo "SMTP_HOST=${{ env.SMTP_HOST }}" >> .env
         echo "SMTP_PORT=${{ env.SMTP_PORT }}" >> .env
@@ -154,14 +164,19 @@ runs:
         echo "SMTP_USE_TLS=${{ env.SMTP_USE_TLS }}" >> .env
         echo "SMTP_USERNAME=${{ env.SMTP_USERNAME }}" >> .env
         echo "SMTP_PASSWORD=${{ env.SMTP_PASSWORD }}" >> .env
+
+        # AWS
+        # -----------------------
         echo "AWS_REGION=${{ inputs.aws-region }}" >> .env
         echo "AWS_ACCESS_KEY_ID=${{ inputs.aws-access-key-id }}" >> .env
         echo "AWS_SECRET_ACCESS_KEY=${{ inputs.aws-secret-access-key }}" >> .env
-        echo "SECRET_KEY=top-secret-key-value" >> .env
-        echo "GOOGLE_MAPS_API_KEY=${{ inputs.google-maps-api-key }}" >> .env
+
+        # AI services
+        # -----------------------
         echo "OPENAI_API_KEY=${{ inputs.openai-api-key }}" >> .env
         echo "PINECONE_API_KEY=${{ inputs.pinecone-api-key }}" >> .env
         echo "PINECONE_ENVIRONMENT=${{ inputs.pinecone-environment }}" >> .env
+        echo "GOOGLE_MAPS_API_KEY=${{ inputs.google-maps-api-key }}" >> .env
 
     #--------------------------------------------------------------------------
     # Test
