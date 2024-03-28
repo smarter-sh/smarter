@@ -154,6 +154,11 @@ runs:
         eks-namespace: ${{ env.NAMESPACE }}
         eks-secret-name: smarter-django-secret-key
 
+    - name: Create .env
+      shell: bash
+      run: |
+        touch .env
+
     #--------------------------------------------------------------------------
     # Test
     #--------------------------------------------------------------------------
@@ -171,7 +176,7 @@ runs:
     # Environment Initializations
     #--------------------------------------------------------------------------
 
-    - name: Create .env
+    - name: Add to .env
       shell: bash
       run: |
         touch .env
