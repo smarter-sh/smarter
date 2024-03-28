@@ -1,0 +1,624 @@
+{% extends 'account/dashboard/base.html' %}
+{% load static %}
+
+{% block dashboard_title %}Account Billing{% endblock %}
+
+    {% block dashboard_title_breadcrumbs %}
+      {{ block.super }}
+      <!--begin::Item-->
+      <li class="breadcrumb-item text-muted">
+        <a href="/account/dashboard/billing/" class="text-muted text-hover-primary">Billing</a>
+      </li>
+    {% endblock %}
+
+
+    {% block dashboard_detail_view %}
+    <!--begin::Payment methods-->
+    <div class="card mb-5 mb-xl-10">
+      <!--begin::Card header-->
+      <div class="card-header card-header-stretch pb-0">
+        <!--begin::Title-->
+        <div class="card-title">
+          <h3 class="m-0">Payment Methods</h3>
+        </div>
+        <!--end::Title-->
+        <!--begin::Toolbar-->
+        <div class="card-toolbar m-0">
+          <!--begin::Tab nav-->
+          <ul class="nav nav-stretch nav-line-tabs border-transparent" role="tablist">
+            <!--begin::Tab item-->
+            <li class="nav-item" role="presentation">
+              <a id="kt_billing_creditcard_tab" class="nav-link fs-5 fw-bold me-5 active" data-bs-toggle="tab" role="tab" href="#kt_billing_creditcard">Credit / Debit Card</a>
+            </li>
+            <!--end::Tab item-->
+            <!--begin::Tab item-->
+            <li class="nav-item" role="presentation">
+              <a id="kt_billing_paypal_tab" class="nav-link fs-5 fw-bold" data-bs-toggle="tab" role="tab" href="#kt_billing_paypal">Paypal</a>
+            </li>
+            <!--end::Tab item-->
+          </ul>
+          <!--end::Tab nav-->
+        </div>
+        <!--end::Toolbar-->
+      </div>
+      <!--end::Card header-->
+      <!--begin::Tab content-->
+      <div id="kt_billing_payment_tab_content" class="card-body tab-content">
+        <!--begin::Tab panel-->
+        <div id="kt_billing_creditcard" class="tab-pane fade show active" role="tabpanel">
+          <!--begin::Title-->
+          <h3 class="mb-5">My Cards</h3>
+          <!--end::Title-->
+          <!--begin::Row-->
+          <div class="row gx-9 gy-6">
+
+            {% for payment_method in billing.payment_methods %}
+            <!--begin::Col-->
+            <div class="col-xl-6" data-kt-billing-element="payment-method">
+              <!--begin::Card-->
+              <div class="card card-dashed h-xl-100 flex-row flex-stack flex-wrap p-6">
+                <!--begin::Info-->
+                <div class="d-flex flex-column py-2">
+                  <!--begin::Owner-->
+                  <div class="d-flex align-items-center fs-4 fw-bold mb-5">{{ payment_method.card_name }}
+                  {% if payment_method.is_primary %}
+                  <span class="badge badge-light-success fs-7 ms-2">Primary</span></div>
+                  {% endif %}
+                  <!--end::Owner-->
+                  <!--begin::Wrapper-->
+                  <div class="d-flex align-items-center">
+                    <!--begin::Icon-->
+                    <img src="{% static 'assets/media/svg/card-logos/'|add:payment_method.card_type|add:'.svg' %}" />
+                    <!--end::Icon-->
+                    <!--begin::Details-->
+                    <div>
+                      <div class="fs-4 fw-bold">{{ payment_method.card_masked }}</div>
+                      <div class="fs-6 fw-semibold text-gray-500">Expires {{ payment_method.card_expiration_month }}/{{ payment_method.card_expiration_year }}</div>
+                    </div>
+                    <!--end::Details-->
+                  </div>
+                  <!--end::Wrapper-->
+                </div>
+                <!--end::Info-->
+                <!--begin::Actions-->
+                <div class="d-flex align-items-center py-2">
+                  <button
+                    class="btn btn-sm btn-light btn-active-light-primary me-3"
+                    data-kt-billing-id="{{ payment_method.id }}"
+                    data-kt-billing-action="payment-method-delete">
+                      <!--begin::Indicator label-->
+                      <span class="indicator-label">Delete</span>
+                      <!--end::Indicator label-->
+                      <!--begin::Indicator progress-->
+                      <span class="indicator-progress">Please wait...
+                      <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                      <!--end::Indicator progress-->
+                  </button>
+                  <button
+                    class="btn btn-sm btn-light btn-active-light-primary"
+                    data-kt-billing-id="{{ payment_method.id }}"
+                    data-kt-billing-action="payment-method-edit"
+                    >Edit
+                  </button>
+                </div>
+                <!--end::Actions-->
+              </div>
+              <!--end::Card-->
+            </div>
+            <!--end::Col-->
+            {% endfor %}
+
+            <!--begin::Col-->
+            <div class="col-xl-6">
+              <!--begin::Notice-->
+              <div class="notice d-flex bg-light-primary rounded border-primary border border-dashed h-lg-100 p-6">
+                <!--begin::Wrapper-->
+                <div class="d-flex flex-stack flex-grow-1 flex-wrap flex-md-nowrap">
+                  <!--begin::Content-->
+                  <div class="mb-3 mb-md-0 fw-semibold">
+                    <h4 class="text-gray-900 fw-bold">Important</h4>
+                    <div class="fs-6 text-gray-700 pe-7">Please review our
+                    <a href="https://smarter.sh/tos/" class="fw-bold me-1">Terms of Service</a> before adding
+                    <br />your new payment card.</div>
+                  </div>
+                  <!--end::Content-->
+                  <!--begin::Action-->
+                  <a
+                    href="#"
+                    class="btn btn-primary px-6 align-self-center text-nowrap"
+                    data-kt-billing-action="payment-method-add"
+                    data-bs-toggle="modal"
+                    data-bs-target="#kt_modal_payment_method">Add Card
+                  </a>
+                  <!--end::Action-->
+                </div>
+                <!--end::Wrapper-->
+              </div>
+              <!--end::Notice-->
+            </div>
+            <!--end::Col-->
+          </div>
+          <!--end::Row-->
+        </div>
+        <!--end::Tab panel-->
+        <!--begin::Tab panel-->
+        <div id="kt_billing_paypal" class="tab-pane fade" role="tabpanel" aria-labelledby="kt_billing_paypal_tab">
+          <!--begin::Title-->
+          <h3 class="mb-5">My Paypal</h3>
+          <!--end::Title-->
+          <!--begin::Description-->
+          <div class="text-gray-600 fs-6 fw-semibold mb-5">To use PayPal as your payment method, you will need to make pre-payments each month before your bill is due.</div>
+          <!--end::Description-->
+          <!--begin::Form-->
+          <form class="form">
+            <!--begin::Input group-->
+            <div class="mb-7 mw-350px">
+              <select name="timezone" data-control="select2" data-placeholder="Select an option" data-hide-search="true" class="form-select form-select-solid form-select-lg fw-semibold fs-6 text-gray-700">
+                <option>Select an option</option>
+                <option value="25">US $25.00</option>
+                <option value="50">US $50.00</option>
+                <option value="100">US $100.00</option>
+                <option value="125">US $125.00</option>
+                <option value="150">US $150.00</option>
+              </select>
+            </div>
+            <!--end::Input group-->
+            <button type="submit" class="btn btn-primary">Pay with Paypal</button>
+          </form>
+          <!--end::Form-->
+        </div>
+        <!--end::Tab panel-->
+      </div>
+      <!--end::Tab content-->
+    </div>
+    <!--end::Payment methods-->
+    <!--begin::Billing Address-->
+    <div class="card mb-5 mb-xl-10">
+      <!--begin::Card header-->
+      <div class="card-header">
+        <!--begin::Title-->
+        <div class="card-title">
+          <h3>Billing Addresses</h3>
+        </div>
+        <!--end::Title-->
+      </div>
+      <!--end::Card header-->
+      <!--begin::Card body-->
+      <div class="card-body">
+        <!--begin::Addresses-->
+        <div class="row gx-9 gy-6">
+
+          {% for address in billing.billing_addresses %}
+          <!--begin::Col-->
+          <div class="col-xl-6" data-kt-billing-element="address">
+            <!--begin::Address-->
+            <div class="card card-dashed h-xl-100 flex-row flex-stack flex-wrap p-6">
+              <!--begin::Details-->
+              <div class="d-flex flex-column py-2">
+                <div class="d-flex align-items-center fs-5 fw-bold mb-5">Address 1
+                  {% if address.is_primary %}
+                  <span class="badge badge-light-success fs-7 ms-2">Primary</span></div>
+                  {% endif %}
+                  <div class="fs-6 fw-semibold text-gray-600">{{ address.address1 }} {{ address.address2 }}
+                <br />{{ address.city }} {{ address.state }} {{ address.zip }}
+                <br />{{ address.country }}</div>
+              </div>
+              <!--end::Details-->
+              <!--begin::Actions-->
+              <div class="d-flex align-items-center py-2">
+                <button
+                  class="btn btn-sm btn-light btn-active-light-primary me-3"
+                  data-kt-billing-action="address-delete">
+                  <!--begin::Indicator label-->
+                  <span class="indicator-label">Delete</span>
+                  <!--end::Indicator label-->
+                  <!--begin::Indicator progress-->
+                  <span class="indicator-progress">Please wait...
+                  <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                  <!--end::Indicator progress-->
+                </button>
+                <button class="btn btn-sm btn-light btn-active-light-primary" data-bs-toggle="modal" data-bs-target="#kt_modal_new_address">Edit</button>
+              </div>
+              <!--end::Actions-->
+            </div>
+            <!--end::Address-->
+          </div>
+          <!--end::Col-->
+          {% endfor %}
+
+          <!--begin::Col-->
+          <div class="col-xl-6">
+            <!--begin::Notice-->
+            <div class="notice d-flex bg-light-primary rounded border-primary border border-dashed flex-stack h-xl-100 mb-10 p-6">
+              <!--begin::Wrapper-->
+              <div class="d-flex flex-stack flex-grow-1 flex-wrap flex-md-nowrap">
+                <!--begin::Content-->
+                <div class="mb-3 mb-md-0 fw-semibold">
+                  <h4 class="text-gray-900 fw-bold"></h4>
+                  <div class="fs-6 text-gray-700 pe-7"></div>
+                </div>
+                <!--end::Content-->
+                <!--begin::Action-->
+                <a href="#" class="btn btn-primary px-6 align-self-center text-nowrap" data-bs-toggle="modal" data-bs-target="#kt_modal_new_address">New Address</a>
+                <!--end::Action-->
+              </div>
+              <!--end::Wrapper-->
+            </div>
+            <!--end::Notice-->
+          </div>
+          <!--end::Col-->
+        </div>
+        <!--end::Addresses-->
+        <!--begin::Tax info-->
+        <div class="mt-10">
+          <h3 class="mb-3">Tax Location</h3>
+          <div class="fw-semibold text-gray-600 fs-6">United States - 10% VAT
+          <br />
+          <a class="fw-bold" href="#">More Info</a></div>
+        </div>
+        <!--end::Tax info-->
+      </div>
+      <!--end::Card body-->
+    </div>
+    <!--end::Billing Address-->
+    {% endblock %}
+
+
+{% block modal %}
+  {{ block.super }}
+		<!--begin::Modal - New Card-->
+		<div class="modal fade" id="kt_modal_payment_method" tabindex="-1" aria-hidden="true">
+			<!--begin::Modal dialog-->
+			<div class="modal-dialog modal-dialog-centered mw-650px">
+				<!--begin::Modal content-->
+				<div class="modal-content">
+					<!--begin::Modal header-->
+					<div class="modal-header">
+						<!--begin::Modal title-->
+						<h2 id="kt_modal_payment_method_title">Add New Card</h2>
+						<!--end::Modal title-->
+						<!--begin::Close-->
+						<div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
+							<i class="ki-duotone ki-cross fs-1">
+								<span class="path1"></span>
+								<span class="path2"></span>
+							</i>
+						</div>
+						<!--end::Close-->
+					</div>
+					<!--end::Modal header-->
+					<!--begin::Modal body-->
+					<div class="modal-body scroll-y mx-5 mx-xl-15 my-7">
+						<!--begin::Form-->
+						<form id="kt_modal_payment_method_form" class="form" action="/account/billing/payment-methods">
+              {% csrf_token %}
+							<!--begin::Input group-->
+							<div class="d-flex flex-column mb-7 fv-row">
+								<!--begin::Label-->
+								<label class="d-flex align-items-center fs-6 fw-semibold form-label mb-2">
+									<span class="required">Name On Card</span>
+									<span class="ms-1" data-bs-toggle="tooltip" title="Specify a card holder's name">
+										<i class="ki-duotone ki-information-5 text-gray-500 fs-6">
+											<span class="path1"></span>
+											<span class="path2"></span>
+											<span class="path3"></span>
+										</i>
+									</span>
+								</label>
+								<!--end::Label-->
+								<input type="text" class="form-control form-control-solid" placeholder="Full name" name="{{ billing.payment_method_form.card_name.name }}" value="" />
+							</div>
+							<!--end::Input group-->
+							<!--begin::Input group-->
+							<div class="d-flex flex-column mb-7 fv-row">
+								<!--begin::Label-->
+								<label class="required fs-6 fw-semibold form-label mb-2">Card Number</label>
+								<!--end::Label-->
+								<!--begin::Input wrapper-->
+								<div class="position-relative">
+									<!--begin::Input-->
+									<input type="text" class="form-control form-control-solid" placeholder="xxxx xxxx xxxx xxxx" name="{{ billing.payment_method_form.card_number.name }}" value="" />
+									<!--end::Input-->
+									<!--begin::Card logos-->
+									<div id="card_type" class="position-absolute translate-middle-y top-50 end-0 me-5">
+										<img data-kt-image-type="visa" name="card_type" src="{% static 'assets/media/svg/card-logos/visa.svg' %}" alt="" class="h-25px" />
+										<img data-kt-image-type="mastercard" name="card_type" src="{% static 'assets/media/svg/card-logos/mastercard.svg' %}" alt="" class="h-25px" />
+										<img data-kt-image-type="american-express" name="card_type" src="{% static 'assets/media/svg/card-logos/american-express.svg' %}" alt="" class="h-25px" />
+									</div>
+									<!--end::Card logos-->
+								</div>
+								<!--end::Input wrapper-->
+							</div>
+							<!--end::Input group-->
+							<!--begin::Input group-->
+							<div class="row mb-10">
+								<!--begin::Col-->
+								<div class="col-md-8 fv-row">
+									<!--begin::Label-->
+									<label class="required fs-6 fw-semibold form-label mb-2">Expiration Date</label>
+									<!--end::Label-->
+									<!--begin::Row-->
+									<div class="row fv-row">
+										<!--begin::Col-->
+										<div class="col-6">
+											<select name="{{ billing.payment_method_form.card_expiration_month.name }}" class="form-select form-select-solid" data-control="select2" data-hide-search="true" data-placeholder="Month">
+												<option></option>
+												<option value="1">1</option>
+												<option value="2">2</option>
+												<option value="3">3</option>
+												<option value="4">4</option>
+												<option value="5">5</option>
+												<option value="6">6</option>
+												<option value="7">7</option>
+												<option value="8">8</option>
+												<option value="9">9</option>
+												<option value="10">10</option>
+												<option value="11">11</option>
+												<option value="12">12</option>
+											</select>
+										</div>
+										<!--end::Col-->
+										<!--begin::Col-->
+										<div class="col-6">
+											<select name="{{ billing.payment_method_form.card_expiration_year.name }}" class="form-select form-select-solid" data-control="select2" data-hide-search="true" data-placeholder="Year">
+												<option></option>
+                        {% for expiration_year in billing.payment_method_expiration_years %}
+												<option value={{ expiration_year }}>{{ expiration_year }}</option>
+                        {% endfor %}
+											</select>
+										</div>
+										<!--end::Col-->
+									</div>
+									<!--end::Row-->
+								</div>
+								<!--end::Col-->
+								<!--begin::Col-->
+								<div class="col-md-4 fv-row">
+									<!--begin::Label-->
+									<label class="d-flex align-items-center fs-6 fw-semibold form-label mb-2">
+										<span class="required">CVV</span>
+										<span class="ms-1" data-bs-toggle="tooltip" title="Enter a card CVV code">
+											<i class="ki-duotone ki-information-5 text-gray-500 fs-6">
+												<span class="path1"></span>
+												<span class="path2"></span>
+												<span class="path3"></span>
+											</i>
+										</span>
+									</label>
+									<!--end::Label-->
+									<!--begin::Input wrapper-->
+									<div class="position-relative">
+										<!--begin::Input-->
+										<input type="text" class="form-control form-control-solid" minlength="3" maxlength="4" placeholder="CVV" name="{{ billing.payment_method_form.card_cvc.name }}" />
+										<!--end::Input-->
+										<!--begin::CVV icon-->
+										<div class="position-absolute translate-middle-y top-50 end-0 me-3">
+											<i class="ki-duotone ki-credit-cart fs-2hx">
+												<span class="path1"></span>
+												<span class="path2"></span>
+											</i>
+										</div>
+										<!--end::CVV icon-->
+									</div>
+									<!--end::Input wrapper-->
+								</div>
+								<!--end::Col-->
+							</div>
+							<!--end::Input group-->
+							<!--begin::Actions-->
+							<div class="text-center pt-15">
+								<button type="reset" id="kt_modal_payment_method_cancel" class="btn btn-light me-3">Cancel</button>
+								<button type="submit" id="kt_modal_payment_method_submit" class="btn btn-primary">
+									<span class="indicator-label">Submit</span>
+									<span class="indicator-progress">Please wait...
+									<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+								</button>
+							</div>
+							<!--end::Actions-->
+						</form>
+						<!--end::Form-->
+					</div>
+					<!--end::Modal body-->
+				</div>
+				<!--end::Modal content-->
+			</div>
+			<!--end::Modal dialog-->
+		</div>
+		<!--end::Modal - New Card-->
+		<!--begin::Modal - New Address-->
+		<div class="modal fade" id="kt_modal_new_address" tabindex="-1" aria-hidden="true">
+			<!--begin::Modal dialog-->
+			<div class="modal-dialog modal-dialog-centered mw-650px">
+				<!--begin::Modal content-->
+				<div class="modal-content">
+					<!--begin::Form-->
+					<form class="form" action="/account/billing/billing-addresses" id="kt_modal_new_address_form">
+						<!--begin::Modal header-->
+						<div class="modal-header" id="kt_modal_new_address_header">
+							<!--begin::Modal title-->
+							<h2>Add New Address</h2>
+							<!--end::Modal title-->
+							<!--begin::Close-->
+							<div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
+								<i class="ki-duotone ki-cross fs-1">
+									<span class="path1"></span>
+									<span class="path2"></span>
+								</i>
+							</div>
+							<!--end::Close-->
+						</div>
+						<!--end::Modal header-->
+						<!--begin::Modal body-->
+						<div class="modal-body py-10 px-lg-17">
+							<!--begin::Scroll-->
+							<div class="scroll-y me-n7 pe-7" id="kt_modal_new_address_scroll" data-kt-scroll="true" data-kt-scroll-activate="{default: false, lg: true}" data-kt-scroll-max-height="auto" data-kt-scroll-dependencies="#kt_modal_new_address_header" data-kt-scroll-wrappers="#kt_modal_new_address_scroll" data-kt-scroll-offset="300px">
+								<!--begin::Notice-->
+								<!--begin::Notice-->
+								<div class="notice d-flex bg-light-warning rounded border-warning border border-dashed mb-9 p-6">
+									<!--begin::Icon-->
+									<i class="ki-duotone ki-information fs-2tx text-warning me-4">
+										<span class="path1"></span>
+										<span class="path2"></span>
+										<span class="path3"></span>
+									</i>
+									<!--end::Icon-->
+									<!--begin::Wrapper-->
+									<div class="d-flex flex-stack flex-grow-1">
+										<!--begin::Content-->
+										<div class="fw-semibold">
+											<h4 class="text-gray-900 fw-bold">Warning</h4>
+											<div class="fs-6 text-gray-700">Updating address may affect your
+											<a href="#">Tax Location</a></div>
+										</div>
+										<!--end::Content-->
+									</div>
+									<!--end::Wrapper-->
+								</div>
+								<!--end::Notice-->
+								<!--end::Notice-->
+								<!--begin::Input group-->
+								<div class="row mb-5">
+									<!--begin::Col-->
+									<div class="col-md-6 fv-row">
+										<!--begin::Label-->
+										<label class="required fs-5 fw-semibold mb-2">First name</label>
+										<!--end::Label-->
+										<!--begin::Input-->
+										<input type="text" class="form-control form-control-solid" placeholder="" name="{{ billing.billing_address_form.first_name.name }}">
+										<!--end::Input-->
+									</div>
+									<!--end::Col-->
+									<!--begin::Col-->
+									<div class="col-md-6 fv-row">
+										<!--end::Label-->
+										<label class="required fs-5 fw-semibold mb-2">Last name</label>
+										<!--end::Label-->
+										<!--end::Input-->
+										<input type="text" class="form-control form-control-solid" placeholder="" name="{{ billing.billing_address_form.last_name.name }}" />
+										<!--end::Input-->
+									</div>
+									<!--end::Col-->
+								</div>
+								<!--end::Input group-->
+								<!--begin::Input group-->
+								<div class="d-flex flex-column mb-5 fv-row">
+									<!--begin::Label-->
+									<label class="d-flex align-items-center fs-5 fw-semibold mb-2">
+										<span class="required">Country</span>
+										<span class="ms-1" data-bs-toggle="tooltip" title="Your payment statements may very based on selected country">
+											<i class="ki-duotone ki-information-5 text-gray-500 fs-6">
+												<span class="path1"></span>
+												<span class="path2"></span>
+												<span class="path3"></span>
+											</i>
+										</span>
+									</label>
+									<!--end::Label-->
+									<!--begin::Select-->
+									<select name="{{ billing.billing_address_form.country.name }}" data-control="select2" data-dropdown-parent="#kt_modal_new_address" data-placeholder="Select a Country..." class="form-select form-select-solid">
+										<option value="">Select a Country...</option>
+                    {% for country in billing.countries %}
+										<option value="{{ country.code }}">{{ country.name }}</option>
+                    {% endfor %}
+									</select>
+									<!--end::Select-->
+								</div>
+								<!--end::Input group-->
+								<!--begin::Input group-->
+								<div class="d-flex flex-column mb-5 fv-row">
+									<!--begin::Label-->
+									<label class="required fs-5 fw-semibold mb-2">Address Line 1</label>
+									<!--end::Label-->
+									<!--begin::Input-->
+									<input class="form-control form-control-solid" placeholder="" name="{{ billing.billing_address_form.address1.name }}" />
+									<!--end::Input-->
+								</div>
+								<!--end::Input group-->
+								<!--begin::Input group-->
+								<div class="d-flex flex-column mb-5 fv-row">
+									<!--begin::Label-->
+									<label class="required fs-5 fw-semibold mb-2">Address Line 2</label>
+									<!--end::Label-->
+									<!--begin::Input-->
+									<input class="form-control form-control-solid" placeholder="" name="{{ billing.billing_address_form.address2.name }}" />
+									<!--end::Input-->
+								</div>
+								<!--end::Input group-->
+								<!--begin::Input group-->
+								<div class="d-flex flex-column mb-5 fv-row">
+									<!--begin::Label-->
+									<label class="fs-5 fw-semibold mb-2">City</label>
+									<!--end::Label-->
+									<!--begin::Input-->
+									<input class="form-control form-control-solid" placeholder="" name="{{ billing.billing_address_form.city.name }}" />
+									<!--end::Input-->
+								</div>
+								<!--end::Input group-->
+								<!--begin::Input group-->
+								<div class="row g-9 mb-5">
+									<!--begin::Col-->
+									<div class="col-md-6 fv-row">
+										<!--begin::Label-->
+										<label class="fs-5 fw-semibold mb-2">State / Province</label>
+										<!--end::Label-->
+										<!--begin::Input-->
+										<input class="form-control form-control-solid" placeholder="" name="{{ billing.billing_address_form.state.name }}" />
+										<!--end::Input-->
+									</div>
+									<!--end::Col-->
+									<!--begin::Col-->
+									<div class="col-md-6 fv-row">
+										<!--begin::Label-->
+										<label class="fs-5 fw-semibold mb-2">Post Code</label>
+										<!--end::Label-->
+										<!--begin::Input-->
+										<input class="form-control form-control-solid" placeholder="" name="{{ billing.billing_address_form.postcode.name }}" />
+										<!--end::Input-->
+									</div>
+									<!--end::Col-->
+								</div>
+								<!--end::Input group-->
+								<!--begin::Input group-->
+								<div class="fv-row mb-5">
+									<!--begin::Wrapper-->
+									<div class="d-flex flex-stack">
+									</div>
+									<!--begin::Wrapper-->
+								</div>
+								<!--end::Input group-->
+							</div>
+							<!--end::Scroll-->
+						</div>
+						<!--end::Modal body-->
+						<!--begin::Modal footer-->
+						<div class="modal-footer flex-center">
+							<!--begin::Button-->
+							<button type="reset" id="kt_modal_new_address_cancel" class="btn btn-light me-3">Discard</button>
+							<!--end::Button-->
+							<!--begin::Button-->
+							<button type="submit" id="kt_modal_new_address_submit" class="btn btn-primary">
+								<span class="indicator-label">Submit</span>
+								<span class="indicator-progress">Please wait...
+								<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+							</button>
+							<!--end::Button-->
+						</div>
+						<!--end::Modal footer-->
+					</form>
+					<!--end::Form-->
+				</div>
+			</div>
+		</div>
+		<!--end::Modal - New Address-->
+
+{% endblock %}
+
+{% block javascript_extra %}
+  {{ block.super }}
+    <!--begin::Javascript-->
+		<!--begin::Custom Javascript(used for this page only)-->
+		<script src="{% static 'js/account/dashboard/billing/billing-address.js' %}"></script>
+		<script src="{% static 'js/account/dashboard/billing/payment-method.js' %}"></script>
+		<!--end::Custom Javascript-->
+		<!--end::Javascript-->
+{% endblock %}

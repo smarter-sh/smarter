@@ -28,6 +28,7 @@ jobs:
 
       - name: Checkout next branch
         run: |
+          git config --global url."https://x-access-token:${{ secrets.PAT }}@github.com/".insteadOf "https://github.com/"
           git fetch
           git checkout next
           git pull origin next
@@ -44,7 +45,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('./requirements/**/*.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('./smarter/requirements/**/*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip
 
@@ -66,7 +67,7 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: |
-          pip install -r ./requirements/local.txt
+          pip install -r ./smarter/requirements/local.txt
         env:
           SITE_PACKAGES_PATH: ${{ env.SITE_PACKAGES_PATH }}
 

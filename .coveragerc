@@ -2,6 +2,6 @@
 omit =
     smarter/apps/common/tests/*
     smarter/apps/api_admin/views/info/tests/*
-    smarter/apps/openai_function_calling/tests/*
-    smarter/apps/openai_function_calling/tests/*
-    smarter/apps/openai_langchain/tests/*
+    smarter/apps/chat/tests/*
+    smarter/apps/chat/tests/*
+    smarter/apps/langchain_passthrough/tests/*

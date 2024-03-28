@@ -1,0 +1,24 @@
+{
+  "model": "gpt-3.5-turbo",
+  "end_point": "ChatCompletion",
+  "temperature": 0.5,
+  "max_tokens": 256,
+  "messages": [
+    {
+      "role": "system",
+      "content": "Hello, I'm Sam, the Smarter sandbox assistant."
+    },
+    {
+      "role": "user",
+      "content": "hello"
+    }
+  ],
+  "chat_history": [
+    {
+      "message": "Hello, How can I help you?",
+      "direction": "incoming",
+      "sentTime": "11/16/2023, 5:53:32 PM",
+      "sender": "system"
+    }
+  ]
+}

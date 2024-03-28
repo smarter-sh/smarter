@@ -2,7 +2,7 @@
 """Account admin."""
 from django.contrib import admin
 
-from .models import Account, PaymentMethod, UserProfile
+from .models import Account, APIKey, PaymentMethod, UserProfile
 
 
 # Register your models here.
@@ -36,6 +36,15 @@ class PaymentMethodModelAdmin(admin.ModelAdmin):
     list_display = ("name", "created_at", "updated_at")
 
 
+class APIKeyModelAdmin(admin.ModelAdmin):
+    """API Key model admin."""
+
+    readonly_fields = ("created",)
+    # pylint: disable=W0212
+    list_display = [field.name for field in APIKey._meta.get_fields()]
+
+
 admin.site.register(Account, AccountAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(PaymentMethod, PaymentMethodModelAdmin)
+admin.site.register(APIKey, APIKeyModelAdmin)

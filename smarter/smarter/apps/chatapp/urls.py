@@ -1,0 +1,10 @@
+# -*- coding: utf-8 -*-
+"""Django URL patterns for the chatapp"""
+from django.urls import path
+
+from .views import ChatAppView
+
+
+urlpatterns = [
+    path("", ChatAppView.as_view(), name="chatapp"),
+]

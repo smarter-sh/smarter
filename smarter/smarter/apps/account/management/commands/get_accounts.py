@@ -5,8 +5,8 @@ import re
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand
 
+from smarter.apps.account.api.v0.serializers import AccountSerializer
 from smarter.apps.account.models import Account
-from smarter.apps.account.serializers import AccountSerializer
 
 
 # pylint: disable=E1101

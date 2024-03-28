@@ -1,0 +1,54 @@
+# -*- coding: utf-8 -*-
+# pylint: disable=C0114,C0115
+"""Initial migration for the account app."""
+
+import uuid
+
+import django.db.models.deletion
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ("account", "0001_initial"),
+        ("knox", "0008_remove_authtoken_salt"),
+    ]
+
+    operations = [
+        migrations.CreateModel(
+            name="APIKey",
+            fields=[
+                (
+                    "authtoken_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="knox.authtoken",
+                    ),
+                ),
+                ("key_id", models.UUIDField(default=uuid.uuid4, editable=False, unique=True)),
+                ("description", models.CharField(blank=True, max_length=255, null=True)),
+                ("last_used_at", models.DateTimeField(blank=True, null=True)),
+                ("is_active", models.BooleanField(default=True)),
+                (
+                    "account",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="api_keys",
+                        to="account.account",
+                    ),
+                ),
+            ],
+            options={
+                "verbose_name": "API Key",
+                "verbose_name_plural": "API Keys",
+            },
+            bases=("knox.authtoken",),
+        ),
+    ]

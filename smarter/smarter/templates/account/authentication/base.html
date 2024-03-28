@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head_extra %}
+<style>
+  .bw-background {
+      filter: grayscale(100%);
+  }
+</style>
+{% endblock %}
+
+{% block root %}
+      <!--begin::Authentication - Sign-in -->
+			<div class="d-flex flex-column flex-lg-row flex-column-fluid">
+				<!--begin::Aside-->
+				<div class="d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center bw-background" style='background-image: url("{% static "assets/media/misc/auth-bg.png" %}")'>
+					<!--begin::Content-->
+					<div class="d-flex flex-column flex-center p-6 p-lg-10 w-100">
+						<!--begin::Logo-->
+						<a href="/" class="mb-0 mb-lg-20">
+							<img alt="Logo" src="{% static 'querium/querium-logo-white-transparent.png' %}" class="h-100px h-lg-200px" />
+						</a>
+						<!--end::Logo-->
+						<!--begin::Image-->
+						<img class="d-none d-lg-block mx-auto w-300px w-lg-75 w-xl-500px mb-10 mb-lg-20" src="{% static 'assets/media/misc/auth-screens.png' %}" alt="" />
+						<!--end::Image-->
+						<!--begin::Title-->
+						<h1 class="d-none d-lg-block text-white fs-2qx fw-bold text-center mb-7">Smarter, Safer, Faster</h1>
+						<!--end::Title-->
+						<!--begin::Text-->
+						<div class="d-none d-lg-block text-white fs-base text-center">Smarter is a
+              <a href="#" class="opacity-75-hover text-warning fw-semibold me-1">plugin based</a> enterprise class AI-driven chat solution
+              <br />that intelligently and securely incorporates your corporate data and knowledge into chatbot responses.
+            </div>
+            <!--end::Text-->
+					</div>
+					<!--end::Content-->
+				</div>
+				<!--begin::Aside-->
+				<!--begin::Body-->
+				<div class="d-flex flex-column flex-lg-row-fluid w-lg-50 p-10">
+          {% block authentication_body %}
+          <h2>account/authentication.base.html: Add your content in block authentication_body</h2>
+          {% endblock %}
+          <!--begin::Footer-->
+          <div class="d-flex flex-center flex-wrap px-5">
+            <!--begin::Links-->
+            <div class="d-flex fw-semibold text-primary fs-base">
+              <a href="https://smarter.sh/legal" class="px-5" target="_blank">Legal</a>
+              <a href="https://smarter.sh/plans/" class="px-5" target="_blank">Plans</a>
+              <a href="https://smarter.sh/contact/" class="px-5" target="_blank">Contact Us</a>
+            </div>
+            <!--end::Links-->
+          </div>
+          <!--end::Footer-->
+        </div>
+      <!--end::Body-->
+			</div>
+			<!--end::Authentication - Sign-in-->
+{% endblock %}
+
+
+{% block javascript_extra %}
+		<!--begin::Custom Javascript(used for this page only)-->
+		<script src="{% static 'assets/js/custom/authentication/sign-in/general.js' %}"></script>
+		<!--end::Custom Javascript-->
+{% endblock %}
