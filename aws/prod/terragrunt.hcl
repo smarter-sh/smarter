@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------
-# written by: Miguel Afonso
-#             https://www.linkedin.com/in/mmafonso/
+# written by: Lawrence McDaniel
+#             https://www.linkedin.com/in/lawrencemcdaniel/
 #
 # date: Feb-2024
 #

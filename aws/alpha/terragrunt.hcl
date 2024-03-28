@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------
-# written by: Miguel Afonso
-#             https://www.linkedin.com/in/mmafonso/
+# written by: Lawrence McDaniel
+#             https://www.linkedin.com/in/lawrencemcdaniel/
 #
 # date: Feb-2024
 #
@@ -10,7 +10,7 @@ locals {
   global_vars = read_terragrunt_config(find_in_parent_folders("global.hcl"))
 
   # environment vars
-  environment           = "dev"
+  environment           = "alpha"
   subdomain             = "${local.environment}.platform"
 }
 
