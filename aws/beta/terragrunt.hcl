@@ -10,8 +10,8 @@ locals {
   global_vars = read_terragrunt_config(find_in_parent_folders("global.hcl"))
 
   # environment vars
-  environment           = "prod"
-  subdomain             = "platform"
+  environment           = "beta"
+  subdomain             = "${local.environment}.platform"
 }
 
 # Terragrunt will copy the Terraform configurations specified by the source parameter, along with any files in the
