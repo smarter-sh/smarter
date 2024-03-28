@@ -4,7 +4,7 @@
 # - a Docker container for the Smarter Celery worker.
 # - a Docker container for the Smarter Celery beat.
 #
-# This image is used for all environments (local, dev, staging, and production).
+# This image is used for all environments (local, alpha, beta, next and production).
 #------------------------------------------------------------------------------
 
 # Use the official Python image as a parent image

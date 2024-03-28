@@ -37,13 +37,13 @@ variable "root_domain" {
 variable "subdomain" {
   description = "a valid Internet domain name which you directly control using AWS Route53 in this account"
   type        = string
-  default     = "dev"
+  default     = "alpha"
 }
 
 variable "environment" {
-  description = "the environment name (e.g. dev, stage, prod)"
+  description = "the environment name (e.g. local, alpha, beta, next, prod)"
   type        = string
-  default     = "dev"
+  default     = "local"
 }
 
 variable "eks_cluster_name" {
