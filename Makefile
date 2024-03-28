@@ -225,7 +225,7 @@ helm-update:
 
 help:
 	@echo '===================================================================='
-	@echo 'init                   - Initialize local dev and Docker environments'
+	@echo 'init                   - Initialize local and Docker environments'
 	@echo 'activate               - activates Python virtual environment'
 	@echo 'build                  - Build Docker containers'
 	@echo 'run                    - run web application from Docker'

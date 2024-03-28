@@ -56,9 +56,12 @@ inputs:
 runs:
   using: "composite"
   steps:
-    #--------------------------------------------------------------------------
-    # Initializations
-    #--------------------------------------------------------------------------
+    - name: Checkout code
+      id: checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
     # Set the Kubernetes namespace based on the environment
     - name: Initialize environment variables
@@ -68,10 +71,6 @@ runs:
       env:
         ENVIRONMENT: ${{ inputs.environment }}
         NAMESPACE_BASE: smarter-platform
-
-    - name: Checkout code
-      id: checkout
-      uses: actions/checkout@v4
 
     # authenticate AWS CLI
     - name: Configure AWS credentials
@@ -122,26 +121,6 @@ runs:
         sudo apt-get update
         sudo apt-get install -y jq
 
-    # connect to Amazon ECR so that we can programmatically
-    # figure out the Docker image to add to the Helm values for the
-    # Kubernetes deployment manifest.
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v2
-
-    # set the Docker image to the environment variable SMARTER_DOCKER_IMAGE
-    # example:  012345678903.dkr.ecr.us-east-2.amazonaws.com/smarter-platform-alpha:latest
-    - name: Set Docker image
-      id: set-docker-image
-      shell: bash
-      run: |-
-        echo "SMARTER_DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest" >> $GITHUB_ENV
-      env:
-        AWS_ECR_REPO: ${{ env.NAMESPACE }}
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
     #--------------------------------------------------------------------------
     # Build and Configure the Docker image
     #--------------------------------------------------------------------------
@@ -175,15 +154,22 @@ runs:
         eks-namespace: ${{ env.NAMESPACE }}
         eks-secret-name: smarter-django-secret-key
 
-    # see: https://github.com/helm/helm
-    #      we're installing directly from the github repo amd64 binary
-    - name: Install Helm
-      id: helm-install
+    #--------------------------------------------------------------------------
+    # Test
+    #--------------------------------------------------------------------------
+    - name: Build local and run Python unit tests
       shell: bash
-      run: |-
-        curl -LO https://get.helm.sh/helm-v3.14.2-linux-amd64.tar.gz
-        tar -zxvf helm-v3.14.2-linux-amd64.tar.gz
-        sudo mv linux-amd64/helm /usr/local/bin/helm
+      env:
+        ENVIRONMENT: local
+        GITHUB_ACTIONS: "true"
+        DEBUG_MODE: "true"
+      run: |
+        make docker-init
+        make docker-test
+
+    #--------------------------------------------------------------------------
+    # Environment Initializations
+    #--------------------------------------------------------------------------
 
     - name: Create .env
       shell: bash
@@ -218,39 +204,6 @@ runs:
         DEBUG_MODE: False
         DJANGO_SETTINGS_MODULE: smarter.settings.${{ inputs.environment }}
 
-    # Dump all of our environment variables to the run log
-    - name: Dump environment variables
-      id: dump-env
-      shell: bash
-      run: |-
-        pwd
-        echo "env"
-        echo "-------------------------------"
-        cat .env
-        echo
-        echo
-        echo "GITHUB_ENV"
-        echo "-------------------------------"
-        cat $GITHUB_ENV
-        echo
-        echo
-        echo "env"
-        echo "-------------------------------"
-        env
-
-    #--------------------------------------------------------------------------
-    # Test
-    #--------------------------------------------------------------------------
-    - name: Build local and run Python unit tests
-      shell: bash
-      env:
-        ENVIRONMENT: local
-        GITHUB_ACTIONS: "true"
-        DEBUG_MODE: "true"
-      run: |
-        make docker-init
-        make docker-test
-
     - name: Rebuild for environment
       shell: bash
       env:
@@ -263,6 +216,23 @@ runs:
     #--------------------------------------------------------------------------
     # Push the Docker image to Amazon ECR
     #--------------------------------------------------------------------------
+    # connect to Amazon ECR so that we can programmatically
+    # figure out the Docker image to add to the Helm values for the
+    # Kubernetes deployment manifest.
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    # set the Docker image to the environment variable SMARTER_DOCKER_IMAGE
+    # example:  012345678903.dkr.ecr.us-east-2.amazonaws.com/smarter-platform-alpha:latest
+    - name: Set Docker image
+      id: set-docker-image
+      shell: bash
+      run: |-
+        echo "SMARTER_DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest" >> $GITHUB_ENV
+      env:
+        AWS_ECR_REPO: ${{ env.NAMESPACE }}
+
     - name: Create the repository
       id: create-repo
       shell: bash
