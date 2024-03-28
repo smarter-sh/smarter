@@ -38,7 +38,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        ENVIRONMENT: local
+        ENVIRONMENT: ${ENVIRONMENT}
       cache_from:
         - smarter
     image: smarter
@@ -61,7 +61,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        ENVIRONMENT: local
+        ENVIRONMENT: ${ENVIRONMENT}
       cache_from:
         - smarter
     command: >
@@ -84,7 +84,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        ENVIRONMENT: local
+        ENVIRONMENT: ${ENVIRONMENT}
       cache_from:
         - smarter
     command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- gunicorn smarter.wsgi:application -b 0.0.0.0:8000
