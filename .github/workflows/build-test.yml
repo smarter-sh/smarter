@@ -16,7 +16,7 @@ env:
   python-version: "3.11"
 
 jobs:
-  build-test-push:
+  build-test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
