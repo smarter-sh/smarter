@@ -267,7 +267,7 @@ class TestConfiguration(unittest.TestCase):
         """Test that the semantic version conforms to a valid pattern."""
         version = get_semantic_version()
         self.assertIsNotNone(version)
-        pattern = r"^\d+\.\d+\.\d+$"
+        pattern = r"^\d+\.\d+\.\d+(-[0-9A-Za-z-\.]+)?(\+[0-9A-Za-z-\.]+)?$"
         match = re.match(pattern, version)
         self.assertIsNotNone(match, f"{version} is not a valid semantic version")
 

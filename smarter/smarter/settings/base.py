@@ -21,6 +21,9 @@ from pathlib import Path
 from corsheaders.defaults import default_headers
 from dotenv import load_dotenv
 
+# Add proprietary settings for the project
+from .smarter import *  # noqa: E402, F401, W0401
+
 
 # to disable redis/celery in collectstatic
 if "collectstatic" in sys.argv:
@@ -265,6 +268,3 @@ SMTP_PORT = os.environ.get("SMTP_PORT", "587")
 SMTP_USE_SSL = os.environ.get("SMTP_USE_SSL", False)
 SMTP_USE_TLS = os.environ.get("SMTP_USE_TLS", True)
 SMTP_USERNAME = os.environ.get("SMTP_USERNAME", "SET-ME-PLEASE")
-
-# Add proprietary settings for the project
-from .smarter import *  # noqa: E402, F401, W0401
