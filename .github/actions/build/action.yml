@@ -12,7 +12,6 @@ inputs:
   environment:
     description: "The environment to deploy"
     required: true
-    default: "dev"
   aws-ecr-push:
     description: "Push the Docker image to Amazon ECR"
     required: true
@@ -67,7 +66,7 @@ runs:
       run: |-
         echo "NAMESPACE=${{ env.NAMESPACE_BASE }}-${{ env.ENVIRONMENT }}" >> $GITHUB_ENV
       env:
-        ENVIRONMENT: dev
+        ENVIRONMENT: ${{ inputs.environment }}
         NAMESPACE_BASE: smarter-platform
 
     - name: Checkout code
@@ -131,7 +130,7 @@ runs:
       uses: aws-actions/amazon-ecr-login@v2
 
     # set the Docker image to the environment variable SMARTER_DOCKER_IMAGE
-    # example:  012345678903.dkr.ecr.us-east-2.amazonaws.com/smarter-api-dev:latest
+    # example:  012345678903.dkr.ecr.us-east-2.amazonaws.com/smarter-platform-alpha:latest
     - name: Set Docker image
       id: set-docker-image
       shell: bash

@@ -36,8 +36,8 @@ jobs:
 
       - name: Check branch name
         run: |
-          if [[ "${{ github.ref }}" != "refs/heads/dev" && "${{ github.ref }}" != "refs/heads/next" && "${{ github.ref }}" != "refs/heads/main" ]]; then
-            echo "This workflow can only run on dev, next, or main branches"
+          if [[ "${{ github.ref }}" != "refs/heads/alpha" && "${{ github.ref }}" != "refs/heads/beta" && "${{ github.ref }}" != "refs/heads/next" && "${{ github.ref }}" != "refs/heads/main" ]]; then
+            echo "This workflow can only run on alpha, beta, next, or main branches"
             exit 1
           fi
 
@@ -70,10 +70,12 @@ jobs:
 
       - name: Set environment variable
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
-            echo "ENVIRONMENT=test" >> $GITHUB_ENV
+          if [[ "${{ github.ref }}" == "refs/heads/alpha" ]]; then
+            echo "ENVIRONMENT=alpha" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/beta" ]]; then
+            echo "ENVIRONMENT=beta" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == "refs/heads/next" ]]; then
-            echo "ENVIRONMENT=staging" >> $GITHUB_ENV
+            echo "ENVIRONMENT=next" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             echo "ENVIRONMENT=production" >> $GITHUB_ENV
           fi
