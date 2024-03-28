@@ -68,7 +68,7 @@ services:
         - smarter
     command: >
       bash -c "watchmedo auto-restart --directory=./ --pattern='*.py' --recursive --
-      celery -A smarter.smarter_celery.celery_app beat --schedule /smarter/smarter/celerybeat/celerybeat-schedule --loglevel=info" image: smarter
+      celery -A smarter.smarter_celery.celery_app beat --schedule /smarter/celerybeat/celerybeat-schedule --loglevel=info" image: smarter
     volumes:
       - ./smarter:/smarter
     depends_on:
