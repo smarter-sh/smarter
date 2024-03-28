@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=E1101
 """A module containing constants for the OpenAI API."""
+import logging
 import os
 from pathlib import Path
 
 import hcl2
 import openai
 
-from .logger import get_logger
 
+logger = logging.getLogger(__name__)
 
 MODULE_NAME = "openai_passthrough"
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -24,14 +25,12 @@ if not os.path.exists(TERRAFORM_TFVARS):
 TFVARS = {}
 IS_USING_TFVARS = False
 
-logger = get_logger(__name__)
-
 try:
     with open(TERRAFORM_TFVARS, "r", encoding="utf-8") as f:
         TFVARS = hcl2.load(f)
     IS_USING_TFVARS = True
 except FileNotFoundError:
-    logger.debug("No terraform.tfvars file found. Using default values.")
+    logger.info("No terraform.tfvars file found. Using default values.")
 
 
 # pylint: disable=too-few-public-methods
