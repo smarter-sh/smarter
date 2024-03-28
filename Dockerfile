@@ -66,7 +66,7 @@ RUN apt-get install -y nodejs
 
 # Add all Python package dependencies
 RUN pip install --upgrade pip
-RUN pip install -r requirements/aws.txt
+RUN pip install -r requirements/docker.txt
 
 # Install Python dependencies for the local environment for cases where
 # we're going to run python unit tests in the Docker container.
