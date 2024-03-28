@@ -50,7 +50,7 @@ jobs:
         with:
           node-version: "20.9.0"
 
-      - name: Install npm dev dependencies
+      - name: Install npm dependencies
         run: npm install
 
       - name: Get current version

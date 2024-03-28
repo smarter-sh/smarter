@@ -11,7 +11,7 @@ on:
     branches:
       - main
 jobs:
-  merge-main-to-dev-branches:
+  merge-main:
     runs-on: ubuntu-latest
 
     steps:
@@ -51,7 +51,7 @@ jobs:
           target-branch: beta
 
   semantic-release:
-    needs: merge-main-to-dev-branches
+    needs: merge-main
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.PAT }}
