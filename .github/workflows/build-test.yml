@@ -32,10 +32,12 @@ jobs:
 
       - name: Set environment variable
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
-            echo "ENVIRONMENT=test" >> $GITHUB_ENV
+          if [[ "${{ github.ref }}" == "refs/heads/alpha" ]]; then
+            echo "ENVIRONMENT=alpha" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/beta" ]]; then
+            echo "ENVIRONMENT=beta" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == "refs/heads/next" ]]; then
-            echo "ENVIRONMENT=staging" >> $GITHUB_ENV
+            echo "ENVIRONMENT=next" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             echo "ENVIRONMENT=production" >> $GITHUB_ENV
           fi
