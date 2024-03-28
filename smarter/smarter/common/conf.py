@@ -16,6 +16,12 @@ The Settings class also provides a dump property that returns a dictionary of al
 configuration values. This is useful for debugging and logging.
 """
 
+# -------------------- WARNING --------------------
+# DO NOT IMPORT DJANGO OR ANY DJANGO MODULES. THIS
+# ENTIRE MODULE SITS UPSTREAM OF DJANGO AND IS
+# INTENDED TO BE USED INDEPENDENTLY OF DJANGO.
+# ------------------------------------------------
+
 # python stuff
 import importlib.util
 import logging
@@ -28,7 +34,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
 import pkg_resources
 from botocore.config import Config
-from botocore.exceptions import ProfileNotFound
+from botocore.exceptions import NoCredentialsError, ProfileNotFound
 from dotenv import load_dotenv
 from pydantic import Field, SecretStr, ValidationError, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings
@@ -62,6 +68,8 @@ def get_semantic_version() -> str:
 
     Example valid values of __version__.py are:
     0.1.17
+    0.1.17-alpha.1
+    0.1.17-beta.1
     0.1.17-next.1
     0.1.17-next.2
     0.1.17-next.123456
@@ -94,20 +102,27 @@ class Services:
     AWS_EC2 = ("ec2", True)
     AWS_IAM = ("iam", True)
     AWS_CLOUDWATCH = ("cloudwatch", True)
+    AWS_SES = ("ses", True)
+    AWS_RDS = ("rds", True)
+    AWS_EKS = ("eks", True)
 
     # disabled
     AWS_LAMBDA = ("lambda", False)
     AWS_APIGATEWAY = ("apigateway", False)
     AWS_SNS = ("sns", False)
     AWS_SQS = ("sqs", False)
-    AWS_SES = ("ses", False)
     AWS_REKOGNITION = ("rekognition", False)
     AWS_DYNAMODB = ("dynamodb", False)
-    AWS_RDS = ("rds", False)
+
+    @classmethod
+    def is_connected_to_aws(cls):
+        return bool(boto3.Session().get_credentials())
 
     @classmethod
     def enabled(cls, service: Union[str, Tuple[str, bool]]) -> bool:
         """Is the service enabled?"""
+        if not cls.is_connected_to_aws():
+            return False
         if isinstance(service, tuple):
             service = service[0]
         return service in cls.enabled_services()
@@ -144,20 +159,30 @@ class Services:
 
 # pylint: disable=too-few-public-methods
 class SettingsDefaults:
-    """Default values for Settings"""
+    """
+    Default values for Settings. This takes care of most of what we're interested in.
+    It initializes from the following prioritization sequence:
+      1. environment variables
+      2. tfvars
+      3. defaults.
+    """
 
     # defaults for this Python package
-    ENVIRONMENT = os.environ.get("ENVIRONMENT", "dev")
-    ROOT_DOMAIN = TFVARS.get("root_domain", "example.com")
-    SHARED_RESOURCE_IDENTIFIER = TFVARS.get("shared_resource_identifier", "smarter")
-    DEBUG_MODE: bool = bool(TFVARS.get("debug_mode", True))
-    DUMP_DEFAULTS: bool = bool(TFVARS.get("dump_defaults", True))
+    ENVIRONMENT = os.environ.get("ENVIRONMENT", TFVARS.get("environment", "local"))
+    ROOT_DOMAIN = os.environ.get("ROOT_DOMAIN", TFVARS.get("root_domain", "example.com"))
+    SHARED_RESOURCE_IDENTIFIER = os.environ.get(
+        "SHARED_RESOURCE_IDENTIFIER", TFVARS.get("shared_resource_identifier", "smarter")
+    )
+    DEBUG_MODE: bool = os.environ.get("DEBUG_MODE", bool(TFVARS.get("debug_mode", True)))
+    DUMP_DEFAULTS: bool = os.environ.get("DUMP_DEFAULTS", bool(TFVARS.get("dump_defaults", True)))
 
     # aws auth
-    AWS_PROFILE = TFVARS.get("aws_profile", None)
-    AWS_ACCESS_KEY_ID = SecretStr(None)
-    AWS_SECRET_ACCESS_KEY = SecretStr(None)
-    AWS_REGION = TFVARS.get("aws_region", "us-east-1")
+    AWS_PROFILE = os.environ.get("AWS_PROFILE", TFVARS.get("aws_profile", None))
+    AWS_ACCESS_KEY_ID = SecretStr(os.environ.get("AWS_ACCESS_KEY_ID", TFVARS.get("aws_access_key_id", None)))
+    AWS_SECRET_ACCESS_KEY = SecretStr(
+        os.environ.get("AWS_SECRET_ACCESS_KEY", TFVARS.get("aws_secret_access_key", None))
+    )
+    AWS_REGION = os.environ.get("AWS_REGION", TFVARS.get("aws_region", "us-east-1"))
 
     # aws api gateway defaults
     AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN = TFVARS.get("create_custom_domain", False)
@@ -165,12 +190,13 @@ class SettingsDefaults:
     AWS_APIGATEWAY_CONNECT_TIMEOUT: int = TFVARS.get("aws_apigateway_connect_timeout", 70)
     AWS_APIGATEWAY_MAX_ATTEMPTS: int = TFVARS.get("aws_apigateway_max_attempts", 10)
 
-    GOOGLE_MAPS_API_KEY: str = TFVARS.get("google_maps_api_key", None) or os.environ.get(
-        "TF_VAR_GOOGLE_MAPS_API_KEY", None
+    GOOGLE_MAPS_API_KEY: str = os.environ.get(
+        "GOOGLE_MAPS_API_KEY",
+        TFVARS.get("google_maps_api_key", None) or os.environ.get("TF_VAR_GOOGLE_MAPS_API_KEY", None),
     )
 
-    LANGCHAIN_MEMORY_KEY = "chat_history"
-    OPENAI_API_ORGANIZATION: str = None
+    LANGCHAIN_MEMORY_KEY = os.environ.get("LANGCHAIN_MEMORY_KEY", "chat_history")
+    OPENAI_API_ORGANIZATION: str = os.environ.get("OPENAI_API_ORGANIZATION", None)
     OPENAI_API_KEY = SecretStr(os.environ.get("TF_VAR_OPENAI_API_KEY", None))
     OPENAI_ENDPOINT_IMAGE_N = 4
     OPENAI_ENDPOINT_IMAGE_SIZE = "1024x768"
@@ -186,11 +212,14 @@ class SettingsDefaults:
         }
 
 
-AWS_REGIONS = []
+AWS_REGIONS = ["us-east-1"]
 if Services.enabled(Services.AWS_EC2):
-    ec2 = boto3.Session(region_name=os.environ.get("AWS_REGION")).client("ec2")
-    regions = ec2.describe_regions()
-    AWS_REGIONS = [region["RegionName"] for region in regions["Regions"]]
+    try:
+        ec2 = boto3.Session(region_name=SettingsDefaults.AWS_REGION).client("ec2")
+        regions = ec2.describe_regions()
+        AWS_REGIONS = [region["RegionName"] for region in regions["Regions"]]
+    except (ProfileNotFound, NoCredentialsError):
+        logger.warning("could not initialize ec2 client")
 
 
 def empty_str_to_bool_default(v: str, default: bool) -> bool:
@@ -248,7 +277,7 @@ class Settings(BaseSettings):
                 raise OpenAIAPIConfigurationError(
                     "required environment variable(s) AWS_ACCESS_KEY_ID and/or AWS_SECRET_ACCESS_KEY not set"
                 )
-            region_name = os.environ.get("AWS_REGION", None)
+            region_name = self.aws_region
             if not region_name and not self.aws_profile:
                 raise OpenAIAPIConfigurationError("required environment variable AWS_REGION not set")
             try:
@@ -648,11 +677,11 @@ class Settings(BaseSettings):
     @field_validator("aws_region")
     def validate_aws_region(cls, v, values: ValidationInfo, **kwargs) -> str:
         """Validate aws_region"""
-        valid_regions = values.data.get("aws_regions", [])
+        valid_regions = values.data.get("aws_regions", ["us-east-1"])
         if v in [None, ""]:
             return SettingsDefaults.AWS_REGION
         if v not in valid_regions:
-            raise OpenAIAPIValueError(f"aws_region {v} not in aws_regions")
+            raise OpenAIAPIValueError(f"aws_region {v} not in aws_regions: {valid_regions}")
         return v
 
     @field_validator("environment")

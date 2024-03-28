@@ -188,42 +188,53 @@ runs:
     - name: Create .env
       shell: bash
       run: |
-        touch ./.env
-        echo "GOOGLE_MAPS_API_KEY=${{ inputs.google-maps-api-key }}" >> ./.env
-        echo "OPENAI_API_ORGANIZATION=${{ env.OPENAI_API_ORGANIZATION }}" >> ./.env
-        echo "OPENAI_API_KEY=${{ inputs.openai-api-key }}" >> ./.env
-        echo "PINECONE_API_KEY=${{ inputs.pinecone-api-key }}" >> ./.env
-        echo "PINECONE_ENVIRONMENT=${{ inputs.pinecone-environment }}" >> ./.env
-        echo "DEBUG_MODE=${{ env.DEBUG_MODE }}" >> ./.env
-        echo "ENVIRONMENT=${{ inputs.environment }}" >> ./.env
-        echo "ROOT_DOMAIN=${{ inputs.root-domain }}" >> ./.env
-        echo "DJANGO_SETTINGS_MODULE=${{ env.DJANGO_SETTINGS_MODULE }}" >> ./.env
-        echo "AWS_REGION=${{ inputs.aws-region }}" >> ./.env
-        echo "AWS_ACCESS_KEY_ID=${{ inputs.aws-access-key-id }}" >> ./.env
-        echo "AWS_SECRET_ACCESS_KEY=${{ inputs.aws-secret-access-key }}" >> ./.env
-        echo "NAMESPACE=${{ env.NAMESPACE }}" >> ./.env
-        echo "DUMP_DEFAULTS=True" >> ./.env
-        echo "SMARTER_DOCKER_IMAGE=${{ env.SMARTER_DOCKER_IMAGE }}" >> ./.env
-        echo "SECRET_KEY=${{ env.SECRET_KEY }}" >> ./.env
-        echo "SMARTER_LOGIN_URL=${{ env.SMARTER_LOGIN_URL }}" >> ./.env
-        echo "SMARTER_ADMIN_PASSWORD=${{ env.SMARTER_ADMIN_PASSWORD }}" >> ./.env
-        echo "SMARTER_ADMIN_USERNAME=${{ env.SMARTER_ADMIN_USERNAME }}" >> ./.env
-        echo "SMARTER_ADMIN_EMAIL=${{ env.SMARTER_ADMIN_EMAIL }}" >> ./.env
-        echo "SMTP_HOST=${{ env.SMTP_HOST }}" >> ./.env
-        echo "SMTP_PORT=${{ env.SMTP_PORT }}" >> ./.env
-        echo "SMTP_USE_SSL=${{ env.SMTP_USE_SSL }}" >> ./.env
-        echo "SMTP_USE_TLS=${{ env.SMTP_USE_TLS }}" >> ./.env
-        echo "SMTP_USERNAME=${{ env.SMTP_USERNAME }}" >> ./.env
-        echo "SMTP_PASSWORD=${{ env.SMTP_PASSWORD }}" >> ./.env
+        touch .env
+        echo "GOOGLE_MAPS_API_KEY=${{ inputs.google-maps-api-key }}" >> .env
+        echo "OPENAI_API_ORGANIZATION=${{ env.OPENAI_API_ORGANIZATION }}" >> .env
+        echo "OPENAI_API_KEY=${{ inputs.openai-api-key }}" >> .env
+        echo "PINECONE_API_KEY=${{ inputs.pinecone-api-key }}" >> .env
+        echo "PINECONE_ENVIRONMENT=${{ inputs.pinecone-environment }}" >> .env
+        echo "DEBUG_MODE=${{ env.DEBUG_MODE }}" >> .env
+        echo "ENVIRONMENT=${{ inputs.environment }}" >> .env
+        echo "ROOT_DOMAIN=${{ inputs.root-domain }}" >> .env
+        echo "DJANGO_SETTINGS_MODULE=${{ env.DJANGO_SETTINGS_MODULE }}" >> .env
+        echo "AWS_REGION=${{ inputs.aws-region }}" >> .env
+        echo "AWS_ACCESS_KEY_ID=${{ inputs.aws-access-key-id }}" >> .env
+        echo "AWS_SECRET_ACCESS_KEY=${{ inputs.aws-secret-access-key }}" >> .env
+        echo "NAMESPACE=${{ env.NAMESPACE }}" >> .env
+        echo "DUMP_DEFAULTS=True" >> .env
+        echo "SMARTER_DOCKER_IMAGE=${{ env.SMARTER_DOCKER_IMAGE }}" >> .env
+        echo "SECRET_KEY=${{ env.SECRET_KEY }}" >> .env
+        echo "SMARTER_LOGIN_URL=${{ env.SMARTER_LOGIN_URL }}" >> .env
+        echo "SMARTER_ADMIN_PASSWORD=${{ env.SMARTER_ADMIN_PASSWORD }}" >> .env
+        echo "SMARTER_ADMIN_USERNAME=${{ env.SMARTER_ADMIN_USERNAME }}" >> .env
+        echo "SMARTER_ADMIN_EMAIL=${{ env.SMARTER_ADMIN_EMAIL }}" >> .env
+        echo "SMTP_HOST=${{ env.SMTP_HOST }}" >> .env
+        echo "SMTP_PORT=${{ env.SMTP_PORT }}" >> .env
+        echo "SMTP_USE_SSL=${{ env.SMTP_USE_SSL }}" >> .env
+        echo "SMTP_USE_TLS=${{ env.SMTP_USE_TLS }}" >> .env
+        echo "SMTP_USERNAME=${{ env.SMTP_USERNAME }}" >> .env
+        echo "SMTP_PASSWORD=${{ env.SMTP_PASSWORD }}" >> .env
       env:
         DEBUG_MODE: False
-        DJANGO_SETTINGS_MODULE: smarter.settings.local
+        DJANGO_SETTINGS_MODULE: smarter.settings.${{ inputs.environment }}
 
     # Dump all of our environment variables to the run log
     - name: Dump environment variables
       id: dump-env
       shell: bash
       run: |-
+        pwd
+        echo "env"
+        echo "-------------------------------"
+        cat .env
+        echo
+        echo
+        echo "GITHUB_ENV"
+        echo "-------------------------------"
+        cat $GITHUB_ENV
+        echo
+        echo
         echo "env"
         echo "-------------------------------"
         env

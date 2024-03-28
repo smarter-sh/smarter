@@ -1,8 +1,6 @@
 SHELL := /bin/bash
 include .env
 export
-S3_BUCKET := dev.platform.smarter.sh
-CLOUDFRONT_DISTRIBUTION_ID := E3AIBM1KMSJOP1
 
 ifeq ($(OS),Windows_NT)
     PYTHON := python.exe
@@ -14,7 +12,6 @@ endif
 PIP := $(PYTHON) -m pip
 
 ifneq ("$(wildcard .env)","")
-    include .env
 else
     $(shell cp ./doc/example-dot-env .env)
 endif
