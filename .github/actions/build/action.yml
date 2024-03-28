@@ -241,7 +241,7 @@ runs:
     #--------------------------------------------------------------------------
     # Test
     #--------------------------------------------------------------------------
-    - name: Run Python unit tests
+    - name: Build local and run Python unit tests
       shell: bash
       env:
         ENVIRONMENT: local
