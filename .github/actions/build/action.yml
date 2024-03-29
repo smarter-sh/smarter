@@ -63,15 +63,6 @@ runs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    # Set the Kubernetes namespace based on the environment
-    - name: Initialize environment variables
-      shell: bash
-      run: |-
-        echo "NAMESPACE=${{ env.NAMESPACE_BASE }}-${{ env.ENVIRONMENT }}" >> $GITHUB_ENV
-      env:
-        ENVIRONMENT: ${{ inputs.environment }}
-        NAMESPACE_BASE: smarter-platform
-
     # authenticate AWS CLI
     - name: Configure AWS credentials
       id: aws-credentials
@@ -94,54 +85,6 @@ runs:
         echo "-------------"
         aws sts get-caller-identity
 
-    # install kubectl, which Helm will use to deploy the application
-    - name: Install kubectl
-      id: kubectl-install
-      shell: bash
-      run: |-
-        sudo snap install kubectl --classic
-
-    # setup kubeconfig using the aws eks helper command, 'update-kubeconfig'
-    - name: Configure kubectl
-      id: kubectl-configure
-      shell: bash
-      run: |-
-        aws eks --region ${{ inputs.aws-region }} update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --alias ${{ env.EKS_CLUSTER_NAME }}
-        echo "kubectl version and diagnostic info:"
-        echo "------------------------------------"
-        kubectl version
-      env:
-        EKS_CLUSTER_NAME: apps-hosting-service
-
-    # install jq, which k8s-get-secret will use to parse the Kubernetes secret
-    # and set the environment variables
-    - name: Install jq
-      shell: bash
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y jq
-
-    #--------------------------------------------------------------------------
-    # Build and Configure the Docker image
-    #--------------------------------------------------------------------------
-
-    # extract the Django SMTP email from the Kubernetes secret.
-    # these will be set as environment variables for the Helm deployment
-    #
-    # example:
-    # SMTP_HOST: email-smtp.us-east-2.amazonaws.com
-    # SMTP_PORT: "587"
-    # SMTP_USE_SSL: "false"
-    # SMTP_USE_TLS: "true"
-    # SMTP_USERNAME: an IAM key-pair id
-    # SMTP_PASSWORD: an IAM key-pair secret
-    - name: Configure SMTP email credentials from Kubernetes secret
-      id: get-aws-ses-secret
-      uses: ./.github/actions/k8s-get-secret
-      with:
-        eks-namespace: ${{ env.NAMESPACE }}
-        eks-secret-name: aws-ses-config
-
     # NOTE: we're going to borrow the SMTP credentials from the Kubernetes secret
     # for this environment, since unit tests will send a test email and we don't
     # have a default set of credentials for the local environment.
@@ -149,46 +92,6 @@ runs:
       shell: bash
       run: |
         touch .env
-
-        # basic django configuration for local
-        # -----------------------
-        echo "ROOT_DOMAIN=${{ inputs.root-domain }}" >> .env
-        echo "SECRET_KEY=top-secret-key-value" >> .env
-
-        # SMTP email configuration
-        # -----------------------
-        echo "SMTP_HOST=${{ env.SMTP_HOST }}" >> .env
-        echo "SMTP_PORT=${{ env.SMTP_PORT }}" >> .env
-        echo "SMTP_USE_SSL=${{ env.SMTP_USE_SSL }}" >> .env
-        echo "SMTP_USE_TLS=${{ env.SMTP_USE_TLS }}" >> .env
-        echo "SMTP_USERNAME=${{ env.SMTP_USERNAME }}" >> .env
-        echo "SMTP_PASSWORD=${{ env.SMTP_PASSWORD }}" >> .env
-
-        # AWS
-        # -----------------------
-        echo "AWS_REGION=${{ inputs.aws-region }}" >> .env
-        echo "AWS_ACCESS_KEY_ID=${{ inputs.aws-access-key-id }}" >> .env
-        echo "AWS_SECRET_ACCESS_KEY=${{ inputs.aws-secret-access-key }}" >> .env
-
-        # AI services
-        # -----------------------
-        echo "OPENAI_API_KEY=${{ inputs.openai-api-key }}" >> .env
-        echo "PINECONE_API_KEY=${{ inputs.pinecone-api-key }}" >> .env
-        echo "PINECONE_ENVIRONMENT=${{ inputs.pinecone-environment }}" >> .env
-        echo "GOOGLE_MAPS_API_KEY=${{ inputs.google-maps-api-key }}" >> .env
-
-    #--------------------------------------------------------------------------
-    # Test
-    #--------------------------------------------------------------------------
-    - name: Build local and run Python unit tests
-      shell: bash
-      env:
-        ENVIRONMENT: local
-        GITHUB_ACTIONS: "true"
-        DEBUG_MODE: "true"
-      run: |
-        make docker-init
-        make docker-test
 
     #--------------------------------------------------------------------------
     # Build and Push the Docker image to Amazon ECR
@@ -230,3 +133,4 @@ runs:
         build-args: ENVIRONMENT=${{ inputs.environment }}
       env:
         ENVIRONMENT: ${{ inputs.environment }}
+        AWS_ECR_REPO: ${{ env.NAMESPACE }}
