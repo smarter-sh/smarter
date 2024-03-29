@@ -12,10 +12,6 @@ inputs:
   environment:
     description: "The environment to deploy"
     required: true
-  aws-ecr-push:
-    description: "Push the Docker image to Amazon ECR"
-    required: true
-    default: "false"
   aws-access-key-id:
     description: "The AWS access key ID"
     required: true
@@ -28,30 +24,6 @@ inputs:
     description: "The AWS region to deploy to"
     required: true
     type: string
-  root-domain:
-    description: "The root domain of the project"
-    required: true
-    type: string
-  python-version:
-    description: "The version of Python to use, such as 3.11.0"
-    required: true
-    type: string
-  openai-api-key:
-    description: "The OpenAI API key"
-    required: true
-    type: string
-  pinecone-api-key:
-    description: "The Pinecone API key"
-    required: true
-    type: string
-  pinecone-environment:
-    description: "The Pinecone environment"
-    required: true
-    type: string
-  google-maps-api-key:
-    description: "Google Maps API key"
-    required: true
-    type: string
 
 runs:
   using: "composite"
@@ -59,6 +31,14 @@ runs:
     - name: Checkout code
       id: checkout
       uses: actions/checkout@v4
+
+    - name: Initialize environment variables
+      shell: bash
+      run: |-
+        echo "NAMESPACE=${{ env.NAMESPACE_BASE }}-${{ env.ENVIRONMENT }}" >> $GITHUB_ENV
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+        NAMESPACE_BASE: smarter-platform
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
