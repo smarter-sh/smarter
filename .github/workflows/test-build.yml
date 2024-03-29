@@ -32,19 +32,19 @@ jobs:
         id: setenv
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/alpha" ]]; then
-            echo "::set-output name=environment::alpha"
+            echo "ENVIRONMENT=alpha" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == "refs/heads/beta" ]]; then
-            echo "::set-output name=environment::beta"
+            echo "ENVIRONMENT=beta" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == "refs/heads/next" ]]; then
-            echo "::set-output name=environment::next"
+            echo "ENVIRONMENT=next" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "::set-output name=environment::production"
+            echo "ENVIRONMENT=production" >> $GITHUB_ENV
           fi
 
       - name: Test
         uses: ./.github/actions/test
         with:
-          environment: ${{ steps.setenv.outputs.environment }}
+          environment: ${{ env.ENVIRONMENT }}
           root-domain: "${{ env.ROOT_DOMAIN }}"
           python-version: "${{ env.python-version}}"
           google-maps-api-key: "${{ secrets.GOOGLE_MAPS_API_KEY }}"
@@ -63,10 +63,23 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
 
+      - name: Set environment variable
+        id: setenv
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/alpha" ]]; then
+            echo "ENVIRONMENT=alpha" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/beta" ]]; then
+            echo "ENVIRONMENT=beta" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/next" ]]; then
+            echo "ENVIRONMENT=next" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "ENVIRONMENT=production" >> $GITHUB_ENV
+          fi
+
       - name: Build
         uses: ./.github/actions/build
         with:
-          environment: ${{ needs.test.outputs.environment }}
+          environment: ${{ env.ENVIRONMENT }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
