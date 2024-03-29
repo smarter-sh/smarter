@@ -277,7 +277,7 @@ class TestConfiguration(unittest.TestCase):
         self.assertIsNotNone(services)
         self.assertTrue(services.enabled(services.AWS_CLI))
         with self.assertRaises(OpenAIAPIConfigurationError):
-            services.raise_error_on_disabled(services.AWS_RDS)
+            services.raise_error_on_disabled(services.AWS_DYNAMODB)
         self.assertIsInstance(services.to_dict(), dict)
         self.assertIn(services.AWS_CLI[0], services.enabled_services())
 
