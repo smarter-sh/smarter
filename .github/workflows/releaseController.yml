@@ -117,6 +117,7 @@ jobs:
       - name: Run pre-commit tests on entire codebase
         shell: bash
         run: |
+          pre-commit-init
           make pre-commit-run
 
   test:
