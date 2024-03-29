@@ -267,7 +267,7 @@ class TestConfiguration(unittest.TestCase):
         """Test that the semantic version conforms to a valid pattern."""
         version = get_semantic_version()
         self.assertIsNotNone(version)
-        pattern = r"^\d+\.\d+\.\d+$"
+        pattern = r"^\d+\.\d+\.\d+(-[0-9A-Za-z-\.]+)?(\+[0-9A-Za-z-\.]+)?$"
         match = re.match(pattern, version)
         self.assertIsNotNone(match, f"{version} is not a valid semantic version")
 
@@ -277,7 +277,7 @@ class TestConfiguration(unittest.TestCase):
         self.assertIsNotNone(services)
         self.assertTrue(services.enabled(services.AWS_CLI))
         with self.assertRaises(OpenAIAPIConfigurationError):
-            services.raise_error_on_disabled(services.AWS_RDS)
+            services.raise_error_on_disabled(services.AWS_DYNAMODB)
         self.assertIsInstance(services.to_dict(), dict)
         self.assertIn(services.AWS_CLI[0], services.enabled_services())
 

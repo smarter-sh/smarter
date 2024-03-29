@@ -6,7 +6,6 @@ inputs:
   environment:
     description: "The environment to deploy"
     required: true
-    default: "dev"
   aws-access-key-id:
     description: "The AWS access key ID"
     required: true
@@ -117,9 +116,9 @@ runs:
       uses: aws-actions/amazon-ecr-login@v2
 
     # set the Docker image to the environment variable SMARTER_DOCKER_IMAGE
-    # example:  012345678903.dkr.ecr.us-east-2.amazonaws.com/smarter-api-dev:latest
+    # example:  012345678903.dkr.ecr.us-east-2.amazonaws.com/smarter-platform-alpha:latest
     - name: Set Docker image
-      id: docker-build
+      id: set-docker-image
       shell: bash
       run: |-
         echo "SMARTER_DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest" >> $GITHUB_ENV
@@ -159,7 +158,7 @@ runs:
     # these will be set as environment variables for the Helm deployment
     #
     # example:
-    # SMARTER_LOGIN_URL: https://dev.api.smarter.sh/login/
+    # SMARTER_LOGIN_URL: https://alpha.platform.smarter.sh/login/
     # SMARTER_ADMIN_USERNAME: admin
     # SMARTER_ADMIN_PASSWORD: top-secret-password
     - name: Configure admin user from Kubernetes secret

@@ -4,55 +4,28 @@
 # - a Docker container for the Smarter Celery worker.
 # - a Docker container for the Smarter Celery beat.
 #
-# This image is used for all environments (local, dev, staging, and production).
+# This image is used for all environments (local, alpha, beta, next and production).
 #------------------------------------------------------------------------------
 
 # Use the official Python image as a parent image
 FROM --platform=linux/amd64 python:3.11-buster
 
-# Define environment variables
-ARG AWS_ACCESS_KEY_ID
-ARG AWS_SECRET_ACCESS_KEY
-ARG AWS_REGION
+# Environment: local, alpha, beta, next, or production
 ARG ENVIRONMENT
-ARG DJANGO_SETTINGS_MODULE
-ARG DEBUG_MODE
-ARG DUMP_DEFAULTS
-ARG MYSQL_HOST
-ARG MYSQL_PORT
-ARG MYSQL_DATABASE
-ARG MYSQL_USER
-ARG MYSQL_PASSWORD
-ARG OPENAI_API_KEY
-ARG PINECONE_API_KEY
-ARG PINECONE_ENVIRONMENT
-ARG GOOGLE_MAPS_API_KEY
-ARG SECRET_KEY
-ARG SMTP_HOST
-ARG SMTP_PORT
-ARG SMTP_USE_SSL
-ARG SMTP_USE_TLS
-ARG SMTP_USERNAME
-ARG SMTP_PASSWORD
-ARG CACHES_LOCATION
-ARG CELERY_BROKER_URL
-ARG CELERY_RESULT_BACKEND
-
-# Set environment variables
 ENV ENVIRONMENT=$ENVIRONMENT
-ENV PYTHONPATH "${PYTHONPATH}:/smarter"
-ENV CELERY_APP "smarter.smarter_celery.celery_app"
+RUN echo "ENVIRONMENT: $ENVIRONMENT"
+
+ENV PYTHONPATH="${PYTHONPATH}:/smarter"
 
 # Create a non-root user to run the application
 RUN adduser --disabled-password --gecos '' smarter_user
 
 # Setup our file system.
-# - Add our source code and make the 'smarter' directory the working directory
-#   so that the Docker file system matches up with the local file system.
-# - Create a directory for the celerybeat-schedule file and change its ownership to smarter_user
+# Add our source code and make the 'smarter' directory the working directory
+# so that the Docker file system matches up with the local file system.
 WORKDIR /smarter
 COPY ./smarter .
-RUN mkdir celerybeat && chown smarter_user:smarter_user celerybeat
+RUN chown smarter_user:smarter_user -R .
 
 # bring Ubuntu up to date
 RUN apt-get update && apt-get install -y

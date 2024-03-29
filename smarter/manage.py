@@ -5,16 +5,12 @@
 import os
 import sys
 
-from dotenv import load_dotenv
+from smarter.common.conf import settings as smarter_settings
 
 
 def main():
     """Run administrative tasks."""
-    load_dotenv()
-
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smarter.settings.local")
-    environment = os.getenv("ENVIRONMENT")
-    os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings." + environment
+    os.environ["DJANGO_SETTINGS_MODULE"] = "smarter.settings." + smarter_settings.environment
 
     try:
         from django.core.management import execute_from_command_line
