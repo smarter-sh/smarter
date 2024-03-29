@@ -191,20 +191,7 @@ runs:
         make docker-test
 
     #--------------------------------------------------------------------------
-    # Environment Initializations
-    #--------------------------------------------------------------------------
-
-    - name: Rebuild for environment
-      shell: bash
-      env:
-        ENVIRONMENT: ${{ inputs.environment }}
-        GITHUB_ACTIONS: "true"
-        DEBUG_MODE: "false"
-      run: |
-        make docker-build
-
-    #--------------------------------------------------------------------------
-    # Push the Docker image to Amazon ECR
+    # Build and Push the Docker image to Amazon ECR
     #--------------------------------------------------------------------------
     # connect to Amazon ECR so that we can programmatically
     # figure out the Docker image to add to the Helm values for the
@@ -228,12 +215,10 @@ runs:
       shell: bash
       run: |
         aws ecr describe-repositories --repository-names ${{ env.AWS_ECR_REPO }} || aws ecr create-repository --repository-name ${{ env.AWS_ECR_REPO }}
-      if: ${{ inputs.aws-ecr-push == 'true' }}
 
     - name: Get the date
       shell: bash
       run: echo "DATESTAMP=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
-      if: ${{ inputs.aws-ecr-push == 'true' }}
 
     - name: Build and push
       id: docker-build
@@ -243,4 +228,5 @@ runs:
         push: true
         tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest, ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ github.run_id }}, ${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:${{ env.DATESTAMP }}
         build-args: ENVIRONMENT=${{ inputs.environment }}
-      if: ${{ inputs.aws-ecr-push == 'true' }}
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
