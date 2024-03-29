@@ -26,7 +26,6 @@ RUN adduser --disabled-password --gecos '' smarter_user
 # - Create a directory for the celerybeat-schedule file and change its ownership to smarter_user
 WORKDIR /smarter
 COPY ./smarter .
-RUN mkdir celerybeat && chown -R smarter_user:smarter_user celerybeat
 RUN chown smarter_user:smarter_user -R .
 
 # Install system packages for the Smarter application.

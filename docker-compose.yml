@@ -53,22 +53,16 @@ services:
       - smarter-redis
     env_file:
       - ./.env
+    mem_limit: 500m
+    cpus: "0.50"
 
   smarter-beat:
     container_name: smarter-beat
     user: smarter_user
-    x-build:
-      type: docker
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        ENVIRONMENT: ${ENVIRONMENT}
-      cache_from:
-        - smarter
+    image: smarter
     command: >
       bash -c "watchmedo auto-restart --directory=./ --pattern='*.py' --recursive --
-      celery -A smarter.smarter_celery.celery_app beat --schedule /smarter/celerybeat/celerybeat-schedule --loglevel=info" image: smarter
+      celery -A smarter.smarter_celery.celery_app beat --schedule /smarter/celerybeat-schedule --loglevel=info"
     volumes:
       - ./smarter:/smarter
     depends_on:
@@ -76,19 +70,13 @@ services:
       - smarter-redis
     env_file:
       - ./.env
+    mem_limit: 500m
+    cpus: "0.50"
 
   smarter-app:
     container_name: smarter-app
     user: smarter_user
-    x-build:
-      type: docker
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        ENVIRONMENT: ${ENVIRONMENT}
-      cache_from:
-        - smarter
+    image: smarter
     command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- gunicorn smarter.wsgi:application -b 0.0.0.0:8000
     volumes:
       - ./smarter:/smarter
