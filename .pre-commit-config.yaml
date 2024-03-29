@@ -65,6 +65,7 @@ repos:
         exclude: "^helm/"
       - id: destroyed-symlinks
       - id: detect-aws-credentials
+        args: ["--allow-missing-credentials"]
       - id: detect-private-key
       - id: end-of-file-fixer
       - id: forbid-new-submodules
@@ -77,7 +78,7 @@ repos:
     hooks:
       - id: terraform-fmt
       - id: terraform-validate
-      - id: tflint
+      # - id: tflint    # requires too much extra installation in GitHub Actions.
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
     rev: v9.13.0
     hooks:
