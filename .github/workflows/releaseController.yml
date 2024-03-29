@@ -121,7 +121,7 @@ jobs:
           make pre-commit-run
 
   test:
-    needs: check_for_pending_release
+    needs: pre_commit_tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
