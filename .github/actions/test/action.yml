@@ -28,10 +28,6 @@ inputs:
     description: "The root domain of the project"
     required: true
     type: string
-  python-version:
-    description: "The version of Python to use, such as 3.11.0"
-    required: true
-    type: string
   openai-api-key:
     description: "The OpenAI API key"
     required: true
