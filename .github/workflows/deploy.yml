@@ -1,0 +1,46 @@
+---
+#------------------------------------------------------------------------------
+# - Build from Dockerfile
+# - Run manage.py unit tests
+#------------------------------------------------------------------------------
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-2
+  ROOT_DOMAIN: "smarter.sh"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        id: checkout_code
+        uses: actions/checkout@v4
+
+      - name: Set environment variable
+        id: setenv
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/alpha" ]]; then
+            echo "ENVIRONMENT=alpha" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/beta" ]]; then
+            echo "ENVIRONMENT=beta" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/next" ]]; then
+            echo "ENVIRONMENT=next" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "ENVIRONMENT=prod" >> $GITHUB_ENV
+          fi
+
+      - name: Deploy
+        uses: ./.github/actions/deploy
+        with:
+          environment: ${{ env.ENVIRONMENT }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          pinecone-api-key: ${{ secrets.PINECONE_API_KEY }}
+          pinecone-environment: ${{ secrets.PINECONE_ENVIRONMENT }}
+          google-maps-api-key: ${{ secrets.GOOGLE_MAPS_API_KEY }}
