@@ -27,6 +27,7 @@ RUN adduser --disabled-password --gecos '' smarter_user
 WORKDIR /smarter
 COPY ./smarter .
 RUN chown smarter_user:smarter_user -R .
+RUN rm -f /smarter/celerybeat-schedule
 
 # Install system packages for the Smarter application.
 RUN apt-get update && apt-get upgrade -y && \
