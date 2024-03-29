@@ -13,6 +13,7 @@ FROM --platform=linux/amd64 python:3.11-buster
 # Environment: local, alpha, beta, next, or production
 ARG ENVIRONMENT
 ENV ENVIRONMENT=$ENVIRONMENT
+ENV CELERY_BEAT_SCHEDULE_FILENAME="/tmp/celerybeat-schedule"
 RUN echo "ENVIRONMENT: $ENVIRONMENT"
 
 ENV PYTHONPATH="${PYTHONPATH}:/smarter"
@@ -26,10 +27,6 @@ RUN adduser --disabled-password --gecos '' smarter_user
 WORKDIR /smarter
 COPY ./smarter .
 RUN chown smarter_user:smarter_user -R .
-
-# Create a directory for the Celery worker and change its ownership to smarter_user
-RUN mkdir -p /data/celerybeat/
-RUN chown smarter_user:smarter_user -R /data
 
 # Install system packages for the Smarter application.
 RUN apt-get update && apt-get upgrade -y && \
