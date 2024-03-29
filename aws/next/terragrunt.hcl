@@ -10,11 +10,7 @@ locals {
   global_vars = read_terragrunt_config(find_in_parent_folders("global.hcl"))
 
   # environment vars
-<<<<<<<< HEAD:aws/test/terragrunt.hcl
-  environment           = "test"
-========
-  environment           = "beta"
->>>>>>>> main:aws/beta/terragrunt.hcl
+  environment           = "next"
   subdomain             = "${local.environment}.platform"
 }
 

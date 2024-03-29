@@ -5,6 +5,7 @@
 import base64
 import datetime
 import json  # library for interacting with JSON data https://www.json.org/json-en.html
+import logging
 import sys  # libraries for error management
 import traceback  # libraries for error management
 
@@ -12,7 +13,6 @@ from pydantic import SecretStr
 
 from .const import LANGCHAIN_MESSAGE_HISTORY_ROLES, OpenAIObjectTypes
 from .exceptions import OpenAIAPIValueError
-from .logger import get_logger
 from .validators import (
     validate_endpoint,
     validate_item,
@@ -24,7 +24,7 @@ from .validators import (
 )
 
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class DateTimeEncoder(json.JSONEncoder):

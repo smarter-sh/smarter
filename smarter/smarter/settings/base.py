@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=unused-wildcard-import, wildcard-import, unused-import, wrong-import-position
 """
 Django base settings.
 
@@ -19,6 +20,9 @@ from pathlib import Path
 
 from corsheaders.defaults import default_headers
 from dotenv import load_dotenv
+
+# Add proprietary settings for the project
+from .smarter import *  # noqa: E402, F401, W0401
 
 
 # to disable redis/celery in collectstatic
@@ -200,7 +204,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_ROOT = PROJECT_ROOT / "staticfiles"
 
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
@@ -264,21 +268,3 @@ SMTP_PORT = os.environ.get("SMTP_PORT", "587")
 SMTP_USE_SSL = os.environ.get("SMTP_USE_SSL", False)
 SMTP_USE_TLS = os.environ.get("SMTP_USE_TLS", True)
 SMTP_USERNAME = os.environ.get("SMTP_USERNAME", "SET-ME-PLEASE")
-
-# SMARTER settings
-SMARTER_CACHE_EXPIRATION = 600
-SMARTER_API_SCHEMA = "http"
-
-SMARTER_API_NAME = "Smarter API"
-SMARTER_API_DESCRIPTION = "An enterprise class plugin-based AI chatbot platform"
-SMARTER_API_VERSION = "v0"
-
-SMARTER_BRANDING_CORPORATE_NAME = "Querium, Corporation"
-SMARTER_BRANDING_SUPPORT_PHONE_NUMBER = "+1 (512) 833-6955"
-SMARTER_BRANDING_SUPPORT_EMAIL = "support@querium.com"
-SMARTER_BRANDING_ADDRESS = "1700 South Lamar Blvd, Suite 338, Austin, TX 78704"
-SMARTER_BRANDING_CONTACT = "https://www.querium.com/contact/"
-SMARTER_BRANDING_SUPPORT_HOURS = "9:00 AM - 5:00 PM GMT-6 (CST)"
-SMARTER_BRANDING_URL_FACEBOOK = "https://www.facebook.com/Querium"
-SMARTER_BRANDING_URL_TWITTER = "https://twitter.com/QueriumCorp"
-SMARTER_BRANDING_URL_LINKEDIN = "https://www.linkedin.com/company/querium-corporation/"

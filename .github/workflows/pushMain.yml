@@ -11,10 +11,8 @@ on:
     branches:
       - main
 jobs:
-  merge-main-to-dev-branches:
+  merge-main:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.PAT }}
 
     steps:
       - name: Checkout code
@@ -22,38 +20,38 @@ jobs:
         uses: actions/checkout@v4
         with:
           persist-credentials: false
-          token: ${{ env.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT }}
 
       - name: Merge main into next
         uses: ./.github/actions/merge-branch
         with:
-          github-token: ${{ env.GITHUB_TOKEN }}
+          github-token: ${{ secrets.PAT }}
           source-branch: main
           target-branch: next
 
       - name: Merge main into next-major
         uses: ./.github/actions/merge-branch
         with:
-          github-token: ${{ env.GITHUB_TOKEN }}
+          github-token: ${{ secrets.PAT }}
           source-branch: main
           target-branch: next-major
 
       - name: Merge main into alpha
         uses: ./.github/actions/merge-branch
         with:
-          github-token: ${{ env.GITHUB_TOKEN }}
+          github-token: ${{ secrets.PAT }}
           source-branch: main
           target-branch: alpha
 
       - name: Merge main into beta
         uses: ./.github/actions/merge-branch
         with:
-          github-token: ${{ env.GITHUB_TOKEN }}
+          github-token: ${{ secrets.PAT }}
           source-branch: main
           target-branch: beta
 
   semantic-release:
-    needs: merge-main-to-dev-branches
+    needs: merge-main
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.PAT }}
@@ -101,5 +99,5 @@ jobs:
       - name: Push updates to branch for major version
         id: push_major
         if: steps.semantic.outputs.new_release_published == 'true'
-        run: "git push https://x-access-token:${{ env.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git HEAD:refs/heads/v${{steps.semantic.outputs.new_release_major_version}}"
+        run: "git push https://x-access-token:${{ secrets.PAT }}@github.com/${GITHUB_REPOSITORY}.git HEAD:refs/heads/v${{steps.semantic.outputs.new_release_major_version}}"
         shell: bash

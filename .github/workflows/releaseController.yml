@@ -46,16 +46,14 @@ on:
     types: [opened, synchronize]
     paths:
       - "**.py"
-      - "**.tf"
       - "**.js"
       - "**.jsx"
-      - "./smarter/requirements/**"
-      - "**.package.json"
-      - "./client/**"
-      - "./api/terraform/**"
+      - "smarter/smarter/static/**"
+      - "smarter/smarter/templates/**"
 
 env:
-  python-version: "3.11"
+  AWS_REGION: us-east-2
+  ROOT_DOMAIN: "smarter.sh"
 
 jobs:
   check_for_pending_release:
@@ -76,6 +74,10 @@ jobs:
               'main',
               'next',
               'next-major',
+              {
+                name: 'test',
+                prerelease: true
+              },
               {
                 name: 'beta',
                 prerelease: true
@@ -99,64 +101,6 @@ jobs:
           echo ${{ steps.semantic.outputs.new_release_minor_version }}
           echo ${{ steps.semantic.outputs.new_release_patch_version }}
 
-  python_tests:
-    needs: check_for_pending_release
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        id: checkout
-        uses: actions/checkout@v4
-
-      - name: Check for changed files
-        id: file_changes
-        run: |
-          echo "::set-output name=files_changed::$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '\.py$' || true)"
-          echo "::set-output name=requirements_changed::$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep 'deploy.txt$' || true)"
-
-      - name: Run Python tests
-        if: steps.file_changes.outputs.files_changed != '' || steps.file_changes.outputs.requirements_changed != ''
-        uses: ./.github/actions/tests/python
-        with:
-          python-version: "${{ env.python-version}}"
-          openai-api-key: "${{ secrets.OPENAI_API_KEY }}"
-          pinecone-api-key: "${{ secrets.PINECONE_API_KEY }}"
-          pinecone-environment: "${{ secrets.PINECONE_ENVIRONMENT }}"
-
-  terraform_tests:
-    needs: check_for_pending_release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        id: checkout
-        uses: actions/checkout@v4
-
-      - name: Check for changed files
-        id: file_changes
-        run: |
-          echo "::set-output name=files_changed::$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep '\.tf$' || true)"
-
-      - name: Run Terraform tests
-        if: steps.file_changes.outputs.files_changed != ''
-        uses: ./.github/actions/tests/reactjs
-
-  reactjs_tests:
-    needs: check_for_pending_release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        id: checkout
-        uses: actions/checkout@v4
-
-      - name: Check for changed files
-        id: file_changes
-        run: |
-          echo "::set-output name=files_changed::$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} -- './client/' || true)"
-
-      - name: Run ReactJS tests
-        if: steps.file_changes.outputs.files_changed != ''
-        uses: ./.github/actions/tests/reactjs
-
   pre_commit_tests:
     needs: check_for_pending_release
     runs-on: ubuntu-latest
@@ -165,7 +109,48 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
 
-      - name: Run pre-commit tests
-        uses: ./.github/actions/tests/pre-commit
+      - name: Run pre-commit tests on entire codebase
+        shell: bash
+        run: |
+          make pre-commit
+
+  test:
+    needs: check_for_pending_release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Check branch name
+        run: |
+          if [[ "${{ github.ref }}" != "refs/heads/alpha" && "${{ github.ref }}" != "refs/heads/beta" && "${{ github.ref }}" != "refs/heads/next" && "${{ github.ref }}" != "refs/heads/main" ]]; then
+            echo "This workflow can only run on alpha, beta, next, or main branches"
+            exit 1
+          fi
+
+      - name: Set environment variable
+        id: setenv
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/alpha" ]]; then
+            echo "ENVIRONMENT=alpha" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/beta" ]]; then
+            echo "ENVIRONMENT=beta" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/next" ]]; then
+            echo "ENVIRONMENT=next" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "ENVIRONMENT=production" >> $GITHUB_ENV
+          fi
+
+      - name: Test
+        uses: ./.github/actions/test
         with:
-          python-version: "${{ env.python-version}}"
+          environment: ${{ env.ENVIRONMENT }}
+          root-domain: "${{ env.ROOT_DOMAIN }}"
+          google-maps-api-key: "${{ secrets.GOOGLE_MAPS_API_KEY }}"
+          openai-api-key: "${{ secrets.OPENAI_API_KEY }}"
+          pinecone-api-key: "${{ secrets.PINECONE_API_KEY }}"
+          pinecone-environment: "${{ secrets.PINECONE_ENVIRONMENT }}"
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}

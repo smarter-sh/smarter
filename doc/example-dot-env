@@ -43,7 +43,7 @@ TF_VAR_GOOGLE_MAPS_API_KEY=SET-ME-PLEASE
 
 # -----------------------------------
 # FOR TESTING HELM CHARTS
-# Kubernetes secrets - smarter-api-dev
+# Kubernetes secrets - smarter-platform-alpha
 # -----------------------------------
 NAMESPACE=SET-ME-PLEASE
 MYSQL_HOST=SET-ME-PLEASE

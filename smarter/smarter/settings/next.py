@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=E0402,E0602,unused-wildcard-import,wildcard-import
-"""Django settings for platform.smarter.sh"""
+"""Django settings for next.platform.smarter.sh"""
 import os
 
 from .base_aws import *
