@@ -105,14 +105,59 @@ jobs:
     needs: check_for_pending_release
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        id: checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Cache NPM dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node
+
+      - name: Cache Python dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('./smarter/requirements/**/*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
+      - name: locate site-packages path
+        shell: bash
+        run: |
+          echo "SITE_PACKAGES_PATH=$(python -c 'import site; print(site.getsitepackages()[0])')" >> $GITHUB_ENV
+
+      - name: Install pip
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          pip install -r ./smarter/requirements/local.txt
+        env:
+          SITE_PACKAGES_PATH: ${{ env.SITE_PACKAGES_PATH }}
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.9.0"
+
+      - name: Install npm dependencies
+        run: npm install
+
+      - name: Update .pre-commit-config.yaml
+        run: |
+          pre-commit autoupdate
 
       - name: Add to .env
         shell: bash
@@ -122,7 +167,6 @@ jobs:
       - name: Run pre-commit tests on entire codebase
         shell: bash
         run: |
-          make python-init
           make pre-commit-init
           make pre-commit-run
 
