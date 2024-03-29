@@ -96,7 +96,7 @@ docker-shell:
 
 docker-init:
 	make check-docker
-	make docker-run
+	docker-compose up -d
 	@echo "Initializing Docker..." && \
 	docker exec smarter-mysql bash -c "until echo '\q' | mysql -u smarter -psmarter; do sleep 1; done" && \
 	docker exec smarter-mysql mysql -u smarter -psmarter -e 'DROP DATABASE IF EXISTS smarter; CREATE DATABASE smarter;' && \
@@ -120,6 +120,7 @@ docker-collectstatic:
 
 docker-test:
 	make check-docker
+	make docker-init
 	docker-compose up -d
 	docker exec smarter-app bash -c "python manage.py test"
 	docker-compose down
