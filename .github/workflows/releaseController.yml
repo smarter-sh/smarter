@@ -117,7 +117,7 @@ jobs:
       - name: Run pre-commit tests on entire codebase
         shell: bash
         run: |
-          make pre-commit
+          make pre-commit-run
 
   test:
     needs: check_for_pending_release
