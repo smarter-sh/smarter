@@ -13,7 +13,6 @@ FROM --platform=linux/amd64 python:3.11-buster
 # Environment: local, alpha, beta, next, or production
 ARG ENVIRONMENT
 ENV ENVIRONMENT=$ENVIRONMENT
-ENV CELERY_BEAT_SCHEDULE_FILENAME="/tmp/celerybeat-schedule"
 RUN echo "ENVIRONMENT: $ENVIRONMENT"
 
 ENV PYTHONPATH="${PYTHONPATH}:/smarter"

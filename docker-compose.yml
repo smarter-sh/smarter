@@ -61,10 +61,7 @@ services:
     user: smarter_user
     image: smarter
     command: >
-      bash -c "watchmedo auto-restart --directory=./ --pattern='*.py' --recursive --
-      celery -A smarter.smarter_celery.celery_app beat --loglevel=debug"
-    volumes:
-      - ./smarter:/smarter
+      celery -A smarter.smarter_celery.celery_app beat --loglevel=info
     depends_on:
       - smarter-mysql
       - smarter-redis
