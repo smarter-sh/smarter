@@ -4,10 +4,10 @@
 # - run all unit tests
 # - push to AWS ECR
 #------------------------------------------------------------------------------
-name: Test Python
+name: Test
 branding:
-  icon: "git-pull-request"
-  color: "orange"
+  icon: "check-circle"
+  color: "green"
 inputs:
   environment:
     description: "The environment to deploy"

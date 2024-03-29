@@ -5,7 +5,7 @@
 # - Push to ECR
 # - Deploy to Kubernetes
 #------------------------------------------------------------------------------
-name: Build-Test-Push-Deploy
+name: Test-Build-Deploy
 
 on:
   workflow_dispatch:

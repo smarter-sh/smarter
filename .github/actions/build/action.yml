@@ -2,11 +2,10 @@
 #------------------------------------------------------------------------------
 # - build the Docker image
 # - run all unit tests
-# - push to AWS ECR
 #------------------------------------------------------------------------------
-name: Test Python
+name: Build
 branding:
-  icon: "git-pull-request"
+  icon: "gear"
   color: "orange"
 inputs:
   environment:
