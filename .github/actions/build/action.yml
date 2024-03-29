@@ -36,6 +36,7 @@ runs:
       shell: bash
       run: |-
         echo "NAMESPACE=${{ env.NAMESPACE_BASE }}-${{ env.ENVIRONMENT }}" >> $GITHUB_ENV
+        echo "AWS_ECR_REPO=${{ env.NAMESPACE_BASE }}-${{ env.ENVIRONMENT }}" >> $GITHUB_ENV
       env:
         ENVIRONMENT: ${{ inputs.environment }}
         NAMESPACE_BASE: smarter-platform
@@ -90,8 +91,6 @@ runs:
       shell: bash
       run: |-
         echo "SMARTER_DOCKER_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.AWS_ECR_REPO }}:latest" >> $GITHUB_ENV
-      env:
-        AWS_ECR_REPO: ${{ env.NAMESPACE }}
 
     - name: Create the repository
       id: create-repo
@@ -113,4 +112,3 @@ runs:
         build-args: ENVIRONMENT=${{ inputs.environment }}
       env:
         ENVIRONMENT: ${{ inputs.environment }}
-        AWS_ECR_REPO: ${{ env.NAMESPACE }}
