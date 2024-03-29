@@ -123,6 +123,7 @@ jobs:
         shell: bash
         run: |
           make python-init
+          make activate
           make pre-commit-init
           make pre-commit-run
 
