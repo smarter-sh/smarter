@@ -187,6 +187,7 @@ runs:
         GITHUB_ACTIONS: "true"
         DEBUG_MODE: "true"
       run: |
+        make docker-init
         make docker-test
 
     #--------------------------------------------------------------------------

@@ -25,7 +25,7 @@ all: help
 # takes around 5 minutes to complete
 init:
 	make check-python		# verify Python 3.11 is installed
-	make check-docker		# verify Docker is installed and running
+	make docker-check		# verify Docker is installed and running
 	make tear-down			# start w a clean environment
 	make python-init		# create/replace Python virtual environment and install dependencies
 	make docker-build		# build Docker containers
@@ -87,47 +87,46 @@ release:
 # ---------------------------------------------------------
 # Docker
 # ---------------------------------------------------------
-check-docker:
+docker-check:
 	@docker ps >/dev/null 2>&1 || { echo >&2 "This project requires Docker but it's not running.  Aborting."; exit 1; }
 
 docker-shell:
-	make check-docker && \
+	make docker-check && \
 	docker exec -it smarter-app /bin/bash
 
 docker-init:
-	make check-docker && \
-	@echo "Building Docker images..." && \
+	make docker-check && \
+	echo "Building Docker images..." && \
 	docker-compose up -d && \
-	@echo "Initializing Docker..." && \
+	echo "Initializing Docker..." && \
 	docker exec smarter-mysql bash -c "sleep 20; until echo '\q' | mysql -u smarter -psmarter; do sleep 10; done" && \
 	docker exec smarter-mysql mysql -u smarter -psmarter -e 'DROP DATABASE IF EXISTS smarter; CREATE DATABASE smarter;' && \
 	docker exec smarter-app bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py create_user --username admin --email admin@smarter.sh --password smarter --admin && python manage.py add_plugin_examples admin && python manage.py seed_chat_history" && \
 	docker ps
 
 docker-build:
-	make check-docker && \
+	make docker-check && \
 	docker-compose build
 
 docker-run:
-	make check-docker && \
+	make docker-check && \
 	docker-compose up
 
 docker-collectstatic:
-	make check-docker && \
+	make docker-check && \
 	docker-compose up -d && \
 	(cd smarter/smarter/apps/chatapp/reactapp/ && npm run build) && \
 	(docker exec smarter-app bash -c "python manage.py  collectstatic --noinput") && \
 	docker-compose down
 
 docker-test:
-	make check-docker && \
-	make docker-init && \
+	make docker-check && \
 	docker-compose up -d && \
 	docker exec smarter-app bash -c "python manage.py test" && \
 	docker-compose down
 
 docker-prune:
-	make check-docker && \
+	make docker-check && \
 	find ./ -name celerybeat-schedule -type f -exec rm -f {} + && \
 	docker system prune -a && \
 	docker volume prune -f && \
