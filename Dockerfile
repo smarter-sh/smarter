@@ -21,13 +21,15 @@ ENV PYTHONPATH="${PYTHONPATH}:/smarter"
 RUN adduser --disabled-password --gecos '' smarter_user
 
 # Setup our file system.
-# - Add our source code and make the 'smarter' directory the working directory
-#   so that the Docker file system matches up with the local file system.
-# - Create a directory for the celerybeat-schedule file and change its ownership to smarter_user
+# Add our source code and make the 'smarter' directory the working directory
+# so that the Docker file system matches up with the local file system.
 WORKDIR /smarter
 COPY ./smarter .
 RUN chown smarter_user:smarter_user -R .
-RUN rm -f /smarter/celerybeat-schedule
+
+# Create a directory for the Celery worker and change its ownership to smarter_user
+RUN mkdir -p /data/celerybeat/
+RUN chown smarter_user:smarter_user -R /data
 
 # Install system packages for the Smarter application.
 RUN apt-get update && apt-get upgrade -y && \
