@@ -82,7 +82,7 @@ jobs:
           elif [[ "${{ github.ref }}" == "refs/heads/next" ]]; then
             echo "ENVIRONMENT=next" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "ENVIRONMENT=production" >> $GITHUB_ENV
+            echo "ENVIRONMENT=prod" >> $GITHUB_ENV
           fi
 
       - name: Test
@@ -116,7 +116,7 @@ jobs:
           elif [[ "${{ github.ref }}" == "refs/heads/next" ]]; then
             echo "ENVIRONMENT=next" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "ENVIRONMENT=production" >> $GITHUB_ENV
+            echo "ENVIRONMENT=prod" >> $GITHUB_ENV
           fi
 
       - name: Build
@@ -144,7 +144,7 @@ jobs:
           elif [[ "${{ github.ref }}" == "refs/heads/next" ]]; then
             echo "ENVIRONMENT=next" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "ENVIRONMENT=production" >> $GITHUB_ENV
+            echo "ENVIRONMENT=prod" >> $GITHUB_ENV
           fi
 
       - name: Deploy
