@@ -117,6 +117,7 @@ jobs:
       - name: Run pre-commit tests on entire codebase
         shell: bash
         run: |
+          make python-init
           make pre-commit-init
           make pre-commit-run
 
