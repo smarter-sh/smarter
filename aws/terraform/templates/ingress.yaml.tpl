@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    cert-manager.io/cluster-issuer: ${environment_domain}
+    cert-manager.io/issuer: letsencrypt-issuer
     kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/affinity: cookie
     nginx.ingress.kubernetes.io/backend-protocol: HTTP
@@ -28,6 +28,10 @@ spec:
                   number: 8000
             path: /
             pathType: Prefix
+  # -----------------------------------------------------
+  # automagically create tls/ssl cert via cert-manager
+  # https://cert-manager.io/docs/usage/ingress/
+  # -----------------------------------------------------
   tls:
     - hosts:
         - ${environment_domain}
