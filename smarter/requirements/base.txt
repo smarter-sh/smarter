@@ -30,6 +30,7 @@ requests==2.31.0
 htmlmin==0.1.12
 requests-cache==1.2.0
 retry-requests==2.0.0
+mailchimp-marketing==3.0.80
 
 # for working with data
 # ------------
