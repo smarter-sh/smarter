@@ -2,7 +2,7 @@
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
-  name: ${environment_domain}
+  name: letsencrypt-issuer
   namespace: ${namespace}
 spec:
   acme:
