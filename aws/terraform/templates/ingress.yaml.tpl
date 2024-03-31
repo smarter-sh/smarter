@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    cert-manager.io/issuer: letsencrypt-issuer
+    cert-manager.io/cluster-issuer: ${environment_domain}
     kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/affinity: cookie
     nginx.ingress.kubernetes.io/backend-protocol: HTTP

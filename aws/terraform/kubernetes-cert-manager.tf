@@ -1,8 +1,9 @@
 locals {
   template_issuer = templatefile("${path.module}/templates/issuer.yml.tpl", {
     root_domain        = var.root_domain
+    environment        = local.environment
     environment_domain = local.environment_domain
-    namespace          = local.environment_namespace
+    namespace          = "cert-manager"
     aws_region         = var.aws_region
     hosted_zone_id     = aws_route53_zone.environment_domain.zone_id
   })
