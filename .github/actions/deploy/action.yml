@@ -27,6 +27,12 @@ inputs:
   google-maps-api-key:
     description: "The Google Maps API key"
     required: true
+  mailchimp-api-key:
+    description: "The Mailchimp API key"
+    required: true
+  mailchimp-list-id:
+    description: "The Mailchimp list ID"
+    required: true
 
 runs:
   using:
@@ -247,8 +253,8 @@ runs:
         --set env.ROOT_DOMAIN=smarter.sh \
         --set env.DEBUG_MODE="false" \
         --set env.DUMP_DEFAULTS="True" \
-        --set env.MAILCHIMP_API_KEY=${{ env.MAILCHIMP_API_KEY }} \
-        --set env.MAILCHIMP_LIST_ID=${{ env.MAILCHIMP_LIST_ID }} \
+        --set env.MAILCHIMP_API_KEY=${{ inputs.mailchimp-api-key }} \
+        --set env.MAILCHIMP_LIST_ID=${{ inputs.mailchimp-list-id }} \
         --set env.OPENAI_API_KEY=${{ inputs.openai-api-key }} \
         --set env.PINECONE_API_KEY=${{ inputs.pinecone-api-key }} \
         --set env.PINECONE_ENVIRONMENT=${{ inputs.pinecone-environment }} \
