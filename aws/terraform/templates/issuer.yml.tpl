@@ -1,9 +1,8 @@
 ---
 apiVersion: cert-manager.io/v1
-kind: Issuer
+kind: ClusterIssuer
 metadata:
-  name: letsencrypt-issuer
-  namespace: ${namespace}
+  name: ${environment_domain}
 spec:
   acme:
     email: no-reply@${root_domain}
@@ -11,8 +10,12 @@ spec:
       name: ${environment_domain}
     server: https://acme-v02.api.letsencrypt.org/directory
     solvers:
+      - http01:
+          ingress:
+            class: nginx
       - dns01:
           # hosted Zone ID for for the environment domain.
           route53:
             region: ${aws_region}
             hostedZoneID: ${hosted_zone_id}
+            ambientCredentials: true
