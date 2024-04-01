@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-"""URL configuration for smarter project."""
+"""
+URL configuration for smarter project.
+hello world -- video 2 almost done!!!!
+"""
 
 from django.conf import settings
 from django.conf.urls.static import static

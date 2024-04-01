@@ -7,6 +7,7 @@ import logging
 from django import forms
 from django.http import JsonResponse
 
+from smarter.common.mailchimp_helpers import add_list_member
 from smarter.common.view_helpers import SmarterAuthenticatedWebView, SmarterWebView
 
 from ..models import EmailContactList
@@ -42,6 +43,7 @@ class ComingSoon(SmarterWebView):
             email = form.cleaned_data["email"]
             email_contact_list, created = EmailContactList.objects.get_or_create(email=email)
             if created:
+                add_list_member(email_contact_list.email)
                 message = "We'll notify you when the launch date nears."
             else:
                 message = f"{email_contact_list.email} is already in our contact list. We'll keep you updated."

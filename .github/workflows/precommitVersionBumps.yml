@@ -5,7 +5,7 @@
 #
 # This workflow runs on a cron schedule and checks for updates to the
 # .pre-commit-config.yaml file. If updates are found, the workflow
-# commits the changes to the next branch and pushes the changes to GitHub.
+# commits the changes to the alpha branch and pushes the changes to GitHub.
 #
 # This is a workaround for the fact that the pre-commit autoupdate command
 # is not supported by Dependabot.
@@ -26,12 +26,12 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Checkout next branch
+      - name: Checkout alpha branch
         run: |
           git config --global url."https://x-access-token:${{ secrets.PAT }}@github.com/".insteadOf "https://github.com/"
           git fetch
-          git checkout next
-          git pull origin next
+          git checkout alpha
+          git pull origin alpha
 
       - name: Cache NPM dependencies
         uses: actions/cache@v4
@@ -100,4 +100,4 @@ jobs:
           git config --local user.name "GitHub Action"
           git add .pre-commit-config.yaml
           git commit -m "chore: [gh] version bumps in .pre-commit-config.yaml [skip ci]"
-          git push https://${{ secrets.PAT }}@github.com/${{ github.repository }}.git HEAD:next
+          git push https://${{ secrets.PAT }}@github.com/${{ github.repository }}.git HEAD:alpha
