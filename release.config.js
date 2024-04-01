@@ -1,4 +1,5 @@
 module.exports = {
+  branches: ["main", "next", "next-major", "beta", "alpha"],
   dryRun: false,
   plugins: [
     "@semantic-release/commit-analyzer",
