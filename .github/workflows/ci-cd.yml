@@ -8,7 +8,7 @@ name: CI/CD
 on:
   workflow_dispatch:
   push:
-    branches: [next, main]
+    branches: [alpha, beta, next, main]
     paths:
       - "**.py"
       - "**.js"
@@ -17,7 +17,13 @@ on:
       - "smarter/smarter/templates/**"
   pull_request:
     types: [closed]
-    branches: [next, main]
+    branches: [alpha, beta, next, main]
+    paths:
+      - "**.py"
+      - "**.js"
+      - "**.jsx"
+      - "smarter/smarter/static/**"
+      - "smarter/smarter/templates/**"
 
 env:
   AWS_REGION: us-east-2
