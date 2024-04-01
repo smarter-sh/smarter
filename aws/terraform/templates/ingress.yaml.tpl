@@ -28,6 +28,10 @@ spec:
                   number: 8000
             path: /
             pathType: Prefix
+  # -----------------------------------------------------
+  # automagically create tls/ssl cert via cert-manager
+  # https://cert-manager.io/docs/usage/ingress/
+  # -----------------------------------------------------
   tls:
     - hosts:
         - ${environment_domain}

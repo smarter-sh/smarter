@@ -44,3 +44,5 @@ jobs:
           pinecone-api-key: ${{ secrets.PINECONE_API_KEY }}
           pinecone-environment: ${{ secrets.PINECONE_ENVIRONMENT }}
           google-maps-api-key: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          mailchimp-api-key: ${{ secrets.MAILCHIMP_API_KEY }}
+          mailchimp-list-id: ${{ secrets.MAILCHIMP_LIST_ID }}
