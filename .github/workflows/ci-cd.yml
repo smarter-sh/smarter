@@ -41,9 +41,13 @@ jobs:
       - name: Check if PR is merged
         id: check
         run: |
-          PR=$(curl https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/${{ github.event.pull_request.number }} -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}")
-          MERGED=$(echo $PR | jq .merged)
-          echo "::set-output name=merged::$MERGED"
+          PR=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/${{ github.event.pull_request.number }}?state=closed)
+          MERGED=$(echo $PR | jq .merged_at)
+          if [ "$MERGED" != "null" ]; then
+            echo "::set-output name=merged::true"
+          else
+            echo "::set-output name=merged::false"
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
