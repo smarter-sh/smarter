@@ -1,4 +1,5 @@
 module.exports = {
+  branches: ["main", "next", "next-major"],
   dryRun: false,
   plugins: [
     "@semantic-release/commit-analyzer",
@@ -15,8 +16,8 @@ module.exports = {
       {
         assets: [
           "CHANGELOG.md",
-          "client/package.json",
-          "client/package-lock.json",
+          "smarter/smarter/apps/chatapp/reactapp/package.json",
+          "smarter/smarter/apps/chatapp/reactapp/package-lock.json",
           "smarter/requirements/**/*",
         ],
         message:
