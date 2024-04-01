@@ -206,6 +206,9 @@ class SettingsDefaults:
     OPENAI_ENDPOINT_IMAGE_SIZE = "1024x768"
     PINECONE_API_KEY = SecretStr(None)
 
+    STRIPE_LIVE_SECRET_KEY = os.environ.get("STRIPE_LIVE_SECRET_KEY", "SET-ME-PLEASE")
+    STRIPE_TEST_SECRET_KEY = os.environ.get("STRIPE_TEST_SECRET_KEY", "SET-ME-PLEASE")
+
     @classmethod
     def to_dict(cls):
         """Convert SettingsDefaults to dict"""
@@ -402,6 +405,8 @@ class Settings(BaseSettings):
         SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE, env="OPENAI_ENDPOINT_IMAGE_SIZE"
     )
     pinecone_api_key: Optional[SecretStr] = Field(SettingsDefaults.PINECONE_API_KEY, env="PINECONE_API_KEY")
+    stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY, env="STRIPE_LIVE_SECRET_KEY")
+    stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY, env="STRIPE_TEST_SECRET_KEY")
 
     @property
     def initialized(self):
@@ -794,6 +799,20 @@ class Settings(BaseSettings):
         """Check pinecone_api_key"""
         if v in [None, ""]:
             return SettingsDefaults.PINECONE_API_KEY
+        return v
+
+    @field_validator("stripe_live_secret_key")
+    def check_stripe_live_secret_key(cls, v) -> str:
+        """Check stripe_live_secret_key"""
+        if v in [None, ""]:
+            return SettingsDefaults.STRIPE_LIVE_SECRET_KEY
+        return v
+
+    @field_validator("stripe_test_secret_key")
+    def check_stripe_test_secret_key(cls, v) -> str:
+        """Check stripe_test_secret_key"""
+        if v in [None, ""]:
+            return SettingsDefaults.STRIPE_TEST_SECRET_KEY
         return v
 
 
