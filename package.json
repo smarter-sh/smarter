@@ -12,7 +12,7 @@
     "typescript": "^5.4.2"
   },
   "dependencies": {
-    "chatgpt_client": "file:smarter/smarter/apps/chatapp/reactapp",
+    "reactapp": "file:smarter/smarter/apps/chatapp/reactapp",
     "gulp": "^4.0.2",
     "gulp-cli": "^3.0.0",
     "yarn": "^1.22.22"
