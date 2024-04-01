@@ -54,6 +54,10 @@ spec:
               value: "{{ .Values.env.MYSQL_USER }}"
             - name: MYSQL_PASSWORD
               value: "{{ .Values.env.MYSQL_PASSWORD }}"
+            - name: MAILCHIMP_API_KEY
+              value: "{{ .Values.env.MAILCHIMP_API_KEY }}"
+            - name: MAILCHIMP_LIST_ID
+              value: "{{ .Values.env.MAILCHIMP_LIST_ID }}"
             - name: OPENAI_API_KEY
               value: "{{ .Values.env.OPENAI_API_KEY }}"
             - name: PINECONE_API_KEY

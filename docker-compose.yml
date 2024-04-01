@@ -40,8 +40,6 @@ services:
       dockerfile: Dockerfile
       args:
         ENVIRONMENT: ${ENVIRONMENT}
-      cache_from:
-        - smarter
     image: smarter
     command: celery -A smarter.smarter_celery.celery_app worker --loglevel=info
     depends_on:
