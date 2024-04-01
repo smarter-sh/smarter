@@ -9,7 +9,7 @@ from .base_aws import *
 environment_name = os.path.basename(__file__).replace(".py", "")
 print(f"Loading smarter.settings.{environment_name}")
 
-ENVIRONMENT_DOMAIN = f"{environment_name}.platform.{SMARTER_ROOT_DOMAIN}"
+ENVIRONMENT_DOMAIN = f"platform.{SMARTER_ROOT_DOMAIN}"
 ALLOWED_HOSTS = [ENVIRONMENT_DOMAIN]
 SMTP_SENDER = os.environ.get("SMTP_SENDER", ENVIRONMENT_DOMAIN)
 SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", "no-reply@" + SMTP_SENDER)
