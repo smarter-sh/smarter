@@ -1,14 +1,14 @@
 ---
 #------------------------------------------------------------------------------
 # Lawrence McDaniel - https://lawrencemcdaniel.com
-# Version Bump Workflow for Python package openai_utils
+# Version Bump Workflow
 #
 # Calculate the version of the 'next' branch based on semantic-release rules.
 # Compares the existing value of __version__.py to the calculated value.
 # If they are different, it will update __version__.py and push the changes
 # to the main branch.
 #------------------------------------------------------------------------------
-name: Semantic Version Bump (next)
+name: Semantic Version Bump
 
 on:
   workflow_dispatch:
