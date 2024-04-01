@@ -196,6 +196,10 @@ class SettingsDefaults:
     )
 
     LANGCHAIN_MEMORY_KEY = os.environ.get("LANGCHAIN_MEMORY_KEY", "chat_history")
+
+    MAILCHIMP_API_KEY = os.environ.get("MAILCHIMP_API_KEY", None)
+    MAILCHIMP_LIST_ID = os.environ.get("MAILCHIMP_LIST_ID", None)
+
     OPENAI_API_ORGANIZATION: str = os.environ.get("OPENAI_API_ORGANIZATION", None)
     OPENAI_API_KEY = SecretStr(os.environ.get("TF_VAR_OPENAI_API_KEY", None))
     OPENAI_ENDPOINT_IMAGE_N = 4
@@ -385,6 +389,8 @@ class Settings(BaseSettings):
         env=["GOOGLE_MAPS_API_KEY", "TF_VAR_GOOGLE_MAPS_API_KEY"],
     )
     langchain_memory_key: Optional[str] = Field(SettingsDefaults.LANGCHAIN_MEMORY_KEY, env="LANGCHAIN_MEMORY_KEY")
+    mailchimp_api_key: Optional[str] = Field(SettingsDefaults.MAILCHIMP_API_KEY, env="MAILCHIMP_API_KEY")
+    mailchimp_list_id: Optional[str] = Field(SettingsDefaults.MAILCHIMP_LIST_ID, env="MAILCHIMP_LIST_ID")
     openai_api_organization: Optional[str] = Field(
         SettingsDefaults.OPENAI_API_ORGANIZATION, env="OPENAI_API_ORGANIZATION"
     )
@@ -737,6 +743,20 @@ class Settings(BaseSettings):
             return v
         if v in [None, ""]:
             return SettingsDefaults.LANGCHAIN_MEMORY_KEY
+        return v
+
+    @field_validator("mailchimp_api_key")
+    def check_mailchimp_api_key(cls, v) -> str:
+        """Check mailchimp_api_key"""
+        if v in [None, ""]:
+            return SettingsDefaults.MAILCHIMP_API_KEY
+        return v
+
+    @field_validator("mailchimp_list_id")
+    def check_mailchimp_list_id(cls, v) -> str:
+        """Check mailchimp_list_id"""
+        if v in [None, ""]:
+            return SettingsDefaults.MAILCHIMP_LIST_ID
         return v
 
     @field_validator("openai_api_organization")
