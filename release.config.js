@@ -15,8 +15,8 @@ module.exports = {
       {
         assets: [
           "CHANGELOG.md",
-          "client/package.json",
-          "client/package-lock.json",
+          "smarter/smarter/apps/chatapp/reactapp/package.json",
+          "smarter/smarter/apps/chatapp/reactapp/package-lock.json",
           "smarter/requirements/**/*",
         ],
         message:
