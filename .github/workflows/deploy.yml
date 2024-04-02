@@ -31,6 +31,9 @@ jobs:
             echo "ENVIRONMENT=next" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             echo "ENVIRONMENT=prod" >> $GITHUB_ENV
+          else
+            echo "This workflow can only run on alpha, beta, next, or main branches"
+            exit 1
           fi
 
       - name: Deploy
