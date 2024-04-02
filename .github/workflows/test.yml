@@ -38,6 +38,8 @@ jobs:
             echo "ENVIRONMENT=next" >> $GITHUB_ENV
           elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
             echo "ENVIRONMENT=prod" >> $GITHUB_ENV
+          else
+            echo "ENVIRONMENT=alpha" >> $GITHUB_ENV
           fi
 
       - name: Test
