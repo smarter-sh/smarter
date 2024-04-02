@@ -7,10 +7,6 @@ import os
 from .base import *
 
 
-SECRET_KEY = os.getenv("SECRET_KEY")
-
-DEBUG = False
-
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -28,9 +24,6 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 # Celery Configuration
 CELERY_BROKER_URL = os.getenv(
     "CELERY_BROKER_URL", "redis://:smarter@smarter-redis-master.smarter-platform-dev.svc.cluster.local:6379/1"
-)
-CELERY_RESULT_BACKEND = os.getenv(
-    "CELERY_RESULT_BACKEND", "redis://:smarter@smarter-redis-master.smarter-platform-dev.svc.cluster.local:6379/1"
 )
 
 # Database
