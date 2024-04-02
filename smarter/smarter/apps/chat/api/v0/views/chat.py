@@ -9,6 +9,10 @@ from django.contrib.auth import get_user_model
 from rest_framework.response import Response
 
 from smarter.apps.account.api.view_helpers import SmarterAPIView
+from smarter.apps.account.tasks import (
+    create_plugin_charge,
+    create_prompt_completion_charge,
+)
 from smarter.apps.chat.functions.function_weather import (
     get_current_weather,
     weather_tool_factory,
@@ -105,6 +109,15 @@ def handler(user: User, data: dict):
             max_tokens=max_tokens,
         )
         openai_response_dict = json.loads(openai_response.model_dump_json())
+        create_prompt_completion_charge(
+            handler.__name__,
+            user.id,
+            model,
+            openai_response.usage.completion_tokens,
+            openai_response.usage.prompt_tokens,
+            openai_response.usage.total_tokens,
+            openai_response.system_fingerprint,
+        )
         response_message = openai_response.choices[0].message
         chat_completion_called.send(sender=handler, user=user, data=openai_response_dict, action="response")
         openai_response = openai_response.model_dump()
@@ -165,6 +178,15 @@ def handler(user: User, data: dict):
             )  # get a new response from the model where it can see the function response
             openai_response = second_response.model_dump()
             openai_response_dict = json.loads(second_response.model_dump_json())
+            create_plugin_charge(
+                handler.__name__,
+                user.id,
+                model,
+                second_response.usage.completion_tokens,
+                second_response.usage.prompt_tokens,
+                second_response.usage.total_tokens,
+                second_response.system_fingerprint,
+            )
             chat_completion_tool_call_received.send(
                 sender=handler,
                 plugin=plugin.plugin_meta if plugin else None,

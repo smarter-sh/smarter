@@ -1,9 +1,8 @@
 ## [0.1.1](https://github.com/QueriumCorp/smarter/compare/v0.1.0...v0.1.1) (2024-04-02)
 
-
 ### Bug Fixes
 
-* force a new release ([dae31bd](https://github.com/QueriumCorp/smarter/commit/dae31bd88a633da0a0d2595ad0ae17420d49db7a))
+- force a new release ([dae31bd](https://github.com/QueriumCorp/smarter/commit/dae31bd88a633da0a0d2595ad0ae17420d49db7a))
 
 # Change Log
 

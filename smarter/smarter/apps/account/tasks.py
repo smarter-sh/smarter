@@ -9,7 +9,7 @@ future high-traffic scenarios.
 """
 import logging
 
-from celery import shared_task
+from smarter.smarter_celery import app
 
 from .models import (
     CHARGE_TYPE_PLUGIN,
@@ -22,13 +22,21 @@ from .models import (
 logger = logging.getLogger(__name__)
 
 
-def _create_charge(charge_type, user_id, prompt_tokens, completion_tokens, total_tokens, model, reference):
-    user = UserProfile.objects.get(id=user_id).user
-    account = UserProfile.objects.get(user=user).account
+@app.task(autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+def create_charge(
+    charge_type: str,
+    user_id: int,
+    prompt_tokens: int,
+    completion_tokens: int,
+    total_tokens: int,
+    model: str,
+    reference: str,
+):
+    user_profile = UserProfile.objects.get(user__id=user_id)
 
     charge = Charge(
-        account=account,
-        user=user,
+        account=user_profile.account,
+        user=user_profile.user,
         charge_type=charge_type,
         completion_tokens=completion_tokens,
         prompt_tokens=prompt_tokens,
@@ -39,19 +47,47 @@ def _create_charge(charge_type, user_id, prompt_tokens, completion_tokens, total
     charge.save()
 
 
-@shared_task
-def create_prompt_completion_charge(user_id, prompt_tokens, completion_tokens, total_tokens, model, reference):
+def create_prompt_completion_charge(
+    reference: str,
+    user_id: int,
+    model: str,
+    completion_tokens: int,
+    prompt_tokens: int,
+    total_tokens: int,
+    fingerprint: str,
+):
     """Create a charge record."""
-    logger.info("Creating prompt completion charge record for user_id: %s", user_id)
+    logger.info("Creating prompt completion charge record for user_id: %s, reference: %s", user_id, fingerprint)
 
-    _create_charge(
-        CHARGE_TYPE_PROMPT_COMPLETION, user_id, prompt_tokens, completion_tokens, total_tokens, model, reference
+    create_charge.delay(
+        charge_type=CHARGE_TYPE_PROMPT_COMPLETION,
+        user_id=user_id,
+        prompt_tokens=prompt_tokens,
+        completion_tokens=completion_tokens,
+        total_tokens=total_tokens,
+        model=model,
+        reference=fingerprint,
     )
 
 
-@shared_task
-def create_plugin_charge(user_id, prompt_tokens, completion_tokens, total_tokens, model, reference):
+def create_plugin_charge(
+    reference: str,
+    user_id: int,
+    model: str,
+    completion_tokens: int,
+    prompt_tokens: int,
+    total_tokens: int,
+    fingerprint: str,
+):
     """Create a charge record."""
-    logger.info("Creating plugin charge record for user_id: %s", user_id)
+    logger.info("Creating plugin charge record for user_id: %s, reference: %s", user_id, fingerprint)
 
-    _create_charge(CHARGE_TYPE_PLUGIN, user_id, prompt_tokens, completion_tokens, total_tokens, model, reference)
+    create_charge.delay(
+        charge_type=CHARGE_TYPE_PLUGIN,
+        user_id=user_id,
+        prompt_tokens=prompt_tokens,
+        completion_tokens=completion_tokens,
+        total_tokens=total_tokens,
+        model=model,
+        reference=fingerprint,
+    )
