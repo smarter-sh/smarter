@@ -45,7 +45,7 @@ python-hcl2==4.3.2
 # ------------
 openai==1.13.3
 pyyaml==6.0.1
-langchain==0.1.12
+langchain==0.1.14
 langchain-openai==0.1.1
 python-Levenshtein==0.25.0
 nltk==3.8.1
