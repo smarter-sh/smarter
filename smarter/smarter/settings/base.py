@@ -19,7 +19,6 @@ import sys
 from pathlib import Path
 
 from corsheaders.defaults import default_headers
-from dotenv import load_dotenv
 
 # Add proprietary settings for the project
 from .smarter import *  # noqa: E402, F401, W0401
@@ -29,7 +28,6 @@ from .smarter import *  # noqa: E402, F401, W0401
 if "collectstatic" in sys.argv:
     CELERY_TASK_ALWAYS_EAGER = True
 
-load_dotenv()
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "x-api-key",
 ]
@@ -37,8 +35,8 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 BASE_DIR = Path(os.path.join(PROJECT_ROOT, "smarter")).resolve()
-print("PROJECT_ROOT", PROJECT_ROOT)
-print("BASE_DIR", BASE_DIR)
+print("PROJECT_ROOT: ", PROJECT_ROOT)
+print("BASE_DIR: ", BASE_DIR)
 
 LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/"
@@ -46,8 +44,8 @@ LOGIN_REDIRECT_URL = "/"
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
-SECRET_KEY = "SET-ME-PLEASE"
-DEBUG = False
+SECRET_KEY = smarter_settings.secret_key
+DEBUG = smarter_settings.debug_mode
 ALLOWED_HOSTS = []
 
 CACHES = {
@@ -64,11 +62,6 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 
 # Default Celery Configuration
 CELERY_BROKER_URL = "redis://:smarter@smarter-redis:6379/1"
-CELERY_RESULT_BACKEND = "redis://:smarter@smarter-redis:6379/1"
-CELERY_ACCEPT_CONTENT = ["application/json"]
-CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
-CELERY_TIMEZONE = "UTC"
 CELERY_TASK_TIME_LIMIT = 30 * 60
 
 # Application definition

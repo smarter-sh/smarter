@@ -17,16 +17,8 @@ from .base import *
 
 
 print("Loading smarter.settings.local")
-ENVIRONMENT_DOMAIN = "dev.platform.smarter.sh"
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-zp722j6hm29(=kro+i*)7p+f=@s)wlhj%8r!k#3qke(yb8%m_j"
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-if not DEBUG:
-    ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ENVIRONMENT_DOMAIN = "local.platform.smarter.sh"
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 # dev only:
 # Bootstrap theme source files and static assets.
