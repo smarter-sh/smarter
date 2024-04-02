@@ -4,6 +4,7 @@ updates:
     directory: "/aws/"
     schedule:
       interval: "weekly"
+    target-branch: "alpha"
     open-pull-requests-limit: 10
     labels:
       - "dependencies"
@@ -16,6 +17,7 @@ updates:
     directory: "/smarter"
     schedule:
       interval: "weekly"
+    target-branch: "alpha"
     labels:
       - "dependencies"
       - "python"
@@ -25,13 +27,14 @@ updates:
     reviewers:
       - "lpm0073"
   - package-ecosystem: "npm"
-    directory: "/react"
+    directory: "/smarter/smarter/apps/chatapp/reactapp"
     labels:
       - "dependencies"
       - "javascript"
       - "automated pr"
     schedule:
       interval: "weekly"
+    target-branch: "alpha"
     assignees:
       - "lpm0073"
     reviewers:
@@ -44,6 +47,7 @@ updates:
       - "automated pr"
     schedule:
       interval: "weekly"
+    target-branch: "alpha"
     assignees:
       - "lpm0073"
     reviewers:
@@ -55,6 +59,7 @@ updates:
       - "automated pr"
     schedule:
       interval: "weekly"
+    target-branch: "alpha"
     assignees:
       - "lpm0073"
     reviewers:
