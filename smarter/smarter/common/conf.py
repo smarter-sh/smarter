@@ -23,12 +23,11 @@ configuration values. This is useful for debugging and logging.
 # ------------------------------------------------
 
 # python stuff
-import importlib.util
 import logging
 import os  # library for interacting with the operating system
 import platform  # library to view information about the server host this Lambda runs on
 import re
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, Union
 
 # 3rd party stuff
 import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
@@ -40,7 +39,7 @@ from pydantic import Field, SecretStr, ValidationError, ValidationInfo, field_va
 from pydantic_settings import BaseSettings
 
 # our stuff
-from .const import IS_USING_TFVARS, PROJECT_ROOT, TFVARS
+from .const import IS_USING_TFVARS, TFVARS, VERSION
 from .exceptions import OpenAIAPIConfigurationError, OpenAIAPIValueError
 from .utils import recursive_sort_dict
 
@@ -49,17 +48,8 @@ logger = logging.getLogger(__name__)
 TFVARS = TFVARS or {}
 DOT_ENV_LOADED = load_dotenv()
 
-
-def load_version() -> Dict[str, str]:
-    """Stringify the __version__ module."""
-    version_file_path = os.path.join(PROJECT_ROOT, "__version__.py")
-    spec = importlib.util.spec_from_file_location("__version__", version_file_path)
-    version_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(version_module)
-    return version_module.__dict__
-
-
-VERSION = load_version()
+VALID_DOMAIN_PATTERN = r"(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]"
+VALID_EMAIL_PATTERN = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
 
 
 def get_semantic_version() -> str:
@@ -205,6 +195,18 @@ class SettingsDefaults:
     OPENAI_ENDPOINT_IMAGE_N = 4
     OPENAI_ENDPOINT_IMAGE_SIZE = "1024x768"
     PINECONE_API_KEY = SecretStr(None)
+
+    SMTP_SENDER = os.environ.get("SMTP_SENDER", None)
+    SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", None)
+    SMTP_HOST = os.environ.get("SMTP_HOST", "email-smtp.us-east-2.amazonaws.com")
+    SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+    SMTP_USE_SSL = bool(os.environ.get("SMTP_USE_SSL", False))
+    SMTP_USE_TLS = bool(os.environ.get("SMTP_USE_TLS", True))
+    SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "SET-ME-PLEASE")
+    SMTP_USERNAME = os.environ.get("SMTP_USERNAME", "SET-ME-PLEASE")
+
+    STRIPE_LIVE_SECRET_KEY = os.environ.get("STRIPE_LIVE_SECRET_KEY", "SET-ME-PLEASE")
+    STRIPE_TEST_SECRET_KEY = os.environ.get("STRIPE_TEST_SECRET_KEY", "SET-ME-PLEASE")
 
     @classmethod
     def to_dict(cls):
@@ -402,6 +404,20 @@ class Settings(BaseSettings):
         SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE, env="OPENAI_ENDPOINT_IMAGE_SIZE"
     )
     pinecone_api_key: Optional[SecretStr] = Field(SettingsDefaults.PINECONE_API_KEY, env="PINECONE_API_KEY")
+    stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY, env="STRIPE_LIVE_SECRET_KEY")
+    stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY, env="STRIPE_TEST_SECRET_KEY")
+
+    smtp_sender: Optional[str] = Field(None, env="SMTP_SENDER")
+    smtp_from_email: Optional[str] = Field(None, env="SMTP_FROM_EMAIL")
+    smtp_host: Optional[str] = Field(None, env="SMTP_HOST")
+    smtp_password: Optional[str] = Field(None, env="SMTP_PASSWORD")
+    smtp_port: Optional[int] = Field(None, env="SMTP_PORT")
+    smtp_use_ssl: Optional[bool] = Field(None, env="SMTP_USE_SSL")
+    smtp_use_tls: Optional[bool] = Field(None, env="SMTP_USE_TLS")
+    smtp_username: Optional[str] = Field(None, env="SMTP_USERNAME")
+
+    stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY, env="STRIPE_LIVE_SECRET_KEY")
+    stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY, env="STRIPE_TEST_SECRET_KEY")
 
     @property
     def initialized(self):
@@ -794,6 +810,90 @@ class Settings(BaseSettings):
         """Check pinecone_api_key"""
         if v in [None, ""]:
             return SettingsDefaults.PINECONE_API_KEY
+        return v
+
+    @field_validator("stripe_live_secret_key")
+    def check_stripe_live_secret_key(cls, v) -> str:
+        """Check stripe_live_secret_key"""
+        if v in [None, ""]:
+            return SettingsDefaults.STRIPE_LIVE_SECRET_KEY
+        return v
+
+    @field_validator("stripe_test_secret_key")
+    def check_stripe_test_secret_key(cls, v) -> str:
+        """Check stripe_test_secret_key"""
+        if v in [None, ""]:
+            return SettingsDefaults.STRIPE_TEST_SECRET_KEY
+        return v
+
+    @field_validator("smtp_sender")
+    def check_smtp_sender(cls, v) -> str:
+        """Check smtp_sender"""
+        if v in [None, ""]:
+            v = SettingsDefaults.SMTP_SENDER
+        pattern = VALID_DOMAIN_PATTERN
+        if v not in [None, ""]:
+            if not re.match(pattern, v):
+                raise ValueError("Invalid domain name")
+        return v
+
+    @field_validator("smtp_from_email")
+    def check_smtp_from_email(cls, v) -> str:
+        """Check smtp_from_email"""
+        if v in [None, ""]:
+            v = SettingsDefaults.SMTP_FROM_EMAIL
+        if v not in [None, ""]:
+            pattern = VALID_EMAIL_PATTERN
+            if not re.match(pattern, v):
+                raise ValueError("Invalid email address")
+        return v
+
+    @field_validator("smtp_host")
+    def check_smtp_host(cls, v) -> str:
+        """Check smtp_host"""
+        if v in [None, ""]:
+            v = SettingsDefaults.SMTP_HOST
+        pattern = VALID_DOMAIN_PATTERN
+        if v not in [None, ""]:
+            if not re.match(pattern, v):
+                raise ValueError("Invalid domain name")
+        return v
+
+    @field_validator("smtp_password")
+    def check_smtp_password(cls, v) -> str:
+        """Check smtp_password"""
+        if v in [None, ""]:
+            return SettingsDefaults.SMTP_PASSWORD
+        return v
+
+    @field_validator("smtp_port")
+    def check_smtp_port(cls, v) -> int:
+        """Check smtp_port"""
+        if v in [None, ""]:
+            v = SettingsDefaults.SMTP_PORT
+        if not str(v).isdigit() or not 1 <= int(v) <= 65535:
+            raise ValueError("Invalid port number")
+        return int(v)
+
+    @field_validator("smtp_use_ssl")
+    def check_smtp_use_ssl(cls, v) -> bool:
+        """Check smtp_use_ssl"""
+        if v in [None, ""]:
+            return SettingsDefaults.SMTP_USE_SSL
+        return v
+
+    @field_validator("smtp_use_tls")
+    def check_smtp_use_tls(cls, v) -> bool:
+        """Check smtp_use_tls"""
+        if v in [None, ""]:
+            return SettingsDefaults.SMTP_USE_TLS
+        return v
+
+    @field_validator("smtp_username")
+    def check_smtp_username(cls, v) -> str:
+        """Check smtp_username"""
+        if v in [None, ""]:
+            return SettingsDefaults.SMTP_USERNAME
         return v
 
 

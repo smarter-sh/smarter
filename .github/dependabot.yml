@@ -13,6 +13,7 @@ updates:
       - "lpm0073"
     reviewers:
       - "lpm0073"
+      - "kentfuka"
   - package-ecosystem: "pip"
     directory: "/smarter"
     schedule:
@@ -26,6 +27,7 @@ updates:
       - "lpm0073"
     reviewers:
       - "lpm0073"
+      - "kentfuka"
   - package-ecosystem: "npm"
     directory: "/smarter/smarter/apps/chatapp/reactapp"
     labels:
@@ -39,6 +41,7 @@ updates:
       - "lpm0073"
     reviewers:
       - "lpm0073"
+      - "kentfuka"
   - package-ecosystem: "npm"
     directory: "/"
     labels:
@@ -52,6 +55,7 @@ updates:
       - "lpm0073"
     reviewers:
       - "lpm0073"
+      - "kentfuka"
   - package-ecosystem: "github-actions"
     directory: "/.github"
     labels:
@@ -64,3 +68,4 @@ updates:
       - "lpm0073"
     reviewers:
       - "lpm0073"
+      - "kentfuka"
