@@ -51,7 +51,6 @@ runs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git checkout ${{ inputs.source-branch }}
-        git pull
         git checkout ${{ inputs.target-branch }}
         git merge -Xtheirs ${{ inputs.source-branch }}
         git remote set-url origin https://x-access-token:${{ inputs.github-token }}@github.com/${{ env.GITHUB_ORGANIZATION }}/${{ github.repository }}.git
