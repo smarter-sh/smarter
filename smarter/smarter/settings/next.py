@@ -11,8 +11,8 @@ print(f"Loading smarter.settings.{environment_name}")
 
 ENVIRONMENT_DOMAIN = f"{environment_name}.platform.{SMARTER_ROOT_DOMAIN}"
 ALLOWED_HOSTS = [ENVIRONMENT_DOMAIN]
-SMTP_SENDER = os.environ.get("SMTP_SENDER", ENVIRONMENT_DOMAIN)
-SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", "no-reply@" + SMTP_SENDER)
+SMTP_SENDER = smarter_settings.smtp_sender or ENVIRONMENT_DOMAIN
+SMTP_FROM_EMAIL = smarter_settings.smtp_from_email or "no-reply@" + SMTP_SENDER
 
 # (4_0.E001) As of Django 4.0, the values in the CSRF_TRUSTED_ORIGINS setting must start with a scheme
 # (usually http:// or https://) but found platform.smarter.sh. See the release notes for details.
