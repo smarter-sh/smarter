@@ -25,6 +25,8 @@ inputs:
     description: "The version of Python to use, such as 3.11.0"
     required: true
     type: string
+env:
+  GITHUB_ORGANIZATION: "QueriumCorp"
 
 runs:
   using: "composite"
@@ -49,10 +51,9 @@ runs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git checkout ${{ inputs.source-branch }}
-        git pull
         git checkout ${{ inputs.target-branch }}
         git merge -Xtheirs ${{ inputs.source-branch }}
-        git remote set-url origin https://x-access-token:${{ inputs.github-token }}@github.com/${{ github.repository }}.git
+        git remote set-url origin https://x-access-token:${{ inputs.github-token }}@github.com/${{ env.GITHUB_ORGANIZATION }}/${{ github.repository }}.git
         git push origin ${{ inputs.target-branch }}
 
     - name: Checkout current branch
