@@ -61,6 +61,15 @@
 
     {% block javascript %}
 		<!--begin::Javascript-->
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-SK81M5HQYS"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-SK81M5HQYS');
+    </script>
+
 		<!--begin::Global Javascript Bundle(mandatory for all pages)-->
 		<script src="{% static 'assets/plugins/global/plugins.bundle.js' %}"></script>
 		<script src="{% static 'assets/js/scripts.bundle.js' %}"></script>
