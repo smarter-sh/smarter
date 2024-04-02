@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=E1101
 """A module containing constants for the OpenAI API."""
+import importlib.util
 import logging
 import os
 from pathlib import Path
+from typing import Dict
 
 import hcl2
 import openai
@@ -31,6 +33,18 @@ try:
     IS_USING_TFVARS = True
 except FileNotFoundError:
     logger.info("No terraform.tfvars file found. Using default values.")
+
+
+def load_version() -> Dict[str, str]:
+    """Stringify the __version__ module."""
+    version_file_path = os.path.join(PROJECT_ROOT, "__version__.py")
+    spec = importlib.util.spec_from_file_location("__version__", version_file_path)
+    version_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(version_module)
+    return version_module.__dict__
+
+
+VERSION = load_version()
 
 
 # pylint: disable=too-few-public-methods
