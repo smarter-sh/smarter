@@ -83,7 +83,7 @@ spec:
             - name: CELERY_RESULT_BACKEND
               value: "{{ .Values.env.CELERY_RESULT_BACKEND }}"
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
-          command: ["celery", "-A", "smarter.smarter_celery.celery_app", "worker", "--loglevel=info"]
+          command: ["celery", "-A", "smarter.smarter_celery.app", "worker", "--loglevel=info"]
           imagePullPolicy: Always
           name: {{ .Values.workerName }}
           ports:
