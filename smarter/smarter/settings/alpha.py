@@ -3,7 +3,7 @@
 """Django settings for alpha.platform.smarter.sh"""
 import os
 
-from .base_aws import *
+from .base_docker import *
 
 
 environment_name = os.path.basename(__file__).replace(".py", "")

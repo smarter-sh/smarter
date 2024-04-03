@@ -41,7 +41,7 @@ services:
       args:
         ENVIRONMENT: ${ENVIRONMENT}
     image: smarter
-    command: celery -A smarter.smarter_celery.celery_app worker --loglevel=info
+    command: celery -A smarter.smarter_celery.app worker --loglevel=info
     depends_on:
       - smarter-mysql
       - smarter-redis
@@ -54,7 +54,7 @@ services:
     container_name: smarter-beat
     user: smarter_user
     image: smarter
-    command: celery -A smarter.smarter_celery.celery_app beat --loglevel=info
+    command: celery -A smarter.smarter_celery.app beat --loglevel=info
     depends_on:
       - smarter-mysql
       - smarter-redis

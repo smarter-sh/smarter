@@ -9,8 +9,9 @@ future high-traffic scenarios.
 """
 import logging
 
-from celery import shared_task
 from django.db.utils import IntegrityError
+
+from smarter.smarter_celery import app
 
 from .models import ChatHistory, ChatToolCallHistory, PluginUsageHistory
 
@@ -18,7 +19,7 @@ from .models import ChatHistory, ChatToolCallHistory, PluginUsageHistory
 logger = logging.getLogger(__name__)
 
 
-@shared_task
+@app.task()
 def create_chat_history(chat_id, user_id, model, tools, temperature, messages, response, max_tokens):
     """Create chat history record with flattened LLM response."""
     logger.info("Creating chat history record for chat_id: %s user_id: %s", chat_id, user_id)
@@ -46,7 +47,7 @@ def create_chat_history(chat_id, user_id, model, tools, temperature, messages, r
     return None
 
 
-@shared_task
+@app.task()
 def create_chat_tool_call_history(event_type, user_id, plugin_id, model, response, response_id):
     """Create chat tool call history record."""
     logger.info("Creating chat tool call history record for event_type: %s user_id: %s", event_type, user_id)
@@ -66,7 +67,7 @@ def create_chat_tool_call_history(event_type, user_id, plugin_id, model, respons
     chat_tool_call_history.save()
 
 
-@shared_task
+@app.task()
 def create_plugin_usage_history(user_id, plugin_id, event, data, model, custom_tool, temperature, max_tokens):
     """Create plugin usage history record."""
 
@@ -85,7 +86,7 @@ def create_plugin_usage_history(user_id, plugin_id, event, data, model, custom_t
     plugin_selection_history.save()
 
 
-@shared_task
+@app.task()
 def create_plugin_selection_history(user_id, plugin_id, event, inquiry_type, inquiry_return):
     """Create plugin selection history record."""
     logger.info("Creating plugin selection history record for event: %s user_id: %s", event, user_id)
