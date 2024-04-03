@@ -196,6 +196,8 @@ class SettingsDefaults:
     OPENAI_ENDPOINT_IMAGE_SIZE = "1024x768"
     PINECONE_API_KEY = SecretStr(None)
 
+    SECRET_KEY = os.getenv("SECRET_KEY")
+
     SMTP_SENDER = os.environ.get("SMTP_SENDER", None)
     SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", None)
     SMTP_HOST = os.environ.get("SMTP_HOST", "email-smtp.us-east-2.amazonaws.com")
@@ -407,14 +409,16 @@ class Settings(BaseSettings):
     stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY, env="STRIPE_LIVE_SECRET_KEY")
     stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY, env="STRIPE_TEST_SECRET_KEY")
 
-    smtp_sender: Optional[str] = Field(None, env="SMTP_SENDER")
-    smtp_from_email: Optional[str] = Field(None, env="SMTP_FROM_EMAIL")
-    smtp_host: Optional[str] = Field(None, env="SMTP_HOST")
-    smtp_password: Optional[str] = Field(None, env="SMTP_PASSWORD")
-    smtp_port: Optional[int] = Field(None, env="SMTP_PORT")
-    smtp_use_ssl: Optional[bool] = Field(None, env="SMTP_USE_SSL")
-    smtp_use_tls: Optional[bool] = Field(None, env="SMTP_USE_TLS")
-    smtp_username: Optional[str] = Field(None, env="SMTP_USERNAME")
+    secret_key: Optional[str] = Field(SettingsDefaults.SECRET_KEY, env="SECRET_KEY")
+
+    smtp_sender: Optional[str] = Field(SettingsDefaults.SMTP_SENDER, env="SMTP_SENDER")
+    smtp_from_email: Optional[str] = Field(SettingsDefaults.SMTP_FROM_EMAIL, env="SMTP_FROM_EMAIL")
+    smtp_host: Optional[str] = Field(SettingsDefaults.SMTP_HOST, env="SMTP_HOST")
+    smtp_password: Optional[str] = Field(SettingsDefaults.SMTP_PASSWORD, env="SMTP_PASSWORD")
+    smtp_port: Optional[int] = Field(SettingsDefaults.SMTP_PORT, env="SMTP_PORT")
+    smtp_use_ssl: Optional[bool] = Field(SettingsDefaults.SMTP_USE_SSL, env="SMTP_USE_SSL")
+    smtp_use_tls: Optional[bool] = Field(SettingsDefaults.SMTP_USE_TLS, env="SMTP_USE_TLS")
+    smtp_username: Optional[str] = Field(SettingsDefaults.SMTP_USERNAME, env="SMTP_USERNAME")
 
     stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY, env="STRIPE_LIVE_SECRET_KEY")
     stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY, env="STRIPE_TEST_SECRET_KEY")
@@ -824,6 +828,13 @@ class Settings(BaseSettings):
         """Check stripe_test_secret_key"""
         if v in [None, ""]:
             return SettingsDefaults.STRIPE_TEST_SECRET_KEY
+        return v
+
+    @field_validator("secret_key")
+    def check_secret_key(cls, v) -> str:
+        """Check secret_key"""
+        if v in [None, ""]:
+            return SettingsDefaults.SECRET_KEY
         return v
 
     @field_validator("smtp_sender")
