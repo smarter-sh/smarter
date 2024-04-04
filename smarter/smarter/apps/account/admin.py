@@ -41,7 +41,7 @@ class APIKeyModelAdmin(admin.ModelAdmin):
 
     readonly_fields = ("created",)
     # pylint: disable=W0212
-    list_display = [field.name for field in APIKey._meta.get_fields()]
+    list_display = ["key_id", "account", "description", "is_active", "last_used_at", "created_at", "updated_at"]
 
 
 admin.site.register(Account, AccountAdmin)

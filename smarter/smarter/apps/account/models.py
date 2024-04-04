@@ -138,7 +138,7 @@ class APIKeyManager(AuthTokenManager):
         return api_key, token
 
 
-class APIKey(AuthToken):
+class APIKey(AuthToken, TimestampedModel):
     """API Key model."""
 
     objects = APIKeyManager()
