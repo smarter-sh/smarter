@@ -81,6 +81,7 @@ INSTALLED_APPS = [
     "smarter.apps.chatapp",
     "smarter.apps.dashboard",
     "smarter.apps.api",
+    "smarter.apps.chatbot",
     # 3rd party apps
     # -------------------------------
     "djstripe",
@@ -102,6 +103,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "corsheaders.middleware.CorsMiddleware",
+    "smarter.common.middleware.quiet_disallowed_host.QuietDisallowedHostMiddleware",
 ]
 
 ROOT_URLCONF = "smarter.urls"
@@ -239,6 +241,13 @@ LOGGING = {
     "root": {
         "handlers": ["console"],
         "level": "INFO",
+    },
+    "loggers": {
+        "django.security.DisallowedHost": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
     },
 }
 logging.config.dictConfig(LOGGING)

@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account, APIKey, UserProfile
+from smarter.common.const import SMARTER_COMPANY_NAME
 
 
 User = get_user_model()
@@ -73,7 +74,7 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.ERROR("Username and email are required."))
 
-        account, _ = Account.objects.get_or_create(company_name="Smarter")
+        account, _ = Account.objects.get_or_create(company_name=SMARTER_COMPANY_NAME)
         UserProfile.objects.get_or_create(user=User.objects.get(username=username), account=account)
 
         # ensure that the admin user has at least one auth token (api key)

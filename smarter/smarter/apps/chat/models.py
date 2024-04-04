@@ -10,7 +10,12 @@ from smarter.apps.plugin.models import PluginMeta
 from smarter.common.model_utils import TimestampedModel
 
 
-# Create your models here.
+# -----------------------------------------------------------------------------
+# History Models. These are ChatBot agnostic and are used to store the history
+# of all chatbot interactions.
+# -----------------------------------------------------------------------------
+
+
 class ChatHistory(TimestampedModel):
     """Chat history model."""
 

@@ -13,6 +13,18 @@ import openai
 
 logger = logging.getLogger(__name__)
 
+SMARTER_CUSTOMER_API_SUBDOMAIN = "api"
+SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN = "platform"
+SMARTER_COMPANY_NAME = "Smarter"
+
+VALID_DOMAIN_PATTERN = r"(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]"
+VALID_EMAIL_PATTERN = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+VALID_IP_PATTERN = r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$"
+VALID_PORT_PATTERN = r"^[0-9]{1,5}$"
+VALID_URL_PATTERN = r"^(http|https)://[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}(:[0-9]{1,5})?$"
+VALID_UUID_PATTERN = r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+
+
 MODULE_NAME = "openai_passthrough"
 HERE = os.path.abspath(os.path.dirname(__file__))
 PROJECT_ROOT = str(Path(HERE).parent)

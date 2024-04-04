@@ -39,7 +39,15 @@ from pydantic import Field, SecretStr, ValidationError, ValidationInfo, field_va
 from pydantic_settings import BaseSettings
 
 # our stuff
-from .const import IS_USING_TFVARS, TFVARS, VERSION
+from .const import (
+    IS_USING_TFVARS,
+    SMARTER_CUSTOMER_API_SUBDOMAIN,
+    SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN,
+    TFVARS,
+    VALID_DOMAIN_PATTERN,
+    VALID_EMAIL_PATTERN,
+    VERSION,
+)
 from .exceptions import OpenAIAPIConfigurationError, OpenAIAPIValueError
 from .utils import recursive_sort_dict
 
@@ -47,9 +55,6 @@ from .utils import recursive_sort_dict
 logger = logging.getLogger(__name__)
 TFVARS = TFVARS or {}
 DOT_ENV_LOADED = load_dotenv()
-
-VALID_DOMAIN_PATTERN = r"(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]"
-VALID_EMAIL_PATTERN = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
 
 
 def get_semantic_version() -> str:
@@ -546,7 +551,22 @@ class Settings(BaseSettings):
     @property
     def environment_domain(self) -> str:
         """Return the complete domain name."""
-        return self.environment + ".api." + self.root_domain
+        return (
+            # platform.smarter.sh
+            SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN + "." + self.root_domain
+            if self.environment == "prod"
+            # alpha.platform.smarter.sh, beta.platform.smarter.sh, next.platform.smarter.sh
+            else self.environment + "." + SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN + "." + self.root_domain
+        )
+
+    @property
+    def customer_api_domain(self) -> str:
+        """Return the customer API domain name."""
+        if self.environment == "prod":
+            # api.smarter.sh
+            return f"{SMARTER_CUSTOMER_API_SUBDOMAIN}.{self.root_domain}"
+        # alpha.api.smarter.sh, beta.api.smarter.sh, next.api.smarter.sh
+        return f"{self.environment}.{SMARTER_CUSTOMER_API_SUBDOMAIN}.{self.root_domain}"
 
     @property
     def aws_s3_bucket_name(self) -> str:
