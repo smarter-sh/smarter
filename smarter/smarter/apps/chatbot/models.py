@@ -3,6 +3,7 @@
 """All models for the OpenAI Function Calling API app."""
 import re
 
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import models
 
@@ -26,6 +27,20 @@ class ChatBotCustomDomain(TimestampedModel):
     domain_name = models.CharField(max_length=255)
     is_verified = models.BooleanField(default=False, blank=True, null=True)
 
+    @classmethod
+    def get_verified_domains(cls):
+        # Try to get the list from cache
+        cache_expiration = 15 * 60  # 15 minutes
+        verified_domains = cache.get("chatbot_verified_custom_domains")
+
+        # If the list is not in cache, fetch it from the database
+        if not verified_domains:
+            verified_domains = list(cls.objects.filter(is_verified=True).values_list("domain_name", flat=True))
+            # Store the list in cache with a timeout of 15 minutes
+            cache.set("chatbot_verified_custom_domains", verified_domains, cache_expiration)
+
+        return verified_domains
+
     def save(self, *args, **kwargs):
         if self.domain_name:
             if re.match(VALID_DOMAIN_PATTERN, self.domain_name) is None:
@@ -36,7 +51,7 @@ class ChatBotCustomDomain(TimestampedModel):
 class ChatBotCustomDomainDNS(TimestampedModel):
     """ChatBot DNS Records for a ChatBot DNS Host."""
 
-    dns_host = models.ForeignKey(ChatBotCustomDomain, on_delete=models.CASCADE)
+    custom_domain = models.ForeignKey(ChatBotCustomDomain, on_delete=models.CASCADE)
     record_name = models.CharField(max_length=255)
     record_type = models.CharField(max_length=255)
     record_value = models.CharField(max_length=255)
@@ -49,28 +64,28 @@ class ChatBot(TimestampedModel):
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     subdomain = models.ForeignKey(ChatBotCustomDomainDNS, on_delete=models.CASCADE, blank=True, null=True)
-    dns_host = models.ForeignKey(ChatBotCustomDomain, on_delete=models.CASCADE, blank=True, null=True)
+    custom_domain = models.ForeignKey(ChatBotCustomDomain, on_delete=models.CASCADE, blank=True, null=True)
     deployed = models.BooleanField(default=False, blank=True, null=True)
 
     def save(self, *args, **kwargs):
-        if not self.dns_host:
-            if re.match(VALID_DOMAIN_PATTERN, self.fqdn) is None:
+        if not self.custom_domain:
+            if re.match(VALID_DOMAIN_PATTERN, self.hostname) is None:
                 raise ValidationError("Invalid domain name")
         super().save(*args, **kwargs)
 
     @property
-    def default_domain(self):
+    def default_host(self):
         return f"{self.name}.{self.account.account_number}.{smarter_settings.customer_api_domain}"
 
     @property
-    def custom_domain(self):
-        if self.dns_host and self.dns_host.is_verified:
-            return f"{self.subdomain.record_name}.{self.dns_host.domain_name}"
+    def custom_host(self):
+        if self.custom_domain and self.custom_domain.is_verified:
+            return f"{self.subdomain.record_name}.{self.custom_domain.domain_name}"
         return None
 
     @property
-    def fqdn(self):
-        return self.custom_domain or self.default_domain
+    def hostname(self):
+        return self.custom_host or self.default_host
 
 
 class ChatBotAPIKeys(TimestampedModel):

@@ -95,7 +95,7 @@ class SmarterAuthenticatedNeverCachedWebView(SmarterAuthenticatedWebView):
     """An optimized web view that requires authentication and is never cached."""
 
     @method_decorator(never_cache)
-    def dispatch(self, *args, **kwargs):
+    def dispatch(self, request, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
 
 

@@ -108,7 +108,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name="chatbot",
-            name="dns_host",
+            name="custom_domain",
             field=models.ForeignKey(
                 blank=True,
                 null=True,
@@ -135,7 +135,7 @@ class Migration(migrations.Migration):
                 ("record_value", models.CharField(max_length=255)),
                 ("record_ttl", models.IntegerField(blank=True, default=600, null=True)),
                 (
-                    "dns_host",
+                    "custom_domain",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         to="chatbot.chatbotcustomdomain",

@@ -40,7 +40,7 @@ def react(request):
     most_recent_response = chat_history.response if chat_history else None
 
     base_url = f"{settings.SMARTER_API_SCHEMA}://{request.get_host()}/"
-    api_url = urljoin(base_url, "/api/v0/")
+    api_url = urljoin(base_url, "/chatbot/")
     context_prefix = "BACKEND_"
     return {
         "react": True,

@@ -2,13 +2,12 @@
 # pylint: disable=R0801
 """All Django views for the OpenAI Function Calling API app."""
 import json
+import logging
 from http import HTTPStatus
 
 import openai
 from django.contrib.auth import get_user_model
-from rest_framework.response import Response
 
-from smarter.apps.account.api.view_helpers import SmarterAPIView
 from smarter.apps.account.tasks import (
     create_plugin_charge,
     create_prompt_completion_charge,
@@ -27,9 +26,9 @@ from smarter.apps.chat.signals import (
     chat_response_failure,
     chat_response_success,
 )
-from smarter.apps.plugin.plugin import Plugin
-from smarter.apps.plugin.utils import plugins_for_user
-from smarter.common.conf import settings
+from smarter.apps.chatbot.models import ChatBot
+from smarter.apps.plugin.plugin import Plugin, Plugins
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import VALID_CHAT_COMPLETION_MODELS, OpenAIResponseCodes
 from smarter.common.exceptions import EXCEPTION_MAP
 from smarter.common.utils import (
@@ -46,19 +45,20 @@ from smarter.common.validators import (  # validate_embedding_request,
 
 
 User = get_user_model()
-openai.organization = settings.openai_api_organization
-openai.api_key = settings.openai_api_key.get_secret_value()
+
+logger = logging.getLogger(__name__)
+openai.organization = smarter_settings.openai_api_organization
+openai.api_key = smarter_settings.openai_api_key.get_secret_value()
 
 
 # pylint: disable=too-many-locals,too-many-statements
-def handler(user: User, data: dict):
+def handler(chatbot: ChatBot, user: User, data: dict):
     """
-    Main Lambda handler function.
-
-    Responsible for processing incoming requests and invoking the appropriate
-    OpenAI API endpoint based on the contents of the request.
+    Chat prompt handler. Responsible for processing incoming requests and
+    invoking the appropriate OpenAI API endpoint based on the contents of
+    the request.
     """
-    chat_invoked.send(sender=handler, user=user, data=data)
+    chat_invoked.send(sender=handler, user=user, data=data, chatbot=chatbot)
     weather_tool = weather_tool_factory()
     tools = [weather_tool]
     available_functions = {
@@ -73,7 +73,7 @@ def handler(user: User, data: dict):
 
         # does the prompt have anything to do with any of the search terms defined in a plugin?
         # FIX NOTE: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_tokens
-        for plugin in plugins_for_user(user):
+        for plugin in Plugins(chatbot=chatbot).plugins:
             if plugin.selected(user=user, messages=messages):
                 model = plugin.plugin_prompt.model
                 temperature = plugin.plugin_prompt.temperature
@@ -228,10 +228,3 @@ def handler(user: User, data: dict):
         status_code=OpenAIResponseCodes.HTTP_RESPONSE_OK,
         body={**openai_response, **request_meta_data},
     )
-
-
-class SmarterChatViewSet(SmarterAPIView):
-    """top-level viewset for openai api function calling"""
-
-    def post(self, request):
-        return Response(handler(user=request.user, data=request.data))

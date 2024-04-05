@@ -17,6 +17,7 @@ SMARTER_CUSTOMER_API_SUBDOMAIN = "api"
 SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN = "platform"
 SMARTER_COMPANY_NAME = "Smarter"
 
+VALID_ACCOUNT_NUMBER_PATTERN = r"^\d{4}-\d{4}-\d{4}$"
 VALID_DOMAIN_PATTERN = r"(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]"
 VALID_EMAIL_PATTERN = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
 VALID_IP_PATTERN = r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$"

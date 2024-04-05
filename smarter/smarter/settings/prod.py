@@ -10,7 +10,8 @@ environment_name = os.path.basename(__file__).replace(".py", "")
 print(f"Loading smarter.settings.{environment_name}")
 
 ENVIRONMENT_DOMAIN = f"platform.{SMARTER_ROOT_DOMAIN}"
-ALLOWED_HOSTS = [ENVIRONMENT_DOMAIN]
+CUSTOMER_API_DOMAIN = smarter_settings.customer_api_domain
+ALLOWED_HOSTS = [ENVIRONMENT_DOMAIN, CUSTOMER_API_DOMAIN]
 SMTP_SENDER = smarter_settings.smtp_sender or ENVIRONMENT_DOMAIN
 SMTP_FROM_EMAIL = smarter_settings.smtp_from_email or "no-reply@" + SMTP_SENDER
 
