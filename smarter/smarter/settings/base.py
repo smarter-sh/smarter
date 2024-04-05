@@ -103,7 +103,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-    "smarter.common.middleware.quiet_disallowed_host.QuietDisallowedHostMiddleware",
+    "smarter.common.middleware.QuietDisallowedHostMiddleware",
+    "smarter.common.middleware.BlockSensitiveFilesMiddleware",
     "smarter.apps.chatbot.middleware.AllowCustomDomainsMiddleware",
 ]
 

@@ -25,7 +25,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         data_folder_path = os.path.join(HERE, "data", "*.json")
         user_profile = UserProfile.objects.filter(user__username="admin").first()
-        chatbot = ChatBot.objects.filter(account=user_profile.account).first()
+        chatbot = ChatBot.objects.get(account=user_profile.account).first()
 
         for file_path in glob.glob(data_folder_path):
             print("Processing file: ", file_path)

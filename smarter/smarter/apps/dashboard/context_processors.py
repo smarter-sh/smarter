@@ -9,6 +9,7 @@ from django.conf import settings
 
 from smarter.__version__ import __version__
 from smarter.apps.chat.models import ChatHistory
+from smarter.apps.chatbot.models import ChatBot
 
 
 def base(request):
@@ -40,7 +41,16 @@ def react(request):
     most_recent_response = chat_history.response if chat_history else None
 
     base_url = f"{settings.SMARTER_API_SCHEMA}://{request.get_host()}/"
-    api_url = urljoin(base_url, "/chatbot/")
+
+    # the React app can be used in either of two modes:
+    # 1. sandbox mode, run from inside the Smarter dashboard
+    # 2. production mode, connected to a deployed customer API
+    try:
+        ChatBot.objects.get(hostname=request.get_host(), deployed=True)
+        api_url = urljoin(base_url, "/chatbot/")
+    except ChatBot.DoesNotExist:
+        api_url = urljoin(base_url, "/api/v0/")
+
     context_prefix = "BACKEND_"
     return {
         "react": True,

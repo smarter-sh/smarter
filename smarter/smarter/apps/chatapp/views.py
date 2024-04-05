@@ -38,7 +38,7 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
 
         # setting this less for its functionality than for using it as a way
         # to validate the hostname and that the chatbot actually exists.
-        self.chatbot = get_object_or_404(ChatBot, hostname=request.get_host())
+        self.chatbot = get_object_or_404(ChatBot, hostname=request.get_host(), deployed=True)
         response = super().dispatch(request, *args, **kwargs)
         return response
 
