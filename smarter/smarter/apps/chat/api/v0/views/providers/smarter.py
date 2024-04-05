@@ -3,15 +3,14 @@
 """Customer API views."""
 
 import logging
-from http import HTTPStatus
 
+from django.shortcuts import get_object_or_404
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
 from smarter.apps.account.api.view_helpers import SmarterAPIView
 from smarter.apps.chat.providers.smarter import handler
 from smarter.apps.chatbot.models import ChatBot
-from smarter.common.utils import exception_response_factory, http_response_factory
 
 
 logger = logging.getLogger(__name__)
@@ -19,6 +18,16 @@ logger = logging.getLogger(__name__)
 
 class SmarterChatViewSet(SmarterAPIView):
     """top-level viewset for openai api function calling"""
+
+    chatbot: ChatBot = None
+
+    def dispatch(self, request, *args, **kwargs):
+
+        # setting this less for its functionality than for using it as a way
+        # to validate the hostname and that the chatbot actually exists.
+        self.chatbot = get_object_or_404(ChatBot, hostname=request.get_host(), deployed=True)
+        response = super().dispatch(request, *args, **kwargs)
+        return response
 
     def post(self, request):
         """
@@ -44,19 +53,10 @@ class SmarterChatViewSet(SmarterAPIView):
         The ChatBot instance hostname is determined by the following logic:
         `chatbot.hostname == chatbot.custom_domain or chatbot.default_host`
         """
-        chatbot: ChatBot = None
-
-        try:
-            chatbot = ChatBot.objects.get(hostname=request.get_host())
-        except ChatBot.DoesNotExist as e:
-            return http_response_factory(
-                status_code=HTTPStatus.NOT_FOUND,
-                body=exception_response_factory(e),
-            )
 
         # FIX NOTE: this might be an unnecessary belt & suspenders step. DRF might be already
         # doing all of this for us.
-        response = Response(handler(chatbot=chatbot, user=request.user, data=request.data))
+        response = Response(handler(chatbot=self.chatbot, user=request.user, data=request.data))
         response.accepted_renderer = JSONRenderer()
         response.accepted_media_type = "application/json"
         response.renderer_context = {}
