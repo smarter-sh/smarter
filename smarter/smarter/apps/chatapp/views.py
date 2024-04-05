@@ -3,6 +3,9 @@
 Views for the React chat app. See doc/DJANGO-REACT-INTEGRATION.md for more
 information about how the React app is integrated into the Django app.
 """
+from django.shortcuts import get_object_or_404
+
+from smarter.apps.chatbot.models import ChatBot
 from smarter.common.view_helpers import SmarterAuthenticatedNeverCachedWebView
 
 
@@ -28,5 +31,15 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
     via the Django manage.py `collectstatic` command. This is why the path is
     relative to the static directory, not the templates directory.
     """
+
+    chatbot: ChatBot = None
+
+    def dispatch(self, request, *args, **kwargs):
+
+        # setting this less for its functionality than for using it as a way
+        # to validate the hostname and that the chatbot actually exists.
+        self.chatbot = get_object_or_404(ChatBot, hostname=request.get_host())
+        response = super().dispatch(request, *args, **kwargs)
+        return response
 
     template_path = "index.html"

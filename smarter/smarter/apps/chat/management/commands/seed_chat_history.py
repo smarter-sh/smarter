@@ -9,7 +9,9 @@ from pathlib import Path
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
-from smarter.apps.chat.api.v0.views.chat import handler
+from smarter.apps.account.models import UserProfile
+from smarter.apps.chat.providers.smarter import handler
+from smarter.apps.chatbot.models import ChatBot
 
 
 User = get_user_model()
@@ -22,10 +24,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         data_folder_path = os.path.join(HERE, "data", "*.json")
-        user = User.objects.filter(username="admin").first()
+        user_profile = UserProfile.objects.filter(user__username="admin").first()
+        chatbot = ChatBot.objects.filter(account=user_profile.account).first()
 
         for file_path in glob.glob(data_folder_path):
             print("Processing file: ", file_path)
             with open(file_path, "r", encoding="utf-8") as file:
                 data = json.loads(file.read())
-                handler(user=user, data=data)
+                handler(chatbot=chatbot, user=user_profile.user, data=data)

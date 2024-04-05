@@ -104,6 +104,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "smarter.common.middleware.quiet_disallowed_host.QuietDisallowedHostMiddleware",
+    "smarter.apps.chatbot.middleware.AllowCustomDomainsMiddleware",
 ]
 
 ROOT_URLCONF = "smarter.urls"

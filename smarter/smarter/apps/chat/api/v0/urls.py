@@ -3,7 +3,6 @@
 
 from django.urls import path
 
-from .views.chat import SmarterChatViewSet
 from .views.history import (
     ChatHistoryListView,
     ChatHistoryView,
@@ -12,10 +11,11 @@ from .views.history import (
     PluginUsageHistoryListView,
     PluginUsageHistoryView,
 )
+from .views.providers.smarter import SmarterChatViewSet
 
 
 urlpatterns = [
-    path("", SmarterChatViewSet.as_view(), name="chat"),
+    path("smarter/", SmarterChatViewSet.as_view(), name="smarter-chat-api"),
     path("history/chats/", ChatHistoryListView.as_view(), name="chathistory_list"),
     path(
         "history/chats/<int:pk>/",

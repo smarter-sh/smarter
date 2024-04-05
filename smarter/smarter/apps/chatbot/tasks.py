@@ -68,7 +68,7 @@ def create_custom_domain(account_id: int, domain_name: str) -> bool:
 
 @app.task(autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
 def create_custom_domain_dns_record(
-    dns_host_id: int, record_name: str, record_type: str, record_value: str, record_ttl: int = 600
+    chatbot_custom_domain_id: int, record_name: str, record_type: str, record_value: str, record_ttl: int = 600
 ):
     """
     Get or create a DNS record in an AWS Route53 hosted zone.
@@ -84,16 +84,16 @@ def create_custom_domain_dns_record(
             ],
         }
     """
-    dns_host = ChatBotCustomDomain.objects.get(id=dns_host_id)
+    custom_domain = ChatBotCustomDomain.objects.get(id=chatbot_custom_domain_id)
     record = aws_helper.get_or_create_dns_record(
-        hosted_zone_id=dns_host.aws_hosted_zone_id,
+        hosted_zone_id=custom_domain.aws_hosted_zone_id,
         record_name=record_name,
         record_type=record_type,
         record_value=record_value,
         record_ttl=record_ttl,
     )
     dns_record = ChatBotCustomDomainDNS.objects.get_or_create(
-        dns_host=dns_host,
+        custom_domain=custom_domain,
         record_name=record["Name"],
         record_type=record["Type"],
     )
@@ -108,15 +108,18 @@ def create_custom_domain_dns_record(
 # optionally deployed to a custom domain.
 # ------------------------------------------------------------------------------
 @app.task(autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
-def verify_custom_domain(hosted_zone_id: int) -> bool:
-    """Verify the NS records of an AWS Route53 hosted zone."""
+def verify_custom_domain(hosted_zone_id: int, reverify: bool = False) -> bool:
+    """
+    Verify the NS records of an AWS Route53 hosted zone. Custom domains
+    are periodically reverified to ensure that the NS records are still valid.
+    """
 
     response = smarter_settings.aws_route53_client.get_hosted_zone(Id=hosted_zone_id)
     domain_name = response["HostedZone"]["Name"]
     aws_ns_records = set(response["DelegationSet"]["NameServers"])
     ns_is_reachable = False
-    sleep_interval = 1800
-    max_attempts = int(24 * (3600 / sleep_interval) * 2)
+    sleep_interval = 300 if reverify else 1800
+    max_attempts = 12 if reverify else int(24 * (3600 / sleep_interval) * 2)
 
     for i in range(max_attempts):  # 24 hours * attempts per hour * 2 days
         if i > 0:
@@ -199,11 +202,11 @@ def verify_domain(domain_name: str) -> bool:
     return False
 
 
-def create_domain_A_record(fqdn: str, api_host_domain: str):
+def create_domain_A_record(hostname: str, api_host_domain: str):
     """Create an A record for the API domain."""
 
     try:
-        logger.info("Deploying %s", fqdn)
+        logger.info("Deploying %s", hostname)
 
         # add the A record to the customer API domain
         hosted_zone_id = aws_helper.get_hosted_zone_id_for_domain(domain_name=api_host_domain)
@@ -213,12 +216,12 @@ def create_domain_A_record(fqdn: str, api_host_domain: str):
         # use this to create the A record in the customer API domain
         a_record = aws_helper.get_environment_A_record(domain=api_host_domain)
         logger.info(
-            "Propagating A record %s for parent domain %s to deployment target %s", a_record, api_host_domain, fqdn
+            "Propagating A record %s for parent domain %s to deployment target %s", a_record, api_host_domain, hostname
         )
 
         deployment_record = aws_helper.get_or_create_dns_record(
             hosted_zone_id=hosted_zone_id,
-            record_name=fqdn,
+            record_name=hostname,
             record_type="A",
             record_alias_target=a_record["AliasTarget"] if "AliasTarget" in a_record else None,
             record_value=a_record["ResourceRecords"] if "ResourceRecords" in a_record else None,
@@ -242,8 +245,8 @@ def create_domain_A_record(fqdn: str, api_host_domain: str):
 def deploy_default_api(chatbot_id: int):
     """Create a customer API default domain A record for a chatbot."""
     chatbot = ChatBot.objects.get(id=chatbot_id)
-    domain_name = chatbot.default_domain
-    create_domain_A_record(fqdn=domain_name, api_host_domain=smarter_settings.customer_api_domain)
+    domain_name = chatbot.default_host
+    create_domain_A_record(hostname=domain_name, api_host_domain=smarter_settings.customer_api_domain)
     if verify_domain(domain_name):
         chatbot.deployed = True
         chatbot.save()
@@ -264,7 +267,7 @@ def deploy_custom_api(chatbot_id: int):
         )
         return
 
-    create_domain_A_record(fqdn=domain_name, api_host_domain=domain_name)
+    create_domain_A_record(hostname=domain_name, api_host_domain=domain_name)
 
     # verify the hosted zone of the custom domain
     hosted_zone_id = aws_helper.get_hosted_zone_id_for_domain(domain_name)
