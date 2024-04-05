@@ -304,7 +304,10 @@ class AWSInfrastructureConfig:
             "TTL": 300,
             "ResourceRecords": [
                 {
-                    "Value": "
+                    "Value": "192.1.1.1"
+                    }
+                ]
+            }
         """
 
         def name_match(record_name, record) -> bool:
