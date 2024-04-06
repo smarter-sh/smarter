@@ -294,7 +294,30 @@ class AWSInfrastructureConfig:
         logger.info("Created hosted zone %s %s", hosted_zone, domain_name)
         return (hosted_zone, True)
 
-    def get_dns_record(self, hosted_zone_id: str, record_name: str, record_type: str) -> str:
+    def delete_hosted_zone(self, domain_name):
+
+        # Get the hosted zone id
+        hosted_zone_id = self.get_hosted_zone_id_for_domain(domain_name)
+
+        # Get all record sets
+        paginator = smarter_settings.aws_route53_client.get_paginator("list_resource_record_sets")
+        record_sets = []
+        for page in paginator.paginate(HostedZoneId=hosted_zone_id):
+            for record_set in page["ResourceRecordSets"]:
+                if record_set["Type"] not in ["NS", "SOA"]:
+                    record_sets.append(record_set)
+
+        # Delete all record sets
+        for record_set in record_sets:
+            smarter_settings.aws_route53_client.change_resource_record_sets(
+                HostedZoneId=hosted_zone_id,
+                ChangeBatch={"Changes": [{"Action": "DELETE", "ResourceRecordSet": record_set}]},
+            )
+
+        # Delete the hosted zone
+        smarter_settings.aws_route53_client.delete_hosted_zone(Id=hosted_zone_id)
+
+    def get_dns_record(self, hosted_zone_id: str, record_name: str, record_type: str) -> dict:
         """
         Return the DNS record from the hosted zone.
         example return value:
@@ -319,6 +342,7 @@ class AWSInfrastructureConfig:
                 name_match(record_name=record_name, record=record)
                 and str(record["Type"]).upper() == record_type.upper()
             ):
+                print("get_dns_record() matched record: ", record)
                 return record
         return None
 
@@ -359,10 +383,12 @@ class AWSInfrastructureConfig:
     ) -> str:
         def match_values(record_value, record) -> bool:
             record_value = record_value or []
-            resource_records = record["ResourceRecords"] if "ResourceRecords" in record else []
-            record_values = [item["Value"] for item in resource_records]
-            record_value_values = [item["Value"] for item in record_value]
-            return set(record_values) == set(record_value_values)
+            if isinstance(record_value, list):
+                resource_records = record["ResourceRecords"] if "ResourceRecords" in record else []
+                record_values = [item["Value"] for item in resource_records]
+                record_value_values = [item["Value"] for item in record_value]
+                return set(record_values) == set(record_value)
+            return record_values == record_value_values
 
         def match_alias(record_alias_target, record) -> bool:
             """
@@ -398,9 +424,12 @@ class AWSInfrastructureConfig:
         if record_alias_target:
             change_batch["Changes"][0]["ResourceRecordSet"]["AliasTarget"] = record_alias_target
         if record_value:
-            change_batch["Changes"][0]["ResourceRecordSet"]["ResourceRecords"] = [
-                {"Value": item["Value"]} for item in record_value
-            ]
+            if isinstance(record_value, list):
+                change_batch["Changes"][0]["ResourceRecordSet"]["ResourceRecords"] = [
+                    {"Value": item} for item in record_value
+                ]
+            else:
+                change_batch["Changes"][0]["ResourceRecordSet"]["ResourceRecords"] = [{"Value": f'"{record_value}"'}]
             change_batch["Changes"][0]["ResourceRecordSet"]["TTL"] = record_ttl
 
         smarter_settings.aws_route53_client.change_resource_record_sets(

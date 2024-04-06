@@ -65,7 +65,7 @@ def handle_chat_invoked(sender, **kwargs):
     logger.info(
         "%s signal received for chatbot %s by user %s with data: %s",
         formatted_text("chat_invoked"),
-        chatbot.name,
+        chatbot.name if chatbot else "unknown",
         user.username,
         formatted_json(data),
     )
@@ -85,7 +85,7 @@ def handle_chat_completion_called(sender, **kwargs):
     logger.info(
         "%s signal received for chatbot %s: %s action: %s data: %s",
         formatted_text("chat_completion_called"),
-        chatbot.name,
+        chatbot.name if chatbot else "unknown",
         user.username,
         action,
         formatted_json(data),
@@ -108,7 +108,7 @@ def handle_chat_completion_tools_call(sender, **kwargs):
     logger.info(
         "%s signal received for chatbot %s: %s \nmodel: %s \ntemperature: %s \nmax_tokens: %s \nresponse: %s \ntools: %s",
         formatted_text("chat_completion_tools_call"),
-        chatbot.name,
+        chatbot.name if chatbot else "unknown",
         user,
         model,
         temperature,
@@ -142,7 +142,7 @@ def handle_chat_completion_tool_call(sender, **kwargs):
         logger.info(
             "%s %s signal received for chatbot %s: %s model: %s",
             formatted_text("chat_completion_tool_call_created"),
-            chatbot.name,
+            chatbot.name if chatbot else "unknown",
             event_type,
             user.username,
             model,
@@ -190,7 +190,7 @@ def handle_chat_completion_plugin_selected(sender, **kwargs):
     logger.info(
         "%s signal received for chatbot %s: %s plugin: %s",
         formatted_text("chat_completion_plugin_selected"),
-        chatbot.name,
+        chatbot.name if chatbot else "unknown",
         user.username,
         plugin,
     )
@@ -224,7 +224,7 @@ def handle_plugin_selection_history_created(sender, **kwargs):
     logger.info(
         "%s signal received for chatbot %s: %s data: %s",
         formatted_text("chat_completion_plugin_usage_history_created"),
-        chatbot.name,
+        chatbot.name if chatbot else "unknown",
         user.username if user else "unknown",
         formatted_json(data_dict),
     )
@@ -250,7 +250,7 @@ def handle_chat_completion_returned(sender, **kwargs):
     logger.info(
         "%s signal received for chatbot %s: %s %s model: %s",
         formatted_text("chat_response_success"),
-        chatbot.name,
+        chatbot.name if chatbot else "unknown",
         chat_id,
         user.username,
         model,
@@ -282,7 +282,7 @@ def handle_chat_response_failed(sender, **kwargs):
     logger.info(
         "%s signal received for chatbot %s: %s data: %s",
         formatted_text("chat_response_failure"),
-        chatbot.name,
+        chatbot.name if chatbot else "unknown",
         user.username,
         data,
     )
@@ -304,7 +304,7 @@ def handle_chat_history_created(sender, **kwargs):
     logger.info(
         "%s signal received for chatbot %s: %s %s",
         formatted_text("chat_history_created"),
-        chatbot.name,
+        chatbot.name if chatbot else "unknown",
         user.username if user else "unknown",
         formatted_json(data_dict),
     )
@@ -325,7 +325,7 @@ def handle_chat_tool_call_history_created(sender, **kwargs):
     logger.info(
         "%s signal received for chatbot %s: %s data: %s",
         formatted_text("chat_tool_call_history_created"),
-        chatbot.name,
+        chatbot.name if chatbot else "unknown",
         user.username if user else "unknown",
         formatted_json(data_dict),
     )
