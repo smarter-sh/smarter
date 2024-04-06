@@ -12,6 +12,7 @@ from django.core.management.base import BaseCommand
 from smarter.apps.account.models import UserProfile
 from smarter.apps.chat.providers.smarter import handler
 from smarter.apps.chatbot.models import ChatBot
+from smarter.common.const import SMARTER_DEMO_API_NAME
 
 
 User = get_user_model()
@@ -25,7 +26,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         data_folder_path = os.path.join(HERE, "data", "*.json")
         user_profile = UserProfile.objects.filter(user__username="admin").first()
-        chatbot = ChatBot.objects.get(account=user_profile.account).first()
+        chatbot = ChatBot.objects.get(account=user_profile.account, name=SMARTER_DEMO_API_NAME)
 
         for file_path in glob.glob(data_folder_path):
             print("Processing file: ", file_path)

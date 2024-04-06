@@ -38,20 +38,20 @@ class TestAWSRoute53(unittest.TestCase):
         self.assertIn(hosted_zone["Name"], [smarter_settings.root_domain, smarter_settings.root_domain + "."])
 
     def test_get_or_create_hosted_zone(self):
-        """Test that we can create a Route53 hosted zone."""
+        """Test that we can retrieve an existing Route53 hosted zone."""
         hosted_zone, created = aws_helper.get_or_create_hosted_zone(smarter_settings.root_domain)
         self.assertIsNotNone(hosted_zone)
         self.assertFalse(created)
         self.assertIn(hosted_zone["Name"], [smarter_settings.root_domain, smarter_settings.root_domain + "."])
 
     def test_get_dns_record(self):
-        """Test that we can get a DNS record."""
+        """Test that we can get an existing DNS record."""
         record = aws_helper.get_dns_record(self.root_hosted_zone_id, smarter_settings.root_domain, "NS")
         self.assertIsNotNone(record)
         self.assertIn(record["Name"], [smarter_settings.root_domain, smarter_settings.root_domain + "."])
 
     def test_get_ns_records(self):
-        """Test that we can get the NS records."""
+        """Test that we can get the NS records for an existing hosted zone."""
         records = aws_helper.get_ns_records(self.root_hosted_zone_id)
         self.assertIsNotNone(records)
         self.assertEqual(len(records), 4)
@@ -61,7 +61,7 @@ class TestAWSRoute53(unittest.TestCase):
         self.assertEqual(records, records2["ResourceRecords"])
 
     def test_get_or_create_dns_record(self):
-
+        """Test that we can get or create a DNS record."""
         ns_record = aws_helper.get_dns_record(self.root_hosted_zone_id, smarter_settings.root_domain, "NS")
         record = aws_helper.get_or_create_dns_record(
             hosted_zone_id=self.root_hosted_zone_id,
@@ -78,6 +78,7 @@ class TestAWSRoute53(unittest.TestCase):
         self.assertEqual(record["ResourceRecords"], ns_record["ResourceRecords"])
 
     def test_get_hosted_zone_for_domain(self):
+        """Test that we can get the hosted zone for a domain."""
         hosted_zone_id = aws_helper.get_hosted_zone_id_for_domain(smarter_settings.root_domain)
         self.assertIsNotNone(hosted_zone_id)
         self.assertEqual(hosted_zone_id, self.root_hosted_zone_id)
