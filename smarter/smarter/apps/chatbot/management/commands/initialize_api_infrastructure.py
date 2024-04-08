@@ -30,7 +30,7 @@ class Command(BaseCommand):
         # 2. Verify the NS records for the domain in the root domain's hosted zone
         # ---------------------------------------------------------------------
         ns_records = aws_helper.get_ns_records(hosted_zone_id=hosted_zone_id)
-        print(f"{self.log_prefix} found NS Records: {ns_records}")
+        print(f"{self.log_prefix} found the following NS Records inside the hosted zone {domain}: {ns_records}")
 
         root_domain_hosted_zone_id = aws_helper.get_hosted_zone_id_for_domain(domain_name=smarter_settings.root_domain)
         print(
