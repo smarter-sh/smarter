@@ -47,7 +47,7 @@ openai==1.16.2
 pyyaml==6.0.1
 langchain==0.1.14
 langchain-openai==0.1.1
-python-Levenshtein==0.25.0
+python-Levenshtein==0.25.1
 nltk==3.8.1
 textblob==0.18.0.post0
 
