@@ -3,12 +3,13 @@
 """Django context processors for base.html"""
 import time
 from datetime import datetime
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 from django.conf import settings
 
 from smarter.__version__ import __version__
 from smarter.apps.chat.models import ChatHistory
+from smarter.apps.chatbot.models import ChatBot
 
 
 def base(request):
@@ -40,7 +41,21 @@ def react(request):
     most_recent_response = chat_history.response if chat_history else None
 
     base_url = f"{settings.SMARTER_API_SCHEMA}://{request.get_host()}/"
-    api_url = urljoin(base_url, "/api/v0/")
+
+    # the React app can be used in either of two modes:
+    # 1. sandbox mode, run from inside the Smarter dashboard
+    # 2. production mode, connected to a deployed customer API
+    try:
+        # we need to parse the first slug, which is the chatbot name
+        # chatbot-name.####-####-####.api.smarter.sh/chatbot/
+        parsed_url = urlparse(request.get_host())
+        name = parsed_url.netloc.split(".")[0]
+
+        ChatBot.objects.get(name=name, deployed=True)
+        api_url = urljoin(base_url, "/chatbot/")
+    except ChatBot.DoesNotExist:
+        api_url = urljoin(base_url, "/api/v0/")
+
     context_prefix = "BACKEND_"
     return {
         "react": True,

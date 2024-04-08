@@ -6,6 +6,7 @@ from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.plugin import Plugin
+from smarter.common.const import SMARTER_COMPANY_NAME
 
 
 User = get_user_model()
@@ -45,7 +46,7 @@ class Command(BaseCommand):
                 if account_number:
                     account = Account.objects.get(account_number=account_number)
                 else:
-                    account, _ = Account.objects.get_or_create(company_name="Smarter")
+                    account, _ = Account.objects.get_or_create(company_name=SMARTER_COMPANY_NAME)
             except Account.DoesNotExist:
                 self.stdout.write(self.style.ERROR(f"Account {account_number} does not exist."))
                 return

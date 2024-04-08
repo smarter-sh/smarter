@@ -45,6 +45,15 @@ Querium also generates revenues by offering three kinds of professional services
 - (PENDING) RAG pdf loader
 - (PENDING) function calling that maps to Azure Cognitive Services [content moderation](https://learn.microsoft.com/en-us/azure/ai-services/content-safety/)
 
+### ChatBot API
+
+Customers can deploy personalized ChatBots with a choice of domain. The default URL format is as follows.
+
+- api: [user-defined-subdomain].####-####-####.api.smarter.sh/chatbot/
+- webapp: [user-defined-subdomain].####-####-####.api.smarter.sh/chatbot/webapp/
+
+Customers can optionally register a custom domain which typically can be verified and activated in around 4 hours.
+
 ## Developer Quickstart
 
 Works with Linux, Windows and macOS environments.

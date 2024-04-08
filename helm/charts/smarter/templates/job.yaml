@@ -26,6 +26,8 @@ spec:
               python manage.py migrate
               python manage.py create_user --username "{{ .Values.env.SMARTER_ADMIN_USERNAME }}" --email "{{ .Values.env.SMARTER_ADMIN_USERNAME }}@{{ .Values.env.ROOT_DOMAIN }}" --password "{{ .Values.env.SMARTER_ADMIN_PASSWORD }}" --admin
               python manage.py add_plugin_examples admin
+              python manage.py initialize_api_infrastructure
+              python manage.py deploy_demo_api
           command:
             - /bin/sh
             - -c

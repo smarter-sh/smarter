@@ -14,6 +14,7 @@ from django.db import transaction
 from rest_framework import serializers
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.chatbot.models import ChatBot, ChatBotPlugins
 
 from .api.v0.serializers import (
     PluginDataSerializer,
@@ -761,7 +762,7 @@ class Plugins:
     account: Account = None
     plugins: list[Plugin] = []
 
-    def __init__(self, user: User = None, account: Account = None):
+    def __init__(self, user: User = None, account: Account = None, chatbot: ChatBot = None):
 
         self.plugins = []
         if user or account:
@@ -769,6 +770,9 @@ class Plugins:
 
             for plugin in PluginMeta.objects.filter(account=self.account):
                 self.plugins.append(Plugin(plugin_id=plugin.id))
+        if chatbot:
+            for plugin in ChatBotPlugins.objects.filter(chatbot=chatbot):
+                self.plugins.append(Plugin(plugin_id=plugin.plugin.id))
 
     @property
     def data(self) -> list[dict]:

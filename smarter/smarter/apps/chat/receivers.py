@@ -4,9 +4,12 @@
 import json
 import logging
 
+from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
+
+from smarter.apps.chatbot.models import ChatBot
 
 from .models import ChatHistory, ChatToolCallHistory, PluginUsageHistory
 from .signals import (
@@ -19,6 +22,8 @@ from .signals import (
     chat_response_success,
 )
 
+
+User = get_user_model()
 
 logger = logging.getLogger(__name__)
 
@@ -48,8 +53,22 @@ def handle_chat_invoked(sender, **kwargs):
     """Handle chat invoked signal."""
 
     user = kwargs.get("user")
+    user = User.objects.get(id=user.id) if user else None
+
     data = kwargs.get("data")
-    logger.info("%s signal received: %s data: %s", formatted_text("chat_invoked"), user.username, formatted_json(data))
+
+    chatbot = kwargs.get("chatbot")
+    chatbot = ChatBot.objects.get(id=chatbot.id) if chatbot else None
+    if not chatbot:
+        logger.warning("received a chat_invoked signal with chatbot equal to None.")
+
+    logger.info(
+        "%s signal received for chatbot %s by user %s with data: %s",
+        formatted_text("chat_invoked"),
+        chatbot.name if chatbot else "unknown",
+        user.username,
+        formatted_json(data),
+    )
 
 
 @receiver(chat_completion_called, dispatch_uid="chat_completion_called")
@@ -60,9 +79,13 @@ def handle_chat_completion_called(sender, **kwargs):
     data = kwargs.get("data")
     action = kwargs.get("action")
 
+    chatbot = kwargs.get("chatbot")
+    chatbot = ChatBot.objects.get(id=chatbot.id) if chatbot else None
+
     logger.info(
-        "%s signal received: %s action: %s data: %s",
+        "%s signal received for chatbot %s: %s action: %s data: %s",
         formatted_text("chat_completion_called"),
+        chatbot.name if chatbot else "unknown",
         user.username,
         action,
         formatted_json(data),
@@ -79,9 +102,13 @@ def handle_chat_completion_tools_call(sender, **kwargs):
     max_tokens = kwargs.get("max_tokens")
     response = kwargs.get("response")
 
+    chatbot = kwargs.get("chatbot")
+    chatbot = ChatBot.objects.get(id=chatbot.id) if chatbot else None
+
     logger.info(
-        "%s signal received: %s \nmodel: %s \ntemperature: %s \nmax_tokens: %s \nresponse: %s \ntools: %s",
+        "%s signal received for chatbot %s: %s \nmodel: %s \ntemperature: %s \nmax_tokens: %s \nresponse: %s \ntools: %s",
         formatted_text("chat_completion_tools_call"),
+        chatbot.name if chatbot else "unknown",
         user,
         model,
         temperature,
@@ -108,24 +135,30 @@ def handle_chat_completion_tool_call(sender, **kwargs):
     response_id = response.get("id") if response else None
     event_type = "received" if "chat_completion_tool_call_received" in sender.__name__ else "called"
 
+    chatbot = kwargs.get("chatbot")
+    chatbot = ChatBot.objects.get(id=chatbot.id) if chatbot else None
+
     if event_type == "called":
         logger.info(
-            "%s %s signal received: %s model: %s",
+            "%s %s signal received for chatbot %s: %s model: %s",
             formatted_text("chat_completion_tool_call_created"),
+            chatbot.name if chatbot else "unknown",
             event_type,
             user.username,
             model,
         )
     else:
         logger.info(
-            "%s %s signal received: %s model: %s",
+            "%s %s signal received for chatbot %s: %s model: %s",
             formatted_text("chat_completion_tool_call_received"),
+            chatbot.name,
             event_type,
             user.username,
             model,
         )
     chat_tool_call_history = ChatToolCallHistory(
         event=event_type,
+        chatbot=chatbot,
         user=user,
         plugin=plugin,
         model=model,
@@ -151,11 +184,19 @@ def handle_chat_completion_plugin_selected(sender, **kwargs):
     max_tokens = kwargs.get("max_tokens")
     custom_tool = kwargs.get("custom_tool")
 
+    chatbot = kwargs.get("chatbot")
+    chatbot = ChatBot.objects.get(id=chatbot.id) if chatbot else None
+
     logger.info(
-        "%s signal received: %s plugin: %s", formatted_text("chat_completion_plugin_selected"), user.username, plugin
+        "%s signal received for chatbot %s: %s plugin: %s",
+        formatted_text("chat_completion_plugin_selected"),
+        chatbot.name if chatbot else "unknown",
+        user.username,
+        plugin,
     )
 
     plugin_selection_history = PluginUsageHistory(
+        chatbot=chatbot,
         user=user,
         plugin=plugin,
         event="selected",
@@ -176,9 +217,14 @@ def handle_plugin_selection_history_created(sender, **kwargs):
     user = kwargs.get("user")
     data = kwargs.get("data")
     data_dict = model_to_dict(data) if data else {}
+
+    chatbot = kwargs.get("chatbot")
+    chatbot = ChatBot.objects.get(id=chatbot.id) if chatbot else None
+
     logger.info(
-        "%s signal received: %s data: %s",
+        "%s signal received for chatbot %s: %s data: %s",
         formatted_text("chat_completion_plugin_usage_history_created"),
+        chatbot.name if chatbot else "unknown",
         user.username if user else "unknown",
         formatted_json(data_dict),
     )
@@ -198,11 +244,20 @@ def handle_chat_completion_returned(sender, **kwargs):
     response = kwargs.get("response")
     chat_id = response.get("id") if response else None
 
+    chatbot = kwargs.get("chatbot")
+    chatbot = ChatBot.objects.get(id=chatbot.id) if chatbot else None
+
     logger.info(
-        "%s signal received:%s %s model: %s", formatted_text("chat_response_success"), chat_id, user.username, model
+        "%s signal received for chatbot %s: %s %s model: %s",
+        formatted_text("chat_response_success"),
+        chatbot.name if chatbot else "unknown",
+        chat_id,
+        user.username,
+        model,
     )
     chat_history = ChatHistory(
         chat_id=chat_id,
+        chatbot=chatbot,
         user=user,
         model=model,
         tools=tools,
@@ -221,7 +276,16 @@ def handle_chat_response_failed(sender, **kwargs):
     user = kwargs.get("user")
     data = kwargs.get("data")
 
-    logger.info("%s signal received: %s data: %s", formatted_text("chat_response_failure"), user.username, data)
+    chatbot = kwargs.get("chatbot")
+    chatbot = ChatBot.objects.get(id=chatbot.id) if chatbot else None
+
+    logger.info(
+        "%s signal received for chatbot %s: %s data: %s",
+        formatted_text("chat_response_failure"),
+        chatbot.name if chatbot else "unknown",
+        user.username,
+        data,
+    )
 
 
 @receiver(post_save, sender=ChatHistory)
@@ -232,10 +296,15 @@ def handle_chat_history_created(sender, **kwargs):
     # we're missing the user and data arguments in the signal
     user = kwargs.get("user")
     data = kwargs.get("data")
+
+    chatbot = kwargs.get("chatbot")
+    chatbot = ChatBot.objects.get(id=chatbot.id) if chatbot else None
+
     data_dict = model_to_dict(data) if data else {}
     logger.info(
-        "%s signal received: %s %s",
+        "%s signal received for chatbot %s: %s %s",
         formatted_text("chat_history_created"),
+        chatbot.name if chatbot else "unknown",
         user.username if user else "unknown",
         formatted_json(data_dict),
     )
@@ -249,9 +318,14 @@ def handle_chat_tool_call_history_created(sender, **kwargs):
     user = kwargs.get("user")
     data = kwargs.get("data")
     data_dict = model_to_dict(data) if data else {}
+
+    chatbot = kwargs.get("chatbot")
+    chatbot = ChatBot.objects.get(id=chatbot.id) if chatbot else None
+
     logger.info(
-        "%s signal received: %s data: %s",
+        "%s signal received for chatbot %s: %s data: %s",
         formatted_text("chat_tool_call_history_created"),
+        chatbot.name if chatbot else "unknown",
         user.username if user else "unknown",
         formatted_json(data_dict),
     )
