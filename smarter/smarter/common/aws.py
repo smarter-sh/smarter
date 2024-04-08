@@ -381,6 +381,8 @@ class AWSInfrastructureConfig:
         record_alias_target: dict = None,
         record_value=None,  # can be a single text value of a list of dict
     ) -> str:
+        action: str = None
+
         def match_values(record_value, fetched_record) -> bool:
             record_value = record_value or []
             if isinstance(record_value, list):
@@ -410,14 +412,16 @@ class AWSInfrastructureConfig:
             if match_values(record_value, fetched_record) or match_alias(record_alias_target, fetched_record):
                 logger.info("get_or_create_dns_record() returning matched record: %s", fetched_record)
                 return fetched_record
+            action = "UPSERT"
             logger.info("Updating %s %s record", record_name, record_type)
         else:
+            action = "CREATE"
             logger.info("Creating %s %s record", record_name, record_type)
 
         change_batch = {
             "Changes": [
                 {
-                    "Action": "CREATE",
+                    "Action": action,
                     "ResourceRecordSet": {
                         "Name": record_name,
                         "Type": record_type,
