@@ -27,7 +27,6 @@ VALID_URL_PATTERN = r"^(http|https)://[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}(:[0-9]{1,5})
 VALID_UUID_PATTERN = r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
 
 
-MODULE_NAME = "openai_passthrough"
 HERE = os.path.abspath(os.path.dirname(__file__))
 PROJECT_ROOT = str(Path(HERE).parent)
 PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)

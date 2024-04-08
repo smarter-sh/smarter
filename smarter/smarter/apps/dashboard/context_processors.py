@@ -3,7 +3,7 @@
 """Django context processors for base.html"""
 import time
 from datetime import datetime
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 from django.conf import settings
 
@@ -46,7 +46,12 @@ def react(request):
     # 1. sandbox mode, run from inside the Smarter dashboard
     # 2. production mode, connected to a deployed customer API
     try:
-        ChatBot.objects.get(hostname=request.get_host(), deployed=True)
+        # we need to parse the first slug, which is the chatbot name
+        # chatbot-name.####-####-####.api.smarter.sh/chatbot/
+        parsed_url = urlparse(request.get_host())
+        name = parsed_url.netloc.split(".")[0]
+
+        ChatBot.objects.get(name=name, deployed=True)
         api_url = urljoin(base_url, "/chatbot/")
     except ChatBot.DoesNotExist:
         api_url = urljoin(base_url, "/api/v0/")

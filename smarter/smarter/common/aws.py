@@ -384,11 +384,11 @@ class AWSInfrastructureConfig:
         def match_values(record_value, record) -> bool:
             record_value = record_value or []
             if isinstance(record_value, list):
-                resource_records = record["ResourceRecords"] if "ResourceRecords" in record else []
+                resource_records = record.get("ResourceRecords", [])
                 record_values = [item["Value"] for item in resource_records]
-                record_value_values = [item["Value"] for item in record_value]
-                return set(record_values) == set(record_value)
-            return record_values == record_value_values
+                record_value_values = [item["Value"] for item in record_value if "Value" in item]
+                return set(record_values) == set(record_value_values)
+            return False
 
         def match_alias(record_alias_target, record) -> bool:
             """
