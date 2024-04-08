@@ -69,7 +69,7 @@ class ChatBot(TimestampedModel):
 
     def save(self, *args, **kwargs):
         if not self.custom_domain:
-            print(self.hostname)
+            print("AND THE HOSTNAME IS: ", self.hostname)
             if re.match(VALID_DOMAIN_PATTERN, self.hostname) is None:
                 raise ValidationError("Invalid domain name")
         super().save(*args, **kwargs)
