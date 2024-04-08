@@ -342,7 +342,7 @@ class AWSInfrastructureConfig:
                 name_match(record_name=record_name, record=record)
                 and str(record["Type"]).upper() == record_type.upper()
             ):
-                print("get_dns_record() matched record: ", record)
+                logger.info("get_dns_record() found record: %s", record)
                 return record
         return None
 
@@ -379,13 +379,14 @@ class AWSInfrastructureConfig:
         record_type: str,
         record_ttl: int,
         record_alias_target: dict = None,
-        record_value=None,
+        record_value=None,  # can be a single text value of a list of dict
     ) -> str:
-        def match_values(record_value, record) -> bool:
+        def match_values(record_value, fetched_record) -> bool:
             record_value = record_value or []
             if isinstance(record_value, list):
-                resource_records = record.get("ResourceRecords", [])
+                resource_records = fetched_record.get("ResourceRecords", [])
                 record_values = [item["Value"] for item in resource_records]
+
                 record_value_values = [item["Value"] for item in record_value if "Value" in item]
                 return set(record_values) == set(record_value_values)
             return False
@@ -402,10 +403,13 @@ class AWSInfrastructureConfig:
                 return True
             return False
 
-        record = self.get_dns_record(hosted_zone_id=hosted_zone_id, record_name=record_name, record_type=record_type)
-        if record:
-            if match_values(record_value, record) or match_alias(record_alias_target, record):
-                return record
+        fetched_record = self.get_dns_record(
+            hosted_zone_id=hosted_zone_id, record_name=record_name, record_type=record_type
+        )
+        if fetched_record:
+            if match_values(record_value, fetched_record) or match_alias(record_alias_target, fetched_record):
+                logger.info("get_or_create_dns_record() returning matched record: %s", fetched_record)
+                return fetched_record
             logger.info("Updating %s %s record", record_name, record_type)
         else:
             logger.info("Creating %s %s record", record_name, record_type)
