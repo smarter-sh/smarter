@@ -31,6 +31,8 @@ def add_example_plugins(user_profile: UserProfile) -> bool:
 
 def plugins_for_user(user: User) -> list[Plugin]:
     """
+    DEPRECATE THIS? We switched to using ChatBot and ChatBotPlugins.
+
     Return the plugins for a user. If the user is associated with an account,
     return the plugins for that account. If the user is not associated with an
     account, return the plugins for the user.

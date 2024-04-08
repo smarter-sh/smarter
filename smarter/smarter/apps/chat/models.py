@@ -4,17 +4,23 @@
 from django.db import models
 from django.forms.models import model_to_dict
 
+from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.plugin.models import PluginMeta
 
 # our stuff
 from smarter.common.model_utils import TimestampedModel
 
 
-# Create your models here.
+# -----------------------------------------------------------------------------
+# History Models.
+# -----------------------------------------------------------------------------
+
+
 class ChatHistory(TimestampedModel):
     """Chat history model."""
 
     chat_id = models.CharField(max_length=255, blank=True, null=True)
+    chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE, blank=True, null=True)
     user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
     model = models.CharField(max_length=255, blank=True, null=True)
     tools = models.JSONField(max_length=255, blank=True, null=True)
@@ -46,6 +52,7 @@ class ChatToolCallHistory(TimestampedModel):
     ]
 
     plugin = models.ForeignKey(PluginMeta, on_delete=models.CASCADE, blank=True, null=True)
+    chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE, blank=True, null=True)
     user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
     event = models.CharField(max_length=255, choices=EVENT_CHOICES, blank=True, null=True)
     model = models.CharField(max_length=255, blank=True, null=True)
@@ -75,6 +82,7 @@ class PluginUsageHistory(TimestampedModel):
     ]
 
     plugin = models.ForeignKey(PluginMeta, on_delete=models.CASCADE)
+    chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE, blank=True, null=True)
     user = models.ForeignKey("auth.User", on_delete=models.CASCADE)
     event = models.CharField(max_length=255, choices=EVENT_CHOICES, blank=True, null=True)
     data = models.JSONField(blank=True, null=True)

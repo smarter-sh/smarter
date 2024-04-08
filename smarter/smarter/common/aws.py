@@ -2,12 +2,18 @@
 """A utility class for introspecting AWS infrastructure."""
 
 # python stuff
+import logging
 import os
 import socket
+import time
 
 # our stuff
-from .conf import Services, settings
+from .conf import Services
+from .conf import settings as smarter_settings
 from .utils import recursive_sort_dict
+
+
+logger = logging.getLogger(__name__)
 
 
 # pylint: disable=too-many-public-methods
@@ -21,19 +27,19 @@ class AWSInfrastructureConfig:
         """Return a dict of the AWS infrastructure config."""
         retval = {}
         if Services.enabled(Services.AWS_APIGATEWAY):
-            api = self.get_api(settings.aws_apigateway_name)
+            api = self.get_api(smarter_settings.aws_apigateway_name)
             retval["apigateway"] = {
                 "api_id": api.get("id"),
                 "stage": self.get_api_stage(),
                 "domains": self.get_api_custom_domains(),
             }
         if Services.enabled(Services.AWS_S3):
-            retval["s3"] = {"bucket_name": self.get_bucket_by_prefix(settings.aws_s3_bucket_name)}
+            retval["s3"] = {"bucket_name": self.get_bucket_by_prefix(smarter_settings.aws_s3_bucket_name)}
         if Services.enabled(Services.AWS_DYNAMODB):
-            retval["dynamodb"] = {"table_name": self.get_dyanmodb_table_by_name(settings.aws_dynamodb_table_id)}
+            retval["dynamodb"] = {"table_name": self.get_dyanmodb_table_by_name(smarter_settings.aws_dynamodb_table_id)}
         if Services.enabled(Services.AWS_REKOGNITION):
             retval["rekognition"] = {
-                "collection_id": self.get_rekognition_collection_by_id(settings.aws_rekognition_collection_id)
+                "collection_id": self.get_rekognition_collection_by_id(smarter_settings.aws_rekognition_collection_id)
             }
         if Services.enabled(Services.AWS_IAM):
             retval["iam"] = {"policies": self.get_iam_policies(), "roles": self.get_iam_roles()}
@@ -45,22 +51,22 @@ class AWSInfrastructureConfig:
 
     def get_lambdas(self):
         """Return a dict of the AWS Lambdas."""
-        lambda_client = settings.aws_session.client("lambda")
+        lambda_client = smarter_settings.aws_session.client("lambda")
         lambdas = lambda_client.list_functions()["Functions"]
         retval = {
             lambda_function["FunctionName"]: lambda_function["FunctionArn"]
             for lambda_function in lambdas
-            if settings.shared_resource_identifier in lambda_function["FunctionName"]
+            if smarter_settings.shared_resource_identifier in lambda_function["FunctionName"]
         }
         return retval or {}
 
     def get_iam_policies(self):
         """Return a dict of the AWS IAM policies."""
-        iam_client = settings.aws_session.client("iam")
+        iam_client = smarter_settings.aws_session.client("iam")
         policies = iam_client.list_policies()["Policies"]
         retval = {}
         for policy in policies:
-            if settings.shared_resource_identifier in policy["PolicyName"]:
+            if smarter_settings.shared_resource_identifier in policy["PolicyName"]:
                 policy_version = iam_client.get_policy(PolicyArn=policy["Arn"])["Policy"]["DefaultVersionId"]
                 policy_document = iam_client.get_policy_version(PolicyArn=policy["Arn"], VersionId=policy_version)[
                     "PolicyVersion"
@@ -70,11 +76,11 @@ class AWSInfrastructureConfig:
 
     def get_iam_roles(self):
         """Return a dict of the AWS IAM roles."""
-        iam_client = settings.aws_session.client("iam")
+        iam_client = smarter_settings.aws_session.client("iam")
         roles = iam_client.list_roles()["Roles"]
         retval = {}
         for role in roles:
-            if settings.shared_resource_identifier in role["RoleName"]:
+            if smarter_settings.shared_resource_identifier in role["RoleName"]:
                 attached_policies = iam_client.list_attached_role_policies(RoleName=role["RoleName"])[
                     "AttachedPolicies"
                 ]
@@ -87,10 +93,10 @@ class AWSInfrastructureConfig:
 
     def get_api_stage(self) -> str:
         """Return the API stage."""
-        api = self.get_api(settings.aws_apigateway_name) or {}
+        api = self.get_api(smarter_settings.aws_apigateway_name) or {}
         api_id = api.get("id")
         if api_id:
-            response = settings.aws_apigateway_client.get_stages(restApiId=api_id)
+            response = smarter_settings.aws_apigateway_client.get_stages(restApiId=api_id)
             # Assuming you want the most recently deployed stage
             stages = response.get("item", [])
             if stages:
@@ -102,23 +108,25 @@ class AWSInfrastructureConfig:
         """Return the API custom domains."""
 
         def filter_dicts(lst):
-            return [d for d in lst if "domainName" in d and settings.shared_resource_identifier in d["domainName"]]
+            return [
+                d for d in lst if "domainName" in d and smarter_settings.shared_resource_identifier in d["domainName"]
+            ]
 
-        response = settings.aws_apigateway_client.get_domain_names()
+        response = smarter_settings.aws_apigateway_client.get_domain_names()
         retval = response.get("items", [])
         return filter_dicts(retval)
 
     def get_url(self, path) -> str:
         """Return the url for the given path."""
-        if settings.aws_apigateway_create_custom_domaim:
-            return f"https://{settings.aws_apigateway_domain_name}{path}"
-        return f"https://{settings.aws_apigateway_domain_name}/{self.get_api_stage()}{path}"
+        if smarter_settings.aws_apigateway_create_custom_domaim:
+            return f"https://{smarter_settings.aws_apigateway_domain_name}{path}"
+        return f"https://{smarter_settings.aws_apigateway_domain_name}/{self.get_api_stage()}{path}"
 
     def aws_connection_works(self):
         """Test that the AWS connection works."""
         try:
             # pylint: disable=pointless-statement
-            settings.aws_session.region_name
+            smarter_settings.aws_session.region_name
             return True
         except Exception:  # pylint: disable=broad-exception-caught
             return False
@@ -127,28 +135,29 @@ class AWSInfrastructureConfig:
     def domain(self):
         """Return the domain."""
         if not self._domain:
-            if settings.aws_apigateway_create_custom_domaim:
+            if smarter_settings.aws_apigateway_create_custom_domaim:
                 self._domain = (
-                    os.getenv(key="DOMAIN") or "api." + settings.shared_resource_identifier + "." + settings.root_domain
+                    os.getenv(key="DOMAIN")
+                    or "api." + smarter_settings.shared_resource_identifier + "." + smarter_settings.root_domain
                 )
                 return self._domain
 
-            response = settings.aws_apigateway_client.get_rest_apis()
+            response = smarter_settings.aws_apigateway_client.get_rest_apis()
             for item in response["items"]:
                 if item["name"] == self.api_gateway_name:
                     api_id = item["id"]
-                    self._domain = f"{api_id}.execute-api.{settings.aws_region}.amazonaws.com"
+                    self._domain = f"{api_id}.execute-api.{smarter_settings.aws_region}.amazonaws.com"
         return self._domain
 
     @property
     def api_gateway_name(self):
         """Return the API Gateway name."""
-        return settings.shared_resource_identifier + "-api"
+        return smarter_settings.shared_resource_identifier + "-api"
 
     def domain_exists(self) -> bool:
         """Test that the domain exists."""
         try:
-            socket.gethostbyname(settings.aws_apigateway_domain_name)
+            socket.gethostbyname(smarter_settings.aws_apigateway_domain_name)
             return True
         except socket.gaierror:
             return False
@@ -156,7 +165,7 @@ class AWSInfrastructureConfig:
     def get_bucket_by_prefix(self, bucket_prefix) -> str:
         """Return the bucket name given the bucket prefix."""
         try:
-            for bucket in settings.aws_s3_client.list_buckets()["Buckets"]:
+            for bucket in smarter_settings.aws_s3_client.list_buckets()["Buckets"]:
                 if bucket["Name"].startswith(bucket_prefix):
                     return f"arn:aws:s3:::{bucket['Name']}"
         except TypeError:
@@ -171,10 +180,10 @@ class AWSInfrastructureConfig:
 
     def get_dyanmodb_table_by_name(self, table_name) -> str:
         """Return the DynamoDB table given the table name."""
-        response = settings.aws_dynamodb_client.list_tables()
+        response = smarter_settings.aws_dynamodb_client.list_tables()
         for table in response["TableNames"]:
             if table == table_name:
-                table_description = settings.aws_dynamodb_client.describe_table(TableName=table_name)
+                table_description = smarter_settings.aws_dynamodb_client.describe_table(TableName=table_name)
                 return table_description["Table"]["TableArn"]
         return None
 
@@ -185,7 +194,7 @@ class AWSInfrastructureConfig:
 
     def api_exists(self, api_name: str) -> bool:
         """Test that the API Gateway exists."""
-        response = settings.aws_apigateway_client.get_rest_apis()
+        response = smarter_settings.aws_apigateway_client.get_rest_apis()
 
         for item in response["items"]:
             if item["name"] == api_name:
@@ -194,7 +203,7 @@ class AWSInfrastructureConfig:
 
     def get_api(self, api_name: str) -> dict:
         """Test that the API Gateway exists."""
-        response = settings.aws_apigateway_client.get_rest_apis()
+        response = smarter_settings.aws_apigateway_client.get_rest_apis()
 
         for item in response["items"]:
             if item["name"] == api_name:
@@ -203,32 +212,32 @@ class AWSInfrastructureConfig:
 
     def api_resource_and_method_exists(self, path, method) -> bool:
         """Test that the API Gateway resource and method exists."""
-        api = self.get_api(settings.aws_apigateway_name) or {}
+        api = self.get_api(smarter_settings.aws_apigateway_name) or {}
         api_id = api.get("id")
-        resources = settings.aws_apigateway_client.get_resources(restApiId=api_id)
+        resources = smarter_settings.aws_apigateway_client.get_resources(restApiId=api_id)
         for resource in resources["items"]:
             if resource["path"] == path:
                 try:
-                    settings.aws_apigateway_client.get_method(
+                    smarter_settings.aws_apigateway_client.get_method(
                         restApiId=api_id, resourceId=resource["id"], httpMethod=method
                     )
                     return True
-                except settings.aws_apigateway_client.exceptions.NotFoundException:
+                except smarter_settings.aws_apigateway_client.exceptions.NotFoundException:
                     return False
 
         return False
 
     def get_api_keys(self) -> str:
         """Test that the API Gateway exists."""
-        response = settings.aws_apigateway_client.get_api_keys(includeValues=True)
+        response = smarter_settings.aws_apigateway_client.get_api_keys(includeValues=True)
         for item in response["items"]:
-            if item["name"] == settings.shared_resource_identifier:
+            if item["name"] == smarter_settings.shared_resource_identifier:
                 return item["value"]
         return False
 
     def get_rekognition_collection_by_id(self, collection_id) -> str:
         """Return the Rekognition collection."""
-        response = settings.aws_rekognition_client.list_collections()
+        response = smarter_settings.aws_rekognition_client.list_collections()
         for collection in response["CollectionIds"]:
             if collection == collection_id:
                 return collection
@@ -236,29 +245,231 @@ class AWSInfrastructureConfig:
 
     def rekognition_collection_exists(self) -> bool:
         """Test that the Rekognition collection exists."""
-        collection = self.get_rekognition_collection_by_id(settings.aws_rekognition_collection_id)
+        collection = self.get_rekognition_collection_by_id(smarter_settings.aws_rekognition_collection_id)
         return collection is not None
 
     def get_hosted_zone(self, domain_name) -> str:
         """Return the hosted zone."""
-        response = settings.aws_route53_client.list_hosted_zones()
+        response = smarter_settings.aws_route53_client.list_hosted_zones()
         for hosted_zone in response["HostedZones"]:
             if hosted_zone["Name"] == domain_name or hosted_zone["Name"] == f"{domain_name}.":
-                return hosted_zone["Id"]
+                return hosted_zone
         return None
 
-    def get_dns_record_from_hosted_zone(self) -> str:
-        """Return the DNS record from the hosted zone."""
-        hosted_zone_id = self.get_hosted_zone(settings.root_domain)
-        if hosted_zone_id:
-            response = settings.aws_route53_client.list_resource_record_sets(HostedZoneId=hosted_zone_id)
-            for record in response["ResourceRecordSets"]:
-                if (
-                    record["Name"] == settings.aws_apigateway_domain_name
-                    or record["Name"] == f"{settings.aws_apigateway_domain_name}."
-                ):
-                    return record
+    def get_or_create_hosted_zone(self, domain_name) -> str:
+        """
+        Return the hosted zone.
+        example return:
+            {
+                'HostedZone': {
+                    'Id': '/hostedzone/Z148QEXAMPLE8V',
+                    'Name': 'example.com.',
+                    'CallerReference': 'my hosted zone',
+                    'Config': {
+                        'Comment': 'This is my hosted zone',
+                        'PrivateZone': False
+                    },
+                    'ResourceRecordSetCount': 2
+                },
+                'DelegationSet': {
+                    'NameServers': [
+                        'ns-2048.awsdns-64.com',
+                        'ns-2049.awsdns-65.net',
+                        'ns-2050.awsdns-66.org',
+                        'ns-2051.awsdns-67.co.uk'
+                    ]
+                }
+            }
+        """
+        hosted_zone = self.get_hosted_zone(domain_name)
+        if hosted_zone:
+            return (hosted_zone, False)
+
+        smarter_settings.aws_route53_client.create_hosted_zone(
+            Name=domain_name,
+            CallerReference=str(time.time()),  # Unique string used to identify the request
+            HostedZoneConfig={"Comment": "Managed by Smarter", "PrivateZone": False},
+        )
+        hosted_zone = self.get_hosted_zone(domain_name)
+        logger.info("Created hosted zone %s %s", hosted_zone, domain_name)
+        return (hosted_zone, True)
+
+    def delete_hosted_zone(self, domain_name):
+
+        # Get the hosted zone id
+        hosted_zone_id = self.get_hosted_zone_id_for_domain(domain_name)
+
+        # Get all record sets
+        paginator = smarter_settings.aws_route53_client.get_paginator("list_resource_record_sets")
+        record_sets = []
+        for page in paginator.paginate(HostedZoneId=hosted_zone_id):
+            for record_set in page["ResourceRecordSets"]:
+                if record_set["Type"] not in ["NS", "SOA"]:
+                    record_sets.append(record_set)
+
+        # Delete all record sets
+        for record_set in record_sets:
+            smarter_settings.aws_route53_client.change_resource_record_sets(
+                HostedZoneId=hosted_zone_id,
+                ChangeBatch={"Changes": [{"Action": "DELETE", "ResourceRecordSet": record_set}]},
+            )
+
+        # Delete the hosted zone
+        smarter_settings.aws_route53_client.delete_hosted_zone(Id=hosted_zone_id)
+
+    def get_dns_record(self, hosted_zone_id: str, record_name: str, record_type: str) -> dict:
+        """
+        Return the DNS record from the hosted zone.
+        example return value:
+        {
+            "Name": "example.com.",
+            "Type": "A",
+            "TTL": 300,
+            "ResourceRecords": [
+                {
+                    "Value": "192.1.1.1"
+                    }
+                ]
+            }
+        """
+
+        def name_match(record_name, record) -> bool:
+            return record["Name"] == record_name or record["Name"] == f"{record_name}."
+
+        response = smarter_settings.aws_route53_client.list_resource_record_sets(HostedZoneId=hosted_zone_id)
+        for record in response["ResourceRecordSets"]:
+            if (
+                name_match(record_name=record_name, record=record)
+                and str(record["Type"]).upper() == record_type.upper()
+            ):
+                print("get_dns_record() matched record: ", record)
+                return record
         return None
+
+    def get_ns_records(self, hosted_zone_id: str):
+        """
+        Return the NS records from the hosted zone.
+        example return value:
+        [
+            {
+                "Value": "ns-2048.awsdns-64.com"
+            },
+            {
+                "Value": "ns-2049.awsdns-65.net"
+            },
+            {
+                "Value": "ns-2050.awsdns-66.org"
+            },
+            {
+                "Value": "ns-2051.awsdns-67.co.uk"
+            }
+        ]
+        """
+        response = smarter_settings.aws_route53_client.list_resource_record_sets(HostedZoneId=hosted_zone_id)
+        for record in response["ResourceRecordSets"]:
+            if record["Type"] == "NS":
+                return record["ResourceRecords"]
+        return None
+
+    # pylint: disable=too-many-arguments
+    def get_or_create_dns_record(
+        self,
+        hosted_zone_id: str,
+        record_name: str,
+        record_type: str,
+        record_ttl: int,
+        record_alias_target: dict = None,
+        record_value=None,
+    ) -> str:
+        def match_values(record_value, record) -> bool:
+            record_value = record_value or []
+            if isinstance(record_value, list):
+                resource_records = record.get("ResourceRecords", [])
+                record_values = [item["Value"] for item in resource_records]
+                record_value_values = [item["Value"] for item in record_value if "Value" in item]
+                return set(record_values) == set(record_value_values)
+            return False
+
+        def match_alias(record_alias_target, record) -> bool:
+            """
+            Match the alias target
+            'AliasTarget': {'HostedZoneId': 'Z3AADJGX6KTTL2', 'DNSName': 'a1db5dfcf202b4a63bdcd0f3c03e769f-769707598.us-east-2.elb.amazonaws.com.', 'EvaluateTargetHealth': True}}
+            """
+            record_alias = record.get("AliasTarget", None)
+            if not record_alias_target and not record_alias:
+                return False
+            if record_alias_target == record_alias:
+                return True
+            return False
+
+        record = self.get_dns_record(hosted_zone_id=hosted_zone_id, record_name=record_name, record_type=record_type)
+        if record:
+            if match_values(record_value, record) or match_alias(record_alias_target, record):
+                return record
+            logger.info("Updating %s %s record", record_name, record_type)
+        else:
+            logger.info("Creating %s %s record", record_name, record_type)
+
+        change_batch = {
+            "Changes": [
+                {
+                    "Action": "CREATE",
+                    "ResourceRecordSet": {
+                        "Name": record_name,
+                        "Type": record_type,
+                    },
+                }
+            ]
+        }
+        if record_alias_target:
+            change_batch["Changes"][0]["ResourceRecordSet"]["AliasTarget"] = record_alias_target
+        if record_value:
+            if isinstance(record_value, list):
+                change_batch["Changes"][0]["ResourceRecordSet"]["ResourceRecords"] = [
+                    {"Value": item} for item in record_value
+                ]
+            else:
+                change_batch["Changes"][0]["ResourceRecordSet"]["ResourceRecords"] = [{"Value": f'"{record_value}"'}]
+            change_batch["Changes"][0]["ResourceRecordSet"]["TTL"] = record_ttl
+
+        smarter_settings.aws_route53_client.change_resource_record_sets(
+            HostedZoneId=hosted_zone_id,
+            ChangeBatch=change_batch,
+        )
+        logger.info("Posting aws route53 change batch %s", change_batch)
+        record = self.get_dns_record(hosted_zone_id=hosted_zone_id, record_name=record_name, record_type=record_type)
+        logger.info("Posted aws routed53 DNS record %s", change_batch)
+        return record
+
+    def get_hosted_zone_id(self, hosted_zone) -> str:
+        """Return the hosted zone id."""
+        if hosted_zone:
+            return hosted_zone["Id"].split("/")[-1]
+        return None
+
+    def get_hosted_zone_id_for_domain(self, domain_name) -> str:
+        """Return the hosted zone id for the domain."""
+        hosted_zone, _ = self.get_or_create_hosted_zone(domain_name)
+        return self.get_hosted_zone_id(hosted_zone)
+
+    def get_environment_A_record(self, domain: str = None) -> dict:
+        """
+        Return the DNS A record for the environment domain.
+        example return value:
+        {
+            "Name": "example.com.",
+            "Type": "A",
+            "TTL": 300,
+            "ResourceRecords": [{"Value": "192.1.1.1"}]
+        }
+        """
+        domain = domain or smarter_settings.environment_domain
+        hosted_zone, _ = aws_helper.get_or_create_hosted_zone(domain_name=domain)
+        hosted_zone_id = aws_helper.get_hosted_zone_id(hosted_zone)
+        environment_A_record = aws_helper.get_dns_record(
+            hosted_zone_id=hosted_zone_id, record_name=domain, record_type="A"
+        )
+        return environment_A_record
 
 
 class SingletonConfig:
@@ -275,8 +486,8 @@ class SingletonConfig:
 
     @property
     def config(self) -> AWSInfrastructureConfig:
-        """Return the settings"""
+        """Return the smarter_settings"""
         return self._config  # pylint: disable=E1101
 
 
-aws_infrastructure_config = SingletonConfig().config
+aws_helper = SingletonConfig().config

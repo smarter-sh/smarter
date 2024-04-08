@@ -18,6 +18,7 @@ from .base import *
 
 print("Loading smarter.settings.local")
 ENVIRONMENT_DOMAIN = "local.platform.smarter.sh"
+CUSTOMER_API_DOMAIN = "local.api.smarter.sh"
 ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 # dev only:
