@@ -426,7 +426,7 @@ class AWSInfrastructureConfig:
         if record_value:
             if isinstance(record_value, list):
                 change_batch["Changes"][0]["ResourceRecordSet"]["ResourceRecords"] = [
-                    {"Value": item} for item in record_value
+                    {"Value": item["Value"]} for item in record_value if "Value" in item
                 ]
             else:
                 change_batch["Changes"][0]["ResourceRecordSet"]["ResourceRecords"] = [{"Value": f'"{record_value}"'}]
