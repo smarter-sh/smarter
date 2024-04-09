@@ -104,10 +104,21 @@ class AccountContact(TimestampedModel):
     email = models.EmailField()
     phone = models.CharField(max_length=20, blank=True, null=True)
     is_primary = models.BooleanField(default=False)
+    welcomed = models.BooleanField(default=False)
 
-    def send_email(self, subject: str, body: str, html: bool = False, from_email: str = None) -> None:
-        """Send an email to the contact."""
-        EmailHelper.send_email(subject=subject, to=self.email, body=body, html=html, from_email=from_email)
+    def send_email(subject: str, to: str, body: str, html: bool = False, from_email: str = None):
+
+        EmailHelper.send_email(subject=subject, to=to, body=body, html=html, from_email=from_email)
+
+    def send_welcome_email(self) -> None:
+        """Send a welcome email to the contact."""
+
+        with open("./assets/html/welcome.html", "r", encoding="utf-8") as welcome_email_template:
+            html_template = welcome_email_template.read()
+
+        subject = "Welcome to Smarter!"
+        body = html_template.format(first_name=self.first_name or "there")
+        self.send_email(subject, body, html=True)
 
     @classmethod
     def get_primary_contact(cls, account: Account) -> "AccountContact":
@@ -137,6 +148,10 @@ class AccountContact(TimestampedModel):
         if self.is_primary:
             # ensure that only one primary contact exists
             AccountContact.objects.filter(account=self.account, is_primary=True).update(is_primary=False)
+        if not self.welcomed:
+            self.send_welcome_email()
+            self.welcomed = True
+            self.save()
         super().save(*args, **kwargs)
 
     def __str__(self):

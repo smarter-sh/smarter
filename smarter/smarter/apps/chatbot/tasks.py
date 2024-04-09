@@ -31,16 +31,34 @@ logger = logging.getLogger(__name__)
 DEFAULT_TTL = 600
 CELERY_MAX_RETRIES = 3
 CELERY_RETRY_BACKOFF = True
+CELERY_TASK_QUEUE = "default_celery_task_queue"
 
 
-@app.task(autoretry_for=(Exception,), retry_backoff=CELERY_RETRY_BACKOFF, max_retries=CELERY_MAX_RETRIES)
+def aggregate_chatbot_history():
+    """summarize detail chatbot history into aggregate records."""
+
+    # FIX NOTE: implement me.
+    logger.info("Aggregating chatbot history.")
+
+
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=CELERY_RETRY_BACKOFF,
+    max_retries=CELERY_MAX_RETRIES,
+    queue=CELERY_TASK_QUEUE,
+)
 def create_chatbot_request(chatbot_id: int, request_data: dict):
     """Create a ChatBot request record."""
     chatbot = ChatBot.objects.get(id=chatbot_id)
     ChatBotRequests.objects.create(chatbot=chatbot, request_data=request_data)
 
 
-@app.task(autoretry_for=(Exception,), retry_backoff=CELERY_RETRY_BACKOFF, max_retries=CELERY_MAX_RETRIES)
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=CELERY_RETRY_BACKOFF,
+    max_retries=CELERY_MAX_RETRIES,
+    queue=CELERY_TASK_QUEUE,
+)
 def create_custom_domain(account_id: int, domain_name: str) -> bool:
     """
     Register a customer's custom domain name in AWS Route53
@@ -80,7 +98,12 @@ def create_custom_domain(account_id: int, domain_name: str) -> bool:
     return True
 
 
-@app.task(autoretry_for=(Exception,), retry_backoff=CELERY_RETRY_BACKOFF, max_retries=CELERY_MAX_RETRIES)
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=CELERY_RETRY_BACKOFF,
+    max_retries=CELERY_MAX_RETRIES,
+    queue=CELERY_TASK_QUEUE,
+)
 def create_custom_domain_dns_record(
     chatbot_custom_domain_id: int, record_name: str, record_type: str, record_value: str, record_ttl: int = 600
 ):
@@ -122,7 +145,12 @@ def create_custom_domain_dns_record(
 # optionally deployed to a custom domain.
 # ------------------------------------------------------------------------------
 # pylint: disable=too-many-locals
-@app.task(autoretry_for=(Exception,), retry_backoff=CELERY_RETRY_BACKOFF, max_retries=CELERY_MAX_RETRIES)
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=CELERY_RETRY_BACKOFF,
+    max_retries=CELERY_MAX_RETRIES,
+    queue=CELERY_TASK_QUEUE,
+)
 def verify_custom_domain(
     hosted_zone_id: int,
     sleep_interval: int = None,
@@ -220,7 +248,12 @@ def verify_custom_domain(
     return False
 
 
-@app.task(autoretry_for=(Exception,), retry_backoff=CELERY_RETRY_BACKOFF, max_retries=CELERY_MAX_RETRIES)
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=CELERY_RETRY_BACKOFF,
+    max_retries=CELERY_MAX_RETRIES,
+    queue=CELERY_TASK_QUEUE,
+)
 def verify_domain(domain_name: str, activate_chatbot: bool = False) -> bool:
     """Verify that an Internet domain name resolves to NS records."""
     sleep_interval = 300
@@ -262,6 +295,12 @@ def verify_domain(domain_name: str, activate_chatbot: bool = False) -> bool:
     return False
 
 
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=CELERY_RETRY_BACKOFF,
+    max_retries=CELERY_MAX_RETRIES,
+    queue=CELERY_TASK_QUEUE,
+)
 def create_domain_A_record(hostname: str, api_host_domain: str):
     """Create an A record for the API domain."""
 
@@ -301,7 +340,12 @@ def create_domain_A_record(hostname: str, api_host_domain: str):
             raise
 
 
-@app.task(autoretry_for=(Exception,), retry_backoff=CELERY_RETRY_BACKOFF, max_retries=CELERY_MAX_RETRIES)
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=CELERY_RETRY_BACKOFF,
+    max_retries=CELERY_MAX_RETRIES,
+    queue=CELERY_TASK_QUEUE,
+)
 def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     """Create a customer API default domain A record for a chatbot."""
     chatbot = ChatBot.objects.get(id=chatbot_id)
@@ -326,7 +370,12 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
         AccountContact.send_email_to_account(account=chatbot.account, subject=subject, body=body)
 
 
-@app.task(autoretry_for=(Exception,), retry_backoff=CELERY_RETRY_BACKOFF, max_retries=CELERY_MAX_RETRIES)
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=CELERY_RETRY_BACKOFF,
+    max_retries=CELERY_MAX_RETRIES,
+    queue=CELERY_TASK_QUEUE,
+)
 def deploy_custom_api(chatbot_id: int):
 
     chatbot = ChatBot.objects.get(id=chatbot_id)
