@@ -116,10 +116,10 @@ class ChatBotPlugins(TimestampedModel):
 
     @classmethod
     def plugins(cls, chatbot: ChatBot) -> List[Plugin]:
-        plugin_metas = cls.objects.filter(chatbot=chatbot).plugin_meta
+        chatbot_plugins = cls.objects.filter(chatbot=chatbot)
         retval = []
-        for plugin_meta in plugin_metas:
-            retval.append(Plugin(plugin_meta=plugin_meta))
+        for chatbot_plugin in chatbot_plugins:
+            retval.append(Plugin(plugin_meta=chatbot_plugin.plugin_meta))
         return retval
 
 
