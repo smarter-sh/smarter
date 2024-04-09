@@ -13,6 +13,8 @@ from knox.auth import TokenAuthentication
 from knox.models import AuthToken, AuthTokenManager
 from rest_framework.exceptions import AuthenticationFailed
 
+from smarter.common.email_helpers import EmailHelper
+
 # our stuff
 from smarter.common.model_utils import TimestampedModel
 
@@ -81,8 +83,73 @@ class Account(TimestampedModel):
         return str(self.company_name)
 
 
+class AccountContact(TimestampedModel):
+    """
+    Account contact model.
+
+    This model is used to store contact information for an account. The User model obviously has an email field, but
+    this model allows us to detach email list management from user management. This is useful for cases where we need
+    to send emails to a list of contacts who are not registered Smarter users, or, in cases where an account user
+    does not want to receive Smarter system emails.
+    """
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        verbose_name = "Account Contact"
+        verbose_name_plural = "Account Contacts"
+
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="contacts")
+    first_name = models.CharField(max_length=255)
+    last_name = models.CharField(max_length=255)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    is_primary = models.BooleanField(default=False)
+
+    def send_email(self, subject: str, body: str, html: bool = False, from_email: str = None) -> None:
+        """Send an email to the contact."""
+        EmailHelper.send_email(subject=subject, to=self.email, body=body, html=html, from_email=from_email)
+
+    @classmethod
+    def get_primary_contact(cls, account: Account) -> "AccountContact":
+        """Get the primary contact for an account."""
+        return cls.objects.filter(account=account, is_primary=True).first()
+
+    # pylint: disable=too-many-arguments
+    @classmethod
+    def send_email_to_account(
+        cls, account: Account, subject: str, body: str, html: bool = False, from_email: str = None
+    ) -> None:
+        """Send an email to all contacts of an account."""
+        contacts = cls.objects.filter(account=account)
+        for contact in contacts:
+            contact.send_email(subject, body, html=html, from_email=from_email)
+
+    # pylint: disable=too-many-arguments
+    @classmethod
+    def send_email_to_primary_contact(
+        cls, account: Account, subject: str, body: str, html: bool = False, from_email: str = None
+    ) -> None:
+        """Send an email to all contacts of an account."""
+        contact = cls.get_primary_contact(account)
+        contact.send_email(subject, body, html=html, from_email=from_email)
+
+    def save(self, *args, **kwargs):
+        if self.is_primary:
+            # ensure that only one primary contact exists
+            AccountContact.objects.filter(account=self.account, is_primary=True).update(is_primary=False)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.first_name + " " + self.last_name
+
+
 class UserProfile(TimestampedModel):
-    """User profile model."""
+    """
+    User profile model.
+
+    This model creates a relationship between a Django User and an Account, making Account a higher-level entity where we can
+    concentrate billing, identity and Smarter resource ownership.
+    """
 
     # pylint: disable=missing-class-docstring
     class Meta:
@@ -95,6 +162,13 @@ class UserProfile(TimestampedModel):
     user = models.OneToOneField(User, unique=True, db_index=True, related_name="user_profile", on_delete=models.CASCADE)
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="users")
 
+    def add_to_account_contacts(self, is_primary: bool = False):
+        """Add the user to the account contact list."""
+        account_contact, _ = AccountContact.objects.get_or_create(account=self.account, email=self.user.email)
+        if account_contact.is_primary != is_primary:
+            account_contact.is_primary = is_primary
+            account_contact.save()
+
     def save(self, *args, **kwargs):
         is_new = self.pk is None
 
@@ -102,10 +176,32 @@ class UserProfile(TimestampedModel):
             raise ValueError("User and Account cannot be null")
         super().save(*args, **kwargs)
         if is_new:
+            # ensure that at least one person is on the account contact list
+            is_primary = AccountContact.objects.filter(account=self.account, is_primary=True).count() == 0
+            self.add_to_account_contacts(is_primary=is_primary)
+
             logger.debug(
                 "New user profile created for %s %s. Sending signal.", self.account.company_name, self.user.email
             )
             new_user_created.send(sender=self.__class__, user_profile=self)
+
+    @classmethod
+    def admin_for_account(cls, account: Account) -> User:
+        """Return the designated user for the account."""
+        try:
+            return cls.objects.filter(account=account, user__is_staff=True).order_by("user__id").first().user
+        except cls.DoesNotExist:
+            msg = "Misconfigured: could not find a designated admin user for account %s.", account
+
+        try:
+            user = cls.objects.filter(account=account).order_by("user__id").first().user
+            msg += " Reverting to first encountered user: %s", user.get_username
+            logger.warning(msg)
+            return user
+        except cls.DoesNotExist as e:
+            msg = "Misconfigured: could not find any User for account %s", account
+            logger.error(msg)
+            raise e(msg) from e
 
     def __str__(self):
         return str(self.account.company_name) + "-" + str(self.user.email or self.user.username)

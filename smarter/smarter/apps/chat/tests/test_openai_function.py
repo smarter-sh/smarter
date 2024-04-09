@@ -106,7 +106,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         plugin_json["user_profile"] = self.user_profile
 
         self.plugin = Plugin(data=plugin_json)
-        ChatBotPlugins.objects.create(chatbot=self.chatbot, plugin=self.plugin.plugin_meta)
+        ChatBotPlugins.objects.create(chatbot=self.chatbot, plugin_meta=self.plugin.plugin_meta)
 
         self.client = Client()
         self.client.force_login(self.user)

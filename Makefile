@@ -105,7 +105,7 @@ docker-init:
 		"python manage.py makemigrations && python manage.py migrate && \
 		python manage.py create_user --username admin --email admin@smarter.sh --password smarter --admin && \
 		python manage.py add_plugin_examples admin && \
-		python manage.py initialize_api_infrastructure && \
+		python manage.py verify_api_infrastructure && \
 		python manage.py deploy_demo_api && \
 		python manage.py seed_chat_history" && \
 	echo "Docker and Smarter are initialized." && \

@@ -865,7 +865,7 @@ class Settings(BaseSettings):
         pattern = VALID_DOMAIN_PATTERN
         if v not in [None, ""]:
             if not re.match(pattern, v):
-                raise ValueError("Invalid domain name")
+                raise ValueError(f"Invalid domain name: {v}")
         return v
 
     @field_validator("smtp_from_email")
@@ -887,7 +887,7 @@ class Settings(BaseSettings):
         pattern = VALID_DOMAIN_PATTERN
         if v not in [None, ""]:
             if not re.match(pattern, v):
-                raise ValueError("Invalid domain name")
+                raise ValueError(f"Invalid domain name: {v}")
         return v
 
     @field_validator("smtp_password")

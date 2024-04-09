@@ -12,9 +12,10 @@ import time
 import botocore
 import dns.resolver
 
-from smarter.apps.account.models import Account
+from smarter.apps.account.models import Account, AccountContact
 from smarter.common.aws import aws_helper
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SMARTER_CUSTOMER_SUPPORT
 from smarter.smarter_celery import app
 
 from .models import ChatBot, ChatBotCustomDomain, ChatBotCustomDomainDNS
@@ -116,11 +117,12 @@ def verify_custom_domain(
     Verify the NS records of an AWS Route53 hosted zone. Custom domains
     are periodically reverified to ensure that the NS records are still valid.
     """
+    HOURS = 24
     hosted_zone = smarter_settings.aws_route53_client.get_hosted_zone(Id=hosted_zone_id)
     domain_name = hosted_zone["HostedZone"]["Name"]
     aws_ns_records = aws_helper.get_ns_records(hosted_zone_id=hosted_zone_id)
     sleep_interval = sleep_interval or 1800
-    max_attempts = max_attempts or 24 * (3600 / sleep_interval)
+    max_attempts = max_attempts or HOURS * (3600 / sleep_interval)
 
     for i in range(max_attempts):  # 24 hours * attempts per hour * 2 days
         if i > 0:
@@ -154,16 +156,49 @@ def verify_custom_domain(
                     hosted_zone.save()
                 except ChatBotCustomDomain.DoesNotExist:
                     pass
+
+                # send an email to the account owner to notify them that the domain has been verified
+                subject = f"Domain Verification for {domain_name} Successful"
+                body = f"""Your domain {domain_name} has been verified.\n\n
+                Your custom domain is now active and ready to use with your ChatBot.
+                If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT}."""
+                account = ChatBotCustomDomain.objects.get(hosted_zone_id=hosted_zone_id).account
+                AccountContact.send_email_to_account(account=account, subject=subject, body=body)
+
+                msg = (
+                    "Domain %s has been verified for account %s %s",
+                    domain_name,
+                    account.company_name,
+                    account.account_number,
+                )
+                logger.info(msg)
+
                 return True
 
         # If we get here, then the hosted zone is not verified
-        # and we should update the database to reflect that.
+        # and we should update the custom domain record to reflect that.
         try:
             hosted_zone = ChatBotCustomDomain.objects.get(aws_hosted_zone_id=hosted_zone_id, is_verified=True)
             hosted_zone.is_verified = False
             hosted_zone.save()
         except ChatBotCustomDomain.DoesNotExist:
             continue
+
+    # send an email to the account owner to notify them that the domain verification failed
+    subject = f"Domain Verification Failure for {domain_name}"
+    body = f"""We were unable to verify your domain {domain_name}.\n\n
+    We made {max_attempts} attempts over a period of {HOURS} hours to verify the domain.
+    If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT}."""
+    account = ChatBotCustomDomain.objects.get(hosted_zone_id=hosted_zone_id).account
+    AccountContact.send_email_to_account(account=account, subject=subject, body=body)
+
+    msg = (
+        "Domain verification failed for domain %s for account %s %s",
+        domain_name,
+        account.company_name,
+        account.account_number,
+    )
+    logger.error(msg)
 
     return False
 
@@ -264,6 +299,14 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
         chatbot.deployed = True
         chatbot.save()
         logger.info("Chatbot %s has been deployed to %s", chatbot.name, domain_name)
+
+        # send an email to the account owner to notify them that the chatbot has been deployed
+        subject = f"Chatbot {chatbot.name} has been deployed"
+        body = f"""Your chatbot {chatbot.name} has been deployed to domain {domain_name} and is now activated
+        and able to respond to prompts.\n\n
+        If you also created a custom domain for your chatbot then you'll be separately notified once it has been verified.
+        If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT}."""
+        AccountContact.send_email_to_account(account=chatbot.account, subject=subject, body=body)
 
 
 @app.task(autoretry_for=(Exception,), retry_backoff=True, max_retries=3)

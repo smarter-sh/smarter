@@ -2,13 +2,15 @@
 # pylint: disable=W0613,C0115
 """All models for the OpenAI Function Calling API app."""
 import re
+from typing import List, Type
 
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from smarter.apps.account.models import Account, APIKey
+from smarter.apps.account.models import Account, APIKey, UserProfile
 from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.plugin.plugin import Plugin
 
 # our stuff
 from smarter.common.conf import settings as smarter_settings
@@ -44,7 +46,7 @@ class ChatBotCustomDomain(TimestampedModel):
     def save(self, *args, **kwargs):
         if self.domain_name:
             if re.match(VALID_DOMAIN_PATTERN, self.domain_name) is None:
-                raise ValidationError("Invalid domain name")
+                raise ValidationError(f"Invalid domain name: {self.domain_name}")
         super().save(*args, **kwargs)
 
 
@@ -70,7 +72,7 @@ class ChatBot(TimestampedModel):
     def save(self, *args, **kwargs):
         if not self.custom_domain:
             if re.match(VALID_DOMAIN_PATTERN, self.hostname) is None:
-                raise ValidationError("Invalid domain name")
+                raise ValidationError(f"Invalid domain name {self.hostname}")
         super().save(*args, **kwargs)
 
     @property
@@ -99,7 +101,26 @@ class ChatBotPlugins(TimestampedModel):
     """List of Plugins for a ChatBot"""
 
     chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE)
-    plugin = models.ForeignKey(PluginMeta, on_delete=models.CASCADE)
+    plugin_meta = models.ForeignKey(PluginMeta, on_delete=models.CASCADE)
+
+    @property
+    def plugin(self) -> Plugin:
+        return Plugin(plugin_meta=self.plugin_meta)
+
+    @classmethod
+    def load(cls: Type["ChatBotPlugins"], chatbot: ChatBot, data) -> "ChatBotPlugins":
+        """Load (aka import) a plugin from a data file in yaml or json format."""
+        user_profile = UserProfile.admin_for_account(chatbot.account)
+        plugin = Plugin(data=data, user_profile=user_profile)
+        return cls.objects.create(chatbot=chatbot, plugin_meta=plugin.meta)
+
+    @classmethod
+    def plugins(cls, chatbot: ChatBot) -> List[Plugin]:
+        plugin_metas = cls.objects.filter(chatbot=chatbot).plugin_meta
+        retval = []
+        for plugin_meta in plugin_metas:
+            retval.append(Plugin(plugin_meta=plugin_meta))
+        return retval
 
 
 class ChatBotFunctions(TimestampedModel):

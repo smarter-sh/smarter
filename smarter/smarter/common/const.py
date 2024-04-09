@@ -17,6 +17,7 @@ SMARTER_CUSTOMER_API_SUBDOMAIN = "api"
 SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN = "platform"
 SMARTER_COMPANY_NAME = "Smarter"
 SMARTER_DEMO_API_NAME = "demo-api"
+SMARTER_CUSTOMER_SUPPORT = "support@smarter.sh"
 
 VALID_ACCOUNT_NUMBER_PATTERN = r"^\d{4}-\d{4}-\d{4}$"
 VALID_DOMAIN_PATTERN = r"(?:[a-z0-9](?:[a-z0-9-_]{0,61}[a-z0-9])?\.)+(?:[a-z0-9-](?:[a-z0-9-_]{0,61}[a-z0-9])?\.)+[a-z0-9-][a-z0-9-_]{0,61}[a-z0-9]"
