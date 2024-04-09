@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 """Django Signal Receivers for chat app."""
 # pylint: disable=W0613,C0115
-import json
 import logging
 
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
+
+from smarter.common.console_helpers import formatted_json, formatted_text
 
 from .models import ChatHistory, ChatToolCallHistory, PluginUsageHistory
 from .signals import (
@@ -24,26 +25,6 @@ from .signals import (
 User = get_user_model()
 
 logger = logging.getLogger(__name__)
-
-
-def formatted_json(json_obj: json) -> str:
-    pretty_json = json.dumps(json_obj, indent=4)
-    return f"\033[32m{pretty_json}\033[0m"
-
-
-def formatted_text(text: str) -> str:
-
-    # bright green
-    # return f"\033[92m{text}\033[0m"
-
-    # regular green
-    # return f"\033[32m{text}\033[0m"
-
-    # dark red
-    # return f"\033[31m{text}\033[0m"
-
-    # bold and dark red
-    return f"\033[1;31m{text}\033[0m"
 
 
 @receiver(chat_invoked, dispatch_uid="chat_invoked")
