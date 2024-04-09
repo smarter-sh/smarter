@@ -13,7 +13,7 @@ from smarter.common.const import SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN
 class Command(BaseCommand):
     """Verify AWS resources for hosting customer api's."""
 
-    log_prefix = "manage.py initialize_api_infrastructure:"
+    log_prefix = "manage.py verify_api_infrastructure:"
 
     def verify(self, domain: str):
         """
@@ -85,4 +85,4 @@ class Command(BaseCommand):
         self.verify(domain=smarter_settings.customer_api_domain)
         self.verify(domain=smarter_settings.environment_domain)
         print("*" * 80)
-        print(f"{self.log_prefix} aws infrastructure for customer api hosting is initialized and configured.")
+        print(f"{self.log_prefix} success: aws infrastructure for customer api hosting is verified.")
