@@ -18,15 +18,29 @@ from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CUSTOMER_SUPPORT
 from smarter.smarter_celery import app
 
-from .models import ChatBot, ChatBotCustomDomain, ChatBotCustomDomainDNS
+from .models import (
+    ChatBot,
+    ChatBotCustomDomain,
+    ChatBotCustomDomainDNS,
+    ChatBotRequests,
+)
 
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_TTL = 600
+CELERY_MAX_RETRIES = 3
+CELERY_RETRY_BACKOFF = True
 
 
-@app.task(autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+@app.task(autoretry_for=(Exception,), retry_backoff=CELERY_RETRY_BACKOFF, max_retries=CELERY_MAX_RETRIES)
+def create_chatbot_request(chatbot_id: int, request_data: dict):
+    """Create a ChatBot request record."""
+    chatbot = ChatBot.objects.get(id=chatbot_id)
+    ChatBotRequests.objects.create(chatbot=chatbot, request_data=request_data)
+
+
+@app.task(autoretry_for=(Exception,), retry_backoff=CELERY_RETRY_BACKOFF, max_retries=CELERY_MAX_RETRIES)
 def create_custom_domain(account_id: int, domain_name: str) -> bool:
     """
     Register a customer's custom domain name in AWS Route53
@@ -66,7 +80,7 @@ def create_custom_domain(account_id: int, domain_name: str) -> bool:
     return True
 
 
-@app.task(autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+@app.task(autoretry_for=(Exception,), retry_backoff=CELERY_RETRY_BACKOFF, max_retries=CELERY_MAX_RETRIES)
 def create_custom_domain_dns_record(
     chatbot_custom_domain_id: int, record_name: str, record_type: str, record_value: str, record_ttl: int = 600
 ):
@@ -107,7 +121,7 @@ def create_custom_domain_dns_record(
 # API's are deployed to the customer's default domain in Smarter, and are also
 # optionally deployed to a custom domain.
 # ------------------------------------------------------------------------------
-@app.task(autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+@app.task(autoretry_for=(Exception,), retry_backoff=CELERY_RETRY_BACKOFF, max_retries=CELERY_MAX_RETRIES)
 def verify_custom_domain(
     hosted_zone_id: int,
     sleep_interval: int = None,
@@ -203,7 +217,7 @@ def verify_custom_domain(
     return False
 
 
-@app.task(autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+@app.task(autoretry_for=(Exception,), retry_backoff=CELERY_RETRY_BACKOFF, max_retries=CELERY_MAX_RETRIES)
 def verify_domain(domain_name: str, activate_chatbot: bool = False) -> bool:
     """Verify that an Internet domain name resolves to NS records."""
     sleep_interval = 300
@@ -284,7 +298,7 @@ def create_domain_A_record(hostname: str, api_host_domain: str):
             raise
 
 
-@app.task(autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+@app.task(autoretry_for=(Exception,), retry_backoff=CELERY_RETRY_BACKOFF, max_retries=CELERY_MAX_RETRIES)
 def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     """Create a customer API default domain A record for a chatbot."""
     chatbot = ChatBot.objects.get(id=chatbot_id)
@@ -309,7 +323,7 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
         AccountContact.send_email_to_account(account=chatbot.account, subject=subject, body=body)
 
 
-@app.task(autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+@app.task(autoretry_for=(Exception,), retry_backoff=CELERY_RETRY_BACKOFF, max_retries=CELERY_MAX_RETRIES)
 def deploy_custom_api(chatbot_id: int):
 
     chatbot = ChatBot.objects.get(id=chatbot_id)

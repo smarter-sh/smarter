@@ -135,3 +135,11 @@ class ChatBotFunctions(TimestampedModel):
 
     chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE)
     name = models.CharField(max_length=255, choices=CHOICES, blank=True, null=True)
+
+
+class ChatBotRequests(TimestampedModel):
+    """List of Requests for a ChatBot"""
+
+    chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE)
+    request = models.JSONField(blank=True, null=True)
+    is_aggregation = models.BooleanField(default=False, blank=True, null=True)

@@ -2,11 +2,12 @@
 # pylint: disable=W0613
 """Django signal receivers for plugin app."""
 
-import json
 import logging
 
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
+
+from smarter.common.console_helpers import formatted_json, formatted_text
 
 from .models import PluginSelectorHistory
 from .plugin import Plugin
@@ -24,16 +25,6 @@ from .signals import (
 
 
 logger = logging.getLogger(__name__)
-
-
-def formatted_json(json_obj: json) -> str:
-    pretty_json = json.dumps(json_obj, indent=4)
-    return f"\033[32m{pretty_json}\033[0m"
-
-
-def formatted_text(text: str) -> str:
-    # bold and dark red
-    return f"\033[1;31m{text}\033[0m"
 
 
 @receiver(plugin_created, dispatch_uid="plugin_created")
