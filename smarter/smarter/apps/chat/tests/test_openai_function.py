@@ -25,7 +25,6 @@ if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.chatbot.models import ChatBot, ChatBotPlugins
 from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.plugin import Plugin
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
@@ -98,7 +97,6 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         self.user = User.objects.create(username=username, password="12345")
         self.account = Account.objects.create(company_name="Test Account")
         self.user_profile = UserProfile.objects.create(user=self.user, account=self.account)
-        self.chatbot = ChatBot.objects.create(account=self.account, name="test_openai_function")
 
         config_path = get_test_file_path("plugins/everlasting-gobstopper.yaml")
         with open(config_path, "r", encoding="utf-8") as file:
@@ -106,7 +104,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         plugin_json["user_profile"] = self.user_profile
 
         self.plugin = Plugin(data=plugin_json)
-        ChatBotPlugins.objects.create(chatbot=self.chatbot, plugin_meta=self.plugin.plugin_meta)
+        self.plugins = [self.plugin]
 
         self.client = Client()
         self.client.force_login(self.user)
@@ -206,7 +204,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         event_about_gobstoppers = get_test_file("json/prompt_about_everlasting_gobstoppers.json")
 
         try:
-            response = handler(chatbot=self.chatbot, user=self.user, data=event_about_gobstoppers)
+            response = handler(plugins=self.plugins, user=self.user, data=event_about_gobstoppers)
             sleep(1)
         except Exception as error:
             self.fail(f"handler() raised {error}")
@@ -240,7 +238,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         event_about_weather = get_test_file("json/prompt_about_weather.json")
 
         try:
-            response = handler(chatbot=self.chatbot, user=self.user, data=event_about_weather)
+            response = handler(plugins=self.plugins, user=self.user, data=event_about_weather)
         except Exception as error:
             self.fail(f"handler() raised {error}")
         self.check_response(response)
@@ -251,7 +249,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         event_about_recipes = get_test_file("json/prompt_about_recipes.json")
 
         try:
-            response = handler(chatbot=self.chatbot, user=self.user, data=event_about_recipes)
+            response = handler(plugins=self.plugins, user=self.user, data=event_about_recipes)
         except Exception as error:
             self.fail(f"handler() raised {error}")
         self.check_response(response)
