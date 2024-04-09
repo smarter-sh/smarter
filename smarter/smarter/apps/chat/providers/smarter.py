@@ -4,6 +4,7 @@
 import json
 import logging
 from http import HTTPStatus
+from typing import List
 
 import openai
 from django.contrib.auth import get_user_model
@@ -26,7 +27,6 @@ from smarter.apps.chat.signals import (
     chat_response_failure,
     chat_response_success,
 )
-from smarter.apps.chatbot.models import ChatBot, ChatBotPlugins
 from smarter.apps.plugin.plugin import Plugin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import VALID_CHAT_COMPLETION_MODELS, OpenAIResponseCodes
@@ -52,13 +52,13 @@ openai.api_key = smarter_settings.openai_api_key.get_secret_value()
 
 
 # pylint: disable=too-many-locals,too-many-statements
-def handler(chatbot: ChatBot, user: User, data: dict):
+def handler(plugins: List[Plugin], user: User, data: dict):
     """
     Chat prompt handler. Responsible for processing incoming requests and
     invoking the appropriate OpenAI API endpoint based on the contents of
     the request.
     """
-    chat_invoked.send(sender=handler, user=user, data=data, chatbot=chatbot)
+    chat_invoked.send(sender=handler, user=user, data=data)
     weather_tool = weather_tool_factory()
     tools = [weather_tool]
     available_functions = {
@@ -73,7 +73,7 @@ def handler(chatbot: ChatBot, user: User, data: dict):
 
         # does the prompt have anything to do with any of the search terms defined in a plugin?
         # FIX NOTE: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_tokens
-        for plugin in ChatBotPlugins().plugins(chatbot=chatbot):
+        for plugin in plugins:
             if plugin.selected(user=user, messages=messages):
                 model = plugin.plugin_prompt.model
                 temperature = plugin.plugin_prompt.temperature

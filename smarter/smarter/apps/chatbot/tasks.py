@@ -121,6 +121,7 @@ def create_custom_domain_dns_record(
 # API's are deployed to the customer's default domain in Smarter, and are also
 # optionally deployed to a custom domain.
 # ------------------------------------------------------------------------------
+# pylint: disable=too-many-locals
 @app.task(autoretry_for=(Exception,), retry_backoff=CELERY_RETRY_BACKOFF, max_retries=CELERY_MAX_RETRIES)
 def verify_custom_domain(
     hosted_zone_id: int,
@@ -165,9 +166,9 @@ def verify_custom_domain(
                 # if this is a customer custom domain, we should update the database to reflect that
                 # the domain is verified.
                 try:
-                    hosted_zone = ChatBotCustomDomain.objects.get(aws_hosted_zone_id=hosted_zone_id)
-                    hosted_zone.is_verified = True
-                    hosted_zone.save()
+                    custom_domain = ChatBotCustomDomain.objects.get(aws_hosted_zone_id=hosted_zone_id)
+                    custom_domain.is_verified = True
+                    custom_domain.save()
                 except ChatBotCustomDomain.DoesNotExist:
                     pass
 
@@ -176,16 +177,18 @@ def verify_custom_domain(
                 body = f"""Your domain {domain_name} has been verified.\n\n
                 Your custom domain is now active and ready to use with your ChatBot.
                 If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT}."""
-                account = ChatBotCustomDomain.objects.get(hosted_zone_id=hosted_zone_id).account
-                AccountContact.send_email_to_account(account=account, subject=subject, body=body)
-
-                msg = (
-                    "Domain %s has been verified for account %s %s",
-                    domain_name,
-                    account.company_name,
-                    account.account_number,
-                )
-                logger.info(msg)
+                try:
+                    account = ChatBotCustomDomain.objects.get(aws_hosted_zone_id=hosted_zone_id).account
+                    AccountContact.send_email_to_account(account=account, subject=subject, body=body)
+                    msg = (
+                        "Domain %s has been verified for account %s %s",
+                        domain_name,
+                        account.company_name,
+                        account.account_number,
+                    )
+                    logger.info(msg)
+                except ChatBotCustomDomain.DoesNotExist:
+                    pass
 
                 return True
 

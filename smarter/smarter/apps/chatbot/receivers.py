@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Django Signal Receivers for chat app."""
+"""Django Signal Receivers for chatbot."""
 # pylint: disable=W0613,C0115
 import json
 import logging
@@ -19,15 +19,18 @@ logger = logging.getLogger(__name__)
 
 @receiver(chatbot_called, dispatch_uid="chatbot_called")
 def handle_chatbot_called(sender, **kwargs):
-    """Handle chat invoked signal."""
+    """Handle chatbot_called signal."""
 
     chatbot: ChatBot = kwargs.get("chatbot")
     logger.info("%s signal received for chatbot_called %s", formatted_text("chatbot_called"), chatbot.hostname)
 
+    request: HttpRequest = kwargs.get("request")
     try:
-        request: HttpRequest = kwargs.get("request")
         request_data = json.loads(request.body)
     except json.JSONDecodeError:
-        request_data = None
+        logger.error("JSONDecodeError raised while attempting to extract request body from %s", chatbot.hostname)
+        request_data = {
+            "JSONDecodeError": "JSONDecodeError raised while attempting to extract request body",
+        }
 
     create_chatbot_request.delay(chatbot.id, request_data)
