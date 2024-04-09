@@ -12,20 +12,35 @@ import time
 import botocore
 import dns.resolver
 
-from smarter.apps.account.models import Account
+from smarter.apps.account.models import Account, AccountContact
 from smarter.common.aws import aws_helper
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SMARTER_CUSTOMER_SUPPORT
 from smarter.smarter_celery import app
 
-from .models import ChatBot, ChatBotCustomDomain, ChatBotCustomDomainDNS
+from .models import (
+    ChatBot,
+    ChatBotCustomDomain,
+    ChatBotCustomDomainDNS,
+    ChatBotRequests,
+)
 
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_TTL = 600
+CELERY_MAX_RETRIES = 3
+CELERY_RETRY_BACKOFF = True
 
 
-@app.task(autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+@app.task(autoretry_for=(Exception,), retry_backoff=CELERY_RETRY_BACKOFF, max_retries=CELERY_MAX_RETRIES)
+def create_chatbot_request(chatbot_id: int, request_data: dict):
+    """Create a ChatBot request record."""
+    chatbot = ChatBot.objects.get(id=chatbot_id)
+    ChatBotRequests.objects.create(chatbot=chatbot, request_data=request_data)
+
+
+@app.task(autoretry_for=(Exception,), retry_backoff=CELERY_RETRY_BACKOFF, max_retries=CELERY_MAX_RETRIES)
 def create_custom_domain(account_id: int, domain_name: str) -> bool:
     """
     Register a customer's custom domain name in AWS Route53
@@ -65,7 +80,7 @@ def create_custom_domain(account_id: int, domain_name: str) -> bool:
     return True
 
 
-@app.task(autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+@app.task(autoretry_for=(Exception,), retry_backoff=CELERY_RETRY_BACKOFF, max_retries=CELERY_MAX_RETRIES)
 def create_custom_domain_dns_record(
     chatbot_custom_domain_id: int, record_name: str, record_type: str, record_value: str, record_ttl: int = 600
 ):
@@ -106,7 +121,8 @@ def create_custom_domain_dns_record(
 # API's are deployed to the customer's default domain in Smarter, and are also
 # optionally deployed to a custom domain.
 # ------------------------------------------------------------------------------
-@app.task(autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+# pylint: disable=too-many-locals
+@app.task(autoretry_for=(Exception,), retry_backoff=CELERY_RETRY_BACKOFF, max_retries=CELERY_MAX_RETRIES)
 def verify_custom_domain(
     hosted_zone_id: int,
     sleep_interval: int = None,
@@ -116,11 +132,12 @@ def verify_custom_domain(
     Verify the NS records of an AWS Route53 hosted zone. Custom domains
     are periodically reverified to ensure that the NS records are still valid.
     """
+    HOURS = 24
     hosted_zone = smarter_settings.aws_route53_client.get_hosted_zone(Id=hosted_zone_id)
     domain_name = hosted_zone["HostedZone"]["Name"]
     aws_ns_records = aws_helper.get_ns_records(hosted_zone_id=hosted_zone_id)
     sleep_interval = sleep_interval or 1800
-    max_attempts = max_attempts or 24 * (3600 / sleep_interval)
+    max_attempts = max_attempts or HOURS * (3600 / sleep_interval)
 
     for i in range(max_attempts):  # 24 hours * attempts per hour * 2 days
         if i > 0:
@@ -149,15 +166,34 @@ def verify_custom_domain(
                 # if this is a customer custom domain, we should update the database to reflect that
                 # the domain is verified.
                 try:
-                    hosted_zone = ChatBotCustomDomain.objects.get(aws_hosted_zone_id=hosted_zone_id)
-                    hosted_zone.is_verified = True
-                    hosted_zone.save()
+                    custom_domain = ChatBotCustomDomain.objects.get(aws_hosted_zone_id=hosted_zone_id)
+                    custom_domain.is_verified = True
+                    custom_domain.save()
                 except ChatBotCustomDomain.DoesNotExist:
                     pass
+
+                # send an email to the account owner to notify them that the domain has been verified
+                subject = f"Domain Verification for {domain_name} Successful"
+                body = f"""Your domain {domain_name} has been verified.\n\n
+                Your custom domain is now active and ready to use with your ChatBot.
+                If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT}."""
+                try:
+                    account = ChatBotCustomDomain.objects.get(aws_hosted_zone_id=hosted_zone_id).account
+                    AccountContact.send_email_to_account(account=account, subject=subject, body=body)
+                    msg = (
+                        "Domain %s has been verified for account %s %s",
+                        domain_name,
+                        account.company_name,
+                        account.account_number,
+                    )
+                    logger.info(msg)
+                except ChatBotCustomDomain.DoesNotExist:
+                    pass
+
                 return True
 
         # If we get here, then the hosted zone is not verified
-        # and we should update the database to reflect that.
+        # and we should update the custom domain record to reflect that.
         try:
             hosted_zone = ChatBotCustomDomain.objects.get(aws_hosted_zone_id=hosted_zone_id, is_verified=True)
             hosted_zone.is_verified = False
@@ -165,10 +201,26 @@ def verify_custom_domain(
         except ChatBotCustomDomain.DoesNotExist:
             continue
 
+    # send an email to the account owner to notify them that the domain verification failed
+    subject = f"Domain Verification Failure for {domain_name}"
+    body = f"""We were unable to verify your domain {domain_name}.\n\n
+    We made {max_attempts} attempts over a period of {HOURS} hours to verify the domain.
+    If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT}."""
+    account = ChatBotCustomDomain.objects.get(hosted_zone_id=hosted_zone_id).account
+    AccountContact.send_email_to_account(account=account, subject=subject, body=body)
+
+    msg = (
+        "Domain verification failed for domain %s for account %s %s",
+        domain_name,
+        account.company_name,
+        account.account_number,
+    )
+    logger.error(msg)
+
     return False
 
 
-@app.task(autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+@app.task(autoretry_for=(Exception,), retry_backoff=CELERY_RETRY_BACKOFF, max_retries=CELERY_MAX_RETRIES)
 def verify_domain(domain_name: str, activate_chatbot: bool = False) -> bool:
     """Verify that an Internet domain name resolves to NS records."""
     sleep_interval = 300
@@ -249,7 +301,7 @@ def create_domain_A_record(hostname: str, api_host_domain: str):
             raise
 
 
-@app.task(autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+@app.task(autoretry_for=(Exception,), retry_backoff=CELERY_RETRY_BACKOFF, max_retries=CELERY_MAX_RETRIES)
 def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     """Create a customer API default domain A record for a chatbot."""
     chatbot = ChatBot.objects.get(id=chatbot_id)
@@ -265,8 +317,16 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
         chatbot.save()
         logger.info("Chatbot %s has been deployed to %s", chatbot.name, domain_name)
 
+        # send an email to the account owner to notify them that the chatbot has been deployed
+        subject = f"Chatbot {chatbot.name} has been deployed"
+        body = f"""Your chatbot {chatbot.name} has been deployed to domain {domain_name} and is now activated
+        and able to respond to prompts.\n\n
+        If you also created a custom domain for your chatbot then you'll be separately notified once it has been verified.
+        If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT}."""
+        AccountContact.send_email_to_account(account=chatbot.account, subject=subject, body=body)
 
-@app.task(autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+
+@app.task(autoretry_for=(Exception,), retry_backoff=CELERY_RETRY_BACKOFF, max_retries=CELERY_MAX_RETRIES)
 def deploy_custom_api(chatbot_id: int):
 
     chatbot = ChatBot.objects.get(id=chatbot_id)
