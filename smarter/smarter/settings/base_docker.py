@@ -25,6 +25,8 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 CELERY_BROKER_URL = os.getenv(
     "CELERY_BROKER_URL", "redis://:smarter@smarter-redis-master.smarter-platform-dev.svc.cluster.local:6379/1"
 )
+CELERY_REDBEAT_REDIS_URL = CELERY_BROKER_URL
+CELERY_BEAT_SCHEDULER = "redbeat.RedBeatScheduler"
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
