@@ -4,6 +4,7 @@ import logging
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from typing import List, Union
 
 from django.conf import settings
 
@@ -15,12 +16,12 @@ class EmailHelper:
     """Helper class for sending emails."""
 
     @staticmethod
-    def send_email(subject, body, to, html=False, from_email=None):
+    def send_email(subject, body, to: Union[str, List[str]], html=False, from_email=None):
         """Send an email."""
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
         msg["From"] = from_email or settings.SMTP_FROM_EMAIL
-        msg["To"] = to
+        msg["To"] = to if isinstance(to, str) else ", ".join(to)
 
         part2 = MIMEText(body, "html") if html else MIMEText(body)
         msg.attach(part2)

@@ -26,6 +26,6 @@ class Command(BaseCommand):
             return
 
         for plugin in Plugins(account=account).plugins:
-            ChatBotPlugins.objects.create(chatbot=chatbot, plugin=plugin.plugin_meta)
+            ChatBotPlugins.objects.create(chatbot=chatbot, plugin_meta=plugin.plugin_meta)
 
         deploy_default_api.delay(chatbot_id=chatbot.id)

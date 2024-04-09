@@ -26,8 +26,8 @@ from smarter.apps.chat.signals import (
     chat_response_failure,
     chat_response_success,
 )
-from smarter.apps.chatbot.models import ChatBot
-from smarter.apps.plugin.plugin import Plugin, Plugins
+from smarter.apps.chatbot.models import ChatBot, ChatBotPlugins
+from smarter.apps.plugin.plugin import Plugin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import VALID_CHAT_COMPLETION_MODELS, OpenAIResponseCodes
 from smarter.common.exceptions import EXCEPTION_MAP
@@ -73,7 +73,7 @@ def handler(chatbot: ChatBot, user: User, data: dict):
 
         # does the prompt have anything to do with any of the search terms defined in a plugin?
         # FIX NOTE: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_tokens
-        for plugin in Plugins(chatbot=chatbot).plugins:
+        for plugin in ChatBotPlugins().plugins(chatbot=chatbot):
             if plugin.selected(user=user, messages=messages):
                 model = plugin.plugin_prompt.model
                 temperature = plugin.plugin_prompt.temperature

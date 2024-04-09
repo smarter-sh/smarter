@@ -19,6 +19,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
+        parser.add_argument("--account_number", type=str, help="The Smarter account number to which the user belongs")
         parser.add_argument("--username", type=str, help="The username for the new superuser")
         parser.add_argument("--email", type=str, help="The email address for the new superuser")
         parser.add_argument("--password", type=str, help="The password for the new superuser")
@@ -40,10 +41,16 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """create the superuser account."""
+        account_number = options["account_number"]
         username = options["username"]
         email = options["email"]
         password = options["password"]
         is_admin = options["admin"]
+
+        if account_number:
+            account = Account.objects.get(account_number=account_number)
+        else:
+            account, _ = Account.objects.get_or_create(company_name=SMARTER_COMPANY_NAME)
 
         if not password:
             password_length = 16
@@ -69,12 +76,12 @@ class Command(BaseCommand):
                 msg = "Admin user" if is_admin else "User" + f" {username} {email} has been created."
                 self.stdout.write(self.style.SUCCESS(msg))
                 self.stdout.write(self.style.SUCCESS(f"Password: {password}"))
+
             else:
                 user = self.change_password(username, password)
         else:
             self.stdout.write(self.style.ERROR("Username and email are required."))
 
-        account, _ = Account.objects.get_or_create(company_name=SMARTER_COMPANY_NAME)
         UserProfile.objects.get_or_create(user=User.objects.get(username=username), account=account)
 
         # ensure that the admin user has at least one auth token (api key)
