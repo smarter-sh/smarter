@@ -36,10 +36,7 @@ class TestDashboard(unittest.TestCase):
             state="TX",
             postal_code="12345",
         )
-        self.user_profile = UserProfile.objects.create(
-            user=self.user,
-            account=self.account,
-        )
+        self.user_profile = UserProfile.objects.create(user=self.user, account=self.account, is_test=True)
         self.client = Client()
         # self.client.login(username="testuser", password="12345")
         self.client.force_login(self.user)

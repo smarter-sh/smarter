@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 
 from smarter.apps.chatbot.models import ChatBotCustomDomain
 from smarter.apps.chatbot.tasks import verify_custom_domain
-from smarter.common.aws import aws_helper
+from smarter.common.aws_helpers import aws_helper
 
 
 # pylint: disable=E1101
@@ -27,7 +27,7 @@ class Command(BaseCommand):
         verify_custom_domain.delay(
             hosted_zone_id=custom_domain.aws_hosted_zone_id, sleep_interval=1800, max_attempts=48
         )
-        ns_records = aws_helper.get_ns_records(hosted_zone_id=custom_domain.aws_hosted_zone_id)
+        ns_records = aws_helper.route53.get_ns_records(hosted_zone_id=custom_domain.aws_hosted_zone_id)
         self.stdout.write(
             self.style.SUCCESS(
                 f"Smarter has initiated the domain verification process for the domain name {domain} for account {custom_domain.account.account_number} {custom_domain.account.company_name}. This process may take up to 24 hours to complete. Please ensure that the root domain DNS settings include the following NS records: {ns_records}"

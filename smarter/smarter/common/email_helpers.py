@@ -18,27 +18,32 @@ logger = logging.getLogger(__name__)
 class EmailHelper:
     """Helper class for sending emails."""
 
-    def validate_mail_list(emails: Union[str, List[str]]) -> List[str]:
+    def validate_mail_list(emails: Union[str, List[str]], quiet: bool = False) -> List[str]:
         """Convert to a list and filter out any invalid email addresses."""
         if isinstance(emails, str):
             mailto_list = [emails]
 
         valid_emails = [email for email in mailto_list if re.match(VALID_EMAIL_PATTERN, email)]
 
-        if len(valid_emails) != len(mailto_list):
+        if len(valid_emails) != len(mailto_list) and not quiet:
             logger.warning("invalid email addresses were found in send list: %s", set(mailto_list) - set(valid_emails))
 
-        if len(valid_emails) == 0:
+        if len(valid_emails) == 0 and not quiet:
             logger.warning("no valid email addresses found in send list")
             return None
 
         return valid_emails
 
+    # pylint: disable=too-many-arguments
     @staticmethod
-    def send_email(subject, body, to: Union[str, List[str]], html=False, from_email=None):
+    def send_email(subject, body, to: Union[str, List[str]], html=False, from_email=None, quiet: bool = False):
         """Send an email."""
+        mail_to = EmailHelper.validate_mail_list(emails=to, quiet=quiet)
 
-        mail_to = EmailHelper.validate_mail_list(to)
+        if quiet:
+            logger.info("EmailHelper.send_email() quite mode. would have sent subject '%s' to: %s", subject, mail_to)
+            return
+
         if not mail_to:
             return
 

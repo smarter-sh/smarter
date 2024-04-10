@@ -48,6 +48,7 @@ class TestAPIKeys(unittest.TestCase):
         self.user_profile = UserProfile.objects.create(
             user=self.user,
             account=self.account,
+            is_test=True,
         )
 
     def tearDown(self):

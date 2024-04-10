@@ -28,7 +28,7 @@ class TestContext(unittest.TestCase):
 
         self.user = User.objects.create_user(username=username, password="12345")
         self.account = Account.objects.create(company_name="Test Company", phone_number="123-456-789")
-        self.user_profile = UserProfile.objects.create(user=self.user, account=self.account)
+        self.user_profile = UserProfile.objects.create(user=self.user, account=self.account, is_test=True)
 
     def tearDown(self):
         """Clean up test fixtures."""

@@ -6,6 +6,7 @@ from typing import List, Type
 
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
 from django.db import models
 
 from smarter.apps.account.models import Account, APIKey, UserProfile
@@ -71,8 +72,11 @@ class ChatBot(TimestampedModel):
 
     def save(self, *args, **kwargs):
         if not self.custom_domain:
-            if re.match(VALID_DOMAIN_PATTERN, self.hostname) is None:
-                raise ValidationError(f"Invalid domain name {self.hostname}")
+            validate = URLValidator()
+            try:
+                validate("http://" + self.hostname)
+            except ValidationError as e:
+                raise ValidationError(f"Invalid domain name {self.hostname}") from e
         super().save(*args, **kwargs)
 
     @property

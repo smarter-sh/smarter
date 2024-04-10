@@ -38,6 +38,7 @@ class TestUrls(unittest.TestCase):
         self.user_profile = UserProfile.objects.create(
             user=self.user,
             account=self.account,
+            is_test=True,
         )
         self.payment_method = PaymentMethod.objects.create(
             account=self.account,
