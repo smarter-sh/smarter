@@ -79,6 +79,7 @@ class TestAccount(unittest.TestCase):
         profile = UserProfile.objects.create(
             user=self.user,
             account=account,
+            is_test=True,
         )
 
         self.assertEqual(profile.account, account)

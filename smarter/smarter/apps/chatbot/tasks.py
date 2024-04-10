@@ -13,11 +13,16 @@ import botocore
 import dns.resolver
 
 from smarter.apps.account.models import Account, AccountContact
-from smarter.common.aws import aws_helper
+from smarter.common.aws.exceptions import (
+    AWSACMCertificateNotFound,
+    AWSACMVerificationNotFound,
+)
+from smarter.common.aws_helpers import aws_helper
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CUSTOMER_SUPPORT
 from smarter.smarter_celery import app
 
+from .exceptions import ChatBotCustomDomainExists
 from .models import (
     ChatBot,
     ChatBotCustomDomain,
@@ -47,6 +52,17 @@ def aggregate_chatbot_history():
     max_retries=CELERY_MAX_RETRIES,
     queue=CELERY_TASK_QUEUE,
 )
+def verify_certificate(certificate_arn: str):
+    """Verify an AWS ACM certificate."""
+    aws_helper.acm.verify_certificate(certificate_arn=certificate_arn)
+
+
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=CELERY_RETRY_BACKOFF,
+    max_retries=CELERY_MAX_RETRIES,
+    queue=CELERY_TASK_QUEUE,
+)
 def create_chatbot_request(chatbot_id: int, request_data: dict):
     """Create a ChatBot request record."""
     chatbot = ChatBot.objects.get(id=chatbot_id)
@@ -59,7 +75,7 @@ def create_chatbot_request(chatbot_id: int, request_data: dict):
     max_retries=CELERY_MAX_RETRIES,
     queue=CELERY_TASK_QUEUE,
 )
-def create_custom_domain(account_id: int, domain_name: str) -> bool:
+def register_custom_domain(account_id: int, domain_name: str):
     """
     Register a customer's custom domain name in AWS Route53
     and associated the Hosted Zone with the account.
@@ -67,9 +83,23 @@ def create_custom_domain(account_id: int, domain_name: str) -> bool:
     account = Account.objects.get(id=account_id)
     try:
         ChatBotCustomDomain.objects.get(account=account, domain_name=domain_name)
+        certificate_arn = aws_helper.acm.get_certificate_arn(domain_name=domain_name)
+        if not certificate_arn:
+            raise AWSACMCertificateNotFound
+        if not aws_helper.acm.certificate_is_verified(certificate_arn=certificate_arn):
+            raise AWSACMVerificationNotFound
+
+        # we found the custom domain, and its certificate is verified
+        return
     except ChatBotCustomDomain.DoesNotExist:
-        # we've already created the hosted zone for this domain
-        return True
+        # the custom domain doesn't exist, so we need to create it
+        pass
+    except AWSACMCertificateNotFound:
+        # the certificate was not found, so we need to create it
+        pass
+    except AWSACMVerificationNotFound:
+        # the certificate has not been verified, so we need to verify it
+        pass
 
     try:
         # verify that the domain is available to register.
@@ -81,21 +111,26 @@ def create_custom_domain(account_id: int, domain_name: str) -> bool:
             domain_record.account.company_name,
         )
         logger.error(err)
-        raise ValueError(err)
+        raise ChatBotCustomDomainExists(err)
     except ChatBotCustomDomain.DoesNotExist:
-        # domain was not previously registered, so we can continue.
+        # domain was not previously registered by another account, so we can continue.
         pass
 
-    aws_hosted_zone, _ = aws_helper.get_or_create_hosted_zone(domain_name=domain_name)
-
-    host = ChatBotCustomDomain.objects.get_or_create(
+    # create a Hosted Zone for the custom domain
+    aws_hosted_zone, _ = aws_helper.route53.get_or_create_hosted_zone(domain_name=domain_name)
+    host, _ = ChatBotCustomDomain.objects.get_or_create(
         account=account,
         domain_name=domain_name,
     )
     host.hosted_zone_id = aws_hosted_zone["Id"]
     host.save()
 
-    return True
+    # create a certificate for the custom domain
+    certificate_arn = aws_helper.acm.get_or_create_certificate(domain_name=domain_name)
+
+    # create a DNS record for the certificate and wait for it to be verified.
+    aws_helper.acm.get_or_create_certificate_dns_record(certificate_arn=certificate_arn)
+    verify_certificate.delay(certificate_arn=certificate_arn)
 
 
 @app.task(
@@ -122,7 +157,7 @@ def create_custom_domain_dns_record(
         }
     """
     custom_domain = ChatBotCustomDomain.objects.get(id=chatbot_custom_domain_id)
-    record = aws_helper.get_or_create_dns_record(
+    record = aws_helper.route53.get_or_create_dns_record(
         hosted_zone_id=custom_domain.aws_hosted_zone_id,
         record_name=record_name,
         record_type=record_type,
@@ -163,7 +198,7 @@ def verify_custom_domain(
     HOURS = 24
     hosted_zone = smarter_settings.aws_route53_client.get_hosted_zone(Id=hosted_zone_id)
     domain_name = hosted_zone["HostedZone"]["Name"]
-    aws_ns_records = aws_helper.get_ns_records(hosted_zone_id=hosted_zone_id)
+    aws_ns_records = aws_helper.route53.get_ns_records(hosted_zone_id=hosted_zone_id)
     sleep_interval = sleep_interval or 1800
     max_attempts = max_attempts or HOURS * (3600 / sleep_interval)
 
@@ -308,17 +343,17 @@ def create_domain_A_record(hostname: str, api_host_domain: str):
         logger.info("Deploying %s", hostname)
 
         # add the A record to the customer API domain
-        hosted_zone_id = aws_helper.get_hosted_zone_id_for_domain(domain_name=api_host_domain)
+        hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=api_host_domain)
         logger.info("Found hosted zone %s for parent domain %s", hosted_zone_id, api_host_domain)
 
         # retrieve the A record from the environment domain hosted zone. we'll
         # use this to create the A record in the customer API domain
-        a_record = aws_helper.get_environment_A_record(domain=api_host_domain)
+        a_record = aws_helper.route53.get_environment_A_record(domain=api_host_domain)
         logger.info(
             "Propagating A record %s from parent domain %s to deployment target %s", a_record, api_host_domain, hostname
         )
 
-        deployment_record = aws_helper.get_or_create_dns_record(
+        deployment_record = aws_helper.route53.get_or_create_dns_record(
             hosted_zone_id=hosted_zone_id,
             record_name=hostname,
             record_type="A",
@@ -392,5 +427,5 @@ def deploy_custom_api(chatbot_id: int):
     create_domain_A_record(hostname=domain_name, api_host_domain=domain_name)
 
     # verify the hosted zone of the custom domain
-    hosted_zone_id = aws_helper.get_hosted_zone_id_for_domain(domain_name)
+    hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name)
     verify_custom_domain(hosted_zone_id)

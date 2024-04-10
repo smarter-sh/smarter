@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Account models."""
 import logging
+import os
 import random
 import uuid
 from datetime import datetime, timedelta
@@ -22,6 +23,7 @@ from .const import CHARGE_TYPE_PLUGIN, CHARGE_TYPE_PROMPT_COMPLETION, CHARGE_TYP
 from .signals import new_charge_created, new_user_created
 
 
+HERE = os.path.abspath(os.path.dirname(__file__))
 User = get_user_model()
 logger = logging.getLogger(__name__)
 
@@ -104,21 +106,24 @@ class AccountContact(TimestampedModel):
     email = models.EmailField()
     phone = models.CharField(max_length=20, blank=True, null=True)
     is_primary = models.BooleanField(default=False)
+    is_test = models.BooleanField(default=False)
     welcomed = models.BooleanField(default=False)
 
-    def send_email(subject: str, to: str, body: str, html: bool = False, from_email: str = None):
+    def send_email(self, subject: str, body: str, html: bool = False, from_email: str = None):
 
-        EmailHelper.send_email(subject=subject, to=to, body=body, html=html, from_email=from_email)
+        EmailHelper.send_email(
+            subject=subject, to=self.email, body=body, html=html, from_email=from_email, quiet=self.is_test
+        )
 
     def send_welcome_email(self) -> None:
         """Send a welcome email to the contact."""
-
-        with open("./assets/html/welcome.html", "r", encoding="utf-8") as welcome_email_template:
+        template_path = os.path.join(HERE, "./assets/html/welcome.html")
+        with open(template_path, "r", encoding="utf-8") as welcome_email_template:
             html_template = welcome_email_template.read()
 
         subject = "Welcome to Smarter!"
-        body = html_template.format(first_name=self.first_name or "there")
-        self.send_email(subject, body, html=True)
+        body = html_template
+        self.send_email(subject=subject, body=body, html=True)
 
     @classmethod
     def get_primary_contact(cls, account: Account) -> "AccountContact":
@@ -133,7 +138,7 @@ class AccountContact(TimestampedModel):
         """Send an email to all contacts of an account."""
         contacts = cls.objects.filter(account=account)
         for contact in contacts:
-            contact.send_email(subject, body, html=html, from_email=from_email)
+            contact.send_email(subject=subject, body=body, html=html, from_email=from_email)
 
     # pylint: disable=too-many-arguments
     @classmethod
@@ -142,9 +147,10 @@ class AccountContact(TimestampedModel):
     ) -> None:
         """Send an email to all contacts of an account."""
         contact = cls.get_primary_contact(account)
-        contact.send_email(subject, body, html=html, from_email=from_email)
+        contact.send_email(subject=subject, body=body, html=html, from_email=from_email)
 
     def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
         if self.is_primary:
             # ensure that only one primary contact exists
             AccountContact.objects.filter(account=self.account, is_primary=True).update(is_primary=False)
@@ -152,7 +158,6 @@ class AccountContact(TimestampedModel):
             self.send_welcome_email()
             self.welcomed = True
             self.save()
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.first_name + " " + self.last_name
@@ -176,10 +181,13 @@ class UserProfile(TimestampedModel):
     # Add more fields here as needed
     user = models.OneToOneField(User, unique=True, db_index=True, related_name="user_profile", on_delete=models.CASCADE)
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="users")
+    is_test = models.BooleanField(default=False)
 
     def add_to_account_contacts(self, is_primary: bool = False):
         """Add the user to the account contact list."""
-        account_contact, _ = AccountContact.objects.get_or_create(account=self.account, email=self.user.email)
+        account_contact, _ = AccountContact.objects.get_or_create(
+            account=self.account, email=self.user.email, is_test=self.is_test
+        )
         if account_contact.is_primary != is_primary:
             account_contact.is_primary = is_primary
             account_contact.save()
