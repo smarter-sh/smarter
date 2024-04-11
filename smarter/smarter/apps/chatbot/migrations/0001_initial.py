@@ -68,7 +68,7 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name="ChatBotAPIKeys",
+            name="ChatBotAPIKey",
             fields=[
                 (
                     "id",
@@ -220,7 +220,7 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name="ChatBotPlugins",
+            name="ChatBotPlugin",
             fields=[
                 (
                     "id",
