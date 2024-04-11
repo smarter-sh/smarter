@@ -4,7 +4,7 @@
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account
-from smarter.apps.chatbot.models import ChatBot, ChatBotPlugins
+from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.plugin import Plugins
 from smarter.common.const import SMARTER_COMPANY_NAME, SMARTER_DEMO_API_NAME
@@ -26,6 +26,6 @@ class Command(BaseCommand):
             return
 
         for plugin in Plugins(account=account).plugins:
-            ChatBotPlugins.objects.create(chatbot=chatbot, plugin_meta=plugin.plugin_meta)
+            ChatBotPlugin.objects.create(chatbot=chatbot, plugin_meta=plugin.plugin_meta)
 
         deploy_default_api.delay(chatbot_id=chatbot.id)

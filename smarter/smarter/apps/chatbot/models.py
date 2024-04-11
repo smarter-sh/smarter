@@ -94,14 +94,14 @@ class ChatBot(TimestampedModel):
         return self.custom_host or self.default_host
 
 
-class ChatBotAPIKeys(TimestampedModel):
+class ChatBotAPIKey(TimestampedModel):
     """Map of API keys for a ChatBot"""
 
     chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE)
     api_key = models.ForeignKey(APIKey, on_delete=models.CASCADE)
 
 
-class ChatBotPlugins(TimestampedModel):
+class ChatBotPlugin(TimestampedModel):
     """List of Plugins for a ChatBot"""
 
     chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE)
@@ -112,7 +112,7 @@ class ChatBotPlugins(TimestampedModel):
         return Plugin(plugin_meta=self.plugin_meta)
 
     @classmethod
-    def load(cls: Type["ChatBotPlugins"], chatbot: ChatBot, data) -> "ChatBotPlugins":
+    def load(cls: Type["ChatBotPlugin"], chatbot: ChatBot, data) -> "ChatBotPlugin":
         """Load (aka import) a plugin from a data file in yaml or json format."""
         user_profile = UserProfile.admin_for_account(chatbot.account)
         plugin = Plugin(data=data, user_profile=user_profile)
