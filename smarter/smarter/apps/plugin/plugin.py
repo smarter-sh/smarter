@@ -7,6 +7,7 @@ import logging
 import os
 import re
 
+import requests
 import yaml
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -65,6 +66,7 @@ class Plugin:
         plugin_meta: PluginMeta = None,
         data=None,
         selected: bool = False,
+        url=None,
     ):
         """
         Initialize the class.
@@ -87,9 +89,30 @@ class Plugin:
             self._user_profile = user_profile
 
         self._selected = selected
+
+        if data and url:
+            raise ValidationError("Cannot specify both data and url.")
+        if not data and not url:
+            raise ValidationError("Must specify either data or url.")
+
         # creating a new plugin or updating an existing plugin from
         # yaml or json data.
         if data is not None:
+            self.create(data)
+            if self.ready:
+                plugin_ready.send(sender=self.__class__, plugin=self)
+
+        if url:
+            if not self.user_profile:
+                raise ValidationError("User profile is required to create a plugin from a URL.")
+
+            response = requests.get(url, timeout=15)
+            data = response.text
+            data["user"] = self.user_profile.user
+            data["account"] = self.user_profile.account
+            data["user_profile"] = user_profile
+            data["meta_data"]["author"] = self.user_profile.id
+
             self.create(data)
             if self.ready:
                 plugin_ready.send(sender=self.__class__, plugin=self)
