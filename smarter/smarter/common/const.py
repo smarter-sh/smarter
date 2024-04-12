@@ -13,6 +13,7 @@ import openai
 
 logger = logging.getLogger(__name__)
 
+SMARTER_ACCOUNT_NUMBER = "3141-5926-5359"
 SMARTER_CUSTOMER_API_SUBDOMAIN = "api"
 SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN = "platform"
 SMARTER_COMPANY_NAME = "Smarter"

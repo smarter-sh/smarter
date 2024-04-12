@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This module retrieves the json representation of a plugin using manage.py on the command line."""
+"""This module retrieves the json representation of a plugin."""
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account
@@ -9,7 +9,7 @@ from smarter.apps.plugin.plugin import Plugin
 
 # pylint: disable=E1101
 class Command(BaseCommand):
-    """Django manage.py retrieve_plugin command. This command is used to retrieve a plugin."""
+    """Prints the json representation of a plugin to the console."""
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
