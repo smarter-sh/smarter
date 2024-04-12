@@ -21,17 +21,18 @@ django-celery-beat==2.6.0
 
 # misc back end
 # ------------
-whitenoise==6.6.0
-mysqlclient==2.2.4
-celery==5.3.6
 boto3==1.34.79
 botocore
+celery==5.3.6
+celery-redbeat==2.2.0
 dnspython==2.6.1
-requests==2.31.0
 htmlmin==0.1.12
+mailchimp-marketing==3.0.80
+mysqlclient==2.2.4
+requests==2.31.0
 requests-cache==1.2.0
 retry-requests==2.0.0
-mailchimp-marketing==3.0.80
+whitenoise==6.6.0
 
 # for working with data
 # ------------
