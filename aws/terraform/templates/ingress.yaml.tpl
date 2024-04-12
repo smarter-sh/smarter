@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    cert-manager.io/cluster-issuer: ${environment_domain}
+    cert-manager.io/cluster-issuer: ${cluster_issuer}
     kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/affinity: cookie
     nginx.ingress.kubernetes.io/backend-protocol: HTTP
@@ -14,11 +14,21 @@ metadata:
     nginx.ingress.kubernetes.io/session-cookie-expires: "172800"
     nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
     nginx.ingress.kubernetes.io/session-cookie-name: ${environment_namespace}_sticky_session
-  name: ${environment_domain}
+  name: ${domain}
   namespace: ${environment_namespace}
 spec:
   rules:
-    - host: ${environment_domain}
+    - host: ${domain}
+      http:
+        paths:
+          - backend:
+              service:
+                name: ${service_name}
+                port:
+                  number: 8000
+            path: /
+            pathType: Prefix
+    - host: "*.${domain}"
       http:
         paths:
           - backend:
@@ -34,5 +44,5 @@ spec:
   # -----------------------------------------------------
   tls:
     - hosts:
-        - ${environment_domain}
-      secretName: ${environment_domain}-tls
+        - ${domain}
+      secretName: ${domain}-tls
