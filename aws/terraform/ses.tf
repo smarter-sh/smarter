@@ -11,10 +11,10 @@
 #
 #------------------------------------------------------------------------------
 
-resource "aws_ses_domain_identity" "environment_domain" {
-  domain = local.environment_domain
+resource "aws_ses_domain_identity" "environment_platform_domain" {
+  domain = local.environment_platform_domain
 }
 
-resource "aws_ses_domain_dkim" "environment_domain" {
-  domain = aws_ses_domain_identity.environment_domain.domain
+resource "aws_ses_domain_dkim" "environment_platform_domain" {
+  domain = aws_ses_domain_identity.environment_platform_domain.domain
 }
