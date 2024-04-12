@@ -11,7 +11,7 @@ from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.chat.providers.smarter import handler
-from smarter.apps.chatbot.models import ChatBot, ChatBotPlugins
+from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.common.const import SMARTER_DEMO_API_NAME
 
 
@@ -32,5 +32,5 @@ class Command(BaseCommand):
             print("Processing file: ", file_path)
             with open(file_path, "r", encoding="utf-8") as file:
                 data = json.loads(file.read())
-                plugins = ChatBotPlugins().plugins(chatbot=chatbot)
+                plugins = ChatBotPlugin().plugins(chatbot=chatbot)
                 handler(plugins=plugins, user=user_profile.user, data=data)

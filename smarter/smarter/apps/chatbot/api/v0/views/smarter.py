@@ -12,7 +12,7 @@ from rest_framework.response import Response
 
 from smarter.apps.chat.api.v0.views.providers.smarter import SmarterChatViewSet
 from smarter.apps.chat.providers.smarter import handler
-from smarter.apps.chatbot.models import ChatBot, ChatBotPlugins
+from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.signals import chatbot_called
 from smarter.apps.plugin.plugin import Plugin
 
@@ -31,7 +31,7 @@ class SmarterChatBotViewSet(SmarterChatViewSet):
         # setting this less for its functionality than for using it as a way
         # to validate the hostname and that the chatbot actually exists.
         self.chatbot = get_object_or_404(ChatBot, hostname=request.get_host(), deployed=True)
-        self.plugins = ChatBotPlugins().plugins(chatbot=self.chatbot)
+        self.plugins = ChatBotPlugin().plugins(chatbot=self.chatbot)
         chatbot_called.send(sender=self.__class__, chatbot=self.chatbot, request=request, args=args, kwargs=kwargs)
         response = super().dispatch(request, *args, **kwargs)
         return response

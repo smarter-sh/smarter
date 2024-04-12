@@ -1,6 +1,7 @@
 [MASTER]
 ignore-paths=venv,node_modules
 ignore=__version__.py
+init-hook='import sys; sys.path.append("./smarter/smarter/common/aws")'
 
 [FORMAT]
 max-line-length=120

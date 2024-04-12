@@ -50,7 +50,7 @@ class TestPluginAPI(unittest.TestCase):
             is_staff=is_staff,
             is_superuser=False,
         )
-        user_profile = UserProfile.objects.create(user=user, account=self.account)
+        user_profile = UserProfile.objects.create(user=user, account=self.account, is_test=True)
         return user, user_profile
 
     def safe_load(self, file_path) -> dict:

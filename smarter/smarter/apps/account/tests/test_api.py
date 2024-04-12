@@ -5,6 +5,7 @@
 # python stuff
 import os
 import unittest
+from typing import Type
 
 from django.contrib.auth import get_user_model
 from django.test import Client
@@ -14,12 +15,13 @@ from ..models import Account, PaymentMethod, UserProfile
 
 
 User = get_user_model()
+UserType = Type[User]
 
 
 class TestUrls(unittest.TestCase):
     """Test Account API end points."""
 
-    user: User
+    user: UserType
 
     def setUp(self):
         """Set up test fixtures."""
@@ -38,6 +40,7 @@ class TestUrls(unittest.TestCase):
         self.user_profile = UserProfile.objects.create(
             user=self.user,
             account=self.account,
+            is_test=True,
         )
         self.payment_method = PaymentMethod.objects.create(
             account=self.account,
