@@ -7,6 +7,7 @@ import random
 
 # python stuff
 import unittest
+from typing import Type
 
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory
@@ -17,6 +18,7 @@ from ..models import Account, UserProfile
 
 
 User = get_user_model()
+UserType = Type[User]
 
 
 class TestContext(unittest.TestCase):

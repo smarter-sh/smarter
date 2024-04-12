@@ -5,8 +5,6 @@
 # server, a Celery worker, and the application itself. The application
 # will be available at http://localhost:8000.
 #------------------------------------------------------------------------------
-version: "3"
-
 services:
   smarter-mysql:
     container_name: smarter-mysql

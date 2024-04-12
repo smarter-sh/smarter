@@ -4,37 +4,146 @@ This module is used to deploy a collection of customer API's from a GitHub repos
 organized in directories by customer API name.
 """
 import os
+import re
 import subprocess
+from typing import Type
 
 import yaml
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
+from django.core.validators import URLValidator
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.utils import account_admin_user
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.plugin import Plugin
 
 
 User = get_user_model()
+UserType = Type[User]
 
 
-# pylint: disable=E1101
+# pylint: disable=E1101,too-many-instance-attributes
 class Command(BaseCommand):
-    """Upsert a collection of plugins from a GitHub repository."""
+    """Deploy customer APIs from a GitHub repository of plugin YAML files organized by customer API name."""
 
     HERE = os.path.abspath(os.path.dirname(__file__))
+    _url: str = None
+    _user: UserType = None
+    _account: Account = None
+    _user_profile: UserProfile = None
 
-    def clone_repo(self, url, path):
+    @property
+    def user(self) -> UserType:
+        if self._user:
+            return self._user
+        if self._user_profile:
+            return self._user_profile.user
+        return None
+
+    @user.setter
+    def user(self, value):
+        if not isinstance(value, User):
+            raise ValueError("User must be a User object.")
+        if not value.is_staff:
+            raise ValueError(f"User {value.username} is not an account admin.")
+        if self._account:
+            try:
+                self._user_profile = UserProfile.objects.get(account=self._account, user=value)
+            except UserProfile.DoesNotExist as e:
+                raise ValueError(
+                    f"User {value.username} is not associated with account {self._account.account_number}."
+                ) from e
+        else:
+            self._user_profile = UserProfile.objects.filter(user=value).first()
+            self._account = self._user_profile.account
+        self._user = value
+
+    @property
+    def account(self) -> Account:
+        if self._account:
+            return self._account
+        if self._user_profile:
+            return self._user_profile.account
+        return None
+
+    @account.setter
+    def account(self, value):
+        if not isinstance(value, Account):
+            raise ValueError("Account must be an Account object.")
+        if self._user:
+            # ensure that we have integrity between user and account
+            UserProfile.objects.get(account=value, user=self._user)
+        self._account = value
+
+    @property
+    def user_profile(self) -> UserProfile:
+        if self._user_profile:
+            return self._user_profile
+        if self._user and self._account:
+            try:
+                self._user_profile = UserProfile.objects.get(user=self._user, account=self._account)
+            except UserProfile.DoesNotExist as e:
+                raise ValueError(
+                    f"User {self._user.username} is not associated with account {self._account.account_number}."
+                ) from e
+        return self._user_profile
+
+    @user_profile.setter
+    def user_profile(self, value):
+        if not isinstance(value, UserProfile):
+            raise ValueError("User profile must be a UserProfile object.")
+        self._user_profile = value
+        self._user = value.user
+        self._account = value.account
+
+    @property
+    def url(self) -> str:
+        if not self._url:
+            raise ValueError("URL is required.")
+        return self._url
+
+    @url.setter
+    def url(self, value):
+        validate = URLValidator()
+        validate(value)
+        self._url = value
+
+    @property
+    def local_path(self):
+        return os.path.join(self.HERE, self.get_url_filename(self.url))
+
+    def get_url_filename(self, url) -> str:
+        """
+        Get the filename from a URL.
+        example: https://github.com/QueriumCorp/smarter_demo/blob/main/hr/shrm_fmla.yaml
+        returns "shrm_fmla.yaml"
+        """
+        return url.split("/")[-1]
+
+    def clone_repo(self):
         """Synchronously clone a GitHub repository to the local file system."""
-        result = subprocess.call(["git", "clone", url, path])
+        self.delete_repo()
+        result = subprocess.call(["git", "clone", self.url, self.local_path])
         if result != 0:
             raise subprocess.CalledProcessError(
-                returncode=result, cmd=f"git clone {url} {path}", output="Failed to clone repository"
+                returncode=result, cmd=f"git clone {self.url} {self.local_path}", output="Failed to clone repository"
             )
 
-    def load_plugin(self, filespec: str, user_profile: UserProfile):
-        """Load a plugin from a file."""
+    def delete_repo(self):
+        """Delete a cloned GitHub repository from the local file system."""
+        if os.path.exists(self.local_path):
+            result = subprocess.call(["rm", "-rf", self.local_path])
+            if result != 0:
+                raise subprocess.CalledProcessError(
+                    returncode=result, cmd=f"rm -rf {self.local_path}", output="Failed to delete repository"
+                )
+
+    def load_plugin(self, filespec: str):
+        """Load a plugin from a file on the local file system."""
+        if not self.user_profile:
+            raise ValueError("User profile is required.")
 
         with open(filespec, "r", encoding="utf-8") as file:
             data = file.read()
@@ -47,29 +156,42 @@ class Command(BaseCommand):
         else:
             raise ValueError("Could not read the file.")
 
-        data["user"] = user_profile.user
-        data["account"] = user_profile.account
-        data["user_profile"] = user_profile
-        data["meta_data"]["author"] = user_profile.id
+        data["user"] = self.user_profile.user
+        data["account"] = self.user_profile.account
+        data["user_profile"] = self.user_profile
+        data["meta_data"]["author"] = self.user_profile.id
 
-        plugin = Plugin(data=data, user_profile=user_profile)
+        plugin = Plugin(data=data, user_profile=self.user_profile)
         return plugin
 
-    def get_filename(self, url: str):
-        """Get the filename from a URL."""
-        return url.split("/")[-1]
-
-    def process_repo(self, url: str, user_profile: UserProfile):
+    def process_repo(self):
         """
-        Process a GitHub repository.
-        Iterated the folder structure of the repository scanning for plugin YAML files.
+        Process a GitHub repository containing yaml plugin files organized into folders,
+        where each folder name is the subdomain for a customer API.
         """
-        filename = self.get_filename(url)
-        path = os.path.join(self.HERE, filename)
-        self.clone_repo(url, path)
 
-        for root, directory_names, _ in os.walk(path):
-            for directory in directory_names:
+        def is_demo_folder(directory) -> bool:
+            """returns true if the folder contains yaml or yml files"""
+            VALID_HOST_PATTERN = r"(?!-)[A-Z\d-]{1,63}(?<!-)$"
+
+            folder_name = os.path.basename(directory_path)
+            if not re.fullmatch(VALID_HOST_PATTERN, folder_name, re.IGNORECASE):
+                print(f"Skipping folder: {folder_name}")
+                return False
+
+            for _, _, files in os.walk(directory):
+                for file in files:
+                    if file.endswith(".yaml") or file.endswith(".yml"):
+                        return True
+            return False
+
+        if not self.user_profile:
+            raise ValueError("User profile is required.")
+        self.clone_repo()
+
+        # pylint: disable=too-many-nested-blocks
+        for root, directory_names, _ in os.walk(self.local_path):
+            for directory in [d for d in directory_names if not d.startswith(".")]:
                 # yaml plugins are separated by directories
                 # representing different kinds of demo plugins
                 # (e.g. "hr", "sales-support", "government", "university-admissions", etc.)
@@ -78,65 +200,52 @@ class Command(BaseCommand):
                 # We're not currently doing anything with the directory names,
                 # but we could use them to create a customer api of the same name.
                 directory_path = os.path.join(root, directory)
-                api_name = directory_path
-                chatbot, _ = ChatBot.objects.get_or_create(name=api_name, user_profile=user_profile)
-                for _, _, files in os.walk(directory_path):
-                    for file in files:
-                        if file.endswith(".yaml") or file.endswith(".yml"):
-                            filespec = os.path.join(directory_path, file)
-                            plugin = self.load_plugin(filespec=filespec, user_profile=user_profile)
-                            ChatBotPlugin.objects.get_or_create(chatbot=chatbot, plugin=plugin)
+                api_name = os.path.basename(directory_path)
+                if is_demo_folder(directory=directory_path):
+                    print(f"Processing API: {api_name}")
+                    chatbot, _ = ChatBot.objects.get_or_create(name=api_name, account=self.account)
+                    for _, _, files in os.walk(directory_path):
+                        for file in files:
+                            if file.endswith(".yaml") or file.endswith(".yml"):
+                                filespec = os.path.join(directory_path, file)
+                                filename = os.path.basename(filespec)
+                                print(f"Loading plugin: {filename}")
+                                plugin = self.load_plugin(filespec=filespec)
+                                ChatBotPlugin.objects.get_or_create(chatbot=chatbot, plugin_meta=plugin.plugin_meta)
 
-                deploy_default_api(chatbot_id=chatbot.id, with_domain_verification=False)
+                    deploy_default_api(chatbot_id=chatbot.id, with_domain_verification=False)
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
+        parser.add_argument("-u", "--url", type=str, help="A url for a public GitHub repository.")
         parser.add_argument(
-            "account_number", type=str, nargs="?", default=None, help="Account number that will own the new plugin."
+            "-a",
+            "--account_number",
+            type=str,
+            nargs="?",
+            default=None,
+            help="Account number that will own the new plugin.",
         )
-        parser.add_argument("username", type=str, nargs="?", default=None, help="A user associated with the account.")
-        parser.add_argument("url", type=str, default=None, help="A public url to a plugin YAML file")
+        parser.add_argument("--username", type=str, nargs="?", default=None, help="A user associated with the account.")
 
     def handle(self, *args, **options):
-        """create the plugin."""
+        """Process the GitHub repository"""
+        self.url = options["url"]
         account_number = options["account_number"]
         username = options["username"]
-        url = options["url"]
 
-        account: Account = None
-        user: User = None
-        user_profile: UserProfile = None
+        if not account_number and not username:
+            raise ValueError("username and/or account_number is required.")
 
-        try:
-            # want to ensure that we either get both or neither or these, and also
-            # that we can distinguish between a user who is not an admin vs
-            # a username that doesn't exist.
-            if username:
-                user = User.objects.get(username=username)
-                if not user.is_staff:
-                    raise ValueError(f"User {username} is not an account admin.")
-                user_profile, _ = UserProfile.objects.get_or_create(user=user, account=account)
-        except (User.DoesNotExist, UserProfile.DoesNotExist) as e:
-            raise ValueError(f"User {username} does not exist for account {account.account_number}.") from e
+        if username:
+            self.user = User.objects.get(username=username)
 
-        try:
-            # if account_number is not provided then we need to ensure that it is consistent
-            # with the account from the user profile of an optionally-provided username.
-            #
-            # if we don't have a username then we'll default to the most senior account admin.
-            if account_number:
-                account = Account.objects.get(account_number=account_number)
-                if user_profile:
-                    if account != user_profile.account:
-                        raise ValueError(f"User {username} does not belong to account {account.account_number}.")
-                else:
-                    try:
-                        user_profile = (
-                            UserProfile.objects.filter(account=account, user__is_staff=True).order_by("pk").first()
-                        )
-                    except UserProfile.DoesNotExist as e:
-                        raise ValueError(f"No account admin found for account {account.account_number}.") from e
-        except Account.DoesNotExist as e:
-            raise ValueError(f"Account {account_number} does not exist.") from e
+        if account_number:
+            self.account = Account.objects.get(account_number=account_number)
 
-        self.process_repo(url, user_profile)
+        if not self.user_profile:
+            admin_user = account_admin_user(self.account)
+            print(f"No user profile found. Defaulting to {admin_user}.")
+            self.user_profile = UserProfile.objects.get(account=self.account, user=admin_user)
+
+        self.process_repo()

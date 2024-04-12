@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 """This module is used to create a new plugin using manage.py"""
+from typing import Type
+
 import yaml
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.utils import account_admin_user
 from smarter.apps.plugin.plugin import Plugin
-from smarter.common.const import SMARTER_COMPANY_NAME
 
 
 User = get_user_model()
+UserType = Type[User]
 
 
 # pylint: disable=E1101
@@ -19,24 +22,34 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         """Add arguments to the command."""
         parser.add_argument(
-            "account_number", type=str, nargs="?", default=None, help="Account number that will own the new plugin."
+            "-a", "--account_number", type=str, nargs="?", help="Account number that will own the new plugin."
         )
-        parser.add_argument("username", type=str, nargs="?", default=None, help="A user associated with the account.")
-        parser.add_argument("url", type=str, default=None, help="A public url to a plugin YAML file")
         parser.add_argument(
-            "file_path", type=str, default=None, help="The local file system path to a plugin YAML file"
+            "-u", "--username", type=str, nargs="?", default=None, help="A user associated with the account."
+        )
+        parser.add_argument("--url", type=str, default=None, help="A public url to a plugin YAML file")
+        parser.add_argument(
+            "--file_path", type=str, default=None, help="The local file system path to a plugin YAML file"
         )
 
     def handle(self, *args, **options):
         """create the plugin."""
-        account: Account = None
-        user: User = None
-        user_profile: UserProfile = None
         account_number = options["account_number"]
         username = options["username"]
         url = options["url"]
         file_path = options["file_path"]
+
+        account: Account = None
+        user: UserType = None
+        user_profile: UserProfile = None
         data = None
+
+        account = Account.objects.get(account_number=account_number)
+        if username:
+            user = User.objects.get(username=username)
+        else:
+            user = account_admin_user(account)
+        user_profile = UserProfile.objects.get(user=user, account=account)
 
         if file_path:
             with open(file_path, "r", encoding="utf-8") as file:
@@ -50,34 +63,6 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(self.style.ERROR("Could not read the file."))
                 return
-
-        try:
-            if account_number:
-                account = Account.objects.get(account_number=account_number)
-            else:
-                account, _ = Account.objects.get_or_create(company_name=SMARTER_COMPANY_NAME)
-        except Account.DoesNotExist:
-            self.stdout.write(self.style.ERROR(f"Account {account_number} does not exist."))
-            return
-
-        try:
-            if username:
-                user = User.objects.get(username=username)
-            else:
-                user, _ = User.objects.get_or_create(username="admin")
-        except User.DoesNotExist:
-            self.stdout.write(self.style.ERROR(f"User {username} does not exist."))
-            return
-
-        try:
-            user_profile, _ = UserProfile.objects.get_or_create(user=user, account=account)
-        except UserProfile.DoesNotExist:
-            self.stdout.write(
-                self.style.ERROR(
-                    f"User profile for {user.username} {user.email} does not exist for account {account.account_number}."
-                )
-            )
-            return
 
         if data:
             data["user"] = user

@@ -2,15 +2,16 @@
 """This module is used to manage the superuser account."""
 import secrets
 import string
+from typing import Type
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account, APIKey, UserProfile
-from smarter.common.const import SMARTER_COMPANY_NAME
 
 
 User = get_user_model()
+UserType = Type[User]
 
 
 # pylint: disable=E1101
@@ -47,10 +48,7 @@ class Command(BaseCommand):
         password = options["password"]
         is_admin = options["admin"]
 
-        if account_number:
-            account = Account.objects.get(account_number=account_number)
-        else:
-            account, _ = Account.objects.get_or_create(company_name=SMARTER_COMPANY_NAME)
+        account = Account.objects.get(account_number=account_number)
 
         if not password:
             password_length = 16
@@ -60,23 +58,13 @@ class Command(BaseCommand):
         if username and email:
             if not User.objects.filter(username=username).exists():
                 user = User.objects.create_user(username=username, email=email)
-                if username == "admin":
-                    user.is_superuser = True
+                if is_admin:
                     user.is_staff = True
-                else:
-                    if is_admin:
-                        user.is_superuser = False
-                        user.is_staff = True
-                    else:
-                        user.is_superuser = False
-                        user.is_staff = False
                 user.is_active = True
                 user.set_password(password)
                 user.save()
-                msg = "Admin user" if is_admin else "User" + f" {username} {email} has been created."
-                self.stdout.write(self.style.SUCCESS(msg))
+                self.stdout.write(self.style.SUCCESS("User" + f" {username} {email} has been created."))
                 self.stdout.write(self.style.SUCCESS(f"Password: {password}"))
-
             else:
                 user = self.change_password(username, password)
         else:

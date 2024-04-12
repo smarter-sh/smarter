@@ -3,6 +3,7 @@
 """Account Payment method views for smarter api."""
 import logging
 from http import HTTPStatus
+from typing import Type
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -17,6 +18,7 @@ from smarter.apps.account.models import Account, PaymentMethod, UserProfile
 
 
 User = get_user_model()
+UserType = Type[User]
 logger = logging.getLogger(__name__)
 
 
@@ -117,7 +119,7 @@ def create_payment_method(request):
 def update_payment_method(request):
     """update an account from a json representation in the body of the request."""
     data: dict = None
-    payment_method_to_update: User = None
+    payment_method_to_update: UserType = None
 
     if not request.user.is_superuser and not request.user.is_staff:
         return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)

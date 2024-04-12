@@ -5,6 +5,7 @@
 # python stuff
 import os
 import unittest
+from typing import Type
 
 from django.contrib.auth import get_user_model
 from django.test import Client
@@ -14,12 +15,13 @@ from ..models import Account, UserProfile
 
 
 User = get_user_model()
+UserType = Type[User]
 
 
 class TestUrls(unittest.TestCase):
     """Test Account views."""
 
-    user: User
+    user: UserType
 
     def setUp(self):
         """Set up test fixtures."""

@@ -2,6 +2,7 @@
 # pylint: disable=W0707,W0718
 """User views for smarter api."""
 from http import HTTPStatus
+from typing import Type
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -19,6 +20,7 @@ from smarter.apps.account.models import Account, UserProfile
 
 
 User = get_user_model()
+UserType = Type[User]
 
 
 class UserView(SmarterAPIAdminView):
@@ -81,7 +83,7 @@ def validate_request_body(request):
     return None
 
 
-def eval_permissions(request, user_to_update: User, user_to_update_profile: UserProfile = None):
+def eval_permissions(request, user_to_update: UserType, user_to_update_profile: UserProfile = None):
     if not request.user.is_superuser:
         # if the user is not a superuser then they need to have a UserProfile
         try:
@@ -106,7 +108,7 @@ def eval_permissions(request, user_to_update: User, user_to_update_profile: User
 
 
 def get_user_for_operation(request):
-    user: User = None
+    user: UserType = None
     user_profile: UserProfile = None
 
     try:
@@ -125,7 +127,7 @@ def get_user_for_operation(request):
 # pylint: disable=too-many-return-statements
 def get_user(request, user_id: int = None):
     """Get an account json representation by id."""
-    user: User = None
+    user: UserType = None
     if user_id is None:
         serializer = UserSerializer(request.user)
         return Response(serializer.data, status=HTTPStatus.OK)
@@ -187,7 +189,7 @@ def create_user(request):
 def update_user(request):
     """update an account from a json representation in the body of the request."""
     data: dict = None
-    user_to_update: User = None
+    user_to_update: UserType = None
     user_to_update_profile: UserProfile = None
 
     validate_request_body(request)

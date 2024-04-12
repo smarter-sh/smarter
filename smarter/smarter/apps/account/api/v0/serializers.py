@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """Account serializers for smarter api"""
+from typing import Type
+
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
@@ -7,6 +9,7 @@ from smarter.apps.account.models import Account, APIKey, PaymentMethod, UserProf
 
 
 User = get_user_model()
+UserType = Type[User]
 
 
 class UserSerializer(serializers.ModelSerializer):
