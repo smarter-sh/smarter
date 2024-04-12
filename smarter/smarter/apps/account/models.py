@@ -5,6 +5,7 @@ import os
 import random
 import uuid
 from datetime import datetime, timedelta
+from typing import Type
 
 from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
@@ -25,6 +26,7 @@ from .signals import new_charge_created, new_user_created
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 User = get_user_model()
+UserType = Type[User]
 logger = logging.getLogger(__name__)
 
 
@@ -209,7 +211,7 @@ class UserProfile(TimestampedModel):
             new_user_created.send(sender=self.__class__, user_profile=self)
 
     @classmethod
-    def admin_for_account(cls, account: Account) -> User:
+    def admin_for_account(cls, account: Account) -> UserType:
         """Return the designated user for the account."""
         try:
             return cls.objects.filter(account=account, user__is_staff=True).order_by("user__id").first().user

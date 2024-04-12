@@ -4,6 +4,7 @@
 
 import json
 from http import HTTPStatus
+from typing import Type
 from urllib.parse import urljoin
 
 import yaml
@@ -25,6 +26,7 @@ from smarter.apps.plugin.utils import add_example_plugins
 
 
 User = get_user_model()
+UserType = Type[User]
 
 
 class PluginView(SmarterAPIView):

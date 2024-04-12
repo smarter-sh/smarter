@@ -2,6 +2,7 @@
 # pylint: disable=W0613
 """Django Authentication views."""
 from http import HTTPStatus
+from typing import Type
 
 from django import forms
 from django.contrib.auth import authenticate, get_user_model, login, logout
@@ -24,6 +25,7 @@ from smarter.common.view_helpers import (
 
 
 User = get_user_model()
+UserType = Type[User]
 
 
 # ------------------------------------------------------------------------------
@@ -47,7 +49,7 @@ class LoginView(SmarterNeverCachedWebView):
 
     def post(self, request):
         form = LoginView.LoginForm(request.POST)
-        authenticated_user: User = None
+        authenticated_user: UserType = None
         if form.is_valid():
             email = form.cleaned_data["email"]
             try:
