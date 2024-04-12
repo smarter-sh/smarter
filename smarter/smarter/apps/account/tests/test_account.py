@@ -5,6 +5,7 @@
 # python stuff
 import os
 import unittest
+from typing import Type
 
 from django.contrib.auth import get_user_model
 
@@ -13,6 +14,7 @@ from ..models import Account, UserProfile
 
 
 User = get_user_model()
+UserType = Type[User]
 
 
 class TestAccount(unittest.TestCase):
@@ -79,6 +81,7 @@ class TestAccount(unittest.TestCase):
         profile = UserProfile.objects.create(
             user=self.user,
             account=account,
+            is_test=True,
         )
 
         self.assertEqual(profile.account, account)

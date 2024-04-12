@@ -13,6 +13,7 @@ import openai
 
 logger = logging.getLogger(__name__)
 
+SMARTER_ACCOUNT_NUMBER = "3141-5926-5359"
 SMARTER_CUSTOMER_API_SUBDOMAIN = "api"
 SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN = "platform"
 SMARTER_COMPANY_NAME = "Smarter"
@@ -28,11 +29,11 @@ VALID_URL_PATTERN = r"^(http|https)://[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}(:[0-9]{1,5})
 VALID_UUID_PATTERN = r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
 
 
-HERE = os.path.abspath(os.path.dirname(__file__))
-PROJECT_ROOT = str(Path(HERE).parent)
-PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
-TERRAFORM_ROOT = str(Path(PROJECT_ROOT).parent.parent)
-REPO_ROOT = str(Path(TERRAFORM_ROOT).parent.parent)
+HERE = os.path.abspath(os.path.dirname(__file__))  # smarter/smarter/common
+PROJECT_ROOT = str(Path(HERE).parent)  # smarter/smarter
+PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)  # smarter
+TERRAFORM_ROOT = str(Path(PROJECT_ROOT).parent.parent)  # ./
+REPO_ROOT = str(Path(TERRAFORM_ROOT).parent.parent)  # ./
 
 TERRAFORM_TFVARS = os.path.join(TERRAFORM_ROOT, "terraform.tfvars")
 if not os.path.exists(TERRAFORM_TFVARS):

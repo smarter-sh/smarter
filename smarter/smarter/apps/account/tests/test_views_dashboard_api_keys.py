@@ -48,6 +48,7 @@ class TestAPIKeys(unittest.TestCase):
         self.user_profile = UserProfile.objects.create(
             user=self.user,
             account=self.account,
+            is_test=True,
         )
         self.api_key = self.create_api_key()
         self.non_staff_user = User.objects.create(
@@ -75,6 +76,7 @@ class TestAPIKeys(unittest.TestCase):
         self.non_staff_user_profile = UserProfile.objects.create(
             user=self.non_staff_user,
             account=self.non_staff_account,
+            is_test=True,
         )
 
     def tearDown(self):

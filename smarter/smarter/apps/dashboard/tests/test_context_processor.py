@@ -33,7 +33,7 @@ class TestContextProcessor(unittest.TestCase):
         self.account = Account.objects.create(
             account_number=account_number, company_name="Test Company", phone_number="123-456-789"
         )
-        self.user_profile = UserProfile.objects.create(user=self.user, account=self.account)
+        self.user_profile = UserProfile.objects.create(user=self.user, account=self.account, is_test=True)
 
     # pylint: disable=broad-exception-caught
     def test_base(self):

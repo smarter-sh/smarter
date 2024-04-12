@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 """Account serializers for smarter api"""
+from typing import Type
+
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from smarter.apps.account.models import Account, PaymentMethod, UserProfile
+from smarter.apps.account.models import Account, APIKey, PaymentMethod, UserProfile
 
 
 User = get_user_model()
+UserType = Type[User]
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -53,4 +56,13 @@ class PaymentMethodSerializer(serializers.ModelSerializer):
     # pylint: disable=missing-class-docstring
     class Meta:
         model = PaymentMethod
+        fields = "__all__"
+
+
+class APIKeySerializer(serializers.ModelSerializer):
+    """API key serializer for smarter api."""
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = APIKey
         fields = "__all__"

@@ -25,5 +25,6 @@ urlpatterns = [
     path("", CustomAPIView.as_view(), name="custom_api_root_v0"),
     path("accounts/", include("smarter.apps.account.api.v0.urls")),
     path("plugins/", include("smarter.apps.plugin.api.v0.urls")),
+    path("chatbots/", include("smarter.apps.chatbot.api.v0.urls")),
     path("chat/", include("smarter.apps.chat.api.v0.urls")),
 ]

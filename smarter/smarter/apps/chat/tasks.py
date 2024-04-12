@@ -19,6 +19,13 @@ from .models import ChatHistory, ChatToolCallHistory, PluginUsageHistory
 logger = logging.getLogger(__name__)
 
 
+def aggregate_chat_history():
+    """summarize detail chatbot history into aggregate records."""
+
+    # FIX NOTE: implement me.
+    logger.info("Aggregating chat history.")
+
+
 @app.task()
 def create_chat_history(chat_id, user_id, model, tools, temperature, messages, response, max_tokens):
     """Create chat history record with flattened LLM response."""

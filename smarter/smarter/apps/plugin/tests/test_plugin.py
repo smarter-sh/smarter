@@ -114,7 +114,7 @@ class TestPlugin(unittest.TestCase):
         username = "testuser_" + os.urandom(4).hex()
         self.user = User.objects.create(username=username, password="12345")
         self.account = Account.objects.create(company_name="Test Account")
-        self.user_profile = UserProfile.objects.create(user=self.user, account=self.account)
+        self.user_profile = UserProfile.objects.create(user=self.user, account=self.account, is_test=True)
 
         self.data["user_profile"] = self.user_profile
 

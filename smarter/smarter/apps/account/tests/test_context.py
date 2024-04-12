@@ -7,6 +7,7 @@ import random
 
 # python stuff
 import unittest
+from typing import Type
 
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory
@@ -17,6 +18,7 @@ from ..models import Account, UserProfile
 
 
 User = get_user_model()
+UserType = Type[User]
 
 
 class TestContext(unittest.TestCase):
@@ -28,7 +30,7 @@ class TestContext(unittest.TestCase):
 
         self.user = User.objects.create_user(username=username, password="12345")
         self.account = Account.objects.create(company_name="Test Company", phone_number="123-456-789")
-        self.user_profile = UserProfile.objects.create(user=self.user, account=self.account)
+        self.user_profile = UserProfile.objects.create(user=self.user, account=self.account, is_test=True)
 
     def tearDown(self):
         """Clean up test fixtures."""

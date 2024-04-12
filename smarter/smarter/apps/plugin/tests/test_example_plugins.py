@@ -41,6 +41,7 @@ class TestPluginUrls(unittest.TestCase):
         self.user_profile = UserProfile.objects.create(
             user=self.user,
             account=self.account,
+            is_test=True,
         )
         add_example_plugins(user_profile=self.user_profile)
         self.client = Client()

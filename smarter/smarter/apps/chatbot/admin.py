@@ -6,11 +6,11 @@ from django.contrib import admin
 
 from .models import (
     ChatBot,
-    ChatBotAPIKeys,
+    ChatBotAPIKey,
     ChatBotCustomDomain,
     ChatBotCustomDomainDNS,
     ChatBotFunctions,
-    ChatBotPlugins,
+    ChatBotPlugin,
 )
 
 
@@ -44,24 +44,24 @@ class ChatBotDNSRecordAdmin(admin.ModelAdmin):
     list_display = [field.name for field in ChatBotCustomDomainDNS._meta.fields]
 
 
-class ChatBotAPIKeysAdmin(admin.ModelAdmin):
-    """ChatBotAPIKeys model admin."""
+class ChatBotAPIKeyAdmin(admin.ModelAdmin):
+    """ChatBotAPIKey model admin."""
 
     readonly_fields = (
         "created_at",
         "updated_at",
     )
-    list_display = [field.name for field in ChatBotAPIKeys._meta.fields]
+    list_display = [field.name for field in ChatBotAPIKey._meta.fields]
 
 
-class ChatBotPluginsAdmin(admin.ModelAdmin):
-    """ChatBotPlugins model admin."""
+class ChatBotPluginAdmin(admin.ModelAdmin):
+    """ChatBotPlugin model admin."""
 
     readonly_fields = (
         "created_at",
         "updated_at",
     )
-    list_display = [field.name for field in ChatBotPlugins._meta.fields]
+    list_display = [field.name for field in ChatBotPlugin._meta.fields]
 
 
 class ChatBotFunctionsAdmin(admin.ModelAdmin):
@@ -77,6 +77,6 @@ class ChatBotFunctionsAdmin(admin.ModelAdmin):
 admin.site.register(ChatBot, ChatBotAdmin)
 admin.site.register(ChatBotCustomDomain, ChatBotDNSHostAdmin)
 admin.site.register(ChatBotCustomDomainDNS, ChatBotDNSRecordAdmin)
-admin.site.register(ChatBotAPIKeys, ChatBotAPIKeysAdmin)
-admin.site.register(ChatBotPlugins, ChatBotPluginsAdmin)
+admin.site.register(ChatBotAPIKey, ChatBotAPIKeyAdmin)
+admin.site.register(ChatBotPlugin, ChatBotPluginAdmin)
 admin.site.register(ChatBotFunctions, ChatBotFunctionsAdmin)

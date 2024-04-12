@@ -6,6 +6,7 @@ from typing import List, Type
 
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
 from django.db import models
 
 from smarter.apps.account.models import Account, APIKey, UserProfile
@@ -71,8 +72,11 @@ class ChatBot(TimestampedModel):
 
     def save(self, *args, **kwargs):
         if not self.custom_domain:
-            if re.match(VALID_DOMAIN_PATTERN, self.hostname) is None:
-                raise ValidationError(f"Invalid domain name {self.hostname}")
+            validate = URLValidator()
+            try:
+                validate("http://" + self.hostname)
+            except ValidationError as e:
+                raise ValidationError(f"Invalid domain name {self.hostname}") from e
         super().save(*args, **kwargs)
 
     @property
@@ -90,14 +94,14 @@ class ChatBot(TimestampedModel):
         return self.custom_host or self.default_host
 
 
-class ChatBotAPIKeys(TimestampedModel):
+class ChatBotAPIKey(TimestampedModel):
     """Map of API keys for a ChatBot"""
 
     chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE)
     api_key = models.ForeignKey(APIKey, on_delete=models.CASCADE)
 
 
-class ChatBotPlugins(TimestampedModel):
+class ChatBotPlugin(TimestampedModel):
     """List of Plugins for a ChatBot"""
 
     chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE)
@@ -108,7 +112,7 @@ class ChatBotPlugins(TimestampedModel):
         return Plugin(plugin_meta=self.plugin_meta)
 
     @classmethod
-    def load(cls: Type["ChatBotPlugins"], chatbot: ChatBot, data) -> "ChatBotPlugins":
+    def load(cls: Type["ChatBotPlugin"], chatbot: ChatBot, data) -> "ChatBotPlugin":
         """Load (aka import) a plugin from a data file in yaml or json format."""
         user_profile = UserProfile.admin_for_account(chatbot.account)
         plugin = Plugin(data=data, user_profile=user_profile)
