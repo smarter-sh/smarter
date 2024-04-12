@@ -9,10 +9,11 @@ from pathlib import Path
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.utils import account_admin_user
 from smarter.apps.chat.providers.smarter import handler
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
-from smarter.common.const import SMARTER_DEMO_API_NAME
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_DEMO_API_NAME
 
 
 User = get_user_model()
@@ -25,7 +26,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         data_folder_path = os.path.join(HERE, "data", "*.json")
-        user_profile = UserProfile.objects.filter(user__username="admin").first()
+        account = Account.objects.get(account_number=SMARTER_ACCOUNT_NUMBER)
+        user = account_admin_user(account)
+        user_profile = UserProfile.objects.get(account=account, user=user)
         chatbot = ChatBot.objects.get(account=user_profile.account, name=SMARTER_DEMO_API_NAME)
 
         for file_path in glob.glob(data_folder_path):
