@@ -37,22 +37,32 @@ class Command(BaseCommand):
         if created:
             self.stdout.write(self.style.SUCCESS(f"Created account: {account.account_number} {account.company_name}"))
 
-        if not password:
-            password_length = 16
-            alphabet = string.ascii_letters + string.digits + string.punctuation
-            password = "".join(secrets.choice(alphabet) for _ in range(password_length))
-
-        user = User.objects.create_user(
+        user, created = User.objects.get_or_create(
             username=username, email=email, is_superuser=True, is_staff=True, is_active=True
         )
-        user.set_password(password)
-        user.save()
-        UserProfile.objects.get_or_create(user=User.objects.get(username=username), account=account)
+        if created:
+            if not password:
+                password_length = 16
+                alphabet = string.ascii_letters + string.digits + string.punctuation
+                password = "".join(secrets.choice(alphabet) for _ in range(password_length))
 
-        self.stdout.write(self.style.SUCCESS(f"Superuser {username} {email} has been created."))
-        self.stdout.write(self.style.SUCCESS(f"Password: {password}"))
+            user.set_password(password)
+            user.save()
 
-        # ensure that the Smarter admin user has at least one auth token (api key)
-        if APIKey.objects.filter(user=user).count() == 0:
-            _, token_key = APIKey.objects.create(user=user, description="created by manage.py", expiry=None)
-            self.stdout.write(self.style.SUCCESS(f"created API key: {token_key}"))
+            self.stdout.write(self.style.SUCCESS(f"Created superuser {username} {email} has been created."))
+            self.stdout.write(self.style.SUCCESS(f"Password: {password}"))
+
+            # ensure that the Smarter admin user has at least one auth token (api key)
+            if APIKey.objects.filter(user=user).count() == 0:
+                _, token_key = APIKey.objects.create(user=user, description="created by manage.py", expiry=None)
+                self.stdout.write(self.style.SUCCESS(f"created API key: {token_key}"))
+
+        user_profile, created = UserProfile.objects.get_or_create(
+            user=User.objects.get(username=username), account=account
+        )
+        if created:
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Created user profile for {user_profile.user.username} {user_profile.user.email}, account {user_profile.account.account_number} {user_profile.account.company_name}"
+                )
+            )

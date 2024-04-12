@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 """Django context processors for account/base.html"""
+import logging
+
 from django.conf import settings
 
 from .models import Account, UserProfile
+
+
+logger = logging.getLogger(__name__)
 
 
 def base(request):
@@ -22,12 +27,16 @@ def base(request):
         }
     }
     if request.user.is_authenticated:
-        user_profile = UserProfile.objects.get(user=request.user)
-        account = Account.objects.get(id=user_profile.account_id)
+        try:
+            user_profile = UserProfile.objects.get(user=request.user)
+            account = Account.objects.get(id=user_profile.account_id)
+        except UserProfile.DoesNotExist:
+            logger.warning("UserProfile.DoesNotExist: user_profile not found for user %s", request.user)
+
         account_authenticated_context = {
             "account_authenticated": {
                 "user": request.user,
-                "account": account,
+                "account": account or None,
             }
         }
         return {**account_context, **account_authentication_context, **account_authenticated_context}
