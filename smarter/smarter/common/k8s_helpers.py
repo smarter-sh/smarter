@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """A module for interacting with Kubernetes clusters."""
 
 import logging
@@ -7,22 +6,12 @@ import subprocess
 
 import yaml
 
+from .classes import Singleton
 from .conf import settings as smarter_settings
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 logger = logging.getLogger(__name__)
-
-
-class Singleton(type):
-    """A metaclass for creating singleton classes."""
-
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
 
 
 class KubernetesHelper(metaclass=Singleton):
@@ -39,7 +28,7 @@ class KubernetesHelper(metaclass=Singleton):
         """Return the kubeconfig file as a dictionary."""
         if self._kubeconfig:
             return self._kubeconfig
-        with open(self.kubeconfig_path, "r", encoding="utf-8") as f:
+        with open(self.kubeconfig_path, encoding="utf-8") as f:
             self._kubeconfig = yaml.safe_load(f)
         return self._kubeconfig
 

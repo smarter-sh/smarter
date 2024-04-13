@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """Django password management views."""
+
 from http import HTTPStatus
 
 from django import forms
@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.shortcuts import HttpResponse, redirect
 
-from smarter.common.email_helpers import EmailHelper
+from smarter.common.email_helpers import email_helper
 from smarter.common.token_generators import (
     ExpiringTokenGenerator,
     TokenConversionError,
@@ -57,7 +57,7 @@ class PasswordResetRequestView(SmarterNeverCachedWebView):
         body = self.render_clean_html(request, template_path=self.email_template_path, context=context)
         subject = "Reset your password"
         to = email
-        EmailHelper.send_email(subject=subject, body=body, to=to, html=True)
+        email_helper.send_email(subject=subject, body=body, to=to, html=True)
         return HttpResponse("Email sent.", status=200)
 
 

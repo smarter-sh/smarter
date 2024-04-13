@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """Account models."""
+
 import logging
 import os
 import random
@@ -15,7 +15,7 @@ from knox.auth import TokenAuthentication
 from knox.models import AuthToken, AuthTokenManager
 from rest_framework.exceptions import AuthenticationFailed
 
-from smarter.common.email_helpers import EmailHelper
+from smarter.common.email_helpers import email_helper
 
 # our stuff
 from smarter.common.model_utils import TimestampedModel
@@ -113,14 +113,14 @@ class AccountContact(TimestampedModel):
 
     def send_email(self, subject: str, body: str, html: bool = False, from_email: str = None):
 
-        EmailHelper.send_email(
+        email_helper.send_email(
             subject=subject, to=self.email, body=body, html=html, from_email=from_email, quiet=self.is_test
         )
 
     def send_welcome_email(self) -> None:
         """Send a welcome email to the contact."""
         template_path = os.path.join(HERE, "./assets/html/welcome.html")
-        with open(template_path, "r", encoding="utf-8") as welcome_email_template:
+        with open(template_path, encoding="utf-8") as welcome_email_template:
             html_template = welcome_email_template.read()
 
         subject = "Welcome to Smarter!"

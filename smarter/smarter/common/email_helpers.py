@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """Helper class for sending email via AWS Simple Email Service using SMTP."""
+
 import logging
 import re
 import smtplib
@@ -11,11 +11,13 @@ from django.conf import settings
 
 from smarter.common.const import VALID_EMAIL_PATTERN
 
+from .classes import Singleton
+
 
 logger = logging.getLogger(__name__)
 
 
-class EmailHelper:
+class EmailHelper(metaclass=Singleton):
     """Helper class for sending emails."""
 
     def validate_mail_list(emails: Union[str, List[str]], quiet: bool = False) -> List[str]:
@@ -61,3 +63,6 @@ class EmailHelper:
             server.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
             server.sendmail(msg["From"], [msg["To"]], msg.as_string())
             logger.info("smtp email sent to %s: %s", to, subject)
+
+
+email_helper = EmailHelper()
