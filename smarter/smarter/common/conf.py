@@ -437,6 +437,11 @@ class Settings(BaseSettings):
     stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY, env="STRIPE_TEST_SECRET_KEY")
 
     @property
+    def data_directory(self) -> str:
+        """Data directory"""
+        return "/data"
+
+    @property
     def initialized(self):
         """Is settings initialized?"""
         return self._initialized

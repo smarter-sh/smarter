@@ -22,7 +22,7 @@ from smarter.common.aws.exceptions import (
 from smarter.common.aws_helpers import aws_helper
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CUSTOMER_SUPPORT
-from smarter.common.k8s_helpers import apply_manifest
+from smarter.common.k8s_helpers import kubernetes_helper
 from smarter.smarter_celery import app
 
 from .exceptions import ChatBotCustomDomainExists
@@ -424,7 +424,7 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
         with open(template_path, "r", encoding="utf-8") as ingress_template:
             template = Template(ingress_template.read())
             manifest = template.substitute(ingress_values)
-        apply_manifest(manifest)
+        kubernetes_helper.apply_manifest(manifest)
 
 
 @app.task(

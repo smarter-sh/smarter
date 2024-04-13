@@ -14,4 +14,5 @@ kind: Config
 preferences: {}
 users:
 - name: default
-  user: {}
+  user:
+    token: ${token}

@@ -52,17 +52,15 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"Created superuser {username} {email} has been created."))
             self.stdout.write(self.style.SUCCESS(f"Password: {password}"))
 
-            # ensure that the Smarter admin user has at least one auth token (api key)
-            if APIKey.objects.filter(user=user).count() == 0:
-                _, token_key = APIKey.objects.create(user=user, description="created by manage.py", expiry=None)
-                self.stdout.write(self.style.SUCCESS(f"created API key: {token_key}"))
-
-        user_profile, created = UserProfile.objects.get_or_create(
-            user=User.objects.get(username=username), account=account
-        )
+        user_profile, created = UserProfile.objects.get_or_create(user=user, account=account)
         if created:
             self.stdout.write(
                 self.style.SUCCESS(
                     f"Created user profile for {user_profile.user.username} {user_profile.user.email}, account {user_profile.account.account_number} {user_profile.account.company_name}"
                 )
             )
+
+        # ensure that the Smarter admin user has at least one auth token (api key)
+        if APIKey.objects.filter(user=user).count() == 0:
+            _, token_key = APIKey.objects.create(user=user, description="created by manage.py", expiry=None)
+            self.stdout.write(self.style.SUCCESS(f"created API key: {token_key}"))
