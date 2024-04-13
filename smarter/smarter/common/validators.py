@@ -1,10 +1,14 @@
-"""Internal validation functions for requests from API Gateway."""
+"""
+Internal validation features. This module contains functions for validating various data types.
+Before adding anything to this module, please first check if there is a built-in Python function
+or a Django utility that can do the validation.
+"""
 
 import json
 import re
 
 from django.core.exceptions import ValidationError
-from django.core.validators import URLValidator, validate_email
+from django.core.validators import URLValidator, validate_email, validate_ipv4_address
 
 from .const import OpenAIEndPoint, OpenAIMessageKeys, OpenAIObjectTypes
 from .exceptions import SmarterValueError
@@ -18,8 +22,6 @@ class SmarterValidator:
     """
 
     VALID_ACCOUNT_NUMBER_PATTERN = r"^\d{4}-\d{4}-\d{4}$"
-    VALID_EMAIL_PATTERN = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
-    VALID_IP_PATTERN = r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$"
     VALID_PORT_PATTERN = r"^[0-9]{1,5}$"
     VALID_URL_PATTERN = r"^(http|https)://[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}(:[0-9]{1,5})?$"
     VALID_UUID_PATTERN = r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
@@ -50,8 +52,10 @@ class SmarterValidator:
     @staticmethod
     def validate_ip(ip: str) -> None:
         """Validate IP address format"""
-        if not re.match(SmarterValidator.VALID_IP_PATTERN, ip):
-            raise SmarterValueError(f"Invalid IP address {ip}")
+        try:
+            validate_ipv4_address(ip)
+        except ValidationError as e:
+            raise SmarterValueError(f"Invalid IP address {ip}") from e
 
     @staticmethod
     def validate_port(port: str) -> None:

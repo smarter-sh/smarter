@@ -54,7 +54,8 @@ class Account(TimestampedModel):
     timezone = models.CharField(max_length=255)
     currency = models.CharField(max_length=255)
 
-    def randomized_account_number(self):
+    @classmethod
+    def randomized_account_number(cls):
         """
         Generate a random account number of the format ####-####-####.
         """
@@ -70,7 +71,7 @@ class Account(TimestampedModel):
             return retval
 
         account_number = account_number_generator()
-        while Account.objects.filter(account_number=account_number).exists():
+        while cls.objects.filter(account_number=account_number).exists():
             account_number = account_number_generator()
 
         return account_number
