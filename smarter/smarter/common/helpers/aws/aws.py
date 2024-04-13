@@ -5,9 +5,9 @@ import os
 import socket
 
 # our stuff
-from ..conf import Services
-from ..conf import settings as smarter_settings
-from ..utils import recursive_sort_dict
+from smarter.common.conf import Services
+from smarter.common.conf import settings as smarter_settings
+from smarter.common.utils import recursive_sort_dict
 
 
 class AWSBase:

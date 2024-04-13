@@ -19,6 +19,7 @@ from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.plugin import Plugin
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.exceptions import SmarterValueError
 
 
 User = get_user_model()
@@ -45,14 +46,14 @@ class Command(BaseCommand):
     @user.setter
     def user(self, value):
         if not isinstance(value, User):
-            raise ValueError("User must be a User object.")
+            raise SmarterValueError("User must be a User object.")
         if not value.is_staff:
-            raise ValueError(f"User {value.username} is not an account admin.")
+            raise SmarterValueError(f"User {value.username} is not an account admin.")
         if self._account:
             try:
                 self._user_profile = UserProfile.objects.get(account=self._account, user=value)
             except UserProfile.DoesNotExist as e:
-                raise ValueError(
+                raise SmarterValueError(
                     f"User {value.username} is not associated with account {self._account.account_number}."
                 ) from e
         else:
@@ -71,7 +72,7 @@ class Command(BaseCommand):
     @account.setter
     def account(self, value):
         if not isinstance(value, Account):
-            raise ValueError("Account must be an Account object.")
+            raise SmarterValueError("Account must be an Account object.")
         if self._user:
             # ensure that we have integrity between user and account
             UserProfile.objects.get(account=value, user=self._user)
@@ -85,7 +86,7 @@ class Command(BaseCommand):
             try:
                 self._user_profile = UserProfile.objects.get(user=self._user, account=self._account)
             except UserProfile.DoesNotExist as e:
-                raise ValueError(
+                raise SmarterValueError(
                     f"User {self._user.username} is not associated with account {self._account.account_number}."
                 ) from e
         return self._user_profile
@@ -93,7 +94,7 @@ class Command(BaseCommand):
     @user_profile.setter
     def user_profile(self, value):
         if not isinstance(value, UserProfile):
-            raise ValueError("User profile must be a UserProfile object.")
+            raise SmarterValueError("User profile must be a UserProfile object.")
         self._user_profile = value
         self._user = value.user
         self._account = value.account
@@ -101,7 +102,7 @@ class Command(BaseCommand):
     @property
     def url(self) -> str:
         if not self._url:
-            raise ValueError("URL is required.")
+            raise SmarterValueError("URL is required.")
         return self._url
 
     @url.setter
@@ -143,7 +144,7 @@ class Command(BaseCommand):
     def load_plugin(self, filespec: str):
         """Load a plugin from a file on the local file system."""
         if not self.user_profile:
-            raise ValueError("User profile is required.")
+            raise SmarterValueError("User profile is required.")
 
         with open(filespec, encoding="utf-8") as file:
             data = file.read()
@@ -154,7 +155,7 @@ class Command(BaseCommand):
             except yaml.YAMLError as exc:
                 print("Error in configuration file:", exc)
         else:
-            raise ValueError("Could not read the file.")
+            raise SmarterValueError("Could not read the file.")
 
         data["user"] = self.user_profile.user
         data["account"] = self.user_profile.account
@@ -186,7 +187,7 @@ class Command(BaseCommand):
             return False
 
         if not self.user_profile:
-            raise ValueError("User profile is required.")
+            raise SmarterValueError("User profile is required.")
         self.clone_repo()
 
         # pylint: disable=too-many-nested-blocks
@@ -235,7 +236,7 @@ class Command(BaseCommand):
         username = options["username"]
 
         if not account_number and not username:
-            raise ValueError("username and/or account_number is required.")
+            raise SmarterValueError("username and/or account_number is required.")
 
         if username:
             self.user = User.objects.get(username=username)

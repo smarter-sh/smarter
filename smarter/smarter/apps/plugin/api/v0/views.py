@@ -22,6 +22,7 @@ from smarter.apps.plugin.api.v0.serializers import PluginMetaSerializer
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin import Plugin
 from smarter.apps.plugin.utils import add_example_plugins
+from smarter.common.exceptions import SmarterValueError
 
 
 User = get_user_model()
@@ -111,7 +112,7 @@ class PluginUploadView(SmarterAPIView):
         except json.JSONDecodeError:
             pass
 
-        raise ValueError("Invalid data format: expected JSON or YAML.")
+        raise SmarterValueError("Invalid data format: expected JSON or YAML.")
 
     def _create(self, request):
         data = self.parse_yaml_file(data=request.data)

@@ -15,6 +15,7 @@ from knox.auth import TokenAuthentication
 from knox.models import AuthToken, AuthTokenManager
 from rest_framework.exceptions import AuthenticationFailed
 
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.email_helpers import email_helper
 
 # our stuff
@@ -198,7 +199,7 @@ class UserProfile(TimestampedModel):
         is_new = self.pk is None
 
         if self.user is None or self.account is None:
-            raise ValueError("User and Account cannot be null")
+            raise SmarterValueError("User and Account cannot be null")
         super().save(*args, **kwargs)
         if is_new:
             # ensure that at least one person is on the account contact list
@@ -281,7 +282,7 @@ class APIKey(AuthToken, TimestampedModel):
 
     def save(self, *args, **kwargs):
         if not self.user.is_staff:
-            raise ValueError("API Keys can only be created for staff users.")
+            raise SmarterValueError("API Keys can only be created for staff users.")
         user_profile = UserProfile.objects.get(user=self.user)
         self.account = user_profile.account
         if self.created is None:
@@ -356,7 +357,7 @@ class Charge(TimestampedModel):
         is_new = self.pk is None
 
         if self.user is None or self.account is None:
-            raise ValueError("User and Account cannot be null")
+            raise SmarterValueError("User and Account cannot be null")
 
         super().save(*args, **kwargs)
         if is_new:
