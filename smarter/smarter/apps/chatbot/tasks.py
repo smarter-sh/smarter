@@ -22,7 +22,7 @@ from smarter.common.aws.exceptions import (
 from smarter.common.aws_helpers import aws_helper
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CUSTOMER_SUPPORT
-from smarter.common.k8s import apply_manifest
+from smarter.common.k8s_helpers import apply_manifest
 from smarter.smarter_celery import app
 
 from .exceptions import ChatBotCustomDomainExists
