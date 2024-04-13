@@ -1,6 +1,5 @@
 # pylint: disable=W0613,C0115
 """All models for the OpenAI Function Calling API app."""
-import re
 from typing import List, Type
 
 from django.core.cache import cache
@@ -14,8 +13,8 @@ from smarter.apps.plugin.plugin import Plugin
 
 # our stuff
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import VALID_DOMAIN_PATTERN
 from smarter.common.helpers.model_helpers import TimestampedModel
+from smarter.common.validators import SmarterValidator
 
 
 # -----------------------------------------------------------------------------
@@ -45,8 +44,7 @@ class ChatBotCustomDomain(TimestampedModel):
 
     def save(self, *args, **kwargs):
         if self.domain_name:
-            if re.match(VALID_DOMAIN_PATTERN, self.domain_name) is None:
-                raise ValidationError(f"Invalid domain name: {self.domain_name}")
+            SmarterValidator.validate_domain(self.domain_name)
         super().save(*args, **kwargs)
 
 

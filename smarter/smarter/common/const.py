@@ -19,14 +19,6 @@ SMARTER_COMPANY_NAME = "Smarter"
 SMARTER_DEMO_API_NAME = "demo-api"
 SMARTER_CUSTOMER_SUPPORT = "support@smarter.sh"
 
-VALID_ACCOUNT_NUMBER_PATTERN = r"^\d{4}-\d{4}-\d{4}$"
-VALID_DOMAIN_PATTERN = r"(?:[a-z0-9](?:[a-z0-9-_]{0,61}[a-z0-9])?\.)+(?:[a-z0-9-](?:[a-z0-9-_]{0,61}[a-z0-9])?\.)+[a-z0-9-][a-z0-9-_]{0,61}[a-z0-9]"
-VALID_EMAIL_PATTERN = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
-VALID_IP_PATTERN = r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$"
-VALID_PORT_PATTERN = r"^[0-9]{1,5}$"
-VALID_URL_PATTERN = r"^(http|https)://[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}(:[0-9]{1,5})?$"
-VALID_UUID_PATTERN = r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-
 
 HERE = os.path.abspath(os.path.dirname(__file__))  # smarter/smarter/common
 PROJECT_ROOT = str(Path(HERE).parent)  # smarter/smarter
