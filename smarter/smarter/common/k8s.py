@@ -4,6 +4,7 @@
 import os
 from string import Template
 
+import yaml
 from kubernetes import client as k8s_client
 from kubernetes import config as k8s_config
 from kubernetes import utils as k8s_utils
@@ -14,7 +15,7 @@ from .conf import settings as smarter_settings
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
-def get_kubeconfig() -> str:
+def get_kubeconfig() -> dict:
     """Generate a kubeconfig file for the EKS cluster."""
     eks_client = smarter_settings.aws_session.client("eks")
     response = eks_client.describe_cluster(name="apps-hosting-service")
@@ -30,7 +31,9 @@ def get_kubeconfig() -> str:
         template = Template(kubeconfig_template.read())
         kubeconfig = template.substitute(kubeconfig_values)
 
-    return kubeconfig
+    json_obj = yaml.safe_load(kubeconfig)
+
+    return json_obj
 
 
 def get_k8s_client() -> k8s_client.ApiClient:
@@ -39,7 +42,7 @@ def get_k8s_client() -> k8s_client.ApiClient:
     of a `kubectl` client.
     """
     kubeconfig = get_kubeconfig()
-    k8s_config.load_kube_config(kubeconfig)
+    k8s_config.load_kube_config_from_dict(kubeconfig)
     return k8s_client.ApiClient()
 
 
