@@ -18,6 +18,7 @@ from smarter.apps.account.utils import account_admin_user
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.plugin import Plugin
+from smarter.common.conf import settings as smarter_settings
 
 
 User = get_user_model()
@@ -28,7 +29,6 @@ UserType = Type[User]
 class Command(BaseCommand):
     """Deploy customer APIs from a GitHub repository of plugin YAML files organized by customer API name."""
 
-    HERE = os.path.abspath(os.path.dirname(__file__))
     _url: str = None
     _user: UserType = None
     _account: Account = None
@@ -112,7 +112,7 @@ class Command(BaseCommand):
 
     @property
     def local_path(self):
-        return os.path.join(self.HERE, self.get_url_filename(self.url))
+        return os.path.join(smarter_settings.data_directory, self.get_url_filename(self.url))
 
     def get_url_filename(self, url) -> str:
         """

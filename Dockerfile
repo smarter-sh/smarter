@@ -20,6 +20,16 @@ ENV PYTHONPATH="${PYTHONPATH}:/smarter"
 # Create a non-root user to run the application
 RUN adduser --disabled-password --gecos '' smarter_user
 
+# create a data directory for the smarter_user that
+# the application can use to store data.
+RUN mkdir -p /data/.kube && \
+    touch /data/.kube/config && \
+    chown -R smarter_user:smarter_user /data && \
+    chmod -R 755 /data
+
+# Set the KUBECONFIG environment variable
+ENV KUBECONFIG=/data/.kube/config
+
 # Setup our file system.
 # Add our source code and make the 'smarter' directory the working directory
 # so that the Docker file system matches up with the local file system.
@@ -43,6 +53,16 @@ RUN apt-get install -y ca-certificates curl gnupg && \
 RUN apt-get install default-mysql-client build-essential libssl-dev libffi-dev python3-dev python-dev -y && \
     rm -rf /var/lib/apt/lists/*
 
+# Download kubectl, which is a requirement for using the Kubernetes API
+RUN apt-get update && apt-get install -y curl && \
+    curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" && \
+    chmod +x ./kubectl && \
+    mv ./kubectl /usr/local/bin/kubectl
+
+# install aws cli
+RUN curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+    unzip awscliv2.zip && \
+    ./aws/install
 
 # Add all Python package dependencies
 RUN pip install --upgrade pip
