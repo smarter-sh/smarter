@@ -7,7 +7,9 @@ These tasks are long-running and/or i/o intensive operations that are managed by
 They are intended to be called asynchronously from the main application.
 """
 import logging
+import os
 import time
+from string import Template
 
 import botocore
 import dns.resolver
@@ -20,6 +22,7 @@ from smarter.common.aws.exceptions import (
 from smarter.common.aws_helpers import aws_helper
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CUSTOMER_SUPPORT
+from smarter.common.k8s import apply_manifest
 from smarter.smarter_celery import app
 
 from .exceptions import ChatBotCustomDomainExists
@@ -33,6 +36,7 @@ from .models import (
 
 logger = logging.getLogger(__name__)
 
+HERE = os.path.abspath(os.path.dirname(__file__))
 DEFAULT_TTL = 600
 CELERY_MAX_RETRIES = 3
 CELERY_RETRY_BACKOFF = True
@@ -403,6 +407,24 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
         If you also created a custom domain for your chatbot then you'll be separately notified once it has been verified.
         If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT}."""
         AccountContact.send_email_to_account(account=chatbot.account, subject=subject, body=body)
+
+    # if we're running in Kubernetes then we should create an ingress manifest
+    # for the customer API domain so that we can issue a certificate for it.
+    if smarter_settings.environment != "local":
+
+        ingress_values = {
+            "cluster_issuer": smarter_settings.customer_api_domain,
+            "environment_namespace": smarter_settings.environment_namespace,
+            "domain": domain_name,
+            "service_name": smarter_settings.platform_name,
+        }
+
+        # create and apply the ingress manifest
+        template_path = os.path.join(HERE, "./k8s/ingress.yaml.tpl")
+        with open(template_path, "r", encoding="utf-8") as ingress_template:
+            template = Template(ingress_template.read())
+            manifest = template.substitute(ingress_values)
+        apply_manifest(manifest)
 
 
 @app.task(

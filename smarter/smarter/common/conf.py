@@ -185,6 +185,10 @@ class SettingsDefaults:
     AWS_APIGATEWAY_CONNECT_TIMEOUT: int = TFVARS.get("aws_apigateway_connect_timeout", 70)
     AWS_APIGATEWAY_MAX_ATTEMPTS: int = TFVARS.get("aws_apigateway_max_attempts", 10)
 
+    AWS_EKS_CLUSTER_NAME = os.environ.get(
+        "AWS_EKS_CLUSTER_NAME", TFVARS.get("aws_eks_cluster_name", "apps-hosting-service")
+    )
+
     GOOGLE_MAPS_API_KEY: str = os.environ.get(
         "GOOGLE_MAPS_API_KEY",
         TFVARS.get("google_maps_api_key", None) or os.environ.get("TF_VAR_GOOGLE_MAPS_API_KEY", None),
@@ -381,6 +385,10 @@ class Settings(BaseSettings):
         pre=True,
         getter=lambda v: empty_str_to_bool_default(v, SettingsDefaults.AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN),
     )
+    aws_eks_cluster_name: Optional[str] = Field(
+        SettingsDefaults.AWS_EKS_CLUSTER_NAME,
+        env="AWS_EKS_CLUSTER_NAME",
+    )
     environment: Optional[str] = Field(
         SettingsDefaults.ENVIRONMENT,
         env="ENVIRONMENT",
@@ -558,6 +566,16 @@ class Settings(BaseSettings):
             # alpha.platform.smarter.sh, beta.platform.smarter.sh, next.platform.smarter.sh
             else self.environment + "." + SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN + "." + self.root_domain
         )
+
+    @property
+    def platform_name(self) -> str:
+        """Return the platform name."""
+        return self.root_domain.split(".")[0]
+
+    @property
+    def environment_namespace(self) -> str:
+        """Return the Kubernetes namespace for the environment."""
+        return f"{self.platform_name}-{SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN}-{settings.environment}"
 
     @property
     def customer_api_domain(self) -> str:
@@ -749,6 +767,13 @@ class Settings(BaseSettings):
         """Validate aws_apigateway_create_custom_domaim"""
         if v in [None, ""]:
             return SettingsDefaults.AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN
+        return v
+
+    @field_validator("aws_eks_cluster_name")
+    def validate_aws_eks_cluster_name(cls, v) -> str:
+        """Validate aws_eks_cluster_name"""
+        if v in [None, ""]:
+            return SettingsDefaults.AWS_EKS_CLUSTER_NAME
         return v
 
     @field_validator("debug_mode")
