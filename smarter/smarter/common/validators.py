@@ -1,9 +1,183 @@
 """Internal validation functions for requests from API Gateway."""
 
 import json
+import re
+
+from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator, validate_email
 
 from .const import OpenAIEndPoint, OpenAIMessageKeys, OpenAIObjectTypes
 from .exceptions import SmarterValueError
+
+
+# pylint: disable=R0904
+class SmarterValidator:
+    """
+    Class for validating various data types. Before adding anything to this class, please
+    first check if there is a built-in Python function or a Django utility that can do the validation.
+    """
+
+    VALID_ACCOUNT_NUMBER_PATTERN = r"^\d{4}-\d{4}-\d{4}$"
+    VALID_EMAIL_PATTERN = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+    VALID_IP_PATTERN = r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$"
+    VALID_PORT_PATTERN = r"^[0-9]{1,5}$"
+    VALID_URL_PATTERN = r"^(http|https)://[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}(:[0-9]{1,5})?$"
+    VALID_UUID_PATTERN = r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+
+    @staticmethod
+    def validate_account_number(account_number: str) -> None:
+        """Validate account number format"""
+        if not re.match(SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN, account_number):
+            raise SmarterValueError(f"Invalid account number {account_number}")
+
+    @staticmethod
+    def validate_domain(domain: str) -> None:
+        """Validate domain format"""
+        validate_url = URLValidator()
+        try:
+            validate_url("http://" + domain)
+        except ValidationError as e:
+            raise SmarterValueError(f"Invalid domain {domain}") from e
+
+    @staticmethod
+    def validate_email(email: str) -> None:
+        """Validate email format"""
+        try:
+            validate_email(email)
+        except ValidationError as e:
+            raise SmarterValueError(f"Invalid email {email}") from e
+
+    @staticmethod
+    def validate_ip(ip: str) -> None:
+        """Validate IP address format"""
+        if not re.match(SmarterValidator.VALID_IP_PATTERN, ip):
+            raise SmarterValueError(f"Invalid IP address {ip}")
+
+    @staticmethod
+    def validate_port(port: str) -> None:
+        """Validate port format"""
+        if not re.match(SmarterValidator.VALID_PORT_PATTERN, port):
+            raise SmarterValueError(f"Invalid port {port}")
+
+    @staticmethod
+    def validate_url(url: str) -> None:
+        """Validate URL format"""
+        if not re.match(SmarterValidator.VALID_URL_PATTERN, url):
+            raise SmarterValueError(f"Invalid URL {url}")
+
+    @staticmethod
+    def validate_uuid(uuid: str) -> None:
+        """Validate UUID format"""
+        if not re.match(SmarterValidator.VALID_UUID_PATTERN, uuid):
+            raise SmarterValueError(f"Invalid UUID {uuid}")
+
+    # --------------------------------------------------------------------------
+    # boolean helpers
+    # --------------------------------------------------------------------------
+    @staticmethod
+    def is_valid_account_number(account_number: str) -> bool:
+        """Check if account number is valid"""
+        try:
+            SmarterValidator.validate_account_number(account_number)
+            return True
+        except SmarterValueError:
+            return False
+
+    @staticmethod
+    def is_valid_domain(domain: str) -> bool:
+        """Check if domain is valid"""
+        try:
+            SmarterValidator.validate_domain(domain)
+            return True
+        except SmarterValueError:
+            return False
+
+    @staticmethod
+    def is_valid_email(email: str) -> bool:
+        """Check if email is valid"""
+        try:
+            SmarterValidator.validate_email(email)
+            return True
+        except SmarterValueError:
+            return False
+
+    @staticmethod
+    def is_valid_ip(ip: str) -> bool:
+        """Check if IP address is valid"""
+        try:
+            SmarterValidator.validate_ip(ip)
+            return True
+        except SmarterValueError:
+            return False
+
+    @staticmethod
+    def is_valid_port(port: str) -> bool:
+        try:
+            SmarterValidator.validate_port(port)
+            return True
+        except SmarterValueError:
+            return False
+
+    @staticmethod
+    def is_valid_url(url: str) -> bool:
+        try:
+            SmarterValidator.validate_url(url)
+            return True
+        except SmarterValueError:
+            return False
+
+    @staticmethod
+    def is_valid_uuid(uuid: str) -> bool:
+        try:
+            SmarterValidator.validate_uuid(uuid)
+            return True
+        except SmarterValueError:
+            return False
+
+    # --------------------------------------------------------------------------
+    # list helpers
+    # --------------------------------------------------------------------------
+    @staticmethod
+    def validate_list_of_account_numbers(account_numbers: list) -> None:
+        """Validate list of account numbers"""
+        for account_number in account_numbers:
+            SmarterValidator.validate_account_number(account_number)
+
+    @staticmethod
+    def validate_list_of_domains(domains: list) -> None:
+        """Validate list of domains"""
+        for domain in domains:
+            SmarterValidator.validate_domain(domain)
+
+    @staticmethod
+    def validate_list_of_emails(emails: list) -> None:
+        """Validate list of emails"""
+        for email in emails:
+            SmarterValidator.validate_email(email)
+
+    @staticmethod
+    def validate_list_of_ips(ips: list) -> None:
+        """Validate list of IP addresses"""
+        for ip in ips:
+            SmarterValidator.validate_ip(ip)
+
+    @staticmethod
+    def validate_list_of_ports(ports: list) -> None:
+        """Validate list of ports"""
+        for port in ports:
+            SmarterValidator.validate_port(port)
+
+    @staticmethod
+    def validate_list_of_urls(urls: list) -> None:
+        """Validate list of URLs"""
+        for url in urls:
+            SmarterValidator.validate_url(url)
+
+    @staticmethod
+    def validate_list_of_uuids(uuids: list) -> None:
+        """Validate list of UUIDs"""
+        for uuid in uuids:
+            SmarterValidator.validate_uuid(uuid)
 
 
 def validate_item(item, valid_items: list, item_type: str) -> None:

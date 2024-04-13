@@ -1,7 +1,6 @@
 """Helper class for sending email via AWS Simple Email Service using SMTP."""
 
 import logging
-import re
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -9,7 +8,7 @@ from typing import List, Union
 
 from django.conf import settings
 
-from smarter.common.const import VALID_EMAIL_PATTERN
+from smarter.common.validators import SmarterValidator
 
 from ..classes import Singleton
 
@@ -25,7 +24,7 @@ class EmailHelper(metaclass=Singleton):
         if isinstance(emails, str):
             mailto_list = [emails]
 
-        valid_emails = [email for email in mailto_list if re.match(VALID_EMAIL_PATTERN, email)]
+        valid_emails = [email for email in mailto_list if SmarterValidator.is_valid_email(email)]
 
         if len(valid_emails) != len(mailto_list) and not quiet:
             logger.warning("invalid email addresses were found in send list: %s", set(mailto_list) - set(valid_emails))

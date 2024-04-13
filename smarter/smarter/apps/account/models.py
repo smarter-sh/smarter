@@ -20,6 +20,7 @@ from smarter.common.helpers.email_helpers import email_helper
 
 # our stuff
 from smarter.common.helpers.model_helpers import TimestampedModel
+from smarter.common.validators import SmarterValidator
 
 from .const import CHARGE_TYPE_PLUGIN, CHARGE_TYPE_PROMPT_COMPLETION, CHARGE_TYPE_TOOL
 from .signals import new_charge_created, new_user_created
@@ -77,6 +78,7 @@ class Account(TimestampedModel):
     def save(self, *args, **kwargs):
         if self.account_number == "default_value":
             self.account_number = self.randomized_account_number()
+        SmarterValidator.validate_account_number(self.account_number)
         super().save(*args, **kwargs)
 
     # pylint: disable=missing-class-docstring

@@ -43,12 +43,11 @@ from .const import (
     SMARTER_CUSTOMER_API_SUBDOMAIN,
     SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN,
     TFVARS,
-    VALID_DOMAIN_PATTERN,
-    VALID_EMAIL_PATTERN,
     VERSION,
 )
 from .exceptions import SmarterConfigurationError, SmarterValueError
 from .utils import recursive_sort_dict
+from .validators import SmarterValidator
 
 
 logger = logging.getLogger(__name__)
@@ -891,10 +890,7 @@ class Settings(BaseSettings):
         """Check smtp_sender"""
         if v in [None, ""]:
             v = SettingsDefaults.SMTP_SENDER
-        pattern = VALID_DOMAIN_PATTERN
-        if v not in [None, ""]:
-            if not re.match(pattern, v):
-                raise SmarterValueError(f"Invalid domain name: {v}")
+            SmarterValidator.validate_domain(v)
         return v
 
     @field_validator("smtp_from_email")
@@ -903,9 +899,7 @@ class Settings(BaseSettings):
         if v in [None, ""]:
             v = SettingsDefaults.SMTP_FROM_EMAIL
         if v not in [None, ""]:
-            pattern = VALID_EMAIL_PATTERN
-            if not re.match(pattern, v):
-                raise SmarterValueError("Invalid email address")
+            SmarterValidator.validate_email(v)
         return v
 
     @field_validator("smtp_host")
@@ -913,10 +907,7 @@ class Settings(BaseSettings):
         """Check smtp_host"""
         if v in [None, ""]:
             v = SettingsDefaults.SMTP_HOST
-        pattern = VALID_DOMAIN_PATTERN
-        if v not in [None, ""]:
-            if not re.match(pattern, v):
-                raise SmarterValueError(f"Invalid domain name: {v}")
+            SmarterValidator.validate_domain(v)
         return v
 
     @field_validator("smtp_password")
@@ -957,22 +948,18 @@ class Settings(BaseSettings):
         return v
 
 
-# pylint: disable=W0105
-"""
-mcdaniel: Apr-2024. Having to use our own bespoke Singleton class to avoid a metaclass conflict
-with Pydantic BaseSettings.
-
-Traceback (most recent call last):
-  File "/smarter/manage.py", line 8, in <module>
-    from smarter.common.conf import settings as smarter_settings
-  File "/smarter/smarter/common/conf.py", line 262, in <module>
-    class Settings(BaseSettings, metaclass=Singleton):
-TypeError: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases
-"""
-
-
 class SingletonSettings:
-    """Singleton for Settings"""
+    """
+    Alternative Singleton pattern to resolve metaclass inheritance conflict
+    from Pydantic BaseSettings.
+
+    Traceback (most recent call last):
+    File "/smarter/manage.py", line 8, in <module>
+        from smarter.common.conf import settings as smarter_settings
+    File "/smarter/smarter/common/conf.py", line 262, in <module>
+        class Settings(BaseSettings, metaclass=Singleton):
+    TypeError: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases
+    """
 
     _instance = None
 

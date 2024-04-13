@@ -14,12 +14,12 @@ import botocore
 import dns.resolver
 
 from smarter.apps.account.models import Account, AccountContact
-from smarter.common.aws.exceptions import (
+from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SMARTER_CUSTOMER_SUPPORT
+from smarter.common.helpers.aws.exceptions import (
     AWSACMCertificateNotFound,
     AWSACMVerificationNotFound,
 )
-from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SMARTER_CUSTOMER_SUPPORT
 from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.common.helpers.k8s_helpers import kubernetes_helper
 from smarter.smarter_celery import app
