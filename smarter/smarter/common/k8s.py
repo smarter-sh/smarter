@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """A module for interacting with Kubernetes clusters."""
 
+import logging
 import os
 from string import Template
 
@@ -13,12 +14,14 @@ from .conf import settings as smarter_settings
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
+logger = logging.getLogger(__name__)
 
 
 def get_kubeconfig() -> dict:
     """Generate a kubeconfig file for the EKS cluster."""
     eks_client = smarter_settings.aws_session.client("eks")
-    response = eks_client.describe_cluster(name="apps-hosting-service")
+    response = eks_client.describe_cluster(name=smarter_settings.aws_eks_cluster_name)
+    logger.info("retrieved AWS EKS cluster configuration for %s", smarter_settings.aws_eks_cluster_name)
     cluster = response["cluster"]
 
     kubeconfig_values = {
@@ -43,10 +46,12 @@ def get_k8s_client() -> k8s_client.ApiClient:
     """
     kubeconfig = get_kubeconfig()
     k8s_config.load_kube_config_from_dict(kubeconfig)
+    logger.info("loaded Kubernetes configuration")
     return k8s_client.ApiClient()
 
 
 def apply_manifest(manifest):
     """Apply a Kubernetes manifest to the cluster."""
     k8s_api = get_k8s_client()
-    k8s_utils.create_from_yaml(k8s_api, manifest)
+    logger.info("applying Kubernetes manifest to cluster %s", smarter_settings.aws_eks_cluster_name)
+    k8s_utils.create_from_yaml(k8s_client=k8s_api, yaml_objects=manifest)
