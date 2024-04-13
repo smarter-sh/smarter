@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Mailchimp API helper functions"""
 
 import logging

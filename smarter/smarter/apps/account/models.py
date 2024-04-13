@@ -15,10 +15,10 @@ from knox.auth import TokenAuthentication
 from knox.models import AuthToken, AuthTokenManager
 from rest_framework.exceptions import AuthenticationFailed
 
-from smarter.common.email_helpers import email_helper
+from smarter.common.helpers.email_helpers import email_helper
 
 # our stuff
-from smarter.common.model_utils import TimestampedModel
+from smarter.common.helpers.model_helpers import TimestampedModel
 
 from .const import CHARGE_TYPE_PLUGIN, CHARGE_TYPE_PROMPT_COMPLETION, CHARGE_TYPE_TOOL
 from .signals import new_charge_created, new_user_created

@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """Django template and view helper functions."""
+
 import re
 
 from django import template

@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """This module deletes a plugin using manage.py on the command line."""
+
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account

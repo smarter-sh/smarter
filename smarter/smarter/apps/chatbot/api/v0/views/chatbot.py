@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=W0718,W0613
 """ChatBot api views."""
 import logging

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Ultility functions for plugins."""
 
 import os

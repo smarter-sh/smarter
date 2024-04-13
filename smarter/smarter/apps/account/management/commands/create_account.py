@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """This module is used to create a new account."""
+
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account

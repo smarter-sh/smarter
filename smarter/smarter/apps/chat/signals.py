@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=W0613,C0115
 """Signals for chat app."""
 from django.dispatch import Signal

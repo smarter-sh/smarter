@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Django custom project settings"""
 
 from smarter.common.conf import settings as smarter_settings

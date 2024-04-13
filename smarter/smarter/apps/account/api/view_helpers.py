@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Django template and view helper functions."""
 
 from knox.auth import TokenAuthentication

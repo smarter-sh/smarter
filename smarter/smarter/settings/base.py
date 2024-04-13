@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=unused-wildcard-import, wildcard-import, unused-import, wrong-import-position
 """
 Django base settings.

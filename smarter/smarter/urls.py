@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 URL configuration for smarter project.
 hello world -- video 2 almost done!!!!

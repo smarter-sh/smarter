@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """URL configuration for dashboard legal pages."""
+
 from django.conf import settings
 from django.urls import path
 from drf_yasg import openapi

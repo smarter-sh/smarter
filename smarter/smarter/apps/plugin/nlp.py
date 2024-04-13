@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Natural language processing functions for the OpenAI API."""
 
 import re

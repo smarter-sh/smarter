@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=E0402,E0602,unused-wildcard-import,wildcard-import
 """Django settings for alpha.platform.smarter.sh"""
 import os

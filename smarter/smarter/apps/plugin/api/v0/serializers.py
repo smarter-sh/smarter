@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """PluginMeta serializers."""
+
 from rest_framework import serializers
 from taggit.models import Tag
 

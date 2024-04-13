@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Celery configuration for smarter APP."""
 
 from celery import Celery

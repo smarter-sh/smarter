@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
 """This module is used to initialize the environment."""
 
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.base import BaseCommand
 
-from smarter.common.aws_helpers import aws_helper
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN
+from smarter.common.helpers.aws_helpers import aws_helper
 
 
 # pylint: disable=E1101

@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 """Account models."""
 
 from django.db import models
 
 # our stuff
-from smarter.common.model_utils import TimestampedModel
+from smarter.common.helpers.model_helpers import TimestampedModel
 
 
 class EmailContactList(TimestampedModel):

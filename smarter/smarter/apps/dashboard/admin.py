@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=missing-class-docstring,missing-function-docstring
 """Rebuild the admin site to restrict access to certain apps and models."""
 from django.apps import apps

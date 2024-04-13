@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=E0402,unused-wildcard-import,wildcard-import
 """Django base settings for environments deployed to AWS."""
 

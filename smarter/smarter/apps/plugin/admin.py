@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=C0114,C0115
 """Plugin admin."""
 import re

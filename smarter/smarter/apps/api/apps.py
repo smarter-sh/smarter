@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """This module is used to configure the Smarter Admin app."""
+
 from django.apps import AppConfig
 
 

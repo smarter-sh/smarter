@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """This module retrieves the json representation of a plugin."""
+
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account

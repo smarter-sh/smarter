@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """A utility class for introspecting AWS infrastructure."""
 
 import logging

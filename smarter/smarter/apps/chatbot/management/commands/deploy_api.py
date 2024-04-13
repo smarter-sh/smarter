@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This module is used to deploy a customer API."""
 
 from django.core.management.base import BaseCommand

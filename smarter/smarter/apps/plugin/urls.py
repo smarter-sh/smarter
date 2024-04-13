@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """URL configuration for the plugin app."""
 
 from django.urls import path

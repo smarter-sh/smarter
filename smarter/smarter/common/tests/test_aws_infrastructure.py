@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position
 # pylint: disable=duplicate-code
 """Test configuration Settings class."""
@@ -16,7 +15,7 @@ PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
 if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 
-from smarter.common.aws_helpers import aws_helper
+from smarter.common.helpers.aws_helpers import aws_helper
 
 from ..conf import Services, settings
 

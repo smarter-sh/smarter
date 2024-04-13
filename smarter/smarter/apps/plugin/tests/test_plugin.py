@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position
 # pylint: disable=R0801,W0613
 """Test providers."""
@@ -107,7 +106,7 @@ class TestPlugin(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         config_path = get_test_file_path("everlasting-gobstopper.yaml")
-        with open(config_path, "r", encoding="utf-8") as file:
+        with open(config_path, encoding="utf-8") as file:
             self.data = yaml.safe_load(file)
 
         # create a 4-digit random string of alphanumeric characters

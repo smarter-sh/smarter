@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=W0613
 """Django signal receivers for plugin app."""
 
@@ -7,7 +6,7 @@ import logging
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 
-from smarter.common.console_helpers import formatted_json, formatted_text
+from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 
 from .models import PluginSelectorHistory
 from .plugin import Plugin

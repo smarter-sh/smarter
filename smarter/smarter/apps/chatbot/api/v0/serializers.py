@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=C0114,C0115,C0116
 """Account serializers for smarter api"""
 from rest_framework import serializers

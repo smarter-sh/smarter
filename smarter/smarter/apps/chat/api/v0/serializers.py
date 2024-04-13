@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=C0115
 """Django REST framework serializers for the API admin app."""
 from rest_framework import serializers

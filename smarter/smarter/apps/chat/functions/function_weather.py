@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 OpenAI API example function: https://platform.openai.com/docs/guides/function-calling
 This function returns the current weather in a given location as a 24-hour forecast.
@@ -19,6 +18,7 @@ The Open-Meteo API is used to get the weather data. The API is rate-limited to 1
 openmeteo_requests Python package, which is a wrapper for the requests package. It is used to cache the API responses
 to avoid repeated API calls, and to retry failed API calls.
 """
+
 import json
 
 import googlemaps

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=W0613
 """
 Stripe API integration for smarter account management.

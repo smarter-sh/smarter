@@ -11,7 +11,7 @@ from django.conf import settings
 
 from smarter.common.const import VALID_EMAIL_PATTERN
 
-from .classes import Singleton
+from ..classes import Singleton
 
 
 logger = logging.getLogger(__name__)

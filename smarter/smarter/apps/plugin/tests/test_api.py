@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position
 # pylint: disable=R0801,W0613,R0902
 """Test plugin API."""
@@ -55,7 +54,7 @@ class TestPluginAPI(unittest.TestCase):
 
     def safe_load(self, file_path) -> dict:
         """Load a file."""
-        with open(file_path, "r", encoding="utf-8") as file:
+        with open(file_path, encoding="utf-8") as file:
             return yaml.safe_load(file)
 
     def setUp(self):

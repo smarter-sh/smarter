@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """WSGI config for smarter project."""
+
 # wsgi.py
 import logging
 import os

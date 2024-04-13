@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=missing-docstring
 """Django token generators for single-use authentications."""
 from typing import Type

@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """Django Signal Receivers for chatbot."""
+
 # pylint: disable=W0613,C0115
 import json
 import logging
@@ -7,7 +7,7 @@ import logging
 from django.dispatch import receiver
 from django.http import HttpRequest
 
-from smarter.common.console_helpers import formatted_text
+from smarter.common.helpers.console_helpers import formatted_text
 
 from .models import ChatBot
 from .signals import chatbot_called

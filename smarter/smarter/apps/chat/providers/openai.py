@@ -1,5 +1,7 @@
-# -*- coding: utf-8 -*-
 """All Django views for the OpenAI API app."""
+
+from http import HTTPStatus
+
 import openai
 from rest_framework import permissions, viewsets
 from rest_framework.response import Response
@@ -8,7 +10,6 @@ from smarter.common.conf import settings
 from smarter.common.const import (  # VALID_EMBEDDING_MODELS,
     VALID_CHAT_COMPLETION_MODELS,
     OpenAIObjectTypes,
-    OpenAIResponseCodes,
 )
 from smarter.common.exceptions import EXCEPTION_MAP
 from smarter.common.utils import (
@@ -97,7 +98,7 @@ def handler(data: dict):
 
     # success!! return the results
     return http_response_factory(
-        status_code=OpenAIResponseCodes.HTTP_RESPONSE_OK,
+        status_code=HTTPStatus.OK,
         body={**openai_results, **request_meta_data},
     )
 

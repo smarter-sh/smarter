@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This module is used to send the html welcome email to a user in the AccountContact table."""
 
 from django.core.management.base import BaseCommand

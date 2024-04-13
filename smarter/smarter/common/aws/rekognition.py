@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """AWS Rekognition helper class."""
 
 from .aws import AWSBase

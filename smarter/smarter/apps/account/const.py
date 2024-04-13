@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Account constants"""
 
 CHARGE_TYPE_PROMPT_COMPLETION = "completion"

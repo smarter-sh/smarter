@@ -47,7 +47,7 @@ from .const import (
     VALID_EMAIL_PATTERN,
     VERSION,
 )
-from .exceptions import OpenAIAPIConfigurationError, OpenAIAPIValueError
+from .exceptions import SmarterConfigurationError, SmarterValueError
 from .utils import recursive_sort_dict
 
 
@@ -125,7 +125,7 @@ class Services:
     def raise_error_on_disabled(cls, service: Union[str, Tuple[str, bool]]) -> None:
         """Raise an error if the service is disabled"""
         if not cls.enabled(service):
-            raise OpenAIAPIConfigurationError(f"{service} is not enabled. See conf.Services")
+            raise SmarterConfigurationError(f"{service} is not enabled. See conf.Services")
 
     @classmethod
     def to_dict(cls):
@@ -290,12 +290,12 @@ class Settings(BaseSettings):
             aws_access_key_id = os.environ.get("AWS_ACCESS_KEY_ID", None)
             aws_secret_access_key = os.environ.get("AWS_SECRET_ACCESS_KEY", None)
             if not aws_access_key_id or not aws_secret_access_key and not self.aws_profile:
-                raise OpenAIAPIConfigurationError(
+                raise SmarterConfigurationError(
                     "required environment variable(s) AWS_ACCESS_KEY_ID and/or AWS_SECRET_ACCESS_KEY not set"
                 )
             region_name = self.aws_region
             if not region_name and not self.aws_profile:
-                raise OpenAIAPIConfigurationError("required environment variable AWS_REGION not set")
+                raise SmarterConfigurationError("required environment variable AWS_REGION not set")
             try:
                 self._aws_session = boto3.Session(
                     region_name=region_name,
@@ -749,7 +749,7 @@ class Settings(BaseSettings):
         if v in [None, ""]:
             return SettingsDefaults.AWS_REGION
         if v not in valid_regions:
-            raise OpenAIAPIValueError(f"aws_region {v} not in aws_regions: {valid_regions}")
+            raise SmarterValueError(f"aws_region {v} not in aws_regions: {valid_regions}")
         return v
 
     @field_validator("environment")
@@ -983,7 +983,7 @@ class SingletonSettings:
             try:
                 cls._instance._settings = Settings()
             except ValidationError as e:
-                raise OpenAIAPIConfigurationError("Invalid configuration: " + str(e)) from e
+                raise SmarterConfigurationError("Invalid configuration: " + str(e)) from e
         return cls._instance
 
     @property

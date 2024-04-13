@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=W0212
 """Django admin configuration for the chat app."""
 
