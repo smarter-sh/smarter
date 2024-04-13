@@ -10,7 +10,7 @@ print(f"Loading smarter.settings.{environment_name}")
 
 ENVIRONMENT_DOMAIN = f"{environment_name}.platform.{SMARTER_ROOT_DOMAIN}"
 CUSTOMER_API_DOMAIN = smarter_settings.customer_api_domain
-ALLOWED_HOSTS = [ENVIRONMENT_DOMAIN, CUSTOMER_API_DOMAIN]
+ALLOWED_HOSTS = [ENVIRONMENT_DOMAIN, CUSTOMER_API_DOMAIN, f"*.{CUSTOMER_API_DOMAIN}"]
 SMTP_SENDER = smarter_settings.smtp_sender or ENVIRONMENT_DOMAIN
 SMTP_FROM_EMAIL = smarter_settings.smtp_from_email or "no-reply@" + SMTP_SENDER
 
