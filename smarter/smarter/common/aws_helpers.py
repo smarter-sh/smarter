@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 AWS Helper Module.
 
@@ -24,10 +23,11 @@ from .aws.lambda_function import AWSLambdaFunction
 from .aws.rekognition import AWSRekognition
 from .aws.route53 import AWSRoute53
 from .aws.s3 import AWSSimpleStorageSystem
+from .classes import Singleton
 
 
 # pylint: disable=too-many-instance-attributes
-class AWSInfrastructureConfig:
+class AWSInfrastructureConfig(metaclass=Singleton):
     """AWS Infrastructure Configuration class with lazy loading of services."""
 
     _aws: AWSBase = None
@@ -104,22 +104,4 @@ class AWSInfrastructureConfig:
         return self._s3
 
 
-class SingletonConfig:
-    """Singleton for Settings"""
-
-    _instance = None
-
-    def __new__(cls):
-        """Create a new instance of Settings"""
-        if cls._instance is None:
-            cls._instance = super(SingletonConfig, cls).__new__(cls)
-            cls._instance._config = AWSInfrastructureConfig()
-        return cls._instance
-
-    @property
-    def config(self) -> AWSInfrastructureConfig:
-        """Return the smarter_settings"""
-        return self._config  # pylint: disable=E1101
-
-
-aws_helper = SingletonConfig().config
+aws_helper = AWSInfrastructureConfig()

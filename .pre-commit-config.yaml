@@ -2,6 +2,10 @@ default_language_version:
   # default language version for each language
   python: python3.11
 repos:
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.15.2
+    hooks:
+      - id: pyupgrade
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.6
     hooks:
@@ -52,7 +56,6 @@ repos:
       # See https://pre-commit.com/hooks.html for more hooks
       #- id: check-added-large-files
       - id: fix-byte-order-marker
-      - id: fix-encoding-pragma
       - id: check-case-conflict
       - id: check-json
         exclude: ".*/reactapp/.*"

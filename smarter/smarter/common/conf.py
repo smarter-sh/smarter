@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=no-member,no-self-argument,unused-argument,R0801
 """
 Configuration for Lambda functions.
@@ -958,6 +957,20 @@ class Settings(BaseSettings):
         return v
 
 
+# pylint: disable=W0105
+"""
+mcdaniel: Apr-2024. Having to use our own bespoke Singleton class to avoid a metaclass conflict
+with Pydantic BaseSettings.
+
+Traceback (most recent call last):
+  File "/smarter/manage.py", line 8, in <module>
+    from smarter.common.conf import settings as smarter_settings
+  File "/smarter/smarter/common/conf.py", line 262, in <module>
+    class Settings(BaseSettings, metaclass=Singleton):
+TypeError: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases
+"""
+
+
 class SingletonSettings:
     """Singleton for Settings"""
 
@@ -966,7 +979,7 @@ class SingletonSettings:
     def __new__(cls):
         """Create a new instance of Settings"""
         if cls._instance is None:
-            cls._instance = super(SingletonSettings, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
             try:
                 cls._instance._settings = Settings()
             except ValidationError as e:

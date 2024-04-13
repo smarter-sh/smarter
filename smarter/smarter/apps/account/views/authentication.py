@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=W0613
 """Django Authentication views."""
 from http import HTTPStatus
@@ -9,7 +8,7 @@ from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.shortcuts import HttpResponse, redirect
 from django.urls import reverse
 
-from smarter.common.email_helpers import EmailHelper
+from smarter.common.email_helpers import email_helper
 from smarter.common.token_generators import (
     ExpiringTokenGenerator,
     TokenConversionError,
@@ -130,7 +129,7 @@ class AccountActivationEmailView(SmarterNeverCachedWebView):
         body = self.render_clean_html(request, template_path=self.email_template_path, context=context)
         subject = "Activate your account."
         to = user.email
-        EmailHelper.send_email(subject=subject, body=body, to=to, html=True)
+        email_helper.send_email(subject=subject, body=body, to=to, html=True)
 
         # render a page to let the user know the email was sent. Add a link to resend the email.
         context = {"account_activation": {"resend": reverse("account_activation")}}
