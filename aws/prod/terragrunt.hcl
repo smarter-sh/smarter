@@ -11,7 +11,8 @@ locals {
 
   # environment vars
   environment           = "prod"
-  subdomain             = "platform"
+  platform_subdomain    = "platform"
+  api_subdomain         = "api"
 }
 
 # Terragrunt will copy the Terraform configurations specified by the source parameter, along with any files in the
@@ -30,7 +31,8 @@ include {
 inputs = merge(
   local.global_vars.locals,
   {
-    environment  = local.environment
-    subdomain    = local.subdomain
+    environment           = local.environment
+    platform_subdomain    = local.platform_subdomain
+    api_subdomain         = local.api_subdomain
   }
 )

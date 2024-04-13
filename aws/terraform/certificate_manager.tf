@@ -15,7 +15,7 @@ provider "aws" {
 # SSL/TLS certs issued in us-east-1 for Cloudfront
 #------------------------------------------------------------------------------
 
-module "acm_environment_domain" {
+module "acm_environment_platform_domain" {
   source  = "terraform-aws-modules/acm/aws"
   version = "~> 5.0"
 
@@ -23,12 +23,12 @@ module "acm_environment_domain" {
     aws = aws.us-east-1
   }
 
-  domain_name       = local.environment_domain
-  zone_id           = aws_route53_zone.environment_domain.id
+  domain_name       = local.environment_platform_domain
+  zone_id           = aws_route53_zone.environment_platform_domain.id
   validation_method = "DNS"
 
   subject_alternative_names = [
-    "*.${local.environment_domain}",
+    "*.${local.environment_platform_domain}",
   ]
 
   wait_for_validation = true

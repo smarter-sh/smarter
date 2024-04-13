@@ -15,11 +15,11 @@ module "environment_storage" {
     {
       allowed_methods = ["GET", "POST", "PUT", "HEAD"]
       allowed_origins = [
-        "https://${local.environment_domain}",
-        "https://${local.environment_domain}",
+        "https://${local.environment_platform_domain}",
+        "https://${local.environment_platform_domain}",
 
-        "http://${local.environment_domain}",
-        "http://${local.environment_domain}",
+        "http://${local.environment_platform_domain}",
+        "http://${local.environment_platform_domain}",
       ]
       allowed_headers = ["*"]
       expose_headers = [

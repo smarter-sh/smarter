@@ -27,6 +27,7 @@ celery==5.3.6
 celery-redbeat==2.2.0
 dnspython==2.6.1
 htmlmin==0.1.12
+kubernetes==29.0.0
 mailchimp-marketing==3.0.80
 mysqlclient==2.2.4
 requests==2.31.0
