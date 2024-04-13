@@ -59,6 +59,7 @@ class KubernetesHelper(metaclass=Singleton):
 
     def apply_manifest(self, manifest: str):
         """Apply a Kubernetes manifest to the cluster."""
+        self.update_kubeconfig()
         logger.info("applying Kubernetes manifest to cluster %s", smarter_settings.aws_eks_cluster_name)
         with subprocess.Popen(
             ["kubectl", "apply", "-f", "-"], stdin=subprocess.PIPE, stderr=subprocess.PIPE
