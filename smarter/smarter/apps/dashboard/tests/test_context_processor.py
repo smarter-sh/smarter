@@ -26,7 +26,7 @@ class TestContextProcessor(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         username = "testuser" + hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()
-        account_number = "" + hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()
+        account_number = "" + Account.randomized_account_number()
 
         self.user = User.objects.create_user(username=username, password="12345")
         self.account = Account.objects.create(
