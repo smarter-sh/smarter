@@ -5,6 +5,7 @@ from django.core.management.base import BaseCommand
 from smarter.apps.account.models import Account
 from smarter.apps.chatbot.models import ChatBotCustomDomain
 from smarter.apps.chatbot.tasks import register_custom_domain
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.aws_helpers import aws_helper
 
 
@@ -27,7 +28,7 @@ class Command(BaseCommand):
         try:
             domain_name = ChatBotCustomDomain.objects.get(domain_name=domain)
             if domain_name.account != account:
-                raise ValueError(f"The domain name {domain} is already registered by another account.")
+                raise SmarterValueError(f"The domain name {domain} is already registered by another account.")
         except ChatBotCustomDomain.DoesNotExist:
             return None
 

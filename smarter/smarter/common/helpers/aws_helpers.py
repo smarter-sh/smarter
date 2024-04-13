@@ -14,16 +14,16 @@ class is created.
 Individual services are accessed lazily via properties on the AWSInfrastructureConfig class.
 """
 
-from ..aws.acm import AWSCertificateManager
-from ..aws.api_gateway import AWSAPIGateway
-from ..aws.aws import AWSBase
-from ..aws.dynamodb import AWSDynamoDB
-from ..aws.iam import AWSIdentifyAccessManagement
-from ..aws.lambda_function import AWSLambdaFunction
-from ..aws.rekognition import AWSRekognition
-from ..aws.route53 import AWSRoute53
-from ..aws.s3 import AWSSimpleStorageSystem
 from ..classes import Singleton
+from .aws.acm import AWSCertificateManager
+from .aws.api_gateway import AWSAPIGateway
+from .aws.aws import AWSBase
+from .aws.dynamodb import AWSDynamoDB
+from .aws.iam import AWSIdentifyAccessManagement
+from .aws.lambda_function import AWSLambdaFunction
+from .aws.rekognition import AWSRekognition
+from .aws.route53 import AWSRoute53
+from .aws.s3 import AWSSimpleStorageSystem
 
 
 # pylint: disable=too-many-instance-attributes

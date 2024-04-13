@@ -4,6 +4,7 @@ from django.core.management.base import BaseCommand
 
 from smarter.apps.chatbot.models import ChatBotCustomDomain
 from smarter.apps.chatbot.tasks import verify_custom_domain
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.aws_helpers import aws_helper
 
 
@@ -22,7 +23,7 @@ class Command(BaseCommand):
         try:
             custom_domain = ChatBotCustomDomain.objects.get(domain_name=domain)
         except ChatBotCustomDomain.DoesNotExist as e:
-            raise ValueError(f"The domain name {domain} is not registered with any Smarter account.") from e
+            raise SmarterValueError(f"The domain name {domain} is not registered with any Smarter account.") from e
 
         verify_custom_domain.delay(
             hosted_zone_id=custom_domain.aws_hosted_zone_id, sleep_interval=1800, max_attempts=48

@@ -4,6 +4,8 @@ from typing import Type
 
 from django.contrib.auth import get_user_model
 
+from smarter.common.exceptions import SmarterValueError
+
 from .models import Account, UserProfile
 
 
@@ -31,4 +33,4 @@ def account_admin_user(account: Account) -> UserType:
         user_profile = UserProfile.objects.filter(account=account, user__is_staff=True).order_by("pk").first()
         return user_profile.user
     except UserProfile.DoesNotExist as e:
-        raise ValueError(f"No account admin user found for account {account.account_number}.") from e
+        raise SmarterValueError(f"No account admin user found for account {account.account_number}.") from e

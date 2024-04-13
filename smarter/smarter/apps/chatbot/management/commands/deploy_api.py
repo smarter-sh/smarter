@@ -5,6 +5,7 @@ from django.core.management.base import BaseCommand
 from smarter.apps.account.models import Account
 from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.chatbot.tasks import deploy_default_api
+from smarter.common.exceptions import SmarterValueError
 
 
 # pylint: disable=E1101
@@ -42,7 +43,7 @@ class Command(BaseCommand):
                 print(f"Account {company_name} not found.")
                 return
         else:
-            raise ValueError("You must provide either an account number or a company name.")
+            raise SmarterValueError("You must provide either an account number or a company name.")
 
         try:
             chatbot, _ = ChatBot.objects.get(account=account, name=name)

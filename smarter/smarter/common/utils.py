@@ -53,7 +53,7 @@ def http_response_factory(status_code: int, body, debug_mode: bool = False) -> j
     see https://docs.aws.amazon.com/lambda/latest/dg/python-handler.html
     """
     if status_code < 100 or status_code > 599:
-        raise ValueError(f"Invalid HTTP response code received: {status_code}")
+        raise SmarterValueError(f"Invalid HTTP response code received: {status_code}")
 
     retval = {
         "isBase64Encoded": False,

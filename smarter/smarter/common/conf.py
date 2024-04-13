@@ -894,7 +894,7 @@ class Settings(BaseSettings):
         pattern = VALID_DOMAIN_PATTERN
         if v not in [None, ""]:
             if not re.match(pattern, v):
-                raise ValueError(f"Invalid domain name: {v}")
+                raise SmarterValueError(f"Invalid domain name: {v}")
         return v
 
     @field_validator("smtp_from_email")
@@ -905,7 +905,7 @@ class Settings(BaseSettings):
         if v not in [None, ""]:
             pattern = VALID_EMAIL_PATTERN
             if not re.match(pattern, v):
-                raise ValueError("Invalid email address")
+                raise SmarterValueError("Invalid email address")
         return v
 
     @field_validator("smtp_host")
@@ -916,7 +916,7 @@ class Settings(BaseSettings):
         pattern = VALID_DOMAIN_PATTERN
         if v not in [None, ""]:
             if not re.match(pattern, v):
-                raise ValueError(f"Invalid domain name: {v}")
+                raise SmarterValueError(f"Invalid domain name: {v}")
         return v
 
     @field_validator("smtp_password")
@@ -932,7 +932,7 @@ class Settings(BaseSettings):
         if v in [None, ""]:
             v = SettingsDefaults.SMTP_PORT
         if not str(v).isdigit() or not 1 <= int(v) <= 65535:
-            raise ValueError("Invalid port number")
+            raise SmarterValueError("Invalid port number")
         return int(v)
 
     @field_validator("smtp_use_ssl")

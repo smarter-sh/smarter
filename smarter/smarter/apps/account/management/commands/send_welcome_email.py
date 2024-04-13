@@ -3,6 +3,7 @@
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account, AccountContact, UserProfile
+from smarter.common.exceptions import SmarterValueError
 
 
 # pylint: disable=E1101
@@ -44,9 +45,9 @@ class Command(BaseCommand):
                     print(f"Account {company_name} not found.")
                     return
             else:
-                raise ValueError("You must provide either an account number or a company name.")
+                raise SmarterValueError("You must provide either an account number or a company name.")
 
-            raise ValueError(
+            raise SmarterValueError(
                 "You must provide either a username or an email address and an account number or company name."
             )
 
