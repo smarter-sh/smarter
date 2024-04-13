@@ -34,7 +34,13 @@ variable "root_domain" {
   default     = ""
 }
 
-variable "subdomain" {
+variable "platform_subdomain" {
+  description = "a valid Internet domain name which you directly control using AWS Route53 in this account"
+  type        = string
+  default     = "alpha"
+}
+
+variable "api_subdomain" {
   description = "a valid Internet domain name which you directly control using AWS Route53 in this account"
   type        = string
   default     = "alpha"
