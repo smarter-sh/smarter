@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Import celery, load its settings from the django settings
 and auto discover tasks in all installed django apps.
@@ -12,6 +11,7 @@ between the celery PyPi package and the smarter module because of the PYTHONPATH
 Both resolve to just 'celery', and so it tries to import the package instead
 of the module. Thus, we have to name it something else.
 """
+
 import os
 
 

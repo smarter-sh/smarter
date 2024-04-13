@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position
 """Test User."""
 
@@ -25,7 +24,7 @@ class TestCelery(unittest.TestCase):
         try:
             replies = app.control.ping()
             self.assertTrue(replies, "Celery is not running")
-        except IOError as e:
+        except OSError as e:
             self.fail(f"Celery is not running: {e}")
 
     def test_celery_configuration(self):

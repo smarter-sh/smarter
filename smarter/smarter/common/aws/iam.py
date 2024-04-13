@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """AWS IAM helper class."""
 
 # python stuff

@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """Django application configuration for the chatapp"""
+
 from django.apps import AppConfig
 
 

@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """Django URL patterns for the chatapp"""
+
 from django.urls import include, path
 
 from smarter.apps.chatapp.views import ChatAppView

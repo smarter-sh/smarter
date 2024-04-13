@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=W0707,W0718
 """User views for smarter api."""
 from http import HTTPStatus

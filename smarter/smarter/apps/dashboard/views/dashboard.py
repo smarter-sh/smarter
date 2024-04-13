@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """Django views"""
+
 import html
 import json
 import logging
@@ -7,8 +7,11 @@ import logging
 from django import forms
 from django.http import JsonResponse
 
-from smarter.common.mailchimp_helpers import MailchimpHelper
-from smarter.common.view_helpers import SmarterAuthenticatedWebView, SmarterWebView
+from smarter.common.helpers.mailchimp_helpers import MailchimpHelper
+from smarter.common.helpers.view_helpers import (
+    SmarterAuthenticatedWebView,
+    SmarterWebView,
+)
 
 from ..models import EmailContactList
 

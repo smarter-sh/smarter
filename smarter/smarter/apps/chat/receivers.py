@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """Django Signal Receivers for chat app."""
+
 # pylint: disable=W0613,C0115
 import logging
 
@@ -8,7 +8,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 
-from smarter.common.console_helpers import formatted_json, formatted_text
+from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 
 from .models import ChatHistory, ChatToolCallHistory, PluginUsageHistory
 from .signals import (

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=E1101
 """A module containing constants for the OpenAI API."""
 import importlib.util
@@ -43,7 +42,7 @@ TFVARS = {}
 IS_USING_TFVARS = False
 
 try:
-    with open(TERRAFORM_TFVARS, "r", encoding="utf-8") as f:
+    with open(TERRAFORM_TFVARS, encoding="utf-8") as f:
         TFVARS = hcl2.load(f)
     IS_USING_TFVARS = True
 except FileNotFoundError:
@@ -63,14 +62,6 @@ VERSION = load_version()
 
 
 # pylint: disable=too-few-public-methods
-class OpenAIResponseCodes:
-    """Http response codes from openai API"""
-
-    HTTP_RESPONSE_OK = 200
-    HTTP_RESPONSE_BAD_REQUEST = 400
-    HTTP_RESPONSE_INTERNAL_SERVER_ERROR = 500
-
-
 class OpenAIObjectTypes:
     """V1 API Object Types (replace OpeanAIEndPoint)"""
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position
 """Test configuration Settings class.
 
@@ -30,7 +29,7 @@ from ..conf import (  # noqa: E402
     empty_str_to_int_default,
     get_semantic_version,
 )
-from ..exceptions import OpenAIAPIConfigurationError
+from ..exceptions import SmarterConfigurationError
 
 
 # pylint: disable=too-many-public-methods
@@ -276,7 +275,7 @@ class TestConfiguration(unittest.TestCase):
         services = Services()
         self.assertIsNotNone(services)
         self.assertTrue(services.enabled(services.AWS_CLI))
-        with self.assertRaises(OpenAIAPIConfigurationError):
+        with self.assertRaises(SmarterConfigurationError):
             services.raise_error_on_disabled(services.AWS_DYNAMODB)
         self.assertIsInstance(services.to_dict(), dict)
         self.assertIn(services.AWS_CLI[0], services.enabled_services())
@@ -308,7 +307,7 @@ class TestConfiguration(unittest.TestCase):
         """Test that the DynamoDB table is valid."""
         mock_settings = Settings(init_info="test_settings_dynamodb()")
         # pylint: disable=pointless-statement
-        with self.assertRaises(OpenAIAPIConfigurationError):
+        with self.assertRaises(SmarterConfigurationError):
             mock_settings.aws_dynamodb_client
 
     def test_settings_aws_s3_bucket_name(self):
@@ -327,6 +326,6 @@ class TestConfiguration(unittest.TestCase):
         self.assertIsNotNone(mock_settings.aws_apigateway_domain_name)
         # pylint: disable=anomalous-backslash-in-string
         assert re.match(
-            "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$",
+            r"^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$",
             hostname,
         ), "Invalid hostname"

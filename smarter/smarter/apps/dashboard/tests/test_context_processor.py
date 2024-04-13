@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position
 # pylint: disable=R0801
 """Test lambda_openai_v2 function."""

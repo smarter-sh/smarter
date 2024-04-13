@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=duplicate-code
 # pylint: disable=E1101
 """Utility functions for the OpenAI Lambda functions"""
@@ -12,7 +11,7 @@ import traceback  # libraries for error management
 from pydantic import SecretStr
 
 from .const import LANGCHAIN_MESSAGE_HISTORY_ROLES, OpenAIObjectTypes
-from .exceptions import OpenAIAPIValueError
+from .exceptions import SmarterValueError
 from .validators import (
     validate_endpoint,
     validate_item,
@@ -167,7 +166,7 @@ def parse_request(request_body: dict):
     )
 
     if not messages and not input_text:
-        raise OpenAIAPIValueError("A value for either messages or input_text is required")
+        raise SmarterValueError("A value for either messages or input_text is required")
 
     if chat_history and input_text:
         # memory-enabled request assumed to be destined for langchain_passthrough

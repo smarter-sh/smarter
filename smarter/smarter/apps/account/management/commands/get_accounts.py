@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """This module is used to generate a JSON list of all accounts, printed to the command line, using manage.py"""
+
 import re
 
 from django.core.exceptions import ValidationError

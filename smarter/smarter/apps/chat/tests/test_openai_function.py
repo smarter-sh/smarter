@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position
 # pylint: disable=R0801,E1101
 # pylint: disable=broad-exception-caught
@@ -99,7 +98,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         self.user_profile = UserProfile.objects.create(user=self.user, account=self.account, is_test=True)
 
         config_path = get_test_file_path("plugins/everlasting-gobstopper.yaml")
-        with open(config_path, "r", encoding="utf-8") as file:
+        with open(config_path, encoding="utf-8") as file:
             plugin_json = yaml.safe_load(file)
         plugin_json["user_profile"] = self.user_profile
 

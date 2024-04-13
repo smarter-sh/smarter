@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=W0511,W0613
 """Billing Views for the account dashboard."""
 import logging
@@ -7,7 +6,7 @@ from http import HTTPStatus
 from django import forms, http
 
 from smarter.apps.account.tests.factories import payment_method_factory
-from smarter.common.view_helpers import SmarterAdminWebView
+from smarter.common.helpers.view_helpers import SmarterAdminWebView
 
 
 logger = logging.getLogger(__name__)

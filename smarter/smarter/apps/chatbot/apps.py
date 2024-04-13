@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """Django Config for the ChatBot app."""
+
 from django.apps import AppConfig
 
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=R0801
 """All Django views for the OpenAI Function Calling API app."""
 import json
@@ -29,7 +28,7 @@ from smarter.apps.chat.signals import (
 )
 from smarter.apps.plugin.plugin import Plugin
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import VALID_CHAT_COMPLETION_MODELS, OpenAIResponseCodes
+from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
 from smarter.common.exceptions import EXCEPTION_MAP
 from smarter.common.utils import (
     exception_response_factory,
@@ -225,6 +224,6 @@ def handler(plugins: List[Plugin], user: User, data: dict):
         data=data,
     )
     return http_response_factory(
-        status_code=OpenAIResponseCodes.HTTP_RESPONSE_OK,
+        status_code=HTTPStatus.OK,
         body={**openai_response, **request_meta_data},
     )

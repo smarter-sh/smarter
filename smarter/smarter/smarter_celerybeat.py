@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Celery Beat schedule for the smarter project."""
 
 import os

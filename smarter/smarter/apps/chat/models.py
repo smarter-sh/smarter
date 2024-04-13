@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=W0613,C0115
 """All models for the OpenAI Function Calling API app."""
 from django.db import models
@@ -7,7 +6,7 @@ from django.forms.models import model_to_dict
 from smarter.apps.plugin.models import PluginMeta
 
 # our stuff
-from smarter.common.model_utils import TimestampedModel
+from smarter.common.helpers.model_helpers import TimestampedModel
 
 
 # -----------------------------------------------------------------------------

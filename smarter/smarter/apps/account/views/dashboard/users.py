@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """Views for the account settings."""
+
 import json
 import logging
 from http import HTTPStatus
@@ -10,7 +10,7 @@ from django.db import transaction
 from django.shortcuts import redirect
 
 from smarter.apps.account.models import UserProfile
-from smarter.common.view_helpers import SmarterAdminWebView
+from smarter.common.helpers.view_helpers import SmarterAdminWebView
 
 
 User = get_user_model()

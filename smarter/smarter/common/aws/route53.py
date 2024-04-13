@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """AWS Route53 helper class."""
 
 # python stuff

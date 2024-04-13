@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
 """This module is used to register a custom domain for a customer account."""
+
 from django.core.management.base import BaseCommand
 
 from smarter.apps.chatbot.models import ChatBotCustomDomain
 from smarter.apps.chatbot.tasks import verify_custom_domain
-from smarter.common.aws_helpers import aws_helper
+from smarter.common.helpers.aws_helpers import aws_helper
 
 
 # pylint: disable=E1101

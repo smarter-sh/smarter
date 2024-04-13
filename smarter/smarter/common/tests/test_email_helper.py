@@ -5,7 +5,7 @@
 import unittest
 
 # our stuff
-from ..email_helpers import email_helper
+from ..helpers.email_helpers import email_helper
 
 
 class TestSMTPEmail(unittest.TestCase):
@@ -27,6 +27,6 @@ class TestSMTPEmail(unittest.TestCase):
             "If you received this email, it means that the email helper is working as expected. "
             "If you have any questions, please contact us at support@smarter.sh."
         )
-        email_helper().send_email(
+        email_helper.send_email(
             subject="CI/CD unit test: email helper", body=body, to="querium.co@gmail.com", html=False, from_email=None
         )

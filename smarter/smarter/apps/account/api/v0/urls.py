@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Account urls for smarter api"""
 
 from django.urls import path

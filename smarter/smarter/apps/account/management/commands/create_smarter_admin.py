@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """This module is used to create a superuser account."""
+
 import secrets
 import string
 from typing import Type

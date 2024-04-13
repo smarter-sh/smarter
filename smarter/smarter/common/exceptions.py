@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
 """Module exceptions.py"""
+
+from http import HTTPStatus
 
 import openai
 
-from .const import OpenAIResponseCodes
 
-
-class OpenAIAPIConfigurationError(Exception):
+class SmarterConfigurationError(Exception):
     """Exception raised for errors in the configuration."""
 
     def __init__(self, message):
@@ -14,7 +13,7 @@ class OpenAIAPIConfigurationError(Exception):
         super().__init__(self.message)
 
 
-class OpenAIAPIValueError(Exception):
+class SmarterValueError(Exception):
     """Exception raised for errors in the configuration."""
 
     def __init__(self, message):
@@ -22,7 +21,7 @@ class OpenAIAPIValueError(Exception):
         super().__init__(self.message)
 
 
-class OpenAIAPIIlligalInvocationError(Exception):
+class SmarterIlligalInvocationError(Exception):
     """Exception raised when the service is called by an unknown service."""
 
     def __init__(self, message):
@@ -31,13 +30,13 @@ class OpenAIAPIIlligalInvocationError(Exception):
 
 
 EXCEPTION_MAP = {
-    OpenAIAPIValueError: (OpenAIResponseCodes.HTTP_RESPONSE_BAD_REQUEST, "BadRequest"),
-    OpenAIAPIConfigurationError: (OpenAIResponseCodes.HTTP_RESPONSE_INTERNAL_SERVER_ERROR, "InternalServerError"),
-    OpenAIAPIIlligalInvocationError: (OpenAIResponseCodes.HTTP_RESPONSE_INTERNAL_SERVER_ERROR, "InternalServerError"),
-    openai.APIError: (OpenAIResponseCodes.HTTP_RESPONSE_BAD_REQUEST, "BadRequest"),
-    ValueError: (OpenAIResponseCodes.HTTP_RESPONSE_BAD_REQUEST, "BadRequest"),
-    TypeError: (OpenAIResponseCodes.HTTP_RESPONSE_BAD_REQUEST, "BadRequest"),
-    NotImplementedError: (OpenAIResponseCodes.HTTP_RESPONSE_BAD_REQUEST, "BadRequest"),
-    openai.OpenAIError: (OpenAIResponseCodes.HTTP_RESPONSE_INTERNAL_SERVER_ERROR, "InternalServerError"),
-    Exception: (OpenAIResponseCodes.HTTP_RESPONSE_INTERNAL_SERVER_ERROR, "InternalServerError"),
+    SmarterValueError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
+    SmarterConfigurationError: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
+    SmarterIlligalInvocationError: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
+    openai.APIError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
+    ValueError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
+    TypeError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
+    NotImplementedError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
+    openai.OpenAIError: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
+    Exception: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
 }

@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """Django context processors for account/base.html"""
+
 import logging
 
 from django.conf import settings

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=W0613,C0115
 """All models for the OpenAI Function Calling API app."""
 import re
@@ -16,7 +15,7 @@ from smarter.apps.plugin.plugin import Plugin
 # our stuff
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import VALID_DOMAIN_PATTERN
-from smarter.common.model_utils import TimestampedModel
+from smarter.common.helpers.model_helpers import TimestampedModel
 
 
 # -----------------------------------------------------------------------------

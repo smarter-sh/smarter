@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=C0115
 """Django views"""
 import logging
 
-from smarter.common.view_helpers import SmarterAuthenticatedNeverCachedWebView
+from smarter.common.helpers.view_helpers import SmarterAuthenticatedNeverCachedWebView
 
 
 logger = logging.getLogger(__name__)

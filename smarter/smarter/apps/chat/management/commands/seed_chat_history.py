@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This module is used to generate seed records for the chat history models."""
 
 import glob
@@ -33,7 +32,7 @@ class Command(BaseCommand):
 
         for file_path in glob.glob(data_folder_path):
             print("Processing file: ", file_path)
-            with open(file_path, "r", encoding="utf-8") as file:
+            with open(file_path, encoding="utf-8") as file:
                 data = json.loads(file.read())
                 plugins = ChatBotPlugin().plugins(chatbot=chatbot)
                 handler(plugins=plugins, user=user_profile.user, data=data)

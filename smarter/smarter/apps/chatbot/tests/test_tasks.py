@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position
 """Test Chatbot tasks."""
 
@@ -11,10 +10,10 @@ from django.contrib.auth import get_user_model
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.chatbot.models import ChatBot, ChatBotCustomDomain
+from smarter.common.conf import settings as smarter_settings
 
 # our stuff
-from smarter.common.aws_helpers import aws_helper
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.helpers.aws_helpers import aws_helper
 
 from ..tasks import (
     create_custom_domain_dns_record,

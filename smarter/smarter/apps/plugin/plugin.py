@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """A Compound Model class for managing plugins."""
 
 import copy
@@ -820,7 +819,7 @@ class PluginExample:
 
     def __init__(self, filepath: str, filename: str):
         """Initialize the class from a yaml file"""
-        with open(os.path.join(filepath, filename), "r", encoding="utf-8") as file:
+        with open(os.path.join(filepath, filename), encoding="utf-8") as file:
             self._yaml = file.read()
             self._json = yaml.safe_load(self._yaml)
 

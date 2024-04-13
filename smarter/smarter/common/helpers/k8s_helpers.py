@@ -6,11 +6,10 @@ import subprocess
 
 import yaml
 
-from .classes import Singleton
-from .conf import settings as smarter_settings
+from ..classes import Singleton
+from ..conf import settings as smarter_settings
 
 
-HERE = os.path.abspath(os.path.dirname(__file__))
 logger = logging.getLogger(__name__)
 
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """AWS S3 helper class."""
 
 from .aws import AWSBase

@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """This module is used to update an existing plugin using manage.py"""
+
 import yaml
 from django.core.management.base import BaseCommand
 
@@ -20,7 +20,7 @@ class Command(BaseCommand):
         user_profile: UserProfile = None
 
         file_path = options["plugin_file_path"]
-        with open(file_path, "r", encoding="utf-8") as file:
+        with open(file_path, encoding="utf-8") as file:
             data = file.read()
 
         if data:

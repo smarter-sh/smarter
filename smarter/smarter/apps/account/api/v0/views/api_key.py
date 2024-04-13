@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=W0707,W0718
 """API Key views for smarter api."""
 

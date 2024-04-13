@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """Common model utils."""
+
 from django.db import models
 
 

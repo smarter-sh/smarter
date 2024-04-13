@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """Add plugin examples to a user account."""
+
 from typing import Type
 
 from django.contrib.auth import get_user_model

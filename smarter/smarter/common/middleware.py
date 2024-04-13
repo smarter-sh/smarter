@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """This module is used to suppress DisallowedHost exception and return HttpResponseBadRequest instead."""
+
 from django.core.exceptions import DisallowedHost
 from django.http import HttpResponseBadRequest, HttpResponseForbidden
 

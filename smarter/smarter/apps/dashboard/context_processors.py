@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=W0613
 """Django context processors for base.html"""
 import time

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This module is used to remove an email address from the Account Contact list."""
 
 from django.core.management.base import BaseCommand

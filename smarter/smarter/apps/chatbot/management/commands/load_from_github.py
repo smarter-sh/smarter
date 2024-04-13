@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
 """
 This module is used to deploy a collection of customer API's from a GitHub repository containing plugin YAML files
 organized in directories by customer API name.
 """
+
 import os
 import re
 import subprocess
@@ -145,7 +145,7 @@ class Command(BaseCommand):
         if not self.user_profile:
             raise ValueError("User profile is required.")
 
-        with open(filespec, "r", encoding="utf-8") as file:
+        with open(filespec, encoding="utf-8") as file:
             data = file.read()
 
         if data:

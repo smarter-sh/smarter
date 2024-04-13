@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This module is used to generate a JSON list of all chatbots for an account, printed to the console."""
 
 from django.core.management.base import BaseCommand

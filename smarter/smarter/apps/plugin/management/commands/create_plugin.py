@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """This module is used to create a new plugin using manage.py"""
+
 from typing import Type
 
 import yaml
@@ -52,7 +52,7 @@ class Command(BaseCommand):
         user_profile = UserProfile.objects.get(user=user, account=account)
 
         if file_path:
-            with open(file_path, "r", encoding="utf-8") as file:
+            with open(file_path, encoding="utf-8") as file:
                 data = file.read()
 
             if data:

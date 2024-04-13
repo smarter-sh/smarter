@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=W0613,C0115,R0913
 """
 Celery tasks for chatbot app.
@@ -19,10 +18,10 @@ from smarter.common.aws.exceptions import (
     AWSACMCertificateNotFound,
     AWSACMVerificationNotFound,
 )
-from smarter.common.aws_helpers import aws_helper
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CUSTOMER_SUPPORT
-from smarter.common.k8s_helpers import kubernetes_helper
+from smarter.common.helpers.aws_helpers import aws_helper
+from smarter.common.helpers.k8s_helpers import kubernetes_helper
 from smarter.smarter_celery import app
 
 from .exceptions import ChatBotCustomDomainExists
@@ -218,7 +217,7 @@ def verify_custom_domain(
 
         # Check NS and SOA records
         try:
-            dns_ns_records = set(rdata.to_text() for rdata in dns.resolver.query(domain_name, "NS"))
+            dns_ns_records = {rdata.to_text() for rdata in dns.resolver.query(domain_name, "NS")}
         except dns.resolver.NXDOMAIN:
             logger.warning("Domain %s does not exist.", domain_name)
             continue
@@ -309,7 +308,7 @@ def verify_domain(domain_name: str, activate_chatbot: bool = False) -> bool:
 
         # Check NS and SOA records
         try:
-            dns_ns_records = set(rdata.to_text() for rdata in dns.resolver.query(domain_name))
+            dns_ns_records = {rdata.to_text() for rdata in dns.resolver.query(domain_name)}
             logger.info("Found NS records %s for domain %s", dns_ns_records, domain_name)
 
             if not activate_chatbot:
@@ -421,7 +420,7 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
 
         # create and apply the ingress manifest
         template_path = os.path.join(HERE, "./k8s/ingress.yaml.tpl")
-        with open(template_path, "r", encoding="utf-8") as ingress_template:
+        with open(template_path, encoding="utf-8") as ingress_template:
             template = Template(ingress_template.read())
             manifest = template.substitute(ingress_values)
         kubernetes_helper.apply_manifest(manifest)

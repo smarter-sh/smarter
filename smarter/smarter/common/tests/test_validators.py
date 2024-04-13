@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position
 """Test configuration Settings class."""
 
@@ -14,7 +13,7 @@ sys.path.append(PYTHON_ROOT)  # noqa: E402
 from ..const import OpenAIEndPoint, OpenAIObjectTypes
 
 # our stuff
-from ..exceptions import OpenAIAPIValueError
+from ..exceptions import SmarterValueError
 from ..tests.test_setup import get_test_file  # noqa: E402
 from ..validators import (
     validate_completion_request,
@@ -55,7 +54,7 @@ class TestValidators(unittest.TestCase):
         validate_item(item, valid_items, "valid_items")
 
         item = "i_cause_an_exception"
-        with self.assertRaises(OpenAIAPIValueError):
+        with self.assertRaises(SmarterValueError):
             validate_item(item, valid_items, "valid_items")
 
     def test_validate_temperature(self):
@@ -65,11 +64,11 @@ class TestValidators(unittest.TestCase):
         validate_temperature(temperature)
 
         temperature = 1.5
-        with self.assertRaises(OpenAIAPIValueError):
+        with self.assertRaises(SmarterValueError):
             validate_temperature(temperature)
 
         temperature = -1.5
-        with self.assertRaises(OpenAIAPIValueError):
+        with self.assertRaises(SmarterValueError):
             validate_temperature(temperature)
 
         temperature = "not_a_float"
@@ -87,11 +86,11 @@ class TestValidators(unittest.TestCase):
         validate_max_tokens(max_tokens)
 
         max_tokens = 0
-        with self.assertRaises(OpenAIAPIValueError):
+        with self.assertRaises(SmarterValueError):
             validate_max_tokens(max_tokens)
 
         max_tokens = 2049
-        with self.assertRaises(OpenAIAPIValueError):
+        with self.assertRaises(SmarterValueError):
             validate_max_tokens(max_tokens)
 
         max_tokens = "not_an_int"
@@ -105,7 +104,7 @@ class TestValidators(unittest.TestCase):
         validate_endpoint(end_point)
 
         end_point = "https://www.google.com/"
-        with self.assertRaises(OpenAIAPIValueError):
+        with self.assertRaises(SmarterValueError):
             validate_endpoint(end_point)
 
     def test_validate_object_types(self):
@@ -115,7 +114,7 @@ class TestValidators(unittest.TestCase):
         validate_object_types(object_type)
 
         object_type = "not_a_valid_object_type"
-        with self.assertRaises(OpenAIAPIValueError):
+        with self.assertRaises(SmarterValueError):
             validate_object_types(object_type)
 
     def test_validate_request_body(self):
@@ -138,7 +137,7 @@ class TestValidators(unittest.TestCase):
         validate_messages(request_body)
 
         request_body = messages_bad_role
-        with self.assertRaises(OpenAIAPIValueError):
+        with self.assertRaises(SmarterValueError):
             validate_messages(request_body)
 
     def test_validate_completion_request(self):
@@ -148,5 +147,5 @@ class TestValidators(unittest.TestCase):
         validate_completion_request(request_body)
 
         request_body = {"prompt": "This is a test", "max_tokens": 100, "temperature": 0.5, "stop": "not_a_list"}
-        with self.assertRaises(OpenAIAPIValueError):
+        with self.assertRaises(SmarterValueError):
             validate_completion_request(request_body)

@@ -1,12 +1,12 @@
-# -*- coding: utf-8 -*-
 """
 Views for the React chat app. See doc/DJANGO-REACT-INTEGRATION.md for more
 information about how the React app is integrated into the Django app.
 """
+
 from django.shortcuts import get_object_or_404
 
 from smarter.apps.chatbot.models import ChatBot
-from smarter.common.view_helpers import SmarterAuthenticatedNeverCachedWebView
+from smarter.common.helpers.view_helpers import SmarterAuthenticatedNeverCachedWebView
 
 
 # ------------------------------------------------------------------------------
