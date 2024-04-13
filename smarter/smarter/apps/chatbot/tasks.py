@@ -411,7 +411,7 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     # if we're running in Kubernetes then we should create an ingress manifest
     # for the customer API domain so that we can issue a certificate for it.
     if smarter_settings.environment != "local":
-
+        logger.info("Creating ingress manifest for %s", domain_name)
         ingress_values = {
             "cluster_issuer": smarter_settings.customer_api_domain,
             "environment_namespace": smarter_settings.environment_namespace,
