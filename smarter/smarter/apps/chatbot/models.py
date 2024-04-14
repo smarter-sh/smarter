@@ -53,6 +53,9 @@ class ChatBotCustomDomain(TimestampedModel):
             SmarterValidator.validate_domain(self.domain_name)
         super().save(*args, **kwargs)
 
+    def __str__(self):
+        return str(self.domain_name)
+
 
 class ChatBotCustomDomainDNS(TimestampedModel):
     """ChatBot DNS Records for a ChatBot DNS Host."""
@@ -67,6 +70,8 @@ class ChatBotCustomDomainDNS(TimestampedModel):
 class ChatBot(TimestampedModel):
     """A ChatBot API for a customer account."""
 
+    url_validator = URLValidator()
+
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     subdomain = models.ForeignKey(ChatBotCustomDomainDNS, on_delete=models.CASCADE, blank=True, null=True)
@@ -80,9 +85,8 @@ class ChatBot(TimestampedModel):
 
     def save(self, *args, **kwargs):
         if not self.custom_domain:
-            validate = URLValidator()
             try:
-                validate("http://" + self.hostname)
+                self.url_validator("http://" + self.hostname)
             except ValidationError as e:
                 raise ValidationError(f"Invalid domain name {self.hostname}") from e
         super().save(*args, **kwargs)
@@ -92,17 +96,27 @@ class ChatBot(TimestampedModel):
 
     @property
     def default_host(self):
-        return f"{self.name}.{self.account.account_number}.{smarter_settings.customer_api_domain}"
+        retval = f"{self.name}.{self.account.account_number}.{smarter_settings.customer_api_domain}"
+        url = f"https://{retval}/"
+        self.url_validator(url)
+        return retval
 
     @property
     def custom_host(self):
         if self.custom_domain and self.custom_domain.is_verified:
-            return f"{self.subdomain.record_name}.{self.custom_domain.domain_name}"
+            retval = f"{self.name}.{self.custom_domain.domain_name}"
+            url = f"https://{retval}/"
+            self.url_validator(url)
+            return retval
         return None
 
     @property
     def hostname(self):
         return self.custom_host or self.default_host
+
+    @property
+    def url(self):
+        return f"https://{self.hostname}/"
 
 
 class ChatBotAPIKey(TimestampedModel):
@@ -170,9 +184,11 @@ class ChatBotApiUrlHelper:
     """
 
     _url: str = None
+    _account_number: str = None
     _environment: str = None
     _account: Account = None
     _chatbot: ChatBot = None
+    _chatbot_custom_domain: ChatBotCustomDomain = None
 
     def __init__(self, url: str = None, environment: str = None):
         """
@@ -279,19 +295,26 @@ class ChatBotApiUrlHelper:
         the account number needs to conform to the SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN
         and it needs to be the second segment of the subdomain of the URL.
         """
-        if not self.is_default_domain:
+        if self._account_number:
+            return self._account_number
+
+        if self.is_default_domain:
+            account_number: str = None
+            search_pattern = SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN.lstrip("^").rstrip("$")
+            search_result = re.search(search_pattern, self.url)
+            account_number = search_result.group(0)
+
+            subdomain_parts = self.subdomain.split(".")
+            if len(subdomain_parts) < 2:
+                return None
+            if account_number == subdomain_parts[1]:
+                self._account_number = account_number
+                return self._account_number
             return None
 
-        account_number: str = None
-        search_pattern = SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN.lstrip("^").rstrip("$")
-        search_result = re.search(search_pattern, self.url)
-        account_number = search_result.group(0)
-
-        subdomain_parts = self.subdomain.split(".")
-        if len(subdomain_parts) < 2:
-            return None
-        if account_number == subdomain_parts[1]:
-            return account_number
+        if self.is_custom_domain:
+            self._account_number = self.chatbot.account.account_number if self.chatbot else None
+            return self._account_number
         return None
 
     @property
@@ -318,13 +341,8 @@ class ChatBotApiUrlHelper:
         if self.is_default_domain:
             return self.customer_api_domain
         if self.is_custom_domain:
-            subdomain_parts = self.subdomain.split(".")
-            api_subdomain_index = (
-                subdomain_parts.index(self.api_subdomain) if self.api_subdomain in subdomain_parts else -1
-            )
-            if api_subdomain_index != -1:
-                del subdomain_parts[api_subdomain_index]
-            return ".".join(subdomain_parts)
+            domain_parts = self.domain.split(".")
+            return ".".join(domain_parts[1:])
         return None
 
     @property
@@ -351,9 +369,9 @@ class ChatBotApiUrlHelper:
 
     @property
     def is_custom_domain(self) -> bool:
-        if not self.url:
+        if self.is_default_domain:
             return False
-        return not self.is_default_domain
+        return self.chatbot_custom_domain is not None
 
     @property
     def is_deployed(self) -> bool:
@@ -387,17 +405,37 @@ class ChatBotApiUrlHelper:
             try:
                 self._chatbot = ChatBot.objects.get(account=self.account, name=self.api_subdomain, deployed=True)
             except ChatBot.DoesNotExist:
-                print(f"ChatBot not found for account {self.account_number} and subdomain {self.api_subdomain}")
                 return None
 
         if self.is_custom_domain:
             try:
-                try:
-                    custom_domain = ChatBotCustomDomain.objects.get(domain_name=self.api_host, is_verified=True)
-                except ChatBotCustomDomain.DoesNotExist:
-                    return None
-                self._chatbot = ChatBot.objects.get(custom_domain=custom_domain, deployed=True)
+                self._chatbot = ChatBot.objects.get(custom_domain=self.chatbot_custom_domain, deployed=True)
             except ChatBot.DoesNotExist:
-                print(f"ChatBot not found for custom domain {self.api_host}")
                 return None
+
         return self._chatbot
+
+    @property
+    def chatbot_custom_domain(self) -> ChatBotCustomDomain:
+        """
+        Returns a lazy instance of the ChatBotCustomDomain
+
+        examples:
+        - https://hr.smarter.querium.com/chatbot/
+          returns ChatBotCustomDomain(domain_name='smarter.querium.com')
+        """
+        if self._chatbot_custom_domain:
+            return self._chatbot_custom_domain
+
+        # this is a cheaper operation than the one below
+        if self.is_default_domain:
+            return None
+
+        domain_parts = self.domain.split(".")
+        domain_name = ".".join(domain_parts[1:])
+        try:
+            self._chatbot_custom_domain = ChatBotCustomDomain.objects.get(domain_name=domain_name)
+        except ChatBotCustomDomain.DoesNotExist:
+            return None
+
+        return self._chatbot_custom_domain
