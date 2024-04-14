@@ -136,3 +136,19 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
         self.assertTrue(
             helper.environment is None, f"Expected {smarter_settings.environment}, but got {helper.environment}"
         )
+
+    def test_no_url(self):
+        """Test no url."""
+        helper = ChatBotApiUrlHelper()
+
+        self.assertTrue(helper.is_valid is False)
+        self.assertTrue(helper.account is None)
+        self.assertTrue(helper.chatbot is None)
+        self.assertTrue(helper.account_number is None)
+        self.assertTrue(helper.is_custom_domain is False)
+        self.assertTrue(helper.url is None)
+        self.assertTrue(helper.is_deployed is False)
+        self.assertTrue(helper.api_host is None)
+        self.assertTrue(helper.api_subdomain is None)
+        self.assertTrue(helper.customer_api_domain == smarter_settings.customer_api_domain)
+        self.assertTrue(helper.environment is None)
