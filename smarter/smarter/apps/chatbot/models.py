@@ -196,6 +196,9 @@ class ChatBotApiUrlHelper:
         :param url: The URL to parse.
         :param environment: The environment to use for the URL. (for unit testing only)
         """
+        if not url:
+            return
+
         SmarterValidator.validate_url(url)
         self._url = url
         self._environment = environment
@@ -264,7 +267,7 @@ class ChatBotApiUrlHelper:
 
         examples:
         - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
-          returns 'api.smarter.sh'
+          returns 'smarter.sh'
         """
         if not self.url:
             return None
@@ -369,12 +372,16 @@ class ChatBotApiUrlHelper:
 
     @property
     def is_custom_domain(self) -> bool:
+        if not self.url:
+            return False
         if self.is_default_domain:
             return False
         return self.chatbot_custom_domain is not None
 
     @property
     def is_deployed(self) -> bool:
+        if not self.url:
+            return False
         if self.chatbot:
             return self.chatbot.deployed
         return False
@@ -429,6 +436,9 @@ class ChatBotApiUrlHelper:
 
         # this is a cheaper operation than the one below
         if self.is_default_domain:
+            return None
+
+        if not self.url:
             return None
 
         domain_parts = self.domain.split(".")
