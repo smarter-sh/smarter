@@ -71,6 +71,7 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
         """Test a url for the chatbot we created."""
         helper = ChatBotApiUrlHelper(url=self.chatbot.url, environment=smarter_settings.environment)
 
+        self.assertTrue(helper.is_valid)
         self.assertTrue(helper.account == self.account)
         self.assertTrue(helper.chatbot == self.chatbot)
         self.assertTrue(helper.account_number == self.account.account_number)
@@ -108,16 +109,7 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
         url = urljoin(self.custom_chatbot.url, "/chatbot/")
         helper = ChatBotApiUrlHelper(url=url)
 
-        print("url: ", helper.url)
-        print("self.custom_chatbot.url:", self.custom_chatbot.url)
-        print("chatbot.url", helper.chatbot.url)
-        print("api_host: ", helper.api_host)
-        print("account: ", helper.account)
-        print("account_number: ", helper.account_number)
-        print("chatbot: ", helper.chatbot)
-        print("chatbot_custom_domain: ", helper.chatbot_custom_domain)
-        print("api_subdomain: ", helper.api_subdomain)
-
+        self.assertTrue(helper.is_valid)
         self.assertTrue(helper.account == self.account, f"Expected {self.account}, but got {helper.account}")
         self.assertTrue(
             helper.chatbot == self.custom_chatbot, f"Expected {self.custom_chatbot}, but got {helper.chatbot}"

@@ -439,3 +439,7 @@ class ChatBotApiUrlHelper:
             return None
 
         return self._chatbot_custom_domain
+
+    @property
+    def is_valid(self) -> bool:
+        return self.chatbot is not None
