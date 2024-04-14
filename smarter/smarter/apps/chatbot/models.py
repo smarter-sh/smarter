@@ -1,7 +1,10 @@
 # pylint: disable=W0613,C0115
 """All models for the OpenAI Function Calling API app."""
+import re
 from typing import List, Type
+from urllib.parse import urlparse
 
+import tldextract
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
@@ -13,8 +16,11 @@ from smarter.apps.plugin.plugin import Plugin
 
 # our stuff
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SMARTER_CUSTOMER_API_SUBDOMAIN
 from smarter.common.helpers.model_helpers import TimestampedModel
 from smarter.common.validators import SmarterValidator
+
+from .utils import cache_results
 
 
 # -----------------------------------------------------------------------------
@@ -67,6 +73,11 @@ class ChatBot(TimestampedModel):
     custom_domain = models.ForeignKey(ChatBotCustomDomain, on_delete=models.CASCADE, blank=True, null=True)
     deployed = models.BooleanField(default=False, blank=True, null=True)
 
+    @staticmethod
+    @cache_results(timeout=60 * 60)
+    def get_by_url(url: str):
+        return ChatBotApiUrlHelper().get_by_url(url)
+
     def save(self, *args, **kwargs):
         if not self.custom_domain:
             validate = URLValidator()
@@ -75,6 +86,9 @@ class ChatBot(TimestampedModel):
             except ValidationError as e:
                 raise ValidationError(f"Invalid domain name {self.hostname}") from e
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.hostname
 
     @property
     def default_host(self):
@@ -144,3 +158,246 @@ class ChatBotRequests(TimestampedModel):
     chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE)
     request = models.JSONField(blank=True, null=True)
     is_aggregation = models.BooleanField(default=False, blank=True, null=True)
+
+
+class ChatBotApiUrlHelper:
+    """Helper class for ChatBot models. Abstracts url parsing logic so that we
+    can use it in multiple places: this module, middleware, views, etc.
+
+    examples of valid urls:
+    - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
+    - https://hr.smarter.querium.com/chatbot/
+    """
+
+    _url: str = None
+    _environment: str = None
+    _account: Account = None
+    _chatbot: ChatBot = None
+
+    def __init__(self, url: str = None, environment: str = None):
+        """
+        Constructor for ChatBotApiUrlHelper.
+        :param url: The URL to parse.
+        :param environment: The environment to use for the URL. (for unit testing only)
+        """
+        SmarterValidator.validate_url(url)
+        self._url = url
+        self._environment = environment
+        self.parsed_url = urlparse(url)
+
+    @property
+    def environment(self) -> str:
+        """
+        The environment to use for the URL.
+        :return: The environment to use for the URL.
+
+        examples:
+        - alpha
+        - local
+        """
+        return self._environment
+
+    @property
+    def url(self) -> str:
+        """
+        The URL to parse.
+        :return: The URL to parse.
+
+        examples:
+        - http://example.com/contact/
+        - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
+        - https://hr.smarter.querium.com/chatbot/
+        """
+        return self._url
+
+    @property
+    def domain(self) -> str:
+        """
+        Extracts the domain from the URL.
+        :return: The domain or None if not found.
+
+        examples:
+        - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
+          returns 'hr.3141-5926-5359.alpha.api.smarter.sh'
+        """
+        if not self.url:
+            return None
+        return self.parsed_url.netloc
+
+    @property
+    def path(self) -> str:
+        """
+        Extracts the path from the URL.
+        :return: The path or None if not found.
+
+        examples:
+        - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
+          returns '/chatbot/'
+        """
+        if not self.url:
+            return None
+        if self.parsed_url.path == "":
+            return "/"
+        return self.parsed_url.path
+
+    @property
+    def root_domain(self) -> str:
+        """
+        Extracts the root domain from the URL.
+        :return: The root domain or None if not found.
+
+        examples:
+        - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
+          returns 'api.smarter.sh'
+        """
+        if not self.url:
+            return None
+        extracted = tldextract.extract(self.url)
+        return f"{extracted.domain}.{extracted.suffix}"
+
+    @property
+    def subdomain(self) -> str:
+        """
+        Extracts the subdomain from the URL.
+        :return: The subdomain or None if not found.
+
+        examples:
+        - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
+          returns 'hr.3141-5926-5359.alpha'
+        """
+        if not self.url:
+            return None
+        extracted = tldextract.extract(self.url)
+        return extracted.subdomain
+
+    @property
+    def account_number(self) -> str:
+        """
+        Extracts the account number from the URL.
+        :return: The account number or None if not found.
+
+        the account number needs to conform to the SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN
+        and it needs to be the second segment of the subdomain of the URL.
+        """
+        if not self.is_default_domain:
+            return None
+
+        account_number: str = None
+        search_pattern = SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN.lstrip("^").rstrip("$")
+        search_result = re.search(search_pattern, self.url)
+        account_number = search_result.group(0)
+
+        subdomain_parts = self.subdomain.split(".")
+        if len(subdomain_parts) < 2:
+            return None
+        if account_number == subdomain_parts[1]:
+            return account_number
+        return None
+
+    @property
+    def api_subdomain(self) -> str:
+        if not self.url:
+            return None
+        subdomain_parts = self.subdomain.split(".")
+        if len(subdomain_parts) < 2:
+            return None
+        return subdomain_parts[0]
+
+    @property
+    def api_host(self) -> str:
+        """
+        Returns the API host for a ChatBot API url.
+        :return: The API host or None if not found.
+
+        examples:
+        - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
+          returns 'alpha.api.smarter.sh'
+        - https://hr.smarter.querium.com/chatbot/
+          return 'smarter.querium.com'
+        """
+        if self.is_default_domain:
+            return self.customer_api_domain
+        if self.is_custom_domain:
+            subdomain_parts = self.subdomain.split(".")
+            api_subdomain_index = (
+                subdomain_parts.index(self.api_subdomain) if self.api_subdomain in subdomain_parts else -1
+            )
+            if api_subdomain_index != -1:
+                del subdomain_parts[api_subdomain_index]
+            return ".".join(subdomain_parts)
+        return None
+
+    @property
+    def customer_api_domain(self) -> str:
+        """
+        Returns the customer API domain for default ChatBot API urls.
+        :return: The customer API domain or None if not found.
+
+        examples:
+        - alpha.api.smarter.sh
+        - local.api.smarter.sh
+        """
+        if not self.url:
+            return None
+        if self.environment:
+            return f"{self.environment}.{SMARTER_CUSTOMER_API_SUBDOMAIN}.{smarter_settings.root_domain}"
+        return smarter_settings.customer_api_domain
+
+    @property
+    def is_default_domain(self) -> bool:
+        if not self.url:
+            return False
+        return self.customer_api_domain in self.url
+
+    @property
+    def is_custom_domain(self) -> bool:
+        if not self.url:
+            return False
+        return not self.is_default_domain
+
+    @property
+    def is_deployed(self) -> bool:
+        if self.chatbot:
+            return self.chatbot.deployed
+        return False
+
+    @property
+    def account(self) -> Account:
+        """
+        Returns a lazy instance of the Account
+        """
+        if self._account:
+            return self._account
+        if self.account_number:
+            try:
+                self._account = Account.objects.get(account_number=self.account_number)
+            except Account.DoesNotExist:
+                return None
+        return self._account
+
+    @property
+    def chatbot(self) -> ChatBot:
+        """
+        Returns a lazy instance of the ChatBot
+        """
+        if self._chatbot:
+            return self._chatbot
+
+        if self.is_default_domain:
+            try:
+                self._chatbot = ChatBot.objects.get(account=self.account, name=self.api_subdomain, deployed=True)
+            except ChatBot.DoesNotExist:
+                print(f"ChatBot not found for account {self.account_number} and subdomain {self.api_subdomain}")
+                return None
+
+        if self.is_custom_domain:
+            try:
+                try:
+                    custom_domain = ChatBotCustomDomain.objects.get(domain_name=self.api_host, is_verified=True)
+                except ChatBotCustomDomain.DoesNotExist:
+                    return None
+                self._chatbot = ChatBot.objects.get(custom_domain=custom_domain, deployed=True)
+            except ChatBot.DoesNotExist:
+                print(f"ChatBot not found for custom domain {self.api_host}")
+                return None
+        return self._chatbot

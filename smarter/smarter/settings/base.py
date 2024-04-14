@@ -93,7 +93,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    "django.middleware.security.SecurityMiddleware",
+    "smarter.apps.chatbot.middleware.SecurityMiddleware",  # replaces django.middleware.security.SecurityMiddleware
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -104,7 +104,6 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "smarter.common.middleware.QuietDisallowedHostMiddleware",
     "smarter.common.middleware.BlockSensitiveFilesMiddleware",
-    "smarter.apps.chatbot.middleware.AllowCustomDomainsMiddleware",
 ]
 
 ROOT_URLCONF = "smarter.urls"

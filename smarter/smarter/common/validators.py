@@ -37,8 +37,8 @@ class SmarterValidator:
         """Validate domain format"""
         try:
             if domain not in [None, "", "localhost"]:
-                URLValidator().validate_url("http://" + domain)
-        except ValidationError as e:
+                SmarterValidator.validate_url("http://" + domain)
+        except SmarterValueError as e:
             raise SmarterValueError(f"Invalid domain {domain}") from e
 
     @staticmethod
@@ -66,8 +66,11 @@ class SmarterValidator:
     @staticmethod
     def validate_url(url: str) -> None:
         """Validate URL format"""
-        if not re.match(SmarterValidator.VALID_URL_PATTERN, url):
-            raise SmarterValueError(f"Invalid URL {url}")
+        try:
+            validator = URLValidator()
+            validator(url)
+        except ValidationError as e:
+            raise SmarterValueError(f"Invalid url {url}") from e
 
     @staticmethod
     def validate_uuid(uuid: str) -> None:
