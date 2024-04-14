@@ -17,6 +17,7 @@ from smarter.apps.plugin.plugin import Plugin
 # our stuff
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CUSTOMER_API_SUBDOMAIN
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.model_helpers import TimestampedModel
 from smarter.common.validators import SmarterValidator
 
@@ -81,7 +82,10 @@ class ChatBot(TimestampedModel):
     @staticmethod
     @cache_results(timeout=60 * 60)
     def get_by_url(url: str):
-        return ChatBotApiUrlHelper().get_by_url(url)
+        try:
+            return ChatBotApiUrlHelper(url).chatbot
+        except SmarterValueError:
+            return None
 
     def save(self, *args, **kwargs):
         if not self.custom_domain:
