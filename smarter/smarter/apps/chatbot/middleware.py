@@ -3,7 +3,7 @@
 from django.core.exceptions import SuspiciousOperation
 from django.middleware.security import SecurityMiddleware as DjangoSecurityMiddleware
 
-from .models import ChatBot
+from .models import ChatBotApiUrlHelper
 
 
 class SecurityMiddleware(DjangoSecurityMiddleware):
@@ -17,7 +17,7 @@ class SecurityMiddleware(DjangoSecurityMiddleware):
             super().process_request(request)
         except SuspiciousOperation:
             host = request.get_host()
-            if ChatBot.get_by_url(host):
+            if ChatBotApiUrlHelper(url=host).is_valid:
                 pass
             else:
                 raise
