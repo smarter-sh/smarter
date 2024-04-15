@@ -5,23 +5,25 @@ from typing import List, Type
 from urllib.parse import urlparse
 
 import tldextract
+from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from django.core.exceptions import ValidationError
-from django.core.validators import URLValidator
 from django.db import models
 
-from smarter.apps.account.models import Account, APIKey, UserProfile
+from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin import Plugin
 
 # our stuff
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CUSTOMER_API_SUBDOMAIN
-from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.model_helpers import TimestampedModel
 from smarter.common.validators import SmarterValidator
 
 from .utils import cache_results
+
+
+User = get_user_model()
+UserType = Type[User]
 
 
 # -----------------------------------------------------------------------------
@@ -71,8 +73,6 @@ class ChatBotCustomDomainDNS(TimestampedModel):
 class ChatBot(TimestampedModel):
     """A ChatBot API for a customer account."""
 
-    url_validator = URLValidator()
-
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     subdomain = models.ForeignKey(ChatBotCustomDomainDNS, on_delete=models.CASCADE, blank=True, null=True)
@@ -82,17 +82,10 @@ class ChatBot(TimestampedModel):
     @staticmethod
     @cache_results(timeout=60 * 60)
     def get_by_url(url: str):
-        try:
-            return ChatBotApiUrlHelper(url).chatbot
-        except SmarterValueError:
-            return None
+        return ChatBotApiUrlHelper(url).chatbot
 
     def save(self, *args, **kwargs):
-        if not self.custom_domain:
-            try:
-                self.url_validator("http://" + self.hostname)
-            except ValidationError as e:
-                raise ValidationError(f"Invalid domain name {self.hostname}") from e
+        SmarterValidator.validate_domain(self.hostname)
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -100,18 +93,16 @@ class ChatBot(TimestampedModel):
 
     @property
     def default_host(self):
-        retval = f"{self.name}.{self.account.account_number}.{smarter_settings.customer_api_domain}"
-        url = f"https://{retval}/"
-        self.url_validator(url)
-        return retval
+        domain = f"{self.name}.{self.account.account_number}.{smarter_settings.customer_api_domain}"
+        SmarterValidator.validate_domain(domain)
+        return domain
 
     @property
     def custom_host(self):
         if self.custom_domain and self.custom_domain.is_verified:
-            retval = f"{self.name}.{self.custom_domain.domain_name}"
-            url = f"https://{retval}/"
-            self.url_validator(url)
-            return retval
+            domain = f"{self.name}.{self.custom_domain.domain_name}"
+            SmarterValidator.validate_domain(domain)
+            return domain
         return None
 
     @property
@@ -127,7 +118,7 @@ class ChatBotAPIKey(TimestampedModel):
     """Map of API keys for a ChatBot"""
 
     chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE)
-    api_key = models.ForeignKey(APIKey, on_delete=models.CASCADE)
+    api_key = models.ForeignKey(SmarterAuthToken, on_delete=models.CASCADE)
 
 
 class ChatBotPlugin(TimestampedModel):
@@ -178,6 +169,7 @@ class ChatBotRequests(TimestampedModel):
     is_aggregation = models.BooleanField(default=False, blank=True, null=True)
 
 
+# pylint: disable=too-many-instance-attributes
 class ChatBotApiUrlHelper:
     """Helper class for ChatBot models. Abstracts url parsing logic so that we
     can use it in multiple places: this module, middleware, views, etc.
@@ -191,10 +183,11 @@ class ChatBotApiUrlHelper:
     _account_number: str = None
     _environment: str = None
     _account: Account = None
+    _user: UserType = None
     _chatbot: ChatBot = None
     _chatbot_custom_domain: ChatBotCustomDomain = None
 
-    def __init__(self, url: str = None, environment: str = None):
+    def __init__(self, url: str = None, user: UserType = None, environment: str = None):
         """
         Constructor for ChatBotApiUrlHelper.
         :param url: The URL to parse.
@@ -207,6 +200,7 @@ class ChatBotApiUrlHelper:
         self._url = url
         self._environment = environment
         self.parsed_url = urlparse(url)
+        self._user = user
 
     @property
     def environment(self) -> str:
@@ -391,6 +385,28 @@ class ChatBotApiUrlHelper:
         return False
 
     @property
+    def is_valid(self) -> bool:
+        if self.chatbot is None:
+            return False
+        if self.user and not UserProfile.objects.exists(user=self.user, account=self.account):
+            return False
+        return True
+
+    @property
+    def is_authentication_required(self) -> bool:
+        if ChatBotAPIKey.objects.exists(chatbot=self.chatbot, api_key__is_enabled=True):
+            return True
+        return False
+
+    @property
+    def user(self) -> UserType:
+        """
+        Returns the user for the ChatBot API url.
+        :return: The user or None if not found.
+        """
+        return self._user
+
+    @property
     def account(self) -> Account:
         """
         Returns a lazy instance of the Account
@@ -453,7 +469,3 @@ class ChatBotApiUrlHelper:
             return None
 
         return self._chatbot_custom_domain
-
-    @property
-    def is_valid(self) -> bool:
-        return self.chatbot is not None

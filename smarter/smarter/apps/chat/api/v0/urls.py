@@ -10,11 +10,11 @@ from .views.history import (
     PluginUsageHistoryListView,
     PluginUsageHistoryView,
 )
-from .views.providers.smarter import SmarterChatViewSet
+from .views.providers.smarter import SmarterChatApiViewSet
 
 
 urlpatterns = [
-    path("smarter/", SmarterChatViewSet.as_view(), name="smarter-chat-api"),
+    path("smarter/", SmarterChatApiViewSet.as_view(), name="smarter-chat-api"),
     path("history/chats/", ChatHistoryListView.as_view(), name="chathistory_list"),
     path(
         "history/chats/<int:pk>/",

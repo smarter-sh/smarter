@@ -3,37 +3,22 @@
 Smarter Customer API view.
 """
 import logging
-from typing import List
 
-from django.shortcuts import get_object_or_404
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 
-from smarter.apps.chat.api.v0.views.providers.smarter import SmarterChatViewSet
 from smarter.apps.chat.providers.smarter import handler
-from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
-from smarter.apps.chatbot.signals import chatbot_called
-from smarter.apps.plugin.plugin import Plugin
+
+from .base import ChatBotApiBaseViewSet
 
 
 logger = logging.getLogger(__name__)
 
 
-class SmarterChatBotViewSet(SmarterChatViewSet):
-    """top-level viewset for openai api function calling"""
-
-    chatbot: ChatBot = None
-    plugins: List[Plugin]
-
-    def dispatch(self, request, *args, **kwargs):
-
-        # setting this less for its functionality than for using it as a way
-        # to validate the hostname and that the chatbot actually exists.
-        self.chatbot = get_object_or_404(ChatBot, hostname=request.get_host(), deployed=True)
-        self.plugins = ChatBotPlugin().plugins(chatbot=self.chatbot)
-        chatbot_called.send(sender=self.__class__, chatbot=self.chatbot, request=request, args=args, kwargs=kwargs)
-        response = super().dispatch(request, *args, **kwargs)
-        return response
+class SmarterChatBotApiViewSet(ChatBotApiBaseViewSet):
+    """
+    top-level viewset for customer-deployed Plugin-based Chat APIs.
+    """
 
     def post(self, request):
         """

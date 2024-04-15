@@ -12,8 +12,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
 from smarter.apps.account.api.v0.serializers import PaymentMethodSerializer
-from smarter.apps.account.api.view_helpers import SmarterAPIListView, SmarterAPIView
 from smarter.apps.account.models import Account, PaymentMethod, UserProfile
+from smarter.lib.drf.view_helpers import SmarterAPIListView, SmarterAuthenticatedAPIView
 
 
 User = get_user_model()
@@ -21,7 +21,7 @@ UserType = Type[User]
 logger = logging.getLogger(__name__)
 
 
-class PaymentMethodView(SmarterAPIView):
+class PaymentMethodView(SmarterAuthenticatedAPIView):
     """Payment method view for smarter api."""
 
     def get(self, request, payment_method_id: int = None):

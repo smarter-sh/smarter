@@ -9,11 +9,7 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
-from smarter.apps.account.api.view_helpers import (
-    SmarterAPIAdminView,
-    SmarterAPIListAdminView,
-)
-from smarter.apps.account.models import Account, APIKey, UserProfile
+from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
 from smarter.apps.chatbot.models import (
     ChatBot,
     ChatBotAPIKey,
@@ -23,8 +19,9 @@ from smarter.apps.chatbot.models import (
 )
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.models import PluginMeta
+from smarter.lib.drf.view_helpers import SmarterAPIAdminView, SmarterAPIListAdminView
 
-from ..serializers import (
+from .serializers import (
     ChatBotAPIKeySerializer,
     ChatBotCustomDomainSerializer,
     ChatBotFunctionsSerializer,
@@ -235,7 +232,7 @@ class ChatBotAPIKeyView(ViewBase):
 
     def get(self, request, chatbot_id: int, api_key_id: int):
         chatbot = get_object_or_404(ChatBot, pk=chatbot_id, account=self.account)
-        api_key = get_object_or_404(APIKey, pk=api_key_id, chatbot=chatbot)
+        api_key = get_object_or_404(SmarterAuthToken, pk=api_key_id, chatbot=chatbot)
         serializer = self.serializer_class(api_key)
         return Response(serializer.data, status=HTTPStatus.OK)
 
@@ -250,7 +247,7 @@ class ChatBotAPIKeyView(ViewBase):
 
     def delete(self, request, chatbot_id: int, api_key_id: int):
         chatbot = get_object_or_404(ChatBot, pk=chatbot_id, account=self.account)
-        api_key = get_object_or_404(APIKey, pk=api_key_id)
+        api_key = get_object_or_404(SmarterAuthToken, pk=api_key_id)
         chatbot_api_key = get_object_or_404(ChatBotAPIKey, chatbot=chatbot, api_key=api_key)
         try:
             chatbot_api_key.delete()

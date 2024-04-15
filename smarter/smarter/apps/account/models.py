@@ -11,14 +11,11 @@ from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
 from django.db import models
 from django.utils import timezone
-from knox.auth import TokenAuthentication
 from knox.models import AuthToken, AuthTokenManager
-from rest_framework.exceptions import AuthenticationFailed
-
-from smarter.common.exceptions import SmarterValueError
-from smarter.common.helpers.email_helpers import email_helper
 
 # our stuff
+from smarter.common.exceptions import SmarterValueError
+from smarter.common.helpers.email_helpers import email_helper
 from smarter.common.helpers.model_helpers import TimestampedModel
 from smarter.common.validators import SmarterValidator
 
@@ -252,21 +249,67 @@ class PaymentMethod(TimestampedModel):
         return self.card_type + " " + self.card_last_4
 
 
-class APIKeyManager(AuthTokenManager):
+class Charge(TimestampedModel):
+    """Charge model for periodic account billing."""
+
+    CHARGE_TYPES = [
+        (CHARGE_TYPE_PROMPT_COMPLETION, "Prompt Completion"),
+        (CHARGE_TYPE_PLUGIN, "Plugin"),
+        (CHARGE_TYPE_TOOL, "Tool"),
+    ]
+
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="charge")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="charge")
+    charge_type = models.CharField(
+        max_length=20,
+        choices=CHARGE_TYPES,
+        default=CHARGE_TYPE_PROMPT_COMPLETION,
+    )
+    prompt_tokens = models.IntegerField()
+    completion_tokens = models.IntegerField()
+    total_tokens = models.IntegerField()
+    model = models.CharField(max_length=255)
+    reference = models.CharField(max_length=255)
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+
+        if self.user is None or self.account is None:
+            raise SmarterValueError("User and Account cannot be null")
+
+        super().save(*args, **kwargs)
+        if is_new:
+            logger.debug(
+                "New user charge created for %s %s. Sending signal.", self.account.company_name, self.user.email
+            )
+            new_charge_created.send(sender=self.__class__, charge=self)
+
+    def __str__(self):
+        return str(self.id) + " - " + self.model + " - " + self.total_tokens
+
+
+###############################################################################
+# API Key Management
+###############################################################################
+class SmarterAuthTokenManager(AuthTokenManager):
     """API Key manager."""
 
-    def create(self, user, expiry=None, description: str = None, is_active: bool = False, **kwargs):
+    # pylint: disable=too-many-arguments
+    def create(self, user, expiry=None, description: str = None, account=None, is_active: bool = False, **kwargs):
         api_key, token = super().create(user, expiry=expiry, **kwargs)
+        if not account:
+            account = UserProfile.objects.get(user=user).account
+        api_key.account = account
         api_key.description = description
         api_key.is_active = is_active
         api_key.save()
         return api_key, token
 
 
-class APIKey(AuthToken, TimestampedModel):
+class SmarterAuthToken(AuthToken, TimestampedModel):
     """API Key model."""
 
-    objects = APIKeyManager()
+    objects = SmarterAuthTokenManager()
 
     # pylint: disable=C0115
     class Meta:
@@ -318,56 +361,5 @@ class APIKey(AuthToken, TimestampedModel):
             self.last_used_at = datetime.now()
             self.save()
 
-    @classmethod
-    def validate_token(cls, token_str: str) -> bool:
-        """
-        Validate a token by authenticating with Django using Knox's TokenAuthentication
-        """
-        try:
-            token_bytes = token_str.encode("utf-8")
-            TokenAuthentication().authenticate_credentials(token_bytes)
-            return True
-        except AuthenticationFailed:
-            return False
-
     def __str__(self):
         return self.identifier
-
-
-class Charge(TimestampedModel):
-    """Charge model for periodic account billing."""
-
-    CHARGE_TYPES = [
-        (CHARGE_TYPE_PROMPT_COMPLETION, "Prompt Completion"),
-        (CHARGE_TYPE_PLUGIN, "Plugin"),
-        (CHARGE_TYPE_TOOL, "Tool"),
-    ]
-
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="charge")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="charge")
-    charge_type = models.CharField(
-        max_length=20,
-        choices=CHARGE_TYPES,
-        default=CHARGE_TYPE_PROMPT_COMPLETION,
-    )
-    prompt_tokens = models.IntegerField()
-    completion_tokens = models.IntegerField()
-    total_tokens = models.IntegerField()
-    model = models.CharField(max_length=255)
-    reference = models.CharField(max_length=255)
-
-    def save(self, *args, **kwargs):
-        is_new = self.pk is None
-
-        if self.user is None or self.account is None:
-            raise SmarterValueError("User and Account cannot be null")
-
-        super().save(*args, **kwargs)
-        if is_new:
-            logger.debug(
-                "New user charge created for %s %s. Sending signal.", self.account.company_name, self.user.email
-            )
-            new_charge_created.send(sender=self.__class__, charge=self)
-
-    def __str__(self):
-        return str(self.id) + " - " + self.model + " - " + self.total_tokens

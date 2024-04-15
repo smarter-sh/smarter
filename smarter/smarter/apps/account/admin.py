@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 
-from .models import Account, APIKey, PaymentMethod, UserProfile
+from .models import Account, PaymentMethod, SmarterAuthToken, UserProfile
 
 
 # Register your models here.
@@ -47,4 +47,4 @@ class APIKeyModelAdmin(admin.ModelAdmin):
 admin.site.register(Account, AccountAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(PaymentMethod, PaymentMethodModelAdmin)
-admin.site.register(APIKey, APIKeyModelAdmin)
+admin.site.register(SmarterAuthToken, APIKeyModelAdmin)

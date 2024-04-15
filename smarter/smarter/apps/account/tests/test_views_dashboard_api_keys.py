@@ -11,7 +11,7 @@ from django.contrib.auth import authenticate, get_user_model
 from django.test import RequestFactory
 
 # our stuff
-from ..models import Account, APIKey, UserProfile
+from ..models import Account, SmarterAuthToken, UserProfile
 from ..views.dashboard.api_keys import APIKeysView, APIKeyView
 
 
@@ -90,7 +90,8 @@ class TestAPIKeys(unittest.TestCase):
 
     def create_api_key(self):
         """Create an API Key."""
-        api_key, _ = APIKey.objects.create(
+        api_key, _ = SmarterAuthToken.objects.create(
+            account=self.account,
             user=self.user,
             description="Test API Key",
             is_active=True,
@@ -117,7 +118,7 @@ class TestAPIKeys(unittest.TestCase):
     #     # should redirect to the api key detail page
     #     response = APIKeyView.as_view()(request)
     #     self.assertIn(response.status_code, SUCCESS_CODES)
-    #     api_key = APIKey.objects.get(description=description)
+    #     api_key = SmarterAuthToken.objects.get(description=description)
 
     #     # test that we can activate an api key
     #     factory = RequestFactory()
@@ -137,7 +138,7 @@ class TestAPIKeys(unittest.TestCase):
     #     response_deactivate = APIKeyView.as_view()(request_deactivate)
     #     self.assertIn(response_deactivate.status_code, SUCCESS_CODES)
 
-    #     deactivated_api_key = APIKey.objects.get(key_id=api_key.key_id)
+    #     deactivated_api_key = SmarterAuthToken.objects.get(key_id=api_key.key_id)
     #     self.assertFalse(deactivated_api_key.is_active)
 
     #     # test that we can delete an api key
@@ -160,7 +161,7 @@ class TestAPIKeys(unittest.TestCase):
 
     def test_get_api_key_no_permissions(self):
         """Test that we can't get an api key without permissions."""
-        another_api_key, _ = APIKey.objects.create(
+        another_api_key, _ = SmarterAuthToken.objects.create(
             user=self.user,
             description="ANOTHER Test API Key",
             is_active=True,

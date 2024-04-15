@@ -7,7 +7,7 @@ from typing import Type
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
-from smarter.apps.account.models import Account, APIKey, UserProfile
+from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_COMPANY_NAME
 
 
@@ -61,6 +61,8 @@ class Command(BaseCommand):
             )
 
         # ensure that the Smarter admin user has at least one auth token (api key)
-        if APIKey.objects.filter(user=user).count() == 0:
-            _, token_key = APIKey.objects.create(user=user, description="created by manage.py", expiry=None)
+        if SmarterAuthToken.objects.filter(user=user).count() == 0:
+            _, token_key = SmarterAuthToken.objects.create(
+                account=account, user=user, description="created by manage.py", expiry=None
+            )
             self.stdout.write(self.style.SUCCESS(f"created API key: {token_key}"))

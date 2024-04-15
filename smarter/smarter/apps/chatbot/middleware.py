@@ -17,6 +17,9 @@ class SecurityMiddleware(DjangoSecurityMiddleware):
             super().process_request(request)
         except SuspiciousOperation:
             host = request.get_host()
+            # Check if the host is a ChatBot API domain.
+            # If it is, then suppress the SuspiciousOperation exception.
+            # This is a cached operation, so it should not affect performance.
             if ChatBot.get_by_url(host) is not None:
                 pass
             else:

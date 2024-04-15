@@ -1,10 +1,10 @@
 # pylint: disable=R0801
 """Customer API views."""
 
-from smarter.apps.account.api.view_helpers import SmarterAPIView
+from smarter.lib.drf.view_helpers import SmarterAuthenticatedAPIView
 
 
-class SmarterChatViewSet(SmarterAPIView):
+class SmarterChatApiViewSet(SmarterAuthenticatedAPIView):
     """top-level viewset for openai api function calling"""
 
     provider = "smarter"
