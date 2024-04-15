@@ -7,7 +7,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.views import APIView
 
-from ..models import APIKey
+from smarter.apps.account.models import SmarterAuthToken
 
 
 class SmarterTokenAuthentication(TokenAuthentication):
@@ -17,24 +17,22 @@ class SmarterTokenAuthentication(TokenAuthentication):
     behavior, but it also checks that the API key is active.
     """
 
-    model = APIKey
+    model = SmarterAuthToken
 
     def authenticate_credentials(self, token):
         # authenticate the user using the normal token authentication
         # this will raise an AuthenticationFailed exception if the token is invalid
         user, auth_token = super().authenticate_credentials(token)
 
-        try:
-            # next, we need to ensure that the token is active, otherwise
-            # we should raise an exception that exactly matches the one
-            # raised by the default token authentication
-            APIKey.objects.get(token_key=auth_token.token_key, is_active=True)
+        # next, we need to ensure that the token is active, otherwise
+        # we should raise an exception that exactly matches the one
+        # raised by the default token authentication
+        if not SmarterAuthToken.objects.exists(token_key=auth_token.token_key, is_active=True):
+            raise AuthenticationFailed
 
-            # if the token is active, we can return the user and token as a tuple
-            # exactly as the default token authentication does.
-            return (user, auth_token)
-        except APIKey.DoesNotExist as e:
-            raise AuthenticationFailed from e
+        # if the token is active, we can return the user and token as a tuple
+        # exactly as the default token authentication does.
+        return (user, auth_token)
 
 
 # ------------------------------------------------------------------------------
@@ -49,6 +47,15 @@ class IsStaffUser(BasePermission):
         return request.user and (request.user.is_staff or request.user.is_superuser)
 
 
+class SmarterAPIUnauthenticated(BasePermission):
+    """
+    Allows public access to APIS.
+    """
+
+    def has_permission(self, request, view):
+        return True
+
+
 class SmarterAPIAuthenticated(IsAuthenticated):
     """
     Allows access only to authenticated users.
@@ -61,7 +68,13 @@ class SmarterAPIAdmin(SmarterAPIAuthenticated, IsStaffUser):
     """
 
 
-class SmarterAPIView(APIView):
+class SmarterUnauthenticatedAPIView(APIView):
+    """Base API view for smarter."""
+
+    permission_classes = [SmarterAPIUnauthenticated]
+
+
+class SmarterAuthenticatedAPIView(APIView):
     """Base API view for smarter."""
 
     permission_classes = [SmarterAPIAuthenticated]
@@ -76,7 +89,7 @@ class SmarterAPIListView(ListAPIView):
     http_method_names = ["get"]
 
 
-class SmarterAPIAdminView(SmarterAPIView):
+class SmarterAPIAdminView(SmarterAuthenticatedAPIView):
     """Base admin-only API view."""
 
     permission_classes = [SmarterAPIAdmin]

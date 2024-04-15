@@ -3,7 +3,6 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
-from smarter.apps.account.api.view_helpers import SmarterAPIListView, SmarterAPIView
 from smarter.apps.chat.api.v0.serializers import (
     ChatHistorySerializer,
     ChatToolCallHistorySerializer,
@@ -14,6 +13,7 @@ from smarter.apps.chat.models import (
     ChatToolCallHistory,
     PluginUsageHistory,
 )
+from smarter.lib.drf.view_helpers import SmarterAPIListView, SmarterAuthenticatedAPIView
 
 
 class ChatToolCallHistoryListView(SmarterAPIListView):
@@ -21,7 +21,7 @@ class ChatToolCallHistoryListView(SmarterAPIListView):
     serializer_class = ChatToolCallHistorySerializer
 
 
-class ChatToolCallHistoryView(SmarterAPIView):
+class ChatToolCallHistoryView(SmarterAuthenticatedAPIView):
 
     def get(self, request, *args, **kwargs):
         instance = get_object_or_404(ChatToolCallHistory, pk=kwargs["pk"])
@@ -34,7 +34,7 @@ class PluginUsageHistoryListView(SmarterAPIListView):
     serializer_class = PluginUsageHistorySerializer
 
 
-class PluginUsageHistoryView(SmarterAPIView):
+class PluginUsageHistoryView(SmarterAuthenticatedAPIView):
 
     def get(self, request, *args, **kwargs):
         instance = get_object_or_404(PluginUsageHistoryView, pk=kwargs["pk"])
@@ -47,7 +47,7 @@ class ChatHistoryListView(SmarterAPIListView):
     serializer_class = ChatHistorySerializer
 
 
-class ChatHistoryView(SmarterAPIView):
+class ChatHistoryView(SmarterAuthenticatedAPIView):
 
     def get(self, request, *args, **kwargs):
         instance = get_object_or_404(ChatHistory, pk=kwargs["pk"])

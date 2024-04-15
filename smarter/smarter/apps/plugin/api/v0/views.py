@@ -16,20 +16,20 @@ from rest_framework import status
 from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 
-from smarter.apps.account.api.view_helpers import SmarterAPIListView, SmarterAPIView
 from smarter.apps.account.models import UserProfile
 from smarter.apps.plugin.api.v0.serializers import PluginMetaSerializer
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin import Plugin
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib.drf.view_helpers import SmarterAPIListView, SmarterAuthenticatedAPIView
 
 
 User = get_user_model()
 UserType = Type[User]
 
 
-class PluginView(SmarterAPIView):
+class PluginView(SmarterAuthenticatedAPIView):
     """Plugin view for smarter api."""
 
     def get(self, request, plugin_id):
@@ -48,7 +48,7 @@ class PluginView(SmarterAPIView):
         return delete_plugin(request, plugin_id)
 
 
-class PluginCloneView(SmarterAPIView):
+class PluginCloneView(SmarterAuthenticatedAPIView):
     """Plugin clone view for smarter api."""
 
     def post(self, request, plugin_id, new_name):
@@ -68,7 +68,7 @@ class PluginsListView(SmarterAPIListView):
         return plugins
 
 
-class AddPluginExamplesView(SmarterAPIView):
+class AddPluginExamplesView(SmarterAuthenticatedAPIView):
     """Add example plugins to a user profile."""
 
     def post(self, request, user_id=None):
@@ -88,7 +88,7 @@ class AddPluginExamplesView(SmarterAPIView):
         return HttpResponseRedirect("/v0/plugins/")
 
 
-class PluginUploadView(SmarterAPIView):
+class PluginUploadView(SmarterAuthenticatedAPIView):
     """Plugin view for smarter api."""
 
     parser_class = (FileUploadParser,)

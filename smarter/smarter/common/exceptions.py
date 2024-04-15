@@ -5,7 +5,7 @@ from http import HTTPStatus
 import openai
 
 
-class SmarterConfigurationError(Exception):
+class SmarterExceptionBase(Exception):
     """Exception raised for errors in the configuration."""
 
     def __init__(self, message):
@@ -13,20 +13,20 @@ class SmarterConfigurationError(Exception):
         super().__init__(self.message)
 
 
-class SmarterValueError(Exception):
+class SmarterConfigurationError(SmarterExceptionBase):
     """Exception raised for errors in the configuration."""
 
-    def __init__(self, message):
-        self.message = message
-        super().__init__(self.message)
+
+class SmarterValueError(SmarterExceptionBase):
+    """Exception raised for errors in the configuration."""
 
 
-class SmarterIlligalInvocationError(Exception):
+class SmarterIlligalInvocationError(SmarterExceptionBase):
     """Exception raised when the service is called by an unknown service."""
 
-    def __init__(self, message):
-        self.message = message
-        super().__init__(self.message)
+
+class SmarterBusinessRuleViolation(SmarterExceptionBase):
+    """Exception raised when the service is called by an unknown service."""
 
 
 EXCEPTION_MAP = {

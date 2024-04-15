@@ -2,7 +2,10 @@
 """Account serializers for smarter api"""
 from rest_framework import serializers
 
-from smarter.apps.account.api.v0.serializers import AccountSerializer, APIKeySerializer
+from smarter.apps.account.api.v0.serializers import (
+    AccountSerializer,
+    SmarterAuthTokenSerializer,
+)
 from smarter.apps.chatbot.models import (
     ChatBot,
     ChatBotAPIKey,
@@ -24,7 +27,7 @@ class ChatBotSerializer(serializers.ModelSerializer):
 class ChatBotAPIKeySerializer(serializers.ModelSerializer):
 
     chatbot = ChatBotSerializer()
-    api_key = APIKeySerializer()
+    api_key = SmarterAuthTokenSerializer()
 
     class Meta:
         model = ChatBotAPIKey

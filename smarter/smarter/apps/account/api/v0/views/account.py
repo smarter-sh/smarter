@@ -9,11 +9,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
 from smarter.apps.account.api.v0.serializers import AccountSerializer
-from smarter.apps.account.api.view_helpers import (
-    SmarterAPIAdminView,
-    SmarterAPIListAdminView,
-)
 from smarter.apps.account.models import Account, UserProfile
+from smarter.lib.drf.view_helpers import SmarterAPIAdminView, SmarterAPIListAdminView
 
 
 class AccountViewBase(SmarterAPIAdminView):
