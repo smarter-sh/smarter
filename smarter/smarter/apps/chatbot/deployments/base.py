@@ -63,6 +63,7 @@ class ChatBotApiBaseViewSet(SmarterUnauthenticatedAPIView):
         if not ChatBotAPIKey.objects.filter(chatbot=self.chatbot, api_key__is_active=True).exists():
             return True
 
+        # returns a tuple of (user, api_key) if the request is authenticated
         user, api_key = TokenAuthentication().authenticate(request)
 
         # the user associated with the API key must have a UserProfile
@@ -78,7 +79,7 @@ class ChatBotApiBaseViewSet(SmarterUnauthenticatedAPIView):
             msg = f"Received api key {api_key.description} for User {user} of Account {user_profile.account.account_number} which is not associated with Chatbot {self.chatbot.name}"
             raise SmarterBusinessRuleViolation(message=msg)
 
-        return False
+        return api_key is not None
 
     def dispatch(self, request, *args, **kwargs):
         helper = self.get_cached_helper(request.get_host(), request.user)
