@@ -583,6 +583,9 @@ class Settings(BaseSettings):
     @property
     def customer_api_domain(self) -> str:
         """Return the customer API domain name."""
+        if self.environment == "local":
+            return f"{self.environment}.{SMARTER_CUSTOMER_API_SUBDOMAIN}.localhost"
+
         if self.environment == "prod":
             # api.smarter.sh
             return f"{SMARTER_CUSTOMER_API_SUBDOMAIN}.{self.root_domain}"

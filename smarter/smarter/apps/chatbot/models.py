@@ -80,8 +80,9 @@ class ChatBot(TimestampedModel):
     deployed = models.BooleanField(default=False, blank=True, null=True)
 
     @staticmethod
-    @cache_results(timeout=60 * 60)
+    @cache_results(timeout=600)
     def get_by_url(url: str):
+        print("get_by_url()")
         return ChatBotApiUrlHelper(url).chatbot
 
     def save(self, *args, **kwargs):
@@ -388,13 +389,13 @@ class ChatBotApiUrlHelper:
     def is_valid(self) -> bool:
         if self.chatbot is None:
             return False
-        if self.user and not UserProfile.objects.exists(user=self.user, account=self.account):
+        if self.user and not UserProfile.objects.filter(user=self.user, account=self.account).exists():
             return False
         return True
 
     @property
     def is_authentication_required(self) -> bool:
-        if ChatBotAPIKey.objects.exists(chatbot=self.chatbot, api_key__is_enabled=True):
+        if ChatBotAPIKey.objects.filter(chatbot=self.chatbot, api_key__is_active=True).exists():
             return True
         return False
 
@@ -404,7 +405,11 @@ class ChatBotApiUrlHelper:
         Returns the user for the ChatBot API url.
         :return: The user or None if not found.
         """
-        return self._user
+
+        # to handle <SimpleLazyObject: <django.contrib.auth.models.AnonymousUser object at blah blah>
+        if isinstance(self._user, User):
+            return self._user
+        return None
 
     @property
     def account(self) -> Account:

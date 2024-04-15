@@ -27,7 +27,7 @@ class SmarterTokenAuthentication(TokenAuthentication):
         # next, we need to ensure that the token is active, otherwise
         # we should raise an exception that exactly matches the one
         # raised by the default token authentication
-        if not SmarterAuthToken.objects.exists(token_key=auth_token.token_key, is_active=True):
+        if not SmarterAuthToken.objects.filter(token_key=auth_token.token_key, is_active=True).exists():
             raise AuthenticationFailed
 
         # if the token is active, we can return the user and token as a tuple

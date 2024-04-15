@@ -23,6 +23,10 @@ from corsheaders.defaults import default_headers
 from .smarter import *  # noqa: E402, F401, W0401
 
 
+# We implemented our own middleware to validate host names
+ALLOWED_HOSTS = ["*"]
+SMARTER_ALLOWED_HOSTS = []
+
 # to disable redis/celery in collectstatic
 if "collectstatic" in sys.argv:
     CELERY_TASK_ALWAYS_EAGER = True
@@ -45,7 +49,6 @@ LOGIN_REDIRECT_URL = "/"
 
 SECRET_KEY = smarter_settings.secret_key
 DEBUG = smarter_settings.debug_mode
-ALLOWED_HOSTS = []
 
 CACHES = {
     "default": {
