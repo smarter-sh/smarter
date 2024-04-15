@@ -8,6 +8,7 @@
 # ------------
 boto3==1.34.79                          # AWS CLI SDK
 botocore                                # AWS CLI SDK
+cachetools==5.3.3                       # Python object caching library
 celery==5.3.6                           # asynchronous task queue. works with redis.
 celery-redbeat==2.2.0                   # scheduled asynchronous tasks
 dnspython==2.6.1                        # DNS toolkit for Python
