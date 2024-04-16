@@ -39,6 +39,4 @@ class SecurityMiddleware(DjangoSecurityMiddleware):
         if ChatBot.get_by_url(host) is not None:
             return None
 
-        return HttpResponseBadRequest(
-            f"Bad Request (400) - Invalid Hostname. ALLOWED_HOSTS: {settings.ALLOWED_HOSTS}. SMARTER_ALLOWED_HOSTS: {settings.SMARTER_ALLOWED_HOSTS}. HOST: {host}"
-        )
+        return HttpResponseBadRequest("Bad Request (400) - Invalid Hostname.")
