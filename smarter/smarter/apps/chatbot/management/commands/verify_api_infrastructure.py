@@ -23,9 +23,7 @@ class Command(BaseCommand):
          - api.smarter.sh, alpha.api.smarter.sh, beta.api.smarter.sh, etc.
          - platform.smarter.sh, alpha.platform.smarter.sh, beta.platform.smarter.sh, etc.
         """
-        if smarter_settings.environment == SmarterEnvironments.LOCAL:
-            self.stdout.write(self.style.NOTICE("Running locally. Skipping AWS verification."))
-            return
+        domain = aws_helper.aws.domain_resolver(domain)
 
         # 1. Verify the AWS Route53 hosted zone for the domain
         # ---------------------------------------------------------------------
@@ -60,9 +58,9 @@ class Command(BaseCommand):
         # ---------------------------------------------------------------------
         environments = [
             f"{SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN}.{smarter_settings.root_domain}",
-            f"alpha.{SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN}.{smarter_settings.root_domain}",
-            f"beta.{SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN}.{smarter_settings.root_domain}",
-            f"next.{SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN}.{smarter_settings.root_domain}",
+            f"{SmarterEnvironments.ALPHA}.{SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN}.{smarter_settings.root_domain}",
+            f"{SmarterEnvironments.BETA}.{SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN}.{smarter_settings.root_domain}",
+            f"{SmarterEnvironments.NEXT}.{SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN}.{smarter_settings.root_domain}",
         ]
         for environment_domain in environments:
             print(f"looking for an A record in {environment_domain}...")

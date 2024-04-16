@@ -8,6 +8,11 @@ from .base_docker import *
 environment_name = os.path.basename(__file__).replace(".py", "")
 print(f"Loading smarter.settings.{environment_name}")
 
+if environment_name != SmarterEnvironments.ALPHA:
+    raise SmarterConfigurationError(
+        f"Iconsistent environment name: .env {environment_name} does not {SmarterEnvironments.ALPHA}"
+    )
+
 ENVIRONMENT_DOMAIN = f"{environment_name}.platform.{SMARTER_ROOT_DOMAIN}"
 CUSTOMER_API_DOMAIN = smarter_settings.customer_api_domain
 SMARTER_ALLOWED_HOSTS = [ENVIRONMENT_DOMAIN, CUSTOMER_API_DOMAIN, f"*.{CUSTOMER_API_DOMAIN}"]

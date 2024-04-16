@@ -31,7 +31,6 @@ from typing import Any, List, Optional, Tuple, Union
 # 3rd party stuff
 import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
 import pkg_resources
-from botocore.config import Config
 from botocore.exceptions import NoCredentialsError, ProfileNotFound
 from dotenv import load_dotenv
 from pydantic import Field, SecretStr, ValidationError, ValidationInfo, field_validator
@@ -261,91 +260,25 @@ def empty_str_to_int_default(v: str, default: int) -> int:
 class Settings(BaseSettings):
     """Settings for Lambda functions"""
 
-    _aws_session: boto3.Session = None
-    _aws_apigateway_client = None
-    _aws_s3_client = None
-    _aws_dynamodb_client = None
-    _aws_rekognition_client = None
+    # pylint: disable=too-few-public-methods
+    class Config:
+        """Pydantic configuration"""
+
+        frozen = True
+
     _aws_access_key_id_source: str = "unset"
     _aws_secret_access_key_source: str = "unset"
     _dump: dict = None
-    _initialized: bool = False
 
     # pylint: disable=too-many-branches,too-many-statements
     def __init__(self, **data: Any):  # noqa: C901
         super().__init__(**data)
-        if not Services.enabled(Services.AWS_CLI):
-            self._initialized = True
-            return
-
-        if bool(os.environ.get("AWS_DEPLOYED", False)):
-            # If we're running inside AWS Lambda, then we don't need to set the AWS credentials.
-            logger.debug("running inside AWS Lambda")
-            self._aws_access_key_id_source: str = "overridden by IAM role-based security"
-            self._aws_secret_access_key_source: str = "overridden by IAM role-based security"
-            self._aws_session = boto3.Session(region_name=self.aws_region)
-            self._initialized = True
-
-        if not self.initialized and bool(os.environ.get("GITHUB_ACTIONS", False)):
-            logger.debug("running inside GitHub Actions")
-            aws_access_key_id = os.environ.get("AWS_ACCESS_KEY_ID", None)
-            aws_secret_access_key = os.environ.get("AWS_SECRET_ACCESS_KEY", None)
-            if not aws_access_key_id or not aws_secret_access_key and not self.aws_profile:
-                raise SmarterConfigurationError(
-                    "required environment variable(s) AWS_ACCESS_KEY_ID and/or AWS_SECRET_ACCESS_KEY not set"
-                )
-            region_name = self.aws_region
-            if not region_name and not self.aws_profile:
-                raise SmarterConfigurationError("required environment variable AWS_REGION not set")
-            try:
-                self._aws_session = boto3.Session(
-                    region_name=region_name,
-                    aws_access_key_id=aws_access_key_id,
-                    aws_secret_access_key=aws_secret_access_key,
-                )
-                self._initialized = True
-                self._aws_access_key_id_source = "environ"
-                self._aws_secret_access_key_source = "environ"
-            except ProfileNotFound:
-                # only log this if the aws_profile is set
-                if self.aws_profile:
-                    logger.warning("aws_profile %s not found", self.aws_profile)
-
-            if self.aws_profile:
-                self._aws_access_key_id_source = "aws_profile"
-                self._aws_secret_access_key_source = "aws_profile"
-            else:
-                self._aws_access_key_id_source = "environ"
-                self._aws_secret_access_key_source = "environ"
-
-            self._initialized = True
-
-        if not self.initialized:
-            if self.aws_profile:
-                self._aws_access_key_id_source = "aws_profile"
-                self._aws_secret_access_key_source = "aws_profile"
-                self._initialized = True
-
-        if not self.initialized:
-            if "aws_access_key_id" in data or "aws_secret_access_key" in data:
-                if "aws_access_key_id" in data:
-                    self._aws_access_key_id_source = "constructor"
-                if "aws_secret_access_key" in data:
-                    self._aws_secret_access_key_source = "constructor"
-                self._initialized = True
-
-        if not self.initialized:
-            if "AWS_ACCESS_KEY_ID" in os.environ:
-                self._aws_access_key_id_source = "environ"
-            if "AWS_SECRET_ACCESS_KEY" in os.environ:
-                self._aws_secret_access_key_source = "environ"
 
         if self.debug_mode:
             logger.setLevel(logging.DEBUG)
 
         # pylint: disable=logging-fstring-interpolation
-        logger.debug(f"initialized settings: {self.aws_auth}")
-        self._initialized = True
+        logger.debug("Settings initialized")
 
     shared_resource_identifier: Optional[str] = Field(
         SettingsDefaults.SHARED_RESOURCE_IDENTIFIER, env="SHARED_RESOURCE_IDENTIFIER"
@@ -442,108 +375,6 @@ class Settings(BaseSettings):
         return "/data"
 
     @property
-    def initialized(self):
-        """Is settings initialized?"""
-        return self._initialized
-
-    @property
-    def aws_account_id(self):
-        """AWS account id"""
-        Services.raise_error_on_disabled(Services.AWS_CLI)
-        sts_client = self.aws_session.client("sts")
-        if not sts_client:
-            logger.warning("could not initialize sts_client")
-            return None
-        retval = sts_client.get_caller_identity()
-        if not isinstance(retval, dict):
-            logger.warning("sts_client.get_caller_identity() did not return a dict")
-            return None
-        return retval.get("Account", None)
-
-    @property
-    def aws_access_key_id_source(self):
-        """Source of aws_access_key_id"""
-        return self._aws_access_key_id_source
-
-    @property
-    def aws_secret_access_key_source(self):
-        """Source of aws_secret_access_key"""
-        return self._aws_secret_access_key_source
-
-    @property
-    def aws_auth(self) -> dict:
-        """AWS authentication"""
-        retval = {
-            "aws_profile": self.aws_profile,
-            "aws_access_key_id_source": self.aws_access_key_id_source,
-            "aws_secret_access_key_source": self.aws_secret_access_key_source,
-            "aws_region": self.aws_region,
-        }
-        if self.init_info:
-            retval["init_info"] = self.init_info
-        return retval
-
-    @property
-    def aws_session(self):
-        """AWS session"""
-        Services.raise_error_on_disabled(Services.AWS_CLI)
-        if not self._aws_session:
-            if self.aws_profile:
-                logger.debug("creating new aws_session with aws_profile: %s", self.aws_profile)
-                try:
-                    self._aws_session = boto3.Session(profile_name=self.aws_profile, region_name=self.aws_region)
-                except ProfileNotFound:
-                    logger.warning("aws_profile %s not found", self.aws_profile)
-
-                return self._aws_session
-            if self.aws_access_key_id.get_secret_value() is not None and self.aws_secret_access_key is not None:
-                logger.debug("creating new aws_session with aws keypair: %s", self.aws_access_key_id_source)
-                self._aws_session = boto3.Session(
-                    region_name=self.aws_region,
-                    aws_access_key_id=self.aws_access_key_id.get_secret_value(),
-                    aws_secret_access_key=self.aws_secret_access_key.get_secret_value(),
-                )
-                return self._aws_session
-            logger.debug("creating new aws_session without aws credentials")
-            self._aws_session = boto3.Session(region_name=self.aws_region)
-        return self._aws_session
-
-    @property
-    def aws_route53_client(self):
-        """Route53 client"""
-        Services.raise_error_on_disabled(Services.AWS_ROUTE53)
-        return self.aws_session.client("route53")
-
-    @property
-    def aws_apigateway_client(self):
-        """API Gateway client"""
-        Services.raise_error_on_disabled(Services.AWS_APIGATEWAY)
-        if not self._aws_apigateway_client:
-            config = Config(
-                read_timeout=SettingsDefaults.AWS_APIGATEWAY_READ_TIMEOUT,
-                connect_timeout=SettingsDefaults.AWS_APIGATEWAY_CONNECT_TIMEOUT,
-                retries={"max_attempts": SettingsDefaults.AWS_APIGATEWAY_MAX_ATTEMPTS},
-            )
-            self._aws_apigateway_client = self.aws_session.client("apigateway", config=config)
-        return self._aws_apigateway_client
-
-    @property
-    def aws_dynamodb_client(self):
-        """DynamoDB client"""
-        Services.raise_error_on_disabled(Services.AWS_DYNAMODB)
-        if not self._aws_dynamodb_client:
-            self._aws_dynamodb_client = self.aws_session.client("dynamodb")
-        return self._aws_dynamodb_client
-
-    @property
-    def aws_s3_client(self):
-        """S3 client"""
-        Services.raise_error_on_disabled(Services.AWS_S3)
-        if not self._aws_s3_client:
-            self._aws_s3_client = self.aws_session.client("s3")
-        return self._aws_s3_client
-
-    @property
     def aws_apigateway_name(self) -> str:
         """Return the API name."""
         return self.shared_resource_identifier + "-api"
@@ -564,13 +395,14 @@ class Settings(BaseSettings):
     @property
     def environment_domain(self) -> str:
         """Return the complete domain name."""
-        return (
-            # platform.smarter.sh
-            SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN + "." + self.root_domain
-            if self.environment == "prod"
-            # alpha.platform.smarter.sh, beta.platform.smarter.sh, next.platform.smarter.sh
-            else self.environment + "." + SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN + "." + self.root_domain
-        )
+        if self.environment == SmarterEnvironments.PROD:
+            return SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN + "." + self.root_domain
+        if self.environment in SmarterEnvironments.aws_environments:
+            return self.environment + "." + SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN + "." + self.root_domain
+        if self.environment == SmarterEnvironments.LOCAL:
+            return f"{SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN}.localhost"
+        # default domain format
+        return self.environment + "." + SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN + "." + self.root_domain
 
     @property
     def platform_name(self) -> str:
@@ -585,13 +417,16 @@ class Settings(BaseSettings):
     @property
     def customer_api_domain(self) -> str:
         """Return the customer API domain name."""
-        if self.environment == SmarterEnvironments.LOCAL:
-            return f"{self.environment}.{SMARTER_CUSTOMER_API_SUBDOMAIN}.localhost"
-
-        if self.environment == "prod":
+        if self.environment == SmarterEnvironments.PROD:
             # api.smarter.sh
             return f"{SMARTER_CUSTOMER_API_SUBDOMAIN}.{self.root_domain}"
-        # alpha.api.smarter.sh, beta.api.smarter.sh, next.api.smarter.sh
+        if self.environment in SmarterEnvironments.aws_environments:
+            # alpha.api.smarter.sh, beta.api.smarter.sh, next.api.smarter.sh
+            return f"{self.environment}.{SMARTER_CUSTOMER_API_SUBDOMAIN}.{self.root_domain}"
+        if self.environment == SmarterEnvironments.LOCAL:
+            # api.localhost
+            return f"{SMARTER_CUSTOMER_API_SUBDOMAIN}.localhost"
+        # default domain format
         return f"{self.environment}.{SMARTER_CUSTOMER_API_SUBDOMAIN}.{self.root_domain}"
 
     @property
@@ -637,24 +472,19 @@ class Settings(BaseSettings):
             package_list = [(d.project_name, d.version) for d in installed_packages]
             return package_list
 
-        if self._dump and self.initialized:
+        if self._dump:
             return self._dump
-
-        if not self.initialized:
-            return {}
 
         packages = get_installed_packages()
         packages_dict = [{"name": name, "version": version} for name, version in packages]
 
         self._dump = {
-            "services": Services.enabled_services(),
             "environment": {
                 "is_using_tfvars_file": self.is_using_tfvars_file,
                 "is_using_dotenv_file": self.is_using_dotenv_file,
                 "os": os.name,
                 "system": platform.system(),
                 "release": platform.release(),
-                "boto3": boto3.__version__,
                 "shared_resource_identifier": self.shared_resource_identifier,
                 "debug_mode": self.debug_mode,
                 "dump_defaults": self.dump_defaults,
@@ -665,8 +495,6 @@ class Settings(BaseSettings):
                 "python_build": platform.python_build(),
                 "python_installed_packages": packages_dict,
             },
-            "aws_auth": self.aws_auth,
-            "aws_lambda": {},
             "google": {
                 "google_maps_api_key": self.google_maps_api_key,
             },
@@ -677,14 +505,6 @@ class Settings(BaseSettings):
                 "openai_endpoint_image_size": self.openai_endpoint_image_size,
             },
         }
-        if Services.enabled(Services.AWS_APIGATEWAY):
-            self._dump["aws_apigateway"] = {
-                "aws_apigateway_create_custom_domaim": self.aws_apigateway_create_custom_domaim,
-                "aws_apigateway_name": self.aws_apigateway_name,
-                "root_domain": self.root_domain,
-                "aws_apigateway_domain_name": self.aws_apigateway_domain_name,
-            }
-
         if self.dump_defaults:
             settings_defaults = SettingsDefaults.to_dict()
             self._dump["settings_defaults"] = settings_defaults
@@ -697,12 +517,6 @@ class Settings(BaseSettings):
 
         self._dump = recursive_sort_dict(self._dump)
         return self._dump
-
-    # pylint: disable=too-few-public-methods
-    class Config:
-        """Pydantic configuration"""
-
-        frozen = True
 
     @field_validator("shared_resource_identifier")
     def validate_shared_resource_identifier(cls, v) -> str:

@@ -25,8 +25,7 @@ class AWSRoute53(AWSBase):
 
     def get_hosted_zone(self, domain_name) -> str:
         """Return the hosted zone."""
-        if not self.is_aws_environment:
-            return ""
+        domain_name = self.domain_resolver(domain_name)
         response = self.client.list_hosted_zones()
         for hosted_zone in response["HostedZones"]:
             if hosted_zone["Name"] == domain_name or hosted_zone["Name"] == f"{domain_name}.":
@@ -58,8 +57,7 @@ class AWSRoute53(AWSBase):
                 }
             }
         """
-        if not self.is_aws_environment:
-            return (None, False)
+        domain_name = self.domain_resolver(domain_name)
         hosted_zone = self.get_hosted_zone(domain_name)
         if hosted_zone:
             return (hosted_zone, False)
@@ -74,9 +72,8 @@ class AWSRoute53(AWSBase):
         return (hosted_zone, True)
 
     def delete_hosted_zone(self, domain_name):
-        if not self.is_aws_environment:
-            return
         # Get the hosted zone id
+        domain_name = self.domain_resolver(domain_name)
         hosted_zone_id = self.get_hosted_zone_id_for_domain(domain_name)
 
         # Get all record sets
@@ -112,8 +109,7 @@ class AWSRoute53(AWSBase):
                 ]
             }
         """
-        if not self.is_aws_environment:
-            return {}
+        record_name = self.domain_resolver(record_name)
 
         def name_match(record_name, record) -> bool:
             return record["Name"] == record_name or record["Name"] == f"{record_name}."
@@ -126,6 +122,7 @@ class AWSRoute53(AWSBase):
             ):
                 logger.info("get_dns_record() found record: %s", record)
                 return record
+        logger.warning("get_dns_record() did not find record for %s %s", record_name, record_type)
         return None
 
     def get_ns_records(self, hosted_zone_id: str):
@@ -147,9 +144,6 @@ class AWSRoute53(AWSBase):
             }
         ]
         """
-        if not self.is_aws_environment:
-            return []
-
         response = self.client.list_resource_record_sets(HostedZoneId=hosted_zone_id)
         for record in response["ResourceRecordSets"]:
             if record["Type"] == "NS":
@@ -166,9 +160,6 @@ class AWSRoute53(AWSBase):
         record_alias_target: dict = None,
         record_value=None,  # can be a single text value of a list of dict
     ) -> dict:
-        if not self.is_aws_environment:
-            return {}
-
         action: str = None
 
         def match_values(record_value, fetched_record) -> bool:
@@ -239,18 +230,13 @@ class AWSRoute53(AWSBase):
 
     def get_hosted_zone_id(self, hosted_zone) -> str:
         """Return the hosted zone id."""
-        if not self.is_aws_environment:
-            return None
-
         if hosted_zone:
             return hosted_zone["Id"].split("/")[-1]
         return None
 
     def get_hosted_zone_id_for_domain(self, domain_name) -> str:
         """Return the hosted zone id for the domain."""
-        if not self.is_aws_environment:
-            return None
-
+        domain_name = self.domain_resolver(domain_name)
         hosted_zone, _ = self.get_or_create_hosted_zone(domain_name)
         return self.get_hosted_zone_id(hosted_zone)
 
@@ -265,10 +251,8 @@ class AWSRoute53(AWSBase):
             "ResourceRecords": [{"Value": "192.1.1.1"}]
         }
         """
-        if not self.is_aws_environment:
-            return {}
-
         domain = domain or self.environment_domain
+        domain = self.domain_resolver(domain)
         hosted_zone, _ = self.get_or_create_hosted_zone(domain_name=domain)
         hosted_zone_id = self.get_hosted_zone_id(hosted_zone)
         environment_A_record = self.get_dns_record(hosted_zone_id=hosted_zone_id, record_name=domain, record_type="A")

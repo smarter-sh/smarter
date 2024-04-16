@@ -1,6 +1,10 @@
 """Custom exceptions for the AWS module."""
 
 
+class AWSNotReadyError(Exception):
+    """Raised when the AWS client is not ready."""
+
+
 class AWSACMVerificationFailed(Exception):
     """Raised when the verification of an ACM certificate fails."""
 

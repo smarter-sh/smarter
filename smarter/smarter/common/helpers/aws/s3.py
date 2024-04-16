@@ -17,8 +17,6 @@ class AWSSimpleStorageSystem(AWSBase):
 
     def get_bucket_by_prefix(self, bucket_prefix) -> str:
         """Return the bucket name given the bucket prefix."""
-        if not self.is_aws_environment:
-            return ""
         try:
             for bucket in self.client.list_buckets()["Buckets"]:
                 if bucket["Name"].startswith(bucket_prefix):
@@ -30,7 +28,5 @@ class AWSSimpleStorageSystem(AWSBase):
 
     def bucket_exists(self, bucket_prefix) -> bool:
         """Test that the S3 bucket exists."""
-        if not self.is_aws_environment:
-            return False
         bucket = self.get_bucket_by_prefix(bucket_prefix)
         return bucket is not None

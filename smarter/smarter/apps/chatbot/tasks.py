@@ -84,6 +84,7 @@ def register_custom_domain(account_id: int, domain_name: str):
     and associated the Hosted Zone with the account.
     """
     account = Account.objects.get(id=account_id)
+    domain_name = aws_helper.aws.domain_resolver(domain_name)
     try:
         ChatBotCustomDomain.objects.get(account=account, domain_name=domain_name)
         certificate_arn = aws_helper.acm.get_certificate_arn(domain_name=domain_name)
@@ -294,6 +295,7 @@ def verify_custom_domain(
 )
 def verify_domain(domain_name: str, activate_chatbot: bool = False) -> bool:
     """Verify that an Internet domain name resolves to NS records."""
+    domain_name = aws_helper.aws.domain_resolver(domain_name)
     sleep_interval = 300
     max_attempts = 48
 
@@ -343,6 +345,9 @@ def create_domain_A_record(hostname: str, api_host_domain: str):
     """Create an A record for the API domain."""
 
     try:
+        hostname = aws_helper.aws.domain_resolver(hostname)
+        api_host_domain = aws_helper.aws.domain_resolver(api_host_domain)
+
         logger.info("Deploying %s", hostname)
 
         # add the A record to the customer API domain
@@ -352,6 +357,10 @@ def create_domain_A_record(hostname: str, api_host_domain: str):
         # retrieve the A record from the environment domain hosted zone. we'll
         # use this to create the A record in the customer API domain
         a_record = aws_helper.route53.get_environment_A_record(domain=api_host_domain)
+        if not a_record:
+            logger.error("A record not found for %s", api_host_domain)
+            return
+
         logger.info(
             "Propagating A record %s from parent domain %s to deployment target %s", a_record, api_host_domain, hostname
         )
@@ -386,6 +395,10 @@ def create_domain_A_record(hostname: str, api_host_domain: str):
 )
 def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     """Create a customer API default domain A record for a chatbot."""
+
+    # ensure that the customer API domain has an A record that we can use to create the chatbot's A record
+    create_domain_A_record(hostname=smarter_settings.customer_api_domain, api_host_domain=smarter_settings.root_domain)
+
     chatbot = ChatBot.objects.get(id=chatbot_id)
     domain_name = chatbot.default_host
     create_domain_A_record(hostname=domain_name, api_host_domain=smarter_settings.customer_api_domain)

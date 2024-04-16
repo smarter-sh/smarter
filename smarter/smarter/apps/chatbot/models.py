@@ -14,7 +14,6 @@ from smarter.apps.plugin.plugin import Plugin
 
 # our stuff
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SMARTER_CUSTOMER_API_SUBDOMAIN
 from smarter.common.helpers.model_helpers import TimestampedModel
 from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
@@ -78,7 +77,6 @@ class ChatBot(TimestampedModel):
     @staticmethod
     @cache_results(timeout=600)
     def get_by_url(url: str):
-        print("get_by_url()")
         return ChatBotApiUrlHelper(url).chatbot
 
     def save(self, *args, **kwargs):
@@ -353,10 +351,6 @@ class ChatBotApiUrlHelper:
         - alpha.api.smarter.sh
         - local.api.smarter.sh
         """
-        if not self.url:
-            return None
-        if self.environment:
-            return f"{self.environment}.{SMARTER_CUSTOMER_API_SUBDOMAIN}.{smarter_settings.root_domain}"
         return smarter_settings.customer_api_domain
 
     @property

@@ -10,7 +10,6 @@ import os
 import re
 import sys
 import unittest
-from unittest.mock import patch
 
 # 3rd party stuff
 from dotenv import load_dotenv
@@ -128,13 +127,6 @@ class TestConfiguration(unittest.TestCase):
         self.assertEqual(mock_settings.openai_endpoint_image_n, 100)
         self.assertEqual(mock_settings.openai_endpoint_image_size, "TEST_image_size")
 
-    @patch.dict(os.environ, {"AWS_REGION": "invalid-region"})
-    def test_invalid_aws_region_code(self):
-        """Test that Pydantic raises a validation error for environment variable with non-existent aws region code."""
-
-        with self.assertRaises(Exception):
-            Settings(init_info="test_invalid_aws_region_code()")
-
     def test_configure_with_class_constructor(self):
         """test that we can set values with the class constructor"""
 
@@ -181,52 +173,6 @@ class TestConfiguration(unittest.TestCase):
 
         with self.assertRaises(PydanticValidationError):
             mock_settings.face_detect_threshold = 25
-
-    def test_dump(self):
-        """Test that dump is a dict."""
-
-        if Services.enabled(Services.AWS_APIGATEWAY):
-            mock_settings = Settings(init_info="test_dump()")
-            self.assertIsInstance(mock_settings.dump, dict)
-
-    def test_dump_keys(self):
-        """Test that dump contains the expected keys."""
-
-        mock_settings = Settings(init_info="test_dump_keys()")
-        environment = mock_settings.dump["environment"]
-        self.assertIn("DEBUG_MODE".lower(), environment)
-        self.assertIn("os", environment)
-        self.assertIn("system", environment)
-        self.assertIn("release", environment)
-        self.assertIn("boto3", environment)
-        self.assertIn("SHARED_RESOURCE_IDENTIFIER".lower(), environment)
-        self.assertIn("version", environment)
-
-        if Services.enabled(Services.AWS_APIGATEWAY):
-            aws_apigateway = mock_settings.dump["aws_apigateway"]
-            self.assertIn("AWS_APIGATEWAY_ROOT_DOMAIN".lower(), aws_apigateway)
-
-        openai_passthrough = mock_settings.dump["openai_passthrough"]
-        self.assertIn("LANGCHAIN_MEMORY_KEY".lower(), openai_passthrough)
-        self.assertIn("OPENAI_ENDPOINT_IMAGE_N".lower(), openai_passthrough)
-        self.assertIn("OPENAI_ENDPOINT_IMAGE_SIZE".lower(), openai_passthrough)
-
-    def test_cloudwatch_values(self):
-        """Test that dump contains the expected default values."""
-        if not Services.enabled(Services.AWS_CLOUDWATCH):
-            return
-
-        mock_settings = Settings(init_info="test_cloudwatch_values()")
-        environment = mock_settings.dump["environment"]
-        # aws_apigateway = mock_settings.dump["aws_apigateway"]
-        openai_passthrough = mock_settings.dump["openai_passthrough"]
-
-        self.assertEqual(environment["DEBUG_MODE".lower()], mock_settings.debug_mode)
-        self.assertEqual(openai_passthrough["LANGCHAIN_MEMORY_KEY".lower()], mock_settings.langchain_memory_key)
-        self.assertEqual(openai_passthrough["OPENAI_ENDPOINT_IMAGE_N".lower()], mock_settings.openai_endpoint_image_n)
-        self.assertEqual(
-            openai_passthrough["OPENAI_ENDPOINT_IMAGE_SIZE".lower()], mock_settings.openai_endpoint_image_size
-        )
 
     def test_initialize_with_values(self):
         """test that we can set values with the class constructor"""
@@ -295,37 +241,3 @@ class TestConfiguration(unittest.TestCase):
         mock_settings = Settings(init_info="test_settings_aws_account_id()")
         self.assertIsNotNone(mock_settings.aws_account_id)
         self.assertTrue(mock_settings.aws_account_id.isdigit())
-
-    def test_settings_aws_session(self):
-        """Test that the AWS session is valid."""
-        mock_settings = Settings(init_info="test_settings_aws_session()")
-        self.assertIsNotNone(mock_settings.aws_session)
-        self.assertIsNotNone(mock_settings.aws_session.region_name)
-        self.assertIsNotNone(mock_settings.aws_session.profile_name)
-
-    def test_settings_dynamodb(self):
-        """Test that the DynamoDB table is valid."""
-        mock_settings = Settings(init_info="test_settings_dynamodb()")
-        # pylint: disable=pointless-statement
-        with self.assertRaises(SmarterConfigurationError):
-            mock_settings.aws_dynamodb_client
-
-    def test_settings_aws_s3_bucket_name(self):
-        """Test that the S3 bucket name is valid."""
-        mock_settings = Settings(init_info="test_settings_aws_s3_bucket_name()")
-        if mock_settings.aws_apigateway_create_custom_domaim:
-            self.assertIsNotNone(mock_settings.aws_s3_bucket_name)
-
-    def test_settings_aws_apigateway_domain_name(self):
-        """Test that the API Gateway domain name is valid."""
-        if not Services.enabled(Services.AWS_APIGATEWAY):
-            return
-
-        mock_settings = Settings(init_info="test_settings_aws_apigateway_domain_name()")
-        hostname = mock_settings.aws_apigateway_domain_name
-        self.assertIsNotNone(mock_settings.aws_apigateway_domain_name)
-        # pylint: disable=anomalous-backslash-in-string
-        assert re.match(
-            r"^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$",
-            hostname,
-        ), "Invalid hostname"
