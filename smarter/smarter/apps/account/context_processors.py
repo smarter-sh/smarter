@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 def base(request):
     """Base context processor for templates that inherit from account/base.html"""
+    account: Account = None
     account_context = {
         "account": {
             "registration_url": "/register/",

@@ -164,7 +164,6 @@ class TestAPIKeys(unittest.TestCase):
         another_api_key, _ = SmarterAuthToken.objects.create(
             user=self.user,
             description="ANOTHER Test API Key",
-            is_active=True,
         )
         url = self.base_url + str(another_api_key) + "/"
         factory = RequestFactory()

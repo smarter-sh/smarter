@@ -295,7 +295,7 @@ class SmarterAuthTokenManager(AuthTokenManager):
     """API Key manager."""
 
     # pylint: disable=too-many-arguments
-    def create(self, user, expiry=None, description: str = None, account=None, is_active: bool = False, **kwargs):
+    def create(self, user, expiry=None, description: str = None, account=None, is_active: bool = True, **kwargs):
         auth_token, token = super().create(user, expiry=expiry, **kwargs)
         if not account:
             account = UserProfile.objects.get(user=user).account

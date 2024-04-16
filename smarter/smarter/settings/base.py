@@ -99,6 +99,9 @@ MIDDLEWARE = [
     # this replaces django.middleware.security.SecurityMiddleware
     # to manage ALLOWED_HOSTS
     "smarter.apps.chatbot.middleware.SecurityMiddleware",
+    # simple middleware to block requests for common sensitive files
+    # like .env, private key files, etc.
+    "smarter.lib.django.middleware.BlockSensitiveFilesMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -107,8 +110,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-    "smarter.lib.django.middleware.QuietDisallowedHostMiddleware",
-    "smarter.lib.django.middleware.BlockSensitiveFilesMiddleware",
 ]
 
 ROOT_URLCONF = "smarter.urls"
