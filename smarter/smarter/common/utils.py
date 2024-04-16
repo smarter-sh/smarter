@@ -10,9 +10,9 @@ import traceback  # libraries for error management
 
 from pydantic import SecretStr
 
-from .const import LANGCHAIN_MESSAGE_HISTORY_ROLES, OpenAIObjectTypes
-from .exceptions import SmarterValueError
-from .validators import (
+# mcdaniel apr-2024: technically we're not supposed to import from smarter.lib.django.validators
+# but the validators don't depend on Django initialization, so it's safe to do so in this case.
+from smarter.lib.django.validators import (
     validate_endpoint,
     validate_item,
     validate_max_tokens,
@@ -21,6 +21,9 @@ from .validators import (
     validate_request_body,
     validate_temperature,
 )
+
+from .const import LANGCHAIN_MESSAGE_HISTORY_ROLES, OpenAIObjectTypes
+from .exceptions import SmarterValueError
 
 
 logger = logging.getLogger(__name__)

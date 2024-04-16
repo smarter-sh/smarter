@@ -10,8 +10,8 @@ import re
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator, validate_email, validate_ipv4_address
 
-from .const import OpenAIEndPoint, OpenAIMessageKeys, OpenAIObjectTypes
-from .exceptions import SmarterValueError
+from ...common.const import OpenAIEndPoint, OpenAIMessageKeys, OpenAIObjectTypes
+from ...common.exceptions import SmarterValueError
 
 
 # pylint: disable=R0904

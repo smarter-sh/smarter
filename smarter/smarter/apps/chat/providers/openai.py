@@ -19,7 +19,7 @@ from smarter.common.utils import (
     parse_request,
     request_meta_data_factory,
 )
-from smarter.common.validators import (  # validate_embedding_request,
+from smarter.lib.django.validators import (  # validate_embedding_request,
     validate_completion_request,
     validate_item,
 )

@@ -17,7 +17,7 @@ from smarter.apps.plugin.plugin import Plugin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CUSTOMER_API_SUBDOMAIN
 from smarter.common.helpers.model_helpers import TimestampedModel
-from smarter.common.validators import SmarterValidator
+from smarter.lib.django.validators import SmarterValidator
 
 from .utils import cache_results
 

@@ -8,7 +8,7 @@ from typing import List, Union
 
 from django.conf import settings
 
-from smarter.common.validators import SmarterValidator
+from smarter.lib.django.validators import SmarterValidator
 
 from ..classes import Singleton
 

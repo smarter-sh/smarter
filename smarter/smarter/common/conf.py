@@ -37,6 +37,8 @@ from dotenv import load_dotenv
 from pydantic import Field, SecretStr, ValidationError, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings
 
+from ..lib.django.validators import SmarterValidator
+
 # our stuff
 from .const import (
     IS_USING_TFVARS,
@@ -47,7 +49,6 @@ from .const import (
 )
 from .exceptions import SmarterConfigurationError, SmarterValueError
 from .utils import recursive_sort_dict
-from .validators import SmarterValidator
 
 
 logger = logging.getLogger(__name__)
