@@ -28,7 +28,7 @@ class Command(BaseCommand):
 
         api_key = SmarterAuthToken.objects.get(key_id=key_id)
         account = Account.objects.get(account_number=account_number)
-        chatbot = ChatBot.objects.get(account=account, name=name, name=name)
+        chatbot = ChatBot.objects.get(account=account, name=name)
         _, created = ChatBotAPIKey.objects.get_or_create(chatbot=chatbot, api_key=api_key)
         if created:
             self.stdout.write(self.style.SUCCESS(f"API key {key_id} has been added to chatbot {name}"))

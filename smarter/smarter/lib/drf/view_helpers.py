@@ -10,6 +10,9 @@ from rest_framework.views import APIView
 from smarter.apps.account.models import SmarterAuthToken
 
 
+# ------------------------------------------------------------------------------
+# API Authentication classes
+# ------------------------------------------------------------------------------
 class SmarterTokenAuthentication(TokenAuthentication):
     """
     Custom token authentication for smarter.
@@ -35,9 +38,6 @@ class SmarterTokenAuthentication(TokenAuthentication):
         return (user, auth_token)
 
 
-# ------------------------------------------------------------------------------
-# API Views
-# ------------------------------------------------------------------------------
 class IsStaffUser(BasePermission):
     """
     Custom permission to only allow access to staff users.
@@ -68,12 +68,25 @@ class SmarterAPIAdmin(SmarterAPIAuthenticated, IsStaffUser):
     """
 
 
+# ------------------------------------------------------------------------------
+# API public views
+# ------------------------------------------------------------------------------
 class SmarterUnauthenticatedAPIView(APIView):
     """Base API view for smarter."""
 
     permission_classes = [SmarterAPIUnauthenticated]
 
 
+class SmarterUnauthenticatedAPIListView(ListAPIView):
+    """Base API listview for smarter."""
+
+    permission_classes = [SmarterAPIUnauthenticated]
+    http_method_names = ["get"]
+
+
+# ------------------------------------------------------------------------------
+# API Views that require authentication
+# ------------------------------------------------------------------------------
 class SmarterAuthenticatedAPIView(APIView):
     """Base API view for smarter."""
 
@@ -81,7 +94,7 @@ class SmarterAuthenticatedAPIView(APIView):
     authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
 
 
-class SmarterAPIListView(ListAPIView):
+class SmarterAuthenticatedAPIListView(ListAPIView):
     """Base API listview for smarter."""
 
     permission_classes = [SmarterAPIAuthenticated]
@@ -89,13 +102,16 @@ class SmarterAPIListView(ListAPIView):
     http_method_names = ["get"]
 
 
+# ------------------------------------------------------------------------------
+# API admin-only views
+# ------------------------------------------------------------------------------
 class SmarterAPIAdminView(SmarterAuthenticatedAPIView):
     """Base admin-only API view."""
 
     permission_classes = [SmarterAPIAdmin]
 
 
-class SmarterAPIListAdminView(SmarterAPIListView):
+class SmarterAPIListAdminView(SmarterAuthenticatedAPIListView):
     """Base admin-only API list view."""
 
     permission_classes = [SmarterAPIAdmin]

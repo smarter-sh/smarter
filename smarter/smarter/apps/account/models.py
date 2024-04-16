@@ -296,14 +296,14 @@ class SmarterAuthTokenManager(AuthTokenManager):
 
     # pylint: disable=too-many-arguments
     def create(self, user, expiry=None, description: str = None, account=None, is_active: bool = False, **kwargs):
-        api_key, token = super().create(user, expiry=expiry, **kwargs)
+        auth_token, token = super().create(user, expiry=expiry, **kwargs)
         if not account:
             account = UserProfile.objects.get(user=user).account
-        api_key.account = account
-        api_key.description = description
-        api_key.is_active = is_active
-        api_key.save()
-        return api_key, token
+        auth_token.account = account
+        auth_token.description = description
+        auth_token.is_active = is_active
+        auth_token.save()
+        return auth_token, token
 
 
 class SmarterAuthToken(AuthToken, TimestampedModel):

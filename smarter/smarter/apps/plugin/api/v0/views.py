@@ -22,7 +22,10 @@ from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin import Plugin
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.common.exceptions import SmarterValueError
-from smarter.lib.drf.view_helpers import SmarterAPIListView, SmarterAuthenticatedAPIView
+from smarter.lib.drf.view_helpers import (
+    SmarterAuthenticatedAPIListView,
+    SmarterAuthenticatedAPIView,
+)
 
 
 User = get_user_model()
@@ -58,7 +61,7 @@ class PluginCloneView(SmarterAuthenticatedAPIView):
         return redirect("/plugins/" + str(new_id) + "/")
 
 
-class PluginsListView(SmarterAPIListView):
+class PluginsListView(SmarterAuthenticatedAPIListView):
     """Plugins list view for smarter api."""
 
     serializer_class = PluginMetaSerializer

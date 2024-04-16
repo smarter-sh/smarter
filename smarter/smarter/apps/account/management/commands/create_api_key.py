@@ -3,6 +3,7 @@
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
+from smarter.apps.account.utils import account_admin_user
 from smarter.lib.django.user import User
 
 
@@ -27,10 +28,12 @@ class Command(BaseCommand):
         description = options["description"]
 
         account = Account.objects.get(account_number=account_number)
-        user = User.objects.get(username=username)
+        user = User.objects.get(username=username) if username else account_admin_user(account)
         UserProfile.objects.get(user=user, account=account)
 
-        _, token_key = SmarterAuthToken.objects.create(account=account, user=user, description=description, expiry=None)
+        auth_token, token_key = SmarterAuthToken.objects.create(
+            account=account, user=user, description=description, expiry=None
+        )
         self.stdout.write(self.style.SUCCESS("*" * 80))
         self.stdout.write(self.style.SUCCESS(f"API key: {token_key}"))
         self.stdout.write(self.style.SUCCESS("*" * 80))
@@ -41,6 +44,6 @@ class Command(BaseCommand):
         )
         self.stdout.write(
             self.style.NOTICE(
-                f"To associate this key with a Chatbot, run `manage.py add_api_key` and pass this key_id: {token_key.key_id}"
+                f"To associate this key with a Chatbot, run `manage.py add_api_key` and pass this key_id: {auth_token.key_id}"
             )
         )
