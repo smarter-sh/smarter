@@ -63,7 +63,7 @@ class ChatToolCallHistory(TimestampedModel):
         return data
 
     def __str__(self):
-        return f"{self.user} - {self.input_text[:50] if self.input_text else ''}"
+        return f"{self.user} - {self.plugin.name if self.plugin else ''}"
 
     class Meta:
         verbose_name_plural = "Chat Tool Call History"
@@ -101,7 +101,7 @@ class PluginUsageHistory(TimestampedModel):
         return data
 
     def __str__(self):
-        return f"{self.plugin} - {self.inquiry_type}"
+        return f"{self.plugin} - {self.event}"
 
     class Meta:
         verbose_name_plural = "Plugin Selection History"
