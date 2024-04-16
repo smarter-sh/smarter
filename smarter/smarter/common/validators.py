@@ -66,8 +66,10 @@ class SmarterValidator:
     @staticmethod
     def validate_url(url: str) -> None:
         """Validate URL format"""
-        if "localhost" in url:
-            return
+        permited_urls = ["localhost", "127.0.0.1"]
+        for permited_url in permited_urls:
+            if permited_url in url:
+                return
         try:
             validator = URLValidator()
             validator(url)

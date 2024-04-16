@@ -1,5 +1,7 @@
 """This module is used to suppress DisallowedHost exception and return HttpResponseBadRequest instead."""
 
+from urllib.parse import urlparse
+
 from django.conf import settings
 from django.http import HttpResponseBadRequest
 from django.middleware.security import SecurityMiddleware as DjangoSecurityMiddleware
@@ -26,10 +28,17 @@ class SecurityMiddleware(DjangoSecurityMiddleware):
     def process_request(self, request):
 
         host = request.get_host()
+        if not host.startswith(("http://", "https://")):
+            host = "http://" + host
+
+        parsed_host = urlparse(host)
+        host = parsed_host.hostname
         if host in settings.SMARTER_ALLOWED_HOSTS:
             return None
 
         if ChatBot.get_by_url(host) is not None:
             return None
 
-        return HttpResponseBadRequest("Bad Request (400) - Invalid Hostname")
+        return HttpResponseBadRequest(
+            f"Bad Request (400) - Invalid Hostname. ALLOWED_HOSTS: {settings.ALLOWED_HOSTS}. SMARTER_ALLOWED_HOSTS: {settings.SMARTER_ALLOWED_HOSTS}. HOST: {host}"
+        )
