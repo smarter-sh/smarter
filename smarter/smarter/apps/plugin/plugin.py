@@ -8,12 +8,12 @@ import re
 
 import requests
 import yaml
-from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from rest_framework import serializers
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.lib.django.user import User
 
 from .api.v0.serializers import (
     PluginDataSerializer,
@@ -35,7 +35,6 @@ from .signals import (
 )
 
 
-User = get_user_model()
 logger = logging.getLogger(__name__)
 
 

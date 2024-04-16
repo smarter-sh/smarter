@@ -6,15 +6,14 @@ import os
 # python stuff
 import unittest
 
-from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth import authenticate
 from django.test import RequestFactory
 
 # our stuff
+from smarter.lib.django.user import User
+
 from ..models import Account, PaymentMethod
 from ..views.dashboard.billing.payment_methods import PaymentMethodsView
-
-
-User = get_user_model()
 
 
 class TestPaymentMethods(unittest.TestCase):

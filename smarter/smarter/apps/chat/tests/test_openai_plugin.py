@@ -9,10 +9,10 @@ import unittest
 from pathlib import Path
 
 import yaml
-from django.contrib.auth import get_user_model
+
+from smarter.lib.django.user import User
 
 
-User = get_user_model()
 HERE = os.path.abspath(os.path.dirname(__file__))
 PROJECT_ROOT = str(Path(HERE).parent.parent)
 PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)

@@ -12,11 +12,11 @@ from pathlib import Path
 from time import sleep
 
 import yaml
-from django.contrib.auth import get_user_model
 from django.test import Client
 
+from smarter.lib.django.user import User
 
-User = get_user_model()
+
 HERE = os.path.abspath(os.path.dirname(__file__))
 PROJECT_ROOT = str(Path(HERE).parent.parent)
 PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)

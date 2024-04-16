@@ -1,9 +1,7 @@
 # pylint: disable=missing-docstring
 """Django token generators for single-use authentications."""
-from typing import Type
 from urllib.parse import urlparse
 
-from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
@@ -15,9 +13,9 @@ from django.utils.http import (
 )
 from django.utils.timezone import now as timezone_now
 
+from smarter.lib.django.user import User, UserType
 
-User = get_user_model()
-UserType = Type[User]
+
 DEFAULT_LINK_EXPIRATION = 86400
 HFS_EPOCH_UNIX_TIMESTAMP = 2082844800
 

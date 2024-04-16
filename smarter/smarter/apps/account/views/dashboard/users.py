@@ -5,15 +5,14 @@ import logging
 from http import HTTPStatus
 
 from django import forms, http
-from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.shortcuts import redirect
 
 from smarter.apps.account.models import UserProfile
 from smarter.common.helpers.view_helpers import SmarterAdminWebView
+from smarter.lib.django.user import User
 
 
-User = get_user_model()
 logger = logging.getLogger(__name__)
 excluded_fields = ["password", "date_joined"]
 

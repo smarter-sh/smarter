@@ -2,17 +2,12 @@
 
 import secrets
 import string
-from typing import Type
 
-from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_COMPANY_NAME
-
-
-User = get_user_model()
-UserType = Type[User]
+from smarter.lib.django.user import User
 
 
 # pylint: disable=E1101

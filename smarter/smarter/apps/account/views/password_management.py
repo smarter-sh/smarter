@@ -4,21 +4,18 @@ from http import HTTPStatus
 
 from django import forms
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.shortcuts import HttpResponse, redirect
 
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.common.helpers.view_helpers import SmarterNeverCachedWebView
-from smarter.common.token_generators import (
+from smarter.lib.django.token_generators import (
     ExpiringTokenGenerator,
     TokenConversionError,
     TokenExpiredError,
     TokenIntegrityError,
     TokenParseError,
 )
-
-
-User = get_user_model()
+from smarter.lib.django.user import User
 
 
 class PasswordResetRequestView(SmarterNeverCachedWebView):

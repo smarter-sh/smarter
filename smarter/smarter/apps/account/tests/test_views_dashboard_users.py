@@ -7,16 +7,15 @@ import unittest
 from http import HTTPStatus
 from urllib.parse import urlparse
 
-from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth import authenticate
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.test import RequestFactory
 
 # our stuff
+from smarter.lib.django.user import User
+
 from ..models import Account, UserProfile
 from ..views.dashboard.users import UsersView, UserView
-
-
-User = get_user_model()
 
 
 # pylint: disable=R0902

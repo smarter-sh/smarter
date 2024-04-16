@@ -8,16 +8,14 @@ import random
 # python stuff
 import unittest
 
-from django.contrib.auth import get_user_model
 from django.test import RequestFactory
 
-# our stuff
 from smarter.apps.account.models import Account, UserProfile
 
+# our stuff
+from smarter.lib.django.user import User
+
 from ..context_processors import base, react
-
-
-User = get_user_model()
 
 
 class TestContextProcessor(unittest.TestCase):

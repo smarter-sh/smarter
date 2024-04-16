@@ -2,16 +2,11 @@
 
 import secrets
 import string
-from typing import Type
 
-from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account, UserProfile
-
-
-User = get_user_model()
-UserType = Type[User]
+from smarter.lib.django.user import User
 
 
 # pylint: disable=E1101
@@ -73,4 +68,8 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR("Username and email are required."))
 
         user = User.objects.get(username=username)
-        UserProfile.objects.get_or_create(user=user, account=account)
+        user_profile, created = UserProfile.objects.get_or_create(user=user, account=account)
+        if created:
+            self.stdout.write(
+                self.style.SUCCESS(f"User profile created for {user_profile.user} {user_profile.account.company_name}.")
+            )

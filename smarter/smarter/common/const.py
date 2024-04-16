@@ -54,6 +54,19 @@ VERSION = load_version()
 
 
 # pylint: disable=too-few-public-methods
+class SmarterEnvironments:
+    """A class representing the fixed set environments for the Smarter API."""
+
+    LOCAL = "local"
+    ALPHA = "alpha"
+    BETA = "beta"
+    NEXT = "next"
+    PROD = "prod"
+    all = [LOCAL, ALPHA, BETA, NEXT, PROD]
+    aws_environments = [ALPHA, BETA, NEXT, PROD]
+
+
+# pylint: disable=too-few-public-methods
 class OpenAIObjectTypes:
     """V1 API Object Types (replace OpeanAIEndPoint)"""
 

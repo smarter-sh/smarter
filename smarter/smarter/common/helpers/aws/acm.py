@@ -29,6 +29,8 @@ class AWSCertificateManager(AWSBase):
     @property
     def route53(self):
         """Return the AWS Route53 helper."""
+        if not self.is_aws_environment:
+            return None
         if self._route53 is None:
             # pylint: disable=import-outside-toplevel
             from .route53 import AWSRoute53
@@ -38,6 +40,9 @@ class AWSCertificateManager(AWSBase):
 
     def get_certificate_arn(self, domain_name) -> str:
         """Return the certificate ARN."""
+        if not self.is_aws_environment:
+            return ""
+
         response = self.client.list_certificates()
         for certificate in response["CertificateSummaryList"]:
             if certificate["DomainName"] == domain_name:
@@ -49,6 +54,9 @@ class AWSCertificateManager(AWSBase):
         Return the certificate status
         see example return in ./data/aws/certificate_detail.json
         """
+        if not self.is_aws_environment:
+            return {}
+
         sleep_interval = 5
         max_attempts = int(600 / sleep_interval)
         attempts = 0
@@ -79,6 +87,8 @@ class AWSCertificateManager(AWSBase):
 
     def get_or_create_certificate(self, domain_name) -> str:
         """Return the certificate ARN."""
+        if not self.is_aws_environment:
+            return ""
 
         # look for existing certificate
         certificate_arn = self.get_certificate_arn(domain_name)
@@ -98,6 +108,8 @@ class AWSCertificateManager(AWSBase):
         Get or create the DNS verification record for the certificate.
 
         """
+        if not self.is_aws_environment:
+            return {}
 
         # get the certificate details
         certificate_detail = self.get_certificate_status(certificate_arn=certificate_arn)
@@ -123,6 +135,9 @@ class AWSCertificateManager(AWSBase):
 
     def certificate_is_verified(self, certificate_arn: str) -> bool:
         """Return whether the certificate is verified."""
+        if not self.is_aws_environment:
+            return True
+
         certificate_detail = self.get_certificate_status(certificate_arn=certificate_arn)
         return certificate_detail["Certificate"]["Status"] == "SUCCESS"
 
@@ -130,7 +145,8 @@ class AWSCertificateManager(AWSBase):
         sleep_interval = 30
         max_attempts = int(600 / sleep_interval)
         attempts = 0
-
+        if not self.is_aws_environment:
+            return True
         if self.certificate_is_verified(certificate_arn):
             return True
 
@@ -143,6 +159,8 @@ class AWSCertificateManager(AWSBase):
 
     def delete_certificate(self, certificate_arn: str):
         """Delete the certificate."""
+        if not self.is_aws_environment:
+            return
 
         try:
             self.client.delete_certificate(CertificateArn=certificate_arn)

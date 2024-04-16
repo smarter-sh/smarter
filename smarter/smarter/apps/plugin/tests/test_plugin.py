@@ -9,7 +9,6 @@ import unittest
 from time import sleep
 
 import yaml
-from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 
 # our stuff
@@ -40,9 +39,7 @@ from smarter.apps.plugin.signals import (
 )
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 from smarter.apps.plugin.utils import add_example_plugins
-
-
-User = get_user_model()
+from smarter.lib.django.user import User
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes

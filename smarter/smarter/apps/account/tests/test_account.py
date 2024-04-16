@@ -4,16 +4,11 @@
 # python stuff
 import os
 import unittest
-from typing import Type
-
-from django.contrib.auth import get_user_model
 
 # our stuff
+from smarter.lib.django.user import User
+
 from ..models import Account, UserProfile
-
-
-User = get_user_model()
-UserType = Type[User]
 
 
 class TestAccount(unittest.TestCase):

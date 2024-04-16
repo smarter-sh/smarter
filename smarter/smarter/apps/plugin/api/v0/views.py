@@ -3,12 +3,10 @@
 
 import json
 from http import HTTPStatus
-from typing import Type
 from urllib.parse import urljoin
 
 import yaml
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
@@ -22,14 +20,11 @@ from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin import Plugin
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib.django.user import User
 from smarter.lib.drf.view_helpers import (
     SmarterAuthenticatedAPIListView,
     SmarterAuthenticatedAPIView,
 )
-
-
-User = get_user_model()
-UserType = Type[User]
 
 
 class PluginView(SmarterAuthenticatedAPIView):

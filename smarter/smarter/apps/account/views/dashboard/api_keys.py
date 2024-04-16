@@ -6,7 +6,6 @@ from http import HTTPStatus
 from uuid import UUID
 
 from django import forms, http
-from django.contrib.auth import get_user_model
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
@@ -14,7 +13,6 @@ from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
 from smarter.common.helpers.view_helpers import SmarterAdminWebView
 
 
-User = get_user_model()
 logger = logging.getLogger(__name__)
 excluded_fields = ["password", "date_joined"]
 

@@ -7,14 +7,12 @@ import random
 # python stuff
 import unittest
 
-from django.contrib.auth import get_user_model
 from django.test import RequestFactory
 
 # our stuff
+from smarter.lib.django.user import User
+
 from ..context_processors import branding
-
-
-User = get_user_model()
 
 
 class TestContext(unittest.TestCase):

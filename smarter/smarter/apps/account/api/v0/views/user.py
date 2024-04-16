@@ -1,9 +1,7 @@
 # pylint: disable=W0707,W0718
 """User views for smarter api."""
 from http import HTTPStatus
-from typing import Type
 
-from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import Http404, HttpResponseRedirect, JsonResponse
@@ -12,11 +10,8 @@ from rest_framework.response import Response
 
 from smarter.apps.account.api.v0.serializers import UserSerializer
 from smarter.apps.account.models import Account, UserProfile
+from smarter.lib.django.user import User, UserType
 from smarter.lib.drf.view_helpers import SmarterAPIAdminView, SmarterAPIListAdminView
-
-
-User = get_user_model()
-UserType = Type[User]
 
 
 class UserView(SmarterAPIAdminView):
