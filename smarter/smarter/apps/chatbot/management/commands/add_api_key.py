@@ -29,8 +29,9 @@ class Command(BaseCommand):
         api_key = SmarterAuthToken.objects.get(key_id=key_id)
         account = Account.objects.get(account_number=account_number)
         chatbot = ChatBot.objects.get(account=account, name=name)
-        _, created = ChatBotAPIKey.objects.get_or_create(chatbot=chatbot, api_key=api_key)
+        chatbot_api_key, created = ChatBotAPIKey.objects.get_or_create(chatbot=chatbot, api_key=api_key)
+        msg = f"API key {key_id} '{chatbot_api_key.api_key.description}'"
         if created:
-            self.stdout.write(self.style.SUCCESS(f"API key {key_id} has been added to chatbot {name}"))
+            self.stdout.write(self.style.SUCCESS(msg + f" has been added to chatbot {name}"))
         else:
-            self.stdout.write(self.style.NOTICE(f"API key {key_id} is already associated with chatbot {name}"))
+            self.stdout.write(self.style.NOTICE(msg + f" is already associated with chatbot {name}"))

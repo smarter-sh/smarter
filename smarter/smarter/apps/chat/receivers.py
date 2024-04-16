@@ -39,7 +39,7 @@ def handle_chat_invoked(sender, **kwargs):
     logger.info(
         "%s signal received for chat by user %s with data: %s",
         formatted_text("chat_invoked"),
-        user.username,
+        user.username if user else "unknown",
         formatted_json(data),
     )
 
@@ -55,7 +55,7 @@ def handle_chat_completion_called(sender, **kwargs):
     logger.info(
         "%s signal received for chat: %s action: %s data: %s",
         formatted_text("chat_completion_called"),
-        user.username,
+        user.username if user else "unknown",
         action,
         formatted_json(data),
     )
@@ -105,7 +105,7 @@ def handle_chat_completion_tool_call(sender, **kwargs):
             "%s %s signal received for chat: %s model: %s",
             formatted_text("chat_completion_tool_call_created"),
             event_type,
-            user.username,
+            user.username if user else "unknown",
             model,
         )
     else:
@@ -113,7 +113,7 @@ def handle_chat_completion_tool_call(sender, **kwargs):
             "%s %s signal received for chat: %s model: %s",
             formatted_text("chat_completion_tool_call_received"),
             event_type,
-            user.username,
+            user.username if user else "unknown",
             model,
         )
     chat_tool_call_history = ChatToolCallHistory(
@@ -146,7 +146,7 @@ def handle_chat_completion_plugin_selected(sender, **kwargs):
     logger.info(
         "%s signal received for chat: %s plugin: %s",
         formatted_text("chat_completion_plugin_selected"),
-        user.username,
+        user.username if user else "unknown",
         plugin,
     )
 
@@ -198,7 +198,7 @@ def handle_chat_completion_returned(sender, **kwargs):
         "%s signal received for chat: %s %s model: %s",
         formatted_text("chat_response_success"),
         chat_id,
-        user.username,
+        user.username if user else "unknown",
         model,
     )
     chat_history = ChatHistory(
@@ -224,7 +224,7 @@ def handle_chat_response_failed(sender, **kwargs):
     logger.info(
         "%s signal received for chat: %s data: %s",
         formatted_text("chat_response_failure"),
-        user.username,
+        user.username if user else "unknown",
         data,
     )
 
