@@ -7,7 +7,7 @@ from typing import Type
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
-from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
+from smarter.apps.account.models import Account, UserProfile
 
 
 User = get_user_model()
@@ -66,15 +66,11 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS("User" + f" {username} {email} has been created."))
                 self.stdout.write(self.style.SUCCESS(f"Password: {password}"))
             else:
-                user = self.change_password(username, password)
+                if password:
+                    self.change_password(username, password)
+                    self.stdout.write(self.style.SUCCESS("Updated password."))
         else:
             self.stdout.write(self.style.ERROR("Username and email are required."))
 
-        UserProfile.objects.get_or_create(user=User.objects.get(username=username), account=account)
-
-        # ensure that the admin user has at least one auth token (api key)
-        if SmarterAuthToken.objects.filter(user=user).count() == 0:
-            _, token_key = SmarterAuthToken.objects.create(
-                account=account, user=user, description="created by manage.py", expiry=None
-            )
-            self.stdout.write(self.style.SUCCESS(f"created API key: {token_key}"))
+        user = User.objects.get(username=username)
+        UserProfile.objects.get_or_create(user=user, account=account)
