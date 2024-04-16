@@ -42,7 +42,7 @@ drf-yasg==1.21.7                        # Swagger API documentation
 markdown==3.6                           # Markdown reader/parser
 pandas==2.2.0                           # Data manipulation for data science stuff
 python-dotenv==1.0.1                    # for reading environment variables from .env files
-pydantic==2.6.4                         # best data validation library ever!
+pydantic==2.7.0                         # best data validation library ever!
 pydantic-settings==2.2.1                # settings management
 python-hcl2==4.3.3                      # Terraform hcl parser for reading Terraform tfvars files
 
