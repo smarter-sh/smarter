@@ -1,5 +1,9 @@
 """AWS API Gateway helper class."""
 
+from botocore.config import Config
+
+from smarter.common.conf import SettingsDefaults
+
 from .aws import AWSBase
 
 
@@ -17,8 +21,14 @@ class AWSAPIGateway(AWSBase):
     @property
     def client(self):
         """Return the AWS API Gateway client."""
-        if not self._client:
-            self._client = self.client
+        if self._client:
+            return self._client
+        config = Config(
+            read_timeout=SettingsDefaults.AWS_APIGATEWAY_READ_TIMEOUT,
+            connect_timeout=SettingsDefaults.AWS_APIGATEWAY_CONNECT_TIMEOUT,
+            retries={"max_attempts": SettingsDefaults.AWS_APIGATEWAY_MAX_ATTEMPTS},
+        )
+        self._client = self.aws_session.client("apigateway", config=config)
         return self._client
 
     @property
