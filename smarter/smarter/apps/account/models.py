@@ -17,7 +17,7 @@ from knox.models import AuthToken, AuthTokenManager
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.common.helpers.model_helpers import TimestampedModel
-from smarter.common.validators import SmarterValidator
+from smarter.lib.django.validators import SmarterValidator
 
 from .const import CHARGE_TYPE_PLUGIN, CHARGE_TYPE_PROMPT_COMPLETION, CHARGE_TYPE_TOOL
 from .signals import new_charge_created, new_user_created

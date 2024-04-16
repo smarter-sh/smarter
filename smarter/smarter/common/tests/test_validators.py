@@ -10,12 +10,7 @@ import unittest
 PYTHON_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 sys.path.append(PYTHON_ROOT)  # noqa: E402
 
-from ..const import OpenAIEndPoint, OpenAIObjectTypes
-
-# our stuff
-from ..exceptions import SmarterValueError
-from ..tests.test_setup import get_test_file  # noqa: E402
-from ..validators import (
+from ...lib.django.validators import (
     validate_completion_request,
     validate_endpoint,
     validate_item,
@@ -25,6 +20,11 @@ from ..validators import (
     validate_request_body,
     validate_temperature,
 )
+from ..const import OpenAIEndPoint, OpenAIObjectTypes
+
+# our stuff
+from ..exceptions import SmarterValueError
+from ..tests.test_setup import get_test_file  # noqa: E402
 
 
 class TestValidators(unittest.TestCase):
