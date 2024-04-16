@@ -13,7 +13,10 @@ from rest_framework.response import Response
 
 from smarter.apps.account.api.v0.serializers import PaymentMethodSerializer
 from smarter.apps.account.models import Account, PaymentMethod, UserProfile
-from smarter.lib.drf.view_helpers import SmarterAPIListView, SmarterAuthenticatedAPIView
+from smarter.lib.drf.view_helpers import (
+    SmarterAuthenticatedAPIListView,
+    SmarterAuthenticatedAPIView,
+)
 
 
 User = get_user_model()
@@ -37,7 +40,7 @@ class PaymentMethodView(SmarterAuthenticatedAPIView):
         return delete_payment_method(request, payment_method_id)
 
 
-class PaymentMethodsListView(SmarterAPIListView):
+class PaymentMethodsListView(SmarterAuthenticatedAPIListView):
     """Payment methods list view for smarter api."""
 
     serializer_class = PaymentMethodSerializer
