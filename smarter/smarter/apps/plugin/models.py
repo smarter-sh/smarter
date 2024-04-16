@@ -1,22 +1,17 @@
 # pylint: disable=C0114,C0115
 """PluginMeta app models."""
 from functools import lru_cache
-from typing import Type
 
 import yaml
-from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from taggit.managers import TaggableManager
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.common.helpers.model_helpers import TimestampedModel
+from smarter.lib.django.user import User
 
 from .signals import plugin_selector_history_created
-
-
-User = get_user_model()
-UserType = Type[User]
 
 
 class PluginMeta(TimestampedModel):

@@ -2,9 +2,7 @@
 """Account Payment method views for smarter api."""
 import logging
 from http import HTTPStatus
-from typing import Type
 
-from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
@@ -13,14 +11,13 @@ from rest_framework.response import Response
 
 from smarter.apps.account.api.v0.serializers import PaymentMethodSerializer
 from smarter.apps.account.models import Account, PaymentMethod, UserProfile
+from smarter.lib.django.user import UserType
 from smarter.lib.drf.view_helpers import (
     SmarterAuthenticatedAPIListView,
     SmarterAuthenticatedAPIView,
 )
 
 
-User = get_user_model()
-UserType = Type[User]
 logger = logging.getLogger(__name__)
 
 

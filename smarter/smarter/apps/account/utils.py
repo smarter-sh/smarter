@@ -1,14 +1,8 @@
 """Account utilities."""
 
-from typing import Type
-
-from django.contrib.auth import get_user_model
+from smarter.lib.django.user import UserType
 
 from .models import Account, UserProfile
-
-
-User = get_user_model()
-UserType = Type[User]
 
 
 def account_for_user(user) -> Account:

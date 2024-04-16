@@ -5,7 +5,6 @@ import json
 import os
 from pathlib import Path
 
-from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account, UserProfile
@@ -15,7 +14,6 @@ from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_DEMO_API_NAME
 
 
-User = get_user_model()
 HERE = Path(__file__).resolve().parent
 
 

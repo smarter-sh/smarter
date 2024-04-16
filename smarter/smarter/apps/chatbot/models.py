@@ -5,7 +5,6 @@ from typing import List, Type
 from urllib.parse import urlparse
 
 import tldextract
-from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db import models
 
@@ -17,13 +16,10 @@ from smarter.apps.plugin.plugin import Plugin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CUSTOMER_API_SUBDOMAIN
 from smarter.common.helpers.model_helpers import TimestampedModel
+from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
 
 from .utils import cache_results
-
-
-User = get_user_model()
-UserType = Type[User]
 
 
 # -----------------------------------------------------------------------------

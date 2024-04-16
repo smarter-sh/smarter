@@ -6,18 +6,14 @@ import random
 
 # python stuff
 import unittest
-from typing import Type
 
-from django.contrib.auth import get_user_model
 from django.test import RequestFactory
 
 # our stuff
+from smarter.lib.django.user import User
+
 from ..context_processors import base
 from ..models import Account, UserProfile
-
-
-User = get_user_model()
-UserType = Type[User]
 
 
 class TestContext(unittest.TestCase):

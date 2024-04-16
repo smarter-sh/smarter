@@ -3,12 +3,12 @@
 # pylint: disable=W0613,C0115
 import logging
 
-from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
+from smarter.lib.django.user import User
 
 from .models import ChatHistory, ChatToolCallHistory, PluginUsageHistory
 from .signals import (
@@ -21,8 +21,6 @@ from .signals import (
     chat_response_success,
 )
 
-
-User = get_user_model()
 
 logger = logging.getLogger(__name__)
 

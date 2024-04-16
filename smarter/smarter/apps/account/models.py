@@ -5,9 +5,7 @@ import os
 import random
 import uuid
 from datetime import datetime, timedelta
-from typing import Type
 
-from django.contrib.auth import get_user_model
 from django.core.validators import RegexValidator
 from django.db import models
 from django.utils import timezone
@@ -17,6 +15,7 @@ from knox.models import AuthToken, AuthTokenManager
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.common.helpers.model_helpers import TimestampedModel
+from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
 
 from .const import CHARGE_TYPE_PLUGIN, CHARGE_TYPE_PROMPT_COMPLETION, CHARGE_TYPE_TOOL
@@ -24,8 +23,6 @@ from .signals import new_charge_created, new_user_created
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-User = get_user_model()
-UserType = Type[User]
 logger = logging.getLogger(__name__)
 
 
@@ -33,7 +30,8 @@ class Account(TimestampedModel):
     """Account model."""
 
     account_number_format = RegexValidator(
-        regex=r"^\d{4}-\d{4}-\d{4}", message="Account number must be entered in the format: '9999-9999-9999'."
+        regex=SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN,
+        message="Account number must be entered in the format: '9999-9999-9999'.",
     )
 
     account_number = models.CharField(

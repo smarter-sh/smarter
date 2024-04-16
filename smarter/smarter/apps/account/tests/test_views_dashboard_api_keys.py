@@ -7,15 +7,14 @@ import unittest
 import uuid
 from http import HTTPStatus
 
-from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth import authenticate
 from django.test import RequestFactory
 
 # our stuff
+from smarter.lib.django.user import User
+
 from ..models import Account, SmarterAuthToken, UserProfile
 from ..views.dashboard.api_keys import APIKeysView, APIKeyView
-
-
-User = get_user_model()
 
 
 # pylint: disable=R0902

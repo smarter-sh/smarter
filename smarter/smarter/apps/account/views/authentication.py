@@ -1,10 +1,9 @@
 # pylint: disable=W0613
 """Django Authentication views."""
 from http import HTTPStatus
-from typing import Type
 
 from django import forms
-from django.contrib.auth import authenticate, get_user_model, login, logout
+from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import HttpResponse, redirect
 from django.urls import reverse
 
@@ -14,17 +13,14 @@ from smarter.common.helpers.view_helpers import (
     SmarterNeverCachedWebView,
     redirect_and_expire_cache,
 )
-from smarter.common.token_generators import (
+from smarter.lib.django.token_generators import (
     ExpiringTokenGenerator,
     TokenConversionError,
     TokenExpiredError,
     TokenIntegrityError,
     TokenParseError,
 )
-
-
-User = get_user_model()
-UserType = Type[User]
+from smarter.lib.django.user import User, UserType
 
 
 # ------------------------------------------------------------------------------

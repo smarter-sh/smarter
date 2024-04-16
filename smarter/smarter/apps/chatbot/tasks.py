@@ -15,7 +15,7 @@ import dns.resolver
 
 from smarter.apps.account.models import Account, AccountContact
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SMARTER_CUSTOMER_SUPPORT
+from smarter.common.const import SMARTER_CUSTOMER_SUPPORT, SmarterEnvironments
 from smarter.common.helpers.aws.exceptions import (
     AWSACMCertificateNotFound,
     AWSACMVerificationNotFound,
@@ -409,7 +409,7 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
 
     # if we're running in Kubernetes then we should create an ingress manifest
     # for the customer API domain so that we can issue a certificate for it.
-    if smarter_settings.environment != "local":
+    if smarter_settings.environment != SmarterEnvironments.LOCAL:
         logger.info("Creating ingress manifest for %s", domain_name)
         ingress_values = {
             "cluster_issuer": smarter_settings.customer_api_domain,

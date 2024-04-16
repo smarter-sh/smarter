@@ -6,7 +6,6 @@ from http import HTTPStatus
 from typing import List
 
 import openai
-from django.contrib.auth import get_user_model
 
 from smarter.apps.account.tasks import (
     create_plugin_charge,
@@ -37,13 +36,12 @@ from smarter.common.utils import (
     parse_request,
     request_meta_data_factory,
 )
+from smarter.lib.django.user import User
 from smarter.lib.django.validators import (  # validate_embedding_request,
     validate_completion_request,
     validate_item,
 )
 
-
-User = get_user_model()
 
 logger = logging.getLogger(__name__)
 openai.organization = smarter_settings.openai_api_organization

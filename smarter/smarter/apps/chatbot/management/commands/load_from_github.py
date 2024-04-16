@@ -6,10 +6,8 @@ organized in directories by customer API name.
 import os
 import re
 import subprocess
-from typing import Type
 
 import yaml
-from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.core.validators import URLValidator
 
@@ -20,10 +18,7 @@ from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.plugin import Plugin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
-
-
-User = get_user_model()
-UserType = Type[User]
+from smarter.lib.django.user import User, UserType
 
 
 # pylint: disable=E1101,too-many-instance-attributes

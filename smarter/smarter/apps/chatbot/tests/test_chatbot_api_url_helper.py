@@ -7,8 +7,6 @@ import random
 import unittest
 from urllib.parse import urljoin
 
-from django.contrib.auth import get_user_model
-
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.chatbot.models import (
     ChatBot,
@@ -17,9 +15,7 @@ from smarter.apps.chatbot.models import (
 )
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
-
-
-User = get_user_model()
+from smarter.lib.django.user import User
 
 
 # pylint: disable=too-many-instance-attributes

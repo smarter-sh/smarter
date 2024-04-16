@@ -1,18 +1,12 @@
 """This module is used to create a new plugin using manage.py"""
 
-from typing import Type
-
 import yaml
-from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import account_admin_user
 from smarter.apps.plugin.plugin import Plugin
-
-
-User = get_user_model()
-UserType = Type[User]
+from smarter.lib.django.user import User, UserType
 
 
 # pylint: disable=E1101

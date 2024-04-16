@@ -3,15 +3,14 @@
 import os
 
 import yaml
-from django.contrib.auth import get_user_model
 
 from smarter.apps.account.models import UserProfile
+from smarter.lib.django.user import User
 
 from .plugin import Plugin, PluginExamples, Plugins
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-User = get_user_model()
 
 
 # pylint: disable=W0613,C0415

@@ -4,17 +4,13 @@
 # python stuff
 import os
 import unittest
-from typing import Type
 
-from django.contrib.auth import get_user_model
 from django.test import Client
 
 # our stuff
+from smarter.lib.django.user import User, UserType
+
 from ..models import Account, PaymentMethod, UserProfile
-
-
-User = get_user_model()
-UserType = Type[User]
 
 
 class TestUrls(unittest.TestCase):

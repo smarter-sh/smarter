@@ -1,13 +1,18 @@
 """AWS helper base class."""
 
 # python stuff
+import logging
 import os
 import socket
 
 # our stuff
 from smarter.common.conf import Services
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SmarterEnvironments
 from smarter.common.utils import recursive_sort_dict
+
+
+logger = logging.getLogger(__name__)
 
 
 class AWSBase:
@@ -20,6 +25,13 @@ class AWSBase:
 
     def __init__(self, shared_resource_identifier: str = smarter_settings.shared_resource_identifier):
         self._shared_resource_identifier = shared_resource_identifier
+        if not self.is_aws_environment:
+            logger.warning("AWS invoked for non-AWS environment: %s.", smarter_settings.environment)
+
+    @property
+    def is_aws_environment(self) -> bool:
+        """Return True if the environment is AWS."""
+        return smarter_settings.environment in SmarterEnvironments.aws_environments
 
     @property
     def aws_session(self):

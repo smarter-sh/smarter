@@ -4,7 +4,10 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.management.base import BaseCommand
 
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN
+from smarter.common.const import (
+    SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN,
+    SmarterEnvironments,
+)
 from smarter.common.helpers.aws_helpers import aws_helper
 
 
@@ -20,6 +23,10 @@ class Command(BaseCommand):
          - api.smarter.sh, alpha.api.smarter.sh, beta.api.smarter.sh, etc.
          - platform.smarter.sh, alpha.platform.smarter.sh, beta.platform.smarter.sh, etc.
         """
+        if smarter_settings.environment == SmarterEnvironments.LOCAL:
+            self.stdout.write(self.style.NOTICE("Running locally. Skipping AWS verification."))
+            return
+
         # 1. Verify the AWS Route53 hosted zone for the domain
         # ---------------------------------------------------------------------
         customer_api_domain_hosted_zone, _ = aws_helper.route53.get_or_create_hosted_zone(domain_name=domain)

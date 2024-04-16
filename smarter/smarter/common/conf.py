@@ -46,6 +46,7 @@ from .const import (
     SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN,
     TFVARS,
     VERSION,
+    SmarterEnvironments,
 )
 from .exceptions import SmarterConfigurationError, SmarterValueError
 from .utils import recursive_sort_dict
@@ -162,7 +163,7 @@ class SettingsDefaults:
     """
 
     # defaults for this Python package
-    ENVIRONMENT = os.environ.get("ENVIRONMENT", TFVARS.get("environment", "local"))
+    ENVIRONMENT = os.environ.get("ENVIRONMENT", TFVARS.get("environment", SmarterEnvironments.LOCAL))
     ROOT_DOMAIN = os.environ.get("ROOT_DOMAIN", TFVARS.get("root_domain", "example.com"))
     SHARED_RESOURCE_IDENTIFIER = os.environ.get(
         "SHARED_RESOURCE_IDENTIFIER", TFVARS.get("shared_resource_identifier", "smarter")
@@ -584,7 +585,7 @@ class Settings(BaseSettings):
     @property
     def customer_api_domain(self) -> str:
         """Return the customer API domain name."""
-        if self.environment == "local":
+        if self.environment == SmarterEnvironments.LOCAL:
             return f"{self.environment}.{SMARTER_CUSTOMER_API_SUBDOMAIN}.localhost"
 
         if self.environment == "prod":
