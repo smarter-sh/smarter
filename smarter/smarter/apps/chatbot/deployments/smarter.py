@@ -47,7 +47,7 @@ class SmarterChatBotApiViewSet(ChatBotApiBaseViewSet):
 
         # FIX NOTE: this might be an unnecessary belt & suspenders step. DRF might be already
         # doing all of this for us.
-        response = Response(handler(plugins=self.plugins, user=request.user, data=request.data))
+        response = Response(handler(plugins=self.plugins, user=self.user, data=request.data))
         response.accepted_renderer = JSONRenderer()
         response.accepted_media_type = "application/json"
         response.renderer_context = {}

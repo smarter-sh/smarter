@@ -69,7 +69,7 @@ def verify_certificate(certificate_arn: str):
 def create_chatbot_request(chatbot_id: int, request_data: dict):
     """Create a ChatBot request record."""
     chatbot = ChatBot.objects.get(id=chatbot_id)
-    ChatBotRequests.objects.create(chatbot=chatbot, request_data=request_data)
+    ChatBotRequests.objects.create(chatbot=chatbot, request=request_data)
 
 
 @app.task(

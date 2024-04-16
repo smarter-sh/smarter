@@ -10,6 +10,7 @@ from django.http import Http404, HttpResponseForbidden
 from knox.auth import TokenAuthentication
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.utils import account_admin_user
 from smarter.apps.chatbot.models import (
     ChatBot,
     ChatBotAPIKey,
@@ -19,6 +20,7 @@ from smarter.apps.chatbot.models import (
 from smarter.apps.chatbot.signals import chatbot_called
 from smarter.apps.plugin.plugin import Plugin
 from smarter.common.exceptions import SmarterBusinessRuleViolation
+from smarter.lib.django.user import User, UserType
 from smarter.lib.drf.view_helpers import SmarterUnauthenticatedAPIView
 
 
@@ -35,11 +37,12 @@ class ChatBotApiBaseViewSet(SmarterUnauthenticatedAPIView):
     """
 
     account: Account = None
+    user: UserType = None
     chatbot: ChatBot = None
     plugins: List[Plugin] = None
 
     @cached(cache)
-    def get_cached_helper(self, url, user):
+    def get_cached_helper(self, url, user: UserType = None):
         """
         Get the ChatBotApiUrlHelper object for the given url and user. This method is cached
         for 10 minutes because its a relatively expensive operation with multiple database queries.
@@ -61,6 +64,7 @@ class ChatBotApiBaseViewSet(SmarterUnauthenticatedAPIView):
 
         # if there are no API keys associated with the ChatBot, then it is public
         if not ChatBotAPIKey.objects.filter(chatbot=self.chatbot, api_key__is_active=True).exists():
+            self.user = request.user
             return True
 
         # returns a tuple of (user, api_key) if the request is authenticated
@@ -79,10 +83,16 @@ class ChatBotApiBaseViewSet(SmarterUnauthenticatedAPIView):
             msg = f"Received api key {api_key.description} for User {user} of Account {user_profile.account.account_number} which is not associated with Chatbot {self.chatbot.name}"
             raise SmarterBusinessRuleViolation(message=msg)
 
+        self.user = user
         return api_key is not None
 
     def dispatch(self, request, *args, **kwargs):
-        helper = self.get_cached_helper(request.get_host(), request.user)
+        if request.user.is_authenticated:
+            self.user = request.user
+            helper = self.get_cached_helper(url=request.get_host(), user=request.user)
+        else:
+            helper = self.get_cached_helper(url=request.get_host())
+
         if not helper.is_valid:
             return Http404()
         self.chatbot = helper.chatbot
@@ -91,5 +101,6 @@ class ChatBotApiBaseViewSet(SmarterUnauthenticatedAPIView):
         self.account = helper.account
         self.plugins = ChatBotPlugin().plugins(chatbot=self.chatbot)
 
+        self.user = self.user or account_admin_user(self.account)
         chatbot_called.send(sender=self.__class__, chatbot=self.chatbot, request=request, args=args, kwargs=kwargs)
         return super().dispatch(request, *args, **kwargs)
