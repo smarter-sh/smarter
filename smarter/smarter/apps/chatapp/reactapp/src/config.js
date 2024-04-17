@@ -11,19 +11,24 @@ export const APPLICATIONS = {
   LangchainPassthrough: "LangchainPassthrough",
   OpenaiPassthrough: "OpenaiPassthrough",
 };
-
 let element = document.getElementById("react-config");
-export const REACT_CONFIG = element ? JSON.parse(element.textContent) : {
-  BACKEND_API_URL: "http://127.0.0.1:8000/api/v0/"
-};
+let config = element ? JSON.parse(element.textContent) : null;
+
+export const REACT_CONFIG = config ? config.react_config : null;
 
 // Django Context Integrations
-export const BACKEND_BASE_URL = REACT_CONFIG.BACKEND_BASE_URL;
-export const BACKEND_API_URL = REACT_CONFIG.BACKEND_API_URL;
-export const BACKEND_API_TEST_URL = BACKEND_API_URL;
-export const BACKEND_CHAT_ID = REACT_CONFIG.BACKEND_CHAT_ID;
-export const BACKEND_CHAT_HISTORY = REACT_CONFIG.BACKEND_CHAT_HISTORY;
-export const BACKEND_CHAT_MOST_RECENT_RESPONSE = REACT_CONFIG.BACKEND_CHAT_MOST_RECENT_RESPONSE;
+export const BACKEND_BASE_URL = REACT_CONFIG ? REACT_CONFIG.BACKEND.BASE_URL : "http://127.0.0.1:8000/";
+export const BACKEND_API_URL = REACT_CONFIG ? REACT_CONFIG.BACKEND.API_URL : "http://127.0.0.1:8000/api/v0/";
+export const BACKEND_CHAT_ID = REACT_CONFIG ? REACT_CONFIG.CHAT.ID : null;
+export const BACKEND_CHAT_HISTORY = REACT_CONFIG ? REACT_CONFIG.CHAT.HISTORY : [];
+export const BACKEND_CHAT_MOST_RECENT_RESPONSE = REACT_CONFIG ? REACT_CONFIG.CHAT.MOST_RECENT_RESPONSE : null;
+
+console.log('REACT_CONFIG:', REACT_CONFIG);
+console.log('BACKEND_BASE_URL:', BACKEND_BASE_URL);
+console.log('BACKEND_API_URL:', BACKEND_API_URL);
+console.log('BACKEND_CHAT_ID:', BACKEND_CHAT_ID);
+console.log('BACKEND_CHAT_HISTORY:', BACKEND_CHAT_HISTORY);
+console.log('BACKEND_CHAT_MOST_RECENT_RESPONSE:', BACKEND_CHAT_MOST_RECENT_RESPONSE);
 
 
 // Backend API ai model defaults
@@ -37,7 +42,3 @@ export const BACKEND_API_DEFAULT_TOP_P = 1;
 export const BACKEND_API_DEFAULT_FREQUENCY_PENALTY = 0.5;
 export const BACKEND_API_DEFAULT_PRESENCE_PENALTY = 0.5;
 export const BACKEND_API_DEFAULT_STOP_SEQUENCE = "###";
-
-// FIX NOTE: DELETE ME
-export const AWS_API_GATEWAY_KEY = "YOUR_AWS_API_KEY";
-export const INFO_URL = "https://smarter.sh";

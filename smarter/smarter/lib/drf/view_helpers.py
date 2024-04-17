@@ -2,9 +2,12 @@
 
 import logging
 
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 from knox.auth import TokenAuthentication
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.views import APIView
@@ -69,6 +72,7 @@ class SmarterTokenAuthentication(TokenAuthentication):
         return (user, auth_token)
 
 
+@method_decorator(login_required, name="dispatch")
 class SmarterAuthenticatedAPIView(APIView):
     """
     Allows access only to authenticated users.
@@ -77,12 +81,8 @@ class SmarterAuthenticatedAPIView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
 
-    def dispatch(self, request, *args, **kwargs):
-        if request.user.is_anonymous:
-            raise NotAuthenticated()
-        return super().dispatch(request, *args, **kwargs)
 
-
+@method_decorator(login_required, name="dispatch")
 class SmarterAuthenticatedListAPIView(ListAPIView):
     """
     Allows access only to authenticated users.
@@ -91,49 +91,23 @@ class SmarterAuthenticatedListAPIView(ListAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
 
-    def dispatch(self, request, *args, **kwargs):
-        if request.user.is_anonymous:
-            raise NotAuthenticated()
-        return super().dispatch(request, *args, **kwargs)
-
 
 # ------------------------------------------------------------------------------
 # Admin API Views
 # ------------------------------------------------------------------------------
-class AdminPermissionsClass(IsAuthenticated):
-    """
-    Custom permission to only allow access to staff users.
-    """
-
-    def has_permission(self, request, view):
-        if not super().has_permission(request, view):
-            return False
-        return request.user.is_staff or request.user.is_superuser
-
-
+@method_decorator(staff_member_required, name="dispatch")
 class SmarterAdminAPIView(APIView):
     """
     Allows access only to admins.
     """
 
-    permission_classes = [AdminPermissionsClass]
-    authentication_classes = [SessionAuthentication]
-
-    def dispatch(self, request, *args, **kwargs):
-        if request.user.is_anonymous:
-            raise NotAuthenticated()
-        return super().dispatch(request, *args, **kwargs)
+    # authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
 
 
+@method_decorator(staff_member_required, name="dispatch")
 class SmarterAdminListAPIView(ListAPIView):
     """
     Allows access only to admins.
     """
 
-    permission_classes = [AdminPermissionsClass]
-    authentication_classes = [SessionAuthentication]
-
-    def dispatch(self, request, *args, **kwargs):
-        if request.user.is_anonymous:
-            raise NotAuthenticated()
-        return super().dispatch(request, *args, **kwargs)
+    authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]

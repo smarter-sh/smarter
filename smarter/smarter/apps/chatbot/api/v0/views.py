@@ -43,12 +43,9 @@ class ViewBase(SmarterAdminAPIView):
     account: Account = None
 
     def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_staff and not request.user.is_superuser:
-            return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
         self.user_profile = get_object_or_404(UserProfile, user=request.user)
         self.account = self.user_profile.account
-        response = super().dispatch(request, *args, **kwargs)
-        return response
+        return super().dispatch(request, *args, **kwargs)
 
 
 class ListViewBase(SmarterAdminListAPIView):
@@ -58,9 +55,9 @@ class ListViewBase(SmarterAdminListAPIView):
     account: Account = None
 
     def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
         self.user_profile = get_object_or_404(UserProfile, user=request.user)
         self.account = self.user_profile.account
-        response = super().dispatch(request, *args, **kwargs)
         return response
 
 
@@ -73,10 +70,20 @@ class ChatBotView(ViewBase):
     """ChatBot view for smarter api."""
 
     serializer_class = ChatBotSerializer
+    chatbot: ChatBot = None
+
+    def get_queryset(self, *args, **kwargs):
+        return ChatBot.objects.filter(id=self.chatbot.id)
+
+    def dispatch(self, request, *args, **kwargs):
+        chatbot_id = kwargs.get("chatbot_id")
+        logger.info("chatbot_id: %s", chatbot_id)
+        logger.info("account: %s", self.account)
+        self.chatbot = get_object_or_404(ChatBot, pk=chatbot_id)
+        return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, chatbot_id: int):
-        chatbot = get_object_or_404(ChatBot, pk=chatbot_id, account=self.account)
-        serializer = self.serializer_class(chatbot)
+        serializer = self.serializer_class(self.chatbot)
         return Response(serializer.data, status=HTTPStatus.OK)
 
     def post(self, request):
@@ -141,8 +148,8 @@ class ChatBotListView(ListViewBase):
     chatbots: List[ChatBot] = []
 
     def dispatch(self, request, *args, **kwargs):
-        self.chatbots = ChatBot.objects.filter(account=self.account)
         response = super().dispatch(request, *args, **kwargs)
+        self.chatbots = ChatBot.objects.filter(account=self.account)
         return response
 
     def get_queryset(self, *args, **kwargs):

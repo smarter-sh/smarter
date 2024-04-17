@@ -36,7 +36,7 @@ from smarter.common.utils import (
     parse_request,
     request_meta_data_factory,
 )
-from smarter.lib.django.user import User
+from smarter.lib.django.user import UserType
 from smarter.lib.django.validators import (  # validate_embedding_request,
     validate_completion_request,
     validate_item,
@@ -49,7 +49,7 @@ openai.api_key = smarter_settings.openai_api_key.get_secret_value()
 
 
 # pylint: disable=too-many-locals,too-many-statements
-def handler(plugins: List[Plugin], user: User, data: dict):
+def handler(plugins: List[Plugin], user: UserType, data: dict):
     """
     Chat prompt handler. Responsible for processing incoming requests and
     invoking the appropriate OpenAI API endpoint based on the contents of

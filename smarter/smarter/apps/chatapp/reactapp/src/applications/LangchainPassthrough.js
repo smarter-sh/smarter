@@ -1,15 +1,17 @@
-import {
-  BACKEND_API_URL,
-  AWS_API_GATEWAY_KEY,
-  INFO_URL,
-} from "../config";
-const SLUG = "chat";
-const api_url = new URL(SLUG, BACKEND_API_URL).href;
+import {REACT_CONFIG} from "../config";
+
+let APP = REACT_CONFIG.APP;
+let BACKEND = REACT_CONFIG.BACKEND;
+
+console.log('REACT_CONFIG:', REACT_CONFIG);
+console.log('APP:', APP);
+console.log('BACKEND:', BACKEND);
+console.log('API_URL:', BACKEND.API_URL);
 
 const OpenaiPassthrough = {
   sidebar_title: "Langchain OpenAI",
-  api_url: api_url,
-  api_key: AWS_API_GATEWAY_KEY,
+  api_url: apiBACKEND.API_URL_url,
+  api_key: null,
   app_name: "Langchain OpenAI",
   assistant_name: "Lance",
   system_role: "You are a helpful assistant.",

@@ -203,6 +203,11 @@ class SmarterValidator:
         SmarterValidator.validate_url(url)
         return url
 
+    @staticmethod
+    def raise_error(msg: str) -> None:
+        """Raise a SmarterValueError with the given message"""
+        raise SmarterValueError(msg)
+
 
 def validate_item(item, valid_items: list, item_type: str) -> None:
     """Ensure that item exists in valid_items"""

@@ -72,11 +72,28 @@ class ChatBotCustomDomainDNS(TimestampedModel):
 class ChatBot(TimestampedModel):
     """A ChatBot API for a customer account."""
 
+    class Modes:
+        """ChatBot API Modes"""
+
+        SANDBOX = "sandbox"
+        CUSTOM = "custom"
+        DEFAULT = "default"
+
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     subdomain = models.ForeignKey(ChatBotCustomDomainDNS, on_delete=models.CASCADE, blank=True, null=True)
     custom_domain = models.ForeignKey(ChatBotCustomDomain, on_delete=models.CASCADE, blank=True, null=True)
     deployed = models.BooleanField(default=False, blank=True, null=True)
+
+    app_name = models.CharField(max_length=255, blank=True, null=True)
+    app_assistant = models.CharField(max_length=255, blank=True, null=True)
+    app_welcome_message = models.CharField(max_length=255, blank=True, null=True)
+    app_example_prompts = models.JSONField(blank=True, null=True)
+    app_placeholder = models.CharField(max_length=255, blank=True, null=True)
+    app_info_url = models.URLField(blank=True, null=True)
+    app_background_image_url = models.URLField(blank=True, null=True)
+    app_logo_url = models.URLField(blank=True, null=True)
+    app_file_attachment = models.BooleanField(default=False, blank=True, null=True)
 
     @property
     def default_host(self):
@@ -125,7 +142,18 @@ class ChatBot(TimestampedModel):
     @staticmethod
     @cache_results(timeout=600)
     def get_by_url(url: str):
+        url = SmarterValidator.urlify(url)
         return ChatBotApiUrlHelper(url).chatbot
+
+    def mode(self, url: str) -> str:
+        SmarterValidator.validate_url(url)
+        if self.custom_url and self.custom_url in url:
+            return self.Modes.CUSTOM
+        if self.default_url and self.default_url in url:
+            return self.Modes.DEFAULT
+        if self.sandbox_url and self.sandbox_url in url:
+            return self.Modes.SANDBOX
+        return SmarterValidator.raise_error("Invalid ChatBot URL")
 
     def save(self, *args, **kwargs):
         SmarterValidator.validate_domain(self.hostname)
@@ -223,11 +251,15 @@ class ChatBotApiUrlHelper:
         """
         if not url:
             return
+        url = SmarterValidator.urlify(url)
         SmarterValidator.validate_url(url)
         self._url = url
         self._environment = environment
         self.parsed_url = urlparse(url)
         self._user = user
+
+    def __str__(self):
+        return self.url
 
     @property
     def environment(self) -> str:
@@ -386,6 +418,12 @@ class ChatBotApiUrlHelper:
         return smarter_settings.customer_api_domain
 
     @property
+    def is_sandbox_domain(self) -> bool:
+        if not self.url:
+            return False
+        return smarter_settings.environment_domain in self.domain
+
+    @property
     def is_default_domain(self) -> bool:
         if not self.url:
             return False
@@ -454,6 +492,17 @@ class ChatBotApiUrlHelper:
         """
         if self._chatbot:
             return self._chatbot
+
+        if self.is_sandbox_domain:
+            # example: http://127.0.0.1:8000/api/v0/chatbots/1/chatbot
+            path = self.parsed_url.path
+            string_value = path.split("/")[-2]
+            try:
+                if isinstance(string_value, str) and string_value.isdigit():
+                    chatbot_id = int(string_value)
+                    self._chatbot = ChatBot.objects.get(id=chatbot_id)
+            except ChatBot.DoesNotExist:
+                return None
 
         if self.is_default_domain:
             try:

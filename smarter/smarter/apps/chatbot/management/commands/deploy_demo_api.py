@@ -20,6 +20,19 @@ class Command(BaseCommand):
         account = Account.objects.get(account_number=SMARTER_ACCOUNT_NUMBER)
         chatbot, _ = ChatBot.objects.get_or_create(account=account, name=SMARTER_EXAMPLE_CHATBOT_NAME)
 
+        chatbot.app_name = "Smarter Demo"
+        chatbot.app_assistant = "Lawrence"
+        chatbot.app_welcome_message = "Welcome to the Smarter demo!"
+        chatbot.app_example_prompts = [
+            "What is the weather in San Francisco?",
+            "What is an Everlasting Gobstopper?",
+            "example function calling configuration",
+        ]
+        chatbot.app_placeholder = "Ask me anything..."
+        chatbot.app_info_url = "https://smarter.sh"
+        chatbot.app_background_image_url = None
+        chatbot.app_logo_url = "/static/querium/querium-logo-white-transparent.png"
+
         if chatbot.deployed:
             self.stdout.write(self.style.SUCCESS(log_prefix, "The Smarter demo API is already deployed."))
             return
