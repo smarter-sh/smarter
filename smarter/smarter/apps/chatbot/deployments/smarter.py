@@ -3,9 +3,9 @@
 Smarter Customer API view.
 """
 import logging
+from http import HTTPStatus
 
-from rest_framework.renderers import JSONRenderer
-from rest_framework.response import Response
+from django.http import JsonResponse
 
 from smarter.apps.chat.providers.smarter import handler
 
@@ -47,8 +47,5 @@ class SmarterChatBotApiViewSet(ChatBotApiBaseViewSet):
 
         # FIX NOTE: this might be an unnecessary belt & suspenders step. DRF might be already
         # doing all of this for us.
-        response = Response(handler(plugins=self.plugins, user=self.user, data=request.data))
-        response.accepted_renderer = JSONRenderer()
-        response.accepted_media_type = "application/json"
-        response.renderer_context = {}
-        return response
+        data = handler(plugins=self.plugins, user=self.user, data=request.data)
+        return JsonResponse(data, safe=False, status=HTTPStatus.OK)

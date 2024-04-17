@@ -1,33 +1,27 @@
-import {
-  BACKEND_API_URL,
-  AWS_API_GATEWAY_KEY,
-  INFO_URL,
-} from "../config";
-const SLUG = "chat";
+import {REACT_CONFIG} from "../config";
 
-let api_url = new URL(SLUG, BACKEND_API_URL).href;
-if (!api_url.endsWith('/')) {
-  api_url += '/';
-}
+let APP = REACT_CONFIG.APP;
+let BACKEND = REACT_CONFIG.BACKEND;
+
+console.log('REACT_CONFIG:', REACT_CONFIG);
+console.log('APP:', APP);
+console.log('BACKEND:', BACKEND);
+console.log('API_URL:', BACKEND.API_URL);
 
 const SmarterSandbox = {
-  sidebar_title: "Smarter Sandbox",
-  api_url: api_url,
-  api_key: AWS_API_GATEWAY_KEY,
-  app_name: "Smarter Sandbox",
-  assistant_name: "Sam",
+  sidebar_title: APP.NAME,
+  api_url: BACKEND.API_URL,
+  api_key: null,
+  app_name: APP.NAME,
+  assistant_name: APP.ASSISTANT,
   system_role: "You are a helpful assistant.",
-  welcome_message: `Hello, I'm Sam, the Smarter sandbox assistant.`,
-  example_prompts: [],
-  placeholder_text: `say something to Sam`,
-  info_url: INFO_URL,
-  file_attach_button: false,
-  // background_image_url: "/applications/SarcasticChat/SarcasticChat-bg.png",
-  // application_logo: "https://www.querium.com/wp-content/uploads/2022/03/cropped-favicon-1-1-192x192.png",
-  // uses_openai: true,
-  // uses_openai_api: false,
-  // uses_langchain: true,
-  // uses_memory: true,
+  welcome_message: APP.WELCOME_MESSAGE,
+  example_prompts: APP.EXAMPLE_PROMPTS,
+  placeholder_text: APP.PLACEHOLDER,
+  info_url: APP.INFO_URL,
+  file_attach_button: APP.FILE_ATTACHMENT_BUTTON,
+  // background_image_url: APP.BACKGROUND_IMAGE_URL,
+  // application_logo: APP.LOGO_URL,
 };
-
+console.log('SmarterSandbox:', SmarterSandbox);
 export default SmarterSandbox;
