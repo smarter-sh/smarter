@@ -12,16 +12,14 @@ from rest_framework.response import Response
 from smarter.apps.account.api.v0.serializers import PaymentMethodSerializer
 from smarter.apps.account.models import Account, PaymentMethod, UserProfile
 from smarter.lib.django.user import UserType
-from smarter.lib.drf.view_helpers import (
-    SmarterAuthenticatedAPIListView,
-    SmarterAuthenticatedAPIView,
-)
+
+from .base import AccountListViewBase, AccountViewBase
 
 
 logger = logging.getLogger(__name__)
 
 
-class PaymentMethodView(SmarterAuthenticatedAPIView):
+class PaymentMethodView(AccountViewBase):
     """Payment method view for smarter api."""
 
     def get(self, request, payment_method_id: int = None):
@@ -37,7 +35,7 @@ class PaymentMethodView(SmarterAuthenticatedAPIView):
         return delete_payment_method(request, payment_method_id)
 
 
-class PaymentMethodsListView(SmarterAuthenticatedAPIListView):
+class PaymentMethodsListView(AccountListViewBase):
     """Payment methods list view for smarter api."""
 
     serializer_class = PaymentMethodSerializer

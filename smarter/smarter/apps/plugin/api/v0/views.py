@@ -22,8 +22,8 @@ from smarter.apps.plugin.utils import add_example_plugins
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.user import User
 from smarter.lib.drf.view_helpers import (
-    SmarterAuthenticatedAPIListView,
     SmarterAuthenticatedAPIView,
+    SmarterAuthenticatedListAPIView,
 )
 
 
@@ -56,7 +56,7 @@ class PluginCloneView(SmarterAuthenticatedAPIView):
         return redirect("/plugins/" + str(new_id) + "/")
 
 
-class PluginsListView(SmarterAuthenticatedAPIListView):
+class PluginsListView(SmarterAuthenticatedListAPIView):
     """Plugins list view for smarter api."""
 
     serializer_class = PluginMetaSerializer

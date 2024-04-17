@@ -14,12 +14,12 @@ from smarter.apps.chat.models import (
     PluginUsageHistory,
 )
 from smarter.lib.drf.view_helpers import (
-    SmarterAuthenticatedAPIListView,
     SmarterAuthenticatedAPIView,
+    SmarterAuthenticatedListAPIView,
 )
 
 
-class ChatToolCallHistoryListView(SmarterAuthenticatedAPIListView):
+class ChatToolCallHistoryListView(SmarterAuthenticatedListAPIView):
     queryset = ChatToolCallHistory.objects.all()
     serializer_class = ChatToolCallHistorySerializer
 
@@ -32,7 +32,7 @@ class ChatToolCallHistoryView(SmarterAuthenticatedAPIView):
         return Response(serializer.data)
 
 
-class PluginUsageHistoryListView(SmarterAuthenticatedAPIListView):
+class PluginUsageHistoryListView(SmarterAuthenticatedListAPIView):
     queryset = PluginUsageHistory.objects.all()
     serializer_class = PluginUsageHistorySerializer
 
@@ -45,7 +45,7 @@ class PluginUsageHistoryView(SmarterAuthenticatedAPIView):
         return Response(serializer.data)
 
 
-class ChatHistoryListView(SmarterAuthenticatedAPIListView):
+class ChatHistoryListView(SmarterAuthenticatedListAPIView):
     queryset = ChatHistory.objects.all()
     serializer_class = ChatHistorySerializer
 

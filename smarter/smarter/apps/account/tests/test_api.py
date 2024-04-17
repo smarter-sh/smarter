@@ -93,7 +93,6 @@ class TestUrls(unittest.TestCase):
     def test_accounts_index_view(self):
         """test that we can see an account from inside the list view and that it matches the account data."""
         response = self.client.get("/api/v0/accounts/" + str(self.account.id) + "/")
-
         self.assertEqual(response.status_code, 200)
         json_data = response.json()
         self.assertIsInstance(json_data, dict)
