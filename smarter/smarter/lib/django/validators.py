@@ -22,6 +22,7 @@ class SmarterValidator:
     """
 
     LOCAL_HOSTS = ["localhost", "127.0.0.1", "testserver"]
+    LOCAL_URLS = [f"http://{host}" for host in LOCAL_HOSTS] + [f"https://{host}" for host in LOCAL_HOSTS]
     VALID_ACCOUNT_NUMBER_PATTERN = r"^\d{4}-\d{4}-\d{4}$"
     VALID_PORT_PATTERN = r"^[0-9]{1,5}$"
     VALID_URL_PATTERN = r"^(http|https)://[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}(:[0-9]{1,5})?$"
@@ -67,7 +68,9 @@ class SmarterValidator:
     @staticmethod
     def validate_url(url: str) -> None:
         """Validate URL format"""
-        if any(permited_url in url for permited_url in SmarterValidator.LOCAL_HOSTS):
+        if not url.startswith(("http://", "https://")):
+            url = "http://" + url
+        if any(local_url in url for local_url in SmarterValidator.LOCAL_URLS):
             return
         try:
             validator = URLValidator()
