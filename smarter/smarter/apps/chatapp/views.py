@@ -3,10 +3,15 @@ Views for the React chat app. See doc/DJANGO-REACT-INTEGRATION.md for more
 information about how the React app is integrated into the Django app.
 """
 
-from django.shortcuts import get_object_or_404
+import logging
+
+from django.http import HttpResponseNotFound
 
 from smarter.apps.chatbot.models import ChatBot
 from smarter.common.helpers.view_helpers import SmarterAuthenticatedNeverCachedWebView
+
+
+logger = logging.getLogger(__name__)
 
 
 # ------------------------------------------------------------------------------
@@ -30,16 +35,34 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
     which is first built by npm and then later copied to the Django static directory
     via the Django manage.py `collectstatic` command. This is why the path is
     relative to the static directory, not the templates directory.
+
+
+    ChatBot.get_by_url: This method is used to get the chatbot object by the
+    url of the current request. The url is used to determine which chatbot to
+    display. The url is expected to be in one of these two formats:
+    - http://127.0.0.1:8000/chatapp/<str:name>/
+    - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatapp/
+    - https://hr.smarter.querium.com/chatapp/
+    We leverage ChatBotApiUrlHelper() to parse the url and get the chatbot object.
     """
 
+    template_path = "index.html"
     chatbot: ChatBot = None
 
+    def get_chatbot_by_name(self, name) -> ChatBot:
+        try:
+            return ChatBot.objects.get(account=self.account, name=name)
+        except ChatBot.DoesNotExist:
+            return None
+
     def dispatch(self, request, *args, **kwargs):
-
-        # setting this less for its functionality than for using it as a way
-        # to validate the hostname and that the chatbot actually exists.
-        self.chatbot = get_object_or_404(ChatBot, hostname=request.get_host(), deployed=True)
         response = super().dispatch(request, *args, **kwargs)
+        if response.status_code < 400:
+            name = kwargs.get("name")
+            if name:
+                self.chatbot = self.get_chatbot_by_name(name)
+            else:
+                self.chatbot = ChatBot.get_by_url(request.get_host())
+            if not self.chatbot:
+                return HttpResponseNotFound()
         return response
-
-    template_path = "index.html"

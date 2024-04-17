@@ -68,8 +68,7 @@ class SmarterValidator:
     @staticmethod
     def validate_url(url: str) -> None:
         """Validate URL format"""
-        if not url.startswith(("http://", "https://")):
-            url = "http://" + url
+        url = SmarterValidator.urlify(url)
         if any(local_url in url for local_url in SmarterValidator.LOCAL_URLS):
             return
         try:
@@ -193,6 +192,16 @@ class SmarterValidator:
         """Validate list of UUIDs"""
         for uuid in uuids:
             SmarterValidator.validate_uuid(uuid)
+
+    # --------------------------------------------------------------------------
+    # utility helpers
+    # --------------------------------------------------------------------------
+    @staticmethod
+    def urlify(url: str) -> str:
+        """ensure that URL starts with http:// or https://"""
+        if not url.startswith(("http://", "https://")):
+            url = "http://" + url
+        return url
 
 
 def validate_item(item, valid_items: list, item_type: str) -> None:

@@ -1,5 +1,6 @@
 # pylint: disable=W0613,C0115
 """All models for the OpenAI Function Calling API app."""
+import logging
 import re
 from typing import List, Type
 from urllib.parse import urlparse
@@ -19,6 +20,9 @@ from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
 
 from .utils import cache_results
+
+
+logger = logging.getLogger(__name__)
 
 
 # -----------------------------------------------------------------------------
@@ -74,18 +78,6 @@ class ChatBot(TimestampedModel):
     custom_domain = models.ForeignKey(ChatBotCustomDomain, on_delete=models.CASCADE, blank=True, null=True)
     deployed = models.BooleanField(default=False, blank=True, null=True)
 
-    @staticmethod
-    @cache_results(timeout=600)
-    def get_by_url(url: str):
-        return ChatBotApiUrlHelper(url).chatbot
-
-    def save(self, *args, **kwargs):
-        SmarterValidator.validate_domain(self.hostname)
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.hostname
-
     @property
     def default_host(self):
         domain = f"{self.name}.{self.account.account_number}.{smarter_settings.customer_api_domain}"
@@ -107,6 +99,18 @@ class ChatBot(TimestampedModel):
     @property
     def url(self):
         return f"https://{self.hostname}/"
+
+    @staticmethod
+    @cache_results(timeout=600)
+    def get_by_url(url: str):
+        return ChatBotApiUrlHelper(url).chatbot
+
+    def save(self, *args, **kwargs):
+        SmarterValidator.validate_domain(self.hostname)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.hostname
 
 
 class ChatBotAPIKey(TimestampedModel):
@@ -190,7 +194,6 @@ class ChatBotApiUrlHelper:
         """
         if not url:
             return
-
         SmarterValidator.validate_url(url)
         self._url = url
         self._environment = environment

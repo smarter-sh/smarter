@@ -38,8 +38,7 @@ class SecurityMiddleware(DjangoSecurityMiddleware):
         if host in SmarterValidator.LOCAL_HOSTS:
             return None
 
-        if not host.startswith(("http://", "https://")):
-            url = "http://" + host
+        url = SmarterValidator.urlify(host)
         parsed_host = urlparse(url)
         host = parsed_host.hostname
 
