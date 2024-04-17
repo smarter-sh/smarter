@@ -2,7 +2,7 @@
 """Django views"""
 import logging
 
-from smarter.common.helpers.view_helpers import SmarterAuthenticatedNeverCachedWebView
+from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
 
 
 logger = logging.getLogger(__name__)

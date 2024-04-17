@@ -2,7 +2,7 @@
 
 import logging
 
-from smarter.common.helpers.view_helpers import SmarterAuthenticatedWebView
+from smarter.lib.django.view_helpers import SmarterAuthenticatedWebView
 
 
 logger = logging.getLogger(__name__)

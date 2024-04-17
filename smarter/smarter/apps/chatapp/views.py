@@ -8,7 +8,7 @@ import logging
 from django.http import HttpResponseNotFound
 
 from smarter.apps.chatbot.models import ChatBot
-from smarter.common.helpers.view_helpers import SmarterAuthenticatedNeverCachedWebView
+from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
 
 
 logger = logging.getLogger(__name__)

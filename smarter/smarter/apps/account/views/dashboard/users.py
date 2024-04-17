@@ -9,8 +9,8 @@ from django.db import transaction
 from django.shortcuts import redirect
 
 from smarter.apps.account.models import UserProfile
-from smarter.common.helpers.view_helpers import SmarterAdminWebView
 from smarter.lib.django.user import User
+from smarter.lib.django.view_helpers import SmarterAdminWebView
 
 
 logger = logging.getLogger(__name__)
