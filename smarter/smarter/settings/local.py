@@ -18,7 +18,8 @@ from .base import *
 print("Loading smarter.settings.local")
 ENVIRONMENT_DOMAIN = "local.platform.smarter.sh"
 CUSTOMER_API_DOMAIN = "local.api.smarter.sh"
-SMARTER_ALLOWED_HOSTS = ["localhost", "127.0.0.1", "testserver"]
+
+SMARTER_ALLOWED_HOSTS = LOCAL_HOSTS
 
 # dev only:
 # Bootstrap theme source files and static assets.

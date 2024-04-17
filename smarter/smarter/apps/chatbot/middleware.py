@@ -1,12 +1,18 @@
 """This module is used to suppress DisallowedHost exception and return HttpResponseBadRequest instead."""
 
+import logging
 from urllib.parse import urlparse
 
 from django.conf import settings
 from django.http import HttpResponseBadRequest
 from django.middleware.security import SecurityMiddleware as DjangoSecurityMiddleware
 
+from smarter.lib.django.validators import SmarterValidator
+
 from .models import ChatBot
+
+
+logger = logging.getLogger(__name__)
 
 
 class SecurityMiddleware(DjangoSecurityMiddleware):
@@ -28,14 +34,13 @@ class SecurityMiddleware(DjangoSecurityMiddleware):
     def process_request(self, request):
 
         # 1.) If the request is from a local host, allow it to pass through
-        LOCAL_HOSTS = ["localhost", "127.0.0.1", "testserver"]
         host = request.get_host()
-        if host in LOCAL_HOSTS:
+        if host in SmarterValidator.LOCAL_HOSTS:
             return None
 
         if not host.startswith(("http://", "https://")):
-            host = "http://" + host
-        parsed_host = urlparse(host)
+            url = "http://" + host
+        parsed_host = urlparse(url)
         host = parsed_host.hostname
 
         # 2.) If the host is in the list of allowed hosts for
@@ -44,7 +49,7 @@ class SecurityMiddleware(DjangoSecurityMiddleware):
             return None
 
         # 3.) If the host is a domain for a deployed ChatBot, allow it to pass through
-        if ChatBot.get_by_url(host) is not None:
+        if ChatBot.get_by_url(url) is not None:
             return None
 
         return HttpResponseBadRequest("Bad Request (400) - Invalid Hostname.")

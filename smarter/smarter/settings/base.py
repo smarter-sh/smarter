@@ -26,6 +26,7 @@ from .smarter import *  # noqa: E402, F401, W0401
 # We implemented our own middleware to validate host names
 ALLOWED_HOSTS = ["*"]
 SMARTER_ALLOWED_HOSTS = []
+LOCAL_HOSTS = ["localhost", "127.0.0.1", "testserver"]
 
 # to disable redis/celery in collectstatic
 if "collectstatic" in sys.argv:
