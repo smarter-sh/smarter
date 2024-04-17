@@ -15,7 +15,7 @@ from smarter.apps.account.models import Account, UserProfile
 # our stuff
 from smarter.lib.django.user import User
 
-from ..context_processors import base, react
+from ..context_processors import base
 
 
 class TestContextProcessor(unittest.TestCase):
@@ -41,12 +41,3 @@ class TestContextProcessor(unittest.TestCase):
         test_context = base(request=request)
 
         self.assertIn("dashboard", test_context)
-
-    def test_react(self):
-        """Test react."""
-        rf = RequestFactory()
-        request = rf.get("/login/")
-        request.user = self.user
-        test_context = react(request=request)
-
-        self.assertIn("react_config", test_context)

@@ -153,7 +153,6 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "smarter.apps.account.context_processors.base",
                 "smarter.apps.dashboard.context_processors.base",
-                "smarter.apps.dashboard.context_processors.react",
             ],
         },
     },

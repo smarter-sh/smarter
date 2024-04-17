@@ -6,7 +6,7 @@ from smarter.apps.account.models import Account
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.plugin import Plugins
-from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_DEMO_API_NAME
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
 
 
 # pylint: disable=E1101
@@ -18,7 +18,7 @@ class Command(BaseCommand):
         print(log_prefix, "Deploying the Smarter demo API...")
 
         account = Account.objects.get(account_number=SMARTER_ACCOUNT_NUMBER)
-        chatbot, _ = ChatBot.objects.get_or_create(account=account, name=SMARTER_DEMO_API_NAME)
+        chatbot, _ = ChatBot.objects.get_or_create(account=account, name=SMARTER_EXAMPLE_CHATBOT_NAME)
 
         if chatbot.deployed:
             self.stdout.write(self.style.SUCCESS(log_prefix, "The Smarter demo API is already deployed."))

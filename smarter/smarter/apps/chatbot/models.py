@@ -85,6 +85,10 @@ class ChatBot(TimestampedModel):
         return domain
 
     @property
+    def default_url(self):
+        return SmarterValidator.urlify(self.default_host)
+
+    @property
     def custom_host(self):
         if self.custom_domain and self.custom_domain.is_verified:
             domain = f"{self.name}.{self.custom_domain.domain_name}"
@@ -93,12 +97,30 @@ class ChatBot(TimestampedModel):
         return None
 
     @property
+    def custom_url(self):
+        if self.custom_host:
+            return SmarterValidator.urlify(self.custom_host)
+        return None
+
+    @property
+    def sandbox_host(self):
+        domain = f"{smarter_settings.environment_domain}/api/v0/chatbots/{self.id}/"
+        SmarterValidator.validate_domain(domain)
+        return domain
+
+    @property
+    def sandbox_url(self):
+        return SmarterValidator.urlify(self.sandbox_host)
+
+    @property
     def hostname(self):
-        return self.custom_host or self.default_host
+        if self.deployed:
+            return self.custom_host or self.default_host
+        return self.sandbox_host
 
     @property
     def url(self):
-        return f"https://{self.hostname}/"
+        return SmarterValidator.urlify(self.hostname)
 
     @staticmethod
     @cache_results(timeout=600)
@@ -143,6 +165,13 @@ class ChatBotPlugin(TimestampedModel):
         retval = []
         for chatbot_plugin in chatbot_plugins:
             retval.append(Plugin(plugin_meta=chatbot_plugin.plugin_meta))
+        return retval
+
+    @classmethod
+    def plugins_json(cls, chatbot: ChatBot) -> List[dict]:
+        retval = []
+        for plugin in cls.plugins(chatbot):
+            retval.append(plugin.to_json())
         return retval
 
 

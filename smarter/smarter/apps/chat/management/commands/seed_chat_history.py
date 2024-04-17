@@ -11,7 +11,7 @@ from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import account_admin_user
 from smarter.apps.chat.providers.smarter import handler
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
-from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_DEMO_API_NAME
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
 
 
 HERE = Path(__file__).resolve().parent
@@ -26,7 +26,7 @@ class Command(BaseCommand):
         account = Account.objects.get(account_number=SMARTER_ACCOUNT_NUMBER)
         user = account_admin_user(account)
         user_profile = UserProfile.objects.get(account=account, user=user)
-        chatbot = ChatBot.objects.get(account=user_profile.account, name=SMARTER_DEMO_API_NAME)
+        chatbot = ChatBot.objects.get(account=user_profile.account, name=SMARTER_EXAMPLE_CHATBOT_NAME)
 
         for file_path in glob.glob(data_folder_path):
             print("Processing file: ", file_path)

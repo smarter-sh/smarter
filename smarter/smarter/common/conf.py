@@ -400,9 +400,13 @@ class Settings(BaseSettings):
         if self.environment in SmarterEnvironments.aws_environments:
             return self.environment + "." + SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN + "." + self.root_domain
         if self.environment == SmarterEnvironments.LOCAL:
-            return f"{SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN}.localhost"
+            return "127.0.0.1:8000"
         # default domain format
         return self.environment + "." + SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN + "." + self.root_domain
+
+    @property
+    def environment_url(self) -> str:
+        return SmarterValidator.urlify(self.environment_domain)
 
     @property
     def platform_name(self) -> str:
@@ -424,10 +428,13 @@ class Settings(BaseSettings):
             # alpha.api.smarter.sh, beta.api.smarter.sh, next.api.smarter.sh
             return f"{self.environment}.{SMARTER_CUSTOMER_API_SUBDOMAIN}.{self.root_domain}"
         if self.environment == SmarterEnvironments.LOCAL:
-            # api.localhost
             return f"{SMARTER_CUSTOMER_API_SUBDOMAIN}.localhost"
         # default domain format
         return f"{self.environment}.{SMARTER_CUSTOMER_API_SUBDOMAIN}.{self.root_domain}"
+
+    @property
+    def customer_api_url(self) -> str:
+        return SmarterValidator.urlify(self.customer_api_domain)
 
     @property
     def aws_s3_bucket_name(self) -> str:
