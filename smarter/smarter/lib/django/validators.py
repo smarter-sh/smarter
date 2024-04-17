@@ -21,6 +21,7 @@ class SmarterValidator:
     first check if there is a built-in Python function or a Django utility that can do the validation.
     """
 
+    LOCAL_HOSTS = ["localhost", "127.0.0.1", "testserver"]
     VALID_ACCOUNT_NUMBER_PATTERN = r"^\d{4}-\d{4}-\d{4}$"
     VALID_PORT_PATTERN = r"^[0-9]{1,5}$"
     VALID_URL_PATTERN = r"^(http|https)://[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}(:[0-9]{1,5})?$"
@@ -36,7 +37,7 @@ class SmarterValidator:
     def validate_domain(domain: str) -> None:
         """Validate domain format"""
         try:
-            if domain not in [None, "", "localhost"]:
+            if domain not in SmarterValidator.LOCAL_HOSTS + [None, ""]:
                 SmarterValidator.validate_url("http://" + domain)
         except SmarterValueError as e:
             raise SmarterValueError(f"Invalid domain {domain}") from e
@@ -66,13 +67,14 @@ class SmarterValidator:
     @staticmethod
     def validate_url(url: str) -> None:
         """Validate URL format"""
-        permited_urls = ["localhost", "127.0.0.1", "testserver"]
-        if any(permited_url in url for permited_url in permited_urls):
+        if any(permited_url in url for permited_url in SmarterValidator.LOCAL_HOSTS):
             return
         try:
             validator = URLValidator()
             validator(url)
         except ValidationError as e:
+            if SmarterValidator.is_valid_ip(url):
+                return
             raise SmarterValueError(f"Invalid url {url}") from e
 
     @staticmethod
