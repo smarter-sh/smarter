@@ -13,7 +13,7 @@ from django.db import transaction
 from rest_framework import serializers
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.lib.django.user import User
+from smarter.lib.django.user import User, UserType
 
 from .api.v0.serializers import (
     PluginDataSerializer,
@@ -292,7 +292,7 @@ class Plugin:
             return self.ready
         return False
 
-    def selected(self, user: User, messages: list[dict]) -> bool:
+    def selected(self, user: UserType, messages: list[dict]) -> bool:
         """
         Return True the user has mentioned Lawrence McDaniel or FullStackWithLawrence
         at any point in the history of the conversation.
@@ -341,7 +341,7 @@ class Plugin:
 
         return messages
 
-    def function_calling_plugin(self, user: User, inquiry_type: str) -> str:
+    def function_calling_plugin(self, user: UserType, inquiry_type: str) -> str:
         """Return select info from custom plugin object"""
         if not self.ready:
             return None

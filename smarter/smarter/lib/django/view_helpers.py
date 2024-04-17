@@ -15,7 +15,6 @@ from django.views.decorators.cache import cache_control, cache_page, never_cache
 from htmlmin.main import minify
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.lib.django.user import User
 
 
 register = template.Library()
@@ -80,7 +79,11 @@ class SmarterNeverCachedWebView(SmarterWebView):
 
 @method_decorator(login_required, name="dispatch")
 class SmarterAuthenticatedWebView(SmarterWebView):
-    """An optimized view that requires authentication."""
+    """
+    An optimized view that requires authentication.
+    Includes helpers for getting the account and user profile.
+    and forces a 404 response for users without a profile.
+    """
 
     account: Account = None
     user_profile: UserProfile = None
@@ -90,7 +93,7 @@ class SmarterAuthenticatedWebView(SmarterWebView):
         patch_vary_headers(response, ["Cookie"])
 
         try:
-            self.user_profile = User.get_user_profile(request.user)
+            self.user_profile = UserProfile.objects.get(user=request.user)
         except UserProfile.DoesNotExist:
             return HttpResponseNotFound
 
