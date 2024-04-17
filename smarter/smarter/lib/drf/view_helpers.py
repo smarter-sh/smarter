@@ -1,8 +1,10 @@
 """Django template and view helper functions."""
 
+import logging
+
 from knox.auth import TokenAuthentication
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.views import APIView
@@ -10,8 +12,37 @@ from rest_framework.views import APIView
 from smarter.apps.account.models import SmarterAuthToken
 
 
+logger = logging.getLogger(__name__)
+
+
 # ------------------------------------------------------------------------------
-# API Authentication classes
+# API public views
+# ------------------------------------------------------------------------------
+class UnauthenticatedPermissionClass(BasePermission):
+    """
+    Allows public access to APIS.
+    """
+
+    def has_permission(self, request, view):
+        return True
+
+
+class SmarterUnauthenticatedAPIView(APIView):
+    """Base API view for smarter."""
+
+    permission_classes = [UnauthenticatedPermissionClass]
+    http_method_names = ["get"]
+
+
+class SmarterUnauthenticatedAPIListView(ListAPIView):
+    """Base API listview for smarter."""
+
+    permission_classes = [UnauthenticatedPermissionClass]
+    http_method_names = ["get"]
+
+
+# ------------------------------------------------------------------------------
+# API Authenticated Views
 # ------------------------------------------------------------------------------
 class SmarterTokenAuthentication(TokenAuthentication):
     """
@@ -38,80 +69,71 @@ class SmarterTokenAuthentication(TokenAuthentication):
         return (user, auth_token)
 
 
-class IsStaffUser(BasePermission):
+class SmarterAuthenticatedAPIView(APIView):
+    """
+    Allows access only to authenticated users.
+    """
+
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_anonymous:
+            raise NotAuthenticated()
+        return super().dispatch(request, *args, **kwargs)
+
+
+class SmarterAuthenticatedListAPIView(ListAPIView):
+    """
+    Allows access only to authenticated users.
+    """
+
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_anonymous:
+            raise NotAuthenticated()
+        return super().dispatch(request, *args, **kwargs)
+
+
+# ------------------------------------------------------------------------------
+# Admin API Views
+# ------------------------------------------------------------------------------
+class AdminPermissionsClass(IsAuthenticated):
     """
     Custom permission to only allow access to staff users.
     """
 
     def has_permission(self, request, view):
-        return request.user and (request.user.is_staff or request.user.is_superuser)
+        if not super().has_permission(request, view):
+            return False
+        return request.user.is_staff or request.user.is_superuser
 
 
-class SmarterAPIUnauthenticated(BasePermission):
-    """
-    Allows public access to APIS.
-    """
-
-    def has_permission(self, request, view):
-        return True
-
-
-class SmarterAPIAuthenticated(IsAuthenticated):
-    """
-    Allows access only to authenticated users.
-    """
-
-
-class SmarterAPIAdmin(SmarterAPIAuthenticated, IsStaffUser):
+class SmarterAdminAPIView(APIView):
     """
     Allows access only to admins.
     """
 
+    permission_classes = [AdminPermissionsClass]
+    authentication_classes = [SessionAuthentication]
 
-# ------------------------------------------------------------------------------
-# API public views
-# ------------------------------------------------------------------------------
-class SmarterUnauthenticatedAPIView(APIView):
-    """Base API view for smarter."""
-
-    permission_classes = [SmarterAPIUnauthenticated]
-
-
-class SmarterUnauthenticatedAPIListView(ListAPIView):
-    """Base API listview for smarter."""
-
-    permission_classes = [SmarterAPIUnauthenticated]
-    http_method_names = ["get"]
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_anonymous:
+            raise NotAuthenticated()
+        return super().dispatch(request, *args, **kwargs)
 
 
-# ------------------------------------------------------------------------------
-# API Views that require authentication
-# ------------------------------------------------------------------------------
-class SmarterAuthenticatedAPIView(APIView):
-    """Base API view for smarter."""
+class SmarterAdminListAPIView(ListAPIView):
+    """
+    Allows access only to admins.
+    """
 
-    permission_classes = [SmarterAPIAuthenticated]
-    authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
+    permission_classes = [AdminPermissionsClass]
+    authentication_classes = [SessionAuthentication]
 
-
-class SmarterAuthenticatedAPIListView(ListAPIView):
-    """Base API listview for smarter."""
-
-    permission_classes = [SmarterAPIAuthenticated]
-    authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
-    http_method_names = ["get"]
-
-
-# ------------------------------------------------------------------------------
-# API admin-only views
-# ------------------------------------------------------------------------------
-class SmarterAPIAdminView(SmarterAuthenticatedAPIView):
-    """Base admin-only API view."""
-
-    permission_classes = [SmarterAPIAdmin]
-
-
-class SmarterAPIListAdminView(SmarterAuthenticatedAPIListView):
-    """Base admin-only API list view."""
-
-    permission_classes = [SmarterAPIAdmin]
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_anonymous:
+            raise NotAuthenticated()
+        return super().dispatch(request, *args, **kwargs)

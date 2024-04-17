@@ -11,10 +11,11 @@ from rest_framework.response import Response
 from smarter.apps.account.api.v0.serializers import UserSerializer
 from smarter.apps.account.models import Account, UserProfile
 from smarter.lib.django.user import User, UserType
-from smarter.lib.drf.view_helpers import SmarterAPIAdminView, SmarterAPIListAdminView
+
+from .base import AccountListViewBase, AccountViewBase
 
 
-class UserView(SmarterAPIAdminView):
+class UserView(AccountViewBase):
     """User view for smarter api."""
 
     def get(self, request, user_id: int):
@@ -35,7 +36,7 @@ class UserView(SmarterAPIAdminView):
         return super().handle_exception(exc)
 
 
-class UserListView(SmarterAPIListAdminView):
+class UserListView(AccountListViewBase):
     """User list view for smarter api."""
 
     serializer_class = UserSerializer

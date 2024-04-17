@@ -1,4 +1,4 @@
-"""This module is used to suppress DisallowedHost exception and return HttpResponseBadRequest instead."""
+"""This module is used to suppress DisallowedHost exception and return HttpResponseForbidden instead."""
 
 from django.http import HttpResponseForbidden
 from django.utils.deprecation import MiddlewareMixin

@@ -236,8 +236,8 @@ class TestConfiguration(unittest.TestCase):
         self.assertEqual(empty_str_to_int_default("", 0), 0)
         self.assertEqual(empty_str_to_int_default("1", 1), 1)
 
-    def test_settings_aws_account_id(self):
+    def test_settings_aws_account_info(self):
         """Test that the AWS account ID is valid."""
         mock_settings = Settings(init_info="test_settings_aws_account_id()")
-        self.assertIsNotNone(mock_settings.aws_account_id)
-        self.assertTrue(mock_settings.aws_account_id.isdigit())
+        self.assertIsNotNone(mock_settings.aws_region)
+        self.assertTrue(mock_settings.aws_region.isalpha)

@@ -19,7 +19,7 @@ from smarter.apps.chatbot.models import (
 )
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.models import PluginMeta
-from smarter.lib.drf.view_helpers import SmarterAPIAdminView, SmarterAPIListAdminView
+from smarter.lib.drf.view_helpers import SmarterAdminAPIView, SmarterAdminListAPIView
 
 from .serializers import (
     ChatBotAPIKeySerializer,
@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 ###############################################################################
 # base views
 ###############################################################################
-class ViewBase(SmarterAPIAdminView):
+class ViewBase(SmarterAdminAPIView):
     """Base class for all chatbot detail views."""
 
     user_profile: UserProfile = None
@@ -51,7 +51,7 @@ class ViewBase(SmarterAPIAdminView):
         return response
 
 
-class ListViewBase(SmarterAPIListAdminView):
+class ListViewBase(SmarterAdminListAPIView):
     """Base class for all chatbot list views."""
 
     user_profile: UserProfile = None
