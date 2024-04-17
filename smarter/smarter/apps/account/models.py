@@ -14,7 +14,7 @@ from knox.models import AuthToken, AuthTokenManager
 # our stuff
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.email_helpers import email_helper
-from smarter.common.helpers.model_helpers import TimestampedModel
+from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
 
