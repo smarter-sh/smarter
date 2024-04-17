@@ -6,13 +6,16 @@ from django import template
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import redirect, render
 from django.utils.cache import patch_vary_headers
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.cache import cache_control, cache_page, never_cache
 from htmlmin.main import minify
+
+from smarter.apps.account.models import Account, UserProfile
+from smarter.lib.django.user import User
 
 
 register = template.Library()
@@ -78,6 +81,22 @@ class SmarterNeverCachedWebView(SmarterWebView):
 @method_decorator(login_required, name="dispatch")
 class SmarterAuthenticatedWebView(SmarterWebView):
     """An optimized view that requires authentication."""
+
+    account: Account = None
+    user_profile: UserProfile = None
+
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        patch_vary_headers(response, ["Cookie"])
+
+        try:
+            self.user_profile = User.get_user_profile(request.user)
+        except UserProfile.DoesNotExist:
+            return HttpResponseNotFound
+
+        self.account = self.user_profile.account
+
+        return response
 
 
 @method_decorator(cache_control(max_age=settings.SMARTER_CACHE_EXPIRATION), name="dispatch")
