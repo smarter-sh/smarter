@@ -7,7 +7,6 @@ from django.conf import settings
 from django.shortcuts import HttpResponse, redirect
 
 from smarter.common.helpers.email_helpers import email_helper
-from smarter.common.helpers.view_helpers import SmarterNeverCachedWebView
 from smarter.lib.django.token_generators import (
     ExpiringTokenGenerator,
     TokenConversionError,
@@ -16,6 +15,7 @@ from smarter.lib.django.token_generators import (
     TokenParseError,
 )
 from smarter.lib.django.user import User
+from smarter.lib.django.view_helpers import SmarterNeverCachedWebView
 
 
 class PasswordResetRequestView(SmarterNeverCachedWebView):

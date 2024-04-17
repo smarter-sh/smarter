@@ -8,10 +8,7 @@ from django import forms
 from django.http import JsonResponse
 
 from smarter.common.helpers.mailchimp_helpers import MailchimpHelper
-from smarter.common.helpers.view_helpers import (
-    SmarterAuthenticatedWebView,
-    SmarterWebView,
-)
+from smarter.lib.django.view_helpers import SmarterAuthenticatedWebView, SmarterWebView
 
 from ..models import EmailContactList
 
