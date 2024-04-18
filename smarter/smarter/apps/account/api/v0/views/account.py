@@ -21,7 +21,6 @@ class AccountView(AccountViewBase):
     """Account view for smarter api."""
 
     def get(self, request, account_id: int):
-        print("account_id: ", account_id)
         if account_id and request.user.is_superuser:
             account = get_object_or_404(Account, pk=account_id)
         else:

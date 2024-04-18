@@ -98,6 +98,5 @@ class TestPaymentMethods(unittest.TestCase):
         client = Client()
         client.force_login(self.user)
 
-        print("base: url: ", self.base_url)
         response = client.get(self.base_url)
         self.assertEqual(response.status_code, 200)
