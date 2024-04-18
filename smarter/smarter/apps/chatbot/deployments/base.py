@@ -136,6 +136,13 @@ class ChatBotApiBaseViewSet(SmarterUnauthenticatedAPIView):
         chatbot_called.send(sender=self.__class__, chatbot=self.chatbot, request=request, args=args, kwargs=kwargs)
         return super().dispatch(request, *args, **kwargs)
 
+    def options(self, request, *args, **kwargs):
+        response = Response()
+        response["Access-Control-Allow-Origin"] = "{smarter_settings.environment_domain}"
+        response["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+        response["Access-Control-Allow-Headers"] = "origin, content-type, accept"
+        return response
+
     # pylint: disable=W0613
     def get(self, request, *args, **kwargs):
         kwargs.get("chatbot_id", None)
