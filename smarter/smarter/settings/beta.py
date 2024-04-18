@@ -26,6 +26,7 @@ CSRF_TRUSTED_ORIGINS = [f"http://{host}" for host in SMARTER_ALLOWED_HOSTS] + [
 ]
 CORS_ALLOWED_ORIGINS = [f"https://{host}" for host in [ENVIRONMENT_DOMAIN, CUSTOMER_API_DOMAIN]]
 CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https?://[\w-]+\.(\d+-\d+-\d+)\.beta\.api\.smarter\.sh$",
     r"^https?://[\w-]+\.beta\.platform\.smarter\.sh$",
     r"^https?://[\w-]+\.beta\.api\.smarter\.sh$",
 ]
