@@ -34,7 +34,7 @@ class Command(BaseCommand):
         chatbot.app_logo_url = "/static/querium/querium-logo-white-transparent.png"
 
         if chatbot.deployed:
-            self.stdout.write(self.style.SUCCESS(log_prefix, "The Smarter demo API is already deployed."))
+            self.stdout.write(self.style.SUCCESS(log_prefix + "The Smarter demo API is already deployed."))
             return
 
         for plugin in Plugins(account=account).plugins:
