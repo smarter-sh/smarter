@@ -103,16 +103,12 @@ class ChatBotApiBaseViewSet(SmarterUnauthenticatedAPIView):
     def dispatch(self, request, *args, **kwargs):
         url = request.build_absolute_uri()
         url = SmarterValidator.urlify(url)
+
         logger.info("ChatBotApiBaseViewSet.dispatch(): url=%s", url)
         logger.info("ChatBotApiBaseViewSet.dispatch(): user=%s", request.user)
         logger.info("ChatBotApiBaseViewSet.dispatch(): method=%s", request.method)  # Log the method
 
-        self.user = request.user
-        if request.user.is_authenticated:
-            self.helper = self.get_cached_helper(url=url, user=request.user)
-        else:
-            self.helper = self.get_cached_helper(url=url)
-
+        self.helper = self.get_cached_helper(url=url)
         if not self.helper.is_valid:
             data = {
                 "message": "Not Found. Please provide a valid ChatBot URL.",
@@ -122,14 +118,14 @@ class ChatBotApiBaseViewSet(SmarterUnauthenticatedAPIView):
                 "url": self.helper.url,
             }
             return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
-        self.chatbot = self.helper.chatbot
         if self.helper.is_authentication_required and not self.smarter_api_authenticate(request):
             data = {"message": "Forbidden. Please provide a valid API key."}
             return JsonResponse(data=data, status=HTTPStatus.FORBIDDEN)
-        self.account = self.helper.account
-        self.plugins = ChatBotPlugin().plugins(chatbot=self.chatbot)
 
-        self.user = self.user or account_admin_user(self.account)
+        self.account = self.helper.account
+        self.user = account_admin_user(self.account)
+        self.chatbot = self.helper.chatbot
+        self.plugins = ChatBotPlugin().plugins(chatbot=self.chatbot)
 
         logger.debug("ChatBotApiBaseViewSet.dispatch(): account=%s", self.account)
         logger.debug("ChatBotApiBaseViewSet.dispatch(): chatbot=%s", self.chatbot)
