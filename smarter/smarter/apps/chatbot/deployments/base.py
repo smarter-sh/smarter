@@ -25,14 +25,14 @@ from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib.django.user import UserType
 from smarter.lib.django.validators import SmarterValidator
-from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
+from smarter.lib.django.view_helpers import SmarterNeverCachedWebView
 
 
 logger = logging.getLogger(__name__)
 cache = TTLCache(ttl=600, maxsize=1000)
 
 
-class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
+class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
     """
     Base viewset for all ChatBot APIs. Handles
     - api key authentication
