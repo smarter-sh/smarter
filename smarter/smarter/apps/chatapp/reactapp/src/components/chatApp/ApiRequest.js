@@ -77,11 +77,16 @@ export async function processApiRequest(
     body: requestBodyFactory(messages),
   };
 
+  console.log("processApiRequest(): ", apiURL, messages, init);
+
   try {
     const response = await fetch(apiURL, init);
     const status = await response.status;
     const response_json = await response.json(); // Convert the ReadableStream to a JSON object
     const response_body = await response_json.body; // ditto
+
+    console.log("processApiRequest(): response status: ", status);
+    console.log("processApiRequest(): response: ", response_json);
 
     if (response.ok) {
       return JSON.parse(response_body);
@@ -95,27 +100,14 @@ export async function processApiRequest(
         - the response_body object is intended to always be available when the status is 400.
           However, there potentially COULD be a case where the response itself contains message text.
       */
+      console.log("processApiRequest(): error: ", status, response.statusText, response_body.message);
+
       let errTitle = "Error " + status;
-      let errMessage = "An unknown error occurred.";
-      switch (status) {
-        case 400:
-          errMessage =
-            response.statusText ||
-            response_body.message ||
-            "The request was invalid.";
-          break;
-        case 500:
-          errMessage =
-            response.statusText ||
-            response_body.message ||
-            "An internal server error occurred.";
-          break;
-        case 504:
-          errMessage =
-            response.statusText ||
-            "Gateway timeout error. This is a known consequence of using AWS Lambda for integrations to the OpenAI API. Note that AWS Lambda has a hard 29 second timeout. If OpenAI requests take longer, which is frequently the case with chatgpt-4 then you will receive this error. If the timeout persists then you might try using chatgpt-3.5 instead as it is more performant.";
-          break;
-      }
+      let errMessage = response.statusText ||
+                        response_body.message ||
+                        "The request was invalid.";
+
+      console.error(errTitle, errMessage);
       openChatModal(errTitle, errMessage);
     }
   } catch (error) {
