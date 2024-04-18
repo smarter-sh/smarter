@@ -147,11 +147,15 @@ class ChatBot(TimestampedModel):
 
     def mode(self, url: str) -> str:
         SmarterValidator.validate_url(url)
-        if self.custom_url and self.custom_url in url:
+        url = SmarterValidator.urlify(url)
+        custom_url = SmarterValidator.urlify(self.custom_host)
+        default_url = SmarterValidator.urlify(self.default_host)
+        sandbox_url = SmarterValidator.urlify(self.sandbox_host)
+        if custom_url in url:
             return self.Modes.CUSTOM
-        if self.default_url and self.default_url in url:
+        if default_url in url:
             return self.Modes.DEFAULT
-        if self.sandbox_url and self.sandbox_url in url:
+        if sandbox_url in url:
             return self.Modes.SANDBOX
         logger.error("Invalid ChatBot url %s received for default_url: %s", url, self.default_url)
         logger.error("sandbox_url: %s", self.sandbox_url)

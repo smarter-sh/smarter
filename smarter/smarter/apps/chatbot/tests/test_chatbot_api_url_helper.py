@@ -16,6 +16,7 @@ from smarter.apps.chatbot.models import (
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.user import User
+from smarter.lib.django.validators import SmarterValidator
 
 
 # pylint: disable=too-many-instance-attributes
@@ -73,7 +74,7 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
         self.assertTrue(helper.chatbot == self.chatbot)
         self.assertTrue(helper.account_number == self.account.account_number)
         self.assertTrue(helper.is_custom_domain is False)
-        self.assertTrue(helper.url == self.chatbot.url)
+        self.assertTrue(SmarterValidator.urlify(helper.url) == SmarterValidator.urlify(self.chatbot.url))
         self.assertTrue(helper.is_deployed is True)
         self.assertTrue(helper.api_host == smarter_settings.customer_api_domain)
         self.assertTrue(helper.api_subdomain == self.chatbot.name)
@@ -94,7 +95,10 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
         self.assertTrue(helper.chatbot is None)
         self.assertTrue(helper.account_number is None)
         self.assertTrue(helper.is_custom_domain is False)
-        self.assertTrue(helper.url == "https://www.google.com")
+        self.assertTrue(
+            SmarterValidator.urlify(helper.url, https=True) == "https://www.google.com",
+            f"Expected https://www.google.com, but got {helper.url}",
+        )
         self.assertTrue(helper.is_deployed is False)
         self.assertTrue(helper.api_host is None)
         self.assertTrue(helper.api_subdomain is None)
@@ -116,7 +120,11 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
             f"Expected {self.account.account_number}, but got {helper.account_number}",
         )
         self.assertTrue(helper.is_custom_domain is True, f"Expected True, but got {helper.is_custom_domain}")
-        self.assertIn(self.custom_chatbot.url, helper.url, f"Expected {self.custom_chatbot.url}, but got {helper.url}")
+        self.assertIn(
+            SmarterValidator.urlify(self.custom_chatbot.url),
+            SmarterValidator.urlify(helper.url),
+            f"Expected {self.custom_chatbot.url}, but got {helper.url}",
+        )
         self.assertTrue(helper.is_deployed is True, f"Expected True, but got {helper.is_deployed}")
         self.assertTrue(
             helper.api_host == self.custom_domain.domain_name,

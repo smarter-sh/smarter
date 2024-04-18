@@ -68,8 +68,11 @@ class SmarterValidator:
     @staticmethod
     def validate_url(url: str) -> None:
         """Validate URL format"""
-        if any(local_url in url for local_url in SmarterValidator.LOCAL_URLS):
-            return
+        try:
+            if any(local_url in url for local_url in SmarterValidator.LOCAL_URLS):
+                return
+        except TypeError as e:
+            raise SmarterValueError(f"Invalid url {url}") from e
         try:
             validator = URLValidator()
             validator(url)
@@ -199,9 +202,12 @@ class SmarterValidator:
     def urlify(url: str, https: bool = False) -> str:
         """ensure that URL starts with http:// or https://"""
         protocol = "https" if https else "http"
-        if not url.startswith(("http://", "https://")):
-            url = f"{protocol}://" + url
-        SmarterValidator.validate_url(url)
+        url = url.replace("http://", "").replace("https://", "")
+        url = f"{protocol}://" + url
+        try:
+            SmarterValidator.validate_url(url)
+        except SmarterValueError:
+            return None
         return url
 
     @staticmethod
