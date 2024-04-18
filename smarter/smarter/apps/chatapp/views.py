@@ -73,13 +73,15 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
         React context for all templates that render
         a React app.
         """
-        host = request.get_host()
-        url = SmarterValidator.urlify(host)
+        url = request.build_absolute_uri()
+        url = SmarterValidator.urlify(url)
+        url = SmarterValidator.base_url(url)
+        api_url = urljoin(chatbot.url, "/chatbot/")
 
         # backend context
         backend_context = {
             "BASE_URL": url,
-            "API_URL": urljoin(chatbot.url, "chatbot"),
+            "API_URL": api_url,
             "SANDBOX_MODE": self.sandbox_mode,
         }
 

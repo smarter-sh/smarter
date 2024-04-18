@@ -408,7 +408,7 @@ class Settings(BaseSettings):
     def environment_url(self) -> str:
         if self.environment == SmarterEnvironments.LOCAL:
             return SmarterValidator.urlify(self.environment_domain)
-        return SmarterValidator.urlify(self.environment_domain, https=True)
+        return SmarterValidator.urlify(self.environment_domain)
 
     @property
     def platform_name(self) -> str:
@@ -438,7 +438,7 @@ class Settings(BaseSettings):
     def customer_api_url(self) -> str:
         if self.environment == SmarterEnvironments.LOCAL:
             return SmarterValidator.urlify(self.customer_api_domain)
-        return SmarterValidator.urlify(self.customer_api_domain, https=True)
+        return SmarterValidator.urlify(self.customer_api_domain)
 
     @property
     def aws_s3_bucket_name(self) -> str:

@@ -103,7 +103,7 @@ class ChatBot(TimestampedModel):
 
     @property
     def default_url(self):
-        return SmarterValidator.urlify(self.default_host, https=True)
+        return SmarterValidator.urlify(self.default_host)
 
     @property
     def custom_host(self):
@@ -116,7 +116,7 @@ class ChatBot(TimestampedModel):
     @property
     def custom_url(self):
         if self.custom_host:
-            return SmarterValidator.urlify(self.custom_host, https=True)
+            return SmarterValidator.urlify(self.custom_host)
         return None
 
     @property
@@ -137,7 +137,7 @@ class ChatBot(TimestampedModel):
 
     @property
     def url(self):
-        return SmarterValidator.urlify(self.hostname, https=self.deployed)
+        return SmarterValidator.urlify(self.hostname)
 
     @staticmethod
     @cache_results(timeout=600)
@@ -414,7 +414,8 @@ class ChatBotApiUrlHelper:
     def api_subdomain(self) -> str:
         if self.is_sandbox_domain:
             return None
-        return self.chatbot.name if self.chatbot else None
+        # need to be careful to avoid recursion here.
+        return self._chatbot.name if self._chatbot else None
 
     @property
     def api_host(self) -> str:

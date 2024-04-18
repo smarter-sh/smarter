@@ -96,7 +96,7 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
         self.assertTrue(helper.account_number is None)
         self.assertTrue(helper.is_custom_domain is False)
         self.assertTrue(
-            SmarterValidator.urlify(helper.url, https=True) == "https://www.google.com",
+            SmarterValidator.urlify(helper.url, scheme="https") == "https://www.google.com",
             f"Expected https://www.google.com, but got {helper.url}",
         )
         self.assertTrue(helper.is_deployed is False)
