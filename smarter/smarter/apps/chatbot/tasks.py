@@ -429,8 +429,8 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
             "environment_namespace": smarter_settings.environment_namespace,
             "domain": domain_name,
             "service_name": smarter_settings.platform_name,
-            "platform_domain": smarter_settings.environment_url,
-            "api_domain": smarter_settings.customer_api_url,
+            "platform_url": smarter_settings.environment_url,
+            "api_url": smarter_settings.customer_api_url,
         }
 
         # create and apply the ingress manifest
