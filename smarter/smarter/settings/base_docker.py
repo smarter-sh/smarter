@@ -6,11 +6,6 @@ import os
 from .base import *
 
 
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    r"^https?://[\w-]+\.platform\.smarter\.sh$",
-    r"^https?://[\w-]+\.api\.smarter\.sh$",
-]
-
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
