@@ -139,6 +139,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
         return super().dispatch(request, *args, **kwargs)
 
     def options(self, request, *args, **kwargs):
+        logger.info("ChatBotApiBaseViewSet.options(): url=%s", self.helper.url)
         response = Response()
         response["Access-Control-Allow-Origin"] = smarter_settings.environment_url
         response["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
@@ -147,6 +148,8 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
 
     # pylint: disable=W0613
     def get(self, request, *args, **kwargs):
+        logger.info("ChatBotApiBaseViewSet.get(): url=%s", self.helper.url)
+        logger.info("ChatBotApiBaseViewSet.get(): headers=%s", request.META)
         kwargs.get("chatbot_id", None)
         retval = {
             "message": "GET is not supported. Please use POST.",
