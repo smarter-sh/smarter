@@ -99,10 +99,11 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
+    # this replaces corsheaders.middleware.CorsMiddleware"
+    "smarter.apps.chatbot.middleware.cors.CorsMiddleware",
     # this replaces django.middleware.security.SecurityMiddleware
     # to manage ALLOWED_HOSTS
-    "smarter.apps.chatbot.middleware.SecurityMiddleware",
+    "smarter.apps.chatbot.middleware.security.SecurityMiddleware",
     # simple middleware to block requests for common sensitive files
     # like .env, private key files, etc.
     "smarter.lib.django.middleware.BlockSensitiveFilesMiddleware",
@@ -111,7 +112,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     # this replaces django.middleware.csrf.CsrfViewMiddleware
     # to add chatbot-specific CSRF handling
-    "smarter.apps.chatbot.middleware.CsrfViewMiddleware",
+    "smarter.apps.chatbot.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
