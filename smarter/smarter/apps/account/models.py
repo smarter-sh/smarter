@@ -212,20 +212,16 @@ class UserProfile(TimestampedModel):
     @classmethod
     def admin_for_account(cls, account: Account) -> UserType:
         """Return the designated user for the account."""
-        try:
-            return cls.objects.filter(account=account, user__is_staff=True).order_by("user__id").first().user
-        except cls.DoesNotExist:
-            msg = "Misconfigured: could not find a designated admin user for account %s.", account
+        admins = cls.objects.filter(account=account, user__is_staff=True).order_by("user__id")
+        if admins.exists():
+            return admins.first().user
 
-        try:
-            user = cls.objects.filter(account=account).order_by("user__id").first().user
-            msg += " Reverting to first encountered user: %s", user.get_username
-            logger.warning(msg)
-            return user
-        except cls.DoesNotExist as e:
-            msg = "Misconfigured: could not find any User for account %s", account
-            logger.error(msg)
-            raise e(msg) from e
+        logger.warning("No admin found for account %s", account)
+
+        users = cls.objects.filter(account=account).order_by("user__id")
+        if users.exists():
+            user = users.first().user
+        return user
 
     def __str__(self):
         return str(self.account.company_name) + "-" + str(self.user.email or self.user.username)

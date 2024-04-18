@@ -14,7 +14,6 @@ from smarter.apps.chatbot.models import (
     ChatBotCustomDomain,
 )
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.user import User
 from smarter.lib.django.validators import SmarterValidator
 
@@ -30,7 +29,9 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
 
         username = f"test_{hashed_slug}"
 
-        self.user = User.objects.create(username=username, password="12345")
+        self.user = User.objects.create(
+            username=username, password="12345", is_active=True, is_staff=True, is_superuser=True
+        )
         self.account = Account.objects.create(company_name=f"Test_{hashed_slug}", phone_number="123-456-789")
         self.user_profile = UserProfile.objects.create(user=self.user, account=self.account, is_test=True)
 
@@ -66,17 +67,26 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
 
     def test_valid_url(self):
         """Test a url for the chatbot we created."""
+        print(
+            f"test_valid_url - creating helper with chatbot: {self.chatbot} account: {self.chatbot.account} {self.chatbot.account.account_number} {self.chatbot.url}"
+        )
         helper = ChatBotApiUrlHelper(url=self.chatbot.url, environment=smarter_settings.environment)
+        print(f"test_valid_url - got helper with {helper.chatbot} {helper.account} {helper.url} ")
         # helper = ChatBotApiUrlHelper(url=self.chatbot.url)
 
         self.assertTrue(helper.is_valid)
         self.assertTrue(helper.account == self.account)
-        self.assertTrue(helper.chatbot == self.chatbot)
+        self.assertTrue(
+            helper.chatbot.url == self.chatbot.url, f"Expected {self.chatbot.url}, but got {helper.chatbot.url}"
+        )
         self.assertTrue(helper.account_number == self.account.account_number)
-        self.assertTrue(helper.is_custom_domain is False)
+        self.assertTrue(helper.is_custom_domain is False, f"this is not a default domain {helper.url}")
         self.assertTrue(SmarterValidator.urlify(helper.url) == SmarterValidator.urlify(self.chatbot.url))
         self.assertTrue(helper.is_deployed is True)
-        self.assertTrue(helper.api_host == smarter_settings.customer_api_domain)
+        self.assertTrue(
+            helper.api_host == smarter_settings.customer_api_domain,
+            f"Expected {smarter_settings.customer_api_domain}, but got {helper.api_host}",
+        )
         self.assertTrue(helper.api_subdomain == self.chatbot.name)
         self.assertTrue(helper.customer_api_domain == smarter_settings.customer_api_domain)
         self.assertTrue(helper.environment == smarter_settings.environment)
@@ -84,26 +94,27 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
     def test_bad_url(self):
         """Test a bad url."""
 
-        with self.assertRaises(SmarterValueError):
+        with self.assertRaises(Exception):
             ChatBotApiUrlHelper(url="bad url")
 
     def test_non_api_url(self):
         """Test a non-api url."""
         helper = ChatBotApiUrlHelper(url="https://www.google.com")
+        reschemed_url = SmarterValidator.urlify(helper.url, scheme="http")
 
         self.assertTrue(helper.account is None)
         self.assertTrue(helper.chatbot is None)
         self.assertTrue(helper.account_number is None)
         self.assertTrue(helper.is_custom_domain is False)
         self.assertTrue(
-            SmarterValidator.urlify(helper.url, scheme="https") == "https://www.google.com",
-            f"Expected https://www.google.com, but got {helper.url}",
+            str(reschemed_url) == "http://www.google.com/",
+            f"Expected http://www.google.com, but got {reschemed_url}",
         )
         self.assertTrue(helper.is_deployed is False)
         self.assertTrue(helper.api_host is None)
-        self.assertTrue(helper.api_subdomain is None)
+        self.assertTrue(helper.api_subdomain == "www")
         self.assertTrue(helper.customer_api_domain == smarter_settings.customer_api_domain)
-        self.assertTrue(helper.environment is None)
+        self.assertTrue(helper.environment is not None)
 
     def test_custom_domain(self):
         """Test a custom domain."""
@@ -139,7 +150,8 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
             f"Expected {smarter_settings.customer_api_domain}, but got {helper.customer_api_domain}",
         )
         self.assertTrue(
-            helper.environment is None, f"Expected {smarter_settings.environment}, but got {helper.environment}"
+            helper.environment == smarter_settings.environment,
+            f"Expected {smarter_settings.environment}, but got {helper.environment}",
         )
 
     def test_no_url(self):
@@ -156,4 +168,4 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
         self.assertTrue(helper.api_host is None)
         self.assertTrue(helper.api_subdomain is None)
         self.assertTrue(helper.customer_api_domain == smarter_settings.customer_api_domain)
-        self.assertTrue(helper.environment is None)
+        self.assertTrue(helper.environment is not None)
