@@ -69,12 +69,9 @@ class SmarterWebView(View):
         return self.clean_http_response(request, template_path=self.template_path)
 
 
+@method_decorator(never_cache, name="dispatch")
 class SmarterNeverCachedWebView(SmarterWebView):
     """An optimized web view that is never cached."""
-
-    @method_decorator(never_cache)
-    def dispatch(self, *args, **kwargs):
-        return super().dispatch(*args, **kwargs)
 
 
 @method_decorator(login_required, name="dispatch")
@@ -90,11 +87,16 @@ class SmarterAuthenticatedWebView(SmarterWebView):
 
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
+        if response.status_code > 299:
+            return response
+
         patch_vary_headers(response, ["Cookie"])
 
         try:
             self.user_profile = UserProfile.objects.get(user=request.user)
         except UserProfile.DoesNotExist:
+            if not request.user.is_authenticated:
+                return redirect_and_expire_cache(path="/login/")
             return HttpResponseNotFound
 
         self.account = self.user_profile.account
@@ -109,16 +111,15 @@ class SmarterAuthenticatedCachedWebView(SmarterAuthenticatedWebView):
 
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
+        if response.status_code > 299:
+            return response
         patch_vary_headers(response, ["Cookie"])
         return response
 
 
+@method_decorator(never_cache, name="dispatch")
 class SmarterAuthenticatedNeverCachedWebView(SmarterAuthenticatedWebView):
     """An optimized web view that requires authentication and is never cached."""
-
-    @method_decorator(never_cache)
-    def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
 
 
 @method_decorator(staff_member_required, name="dispatch")

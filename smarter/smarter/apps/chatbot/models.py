@@ -516,7 +516,10 @@ class ChatBotApiUrlHelper:
         if self.is_sandbox_domain:
             # example: http://127.0.0.1:8000/api/v0/chatbots/1/chatbot
             path = self.parsed_url.path
-            string_value = path.split("/")[-2]
+            try:
+                string_value = path.split("/")[-2]
+            except IndexError:
+                return None
             try:
                 if isinstance(string_value, str) and string_value.isdigit():
                     chatbot_id = int(string_value)

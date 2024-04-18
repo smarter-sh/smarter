@@ -62,13 +62,13 @@ class PaymentMethodView(SmarterAdminWebView):
         return http.JsonResponse(data=retval, safe=False, status=HTTPStatus.OK)
 
     def post(self, request, payment_method_id: str = None):
-        self.process_form(request)
+        return self.process_form(request)
 
     def patch(self, request, payment_method_id: str = None):
-        self.process_form(request)
+        return self.process_form(request)
 
     def put(self, request, payment_method_id: str = None):
-        self.process_form(request)
+        return self.process_form(request)
 
     def delete(self, request, payment_method_id: str):
         logger.info("Deleting payment method %s", payment_method_id)

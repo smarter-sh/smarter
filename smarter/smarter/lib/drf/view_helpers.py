@@ -101,7 +101,8 @@ class SmarterAdminAPIView(APIView):
     Allows access only to admins.
     """
 
-    # authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
 
 
 @method_decorator(staff_member_required, name="dispatch")
@@ -110,4 +111,5 @@ class SmarterAdminListAPIView(ListAPIView):
     Allows access only to admins.
     """
 
+    permission_classes = [IsAuthenticated]
     authentication_classes = [SmarterTokenAuthentication, SessionAuthentication]
