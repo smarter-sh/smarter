@@ -153,7 +153,9 @@ class ChatBot(TimestampedModel):
             return self.Modes.DEFAULT
         if self.sandbox_url and self.sandbox_url in url:
             return self.Modes.SANDBOX
-        logger.error("Invalid ChatBot url %s received for hostname: %s", url, self.hostname)
+        logger.error("Invalid ChatBot url %s received for default_url: %s", url, self.default_url)
+        logger.error("sandbox_url: %s", self.sandbox_url)
+        logger.error("custom_url: %a", self.custom_url)
         # default to default mode as a safety measure
         return self.Modes.DEFAULT
 
