@@ -43,9 +43,9 @@ class CorsMiddleware(DjangoCorsMiddleware):
     def url(self, url: SplitResult = None):
         if url == self._url:
             return
+        self._url = url
         parsed_url = urlparse(url.geturl())
         url_without_path = urlunparse((parsed_url.scheme, parsed_url.netloc, "", "", "", ""))
-        self._url = url_without_path
         self._helper = ChatBotApiUrlHelper(url=url_without_path)
         self._chatbot = self._helper.chatbot if self._helper.chatbot else None
 
