@@ -35,6 +35,7 @@ if "collectstatic" in sys.argv:
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "x-api-key",
 ]
+CORS_ALLOW_CREDENTIALS = True
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
