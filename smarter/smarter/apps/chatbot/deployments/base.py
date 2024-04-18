@@ -9,6 +9,7 @@ from typing import List
 from cachetools import TTLCache, cached
 from django.http import JsonResponse
 from knox.auth import TokenAuthentication
+from rest_framework.response import Response
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import account_admin_user
@@ -41,7 +42,7 @@ class ChatBotApiBaseViewSet(SmarterUnauthenticatedAPIView):
     - dispatching.
     """
 
-    http_method_names = ["get", "post"]
+    http_method_names = ["get", "post", "options"]
     helper: ChatBotApiUrlHelper = None
     account: Account = None
     user: UserType = None
