@@ -15,11 +15,10 @@ from smarter.apps.plugin.plugin import Plugin
 
 # our stuff
 from smarter.common.conf import settings as smarter_settings
+from smarter.lib.cache import cache_results
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
-
-from .utils import cache_results
 
 
 logger = logging.getLogger(__name__)
