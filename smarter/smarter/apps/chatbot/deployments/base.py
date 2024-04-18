@@ -25,7 +25,7 @@ from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib.django.user import UserType
 from smarter.lib.django.validators import SmarterValidator
-from smarter.lib.drf.view_helpers import SmarterUnauthenticatedAPIView
+from smarter.lib.django.view_helpers import SmarterNeverCachedWebView
 
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ logger.setLevel(logging.DEBUG)
 cache = TTLCache(ttl=600, maxsize=1000)
 
 
-class ChatBotApiBaseViewSet(SmarterUnauthenticatedAPIView):
+class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
     """
     Base viewset for all ChatBot APIs. Handles
     - api key authentication
@@ -106,8 +106,10 @@ class ChatBotApiBaseViewSet(SmarterUnauthenticatedAPIView):
         url = SmarterValidator.urlify(url)
 
         logger.info("ChatBotApiBaseViewSet.dispatch(): url=%s", url)
+        logger.info("ChatBotApiBaseViewSet.dispatch(): headers=%s", request.META)
         logger.info("ChatBotApiBaseViewSet.dispatch(): user=%s", request.user)
-        logger.info("ChatBotApiBaseViewSet.dispatch(): method=%s", request.method)  # Log the method
+        logger.info("ChatBotApiBaseViewSet.dispatch(): method=%s", request.method)
+        logger.info("ChatBotApiBaseViewSet.dispatch(): body=%s", request.body)
 
         self.helper = self.get_cached_helper(url=url)
         if not self.helper.is_valid:

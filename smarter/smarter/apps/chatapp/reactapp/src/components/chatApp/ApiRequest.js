@@ -68,6 +68,7 @@ export async function processApiRequest(
     "Content-Type": "application/json",
     "X-CSRFToken": csrftoken,
     "Origin": window.location.origin,
+    "Content-Length": JSON.stringify(requestBodyFactory(messages)).length,
   };
   const init = {
     method: "POST",
