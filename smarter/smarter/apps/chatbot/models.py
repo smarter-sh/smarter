@@ -153,7 +153,9 @@ class ChatBot(TimestampedModel):
             return self.Modes.DEFAULT
         if self.sandbox_url and self.sandbox_url in url:
             return self.Modes.SANDBOX
-        return SmarterValidator.raise_error("Invalid ChatBot URL")
+        logger.error("Invalid ChatBot url %s received for hostname: %s", url, self.hostname)
+        # default to default mode as a safety measure
+        return self.Modes.DEFAULT
 
     def save(self, *args, **kwargs):
         SmarterValidator.validate_domain(self.hostname)
