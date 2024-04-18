@@ -24,3 +24,8 @@ SMTP_FROM_EMAIL = smarter_settings.smtp_from_email or "no-reply@" + SMTP_SENDER
 CSRF_TRUSTED_ORIGINS = [f"http://{host}" for host in SMARTER_ALLOWED_HOSTS] + [
     f"https://{host}" for host in SMARTER_ALLOWED_HOSTS
 ]
+CORS_ALLOWED_ORIGINS = [f"https://{host}" for host in [ENVIRONMENT_DOMAIN, CUSTOMER_API_DOMAIN]]
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https?://[\w-]+\.platform\.smarter\.sh$",
+    r"^https?://[\w-]+\.api\.smarter\.sh$",
+]
