@@ -139,7 +139,7 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
         name = kwargs.pop("name", None)
         self._sandbox_mode = name is not None
         response = super().dispatch(request, *args, **kwargs)
-        if response.status_code >= 400:
+        if response.status_code >= 300:
             return response
         if name:
             self.chatbot = self.get_chatbot_by_name(name)

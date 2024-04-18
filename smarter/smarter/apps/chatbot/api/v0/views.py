@@ -56,6 +56,8 @@ class ListViewBase(SmarterAdminListAPIView):
 
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
+        if response.status_code > 299:
+            return response
         self.user_profile = get_object_or_404(UserProfile, user=request.user)
         self.account = self.user_profile.account
         return response
@@ -149,6 +151,8 @@ class ChatBotListView(ListViewBase):
 
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
+        if response.status_code > 299:
+            return response
         self.chatbots = ChatBot.objects.filter(account=self.account)
         return response
 

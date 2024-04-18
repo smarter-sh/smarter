@@ -20,7 +20,7 @@ class AccountViewBase(SmarterAdminAPIView):
 
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
-        if response.status_code < 400:
+        if response.status_code < 300:
             self.user_profile = get_object_or_404(UserProfile, user=request.user)
         return response
 
@@ -33,6 +33,6 @@ class AccountListViewBase(SmarterAdminListAPIView):
 
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
-        if response.status_code < 400:
+        if response.status_code < 300:
             self.user_profile = get_object_or_404(UserProfile, user=request.user)
         return response
