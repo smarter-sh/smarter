@@ -196,10 +196,11 @@ class SmarterValidator:
     # utility helpers
     # --------------------------------------------------------------------------
     @staticmethod
-    def urlify(url: str) -> str:
+    def urlify(url: str, https: bool = False) -> str:
         """ensure that URL starts with http:// or https://"""
+        protocol = "https" if https else "http"
         if not url.startswith(("http://", "https://")):
-            url = "http://" + url
+            url = f"{protocol}://" + url
         SmarterValidator.validate_url(url)
         return url
 
