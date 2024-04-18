@@ -33,7 +33,9 @@ class CorsMiddleware(DjangoCorsMiddleware):
     def get_helper(url: str) -> ChatBotApiUrlHelper:
         """
         Returns the ChatBotApiUrlHelper instance for the given url.
-        This is a cached operation with a timeout of 5 minutes.
+        This is a cached operation with a timeout of 5 minutes because
+        the helper is used multiple times in a request and instantiating
+        it is an expensive operation.
         """
         return ChatBotApiUrlHelper(url=url)
 
@@ -53,11 +55,22 @@ class CorsMiddleware(DjangoCorsMiddleware):
     def url(self, url: SplitResult = None):
         if url == self._url:
             return
+
+        # reduce the ulr to its base url.
         self._url = url
         parsed_url = urlparse(url.geturl())
         url_without_path = urlunparse((parsed_url.scheme, parsed_url.netloc, "", "", "", ""))
+
+        # get the chatbot helper for the url and try to find the chatbot
         self._helper = CorsMiddleware.get_helper(url=url_without_path)
         self._chatbot = self._helper.chatbot if self._helper.chatbot else None
+
+        # If the chatbot is found, update the chatbot url
+        # which ensures that we'll only be working with the
+        # base url for the chatbot and that the protocol
+        # will remain consistent.
+        if self._helper and self._helper.chatbot:
+            self._url = self._helper.chatbot.url
 
     @property
     def CORS_ALLOWED_ORIGINS(self) -> list[str] | tuple[str]:

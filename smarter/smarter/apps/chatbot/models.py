@@ -261,9 +261,13 @@ class ChatBotApiUrlHelper:
             return
         url = SmarterValidator.urlify(url)
         SmarterValidator.validate_url(url)
-        self._url = url
+
+        # trim the url to its base url
+        self._url = SmarterValidator.base_url(url)
+        self.parsed_url = urlparse(self._url)
+
+        # finish instantiating the object
         self._environment = environment
-        self.parsed_url = urlparse(url)
         self._user = user
 
         logger.debug(f"ChatBotApiUrlHelper: url={self.url}, environment={self.environment}")
