@@ -6,6 +6,7 @@ or a Django utility that can do the validation.
 
 import json
 import re
+from urllib.parse import SplitResult, urlparse, urlunparse
 
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator, validate_email, validate_ipv4_address
@@ -198,6 +199,15 @@ class SmarterValidator:
     # --------------------------------------------------------------------------
     # utility helpers
     # --------------------------------------------------------------------------
+    @staticmethod
+    def base_url(url: str) -> str:
+        parsed_url = urlparse(url)
+        split_result = SplitResult(
+            scheme=parsed_url.scheme, netloc=parsed_url.netloc, path=parsed_url.path, query="", fragment=""
+        )
+        parsed_url = urlparse(split_result.geturl())
+        return urlunparse((parsed_url.scheme, parsed_url.netloc, parsed_url.path, "", "", ""))
+
     @staticmethod
     def urlify(url: str, https: bool = False) -> str:
         """ensure that URL starts with http:// or https://"""
