@@ -3,11 +3,6 @@ import {REACT_CONFIG} from "../config";
 let APP = REACT_CONFIG.APP;
 let BACKEND = REACT_CONFIG.BACKEND;
 
-console.log('REACT_CONFIG:', REACT_CONFIG);
-console.log('APP:', APP);
-console.log('BACKEND:', BACKEND);
-console.log('API_URL:', BACKEND.API_URL);
-
 const SmarterSandbox = {
   sidebar_title: APP.NAME,
   api_url: BACKEND.API_URL,

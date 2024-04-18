@@ -105,6 +105,7 @@ def handler(plugins: List[Plugin], user: UserType, data: dict):
             temperature=temperature,
             max_tokens=max_tokens,
         )
+        logger.info("openai_response: %s", openai_response)
         openai_response_dict = json.loads(openai_response.model_dump_json())
         create_prompt_completion_charge(
             handler.__name__,

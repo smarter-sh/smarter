@@ -101,11 +101,13 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
     def dispatch(self, request, *args, **kwargs):
         url = request.build_absolute_uri()
         url = SmarterValidator.urlify(url)
-        # if request.user.is_authenticated:
-        #     self.user = request.user
-        #     helper = self.get_cached_helper(url=url, user=request.user)
-        # else:
-        self.helper = self.get_cached_helper(url=url)
+        logger.debug("ChatBotApiBaseViewSet.dispatch: url=%s", url)
+        logger.debug("ChatBotApiBaseViewSet.dispatch: user=%s", request.user)
+        self.user = request.user
+        if request.user.is_authenticated:
+            self.helper = self.get_cached_helper(url=url, user=request.user)
+        else:
+            self.helper = self.get_cached_helper(url=url)
 
         if not self.helper.is_valid:
             return HttpResponseNotFound(
@@ -124,12 +126,18 @@ class ChatBotApiBaseViewSet(SmarterAuthenticatedNeverCachedWebView):
         self.plugins = ChatBotPlugin().plugins(chatbot=self.chatbot)
 
         self.user = self.user or account_admin_user(self.account)
+
+        logger.debug("ChatBotApiBaseViewSet.dispatch: done. account=%s", self.account)
+        logger.debug("ChatBotApiBaseViewSet.dispatch: done. chatbot=%s", self.chatbot)
+        logger.debug("ChatBotApiBaseViewSet.dispatch: done. user=%s", self.user)
+        logger.debug("ChatBotApiBaseViewSet.dispatch: done. plugins=%s", self.plugins)
+
         chatbot_called.send(sender=self.__class__, chatbot=self.chatbot, request=request, args=args, kwargs=kwargs)
         return super().dispatch(request, *args, **kwargs)
 
-    # pylint: disable=W0613,W0612
+    # pylint: disable=W0613
     def get(self, request, *args, **kwargs):
-        chatbot_id = kwargs.get("chatbot_id", None)
+        kwargs.get("chatbot_id", None)
         retval = {
             "message": "GET is not supported. Please use POST.",
             "chatbot": self.chatbot.name if self.chatbot else None,

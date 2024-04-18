@@ -11,10 +11,12 @@ export const APPLICATIONS = {
   LangchainPassthrough: "LangchainPassthrough",
   OpenaiPassthrough: "OpenaiPassthrough",
 };
-let element = document.getElementById("react-config");
-let config = element ? JSON.parse(element.textContent) : null;
 
-export const REACT_CONFIG = config ? config.react_config : null;
+let element = document.getElementById("react-config");
+export const REACT_CONFIG = element ? JSON.parse(element.textContent) : {
+  BACKEND_API_URL: "http://127.0.0.1:8000/api/v0/"
+};
+
 
 // Django Context Integrations
 export const BACKEND_BASE_URL = REACT_CONFIG ? REACT_CONFIG.BACKEND.BASE_URL : "http://127.0.0.1:8000/";
@@ -22,14 +24,6 @@ export const BACKEND_API_URL = REACT_CONFIG ? REACT_CONFIG.BACKEND.API_URL : "ht
 export const BACKEND_CHAT_ID = REACT_CONFIG ? REACT_CONFIG.CHAT.ID : null;
 export const BACKEND_CHAT_HISTORY = REACT_CONFIG ? REACT_CONFIG.CHAT.HISTORY : [];
 export const BACKEND_CHAT_MOST_RECENT_RESPONSE = REACT_CONFIG ? REACT_CONFIG.CHAT.MOST_RECENT_RESPONSE : null;
-
-console.log('REACT_CONFIG:', REACT_CONFIG);
-console.log('BACKEND_BASE_URL:', BACKEND_BASE_URL);
-console.log('BACKEND_API_URL:', BACKEND_API_URL);
-console.log('BACKEND_CHAT_ID:', BACKEND_CHAT_ID);
-console.log('BACKEND_CHAT_HISTORY:', BACKEND_CHAT_HISTORY);
-console.log('BACKEND_CHAT_MOST_RECENT_RESPONSE:', BACKEND_CHAT_MOST_RECENT_RESPONSE);
-
 
 // Backend API ai model defaults
 export const BACKEND_API_DEFAULT_MODEL = "gpt-3.5-turbo";
