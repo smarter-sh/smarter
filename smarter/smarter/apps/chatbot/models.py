@@ -15,7 +15,6 @@ from smarter.apps.plugin.plugin import Plugin
 
 # our stuff
 from smarter.common.conf import settings as smarter_settings
-from smarter.lib.cache import cache_results
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
@@ -79,6 +78,12 @@ class ChatBot(TimestampedModel):
         DEFAULT = "default"
         UNKNOWN = "unknown"
 
+    class Schemes:
+        """ChatBot API Schemes"""
+
+        HTTP = "http"
+        HTTPS = "https"
+
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     subdomain = models.ForeignKey(ChatBotCustomDomainDNS, on_delete=models.CASCADE, blank=True, null=True)
@@ -103,7 +108,7 @@ class ChatBot(TimestampedModel):
 
     @property
     def default_url(self):
-        return SmarterValidator.urlify(self.default_host)
+        return SmarterValidator.urlify(self.default_host, scheme=ChatBot.Schemes.HTTPS)
 
     @property
     def custom_host(self):
@@ -116,7 +121,7 @@ class ChatBot(TimestampedModel):
     @property
     def custom_url(self):
         if self.custom_host:
-            return SmarterValidator.urlify(self.custom_host)
+            return SmarterValidator.urlify(self.custom_host, scheme=ChatBot.Schemes.HTTPS)
         return None
 
     @property
@@ -136,14 +141,24 @@ class ChatBot(TimestampedModel):
         return self.sandbox_host
 
     @property
+    def scheme(self):
+        return ChatBot.Schemes.HTTPS if self.deployed else ChatBot.Schemes.HTTP
+
+    @property
     def url(self):
-        return SmarterValidator.urlify(self.hostname)
+        if self.deployed:
+            return self.custom_url or self.default_url
+        return self.sandbox_host
 
     @staticmethod
-    @cache_results(timeout=600)
+    # @cache_results(timeout=600)
     def get_by_url(url: str):
+        print("get_by_url() - url: ", url)
         url = SmarterValidator.urlify(url)
-        return ChatBotApiUrlHelper(url).chatbot
+        print("get_by_url() - urlify() url: ", url)
+        retval = ChatBotApiUrlHelper(url).chatbot
+        print("get_by_url() - retval: ", retval.url)
+        return retval
 
     def mode(self, url: str) -> str:
         if not url:
@@ -235,7 +250,7 @@ class ChatBotRequests(TimestampedModel):
     is_aggregation = models.BooleanField(default=False, blank=True, null=True)
 
 
-# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-instance-attributes,too-many-public-methods
 class ChatBotApiUrlHelper:
     """Helper class for ChatBot models. Abstracts url parsing logic so that we
     can use it in multiple places: this module, middleware, views, etc.
@@ -250,6 +265,7 @@ class ChatBotApiUrlHelper:
     _environment: str = None
     _account: Account = None
     _user: UserType = None
+    _user_profile: UserProfile = None
     _chatbot: ChatBot = None
     _chatbot_custom_domain: ChatBotCustomDomain = None
 
@@ -262,19 +278,17 @@ class ChatBotApiUrlHelper:
         """
         if not url:
             return
-        url = SmarterValidator.urlify(url)
         SmarterValidator.validate_url(url)
 
         # finish instantiating the object
         self._url = url
-        self.parsed_url = urlparse(self._url)
         self._environment = environment
         self._user = user
 
         logger.info(f"ChatBotApiUrlHelper: url={self.url}, environment={self.environment}")
         logger.info(f"ChatBotApiUrlHelper: domain={self.domain}, path={self.path}")
         logger.info(f"ChatBotApiUrlHelper: subdomain={self.subdomain}")
-        logger.info(f"ChatBotApiUrlHelper: root_domain={self.root_domain}, subdomain={self.subdomain}")
+        logger.info(f"ChatBotApiUrlHelper: root_domain={self.root_domain}")
         logger.info(f"ChatBotApiUrlHelper: account_number={self.account_number}")
         logger.info(f"ChatBotApiUrlHelper: api_subdomain={self.api_subdomain}, api_host={self.api_host}")
         logger.info(f"ChatBotApiUrlHelper: customer_api_domain={self.customer_api_domain}")
@@ -289,6 +303,12 @@ class ChatBotApiUrlHelper:
 
     def __str__(self):
         return self.url
+
+    @property
+    def parsed_url(self):
+        if self.url:
+            return urlparse(self.url)
+        return None
 
     @property
     def environment(self) -> str:
@@ -408,14 +428,22 @@ class ChatBotApiUrlHelper:
         if self.is_custom_domain:
             self._account_number = self.chatbot.account.account_number if self.chatbot else None
             return self._account_number
-        return None
+
+        if self._account_number:
+            self._account = Account.objects.get(account_number=self._account_number)
+
+        return self._account_number
 
     @property
     def api_subdomain(self) -> str:
         if self.is_sandbox_domain:
             return None
-        # need to be careful to avoid recursion here.
-        return self._chatbot.name if self._chatbot else None
+        try:
+            result = urlparse(self.url)
+            domain_parts = result.netloc.split(".")
+            return domain_parts[0]
+        except TypeError:
+            return None
 
     @property
     def api_host(self) -> str:
@@ -482,7 +510,7 @@ class ChatBotApiUrlHelper:
     def is_valid(self) -> bool:
         if self.chatbot is None:
             return False
-        if self.user and not UserProfile.objects.filter(user=self.user, account=self.account).exists():
+        if self.user and not self.user_profile:
             return False
         return True
 
@@ -491,6 +519,22 @@ class ChatBotApiUrlHelper:
         if ChatBotAPIKey.objects.filter(chatbot=self.chatbot, api_key__is_active=True).exists():
             return True
         return False
+
+    @property
+    def user_profile(self) -> UserProfile:
+        """
+        Returns the user profile for the ChatBot API url.
+        :return: The user profile or None if not found.
+        """
+        if self._user_profile:
+            return self._user_profile
+        if self.user and self.account:
+            try:
+                self._user_profile = UserProfile.objects.get(user=self.user, account=self.account)
+                return self._user_profile
+            except UserProfile.DoesNotExist:
+                return None
+        return None
 
     @property
     def user(self) -> UserType:
@@ -511,10 +555,16 @@ class ChatBotApiUrlHelper:
         """
         if self._account:
             return self._account
+        logger.info("initializing account")
         if self.account_number:
             try:
                 self._account = Account.objects.get(account_number=self.account_number)
             except Account.DoesNotExist:
+                logger.warning(f"Account {self.account_number} not found")
+                if self._user_profile:
+                    logger.warning(
+                        f"User Profile {self._user_profile} is linked to account {self._user_profile.account}"
+                    )
                 return None
         return self._account
 
@@ -544,6 +594,9 @@ class ChatBotApiUrlHelper:
             try:
                 self._chatbot = ChatBot.objects.get(account=self.account, name=self.api_subdomain, deployed=True)
             except ChatBot.DoesNotExist:
+                logger.warning(
+                    f"didn't find chatbot for default_domain with account: {self.account} name: {self.api_subdomain} {self.url}"
+                )
                 return None
 
         if self.is_custom_domain:

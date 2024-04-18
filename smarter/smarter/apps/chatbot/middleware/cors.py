@@ -15,7 +15,6 @@ from corsheaders.middleware import CorsMiddleware as DjangoCorsMiddleware
 from django.http import HttpRequest
 
 from smarter.apps.chatbot.models import ChatBot, ChatBotApiUrlHelper
-from smarter.lib.cache import cache_results
 
 
 logger = logging.getLogger(__name__)
@@ -29,7 +28,7 @@ class CorsMiddleware(DjangoCorsMiddleware):
     _helper: ChatBotApiUrlHelper = None
 
     @staticmethod
-    @cache_results(timeout=300)
+    # @cache_results(timeout=300)
     def get_helper(url: str) -> ChatBotApiUrlHelper:
         """
         Returns the ChatBotApiUrlHelper instance for the given url.

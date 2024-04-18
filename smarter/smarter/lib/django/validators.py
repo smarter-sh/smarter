@@ -14,7 +14,6 @@ from django.core.validators import URLValidator, validate_email, validate_ipv4_a
 
 from smarter.common.const import OpenAIEndPoint, OpenAIMessageKeys, OpenAIObjectTypes
 from smarter.common.exceptions import SmarterValueError
-from smarter.lib.cache import cache_results
 
 
 logger = logging.getLogger(__name__)
@@ -211,7 +210,8 @@ class SmarterValidator:
         base_url = SmarterValidator.base_url(url)
         if not base_url:
             return None
-        return base_url.replace("http://", "").replace("https://", "")
+        base_url = base_url.replace("http://", "").replace("https://", "")
+        return base_url.rstrip("/")
 
     @staticmethod
     def base_url(url: str) -> str:
@@ -221,12 +221,19 @@ class SmarterValidator:
         SmarterValidator.validate_url(url)
         parsed_url = urlparse(url)
         unparsed_url = urlunparse((parsed_url.scheme, parsed_url.netloc, "", "", "", ""))
-        return unparsed_url if unparsed_url.endswith("/") else unparsed_url + "/"
+        return SmarterValidator.trailing_slash(unparsed_url)
 
     @staticmethod
-    @cache_results(timeout=300)
+    def trailing_slash(url: str) -> str:
+        if not url:
+            return None
+        return url if url.endswith("/") else url + "/"
+
+    @staticmethod
     def urlify(url: str, scheme: str = None) -> str:
         """ensure that URL starts with http:// or https://"""
+        if not scheme and SmarterValidator.is_valid_url(url):
+            return SmarterValidator.trailing_slash(url)
         if scheme and scheme not in ["http", "https"]:
             SmarterValidator.raise_error(f"Invalid scheme {scheme}. Should be one of ['http', 'https']")
 
@@ -237,7 +244,7 @@ class SmarterValidator:
         parsed_url = urlparse(url)
         scheme = scheme or parsed_url.scheme or "http"
         url = urlunparse((scheme, parsed_url.netloc, parsed_url.path, "", "", ""))
-        url = url if url.endswith("/") else url + "/"
+        url = SmarterValidator.trailing_slash(url)
         SmarterValidator.validate_url(url)
         return url
 
@@ -245,6 +252,11 @@ class SmarterValidator:
     def raise_error(msg: str) -> None:
         """Raise a SmarterValueError with the given message"""
         raise SmarterValueError(msg)
+
+
+####################################################################################################
+# Legacy openai validators
+####################################################################################################
 
 
 def validate_item(item, valid_items: list, item_type: str) -> None:
