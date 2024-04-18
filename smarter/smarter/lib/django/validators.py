@@ -5,6 +5,7 @@ or a Django utility that can do the validation.
 """
 
 import json
+import logging
 import re
 from urllib.parse import urlparse, urlunparse
 
@@ -13,6 +14,10 @@ from django.core.validators import URLValidator, validate_email, validate_ipv4_a
 
 from smarter.common.const import OpenAIEndPoint, OpenAIMessageKeys, OpenAIObjectTypes
 from smarter.common.exceptions import SmarterValueError
+from smarter.lib.cache import cache_results
+
+
+logger = logging.getLogger(__name__)
 
 
 # pylint: disable=R0904
@@ -212,22 +217,28 @@ class SmarterValidator:
     def base_url(url: str) -> str:
         if not url:
             return None
+        url = SmarterValidator.urlify(url)
         SmarterValidator.validate_url(url)
         parsed_url = urlparse(url)
-        return urlunparse((parsed_url.scheme, parsed_url.netloc, "", "", "", ""))
+        unparsed_url = urlunparse((parsed_url.scheme, parsed_url.netloc, "", "", "", ""))
+        return unparsed_url if unparsed_url.endswith("/") else unparsed_url + "/"
 
     @staticmethod
-    def urlify(url: str, https: bool = False) -> str:
+    @cache_results(timeout=300)
+    def urlify(url: str, scheme: str = None) -> str:
         """ensure that URL starts with http:// or https://"""
+        if scheme and scheme not in ["http", "https"]:
+            SmarterValidator.raise_error(f"Invalid scheme {scheme}. Should be one of ['http', 'https']")
+
         if not str:
             return None
-        protocol = "https" if https else "http"
-        url = url.replace("http://", "").replace("https://", "")
-        url = f"{protocol}://" + url
-        try:
-            SmarterValidator.validate_url(url)
-        except SmarterValueError:
-            return None
+        if not "://" in url:
+            url = f"http://{url}"
+        parsed_url = urlparse(url)
+        scheme = scheme or parsed_url.scheme or "http"
+        url = urlunparse((scheme, parsed_url.netloc, parsed_url.path, "", "", ""))
+        url = url if url.endswith("/") else url + "/"
+        SmarterValidator.validate_url(url)
         return url
 
     @staticmethod
