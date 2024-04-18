@@ -153,11 +153,8 @@ class ChatBot(TimestampedModel):
     @staticmethod
     # @cache_results(timeout=600)
     def get_by_url(url: str):
-        print("get_by_url() - url: ", url)
         url = SmarterValidator.urlify(url)
-        print("get_by_url() - urlify() url: ", url)
         retval = ChatBotApiUrlHelper(url).chatbot
-        print("get_by_url() - retval: ", retval.url)
         return retval
 
     def mode(self, url: str) -> str:
