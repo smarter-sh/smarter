@@ -48,17 +48,15 @@ class SmarterChatBotApiViewSet(ChatBotApiBaseViewSet):
         """
         kwargs.pop("chatbot_id", None)
 
-        # FIX NOTE: this might be an unnecessary belt & suspenders step. DRF might be already
-        # doing all of this for us.
         data = json.loads(request.body)
 
-        logger.info("SmarterChatBotApiViewSet.post: data=%s", data)
-        logger.info("account: %s", self.account)
-        logger.info("user: %s", self.user)
-        logger.info("chatbot: %s", self.chatbot)
-        logger.info("plugins: %s", self.plugins)
+        logger.debug("SmarterChatBotApiViewSet.post: data=%s", data)
+        logger.debug("account: %s", self.account)
+        logger.debug("user: %s", self.user)
+        logger.debug("chatbot: %s", self.chatbot)
+        logger.debug("plugins: %s", self.plugins)
 
         response = handler(plugins=self.plugins, user=self.user, data=data)
         response = JsonResponse(data=response, safe=False, status=HTTPStatus.OK)
-        logger.info("SmarterChatBotApiViewSet.post: response=%s", response)
+        logger.debug("SmarterChatBotApiViewSet.post: response=%s", response)
         return response
