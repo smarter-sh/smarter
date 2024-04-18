@@ -138,7 +138,7 @@ class ChatBotApiBaseViewSet(SmarterUnauthenticatedAPIView):
 
     def options(self, request, *args, **kwargs):
         response = Response()
-        response["Access-Control-Allow-Origin"] = "{smarter_settings.environment_domain}"
+        response["Access-Control-Allow-Origin"] = f"https://{smarter_settings.environment_domain}"
         response["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
         response["Access-Control-Allow-Headers"] = "origin, content-type, accept"
         return response
