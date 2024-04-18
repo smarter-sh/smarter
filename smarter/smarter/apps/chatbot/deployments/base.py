@@ -142,10 +142,10 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
             "message": "GET is not supported. Please use POST.",
             "chatbot": self.chatbot.name if self.chatbot else None,
             "mode": self.chatbot.mode(url=self.helper.url) if self.chatbot else None,
-            "created": self.chatbot.created_at if self.chatbot else None,
-            "updated": self.chatbot.updated_at if self.chatbot else None,
+            "created": self.chatbot.created_at.isoformat() if self.chatbot else None,
+            "updated": self.chatbot.updated_at.isoformat() if self.chatbot else None,
             "plugins": ChatBotPlugin.plugins_json(chatbot=self.chatbot) if self.chatbot else None,
-            "account": self.account,
-            "user": self.user,
+            "account": self.account.account_number if self.account else None,
+            "user": self.user.username if self.user else None,
         }
         return JsonResponse(data=retval, status=HTTPStatus.METHOD_NOT_ALLOWED)
