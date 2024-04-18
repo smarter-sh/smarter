@@ -155,10 +155,10 @@ class TestChatBotTasks(unittest.TestCase):
             domain_name=aws_helper.aws.customer_api_domain
         )
         a_record = aws_helper.route53.get_dns_record(
-            hosted_zone_id=hosted_zone_id, record_name=self.chatbot.hostname, record_type="A"
+            hosted_zone_id=hosted_zone_id, record_name=self.chatbot.default_host, record_type="A"
         )
         self.assertIsNotNone(a_record)
 
-        resolved_hostname = aws_helper.aws.domain_resolver(self.chatbot.hostname)
+        resolved_hostname = aws_helper.aws.domain_resolver(self.chatbot.default_host)
         self.assertIn(a_record["Name"], [resolved_hostname, resolved_hostname + "."])
         self.assertEqual(a_record["Type"], "A")
