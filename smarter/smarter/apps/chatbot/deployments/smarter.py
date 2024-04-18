@@ -2,6 +2,7 @@
 """
 Smarter Customer API view.
 """
+import json
 import logging
 from http import HTTPStatus
 
@@ -20,7 +21,8 @@ class SmarterChatBotApiViewSet(ChatBotApiBaseViewSet):
     top-level viewset for customer-deployed Plugin-based Chat APIs.
     """
 
-    def post(self, request):
+    # pylint: disable=W0613
+    def post(self, request, *args, **kwargs):
         """
         POST request handler for the Smarter Chat API. We need to parse the request host
         to determine which ChatBot instance to use. There are two possible hostname formats:
@@ -44,8 +46,19 @@ class SmarterChatBotApiViewSet(ChatBotApiBaseViewSet):
         The ChatBot instance hostname is determined by the following logic:
         `chatbot.hostname == chatbot.custom_domain or chatbot.default_host`
         """
+        kwargs.pop("chatbot_id", None)
 
         # FIX NOTE: this might be an unnecessary belt & suspenders step. DRF might be already
         # doing all of this for us.
-        data = handler(plugins=self.plugins, user=self.user, data=request.data)
-        return JsonResponse(data, safe=False, status=HTTPStatus.OK)
+        data = json.loads(request.body)
+
+        logger.info("SmarterChatBotApiViewSet.post: data=%s", data)
+        logger.info("account: %s", self.account)
+        logger.info("user: %s", self.user)
+        logger.info("chatbot: %s", self.chatbot)
+        logger.info("plugins: %s", self.plugins)
+
+        response = handler(plugins=self.plugins, user=self.user, data=data)
+        response = JsonResponse(data=response, safe=False, status=HTTPStatus.OK)
+        logger.info("SmarterChatBotApiViewSet.post: response=%s", response)
+        return response

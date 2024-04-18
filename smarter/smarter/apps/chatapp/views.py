@@ -128,6 +128,7 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
                 "SANDBOX": sandbox_context,
             },
         }
+        logger.debug("react_context(): %s", retval)
         return retval
 
     def react_render(self, request):

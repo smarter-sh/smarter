@@ -243,6 +243,7 @@ class ChatBotApiUrlHelper:
     _chatbot: ChatBot = None
     _chatbot_custom_domain: ChatBotCustomDomain = None
 
+    # pylint: disable=W1203
     def __init__(self, url: str = None, user: UserType = None, environment: str = None):
         """
         Constructor for ChatBotApiUrlHelper.
@@ -257,6 +258,21 @@ class ChatBotApiUrlHelper:
         self._environment = environment
         self.parsed_url = urlparse(url)
         self._user = user
+
+        logger.debug(f"ChatBotApiUrlHelper: url={self.url}, environment={self.environment}")
+        logger.debug(f"ChatBotApiUrlHelper: domain={self.domain}, path={self.path}")
+        logger.debug(f"ChatBotApiUrlHelper: root_domain={self.root_domain}, subdomain={self.subdomain}")
+        logger.debug(f"ChatBotApiUrlHelper: account_number={self.account_number}")
+        logger.debug(f"ChatBotApiUrlHelper: api_subdomain={self.api_subdomain}, api_host={self.api_host}")
+        logger.debug(f"ChatBotApiUrlHelper: customer_api_domain={self.customer_api_domain}")
+        logger.debug(f"ChatBotApiUrlHelper: is_sandbox_domain={self.is_sandbox_domain}")
+        logger.debug(f"ChatBotApiUrlHelper: is_default_domain={self.is_default_domain}")
+        logger.debug(f"ChatBotApiUrlHelper: is_custom_domain={self.is_custom_domain}")
+        logger.debug(f"ChatBotApiUrlHelper: is_deployed={self.is_deployed}")
+        logger.debug(f"ChatBotApiUrlHelper: is_valid={self.is_valid}")
+        logger.debug(f"ChatBotApiUrlHelper: is_authentication_required={self.is_authentication_required}")
+        logger.debug(f"ChatBotApiUrlHelper: user={self.user}, account={self.account}")
+        logger.debug(f"ChatBotApiUrlHelper: chatbot={self.chatbot}")
 
     def __str__(self):
         return self.url
@@ -346,6 +362,7 @@ class ChatBotApiUrlHelper:
         extracted = tldextract.extract(self.url)
         return extracted.subdomain
 
+    # pylint: disable=R0911
     @property
     def account_number(self) -> str:
         """
@@ -357,6 +374,9 @@ class ChatBotApiUrlHelper:
         """
         if self._account_number:
             return self._account_number
+
+        if self.is_sandbox_domain:
+            return self.chatbot.account.account_number if self.chatbot else None
 
         if self.is_default_domain:
             account_number: str = None
