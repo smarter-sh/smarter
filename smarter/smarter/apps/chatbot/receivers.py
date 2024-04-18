@@ -28,9 +28,9 @@ def handle_chatbot_called(sender, **kwargs):
     try:
         request_data = json.loads(request.body)
     except json.JSONDecodeError:
-        logger.error("JSONDecodeError raised while attempting to extract request body from %s", chatbot.hostname)
+        logger.warning("handle_chatbot_called() received an empty or invalid request body from %s", chatbot.hostname)
         request_data = {
-            "JSONDecodeError": "JSONDecodeError raised while attempting to extract request body",
+            "JSONDecodeError": "received an empty or invalid request body",
         }
 
     create_chatbot_request.delay(chatbot.id, request_data)

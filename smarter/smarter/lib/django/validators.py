@@ -6,13 +6,13 @@ or a Django utility that can do the validation.
 
 import json
 import re
-from urllib.parse import SplitResult, urlparse, urlunparse
+from urllib.parse import urlparse, urlunparse
 
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator, validate_email, validate_ipv4_address
 
-from ...common.const import OpenAIEndPoint, OpenAIMessageKeys, OpenAIObjectTypes
-from ...common.exceptions import SmarterValueError
+from smarter.common.const import OpenAIEndPoint, OpenAIMessageKeys, OpenAIObjectTypes
+from smarter.common.exceptions import SmarterValueError
 
 
 # pylint: disable=R0904
@@ -200,17 +200,27 @@ class SmarterValidator:
     # utility helpers
     # --------------------------------------------------------------------------
     @staticmethod
+    def base_domain(url: str) -> str:
+        if not url:
+            return None
+        base_url = SmarterValidator.base_url(url)
+        if not base_url:
+            return None
+        return base_url.replace("http://", "").replace("https://", "")
+
+    @staticmethod
     def base_url(url: str) -> str:
+        if not url:
+            return None
+        SmarterValidator.validate_url(url)
         parsed_url = urlparse(url)
-        split_result = SplitResult(
-            scheme=parsed_url.scheme, netloc=parsed_url.netloc, path=parsed_url.path, query="", fragment=""
-        )
-        parsed_url = urlparse(split_result.geturl())
-        return urlunparse((parsed_url.scheme, parsed_url.netloc, parsed_url.path, "", "", ""))
+        return urlunparse((parsed_url.scheme, parsed_url.netloc, "", "", "", ""))
 
     @staticmethod
     def urlify(url: str, https: bool = False) -> str:
         """ensure that URL starts with http:// or https://"""
+        if not str:
+            return None
         protocol = "https" if https else "http"
         url = url.replace("http://", "").replace("https://", "")
         url = f"{protocol}://" + url
