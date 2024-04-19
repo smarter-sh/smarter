@@ -158,6 +158,7 @@ class ChatBot(TimestampedModel):
         return retval
 
     def mode(self, url: str) -> str:
+        logger.info("mode: %s", url)
         if not url:
             return self.Modes.UNKNOWN
         SmarterValidator.validate_url(url)
@@ -165,11 +166,11 @@ class ChatBot(TimestampedModel):
         custom_url = SmarterValidator.urlify(self.custom_host)
         default_url = SmarterValidator.urlify(self.default_host)
         sandbox_url = SmarterValidator.urlify(self.sandbox_host)
-        if custom_url in url:
+        if custom_url and custom_url in url:
             return self.Modes.CUSTOM
-        if default_url in url:
+        if default_url and default_url in url:
             return self.Modes.DEFAULT
-        if sandbox_url in url:
+        if sandbox_url and sandbox_url in url:
             return self.Modes.SANDBOX
         logger.error("Invalid ChatBot url %s received for default_url: %s", url, self.default_url)
         logger.error("sandbox_url: %s", self.sandbox_url)
@@ -282,21 +283,21 @@ class ChatBotHelper:
         self._environment = environment
         self._user = user
 
-        logger.info(f"ChatBotHelper: url={self.url}, environment={self.environment}")
-        logger.info(f"ChatBotHelper: domain={self.domain}, path={self.path}")
-        logger.info(f"ChatBotHelper: subdomain={self.subdomain}")
-        logger.info(f"ChatBotHelper: root_domain={self.root_domain}")
-        logger.info(f"ChatBotHelper: account_number={self.account_number}")
-        logger.info(f"ChatBotHelper: api_subdomain={self.api_subdomain}, api_host={self.api_host}")
-        logger.info(f"ChatBotHelper: customer_api_domain={self.customer_api_domain}")
-        logger.info(f"ChatBotHelper: is_sandbox_domain={self.is_sandbox_domain}")
-        logger.info(f"ChatBotHelper: is_default_domain={self.is_default_domain}")
-        logger.info(f"ChatBotHelper: is_custom_domain={self.is_custom_domain}")
-        logger.info(f"ChatBotHelper: is_deployed={self.is_deployed}")
-        logger.info(f"ChatBotHelper: is_valid={self.is_valid}")
-        logger.info(f"ChatBotHelper: is_authentication_required={self.is_authentication_required}")
-        logger.info(f"ChatBotHelper: user={self.user}, account={self.account}")
-        logger.info(f"ChatBotHelper: chatbot={self.chatbot}")
+        logger.debug(f"ChatBotHelper: url={self.url}, environment={self.environment}")
+        logger.debug(f"ChatBotHelper: domain={self.domain}, path={self.path}")
+        logger.debug(f"ChatBotHelper: subdomain={self.subdomain}")
+        logger.debug(f"ChatBotHelper: root_domain={self.root_domain}")
+        logger.debug(f"ChatBotHelper: account_number={self.account_number}")
+        logger.debug(f"ChatBotHelper: api_subdomain={self.api_subdomain}, api_host={self.api_host}")
+        logger.debug(f"ChatBotHelper: customer_api_domain={self.customer_api_domain}")
+        logger.debug(f"ChatBotHelper: is_sandbox_domain={self.is_sandbox_domain}")
+        logger.debug(f"ChatBotHelper: is_default_domain={self.is_default_domain}")
+        logger.debug(f"ChatBotHelper: is_custom_domain={self.is_custom_domain}")
+        logger.debug(f"ChatBotHelper: is_deployed={self.is_deployed}")
+        logger.debug(f"ChatBotHelper: is_valid={self.is_valid}")
+        logger.debug(f"ChatBotHelper: is_authentication_required={self.is_authentication_required}")
+        logger.debug(f"ChatBotHelper: user={self.user}, account={self.account}")
+        logger.debug(f"ChatBotHelper: chatbot={self.chatbot}")
 
     def __str__(self):
         return self.url
@@ -552,7 +553,7 @@ class ChatBotHelper:
         """
         if self._account:
             return self._account
-        logger.info("initializing account")
+        logger.debug("initializing account")
         if self.account_number:
             try:
                 self._account = Account.objects.get(account_number=self.account_number)
