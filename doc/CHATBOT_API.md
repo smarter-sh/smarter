@@ -32,7 +32,7 @@ The Smarter application stack provides consistent behavior for either of three d
 - Customer's custom domain names: [subdomain].example.com/chatbot/
 - The Smarter API: /api/v0/chatbots/[int]/[ChatBot.name]
 
-Secondarily, it also needs to gracefully adapt to alternatives like `localhost`, `127.0.0.1` and conjured up names used in unit tests.
+Secondarily, it also gracefully adapts to alternatives like `localhost`, `127.0.0.1` and any host names that are conjured up in unit tests.
 
 ## URL Parsing and Routing
 
@@ -50,11 +50,10 @@ example: https://example.3141-5926-5359.beta.api.smarter.sh/chatbot/
 
 where
 
+- `'example' == ChatBot.name`
+- `'3141-5926-5359' == ChatBot.account.account_number`
+- `'beta.api.smarter.sh' == smarter_settings.customer_api_domain`
 - `/chatbot/` is a URL endpoint defined in smarter/urls.py and resolves to a Django View that invoke Chat with a List of Smarter Plugin objects.
-
-- `example' == ChatBot.name`
-- `3141-5926-5359 == ChatBot.account.account_number`
-- `beta.api.smarter.sh == smarter_settings.customer_api_domain`
 
 ### Custom Domain
 
