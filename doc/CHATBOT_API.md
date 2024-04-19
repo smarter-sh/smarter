@@ -26,7 +26,7 @@ curl --location 'https://example.3141-5926-5359.api.smarter.sh/chatbot/' \
 
 ChatBots can also run in pre-production 'sandbox' mode from inside the Smarter web console.
 
-## ChatBot API Management
+## Management
 
 There are Django `manage.py` commands for the complete ChatBot lifecycle, namely, for deploying the ChatBot so that it can begin receiving and responding to http requests. To access `manage.py` you'll need ssh access to the Smarter Bastion server, a managed Ubuntu Linux AWS EC2 instance that is pre-configured connect to the Kubernetes cluster via an ASCII gui application named [k9s](https://k9scli.io/). From k9s you can navigate to any running 'smarter' application pod, whereupon you access a bash shell.
 
