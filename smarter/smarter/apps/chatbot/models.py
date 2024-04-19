@@ -102,13 +102,13 @@ class ChatBot(TimestampedModel):
 
     @property
     def default_host(self):
-        domain = f"{self.name}.{self.account.account_number}.{smarter_settings.customer_api_domain}"
+        domain = f"{self.name}.{self.account.account_number}.{smarter_settings.environment}.{smarter_settings.customer_api_domain}"
         SmarterValidator.validate_domain(domain)
         return domain
 
     @property
     def default_url(self):
-        return SmarterValidator.urlify(self.default_host, scheme=ChatBot.Schemes.HTTPS)
+        return SmarterValidator.urlify(self.default_host, scheme=self.scheme)
 
     @property
     def custom_host(self):
@@ -121,7 +121,7 @@ class ChatBot(TimestampedModel):
     @property
     def custom_url(self):
         if self.custom_host:
-            return SmarterValidator.urlify(self.custom_host, scheme=ChatBot.Schemes.HTTPS)
+            return SmarterValidator.urlify(self.custom_host, scheme=self.scheme)
         return None
 
     @property
@@ -132,7 +132,7 @@ class ChatBot(TimestampedModel):
 
     @property
     def sandbox_url(self):
-        return SmarterValidator.urlify(self.sandbox_host)
+        return SmarterValidator.urlify(self.sandbox_host, scheme=self.scheme)
 
     @property
     def hostname(self):
@@ -142,7 +142,7 @@ class ChatBot(TimestampedModel):
 
     @property
     def scheme(self):
-        return ChatBot.Schemes.HTTPS if self.deployed else ChatBot.Schemes.HTTP
+        return ChatBot.Schemes.HTTP if smarter_settings.environment == "local" else ChatBot.Schemes.HTTPS
 
     @property
     def url(self):
