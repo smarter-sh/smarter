@@ -32,7 +32,7 @@ There are Django `manage.py` commands for the complete ChatBot lifecycle, namely
 
 Contact Lawrence McDaniel (<lawrence@querium.com>) or Kent Fuka (<kent@querium.com>) if you need Smarter Bastion server access.
 
-Features are continuously added to the Smarter web console, with the mid-term goal of providing a minimal UX that provides customers with autonomy to manage all aspects of a ChatBot. Meanwhile, there's Django Admin to cover any functionality gaps.
+Features are continuously added to the Smarter web console, with the mid-term goal of deploying a minimal UX that gives customers autonomy to manage all aspects of a ChatBot. Meanwhile, there's Django Admin to cover any functionality gaps.
 
 ## Domain Name Resolution
 
