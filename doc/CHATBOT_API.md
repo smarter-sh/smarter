@@ -26,7 +26,7 @@ curl --location 'https://example.3141-5926-5359.api.smarter.sh/chatbot/' \
 
 ## Domain Name Resolution
 
-The Smarter application stack needs to provide consistent behavior for either of three different styles of domain name
+The Smarter application stack provides consistent behavior for either of three different domain name styles
 
 - Default ChatBot domain names: [subdomain].[####-####-####].[environment].smarter.sh/chatbot/
 - Customer's custom domain names: [subdomain].example.com/chatbot/
@@ -36,19 +36,17 @@ Secondarily, it also needs to gracefully adapt to alternatives like `localhost`,
 
 ## URL Parsing and Routing
 
-In light of the multiple naming schemes, mapping hosts and urls to a ChatBot is not trivial.
-
-and provide reliable and performant functions for URL parsing as well as instantiating Account, ChatBot and User objects related to the domain. Also be aware that the singleton `smarter.common.conf.settings` implements `settings.customer_api_domain`.
+In light of the multiple naming schemes, mapping hosts and urls to a ChatBot is not trivial. Note the following code resources for working with chatbot urls:
 
 - `smarter.apps.chatbot.models.ChatBotHelper`: Maps a url to its ChatBot, Plugin list, Account and User objects.
 - `smarter.lib.django.validators.SmarterValidator`: Low-level url parsing features.
 - `smarter.common.conf.settings`: A singleton that provides settings values for the environment and base customer API domains.
 
-## Default Domain
+### Default Domain
 
 The default domain for each ChatBot is accessible regardless of whether the customer has also implemented a custom domain.
 
-example: https://example.3141-5926-5359.api.smarter.sh/chatbot/
+example: https://example.3141-5926-5359.beta.api.smarter.sh/chatbot/
 
 where
 
@@ -56,23 +54,27 @@ where
 
 - `example' == ChatBot.name`
 - `3141-5926-5359 == ChatBot.account.account_number`
-- `api.smarter.sh == smarter_settings.customer_api_domain`
+- `beta.api.smarter.sh == smarter_settings.customer_api_domain`
 
-## Custom Domain
+### Custom Domain
 
 Customers can configure a custom domain for their account, mapping individual chatbots to DNS subdomain records aliased to the master Kubernetes ingress controller for the platform. Smarter provides `manage.py` admin commands for managing the complete lifecycle of customer custom domain recourses.
 
-example: https://api.smarter.querium.com/chatbot/
+example: https://sales.api.smarter.querium.com/chatbot/
 where
 
 - `api.smarter.querium.com == chatbot.custom_domain`: A ChatBotCustomDomain object
+- `sales`: is a verified A record (ie a subdomain) in the AWS Hosted zone for the customer domain
 - `ChatBotCustomDomain.is_verified == True`: An asynchronous task verifies the domain NS records.
 
-The ChatBot instance hostname is determined by the following logic: `chatbot.hostname == ChatBot.custom_domain` once the domain is verified and the chatbot is deployed.
+The ChatBot instance hostname is determined by the following logic: `chatbot.hostname == ChatBot.custom_domain` once the following conditions are satisfied:
 
-## Application Configuration Considerations
+- `ChatBotCustomDomain.is_verified == True`. An asynchronous task verifies the domain NS records.
+- `ChatBot.deployed==True`. This is a customer-managed setting.
 
-There are multiple Django configuration implications due the additional subdomains prefixed to default customer domains, as well as the fact that custom domains need to be treated as if they were in fact the platform root domain, `smarter.sh`. This domain naming styles requires customizations to url routing within Django, as well as to `ALLOWED_HOSTS`, CORS, CSRF, ssl-certificates, and Kubernetes Ingresses.
+## Django Application Configuration
+
+There are multiple Django configuration implications due the default customer domain naming style, as well as the fact that custom domains need to be treated as if they were in fact the Django platform `ENVIRONMENT_DOMAIN`. For example, `beta.smarter.sh`. These domain naming styles require customizations to url routing within Django, as well as to `ALLOWED_HOSTS`, CORS, CSRF, ssl-certificates, and multiple kinds of Kubernetes resources.
 
 ### ALLOWED_HOSTS
 
