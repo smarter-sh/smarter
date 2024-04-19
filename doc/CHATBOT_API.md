@@ -24,6 +24,12 @@ curl --location 'https://example.3141-5926-5359.api.smarter.sh/chatbot/' \
 }'
 ```
 
+ChatBots can also run in pre-production 'sandbox' mode from inside the Smarter web console.
+
+## ChatBot API Management
+
+There are Django `manage.py` commands for the complete ChatBot lifecycle, namely, for deploying the ChatBot so that it can begin receiving and responding to http requests.
+
 ## Domain Name Resolution
 
 The Smarter application stack provides consistent behavior for either of three different domain name styles
@@ -57,7 +63,7 @@ where
 
 ### Custom Domain
 
-Customers can optionally configure a custom domain for their account, mapping individual chatbots to DNS subdomain records aliased to the master Kubernetes ingress controller for the platform. Smarter provides `manage.py` admin commands for managing the complete lifecycle of customer custom domain recourses.
+Customers can optionally configure a custom domain for their account, mapping individual chatbots to DNS subdomain records aliased to the master Kubernetes ingress controller for the platform. Smarter provides `manage.py` admin commands for managing the complete lifecycle of customer custom domain resources.
 
 example: https://sales.api.smarter.querium.com/chatbot/
 where
