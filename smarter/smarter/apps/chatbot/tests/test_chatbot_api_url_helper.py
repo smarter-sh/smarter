@@ -1,5 +1,5 @@
 # pylint: disable=wrong-import-position
-"""Test ChatBotApiUrlHelper."""
+"""Test ChatBotHelper."""
 
 # python stuff
 import hashlib
@@ -8,11 +8,7 @@ import unittest
 from urllib.parse import urljoin
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.chatbot.models import (
-    ChatBot,
-    ChatBotApiUrlHelper,
-    ChatBotCustomDomain,
-)
+from smarter.apps.chatbot.models import ChatBot, ChatBotCustomDomain, ChatBotHelper
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django.user import User
 from smarter.lib.django.validators import SmarterValidator
@@ -20,7 +16,7 @@ from smarter.lib.django.validators import SmarterValidator
 
 # pylint: disable=too-many-instance-attributes
 class TestChatBotApiUrlHelper(unittest.TestCase):
-    """Test ChatBotApiUrlHelper"""
+    """Test ChatBotHelper"""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -70,9 +66,9 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
         print(
             f"test_valid_url - creating helper with chatbot: {self.chatbot} account: {self.chatbot.account} {self.chatbot.account.account_number} {self.chatbot.url}"
         )
-        helper = ChatBotApiUrlHelper(url=self.chatbot.url, environment=smarter_settings.environment)
+        helper = ChatBotHelper(url=self.chatbot.url, environment=smarter_settings.environment)
         print(f"test_valid_url - got helper with {helper.chatbot} {helper.account} {helper.url} ")
-        # helper = ChatBotApiUrlHelper(url=self.chatbot.url)
+        # helper = ChatBotHelper(url=self.chatbot.url)
 
         self.assertTrue(helper.is_valid)
         self.assertTrue(helper.account == self.account)
@@ -95,11 +91,11 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
         """Test a bad url."""
 
         with self.assertRaises(Exception):
-            ChatBotApiUrlHelper(url="bad url")
+            ChatBotHelper(url="bad url")
 
     def test_non_api_url(self):
         """Test a non-api url."""
-        helper = ChatBotApiUrlHelper(url="https://www.google.com")
+        helper = ChatBotHelper(url="https://www.google.com")
         reschemed_url = SmarterValidator.urlify(helper.url, scheme="http")
 
         self.assertTrue(helper.account is None)
@@ -119,7 +115,7 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
     def test_custom_domain(self):
         """Test a custom domain."""
         url = urljoin(self.custom_chatbot.url, "/chatbot/")
-        helper = ChatBotApiUrlHelper(url=url)
+        helper = ChatBotHelper(url=url)
 
         self.assertTrue(helper.is_valid)
         self.assertTrue(helper.account == self.account, f"Expected {self.account}, but got {helper.account}")
@@ -156,7 +152,7 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
 
     def test_no_url(self):
         """Test no url."""
-        helper = ChatBotApiUrlHelper()
+        helper = ChatBotHelper()
 
         self.assertTrue(helper.is_valid is False)
         self.assertTrue(helper.account is None)

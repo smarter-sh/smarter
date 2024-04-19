@@ -154,7 +154,7 @@ class ChatBot(TimestampedModel):
     # @cache_results(timeout=600)
     def get_by_url(url: str):
         url = SmarterValidator.urlify(url)
-        retval = ChatBotApiUrlHelper(url).chatbot
+        retval = ChatBotHelper(url).chatbot
         return retval
 
     def mode(self, url: str) -> str:
@@ -248,7 +248,7 @@ class ChatBotRequests(TimestampedModel):
 
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
-class ChatBotApiUrlHelper:
+class ChatBotHelper:
     """Helper class for ChatBot models. Abstracts url parsing logic so that we
     can use it in multiple places: this module, middleware, views, etc.
 
@@ -269,7 +269,7 @@ class ChatBotApiUrlHelper:
     # pylint: disable=W1203
     def __init__(self, url: str = None, user: UserType = None, environment: str = None):
         """
-        Constructor for ChatBotApiUrlHelper.
+        Constructor for ChatBotHelper.
         :param url: The URL to parse.
         :param environment: The environment to use for the URL. (for unit testing only)
         """
@@ -282,21 +282,21 @@ class ChatBotApiUrlHelper:
         self._environment = environment
         self._user = user
 
-        logger.info(f"ChatBotApiUrlHelper: url={self.url}, environment={self.environment}")
-        logger.info(f"ChatBotApiUrlHelper: domain={self.domain}, path={self.path}")
-        logger.info(f"ChatBotApiUrlHelper: subdomain={self.subdomain}")
-        logger.info(f"ChatBotApiUrlHelper: root_domain={self.root_domain}")
-        logger.info(f"ChatBotApiUrlHelper: account_number={self.account_number}")
-        logger.info(f"ChatBotApiUrlHelper: api_subdomain={self.api_subdomain}, api_host={self.api_host}")
-        logger.info(f"ChatBotApiUrlHelper: customer_api_domain={self.customer_api_domain}")
-        logger.info(f"ChatBotApiUrlHelper: is_sandbox_domain={self.is_sandbox_domain}")
-        logger.info(f"ChatBotApiUrlHelper: is_default_domain={self.is_default_domain}")
-        logger.info(f"ChatBotApiUrlHelper: is_custom_domain={self.is_custom_domain}")
-        logger.info(f"ChatBotApiUrlHelper: is_deployed={self.is_deployed}")
-        logger.info(f"ChatBotApiUrlHelper: is_valid={self.is_valid}")
-        logger.info(f"ChatBotApiUrlHelper: is_authentication_required={self.is_authentication_required}")
-        logger.info(f"ChatBotApiUrlHelper: user={self.user}, account={self.account}")
-        logger.info(f"ChatBotApiUrlHelper: chatbot={self.chatbot}")
+        logger.info(f"ChatBotHelper: url={self.url}, environment={self.environment}")
+        logger.info(f"ChatBotHelper: domain={self.domain}, path={self.path}")
+        logger.info(f"ChatBotHelper: subdomain={self.subdomain}")
+        logger.info(f"ChatBotHelper: root_domain={self.root_domain}")
+        logger.info(f"ChatBotHelper: account_number={self.account_number}")
+        logger.info(f"ChatBotHelper: api_subdomain={self.api_subdomain}, api_host={self.api_host}")
+        logger.info(f"ChatBotHelper: customer_api_domain={self.customer_api_domain}")
+        logger.info(f"ChatBotHelper: is_sandbox_domain={self.is_sandbox_domain}")
+        logger.info(f"ChatBotHelper: is_default_domain={self.is_default_domain}")
+        logger.info(f"ChatBotHelper: is_custom_domain={self.is_custom_domain}")
+        logger.info(f"ChatBotHelper: is_deployed={self.is_deployed}")
+        logger.info(f"ChatBotHelper: is_valid={self.is_valid}")
+        logger.info(f"ChatBotHelper: is_authentication_required={self.is_authentication_required}")
+        logger.info(f"ChatBotHelper: user={self.user}, account={self.account}")
+        logger.info(f"ChatBotHelper: chatbot={self.chatbot}")
 
     def __str__(self):
         return self.url

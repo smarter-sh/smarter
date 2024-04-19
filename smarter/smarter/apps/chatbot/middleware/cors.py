@@ -14,7 +14,7 @@ from corsheaders.conf import conf
 from corsheaders.middleware import CorsMiddleware as DjangoCorsMiddleware
 from django.http import HttpRequest
 
-from smarter.apps.chatbot.models import ChatBot, ChatBotApiUrlHelper
+from smarter.apps.chatbot.models import ChatBot, ChatBotHelper
 
 
 logger = logging.getLogger(__name__)
@@ -25,25 +25,25 @@ class CorsMiddleware(DjangoCorsMiddleware):
 
     _url: SplitResult = None
     _chatbot: ChatBot = None
-    _helper: ChatBotApiUrlHelper = None
+    _helper: ChatBotHelper = None
 
     @staticmethod
     # @cache_results(timeout=300)
-    def get_helper(url: str) -> ChatBotApiUrlHelper:
+    def get_helper(url: str) -> ChatBotHelper:
         """
-        Returns the ChatBotApiUrlHelper instance for the given url.
+        Returns the ChatBotHelper instance for the given url.
         This is a cached operation with a timeout of 5 minutes because
         the helper is used multiple times in a request and instantiating
         it is an expensive operation.
         """
-        return ChatBotApiUrlHelper(url=url)
+        return ChatBotHelper(url=url)
 
     @property
     def chatbot(self) -> ChatBot:
         return self._chatbot
 
     @property
-    def helper(self) -> ChatBotApiUrlHelper:
+    def helper(self) -> ChatBotHelper:
         return self._helper
 
     @property

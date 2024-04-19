@@ -16,7 +16,7 @@ from smarter.apps.account.utils import account_admin_user
 from smarter.apps.chatbot.models import (
     ChatBot,
     ChatBotAPIKey,
-    ChatBotApiUrlHelper,
+    ChatBotHelper,
     ChatBotPlugin,
 )
 from smarter.apps.chatbot.signals import chatbot_called
@@ -43,7 +43,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
     """
 
     http_method_names = ["get", "post", "options"]
-    helper: ChatBotApiUrlHelper = None
+    helper: ChatBotHelper = None
     account: Account = None
     user: UserType = None
     chatbot: ChatBot = None
@@ -57,12 +57,12 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
         return False
 
     @cached(cache)
-    def get_cached_helper(self, url, user: UserType = None) -> ChatBotApiUrlHelper:
+    def get_cached_helper(self, url, user: UserType = None) -> ChatBotHelper:
         """
-        Get the ChatBotApiUrlHelper object for the given url and user. This method is cached
+        Get the ChatBotHelper object for the given url and user. This method is cached
         for 10 minutes because its a relatively expensive operation with multiple database queries.
         """
-        return ChatBotApiUrlHelper(url=url, user=user)
+        return ChatBotHelper(url=url, user=user)
 
     def smarter_api_authenticate(self, request) -> bool:
         """
