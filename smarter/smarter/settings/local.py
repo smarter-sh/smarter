@@ -15,9 +15,12 @@ import os
 from .base import *
 
 
-print("Loading smarter.settings.local")
-ENVIRONMENT_DOMAIN = "local.platform.smarter.sh"
-CUSTOMER_API_DOMAIN = "local.api.smarter.sh"
+logger.info("Loading smarter.settings.local")
+
+ENVIRONMENT_DOMAIN = smarter_settings.environment_domain
+CUSTOMER_API_DOMAIN = smarter_settings.customer_api_domain
+logger.info("ENVIRONMENT_DOMAIN: %s", ENVIRONMENT_DOMAIN)
+logger.info("CUSTOMER_API_DOMAIN: %s", CUSTOMER_API_DOMAIN)
 
 SMARTER_ALLOWED_HOSTS = LOCAL_HOSTS
 
@@ -44,6 +47,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
 CSRF_TRUSTED_ORIGINS = [f"http://{host}" for host in smarter_settings.local_hosts]
+CSRF_COOKIE_DOMAIN = ENVIRONMENT_DOMAIN.split(":")[0]
 
 
 # prevent browser caching in dev.
@@ -63,3 +67,4 @@ DJSTRIPE_FOREIGN_KEY_TO_FIELD = "id"
 
 SMTP_SENDER = smarter_settings.smtp_sender or ENVIRONMENT_DOMAIN
 SMTP_FROM_EMAIL = smarter_settings.smtp_from_email or "no-reply@" + SMTP_SENDER
+logger.info("CSRF_COOKIE_DOMAIN: %s", CSRF_COOKIE_DOMAIN)

@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 import glob
-import logging.config
+import logging
 import os
 import sys
 from pathlib import Path
@@ -21,6 +21,9 @@ from corsheaders.defaults import default_headers
 
 # Add proprietary settings for the project
 from .smarter import *  # noqa: E402, F401, W0401
+
+
+logger = logging.getLogger(__name__)
 
 
 # We implemented our own middleware to validate host names
@@ -37,6 +40,7 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_ALLOW_ALL = False
+CSRF_COOKIE_NAME = "csrftoken"
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent

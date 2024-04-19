@@ -408,7 +408,7 @@ class Settings(BaseSettings):
         if self.environment in SmarterEnvironments.aws_environments:
             return self.environment + "." + SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN + "." + self.root_domain
         if self.environment == SmarterEnvironments.LOCAL:
-            return "127.0.0.1:8000"
+            return "localhost:8000"
         # default domain format
         return self.environment + "." + SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN + "." + self.root_domain
 
