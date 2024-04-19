@@ -218,6 +218,10 @@ class SettingsDefaults:
     STRIPE_LIVE_SECRET_KEY = os.environ.get("STRIPE_LIVE_SECRET_KEY", "SET-ME-PLEASE")
     STRIPE_TEST_SECRET_KEY = os.environ.get("STRIPE_TEST_SECRET_KEY", "SET-ME-PLEASE")
 
+    LOCAL_HOSTS = ["localhost", "127.0.0.1"]
+    LOCAL_HOSTS += [host + ":8000" for host in LOCAL_HOSTS]
+    LOCAL_HOSTS.append("testserver")
+
     @classmethod
     def to_dict(cls):
         """Convert SettingsDefaults to dict"""
@@ -326,6 +330,10 @@ class Settings(BaseSettings):
         SettingsDefaults.ENVIRONMENT,
         env="ENVIRONMENT",
     )
+    local_hosts: Optional[List[str]] = Field(
+        SettingsDefaults.LOCAL_HOSTS,
+        env="LOCAL_HOSTS",
+    )
     root_domain: Optional[str] = Field(
         SettingsDefaults.ROOT_DOMAIN,
         env="ROOT_DOMAIN",
@@ -430,7 +438,7 @@ class Settings(BaseSettings):
             # alpha.api.smarter.sh, beta.api.smarter.sh, next.api.smarter.sh
             return f"{self.environment}.{SMARTER_CUSTOMER_API_SUBDOMAIN}.{self.root_domain}"
         if self.environment == SmarterEnvironments.LOCAL:
-            return f"{SMARTER_CUSTOMER_API_SUBDOMAIN}.localhost"
+            return f"{SMARTER_CUSTOMER_API_SUBDOMAIN}.localhost:8000"
         # default domain format
         return f"{self.environment}.{SMARTER_CUSTOMER_API_SUBDOMAIN}.{self.root_domain}"
 
@@ -586,6 +594,13 @@ class Settings(BaseSettings):
         """Validate environment"""
         if v in [None, ""]:
             return SettingsDefaults.ENVIRONMENT
+        return v
+
+    @field_validator("local_hosts")
+    def validate_local_hosts(cls, v) -> List[str]:
+        """Validate local_hosts"""
+        if v in [None, ""]:
+            return SettingsDefaults.LOCAL_HOSTS
         return v
 
     @field_validator("root_domain")

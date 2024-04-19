@@ -38,7 +38,7 @@ class AWSBase:
     - reformatting localhost domain names into proxy domains that will work with AWS Route53 and Kubernetes.
     """
 
-    LOCAL_HOSTS = ["localhost", "127.0.0.1"]
+    LOCAL_HOSTS = smarter_settings.local_hosts
 
     _aws_access_key_id: str = None
     _aws_secret_access_key: str = None

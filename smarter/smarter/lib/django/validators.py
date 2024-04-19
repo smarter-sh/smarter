@@ -26,7 +26,10 @@ class SmarterValidator:
     first check if there is a built-in Python function or a Django utility that can do the validation.
     """
 
-    LOCAL_HOSTS = ["localhost", "127.0.0.1", "testserver"]
+    LOCAL_HOSTS = ["localhost", "127.0.0.1"]
+    LOCAL_HOSTS += [host + ":8000" for host in LOCAL_HOSTS]
+    LOCAL_HOSTS.append("testserver")
+
     LOCAL_URLS = [f"http://{host}" for host in LOCAL_HOSTS] + [f"https://{host}" for host in LOCAL_HOSTS]
     VALID_ACCOUNT_NUMBER_PATTERN = r"^\d{4}-\d{4}-\d{4}$"
     VALID_PORT_PATTERN = r"^[0-9]{1,5}$"
@@ -232,15 +235,18 @@ class SmarterValidator:
     @staticmethod
     def urlify(url: str, scheme: str = None) -> str:
         """ensure that URL starts with http:// or https://"""
-        if not scheme and SmarterValidator.is_valid_url(url):
-            return SmarterValidator.trailing_slash(url)
-        if scheme and scheme not in ["http", "https"]:
-            SmarterValidator.raise_error(f"Invalid scheme {scheme}. Should be one of ['http', 'https']")
-
-        if not str:
+        logger.debug("urlify %s, %s", url, scheme)
+        if not url:
             return None
         if not "://" in url:
             url = f"http://{url}"
+        if not scheme and SmarterValidator.is_valid_url(url):
+            retval = SmarterValidator.trailing_slash(url)
+            logger.debug("urlify returning %s, %s", retval, scheme)
+            return retval
+        if scheme and scheme not in ["http", "https"]:
+            SmarterValidator.raise_error(f"Invalid scheme {scheme}. Should be one of ['http', 'https']")
+
         parsed_url = urlparse(url)
         scheme = scheme or parsed_url.scheme or "http"
         url = urlunparse((scheme, parsed_url.netloc, parsed_url.path, "", "", ""))
