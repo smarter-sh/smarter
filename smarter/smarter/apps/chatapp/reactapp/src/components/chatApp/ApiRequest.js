@@ -47,10 +47,10 @@ function getCookie(name) {
 function requestBodyFactory(messages) {
 
   const retval = {
-    "model": BACKEND_API_DEFAULT_MODEL,
+  //  "model": BACKEND_API_DEFAULT_MODEL,
     "end_point": BACKEND_API_DEFAULT_MODEL_TYPE,
-    "temperature": BACKEND_API_DEFAULT_TEMPERATURE,
-    "max_tokens": BACKEND_API_DEFAULT_MAX_TOKENS,
+  //  "temperature": BACKEND_API_DEFAULT_TEMPERATURE,
+  //  "max_tokens": BACKEND_API_DEFAULT_MAX_TOKENS,
     "messages": messages,
   };
   return JSON.stringify(retval);

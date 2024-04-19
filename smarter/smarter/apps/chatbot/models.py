@@ -305,7 +305,7 @@ class ChatBotHelper:
     @property
     def parsed_url(self):
         if self.url:
-            return urlparse(self.url)
+            return urlparse(self._url)
         return None
 
     @property
@@ -403,27 +403,38 @@ class ChatBotHelper:
         the account number needs to conform to the SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN
         and it needs to be the second segment of the subdomain of the URL.
         """
-        if self._account_number:
-            return self._account_number
 
-        if self.is_sandbox_domain:
-            return self.chatbot.account.account_number if self.chatbot else None
-
-        if self.is_default_domain:
+        def from_url(url: str) -> str:
+            logger.info("account_number() - from_url() - url: %s", url)
             account_number: str = None
             search_pattern = SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN.lstrip("^").rstrip("$")
             search_result = re.search(search_pattern, self.url)
+            if not search_result:
+                return None
             account_number = search_result.group(0)
 
             subdomain_parts = self.subdomain.split(".")
             if len(subdomain_parts) < 2:
                 return None
             if account_number == subdomain_parts[1]:
-                self._account_number = account_number
-                return self._account_number
+                return account_number
             return None
 
+        if self._account_number:
+            return self._account_number
+
+        if self.is_sandbox_domain:
+            logger.info("account_number() - sandbox domain")
+            if self._chatbot:
+                return self._chatbot.account.account_number
+            self._account_number = from_url(self.url)
+
+        if self.is_default_domain:
+            logger.info("account_number() - default domain")
+            self._account_number = from_url(self.url)
+
         if self.is_custom_domain:
+            logger.info("account_number() - custom domain")
             self._account_number = self.chatbot.account.account_number if self.chatbot else None
             return self._account_number
 
