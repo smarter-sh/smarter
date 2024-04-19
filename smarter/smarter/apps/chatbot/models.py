@@ -405,48 +405,47 @@ class ChatBotHelper:
         """
 
         def from_url(url: str) -> str:
-            logger.info("account_number() - from_url() - url: %s", url)
-            account_number: str = None
-            search_pattern = SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN.lstrip("^").rstrip("$")
-            search_result = re.search(search_pattern, self.url)
-            if not search_result:
-                return None
-            account_number = search_result.group(0)
-
-            subdomain_parts = self.subdomain.split(".")
-            if len(subdomain_parts) < 2:
-                return None
-            if account_number == subdomain_parts[1]:
-                return account_number
-            return None
+            pattern = r"\d{4}-\d{4}-\d{4}"
+            match = re.search(pattern, url)
+            retval = match.group(0) if match else None
+            if retval:
+                try:
+                    self._account = Account.objects.get(account_number=retval)
+                    logger.info("ChatBotHelper Initialized Account: %s", self._account)
+                except Account.DoesNotExist:
+                    logger.warning(f"Account {retval} not found")
+                    self._account_number = None
+                    return None
+            return retval
 
         if self._account_number:
             return self._account_number
 
         if self.is_sandbox_domain:
-            logger.info("account_number() - sandbox domain")
+            logger.debug("account_number() - sandbox domain")
             if self._chatbot:
                 return self._chatbot.account.account_number
             self._account_number = from_url(self.url)
+            return self._account_number
 
         if self.is_default_domain:
-            logger.info("account_number() - default domain")
+            logger.debug("account_number() - default domain")
             self._account_number = from_url(self.url)
+            return self._account_number
 
         if self.is_custom_domain:
-            logger.info("account_number() - custom domain")
+            logger.debug("account_number() - custom domain")
             self._account_number = self.chatbot.account.account_number if self.chatbot else None
             return self._account_number
 
         if self._account_number:
             self._account = Account.objects.get(account_number=self._account_number)
+            logger.info("ChatBotHelper Initialized Account: %s", self._account)
 
         return self._account_number
 
     @property
     def api_subdomain(self) -> str:
-        if self.is_sandbox_domain:
-            return None
         try:
             result = urlparse(self.url)
             domain_parts = result.netloc.split(".")
@@ -491,7 +490,8 @@ class ChatBotHelper:
     def is_sandbox_domain(self) -> bool:
         if not self.url:
             return False
-        return smarter_settings.environment_domain in self.domain
+        retval = smarter_settings.environment_domain in self.domain
+        return retval
 
     @property
     def is_default_domain(self) -> bool:
@@ -540,6 +540,8 @@ class ChatBotHelper:
         if self.user and self.account:
             try:
                 self._user_profile = UserProfile.objects.get(user=self.user, account=self.account)
+                if self._user_profile:
+                    logger.info(f"ChatBotHelper Initialized UserProfile: {self._user_profile}")
                 return self._user_profile
             except UserProfile.DoesNotExist:
                 return None
@@ -555,6 +557,8 @@ class ChatBotHelper:
             return self._user
         if self.account:
             self._user = UserProfile.admin_for_account(self.account)
+        if self._user:
+            logger.info(f"ChatBotHelper Initialized User: {self._user}")
         return self._user
 
     @property
@@ -575,6 +579,8 @@ class ChatBotHelper:
                         f"User Profile {self._user_profile} is linked to account {self._user_profile.account}"
                     )
                 return None
+        if self._account:
+            logger.info(f"ChatBotHelper Initialized Account: {self._account}")
         return self._account
 
     @property
@@ -614,6 +620,8 @@ class ChatBotHelper:
             except ChatBot.DoesNotExist:
                 return None
 
+        if self._chatbot:
+            logger.info(f"ChatBotHelper Initialized ChatBot: {self._chatbot}")
         return self._chatbot
 
     @property
