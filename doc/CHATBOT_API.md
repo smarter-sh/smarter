@@ -42,7 +42,7 @@ The Smarter application stack provides consistent behavior for either of three d
 
 Secondarily, it also gracefully adapts to alternatives like `localhost`, `127.0.0.1` and any host names that are conjured up in unit tests.
 
-## URL Parsing and Routing
+### URL Parsing and Routing
 
 In light of the multiple naming schemes, mapping hosts and urls to a ChatBot is not trivial. Note the following code resources for working with chatbot urls:
 
