@@ -48,7 +48,7 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CSRF_TRUSTED_ORIGINS = [f"http://{host}" for host in smarter_settings.local_hosts]
 CSRF_COOKIE_DOMAIN = ENVIRONMENT_DOMAIN.split(":")[0]
-
+SESSION_COOKIE_SECURE = False
 
 # prevent browser caching in dev.
 for template in TEMPLATES:
@@ -67,4 +67,16 @@ DJSTRIPE_FOREIGN_KEY_TO_FIELD = "id"
 
 SMTP_SENDER = smarter_settings.smtp_sender or ENVIRONMENT_DOMAIN
 SMTP_FROM_EMAIL = smarter_settings.smtp_from_email or "no-reply@" + SMTP_SENDER
+
+logger.info("DEBUG: %s", DEBUG)
 logger.info("CSRF_COOKIE_DOMAIN: %s", CSRF_COOKIE_DOMAIN)
+logger.info("CORS_ALLOWED_ORIGINS: %s", CORS_ALLOWED_ORIGINS)
+logger.info("CSRF_TRUSTED_ORIGINS: %s", CSRF_TRUSTED_ORIGINS)
+logger.info("SESSION_COOKIE_SECURE: %s", SESSION_COOKIE_SECURE)
+logger.info("CSRF_COOKIE_DOMAIN: %s", CSRF_COOKIE_DOMAIN)
+logger.info("SESSION_COOKIE_SECURE: %s", SESSION_COOKIE_SECURE)
+logger.info("CORS_ALLOW_CREDENTIALS: %s", CORS_ALLOW_CREDENTIALS)
+logger.info("CORS_ORIGIN_ALLOW_ALL: %s", CORS_ORIGIN_ALLOW_ALL)
+logger.info("CSRF_COOKIE_NAME: %s", CSRF_COOKIE_NAME)
+logger.info("SESSION_COOKIE_SAMESITE: %s", SESSION_COOKIE_SAMESITE)
+logger.info("SESSION_COOKIE_SECURE: %s", SESSION_COOKIE_SECURE)

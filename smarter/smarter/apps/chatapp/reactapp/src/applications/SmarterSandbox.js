@@ -18,5 +18,4 @@ const SmarterSandbox = {
   // background_image_url: APP.BACKGROUND_IMAGE_URL,
   // application_logo: APP.LOGO_URL,
 };
-console.log('SmarterSandbox:', SmarterSandbox);
 export default SmarterSandbox;

@@ -16,6 +16,7 @@ let element = document.getElementById("react-config");
 export const REACT_CONFIG = element ? JSON.parse(element.textContent) : {
   BACKEND_API_URL: "http://127.0.0.1:8000/api/v0/"
 };
+import { getCookie } from "./components/chatApp/csrf";
 
 
 // Django Context Integrations
@@ -36,3 +37,6 @@ export const BACKEND_API_DEFAULT_TOP_P = 1;
 export const BACKEND_API_DEFAULT_FREQUENCY_PENALTY = 0.5;
 export const BACKEND_API_DEFAULT_PRESENCE_PENALTY = 0.5;
 export const BACKEND_API_DEFAULT_STOP_SEQUENCE = "###";
+
+console.log('config.js: BACKEND_API_URL: ', BACKEND_API_URL);
+console.log('config.js: csrf: ', getCookie('csrftoken'));
