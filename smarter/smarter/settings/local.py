@@ -36,8 +36,12 @@ MIDDLEWARE += [
     "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:5173",  # Django
+    "http://127.0.0.1:3000",  # React
+    "http://127.0.0.1:8000",  # Django
     "http://localhost:5173",
     "http://localhost:8000",
+    "http://localhost:3000",
 ]
 CSRF_TRUSTED_ORIGINS = [f"http://{host}" for host in smarter_settings.local_hosts]
 
