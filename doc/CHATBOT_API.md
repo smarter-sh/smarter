@@ -90,7 +90,7 @@ We subclassed Django's csrf library as `smarter.apps.chatbot.middleware.csrf.Csr
 
 ### TLS/SSL Certificates
 
-The certificates issued and managed by `cert-manager` in Kubernetes for each environment only support the first level of subdomain, implemented as a wildcard, for example, `*.beta.api.smarter.sh` and thus, API domains like for example, `example.3141-5926-5359.api.smarter.sh`, fall outside of this scheme. Smarter therefore implements asynchronous tasks for creating per-customer and per-chatbot certificates and the requisite DNS TXT challenge records.
+The certificates issued and managed by `cert-manager` in Kubernetes for each environment only support the first level of subdomain, implemented as a wildcard. For example, `*.beta.api.smarter.sh`. Therefore, API domains like for example, `example.3141-5926-5359.api.smarter.sh`, fall outside of this scheme. Smarter therefore implements asynchronous tasks for creating per-customer and per-chatbot certificates and the requisite DNS TXT challenge records.
 
 ### Kubernetes Ingresses
 
