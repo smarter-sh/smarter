@@ -53,31 +53,32 @@ where
 - `'example' == ChatBot.name`
 - `'3141-5926-5359' == ChatBot.account.account_number`
 - `'beta.api.smarter.sh' == smarter_settings.customer_api_domain`
-- `/chatbot/` is a URL endpoint defined in smarter/urls.py and resolves to a Django View that invoke Chat with a List of Smarter Plugin objects.
+- `/chatbot/` is a URL endpoint defined in smarter/urls.py and resolves to a Django View that invokes Chat with an Account object and a List of Smarter Plugin objects.
 
 ### Custom Domain
 
-Customers can configure a custom domain for their account, mapping individual chatbots to DNS subdomain records aliased to the master Kubernetes ingress controller for the platform. Smarter provides `manage.py` admin commands for managing the complete lifecycle of customer custom domain recourses.
+Customers can optionally configure a custom domain for their account, mapping individual chatbots to DNS subdomain records aliased to the master Kubernetes ingress controller for the platform. Smarter provides `manage.py` admin commands for managing the complete lifecycle of customer custom domain recourses.
 
 example: https://sales.api.smarter.querium.com/chatbot/
 where
 
-- `api.smarter.querium.com == chatbot.custom_domain`: A ChatBotCustomDomain object
-- `sales`: is a verified A record (ie a subdomain) in the AWS Hosted zone for the customer domain
-- `ChatBotCustomDomain.is_verified == True`: An asynchronous task verifies the domain NS records.
+- `'api.smarter.querium.com == chatbot.custom_domain'` is a ChatBotCustomDomain object
+- `'sales'` is a verified A record (ie a subdomain) in the AWS Hosted zone for the customer domain
+- `ChatBotCustomDomain.is_verified == True`. An asynchronous task verifies the domain NS records.
+- `/chatbot/` is the same URL endpoint used by default domains.
 
-The ChatBot instance hostname is determined by the following logic: `chatbot.hostname == ChatBot.custom_domain` once the following conditions are satisfied:
+When using a custom domain, `ChatBot.hostname == ChatBot.custom_domain` once the following conditions are satisfied:
 
 - `ChatBotCustomDomain.is_verified == True`. An asynchronous task verifies the domain NS records.
 - `ChatBot.deployed==True`. This is a customer-managed setting.
 
 ## Django Application Configuration
 
-There are multiple Django configuration implications due to the default customer domain naming style, as well as the fact that custom domains need to be treated as if they were in fact the Django platform `ENVIRONMENT_DOMAIN`. For example, `beta.smarter.sh`. These domain naming styles require customizations to url routing within Django, as well as to `ALLOWED_HOSTS`, CORS, CSRF, ssl-certificates, and multiple kinds of Kubernetes resources.
+There are multiple Django configuration implications to the API domain naming conventions outlined in this document. These require customizations to url routing within Django, as well as customizing management of `ALLOWED_HOSTS`, CORS, CSRF, ssl-certificates, and multiple kinds of Kubernetes resources.
 
 ### ALLOWED_HOSTS
 
-For Django to accept http requests from any domain, it must be included in Django's `ALLOWED_HOSTS` settings which is managed by Django middleware that we've subclassed as `smarter.apps.chatbot.middleware.security.SecurityMiddleware` in order to append API domain names to `ALLOWED_HOSTS` at run time.
+For Django to accept http requests from a domain, it must be included in Django's `ALLOWED_HOSTS` setting which is managed by Django middleware that we've subclassed as `smarter.apps.chatbot.middleware.security.SecurityMiddleware` in order to append API domain names to `ALLOWED_HOSTS` at run time.
 
 ### CORS
 
