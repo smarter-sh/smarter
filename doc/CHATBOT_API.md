@@ -74,28 +74,28 @@ The ChatBot instance hostname is determined by the following logic: `chatbot.hos
 
 ## Django Application Configuration
 
-There are multiple Django configuration implications due the default customer domain naming style, as well as the fact that custom domains need to be treated as if they were in fact the Django platform `ENVIRONMENT_DOMAIN`. For example, `beta.smarter.sh`. These domain naming styles require customizations to url routing within Django, as well as to `ALLOWED_HOSTS`, CORS, CSRF, ssl-certificates, and multiple kinds of Kubernetes resources.
+There are multiple Django configuration implications due to the default customer domain naming style, as well as the fact that custom domains need to be treated as if they were in fact the Django platform `ENVIRONMENT_DOMAIN`. For example, `beta.smarter.sh`. These domain naming styles require customizations to url routing within Django, as well as to `ALLOWED_HOSTS`, CORS, CSRF, ssl-certificates, and multiple kinds of Kubernetes resources.
 
 ### ALLOWED_HOSTS
 
-For Django to accept http requests from any domain, it must be included in Django's `ALLOWED_HOSTS` settings which is then managed by Django middleware that we've subclassed as `smarter.apps.chatbot.middleware.security.SecurityMiddleware` in order to append customer API domains to `ALLOWED_HOSTS` at run time.
+For Django to accept http requests from any domain, it must be included in Django's `ALLOWED_HOSTS` settings which is managed by Django middleware that we've subclassed as `smarter.apps.chatbot.middleware.security.SecurityMiddleware` in order to append API domain names to `ALLOWED_HOSTS` at run time.
 
 ### CORS
 
-We subclassed the standard `corsheaders` as `smarter.apps.chatbot.middleware.cors.CorsMiddleware` in order to performantly append customer API domains to its `CORS_ALLOWED_ORIGINS` at run time..
+We subclassed the standard `corsheaders` as `smarter.apps.chatbot.middleware.cors.CorsMiddleware` in order to performantly append API domain names to `CORS_ALLOWED_ORIGINS` at run time..
 
 ### Cross-Site Request Forgery
 
-We subclassed Django's csrf library as `smarter.apps.chatbot.middleware.csrf.CsrfViewMiddleware` in order to performantly append customer domains to `CSRF_TRUSTED_ORIGINS` at run time.
+We subclassed Django's csrf library as `smarter.apps.chatbot.middleware.csrf.CsrfViewMiddleware` in order to append API domain names to `CSRF_TRUSTED_ORIGINS` at run time.
 
 ### TLS/SSL Certificates
 
-The certificates issued and managed by `cert-manager` for each environment only support one subdomain, implemented as a wildcard, `*.[environment].smarter.sh` and thus, customer API domains fall outside of this scheme. Smarter therefore implements asynchronous tasks for creating per-customer and per-chatbot certificates and DNS TXT challenge records.
+The certificates issued and managed by `cert-manager` in Kubernetes for each environment only support the first level of subdomain, implemented as a wildcard, for example, `*.beta.api.smarter.sh` and thus, API domains like for example, `example.3141-5926-5359.api.smarter.sh`, fall outside of this scheme. Smarter therefore implements asynchronous tasks for creating per-customer and per-chatbot certificates and the requisite DNS TXT challenge records.
 
 ### Kubernetes Ingresses
 
-Similarly, we also have to create individual Ingress resources.
+Similarly, we also have to create an individual Ingress resource for each API domain.
 
 ### AWS Hosted Zones
 
-Custom API domains require a dedicated AWS Hosted Zone in order to generate the NS records that customers are responsible for adding to their DNS host.
+Custom API domain names require a dedicated AWS Hosted Zone in order to generate the NS records that customers are responsible for adding to their DNS host.
