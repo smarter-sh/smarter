@@ -1,5 +1,7 @@
 import { MESSAGE_DIRECTION, SENDER_ROLE, VALID_MESSAGE_ROLES } from "./constants.js";
 
+
+
 export function chat_restore_from_backend(chat_history, last_response) {
   /*
   Rebuild the message thread from the most recently persisted chat history.

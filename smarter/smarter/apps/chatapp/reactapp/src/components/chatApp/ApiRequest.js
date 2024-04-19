@@ -27,22 +27,8 @@ import {
   BACKEND_API_DEFAULT_TEMPERATURE,
   BACKEND_API_DEFAULT_MAX_TOKENS
 } from "../../config";
+import { getCookie } from "./csrf";
 
-
-function getCookie(name) {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i].trim();
-          if (cookie.substring(0, name.length + 1) === (name + '=')) {
-              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-              break;
-          }
-      }
-  }
-  return cookieValue;
-}
 
 function requestBodyFactory(messages) {
 
@@ -62,7 +48,7 @@ export async function processApiRequest(
   openChatModal,
 ) {
 
-  const csrftoken = getCookie('csrftoken');
+  const csrftoken = getCookie("csrftoken");
   const headers = {
     "Accept": "*/*",
     "Content-Type": "application/json",
@@ -76,7 +62,7 @@ export async function processApiRequest(
     headers: headers,
     body: requestBodyFactory(messages),
   };
-
+  console.log("processApiRequest(): csrftoken: ", csrftoken);
   console.log("processApiRequest(): ", apiURL, messages, init);
 
   try {
