@@ -98,4 +98,4 @@ Similarly, we also have to create an individual Ingress resource for each API do
 
 ### AWS Hosted Zones
 
-Custom API domain names require a dedicated AWS Hosted Zone in order to generate the NS records that customers are responsible for adding to their DNS host.
+Custom API domain names require a dedicated AWS Hosted Zone in order to generate the NS records. Note that customers are responsible for adding the NS records to the DNS host for their root domain name.
