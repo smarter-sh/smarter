@@ -53,3 +53,16 @@ DJSTRIPE_FOREIGN_KEY_TO_FIELD = "id"
 
 # SMARTER settings
 SMARTER_API_SCHEMA = "https"
+
+# Common security settings
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https?://[\w-]+\.(\d+-\d+-\d+)\.api\.smarter\.sh$",
+    r"^https?://[\w-]+\.platform\.smarter\.sh$",
+    r"^https?://[\w-]+\.api\.smarter\.sh$",
+]
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = "Lax"
+
+SESSION_COOKIE_SECURE = CSRF_COOKIE_SECURE
+SESSION_COOKIE_SAMESITE = CSRF_COOKIE_SAMESITE
