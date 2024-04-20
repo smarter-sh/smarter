@@ -175,11 +175,11 @@ class ChatBot(TimestampedModel):
 
     @property
     def url_chatbot(self):
-        return urljoin(self.url, "/chatbot/")
+        return urljoin(self.url, "chatbot/")
 
     @property
     def url_chatapp(self):
-        return urljoin(self.url, "/chatapp/")
+        return urljoin(self.url, "chatapp/")
 
     @staticmethod
     def get_by_request(request):
