@@ -6,7 +6,7 @@ import logging
 from http import HTTPStatus
 from typing import List
 
-from cachetools import TTLCache, cached
+# from cachetools import TTLCache, cached
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -25,7 +25,7 @@ from smarter.apps.chatbot.signals import chatbot_called
 from smarter.apps.plugin.plugin import Plugin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterBusinessRuleViolation
-from smarter.lib.django.user import UserType
+from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.view_helpers import SmarterNeverCachedWebView
 
@@ -33,7 +33,7 @@ from smarter.lib.django.view_helpers import SmarterNeverCachedWebView
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-cache = TTLCache(ttl=600, maxsize=1000)
+# cache = TTLCache(ttl=600, maxsize=1000)
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -59,7 +59,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
             return True
         return False
 
-    @cached(cache)
+    # @cached(cache)
     def get_cached_helper(self, url, user: UserType = None) -> ChatBotHelper:
         """
         Get the ChatBotHelper object for the given url and user. This method is cached
@@ -114,7 +114,10 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
         logger.info("ChatBotApiBaseViewSet.dispatch(): method=%s", request.method)
         logger.info("ChatBotApiBaseViewSet.dispatch(): body=%s", request.body)
 
-        self.helper = self.get_cached_helper(url=url)
+        if isinstance(request.user, User):
+            self.helper = self.get_cached_helper(url=url, user=request.user)
+        else:
+            self.helper = self.get_cached_helper(url=url)
         if not self.helper.is_valid:
             data = {
                 "message": "Not Found. Please provide a valid ChatBot URL.",
@@ -163,5 +166,6 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
             "plugins": ChatBotPlugin.plugins_json(chatbot=self.chatbot) if self.chatbot else None,
             "account": self.account.account_number if self.account else None,
             "user": self.user.username if self.user else None,
+            "meta": self.helper.to_json(),
         }
         return JsonResponse(data=retval, status=HTTPStatus.OK)

@@ -22,11 +22,11 @@ urlpatterns = [
     # TO DO: add paths for langchain, openai and other chatbot providers
     path("", ChatBotListView.as_view(), name="chatbot-api"),
     path("<int:chatbot_id>/", ChatBotView.as_view(), name="chatbot-api"),
-    path("<int:chatbot_id>/chatbot", SmarterChatBotApiViewSet.as_view(), name="chatbot-api-chatbot"),
-    path("<int:chatbot_id>/plugins", ChatBotPluginListView.as_view(), name="chatbot-api-plugins"),
-    path("<int:chatbot_id>/plugins/<int:plugin_id>", ChatBotPluginView.as_view(), name="chatbot-api-plugin"),
-    path("<int:chatbot_id>/apikeys", ChatBotAPIKeyListView.as_view(), name="chatbot-api-apikeys"),
-    path("<int:chatbot_id>/apikeys/<int:apikey_id>", ChatBotAPIKeyView.as_view(), name="chatbot-api-apikey"),
+    path("<int:chatbot_id>/chatbot/", SmarterChatBotApiViewSet.as_view(), name="chatbot-api-chatbot"),
+    path("<int:chatbot_id>/plugins/", ChatBotPluginListView.as_view(), name="chatbot-api-plugins"),
+    path("<int:chatbot_id>/plugins/<int:plugin_id>/", ChatBotPluginView.as_view(), name="chatbot-api-plugin"),
+    path("<int:chatbot_id>/apikeys/", ChatBotAPIKeyListView.as_view(), name="chatbot-api-apikeys"),
+    path("<int:chatbot_id>/apikeys/<int:apikey_id>/", ChatBotAPIKeyView.as_view(), name="chatbot-api-apikey"),
     path(
         "<int:chatbot_id>/customdomains",
         ChatBotCustomDomainListView.as_view(),

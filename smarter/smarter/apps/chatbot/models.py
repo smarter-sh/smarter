@@ -319,27 +319,62 @@ class ChatBotHelper:
 
         # finish instantiating the object
         self._url = url
-        self._environment = environment
-        self._user = user
+        if environment:
+            self._environment = environment
+            logger.info(f"ChatBotHelper: initialized self.environment={self.environment}")
+        if user:
+            self._user = user
+            logger.info(f"ChatBotHelper: initialized self.user={self.user}")
 
-        logger.debug(f"ChatBotHelper: url={self.url}, environment={self.environment}")
-        logger.debug(f"ChatBotHelper: domain={self.domain}, path={self.path}")
-        logger.debug(f"ChatBotHelper: subdomain={self.subdomain}")
-        logger.debug(f"ChatBotHelper: root_domain={self.root_domain}")
-        logger.debug(f"ChatBotHelper: account_number={self.account_number}")
-        logger.debug(f"ChatBotHelper: api_subdomain={self.api_subdomain}, api_host={self.api_host}")
-        logger.debug(f"ChatBotHelper: customer_api_domain={self.customer_api_domain}")
-        logger.debug(f"ChatBotHelper: is_sandbox_domain={self.is_sandbox_domain}")
-        logger.debug(f"ChatBotHelper: is_default_domain={self.is_default_domain}")
-        logger.debug(f"ChatBotHelper: is_custom_domain={self.is_custom_domain}")
-        logger.debug(f"ChatBotHelper: is_deployed={self.is_deployed}")
-        logger.debug(f"ChatBotHelper: is_valid={self.is_valid}")
-        logger.debug(f"ChatBotHelper: is_authentication_required={self.is_authentication_required}")
-        logger.debug(f"ChatBotHelper: user={self.user}, account={self.account}")
-        logger.debug(f"ChatBotHelper: chatbot={self.chatbot}")
+        if self._user:
+            self._account = UserProfile.objects.get(user=self._user).account
+            logger.info(f"ChatBotHelper: initialized self.account={self.account}")
+
+        if self._user and self._account:
+            self._user_profile = UserProfile.objects.get(user=self._user, account=self._account)
+            logger.info(f"ChatBotHelper: initialized self.user_profile={self.user_profile}")
+
+        logger.info(f"ChatBotHelper: url={self.url}, environment={self.environment}")
+        logger.info(f"ChatBotHelper: domain={self.domain}, path={self.path}")
+        logger.info(f"ChatBotHelper: subdomain={self.subdomain}")
+        logger.info(f"ChatBotHelper: root_domain={self.root_domain}")
+        logger.info(f"ChatBotHelper: account_number={self.account_number}")
+        logger.info(f"ChatBotHelper: api_subdomain={self.api_subdomain}, api_host={self.api_host}")
+        logger.info(f"ChatBotHelper: customer_api_domain={self.customer_api_domain}")
+        logger.info(f"ChatBotHelper: is_sandbox_domain={self.is_sandbox_domain}")
+        logger.info(f"ChatBotHelper: is_default_domain={self.is_default_domain}")
+        logger.info(f"ChatBotHelper: is_custom_domain={self.is_custom_domain}")
+        logger.info(f"ChatBotHelper: is_deployed={self.is_deployed}")
+        logger.info(f"ChatBotHelper: is_valid={self.is_valid}")
+        logger.info(f"ChatBotHelper: is_authentication_required={self.is_authentication_required}")
+        logger.info(f"ChatBotHelper: user={self.user}, account={self.account}")
+        logger.info(f"ChatBotHelper: chatbot={self.chatbot}")
 
     def __str__(self):
         return self.url
+
+    def to_json(self):
+        return {
+            "url": self.url,
+            "environment": self.environment,
+            "domain": self.domain,
+            "path": self.path,
+            "root_domain": self.root_domain,
+            "subdomain": self.subdomain,
+            "account_number": self.account_number,
+            "api_subdomain": self.api_subdomain,
+            "api_host": self.api_host,
+            "customer_api_domain": self.customer_api_domain,
+            "is_sandbox_domain": self.is_sandbox_domain,
+            "is_default_domain": self.is_default_domain,
+            "is_custom_domain": self.is_custom_domain,
+            "is_deployed": self.is_deployed,
+            "is_valid": self.is_valid,
+            "is_authentication_required": self.is_authentication_required,
+            "user": self.user.username if self.user else None,
+            "account": self.account.account_number if self.account else None,
+            "chatbot": self.chatbot.name if self.chatbot else None,
+        }
 
     @property
     def parsed_url(self):
@@ -366,6 +401,7 @@ class ChatBotHelper:
         :return: The URL to parse.
 
         examples:
+        - https://alpha.platform.smarter.sh/api/v0/chatbots/1/chatbot/
         - http://example.com/contact/
         - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
         - https://hr.smarter.querium.com/chatbot/
@@ -442,6 +478,8 @@ class ChatBotHelper:
         the account number needs to conform to the SmarterValidator.VALID_ACCOUNT_NUMBER_PATTERN
         and it needs to be the second segment of the subdomain of the URL.
         """
+        if self._account_number:
+            return self._account_number
 
         def from_url(url: str) -> str:
             pattern = r"\d{4}-\d{4}-\d{4}"
@@ -457,23 +495,20 @@ class ChatBotHelper:
                     return None
             return retval
 
-        if self._account_number:
-            return self._account_number
-
         if self.is_sandbox_domain:
-            logger.debug("account_number() - sandbox domain")
+            logger.info("account_number() - sandbox domain")
             if self._chatbot:
                 return self._chatbot.account.account_number
             self._account_number = from_url(self.url)
             return self._account_number
 
         if self.is_default_domain:
-            logger.debug("account_number() - default domain")
+            logger.info("account_number() - default domain")
             self._account_number = from_url(self.url)
             return self._account_number
 
         if self.is_custom_domain:
-            logger.debug("account_number() - custom domain")
+            logger.info("account_number() - custom domain")
             self._account_number = self.chatbot.account.account_number if self.chatbot else None
             return self._account_number
 
@@ -607,7 +642,7 @@ class ChatBotHelper:
         """
         if self._account:
             return self._account
-        logger.debug("initializing account")
+        logger.info("initializing account")
         if self.account_number:
             try:
                 self._account = Account.objects.get(account_number=self.account_number)
@@ -631,18 +666,17 @@ class ChatBotHelper:
             return self._chatbot
 
         if self.is_sandbox_domain:
-            # example: http://127.0.0.1:8000/api/v0/chatbots/1/chatbot
-            path = self.parsed_url.path
-            try:
-                string_value = path.split("/")[-2]
-            except IndexError:
-                return None
-            try:
-                if isinstance(string_value, str) and string_value.isdigit():
-                    chatbot_id = int(string_value)
+            # example: http://127.0.0.1:8000/api/v0/chatbots/1/chatbot/
+            match = re.search(r"/api/v0/chatbots/(\d+)", self.url)
+            if match:
+                chatbot_id = int(match.group(1))
+                try:
                     self._chatbot = ChatBot.objects.get(id=chatbot_id)
-            except ChatBot.DoesNotExist:
-                return None
+                    return self._chatbot
+                except ChatBot.DoesNotExist:
+                    logger.warning(f"ChatBot {chatbot_id} not found")
+                    return None
+            return None
 
         if self.is_default_domain:
             try:
