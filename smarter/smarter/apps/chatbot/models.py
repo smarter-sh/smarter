@@ -327,7 +327,10 @@ class ChatBotHelper:
             logger.info(f"ChatBotHelper: initialized self.user={self.user}")
 
         if self._user:
-            self._account = UserProfile.objects.get(user=self._user).account
+            self.user_profile, created = UserProfile.objects.get_or_create(user=self._user, account=self._account)
+            if created:
+                logger.warning(f"ChatBotHelper: created missing user_profile={self.user_profile}")
+            self._account = self.user_profile.account
             logger.info(f"ChatBotHelper: initialized self.account={self.account}")
 
         if self._user and self._account:
