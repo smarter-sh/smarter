@@ -12,7 +12,8 @@ from django.utils.cache import patch_vary_headers
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.cache import cache_control, cache_page, never_cache
-from django.views.decorators.csrf import ensure_csrf_cookie
+
+# from django.views.decorators.csrf import ensure_csrf_cookie
 from htmlmin.main import minify
 
 from smarter.apps.account.models import Account, UserProfile
@@ -76,7 +77,7 @@ class SmarterNeverCachedWebView(SmarterWebView):
 
 
 @method_decorator(login_required, name="dispatch")
-@method_decorator(ensure_csrf_cookie, name="dispatch")
+# @method_decorator(ensure_csrf_cookie, name="dispatch")
 class SmarterAuthenticatedWebView(SmarterWebView):
     """
     An optimized view that requires authentication.
