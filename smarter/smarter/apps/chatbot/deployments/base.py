@@ -8,6 +8,8 @@ from typing import List
 
 from cachetools import TTLCache, cached
 from django.http import JsonResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from knox.auth import TokenAuthentication
 from rest_framework.response import Response
 
@@ -34,6 +36,7 @@ logger.setLevel(logging.DEBUG)
 cache = TTLCache(ttl=600, maxsize=1000)
 
 
+@method_decorator(csrf_exempt, name="dispatch")
 class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
     """
     Base viewset for all ChatBot APIs. Handles
