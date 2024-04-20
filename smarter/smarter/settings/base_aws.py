@@ -62,9 +62,13 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https?://[\w-]+\.api\.smarter\.sh$",
 ]
 # settings that affect whether the browser saves cookies
+CSRF_COOKIE_DOMAIN = None
 CSRF_COOKIE_SECURE = False
 CSRF_COOKIE_SAMESITE = "Lax"
+
 SESSION_COOKIE_SECURE = False
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_DOMAIN = None
+
+SECURE_PROXY_SSL_HEADER = None
