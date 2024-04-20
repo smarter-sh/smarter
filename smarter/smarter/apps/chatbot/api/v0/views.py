@@ -19,6 +19,7 @@ from smarter.apps.chatbot.models import (
 )
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.models import PluginMeta
+from smarter.lib.django.user import User
 from smarter.lib.drf.view_helpers import SmarterAdminAPIView, SmarterAdminListAPIView
 
 from .serializers import (
@@ -43,8 +44,9 @@ class ViewBase(SmarterAdminAPIView):
     account: Account = None
 
     def dispatch(self, request, *args, **kwargs):
-        self.user_profile = get_object_or_404(UserProfile, user=request.user)
-        self.account = self.user_profile.account
+        if isinstance(request.user, User):
+            self.user_profile = get_object_or_404(UserProfile, user=request.user)
+            self.account = self.user_profile.account
         return super().dispatch(request, *args, **kwargs)
 
 

@@ -103,6 +103,9 @@ def get_user_for_operation(request):
     user: UserType = None
     user_profile: UserProfile = None
 
+    if not isinstance(request.user, User):
+        return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
+
     try:
         user = User.objects.get(id=request.data.get("id"))
     except User.DoesNotExist:
