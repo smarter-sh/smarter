@@ -107,7 +107,7 @@ class ChatBot(TimestampedModel):
 
     @property
     def default_host(self):
-        domain = f"{self.name}.{self.account.account_number}.{smarter_settings.environment}.{smarter_settings.customer_api_domain}"
+        domain = f"{self.name}.{self.account.account_number}.{smarter_settings.customer_api_domain}"
         SmarterValidator.validate_domain(domain)
         return domain
 
