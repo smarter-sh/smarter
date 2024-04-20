@@ -27,8 +27,20 @@ class Command(BaseCommand):
         password = options["password"]
 
         account, created = Account.objects.get_or_create(
-            account_number=SMARTER_ACCOUNT_NUMBER, company_name=SMARTER_COMPANY_NAME
+            account_number=SMARTER_ACCOUNT_NUMBER,
+            company_name=SMARTER_COMPANY_NAME,
         )
+        account.phone_number = ("+1 (512) 833-6955",)
+        account.address1 = ("1700 South Lamar Blvd",)
+        account.address2 = ("Suite 338",)
+        account.city = ("Austin",)
+        account.state = ("TX",)
+        account.postal_code = ("78704",)
+        account.country = ("USA",)
+        account.timezone = ("America/Chicago",)
+        account.currency = "USD"
+        account.save()
+
         if created:
             self.stdout.write(self.style.SUCCESS(f"Created account: {account.account_number} {account.company_name}"))
 
