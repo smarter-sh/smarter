@@ -8,7 +8,7 @@ from __future__ import annotations
 import logging
 import re
 from typing import Pattern, Sequence
-from urllib.parse import SplitResult, urlparse, urlsplit, urlunparse
+from urllib.parse import SplitResult, urlparse, urlsplit
 
 from corsheaders.conf import conf
 from corsheaders.middleware import CorsMiddleware as DjangoCorsMiddleware
@@ -48,20 +48,20 @@ class CorsMiddleware(DjangoCorsMiddleware):
 
     @property
     def url(self) -> SplitResult:
-        return self._url
+        if self._url is None:
+            return None
+        return urlparse(self._url.geturl())
 
     @url.setter
     def url(self, url: SplitResult = None):
-        if url == self._url:
-            return
+        # if url == self._url:
+        #     return
 
         # reduce the ulr to its base url.
         self._url = url
-        parsed_url = urlparse(url.geturl())
-        url_without_path = urlunparse((parsed_url.scheme, parsed_url.netloc, "", "", "", ""))
 
         # get the chatbot helper for the url and try to find the chatbot
-        self._helper = CorsMiddleware.get_helper(url=url_without_path)
+        self._helper = CorsMiddleware.get_helper(url=url.geturl())
         self._chatbot = self._helper.chatbot if self._helper.chatbot else None
 
         # If the chatbot is found, update the chatbot url
@@ -77,10 +77,10 @@ class CorsMiddleware(DjangoCorsMiddleware):
         Returns the list of allowed origins for the application. If the request
         is from a chatbot, the chatbot url is added to the list.
         """
-        if self.chatbot is None:
-            return conf.CORS_ALLOWED_ORIGINS
-        logger.info("Adding chatbot url to CORS_ALLOWED_ORIGINS: %s", self.chatbot.url)
-        return conf.CORS_ALLOWED_ORIGINS + [self.chatbot.url]
+        retval = conf.CORS_ALLOWED_ORIGINS
+        if self.chatbot is not None:
+            retval += [self.chatbot.url]
+        return retval
 
     @property
     def CORS_ALLOWED_ORIGIN_REGEXES(self) -> Sequence[str | Pattern[str]]:

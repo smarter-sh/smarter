@@ -40,6 +40,7 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware):
         retval = settings.CSRF_TRUSTED_ORIGINS
         if self.chatbot is not None:
             retval += [self.chatbot.url]
+        logger.info("CsrfViewMiddleware.CSRF_TRUSTED_ORIGINS: %s", retval)
         return retval
 
     @cached_property
@@ -62,7 +63,7 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware):
         return allowed_origin_subdomains
 
     def process_request(self, request):
-
+        logger.info("CsrfViewMiddleware.process_request")
         # Attempt to initialize a ChatBot instance based on the request's host.
         # ------------------------------------------------------
         host = request.get_host()
@@ -70,5 +71,24 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware):
         parsed_host = urlparse(url)
         host = parsed_host.hostname
         self.chatbot = ChatBot.get_by_url(url)
+        logger.info("CsrfViewMiddleware ChatBot: %s", self.chatbot)
+        logger.info("CsrfViewMiddleware host: %s", host)
+        logger.info("CsrfViewMiddleware url: %s", url)
+
+        for cookie in request.COOKIES:
+            logger.info("CsrfViewMiddleware request.COOKIES: %s", cookie)
+
+        logger.info("CsrfViewMiddleware cookie settings")
+        logger.info("=" * 80)
+        logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_NAME: %s", settings.CSRF_COOKIE_NAME)
+        # logger.info("CsrfViewMiddleware request.META['CSRF_COOKIE']: %s", request.META["CSRF_COOKIE"])
+        logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_AGE: %s", settings.CSRF_COOKIE_AGE)
+        logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_DOMAIN: %s", settings.CSRF_COOKIE_DOMAIN)
+        logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_PATH: %s", settings.CSRF_COOKIE_PATH)
+        logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_SECURE: %s", settings.CSRF_COOKIE_SECURE)
+        logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_HTTPONLY: %s", settings.CSRF_COOKIE_HTTPONLY)
+        logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_SAMESITE: %s", settings.CSRF_COOKIE_SAMESITE)
+        logger.info("=" * 80)
+
         # ------------------------------------------------------
         super().process_request(request)
