@@ -81,7 +81,7 @@ class Migration(migrations.Migration):
                 ("first_name", models.CharField(max_length=255)),
                 ("last_name", models.CharField(max_length=255)),
                 ("email", models.EmailField(max_length=254)),
-                ("phone", models.CharField(blank=True, max_length=20, null=True)),
+                ("phone", models.CharField(blank=True, max_length=50, null=True)),
                 ("is_primary", models.BooleanField(default=False)),
                 ("is_test", models.BooleanField(default=False)),
                 ("welcomed", models.BooleanField(default=False)),

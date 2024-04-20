@@ -38,7 +38,7 @@ class Account(TimestampedModel):
         validators=[account_number_format], max_length=255, unique=True, default="default_value"
     )
     company_name = models.CharField(max_length=255)
-    phone_number = models.CharField(max_length=20)
+    phone_number = models.CharField(max_length=50)
     address1 = models.CharField(max_length=255)
     address2 = models.CharField(max_length=255)
     city = models.CharField(max_length=255)

@@ -36,6 +36,7 @@ class Command(BaseCommand):
         chatbot.app_info_url = "https://smarter.sh"
         chatbot.app_background_image_url = None
         chatbot.app_logo_url = "/static/querium/querium-logo-white-transparent.png"
+        chatbot.save()
 
         if chatbot.deployed:
             self.stdout.write(self.style.SUCCESS(log_prefix + "The Smarter demo API is already deployed."))
