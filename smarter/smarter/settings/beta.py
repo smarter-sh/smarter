@@ -2,7 +2,7 @@
 """Django settings for beta.platform.smarter.sh"""
 import os
 
-from .base_docker import *
+from .base_aws import *
 
 
 environment_name = os.path.basename(__file__).replace(".py", "")
@@ -31,6 +31,3 @@ CSRF_COOKIE_SECURE = True
 # (usually http:// or https://) but found platform.smarter.sh. See the release notes for details.
 CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in SMARTER_ALLOWED_HOSTS]
 CSRF_COOKIE_DOMAIN = ENVIRONMENT_DOMAIN
-CSRF_COOKIE_SAMESITE = "Lax"
-SESSION_COOKIE_SECURE = True
-SESSION_COOKIE_SAMESITE = "Lax"
