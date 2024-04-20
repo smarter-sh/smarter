@@ -161,6 +161,10 @@ class SettingsDefaults:
       3. defaults.
     """
 
+    OPENAI_DEFAULT_MODEL = "gpt-3.5-turbo"
+    OPENAI_DEFAULT_TEMPERATURE = 0.5
+    OPENAI_DEFAULT_MAX_TOKENS = 256
+
     # defaults for this Python package
     ENVIRONMENT = os.environ.get("ENVIRONMENT", TFVARS.get("environment", SmarterEnvironments.LOCAL))
     ROOT_DOMAIN = os.environ.get("ROOT_DOMAIN", TFVARS.get("root_domain", "example.com"))
@@ -358,6 +362,13 @@ class Settings(BaseSettings):
     )
     openai_endpoint_image_size: Optional[str] = Field(
         SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE, env="OPENAI_ENDPOINT_IMAGE_SIZE"
+    )
+    openai_default_model: Optional[str] = Field(SettingsDefaults.OPENAI_DEFAULT_MODEL, env="OPENAI_DEFAULT_MODEL")
+    openai_default_temperature: Optional[float] = Field(
+        SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE, env="OPENAI_DEFAULT_TEMPERATURE"
+    )
+    openai_default_max_tokens: Optional[int] = Field(
+        SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS, env="OPENAI_DEFAULT_MAX_TOKENS"
     )
     pinecone_api_key: Optional[SecretStr] = Field(SettingsDefaults.PINECONE_API_KEY, env="PINECONE_API_KEY")
     stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY, env="STRIPE_LIVE_SECRET_KEY")
@@ -701,6 +712,31 @@ class Settings(BaseSettings):
         if v in [None, ""]:
             return SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE
         return v
+
+    @field_validator("openai_default_model")
+    def check_openai_default_model(cls, v) -> str:
+        """Check openai_default_model"""
+        if v in [None, ""]:
+            return SettingsDefaults.OPENAI_DEFAULT_MODEL
+        return v
+
+    @field_validator("openai_default_temperature")
+    def check_openai_default_temperature(cls, v) -> float:
+        """Check openai_default_temperature"""
+        if isinstance(v, float):
+            return v
+        if v in [None, ""]:
+            return SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE
+        return float(v)
+
+    @field_validator("openai_default_max_tokens")
+    def check_openai_default_max_tokens(cls, v) -> int:
+        """Check openai_default_max_tokens"""
+        if isinstance(v, int):
+            return v
+        if v in [None, ""]:
+            return SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS
+        return int(v)
 
     @field_validator("pinecone_api_key")
     def check_pinecone_api_key(cls, v) -> SecretStr:

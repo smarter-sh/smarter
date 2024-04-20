@@ -11,6 +11,7 @@ from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import account_admin_user
 from smarter.apps.chat.providers.smarter import handler
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
 
 
@@ -33,4 +34,11 @@ class Command(BaseCommand):
             with open(file_path, encoding="utf-8") as file:
                 data = json.loads(file.read())
                 plugins = ChatBotPlugin().plugins(chatbot=chatbot)
-                handler(plugins=plugins, user=user_profile.user, data=data)
+                handler(
+                    plugins=plugins,
+                    user=user_profile.user,
+                    data=data,
+                    default_model=smarter_settings.openai_default_model,
+                    default_temperature=smarter_settings.openai_default_temperature,
+                    default_max_tokens=smarter_settings.openai_default_max_tokens,
+                )
