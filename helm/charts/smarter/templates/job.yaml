@@ -30,6 +30,7 @@ spec:
               python manage.py add_plugin_examples admin
               python manage.py verify_api_infrastructure
               python manage.py deploy_demo_api
+              python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/QueriumCorp/smarter_demo
           command:
             - /bin/sh
             - -c
