@@ -29,11 +29,8 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 CSRF_COOKIE_SECURE = True
 # (4_0.E001) As of Django 4.0, the values in the CSRF_TRUSTED_ORIGINS setting must start with a scheme
 # (usually http:// or https://) but found platform.smarter.sh. See the release notes for details.
-CSRF_TRUSTED_ORIGINS = [f"http://{host}" for host in SMARTER_ALLOWED_HOSTS] + [
-    f"https://{host}" for host in SMARTER_ALLOWED_HOSTS
-]
+CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in SMARTER_ALLOWED_HOSTS]
 CSRF_COOKIE_DOMAIN = ENVIRONMENT_DOMAIN
-CSRF_COOKIE_SAMESITE = "None"
-
+CSRF_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SECURE = True
-SESSION_COOKIE_SAMESITE = "None"
+SESSION_COOKIE_SAMESITE = "Lax"
