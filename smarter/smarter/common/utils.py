@@ -7,6 +7,7 @@ import json  # library for interacting with JSON data https://www.json.org/json-
 import logging
 import sys  # libraries for error management
 import traceback  # libraries for error management
+import warnings
 
 from pydantic import SecretStr
 
@@ -55,6 +56,10 @@ def http_response_factory(status_code: int, body, debug_mode: bool = False) -> j
 
     see https://docs.aws.amazon.com/lambda/latest/dg/python-handler.html
     """
+    warnings.warn(
+        "This function will be deprecated in the future. Please use smarter.apps.chatbot.providers.utils",
+        DeprecationWarning,
+    )
     if status_code < 100 or status_code > 599:
         raise SmarterValueError(f"Invalid HTTP response code received: {status_code}")
 
@@ -86,6 +91,10 @@ def exception_response_factory(exception) -> json:
 
     exception: a descendant of Python Exception class
     """
+    warnings.warn(
+        "This function will be deprecated in the future. Please use smarter.apps.chatbot.providers.utils",
+        DeprecationWarning,
+    )
     exc_info = sys.exc_info()
     retval = {
         "error": str(exception),
@@ -105,6 +114,10 @@ def get_request_body(data) -> dict:
     Returns:
         A dictionary representing the request body.
     """
+    warnings.warn(
+        "This function will be deprecated in the future. Please use smarter.apps.chatbot.providers.utils",
+        DeprecationWarning,
+    )
     if hasattr(data, "isBase64Encoded") and bool(data["isBase64Encoded"]):
         # pylint: disable=line-too-long
         #  https://stackoverflow.com/questions/9942594/unicodeencodeerror-ascii-codec-cant-encode-character-u-xa0-in-position-20
@@ -138,6 +151,10 @@ def get_request_body(data) -> dict:
 
 def parse_request(request_body: dict):
     """Parse the request body and return the endpoint, model, messages, and input_text"""
+    warnings.warn(
+        "This function will be deprecated in the future. Please use smarter.apps.chatbot.providers.utils",
+        DeprecationWarning,
+    )
     object_type = request_body.get("object_type")
     model = request_body.get("model")
     messages = request_body.get("messages")
@@ -184,6 +201,10 @@ def parse_request(request_body: dict):
 
 def get_content_for_role(messages: list, role: str) -> str:
     """Get the text content from the messages list for a given role"""
+    warnings.warn(
+        "This function will be deprecated in the future. Please use smarter.apps.chatbot.providers.utils",
+        DeprecationWarning,
+    )
     retval = [d.get("content") for d in messages if d["role"] == role]
     try:
         return retval[-1]
@@ -193,6 +214,10 @@ def get_content_for_role(messages: list, role: str) -> str:
 
 def get_message_history(messages: list) -> list:
     """Get the text content from the messages list for a given role"""
+    warnings.warn(
+        "This function will be deprecated in the future. Please use smarter.apps.chatbot.providers.utils",
+        DeprecationWarning,
+    )
     message_history = [
         {"role": d["role"], "content": d.get("content")}
         for d in messages
@@ -203,6 +228,10 @@ def get_message_history(messages: list) -> list:
 
 def get_messages_for_role(messages: list, role: str) -> list:
     """Get the text content from the messages list for a given role"""
+    warnings.warn(
+        "This function will be deprecated in the future. Please use smarter.apps.chatbot.providers.utils",
+        DeprecationWarning,
+    )
     retval = [d.get("content") for d in messages if d["role"] == role]
     return retval
 
@@ -211,6 +240,10 @@ def request_meta_data_factory(model, object_type, temperature, max_tokens, input
     """
     Return a dictionary of request meta data.
     """
+    warnings.warn(
+        "This function will be deprecated in the future. Please use smarter.apps.chatbot.providers.utils",
+        DeprecationWarning,
+    )
     return {
         "request_meta_data": {
             "lambda": "openai_passthrough",
