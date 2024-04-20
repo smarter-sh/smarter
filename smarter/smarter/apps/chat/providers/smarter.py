@@ -29,17 +29,15 @@ from smarter.apps.plugin.plugin import Plugin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
 from smarter.common.exceptions import EXCEPTION_MAP
-from smarter.common.utils import (
+from smarter.lib.django.user import UserType
+from smarter.lib.django.validators import validate_completion_request, validate_item
+
+from .utils import (
     exception_response_factory,
     get_request_body,
     http_response_factory,
     parse_request,
     request_meta_data_factory,
-)
-from smarter.lib.django.user import UserType
-from smarter.lib.django.validators import (  # validate_embedding_request,
-    validate_completion_request,
-    validate_item,
 )
 
 
@@ -48,8 +46,15 @@ openai.organization = smarter_settings.openai_api_organization
 openai.api_key = smarter_settings.openai_api_key.get_secret_value()
 
 
-# pylint: disable=too-many-locals,too-many-statements
-def handler(plugins: List[Plugin], user: UserType, data: dict):
+# pylint: disable=too-many-locals,too-many-statements,too-many-arguments
+def handler(
+    default_model: str,
+    default_temperature: float,
+    default_max_tokens: int,
+    plugins: List[Plugin],
+    user: UserType,
+    data: dict,
+):
     """
     Chat prompt handler. Responsible for processing incoming requests and
     invoking the appropriate OpenAI API endpoint based on the contents of
@@ -67,6 +72,10 @@ def handler(plugins: List[Plugin], user: UserType, data: dict):
         request_body = get_request_body(data=data)
         object_type, model, messages, input_text, temperature, max_tokens = parse_request(request_body)
         request_meta_data = request_meta_data_factory(model, object_type, temperature, max_tokens, input_text)
+
+        model = model or default_model
+        temperature = temperature or default_temperature
+        max_tokens = max_tokens or default_max_tokens
 
         # does the prompt have anything to do with any of the search terms defined in a plugin?
         # FIX NOTE: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_tokens

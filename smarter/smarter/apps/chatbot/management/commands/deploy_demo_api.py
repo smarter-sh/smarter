@@ -20,8 +20,12 @@ class Command(BaseCommand):
         account = Account.objects.get(account_number=SMARTER_ACCOUNT_NUMBER)
         chatbot, _ = ChatBot.objects.get_or_create(account=account, name=SMARTER_EXAMPLE_CHATBOT_NAME)
 
+        chatbot.default_model = "gpt-3.5-turbo"
+        chatbot.default_temperature = 0.5
+        chatbot.default_max_tokens = 256
+
         chatbot.app_name = "Smarter Demo"
-        chatbot.app_assistant = "Lawrence"
+        chatbot.app_assistant = "Kent"
         chatbot.app_welcome_message = "Welcome to the Smarter demo!"
         chatbot.app_example_prompts = [
             "What is the weather in San Francisco?",
