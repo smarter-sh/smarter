@@ -103,6 +103,8 @@ docker-init:
 	docker exec smarter-mysql mysql -u smarter -psmarter -e 'DROP DATABASE IF EXISTS smarter; CREATE DATABASE smarter;' && \
 	docker exec smarter-app bash -c \
 		"python manage.py makemigrations && python manage.py migrate && \
+		python manage.py waffle_switch chatbot_suppress_csrf off --create && \
+		python manage.py waffle_switch chatbot_log_csrf off --create && \
 		python manage.py create_smarter_admin --username admin --email admin@smarter.sh --password smarter && \
 		python manage.py add_plugin_examples admin && \
 		python manage.py verify_api_infrastructure && \

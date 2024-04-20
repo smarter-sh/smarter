@@ -8,13 +8,13 @@ import logging
 from collections import defaultdict
 from urllib.parse import urlparse
 
+import waffle
 from django.conf import settings
+from django.http import HttpResponseForbidden
 from django.middleware.csrf import CsrfViewMiddleware as DjangoCsrfViewMiddleware
 from django.utils.functional import cached_property
 
-from smarter.lib.django.validators import SmarterValidator
-
-from ..models import ChatBot
+from smarter.apps.chatbot.models import ChatBot
 
 
 logger = logging.getLogger(__name__)
@@ -63,32 +63,38 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware):
         return allowed_origin_subdomains
 
     def process_request(self, request):
-        logger.info("CsrfViewMiddleware.process_request")
-        # Attempt to initialize a ChatBot instance based on the request's host.
+        # Does this url point to a ChatBot?
         # ------------------------------------------------------
-        host = request.get_host()
-        url = SmarterValidator.urlify(host)
-        parsed_host = urlparse(url)
-        host = parsed_host.hostname
-        self.chatbot = ChatBot.get_by_url(url)
-        logger.info("CsrfViewMiddleware ChatBot: %s", self.chatbot)
-        logger.info("CsrfViewMiddleware host: %s", host)
-        logger.info("CsrfViewMiddleware url: %s", url)
-
-        for cookie in request.COOKIES:
-            logger.info("CsrfViewMiddleware request.COOKIES: %s", cookie)
-
-        logger.info("CsrfViewMiddleware cookie settings")
-        logger.info("=" * 80)
-        logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_NAME: %s", settings.CSRF_COOKIE_NAME)
-        # logger.info("CsrfViewMiddleware request.META['CSRF_COOKIE']: %s", request.META["CSRF_COOKIE"])
-        logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_AGE: %s", settings.CSRF_COOKIE_AGE)
-        logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_DOMAIN: %s", settings.CSRF_COOKIE_DOMAIN)
-        logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_PATH: %s", settings.CSRF_COOKIE_PATH)
-        logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_SECURE: %s", settings.CSRF_COOKIE_SECURE)
-        logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_HTTPONLY: %s", settings.CSRF_COOKIE_HTTPONLY)
-        logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_SAMESITE: %s", settings.CSRF_COOKIE_SAMESITE)
-        logger.info("=" * 80)
+        self.chatbot = ChatBot.get_by_request(request=request)
+        logger.info(
+            "CsrfViewMiddleware.process_request chatbot_log_csrf %s", waffle.switch_is_active("chatbot_log_csrf")
+        )
+        if self.chatbot and waffle.switch_is_active("chatbot_log_csrf"):
+            logger.info("CsrfViewMiddleware.process_request: chatbot_log_csrf is active")
+            logger.info("=" * 80)
+            logger.info("CsrfViewMiddleware ChatBot: %s", self.chatbot)
+            for cookie in request.COOKIES:
+                logger.info("CsrfViewMiddleware request.COOKIES: %s", cookie)
+            logger.info("CsrfViewMiddleware cookie settings")
+            logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_NAME: %s", settings.CSRF_COOKIE_NAME)
+            logger.info("CsrfViewMiddleware request.META['CSRF_COOKIE']: %s", request.META.get("CSRF_COOKIE"))
+            logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_AGE: %s", settings.CSRF_COOKIE_AGE)
+            logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_DOMAIN: %s", settings.CSRF_COOKIE_DOMAIN)
+            logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_PATH: %s", settings.CSRF_COOKIE_PATH)
+            logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_SECURE: %s", settings.CSRF_COOKIE_SECURE)
+            logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_HTTPONLY: %s", settings.CSRF_COOKIE_HTTPONLY)
+            logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_SAMESITE: %s", settings.CSRF_COOKIE_SAMESITE)
+            logger.info("=" * 80)
 
         # ------------------------------------------------------
         super().process_request(request)
+
+    def process_view(self, request, callback, callback_args, callback_kwargs):
+        if self.chatbot and waffle.switch_is_active("chatbot_suppress_csrf"):
+            logger.info("CsrfViewMiddleware.process_view: chatbot_suppress_csrf is active")
+            response = super().process_view(request, callback, callback_args, callback_kwargs)
+            if isinstance(response, HttpResponseForbidden):
+                logger.error("CSRF validation failed")
+                return None
+            return response
+        return super().process_view(request, callback, callback_args, callback_kwargs)

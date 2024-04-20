@@ -36,6 +36,7 @@ django-rest-knox==4.2.0                 # Token authentication for REST APIs
 dj-stripe==2.8.3                        # Stripe card processing integration
 django-cors-headers==4.3.1              # Cross-origin resource sharing
 drf-yasg==1.21.7                        # Swagger API documentation
+django-waffle==4.1.0                     # Feature flagging
 
 # for working with data
 # ------------
