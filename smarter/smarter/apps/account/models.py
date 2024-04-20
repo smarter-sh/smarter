@@ -216,12 +216,18 @@ class UserProfile(TimestampedModel):
         if admins.exists():
             return admins.first().user
 
-        logger.warning("No admin found for account %s", account)
+        logger.error("No admin found for account %s", account)
 
         users = cls.objects.filter(account=account).order_by("user__id")
         if users.exists():
             user = users.first().user
-        return user
+            return user
+
+        logger.error("No user for account %s", account)
+        admin_user = cls.objects.get_or_create(username="admin")
+        user_profile = cls.objects.create(user=admin_user, account=account)
+        logger.warning("Created admin user for account %s. Use manage.py to set the password", account)
+        return user_profile.user
 
     def __str__(self):
         return str(self.account.company_name) + "-" + str(self.user.email or self.user.username)
