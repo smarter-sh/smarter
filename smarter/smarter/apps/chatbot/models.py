@@ -151,6 +151,14 @@ class ChatBot(TimestampedModel):
         return self.sandbox_host
 
     @staticmethod
+    def get_by_request(request):
+        host = request.get_host()
+        url = SmarterValidator.urlify(host)
+        parsed_host = urlparse(url)
+        host = parsed_host.hostname
+        return ChatBot.get_by_url(url)
+
+    @staticmethod
     # @cache_results(timeout=600)
     def get_by_url(url: str):
         url = SmarterValidator.urlify(url)
