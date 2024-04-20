@@ -7,20 +7,18 @@ import logging
 
 from django.http import HttpResponseNotFound
 from django.shortcuts import render
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 
 from smarter.apps.chat.models import ChatHistory
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
 
 
-# from django.utils.decorators import method_decorator
-# from django.views.decorators.csrf import csrf_exempt
-
-
 logger = logging.getLogger(__name__)
 
 
-# @method_decorator(csrf_exempt, name="dispatch")
+@method_decorator(csrf_exempt, name="dispatch")
 class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
     """
     Chat app view for smarter web. This view is protected and requires the user

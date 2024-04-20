@@ -107,6 +107,11 @@ class ChatBot(TimestampedModel):
 
     @property
     def default_host(self):
+        """
+        self.name: 'example'
+        self.account.account_number: '1234-5678-9012'
+        smarter_settings.customer_api_domain: 'alpha.api.smarter.sh'
+        """
         domain = f"{self.name}.{self.account.account_number}.{smarter_settings.customer_api_domain}"
         SmarterValidator.validate_domain(domain)
         return domain
@@ -117,6 +122,10 @@ class ChatBot(TimestampedModel):
 
     @property
     def custom_host(self):
+        """
+        self.name: 'example'
+        self.custom_domain.domain_name: 'example.com'
+        """
         if self.custom_domain and self.custom_domain.is_verified:
             domain = f"{self.name}.{self.custom_domain.domain_name}"
             SmarterValidator.validate_domain(domain)
@@ -125,18 +134,27 @@ class ChatBot(TimestampedModel):
 
     @property
     def custom_url(self):
+        """
+        return 'https://example.example.com'
+        """
         if self.custom_host:
             return SmarterValidator.urlify(self.custom_host, scheme=self.scheme)
         return None
 
     @property
     def sandbox_host(self):
+        """
+        return 'alpha.api.smarter.sh/api/v0/chatbots/1/'
+        """
         domain = f"{smarter_settings.environment_domain}/api/v0/chatbots/{self.id}/"
         SmarterValidator.validate_domain(domain)
         return domain
 
     @property
     def sandbox_url(self):
+        """
+        return 'https://alpha.api.smarter.sh/api/v0/chatbots/1/'
+        """
         return SmarterValidator.urlify(self.sandbox_host, scheme=self.scheme)
 
     @property
