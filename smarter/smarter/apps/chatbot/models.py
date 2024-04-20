@@ -3,7 +3,7 @@
 import logging
 import re
 from typing import List, Type
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 import tldextract
 from django.core.cache import cache
@@ -153,7 +153,15 @@ class ChatBot(TimestampedModel):
     def url(self):
         if self.deployed:
             return self.custom_url or self.default_url
-        return self.sandbox_host
+        return self.sandbox_url
+
+    @property
+    def url_chatbot(self):
+        return urljoin(self.url, "/chatbot/")
+
+    @property
+    def url_chatapp(self):
+        return urljoin(self.url, "/chatapp/")
 
     @staticmethod
     def get_by_request(request):
@@ -196,7 +204,7 @@ class ChatBot(TimestampedModel):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.hostname
+        return self.url
 
 
 class ChatBotAPIKey(TimestampedModel):

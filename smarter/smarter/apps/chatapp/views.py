@@ -4,14 +4,12 @@ information about how the React app is integrated into the Django app.
 """
 
 import logging
-from urllib.parse import urljoin
 
 from django.http import HttpResponseNotFound
 from django.shortcuts import render
 
 from smarter.apps.chat.models import ChatHistory
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
-from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
 
 
@@ -79,14 +77,11 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
         a React app.
         """
         url = request.build_absolute_uri()
-        url = SmarterValidator.urlify(url)
-        url = SmarterValidator.base_url(url)
-        api_url = urljoin(chatbot.url, "/chatbot/")
 
         # backend context
         backend_context = {
             "BASE_URL": url,
-            "API_URL": api_url,
+            "API_URL": chatbot.url_chatbot,
             "SANDBOX_MODE": self.sandbox_mode,
         }
 
