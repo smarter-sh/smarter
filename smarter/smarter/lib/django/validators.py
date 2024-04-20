@@ -337,16 +337,18 @@ def validate_messages(request_body):
             raise SmarterValueError(f"dict key 'content' not found in message {json.dumps(message, indent=4)}")
 
 
-def validate_completion_request(request_body) -> None:
+def validate_completion_request(request_body, version: str = "v0") -> None:
     """See openai.chat.completion.request.json"""
     validate_request_body(request_body=request_body)
-    if "model" not in request_body:
-        raise SmarterValueError("dict key 'model' not found in request body object")
-    if "temperature" not in request_body:
-        raise SmarterValueError("dict key 'temperature' not found in request body object")
-    if "max_tokens" not in request_body:
-        raise SmarterValueError("dict key 'max_tokens' not found in request body object")
     validate_messages(request_body=request_body)
+
+    if version == "v0":
+        if "model" not in request_body:
+            raise SmarterValueError("dict key 'model' not found in request body object")
+        if "temperature" not in request_body:
+            raise SmarterValueError("dict key 'temperature' not found in request body object")
+        if "max_tokens" not in request_body:
+            raise SmarterValueError("dict key 'max_tokens' not found in request body object")
 
 
 def validate_embedding_request(request_body) -> None:

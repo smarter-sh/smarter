@@ -89,9 +89,11 @@ class ChatBot(TimestampedModel):
     subdomain = models.ForeignKey(ChatBotCustomDomainDNS, on_delete=models.CASCADE, blank=True, null=True)
     custom_domain = models.ForeignKey(ChatBotCustomDomain, on_delete=models.CASCADE, blank=True, null=True)
     deployed = models.BooleanField(default=False, blank=True, null=True)
-    default_model = models.CharField(default="gpt-3.5-turbo", max_length=255, blank=True, null=True)
-    default_temperature = models.FloatField(default=0.5, blank=True, null=True)
-    default_max_tokens = models.IntegerField(default=256, blank=True, null=True)
+    default_model = models.CharField(
+        default=smarter_settings.openai_default_model, max_length=255, blank=True, null=True
+    )
+    default_temperature = models.FloatField(default=smarter_settings.openai_default_temperature, blank=True, null=True)
+    default_max_tokens = models.IntegerField(default=smarter_settings.openai_default_max_tokens, blank=True, null=True)
 
     app_name = models.CharField(max_length=255, blank=True, null=True)
     app_assistant = models.CharField(max_length=255, blank=True, null=True)

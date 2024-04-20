@@ -56,7 +56,14 @@ class SmarterChatBotApiViewSet(ChatBotApiBaseViewSet):
         logger.debug("chatbot: %s", self.chatbot)
         logger.debug("plugins: %s", self.plugins)
 
-        response = handler(plugins=self.plugins, user=self.user, data=data)
+        response = handler(
+            plugins=self.plugins,
+            user=self.user,
+            data=data,
+            default_model=self.chatbot.default_model,
+            default_temperature=self.chatbot.default_temperature,
+            default_max_tokens=self.chatbot.default_max_tokens,
+        )
         response = JsonResponse(data=response, safe=False, status=HTTPStatus.OK)
         logger.debug("SmarterChatBotApiViewSet.post: response=%s", response)
         return response

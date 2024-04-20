@@ -105,7 +105,7 @@ def handler(
             valid_items=VALID_CHAT_COMPLETION_MODELS,
             item_type="ChatCompletion models",
         )
-        validate_completion_request(request_body)
+        validate_completion_request(request_body, version="v1")
         chat_completion_called.send(sender=handler, user=user, data=data, action="request")
         openai_response = openai.chat.completions.create(
             model=model,
