@@ -48,3 +48,7 @@ logger.info("CSRF_TRUSTED_ORIGINS: %s", CSRF_TRUSTED_ORIGINS)
 logger.info("SESSION_COOKIE_SECURE: %s", SESSION_COOKIE_SECURE)
 logger.info("SESSION_COOKIE_SAMESITE: %s", SESSION_COOKIE_SAMESITE)
 logger.info("*" * 80)
+if not SESSION_COOKIE_SECURE:
+    logger.warning(
+        "SESSION_COOKIE_SECURE should be set to True. The current setting makes the cookie vulnerable to man-in-the-middle attacks."
+    )
