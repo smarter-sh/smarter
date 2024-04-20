@@ -37,6 +37,10 @@ WORKDIR /smarter
 COPY ./smarter .
 RUN chown smarter_user:smarter_user -R .
 
+COPY ./scripts/pull_s3_env.sh .
+RUN chown smarter_user:smarter_user -R . && \
+    chmod +x pull_s3_env.sh
+
 # bring Ubuntu up to date
 RUN apt-get update && apt-get install -y
 
@@ -79,6 +83,8 @@ RUN python manage.py collectstatic --noinput
 
 # Add a non-root user and switch to it
 # setup the run-time environment
+#
+# TO DO: add auto download of AWS S3 bucket with settings.
 USER smarter_user
 CMD ["gunicorn", "smarter.wsgi:application", "-b", "0.0.0.0:8000"]
 EXPOSE 8000
