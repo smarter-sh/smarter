@@ -11,7 +11,7 @@ from rest_framework.response import Response
 
 from smarter.apps.account.api.v0.serializers import PaymentMethodSerializer
 from smarter.apps.account.models import Account, PaymentMethod, UserProfile
-from smarter.lib.django.user import UserType
+from smarter.lib.django.user import User, UserType
 
 from .base import AccountListViewBase, AccountViewBase
 
@@ -77,10 +77,15 @@ def get_payment_method(request, payment_method_id: int):
     except PaymentMethod.DoesNotExist:
         return JsonResponse({"error": "Payment method not found"}, status=HTTPStatus.NOT_FOUND)
 
-    user_profile = UserProfile.objects.get(user=request.user)
+    if isinstance(request.user, User):
+        user_profile = UserProfile.objects.get(user=request.user)
 
     # staff can manage payment methods for their account
-    if request.user.is_superuser or (user_profile.account == account and request.user.is_staff):
+    if (
+        isinstance(request.user, User)
+        and request.user.is_superuser
+        or (user_profile.account == account and request.user.is_staff)
+    ):
         serializer = PaymentMethodSerializer(payment_method)
         return Response(serializer.data, status=HTTPStatus.OK)
 
@@ -130,10 +135,13 @@ def update_payment_method(request):
     except PaymentMethod.DoesNotExist:
         return JsonResponse({"error": "Payment method not found"}, status=HTTPStatus.NOT_FOUND)
 
-    user_profile = UserProfile.objects.get(user=request.user)
+    if isinstance(request.user, User):
+        user_profile = UserProfile.objects.get(user=request.user)
 
     # superusers can manage any payment method. staff can manage payment methods for their account
-    if not (request.user.is_superuser or (user_profile.account == account and request.user.is_staff)):
+    if isinstance(request.user, User) and not (
+        request.user.is_superuser or (user_profile.account == account and request.user.is_staff)
+    ):
         return JsonResponse({"error": "You are not authorized to modify this account."}, status=HTTPStatus.UNAUTHORIZED)
 
     try:

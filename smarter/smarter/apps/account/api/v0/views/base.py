@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404
 
 from smarter.apps.account.api.v0.serializers import AccountSerializer
 from smarter.apps.account.models import UserProfile
+from smarter.lib.django.user import User
 from smarter.lib.drf.view_helpers import SmarterAdminAPIView, SmarterAdminListAPIView
 
 
@@ -20,7 +21,7 @@ class AccountViewBase(SmarterAdminAPIView):
 
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
-        if response.status_code < 300:
+        if response.status_code < 300 and isinstance(request.user, User):
             self.user_profile = get_object_or_404(UserProfile, user=request.user)
         return response
 
@@ -33,6 +34,6 @@ class AccountListViewBase(SmarterAdminListAPIView):
 
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
-        if response.status_code < 300:
+        if response.status_code < 300 and isinstance(request.user, User):
             self.user_profile = get_object_or_404(UserProfile, user=request.user)
         return response
