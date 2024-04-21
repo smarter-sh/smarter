@@ -1,5 +1,6 @@
 """Django template and view helper functions."""
 
+import logging
 import re
 
 from django import template
@@ -19,6 +20,7 @@ from htmlmin.main import minify
 from smarter.apps.account.models import Account, UserProfile
 
 
+logger = logging.getLogger(__name__)
 register = template.Library()
 
 
@@ -91,6 +93,7 @@ class SmarterAuthenticatedWebView(SmarterWebView):
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
         if response.status_code > 299:
+            logger.info("SmarterAuthenticatedWebView.dispatch(): ERROR response=%s", response)
             return response
 
         patch_vary_headers(response, ["Cookie"])
@@ -100,6 +103,7 @@ class SmarterAuthenticatedWebView(SmarterWebView):
         except UserProfile.DoesNotExist:
             if not request.user.is_authenticated:
                 return redirect_and_expire_cache(path="/login/")
+            logger.error("SmarterAuthenticatedWebView.dispatch(): UserProfile.DoesNotExist")
             return HttpResponseNotFound
 
         self.account = self.user_profile.account

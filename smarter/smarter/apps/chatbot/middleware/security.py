@@ -9,7 +9,7 @@ from django.middleware.security import SecurityMiddleware as DjangoSecurityMiddl
 
 from smarter.lib.django.validators import SmarterValidator
 
-from ..models import ChatBot
+from ..models import ChatBotHelper
 
 
 logger = logging.getLogger(__name__)
@@ -48,7 +48,8 @@ class SecurityMiddleware(DjangoSecurityMiddleware):
             return None
 
         # 3.) If the host is a domain for a deployed ChatBot, allow it to pass through
-        if ChatBot.get_by_url(url) is not None:
+        helper = ChatBotHelper(url=url, user=request.user)
+        if helper.chatbot is not None:
             return None
 
         return HttpResponseBadRequest("Bad Request (400) - Invalid Hostname.")

@@ -4,18 +4,132 @@ information about how the React app is integrated into the Django app.
 """
 
 import logging
+import warnings
 
-from django.http import HttpResponseNotFound
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseNotFound, JsonResponse
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
+from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
+from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.chat.models import ChatHistory
-from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
+from smarter.apps.chatbot.models import ChatBot, ChatBotHelper, ChatBotPlugin
+from smarter.apps.chatbot.serializers import ChatBotPluginSerializer, ChatBotSerializer
+from smarter.lib.django.user import UserType
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
 
 
 logger = logging.getLogger(__name__)
+
+
+# pylint: disable=R0902
+@method_decorator(login_required, name="dispatch")
+@method_decorator(csrf_exempt, name="dispatch")
+class ChatConfigView(View):
+    """
+    Chat config view for smarter web. This view is protected and requires the user
+    to be authenticated. It works with any ChatBots but is aimed at chatbots running
+    inside the web console in sandbox mode.
+    """
+
+    _sandbox_mode: bool = True
+    helper: ChatBotHelper = None
+    account: Account = None
+    user: UserType = None
+    user_profile: UserProfile = None
+    chatbot: ChatBot = None
+    chatbot_serializer: ChatBotSerializer = None
+    chatbot_plugin_serializer: ChatBotPluginSerializer = None
+    url: str = None
+
+    def dispatch(self, request, *args, **kwargs):
+        name = kwargs.pop("name", None)
+        self.user = request.user
+        self.user_profile = UserProfile.objects.get(user=self.user)
+        self.account = self.user_profile.account
+
+        self._sandbox_mode = name is not None
+        self.url = request.build_absolute_uri()
+        self.helper = ChatBotHelper(url=self.url, user=self.user_profile.user, account=self.account, name=name)
+        self.chatbot = self.helper.chatbot
+        if not self.chatbot:
+            return HttpResponseNotFound()
+        self.chatbot_serializer = ChatBotSerializer(self.chatbot)
+        chatbot_plugins = ChatBotPlugin.objects.filter(chatbot=self.chatbot)
+        self.chatbot_plugin_serializer = ChatBotPluginSerializer(chatbot_plugins, many=True)
+        return super().dispatch(request, *args, **kwargs)
+
+    # pylint: disable=unused-argument
+    def get(self, request, *args, **kwargs):
+        """
+        Get the chatbot configuration.
+        """
+        if not self.chatbot:
+            return HttpResponseNotFound()
+        return JsonResponse(data=self.config())
+
+    @property
+    def sandbox_mode(self):
+        return self._sandbox_mode
+
+    def config(self) -> dict:
+        """
+        React context for all templates that render
+        a React app.
+        """
+
+        # backend context
+        backend_context = {
+            "BASE_URL": self.url,
+            "API_URL": self.chatbot.url_chatbot,
+            "SANDBOX_MODE": self.sandbox_mode,
+        }
+
+        app_context = {
+            "NAME": self.chatbot.app_name or "chatbot",
+            "ASSISTANT": self.chatbot.app_assistant or "Smarter",
+            "WELCOME_MESSAGE": self.chatbot.app_welcome_message or "Welcome to the chatbot!",
+            "EXAMPLE_PROMPTS": self.chatbot.app_example_prompts or [],
+            "PLACEHOLDER": self.chatbot.app_placeholder or "Type something here...",
+            "INFO_URL": self.chatbot.app_info_url,
+            "BACKGROUND_IMAGE_URL": self.chatbot.app_background_image_url,
+            "LOGO_URL": self.chatbot.app_logo_url,
+            "FILE_ATTACHMENT_BUTTON": self.chatbot.app_file_attachment,
+        }
+
+        # chat context
+        chat_history = ChatHistory.objects.filter(user=self.user_profile.user).order_by("-created_at").first()
+        chat_context = {
+            "ID": chat_history.chat_id if chat_history else "undefined",
+            "HISTORY": chat_history.messages if chat_history else [],
+            "MOST_RECENT_RESPONSE": chat_history.response if chat_history else None,
+        }
+
+        # sandbox mode
+        sandbox_context = {}
+        if self.sandbox_mode:
+            plugins = [plugin.name for plugin in ChatBotPlugin.plugins(self.chatbot)]
+            sandbox_context = {
+                "PLUGINS": plugins,
+                "URL": self.chatbot.url,
+                "DEFAULT_URL": self.chatbot.default_url,
+                "CUSTOM_URL": self.chatbot.custom_url,
+                "SANDBOX_URL": self.chatbot.sandbox_url,
+                "CREATED_AT": self.chatbot.created_at,
+                "UPDATED_AT": self.chatbot.updated_at,
+            }
+
+        retval = {
+            "CHATBOT": self.chatbot_serializer.data,
+            "PLUGINS": self.chatbot_plugin_serializer.data,
+            "BACKEND": backend_context,
+            "APP": app_context,
+            "CHAT": chat_context,
+            "SANDBOX": sandbox_context,
+        }
+        return retval
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -74,6 +188,10 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
         React context for all templates that render
         a React app.
         """
+        warnings.warn(
+            "The 'react_context' method is deprecated. Use api endpoint /chatapp/<name>/config/", DeprecationWarning
+        )
+
         url = request.build_absolute_uri()
 
         # backend context
