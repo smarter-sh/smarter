@@ -115,8 +115,6 @@ MIDDLEWARE = [
     # this replaces corsheaders.middleware.CorsMiddleware"
     "smarter.apps.chatbot.middleware.cors.CorsMiddleware",
     # this replaces django.middleware.security.SecurityMiddleware
-    # to manage ALLOWED_HOSTS
-    "smarter.apps.chatbot.middleware.security.SecurityMiddleware",
     # simple middleware to block requests for common sensitive files
     # like .env, private key files, etc.
     "smarter.lib.django.middleware.BlockSensitiveFilesMiddleware",
@@ -127,6 +125,8 @@ MIDDLEWARE = [
     # to add chatbot-specific CSRF handling
     "smarter.apps.chatbot.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # to manage ALLOWED_HOSTS
+    "smarter.apps.chatbot.middleware.security.SecurityMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "waffle.middleware.WaffleMiddleware",
