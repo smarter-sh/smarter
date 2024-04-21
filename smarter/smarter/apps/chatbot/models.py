@@ -10,11 +10,10 @@ import waffle
 from django.core.cache import cache
 from django.db import models
 
+# our stuff
 from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin import Plugin
-
-# our stuff
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import User, UserType

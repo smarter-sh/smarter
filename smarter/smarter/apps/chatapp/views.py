@@ -122,12 +122,15 @@ class ChatConfigView(View):
             }
 
         retval = {
-            "CHATBOT": self.chatbot_serializer.data,
-            "PLUGINS": self.chatbot_plugin_serializer.data,
-            "BACKEND": backend_context,
-            "APP": app_context,
-            "CHAT": chat_context,
-            "SANDBOX": sandbox_context,
+            "chatbot": self.chatbot_serializer.data,
+            "plugins": self.chatbot_plugin_serializer.data,
+            "meta": self.helper.to_json(),
+            "legacy": {
+                "backend": backend_context,
+                "app": app_context,
+                "chat": chat_context,
+                "sandbox": sandbox_context,
+            },
         }
         return retval
 
