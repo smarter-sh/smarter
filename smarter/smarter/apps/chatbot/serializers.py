@@ -2,12 +2,15 @@
 
 from rest_framework import serializers
 
+from smarter.apps.account.api.v0.serializers import AccountSerializer
+
 from .models import ChatBot, ChatBotPlugin
 
 
 class ChatBotSerializer(serializers.ModelSerializer):
     """Serializer for ChatBot model."""
 
+    account = AccountSerializer()
     default_host = serializers.SerializerMethodField()
     default_url = serializers.SerializerMethodField()
     custom_host = serializers.SerializerMethodField()
