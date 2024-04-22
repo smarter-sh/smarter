@@ -75,9 +75,6 @@ def handle_chat_completion_tool_call(sender, **kwargs):
     request: dict = kwargs.get("request")
     response: dict = kwargs.get("response")
 
-    logger.info("request: %s", request)
-    logger.info("response: %s", response)
-
     chat_tool_call_history = ChatToolCall(
         chat=chat,
         plugin=plugin,
@@ -121,13 +118,6 @@ def handle_chat_completion_returned(sender, **kwargs):
     request: dict = kwargs.get("request")
     response: dict = kwargs.get("response")
 
-    logger.info(
-        "%s signal received for chat: %s,  input_text: %s, response: %s",
-        formatted_text("chat_response_success"),
-        chat.id,
-        request,
-        response,
-    )
     ChatHistory(
         chat=chat,
         request=request,
