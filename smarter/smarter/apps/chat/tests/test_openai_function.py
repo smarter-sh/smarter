@@ -14,6 +14,7 @@ from time import sleep
 import yaml
 from django.test import Client
 
+from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django.user import User
 
 
@@ -203,7 +204,14 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         event_about_gobstoppers = get_test_file("json/prompt_about_everlasting_gobstoppers.json")
 
         try:
-            response = handler(plugins=self.plugins, user=self.user, data=event_about_gobstoppers)
+            response = handler(
+                plugins=self.plugins,
+                user=self.user,
+                data=event_about_gobstoppers,
+                default_model=smarter_settings.openai_default_model,
+                default_max_tokens=smarter_settings.openai_default_max_tokens,
+                default_temperature=smarter_settings.openai_default_temperature,
+            )
             sleep(1)
         except Exception as error:
             self.fail(f"handler() raised {error}")
@@ -237,7 +245,14 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         event_about_weather = get_test_file("json/prompt_about_weather.json")
 
         try:
-            response = handler(plugins=self.plugins, user=self.user, data=event_about_weather)
+            response = handler(
+                plugins=self.plugins,
+                user=self.user,
+                data=event_about_weather,
+                default_model=smarter_settings.openai_default_model,
+                default_max_tokens=smarter_settings.openai_default_max_tokens,
+                default_temperature=smarter_settings.openai_default_temperature,
+            )
         except Exception as error:
             self.fail(f"handler() raised {error}")
         self.check_response(response)
@@ -248,7 +263,14 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         event_about_recipes = get_test_file("json/prompt_about_recipes.json")
 
         try:
-            response = handler(plugins=self.plugins, user=self.user, data=event_about_recipes)
+            response = handler(
+                plugins=self.plugins,
+                user=self.user,
+                data=event_about_recipes,
+                default_model=smarter_settings.openai_default_model,
+                default_max_tokens=smarter_settings.openai_default_max_tokens,
+                default_temperature=smarter_settings.openai_default_temperature,
+            )
         except Exception as error:
             self.fail(f"handler() raised {error}")
         self.check_response(response)
