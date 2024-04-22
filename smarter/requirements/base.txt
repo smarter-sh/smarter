@@ -33,7 +33,7 @@ djangorestframework==3.15.1             # for creating REST APIs on top of Djang
 django-filter==24.1                     # REST API filtering
 django-taggit==5.0.1                    # Smarter Plugin tagging
 django-rest-knox==4.2.0                 # Token authentication for REST APIs
-dj-stripe==2.8.3                        # Stripe card processing integration
+dj-stripe==2.8.4                        # Stripe card processing integration
 django-cors-headers==4.3.1              # Cross-origin resource sharing
 drf-yasg==1.21.7                        # Swagger API documentation
 django-waffle==4.1.0                     # Feature flagging
