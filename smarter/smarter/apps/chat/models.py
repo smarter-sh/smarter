@@ -48,7 +48,7 @@ class ChatToolCall(TimestampedModel):
 
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
     plugin = models.ForeignKey(PluginMeta, on_delete=models.CASCADE, blank=True, null=True)
-    tool_call = models.JSONField(blank=True, null=True)
+    function_name = models.CharField(max_length=255, blank=True, null=True)
     request = models.JSONField(blank=True, null=True)
     response = models.JSONField(blank=True, null=True)
 

@@ -158,17 +158,21 @@ def handler(
             response_message_dict = response_message.model_dump_json()
             serialized_messages: list = json.loads(json.dumps(modified_messages))
             serialized_messages.append(response_message_dict)
+            serialized_tool_calls = []
 
             # Step 3: call the function
             # Note: the JSON response may not always be valid; be sure to handle errors
             modified_messages.append(response_message)  # extend conversation with assistant's reply
 
             # Step 4: send the info for each function call and function response to the model
+
             for tool_call in tool_calls:
+                serialized_tool_call = {}
                 plugin: Plugin = None
                 function_name = tool_call.function.name
                 function_to_call = available_functions[function_name]
                 function_args = json.loads(tool_call.function.arguments)
+                serialized_tool_call["function_name"] = function_name
 
                 if function_name == "get_current_weather":
                     function_response = function_to_call(
@@ -182,6 +186,7 @@ def handler(
                     plugin_id = int(function_name[-4:])
                     plugin = Plugin(plugin_id=plugin_id)
                     function_response = plugin.function_calling_plugin(inquiry_type=function_args.get("inquiry_type"))
+                    serialized_tool_call["plugin_meta"] = plugin.plugin_meta
                 tool_call_message = {
                     "tool_call_id": tool_call.id,
                     "role": "tool",
@@ -190,6 +195,7 @@ def handler(
                 }
                 modified_messages.append(tool_call_message)  # extend conversation with function response
                 serialized_messages.append(tool_call_message)
+                serialized_tool_calls.append(serialized_tool_call)
 
             request_meta_data["modified_request"]["request"] = {
                 "model": model,
@@ -205,7 +211,7 @@ def handler(
             chat_completion_tool_call_created.send(
                 sender=handler,
                 chat=chat,
-                tool_calls=[tool.model_dump_json for tool in tool_calls],
+                tool_calls=serialized_tool_calls,
                 request=request_meta_data["modified_request"]["request"],
                 response=request_meta_data["modified_request"]["response"],
             )

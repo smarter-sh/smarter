@@ -70,19 +70,20 @@ def handle_chat_completion_tool_call(sender, **kwargs):
     """Handle chat completion tool call signal."""
 
     chat: Chat = kwargs.get("chat")
-    tool_call: dict = kwargs.get("tool_call")
-    plugin: PluginMeta = kwargs.get("plugin")
+    tool_calls: list[dict] = kwargs.get("tool_calls")
     request: dict = kwargs.get("request")
     response: dict = kwargs.get("response")
 
-    chat_tool_call_history = ChatToolCall(
-        chat=chat,
-        plugin=plugin,
-        tool_call=tool_call,
-        request=request,
-        response=response,
-    )
-    chat_tool_call_history.save()
+    for tool_call in tool_calls:
+        plugin_meta: PluginMeta = tool_call.get("plugin_meta")
+        function_name: str = tool_call.get("function_name")
+        ChatToolCall(
+            chat=chat,
+            plugin=plugin_meta,
+            function_name=function_name,
+            request=request,
+            response=response,
+        ).save()
 
 
 @receiver(chat_completion_plugin_selected, dispatch_uid="chat_completion_plugin_selected")
