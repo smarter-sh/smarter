@@ -1,5 +1,6 @@
 # pylint: disable=C0114,C0115
 """PluginMeta app models."""
+import json
 from functools import lru_cache
 
 import yaml
@@ -55,7 +56,8 @@ class PluginSelector(TimestampedModel):
     )
 
     def __str__(self) -> str:
-        return str(self.directive) or ""
+        search_terms = json.dumps(self.search_terms)[:50]
+        return f"{str(self.directive)} - {search_terms}"
 
 
 class PluginSelectorHistory(TimestampedModel):
@@ -70,7 +72,7 @@ class PluginSelectorHistory(TimestampedModel):
         plugin_selector_history_created.send(sender=self.__class__, plugin_selector_history=self)
 
     def __str__(self) -> str:
-        return str(self.user.username) or ""
+        return f"{str(self.plugin_selector.plugin.name)} - {self.search_term}"
 
     class Meta:
         verbose_name_plural = "Plugin Selector Histories"
