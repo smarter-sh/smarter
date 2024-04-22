@@ -124,12 +124,6 @@ def handler(
             "temperature": temperature,
             "max_tokens": max_tokens,
         }
-        chat_completion_called.send(
-            sender=handler,
-            chat=chat,
-            request=request_meta_data["original_request"]["request"],
-            action="request",
-        )
         first_response = openai.chat.completions.create(
             model=model,
             messages=messages,
@@ -157,16 +151,17 @@ def handler(
         )
         tool_calls = response_message.tool_calls
         if tool_calls:
+            modified_messages = messages.copy()
             # this is intended to force a json serialization exception
             # in the event that we've neglected to properly serialize all
             # responses from openai api.
             response_message_dict = response_message.model_dump_json()
-            serialized_messages: list = json.loads(json.dumps(messages))
+            serialized_messages: list = json.loads(json.dumps(modified_messages))
             serialized_messages.append(response_message_dict)
 
             # Step 3: call the function
             # Note: the JSON response may not always be valid; be sure to handle errors
-            messages.append(response_message)  # extend conversation with assistant's reply
+            modified_messages.append(response_message)  # extend conversation with assistant's reply
 
             # Step 4: send the info for each function call and function response to the model
             for tool_call in tool_calls:
@@ -193,7 +188,7 @@ def handler(
                     "name": function_name,
                     "content": function_response,
                 }
-                messages.append(tool_call_message)  # extend conversation with function response
+                modified_messages.append(tool_call_message)  # extend conversation with function response
                 serialized_messages.append(tool_call_message)
 
             request_meta_data["modified_request"]["request"] = {
@@ -202,10 +197,11 @@ def handler(
             }
             second_response = openai.chat.completions.create(
                 model=model,
-                messages=messages,
+                messages=modified_messages,
             )  # get a new response from the model where it can see the function response
             second_response_dict = json.loads(second_response.model_dump_json())
             request_meta_data["modified_request"]["response"] = second_response_dict
+            request_meta_data["modified_request"]["request"]["messages"] = serialized_messages
             chat_completion_tool_call_created.send(
                 sender=handler,
                 chat=chat,
@@ -233,7 +229,9 @@ def handler(
         )
 
     # success!! return the response
-    request_dict = request_meta_data["original_request"]["request"] or request_meta_data["original_request"]["request"]
+    orginal_request = request_meta_data["modified_request"]
+    modified_request = request_meta_data["modified_request"]
+    request_dict = modified_request.get("request") or orginal_request.get("request")
     response_dict = second_response_dict or first_response_dict
     chat_response_success.send(
         sender=handler,
