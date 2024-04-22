@@ -48,14 +48,16 @@ def handle_chat_completion_called(sender, **kwargs):
 
     user = kwargs.get("user")
     data = kwargs.get("data")
+    request = kwargs.get("request")
     action = kwargs.get("action")
 
     logger.info(
-        "%s signal received for chat: %s action: %s data: %s",
+        "%s signal received for chat: %s action: %s data: %s completion_request: %s",
         formatted_text("chat_completion_called"),
         user.username if user else "unknown",
         action,
         formatted_json(data),
+        formatted_json(request),
     )
 
 

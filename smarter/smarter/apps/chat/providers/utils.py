@@ -7,15 +7,14 @@ import logging
 import sys  # libraries for error management
 import traceback  # libraries for error management
 
-from smarter.common.const import LANGCHAIN_MESSAGE_HISTORY_ROLES, OpenAIObjectTypes
+from smarter.common.const import LANGCHAIN_MESSAGE_HISTORY_ROLES
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import DateTimeEncoder
 
 # mcdaniel apr-2024: technically we're not supposed to import from smarter.lib.django.validators
 # but the validators don't depend on Django initialization, so it's safe to do so in this case.
-from smarter.lib.django.validators import (
+from .validators import (
     validate_endpoint,
-    validate_item,
     validate_max_tokens,
     validate_messages,
     validate_object_types,
@@ -119,35 +118,9 @@ def get_request_body(data) -> dict:
 
 def parse_request(request_body: dict):
     """Parse the request body and return the endpoint, model, messages, and input_text"""
-    object_type = request_body.get("object_type")
-    model = request_body.get("model")
     messages = request_body.get("messages")
     input_text = request_body.get("input_text")
-    temperature = request_body.get("temperature", -1)
-    max_tokens = request_body.get("max_tokens")
     chat_history = request_body.get("chat_history")
-
-    if not object_type:
-        logger.warning("object_type key not found in request body. defaulting to ChatCompletion")
-        object_type = OpenAIObjectTypes.ChatCompletion
-
-    if not model:
-        logger.warning("model key not found in request body. defaulting to gpt-3.5-turbo")
-        model = "gpt-3.5-turbo"
-
-    if temperature < 0:
-        logger.warning("temperature key not found in request body. defaulting to 0.5")
-        temperature = 0.5
-
-    if not max_tokens:
-        logger.warning("max_tokens key not found in request body. defaulting to 150")
-        max_tokens = 150
-
-    validate_item(
-        item=object_type,
-        valid_items=OpenAIObjectTypes.all_object_types,
-        item_type="OpenAI ObjectTypes",
-    )
 
     if not messages and not input_text:
         raise SmarterValueError("A value for either messages or input_text is required")
@@ -160,7 +133,7 @@ def parse_request(request_body: dict):
             messages.append({"role": chat["sender"], "content": chat["message"]})
         messages.append({"role": "user", "content": input_text})
 
-    return object_type, model, messages, input_text, temperature, max_tokens
+    return messages, input_text
 
 
 def get_content_for_role(messages: list, role: str) -> str:
@@ -188,17 +161,17 @@ def get_messages_for_role(messages: list, role: str) -> list:
     return retval
 
 
-def request_meta_data_factory(model, object_type, temperature, max_tokens, input_text):
+def request_meta_data_factory(model, temperature, max_tokens, input_text):
     """
     Return a dictionary of request meta data.
     """
     return {
-        "request_meta_data": {
-            "lambda": "openai_passthrough",
+        "meta_data": {
             "model": model,
-            "object_type": object_type,
             "temperature": temperature,
             "max_tokens": max_tokens,
             "input_text": input_text,
-        }
+        },
+        "original_request": {},
+        "modified_request": {},
     }
