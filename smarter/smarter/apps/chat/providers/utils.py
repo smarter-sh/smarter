@@ -11,8 +11,6 @@ from smarter.common.const import LANGCHAIN_MESSAGE_HISTORY_ROLES
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import DateTimeEncoder
 
-# mcdaniel apr-2024: technically we're not supposed to import from smarter.lib.django.validators
-# but the validators don't depend on Django initialization, so it's safe to do so in this case.
 from .validators import (
     validate_endpoint,
     validate_max_tokens,
@@ -59,15 +57,17 @@ def http_response_factory(status_code: int, body, debug_mode: bool = False) -> j
     return retval
 
 
-def exception_response_factory(exception) -> json:
+def exception_response_factory(exception, request_meta_data: dict = None) -> json:
     """
     Generate a standardized error response dictionary that includes
     the Python exception type and stack trace.
 
     exception: a descendant of Python Exception class
     """
+
     exc_info = sys.exc_info()
     retval = {
+        "request_meta_data": request_meta_data,
         "error": str(exception),
         "description": "".join(traceback.format_exception(*exc_info)),
     }
@@ -133,6 +133,10 @@ def parse_request(request_body: dict):
         for chat in chat_history:
             messages.append({"role": chat["sender"], "content": chat["message"]})
         messages.append({"role": "user", "content": input_text})
+
+    if not input_text:
+        # we need to extract the most recent prompt for the user role
+        input_text = get_content_for_role(messages, "user")
 
     return messages, input_text, chat_id
 

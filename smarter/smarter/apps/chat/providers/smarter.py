@@ -63,7 +63,6 @@ def handler(
     first_response_dict: dict = None
     second_response_dict: dict = None
 
-    chat_invoked.send(sender=handler, user=user, data=data)
     weather_tool = weather_tool_factory()
     tools = [weather_tool]
     available_functions = {
@@ -91,6 +90,7 @@ def handler(
                 temperature=temperature,
                 max_tokens=max_tokens,
             )
+        chat_invoked.send(sender=handler, chat=chat, data=data)
 
         # does the prompt have anything to do with any of the search terms defined in a plugin?
         # FIX NOTE: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_tokens
@@ -157,6 +157,13 @@ def handler(
         )
         tool_calls = response_message.tool_calls
         if tool_calls:
+            # this is intended to force a json serialization exception
+            # in the event that we've neglected to properly serialize all
+            # responses from openai api.
+            response_message_dict = response_message.model_dump_json()
+            serialized_messages: list = json.loads(json.dumps(messages))
+            serialized_messages.append(response_message_dict)
+
             # Step 3: call the function
             # Note: the JSON response may not always be valid; be sure to handle errors
             messages.append(response_message)  # extend conversation with assistant's reply
@@ -179,20 +186,19 @@ def handler(
                     # we're directly invoking the plugin's function_calling_plugin() method.
                     plugin_id = int(function_name[-4:])
                     plugin = Plugin(plugin_id=plugin_id)
-                    function_response = plugin.function_calling_plugin(
-                        user=user, inquiry_type=function_args.get("inquiry_type")
-                    )
-                messages.append(
-                    {
-                        "tool_call_id": tool_call.id,
-                        "role": "tool",
-                        "name": function_name,
-                        "content": function_response,
-                    }
-                )  # extend conversation with function response
+                    function_response = plugin.function_calling_plugin(inquiry_type=function_args.get("inquiry_type"))
+                tool_call_message = {
+                    "tool_call_id": tool_call.id,
+                    "role": "tool",
+                    "name": function_name,
+                    "content": function_response,
+                }
+                messages.append(tool_call_message)  # extend conversation with function response
+                serialized_messages.append(tool_call_message)
+
             request_meta_data["modified_request"]["request"] = {
                 "model": model,
-                "messages": messages,
+                "messages": serialized_messages,
             }
             second_response = openai.chat.completions.create(
                 model=model,
@@ -220,15 +226,18 @@ def handler(
     # handle anything that went wrong
     # pylint: disable=broad-exception-caught
     except Exception as e:
-        chat_response_failure.send(sender=handler, user=user, exception=e, data=data)
+        chat_response_failure.send(sender=handler, chat=chat, request_meta_data=request_meta_data, exception=e)
         status_code, _message = EXCEPTION_MAP.get(type(e), (HTTPStatus.INTERNAL_SERVER_ERROR, "Internal server error"))
-        return http_response_factory(status_code=status_code, body=exception_response_factory(e))
+        return http_response_factory(
+            status_code=status_code, body=exception_response_factory(exception=e, request_meta_data=request_meta_data)
+        )
 
     # success!! return the response
     request_dict = request_meta_data["original_request"]["request"] or request_meta_data["original_request"]["request"]
     response_dict = second_response_dict or first_response_dict
     chat_response_success.send(
         sender=handler,
+        chat=chat,
         request=request_dict,
         response=response_dict,
     )

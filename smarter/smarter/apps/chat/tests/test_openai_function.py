@@ -167,10 +167,12 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
             ]
 
         def false_assertion(content: str):
-            self.assertFalse(self.plugin.selected(self.user, list_factory(content)))
+            messages = list_factory(content)
+            self.assertFalse(self.plugin.selected(self.user, messages=messages))
 
         def true_assertion(content: str):
-            self.assertTrue(self.plugin.selected(self.user, list_factory(content)))
+            messages = list_factory(content)
+            self.assertTrue(self.plugin.selected(self.user, messages=messages))
 
         # false cases
         false_assertion("when was leisure suit larry released?")

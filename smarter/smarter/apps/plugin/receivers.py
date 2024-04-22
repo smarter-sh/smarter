@@ -17,7 +17,6 @@ from .signals import (
     plugin_deleted,
     plugin_ready,
     plugin_selected,
-    plugin_selected_called,
     plugin_selector_history_created,
     plugin_updated,
 )
@@ -66,14 +65,12 @@ def handle_plugin_called(sender, **kwargs):
     """Handle plugin called signal."""
 
     plugin = kwargs.get("plugin")
-    user = kwargs.get("user")
     inquiry_type = kwargs.get("inquiry_type")
     inquiry_return = kwargs.get("inquiry_return")
     logger.info(
-        "%s signal received: %s user: %s inquiry_type: %s inquiry_return: %s",
+        "%s signal received: %s inquiry_type: %s inquiry_return: %s",
         formatted_text("plugin_called"),
         plugin.name,
-        user.username,
         inquiry_type,
         inquiry_return,
     )
@@ -87,42 +84,29 @@ def handle_plugin_ready(sender, **kwargs):
     logger.info("%s signal received: %s", formatted_text("plugin_ready"), plugin.name)
 
 
-@receiver(plugin_selected_called, dispatch_uid="plugin_selected_called")
-def handle_plugin_selected_called(sender, **kwargs):
-    """Handle plugin selected called signal."""
-
-    plugin = kwargs.get("plugin")
-    messages = kwargs.get("messages")
-    logger.info(
-        "%s signal received: %s messages: %s",
-        formatted_text("plugin_selected_called"),
-        plugin.name,
-        formatted_json(messages),
-    )
-
-
 @receiver(plugin_selected, dispatch_uid="plugin_selected")
 def handle_plugin_selected(sender, **kwargs):
     """Handle plugin selected signal."""
 
     plugin = kwargs.get("plugin")
     plugin = Plugin(plugin_id=plugin.id)
-    user = kwargs.get("user")
-    messages = kwargs.get("messages")
-    search_term = kwargs.get("search_term")
+    input_text: str = kwargs.get("input_text")
+    messages: list[dict] = kwargs.get("messages")
+    search_term: str = kwargs.get("search_term")
+
+    prompt = input_text if input_text else formatted_json(messages)
     logger.info(
-        "%s signal received: %s search_term: %s \nmessages: %s",
-        formatted_text("plugin_selected_called"),
+        "%s signal received: %s search_term: %s \nprompt(s): %s",
+        formatted_text("plugin_selected"),
         plugin.name,
         search_term,
-        formatted_json(messages),
+        prompt,
     )
 
     plugin_selector_history = PluginSelectorHistory(
         plugin_selector=plugin.plugin_selector,
-        user=user,
         search_term=search_term,
-        messages=messages,
+        messages={"input_text": input_text} if input_text else messages,
     )
     plugin_selector_history.save()
 

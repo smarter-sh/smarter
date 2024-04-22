@@ -4,9 +4,9 @@ from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
 from smarter.apps.chat.api.v0.serializers import (
-    ChatHistorySerializer,
-    ChatToolCallHistorySerializer,
-    PluginUsageHistorySerializer,
+    ChatSerializer,
+    ChatToolCallSerializer,
+    PluginUsageSerializer,
 )
 from smarter.apps.chat.models import Chat, ChatToolCall, PluginUsage
 from smarter.lib.drf.view_helpers import (
@@ -17,38 +17,38 @@ from smarter.lib.drf.view_helpers import (
 
 class ChatToolCallHistoryListView(SmarterAuthenticatedListAPIView):
     queryset = ChatToolCall.objects.all()
-    serializer_class = ChatToolCallHistorySerializer
+    serializer_class = ChatToolCallSerializer
 
 
 class ChatToolCallHistoryView(SmarterAuthenticatedAPIView):
 
     def get(self, request, *args, **kwargs):
         instance = get_object_or_404(ChatToolCall, pk=kwargs["pk"])
-        serializer = ChatToolCallHistorySerializer(instance)
+        serializer = ChatToolCallSerializer(instance)
         return Response(serializer.data)
 
 
 class PluginUsageHistoryListView(SmarterAuthenticatedListAPIView):
     queryset = PluginUsage.objects.all()
-    serializer_class = PluginUsageHistorySerializer
+    serializer_class = PluginUsageSerializer
 
 
 class PluginUsageHistoryView(SmarterAuthenticatedAPIView):
 
     def get(self, request, *args, **kwargs):
         instance = get_object_or_404(PluginUsageHistoryView, pk=kwargs["pk"])
-        serializer = PluginUsageHistorySerializer(instance)
+        serializer = PluginUsageSerializer(instance)
         return Response(serializer.data)
 
 
 class ChatHistoryListView(SmarterAuthenticatedListAPIView):
     queryset = Chat.objects.all()
-    serializer_class = ChatHistorySerializer
+    serializer_class = ChatSerializer
 
 
 class ChatHistoryView(SmarterAuthenticatedAPIView):
 
     def get(self, request, *args, **kwargs):
         instance = get_object_or_404(Chat, pk=kwargs["pk"])
-        serializer = ChatHistorySerializer(instance)
+        serializer = ChatSerializer(instance)
         return Response(serializer.data)
