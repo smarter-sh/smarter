@@ -292,7 +292,7 @@ class Plugin:
             return self.ready
         return False
 
-    def selected(self, user: UserType, messages: list[dict]) -> bool:
+    def selected(self, user: UserType, input_text: str = None, messages: list[dict] = None) -> bool:
         """
         Return True the user has mentioned Lawrence McDaniel or FullStackWithLawrence
         at any point in the history of the conversation.
@@ -310,6 +310,16 @@ class Plugin:
             return True
 
         search_terms = self.plugin_selector.search_terms
+
+        # check the input text
+        if does_refer_to(prompt=input_text, search_term=search_terms):
+            self._selected = True
+            plugin_selected.send(
+                sender=self.selected, plugin=self, user=user, messages=messages, search_term=search_terms
+            )
+            return True
+
+        # check the messages list
         for message in messages:
             if "role" in message and str(message["role"]).lower() == "user":
                 content = message["content"]

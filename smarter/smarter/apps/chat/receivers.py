@@ -10,12 +10,11 @@ from django.forms.models import model_to_dict
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 from smarter.lib.django.user import User
 
-from .models import ChatHistory, ChatToolCallHistory, PluginUsageHistory
+from .models import Chat, ChatHistory, ChatToolCall, PluginMeta, PluginUsage
 from .signals import (
     chat_completion_called,
     chat_completion_plugin_selected,
     chat_completion_tool_call_created,
-    chat_completion_tools_call,
     chat_invoked,
     chat_response_failure,
     chat_response_success,
@@ -46,44 +45,24 @@ def handle_chat_invoked(sender, **kwargs):
 def handle_chat_completion_called(sender, **kwargs):
     """Handle chat completion called signal."""
 
-    user = kwargs.get("user")
-    data = kwargs.get("data")
-    request = kwargs.get("request")
-    action = kwargs.get("action")
+    chat: Chat = kwargs.get("chat")
+    request: dict = kwargs.get("request")
+    response: dict = kwargs.get("response")
 
     logger.info(
-        "%s signal received for chat: %s action: %s data: %s completion_request: %s",
+        "%s signal received for chat: %s, request: %s, response: %s",
         formatted_text("chat_completion_called"),
-        user.username if user else "unknown",
-        action,
-        formatted_json(data),
+        chat.id,
         formatted_json(request),
-    )
-
-
-@receiver(chat_completion_tools_call, dispatch_uid="chat_completion_tools_call")
-def handle_chat_completion_tools_call(sender, **kwargs):
-
-    user = kwargs.get("user")
-    model = kwargs.get("model")
-    tools = kwargs.get("tools")
-    temperature = kwargs.get("temperature")
-    max_tokens = kwargs.get("max_tokens")
-    response = kwargs.get("response")
-
-    logger.info(
-        "%s signal received for chat: %s \nmodel: %s \ntemperature: %s \nmax_tokens: %s \nresponse: %s \ntools: %s",
-        formatted_text("chat_completion_tools_call"),
-        user,
-        model,
-        temperature,
-        max_tokens,
         formatted_json(response),
-        formatted_json(tools),
     )
 
-
-chat_completion_tools_call.connect(handle_chat_completion_tools_call, dispatch_uid="chat_completion_tools_call")
+    chat_history = ChatHistory(
+        chat=chat,
+        request=request,
+        response=response,
+    )
+    chat_history.save()
 
 
 # pylint: disable=W0612
@@ -93,41 +72,19 @@ chat_completion_tools_call.connect(handle_chat_completion_tools_call, dispatch_u
 def handle_chat_completion_tool_call(sender, **kwargs):
     """Handle chat completion tool call signal."""
 
-    user = kwargs.get("user")
-    plugin = kwargs.get("plugin")
-    model = kwargs.get("model")
-    response = kwargs.get("response")
-    response_id = response.get("id") if response else None
-    event_type = "received" if "chat_completion_tool_call_received" in sender.__name__ else "called"
+    chat: Chat = kwargs.get("chat")
+    tool_calls: dict = kwargs.get("tool_call")
+    plugin: PluginMeta = kwargs.get("plugin")
+    request: dict = kwargs.get("request")
+    response: dict = kwargs.get("response")
 
-    if event_type == "called":
-        logger.info(
-            "%s %s signal received for chat: %s model: %s",
-            formatted_text("chat_completion_tool_call_created"),
-            event_type,
-            user.username if user else "unknown",
-            model,
-        )
-    else:
-        logger.info(
-            "%s %s signal received for chat: %s model: %s",
-            formatted_text("chat_completion_tool_call_received"),
-            event_type,
-            user.username if user else "unknown",
-            model,
-        )
-    chat_tool_call_history = ChatToolCallHistory(
-        event=event_type,
-        user=user,
+    chat_tool_call_history = ChatToolCall(
+        chat=chat,
         plugin=plugin,
-        model=model,
+        tool_calls=tool_calls,
+        request=request,
         response=response,
-        response_id=response_id,
     )
-
-    if event_type == "received":
-        chat_tool_call_history.response = response
-
     chat_tool_call_history.save()
 
 
@@ -135,35 +92,28 @@ def handle_chat_completion_tool_call(sender, **kwargs):
 def handle_chat_completion_plugin_selected(sender, **kwargs):
     """Handle plugin selected signal."""
 
-    plugin = kwargs.get("plugin")
-    user = kwargs.get("user")
-    data = kwargs.get("data")
-    model = kwargs.get("model")
-    temperature = kwargs.get("temperature")
-    max_tokens = kwargs.get("max_tokens")
-    custom_tool = kwargs.get("custom_tool")
+    plugin: PluginMeta = kwargs.get("plugin")
+    chat: Chat = kwargs.get("chat")
+    input_text = kwargs.get("input_text")
 
     logger.info(
-        "%s signal received for chat: %s plugin: %s",
+        "%s signal received for chat %s, plugin: %s, input_text: %s",
         formatted_text("chat_completion_plugin_selected"),
-        user.username if user else "unknown",
+        chat,
         plugin,
+        input_text,
     )
 
-    plugin_selection_history = PluginUsageHistory(
-        user=user,
+    plugin_selection_history = PluginUsage(
         plugin=plugin,
+        chat=chat,
+        input_text=input_text,
         event="selected",
-        data=data,
-        model=model,
-        custom_tool=custom_tool,
-        temperature=temperature,
-        max_tokens=max_tokens,
     )
     plugin_selection_history.save()
 
 
-@receiver(post_save, sender=ChatToolCallHistory)
+@receiver(post_save, sender=ChatToolCall)
 def handle_plugin_selection_history_created(sender, **kwargs):
     """Handle plugin selection history created signal."""
 
@@ -185,31 +135,21 @@ def handle_plugin_selection_history_created(sender, **kwargs):
 def handle_chat_completion_returned(sender, **kwargs):
     """Handle chat completion returned signal."""
 
-    user = kwargs.get("user")
-    model = kwargs.get("model")
-    tools = kwargs.get("tools")
-    temperature = kwargs.get("temperature")
-    max_tokens = kwargs.get("max_tokens")
-    messages = kwargs.get("messages")
+    chat_id = kwargs.get("chat_id")
+    request = kwargs.get("request")
     response = kwargs.get("response")
-    chat_id = response.get("id") if response else None
 
     logger.info(
-        "%s signal received for chat: %s %s model: %s",
+        "%s signal received for chat: %s,  input_text: %s, response: %s",
         formatted_text("chat_response_success"),
         chat_id,
-        user.username if user else "unknown",
-        model,
+        request,
+        response,
     )
     chat_history = ChatHistory(
-        chat_id=chat_id,
-        user=user,
-        model=model,
-        tools=tools,
-        temperature=temperature,
-        messages=messages,
+        chat=chat_id,
+        request=request,
         response=response,
-        max_tokens=max_tokens,
     )
     chat_history.save()
 
@@ -229,7 +169,7 @@ def handle_chat_response_failed(sender, **kwargs):
     )
 
 
-@receiver(post_save, sender=ChatHistory)
+@receiver(post_save, sender=Chat)
 def handle_chat_history_created(sender, **kwargs):
     """Handle chat  history created signal."""
 
@@ -247,7 +187,7 @@ def handle_chat_history_created(sender, **kwargs):
     )
 
 
-@receiver(post_save, sender=ChatToolCallHistory)
+@receiver(post_save, sender=ChatToolCall)
 def handle_chat_tool_call_history_created(sender, **kwargs):
     """Handle chat completion tool call history created signal."""
 

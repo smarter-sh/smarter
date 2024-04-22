@@ -10,7 +10,7 @@ import unittest
 PYTHON_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 sys.path.append(PYTHON_ROOT)  # noqa: E402
 
-from ...lib.django.validators import (
+from smarter.apps.chat.providers.validators import (
     validate_completion_request,
     validate_endpoint,
     validate_item,
@@ -20,10 +20,11 @@ from ...lib.django.validators import (
     validate_request_body,
     validate_temperature,
 )
-from ..const import OpenAIEndPoint, OpenAIObjectTypes
+from smarter.common.const import OpenAIEndPoint, OpenAIObjectTypes
 
 # our stuff
-from ..exceptions import SmarterValueError
+from smarter.common.exceptions import SmarterValueError
+
 from ..tests.test_setup import get_test_file  # noqa: E402
 
 

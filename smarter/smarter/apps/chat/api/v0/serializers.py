@@ -2,24 +2,20 @@
 """Django REST framework serializers for the API admin app."""
 from rest_framework import serializers
 
-from smarter.apps.chat.models import (
-    ChatHistory,
-    ChatToolCallHistory,
-    PluginUsageHistory,
-)
+from smarter.apps.chat.models import Chat, ChatToolCall, PluginUsage
 
 
 class ChatHistorySerializer(serializers.ModelSerializer):
     class Meta:
-        model = ChatHistory
+        model = Chat
         fields = "__all__"
 
 
 class PluginUsageHistorySerializer(serializers.ModelSerializer):
-    """Serializer for the PluginUsageHistory model."""
+    """Serializer for the PluginUsage model."""
 
     class Meta:
-        model = PluginUsageHistory
+        model = PluginUsage
         fields = [
             "user",
             "event",
@@ -35,8 +31,8 @@ class PluginUsageHistorySerializer(serializers.ModelSerializer):
 
 
 class ChatToolCallHistorySerializer(serializers.ModelSerializer):
-    """Serializer for the ChatToolCallHistory model."""
+    """Serializer for the ChatToolCall model."""
 
     class Meta:
-        model = ChatToolCallHistory
+        model = ChatToolCall
         fields = "__all__"

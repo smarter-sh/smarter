@@ -3,7 +3,7 @@
 
 from django.contrib import admin
 
-from .models import ChatHistory, ChatToolCallHistory, PluginUsageHistory
+from .models import Chat, ChatToolCall, PluginUsage
 
 
 class ChatHistoryAdmin(admin.ModelAdmin):
@@ -13,7 +13,7 @@ class ChatHistoryAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
-    list_display = [field.name for field in ChatHistory._meta.fields]
+    list_display = [field.name for field in Chat._meta.fields]
 
 
 class PluginSelectionHistoryAdmin(admin.ModelAdmin):
@@ -23,7 +23,7 @@ class PluginSelectionHistoryAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
-    list_display = [field.name for field in PluginUsageHistory._meta.fields]
+    list_display = [field.name for field in PluginUsage._meta.fields]
 
 
 class ChatToolCallHistoryAdmin(admin.ModelAdmin):
@@ -33,9 +33,9 @@ class ChatToolCallHistoryAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
-    list_display = [field.name for field in ChatToolCallHistory._meta.fields]
+    list_display = [field.name for field in ChatToolCall._meta.fields]
 
 
-admin.site.register(ChatHistory, ChatHistoryAdmin)
-admin.site.register(PluginUsageHistory, PluginSelectionHistoryAdmin)
-admin.site.register(ChatToolCallHistory, ChatToolCallHistoryAdmin)
+admin.site.register(Chat, ChatHistoryAdmin)
+admin.site.register(PluginUsage, PluginSelectionHistoryAdmin)
+admin.site.register(ChatToolCall, ChatToolCallHistoryAdmin)

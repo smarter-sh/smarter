@@ -108,11 +108,11 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
         url = request.build_absolute_uri()
         url = SmarterValidator.urlify(url)
 
-        logger.info("ChatBotApiBaseViewSet.dispatch(): url=%s", url)
-        logger.info("ChatBotApiBaseViewSet.dispatch(): headers=%s", request.META)
-        logger.info("ChatBotApiBaseViewSet.dispatch(): user=%s", request.user)
-        logger.info("ChatBotApiBaseViewSet.dispatch(): method=%s", request.method)
-        logger.info("ChatBotApiBaseViewSet.dispatch(): body=%s", request.body)
+        logger.debug("ChatBotApiBaseViewSet.dispatch(): url=%s", url)
+        logger.debug("ChatBotApiBaseViewSet.dispatch(): headers=%s", request.META)
+        logger.debug("ChatBotApiBaseViewSet.dispatch(): user=%s", request.user)
+        logger.debug("ChatBotApiBaseViewSet.dispatch(): method=%s", request.method)
+        logger.debug("ChatBotApiBaseViewSet.dispatch(): body=%s", request.body)
 
         if isinstance(request.user, User):
             self.helper = self.get_cached_helper(url=url, user=request.user)
@@ -145,7 +145,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
         return super().dispatch(request, *args, **kwargs)
 
     def options(self, request, *args, **kwargs):
-        logger.info("ChatBotApiBaseViewSet.options(): url=%s", self.helper.url)
+        logger.debug("ChatBotApiBaseViewSet.options(): url=%s", self.helper.url)
         response = Response()
         response["Access-Control-Allow-Origin"] = smarter_settings.environment_url
         response["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
@@ -154,8 +154,8 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
 
     # pylint: disable=W0613
     def get(self, request, *args, **kwargs):
-        logger.info("ChatBotApiBaseViewSet.get(): url=%s", self.helper.url)
-        logger.info("ChatBotApiBaseViewSet.get(): headers=%s", request.META)
+        logger.debug("ChatBotApiBaseViewSet.get(): url=%s", self.helper.url)
+        logger.debug("ChatBotApiBaseViewSet.get(): headers=%s", request.META)
         kwargs.get("chatbot_id", None)
         retval = {
             "message": "GET is not supported. Please use POST.",

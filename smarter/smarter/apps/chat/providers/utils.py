@@ -121,6 +121,7 @@ def parse_request(request_body: dict):
     messages = request_body.get("messages")
     input_text = request_body.get("input_text")
     chat_history = request_body.get("chat_history")
+    chat_id = request_body.get("chat_id")
 
     if not messages and not input_text:
         raise SmarterValueError("A value for either messages or input_text is required")
@@ -133,7 +134,7 @@ def parse_request(request_body: dict):
             messages.append({"role": chat["sender"], "content": chat["message"]})
         messages.append({"role": "user", "content": input_text})
 
-    return messages, input_text
+    return messages, input_text, chat_id
 
 
 def get_content_for_role(messages: list, role: str) -> str:

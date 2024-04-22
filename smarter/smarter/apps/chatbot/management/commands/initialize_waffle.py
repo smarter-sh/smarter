@@ -12,4 +12,4 @@ class Command(BaseCommand):
         """Handle the command."""
         call_command("waffle_switch", "chatbot_suppress_csrf", "off", "--create")
         call_command("waffle_switch", "chatbot_log_csrf", "off", "--create")
-        call_command("waffle_switch", "chatbothelper_logging", "on", "--create")
+        call_command("waffle_switch", "chatbothelper_logging", "off", "--create")

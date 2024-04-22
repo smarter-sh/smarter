@@ -12,14 +12,15 @@ from smarter.common.const import (  # VALID_EMBEDDING_MODELS,
     OpenAIObjectTypes,
 )
 from smarter.common.exceptions import EXCEPTION_MAP
-from smarter.common.utils import (
+
+from .utils import (
     exception_response_factory,
     get_request_body,
     http_response_factory,
     parse_request,
     request_meta_data_factory,
 )
-from smarter.lib.django.validators import (  # validate_embedding_request,
+from .validators import (  # validate_embedding_request,
     validate_completion_request,
     validate_item,
 )
@@ -40,7 +41,7 @@ def handler(data: dict):
     try:
         openai_results = {}
         request_body = get_request_body(data=data)
-        object_type, model, messages, input_text, temperature, max_tokens = parse_request(request_body)
+        messages, input_text, chat_id = parse_request(request_body)
         request_meta_data = request_meta_data_factory(model, object_type, temperature, max_tokens, input_text)
 
         match object_type:
