@@ -14,9 +14,17 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.chat.api.v0.serializers import (
+    ChatHistorySerializer,
+    ChatToolCallHistorySerializer,
+    PluginUsageHistorySerializer,
+)
 from smarter.apps.chat.models import ChatHistory
+from smarter.apps.chatbot.api.v0.serializers import (
+    ChatBotPluginSerializer,
+    ChatBotSerializer,
+)
 from smarter.apps.chatbot.models import ChatBot, ChatBotHelper, ChatBotPlugin
-from smarter.apps.chatbot.serializers import ChatBotPluginSerializer, ChatBotSerializer
 from smarter.lib.django.user import UserType
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
 
@@ -40,8 +48,6 @@ class ChatConfigView(View):
     user: UserType = None
     user_profile: UserProfile = None
     chatbot: ChatBot = None
-    chatbot_serializer: ChatBotSerializer = None
-    chatbot_plugin_serializer: ChatBotPluginSerializer = None
     url: str = None
 
     def dispatch(self, request, *args, **kwargs):
@@ -56,9 +62,6 @@ class ChatConfigView(View):
         self.chatbot = self.helper.chatbot
         if not self.chatbot:
             return HttpResponseNotFound()
-        self.chatbot_serializer = ChatBotSerializer(self.chatbot)
-        chatbot_plugins = ChatBotPlugin.objects.filter(chatbot=self.chatbot)
-        self.chatbot_plugin_serializer = ChatBotPluginSerializer(chatbot_plugins, many=True)
         return super().dispatch(request, *args, **kwargs)
 
     # pylint: disable=unused-argument
@@ -79,57 +82,39 @@ class ChatConfigView(View):
         React context for all templates that render
         a React app.
         """
+        # chatbot context
+        chatbot_serializer = ChatBotSerializer(self.chatbot)
 
-        # backend context
-        backend_context = {
-            "BASE_URL": self.url,
-            "API_URL": self.chatbot.url_chatbot,
-            "SANDBOX_MODE": self.sandbox_mode,
-        }
+        # plugins context. the main thing we need here is to constrain the number of plugins
+        # returned to some reasonable number, since we'll probaably have cases where
+        # the chatbot has a lot of plugins (hundreds, thousands...).
+        MAX_PLUGINS = 10
+        chatbot_plugins_count = ChatBotPlugin.objects.filter(chatbot=self.chatbot).count()
+        chatbot_plugins = ChatBotPlugin.objects.order_by("-pk")[:MAX_PLUGINS]
+        chatbot_plugin_serializer = ChatBotPluginSerializer(chatbot_plugins, many=True)
 
-        app_context = {
-            "NAME": self.chatbot.app_name or "chatbot",
-            "ASSISTANT": self.chatbot.app_assistant or "Smarter",
-            "WELCOME_MESSAGE": self.chatbot.app_welcome_message or "Welcome to the chatbot!",
-            "EXAMPLE_PROMPTS": self.chatbot.app_example_prompts or [],
-            "PLACEHOLDER": self.chatbot.app_placeholder or "Type something here...",
-            "INFO_URL": self.chatbot.app_info_url,
-            "BACKGROUND_IMAGE_URL": self.chatbot.app_background_image_url,
-            "LOGO_URL": self.chatbot.app_logo_url,
-            "FILE_ATTACHMENT_BUTTON": self.chatbot.app_file_attachment,
-        }
-
-        # chat context
+        # message thread history context
         chat_history = ChatHistory.objects.filter(user=self.user_profile.user).order_by("-created_at").first()
-        chat_context = {
-            "ID": chat_history.chat_id if chat_history else "undefined",
-            "HISTORY": chat_history.messages if chat_history else [],
-            "MOST_RECENT_RESPONSE": chat_history.response if chat_history else None,
-        }
-
-        # sandbox mode
-        sandbox_context = {}
-        if self.sandbox_mode:
-            plugins = [plugin.name for plugin in ChatBotPlugin.plugins(self.chatbot)]
-            sandbox_context = {
-                "PLUGINS": plugins,
-                "URL": self.chatbot.url,
-                "DEFAULT_URL": self.chatbot.default_url,
-                "CUSTOM_URL": self.chatbot.custom_url,
-                "SANDBOX_URL": self.chatbot.sandbox_url,
-                "CREATED_AT": self.chatbot.created_at,
-                "UPDATED_AT": self.chatbot.updated_at,
-            }
+        chat_history_serializer = ChatHistorySerializer(chat_history)
+        chat_tool_call_history = ChatToolCallHistorySerializer(chat_history)
+        plugin_usage_history = PluginUsageHistorySerializer(chat_history)
 
         retval = {
-            "chatbot": self.chatbot_serializer.data,
-            "plugins": self.chatbot_plugin_serializer.data,
-            "meta": self.helper.to_json(),
-            "legacy": {
-                "backend": backend_context,
-                "app": app_context,
-                "chat": chat_context,
-                "sandbox": sandbox_context,
+            "sandbox_mode": self.sandbox_mode,
+            "chatbot": chatbot_serializer.data,
+            "plugins": {
+                "meta_data": {
+                    "total_plugins": chatbot_plugins_count,
+                    "plugins_returned": len(chatbot_plugins),
+                },
+                "plugins": chatbot_plugin_serializer.data,
+            },
+            "meta_data": self.helper.to_json(),
+            "chat": {
+                "id": chat_history.chat_id if chat_history else "undefined",
+                "history": chat_history_serializer.data if chat_history else [],
+                "tool_calls": chat_tool_call_history.data if chat_history else [],
+                "plugin_usage": plugin_usage_history.data if chat_history else [],
             },
         }
         return retval

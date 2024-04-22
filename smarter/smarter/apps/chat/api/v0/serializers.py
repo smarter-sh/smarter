@@ -20,7 +20,18 @@ class PluginUsageHistorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PluginUsageHistory
-        fields = "__all__"
+        fields = [
+            "user",
+            "event",
+            "data",
+            "model",
+            "custom_tool",
+            "temperature",
+            "max_tokens",
+            "custom_tool",
+            "inquiry_type",
+            "inquiry_return",
+        ]
 
 
 class ChatToolCallHistorySerializer(serializers.ModelSerializer):
