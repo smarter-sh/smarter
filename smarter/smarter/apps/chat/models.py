@@ -49,11 +49,16 @@ class ChatToolCall(TimestampedModel):
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
     plugin = models.ForeignKey(PluginMeta, on_delete=models.CASCADE, blank=True, null=True)
     function_name = models.CharField(max_length=255, blank=True, null=True)
+    function_args = models.CharField(max_length=255, blank=True, null=True)
     request = models.JSONField(blank=True, null=True)
     response = models.JSONField(blank=True, null=True)
 
     def __str__(self):
-        return f"{self.chat.id}"
+        if self.plugin:
+            name = f"{self.chat.id} - {self.plugin.name}"
+        else:
+            name = f"{self.chat.id} - {self.function_name}"
+        return name
 
     class Meta:
         verbose_name_plural = "Chat Tool Call Histories"

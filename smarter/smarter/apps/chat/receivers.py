@@ -77,10 +77,12 @@ def handle_chat_completion_tool_call(sender, **kwargs):
     for tool_call in tool_calls:
         plugin_meta: PluginMeta = tool_call.get("plugin_meta")
         function_name: str = tool_call.get("function_name")
+        function_args: str = tool_call.get("function_args")
         ChatToolCall(
             chat=chat,
             plugin=plugin_meta,
             function_name=function_name,
+            function_args=function_args,
             request=request,
             response=response,
         ).save()
