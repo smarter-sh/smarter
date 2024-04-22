@@ -12,7 +12,7 @@ from django.db.utils import IntegrityError
 
 from smarter.smarter_celery import app
 
-from .models import ChatHistory, ChatToolCallHistory, PluginUsageHistory
+from .models import Chat, ChatToolCall, PluginUsage
 
 
 logger = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ def create_chat_history(chat_id, user_id, model, tools, temperature, messages, r
 
     try:
         if user_id:
-            chat_history = ChatHistory(
+            chat_history = Chat(
                 chat_id=chat_id,
                 user_id=user_id,
                 model=model,
@@ -58,7 +58,7 @@ def create_chat_tool_call_history(event_type, user_id, plugin_id, model, respons
     """Create chat tool call history record."""
     logger.info("Creating chat tool call history record for event_type: %s user_id: %s", event_type, user_id)
 
-    chat_tool_call_history = ChatToolCallHistory(
+    chat_tool_call_history = ChatToolCall(
         event=event_type,
         user_id=user_id,
         plugin_id=plugin_id,
@@ -79,7 +79,7 @@ def create_plugin_usage_history(user_id, plugin_id, event, data, model, custom_t
 
     logger.info("Creating plugin usage history record for event: %s user_id: %s", event, user_id)
 
-    plugin_selection_history = PluginUsageHistory(
+    plugin_selection_history = PluginUsage(
         user_id=user_id,
         plugin_id=plugin_id,
         event=event,
@@ -97,7 +97,7 @@ def create_plugin_selection_history(user_id, plugin_id, event, inquiry_type, inq
     """Create plugin selection history record."""
     logger.info("Creating plugin selection history record for event: %s user_id: %s", event, user_id)
 
-    plugin_selection_history = PluginUsageHistory(
+    plugin_selection_history = PluginUsage(
         user_id=user_id, plugin_id=plugin_id, event=event, inquiry_type=inquiry_type, inquiry_return=inquiry_return
     )
     plugin_selection_history.save()

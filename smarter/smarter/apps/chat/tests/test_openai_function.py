@@ -29,12 +29,11 @@ from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.plugin import Plugin
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
 
-from ..models import ChatHistory, PluginUsageHistory
+from ..models import Chat, PluginUsage
 from ..providers.smarter import handler
 from ..signals import (
     chat_completion_called,
     chat_completion_plugin_selected,
-    chat_completion_tool_call_received,
     chat_invoked,
     chat_response_failure,
     chat_response_success,
@@ -198,7 +197,6 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         chat_completion_called.connect(self.chat_completion_called_signal_handler)
         chat_response_success.connect(self.chat_completion_returned_signal_handler)
         chat_response_failure.connect(self.chat_completion_failed_signal_handler)
-        chat_completion_tool_call_received.connect(self.chat_completion_tool_call_received_signal_handler)
 
         response = None
         event_about_gobstoppers = get_test_file("json/prompt_about_everlasting_gobstoppers.json")
@@ -226,8 +224,8 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
                 print("assertFalse key:", key, "value:", value)
                 # self.assertFalse(value)
 
-        # assert that ChatHistory has one or more records for self.user
-        chat_histories = ChatHistory.objects.filter(user=self.user)
+        # assert that Chat has one or more records for self.user
+        chat_histories = Chat.objects.filter(user=self.user)
         self.assertTrue(chat_histories.exists())
 
         # test url api endpoint for chat history
@@ -235,8 +233,8 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         print("/api/v0/chat/history/chats/ response:", response.json())
 
-        # assert that PluginUsageHistory has one or more records for self.user
-        plugin_selection_histories = PluginUsageHistory.objects.filter(user=self.user)
+        # assert that PluginUsage has one or more records for self.user
+        plugin_selection_histories = PluginUsage.objects.filter(user=self.user)
         self.assertTrue(plugin_selection_histories.exists())
 
     def test_handler_weather(self):

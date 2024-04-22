@@ -15,11 +15,8 @@ PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
 if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 
-from ..const import OpenAIMessageKeys  # noqa: E402
-
 # our stuff
-from ..tests.test_setup import get_test_file  # noqa: E402
-from ..utils import (  # noqa: E402
+from smarter.apps.chat.providers.utils import (  # noqa: E402
     exception_response_factory,
     get_content_for_role,
     get_message_history,
@@ -28,6 +25,9 @@ from ..utils import (  # noqa: E402
     http_response_factory,
     parse_request,
 )
+from smarter.common.const import OpenAIMessageKeys  # noqa: E402
+
+from ..tests.test_setup import get_test_file  # noqa: E402
 
 
 class TestUtils(unittest.TestCase):
@@ -62,27 +62,20 @@ class TestUtils(unittest.TestCase):
         """Test get_request_body"""
         request_body = get_request_body(self.request)
         self.assertEqual(request_body, self.request)
-        self.assertEqual(request_body["model"], "gpt-3.5-turbo")
-        self.assertEqual(request_body["object_type"], "chat.completion")
-        self.assertIn("temperature", request_body)
-        self.assertIn("max_tokens", request_body)
         self.assertIn("messages", request_body)
 
     def test_parse_request(self):
         """Test parse_request"""
         request_body = get_request_body(self.request)
-        object_type, model, messages, input_text, temperature, max_tokens = parse_request(request_body)
-        self.assertEqual(object_type, "chat.completion")
-        self.assertEqual(model, "gpt-3.5-turbo")
+        messages, input_text, chat_id = parse_request(request_body)
+        self.assertEqual(chat_id, 1)
         self.assertEqual(input_text, None)
-        self.assertEqual(temperature, 0)
-        self.assertEqual(max_tokens, 256)
         self.assertEqual(len(messages), 2)
 
     def test_get_content_for_role(self):
         """Test get_content_for_role"""
         request_body = get_request_body(self.request)
-        _, _, messages, _, _, _ = parse_request(request_body)
+        messages, _, _ = parse_request(request_body)
         system_message = get_content_for_role(messages, OpenAIMessageKeys.OPENAI_SYSTEM_MESSAGE_KEY)
         user_message = get_content_for_role(messages, OpenAIMessageKeys.OPENAI_USER_MESSAGE_KEY)
         self.assertEqual(system_message, "you always return the integer value 42.")
@@ -91,7 +84,7 @@ class TestUtils(unittest.TestCase):
     def test_get_message_history(self):
         """test get_message_history"""
         request_body = get_request_body(self.request)
-        _, _, messages, _, _, _ = parse_request(request_body)
+        messages, _, _ = parse_request(request_body)
         message_history = get_message_history(messages)
         self.assertIsInstance(message_history, list)
         self.assertEqual(len(message_history), 1)
@@ -101,7 +94,7 @@ class TestUtils(unittest.TestCase):
     def test_get_messages_for_role(self):
         """test get_messages_for_role"""
         request_body = get_request_body(self.request)
-        _, _, messages, _, _, _ = parse_request(request_body)
+        messages, _, _ = parse_request(request_body)
         message_history = get_message_history(messages)
         self.assertIsInstance(message_history, list)
         user_messages = get_messages_for_role(message_history, OpenAIMessageKeys.OPENAI_USER_MESSAGE_KEY)

@@ -19,7 +19,7 @@ from smarter.apps.chat.api.v0.serializers import (
     ChatToolCallHistorySerializer,
     PluginUsageHistorySerializer,
 )
-from smarter.apps.chat.models import ChatHistory
+from smarter.apps.chat.models import Chat
 from smarter.apps.chatbot.api.v0.serializers import (
     ChatBotPluginSerializer,
     ChatBotSerializer,
@@ -94,7 +94,7 @@ class ChatConfigView(View):
         chatbot_plugin_serializer = ChatBotPluginSerializer(chatbot_plugins, many=True)
 
         # message thread history context
-        chat_history = ChatHistory.objects.filter(user=self.user_profile.user).order_by("-created_at").first()
+        chat_history = Chat.objects.filter(user=self.user_profile.user).order_by("-created_at").first()
         chat_history_serializer = ChatHistorySerializer(chat_history)
         chat_tool_call_history = ChatToolCallHistorySerializer(chat_history)
         plugin_usage_history = PluginUsageHistorySerializer(chat_history)
@@ -202,7 +202,7 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
         }
 
         # chat context
-        chat_history = ChatHistory.objects.filter(user=request.user).order_by("-created_at").first()
+        chat_history = Chat.objects.filter(user=request.user).order_by("-created_at").first()
         chat_context = {
             "ID": chat_history.chat_id if chat_history else "undefined",
             "HISTORY": chat_history.messages if chat_history else [],

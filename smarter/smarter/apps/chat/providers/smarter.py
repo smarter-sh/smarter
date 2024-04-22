@@ -15,12 +15,11 @@ from smarter.apps.chat.functions.function_weather import (
     get_current_weather,
     weather_tool_factory,
 )
+from smarter.apps.chat.models import Chat
 from smarter.apps.chat.signals import (
     chat_completion_called,
     chat_completion_plugin_selected,
     chat_completion_tool_call_created,
-    chat_completion_tool_call_received,
-    chat_completion_tools_call,
     chat_invoked,
     chat_response_failure,
     chat_response_success,
@@ -54,12 +53,16 @@ def handler(
     plugins: List[Plugin],
     user: UserType,
     data: dict,
+    chat_id: Chat = None,
 ):
     """
     Chat prompt handler. Responsible for processing incoming requests and
     invoking the appropriate OpenAI API endpoint based on the contents of
     the request.
     """
+    first_response_dict: dict = None
+    second_response_dict: dict = None
+
     chat_invoked.send(sender=handler, user=user, data=data)
     weather_tool = weather_tool_factory()
     tools = [weather_tool]
@@ -68,13 +71,26 @@ def handler(
     }
 
     try:
-        openai_response = {}
+        chat: Chat = None
+        chat_id: str = None
+        messages: list[dict] = None
+        input_text: str = None
+        first_response = {}
+
         request_body = get_request_body(data=data)
-        messages, input_text = parse_request(request_body)
+        messages, input_text, chat_id = parse_request(request_body)
         model = default_model
         temperature = default_temperature
         max_tokens = default_max_tokens
         request_meta_data = request_meta_data_factory(model, temperature, max_tokens, input_text)
+        if chat_id:
+            chat = Chat.objects.get(chat_id=chat_id)
+        else:
+            chat = Chat.objects.create(
+                model=model,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
 
         # does the prompt have anything to do with any of the search terms defined in a plugin?
         # FIX NOTE: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_tokens
@@ -82,7 +98,7 @@ def handler(
             "smarter.apps.chat.providers.smarter.handler(): plugins selector needs to be refactored to use Django model."
         )
         for plugin in plugins:
-            if plugin.selected(user=user, messages=messages):
+            if plugin.selected(user=user, input_text=input_text):
                 model = plugin.plugin_prompt.model
                 temperature = plugin.plugin_prompt.temperature
                 max_tokens = plugin.plugin_prompt.max_tokens
@@ -91,14 +107,7 @@ def handler(
                 tools.append(custom_tool)
                 available_functions[plugin.function_calling_identifier] = plugin.function_calling_plugin
                 chat_completion_plugin_selected.send(
-                    sender=handler,
-                    plugin=plugin.plugin_meta if plugin else None,
-                    user=user,
-                    data=data,
-                    model=model,
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                    custom_tool=custom_tool,
+                    sender=handler, chat=chat, plugin=plugin.plugin_meta, input_text=input_text
                 )
 
         # https://platform.openai.com/docs/guides/gpt/chat-completions-api
@@ -117,44 +126,37 @@ def handler(
         }
         chat_completion_called.send(
             sender=handler,
-            user=user,
-            data=data,
+            chat=chat,
             request=request_meta_data["original_request"]["request"],
             action="request",
         )
-        openai_response = openai.chat.completions.create(
+        first_response = openai.chat.completions.create(
             model=model,
             messages=messages,
             tools=tools,
             temperature=temperature,
             max_tokens=max_tokens,
         )
-        logger.info("openai_response: %s", openai_response)
-        openai_response_dict = json.loads(openai_response.model_dump_json())
-        request_meta_data["original_request"]["response"] = openai_response_dict
+        first_response_dict = json.loads(first_response.model_dump_json())
+        request_meta_data["original_request"]["response"] = first_response_dict
         create_prompt_completion_charge(
             handler.__name__,
             user.id,
             model,
-            openai_response.usage.completion_tokens,
-            openai_response.usage.prompt_tokens,
-            openai_response.usage.total_tokens,
-            openai_response.system_fingerprint,
+            first_response.usage.completion_tokens,
+            first_response.usage.prompt_tokens,
+            first_response.usage.total_tokens,
+            first_response.system_fingerprint,
         )
-        response_message = openai_response.choices[0].message
-        chat_completion_called.send(sender=handler, user=user, data=openai_response_dict, action="response")
-        openai_response = openai_response.model_dump()
+        response_message = first_response.choices[0].message
+        chat_completion_called.send(
+            sender=handler,
+            chat=chat,
+            request=request_meta_data["original_request"]["request"],
+            response=first_response_dict,
+        )
         tool_calls = response_message.tool_calls
         if tool_calls:
-            chat_completion_tools_call.send(
-                sender=handler,
-                user=user,
-                model=model,
-                tools=tools,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                response=openai_response_dict,
-            )
             # Step 3: call the function
             # Note: the JSON response may not always be valid; be sure to handle errors
             messages.append(response_message)  # extend conversation with assistant's reply
@@ -188,13 +190,6 @@ def handler(
                         "content": function_response,
                     }
                 )  # extend conversation with function response
-            chat_completion_tool_call_created.send(
-                sender=handler,
-                plugin=plugin.plugin_meta if plugin else None,
-                user=user,
-                data=data,
-                model=model,
-            )
             request_meta_data["modified_request"]["request"] = {
                 "model": model,
                 "messages": messages,
@@ -203,9 +198,15 @@ def handler(
                 model=model,
                 messages=messages,
             )  # get a new response from the model where it can see the function response
-            openai_response = second_response.model_dump()
-            openai_response_dict = json.loads(second_response.model_dump_json())
-            request_meta_data["modified_request"]["response"] = openai_response_dict
+            second_response_dict = json.loads(second_response.model_dump_json())
+            request_meta_data["modified_request"]["response"] = second_response_dict
+            chat_completion_tool_call_created.send(
+                sender=handler,
+                chat=chat,
+                tool_calls=[tool.model_dump_json for tool in tool_calls],
+                request=request_meta_data["modified_request"]["request"],
+                response=request_meta_data["modified_request"]["response"],
+            )
             create_plugin_charge(
                 handler.__name__,
                 user.id,
@@ -215,14 +216,6 @@ def handler(
                 second_response.usage.total_tokens,
                 second_response.system_fingerprint,
             )
-            chat_completion_tool_call_received.send(
-                sender=handler,
-                plugin=plugin.plugin_meta if plugin else None,
-                user=user,
-                data=data,
-                model=model,
-                response=openai_response_dict,
-            )
 
     # handle anything that went wrong
     # pylint: disable=broad-exception-caught
@@ -231,28 +224,15 @@ def handler(
         status_code, _message = EXCEPTION_MAP.get(type(e), (HTTPStatus.INTERNAL_SERVER_ERROR, "Internal server error"))
         return http_response_factory(status_code=status_code, body=exception_response_factory(e))
 
-    def messages_serializer_generator(messages):
-        for message in messages:
-            if isinstance(message, dict):
-                yield message
-            else:
-                yield message.model_dump()
-
-    serialized_messages = list(messages_serializer_generator(messages))
-
     # success!! return the response
+    request_dict = request_meta_data["original_request"]["request"] or request_meta_data["original_request"]["request"]
+    response_dict = second_response_dict or first_response_dict
     chat_response_success.send(
         sender=handler,
-        user=user,
-        model=model,
-        tools=tools,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        messages=serialized_messages,
-        response=openai_response,
-        data=data,
+        request=request_dict,
+        response=response_dict,
     )
     return http_response_factory(
         status_code=HTTPStatus.OK,
-        body={**openai_response, **request_meta_data},
+        body={**response_dict, **request_meta_data},
     )
