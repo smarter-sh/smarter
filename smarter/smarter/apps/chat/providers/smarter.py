@@ -30,7 +30,6 @@ from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
 from smarter.common.exceptions import EXCEPTION_MAP
 from smarter.lib.django.user import UserType
-from smarter.lib.django.validators import validate_completion_request, validate_item
 
 from .utils import (
     exception_response_factory,
@@ -39,6 +38,7 @@ from .utils import (
     parse_request,
     request_meta_data_factory,
 )
+from .validators import validate_completion_request, validate_item
 
 
 logger = logging.getLogger(__name__)
@@ -70,15 +70,17 @@ def handler(
     try:
         openai_response = {}
         request_body = get_request_body(data=data)
-        object_type, model, messages, input_text, temperature, max_tokens = parse_request(request_body)
-        request_meta_data = request_meta_data_factory(model, object_type, temperature, max_tokens, input_text)
-
-        model = model or default_model
-        temperature = temperature or default_temperature
-        max_tokens = max_tokens or default_max_tokens
+        messages, input_text = parse_request(request_body)
+        model = default_model
+        temperature = default_temperature
+        max_tokens = default_max_tokens
+        request_meta_data = request_meta_data_factory(model, temperature, max_tokens, input_text)
 
         # does the prompt have anything to do with any of the search terms defined in a plugin?
         # FIX NOTE: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_tokens
+        logger.warning(
+            "smarter.apps.chat.providers.smarter.handler(): plugins selector needs to be refactored to use Django model."
+        )
         for plugin in plugins:
             if plugin.selected(user=user, messages=messages):
                 model = plugin.plugin_prompt.model
@@ -106,7 +108,20 @@ def handler(
             item_type="ChatCompletion models",
         )
         validate_completion_request(request_body, version="v1")
-        chat_completion_called.send(sender=handler, user=user, data=data, action="request")
+        request_meta_data["original_request"]["request"] = {
+            "model": model,
+            "messages": messages,
+            "tools": tools,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        }
+        chat_completion_called.send(
+            sender=handler,
+            user=user,
+            data=data,
+            request=request_meta_data["original_request"]["request"],
+            action="request",
+        )
         openai_response = openai.chat.completions.create(
             model=model,
             messages=messages,
@@ -116,6 +131,7 @@ def handler(
         )
         logger.info("openai_response: %s", openai_response)
         openai_response_dict = json.loads(openai_response.model_dump_json())
+        request_meta_data["original_request"]["response"] = openai_response_dict
         create_prompt_completion_charge(
             handler.__name__,
             user.id,
@@ -179,12 +195,17 @@ def handler(
                 data=data,
                 model=model,
             )
+            request_meta_data["modified_request"]["request"] = {
+                "model": model,
+                "messages": messages,
+            }
             second_response = openai.chat.completions.create(
                 model=model,
                 messages=messages,
             )  # get a new response from the model where it can see the function response
             openai_response = second_response.model_dump()
             openai_response_dict = json.loads(second_response.model_dump_json())
+            request_meta_data["modified_request"]["response"] = openai_response_dict
             create_plugin_charge(
                 handler.__name__,
                 user.id,

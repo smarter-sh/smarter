@@ -24,9 +24,7 @@ spec:
               mysql -u "{{ .Values.env.MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.MYSQL_HOST }}" --port {{ .Values.env.MYSQL_PORT }} -e "GRANT ALL PRIVILEGES ON {{ .Values.env.MYSQL_DATABASE }}.* TO '{{ .Values.env.MYSQL_USER }}'@'%'; FLUSH PRIVILEGES;"
               python manage.py makemigrations
               python manage.py migrate
-              python manage.py waffle_switch chatbot_suppress_csrf off --create
-              python manage.py waffle_switch chatbot_log_csrf off --create
-              python manage.py waffle_switch chatbothelper_logging on --create
+              python manage.py initialize_waffle
               python manage.py create_smarter_admin --username "{{ .Values.env.SMARTER_ADMIN_USERNAME }}" --email "{{ .Values.env.SMARTER_ADMIN_USERNAME }}@{{ .Values.env.ROOT_DOMAIN }}" --password "{{ .Values.env.SMARTER_ADMIN_PASSWORD }}"
               python manage.py add_plugin_examples admin
               python manage.py verify_api_infrastructure
