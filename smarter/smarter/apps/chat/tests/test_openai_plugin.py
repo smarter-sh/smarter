@@ -57,7 +57,7 @@ class TestPlugin(unittest.TestCase):
         """Test default return value of function_calling_plugin()"""
         try:
             inquiry_type = inquiry_type = self.plugin.plugin_data.return_data_keys[0]
-            return_data = self.plugin.function_calling_plugin(self.user, inquiry_type=inquiry_type)
+            return_data = self.plugin.function_calling_plugin(inquiry_type=inquiry_type)
         except Exception:
             self.fail("function_calling_plugin() raised ExceptionType")
 

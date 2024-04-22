@@ -5,10 +5,8 @@ import logging
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.forms.models import model_to_dict
 
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
-from smarter.lib.django.user import User
 
 from .models import Chat, ChatHistory, ChatToolCall, PluginMeta, PluginUsage
 from .signals import (
@@ -28,15 +26,14 @@ logger = logging.getLogger(__name__)
 def handle_chat_invoked(sender, **kwargs):
     """Handle chat invoked signal."""
 
-    user = kwargs.get("user")
-    user = User.objects.get(id=user.id) if user else None
+    chat: Chat = kwargs.get("chat")
 
     data = kwargs.get("data")
 
     logger.info(
-        "%s signal received for chat by user %s with data: %s",
+        "%s signal received for chat %s with data: %s",
         formatted_text("chat_invoked"),
-        user.username if user else "unknown",
+        chat.id,
         formatted_json(data),
     )
 
@@ -73,15 +70,18 @@ def handle_chat_completion_tool_call(sender, **kwargs):
     """Handle chat completion tool call signal."""
 
     chat: Chat = kwargs.get("chat")
-    tool_calls: dict = kwargs.get("tool_call")
+    tool_call: dict = kwargs.get("tool_call")
     plugin: PluginMeta = kwargs.get("plugin")
     request: dict = kwargs.get("request")
     response: dict = kwargs.get("response")
 
+    logger.info("request: %s", request)
+    logger.info("response: %s", response)
+
     chat_tool_call_history = ChatToolCall(
         chat=chat,
         plugin=plugin,
-        tool_calls=tool_calls,
+        tool_call=tool_call,
         request=request,
         response=response,
     )
@@ -108,26 +108,8 @@ def handle_chat_completion_plugin_selected(sender, **kwargs):
         plugin=plugin,
         chat=chat,
         input_text=input_text,
-        event="selected",
     )
     plugin_selection_history.save()
-
-
-@receiver(post_save, sender=ChatToolCall)
-def handle_plugin_selection_history_created(sender, **kwargs):
-    """Handle plugin selection history created signal."""
-
-    # FIX NOTE: This is a temporary fix to get tests to pass again
-    user = kwargs.get("user")
-    data = kwargs.get("data")
-    data_dict = model_to_dict(data) if data else {}
-
-    logger.info(
-        "%s signal received for chat: %s data: %s",
-        formatted_text("chat_completion_plugin_usage_history_created"),
-        user.username if user else "unknown",
-        formatted_json(data_dict),
-    )
 
 
 # pylint: disable=W0612
@@ -135,70 +117,65 @@ def handle_plugin_selection_history_created(sender, **kwargs):
 def handle_chat_completion_returned(sender, **kwargs):
     """Handle chat completion returned signal."""
 
-    chat_id = kwargs.get("chat_id")
-    request = kwargs.get("request")
-    response = kwargs.get("response")
+    chat: Chat = kwargs.get("chat")
+    request: dict = kwargs.get("request")
+    response: dict = kwargs.get("response")
 
     logger.info(
         "%s signal received for chat: %s,  input_text: %s, response: %s",
         formatted_text("chat_response_success"),
-        chat_id,
+        chat.id,
         request,
         response,
     )
-    chat_history = ChatHistory(
-        chat=chat_id,
+    ChatHistory(
+        chat=chat,
         request=request,
         response=response,
-    )
-    chat_history.save()
+    ).save()
 
 
 @receiver(chat_response_failure, dispatch_uid="chat_response_failure")
 def handle_chat_response_failed(sender, **kwargs):
     """Handle chat completion failed signal."""
 
-    user = kwargs.get("user")
-    data = kwargs.get("data")
+    exception = kwargs.get("exception")
+    chat: Chat = kwargs.get("chat")
+    request_meta_data = kwargs.get("request_meta_data")
 
     logger.info(
-        "%s signal received for chat: %s data: %s",
+        "%s signal received for chat: %s, request_meta_data: %s, exception: %s",
         formatted_text("chat_response_failure"),
-        user.username if user else "unknown",
-        data,
+        chat.id,
+        formatted_json(request_meta_data),
+        exception,
     )
+
+
+# ------------------------------------------------------------------------------
+# Django model receivers.
+# ------------------------------------------------------------------------------
 
 
 @receiver(post_save, sender=Chat)
+def handle_chat_created(sender, **kwargs):
+
+    logger.info("%s", formatted_text("Chat() record created."))
+
+
+@receiver(post_save, sender=ChatHistory)
 def handle_chat_history_created(sender, **kwargs):
-    """Handle chat  history created signal."""
 
-    # FIX NOTE: This is a temporary fix to get tests to pass again
-    # we're missing the user and data arguments in the signal
-    user = kwargs.get("user")
-    data = kwargs.get("data")
-
-    data_dict = model_to_dict(data) if data else {}
-    logger.info(
-        "%s signal received for chat: %s %s",
-        formatted_text("chat_history_created"),
-        user.username if user else "unknown",
-        formatted_json(data_dict),
-    )
+    logger.info("%s", formatted_text("ChatHistory() record created."))
 
 
 @receiver(post_save, sender=ChatToolCall)
-def handle_chat_tool_call_history_created(sender, **kwargs):
-    """Handle chat completion tool call history created signal."""
+def handle_chat_tool_call_created(sender, **kwargs):
 
-    # FIX NOTE: This is a temporary fix to get tests to pass again
-    user = kwargs.get("user")
-    data = kwargs.get("data")
-    data_dict = model_to_dict(data) if data else {}
+    logger.info("%s", formatted_text("ChatToolCall() record created."))
 
-    logger.info(
-        "%s signal received for chat: %s data: %s",
-        formatted_text("chat_tool_call_history_created"),
-        user.username if user else "unknown",
-        formatted_json(data_dict),
-    )
+
+@receiver(post_save, sender=PluginUsage)
+def handle_plugin_usage_created(sender, **kwargs):
+
+    logger.info("%s", formatted_text("PluginUsage() record created."))

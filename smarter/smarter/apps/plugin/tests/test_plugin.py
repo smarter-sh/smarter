@@ -33,7 +33,6 @@ from smarter.apps.plugin.signals import (
     plugin_deleted,
     plugin_ready,
     plugin_selected,
-    plugin_selected_called,
     plugin_selector_history_created,
     plugin_updated,
 )
@@ -95,7 +94,6 @@ class TestPlugin(unittest.TestCase):
             "plugin_deleted": self._plugin_deleted,
             "plugin_ready": self._plugin_ready,
             "plugin_selected": self._plugin_selected,
-            "plugin_selected_called": self._plugin_selected_called,
             "plugin_selector_history_created": self._plugin_selector_history_created,
             "plugin_updated": self._plugin_updated,
         }
@@ -414,16 +412,12 @@ class TestPlugin(unittest.TestCase):
         plugin_called.connect(self.plugin_called_signal_handler, dispatch_uid="plugin_called_test_plugin_called_signal")
 
         plugin = Plugin(data=self.data)
-        plugin.function_calling_plugin(self.user, inquiry_type="sales_promotions")
+        plugin.function_calling_plugin(inquiry_type="sales_promotions")
 
         self.assertTrue(self.signals["plugin_called"])
 
     def test_plugin_selected_signal(self):
         """Test the plugin_selected signal."""
-        plugin_selected_called.connect(
-            self.plugin_selected_called_signal_handler,
-            dispatch_uid="plugin_selected_test_plugin_selected_called_signal",
-        )
         plugin_selected.connect(
             self.plugin_selected_signal_handler, dispatch_uid="plugin_selected_test_plugin_selected_signal"
         )
@@ -439,7 +433,6 @@ class TestPlugin(unittest.TestCase):
 
         plugin = Plugin(data=self.data)
         plugin.selected(user=self.user, messages=messages)
-        self.assertTrue(self.signals["plugin_selected_called"])
         self.assertTrue(self.signals["plugin_selected"])
 
         sleep(1)

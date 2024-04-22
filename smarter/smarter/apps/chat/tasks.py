@@ -8,8 +8,6 @@ future high-traffic scenarios.
 """
 import logging
 
-from django.db.utils import IntegrityError
-
 from smarter.smarter_celery import app
 
 from .models import Chat, ChatToolCall, PluginUsage
@@ -26,58 +24,24 @@ def aggregate_chat_history():
 
 
 @app.task()
-def create_chat_history(chat_id, user_id, model, tools, temperature, messages, response, max_tokens):
+def create_chat_history(model, tools, temperature, max_tokens):
     """Create chat history record with flattened LLM response."""
-    logger.info("Creating chat history record for chat_id: %s user_id: %s", chat_id, user_id)
 
-    try:
-        if user_id:
-            chat_history = Chat(
-                chat_id=chat_id,
-                user_id=user_id,
-                model=model,
-                tools=tools,
-                temperature=temperature,
-                messages=messages,
-                response=response,
-                max_tokens=max_tokens,
-            )
-            chat_history.save()
-            return None
-    except IntegrityError as e:
-        # seems to happen due to race conditions during unit tests
-        logger.warning("Couldn't save Chat history due to foreign key violation %s", e)
-
-    # ditto
-    logger.warning("Couldn't save Chat history. None existent user_id %s", user_id)
-    return None
+    Chat(model=model, tools=tools, temperature=temperature, max_tokens=max_tokens)
 
 
 @app.task()
-def create_chat_tool_call_history(event_type, user_id, plugin_id, model, response, response_id):
+def create_chat_tool_call_history(chat_id, plugin_id, tool_call, request, response):
     """Create chat tool call history record."""
-    logger.info("Creating chat tool call history record for event_type: %s user_id: %s", event_type, user_id)
-
     chat_tool_call_history = ChatToolCall(
-        event=event_type,
-        user_id=user_id,
-        plugin_id=plugin_id,
-        model=model,
-        response=response,
-        response_id=response_id,
+        chat_id=chat_id, plugin_id=plugin_id, tool_call=tool_call, request=request, response=response
     )
-
-    if event_type == "received":
-        chat_tool_call_history.response = response
-
     chat_tool_call_history.save()
 
 
 @app.task()
 def create_plugin_usage_history(user_id, plugin_id, event, data, model, custom_tool, temperature, max_tokens):
     """Create plugin usage history record."""
-
-    logger.info("Creating plugin usage history record for event: %s user_id: %s", event, user_id)
 
     plugin_selection_history = PluginUsage(
         user_id=user_id,
@@ -95,8 +59,6 @@ def create_plugin_usage_history(user_id, plugin_id, event, data, model, custom_t
 @app.task()
 def create_plugin_selection_history(user_id, plugin_id, event, inquiry_type, inquiry_return):
     """Create plugin selection history record."""
-    logger.info("Creating plugin selection history record for event: %s user_id: %s", event, user_id)
-
     plugin_selection_history = PluginUsage(
         user_id=user_id, plugin_id=plugin_id, event=event, inquiry_type=inquiry_type, inquiry_return=inquiry_return
     )

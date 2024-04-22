@@ -30,7 +30,6 @@ from .signals import (
     plugin_deleted,
     plugin_ready,
     plugin_selected,
-    plugin_selected_called,
     plugin_updated,
 )
 
@@ -302,8 +301,6 @@ class Plugin:
         search_pairs: [["Lawrence", "McDaniel"], ["FullStackWithLawrence", "Lawrence McDaniel"]]
         """
 
-        plugin_selected_called.send(sender=self.selected, plugin=self, messages=messages)
-
         if not self.ready:
             return False
         if self._selected:
@@ -312,24 +309,27 @@ class Plugin:
         search_terms = self.plugin_selector.search_terms
 
         # check the input text
-        if does_refer_to(prompt=input_text, search_term=search_terms):
-            self._selected = True
-            plugin_selected.send(
-                sender=self.selected, plugin=self, user=user, messages=messages, search_term=search_terms
-            )
-            return True
+        if input_text:
+            for search_term in search_terms:
+                if does_refer_to(prompt=input_text, search_term=search_term):
+                    self._selected = True
+                    plugin_selected.send(
+                        sender=self.selected, plugin=self, input_text=input_text, search_term=search_term
+                    )
+                    return True
 
         # check the messages list
-        for message in messages:
-            if "role" in message and str(message["role"]).lower() == "user":
-                content = message["content"]
-                for search_term in search_terms:
-                    if does_refer_to(prompt=content, search_term=search_term):
-                        self._selected = True
-                        plugin_selected.send(
-                            sender=self.selected, plugin=self, user=user, messages=messages, search_term=search_term
-                        )
-                        return True
+        if messages:
+            for message in messages:
+                if "role" in message and str(message["role"]).lower() == "user":
+                    content = message["content"]
+                    for search_term in search_terms:
+                        if does_refer_to(prompt=content, search_term=search_term):
+                            self._selected = True
+                            plugin_selected.send(
+                                sender=self.selected, plugin=self, user=user, messages=messages, search_term=search_term
+                            )
+                            return True
 
         return False
 
@@ -351,7 +351,7 @@ class Plugin:
 
         return messages
 
-    def function_calling_plugin(self, user: UserType, inquiry_type: str) -> str:
+    def function_calling_plugin(self, inquiry_type: str) -> str:
         """Return select info from custom plugin object"""
         if not self.ready:
             return None
@@ -362,7 +362,6 @@ class Plugin:
             retval = json.dumps(retval)
             plugin_called.send(
                 sender=self.function_calling_plugin,
-                user=user,
                 plugin=self.plugin_meta,
                 inquiry_type=inquiry_type,
                 inquiry_return=retval,
@@ -371,7 +370,6 @@ class Plugin:
         except KeyError:
             plugin_called.send(
                 sender=self.function_calling_plugin,
-                user=user,
                 plugin=self.plugin_meta,
                 inquiry_type=inquiry_type,
                 inquiry_return="KeyError",

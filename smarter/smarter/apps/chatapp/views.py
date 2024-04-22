@@ -15,9 +15,9 @@ from django.views.decorators.csrf import csrf_exempt
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.chat.api.v0.serializers import (
-    ChatHistorySerializer,
-    ChatToolCallHistorySerializer,
-    PluginUsageHistorySerializer,
+    ChatSerializer,
+    ChatToolCallSerializer,
+    PluginUsageSerializer,
 )
 from smarter.apps.chat.models import Chat
 from smarter.apps.chatbot.api.v0.serializers import (
@@ -95,9 +95,9 @@ class ChatConfigView(View):
 
         # message thread history context
         chat_history = Chat.objects.filter(user=self.user_profile.user).order_by("-created_at").first()
-        chat_history_serializer = ChatHistorySerializer(chat_history)
-        chat_tool_call_history = ChatToolCallHistorySerializer(chat_history)
-        plugin_usage_history = PluginUsageHistorySerializer(chat_history)
+        chat_history_serializer = ChatSerializer(chat_history)
+        chat_tool_call_history = ChatToolCallSerializer(chat_history)
+        plugin_usage_history = PluginUsageSerializer(chat_history)
 
         retval = {
             "sandbox_mode": self.sandbox_mode,
