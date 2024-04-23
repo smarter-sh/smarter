@@ -2,6 +2,7 @@
 """All models for the OpenAI Function Calling API app."""
 from django.db import models
 
+from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.plugin.models import PluginMeta
 
 # our stuff
@@ -14,12 +15,10 @@ from smarter.lib.django.model_helpers import TimestampedModel
 
 
 class Chat(TimestampedModel):
-    """Chat history model."""
+    """Chat model."""
 
-    model = models.CharField(max_length=255, blank=True, null=True)
-    tools = models.JSONField(max_length=255, blank=True, null=True)
-    temperature = models.FloatField(blank=True, null=True)
-    max_tokens = models.IntegerField(blank=True, null=True)
+    session_key = models.CharField(max_length=255, blank=True, null=True)
+    chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE)
 
     def __str__(self):
         # pylint: disable=E1136

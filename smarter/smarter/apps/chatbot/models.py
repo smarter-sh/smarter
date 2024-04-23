@@ -98,7 +98,7 @@ class ChatBot(TimestampedModel):
     app_name = models.CharField(default="chatbot", max_length=255, blank=True, null=True)
     app_assistant = models.CharField(default="Smarter", max_length=255, blank=True, null=True)
     app_welcome_message = models.CharField(default="Welcome to the chatbot!", max_length=255, blank=True, null=True)
-    app_example_prompts = models.JSONField(default="[]", blank=True, null=True)
+    app_example_prompts = models.JSONField(default=list, blank=True, null=True)
     app_placeholder = models.CharField(default="Type something here...", max_length=255, blank=True, null=True)
     app_info_url = models.URLField(default="https://smarter.sh", blank=True, null=True)
     app_background_image_url = models.URLField(blank=True, null=True)

@@ -3,6 +3,7 @@
 import glob
 import json
 import os
+import secrets
 from pathlib import Path
 
 from django.core.management.base import BaseCommand
@@ -28,6 +29,7 @@ class Command(BaseCommand):
         user = account_admin_user(account)
         user_profile = UserProfile.objects.get(account=account, user=user)
         chatbot = ChatBot.objects.get(account=user_profile.account, name=SMARTER_EXAMPLE_CHATBOT_NAME)
+        session_key = "seed_chat_history.py_" + secrets.token_urlsafe(16)
 
         for file_path in glob.glob(data_folder_path):
             print("Processing file: ", file_path)
@@ -35,6 +37,8 @@ class Command(BaseCommand):
                 data = json.loads(file.read())
                 plugins = ChatBotPlugin().plugins(chatbot=chatbot)
                 handler(
+                    chatbot=chatbot,
+                    session_key=session_key,
                     plugins=plugins,
                     user=user_profile.user,
                     data=data,
