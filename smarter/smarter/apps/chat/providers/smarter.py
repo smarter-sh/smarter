@@ -24,6 +24,7 @@ from smarter.apps.chat.signals import (
     chat_response_failure,
     chat_response_success,
 )
+from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.plugin.plugin import Plugin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
@@ -47,6 +48,8 @@ openai.api_key = smarter_settings.openai_api_key.get_secret_value()
 
 # pylint: disable=too-many-locals,too-many-statements,too-many-arguments
 def handler(
+    chatbot: ChatBot,
+    session_key: str,
     default_model: str,
     default_temperature: float,
     default_max_tokens: int,
@@ -86,9 +89,8 @@ def handler(
             chat = Chat.objects.get(chat_id=chat_id)
         else:
             chat = Chat.objects.create(
-                model=model,
-                temperature=temperature,
-                max_tokens=max_tokens,
+                session_key=session_key,
+                chatbot=chatbot,
             )
         chat_invoked.send(sender=handler, chat=chat, data=data)
 

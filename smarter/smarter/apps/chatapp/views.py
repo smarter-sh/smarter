@@ -15,11 +15,11 @@ from django.views.decorators.csrf import csrf_exempt
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.chat.api.v0.serializers import (
-    ChatSerializer,
+    ChatHistorySerializer,
     ChatToolCallSerializer,
     PluginUsageSerializer,
 )
-from smarter.apps.chat.models import Chat
+from smarter.apps.chat.models import Chat, ChatHistory
 from smarter.apps.chatbot.api.v0.serializers import (
     ChatBotPluginSerializer,
     ChatBotSerializer,
@@ -94,10 +94,14 @@ class ChatConfigView(View):
         chatbot_plugin_serializer = ChatBotPluginSerializer(chatbot_plugins, many=True)
 
         # message thread history context
-        chat_history = Chat.objects.filter(user=self.user_profile.user).order_by("-created_at").first()
-        chat_history_serializer = ChatSerializer(chat_history)
-        chat_tool_call_history = ChatToolCallSerializer(chat_history)
-        plugin_usage_history = PluginUsageSerializer(chat_history)
+        try:
+            chat = Chat.objects.get(chatbot=self.chatbot)
+        except Chat.DoesNotExist:
+            chat = None
+        chat_history = ChatHistory.objects.filter(chat=chat).order_by("-created_at").first() if chat else None
+        chat_history_serializer = ChatHistorySerializer(chat_history) if chat_history else None
+        chat_tool_call_history = ChatToolCallSerializer(chat_history) if chat_history else None
+        plugin_usage_history = PluginUsageSerializer(chat_history) if chat_history else None
 
         retval = {
             "sandbox_mode": self.sandbox_mode,
@@ -202,10 +206,11 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
         }
 
         # chat context
-        chat_history = Chat.objects.filter(user=request.user).order_by("-created_at").first()
+        chat_history = ChatHistory.objects.filter().order_by("-created_at").first()
+        messages = chat_history.request["messages"] if chat_history else []
         chat_context = {
-            "ID": chat_history.chat_id if chat_history else "undefined",
-            "HISTORY": chat_history.messages if chat_history else [],
+            "ID": chat_history.id if chat_history else None,
+            "HISTORY": messages,
             "MOST_RECENT_RESPONSE": chat_history.response if chat_history else None,
         }
 

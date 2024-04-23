@@ -51,6 +51,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
     user: UserType = None
     chatbot: ChatBot = None
     plugins: List[Plugin] = None
+    session_key: str = None
 
     @property
     def is_web_platform(self):
