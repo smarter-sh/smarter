@@ -22,8 +22,9 @@ import {
   TypingIndicator,
   ConversationHeader,
   InfoButton,
-  VoiceCallButton,
   VideoCallButton,
+  SendButton,
+  StarButton
 } from "@chatscope/chat-ui-kit-react";
 
 // Our stuff
@@ -42,8 +43,6 @@ function ChatApp(props) {
   // In all fairness this probably isn't necessary, but it's a good practice
   // to define the props that are expected to be passed in and also
   // to make these immutable.
-
-  console.log("ChatApp() - props: ", props);
 
   const welcome_message = props.welcome_message;
   const placeholder_text = props.placeholder_text;
@@ -193,8 +192,8 @@ function ChatApp(props) {
               info={props.config.chat.id}
             />
             <ConversationHeader.Actions>
-              <VoiceCallButton disabled />
-              <VideoCallButton disabled />
+              <SendButton onClick={handleInfoButtonClick} title={info_url} />
+              <StarButton onClick={handleInfoButtonClick} title={info_url} />
               <InfoButton onClick={handleInfoButtonClick} title={info_url} />
             </ConversationHeader.Actions>
           </ConversationHeader>

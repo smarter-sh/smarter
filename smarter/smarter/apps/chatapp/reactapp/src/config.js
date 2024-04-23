@@ -7,7 +7,6 @@
 import { getCookie } from "./components/chatApp/csrf.js";
 
 export async function fetchConfig() {
-  console.log("fetchConfig()");
   const headers = {
     "Accept": "*/*",
     "Content-Type": "application/json",
@@ -28,8 +27,6 @@ export async function fetchConfig() {
     const status = await response.status;
     const response_json = await response.json();    // Convert the ReadableStream to a JSON object
 
-    console.log("fetchConfig() response: ", response);
-
     if (response.ok) {
       return response_json;
     } else {
@@ -43,8 +40,6 @@ export async function fetchConfig() {
 
 export function setConfig(config) {
 
-    console.log("config: ", config);
-
     // Application setup
     config.APPLICATIONS = {
       SmarterSandbox: "SmarterSandBox",
@@ -52,8 +47,8 @@ export function setConfig(config) {
       OpenaiPassthrough: "OpenaiPassthrough",
     };
 
-    console.log('config.js: BACKEND_API_URL: ', config.chatbot.url_chatbot);
-    console.log('config.js: BACKEND_SESSION_KEY: ', config.session_key);
+    console.log('config.js: api_url: ', config.chatbot.url_chatbot);
+    console.log('config.js: session_key: ', config.session_key);
     console.log('config.js: csrf: ', getCookie('csrftoken'));
 
     return config;

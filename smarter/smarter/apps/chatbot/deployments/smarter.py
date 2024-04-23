@@ -9,8 +9,16 @@ from http import HTTPStatus
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 
-from smarter.apps.chat.models import Chat
+from smarter.apps.account.api.v0.serializers import AccountSerializer
+from smarter.apps.chat.api.v0.serializers import (
+    ChatHistorySerializer,
+    ChatPluginUsageSerializer,
+    ChatSerializer,
+    ChatToolCallSerializer,
+)
+from smarter.apps.chat.models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
 from smarter.apps.chat.providers.smarter import handler
+from smarter.apps.chatbot.api.v0.serializers import ChatBotSerializer
 
 from .base import ChatBotApiBaseViewSet
 
@@ -35,6 +43,7 @@ class SmarterChatBotApiViewSet(ChatBotApiBaseViewSet):
             self.data = json.loads(request.body)
         except json.JSONDecodeError:
             self.data = {}
+        logger.info("SmarterChatBotApiViewSet.dispatch: data=%s", self.data)
 
         # Initialize the chat session for this request. session_key is generated
         # and managed by the /config/ endpoint for the chatbot
@@ -46,7 +55,28 @@ class SmarterChatBotApiViewSet(ChatBotApiBaseViewSet):
         # which uniquely identifies the device and the individual chatbot session
         # for the device.
         self.session_key = self.data.get("session_key")
-        self.chat = get_object_or_404(Chat, session_key=self.session_key)
+        self.session_key = "8d7e93544088e2cc23b97890a96c17d285edcd0f5eec54810aa81136b80e73a3"
+        logger.info("SmarterChatBotApiViewSet.dispatch: session_key=%s", self.session_key)
+        self.chat = Chat.objects.get(session_key=self.session_key)
+        logger.info("SmarterChatBotApiViewSet.dispatch: chat=%s", self.chat)
+        return super().dispatch(request, *args, **kwargs)
+
+    # pylint: disable=W0613
+    def get(self, request, *args, **kwargs):
+        chat = get_object_or_404(Chat, session_key=self.session_key)
+        chat_history = ChatHistory.objects.filter(chat=chat)
+        chat_tool_calls = ChatToolCall.objects.filter(chat=chat)
+        chat_plugin_usage = ChatPluginUsage.objects.filter(chat=chat)
+        data = {
+            "session_key": self.session_key,
+            "account": AccountSerializer(self.account).data if self.account else None,
+            "chatbot": ChatBotSerializer(self.chatbot).data if self.chatbot else None,
+            "chat": ChatSerializer(self.chat).data if self.chat else None,
+            "history": ChatHistorySerializer(chat_history).data if chat_history.exists() else None,
+            "tool_calls": ChatToolCallSerializer(chat_tool_calls).data if chat_tool_calls.exists() else None,
+            "plugin_usage": ChatPluginUsageSerializer(chat_plugin_usage).data if chat_plugin_usage.exists() else None,
+        }
+        return JsonResponse(data=data, safe=False, status=HTTPStatus.OK)
 
     # pylint: disable=W0613
     def post(self, request, *args, **kwargs):
@@ -74,11 +104,11 @@ class SmarterChatBotApiViewSet(ChatBotApiBaseViewSet):
         `chatbot.hostname == chatbot.custom_domain or chatbot.default_host`
         """
 
-        logger.debug("SmarterChatBotApiViewSet.post: data=%s", self.data)
-        logger.debug("account: %s", self.account)
-        logger.debug("user: %s", self.user)
-        logger.debug("chatbot: %s", self.chatbot)
-        logger.debug("plugins: %s", self.plugins)
+        logger.info("SmarterChatBotApiViewSet.post: data=%s", self.data)
+        logger.info("account: %s", self.account)
+        logger.info("user: %s", self.user)
+        logger.info("chatbot: %s", self.chatbot)
+        logger.info("plugins: %s", self.plugins)
 
         response = handler(
             chat=self.chat,
@@ -90,5 +120,5 @@ class SmarterChatBotApiViewSet(ChatBotApiBaseViewSet):
             default_max_tokens=self.chatbot.default_max_tokens,
         )
         response = JsonResponse(data=response, safe=False, status=HTTPStatus.OK)
-        logger.debug("SmarterChatBotApiViewSet.post: response=%s", response)
+        logger.info("SmarterChatBotApiViewSet.post: response=%s", response)
         return response

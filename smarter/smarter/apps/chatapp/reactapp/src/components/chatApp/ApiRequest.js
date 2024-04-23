@@ -24,10 +24,10 @@
 import { getCookie } from "./csrf";
 
 
-function requestBodyFactory(messages) {
+function requestBodyFactory(messages, session_key) {
 
   const retval = {
-    "session_key": "SET ME PLEASE",
+    "session_key": session_key,
     "messages": messages,
   };
   return JSON.stringify(retval);
@@ -54,10 +54,9 @@ export async function processApiRequest(
     credentials: 'include',
     mode: "cors",
     headers: headers,
-    body: requestBodyFactory(messages),
+    body: requestBodyFactory(messages, props.config.session_key),
   };
-  console.log("processApiRequest(): csrftoken: ", csrftoken);
-  console.log("processApiRequest(): ", apiURL, messages, init);
+  console.log("processApiRequest(): ", props, apiURL, messages, init);
 
   try {
     const response = await fetch(apiURL, init);
