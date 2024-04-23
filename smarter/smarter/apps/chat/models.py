@@ -75,4 +75,4 @@ class ChatPluginUsage(TimestampedModel):
         return f"{self.chat.id} - {self.plugin.name}"
 
     class Meta:
-        verbose_name_plural = "Plugin Selection Histories"
+        verbose_name_plural = "Plugin Usage"
