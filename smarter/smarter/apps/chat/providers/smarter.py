@@ -24,6 +24,7 @@ from smarter.apps.chat.signals import (
     chat_response_failure,
     chat_response_success,
 )
+from smarter.apps.plugin.api.v0.serializers import PluginMetaSerializer
 from smarter.apps.plugin.plugin import Plugin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
@@ -180,7 +181,7 @@ def handler(
                     plugin_id = int(function_name[-4:])
                     plugin = Plugin(plugin_id=plugin_id)
                     function_response = plugin.function_calling_plugin(inquiry_type=function_args.get("inquiry_type"))
-                    serialized_tool_call["plugin_meta"] = plugin.plugin_meta
+                    serialized_tool_call["smarter_plugin"] = PluginMetaSerializer(plugin.plugin_meta).data
                 tool_call_message = {
                     "tool_call_id": tool_call.id,
                     "role": "tool",
@@ -231,6 +232,6 @@ def handler(
 
     # success!! return the response
     response = second_iteration.get("response") or first_iteration.get("response")
-    response = http_response_factory(status_code=HTTPStatus.OK, body=response)
+    response["meta_data"] = {"tool_calls": serialized_tool_calls, **request_meta_data}
     chat_response_success.send(sender=handler, chat=chat, request=first_iteration.get("request"), response=response)
-    return response
+    return http_response_factory(status_code=HTTPStatus.OK, body=response)
