@@ -10,6 +10,7 @@ from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import account_admin_user
+from smarter.apps.chat.models import Chat
 from smarter.apps.chat.providers.smarter import handler
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.common.conf import settings as smarter_settings
@@ -30,6 +31,12 @@ class Command(BaseCommand):
         user_profile = UserProfile.objects.get(account=account, user=user)
         chatbot = ChatBot.objects.get(account=user_profile.account, name=SMARTER_EXAMPLE_CHATBOT_NAME)
         session_key = "seed_chat_history.py_" + secrets.token_urlsafe(16)
+        chat = Chat.objects.create(
+            session_key=session_key,
+            url="https://smarter.com/seed-chat-history",
+            ip_address="192.1.1.1",
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+        )
 
         for file_path in glob.glob(data_folder_path):
             print("Processing file: ", file_path)
@@ -37,8 +44,7 @@ class Command(BaseCommand):
                 data = json.loads(file.read())
                 plugins = ChatBotPlugin().plugins(chatbot=chatbot)
                 handler(
-                    chatbot=chatbot,
-                    session_key=session_key,
+                    chat_id=chat.id,
                     plugins=plugins,
                     user=user_profile.user,
                     data=data,

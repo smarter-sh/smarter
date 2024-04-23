@@ -4,8 +4,10 @@ information about how the React app is integrated into the Django app.
 """
 
 import hashlib
+import json
 import logging
 import warnings
+from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseNotFound, JsonResponse
@@ -44,6 +46,7 @@ class ChatConfigView(View):
     """
 
     _sandbox_mode: bool = True
+    request: None
     helper: ChatBotHelper = None
     account: Account = None
     user: UserType = None
@@ -52,16 +55,34 @@ class ChatConfigView(View):
     url: str = None
     session_key: str = None
 
-    def get_session_key(self, request):
-        user_agent = request.META.get("HTTP_USER_AGENT", "")
-        ip = request.META.get("REMOTE_ADDR", "")
-        unique_string_data = f"{user_agent}{ip}"
-        session_key = hashlib.sha256(unique_string_data.encode()).hexdigest()
-        return session_key
+    @property
+    def ip_address(self):
+        return self.request.META.get("REMOTE_ADDR", "")
+
+    @property
+    def user_agent(self):
+        return self.request.META.get("HTTP_USER_AGENT", "")
+
+    @property
+    def unique_client_string(self):
+        return f"{self.account.account_number}{self.chatbot.id}{self.user_agent}{self.ip_address}"
+
+    @property
+    def client_key(self):
+        return hashlib.sha256(self.unique_client_string.encode()).hexdigest()
+
+    def create_session_key(self):
+        key_string = self.unique_client_string + str(datetime.now())
+        return hashlib.sha256(key_string.encode()).hexdigest()
 
     def dispatch(self, request, *args, **kwargs):
+        self.request = request
         name = kwargs.pop("name", None)
-        self.session_key = self.get_session_key(request)
+        try:
+            body = json.loads(request.body)
+        except json.JSONDecodeError:
+            body = {}
+
         self.user = request.user
         self.user_profile = UserProfile.objects.get(user=self.user)
         self.account = self.user_profile.account
@@ -72,6 +93,7 @@ class ChatConfigView(View):
         self.chatbot = self.helper.chatbot
         if not self.chatbot:
             return HttpResponseNotFound()
+        self.session_key = body.get("session_key") or self.create_session_key()
         return super().dispatch(request, *args, **kwargs)
 
     # pylint: disable=unused-argument
@@ -92,6 +114,12 @@ class ChatConfigView(View):
         React context for all templates that render
         a React app.
         """
+        chat: Chat = None
+        chat_history: ChatHistory = None
+        chat_history_serializer: ChatHistorySerializer = None
+        chat_tool_call_history: ChatToolCallSerializer = None
+        plugin_usage_history: PluginUsageSerializer = None
+
         # chatbot context
         chatbot_serializer = ChatBotSerializer(self.chatbot)
 
@@ -104,14 +132,17 @@ class ChatConfigView(View):
         chatbot_plugin_serializer = ChatBotPluginSerializer(chatbot_plugins, many=True)
 
         # message thread history context
-        try:
-            chat = Chat.objects.get(chatbot=self.chatbot, session_key=self.session_key)
-        except Chat.DoesNotExist:
-            chat = None
-        chat_history = ChatHistory.objects.filter(chat=chat).order_by("-created_at").first() if chat else None
-        chat_history_serializer = ChatHistorySerializer(chat_history) if chat_history else None
-        chat_tool_call_history = ChatToolCallSerializer(chat_history) if chat_history else None
-        plugin_usage_history = PluginUsageSerializer(chat_history) if chat_history else None
+        chat, created = Chat.objects.get_or_create(
+            session_key=self.session_key,
+            ip_address=self.ip_address,
+            user_agent=self.user_agent,
+            url=self.url,
+        )
+        if not created:
+            chat_history = ChatHistory.objects.filter(chat=chat).order_by("-created_at").first() if chat else None
+            chat_history_serializer = ChatHistorySerializer(chat_history) if chat_history else None
+            chat_tool_call_history = ChatToolCallSerializer(chat_history) if chat_history else None
+            plugin_usage_history = PluginUsageSerializer(chat_history) if chat_history else None
 
         retval = {
             "session_key": self.session_key,
@@ -126,7 +157,7 @@ class ChatConfigView(View):
             },
             "meta_data": self.helper.to_json(),
             "chat": {
-                "id": chat_history.chat_id if chat_history else "undefined",
+                "id": chat_history.chat_id if chat_history else None,
                 "history": chat_history_serializer.data if chat_history else [],
                 "tool_calls": chat_tool_call_history.data if chat_history else [],
                 "plugin_usage": plugin_usage_history.data if chat_history else [],

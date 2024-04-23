@@ -139,7 +139,7 @@ def handle_chat_response_failed(sender, **kwargs):
     logger.info(
         "%s signal received for chat: %s, request_meta_data: %s, exception: %s",
         formatted_text("chat_response_failure"),
-        chat.id,
+        chat.id if chat else None,
         formatted_json(request_meta_data),
         exception,
     )

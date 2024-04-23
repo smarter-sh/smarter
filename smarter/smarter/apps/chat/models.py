@@ -2,7 +2,6 @@
 """All models for the OpenAI Function Calling API app."""
 from django.db import models
 
-from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.plugin.models import PluginMeta
 
 # our stuff
@@ -18,11 +17,13 @@ class Chat(TimestampedModel):
     """Chat model."""
 
     session_key = models.CharField(max_length=255, blank=True, null=True)
-    chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+    user_agent = models.CharField(max_length=255, blank=True, null=True)
+    url = models.URLField(blank=True, null=True)
 
     def __str__(self):
         # pylint: disable=E1136
-        return f"{self.id}"
+        return f"{self.ip_address} - {self.url}"
 
     class Meta:
         verbose_name_plural = "Chats"

@@ -6,6 +6,7 @@ from http import HTTPStatus
 from typing import List
 
 import openai
+from django.shortcuts import get_object_or_404
 
 from smarter.apps.account.tasks import (
     create_plugin_charge,
@@ -24,7 +25,6 @@ from smarter.apps.chat.signals import (
     chat_response_failure,
     chat_response_success,
 )
-from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.plugin.plugin import Plugin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
@@ -48,15 +48,13 @@ openai.api_key = smarter_settings.openai_api_key.get_secret_value()
 
 # pylint: disable=too-many-locals,too-many-statements,too-many-arguments
 def handler(
-    chatbot: ChatBot,
-    session_key: str,
-    default_model: str,
-    default_temperature: float,
-    default_max_tokens: int,
-    plugins: List[Plugin],
-    user: UserType,
+    chat_id: Chat,
     data: dict,
-    chat_id: Chat = None,
+    plugins: List[Plugin] = None,
+    user: UserType = None,
+    default_model: str = smarter_settings.openai_default_model,
+    default_temperature: float = smarter_settings.openai_default_temperature,
+    default_max_tokens: int = smarter_settings.openai_default_max_tokens,
 ):
     """
     Chat prompt handler. Responsible for processing incoming requests and
@@ -85,13 +83,7 @@ def handler(
         temperature = default_temperature
         max_tokens = default_max_tokens
         request_meta_data = request_meta_data_factory(model, temperature, max_tokens, input_text)
-        if chat_id:
-            chat = Chat.objects.get(chat_id=chat_id)
-        else:
-            chat = Chat.objects.create(
-                session_key=session_key,
-                chatbot=chatbot,
-            )
+        chat = get_object_or_404(Chat, id=chat_id)
         chat_invoked.send(sender=handler, chat=chat, data=data)
 
         # does the prompt have anything to do with any of the search terms defined in a plugin?
