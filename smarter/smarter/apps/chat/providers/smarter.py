@@ -6,7 +6,6 @@ from http import HTTPStatus
 from typing import List
 
 import openai
-from django.shortcuts import get_object_or_404
 
 from smarter.apps.account.tasks import (
     create_plugin_charge,
@@ -48,7 +47,7 @@ openai.api_key = smarter_settings.openai_api_key.get_secret_value()
 
 # pylint: disable=too-many-locals,too-many-statements,too-many-arguments
 def handler(
-    chat_id: Chat,
+    chat: Chat,
     data: dict,
     plugins: List[Plugin] = None,
     user: UserType = None,
@@ -71,19 +70,16 @@ def handler(
     }
 
     try:
-        chat: Chat = None
-        chat_id: str = None
         messages: list[dict] = None
         input_text: str = None
         first_response = {}
 
         request_body = get_request_body(data=data)
-        messages, input_text, chat_id = parse_request(request_body)
+        messages, input_text = parse_request(request_body)
         model = default_model
         temperature = default_temperature
         max_tokens = default_max_tokens
         request_meta_data = request_meta_data_factory(model, temperature, max_tokens, input_text)
-        chat = get_object_or_404(Chat, id=chat_id)
         chat_invoked.send(sender=handler, chat=chat, data=data)
 
         # does the prompt have anything to do with any of the search terms defined in a plugin?

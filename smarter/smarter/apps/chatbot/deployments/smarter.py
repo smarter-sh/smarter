@@ -81,7 +81,7 @@ class SmarterChatBotApiViewSet(ChatBotApiBaseViewSet):
         logger.debug("plugins: %s", self.plugins)
 
         response = handler(
-            chat_id=self.chat.id,
+            chat=self.chat,
             data=self.data,
             plugins=self.plugins,
             user=self.user,
