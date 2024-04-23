@@ -31,7 +31,7 @@ class Command(BaseCommand):
         user_profile = UserProfile.objects.get(account=account, user=user)
         chatbot = ChatBot.objects.get(account=user_profile.account, name=SMARTER_EXAMPLE_CHATBOT_NAME)
         session_key = "seed_chat_history.py_" + secrets.token_urlsafe(16)
-        chat = Chat.objects.create(
+        chat, _ = Chat.objects.get_or_create(
             session_key=session_key,
             url="https://smarter.com/seed-chat-history",
             ip_address="192.1.1.1",
@@ -44,7 +44,7 @@ class Command(BaseCommand):
                 data = json.loads(file.read())
                 plugins = ChatBotPlugin().plugins(chatbot=chatbot)
                 handler(
-                    chat_id=chat.id,
+                    chat=chat,
                     plugins=plugins,
                     user=user_profile.user,
                     data=data,

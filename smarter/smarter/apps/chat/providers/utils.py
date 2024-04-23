@@ -121,7 +121,6 @@ def parse_request(request_body: dict):
     messages = request_body.get("messages")
     input_text = request_body.get("input_text")
     chat_history = request_body.get("chat_history")
-    chat_id = request_body.get("chat_id")
 
     if not messages and not input_text:
         raise SmarterValueError("A value for either messages or input_text is required")
@@ -138,7 +137,7 @@ def parse_request(request_body: dict):
         # we need to extract the most recent prompt for the user role
         input_text = get_content_for_role(messages, "user")
 
-    return messages, input_text, chat_id
+    return messages, input_text
 
 
 def get_content_for_role(messages: list, role: str) -> str:
