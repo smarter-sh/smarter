@@ -28,11 +28,6 @@ import {
 
 // Our stuff
 import "./Component.css";
-import {
-  BACKEND_CHAT_ID,
-  BACKEND_CHAT_HISTORY,
-  BACKEND_CHAT_MOST_RECENT_RESPONSE,
-} from "../../config";
 
 import { messageFactory, chatMessages2RequestMessages, chat_init } from "./utils.jsx";
 import { MESSAGE_DIRECTION, SENDER_ROLE } from "./constants.js";
@@ -47,6 +42,9 @@ function ChatApp(props) {
   // In all fairness this probably isn't necessary, but it's a good practice
   // to define the props that are expected to be passed in and also
   // to make these immutable.
+
+  console.log("ChatApp() - props: ", props);
+
   const welcome_message = props.welcome_message;
   const placeholder_text = props.placeholder_text;
   const api_url = props.api_url;
@@ -61,7 +59,7 @@ function ChatApp(props) {
   const [isTyping, setIsTyping] = useState(false);
   const fileInputRef = useRef(null);
 
-  const message_thread = chat_init(welcome_message, system_role, example_prompts, BACKEND_CHAT_ID, BACKEND_CHAT_HISTORY, BACKEND_CHAT_MOST_RECENT_RESPONSE);
+  const message_thread = chat_init(welcome_message, system_role, example_prompts, props.config.chat.id, props.config.chat.history, "BACKEND_CHAT_MOST_RECENT_RESPONSE");
   const [messages, setMessages] = useState(message_thread);
 
   // Error modal state management
@@ -101,6 +99,7 @@ function ChatApp(props) {
         try {
           const msgs = chatMessages2RequestMessages(updatedMessages);
           const response = await processApiRequest(
+            props,
             msgs,
             api_url,
             openChatModal,
@@ -191,7 +190,7 @@ function ChatApp(props) {
           <ConversationHeader>
             <ConversationHeader.Content
               userName={app_name}
-              info={BACKEND_CHAT_ID}
+              info={props.config.chat.id}
             />
             <ConversationHeader.Actions>
               <VoiceCallButton disabled />

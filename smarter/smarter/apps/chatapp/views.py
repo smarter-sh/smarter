@@ -19,10 +19,10 @@ from django.views.decorators.csrf import csrf_exempt
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.chat.api.v0.serializers import (
     ChatHistorySerializer,
+    ChatPluginUsageSerializer,
     ChatToolCallSerializer,
-    PluginUsageSerializer,
 )
-from smarter.apps.chat.models import Chat, ChatHistory
+from smarter.apps.chat.models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
 from smarter.apps.chatbot.api.v0.serializers import (
     ChatBotPluginSerializer,
     ChatBotSerializer,
@@ -43,6 +43,8 @@ class ChatConfigView(View):
     Chat config view for smarter web. This view is protected and requires the user
     to be authenticated. It works with any ChatBots but is aimed at chatbots running
     inside the web console in sandbox mode.
+
+    example: https://sales.3141-5926-5359.alpha.api.smarter.sh/chatbot/config/
     """
 
     _sandbox_mode: bool = True
@@ -115,13 +117,12 @@ class ChatConfigView(View):
         a React app.
         """
         chat: Chat = None
-        chat_history: ChatHistory = None
         chat_history_serializer: ChatHistorySerializer = None
-        chat_tool_call_history: ChatToolCallSerializer = None
-        plugin_usage_history: PluginUsageSerializer = None
+        chat_tool_call_serializer: ChatToolCallSerializer = None
+        chat_plugin_usage_serializer: ChatPluginUsageSerializer = None
 
         # chatbot context
-        chatbot_serializer = ChatBotSerializer(self.chatbot)
+        chatbot_serializer = ChatBotSerializer(self.chatbot) if self.chatbot else None
 
         # plugins context. the main thing we need here is to constrain the number of plugins
         # returned to some reasonable number, since we'll probaably have cases where
@@ -139,10 +140,14 @@ class ChatConfigView(View):
             url=self.url,
         )
         if not created:
-            chat_history = ChatHistory.objects.filter(chat=chat).order_by("-created_at").first() if chat else None
+            chat_history = ChatHistory.objects.get(chat=chat) if chat else None
             chat_history_serializer = ChatHistorySerializer(chat_history) if chat_history else None
-            chat_tool_call_history = ChatToolCallSerializer(chat_history) if chat_history else None
-            plugin_usage_history = PluginUsageSerializer(chat_history) if chat_history else None
+
+            chat_tool_call = ChatToolCall.objects.get(chat=chat) if chat else None
+            chat_tool_call_serializer = ChatToolCallSerializer(chat_tool_call) if chat_tool_call else None
+
+            chat_plugin_usage = ChatPluginUsage.objects.get(chat=chat) if chat else None
+            chat_plugin_usage_serializer = ChatPluginUsageSerializer(chat_plugin_usage) if chat_plugin_usage else None
 
         retval = {
             "session_key": self.session_key,
@@ -157,10 +162,10 @@ class ChatConfigView(View):
             },
             "meta_data": self.helper.to_json(),
             "chat": {
-                "id": chat_history.chat_id if chat_history else None,
-                "history": chat_history_serializer.data if chat_history else [],
-                "tool_calls": chat_tool_call_history.data if chat_history else [],
-                "plugin_usage": plugin_usage_history.data if chat_history else [],
+                "id": chat.id if chat else None,
+                "history": chat_history_serializer.data if chat_history_serializer else [],
+                "tool_calls": chat_tool_call_serializer.data if chat_tool_call_serializer else [],
+                "plugin_usage": chat_plugin_usage_serializer.data if chat_plugin_usage_serializer else [],
             },
         }
         return retval

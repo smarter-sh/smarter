@@ -64,7 +64,7 @@ class ChatToolCall(TimestampedModel):
         verbose_name_plural = "Chat Tool Call Histories"
 
 
-class PluginUsage(TimestampedModel):
+class ChatPluginUsage(TimestampedModel):
     """Plugin selection history model."""
 
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
