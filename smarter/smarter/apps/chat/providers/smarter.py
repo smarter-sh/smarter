@@ -67,6 +67,7 @@ def handler(
     second_iteration = {}
     first_response_dict: dict = None
     second_response_dict: dict = None
+    serialized_tool_calls: list[dict] = None
     messages: list[dict] = None
     input_text: str = None
 
