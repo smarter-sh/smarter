@@ -8,7 +8,7 @@ from django.dispatch import receiver
 
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 
-from .models import Chat, ChatHistory, ChatToolCall, PluginMeta, PluginUsage
+from .models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall, PluginMeta
 from .signals import (
     chat_completion_called,
     chat_completion_plugin_selected,
@@ -105,7 +105,7 @@ def handle_chat_completion_plugin_selected(sender, **kwargs):
         input_text,
     )
 
-    plugin_selection_history = PluginUsage(
+    plugin_selection_history = ChatPluginUsage(
         plugin=plugin,
         chat=chat,
         input_text=input_text,
@@ -177,7 +177,7 @@ def handle_chat_tool_call_created(sender, **kwargs):
     logger.info("%s", formatted_text("ChatToolCall() record created."))
 
 
-@receiver(post_save, sender=PluginUsage)
+@receiver(post_save, sender=ChatPluginUsage)
 def handle_plugin_usage_created(sender, **kwargs):
 
-    logger.info("%s", formatted_text("PluginUsage() record created."))
+    logger.info("%s", formatted_text("ChatPluginUsage() record created."))

@@ -11,7 +11,7 @@ import logging
 from smarter.apps.chatbot.models import ChatBot
 from smarter.smarter_celery import app
 
-from .models import Chat, ChatToolCall, PluginUsage
+from .models import Chat, ChatPluginUsage, ChatToolCall
 
 
 logger = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ def create_chat_tool_call_history(chat_id, plugin_id, tool_call, request, respon
 def create_plugin_usage_history(user_id, plugin_id, event, data, model, custom_tool, temperature, max_tokens):
     """Create plugin usage history record."""
 
-    PluginUsage(
+    ChatPluginUsage(
         user_id=user_id,
         plugin_id=plugin_id,
         event=event,
@@ -56,6 +56,6 @@ def create_plugin_usage_history(user_id, plugin_id, event, data, model, custom_t
 @app.task()
 def create_plugin_selection_history(user_id, plugin_id, event, inquiry_type, inquiry_return):
     """Create plugin selection history record."""
-    PluginUsage(
+    ChatPluginUsage(
         user_id=user_id, plugin_id=plugin_id, event=event, inquiry_type=inquiry_type, inquiry_return=inquiry_return
     ).save()

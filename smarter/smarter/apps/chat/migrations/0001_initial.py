@@ -108,7 +108,7 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name="PluginUsage",
+            name="ChatPluginUsage",
             fields=[
                 (
                     "id",
