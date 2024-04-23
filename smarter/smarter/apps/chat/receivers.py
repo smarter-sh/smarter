@@ -31,9 +31,9 @@ def handle_chat_invoked(sender, **kwargs):
     data = kwargs.get("data")
 
     logger.info(
-        "%s signal received for chat %s with data: %s",
+        "%s for chat %s with data: %s",
         formatted_text("chat_invoked"),
-        chat.id,
+        chat,
         formatted_json(data),
     )
 
@@ -43,13 +43,14 @@ def handle_chat_completion_called(sender, **kwargs):
     """Handle chat completion called signal."""
 
     chat: Chat = kwargs.get("chat")
+    iteration: int = kwargs.get("iteration")
     request: dict = kwargs.get("request")
     response: dict = kwargs.get("response")
 
     logger.info(
-        "%s signal received for chat: %s, request: %s, response: %s",
-        formatted_text("chat_completion_called"),
-        chat.id,
+        "%s for chat: %s \nrequest: %s \nresponse: %s",
+        formatted_text(f"chat_completion_called for iteration {iteration}"),
+        chat,
         formatted_json(request),
         formatted_json(response),
     )
@@ -97,7 +98,7 @@ def handle_chat_completion_plugin_selected(sender, **kwargs):
     input_text = kwargs.get("input_text")
 
     logger.info(
-        "%s signal received for chat %s, plugin: %s, input_text: %s",
+        "%s for chat %s, plugin: %s, input_text: %s",
         formatted_text("chat_completion_plugin_selected"),
         chat,
         plugin,
@@ -127,6 +128,14 @@ def handle_chat_completion_returned(sender, **kwargs):
         response=response,
     ).save()
 
+    logger.info(
+        "%s for chat %s, \nrequest: %s, \nresponse: %s",
+        formatted_text("chat_response_success"),
+        chat,
+        formatted_json(request),
+        formatted_json(response),
+    )
+
 
 @receiver(chat_response_failure, dispatch_uid="chat_response_failure")
 def handle_chat_response_failed(sender, **kwargs):
@@ -137,9 +146,9 @@ def handle_chat_response_failed(sender, **kwargs):
     request_meta_data = kwargs.get("request_meta_data")
 
     logger.info(
-        "%s signal received for chat: %s, request_meta_data: %s, exception: %s",
+        "%s for chat: %s, request_meta_data: %s, exception: %s",
         formatted_text("chat_response_failure"),
-        chat.id if chat else None,
+        chat if chat else None,
         formatted_json(request_meta_data),
         exception,
     )

@@ -170,12 +170,8 @@ def request_meta_data_factory(model, temperature, max_tokens, input_text):
     Return a dictionary of request meta data.
     """
     return {
-        "meta_data": {
-            "model": model,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-            "input_text": input_text,
-        },
-        "original_request": {},
-        "modified_request": {},
+        "model": model,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+        "input_text": input_text,
     }

@@ -22,7 +22,7 @@ def handle_chatbot_called(sender, **kwargs):
     """Handle chatbot_called signal."""
 
     chatbot: ChatBot = kwargs.get("chatbot")
-    logger.info("%s signal received for chatbot_called %s", formatted_text("chatbot_called"), chatbot.hostname)
+    logger.info("%s - %s", formatted_text("chatbot_called"), chatbot.hostname)
 
     request: HttpRequest = kwargs.get("request")
     try:
