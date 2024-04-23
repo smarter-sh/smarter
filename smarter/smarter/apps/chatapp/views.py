@@ -3,6 +3,7 @@ Views for the React chat app. See doc/DJANGO-REACT-INTEGRATION.md for more
 information about how the React app is integrated into the Django app.
 """
 
+import hashlib
 import logging
 import warnings
 
@@ -49,9 +50,18 @@ class ChatConfigView(View):
     user_profile: UserProfile = None
     chatbot: ChatBot = None
     url: str = None
+    session_key: str = None
+
+    def get_session_key(self, request):
+        user_agent = request.META.get("HTTP_USER_AGENT", "")
+        ip = request.META.get("REMOTE_ADDR", "")
+        unique_string_data = f"{user_agent}{ip}"
+        session_key = hashlib.sha256(unique_string_data.encode()).hexdigest()
+        return session_key
 
     def dispatch(self, request, *args, **kwargs):
         name = kwargs.pop("name", None)
+        self.session_key = self.get_session_key(request)
         self.user = request.user
         self.user_profile = UserProfile.objects.get(user=self.user)
         self.account = self.user_profile.account
@@ -95,7 +105,7 @@ class ChatConfigView(View):
 
         # message thread history context
         try:
-            chat = Chat.objects.get(chatbot=self.chatbot)
+            chat = Chat.objects.get(chatbot=self.chatbot, session_key=self.session_key)
         except Chat.DoesNotExist:
             chat = None
         chat_history = ChatHistory.objects.filter(chat=chat).order_by("-created_at").first() if chat else None
@@ -104,6 +114,7 @@ class ChatConfigView(View):
         plugin_usage_history = PluginUsageSerializer(chat_history) if chat_history else None
 
         retval = {
+            "session_key": self.session_key,
             "sandbox_mode": self.sandbox_mode,
             "chatbot": chatbot_serializer.data,
             "plugins": {
