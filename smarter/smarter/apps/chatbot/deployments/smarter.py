@@ -72,9 +72,19 @@ class SmarterChatBotApiViewSet(ChatBotApiBaseViewSet):
             "account": AccountSerializer(self.account).data if self.account else None,
             "chatbot": ChatBotSerializer(self.chatbot).data if self.chatbot else None,
             "chat": ChatSerializer(self.chat).data if self.chat else None,
-            "history": ChatHistorySerializer(chat_history).data if chat_history.exists() else None,
-            "tool_calls": ChatToolCallSerializer(chat_tool_calls).data if chat_tool_calls.exists() else None,
-            "plugin_usage": ChatPluginUsageSerializer(chat_plugin_usage).data if chat_plugin_usage.exists() else None,
+            "history": (
+                [ChatHistorySerializer(instance).data for instance in chat_history] if chat_history.exists() else None
+            ),
+            "tool_calls": (
+                [ChatToolCallSerializer(instance).data for instance in chat_tool_calls]
+                if chat_tool_calls.exists()
+                else None
+            ),
+            "plugin_usage": (
+                [ChatPluginUsageSerializer(instance).data for instance in chat_plugin_usage]
+                if chat_plugin_usage.exists()
+                else None
+            ),
         }
         return JsonResponse(data=data, safe=False, status=HTTPStatus.OK)
 
