@@ -231,10 +231,6 @@ def handler(
 
     # success!! return the response
     response = second_iteration.get("response") or first_iteration.get("response")
-    if second_iteration.get("response"):
-        chat_response_success.send(sender=handler, chat=chat, request=first_iteration.get("request"), response=response)
-
-    return http_response_factory(
-        status_code=HTTPStatus.OK,
-        body=response,
-    )
+    response = http_response_factory(status_code=HTTPStatus.OK, body=response)
+    chat_response_success.send(sender=handler, chat=chat, request=first_iteration.get("request"), response=response)
+    return response
