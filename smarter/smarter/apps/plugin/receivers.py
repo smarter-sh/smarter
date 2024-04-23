@@ -30,7 +30,7 @@ def handle_plugin_created(sender, **kwargs):
     """Handle plugin created signal."""
 
     plugin = kwargs.get("plugin")
-    logger.info("%s signal received: %s", formatted_text("plugin_created"), plugin.name)
+    logger.info("%s - %s", formatted_text("plugin_created"), plugin.name)
 
 
 @receiver(plugin_cloned, dispatch_uid="plugin_cloned")
@@ -39,7 +39,7 @@ def handle_plugin_cloned(sender, **kwargs):
 
     plugin_id = kwargs.get("plugin_id")
     plugin = Plugin(plugin_id=plugin_id)
-    logger.info("%s signal received: %s", formatted_text("plugin_cloned"), plugin.name)
+    logger.info("%s - %s", formatted_text("plugin_cloned"), plugin.name)
 
 
 @receiver(plugin_updated, dispatch_uid="plugin_updated")
@@ -47,7 +47,7 @@ def handle_plugin_updated(sender, **kwargs):
     """Handle plugin updated signal."""
 
     plugin = kwargs.get("plugin")
-    logger.info("%s signal received: %s", formatted_text("plugin_updated"), plugin.name)
+    logger.info("%s - %s", formatted_text("plugin_updated"), plugin.name)
 
 
 @receiver(plugin_deleted, dispatch_uid="plugin_deleted")
@@ -57,7 +57,7 @@ def handle_plugin_deleted(sender, **kwargs):
     plugin_id = kwargs.get("plugin_id")
     plugin_name = kwargs.get("plugin_name")
     info = f"{plugin_id} {plugin_name}"
-    logger.info("%s signal received: %s", formatted_text("plugin_deleted"), info)
+    logger.info("%s - %s", formatted_text("plugin_deleted"), info)
 
 
 @receiver(plugin_called, dispatch_uid="plugin_called")
@@ -68,11 +68,11 @@ def handle_plugin_called(sender, **kwargs):
     inquiry_type = kwargs.get("inquiry_type")
     inquiry_return = kwargs.get("inquiry_return")
     logger.info(
-        "%s signal received: %s inquiry_type: %s inquiry_return: %s",
+        "%s - %s inquiry_type: %s inquiry_return: %s",
         formatted_text("plugin_called"),
         plugin.name,
         inquiry_type,
-        inquiry_return,
+        formatted_json(inquiry_return) if inquiry_return else None,
     )
 
 
@@ -81,7 +81,7 @@ def handle_plugin_ready(sender, **kwargs):
     """Handle plugin ready signal."""
 
     plugin = kwargs.get("plugin")
-    logger.info("%s signal received: %s", formatted_text("plugin_ready"), plugin.name)
+    logger.info("%s - %s", formatted_text("plugin_ready"), plugin.name)
 
 
 @receiver(plugin_selected, dispatch_uid="plugin_selected")
@@ -96,7 +96,7 @@ def handle_plugin_selected(sender, **kwargs):
 
     prompt = input_text if input_text else formatted_json(messages)
     logger.info(
-        "%s signal received: %s search_term: %s \nprompt(s): %s",
+        "%s - %s search_term: %s \nprompt(s): %s",
         formatted_text("plugin_selected"),
         plugin.name,
         search_term,
@@ -117,7 +117,7 @@ def handle_plugin_selector_history_created(sender, **kwargs):
 
     plugin_selector_history = kwargs.get("plugin_selector_history")
     logger.info(
-        "%s signal received: %s",
+        "%s - %s",
         formatted_text("plugin_selector_history_created"),
         formatted_json(model_to_dict(plugin_selector_history)),
     )
