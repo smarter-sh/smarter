@@ -1,6 +1,7 @@
 # pylint: disable=W0613
 """Django signal receivers for plugin app."""
 
+import json
 import logging
 
 from django.dispatch import receiver
@@ -67,6 +68,12 @@ def handle_plugin_called(sender, **kwargs):
     plugin = kwargs.get("plugin")
     inquiry_type = kwargs.get("inquiry_type")
     inquiry_return = kwargs.get("inquiry_return")
+
+    try:
+        inquiry_return = json.loads(inquiry_return)
+    except (TypeError, json.JSONDecodeError):
+        pass
+
     logger.info(
         "%s - %s inquiry_type: %s inquiry_return: %s",
         formatted_text("plugin_called"),
