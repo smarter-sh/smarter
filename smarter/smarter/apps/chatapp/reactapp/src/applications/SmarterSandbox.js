@@ -1,7 +1,5 @@
 export const getSmarterSandbox = (config) => {
 
-  console.log("getSmarterSandbox(): config: ", config);
-
   return {
     sidebar_title: config.chatbot.app_name,
     api_url: config.chatbot.url_chatbot,

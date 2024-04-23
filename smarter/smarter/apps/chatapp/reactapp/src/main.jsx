@@ -5,15 +5,11 @@ import { fetchConfig, setConfig } from "./config.js";
 import "./index.css";
 
 function Main() {
-  console.log("Main() - entry point");
   const [config, setConfigState] = useState(null);
 
   useEffect(() => {
-    console.log("Main() useEffect()");
     fetchConfig().then(config => setConfigState(setConfig(config)));
   }, []);
-
-  console.log("Main() config:", config);
 
   return <App config={config} />;
 
