@@ -6,6 +6,8 @@ import logging
 from http import HTTPStatus
 from typing import List
 
+import waffle
+
 # from cachetools import TTLCache, cached
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
@@ -25,6 +27,7 @@ from smarter.apps.chatbot.signals import chatbot_called
 from smarter.apps.plugin.plugin import Plugin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterBusinessRuleViolation
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.view_helpers import SmarterNeverCachedWebView
@@ -45,6 +48,8 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
     - dispatching.
     """
 
+    _url: str = None
+    request = None
     http_method_names = ["get", "post", "options"]
     helper: ChatBotHelper = None
     account: Account = None
@@ -54,19 +59,27 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
     session_key: str = None
 
     @property
+    def formatted_class_name(self):
+        return formatted_text(self.__class__.__name__)
+
+    @property
+    def url(self):
+        return self._url
+
+    @property
+    def ip_address(self):
+        return self.request.META.get("REMOTE_ADDR", "")
+
+    @property
+    def user_agent(self):
+        return self.request.META.get("HTTP_USER_AGENT", "")
+
+    @property
     def is_web_platform(self):
         host = self.request.get_host()
         if host in smarter_settings.environment_domain:
             return True
         return False
-
-    # @cached(cache)
-    def get_cached_helper(self, url, user: UserType = None) -> ChatBotHelper:
-        """
-        Get the ChatBotHelper object for the given url and user. This method is cached
-        for 10 minutes because its a relatively expensive operation with multiple database queries.
-        """
-        return ChatBotHelper(url=url, user=user)
 
     def smarter_api_authenticate(self, request) -> bool:
         """
@@ -106,19 +119,18 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
         return api_key is not None
 
     def dispatch(self, request, *args, **kwargs):
-        url = request.build_absolute_uri()
-        url = SmarterValidator.urlify(url)
+        self.request = request
+        self._url = self.request.build_absolute_uri()
+        self._url = SmarterValidator.urlify(self._url)
+        self.helper = ChatBotHelper(url=self.url, user=request.user)
 
-        logger.debug("ChatBotApiBaseViewSet.dispatch(): url=%s", url)
-        logger.debug("ChatBotApiBaseViewSet.dispatch(): headers=%s", request.META)
-        logger.debug("ChatBotApiBaseViewSet.dispatch(): user=%s", request.user)
-        logger.debug("ChatBotApiBaseViewSet.dispatch(): method=%s", request.method)
-        logger.debug("ChatBotApiBaseViewSet.dispatch(): body=%s", request.body)
+        if waffle.switch_is_active("chatbot_api_view_logging"):
+            logger.info("%s.dispatch() - url=%s", self.formatted_class_name, self.url)
+            logger.info("%s.dispatch() - headers=%s", self.formatted_class_name, request.META)
+            logger.info("%s.dispatch() - user=%s", self.formatted_class_name, request.user)
+            logger.info("%s.dispatch() - method=%s", self.formatted_class_name, request.method)
+            logger.info("%s.dispatch() - body=%s", self.formatted_class_name, request.body)
 
-        if isinstance(request.user, User):
-            self.helper = self.get_cached_helper(url=url, user=request.user)
-        else:
-            self.helper = self.get_cached_helper(url=url)
         if not self.helper.is_valid:
             data = {
                 "message": "Not Found. Please provide a valid ChatBot URL.",
@@ -137,16 +149,18 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
         self.chatbot = self.helper.chatbot
         self.plugins = ChatBotPlugin().plugins(chatbot=self.chatbot)
 
-        logger.debug("ChatBotApiBaseViewSet.dispatch(): account=%s", self.account)
-        logger.debug("ChatBotApiBaseViewSet.dispatch(): chatbot=%s", self.chatbot)
-        logger.debug("ChatBotApiBaseViewSet.dispatch(): user=%s", self.user)
-        logger.debug("ChatBotApiBaseViewSet.dispatch(): plugins=%s", self.plugins)
+        if waffle.switch_is_active("chatbot_api_view_logging"):
+            logger.info("%s.dispatch(): account=%s", self.formatted_class_name, self.account)
+            logger.info("%s.dispatch(): chatbot=%s", self.formatted_class_name, self.chatbot)
+            logger.info("%s.dispatch(): user=%s", self.formatted_class_name, self.user)
+            logger.info("%s.dispatch(): plugins=%s", self.formatted_class_name, self.plugins)
 
         chatbot_called.send(sender=self.__class__, chatbot=self.chatbot, request=request, args=args, kwargs=kwargs)
         return super().dispatch(request, *args, **kwargs)
 
     def options(self, request, *args, **kwargs):
-        logger.debug("ChatBotApiBaseViewSet.options(): url=%s", self.helper.url)
+        if waffle.switch_is_active("chatbot_api_view_logging"):
+            logger.info("%s.options(): url=%s", self.formatted_class_name, self.helper.url)
         response = Response()
         response["Access-Control-Allow-Origin"] = smarter_settings.environment_url
         response["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
@@ -155,8 +169,9 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
 
     # pylint: disable=W0613
     def get(self, request, *args, **kwargs):
-        logger.debug("ChatBotApiBaseViewSet.get(): url=%s", self.helper.url)
-        logger.debug("ChatBotApiBaseViewSet.get(): headers=%s", request.META)
+        if waffle.switch_is_active("chatbot_api_view_logging"):
+            logger.info("%s.get(): url=%s", self.formatted_class_name, self.helper.url)
+            logger.info("%s.get(): headers=%s", self.formatted_class_name, request.META)
         kwargs.get("chatbot_id", None)
         retval = {
             "message": "GET is not supported. Please use POST.",

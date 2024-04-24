@@ -116,7 +116,7 @@ class Plugin:
 
     def __str__(self) -> str:
         """Return the name of the plugin."""
-        return self.name
+        return str(self.name)
 
     @property
     def id(self) -> int:

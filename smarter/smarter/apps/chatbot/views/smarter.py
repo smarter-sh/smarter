@@ -27,7 +27,7 @@ from .base import ChatBotApiBaseViewSet
 
 
 MAX_RETURNED_HISTORY = 25
-CACHE_EXPIRATION = 60 * 5  # 5 minutes
+CACHE_EXPIRATION = 60 * 30  # 5 minutes
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ class SmarterChatBotApiView(ChatBotApiBaseViewSet):
         chat = cache.get(self.session_key)
         if chat:
             if waffle.switch_is_active("chatbot_api_view_logging"):
-                logger.info("SmarterChatBotApiView.get_chat() - retrieved cached chat=%s", chat)
+                logger.info("%s - retrieved cached chat=%s", self.formatted_class_name, chat)
         else:
             chat, created = Chat.objects.get_or_create(session_key=self.session_key)
             if created:
@@ -61,21 +61,9 @@ class SmarterChatBotApiView(ChatBotApiBaseViewSet):
                 chat.save()
             cache.set(key=self.session_key, value=chat, timeout=CACHE_EXPIRATION)
             if waffle.switch_is_active("chatbot_api_view_logging"):
-                logger.info("SmarterChatBotApiView.get_chat() - cached chat=%s", chat)
+                logger.info("%s - cached chat object %s", self.formatted_class_name, chat)
 
         return chat
-
-    @property
-    def url(self):
-        return self.request.build_absolute_uri()
-
-    @property
-    def ip_address(self):
-        return self.request.META.get("REMOTE_ADDR", "")
-
-    @property
-    def user_agent(self):
-        return self.request.META.get("HTTP_USER_AGENT", "")
 
     def dispatch(self, request, *args, **kwargs):
         self.request = request
@@ -85,7 +73,7 @@ class SmarterChatBotApiView(ChatBotApiBaseViewSet):
         except json.JSONDecodeError:
             self.data = {}
         if waffle.switch_is_active("chatbot_api_view_logging"):
-            logger.info("SmarterChatBotApiView.dispatch() - data=%s", self.data)
+            logger.info("%s - data=%s", self.formatted_class_name, self.data)
 
         # Initialize the chat session for this request. session_key is generated
         # and managed by the /config/ endpoint for the chatbot
@@ -98,18 +86,19 @@ class SmarterChatBotApiView(ChatBotApiBaseViewSet):
         # for the device.
         self.session_key = self.data.get("session_key")
         SmarterValidator.validate_session_key(self.session_key)
-        if waffle.switch_is_active("chatbot_api_view_logging"):
-            logger.info("SmarterChatBotApiView.dispatch() - session_key=%s", self.session_key)
 
         self.chat = self.get_chat()
 
         if waffle.switch_is_active("chatbot_api_view_logging"):
-            logger.info("SmarterChatBotApiView.dispatch() - chat=%s", self.chat)
+            logger.info("%s initialized with chat object %s", self.formatted_class_name, self.chat)
 
         return super().dispatch(request, *args, **kwargs)
 
     # pylint: disable=W0613
     def get(self, request, *args, **kwargs):
+        if waffle.switch_is_active("chatbot_api_view_logging"):
+            logger.info("%s.get() - %s", self.formatted_class_name, self.chat)
+
         chat = get_object_or_404(Chat, session_key=self.session_key)
         chat_history = ChatHistory.objects.filter(chat=chat).order_by("-pk")[:MAX_RETURNED_HISTORY]
         chat_tool_calls = ChatToolCall.objects.filter(chat=chat)
@@ -162,11 +151,13 @@ class SmarterChatBotApiView(ChatBotApiBaseViewSet):
         `chatbot.hostname == chatbot.custom_domain or chatbot.default_host`
         """
 
-        logger.info("SmarterChatBotApiView.post: data=%s", self.data)
-        logger.info("account: %s", self.account)
-        logger.info("user: %s", self.user)
-        logger.info("chatbot: %s", self.chatbot)
-        logger.info("plugins: %s", self.plugins)
+        if waffle.switch_is_active("chatbot_api_view_logging"):
+            logger.info("%s.post() - data=%s", self.formatted_class_name, self.data)
+            logger.info("%s.post() - account: %s", self.formatted_class_name, self.account)
+            logger.info("%s.post() - user: %s", self.formatted_class_name, self.user)
+            logger.info("%s.post() - chat: %s", self.formatted_class_name, self.chat)
+            logger.info("%s.post() - chatbot: %s", self.formatted_class_name, self.chatbot)
+            logger.info("%s.post() - plugins: %s", self.formatted_class_name, self.plugins)
 
         response = handler(
             chat=self.chat,
@@ -178,5 +169,6 @@ class SmarterChatBotApiView(ChatBotApiBaseViewSet):
             default_max_tokens=self.chatbot.default_max_tokens,
         )
         response = JsonResponse(data=response, safe=False, status=HTTPStatus.OK)
-        logger.info("SmarterChatBotApiView.post: response=%s", response)
+        if waffle.switch_is_active("chatbot_api_view_logging"):
+            logger.info("%s response=%s", self.formatted_class_name, response)
         return response
