@@ -10,6 +10,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """Handle the command."""
-        call_command("waffle_switch", "chatbot_suppress_csrf", "off", "--create")
-        call_command("waffle_switch", "chatbot_log_csrf", "off", "--create")
+        call_command("waffle_switch", "csrf_middleware_suppress_for_chatbots", "off", "--create")
+        call_command("waffle_switch", "csrf_middleware_logging", "off", "--create")
         call_command("waffle_switch", "chatbothelper_logging", "off", "--create")
+        call_command("waffle_switch", "chatbot_api_view_logging", "off", "--create")

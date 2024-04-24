@@ -25,8 +25,8 @@ def aggregate_chat_history():
 
 
 @app.task()
-def create_chat_history(session_key, chatbot_id):
-    """Create chat history record with flattened LLM response."""
+def create_chat(session_key, chatbot_id):
+    """Create chat record with flattened LLM response."""
     chatbot = ChatBot.objects.get(id=chatbot_id)
     Chat(session_key=session_key, chatbot=chatbot).save()
 
