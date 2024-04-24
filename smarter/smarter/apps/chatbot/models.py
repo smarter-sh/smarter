@@ -291,8 +291,12 @@ class ChatBotRequests(TimestampedModel):
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
 class ChatBotHelper:
-    """Helper class for ChatBot models. Abstracts url parsing logic so that we
-    can use it in multiple places: this module, middleware, views, etc.
+    """Maps urls and attribute data to their respective ChatBot models.
+    Abstracts url parsing logic so that we can use it in multiple
+    places: inside this module, in middleware, in Views, etc.
+
+    Also caches the ChatBot object for a given url so that we don't have to
+    parse the url multiple times.
 
     examples of valid urls:
     - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
@@ -325,21 +329,23 @@ class ChatBotHelper:
         if not url:
             return None
 
-        SmarterValidator.validate_url(url)
+        SmarterValidator.validate_url(url)  # raises ValidationError if url is invalid
+        url = SmarterValidator.urlify(
+            url
+        )  # normalizes the url so that we dont find ourselves working with variations of the same url
 
         self._cache_key = f"{self.CACHE_PREFIX}_{url}"
+        # check to see if the cache key exists bc we also cache and return None values
         if self.cache_key in cache:
-            chatbot_id = cache.get(self.cache_key)
-            if chatbot_id:
-                self._chatbot = ChatBot.objects.get(id=chatbot_id)
-                if waffle.switch_is_active("chatbothelper_logging"):
-                    logger.info(
-                        "%s: %s, account: %s for url: %s",
-                        formatted_text("ChatBotHelper: returning cached chatbot"),
-                        self.chatbot.name,
-                        self.chatbot.account.account_number,
-                        url,
-                    )
+            self._chatbot = cache.get(self.cache_key)
+            if self._chatbot and waffle.switch_is_active("chatbothelper_logging"):
+                logger.info(
+                    "%s: %s, account: %s for url: %s",
+                    formatted_text("ChatBotHelper: returning cached chatbot"),
+                    self.chatbot.name,
+                    self.chatbot.account.account_number,
+                    url,
+                )
 
             # most calls arrive here, because in most cases the url is not a
             # chatbot url and its already cached.
@@ -422,8 +428,7 @@ class ChatBotHelper:
             logger.info("ChatBotHelper: %s", "-" * (80 - 15))
 
         # cache the url so we don't have to parse it again
-        value = self._chatbot.id if self._chatbot else None
-        cache.set(key=self.cache_key, value=value, timeout=self.CACHE_EXPIRY)
+        cache.set(key=self.cache_key, value=self._chatbot, timeout=self.CACHE_EXPIRY)
         if waffle.switch_is_active("chatbothelper_logging"):
             logger.info("%s - %s", formatted_text("ChatBotHelper: cached url"), self.url)
         return None
