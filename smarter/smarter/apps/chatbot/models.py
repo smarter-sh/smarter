@@ -15,6 +15,7 @@ from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin import Plugin
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
@@ -37,14 +38,14 @@ class ChatBotCustomDomain(TimestampedModel):
     @classmethod
     def get_verified_domains(cls):
         # Try to get the list from cache
-        cache_expiration = 15 * 60  # 15 minutes
-        verified_domains = cache.get("chatbot_verified_custom_domains")
+        cache_expiration = 5 * 60  # 5 minutes
+        cache_key = "ChatBotCustomDomain_chatbot_verified_custom_domains"
+        verified_domains = cache.get(cache_key)
 
         # If the list is not in cache, fetch it from the database
         if not verified_domains:
             verified_domains = list(cls.objects.filter(is_verified=True).values_list("domain_name", flat=True))
-            # Store the list in cache with a timeout of 15 minutes
-            cache.set("chatbot_verified_custom_domains", verified_domains, cache_expiration)
+            cache.set(key=cache_key, value=verified_domains, timeout=cache_expiration)
 
         return verified_domains
 
@@ -312,6 +313,7 @@ class ChatBotHelper:
     _chatbot_custom_domain: ChatBotCustomDomain = None
 
     # pylint: disable=W1203,R0913,R0915,R0912
+    # mcdaniel apr-2024 TODO: refactor this class to reduce complexity, and memory usage.
     def __init__(
         self, url: str = None, user: UserType = None, account: Account = None, name: str = None, environment: str = None
     ):
@@ -331,7 +333,16 @@ class ChatBotHelper:
             if chatbot_id:
                 self._chatbot = ChatBot.objects.get(id=chatbot_id)
                 if waffle.switch_is_active("chatbothelper_logging"):
-                    logger.info(f"ChatBotHelper: returning cached chatbot {self.chatbot}")
+                    logger.info(
+                        "%s: %s, account: %s for url: %s",
+                        formatted_text("ChatBotHelper: returning cached chatbot"),
+                        self.chatbot.name,
+                        self.chatbot.account.account_number,
+                        url,
+                    )
+
+            # most calls arrive here, because in most cases the url is not a
+            # chatbot url and its already cached.
             return None
 
         if waffle.switch_is_active("chatbothelper_logging"):
@@ -414,7 +425,7 @@ class ChatBotHelper:
         value = self._chatbot.id if self._chatbot else None
         cache.set(key=self.cache_key, value=value, timeout=self.CACHE_EXPIRY)
         if waffle.switch_is_active("chatbothelper_logging"):
-            logger.info(f"ChatBotHelper: cached chatbot {self.url}")
+            logger.info("%s - %s", formatted_text("ChatBotHelper: cached url"), self.url)
         return None
 
     def __str__(self):
