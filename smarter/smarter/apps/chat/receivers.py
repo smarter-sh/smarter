@@ -161,8 +161,9 @@ def handle_chat_response_failed(sender, **kwargs):
 
 @receiver(post_save, sender=Chat)
 def handle_chat_created(sender, **kwargs):
-
-    logger.info("%s", formatted_text("Chat() record created."))
+    chat = kwargs.get("chat", None)
+    session_key = chat.session_key if chat else None
+    logger.info("%s - %s", formatted_text("Chat() record created."), session_key)
 
 
 @receiver(post_save, sender=ChatHistory)

@@ -6,7 +6,6 @@ information about how the React app is integrated into the Django app.
 import hashlib
 import json
 import logging
-import warnings
 from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
@@ -17,7 +16,6 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.chat.models import ChatHistory
 from smarter.apps.chatbot.api.v0.serializers import (
     ChatBotPluginSerializer,
     ChatBotSerializer,
@@ -183,90 +181,12 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
 
     template_path = "index.html"
     chatbot: ChatBot = None
+    helper: ChatBotHelper = None
+    url: str = None
 
     @property
     def sandbox_mode(self):
         return self._sandbox_mode
-
-    def get_chatbot_by_name(self, name) -> ChatBot:
-        try:
-            return ChatBot.objects.get(account=self.account, name=name)
-        except ChatBot.DoesNotExist:
-            return None
-
-    def get_chatbot_by_url(self, url) -> ChatBot:
-        return ChatBot.get_by_url(url)
-
-    def react_context(self, request, chatbot: ChatBot):
-        """
-        React context for all templates that render
-        a React app.
-        """
-        warnings.warn(
-            "The 'react_context' method is deprecated. Use api endpoint /chatapp/<name>/config/", DeprecationWarning
-        )
-
-        url = request.build_absolute_uri()
-
-        # backend context
-        backend_context = {
-            "BASE_URL": url,
-            "API_URL": chatbot.url_chatbot,
-            "SANDBOX_MODE": self.sandbox_mode,
-        }
-
-        app_context = {
-            "NAME": chatbot.app_name or "chatbot",
-            "ASSISTANT": chatbot.app_assistant or "Smarter",
-            "WELCOME_MESSAGE": chatbot.app_welcome_message or "Welcome to the chatbot!",
-            "EXAMPLE_PROMPTS": chatbot.app_example_prompts or [],
-            "PLACEHOLDER": chatbot.app_placeholder or "Type something here...",
-            "INFO_URL": chatbot.app_info_url,
-            "BACKGROUND_IMAGE_URL": chatbot.app_background_image_url,
-            "LOGO_URL": chatbot.app_logo_url,
-            "FILE_ATTACHMENT_BUTTON": chatbot.app_file_attachment,
-        }
-
-        # chat context
-        chat_history = ChatHistory.objects.filter().order_by("-created_at").first()
-        messages = chat_history.request["messages"] if chat_history else []
-        chat_context = {
-            "ID": chat_history.id if chat_history else None,
-            "HISTORY": messages,
-            "MOST_RECENT_RESPONSE": chat_history.response if chat_history else None,
-        }
-
-        # sandbox mode
-        sandbox_context = {}
-        if self.sandbox_mode:
-            plugins = [plugin.name for plugin in ChatBotPlugin.plugins(chatbot)]
-            sandbox_context = {
-                "CHATBOT_ID": chatbot.id,
-                "CHATBOT_NAME": chatbot.name,
-                "PLUGINS": plugins,
-                "URL": chatbot.url,
-                "DEFAULT_URL": chatbot.default_url,
-                "CUSTOM_URL": chatbot.custom_url,
-                "SANDBOX_URL": chatbot.sandbox_url,
-                "CREATED_AT": chatbot.created_at,
-                "UPDATED_AT": chatbot.updated_at,
-            }
-
-        retval = {
-            "react": True,
-            "react_config": {
-                "BACKEND": backend_context,
-                "APP": app_context,
-                "CHAT": chat_context,
-                "SANDBOX": sandbox_context,
-            },
-        }
-        logger.debug("react_context(): %s", retval)
-        return retval
-
-    def react_render(self, request):
-        context = self.react_context(request, self.chatbot)
-        return render(request, self.template_path, context=context)
 
     def dispatch(self, request, *args, **kwargs):
         name = kwargs.pop("name", None)
@@ -274,10 +194,9 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
         response = super().dispatch(request, *args, **kwargs)
         if response.status_code >= 300:
             return response
-        if name:
-            self.chatbot = self.get_chatbot_by_name(name)
-        if not self.chatbot:
-            self.chatbot = self.get_chatbot_by_url(request.get_host())
+        self.url = request.build_absolute_uri()
+        self.helper = ChatBotHelper(url=self.url, user=self.user_profile.user, account=self.account, name=name)
+        self.chatbot = self.helper.chatbot
         if not self.chatbot:
             return HttpResponseNotFound()
-        return self.react_render(request)
+        return render(request, self.template_path)
