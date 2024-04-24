@@ -316,14 +316,20 @@ class ChatBotHelper:
         :param url: The URL to parse.
         :param environment: The environment to use for the URL. (for unit testing only)
         """
+        CACHE_EXPIRY = 300  # 5 minutes
+        CACHE_PREFIX = "ChatBotHelper_"
         if not url:
-            return
+            return None
+
+        # we cache url's that we previously determined are not chatbots
+        cache_key = f"{CACHE_PREFIX}_{url}"
+        if cache.get(cache_key):
+            return None
+
         if waffle.switch_is_active("chatbothelper_logging"):
             logger.info("ChatBotHelper: __init__()")
 
         SmarterValidator.validate_url(url)
-        if waffle.switch_is_active("chatbothelper_logging"):
-            logger.info("ChatBotHelper: validated url: %s", url)
 
         # finish instantiating the object
         self._url = url
@@ -376,7 +382,7 @@ class ChatBotHelper:
             except ChatBot.DoesNotExist:
                 pass
 
-        if waffle.switch_is_active("chatbothelper_logging"):
+        if self._chatbot and waffle.switch_is_active("chatbothelper_logging"):
             logger.info("ChatBotHelper: %s", "-" * (80 - 15))
             logger.info("ChatBotHelper: INITIALIZED.")
             logger.info("ChatBotHelper: %s", "-" * (80 - 15))
@@ -398,6 +404,15 @@ class ChatBotHelper:
             logger.info(f"ChatBotHelper: is_valid={self.is_valid}")
             logger.info(f"ChatBotHelper: is_authentication_required={self.is_authentication_required}")
             logger.info("ChatBotHelper: %s", "-" * (80 - 15))
+
+        # cache the url so we don't have to parse it again
+        if not self._chatbot:
+            cache.set(key=cache_key, value="None", timeout=CACHE_EXPIRY)
+            if waffle.switch_is_active("chatbothelper_logging"):
+                logger.info(f"ChatBotHelper: {self.url} is not a chatbot")
+            return None
+
+        return None
 
     def __str__(self):
         return self.url
