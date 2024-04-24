@@ -23,6 +23,8 @@ from smarter.apps.chatbot.api.v0.serializers import ChatBotSerializer
 from .base import ChatBotApiBaseViewSet
 
 
+MAX_RETURNED_HISTORY = 25
+
 logger = logging.getLogger(__name__)
 
 
@@ -64,9 +66,10 @@ class SmarterChatBotApiViewSet(ChatBotApiBaseViewSet):
     # pylint: disable=W0613
     def get(self, request, *args, **kwargs):
         chat = get_object_or_404(Chat, session_key=self.session_key)
-        chat_history = ChatHistory.objects.filter(chat=chat)
+        chat_history = ChatHistory.objects.filter(chat=chat).order_by("-pk")[:MAX_RETURNED_HISTORY]
         chat_tool_calls = ChatToolCall.objects.filter(chat=chat)
         chat_plugin_usage = ChatPluginUsage.objects.filter(chat=chat)
+
         data = {
             "session_key": self.session_key,
             "account": AccountSerializer(self.account).data if self.account else None,

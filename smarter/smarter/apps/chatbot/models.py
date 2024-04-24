@@ -493,6 +493,10 @@ class ChatBotHelper:
         - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
         - https://hr.smarter.querium.com/chatbot/
         """
+        if self._url:
+            return self._url
+        if self._chatbot:
+            self._url = self.chatbot.url
         return self._url
 
     @property
@@ -537,8 +541,9 @@ class ChatBotHelper:
         """
         if not self.url:
             return None
-        url = SmarterValidator.urlify(self.domain)
-        return SmarterValidator.base_domain(url)
+        url = SmarterValidator.urlify(self.domain) or ""
+        subdomain = self.subdomain or ""
+        return url.replace(f"{subdomain}.", "").replace("http://", "").replace("https://", "").replace("/", "")
 
     @property
     def subdomain(self) -> str:
@@ -703,8 +708,10 @@ class ChatBotHelper:
         if self.user and self.account:
             try:
                 self._user_profile = UserProfile.objects.get(user=self.user, account=self.account)
-                if self._user_profile:
-                    logger.info(f"ChatBotHelper Initialized UserProfile: {self._user_profile}")
+                if self._user_profile and waffle.switch_is_active("chatbothelper_logging"):
+                    logger.info(
+                        f"ChatBotHelper Initialized UserProfile: {self._user_profile} from self.user and self.account"
+                    )
                 return self._user_profile
             except UserProfile.DoesNotExist:
                 return None
@@ -720,8 +727,10 @@ class ChatBotHelper:
             return self._user
         if self.account:
             self._user = UserProfile.admin_for_account(self.account)
-        if self._user:
-            logger.info(f"ChatBotHelper Initialized User: {self._user}")
+        if self._user and waffle.switch_is_active("chatbothelper_logging"):
+            logger.info(
+                f"ChatBotHelper Initialized user {self._user} with admin for account {self.account.account_number}"
+            )
         return self._user
 
     @property
@@ -730,6 +739,11 @@ class ChatBotHelper:
         Returns a lazy instance of the Account
         """
         if self._account:
+            return self._account
+        if self._chatbot:
+            self._account = self.chatbot.account
+            if waffle.switch_is_active("chatbothelper_logging"):
+                logger.info(f"ChatBotHelper: initialized account {self._account} from chatbot {self._chatbot}")
             return self._account
         if self.account_number:
             try:

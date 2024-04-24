@@ -22,7 +22,6 @@ import {
   TypingIndicator,
   ConversationHeader,
   InfoButton,
-  VideoCallButton,
   SendButton,
   StarButton
 } from "@chatscope/chat-ui-kit-react";
@@ -58,7 +57,9 @@ function ChatApp(props) {
   const [isTyping, setIsTyping] = useState(false);
   const fileInputRef = useRef(null);
 
-  const message_thread = chat_init(welcome_message, system_role, example_prompts, props.config.chat.id, props.config.chat.history, "BACKEND_CHAT_MOST_RECENT_RESPONSE");
+  const chatId = props.config && props.config.chat ? props.config.chat.id : null;
+  const chatHistory = props.config && props.config.chat ? props.config.chat.history : [];
+  const message_thread = chat_init(welcome_message, system_role, example_prompts, chatId, chatHistory, "BACKEND_CHAT_MOST_RECENT_RESPONSE");
   const [messages, setMessages] = useState(message_thread);
 
   // Error modal state management
@@ -189,7 +190,7 @@ function ChatApp(props) {
           <ConversationHeader>
             <ConversationHeader.Content
               userName={app_name}
-              info={props.config.chat.id}
+              info={chatId}
             />
             <ConversationHeader.Actions>
               <SendButton onClick={handleInfoButtonClick} title={info_url} />
