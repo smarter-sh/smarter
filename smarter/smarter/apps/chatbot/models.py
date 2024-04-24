@@ -710,7 +710,7 @@ class ChatBotHelper:
                 self._user_profile = UserProfile.objects.get(user=self.user, account=self.account)
                 if self._user_profile and waffle.switch_is_active("chatbothelper_logging"):
                     logger.info(
-                        f"ChatBotHelper Initialized UserProfile: {self._user_profile} from self.user and self.account"
+                        f"ChatBotHelper: initialized UserProfile: {self._user_profile} from self.user and self.account"
                     )
                 return self._user_profile
             except UserProfile.DoesNotExist:
@@ -729,7 +729,7 @@ class ChatBotHelper:
             self._user = UserProfile.admin_for_account(self.account)
         if self._user and waffle.switch_is_active("chatbothelper_logging"):
             logger.info(
-                f"ChatBotHelper Initialized user {self._user} with admin for account {self.account.account_number}"
+                f"ChatBotHelper: initialized user {self._user} with admin for account {self.account.account_number}"
             )
         return self._user
 
@@ -760,7 +760,7 @@ class ChatBotHelper:
                     )
                 return None
         if self._account:
-            logger.info(f"ChatBotHelper initialized account: {self._account}")
+            logger.info(f"ChatBotHelper: initialized account: {self._account}")
         return self._account
 
     @property
