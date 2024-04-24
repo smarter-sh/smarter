@@ -4,12 +4,19 @@
 import json
 import logging
 
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 
-from .models import PluginSelectorHistory
+from .models import (
+    PluginData,
+    PluginMeta,
+    PluginPrompt,
+    PluginSelector,
+    PluginSelectorHistory,
+)
 from .plugin import Plugin
 from .signals import (
     plugin_called,
@@ -18,7 +25,6 @@ from .signals import (
     plugin_deleted,
     plugin_ready,
     plugin_selected,
-    plugin_selector_history_created,
     plugin_updated,
 )
 
@@ -118,13 +124,45 @@ def handle_plugin_selected(sender, **kwargs):
     plugin_selector_history.save()
 
 
-@receiver(plugin_selector_history_created, dispatch_uid="plugin_selector_history_created")
+# ------------------------------------------------------------------------------
+# Django model receivers.
+# ------------------------------------------------------------------------------
+
+
+@receiver(post_save, sender=PluginMeta)
+def handle_plugin_meta_created(sender, **kwargs):
+
+    logger.info("%s", formatted_text("PluginMeta() record created."))
+
+
+@receiver(post_save, sender=PluginSelector)
+def handle_plugin_selector_created(sender, **kwargs):
+    """Handle plugin selector created signal."""
+
+    logger.info("%s", formatted_text("PluginSelector() record created."))
+
+
+@receiver(post_save, sender=PluginPrompt)
+def handle_plugin_prompt_created(sender, **kwargs):
+    """Handle plugin prompt created signal."""
+
+    logger.info("%s", formatted_text("PluginPrompt() record created."))
+
+
+@receiver(post_save, sender=PluginData)
+def handle_plugin_data_created(sender, **kwargs):
+    """Handle plugin data created signal."""
+
+    logger.info("%s", formatted_text("PluginData() record created."))
+
+
+@receiver(post_save, sender=PluginSelectorHistory)
 def handle_plugin_selector_history_created(sender, **kwargs):
     """Handle plugin selector history created signal."""
 
     plugin_selector_history = kwargs.get("plugin_selector_history")
     logger.info(
         "%s - %s",
-        formatted_text("plugin_selector_history_created"),
+        formatted_text("PluginSelectorHistory() created"),
         formatted_json(model_to_dict(plugin_selector_history)),
     )
