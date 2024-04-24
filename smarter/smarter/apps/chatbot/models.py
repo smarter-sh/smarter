@@ -298,6 +298,10 @@ class ChatBotHelper:
     - https://hr.smarter.querium.com/chatbot/
     """
 
+    CACHE_EXPIRY = 300  # 5 minutes
+    CACHE_PREFIX = "ChatBotHelper_"
+
+    _cache_key: str = None
     _url: str = None
     _account_number: str = None
     _environment: str = None
@@ -316,22 +320,23 @@ class ChatBotHelper:
         :param url: The URL to parse.
         :param environment: The environment to use for the URL. (for unit testing only)
         """
-        CACHE_EXPIRY = 300  # 5 minutes
-        CACHE_PREFIX = "ChatBotHelper_"
         if not url:
             return None
 
-        # we cache url's that we previously determined are not chatbots
-        cache_key = f"{CACHE_PREFIX}_{url}"
-        if cache.get(cache_key):
+        SmarterValidator.validate_url(url)
+
+        self._cache_key = f"{self.CACHE_PREFIX}_{url}"
+        if self.cache_key in cache:
+            chatbot_id = cache.get(self.cache_key)
+            if chatbot_id:
+                self._chatbot = ChatBot.objects.get(id=chatbot_id)
+                if waffle.switch_is_active("chatbothelper_logging"):
+                    logger.info(f"ChatBotHelper: returning cached chatbot {self.chatbot}")
             return None
 
         if waffle.switch_is_active("chatbothelper_logging"):
             logger.info("ChatBotHelper: __init__()")
 
-        SmarterValidator.validate_url(url)
-
-        # finish instantiating the object
         self._url = url
         if environment:
             self._environment = environment
@@ -406,12 +411,10 @@ class ChatBotHelper:
             logger.info("ChatBotHelper: %s", "-" * (80 - 15))
 
         # cache the url so we don't have to parse it again
-        if not self._chatbot:
-            cache.set(key=cache_key, value="None", timeout=CACHE_EXPIRY)
-            if waffle.switch_is_active("chatbothelper_logging"):
-                logger.info(f"ChatBotHelper: {self.url} is not a chatbot")
-            return None
-
+        value = self._chatbot.id if self._chatbot else None
+        cache.set(key=self.cache_key, value=value, timeout=self.CACHE_EXPIRY)
+        if waffle.switch_is_active("chatbothelper_logging"):
+            logger.info(f"ChatBotHelper: cached chatbot {self.url}")
         return None
 
     def __str__(self):
@@ -439,6 +442,10 @@ class ChatBotHelper:
             "account": self.account.account_number if self.account else None,
             "chatbot": self.chatbot.name if self.chatbot else None,
         }
+
+    @property
+    def cache_key(self) -> str:
+        return self._cache_key
 
     @property
     def parsed_url(self):
