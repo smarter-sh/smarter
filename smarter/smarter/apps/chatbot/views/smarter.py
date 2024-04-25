@@ -7,7 +7,6 @@ import logging
 from http import HTTPStatus
 
 import waffle
-from django.core.cache import cache
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 
@@ -18,7 +17,13 @@ from smarter.apps.chat.api.v0.serializers import (
     ChatSerializer,
     ChatToolCallSerializer,
 )
-from smarter.apps.chat.models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
+from smarter.apps.chat.models import (
+    Chat,
+    ChatHelper,
+    ChatHistory,
+    ChatPluginUsage,
+    ChatToolCall,
+)
 from smarter.apps.chat.providers.smarter import handler
 from smarter.apps.chatbot.api.v0.serializers import ChatBotSerializer
 from smarter.lib.django.validators import SmarterValidator
@@ -36,37 +41,15 @@ class SmarterChatBotApiView(ChatBotApiBaseViewSet):
     """Main view for Smarter ChatBot API."""
 
     data: dict = {}
+    chat_helper: ChatHelper = None
     chat: Chat = None
     session_key: str = None
-    request: None
 
     """
     top-level viewset for customer-deployed Plugin-based Chat APIs.
     """
 
-    def get_chat(self):
-        """
-        Get the chat instance for the current request.
-        """
-        chat = cache.get(self.session_key)
-        if chat:
-            if waffle.switch_is_active("chatbot_api_view_logging"):
-                logger.info("%s - retrieved cached chat=%s", self.formatted_class_name, chat)
-        else:
-            chat, created = Chat.objects.get_or_create(session_key=self.session_key)
-            if created:
-                chat.url = self.url
-                chat.ip_address = self.ip_address
-                chat.user_agent = self.user_agent
-                chat.save()
-            cache.set(key=self.session_key, value=chat, timeout=CACHE_EXPIRATION)
-            if waffle.switch_is_active("chatbot_api_view_logging"):
-                logger.info("%s - cached chat object %s", self.formatted_class_name, chat)
-
-        return chat
-
     def dispatch(self, request, *args, **kwargs):
-        self.request = request
         kwargs.pop("chatbot_id", None)
         try:
             self.data = json.loads(request.body)
@@ -87,7 +70,8 @@ class SmarterChatBotApiView(ChatBotApiBaseViewSet):
         self.session_key = self.data.get("session_key")
         SmarterValidator.validate_session_key(self.session_key)
 
-        self.chat = self.get_chat()
+        self.chat_helper = ChatHelper(session_key=self.session_key, request=request)
+        self.chat = self.chat_helper.chat
 
         if waffle.switch_is_active("chatbot_api_view_logging"):
             logger.info("%s initialized with chat object %s", self.formatted_class_name, self.chat)

@@ -21,6 +21,7 @@ from smarter.apps.chatbot.api.v0.serializers import (
     ChatBotSerializer,
 )
 from smarter.apps.chatbot.models import ChatBot, ChatBotHelper, ChatBotPlugin
+from smarter.lib.django.request import SmarterRequestHelper
 from smarter.lib.django.user import UserType
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
 
@@ -29,6 +30,38 @@ MAX_RETURNED_PLUGINS = 10
 
 
 logger = logging.getLogger(__name__)
+
+
+class SmarterSession(SmarterRequestHelper):
+    """
+    Helper class that provides methods for creating a session key and client key.
+    """
+
+    _chatbot: ChatBot = None
+
+    def __init__(self, request, chatbot: ChatBot):
+        super().__init__(request)
+
+        if chatbot.account != self.account:
+            raise ValueError("ChatBot is not associated with this account")
+
+        self._chatbot = chatbot
+
+    @property
+    def chatbot(self):
+        return self._chatbot
+
+    @property
+    def unique_client_string(self):
+        return f"{self.account.account_number}{self.chatbot.id}{self.user_agent}{self.ip_address}"
+
+    @property
+    def client_key(self):
+        return hashlib.sha256(self.unique_client_string.encode()).hexdigest()
+
+    def generate_key(self):
+        key_string = self.unique_client_string + str(datetime.now())
+        return hashlib.sha256(key_string.encode()).hexdigest()
 
 
 # pylint: disable=R0902
@@ -45,33 +78,14 @@ class ChatConfigView(View):
 
     _sandbox_mode: bool = True
     request: None
-    helper: ChatBotHelper = None
+    chatbot_helper: ChatBotHelper = None
+    session: SmarterSession = None
     account: Account = None
     user: UserType = None
     user_profile: UserProfile = None
     chatbot: ChatBot = None
     url: str = None
     session_key: str = None
-
-    @property
-    def ip_address(self):
-        return self.request.META.get("REMOTE_ADDR", "")
-
-    @property
-    def user_agent(self):
-        return self.request.META.get("HTTP_USER_AGENT", "")
-
-    @property
-    def unique_client_string(self):
-        return f"{self.account.account_number}{self.chatbot.id}{self.user_agent}{self.ip_address}"
-
-    @property
-    def client_key(self):
-        return hashlib.sha256(self.unique_client_string.encode()).hexdigest()
-
-    def create_session_key(self):
-        key_string = self.unique_client_string + str(datetime.now())
-        return hashlib.sha256(key_string.encode()).hexdigest()
 
     def dispatch(self, request, *args, **kwargs):
         self.request = request
@@ -88,12 +102,15 @@ class ChatConfigView(View):
 
         self._sandbox_mode = name is not None
         self.url = request.build_absolute_uri()
-        self.helper = ChatBotHelper(url=self.url, user=self.user_profile.user, account=self.account, name=name)
-        self.chatbot = self.helper.chatbot
+        self.chatbot_helper = ChatBotHelper(url=self.url, user=self.user_profile.user, account=self.account, name=name)
+        self.chatbot = self.chatbot_helper.chatbot
+
         if not self.chatbot:
             return HttpResponseNotFound()
 
-        self.session_key = body.get("session_key") or self.create_session_key()
+        self.session = SmarterSession(request, self.chatbot)
+        self.session_key = body.get("session_key") or self.session.generate_key()
+
         return super().dispatch(request, *args, **kwargs)
 
     # pylint: disable=unused-argument
@@ -132,7 +149,7 @@ class ChatConfigView(View):
             "session_key": self.session_key,
             "sandbox_mode": self.sandbox_mode,
             "chatbot": chatbot_serializer.data,
-            "meta_data": self.helper.to_json(),
+            "meta_data": self.chatbot_helper.to_json(),
             "plugins": {
                 "meta_data": {
                     "total_plugins": chatbot_plugins_count,
@@ -181,7 +198,7 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
 
     template_path = "index.html"
     chatbot: ChatBot = None
-    helper: ChatBotHelper = None
+    chatbot_helper: ChatBotHelper = None
     url: str = None
 
     @property
@@ -195,8 +212,8 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
         if response.status_code >= 300:
             return response
         self.url = request.build_absolute_uri()
-        self.helper = ChatBotHelper(url=self.url, user=self.user_profile.user, account=self.account, name=name)
-        self.chatbot = self.helper.chatbot
+        self.chatbot_helper = ChatBotHelper(url=self.url, user=self.user_profile.user, account=self.account, name=name)
+        self.chatbot = self.chatbot_helper.chatbot
         if not self.chatbot:
             return HttpResponseNotFound()
         return render(request, self.template_path)
