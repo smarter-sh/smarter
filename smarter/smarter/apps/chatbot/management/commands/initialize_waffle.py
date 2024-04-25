@@ -14,3 +14,4 @@ class Command(BaseCommand):
         call_command("waffle_switch", "csrf_middleware_logging", "off", "--create")
         call_command("waffle_switch", "chatbothelper_logging", "off", "--create")
         call_command("waffle_switch", "chatbot_api_view_logging", "off", "--create")
+        call_command("waffle_switch", "chat_logging", "off", "--create")

@@ -12,7 +12,6 @@ from urllib.parse import SplitResult, urlparse, urlsplit
 
 from corsheaders.conf import conf
 from corsheaders.middleware import CorsMiddleware as DjangoCorsMiddleware
-from django.core.cache import cache
 from django.http import HttpRequest
 
 from smarter.apps.chatbot.models import ChatBot, ChatBotHelper
@@ -26,36 +25,11 @@ class CorsMiddleware(DjangoCorsMiddleware):
 
     _url: SplitResult = None
     _chatbot: ChatBot = None
-    _helper: ChatBotHelper = None
-
-    @staticmethod
-    def get_helper(url: str) -> ChatBotHelper:
-        """
-        Returns the ChatBotHelper instance for the given url.
-        This is a cached operation with a timeout of 5 minutes because
-        the helper is used multiple times in a request and instantiating
-        it is an expensive operation.
-        """
-        CACHE_EXPIRY = 300  # 5 minutes
-        CACHE_PREFIX = "CorsMiddleware_"
-        cache_key = f"{CACHE_PREFIX}_{url}"
-        cached_helper = cache.get(cache_key)
-        if cached_helper:
-            return None
-
-        helper = ChatBotHelper(url=url)
-        if helper is None:
-            cache.set(key=cache_key, value="None", timeout=CACHE_EXPIRY)
-            return None
-        return helper
+    helper: ChatBotHelper = None
 
     @property
     def chatbot(self) -> ChatBot:
         return self._chatbot
-
-    @property
-    def helper(self) -> ChatBotHelper:
-        return self._helper
 
     @property
     def url(self) -> SplitResult:
@@ -72,15 +46,15 @@ class CorsMiddleware(DjangoCorsMiddleware):
         self._url = url
 
         # get the chatbot helper for the url and try to find the chatbot
-        self._helper = CorsMiddleware.get_helper(url=url.geturl())
-        self._chatbot = self._helper.chatbot if self._helper.chatbot else None
+        self.helper = ChatBotHelper(url=url.geturl())
+        self._chatbot = self.helper.chatbot if self.helper.chatbot else None
 
         # If the chatbot is found, update the chatbot url
         # which ensures that we'll only be working with the
         # base url for the chatbot and that the protocol
         # will remain consistent.
-        if self._helper and self._helper.chatbot:
-            self._url = self._helper.chatbot.url
+        if self.helper and self.helper.chatbot:
+            self._url = self.helper.chatbot.url
 
     @property
     def CORS_ALLOWED_ORIGINS(self) -> list[str] | tuple[str]:

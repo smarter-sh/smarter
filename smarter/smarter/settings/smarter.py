@@ -24,3 +24,5 @@ SMARTER_BRANDING_SUPPORT_HOURS = "9:00 AM - 5:00 PM GMT-6 (CST)"
 SMARTER_BRANDING_URL_FACEBOOK = "https://www.facebook.com/Querium"
 SMARTER_BRANDING_URL_TWITTER = "https://twitter.com/QueriumCorp"
 SMARTER_BRANDING_URL_LINKEDIN = "https://www.linkedin.com/company/querium-corporation/"
+
+SMARTER_CHAT_CACHE_EXPIRATION = 60 * 30  # 5 minutes
