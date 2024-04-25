@@ -1,15 +1,65 @@
 # pylint: disable=C0114,C0115
 """PluginMeta app models."""
 import json
+import logging
 from functools import lru_cache
 
 import yaml
+from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from taggit.managers import TaggableManager
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.model_helpers import TimestampedModel
+
+
+logger = logging.getLogger(__name__)
+
+
+def dict_key_cleaner(key: str) -> str:
+    """Clean a key by replacing spaces with underscores."""
+    return str(key).replace("\n", "").replace("\r", "").replace("\t", "").replace(" ", "_")
+
+
+def dict_keys_to_list(data: dict, keys=None) -> list[str]:
+    """recursive function to extract all keys from a nested dictionary."""
+    if keys is None:
+        keys = []
+    for key, value in data.items():
+        keys.append(key)
+        if isinstance(value, dict):
+            dict_keys_to_list(value, keys)
+    return keys
+
+
+def list_of_dicts_to_list(data: list[dict]) -> list[str]:
+    """Convert a list of dictionaries into a single dict with keys extracted
+    from the first key in the first dict."""
+    if not data or not isinstance(data[0], dict):
+        return None
+    retval = []
+    key = next(iter(data[0]))
+    for d in data:
+        if key in d:
+            cleaned_key = dict_key_cleaner(d[key])
+            retval.append(cleaned_key)
+    return retval
+
+
+def list_of_dicts_to_dict(data: list[dict]) -> dict:
+    """Convert a list of dictionaries into a single dict with keys extracted
+    from the first key in the first dict."""
+    if not data or not isinstance(data[0], dict):
+        return None
+    retval = {}
+    key = next(iter(data[0]))
+    for d in data:
+        if key in d:
+            cleaned_key = dict_key_cleaner(d[key])
+            retval[cleaned_key] = d[key]
+    return retval
 
 
 class PluginMeta(TimestampedModel):
@@ -110,21 +160,49 @@ class PluginData(TimestampedModel):
     )
 
     @property
+    def sanitized_return_data(self) -> dict:
+        """Returns a dict of self.return_data."""
+        retval: dict = {}
+        if isinstance(self.return_data, dict):
+            return self.return_data
+        if isinstance(self.return_data, list):
+            retval = self.return_data
+            if isinstance(retval, list) and len(retval) > 0:
+                if len(retval) > settings.SMARTER_PLUGIN_MAX_DATA_RESULTS:
+                    logger.warning(
+                        "PluginData.sanitized_return_data: Truncating return_data to %s items.",
+                        {settings.SMARTER_PLUGIN_MAX_DATA_RESULTS},
+                    )
+                retval = retval[: settings.SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136
+                retval = list_of_dicts_to_dict(data=retval)
+        else:
+            raise SmarterValueError("return_data must be a dict or a list or None")
+
+        return retval
+
+    @property
     @lru_cache(maxsize=128)
     def return_data_keys(self) -> list:
         """Return all keys in the return_data."""
 
-        def find_keys(data, keys=None):
-            if keys is None:
-                keys = []
-            for key, value in data.items():
-                keys.append(key)
-                if isinstance(value, dict):
-                    find_keys(value, keys)
-            return keys
+        retval: list = []
+        if isinstance(self.return_data, dict):
+            retval = dict_keys_to_list(data=self.return_data)
+            retval = list(retval)
+        elif isinstance(self.return_data, list):
+            retval = self.return_data
+            if isinstance(retval, list) and len(retval) > 0:
+                if len(retval) > settings.SMARTER_PLUGIN_MAX_DATA_RESULTS:
+                    logger.warning(
+                        "PluginData.return_data_keys: Truncating return_data to %s items.",
+                        {settings.SMARTER_PLUGIN_MAX_DATA_RESULTS},
+                    )
+                retval = retval[: settings.SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136
+                retval = list_of_dicts_to_list(data=retval)
+        else:
+            raise SmarterValueError("return_data must be a dict or a list or None")
 
-        retval = find_keys(self.return_data)
-        return list(retval)
+        return retval[: settings.SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136
 
     @property
     def data(self) -> dict:

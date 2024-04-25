@@ -361,7 +361,7 @@ class Plugin:
             return None
 
         try:
-            return_data = self.plugin_data.return_data
+            return_data = self.plugin_data.sanitized_return_data
             retval = return_data[inquiry_type]
             retval = json.dumps(retval)
             plugin_called.send(
