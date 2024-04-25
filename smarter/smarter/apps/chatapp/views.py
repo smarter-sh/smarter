@@ -16,7 +16,6 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
-from smarter.apps.chat.api.v0.serializers import ChatHistorySerializer
 from smarter.apps.chat.models import Chat, ChatHelper
 from smarter.apps.chatbot.api.v0.serializers import (
     ChatBotPluginSerializer,
@@ -35,7 +34,7 @@ MAX_RETURNED_PLUGINS = 10
 logger = logging.getLogger(__name__)
 
 
-class SmarterSession(SmarterRequestHelper):
+class SmarterChatSession(SmarterRequestHelper):
     """
     Helper class that provides methods for creating a session key and client key.
     """
@@ -50,8 +49,7 @@ class SmarterSession(SmarterRequestHelper):
         if session_key:
             SmarterValidator.validate_session_key(session_key)
             self._session_key = session_key
-
-        if not self._session_key:
+        else:
             self._session_key = self.generate_key()
 
         self._chat_helper = ChatHelper(session_key=self.session_key, request=request)
@@ -98,9 +96,7 @@ class ChatConfigView(View):
     """
 
     _sandbox_mode: bool = True
-    request: None
-    data: dict = None
-    session: SmarterSession = None
+    session: SmarterChatSession = None
     chatbot_helper: ChatBotHelper = None
     chatbot: ChatBot = None
 
@@ -109,16 +105,15 @@ class ChatConfigView(View):
         return formatted_text(self.__class__.__name__)
 
     def dispatch(self, request, *args, **kwargs):
-        self.request = request
         name = kwargs.pop("name", None)
         self._sandbox_mode = name is not None
 
         try:
-            self.data = json.loads(request.body)
+            data = json.loads(request.body)
         except json.JSONDecodeError:
-            self.data = {}
+            data = {}
         if waffle.switch_is_active("chatapp_view_logging"):
-            logger.info("%s - data=%s", self.formatted_class_name, self.data)
+            logger.info("%s - data=%s", self.formatted_class_name, data)
 
         # Initialize the chat session for this request. session_key is generated
         # and managed by the /config/ endpoint for the chatbot
@@ -130,8 +125,7 @@ class ChatConfigView(View):
         # which uniquely identifies the device and the individual chatbot session
         # for the device.
 
-        session_key = self.data.get("session_key")
-        self.session = SmarterSession(request, session_key)
+        self.session = SmarterChatSession(request, session_key=data.get("session_key"))
         self.chatbot_helper = ChatBotHelper(
             url=self.session.url, user=self.session.user_profile.user, account=self.session.account, name=name
         )
@@ -173,13 +167,13 @@ class ChatConfigView(View):
         chatbot_plugins_count = ChatBotPlugin.objects.filter(chatbot=self.chatbot).count()
         chatbot_plugins = ChatBotPlugin.objects.filter(chatbot=self.chatbot).order_by("-pk")[:MAX_RETURNED_PLUGINS]
         chatbot_plugin_serializer = ChatBotPluginSerializer(chatbot_plugins, many=True)
-
+        logger.info("history=%s", self.session.chat_helper.chat_history)
         retval = {
             "session_key": self.session.session_key,
             "sandbox_mode": self.sandbox_mode,
             "chatbot": chatbot_serializer.data,
             "meta_data": self.chatbot_helper.to_json(),
-            "history": ChatHistorySerializer(self.session.chat_helper.chat_history, many=True).data,
+            "history": self.session.chat_helper.chat_history,
             "plugins": {
                 "meta_data": {
                     "total_plugins": chatbot_plugins_count,
