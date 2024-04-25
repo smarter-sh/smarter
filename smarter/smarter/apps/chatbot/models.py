@@ -7,6 +7,7 @@ from urllib.parse import urljoin, urlparse
 
 import tldextract
 import waffle
+from django.conf import settings
 from django.core.cache import cache
 from django.db import models
 
@@ -303,7 +304,6 @@ class ChatBotHelper:
     - https://hr.smarter.querium.com/chatbot/
     """
 
-    CACHE_EXPIRY = 300  # 5 minutes
     CACHE_PREFIX = "ChatBotHelper_"
 
     _cache_key: str = None
@@ -428,7 +428,7 @@ class ChatBotHelper:
             logger.info("ChatBotHelper: %s", "-" * (80 - 15))
 
         # cache the url so we don't have to parse it again
-        cache.set(key=self.cache_key, value=self._chatbot, timeout=self.CACHE_EXPIRY)
+        cache.set(key=self.cache_key, value=self._chatbot, timeout=settings.SMARTER_CHATBOT_CACHE_EXPIRATION)
         if waffle.switch_is_active("chatbothelper_logging"):
             logger.info("%s - %s", formatted_text("ChatBotHelper: cached url"), self.url)
         return None
