@@ -67,6 +67,7 @@ export function setConfig(config) {
     console.log('config.js: api_url: ', config.chatbot.url_chatbot);
     console.log('config.js: session_key: ', config.session_key);
     console.log('config.js: csrf: ', getCookie('csrftoken'));
+    console.log('config.js: history: ', config.history);
     return config;
 }
 

@@ -46,6 +46,15 @@ class ChatHistory(TimestampedModel):
     def __str__(self):
         return f"{self.chat.id}"
 
+    @property
+    def chat_history(self) -> list[dict]:
+        history = self.request.get("messages", [])
+        response = self.response.get("choices", [])
+        response = response[0] if response else {}
+        response = response.get("message", {})
+        history.append(response)
+        return history
+
     class Meta:
         verbose_name_plural = "Chat Histories"
 
@@ -114,8 +123,9 @@ class ChatHelper(SmarterRequestHelper):
         return formatted_text(self.__class__.__name__)
 
     @property
-    def chat_history(self) -> models.QuerySet[ChatHistory]:
-        return ChatHistory.objects.filter(chat=self.chat)
+    def chat_history(self) -> ChatHistory:
+        rec = ChatHistory.objects.filter(chat=self.chat).order_by("-created_at").first()
+        return rec.chat_history if rec else []
 
     def get_cached_chat(self):
         """
