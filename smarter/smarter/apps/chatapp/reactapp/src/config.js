@@ -4,7 +4,7 @@
 //
 // The API_KEY is only used to demonstrate how you'd set this up in
 // the event that you needed it.
-import { getCookie } from "./components/chatApp/csrf.js";
+import { getCookie } from "./cookies.js";
 
 export async function fetchConfig() {
   const session_key = getCookie('session_key');

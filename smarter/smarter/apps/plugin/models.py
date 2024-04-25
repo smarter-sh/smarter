@@ -39,6 +39,7 @@ def list_of_dicts_to_list(data: list[dict]) -> list[str]:
     from the first key in the first dict."""
     if not data or not isinstance(data[0], dict):
         return None
+    logger.warning("converting list of dicts to a single dict")
     retval = []
     key = next(iter(data[0]))
     for d in data:

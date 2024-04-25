@@ -8,6 +8,7 @@ import json
 import logging
 from datetime import datetime
 
+import waffle
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseNotFound, JsonResponse
 from django.shortcuts import render
@@ -15,14 +16,16 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.chat.api.v0.serializers import ChatHistorySerializer
+from smarter.apps.chat.models import Chat, ChatHelper
 from smarter.apps.chatbot.api.v0.serializers import (
     ChatBotPluginSerializer,
     ChatBotSerializer,
 )
 from smarter.apps.chatbot.models import ChatBot, ChatBotHelper, ChatBotPlugin
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.request import SmarterRequestHelper
-from smarter.lib.django.user import UserType
+from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
 
 
@@ -37,23 +40,41 @@ class SmarterSession(SmarterRequestHelper):
     Helper class that provides methods for creating a session key and client key.
     """
 
-    _chatbot: ChatBot = None
+    _session_key: str = None
+    _chat: Chat = None
+    _chat_helper: ChatHelper = None
 
-    def __init__(self, request, chatbot: ChatBot):
+    def __init__(self, request, session_key: str = None):
         super().__init__(request)
 
-        if chatbot.account != self.account:
-            raise ValueError("ChatBot is not associated with this account")
+        if session_key:
+            SmarterValidator.validate_session_key(session_key)
+            self._session_key = session_key
 
-        self._chatbot = chatbot
+        if not self._session_key:
+            self._session_key = self.generate_key()
+
+        self._chat_helper = ChatHelper(session_key=self.session_key, request=request)
+        self._chat = self._chat_helper.chat
+
+        if waffle.switch_is_active("chatapp_view_logging"):
+            logger.info("%s - session established: %s", self.formatted_class_name, self.data)
 
     @property
-    def chatbot(self):
-        return self._chatbot
+    def session_key(self):
+        return self._session_key
+
+    @property
+    def chat(self):
+        return self._chat
+
+    @property
+    def chat_helper(self):
+        return self._chat_helper
 
     @property
     def unique_client_string(self):
-        return f"{self.account.account_number}{self.chatbot.id}{self.user_agent}{self.ip_address}"
+        return f"{self.account.account_number}{self.url}{self.user_agent}{self.ip_address}"
 
     @property
     def client_key(self):
@@ -78,38 +99,46 @@ class ChatConfigView(View):
 
     _sandbox_mode: bool = True
     request: None
-    chatbot_helper: ChatBotHelper = None
+    data: dict = None
     session: SmarterSession = None
-    account: Account = None
-    user: UserType = None
-    user_profile: UserProfile = None
+    chatbot_helper: ChatBotHelper = None
     chatbot: ChatBot = None
-    url: str = None
-    session_key: str = None
+
+    @property
+    def formatted_class_name(self):
+        return formatted_text(self.__class__.__name__)
 
     def dispatch(self, request, *args, **kwargs):
         self.request = request
         name = kwargs.pop("name", None)
-        try:
-            body = json.loads(request.body)
-        except json.JSONDecodeError:
-            body = {}
-        logger.info("ChatConfigView: %s", body)
-
-        self.user = request.user
-        self.user_profile = UserProfile.objects.get(user=self.user)
-        self.account = self.user_profile.account
-
         self._sandbox_mode = name is not None
-        self.url = request.build_absolute_uri()
-        self.chatbot_helper = ChatBotHelper(url=self.url, user=self.user_profile.user, account=self.account, name=name)
+
+        try:
+            self.data = json.loads(request.body)
+        except json.JSONDecodeError:
+            self.data = {}
+        if waffle.switch_is_active("chatapp_view_logging"):
+            logger.info("%s - data=%s", self.formatted_class_name, self.data)
+
+        # Initialize the chat session for this request. session_key is generated
+        # and managed by the /config/ endpoint for the chatbot
+        #
+        # example: https://customer-support.3141-5926-5359.api.smarter.sh/chatbot/config/
+        #
+        # The React app calls this endpoint at app initialization to get a
+        # json dict that includes, among other pertinent info, this session_key
+        # which uniquely identifies the device and the individual chatbot session
+        # for the device.
+
+        session_key = self.data.get("session_key")
+        self.session = SmarterSession(request, session_key)
+        self.chatbot_helper = ChatBotHelper(
+            url=self.session.url, user=self.session.user_profile.user, account=self.session.account, name=name
+        )
         self.chatbot = self.chatbot_helper.chatbot
 
         if not self.chatbot:
             return HttpResponseNotFound()
-
-        self.session = SmarterSession(request, self.chatbot)
-        self.session_key = body.get("session_key") or self.session.generate_key()
 
         return super().dispatch(request, *args, **kwargs)
 
@@ -146,10 +175,11 @@ class ChatConfigView(View):
         chatbot_plugin_serializer = ChatBotPluginSerializer(chatbot_plugins, many=True)
 
         retval = {
-            "session_key": self.session_key,
+            "session_key": self.session.session_key,
             "sandbox_mode": self.sandbox_mode,
             "chatbot": chatbot_serializer.data,
             "meta_data": self.chatbot_helper.to_json(),
+            "history": ChatHistorySerializer(self.session.chat_helper.chat_history, many=True).data,
             "plugins": {
                 "meta_data": {
                     "total_plugins": chatbot_plugins_count,

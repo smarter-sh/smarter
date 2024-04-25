@@ -15,6 +15,7 @@ export const getSmarterSandbox = (config) => {
     file_attach_button: config.chatbot.app_file_attachment,
     background_image_url: config.chatbot.app_background_image_url,
     application_logo: config.chatbot.app_logo_url,
+    history: config.history,
     config: config,
   };
 };

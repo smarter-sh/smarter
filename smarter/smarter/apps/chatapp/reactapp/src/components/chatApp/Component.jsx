@@ -57,8 +57,8 @@ function ChatApp(props) {
   const [isTyping, setIsTyping] = useState(false);
   const fileInputRef = useRef(null);
 
-  const chatId = props.config && props.config.chat ? props.config.chat.id : null;
-  const chatHistory = props.config && props.config.chat ? props.config.chat.history : [];
+  const chatId = props.session_key;
+  const chatHistory = props.history ? props.history : [];
   const message_thread = chat_init(welcome_message, system_role, example_prompts, chatId, chatHistory, "BACKEND_CHAT_MOST_RECENT_RESPONSE");
   const [messages, setMessages] = useState(message_thread);
 

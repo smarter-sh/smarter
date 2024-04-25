@@ -21,7 +21,7 @@
     v0.1.0 - v0.4.0:  ./test/events/openai.response.v0.4.0.json
     v0.5.0:       ./test/events/langchain.response.v0.5.0.json
 -----------------------------------------------------------------------------*/
-import { getCookie } from "./csrf";
+import { getCookie } from "../../cookies.js";
 
 
 function requestBodyFactory(messages, session_key) {
