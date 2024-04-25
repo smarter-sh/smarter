@@ -160,7 +160,7 @@ def handle_plugin_data_created(sender, **kwargs):
 def handle_plugin_selector_history_created(sender, **kwargs):
     """Handle plugin selector history created signal."""
 
-    plugin_selector_history = kwargs.get("plugin_selector_history")
+    plugin_selector_history = kwargs.get("instance")
     logger.info(
         "%s - %s",
         formatted_text("PluginSelectorHistory() created"),

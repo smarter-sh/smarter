@@ -5,7 +5,7 @@ import os
 import yaml
 
 from smarter.apps.account.models import UserProfile
-from smarter.lib.django.user import User
+from smarter.lib.django.user import UserType
 
 from .plugin import Plugin, PluginExamples, Plugins
 
@@ -27,7 +27,7 @@ def add_example_plugins(user_profile: UserProfile) -> bool:
         Plugin(data=data)
 
 
-def plugins_for_user(user: User) -> list[Plugin]:
+def plugins_for_user(user: UserType) -> list[Plugin]:
     """
     DEPRECATE THIS? We switched to using ChatBot and ChatBotPlugin.
 

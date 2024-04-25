@@ -27,3 +27,5 @@ SMARTER_BRANDING_URL_LINKEDIN = "https://www.linkedin.com/company/querium-corpor
 
 SMARTER_CHAT_CACHE_EXPIRATION = 60 * 30  # 5 minutes
 SMARTER_CHATBOT_CACHE_EXPIRATION = 60 * 30  # 5 minutes
+
+SMARTER_PLUGIN_MAX_DATA_RESULTS = 50

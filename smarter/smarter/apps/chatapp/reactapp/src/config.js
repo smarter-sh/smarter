@@ -8,16 +8,18 @@ import { getCookie } from "./components/chatApp/csrf.js";
 
 export async function fetchConfig() {
   const session_key = getCookie('session_key');
-  const csrf = getCookie('csrftoken');
+  const csrftoken = getCookie('csrftoken');
+  const sessionid = getCookie('sessionid');
 
   const headers = {
     "Accept": "*/*",
     "Content-Type": "application/json",
+    "X-CSRFToken": csrftoken,
     "Origin": window.location.origin,
+    "Cookie": `sessionid=${sessionid}`,
   };
   const body = {
-    "session_key": session_key,
-    "csrf": csrf,
+    "session_key": session_key
   };
   const init = {
     method: "POST",

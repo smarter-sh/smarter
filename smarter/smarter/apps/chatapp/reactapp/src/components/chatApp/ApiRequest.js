@@ -43,11 +43,14 @@ export async function processApiRequest(
   console.log("processApiRequest(): props: ", props);
 
   const csrftoken = getCookie("csrftoken");
+  const sessionid = getCookie('sessionid');
+
   const headers = {
     "Accept": "*/*",
     "Content-Type": "application/json",
     "X-CSRFToken": csrftoken,
     "Origin": window.location.origin,
+    "Cookie": `sessionid=${sessionid}`,
   };
   const init = {
     method: "POST",
