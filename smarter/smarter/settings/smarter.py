@@ -26,3 +26,4 @@ SMARTER_BRANDING_URL_TWITTER = "https://twitter.com/QueriumCorp"
 SMARTER_BRANDING_URL_LINKEDIN = "https://www.linkedin.com/company/querium-corporation/"
 
 SMARTER_CHAT_CACHE_EXPIRATION = 60 * 30  # 5 minutes
+SMARTER_CHATBOT_CACHE_EXPIRATION = 60 * 30  # 5 minutes
