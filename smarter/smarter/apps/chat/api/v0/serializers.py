@@ -15,6 +15,8 @@ class ChatSerializer(serializers.ModelSerializer):
 class ChatHistorySerializer(serializers.ModelSerializer):
     """Serializer for the ChatHistory model."""
 
+    chat = ChatSerializer(read_only=True)
+
     class Meta:
         model = ChatHistory
         fields = "__all__"
@@ -23,6 +25,7 @@ class ChatHistorySerializer(serializers.ModelSerializer):
 class ChatPluginUsageSerializer(serializers.ModelSerializer):
     """Serializer for the ChatPluginUsage model."""
 
+    chat = ChatSerializer(read_only=True)
     plugin = PluginMetaSerializer()
 
     class Meta:
@@ -32,6 +35,8 @@ class ChatPluginUsageSerializer(serializers.ModelSerializer):
 
 class ChatToolCallSerializer(serializers.ModelSerializer):
     """Serializer for the ChatToolCall model."""
+
+    chat = ChatSerializer(read_only=True)
 
     class Meta:
         model = ChatToolCall

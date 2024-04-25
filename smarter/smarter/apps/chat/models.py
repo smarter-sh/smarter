@@ -113,6 +113,10 @@ class ChatHelper(SmarterRequestHelper):
     def formatted_class_name(self):
         return formatted_text(self.__class__.__name__)
 
+    @property
+    def chat_history(self) -> models.QuerySet[ChatHistory]:
+        return ChatHistory.objects.filter(chat=self.chat)
+
     def get_cached_chat(self):
         """
         Get the chat instance for the current request.
