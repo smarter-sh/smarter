@@ -8,7 +8,7 @@ We leverage Django REST Framework to implement a /config api end point for all c
 
 example url: https://platform.smarter.sh/chatapp/example/config/
 
-See this complete [example config](./data/reactapp.config.json) json dict, based on the following overall structure:
+See this complete [example config](./json/reactapp.config.json) json dict, based on the following overall structure:
 
 ```json
 {
