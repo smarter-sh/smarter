@@ -10,6 +10,7 @@ export async function fetchConfig() {
   const session_key = getCookie('session_key');
   const csrftoken = getCookie('csrftoken');
   const sessionid = getCookie('sessionid');
+  const debugMode = getCookie('debug') || false;
 
   const headers = {
     "Accept": "*/*",
@@ -33,6 +34,11 @@ export async function fetchConfig() {
     thisURL.pathname += "config/";
     let configURL = thisURL.toString();
 
+    if (debugMode) {
+      console.log('fetchConfig() - init: ', init);
+      console.log('fetchConfig() - configURL: ', configURL);
+    }
+
     const response = await fetch(configURL, init);
     const status = await response.status;
     const response_json = await response.json();    // Convert the ReadableStream to a JSON object
@@ -48,6 +54,8 @@ export async function fetchConfig() {
   }
 }
 
+// do additional configuration after having fetched
+// config json from the server.
 export function setConfig(config) {
 
     // Application setup
@@ -57,17 +65,18 @@ export function setConfig(config) {
       OpenaiPassthrough: "OpenaiPassthrough",
     };
 
+    // set cookies
     if (config.session_key) {
       document.cookie = `session_key=${config.session_key}; path=/`;
     }
     else {
       console.error("config.js: session_key is not defined");
     }
+    document.cookie = `debug=${config.debugMode}; path=/`;
 
-    console.log('config.js: api_url: ', config.chatbot.url_chatbot);
-    console.log('config.js: session_key: ', config.session_key);
-    console.log('config.js: csrf: ', getCookie('csrftoken'));
-    console.log('config.js: history: ', config.history);
+    if (config.debug_mode) {
+      console.log('setConfig() - config: ', config);
+    }
     return config;
 }
 

@@ -171,9 +171,11 @@ class ChatConfigView(View):
         retval = {
             "session_key": self.session.session_key,
             "sandbox_mode": self.sandbox_mode,
+            "debug_mode": waffle.switch_is_active("reactapp_debug_mode"),
             "chatbot": chatbot_serializer.data,
             "meta_data": self.chatbot_helper.to_json(),
             "history": self.session.chat_helper.chat_history,
+            "tool_calls": [],
             "plugins": {
                 "meta_data": {
                     "total_plugins": chatbot_plugins_count,

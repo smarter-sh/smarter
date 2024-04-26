@@ -59,7 +59,11 @@ export async function processApiRequest(
     headers: headers,
     body: requestBodyFactory(messages, props.config.session_key),
   };
-  console.log("processApiRequest(): ", props, apiURL, messages, init);
+  if (props.config.debug_mode) {
+    console.log("processApiRequest() - apiURL:", apiURL);
+    console.log("processApiRequest() - init:", init);
+    console.log("processApiRequest() - props:", props);
+  }
 
   try {
     const response = await fetch(apiURL, init);

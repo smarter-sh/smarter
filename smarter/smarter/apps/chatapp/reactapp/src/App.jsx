@@ -27,6 +27,10 @@ const App = ({ config }) => {
     config.APPLICATIONS.SmarterSandbox,
   );
 
+  if (config.debug_mode) {
+    console.log("App() - config:", config);
+  }
+
   return (
     <div className="App">
       <ContainerLayout>
