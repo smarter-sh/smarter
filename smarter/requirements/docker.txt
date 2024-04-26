@@ -10,4 +10,4 @@
 
 -r base.txt
 
-gunicorn==21.2.0
+gunicorn==22.0.0
