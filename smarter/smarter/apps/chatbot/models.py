@@ -31,6 +31,9 @@ logger = logging.getLogger(__name__)
 class ChatBotCustomDomain(TimestampedModel):
     """A ChatBot DNS Host for a customer account. Linked to an AWS Hosted Zone."""
 
+    class Meta:
+        verbose_name_plural = "ChatBot Custom Domains"
+
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     aws_hosted_zone_id = models.CharField(max_length=255)
     domain_name = models.CharField(max_length=255)
@@ -62,6 +65,9 @@ class ChatBotCustomDomain(TimestampedModel):
 class ChatBotCustomDomainDNS(TimestampedModel):
     """ChatBot DNS Records for a ChatBot DNS Host."""
 
+    class Meta:
+        verbose_name_plural = "ChatBot Custom Domain DNS"
+
     custom_domain = models.ForeignKey(ChatBotCustomDomain, on_delete=models.CASCADE)
     record_name = models.CharField(max_length=255)
     record_type = models.CharField(max_length=255)
@@ -71,6 +77,9 @@ class ChatBotCustomDomainDNS(TimestampedModel):
 
 class ChatBot(TimestampedModel):
     """A ChatBot API for a customer account."""
+
+    class Meta:
+        verbose_name_plural = "ChatBots"
 
     class Modes:
         """ChatBot API Modes"""
@@ -231,6 +240,9 @@ class ChatBot(TimestampedModel):
 class ChatBotAPIKey(TimestampedModel):
     """Map of API keys for a ChatBot"""
 
+    class Meta:
+        verbose_name_plural = "ChatBot API Keys"
+
     chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE)
     api_key = models.ForeignKey(SmarterAuthToken, on_delete=models.CASCADE)
 
@@ -238,8 +250,14 @@ class ChatBotAPIKey(TimestampedModel):
 class ChatBotPlugin(TimestampedModel):
     """List of Plugins for a ChatBot"""
 
+    class Meta:
+        verbose_name_plural = "ChatBot Plugins"
+
     chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE)
     plugin_meta = models.ForeignKey(PluginMeta, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{str(self.chatbot.url)} - {str(self.plugin_meta.name)}"
 
     @property
     def plugin(self) -> Plugin:
@@ -271,6 +289,9 @@ class ChatBotPlugin(TimestampedModel):
 class ChatBotFunctions(TimestampedModel):
     """List of Functions for a ChatBot"""
 
+    class Meta:
+        verbose_name_plural = "ChatBot Functions"
+
     CHOICES = [
         ("weather", "weather"),
         ("news", "news"),
@@ -284,6 +305,9 @@ class ChatBotFunctions(TimestampedModel):
 
 class ChatBotRequests(TimestampedModel):
     """List of Requests for a ChatBot"""
+
+    class Meta:
+        verbose_name_plural = "ChatBot Prompt History"
 
     chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE)
     request = models.JSONField(blank=True, null=True)

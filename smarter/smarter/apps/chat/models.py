@@ -23,6 +23,9 @@ logger = logging.getLogger(__name__)
 class Chat(TimestampedModel):
     """Chat model."""
 
+    class Meta:
+        verbose_name_plural = "Chats"
+
     session_key = models.CharField(max_length=255, blank=True, null=True)
     ip_address = models.GenericIPAddressField(blank=True, null=True)
     user_agent = models.CharField(max_length=255, blank=True, null=True)
@@ -32,12 +35,12 @@ class Chat(TimestampedModel):
         # pylint: disable=E1136
         return f"{self.ip_address} - {self.url}"
 
-    class Meta:
-        verbose_name_plural = "Chats"
-
 
 class ChatHistory(TimestampedModel):
     """Chat history model."""
+
+    class Meta:
+        verbose_name_plural = "Chat History"
 
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
     request = models.JSONField(blank=True, null=True)
@@ -55,12 +58,12 @@ class ChatHistory(TimestampedModel):
         history.append(response)
         return history
 
-    class Meta:
-        verbose_name_plural = "Chat Histories"
-
 
 class ChatToolCall(TimestampedModel):
     """Chat tool call history model."""
+
+    class Meta:
+        verbose_name_plural = "Chat Tool Call History"
 
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
     plugin = models.ForeignKey(PluginMeta, on_delete=models.CASCADE, blank=True, null=True)
@@ -76,12 +79,12 @@ class ChatToolCall(TimestampedModel):
             name = f"{self.chat.id} - {self.function_name}"
         return name
 
-    class Meta:
-        verbose_name_plural = "Chat Tool Call Histories"
-
 
 class ChatPluginUsage(TimestampedModel):
     """Plugin selection history model."""
+
+    class Meta:
+        verbose_name_plural = "Plugin Usage"
 
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
     plugin = models.ForeignKey(PluginMeta, on_delete=models.CASCADE)
@@ -89,9 +92,6 @@ class ChatPluginUsage(TimestampedModel):
 
     def __str__(self):
         return f"{self.chat.id} - {self.plugin.name}"
-
-    class Meta:
-        verbose_name_plural = "Plugin Usage"
 
 
 class ChatHelper(SmarterRequestHelper):

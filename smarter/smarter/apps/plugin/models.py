@@ -120,7 +120,7 @@ class PluginSelectorHistory(TimestampedModel):
         return f"{str(self.plugin_selector.plugin.name)} - {self.search_term}"
 
     class Meta:
-        verbose_name_plural = "Plugin Selector Histories"
+        verbose_name_plural = "Plugin Selector History"
 
 
 class PluginPrompt(TimestampedModel):
