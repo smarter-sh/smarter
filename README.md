@@ -20,6 +20,42 @@
 
 Smarter is an extensible web platform for developing knowledge domain specific generative AI text completion REST APIs. It provides users with a workbench approach to designing, prototyping, testing and deploying custom APIs in a standardized format that will be compatible with a wide variety of chatbot UIs for technology ecosystems such as NPM, Wordpress, Squarespace, Drupal, Office 365, .Net, salesforce.com, and SAP. It is developed for OEMs, and large business analyst & data science teams, and provides common enterprise features like security, accounting cost codes, and audit capabilities. Additionally It is envisioned being packaged and resold through large professional services firms and technology solutions providers.
 
+## Smarter ChatBot APIs
+
+The following collection of url endpoints are available to all Smarter chatbot, where `example` is the name of the chatbot. The chatbot sandbox React app and configuration api are available via these two url's, both of which require authentication and are only available to user associated with the Account to which the chatbot belongs.
+
+```console
+https://platform.smarter.sh/chatapp/example/
+https://platform.smarter.sh/chatapp/example/config/
+```
+
+Chatbot REST api's are available at several different styles of url endpoint depending on your needs. Deployed chatbots are accessible via either of these two styles. These url's do not require authentication (ie they are publicly accessible) unless the customer chooses to add an optional api key.
+
+```console
+https://example.3141-5926-5359.api.platform.smarter.sh/chatbot/
+https://custom-domain.com/chatbot/
+```
+
+Additionally, there's a sandbox url which works with Django authentication and is accessible regardless of the chatbot's deployment status.
+
+```console
+https://platform.smarter.sh/api/v0/chatbots/1/chatbot/
+```
+
+## Logging
+
+Logging and audit capabilities are one of Smarter's key strengths. Smarter logs every step of the chat completion workflow:
+
+- prompt
+- plugin selection
+- presentation of prompt and selected plugins to the LLM
+- initial response from the LLM
+- function calling
+- final request to the LLM
+- final response from the LLM
+
+Additionally, Smarter streams formatted text output to the console, viewable from the Smarter web console chat sandbox.
+
 ## Business Model
 
 Smarter has a token-based costing model priced as a multiple of the "wholesale" cost of underlying LLM service providers like for example, OpenAI. Querium generates revenue by charging customers for use of the APIs that they deploy. Customers can manage multiple APIs for a broad range of use cases ranging from customer and sales support to human resources assistants.

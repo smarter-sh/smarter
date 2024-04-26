@@ -62,7 +62,7 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "verbose_name_plural": "Chat Histories",
+                "verbose_name_plural": "Chat History",
             },
         ),
         migrations.CreateModel(
@@ -135,7 +135,7 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "verbose_name_plural": "Chat Tool Call Histories",
+                "verbose_name_plural": "Chat Tool Call History",
             },
         ),
     ]
