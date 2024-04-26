@@ -52,7 +52,7 @@ python-hcl2==4.3.3                      # Terraform hcl parser for reading Terra
 openai==1.23.2                          # OpenAI API
 pyyaml==6.0.1                           # YAML parser
 langchain==0.1.16                       # LLM abstractions library for building complex workflows
-langchain-openai==0.1.3                 # OpenAI plugin for Langchain
+langchain-openai==0.1.4                 # OpenAI plugin for Langchain
 python-Levenshtein==0.25.1              # Levenshtein distance calculation for LLMs
 nltk==3.8.1                             # Natural Language Toolkit
 textblob==0.18.0.post0                  # Text processing library
