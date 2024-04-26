@@ -350,16 +350,16 @@ class ChatBotHelper:
         :param url: The URL to parse.
         :param environment: The environment to use for the URL. (for unit testing only)
         """
-        if not url:
-            return None
+        if url:
+            SmarterValidator.validate_url(url)  # raises ValidationError if url is invalid
+            url = SmarterValidator.urlify(
+                url
+            )  # normalizes the url so that we dont find ourselves working with variations of the same url
+            self._url = url
 
-        SmarterValidator.validate_url(url)  # raises ValidationError if url is invalid
-        url = SmarterValidator.urlify(
-            url
-        )  # normalizes the url so that we dont find ourselves working with variations of the same url
-
-        self._cache_key = f"{self.CACHE_PREFIX}_{url}"
-        # check to see if the cache key exists bc we also cache and return None values
+        # 1. return a cached object if we have one.
+        #    first, check to see if the cache key exists bc we also cache and return None values
+        self._cache_key = f"{self.CACHE_PREFIX}_{self.url}"
         if self.cache_key in cache:
             self._chatbot = cache.get(self.cache_key)
             if self._chatbot and waffle.switch_is_active("chatbothelper_logging"):
@@ -368,7 +368,7 @@ class ChatBotHelper:
                     formatted_text("ChatBotHelper: returning cached chatbot"),
                     self.chatbot.name,
                     self.chatbot.account.account_number,
-                    url,
+                    self.url,
                 )
 
             # most calls arrive here, because in most cases the url is not a
@@ -378,13 +378,15 @@ class ChatBotHelper:
         if waffle.switch_is_active("chatbothelper_logging"):
             logger.info("ChatBotHelper: __init__()")
 
-        self._url = url
+        # 2. take a wild swing at initializing the chatbot using the built-in property logic
+        self._chatbot = self.chatbot
+
         if environment:
             self._environment = environment
             if waffle.switch_is_active("chatbothelper_logging"):
                 logger.info(f"ChatBotHelper: initialized self.environment={self.environment}")
 
-        if user:
+        if not self._chatbot and user and not self._user:
             self._user = user
             if waffle.switch_is_active("chatbothelper_logging"):
                 logger.info(f"ChatBotHelper: initialized self.user={self.user}")
@@ -395,12 +397,12 @@ class ChatBotHelper:
             if waffle.switch_is_active("chatbothelper_logging"):
                 logger.info(f"ChatBotHelper: initialized self.account from self.user_profile={self.user_profile}")
 
-        if account and not self._account:
+        if not self._chatbot and account and not self._account:
             self._account = account
             if waffle.switch_is_active("chatbothelper_logging"):
                 logger.info(f"ChatBotHelper: initialized self.account={self.account}")
 
-        if self._user and self._account and not self._user_profile:
+        if not self._chatbot and self._user and self._account and not self._user_profile:
             self._user_profile, created = UserProfile.objects.get_or_create(user=self._user, account=self._account)
             if created:
                 logger.warning(f"ChatBotHelper: created missing user_profile={self.user_profile}")
@@ -408,7 +410,7 @@ class ChatBotHelper:
             if waffle.switch_is_active("chatbothelper_logging"):
                 logger.info(f"ChatBotHelper: initialized self.account={self.account}")
 
-        if self._account and name:
+        if not self._chatbot and self._account and name:
             try:
                 self._chatbot = ChatBot.objects.get(account=self._account, name=name)
                 if waffle.switch_is_active("chatbothelper_logging"):
@@ -433,27 +435,7 @@ class ChatBotHelper:
                 pass
 
         if self._chatbot and waffle.switch_is_active("chatbothelper_logging"):
-            logger.info("ChatBotHelper: %s", "-" * (80 - 15))
-            logger.info("ChatBotHelper: INITIALIZED.")
-            logger.info("ChatBotHelper: %s", "-" * (80 - 15))
-            logger.info(f"ChatBotHelper: chatbot={self.chatbot}")
-            logger.info(f"ChatBotHelper: account_number={self.account_number}")
-            logger.info(f"ChatBotHelper: user={self.user}, account={self.account}")
-
-            logger.info(f"ChatBotHelper: url={self.url}, environment={self.environment}")
-            logger.info(f"ChatBotHelper: domain={self.domain}, path={self.path}")
-            logger.info(f"ChatBotHelper: subdomain={self.subdomain}")
-            logger.info(f"ChatBotHelper: root_domain={self.root_domain}")
-            logger.info(f"ChatBotHelper: api_subdomain={self.api_subdomain}, api_host={self.api_host}")
-            logger.info(f"ChatBotHelper: customer_api_domain={self.customer_api_domain}")
-
-            logger.info(f"ChatBotHelper: is_sandbox_domain={self.is_sandbox_domain}")
-            logger.info(f"ChatBotHelper: is_default_domain={self.is_default_domain}")
-            logger.info(f"ChatBotHelper: is_custom_domain={self.is_custom_domain}")
-            logger.info(f"ChatBotHelper: is_deployed={self.is_deployed}")
-            logger.info(f"ChatBotHelper: is_valid={self.is_valid}")
-            logger.info(f"ChatBotHelper: is_authentication_required={self.is_authentication_required}")
-            logger.info("ChatBotHelper: %s", "-" * (80 - 15))
+            self.log_dump()
 
         # cache the url so we don't have to parse it again
         cache.set(key=self.cache_key, value=self._chatbot, timeout=settings.SMARTER_CHATBOT_CACHE_EXPIRATION)
@@ -463,6 +445,29 @@ class ChatBotHelper:
 
     def __str__(self):
         return self.url
+
+    def log_dump(self):
+        logger.info("ChatBotHelper: %s", "-" * (80 - 15))
+        logger.info("ChatBotHelper: INITIALIZED.")
+        logger.info("ChatBotHelper: %s", "-" * (80 - 15))
+        logger.info(f"ChatBotHelper: chatbot={self.chatbot}")
+        logger.info(f"ChatBotHelper: account_number={self.account_number}")
+        logger.info(f"ChatBotHelper: user={self.user}, account={self.account}")
+
+        logger.info(f"ChatBotHelper: url={self.url}, environment={self.environment}")
+        logger.info(f"ChatBotHelper: domain={self.domain}, path={self.path}")
+        logger.info(f"ChatBotHelper: subdomain={self.subdomain}")
+        logger.info(f"ChatBotHelper: root_domain={self.root_domain}")
+        logger.info(f"ChatBotHelper: api_subdomain={self.api_subdomain}, api_host={self.api_host}")
+        logger.info(f"ChatBotHelper: customer_api_domain={self.customer_api_domain}")
+
+        logger.info(f"ChatBotHelper: is_sandbox_domain={self.is_sandbox_domain}")
+        logger.info(f"ChatBotHelper: is_default_domain={self.is_default_domain}")
+        logger.info(f"ChatBotHelper: is_custom_domain={self.is_custom_domain}")
+        logger.info(f"ChatBotHelper: is_deployed={self.is_deployed}")
+        logger.info(f"ChatBotHelper: is_valid={self.is_valid}")
+        logger.info(f"ChatBotHelper: is_authentication_required={self.is_authentication_required}")
+        logger.info("ChatBotHelper: %s", "-" * (80 - 15))
 
     def to_json(self):
         return {
@@ -686,8 +691,12 @@ class ChatBotHelper:
     def is_sandbox_domain(self) -> bool:
         if not self.url:
             return False
-        retval = smarter_settings.environment_domain in self.domain
-        return retval
+        # best way to match: using a regular expression against the url pattern
+        match = re.search(r"/api/v0/chatbots/(\d+)", self.url)
+        if match:
+            return True
+        # an alternative way to match: looking for the environment domain name in the domain name
+        return smarter_settings.environment_domain in self.domain
 
     @property
     def is_default_domain(self) -> bool:
@@ -818,6 +827,10 @@ class ChatBotHelper:
             match = re.search(r"/api/v0/chatbots/(\d+)", self.url)
             if match:
                 chatbot_id = int(match.group(1))
+                if waffle.switch_is_active("chatbothelper_logging"):
+                    logger.info(
+                        f"ChatBotHelper: matched ChatBot id {chatbot_id} from regular expression against {self.url}"
+                    )
                 try:
                     self._chatbot = ChatBot.objects.get(id=chatbot_id)
                     if waffle.switch_is_active("chatbothelper_logging"):

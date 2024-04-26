@@ -133,6 +133,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
                 "user": self.chatbot_helper.user.username if self.chatbot_helper.user else None,
                 "url": self.chatbot_helper.url,
             }
+            self.chatbot_helper.log_dump()
             return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
         if self.chatbot_helper.is_authentication_required and not self.smarter_api_authenticate(request):
             data = {"message": "Forbidden. Please provide a valid API key."}

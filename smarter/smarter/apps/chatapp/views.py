@@ -167,7 +167,7 @@ class ChatConfigView(View):
         chatbot_plugins_count = ChatBotPlugin.objects.filter(chatbot=self.chatbot).count()
         chatbot_plugins = ChatBotPlugin.objects.filter(chatbot=self.chatbot).order_by("-pk")[:MAX_RETURNED_PLUGINS]
         chatbot_plugin_serializer = ChatBotPluginSerializer(chatbot_plugins, many=True)
-        logger.info("history=%s", self.session.chat_helper.chat_history)
+
         retval = {
             "session_key": self.session.session_key,
             "sandbox_mode": self.sandbox_mode,
@@ -184,7 +184,6 @@ class ChatConfigView(View):
                 "plugins": chatbot_plugin_serializer.data,
             },
         }
-        logger.info("config=%s", retval)
         return retval
 
 
