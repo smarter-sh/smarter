@@ -386,10 +386,14 @@ class ChatBotHelper:
 
         if user:
             self._user = user
-            self._user_profile = UserProfile.objects.get(user=self.user)
-            self._account = self.user_profile.account
             if waffle.switch_is_active("chatbothelper_logging"):
                 logger.info(f"ChatBotHelper: initialized self.user={self.user}")
+            self._user_profile = UserProfile.objects.get(user=self.user)
+            if waffle.switch_is_active("chatbothelper_logging"):
+                logger.info(f"ChatBotHelper: initialized self.user_profile from self.user={self.user}")
+            self._account = self.user_profile.account
+            if waffle.switch_is_active("chatbothelper_logging"):
+                logger.info(f"ChatBotHelper: initialized self.account from self.user_profile={self.user_profile}")
 
         if account and not self._account:
             self._account = account
@@ -729,7 +733,7 @@ class ChatBotHelper:
         """
         if self._user_profile:
             return self._user_profile
-        if self.user and self.account:
+        if self._user and self._account:
             try:
                 self._user_profile = UserProfile.objects.get(user=self.user, account=self.account)
                 if self._user_profile and waffle.switch_is_active("chatbothelper_logging"):
@@ -769,6 +773,20 @@ class ChatBotHelper:
             if waffle.switch_is_active("chatbothelper_logging"):
                 logger.info(f"ChatBotHelper: initialized account {self._account} from chatbot {self._chatbot}")
             return self._account
+        if self._user_profile:
+            self._account = self.user_profile.account
+            if waffle.switch_is_active("chatbothelper_logging"):
+                logger.info(
+                    f"ChatBotHelper: initialized account {self._account} from user_profile {self._user_profile}"
+                )
+            return self._account
+        if self._user:
+            self._user_profile = UserProfile.objects.get(user=self.user)
+            self._account = self.user_profile.account
+            if waffle.switch_is_active("chatbothelper_logging"):
+                logger.info(
+                    f"ChatBotHelper: initialized account {self._account} from user {self.user} and user_profile {self.user_profile}"
+                )
         if self.account_number:
             try:
                 self._account = Account.objects.get(account_number=self.account_number)
