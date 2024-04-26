@@ -184,6 +184,7 @@ class ChatConfigView(View):
                 "plugins": chatbot_plugin_serializer.data,
             },
         }
+        logger.info("config=%s", retval)
         return retval
 
 

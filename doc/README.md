@@ -10,7 +10,7 @@ Table of contents:
 - [How to Get an OpenAI API Key](./OPENAI_API_GETTING_STARTED_GUIDE.md)
 - [Semantic Versioning Guide](./SEMANTIC_VERSIONING.md)
 - [Getting Started With AWS and Terraform](./TERRAFORM_GETTING_STARTED_GUIDE.md)
-- [12-Factor Methodology](./Twelve_Factor_Methodology.md)
+- [12-Factor Methodology](./12-FACTOR.md)
 
 ## Stack
 

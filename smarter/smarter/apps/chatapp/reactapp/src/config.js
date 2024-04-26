@@ -9,7 +9,6 @@ import { getCookie } from "./cookies.js";
 export async function fetchConfig() {
   const session_key = getCookie('session_key');
   const csrftoken = getCookie('csrftoken');
-  const sessionid = getCookie('sessionid');
   const debugMode = getCookie('debug') || false;
 
   const headers = {
@@ -17,7 +16,6 @@ export async function fetchConfig() {
     "Content-Type": "application/json",
     "X-CSRFToken": csrftoken,
     "Origin": window.location.origin,
-    "Cookie": `sessionid=${sessionid}`,
   };
   const body = {
     "session_key": session_key
@@ -40,7 +38,6 @@ export async function fetchConfig() {
     }
 
     const response = await fetch(configURL, init);
-    const status = await response.status;
     const response_json = await response.json();    // Convert the ReadableStream to a JSON object
 
     if (response.ok) {
@@ -67,18 +64,17 @@ export function setConfig(config) {
 
     // set cookies
     if (config.session_key) {
-      document.cookie = `session_key=${config.session_key}; path=/`;
+      document.cookie = `session_key=${config.session_key}; path=/; SameSite=Lax`;
     }
     else {
       console.error("config.js: session_key is not defined");
     }
-    document.cookie = `debug=${config.debugMode}; path=/`;
+
+    const debugMode = config.debug_mode || false;
+    document.cookie = `debug=${debugMode}; path=/; SameSite=Lax`;
 
     if (config.debug_mode) {
       console.log('setConfig() - config: ', config);
     }
     return config;
 }
-
-
-// Export the variables
