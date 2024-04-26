@@ -12,7 +12,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """ensure that switches exist. If not, then create them"""
 
-        def initialize_switch(switch_name):
+        def verify_switch(switch_name):
             """Initialize a switch."""
             if not Switch.objects.filter(name=switch_name).exists():
                 call_command("waffle_switch", switch_name, "off", "--create")
@@ -30,4 +30,4 @@ class Command(BaseCommand):
         ]
 
         for switch in switches:
-            initialize_switch(switch)
+            verify_switch(switch)
