@@ -2,6 +2,48 @@
 
 There are several considerations for getting React to work inside a Django project. React's native build tools assume that you're building a standalone web app as opposed to more of a drop-in page component in our case. Additionally, Django does opinionated things with your project's static assets like for example, the css/js bundles that React's build tools create.
 
+## React App Configuration
+
+We leverage Django REST Framework to implement a /config api end point for all chatbots that returns a json dict with the React app configuration settings. This endpoint accepts `POST` requests, and it is referenced directly from inside of the React app at startup. The json dict that it returns is distributed throughout the React app as `props.config`.
+
+example url: https://platform.smarter.sh/chatapp/example/config/
+
+See this complete [example config](./data/config.json) json dict, based on the following overall structure:
+
+```json
+{
+  "session_key": "433f830c189d83f <-- 64-character hashed key string --> f9c95d17ae5b07c",
+  "sandbox_mode": true,
+  "debug_mode": true,
+  "chatbot": {
+    "account": {},
+    "name": "example",
+    "app_name": "Smarter Demo",
+    "app_assistant": "Kent",
+    "app_welcome_message": "Welcome to the Smarter demo!",
+    "app_example_prompts": [
+      "What is the weather in San Francisco?",
+      "What is an Everlasting Gobstopper?",
+      "example function calling configuration"
+    ],
+    "app_placeholder": "Ask me anything...",
+    "url": "http://example.3141-5926-5359.api.localhost:8000/",
+    "url_chatbot": "http://example.3141-5926-5359.api.localhost:8000/chatbot/",
+    "url_chatapp": "http://example.3141-5926-5359.api.localhost:8000/chatapp/"
+  },
+  "meta_data": {},
+  "history": [],
+  "tool_calls": [],
+  "plugins": {
+    "meta_data": {
+      "total_plugins": 2,
+      "plugins_returned": 2
+    },
+    "plugins": []
+  }
+}
+```
+
 ## React App Setup
 
 - **placement within folder structure.** The React app was scaffolded with ViteJS and is added to the Django app [chatapp](./smarter/smarter/apps/chatapp/reactapp/).
@@ -72,8 +114,9 @@ class ReactAppLoader(FilesystemLoader):
               "django.template.loaders.filesystem.Loader",
           ],
           "context_processors": [
-              # our custom context processor goes here...
-              "smarter.apps.dashboard.context_processors.react",
+              #
+              # other context processors ...
+              #
               "django.template.context_processors.request",
               #
               # other context processors ...
@@ -139,7 +182,9 @@ We created this second template engine that is customized for React.
               "django.template.loaders.filesystem.Loader",
           ],
           "context_processors": [
-              "smarter.apps.dashboard.context_processors.react",
+              #
+              # other context processors ...
+              #
               "django.template.context_processors.request",
               #
               # other context processors ...
