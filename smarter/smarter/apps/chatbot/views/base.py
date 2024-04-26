@@ -114,7 +114,9 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
         self.request = request
         self._url = self.request.build_absolute_uri()
         self._url = SmarterValidator.urlify(self._url)
-        self.chatbot_helper = ChatBotHelper(url=self.url, user=request.user)
+        self.chatbot_helper = ChatBotHelper(
+            url=self.url
+        )  # chatbot urls are intended to be public, so, no need to authenticate
 
         if waffle.switch_is_active("chatbot_api_view_logging"):
             logger.info("%s.dispatch() - url=%s", self.formatted_class_name, self.url)
