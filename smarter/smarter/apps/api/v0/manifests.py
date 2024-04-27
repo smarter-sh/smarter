@@ -28,7 +28,7 @@ class SmarterApiManifDataFormats(SmarterEnumAbstract):
     YAML = "yaml"
 
 
-class SmarterApiSpecKeyTypes(SmarterEnumAbstract):
+class SmarterApiSpecKeyOptions(SmarterEnumAbstract):
     """Key types enumeration."""
 
     REQUIRED = "required"
@@ -72,7 +72,7 @@ def validate_key(key: str, spec: Any, data: dict):
             raise SmarterApiManifestValidationError(
                 f"Invalid data type for key {key}. Expected {spec[0]} but got {type(data.get(key))}"
             )
-        if spec[1] == SmarterApiSpecKeyTypes.REQUIRED and key not in data:
+        if spec[1] == SmarterApiSpecKeyOptions.REQUIRED and key not in data:
             raise SmarterApiManifestValidationError(f"Missing required key {key}")
 
 
@@ -87,9 +87,9 @@ class SmarterApi(ABC):
     _spec = {
         SmarterApiManifestKeys.APIVERSION: SMARTER_API_VERSION,
         SmarterApiManifestKeys.KIND: SmarterApiManifestKinds.all_values(),
-        SmarterApiManifestKeys.METADATA: (dict, [SmarterApiSpecKeyTypes.REQUIRED]),
-        SmarterApiManifestKeys.SPEC: (dict, [SmarterApiSpecKeyTypes.REQUIRED]),
-        SmarterApiManifestKeys.STATUS: (dict, [SmarterApiSpecKeyTypes.READONLY, SmarterApiSpecKeyTypes.OPTIONAL]),
+        SmarterApiManifestKeys.METADATA: (dict, [SmarterApiSpecKeyOptions.REQUIRED]),
+        SmarterApiManifestKeys.SPEC: (dict, [SmarterApiSpecKeyOptions.REQUIRED]),
+        SmarterApiManifestKeys.STATUS: (dict, [SmarterApiSpecKeyOptions.READONLY, SmarterApiSpecKeyOptions.OPTIONAL]),
     }
 
     def __init__(self, manifest: str, data_format: SmarterApiManifDataFormats = None):
@@ -159,9 +159,8 @@ class SmarterApi(ABC):
             pass
         return None
 
-    @classmethod
-    def get_spec(cls) -> dict:  # pylint: disable=W0221
-        return cls._spec
+    def get_spec(self) -> dict:
+        return self._spec
 
     def validate(self, data: dict = None, spec: dict = None):
         """
