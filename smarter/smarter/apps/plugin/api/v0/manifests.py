@@ -1,10 +1,11 @@
 """Smarter API V0 Plugin manifest specification."""
 
 from smarter.apps.api.v0.manifests import (
-    SmarterApi,
+    SmarterApiManifest,
+    SmarterApiManifestDataFormats,
     SmarterApiManifestKeys,
     SmarterApiManifestKinds,
-    SmarterApiSpecKeyOptions,
+    SmarterApiSpecificationKeyOptions,
     SmarterEnumAbstract,
 )
 
@@ -52,31 +53,82 @@ class SmartApiPluginSpecDataKeys(SmarterEnumAbstract):
     DESCRIPTION = "description"
 
 
-class SmarterApiPlugin(SmarterApi):
+class SmarterApiPlugin(SmarterApiManifest):
     """Smarter API V0 Plugin class."""
 
-    plugin_spec = {
-        SmarterApiManifestKeys.KIND: SmarterApiManifestKinds.PLUGIN,
-        SmarterApiManifestKeys.METADATA: {
-            SmarterApiManifestPluginMetadataKeys.CLASS: SmarterApiManifestPluginMetadataClass.all_values(),
-        },
-        SmarterApiManifestKeys.SPEC: {
-            SmarterApiManifestPluginSpecKeys.SELECTOR: {
-                SmartApiPluginSpecSelectorKeys.DIRECTIVE: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
-            },
-            SmarterApiManifestPluginSpecKeys.PROMPT: {
-                SmarterApiManifestPluginSpecPromptKeys.SYSTEMROLE: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
-                SmarterApiManifestPluginSpecPromptKeys.MODEL: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
-                SmarterApiManifestPluginSpecPromptKeys.TEMPERATURE: (float, [SmarterApiSpecKeyOptions.REQUIRED]),
-                SmarterApiManifestPluginSpecPromptKeys.MAXTOKENS: (int, [SmarterApiSpecKeyOptions.REQUIRED]),
-            },
-            SmarterApiManifestPluginSpecKeys.DATA: {
-                SmartApiPluginSpecDataKeys.DESCRIPTION: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
-            },
-        },
-    }
+    def __init__(
+        self,
+        manifest: str = None,
+        data_format: SmarterApiManifestDataFormats = None,
+        file_path: str = None,
+        url: str = None,
+    ):
+        super().__init__(manifest, data_format, file_path, url)
 
-    def get_spec(self) -> dict:
-        spec = super().get_spec()
-        spec.update(self.plugin_spec)
-        return spec
+        plugin_specification = {
+            SmarterApiManifestKeys.KIND: SmarterApiManifestKinds.PLUGIN,
+            SmarterApiManifestKeys.METADATA: {
+                SmarterApiManifestPluginMetadataKeys.CLASS: SmarterApiManifestPluginMetadataClass.all_values(),
+            },
+            SmarterApiManifestKeys.SPEC: {
+                SmarterApiManifestPluginSpecKeys.SELECTOR: {
+                    SmartApiPluginSpecSelectorKeys.DIRECTIVE: (str, [SmarterApiSpecificationKeyOptions.REQUIRED]),
+                },
+                SmarterApiManifestPluginSpecKeys.PROMPT: {
+                    SmarterApiManifestPluginSpecPromptKeys.SYSTEMROLE: (
+                        str,
+                        [SmarterApiSpecificationKeyOptions.REQUIRED],
+                    ),
+                    SmarterApiManifestPluginSpecPromptKeys.MODEL: (str, [SmarterApiSpecificationKeyOptions.REQUIRED]),
+                    SmarterApiManifestPluginSpecPromptKeys.TEMPERATURE: (
+                        float,
+                        [SmarterApiSpecificationKeyOptions.REQUIRED],
+                    ),
+                    SmarterApiManifestPluginSpecPromptKeys.MAXTOKENS: (
+                        int,
+                        [SmarterApiSpecificationKeyOptions.REQUIRED],
+                    ),
+                },
+                SmarterApiManifestPluginSpecKeys.DATA: {
+                    SmartApiPluginSpecDataKeys.DESCRIPTION: (str, [SmarterApiSpecificationKeyOptions.REQUIRED]),
+                },
+            },
+        }
+        specification = self.specification.copy()
+        specification.update(plugin_specification)
+        self._specification = specification
+        self.validate()
+
+    @property
+    def manifest_metadata_keys(self) -> list[str]:
+        super_meta_keys = super().metadata_keys
+        these_keys = SmarterApiManifestPluginMetadataKeys.all_values()
+        return super_meta_keys + these_keys
+
+    @property
+    def manifest_spec_keys(self) -> list[str]:
+        super_spec_keys = super().spec_keys
+        these_keys = SmarterApiManifestPluginSpecKeys.all_values()
+        return super_spec_keys + these_keys
+
+    @property
+    def manifest_status_keys(self) -> list[str]:
+        return []
+
+    @property
+    def manifest_plugin_classes(self) -> list[str]:
+        return SmarterApiManifestPluginMetadataClass.all_values()
+
+    @property
+    def manifest_plugin_prompt_spec_keys(self) -> list[str]:
+        return SmarterApiManifestPluginSpecPromptKeys.all_values()
+
+    @property
+    def manifest_plugin_selector_spec_keys(self) -> list[str]:
+        return SmartApiPluginSpecSelectorKeys.all_values()
+
+    def validate(self, recursed_data: dict = None, recursed_spec: dict = None):
+        """Validate the plugin specification."""
+        super().validate(recursed_data=recursed_data, recursed_spec=recursed_spec)
+
+        # do plugin-specific validation here: static, api, sql
