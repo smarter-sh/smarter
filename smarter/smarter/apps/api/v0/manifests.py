@@ -65,6 +65,8 @@ def validate_key(key: str, spec: Any, data: dict):
         - The second element of the tuple is the key type (required, optional, readonly)
     - otherwise, validate the value of the key against spec value
     """
+    if not isinstance(key, str):
+        raise SmarterApiManifestValidationError(f"Invalid data type for key {key}. Expected str but got {type(data)}")
     if isinstance(spec, list):
         if data.get(key) not in spec:
             raise SmarterApiManifestValidationError(f"Invalid value for key {key}")
