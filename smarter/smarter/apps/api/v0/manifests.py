@@ -63,6 +63,7 @@ def validate_key(key: str, spec: Any, data: dict):
     - If a key's value is a tuple then validate the value of the key against the tuple, as follows:
         - The first element of the tuple is the expected data type
         - The second element of the tuple is the key type (required, optional, readonly)
+    - otherwise, validate the value of the key against spec value
     """
     if isinstance(spec, list):
         if data.get(key) not in spec:
@@ -74,6 +75,15 @@ def validate_key(key: str, spec: Any, data: dict):
             )
         if spec[1] == SmarterApiSpecKeyOptions.REQUIRED and key not in data:
             raise SmarterApiManifestValidationError(f"Missing required key {key}")
+    else:
+        if not isinstance(data.get(key), type(spec)):
+            raise SmarterApiManifestValidationError(
+                f"Invalid data type for key {key}. Expected {type(spec)} but got {type(data.get(key))}"
+            )
+        if data.get(key) != spec:
+            raise SmarterApiManifestValidationError(
+                f"Invalid value for key {key}. Expected {spec} but got {data.get(key)}"
+            )
 
 
 class SmarterApi(ABC):
