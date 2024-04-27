@@ -1,4 +1,4 @@
-"""Top-level API classes for the Smarter API."""
+"""Smarter API Manifest ("SAM") base class."""
 
 import json
 import logging
@@ -9,7 +9,9 @@ import requests
 import waffle
 import yaml
 
-from smarter.common.exceptions import SmarterApiManifestValidationError
+# pylint: disable=E0611
+from smarter.common.classes import SmarterEnumAbstract
+from smarter.common.exceptions import SAMValidationError
 
 
 logger = logging.getLogger(__name__)
@@ -17,22 +19,14 @@ logger = logging.getLogger(__name__)
 SMARTER_API_VERSION = "smarter/v0"
 
 
-class SmarterEnumAbstract(Enum):
-    """Smarter manifest kinds enumeration."""
-
-    @classmethod
-    def all_values(cls) -> list[str]:
-        return [member.value for _, member in cls.__members__.items()]
-
-
-class SmarterApiManifestDataFormats(SmarterEnumAbstract):
+class SAMDataFormats(SmarterEnumAbstract):
     """Data format enumeration."""
 
     JSON = "json"
     YAML = "yaml"
 
 
-class SmarterApiSpecificationKeyOptions(SmarterEnumAbstract):
+class SAMSpecificationKeyOptions(SmarterEnumAbstract):
     """Key types enumeration."""
 
     REQUIRED = "required"
@@ -40,7 +34,7 @@ class SmarterApiSpecificationKeyOptions(SmarterEnumAbstract):
     READONLY = "readonly"
 
 
-class SmarterApiManifestKinds(SmarterEnumAbstract):
+class SAMKinds(SmarterEnumAbstract):
     """Smarter manifest kinds enumeration."""
 
     PLUGIN = "Plugin"
@@ -50,7 +44,7 @@ class SmarterApiManifestKinds(SmarterEnumAbstract):
     CHATBOT = "Chatbot"
 
 
-class SmarterApiManifestKeys(SmarterEnumAbstract):
+class SAMKeys(SmarterEnumAbstract):
     """Smarter API V0 required keys enumeration."""
 
     APIVERSION = "apiVersion"
@@ -60,7 +54,7 @@ class SmarterApiManifestKeys(SmarterEnumAbstract):
     STATUS = "status"
 
 
-class SmarterApiManifestMetadataKeys(SmarterEnumAbstract):
+class SAMMetadataKeys(SmarterEnumAbstract):
     """Smarter API V0 Plugin Metadata keys enumeration."""
 
     NAME = "name"
@@ -83,85 +77,85 @@ def validate_key(key: str, key_value: Any, spec: Any):
     if isinstance(key, Enum):
         key = key.value
     if not isinstance(key, str):
-        raise SmarterApiManifestValidationError(f"Invalid data type for key {key}. Expected str but got {type(key)}")
+        raise SAMValidationError(f"Invalid data type for key {key}. Expected str but got {type(key)}")
 
     # validate that key's value exists in the spec list
     if isinstance(spec, list):
         if key_value not in spec:
-            raise SmarterApiManifestValidationError(f"Invalid value for key {key}")
+            raise SAMValidationError(f"Invalid value for key {key}")
 
     # validate that key value's data type matches the spec's data type, and if required, that the key exists
     elif isinstance(spec, tuple):
         type_spec = spec[0]
         options_list = spec[1]
         # validate that value exists for required key
-        if SmarterApiSpecificationKeyOptions.REQUIRED in options_list and not key_value:
-            raise SmarterApiManifestValidationError(f"Missing required key {key}")
-        if not SmarterApiSpecificationKeyOptions.OPTIONAL and not isinstance(key_value, type_spec):
-            raise SmarterApiManifestValidationError(
+        if SAMSpecificationKeyOptions.REQUIRED in options_list and not key_value:
+            raise SAMValidationError(f"Missing required key {key}")
+        if not SAMSpecificationKeyOptions.OPTIONAL and not isinstance(key_value, type_spec):
+            raise SAMValidationError(
                 f"Invalid data type for key {key}. Expected {spec[0]} but got {type(key_value)}: key_value={key_value} spec={spec[0]}"
             )
 
     # validate that key value is the same as the spec value
     else:
         if not isinstance(key_value, type(spec)):
-            raise SmarterApiManifestValidationError(
+            raise SAMValidationError(
                 f"Invalid key_value type for key {key}. Expected {type(spec)} but got {type(key_value)}"
             )
         if key_value != spec:
-            raise SmarterApiManifestValidationError(f"Invalid value for key {key}. Expected {spec} but got {key_value}")
+            raise SAMValidationError(f"Invalid value for key {key}. Expected {spec} but got {key_value}")
 
 
-class SmarterApiManifest:
+class SAM:
     """
-    Smarter API base class.
+    Smarter API Manifest ("SAM") base class.
     """
 
     _raw_data: str = None
     _dict_data: dict = None
-    _data_format: SmarterApiManifestDataFormats = None
+    _data_format: SAMDataFormats = None
     _specification: dict = None
 
     def __init__(
         self,
         manifest: str = None,
-        data_format: SmarterApiManifestDataFormats = None,
+        data_format: SAMDataFormats = None,
         file_path: str = None,
         url: str = None,
     ):
         self._specification = {
-            SmarterApiManifestKeys.APIVERSION: SMARTER_API_VERSION,
-            SmarterApiManifestKeys.KIND: SmarterApiManifestKinds.all_values(),
-            SmarterApiManifestKeys.METADATA: {
-                SmarterApiManifestMetadataKeys.NAME: (str, [SmarterApiSpecificationKeyOptions.REQUIRED]),
-                SmarterApiManifestMetadataKeys.DESCRIPTION: (str, [SmarterApiSpecificationKeyOptions.REQUIRED]),
-                SmarterApiManifestMetadataKeys.VERSION: (str, [SmarterApiSpecificationKeyOptions.REQUIRED]),
-                SmarterApiManifestMetadataKeys.TAGS: (list, [SmarterApiSpecificationKeyOptions.OPTIONAL]),
-                SmarterApiManifestMetadataKeys.ANNOTATIONS: (list, [SmarterApiSpecificationKeyOptions.OPTIONAL]),
+            SAMKeys.APIVERSION: SMARTER_API_VERSION,
+            SAMKeys.KIND: SAMKinds.all_values(),
+            SAMKeys.METADATA: {
+                SAMMetadataKeys.NAME: (str, [SAMSpecificationKeyOptions.REQUIRED]),
+                SAMMetadataKeys.DESCRIPTION: (str, [SAMSpecificationKeyOptions.REQUIRED]),
+                SAMMetadataKeys.VERSION: (str, [SAMSpecificationKeyOptions.REQUIRED]),
+                SAMMetadataKeys.TAGS: (list, [SAMSpecificationKeyOptions.OPTIONAL]),
+                SAMMetadataKeys.ANNOTATIONS: (list, [SAMSpecificationKeyOptions.OPTIONAL]),
             },
-            SmarterApiManifestKeys.SPEC: (dict, [SmarterApiSpecificationKeyOptions.REQUIRED]),
-            SmarterApiManifestKeys.STATUS: (
+            SAMKeys.SPEC: (dict, [SAMSpecificationKeyOptions.REQUIRED]),
+            SAMKeys.STATUS: (
                 dict,
-                [SmarterApiSpecificationKeyOptions.READONLY, SmarterApiSpecificationKeyOptions.OPTIONAL],
+                [SAMSpecificationKeyOptions.READONLY, SAMSpecificationKeyOptions.OPTIONAL],
             ),
         }
 
-        logger.info("SmarterApiManifest init spec: %s", self.specification)
+        logger.info("SAM init spec: %s", self.specification)
 
         self._raw_data = manifest
         if data_format:
-            if data_format == SmarterApiManifestDataFormats.JSON:
+            if data_format == SAMDataFormats.JSON:
                 try:
                     json.loads(manifest)
                 except json.JSONDecodeError as e:
-                    raise SmarterApiManifestValidationError("Invalid json data received.") from e
-            elif data_format == SmarterApiManifestDataFormats.YAML:
+                    raise SAMValidationError("Invalid json data received.") from e
+            elif data_format == SAMDataFormats.YAML:
                 try:
                     yaml.safe_load(manifest)
                 except yaml.YAMLError as e:
-                    raise SmarterApiManifestValidationError("Invalid yaml data received.") from e
+                    raise SAMValidationError("Invalid yaml data received.") from e
             else:
-                raise SmarterApiManifestValidationError("Supported data formats: json, yaml.")
+                raise SAMValidationError("Supported data formats: json, yaml.")
             self._data_format = data_format
 
         if not manifest and file_path:
@@ -198,22 +192,22 @@ class SmarterApiManifest:
             return None
 
     @property
-    def data_format(self) -> SmarterApiManifestDataFormats:
+    def data_format(self) -> SAMDataFormats:
         if self._data_format:
             return self._data_format
         if self.dict_data:
-            self._data_format = SmarterApiManifestDataFormats.JSON
+            self._data_format = SAMDataFormats.JSON
         elif self.yaml_data:
-            self._data_format = SmarterApiManifestDataFormats.YAML
+            self._data_format = SAMDataFormats.YAML
         return None
 
     @property
     def data(self) -> dict:
         if self._dict_data:
             return self._dict_data
-        if self.data_format == SmarterApiManifestDataFormats.JSON:
+        if self.data_format == SAMDataFormats.JSON:
             self._dict_data = self.dict_data
-        elif self.data_format == SmarterApiManifestDataFormats.YAML:
+        elif self.data_format == SAMDataFormats.YAML:
             self._dict_data = self.yaml_data
         return self._dict_data
 
@@ -236,12 +230,12 @@ class SmarterApiManifest:
         Validate the manifest data. Recursively validate dict keys based on the
         contents of spec.
         """
-        logger.info("SmarterApiManifest validate() - 1: %s", self.specification)
+        logger.info("SAM validate() - 1: %s", self.specification)
 
         this_overall_spec = recursed_spec or self.specification
         this_data = recursed_data or self.data
         if not this_data:
-            raise SmarterApiManifestValidationError("Received empty or invalid data.")
+            raise SAMValidationError("Received empty or invalid data.")
 
         for key, key_spec in this_overall_spec.items():
             if isinstance(key, Enum):
@@ -265,15 +259,15 @@ class SmarterApiManifest:
     # -------------------------------------------------------------------------
     @property
     def manifest_api_version(self) -> str:
-        return self.get_key(SmarterApiManifestKeys.APIVERSION.value)
+        return self.get_key(SAMKeys.APIVERSION.value)
 
     @property
     def manifest_kind(self) -> str:
-        return self.get_key(SmarterApiManifestKeys.KIND.value)
+        return self.get_key(SAMKeys.KIND.value)
 
     @property
     def manifest_metadata_keys(self) -> list[str]:
-        return SmarterApiManifestMetadataKeys.all_values()
+        return SAMMetadataKeys.all_values()
 
     @property
     def manifest_spec_keys(self) -> list[str]:
@@ -284,19 +278,19 @@ class SmarterApiManifest:
         return []
 
     def manifest_metadata(self, key: str = None) -> any:
-        meta_data = self.get_key(SmarterApiManifestKeys.METADATA.value)
-        if key in SmarterApiManifestMetadataKeys.all_values():
+        meta_data = self.get_key(SAMKeys.METADATA.value)
+        if key in SAMMetadataKeys.all_values():
             return meta_data.get(key)
         return meta_data
 
     def manifest_spec(self, key: str = None) -> any:
-        spec_data = self.get_key(SmarterApiManifestKeys.SPEC.value)
+        spec_data = self.get_key(SAMKeys.SPEC.value)
         if key:
             return spec_data.get(key)
         return spec_data
 
     def manifest_status(self, key: str = None) -> any:
-        status_data = self.get_key(SmarterApiManifestKeys.STATUS.value)
+        status_data = self.get_key(SAMKeys.STATUS.value)
         if key:
             return status_data.get(key)
         return status_data
