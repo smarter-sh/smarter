@@ -6,6 +6,8 @@ import logging
 from http import HTTPStatus
 from typing import List
 
+import waffle
+
 # from cachetools import TTLCache, cached
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
@@ -25,6 +27,7 @@ from smarter.apps.chatbot.signals import chatbot_called
 from smarter.apps.plugin.plugin import Plugin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterBusinessRuleViolation
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.view_helpers import SmarterNeverCachedWebView
@@ -45,12 +48,23 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
     - dispatching.
     """
 
+    _url: str = None
+    request = None
     http_method_names = ["get", "post", "options"]
-    helper: ChatBotHelper = None
+    chatbot_helper: ChatBotHelper = None
     account: Account = None
     user: UserType = None
     chatbot: ChatBot = None
     plugins: List[Plugin] = None
+    session_key: str = None
+
+    @property
+    def formatted_class_name(self):
+        return formatted_text(self.__class__.__name__)
+
+    @property
+    def url(self):
+        return self._url
 
     @property
     def is_web_platform(self):
@@ -58,14 +72,6 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
         if host in smarter_settings.environment_domain:
             return True
         return False
-
-    # @cached(cache)
-    def get_cached_helper(self, url, user: UserType = None) -> ChatBotHelper:
-        """
-        Get the ChatBotHelper object for the given url and user. This method is cached
-        for 10 minutes because its a relatively expensive operation with multiple database queries.
-        """
-        return ChatBotHelper(url=url, user=user)
 
     def smarter_api_authenticate(self, request) -> bool:
         """
@@ -105,47 +111,51 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
         return api_key is not None
 
     def dispatch(self, request, *args, **kwargs):
-        url = request.build_absolute_uri()
-        url = SmarterValidator.urlify(url)
+        self.request = request
+        self._url = self.request.build_absolute_uri()
+        self._url = SmarterValidator.urlify(self._url)
+        self.chatbot_helper = ChatBotHelper(
+            url=self.url
+        )  # chatbot urls are intended to be public, so, no need to authenticate
 
-        logger.debug("ChatBotApiBaseViewSet.dispatch(): url=%s", url)
-        logger.debug("ChatBotApiBaseViewSet.dispatch(): headers=%s", request.META)
-        logger.debug("ChatBotApiBaseViewSet.dispatch(): user=%s", request.user)
-        logger.debug("ChatBotApiBaseViewSet.dispatch(): method=%s", request.method)
-        logger.debug("ChatBotApiBaseViewSet.dispatch(): body=%s", request.body)
+        if waffle.switch_is_active("chatbot_api_view_logging"):
+            logger.info("%s.dispatch() - url=%s", self.formatted_class_name, self.url)
+            logger.info("%s.dispatch() - headers=%s", self.formatted_class_name, request.META)
+            logger.info("%s.dispatch() - user=%s", self.formatted_class_name, request.user)
+            logger.info("%s.dispatch() - method=%s", self.formatted_class_name, request.method)
+            logger.info("%s.dispatch() - body=%s", self.formatted_class_name, request.body)
 
-        if isinstance(request.user, User):
-            self.helper = self.get_cached_helper(url=url, user=request.user)
-        else:
-            self.helper = self.get_cached_helper(url=url)
-        if not self.helper.is_valid:
+        if not self.chatbot_helper.is_valid:
             data = {
                 "message": "Not Found. Please provide a valid ChatBot URL.",
-                "account": self.helper.account.account_number if self.helper.account else None,
-                "chatbot": self.helper.chatbot,
-                "user": self.helper.user.username if self.helper.user else None,
-                "url": self.helper.url,
+                "account": self.chatbot_helper.account.account_number if self.chatbot_helper.account else None,
+                "chatbot": self.chatbot_helper.chatbot,
+                "user": self.chatbot_helper.user.username if self.chatbot_helper.user else None,
+                "url": self.chatbot_helper.url,
             }
+            self.chatbot_helper.log_dump()
             return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
-        if self.helper.is_authentication_required and not self.smarter_api_authenticate(request):
+        if self.chatbot_helper.is_authentication_required and not self.smarter_api_authenticate(request):
             data = {"message": "Forbidden. Please provide a valid API key."}
             return JsonResponse(data=data, status=HTTPStatus.FORBIDDEN)
 
-        self.account = self.helper.account
+        self.account = self.chatbot_helper.account
         self.user = account_admin_user(self.account)
-        self.chatbot = self.helper.chatbot
+        self.chatbot = self.chatbot_helper.chatbot
         self.plugins = ChatBotPlugin().plugins(chatbot=self.chatbot)
 
-        logger.debug("ChatBotApiBaseViewSet.dispatch(): account=%s", self.account)
-        logger.debug("ChatBotApiBaseViewSet.dispatch(): chatbot=%s", self.chatbot)
-        logger.debug("ChatBotApiBaseViewSet.dispatch(): user=%s", self.user)
-        logger.debug("ChatBotApiBaseViewSet.dispatch(): plugins=%s", self.plugins)
+        if waffle.switch_is_active("chatbot_api_view_logging"):
+            logger.info("%s.dispatch(): account=%s", self.formatted_class_name, self.account)
+            logger.info("%s.dispatch(): chatbot=%s", self.formatted_class_name, self.chatbot)
+            logger.info("%s.dispatch(): user=%s", self.formatted_class_name, self.user)
+            logger.info("%s.dispatch(): plugins=%s", self.formatted_class_name, self.plugins)
 
         chatbot_called.send(sender=self.__class__, chatbot=self.chatbot, request=request, args=args, kwargs=kwargs)
         return super().dispatch(request, *args, **kwargs)
 
     def options(self, request, *args, **kwargs):
-        logger.debug("ChatBotApiBaseViewSet.options(): url=%s", self.helper.url)
+        if waffle.switch_is_active("chatbot_api_view_logging"):
+            logger.info("%s.options(): url=%s", self.formatted_class_name, self.chatbot_helper.url)
         response = Response()
         response["Access-Control-Allow-Origin"] = smarter_settings.environment_url
         response["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
@@ -154,18 +164,19 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
 
     # pylint: disable=W0613
     def get(self, request, *args, **kwargs):
-        logger.debug("ChatBotApiBaseViewSet.get(): url=%s", self.helper.url)
-        logger.debug("ChatBotApiBaseViewSet.get(): headers=%s", request.META)
+        if waffle.switch_is_active("chatbot_api_view_logging"):
+            logger.info("%s.get(): url=%s", self.formatted_class_name, self.chatbot_helper.url)
+            logger.info("%s.get(): headers=%s", self.formatted_class_name, request.META)
         kwargs.get("chatbot_id", None)
         retval = {
             "message": "GET is not supported. Please use POST.",
             "chatbot": self.chatbot.name if self.chatbot else None,
-            "mode": self.chatbot.mode(url=self.helper.url) if self.chatbot else None,
+            "mode": self.chatbot.mode(url=self.chatbot_helper.url) if self.chatbot else None,
             "created": self.chatbot.created_at.isoformat() if self.chatbot else None,
             "updated": self.chatbot.updated_at.isoformat() if self.chatbot else None,
             "plugins": ChatBotPlugin.plugins_json(chatbot=self.chatbot) if self.chatbot else None,
             "account": self.account.account_number if self.account else None,
             "user": self.user.username if self.user else None,
-            "meta": self.helper.to_json(),
+            "meta": self.chatbot_helper.to_json(),
         }
         return JsonResponse(data=retval, status=HTTPStatus.OK)

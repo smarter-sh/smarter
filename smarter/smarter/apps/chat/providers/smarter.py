@@ -24,6 +24,7 @@ from smarter.apps.chat.signals import (
     chat_response_failure,
     chat_response_success,
 )
+from smarter.apps.plugin.api.v0.serializers import PluginMetaSerializer
 from smarter.apps.plugin.plugin import Plugin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
@@ -47,21 +48,28 @@ openai.api_key = smarter_settings.openai_api_key.get_secret_value()
 
 # pylint: disable=too-many-locals,too-many-statements,too-many-arguments
 def handler(
-    default_model: str,
-    default_temperature: float,
-    default_max_tokens: int,
-    plugins: List[Plugin],
-    user: UserType,
+    chat: Chat,
     data: dict,
-    chat_id: Chat = None,
+    plugins: List[Plugin] = None,
+    user: UserType = None,
+    default_model: str = smarter_settings.openai_default_model,
+    default_temperature: float = smarter_settings.openai_default_temperature,
+    default_max_tokens: int = smarter_settings.openai_default_max_tokens,
 ):
     """
     Chat prompt handler. Responsible for processing incoming requests and
     invoking the appropriate OpenAI API endpoint based on the contents of
     the request.
     """
+    request_meta_data: dict = None
+    first_iteration = {}
+    first_response = {}
+    second_iteration = {}
     first_response_dict: dict = None
     second_response_dict: dict = None
+    serialized_tool_calls: list[dict] = None
+    messages: list[dict] = None
+    input_text: str = None
 
     weather_tool = weather_tool_factory()
     tools = [weather_tool]
@@ -70,26 +78,12 @@ def handler(
     }
 
     try:
-        chat: Chat = None
-        chat_id: str = None
-        messages: list[dict] = None
-        input_text: str = None
-        first_response = {}
-
         request_body = get_request_body(data=data)
-        messages, input_text, chat_id = parse_request(request_body)
+        messages, input_text = parse_request(request_body)
         model = default_model
         temperature = default_temperature
         max_tokens = default_max_tokens
         request_meta_data = request_meta_data_factory(model, temperature, max_tokens, input_text)
-        if chat_id:
-            chat = Chat.objects.get(chat_id=chat_id)
-        else:
-            chat = Chat.objects.create(
-                model=model,
-                temperature=temperature,
-                max_tokens=max_tokens,
-            )
         chat_invoked.send(sender=handler, chat=chat, data=data)
 
         # does the prompt have anything to do with any of the search terms defined in a plugin?
@@ -117,7 +111,7 @@ def handler(
             item_type="ChatCompletion models",
         )
         validate_completion_request(request_body, version="v1")
-        request_meta_data["original_request"]["request"] = {
+        first_iteration["request"] = {
             "model": model,
             "messages": messages,
             "tools": tools,
@@ -132,7 +126,14 @@ def handler(
             max_tokens=max_tokens,
         )
         first_response_dict = json.loads(first_response.model_dump_json())
-        request_meta_data["original_request"]["response"] = first_response_dict
+        first_iteration["response"] = first_response_dict
+        chat_completion_called.send(
+            sender=handler,
+            chat=chat,
+            iteration=1,
+            request=first_iteration["request"],
+            response=first_iteration["response"],
+        )
         create_prompt_completion_charge(
             handler.__name__,
             user.id,
@@ -143,12 +144,6 @@ def handler(
             first_response.system_fingerprint,
         )
         response_message = first_response.choices[0].message
-        chat_completion_called.send(
-            sender=handler,
-            chat=chat,
-            request=request_meta_data["original_request"]["request"],
-            response=first_response_dict,
-        )
         tool_calls = response_message.tool_calls
         if tool_calls:
             modified_messages = messages.copy()
@@ -158,17 +153,22 @@ def handler(
             response_message_dict = response_message.model_dump_json()
             serialized_messages: list = json.loads(json.dumps(modified_messages))
             serialized_messages.append(response_message_dict)
+            serialized_tool_calls = []
 
             # Step 3: call the function
             # Note: the JSON response may not always be valid; be sure to handle errors
             modified_messages.append(response_message)  # extend conversation with assistant's reply
 
             # Step 4: send the info for each function call and function response to the model
+
             for tool_call in tool_calls:
+                serialized_tool_call = {}
                 plugin: Plugin = None
                 function_name = tool_call.function.name
                 function_to_call = available_functions[function_name]
                 function_args = json.loads(tool_call.function.arguments)
+                serialized_tool_call["function_name"] = function_name
+                serialized_tool_call["function_args"] = function_args
 
                 if function_name == "get_current_weather":
                     function_response = function_to_call(
@@ -182,6 +182,7 @@ def handler(
                     plugin_id = int(function_name[-4:])
                     plugin = Plugin(plugin_id=plugin_id)
                     function_response = plugin.function_calling_plugin(inquiry_type=function_args.get("inquiry_type"))
+                    serialized_tool_call["smarter_plugin"] = PluginMetaSerializer(plugin.plugin_meta).data
                 tool_call_message = {
                     "tool_call_id": tool_call.id,
                     "role": "tool",
@@ -190,24 +191,26 @@ def handler(
                 }
                 modified_messages.append(tool_call_message)  # extend conversation with function response
                 serialized_messages.append(tool_call_message)
+                serialized_tool_calls.append(serialized_tool_call)
 
-            request_meta_data["modified_request"]["request"] = {
+            second_iteration["request"] = {
                 "model": model,
                 "messages": serialized_messages,
             }
+            chat_completion_called.send(sender=handler, chat=chat, iteration=2, request=second_iteration["request"])
             second_response = openai.chat.completions.create(
                 model=model,
                 messages=modified_messages,
             )  # get a new response from the model where it can see the function response
             second_response_dict = json.loads(second_response.model_dump_json())
-            request_meta_data["modified_request"]["response"] = second_response_dict
-            request_meta_data["modified_request"]["request"]["messages"] = serialized_messages
+            second_iteration["response"] = second_response_dict
+            second_iteration["request"]["messages"] = serialized_messages
             chat_completion_tool_call_created.send(
                 sender=handler,
                 chat=chat,
-                tool_calls=[tool.model_dump_json for tool in tool_calls],
-                request=request_meta_data["modified_request"]["request"],
-                response=request_meta_data["modified_request"]["response"],
+                tool_calls=serialized_tool_calls,
+                request=second_iteration["request"],
+                response=second_iteration["response"],
             )
             create_plugin_charge(
                 handler.__name__,
@@ -229,17 +232,7 @@ def handler(
         )
 
     # success!! return the response
-    orginal_request = request_meta_data["modified_request"]
-    modified_request = request_meta_data["modified_request"]
-    request_dict = modified_request.get("request") or orginal_request.get("request")
-    response_dict = second_response_dict or first_response_dict
-    chat_response_success.send(
-        sender=handler,
-        chat=chat,
-        request=request_dict,
-        response=response_dict,
-    )
-    return http_response_factory(
-        status_code=HTTPStatus.OK,
-        body={**response_dict, **request_meta_data},
-    )
+    response = second_iteration.get("response") or first_iteration.get("response")
+    response["meta_data"] = {"tool_calls": serialized_tool_calls, **request_meta_data}
+    chat_response_success.send(sender=handler, chat=chat, request=first_iteration.get("request"), response=response)
+    return http_response_factory(status_code=HTTPStatus.OK, body=response)

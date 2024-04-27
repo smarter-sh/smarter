@@ -3,9 +3,12 @@ Views for the React chat app. See doc/DJANGO-REACT-INTEGRATION.md for more
 information about how the React app is integrated into the Django app.
 """
 
+import hashlib
+import json
 import logging
-import warnings
+from datetime import datetime
 
+import waffle
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseNotFound, JsonResponse
 from django.shortcuts import render
@@ -13,23 +16,71 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
-from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.chat.api.v0.serializers import (
-    ChatSerializer,
-    ChatToolCallSerializer,
-    PluginUsageSerializer,
-)
-from smarter.apps.chat.models import Chat
+from smarter.apps.chat.models import Chat, ChatHelper
 from smarter.apps.chatbot.api.v0.serializers import (
     ChatBotPluginSerializer,
     ChatBotSerializer,
 )
 from smarter.apps.chatbot.models import ChatBot, ChatBotHelper, ChatBotPlugin
-from smarter.lib.django.user import UserType
+from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib.django.request import SmarterRequestHelper
+from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
 
 
+MAX_RETURNED_PLUGINS = 10
+
+
 logger = logging.getLogger(__name__)
+
+
+class SmarterChatSession(SmarterRequestHelper):
+    """
+    Helper class that provides methods for creating a session key and client key.
+    """
+
+    _session_key: str = None
+    _chat: Chat = None
+    _chat_helper: ChatHelper = None
+
+    def __init__(self, request, session_key: str = None):
+        super().__init__(request)
+
+        if session_key:
+            SmarterValidator.validate_session_key(session_key)
+            self._session_key = session_key
+        else:
+            self._session_key = self.generate_key()
+
+        self._chat_helper = ChatHelper(session_key=self.session_key, request=request)
+        self._chat = self._chat_helper.chat
+
+        if waffle.switch_is_active("chatapp_view_logging"):
+            logger.info("%s - session established: %s", self.formatted_class_name, self.data)
+
+    @property
+    def session_key(self):
+        return self._session_key
+
+    @property
+    def chat(self):
+        return self._chat
+
+    @property
+    def chat_helper(self):
+        return self._chat_helper
+
+    @property
+    def unique_client_string(self):
+        return f"{self.account.account_number}{self.url}{self.user_agent}{self.ip_address}"
+
+    @property
+    def client_key(self):
+        return hashlib.sha256(self.unique_client_string.encode()).hexdigest()
+
+    def generate_key(self):
+        key_string = self.unique_client_string + str(datetime.now())
+        return hashlib.sha256(key_string.encode()).hexdigest()
 
 
 # pylint: disable=R0902
@@ -40,37 +91,63 @@ class ChatConfigView(View):
     Chat config view for smarter web. This view is protected and requires the user
     to be authenticated. It works with any ChatBots but is aimed at chatbots running
     inside the web console in sandbox mode.
+
+    example: https://sales.3141-5926-5359.alpha.api.smarter.sh/chatbot/config/
     """
 
     _sandbox_mode: bool = True
-    helper: ChatBotHelper = None
-    account: Account = None
-    user: UserType = None
-    user_profile: UserProfile = None
+    session: SmarterChatSession = None
+    chatbot_helper: ChatBotHelper = None
     chatbot: ChatBot = None
-    url: str = None
+
+    @property
+    def formatted_class_name(self):
+        return formatted_text(self.__class__.__name__)
 
     def dispatch(self, request, *args, **kwargs):
         name = kwargs.pop("name", None)
-        self.user = request.user
-        self.user_profile = UserProfile.objects.get(user=self.user)
-        self.account = self.user_profile.account
-
         self._sandbox_mode = name is not None
-        self.url = request.build_absolute_uri()
-        self.helper = ChatBotHelper(url=self.url, user=self.user_profile.user, account=self.account, name=name)
-        self.chatbot = self.helper.chatbot
+
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            data = {}
+        if waffle.switch_is_active("chatapp_view_logging"):
+            logger.info("%s - data=%s", self.formatted_class_name, data)
+
+        # Initialize the chat session for this request. session_key is generated
+        # and managed by the /config/ endpoint for the chatbot
+        #
+        # example: https://customer-support.3141-5926-5359.api.smarter.sh/chatbot/config/
+        #
+        # The React app calls this endpoint at app initialization to get a
+        # json dict that includes, among other pertinent info, this session_key
+        # which uniquely identifies the device and the individual chatbot session
+        # for the device.
+
+        self.session = SmarterChatSession(request, session_key=data.get("session_key"))
+        self.chatbot_helper = ChatBotHelper(
+            url=self.session.url, user=self.session.user_profile.user, account=self.session.account, name=name
+        )
+        self.chatbot = self.chatbot_helper.chatbot
+
         if not self.chatbot:
             return HttpResponseNotFound()
+
         return super().dispatch(request, *args, **kwargs)
+
+    # pylint: disable=unused-argument
+    def post(self, request, *args, **kwargs):
+        """
+        Get the chatbot configuration.
+        """
+        return JsonResponse(data=self.config())
 
     # pylint: disable=unused-argument
     def get(self, request, *args, **kwargs):
         """
         Get the chatbot configuration.
         """
-        if not self.chatbot:
-            return HttpResponseNotFound()
         return JsonResponse(data=self.config())
 
     @property
@@ -82,39 +159,29 @@ class ChatConfigView(View):
         React context for all templates that render
         a React app.
         """
-        # chatbot context
-        chatbot_serializer = ChatBotSerializer(self.chatbot)
+        chatbot_serializer = ChatBotSerializer(self.chatbot) if self.chatbot else None
 
         # plugins context. the main thing we need here is to constrain the number of plugins
         # returned to some reasonable number, since we'll probaably have cases where
         # the chatbot has a lot of plugins (hundreds, thousands...).
-        MAX_PLUGINS = 10
         chatbot_plugins_count = ChatBotPlugin.objects.filter(chatbot=self.chatbot).count()
-        chatbot_plugins = ChatBotPlugin.objects.order_by("-pk")[:MAX_PLUGINS]
+        chatbot_plugins = ChatBotPlugin.objects.filter(chatbot=self.chatbot).order_by("-pk")[:MAX_RETURNED_PLUGINS]
         chatbot_plugin_serializer = ChatBotPluginSerializer(chatbot_plugins, many=True)
 
-        # message thread history context
-        chat_history = Chat.objects.filter(user=self.user_profile.user).order_by("-created_at").first()
-        chat_history_serializer = ChatSerializer(chat_history)
-        chat_tool_call_history = ChatToolCallSerializer(chat_history)
-        plugin_usage_history = PluginUsageSerializer(chat_history)
-
         retval = {
+            "session_key": self.session.session_key,
             "sandbox_mode": self.sandbox_mode,
+            "debug_mode": waffle.switch_is_active("reactapp_debug_mode"),
             "chatbot": chatbot_serializer.data,
+            "meta_data": self.chatbot_helper.to_json(),
+            "history": self.session.chat_helper.chat_history,
+            "tool_calls": [],
             "plugins": {
                 "meta_data": {
                     "total_plugins": chatbot_plugins_count,
                     "plugins_returned": len(chatbot_plugins),
                 },
                 "plugins": chatbot_plugin_serializer.data,
-            },
-            "meta_data": self.helper.to_json(),
-            "chat": {
-                "id": chat_history.chat_id if chat_history else "undefined",
-                "history": chat_history_serializer.data if chat_history else [],
-                "tool_calls": chat_tool_call_history.data if chat_history else [],
-                "plugin_usage": plugin_usage_history.data if chat_history else [],
             },
         }
         return retval
@@ -157,89 +224,12 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
 
     template_path = "index.html"
     chatbot: ChatBot = None
+    chatbot_helper: ChatBotHelper = None
+    url: str = None
 
     @property
     def sandbox_mode(self):
         return self._sandbox_mode
-
-    def get_chatbot_by_name(self, name) -> ChatBot:
-        try:
-            return ChatBot.objects.get(account=self.account, name=name)
-        except ChatBot.DoesNotExist:
-            return None
-
-    def get_chatbot_by_url(self, url) -> ChatBot:
-        return ChatBot.get_by_url(url)
-
-    def react_context(self, request, chatbot: ChatBot):
-        """
-        React context for all templates that render
-        a React app.
-        """
-        warnings.warn(
-            "The 'react_context' method is deprecated. Use api endpoint /chatapp/<name>/config/", DeprecationWarning
-        )
-
-        url = request.build_absolute_uri()
-
-        # backend context
-        backend_context = {
-            "BASE_URL": url,
-            "API_URL": chatbot.url_chatbot,
-            "SANDBOX_MODE": self.sandbox_mode,
-        }
-
-        app_context = {
-            "NAME": chatbot.app_name or "chatbot",
-            "ASSISTANT": chatbot.app_assistant or "Smarter",
-            "WELCOME_MESSAGE": chatbot.app_welcome_message or "Welcome to the chatbot!",
-            "EXAMPLE_PROMPTS": chatbot.app_example_prompts or [],
-            "PLACEHOLDER": chatbot.app_placeholder or "Type something here...",
-            "INFO_URL": chatbot.app_info_url,
-            "BACKGROUND_IMAGE_URL": chatbot.app_background_image_url,
-            "LOGO_URL": chatbot.app_logo_url,
-            "FILE_ATTACHMENT_BUTTON": chatbot.app_file_attachment,
-        }
-
-        # chat context
-        chat_history = Chat.objects.filter(user=request.user).order_by("-created_at").first()
-        chat_context = {
-            "ID": chat_history.chat_id if chat_history else "undefined",
-            "HISTORY": chat_history.messages if chat_history else [],
-            "MOST_RECENT_RESPONSE": chat_history.response if chat_history else None,
-        }
-
-        # sandbox mode
-        sandbox_context = {}
-        if self.sandbox_mode:
-            plugins = [plugin.name for plugin in ChatBotPlugin.plugins(chatbot)]
-            sandbox_context = {
-                "CHATBOT_ID": chatbot.id,
-                "CHATBOT_NAME": chatbot.name,
-                "PLUGINS": plugins,
-                "URL": chatbot.url,
-                "DEFAULT_URL": chatbot.default_url,
-                "CUSTOM_URL": chatbot.custom_url,
-                "SANDBOX_URL": chatbot.sandbox_url,
-                "CREATED_AT": chatbot.created_at,
-                "UPDATED_AT": chatbot.updated_at,
-            }
-
-        retval = {
-            "react": True,
-            "react_config": {
-                "BACKEND": backend_context,
-                "APP": app_context,
-                "CHAT": chat_context,
-                "SANDBOX": sandbox_context,
-            },
-        }
-        logger.debug("react_context(): %s", retval)
-        return retval
-
-    def react_render(self, request):
-        context = self.react_context(request, self.chatbot)
-        return render(request, self.template_path, context=context)
 
     def dispatch(self, request, *args, **kwargs):
         name = kwargs.pop("name", None)
@@ -247,10 +237,9 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
         response = super().dispatch(request, *args, **kwargs)
         if response.status_code >= 300:
             return response
-        if name:
-            self.chatbot = self.get_chatbot_by_name(name)
-        if not self.chatbot:
-            self.chatbot = self.get_chatbot_by_url(request.get_host())
+        self.url = request.build_absolute_uri()
+        self.chatbot_helper = ChatBotHelper(url=self.url, user=self.user_profile.user, account=self.account, name=name)
+        self.chatbot = self.chatbot_helper.chatbot
         if not self.chatbot:
             return HttpResponseNotFound()
-        return self.react_render(request)
+        return render(request, self.template_path)

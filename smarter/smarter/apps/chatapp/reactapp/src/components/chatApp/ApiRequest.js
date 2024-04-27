@@ -21,49 +21,49 @@
     v0.1.0 - v0.4.0:  ./test/events/openai.response.v0.4.0.json
     v0.5.0:       ./test/events/langchain.response.v0.5.0.json
 -----------------------------------------------------------------------------*/
-import {
-  BACKEND_API_DEFAULT_MODEL_TYPE,
-  BACKEND_API_DEFAULT_MODEL,
-  BACKEND_API_DEFAULT_TEMPERATURE,
-  BACKEND_API_DEFAULT_MAX_TOKENS
-} from "../../config";
-import { getCookie } from "./csrf";
+import { getCookie } from "../../cookies.js";
 
 
-function requestBodyFactory(messages) {
+function requestBodyFactory(messages, session_key) {
 
   const retval = {
-  //  "model": BACKEND_API_DEFAULT_MODEL,
-    "end_point": BACKEND_API_DEFAULT_MODEL_TYPE,
-  //  "temperature": BACKEND_API_DEFAULT_TEMPERATURE,
-  //  "max_tokens": BACKEND_API_DEFAULT_MAX_TOKENS,
+    "session_key": session_key,
     "messages": messages,
   };
   return JSON.stringify(retval);
 }
 
 export async function processApiRequest(
+  props,
   messages,
   apiURL,
   openChatModal,
 ) {
 
+  console.log("processApiRequest(): props: ", props);
+
   const csrftoken = getCookie("csrftoken");
+  const sessionid = getCookie('sessionid');
+
   const headers = {
     "Accept": "*/*",
     "Content-Type": "application/json",
     "X-CSRFToken": csrftoken,
     "Origin": window.location.origin,
+    "Cookie": `sessionid=${sessionid}`,
   };
   const init = {
     method: "POST",
     credentials: 'include',
     mode: "cors",
     headers: headers,
-    body: requestBodyFactory(messages),
+    body: requestBodyFactory(messages, props.config.session_key),
   };
-  console.log("processApiRequest(): csrftoken: ", csrftoken);
-  console.log("processApiRequest(): ", apiURL, messages, init);
+  if (props.config.debug_mode) {
+    console.log("processApiRequest() - apiURL:", apiURL);
+    console.log("processApiRequest() - init:", init);
+    console.log("processApiRequest() - props:", props);
+  }
 
   try {
     const response = await fetch(apiURL, init);

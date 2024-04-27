@@ -266,7 +266,7 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "verbose_name_plural": "Plugin Selector Histories",
+                "verbose_name_plural": "Plugin Selector History",
             },
         ),
     ]

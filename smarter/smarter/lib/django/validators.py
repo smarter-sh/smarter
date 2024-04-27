@@ -33,6 +33,13 @@ class SmarterValidator:
     VALID_PORT_PATTERN = r"^[0-9]{1,5}$"
     VALID_URL_PATTERN = r"^(http|https)://[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}(:[0-9]{1,5})?$"
     VALID_UUID_PATTERN = r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    VALID_SESSION_KEY = r"^[a-fA-F0-9]{64}$"
+
+    @staticmethod
+    def validate_session_key(session_key: str) -> None:
+        """Validate session key format"""
+        if not re.match(SmarterValidator.VALID_SESSION_KEY, session_key):
+            raise SmarterValueError(f"Invalid session key {session_key}")
 
     @staticmethod
     def validate_account_number(account_number: str) -> None:
@@ -96,6 +103,14 @@ class SmarterValidator:
     # --------------------------------------------------------------------------
     # boolean helpers
     # --------------------------------------------------------------------------
+    @staticmethod
+    def is_valid_session_key(session_key: str) -> bool:
+        try:
+            SmarterValidator.validate_session_key(session_key)
+            return True
+        except SmarterValueError:
+            return False
+
     @staticmethod
     def is_valid_account_number(account_number: str) -> bool:
         """Check if account number is valid"""

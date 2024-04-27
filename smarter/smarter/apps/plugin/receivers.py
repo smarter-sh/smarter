@@ -1,14 +1,22 @@
 # pylint: disable=W0613
 """Django signal receivers for plugin app."""
 
+import json
 import logging
 
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 
-from .models import PluginSelectorHistory
+from .models import (
+    PluginData,
+    PluginMeta,
+    PluginPrompt,
+    PluginSelector,
+    PluginSelectorHistory,
+)
 from .plugin import Plugin
 from .signals import (
     plugin_called,
@@ -17,7 +25,6 @@ from .signals import (
     plugin_deleted,
     plugin_ready,
     plugin_selected,
-    plugin_selector_history_created,
     plugin_updated,
 )
 
@@ -30,7 +37,7 @@ def handle_plugin_created(sender, **kwargs):
     """Handle plugin created signal."""
 
     plugin = kwargs.get("plugin")
-    logger.info("%s signal received: %s", formatted_text("plugin_created"), plugin.name)
+    logger.info("%s - %s", formatted_text("plugin_created"), plugin.name)
 
 
 @receiver(plugin_cloned, dispatch_uid="plugin_cloned")
@@ -39,7 +46,7 @@ def handle_plugin_cloned(sender, **kwargs):
 
     plugin_id = kwargs.get("plugin_id")
     plugin = Plugin(plugin_id=plugin_id)
-    logger.info("%s signal received: %s", formatted_text("plugin_cloned"), plugin.name)
+    logger.info("%s - %s", formatted_text("plugin_cloned"), plugin.name)
 
 
 @receiver(plugin_updated, dispatch_uid="plugin_updated")
@@ -47,7 +54,7 @@ def handle_plugin_updated(sender, **kwargs):
     """Handle plugin updated signal."""
 
     plugin = kwargs.get("plugin")
-    logger.info("%s signal received: %s", formatted_text("plugin_updated"), plugin.name)
+    logger.info("%s - %s", formatted_text("plugin_updated"), plugin.name)
 
 
 @receiver(plugin_deleted, dispatch_uid="plugin_deleted")
@@ -57,7 +64,7 @@ def handle_plugin_deleted(sender, **kwargs):
     plugin_id = kwargs.get("plugin_id")
     plugin_name = kwargs.get("plugin_name")
     info = f"{plugin_id} {plugin_name}"
-    logger.info("%s signal received: %s", formatted_text("plugin_deleted"), info)
+    logger.info("%s - %s", formatted_text("plugin_deleted"), info)
 
 
 @receiver(plugin_called, dispatch_uid="plugin_called")
@@ -67,12 +74,18 @@ def handle_plugin_called(sender, **kwargs):
     plugin = kwargs.get("plugin")
     inquiry_type = kwargs.get("inquiry_type")
     inquiry_return = kwargs.get("inquiry_return")
+
+    try:
+        inquiry_return = json.loads(inquiry_return)
+    except (TypeError, json.JSONDecodeError):
+        pass
+
     logger.info(
-        "%s signal received: %s inquiry_type: %s inquiry_return: %s",
+        "%s - %s inquiry_type: %s inquiry_return: %s",
         formatted_text("plugin_called"),
         plugin.name,
         inquiry_type,
-        inquiry_return,
+        formatted_json(inquiry_return) if inquiry_return else None,
     )
 
 
@@ -81,7 +94,7 @@ def handle_plugin_ready(sender, **kwargs):
     """Handle plugin ready signal."""
 
     plugin = kwargs.get("plugin")
-    logger.info("%s signal received: %s", formatted_text("plugin_ready"), plugin.name)
+    logger.info("%s - %s", formatted_text("plugin_ready"), plugin.name)
 
 
 @receiver(plugin_selected, dispatch_uid="plugin_selected")
@@ -96,7 +109,7 @@ def handle_plugin_selected(sender, **kwargs):
 
     prompt = input_text if input_text else formatted_json(messages)
     logger.info(
-        "%s signal received: %s search_term: %s \nprompt(s): %s",
+        "%s - %s search_term: %s \nprompt(s): %s",
         formatted_text("plugin_selected"),
         plugin.name,
         search_term,
@@ -111,13 +124,45 @@ def handle_plugin_selected(sender, **kwargs):
     plugin_selector_history.save()
 
 
-@receiver(plugin_selector_history_created, dispatch_uid="plugin_selector_history_created")
+# ------------------------------------------------------------------------------
+# Django model receivers.
+# ------------------------------------------------------------------------------
+
+
+@receiver(post_save, sender=PluginMeta)
+def handle_plugin_meta_created(sender, **kwargs):
+
+    logger.info("%s", formatted_text("PluginMeta() record created."))
+
+
+@receiver(post_save, sender=PluginSelector)
+def handle_plugin_selector_created(sender, **kwargs):
+    """Handle plugin selector created signal."""
+
+    logger.info("%s", formatted_text("PluginSelector() record created."))
+
+
+@receiver(post_save, sender=PluginPrompt)
+def handle_plugin_prompt_created(sender, **kwargs):
+    """Handle plugin prompt created signal."""
+
+    logger.info("%s", formatted_text("PluginPrompt() record created."))
+
+
+@receiver(post_save, sender=PluginData)
+def handle_plugin_data_created(sender, **kwargs):
+    """Handle plugin data created signal."""
+
+    logger.info("%s", formatted_text("PluginData() record created."))
+
+
+@receiver(post_save, sender=PluginSelectorHistory)
 def handle_plugin_selector_history_created(sender, **kwargs):
     """Handle plugin selector history created signal."""
 
-    plugin_selector_history = kwargs.get("plugin_selector_history")
+    plugin_selector_history = kwargs.get("instance")
     logger.info(
-        "%s signal received: %s",
-        formatted_text("plugin_selector_history_created"),
+        "%s - %s",
+        formatted_text("PluginSelectorHistory() created"),
         formatted_json(model_to_dict(plugin_selector_history)),
     )

@@ -116,7 +116,11 @@ class Plugin:
 
     def __str__(self) -> str:
         """Return the name of the plugin."""
-        return self.name
+        return str(self.name)
+
+    def __repr__(self) -> str:
+        """Return the name of the plugin."""
+        return self.__str__()
 
     @property
     def id(self) -> int:
@@ -357,7 +361,7 @@ class Plugin:
             return None
 
         try:
-            return_data = self.plugin_data.return_data
+            return_data = self.plugin_data.sanitized_return_data
             retval = return_data[inquiry_type]
             retval = json.dumps(retval)
             plugin_called.send(

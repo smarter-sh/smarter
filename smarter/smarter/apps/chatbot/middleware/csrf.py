@@ -67,8 +67,8 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware):
         # Does this url point to a ChatBot?
         # ------------------------------------------------------
         self.chatbot = ChatBot.get_by_request(request=request)
-        if self.chatbot and waffle.switch_is_active("chatbot_log_csrf"):
-            logger.info("CsrfViewMiddleware.process_request: chatbot_log_csrf is active")
+        if self.chatbot and waffle.switch_is_active("csrf_middleware_logging"):
+            logger.info("CsrfViewMiddleware.process_request: csrf_middleware_logging is active")
             logger.info("=" * 80)
             logger.info("CsrfViewMiddleware ChatBot: %s", self.chatbot)
             for cookie in request.COOKIES:
@@ -91,8 +91,8 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware):
         if smarter_settings.environment == "local":
             logger.info("CsrfViewMiddleware._accept: environment is local. ignoring csrf checks")
             return None
-        if self.chatbot and waffle.switch_is_active("chatbot_suppress_csrf"):
-            logger.info("CsrfViewMiddleware.process_view: chatbot_suppress_csrf is active")
+        if self.chatbot and waffle.switch_is_active("csrf_middleware_suppress_for_chatbots"):
+            logger.info("CsrfViewMiddleware.process_view: csrf_middleware_suppress_for_chatbots is active")
             response = super().process_view(request, callback, callback_args, callback_kwargs)
             if isinstance(response, HttpResponseForbidden):
                 logger.error("CSRF validation failed")

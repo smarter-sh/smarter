@@ -8,9 +8,10 @@ future high-traffic scenarios.
 """
 import logging
 
+from smarter.apps.chatbot.models import ChatBot
 from smarter.smarter_celery import app
 
-from .models import Chat, ChatToolCall, PluginUsage
+from .models import Chat, ChatPluginUsage, ChatToolCall
 
 
 logger = logging.getLogger(__name__)
@@ -24,26 +25,23 @@ def aggregate_chat_history():
 
 
 @app.task()
-def create_chat_history(model, tools, temperature, max_tokens):
-    """Create chat history record with flattened LLM response."""
-
-    Chat(model=model, tools=tools, temperature=temperature, max_tokens=max_tokens)
+def create_chat(session_key, chatbot_id):
+    """Create chat record with flattened LLM response."""
+    chatbot = ChatBot.objects.get(id=chatbot_id)
+    Chat(session_key=session_key, chatbot=chatbot).save()
 
 
 @app.task()
 def create_chat_tool_call_history(chat_id, plugin_id, tool_call, request, response):
     """Create chat tool call history record."""
-    chat_tool_call_history = ChatToolCall(
-        chat_id=chat_id, plugin_id=plugin_id, tool_call=tool_call, request=request, response=response
-    )
-    chat_tool_call_history.save()
+    ChatToolCall(chat_id=chat_id, plugin_id=plugin_id, tool_call=tool_call, request=request, response=response).save()
 
 
 @app.task()
 def create_plugin_usage_history(user_id, plugin_id, event, data, model, custom_tool, temperature, max_tokens):
     """Create plugin usage history record."""
 
-    plugin_selection_history = PluginUsage(
+    ChatPluginUsage(
         user_id=user_id,
         plugin_id=plugin_id,
         event=event,
@@ -52,14 +50,12 @@ def create_plugin_usage_history(user_id, plugin_id, event, data, model, custom_t
         custom_tool=custom_tool,
         temperature=temperature,
         max_tokens=max_tokens,
-    )
-    plugin_selection_history.save()
+    ).save()
 
 
 @app.task()
 def create_plugin_selection_history(user_id, plugin_id, event, inquiry_type, inquiry_return):
     """Create plugin selection history record."""
-    plugin_selection_history = PluginUsage(
+    ChatPluginUsage(
         user_id=user_id, plugin_id=plugin_id, event=event, inquiry_type=inquiry_type, inquiry_return=inquiry_return
-    )
-    plugin_selection_history.save()
+    ).save()
