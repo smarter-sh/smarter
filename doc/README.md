@@ -70,6 +70,10 @@ _Why do we use it: Aside from being a fantastic web framework, Django is arguabl
 
 _Why do we use it: given that we're standardized on Python-Django, Django REST framework is the gold standard for implementing sophisticated REST APIs._
 
+### Django Waffle
+
+[Waffle](https://waffle.readthedocs.io/en/stable/) is feature flipper for Django. You can define the conditions for which a flag should be active, and use it in a number of ways.
+
 ### Pydantic
 
 [Pydantic](https://docs.pydantic.dev/) is a Python package that can offer simple data validation and manipulation. It was developed to improve the data validation process for developers. Indeed, Pydantic is an API for defining and validating data that is flexible and easy to use, and it integrates seamlessly with Python's data structures.
