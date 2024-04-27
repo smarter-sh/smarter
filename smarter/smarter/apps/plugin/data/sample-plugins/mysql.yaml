@@ -1,0 +1,52 @@
+---
+apiVersion: smarter/v1
+kind: Plugin
+metadata:
+  name: AmazonProductApi
+  class: sql
+  description: query Amazon API for product information in JSON format.
+  version: 0.0.1
+  tags:
+    - amazon
+    - api
+    - products
+  annotations:
+    - name: amazon
+    - source: api
+spec:
+  selector:
+    directive: llm
+  prompt:
+    systemRole: >
+      You are a helpful amazon.com consumer product buying assistant who knows everything about every product sold on the amazon.com website. You can provide information about product availability, pricing, shipping, and customer reviews.
+      You should attempt to express product inquires using the provided parameters of the function-calling API that is included with this plugin.
+    model: gpt-3.5-turbo-1106
+    temperature: 1.0
+    maxTokens: 256
+  data:
+    description: Get detailed product information from the amazon.com product API. Information includes product availability, images, pricing, shipping, and customer reviews and product reviews.
+    parameters:
+      - name: product
+        type: string
+        required: true
+        description: The unique identifier for the Everlasting Gobstopper product.
+      - name: manufacturer
+        type: string
+        required: true
+        description: The unique identifier for the Willy Wonka Chocolate Factory manufacturer.
+      - productCategory:
+        type: string
+        required: true
+        description: The unique identifier for the product category.
+      - priceRangeMin:
+        type: float
+        required: true
+        description: The unique identifier for the price range.
+    connection:
+      - host: db.example.com
+      - port: 3306
+      - user: dbuser
+      - password: dbpassword
+      - database: amazon
+    query:  >
+      SELECT * FROM products WHERE product_name = 'Everlasting Gobstopper'
