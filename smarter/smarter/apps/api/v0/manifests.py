@@ -1,14 +1,19 @@
 """Top-level API classes for the Smarter API."""
 
 import json
+import logging
 from abc import ABC
 from enum import Enum
 from typing import Any
 
+import requests
+import waffle
 import yaml
 
 from smarter.common.exceptions import SmarterApiManifestValidationError
 
+
+logger = logging.getLogger(__name__)
 
 SMARTER_API_VERSION = "smarter/v0"
 
@@ -66,7 +71,7 @@ class SmarterApiManifestMetadataKeys(SmarterEnumAbstract):
     ANNOTATIONS = "annotations"
 
 
-def validate_key(key: str, spec: Any, data: dict):
+def validate_key(key: str, key_value: Any, spec: Any):
     """
     Validate a key against a spec. Of note:
     - If a key's value is a list then validate the value of the key against the list
@@ -75,27 +80,37 @@ def validate_key(key: str, spec: Any, data: dict):
         - The second element of the tuple is the key type (required, optional, readonly)
     - otherwise, validate the value of the key against spec value
     """
+    # all keys must be strings
+    if isinstance(key, Enum):
+        key = key.value
     if not isinstance(key, str):
-        raise SmarterApiManifestValidationError(f"Invalid data type for key {key}. Expected str but got {type(data)}")
+        raise SmarterApiManifestValidationError(f"Invalid data type for key {key}. Expected str but got {type(key)}")
+
+    # validate that key's value exists in the spec list
     if isinstance(spec, list):
-        if data.get(key) not in spec:
+        if key_value not in spec:
             raise SmarterApiManifestValidationError(f"Invalid value for key {key}")
+
+    # validate that key value's data type matches the spec's data type, and if required, that the key exists
     elif isinstance(spec, tuple):
-        if not isinstance(data.get(key), spec[0]):
-            raise SmarterApiManifestValidationError(
-                f"Invalid data type for key {key}. Expected {spec[0]} but got {type(data.get(key))}"
-            )
-        if spec[1] == SmarterApiSpecKeyOptions.REQUIRED and key not in data:
+        type_spec = spec[0]
+        options_list = spec[1]
+        # validate that value exists for required key
+        if SmarterApiSpecKeyOptions.REQUIRED in options_list and not key_value:
             raise SmarterApiManifestValidationError(f"Missing required key {key}")
+        if not SmarterApiSpecKeyOptions.OPTIONAL and not isinstance(key_value, type_spec):
+            raise SmarterApiManifestValidationError(
+                f"Invalid data type for key {key}. Expected {spec[0]} but got {type(key_value)}: key_value={key_value} spec={spec[0]}"
+            )
+
+    # validate that key value is the same as the spec value
     else:
-        if not isinstance(data.get(key), type(spec)):
+        if not isinstance(key_value, type(spec)):
             raise SmarterApiManifestValidationError(
-                f"Invalid data type for key {key}. Expected {type(spec)} but got {type(data.get(key))}"
+                f"Invalid key_value type for key {key}. Expected {type(spec)} but got {type(key_value)}"
             )
-        if data.get(key) != spec:
-            raise SmarterApiManifestValidationError(
-                f"Invalid value for key {key}. Expected {spec} but got {data.get(key)}"
-            )
+        if key_value != spec:
+            raise SmarterApiManifestValidationError(f"Invalid value for key {key}. Expected {spec} but got {key_value}")
 
 
 class SmarterApi(ABC):
@@ -110,19 +125,23 @@ class SmarterApi(ABC):
         SmarterApiManifestKeys.APIVERSION: SMARTER_API_VERSION,
         SmarterApiManifestKeys.KIND: SmarterApiManifestKinds.all_values(),
         SmarterApiManifestKeys.METADATA: {
-            SmarterApiManifestKeys.METADATA: {
-                SmarterApiManifestMetadataKeys.NAME: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
-                SmarterApiManifestMetadataKeys.DESCRIPTION: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
-                SmarterApiManifestMetadataKeys.VERSION: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
-                SmarterApiManifestMetadataKeys.TAGS: (list, [SmarterApiSpecKeyOptions.OPTIONAL]),
-                SmarterApiManifestMetadataKeys.ANNOTATIONS: (list, [SmarterApiSpecKeyOptions.OPTIONAL]),
-            },
+            SmarterApiManifestMetadataKeys.NAME: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
+            SmarterApiManifestMetadataKeys.DESCRIPTION: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
+            SmarterApiManifestMetadataKeys.VERSION: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
+            SmarterApiManifestMetadataKeys.TAGS: (list, [SmarterApiSpecKeyOptions.OPTIONAL]),
+            SmarterApiManifestMetadataKeys.ANNOTATIONS: (list, [SmarterApiSpecKeyOptions.OPTIONAL]),
         },
         SmarterApiManifestKeys.SPEC: (dict, [SmarterApiSpecKeyOptions.REQUIRED]),
         SmarterApiManifestKeys.STATUS: (dict, [SmarterApiSpecKeyOptions.READONLY, SmarterApiSpecKeyOptions.OPTIONAL]),
     }
 
-    def __init__(self, manifest: str, data_format: SmarterApiManifDataFormats = None):
+    def __init__(
+        self,
+        manifest: str = None,
+        data_format: SmarterApiManifDataFormats = None,
+        file_path: str = None,
+        url: str = None,
+    ):
         self._raw_data = manifest
         if data_format:
             if data_format == SmarterApiManifDataFormats.JSON:
@@ -139,13 +158,19 @@ class SmarterApi(ABC):
                 raise SmarterApiManifestValidationError("Supported data formats: json, yaml.")
             self._data_format = data_format
 
+        if not manifest and file_path:
+            with open(file_path, encoding="utf-8") as file:
+                self._raw_data = file.read()
+        elif not manifest and url:
+            self._raw_data = requests.get(url, timeout=30).text
+
         self.validate()
 
     # -------------------------------------------------------------------------
     # data setters and getters. Sort out whether we received JSON or YAML data
     # -------------------------------------------------------------------------
     @property
-    def raw_data(self):
+    def raw_data(self) -> str:
         return self._raw_data
 
     @property
@@ -203,8 +228,18 @@ class SmarterApi(ABC):
             raise SmarterApiManifestValidationError("Received empty or invalid data.")
 
         for key, key_spec in spec.items():
+            if isinstance(key, Enum):
+                key = key.value
+            key_value = data.get(key)
             if isinstance(key_spec, dict):
-                value = data.get(key)
-                self.validate(value, key_spec)
+                if waffle.switch_is_active("manifest_logging"):
+                    logger.info("recursing to key %s with spec %s using data %s", key, key_spec, key_value)
+                self.validate(data=key_value, spec=key_spec)
             else:
-                validate_key(key, spec, data)
+                if waffle.switch_is_active("manifest_logging"):
+                    logger.info("Validating key %s with spec %s using data %s", key, key_spec, key_value)
+                validate_key(
+                    key=key,
+                    key_value=key_value,
+                    spec=key_spec,
+                )
