@@ -1,5 +1,5 @@
 ---
-apiVersion: smarter/v1
+apiVersion: smarter/v0
 kind: Plugin
 metadata:
   name: AmazonAPIPlugin

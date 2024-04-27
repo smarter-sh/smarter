@@ -1,5 +1,5 @@
 ---
-apiVersion: smarter/v1
+apiVersion: smarter/v0
 kind: Plugin
 # ------------------------------------------------------------
 # 1. Required field: meta_data.
