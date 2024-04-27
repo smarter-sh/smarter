@@ -2,7 +2,6 @@
 
 import json
 import logging
-from abc import ABC
 from enum import Enum
 from typing import Any
 
@@ -23,7 +22,7 @@ class SmarterEnumAbstract(Enum):
 
     @classmethod
     def all_values(cls) -> list[str]:
-        return [member.value for _, member in SmarterApiManifestKinds.__members__.items()]
+        return [member.value for _, member in cls.__members__.items()]
 
 
 class SmarterApiManifDataFormats(SmarterEnumAbstract):
@@ -113,7 +112,7 @@ def validate_key(key: str, key_value: Any, spec: Any):
             raise SmarterApiManifestValidationError(f"Invalid value for key {key}. Expected {spec} but got {key_value}")
 
 
-class SmarterApi(ABC):
+class SmarterApi:
     """
     Smarter API base class.
     """
@@ -121,19 +120,7 @@ class SmarterApi(ABC):
     _raw_data: str = None
     _dict_data: dict = None
     _data_format: SmarterApiManifDataFormats = None
-    _spec = {
-        SmarterApiManifestKeys.APIVERSION: SMARTER_API_VERSION,
-        SmarterApiManifestKeys.KIND: SmarterApiManifestKinds.all_values(),
-        SmarterApiManifestKeys.METADATA: {
-            SmarterApiManifestMetadataKeys.NAME: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
-            SmarterApiManifestMetadataKeys.DESCRIPTION: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
-            SmarterApiManifestMetadataKeys.VERSION: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
-            SmarterApiManifestMetadataKeys.TAGS: (list, [SmarterApiSpecKeyOptions.OPTIONAL]),
-            SmarterApiManifestMetadataKeys.ANNOTATIONS: (list, [SmarterApiSpecKeyOptions.OPTIONAL]),
-        },
-        SmarterApiManifestKeys.SPEC: (dict, [SmarterApiSpecKeyOptions.REQUIRED]),
-        SmarterApiManifestKeys.STATUS: (dict, [SmarterApiSpecKeyOptions.READONLY, SmarterApiSpecKeyOptions.OPTIONAL]),
-    }
+    _specification: dict = None
 
     def __init__(
         self,
@@ -142,6 +129,25 @@ class SmarterApi(ABC):
         file_path: str = None,
         url: str = None,
     ):
+        self._specification = {
+            SmarterApiManifestKeys.APIVERSION: SMARTER_API_VERSION,
+            SmarterApiManifestKeys.KIND: SmarterApiManifestKinds.all_values(),
+            SmarterApiManifestKeys.METADATA: {
+                SmarterApiManifestMetadataKeys.NAME: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
+                SmarterApiManifestMetadataKeys.DESCRIPTION: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
+                SmarterApiManifestMetadataKeys.VERSION: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
+                SmarterApiManifestMetadataKeys.TAGS: (list, [SmarterApiSpecKeyOptions.OPTIONAL]),
+                SmarterApiManifestMetadataKeys.ANNOTATIONS: (list, [SmarterApiSpecKeyOptions.OPTIONAL]),
+            },
+            SmarterApiManifestKeys.SPEC: (dict, [SmarterApiSpecKeyOptions.REQUIRED]),
+            SmarterApiManifestKeys.STATUS: (
+                dict,
+                [SmarterApiSpecKeyOptions.READONLY, SmarterApiSpecKeyOptions.OPTIONAL],
+            ),
+        }
+
+        logger.info("SmarterApi init spec: %s", self.specification)
+
         self._raw_data = manifest
         if data_format:
             if data_format == SmarterApiManifDataFormats.JSON:
@@ -169,6 +175,10 @@ class SmarterApi(ABC):
     # -------------------------------------------------------------------------
     # data setters and getters. Sort out whether we received JSON or YAML data
     # -------------------------------------------------------------------------
+    @property
+    def specification(self) -> dict:
+        return self._specification
+
     @property
     def raw_data(self) -> str:
         return self._raw_data
@@ -207,6 +217,13 @@ class SmarterApi(ABC):
             self._dict_data = self.yaml_data
         return self._dict_data
 
+    @property
+    def formatted_data(self) -> str:
+        return json.dumps(self.data, indent=4)
+
+    # -------------------------------------------------------------------------
+    # class methods
+    # -------------------------------------------------------------------------
     def get_key(self, key) -> any:
         try:
             return self.data[key]
@@ -214,27 +231,26 @@ class SmarterApi(ABC):
             pass
         return None
 
-    def get_spec(self) -> dict:
-        return self._spec
-
-    def validate(self, data: dict = None, spec: dict = None):
+    def validate(self, recursed_data: dict = None, recursed_spec: dict = None):
         """
         Validate the manifest data. Recursively validate dict keys based on the
         contents of spec.
         """
-        spec = spec or self.get_spec()
-        data = data or self.data
-        if not data:
+        logger.info("SmarterApi validate() - 1: %s", self.specification)
+
+        this_overall_spec = recursed_spec or self.specification
+        this_data = recursed_data or self.data
+        if not this_data:
             raise SmarterApiManifestValidationError("Received empty or invalid data.")
 
-        for key, key_spec in spec.items():
+        for key, key_spec in this_overall_spec.items():
             if isinstance(key, Enum):
                 key = key.value
-            key_value = data.get(key)
+            key_value = this_data.get(key)
             if isinstance(key_spec, dict):
                 if waffle.switch_is_active("manifest_logging"):
                     logger.info("recursing to key %s with spec %s using data %s", key, key_spec, key_value)
-                self.validate(data=key_value, spec=key_spec)
+                self.validate(recursed_data=key_value, recursed_spec=key_spec)
             else:
                 if waffle.switch_is_active("manifest_logging"):
                     logger.info("Validating key %s with spec %s using data %s", key, key_spec, key_value)
@@ -243,3 +259,44 @@ class SmarterApi(ABC):
                     key_value=key_value,
                     spec=key_spec,
                 )
+
+    # -------------------------------------------------------------------------
+    # manifest properties
+    # -------------------------------------------------------------------------
+    @property
+    def api_version(self) -> str:
+        return self.get_key(SmarterApiManifestKeys.APIVERSION.value)
+
+    @property
+    def kind(self) -> str:
+        return self.get_key(SmarterApiManifestKeys.KIND.value)
+
+    @property
+    def metadata_keys(self) -> list:
+        return SmarterApiManifestMetadataKeys.all_values()
+
+    @property
+    def spec_keys(self) -> list:
+        raise NotImplementedError
+
+    @property
+    def status_keys(self) -> list:
+        raise NotImplementedError
+
+    def metadata(self, key: str = None) -> any:
+        meta_data = self.get_key(SmarterApiManifestKeys.METADATA.value)
+        if key in SmarterApiManifestMetadataKeys.all_values():
+            return meta_data.get(key)
+        return meta_data
+
+    def spec(self, key: str = None) -> any:
+        spec_data = self.get_key(SmarterApiManifestKeys.SPEC.value)
+        if key:
+            return spec_data.get(key)
+        return spec_data
+
+    def status(self, key: str = None) -> any:
+        status_data = self.get_key(SmarterApiManifestKeys.STATUS.value)
+        if key:
+            return status_data.get(key)
+        return status_data
