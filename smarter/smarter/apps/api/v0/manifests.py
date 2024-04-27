@@ -63,6 +63,7 @@ class SmarterApiManifestMetadataKeys(SmarterEnumAbstract):
     DESCRIPTION = "description"
     VERSION = "version"
     TAGS = "tags"
+    ANNOTATIONS = "annotations"
 
 
 def validate_key(key: str, spec: Any, data: dict):
@@ -114,6 +115,7 @@ class SmarterApi(ABC):
                 SmarterApiManifestMetadataKeys.DESCRIPTION: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
                 SmarterApiManifestMetadataKeys.VERSION: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
                 SmarterApiManifestMetadataKeys.TAGS: (list, [SmarterApiSpecKeyOptions.OPTIONAL]),
+                SmarterApiManifestMetadataKeys.ANNOTATIONS: (list, [SmarterApiSpecKeyOptions.OPTIONAL]),
             },
         },
         SmarterApiManifestKeys.SPEC: (dict, [SmarterApiSpecKeyOptions.REQUIRED]),
