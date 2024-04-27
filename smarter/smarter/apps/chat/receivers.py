@@ -8,7 +8,7 @@ from django.dispatch import receiver
 
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 
-from .models import Chat, ChatHistory, ChatToolCall, PluginMeta, PluginUsage
+from .models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall, PluginMeta
 from .signals import (
     chat_completion_called,
     chat_completion_plugin_selected,
@@ -31,9 +31,9 @@ def handle_chat_invoked(sender, **kwargs):
     data = kwargs.get("data")
 
     logger.info(
-        "%s signal received for chat %s with data: %s",
+        "%s for chat %s with data: %s",
         formatted_text("chat_invoked"),
-        chat.id,
+        chat,
         formatted_json(data),
     )
 
@@ -43,13 +43,14 @@ def handle_chat_completion_called(sender, **kwargs):
     """Handle chat completion called signal."""
 
     chat: Chat = kwargs.get("chat")
+    iteration: int = kwargs.get("iteration")
     request: dict = kwargs.get("request")
     response: dict = kwargs.get("response")
 
     logger.info(
-        "%s signal received for chat: %s, request: %s, response: %s",
-        formatted_text("chat_completion_called"),
-        chat.id,
+        "%s for chat: %s \nrequest: %s \nresponse: %s",
+        formatted_text(f"chat_completion_called for iteration {iteration}"),
+        chat,
         formatted_json(request),
         formatted_json(response),
     )
@@ -70,19 +71,22 @@ def handle_chat_completion_tool_call(sender, **kwargs):
     """Handle chat completion tool call signal."""
 
     chat: Chat = kwargs.get("chat")
-    tool_call: dict = kwargs.get("tool_call")
-    plugin: PluginMeta = kwargs.get("plugin")
+    tool_calls: list[dict] = kwargs.get("tool_calls")
     request: dict = kwargs.get("request")
     response: dict = kwargs.get("response")
 
-    chat_tool_call_history = ChatToolCall(
-        chat=chat,
-        plugin=plugin,
-        tool_call=tool_call,
-        request=request,
-        response=response,
-    )
-    chat_tool_call_history.save()
+    for tool_call in tool_calls:
+        plugin_meta: PluginMeta = tool_call.get("plugin_meta")
+        function_name: str = tool_call.get("function_name")
+        function_args: str = tool_call.get("function_args")
+        ChatToolCall(
+            chat=chat,
+            plugin=plugin_meta,
+            function_name=function_name,
+            function_args=function_args,
+            request=request,
+            response=response,
+        ).save()
 
 
 @receiver(chat_completion_plugin_selected, dispatch_uid="chat_completion_plugin_selected")
@@ -94,14 +98,14 @@ def handle_chat_completion_plugin_selected(sender, **kwargs):
     input_text = kwargs.get("input_text")
 
     logger.info(
-        "%s signal received for chat %s, plugin: %s, input_text: %s",
+        "%s for chat %s, plugin: %s, input_text: %s",
         formatted_text("chat_completion_plugin_selected"),
         chat,
         plugin,
         input_text,
     )
 
-    plugin_selection_history = PluginUsage(
+    plugin_selection_history = ChatPluginUsage(
         plugin=plugin,
         chat=chat,
         input_text=input_text,
@@ -124,6 +128,14 @@ def handle_chat_completion_returned(sender, **kwargs):
         response=response,
     ).save()
 
+    logger.info(
+        "%s for chat %s, \nrequest: %s, \nresponse: %s",
+        formatted_text("chat_response_success"),
+        chat,
+        formatted_json(request),
+        formatted_json(response),
+    )
+
 
 @receiver(chat_response_failure, dispatch_uid="chat_response_failure")
 def handle_chat_response_failed(sender, **kwargs):
@@ -134,9 +146,9 @@ def handle_chat_response_failed(sender, **kwargs):
     request_meta_data = kwargs.get("request_meta_data")
 
     logger.info(
-        "%s signal received for chat: %s, request_meta_data: %s, exception: %s",
+        "%s for chat: %s, request_meta_data: %s, exception: %s",
         formatted_text("chat_response_failure"),
-        chat.id,
+        chat if chat else None,
         formatted_json(request_meta_data),
         exception,
     )
@@ -165,7 +177,7 @@ def handle_chat_tool_call_created(sender, **kwargs):
     logger.info("%s", formatted_text("ChatToolCall() record created."))
 
 
-@receiver(post_save, sender=PluginUsage)
+@receiver(post_save, sender=ChatPluginUsage)
 def handle_plugin_usage_created(sender, **kwargs):
 
-    logger.info("%s", formatted_text("PluginUsage() record created."))
+    logger.info("%s", formatted_text("ChatPluginUsage() record created."))

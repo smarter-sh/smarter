@@ -4,8 +4,10 @@
 # pylint: disable=W0613
 """Test lambda_openai_v2 function."""
 
-# python stuff
 import os
+
+# python stuff
+import secrets
 import sys
 import unittest
 from pathlib import Path
@@ -29,7 +31,7 @@ from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.plugin import Plugin
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
 
-from ..models import Chat, PluginUsage
+from ..models import Chat, ChatPluginUsage
 from ..providers.smarter import handler
 from ..signals import (
     chat_completion_called,
@@ -107,6 +109,13 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
 
         self.client = Client()
         self.client.force_login(self.user)
+
+        self.chat = Chat.objects.create(
+            session_key=secrets.token_hex(32),
+            ip_address="192.1.1.1",
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+            url="https://www.test.com",
+        )
 
     def tearDown(self):
         """Tear down test fixtures."""
@@ -205,9 +214,10 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
 
         try:
             response = handler(
+                chat=self.chat,
+                data=event_about_gobstoppers,
                 plugins=self.plugins,
                 user=self.user,
-                data=event_about_gobstoppers,
                 default_model=smarter_settings.openai_default_model,
                 default_max_tokens=smarter_settings.openai_default_max_tokens,
                 default_temperature=smarter_settings.openai_default_temperature,
@@ -235,8 +245,8 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         print("/api/v0/chat/history/chats/ response:", response.json())
 
-        # assert that PluginUsage has one or more records for self.user
-        plugin_selection_histories = PluginUsage.objects.filter(user=self.user)
+        # assert that ChatPluginUsage has one or more records for self.user
+        plugin_selection_histories = ChatPluginUsage.objects.filter(user=self.user)
         self.assertTrue(plugin_selection_histories.exists())
 
     def test_handler_weather(self):
@@ -246,6 +256,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
 
         try:
             response = handler(
+                chat=self.chat,
                 plugins=self.plugins,
                 user=self.user,
                 data=event_about_weather,
@@ -264,6 +275,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
 
         try:
             response = handler(
+                chat=self.chat,
                 plugins=self.plugins,
                 user=self.user,
                 data=event_about_recipes,

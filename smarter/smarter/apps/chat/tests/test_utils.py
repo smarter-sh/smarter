@@ -67,15 +67,14 @@ class TestUtils(unittest.TestCase):
     def test_parse_request(self):
         """Test parse_request"""
         request_body = get_request_body(self.request)
-        messages, input_text, chat_id = parse_request(request_body)
-        self.assertEqual(chat_id, 1)
+        messages, input_text = parse_request(request_body)
         self.assertEqual(input_text, None)
         self.assertEqual(len(messages), 2)
 
     def test_get_content_for_role(self):
         """Test get_content_for_role"""
         request_body = get_request_body(self.request)
-        messages, _, _ = parse_request(request_body)
+        messages, _ = parse_request(request_body)
         system_message = get_content_for_role(messages, OpenAIMessageKeys.OPENAI_SYSTEM_MESSAGE_KEY)
         user_message = get_content_for_role(messages, OpenAIMessageKeys.OPENAI_USER_MESSAGE_KEY)
         self.assertEqual(system_message, "you always return the integer value 42.")
@@ -84,7 +83,7 @@ class TestUtils(unittest.TestCase):
     def test_get_message_history(self):
         """test get_message_history"""
         request_body = get_request_body(self.request)
-        messages, _, _ = parse_request(request_body)
+        messages, _ = parse_request(request_body)
         message_history = get_message_history(messages)
         self.assertIsInstance(message_history, list)
         self.assertEqual(len(message_history), 1)
@@ -94,7 +93,7 @@ class TestUtils(unittest.TestCase):
     def test_get_messages_for_role(self):
         """test get_messages_for_role"""
         request_body = get_request_body(self.request)
-        messages, _, _ = parse_request(request_body)
+        messages, _ = parse_request(request_body)
         message_history = get_message_history(messages)
         self.assertIsInstance(message_history, list)
         user_messages = get_messages_for_role(message_history, OpenAIMessageKeys.OPENAI_USER_MESSAGE_KEY)

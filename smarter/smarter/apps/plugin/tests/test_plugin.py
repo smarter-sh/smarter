@@ -33,7 +33,6 @@ from smarter.apps.plugin.signals import (
     plugin_deleted,
     plugin_ready,
     plugin_selected,
-    plugin_selector_history_created,
     plugin_updated,
 )
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
@@ -55,7 +54,6 @@ class TestPlugin(unittest.TestCase):
     _plugin_ready = False
     _plugin_selected = False
     _plugin_selected_called = False
-    _plugin_selector_history_created = False
     _plugin_updated = False
 
     def plugin_called_signal_handler(self, *args, **kwargs):
@@ -79,9 +77,6 @@ class TestPlugin(unittest.TestCase):
     def plugin_selected_called_signal_handler(self, *args, **kwargs):
         self._plugin_selected_called = True
 
-    def plugin_selector_history_created_signal_handler(self, *args, **kwargs):
-        self._plugin_selector_history_created = True
-
     def plugin_updated_signal_handler(self, *args, **kwargs):
         self._plugin_updated = True
 
@@ -94,7 +89,6 @@ class TestPlugin(unittest.TestCase):
             "plugin_deleted": self._plugin_deleted,
             "plugin_ready": self._plugin_ready,
             "plugin_selected": self._plugin_selected,
-            "plugin_selector_history_created": self._plugin_selector_history_created,
             "plugin_updated": self._plugin_updated,
         }
 
@@ -421,10 +415,6 @@ class TestPlugin(unittest.TestCase):
         plugin_selected.connect(
             self.plugin_selected_signal_handler, dispatch_uid="plugin_selected_test_plugin_selected_signal"
         )
-        plugin_selector_history_created.connect(
-            self.plugin_selector_history_created_signal_handler,
-            dispatch_uid="plugin_selected_test_plugin_selector_history_created_signal",
-        )
 
         messages = [
             {"role": "system", "content": "you are a helpful chatbot."},
@@ -436,7 +426,6 @@ class TestPlugin(unittest.TestCase):
         self.assertTrue(self.signals["plugin_selected"])
 
         sleep(1)
-        self.assertTrue(self.signals["plugin_selector_history_created"])
 
         self._plugin_selected = False
         messages = [

@@ -1,21 +1,21 @@
-import {REACT_CONFIG} from "../config";
+export const getSmarterSandbox = (config) => {
 
-let APP = REACT_CONFIG.APP;
-let BACKEND = REACT_CONFIG.BACKEND;
-
-const SmarterSandbox = {
-  sidebar_title: APP.NAME,
-  api_url: BACKEND.API_URL,
-  api_key: null,
-  app_name: APP.NAME,
-  assistant_name: APP.ASSISTANT,
-  system_role: "You are a helpful assistant.",
-  welcome_message: APP.WELCOME_MESSAGE,
-  example_prompts: APP.EXAMPLE_PROMPTS,
-  placeholder_text: APP.PLACEHOLDER,
-  info_url: APP.INFO_URL,
-  file_attach_button: APP.FILE_ATTACHMENT_BUTTON,
-  // background_image_url: APP.BACKGROUND_IMAGE_URL,
-  // application_logo: APP.LOGO_URL,
+  return {
+    sidebar_title: config.chatbot.app_name,
+    api_url: config.chatbot.url_chatbot,
+    session_key: config.session_key,
+    api_key: null,
+    app_name: config.chatbot.app_name,
+    assistant_name: config.chatbot.app_assistant,
+    system_role: "You are a helpful assistant.",
+    welcome_message: config.chatbot.app_welcome_message,
+    example_prompts: config.chatbot.app_example_prompts,
+    placeholder_text: config.chatbot.app_placeholder,
+    info_url: config.chatbot.app_info_url,
+    file_attach_button: config.chatbot.app_file_attachment,
+    background_image_url: config.chatbot.app_background_image_url,
+    application_logo: config.chatbot.app_logo_url,
+    history: config.history,
+    config: config,
+  };
 };
-export default SmarterSandbox;

@@ -108,8 +108,8 @@ docker-init:
 		python manage.py add_plugin_examples admin && \
 		python manage.py verify_api_infrastructure && \
 		python manage.py deploy_demo_api && \
-		python manage.py seed_chat_history" && \
-		python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/QueriumCorp/smarter_demo && \
+		python manage.py seed_chat_history && \
+		python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/QueriumCorp/smarter_demo" && \
 	echo "Docker and Smarter are initialized." && \
 	docker ps
 
