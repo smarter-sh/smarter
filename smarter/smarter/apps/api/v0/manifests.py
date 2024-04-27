@@ -56,6 +56,15 @@ class SmarterApiManifestKeys(SmarterEnumAbstract):
     STATUS = "status"
 
 
+class SmarterApiManifestMetadataKeys(SmarterEnumAbstract):
+    """Smarter API V0 Plugin Metadata keys enumeration."""
+
+    NAME = "name"
+    DESCRIPTION = "description"
+    VERSION = "version"
+    TAGS = "tags"
+
+
 def validate_key(key: str, spec: Any, data: dict):
     """
     Validate a key against a spec. Of note:
@@ -99,7 +108,14 @@ class SmarterApi(ABC):
     _spec = {
         SmarterApiManifestKeys.APIVERSION: SMARTER_API_VERSION,
         SmarterApiManifestKeys.KIND: SmarterApiManifestKinds.all_values(),
-        SmarterApiManifestKeys.METADATA: (dict, [SmarterApiSpecKeyOptions.REQUIRED]),
+        SmarterApiManifestKeys.METADATA: {
+            SmarterApiManifestKeys.METADATA: {
+                SmarterApiManifestMetadataKeys.NAME: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
+                SmarterApiManifestMetadataKeys.DESCRIPTION: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
+                SmarterApiManifestMetadataKeys.VERSION: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
+                SmarterApiManifestMetadataKeys.TAGS: (list, [SmarterApiSpecKeyOptions.OPTIONAL]),
+            },
+        },
         SmarterApiManifestKeys.SPEC: (dict, [SmarterApiSpecKeyOptions.REQUIRED]),
         SmarterApiManifestKeys.STATUS: (dict, [SmarterApiSpecKeyOptions.READONLY, SmarterApiSpecKeyOptions.OPTIONAL]),
     }

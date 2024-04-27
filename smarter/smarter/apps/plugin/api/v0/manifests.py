@@ -12,11 +12,7 @@ from smarter.apps.api.v0.manifests import (
 class SmarterApiManifestPluginMetadataKeys(SmarterEnumAbstract):
     """Smarter API V0 Plugin Metadata keys enumeration."""
 
-    NAME = "name"
     CLASS = "class"
-    DESCRIPTION = "description"
-    VERSION = "version"
-    TAGS = "tags"
 
 
 class SmarterApiManifestPluginMetadataClass(SmarterEnumAbstract):
@@ -62,11 +58,7 @@ class SmarterApiPlugin(SmarterApi):
     plugin_spec = {
         SmarterApiManifestKeys.KIND: SmarterApiManifestKinds.PLUGIN,
         SmarterApiManifestKeys.METADATA: {
-            SmarterApiManifestPluginMetadataKeys.NAME: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
             SmarterApiManifestPluginMetadataKeys.CLASS: SmarterApiManifestPluginMetadataClass.all_values(),
-            SmarterApiManifestPluginMetadataKeys.DESCRIPTION: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
-            SmarterApiManifestPluginMetadataKeys.VERSION: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
-            SmarterApiManifestPluginMetadataKeys.TAGS: (list, [SmarterApiSpecKeyOptions.OPTIONAL]),
         },
         SmarterApiManifestKeys.SPEC: {
             SmarterApiManifestPluginSpecKeys.SELECTOR: {
