@@ -9,7 +9,7 @@ from smarter.apps.api.v0.manifests import (
 )
 
 
-class SmarterApiManifestKeysPluginMetadata(SmarterEnumAbstract):
+class SmarterApiManifestPluginMetadataKeys(SmarterEnumAbstract):
     """Smarter API V0 Plugin Metadata keys enumeration."""
 
     NAME = "name"
@@ -41,7 +41,7 @@ class SmartApiPluginSpecSelectorKeys(SmarterEnumAbstract):
     DIRECTIVE = "directive"
 
 
-class SmarterApiManifestPluginSpecPromptKey(SmarterEnumAbstract):
+class SmarterApiManifestPluginSpecPromptKeys(SmarterEnumAbstract):
     """Smarter API V0 Plugin Spec Prompt keys enumeration."""
 
     SYSTEMROLE = "systemRole"
@@ -62,21 +62,21 @@ class SmarterApiPlugin(SmarterApi):
     plugin_spec = {
         SmarterApiManifestKeys.KIND: SmarterApiManifestKinds.PLUGIN,
         SmarterApiManifestKeys.METADATA: {
-            SmarterApiManifestKeysPluginMetadata.NAME: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
-            SmarterApiManifestKeysPluginMetadata.CLASS: SmarterApiManifestPluginMetadataClass.all_values(),
-            SmarterApiManifestKeysPluginMetadata.DESCRIPTION: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
-            SmarterApiManifestKeysPluginMetadata.VERSION: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
-            SmarterApiManifestKeysPluginMetadata.TAGS: (list, [SmarterApiSpecKeyOptions.OPTIONAL]),
+            SmarterApiManifestPluginMetadataKeys.NAME: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
+            SmarterApiManifestPluginMetadataKeys.CLASS: SmarterApiManifestPluginMetadataClass.all_values(),
+            SmarterApiManifestPluginMetadataKeys.DESCRIPTION: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
+            SmarterApiManifestPluginMetadataKeys.VERSION: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
+            SmarterApiManifestPluginMetadataKeys.TAGS: (list, [SmarterApiSpecKeyOptions.OPTIONAL]),
         },
         SmarterApiManifestKeys.SPEC: {
             SmarterApiManifestPluginSpecKeys.SELECTOR: {
                 SmartApiPluginSpecSelectorKeys.DIRECTIVE: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
             },
             SmarterApiManifestPluginSpecKeys.PROMPT: {
-                SmarterApiManifestPluginSpecPromptKey.SYSTEMROLE: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
-                SmarterApiManifestPluginSpecPromptKey.MODEL: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
-                SmarterApiManifestPluginSpecPromptKey.TEMPERATURE: (float, [SmarterApiSpecKeyOptions.REQUIRED]),
-                SmarterApiManifestPluginSpecPromptKey.MAXTOKENS: (int, [SmarterApiSpecKeyOptions.REQUIRED]),
+                SmarterApiManifestPluginSpecPromptKeys.SYSTEMROLE: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
+                SmarterApiManifestPluginSpecPromptKeys.MODEL: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
+                SmarterApiManifestPluginSpecPromptKeys.TEMPERATURE: (float, [SmarterApiSpecKeyOptions.REQUIRED]),
+                SmarterApiManifestPluginSpecPromptKeys.MAXTOKENS: (int, [SmarterApiSpecKeyOptions.REQUIRED]),
             },
             SmarterApiManifestPluginSpecKeys.DATA: {
                 SmartApiPluginSpecDataKeys.DESCRIPTION: (str, [SmarterApiSpecKeyOptions.REQUIRED]),
