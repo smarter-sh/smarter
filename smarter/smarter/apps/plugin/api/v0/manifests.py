@@ -1,22 +1,22 @@
 """Smarter API V0 Plugin manifest specification."""
 
 from smarter.apps.api.v0.manifests import (
-    SmarterApiManifest,
-    SmarterApiManifestDataFormats,
-    SmarterApiManifestKeys,
-    SmarterApiManifestKinds,
-    SmarterApiSpecificationKeyOptions,
+    SAM,
+    SAMDataFormats,
+    SAMKeys,
+    SAMKinds,
+    SAMSpecificationKeyOptions,
     SmarterEnumAbstract,
 )
 
 
-class SmarterApiManifestPluginMetadataKeys(SmarterEnumAbstract):
+class SAMPluginMetadataKeys(SmarterEnumAbstract):
     """Smarter API V0 Plugin Metadata keys enumeration."""
 
     CLASS = "class"
 
 
-class SmarterApiManifestPluginMetadataClass(SmarterEnumAbstract):
+class SAMPluginMetadataClass(SmarterEnumAbstract):
     """Smarter API V0 Plugin Metadata Class keys enumeration."""
 
     STATIC = "static"
@@ -24,7 +24,7 @@ class SmarterApiManifestPluginMetadataClass(SmarterEnumAbstract):
     SQL = "sql"
 
 
-class SmarterApiManifestPluginSpecKeys(SmarterEnumAbstract):
+class SAMPluginSpecKeys(SmarterEnumAbstract):
     """Smarter API V0 Plugin Spec keys enumeration."""
 
     SELECTOR = "selector"
@@ -32,13 +32,13 @@ class SmarterApiManifestPluginSpecKeys(SmarterEnumAbstract):
     DATA = "data"
 
 
-class SmartApiPluginSpecSelectorKeys(SmarterEnumAbstract):
+class SAMPluginSpecSelectorKeys(SmarterEnumAbstract):
     """Smarter API V0 Plugin Spec Selector keys enumeration."""
 
     DIRECTIVE = "directive"
 
 
-class SmarterApiManifestPluginSpecPromptKeys(SmarterEnumAbstract):
+class SAMPluginSpecPromptKeys(SmarterEnumAbstract):
     """Smarter API V0 Plugin Spec Prompt keys enumeration."""
 
     SYSTEMROLE = "systemRole"
@@ -53,44 +53,44 @@ class SmartApiPluginSpecDataKeys(SmarterEnumAbstract):
     DESCRIPTION = "description"
 
 
-class SmarterApiPlugin(SmarterApiManifest):
+class SAMPlugin(SAM):
     """Smarter API V0 Plugin class."""
 
     def __init__(
         self,
         manifest: str = None,
-        data_format: SmarterApiManifestDataFormats = None,
+        data_format: SAMDataFormats = None,
         file_path: str = None,
         url: str = None,
     ):
         super().__init__(manifest, data_format, file_path, url)
 
         plugin_specification = {
-            SmarterApiManifestKeys.KIND: SmarterApiManifestKinds.PLUGIN,
-            SmarterApiManifestKeys.METADATA: {
-                SmarterApiManifestPluginMetadataKeys.CLASS: SmarterApiManifestPluginMetadataClass.all_values(),
+            SAMKeys.KIND: SAMKinds.PLUGIN,
+            SAMKeys.METADATA: {
+                SAMPluginMetadataKeys.CLASS: SAMPluginMetadataClass.all_values(),
             },
-            SmarterApiManifestKeys.SPEC: {
-                SmarterApiManifestPluginSpecKeys.SELECTOR: {
-                    SmartApiPluginSpecSelectorKeys.DIRECTIVE: (str, [SmarterApiSpecificationKeyOptions.REQUIRED]),
+            SAMKeys.SPEC: {
+                SAMPluginSpecKeys.SELECTOR: {
+                    SAMPluginSpecSelectorKeys.DIRECTIVE: (str, [SAMSpecificationKeyOptions.REQUIRED]),
                 },
-                SmarterApiManifestPluginSpecKeys.PROMPT: {
-                    SmarterApiManifestPluginSpecPromptKeys.SYSTEMROLE: (
+                SAMPluginSpecKeys.PROMPT: {
+                    SAMPluginSpecPromptKeys.SYSTEMROLE: (
                         str,
-                        [SmarterApiSpecificationKeyOptions.REQUIRED],
+                        [SAMSpecificationKeyOptions.REQUIRED],
                     ),
-                    SmarterApiManifestPluginSpecPromptKeys.MODEL: (str, [SmarterApiSpecificationKeyOptions.REQUIRED]),
-                    SmarterApiManifestPluginSpecPromptKeys.TEMPERATURE: (
+                    SAMPluginSpecPromptKeys.MODEL: (str, [SAMSpecificationKeyOptions.REQUIRED]),
+                    SAMPluginSpecPromptKeys.TEMPERATURE: (
                         float,
-                        [SmarterApiSpecificationKeyOptions.REQUIRED],
+                        [SAMSpecificationKeyOptions.REQUIRED],
                     ),
-                    SmarterApiManifestPluginSpecPromptKeys.MAXTOKENS: (
+                    SAMPluginSpecPromptKeys.MAXTOKENS: (
                         int,
-                        [SmarterApiSpecificationKeyOptions.REQUIRED],
+                        [SAMSpecificationKeyOptions.REQUIRED],
                     ),
                 },
-                SmarterApiManifestPluginSpecKeys.DATA: {
-                    SmartApiPluginSpecDataKeys.DESCRIPTION: (str, [SmarterApiSpecificationKeyOptions.REQUIRED]),
+                SAMPluginSpecKeys.DATA: {
+                    SmartApiPluginSpecDataKeys.DESCRIPTION: (str, [SAMSpecificationKeyOptions.REQUIRED]),
                 },
             },
         }
@@ -102,13 +102,13 @@ class SmarterApiPlugin(SmarterApiManifest):
     @property
     def manifest_metadata_keys(self) -> list[str]:
         super_meta_keys = super().metadata_keys
-        these_keys = SmarterApiManifestPluginMetadataKeys.all_values()
+        these_keys = SAMPluginMetadataKeys.all_values()
         return super_meta_keys + these_keys
 
     @property
     def manifest_spec_keys(self) -> list[str]:
         super_spec_keys = super().spec_keys
-        these_keys = SmarterApiManifestPluginSpecKeys.all_values()
+        these_keys = SAMPluginSpecKeys.all_values()
         return super_spec_keys + these_keys
 
     @property
@@ -117,15 +117,15 @@ class SmarterApiPlugin(SmarterApiManifest):
 
     @property
     def manifest_plugin_classes(self) -> list[str]:
-        return SmarterApiManifestPluginMetadataClass.all_values()
+        return SAMPluginMetadataClass.all_values()
 
     @property
     def manifest_plugin_prompt_spec_keys(self) -> list[str]:
-        return SmarterApiManifestPluginSpecPromptKeys.all_values()
+        return SAMPluginSpecPromptKeys.all_values()
 
     @property
     def manifest_plugin_selector_spec_keys(self) -> list[str]:
-        return SmartApiPluginSpecSelectorKeys.all_values()
+        return SAMPluginSpecSelectorKeys.all_values()
 
     def validate(self, recursed_data: dict = None, recursed_spec: dict = None):
         """Validate the plugin specification."""
