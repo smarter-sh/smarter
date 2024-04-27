@@ -1,4 +1,4 @@
-"""Smarter API V0 Plugin manifest specification."""
+"""Smarter Api Manifest ("SAM") specification for Plugin."""
 
 from smarter.apps.api.v0.manifests import (
     SAM,
@@ -94,9 +94,13 @@ class SAMPlugin(SAM):
                 },
             },
         }
-        specification = self.specification.copy()
+
+        # update the base specification with the plugin-specific specification
+        specification = super().specification.copy()
         specification.update(plugin_specification)
-        self._specification = specification
+        super()._specification = specification
+
+        # revalidate the specification
         self.validate()
 
     @property

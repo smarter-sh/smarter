@@ -140,8 +140,6 @@ class SAM:
             ),
         }
 
-        logger.info("SAM init spec: %s", self.specification)
-
         self._raw_data = manifest
         if data_format:
             if data_format == SAMDataFormats.JSON:
@@ -230,7 +228,6 @@ class SAM:
         Validate the manifest data. Recursively validate dict keys based on the
         contents of spec.
         """
-        logger.info("SAM validate() - 1: %s", self.specification)
 
         this_overall_spec = recursed_spec or self.specification
         this_data = recursed_data or self.data
