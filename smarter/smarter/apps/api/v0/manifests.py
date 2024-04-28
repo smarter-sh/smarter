@@ -176,7 +176,7 @@ class SAM:
         return self._raw_data
 
     @property
-    def dict_data(self) -> dict:
+    def json_data(self) -> dict:
         try:
             return json.loads(self.raw_data)
         except json.JSONDecodeError:
@@ -193,7 +193,7 @@ class SAM:
     def data_format(self) -> SAMDataFormats:
         if self._data_format:
             return self._data_format
-        if self.dict_data:
+        if self.json_data:
             self._data_format = SAMDataFormats.JSON
         elif self.yaml_data:
             self._data_format = SAMDataFormats.YAML
@@ -204,7 +204,7 @@ class SAM:
         if self._dict_data:
             return self._dict_data
         if self.data_format == SAMDataFormats.JSON:
-            self._dict_data = self.dict_data
+            self._dict_data = self.json_data
         elif self.data_format == SAMDataFormats.YAML:
             self._dict_data = self.yaml_data
         return self._dict_data
