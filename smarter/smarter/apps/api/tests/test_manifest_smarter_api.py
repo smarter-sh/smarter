@@ -6,7 +6,7 @@ import unittest
 
 from smarter.apps.api.v0.manifests import SAM
 from smarter.common.const import PYTHON_ROOT
-from smarter.common.exceptions import SAMValidationError  # pylint: disable=E0611
+from smarter.common.exceptions import SAMValidationError
 
 
 class TestSAM(unittest.TestCase):
