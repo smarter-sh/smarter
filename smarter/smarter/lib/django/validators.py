@@ -36,6 +36,7 @@ class SmarterValidator:
     VALID_SESSION_KEY = r"^[a-fA-F0-9]{64}$"
     VALID_SEMANTIC_VERSION = r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$"
     VALID_URL_FRIENDLY_STRING = r"^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$"
+    VALID_CLEAN_STRING = r"^[a-zA-Z0-9_-]+$"
 
     @staticmethod
     def validate_session_key(session_key: str) -> None:
