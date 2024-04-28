@@ -82,7 +82,7 @@ def validate_key(key: str, key_value: Any, spec: Any):
     # validate that key's value exists in the spec list
     if isinstance(spec, list):
         if key_value not in spec:
-            raise SAMValidationError(f"Invalid value for key {key}")
+            raise SAMValidationError(f"Invalid value {key_value} for key {key}. Expected one of {spec}")
 
     # validate that key value's data type matches the spec's data type, and if required, that the key exists
     elif isinstance(spec, tuple):
@@ -99,6 +99,10 @@ def validate_key(key: str, key_value: Any, spec: Any):
     # validate that key value is the same as the spec value
     else:
         if not isinstance(key_value, type(spec)):
+            # possibility #1: the data is missing, so it's a NoneType
+            if key_value is None:
+                raise SAMValidationError(f"Missing required key {key}")
+            # possibility #2: the data exists but is the wrong type
             raise SAMValidationError(
                 f"Invalid key_value type for key {key}. Expected {type(spec)} but got {type(key_value)}"
             )
@@ -185,9 +189,12 @@ class SAM:
     @property
     def yaml_data(self) -> str:
         try:
-            return yaml.safe_load(self.raw_data)
+            data = yaml.safe_load(self.raw_data)
+            if isinstance(data, dict):
+                return data
         except yaml.YAMLError:
-            return None
+            pass
+        return None
 
     @property
     def data_format(self) -> SAMDataFormats:
@@ -197,7 +204,7 @@ class SAM:
             self._data_format = SAMDataFormats.JSON
         elif self.yaml_data:
             self._data_format = SAMDataFormats.YAML
-        return None
+        return self._data_format
 
     @property
     def data(self) -> dict:
@@ -223,33 +230,41 @@ class SAM:
             pass
         return None
 
-    def validate(self, recursed_data: dict = None, recursed_spec: dict = None):
+    def validate(self):
         """
         Validate the manifest data. Recursively validate dict keys based on the
         contents of spec.
         """
-
-        this_overall_spec = recursed_spec or self.specification
-        this_data = recursed_data or self.data
-        if not this_data:
+        # top-level validations of the manifest itself.
+        if not self.raw_data:
             raise SAMValidationError("Received empty or invalid data.")
+        if not self.data:
+            raise SAMValidationError("Invalid data format. Supported formats: json, yaml")
 
-        for key, key_spec in this_overall_spec.items():
-            if isinstance(key, Enum):
-                key = key.value
-            key_value = this_data.get(key)
-            if isinstance(key_spec, dict):
-                if waffle.switch_is_active("manifest_logging"):
-                    logger.info("recursing to key %s with spec %s using data %s", key, key_spec, key_value)
-                self.validate(recursed_data=key_value, recursed_spec=key_spec)
-            else:
-                if waffle.switch_is_active("manifest_logging"):
-                    logger.info("Validating key %s with spec %s using data %s", key, key_spec, key_value)
-                validate_key(
-                    key=key,
-                    key_value=key_value,
-                    spec=key_spec,
-                )
+        def recursive_validator(recursed_data: dict = None, recursed_spec: dict = None):
+            this_overall_spec = recursed_spec or self.specification
+            this_data = recursed_data or self.data
+            if not this_data:
+                raise SAMValidationError("Received empty or invalid data.")
+
+            for key, key_spec in this_overall_spec.items():
+                if isinstance(key, Enum):
+                    key = key.value
+                key_value = this_data.get(key)
+                if isinstance(key_spec, dict):
+                    if waffle.switch_is_active("manifest_logging"):
+                        logger.info("recursing to key %s with spec %s using data %s", key, key_spec, key_value)
+                    recursive_validator(recursed_data=key_value, recursed_spec=key_spec)
+                else:
+                    if waffle.switch_is_active("manifest_logging"):
+                        logger.info("Validating key %s with spec %s using data %s", key, key_spec, key_value)
+                    validate_key(
+                        key=key,
+                        key_value=key_value,
+                        spec=key_spec,
+                    )
+
+        recursive_validator()
 
     # -------------------------------------------------------------------------
     # manifest properties
