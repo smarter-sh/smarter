@@ -4,35 +4,37 @@
 import os
 import unittest
 
-from smarter.apps.api.v0.manifests import SAM
+from smarter.apps.api.v0.manifests.enum import SAMKeys
+from smarter.apps.api.v0.manifests.exceptions import SAMValidationError
+from smarter.apps.api.v0.manifests.handler import SAMHandler
 from smarter.common.const import PYTHON_ROOT
-from smarter.common.exceptions import SAMValidationError
 
 
-class TestSAM(unittest.TestCase):
+class TestSAMLoader(unittest.TestCase):
     """Test TestSAM"""
 
     def setUp(self):
         """Set up test fixtures."""
-        self.path = os.path.join(PYTHON_ROOT, "smarter", "apps", "api", "tests", "data")
+        self.path = os.path.join(PYTHON_ROOT, "smarter", "apps", "api", "v0", "tests", "data")
         self.good_manifest_path = os.path.join(self.path, "good-manifest.yaml")
         self.invalid_file_format = os.path.join(self.path, "invalid-file-format.yaml")
 
     def test_valid_manifest(self):
         """Test valid file path and that we can instantiate with errors"""
 
-        SAM(file_path=self.good_manifest_path)
+        SAMHandler(file_path=self.good_manifest_path)
 
     def test_validate(self):
         """Test valid file path and that we can instantiate with errors"""
 
-        sam = SAM(file_path=self.good_manifest_path)
-        sam.validate()
+        handler = SAMHandler(file_path=self.good_manifest_path)
+        handler.loader.validate_manifest()
 
     def test_valid_manifest_properties(self):
         """Test valid file path and that we can instantiate with errors"""
 
-        sam = SAM(file_path=self.good_manifest_path)
+        handler = SAMHandler(file_path=self.good_manifest_path)
+        sam = handler.loader
         self.assertTrue(sam.specification is not None, f"sam.specification is {sam.specification}")
         self.assertTrue(isinstance(sam.specification, dict), f"sam.specification is {type(sam.specification)}")
         self.assertTrue(sam.json_data is None, f"sam.json_data is {sam.json_data}")
@@ -43,16 +45,16 @@ class TestSAM(unittest.TestCase):
         self.assertTrue(sam.formatted_data is not None, f"sam.formatted_data is {sam.formatted_data}")
         self.assertTrue(isinstance(sam.formatted_data, str), f"sam.formatted_data is {type(sam.formatted_data)}")
 
-        self.assertEqual(
-            sam.manifest_api_version, "smarter/v0", f"sam.manifest_api_version is {sam.manifest_api_version}"
-        )
+        apiVersion = sam.get_key(key=SAMKeys.APIVERSION.value)
+        self.assertEqual(apiVersion, "smarter/v0", f"sam.get_key(key=SAMKeys.APIVERSION) is {apiVersion}")
         self.assertEqual(sam.data_format.value, "yaml", f"sam.data_format.value is {sam.data_format.value}")
         self.assertEqual(
             sam.manifest_metadata_keys,
             ["name", "description", "version", "tags", "annotations"],
             f"sam.manifest_metadata_keys is {sam.manifest_metadata_keys}",
         )
-        self.assertEqual(sam.manifest_kind, "Plugin", f"sam.manifest_kind is {sam.manifest_kind}")
+        kind = sam.get_key(key=SAMKeys.KIND.value)
+        self.assertEqual(kind, "Plugin", f"sam.manifest_kind is {kind}")
         self.assertEqual(sam.manifest_spec_keys, [], f"sam.manifest_spec_keys is {sam.manifest_spec_keys}")
         self.assertTrue(isinstance(sam.manifest_spec(), dict), f"sam.manifest_spec() is {type(sam.manifest_spec())}")
         self.assertEqual(sam.manifest_status_keys, [], f"sam.manifest_status_keys is {sam.manifest_status_keys}")
@@ -61,7 +63,8 @@ class TestSAM(unittest.TestCase):
     def test_get_key(self):
         """Test valid file path and that we can instantiate with errors"""
 
-        sam = SAM(file_path=self.good_manifest_path)
+        handler = SAMHandler(file_path=self.good_manifest_path)
+        sam = handler.loader
         self.assertEqual(sam.get_key("apiVersion"), "smarter/v0")
         self.assertEqual(sam.get_key("kind"), "Plugin")
         self.assertEqual(sam.get_key("metadata"), sam.manifest_metadata())
@@ -69,10 +72,11 @@ class TestSAM(unittest.TestCase):
     def test_missing_apiversion(self):
         """Test valid file path and that we can instantiate with errors"""
 
-        sam = SAM(file_path=self.good_manifest_path)
+        handler = SAMHandler(file_path=self.good_manifest_path)
+        sam = handler.loader
         sam.data.pop("apiVersion")
         try:
-            sam.validate()
+            sam.validate_manifest()
         except SAMValidationError as e:
             self.assertEqual(str(e), "Missing required key apiVersion")
         else:
@@ -81,10 +85,11 @@ class TestSAM(unittest.TestCase):
     def test_unknown_kind(self):
         """Test valid file path and that we can instantiate with errors"""
 
-        sam = SAM(file_path=self.good_manifest_path)
+        handler = SAMHandler(file_path=self.good_manifest_path)
+        sam = handler.loader
         sam.data["kind"] = "WrongKind"
         try:
-            sam.validate()
+            sam.validate_manifest()
         except SAMValidationError as e:
             self.assertEqual(
                 str(e),
@@ -97,7 +102,7 @@ class TestSAM(unittest.TestCase):
         """Test that a validation error is raised for an invalid file format"""
 
         try:
-            SAM(file_path=self.invalid_file_format)
+            SAMHandler(file_path=self.invalid_file_format)
         except SAMValidationError as e:
             self.assertEqual(str(e), "Invalid data format. Supported formats: json, yaml")
         else:

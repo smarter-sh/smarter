@@ -1,4 +1,4 @@
-"""Smarter API Manifest ("SAM") base class."""
+"""Smarter API Manifest Loader base class."""
 
 import json
 import logging
@@ -9,60 +9,23 @@ import requests
 import waffle
 import yaml
 
-from smarter.common.classes import SmarterEnumAbstract
-from smarter.common.exceptions import SAMValidationError
+from .enum import (
+    SAMDataFormats,
+    SAMKeys,
+    SAMKinds,
+    SAMMetadataKeys,
+    SAMSpecificationKeyOptions,
+)
+from .exceptions import SAMValidationError
+from .version import SMARTER_API_VERSION
 
 
 logger = logging.getLogger(__name__)
 
-SMARTER_API_VERSION = "smarter/v0"
 
-
-class SAMDataFormats(SmarterEnumAbstract):
-    """Data format enumeration."""
-
-    JSON = "json"
-    YAML = "yaml"
-
-
-class SAMSpecificationKeyOptions(SmarterEnumAbstract):
-    """Key types enumeration."""
-
-    REQUIRED = "required"
-    OPTIONAL = "optional"
-    READONLY = "readonly"
-
-
-class SAMKinds(SmarterEnumAbstract):
-    """Smarter manifest kinds enumeration."""
-
-    PLUGIN = "Plugin"
-    ACCOUNT = "Account"
-    USER = "User"
-    CHAT = "Chat"
-    CHATBOT = "Chatbot"
-
-
-class SAMKeys(SmarterEnumAbstract):
-    """Smarter API V0 required keys enumeration."""
-
-    APIVERSION = "apiVersion"
-    KIND = "kind"
-    METADATA = "metadata"
-    SPEC = "spec"
-    STATUS = "status"
-
-
-class SAMMetadataKeys(SmarterEnumAbstract):
-    """Smarter API V0 Plugin Metadata keys enumeration."""
-
-    NAME = "name"
-    DESCRIPTION = "description"
-    VERSION = "version"
-    TAGS = "tags"
-    ANNOTATIONS = "annotations"
-
-
+###############################################################################
+# Loader
+###############################################################################
 def validate_key(key: str, key_value: Any, spec: Any):
     """
     Validate a key against a spec. Of note:
@@ -109,63 +72,61 @@ def validate_key(key: str, key_value: Any, spec: Any):
             raise SAMValidationError(f"Invalid value for key {key}. Expected {spec} but got {key_value}")
 
 
-class SAM:
+class SAMLoader:
     """
-    Smarter API Manifest ("SAM") base class.
+    Smarter API Manifest Loader base class.
     """
 
     _raw_data: str = None
     _dict_data: dict = None
     _data_format: SAMDataFormats = None
-    _specification: dict = None
+    _specification: dict = {
+        SAMKeys.APIVERSION: SMARTER_API_VERSION,
+        SAMKeys.KIND: SAMKinds.all_values(),
+        SAMKeys.METADATA: {
+            SAMMetadataKeys.NAME: (str, [SAMSpecificationKeyOptions.REQUIRED]),
+            SAMMetadataKeys.DESCRIPTION: (str, [SAMSpecificationKeyOptions.REQUIRED]),
+            SAMMetadataKeys.VERSION: (str, [SAMSpecificationKeyOptions.REQUIRED]),
+            SAMMetadataKeys.TAGS: (list, [SAMSpecificationKeyOptions.OPTIONAL]),
+            SAMMetadataKeys.ANNOTATIONS: (list, [SAMSpecificationKeyOptions.OPTIONAL]),
+        },
+        SAMKeys.SPEC: (dict, [SAMSpecificationKeyOptions.REQUIRED]),
+        SAMKeys.STATUS: (
+            dict,
+            [SAMSpecificationKeyOptions.READONLY, SAMSpecificationKeyOptions.OPTIONAL],
+        ),
+    }
 
     def __init__(
         self,
         manifest: str = None,
-        data_format: SAMDataFormats = None,
         file_path: str = None,
         url: str = None,
     ):
-        self._specification = {
-            SAMKeys.APIVERSION: SMARTER_API_VERSION,
-            SAMKeys.KIND: SAMKinds.all_values(),
-            SAMKeys.METADATA: {
-                SAMMetadataKeys.NAME: (str, [SAMSpecificationKeyOptions.REQUIRED]),
-                SAMMetadataKeys.DESCRIPTION: (str, [SAMSpecificationKeyOptions.REQUIRED]),
-                SAMMetadataKeys.VERSION: (str, [SAMSpecificationKeyOptions.REQUIRED]),
-                SAMMetadataKeys.TAGS: (list, [SAMSpecificationKeyOptions.OPTIONAL]),
-                SAMMetadataKeys.ANNOTATIONS: (list, [SAMSpecificationKeyOptions.OPTIONAL]),
-            },
-            SAMKeys.SPEC: (dict, [SAMSpecificationKeyOptions.REQUIRED]),
-            SAMKeys.STATUS: (
-                dict,
-                [SAMSpecificationKeyOptions.READONLY, SAMSpecificationKeyOptions.OPTIONAL],
-            ),
-        }
 
-        self._raw_data = manifest
-        if data_format:
-            if data_format == SAMDataFormats.JSON:
-                try:
-                    json.loads(manifest)
-                except json.JSONDecodeError as e:
-                    raise SAMValidationError("Invalid json data received.") from e
-            elif data_format == SAMDataFormats.YAML:
-                try:
-                    yaml.safe_load(manifest)
-                except yaml.YAMLError as e:
-                    raise SAMValidationError("Invalid yaml data received.") from e
-            else:
-                raise SAMValidationError("Supported data formats: json, yaml.")
-            self._data_format = data_format
+        # 1. acquire the manifest data
+        # ---------------------------------------------------------------------
+        if sum([bool(manifest), bool(file_path), bool(url)]) == 0:
+            raise SAMValidationError("One of manifest, file_path, or url is required.")
+        if sum([bool(manifest), bool(file_path), bool(url)]) > 1:
+            raise SAMValidationError("Only one of manifest, file_path, or url is allowed.")
 
-        if not manifest and file_path:
+        if manifest:
+            self._raw_data = manifest
+        elif file_path:
             with open(file_path, encoding="utf-8") as file:
                 self._raw_data = file.read()
-        elif not manifest and url:
+        elif url:
             self._raw_data = requests.get(url, timeout=30).text
 
-        self.validate()
+        # 2. validate a json representation of the manifest using our in-house Enumerated data types.
+        # ---------------------------------------------------------------------
+        # Note that child classes are expected to
+        # override the specification as well as validate() in order to add
+        # the specification details of their own individual manfiests.
+        # Therefore, this call will only validate the top-level keys and values
+        # of the manifest.
+        self.validate_manifest()
 
     # -------------------------------------------------------------------------
     # data setters and getters. Sort out whether we received JSON or YAML data
@@ -229,7 +190,7 @@ class SAM:
             pass
         return None
 
-    def validate(self):
+    def validate_manifest(self):
         """
         Validate the manifest data. Recursively validate dict keys based on the
         contents of spec.
@@ -269,14 +230,6 @@ class SAM:
     # -------------------------------------------------------------------------
     # manifest properties
     # -------------------------------------------------------------------------
-    @property
-    def manifest_api_version(self) -> str:
-        return self.get_key(SAMKeys.APIVERSION.value)
-
-    @property
-    def manifest_kind(self) -> str:
-        return self.get_key(SAMKeys.KIND.value)
-
     @property
     def manifest_metadata_keys(self) -> list[str]:
         return SAMMetadataKeys.all_values()
