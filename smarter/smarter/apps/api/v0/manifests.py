@@ -9,7 +9,6 @@ import requests
 import waffle
 import yaml
 
-# pylint: disable=E0611
 from smarter.common.classes import SmarterEnumAbstract
 from smarter.common.exceptions import SAMValidationError
 

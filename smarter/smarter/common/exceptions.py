@@ -29,7 +29,7 @@ class SmarterBusinessRuleViolation(SmarterExceptionBase):
     """Exception raised when policies are violated."""
 
 
-class SmarterApiManifestValidationError(SmarterExceptionBase):
+class SAMValidationError(SmarterExceptionBase):
     """Exception raised during Plugin validation."""
 
 
@@ -37,7 +37,7 @@ EXCEPTION_MAP = {
     SmarterValueError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
     SmarterConfigurationError: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
     SmarterIlligalInvocationError: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
-    SmarterApiManifestValidationError: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
+    SAMValidationError: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
     openai.APIError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
     ValueError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
     TypeError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
