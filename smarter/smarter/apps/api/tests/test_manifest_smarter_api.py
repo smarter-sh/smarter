@@ -8,6 +8,7 @@ import unittest
 
 from smarter.apps.api.v0.manifests import SAM
 from smarter.common.const import PYTHON_ROOT
+from smarter.common.exceptions import SAMValidationError  # pylint: disable=E0611
 
 
 # pylint: disable=too-many-instance-attributes
@@ -16,10 +17,9 @@ class TestSAM(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        self.good_manifest_path = os.path.join(
-            PYTHON_ROOT, "smarter", "apps", "api", "tests", "data", "good-manifest.yaml"
-        )
-        print(self.good_manifest_path)
+        self.path = os.path.join(PYTHON_ROOT, "smarter", "apps", "api", "tests", "data")
+        self.good_manifest_path = os.path.join(self.path, "good-manifest.yaml")
+        self.invalid_file_format = os.path.join(self.path, "invalid-file-format.yaml")
 
     def test_valid_manifest(self):
         """Test valid file path and that we can instantiate with errors"""
@@ -68,3 +68,40 @@ class TestSAM(unittest.TestCase):
         self.assertEqual(sam.get_key("apiVersion"), "smarter/v0")
         self.assertEqual(sam.get_key("kind"), "Plugin")
         self.assertEqual(sam.get_key("metadata"), sam.manifest_metadata())
+
+    def test_missing_apiversion(self):
+        """Test valid file path and that we can instantiate with errors"""
+
+        sam = SAM(file_path=self.good_manifest_path)
+        sam.data.pop("apiVersion")
+        try:
+            sam.validate()
+        except SAMValidationError as e:
+            self.assertEqual(str(e), "Missing required key apiVersion")
+        else:
+            self.fail("SAMValidationError not raised")
+
+    def test_unknown_kind(self):
+        """Test valid file path and that we can instantiate with errors"""
+
+        sam = SAM(file_path=self.good_manifest_path)
+        sam.data["kind"] = "WrongKind"
+        try:
+            sam.validate()
+        except SAMValidationError as e:
+            self.assertEqual(
+                str(e),
+                "Invalid value WrongKind for key kind. Expected one of ['Plugin', 'Account', 'User', 'Chat', 'Chatbot']",
+            )
+        else:
+            self.fail("SAMValidationError not raised")
+
+    def test_invalid_file_format(self):
+        """Test that a validation error is raised for an invalid file format"""
+
+        try:
+            SAM(file_path=self.invalid_file_format)
+        except SAMValidationError as e:
+            self.assertEqual(str(e), "Invalid data format. Supported formats: json, yaml")
+        else:
+            self.fail("SAMValidationError not raised")
