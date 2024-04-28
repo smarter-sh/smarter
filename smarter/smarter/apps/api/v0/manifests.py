@@ -235,11 +235,6 @@ class SAM:
         Validate the manifest data. Recursively validate dict keys based on the
         contents of spec.
         """
-        # top-level validations of the manifest itself.
-        if not self.raw_data:
-            raise SAMValidationError("Received empty or invalid data.")
-        if not self.data:
-            raise SAMValidationError("Invalid data format. Supported formats: json, yaml")
 
         def recursive_validator(recursed_data: dict = None, recursed_spec: dict = None):
             this_overall_spec = recursed_spec or self.specification
@@ -264,6 +259,12 @@ class SAM:
                         spec=key_spec,
                     )
 
+        # top-level validations of the manifest itself.
+        if not self.raw_data:
+            raise SAMValidationError("Received empty or invalid data.")
+        if not self.data:
+            raise SAMValidationError("Invalid data format. Supported formats: json, yaml")
+        # recursively validate the json representation of the manifest data
         recursive_validator()
 
     # -------------------------------------------------------------------------
