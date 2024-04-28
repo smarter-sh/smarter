@@ -2,8 +2,6 @@
 """Test TestSAM."""
 
 import os
-
-# python stuff
 import unittest
 
 from smarter.apps.api.v0.manifests import SAM
@@ -11,7 +9,6 @@ from smarter.common.const import PYTHON_ROOT
 from smarter.common.exceptions import SAMValidationError  # pylint: disable=E0611
 
 
-# pylint: disable=too-many-instance-attributes
 class TestSAM(unittest.TestCase):
     """Test TestSAM"""
 
