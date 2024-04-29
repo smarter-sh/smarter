@@ -17,7 +17,7 @@ from smarter.apps.plugin.api.v0.manifests.enum import (
 from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
 from smarter.lib.django.validators import SmarterValidator
 
-from ..enum import SAMPluginMetadataClassValues
+from ..enum import SAMPluginMetadataClassValues, SAMPluginSpecSelectorKeyDirectiveValues
 
 
 class SAMPluginSpecSelector(BaseModel):
@@ -36,7 +36,8 @@ class SAMPluginSpecSelector(BaseModel):
         None,
         description=(
             f"{err_desc_manifest_kind}.searchTerms[list]. Optional. The keyword search terms to use when the "
-            "Plugin directive is 'searchTerms'. Keywords are most effective when constrained to 1 or 2 words "
+            f"Plugin directive is '{SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS.value}'. "
+            "Keywords are most effective when constrained to 1 or 2 words "
             "each and lists are limited to a few dozen items."
         ),
     )
@@ -187,8 +188,8 @@ class SAMPluginSpecData(BaseModel):
         None,
         description=(
             f"{err_desc_manifest_kind}.staticData[obj]: The static data returned by the Plugin when the "
-            f"class is '{SAMPluginMetadataClassValues.STATIC.value}'. LLM's are adept at understanding the context of json data structures. "
-            "Try to provide granular and specific data elements."
+            f"class is '{SAMPluginMetadataClassValues.STATIC.value}'. LLM's are adept at understanding the context of "
+            "json data structures. Try to provide granular and specific data elements."
         ),
     )
     sqlData: Optional[SAMPluginSpecDataSql] = Field(
