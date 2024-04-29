@@ -207,13 +207,13 @@ class SAMPluginSpecData(BaseModel):
     @model_validator(mode="after")
     def validate_business_rules(self) -> "SAMPluginSpecData":
         """Plugin-level business rule validations"""
-        static_name = self.staticData.__class__.__name__
-        sql_name = self.sqlData.__class__.__name__
-        api_name = self.apiData.__class__.__name__
-
         total_set = bool(self.staticData) + bool(self.sqlData) + bool(self.apiData)
 
         if total_set != 1:
+            static_name = self.staticData.__class__.__name__
+            sql_name = self.sqlData.__class__.__name__
+            api_name = self.apiData.__class__.__name__
+
             raise SAMValidationError(
                 f"One and only one of {self.err_desc_manifest_kind}.{static_name}, {self.err_desc_manifest_kind}.{sql_name}, or {self.err_desc_manifest_kind}.{api_name} must be provided."
             )
