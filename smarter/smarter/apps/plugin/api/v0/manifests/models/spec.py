@@ -17,6 +17,8 @@ from smarter.apps.plugin.api.v0.manifests.enum import (
 from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
 from smarter.lib.django.validators import SmarterValidator
 
+from ..enum import SAMPluginMetadataClassValues
+
 
 class SAMPluginSpecSelector(BaseModel):
     """Smarter API V0 Plugin Manifest - Spec - Selector class."""
@@ -185,7 +187,7 @@ class SAMPluginSpecData(BaseModel):
         None,
         description=(
             f"{err_desc_manifest_kind}.staticData[obj]: The static data returned by the Plugin when the "
-            "class is 'static'. LLM's are adept at understanding the context of json data structures. "
+            f"class is '{SAMPluginMetadataClassValues.STATIC.value}'. LLM's are adept at understanding the context of json data structures. "
             "Try to provide granular and specific data elements."
         ),
     )
@@ -193,20 +195,19 @@ class SAMPluginSpecData(BaseModel):
         None,
         description=(
             f"{err_desc_manifest_kind}.sqlData[obj]: The SQL connection and query to use for the Plugin return data when "
-            "the class is 'sql'"
+            f"the class is '{SAMPluginMetadataClassValues.SQL.value}'"
         ),
     )
     apiData: Optional[HttpRequest] = Field(
         None,
         description=(
             f"{err_desc_manifest_kind}.apiData[obj]: The rest API connection and endpoint to use for the Plugin "
-            "return data when the class is 'api'"
+            f"return data when the class is '{SAMPluginMetadataClassValues.API.value}'"
         ),
     )
 
     @model_validator(mode="after")
     def validate_business_rules(self) -> "SAMPluginSpecData":
-        """Plugin-level business rule validations"""
         total_set = bool(self.staticData) + bool(self.sqlData) + bool(self.apiData)
 
         if total_set != 1:
