@@ -167,7 +167,7 @@ class SAMPluginSpecData(BaseModel):
             "that is provided to the LLM as part of a tool_chain dict"
         ),
     )
-    static_data: Optional[dict] = Field(
+    staticData: Optional[dict] = Field(
         None,
         description=(
             "Plugin.spec.data.staticData[obj]: The static data returned by the Plugin when the "
@@ -175,14 +175,14 @@ class SAMPluginSpecData(BaseModel):
             "Try to provide granular and specific data elements."
         ),
     )
-    sql_data: Optional[SAMPluginSpecDataSql] = Field(
+    sqlData: Optional[SAMPluginSpecDataSql] = Field(
         None,
         description=(
             "Plugin.spec.data.sqlData[obj]: The SQL connection and query to use for the Plugin return data when "
             "the class is 'sql'"
         ),
     )
-    api_data: Optional[HttpRequest] = Field(
+    apiData: Optional[HttpRequest] = Field(
         None,
         description=(
             "Plugin.spec.data.apiData[obj]: The rest API connection and endpoint to use for the Plugin "
@@ -202,8 +202,12 @@ class SAMPluginSpec(SAMSpecBase):
     )
     data: SAMPluginSpecData = Field(..., description="Plugin.spec.data[obj]: the json data returned by the Plugin")
 
-    @model_validator(mode="after")
-    def validate_business_rules(self) -> "SAMPluginSpec":
-        # Add Plugin Spec-level business rules validations here
+    # @model_validator(mode="after")
+    # def validate_business_rules(self) -> "SAMPluginSpec":
+    #     err_desc_manifest_kind = "Plugin.metadata.spec"
+    #     err_desc_selector_name = self.selector.__class__.__name__
+    #     err_desc_prompt_name = self.prompt.__class__.__name__
+    #     err_desc_data_name = self.data.__class__.__name__
+    #     err_desc_model_name = f"{err_desc_manifest_kind}.{err_desc_selector_name}"
 
-        return self
+    #     return self
