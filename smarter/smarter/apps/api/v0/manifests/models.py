@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from smarter.lib.django.validators import SmarterValidator
 
-from .enum import SAMKinds
+from .enum import DbEngine, SAMKinds
 from .exceptions import SAMValidationError
 from .version import SMARTER_API_VERSION
 
@@ -56,11 +56,21 @@ class HttpRequest(BaseModel):
 class SqlConnection(BaseModel):
     """Smarter API V0 Plugin Manifest - Spec - Data - SQL - Connection class."""
 
+    db_engine: str = Field(
+        ...,
+        description=f"Plugin.spec.data.sql_data.dbEngine: a valid SQL database engine.  Must be one of {DbEngine.all_values()}",
+    )
     host: str = Field(..., description="The host of the SQL connection")
     port: int = Field(..., description="The port of the SQL connection")
-    database: str = Field(..., description="The database of the SQL connection")
-    user: str = Field(..., description="The user of the SQL connection")
-    password: str = Field(..., description="The password of the SQL connection")
+    database: str = Field(..., description="The name of the database to connect to")
+    user: str = Field(..., description="The database username")
+    password: str = Field(..., description="The password")
+
+    @field_validator("db_engine")
+    def validate_db_engine(cls, v) -> str:
+        if v in DbEngine.all_values():
+            return v
+        raise SAMValidationError(f"Invalid SQL connection engine: {v}. Must be one of {DbEngine.all_values()}")
 
     @field_validator("host")
     def validate_host(cls, v) -> str:
@@ -174,16 +184,16 @@ class SAM(BaseModel):
     """
 
     apiVersion: str = Field(..., description="The API version of the SAM")
-    kind: str = Field(..., description="The kind of SAM")
-    metadata: SAMMetadataBase
-    spec: SAMSpecBase
-    status: SAMStatusBase
+    kind: str = Field(..., description=f"The kind of SAM. Must be one of {SAMKinds.all_values()}")
+    metadata: SAMMetadataBase = Field(..., description="The metadata of the SAM")
+    spec: SAMSpecBase = Field(..., description="The spec of the SAM")
+    status: SAMStatusBase = Field(None, description="The status of the SAM")
 
     @field_validator("apiVersion")
     def validate_apiVersion(cls, v) -> str:
         """Validate apiVersion"""
         if v in [None, ""]:
-            raise SAMValidationError("Missing required key apiVersion")
+            raise SAMValidationError("Missing required manifest key: apiVersion")
         if v != SMARTER_API_VERSION:
             raise SAMValidationError(f"Invalid apiVersion. Expected {SMARTER_API_VERSION} but got {v}")
         return v
@@ -192,7 +202,7 @@ class SAM(BaseModel):
     def validate_kind(cls, v) -> str:
         """Validate kind"""
         if v in [None, ""]:
-            raise SAMValidationError("Missing required key kind")
+            raise SAMValidationError("Missing required manifest key: kind")
         if v not in SAMKinds.all_values():
-            raise SAMValidationError(f"Invalid kind. Expected one of {SAMKinds.all_values()} but got {v}")
+            raise SAMValidationError(f"Invalid kind. Must be one of {SAMKinds.all_values()} but got {v}")
         return v

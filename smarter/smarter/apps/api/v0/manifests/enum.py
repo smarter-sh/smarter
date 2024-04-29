@@ -11,6 +11,16 @@ class SmarterEnumAbstract(Enum):
         return [member.value for _, member in cls.__members__.items()]
 
 
+class DbEngine(SmarterEnumAbstract):
+    """SQL database engine enumeration."""
+
+    POSTGRES = "postgres"
+    MYSQL = "mysql"
+    ORACLE = "oracle"
+    SQLITE = "sqlite"
+    MSSQL = "mssql"
+
+
 class SAMDataFormats(SmarterEnumAbstract):
     """Data format enumeration."""
 

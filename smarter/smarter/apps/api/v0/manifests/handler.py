@@ -2,7 +2,7 @@
 
 import logging
 
-from .enum import SAMKeys, SAMMetadataKeys
+from .enum import SAMKeys
 from .loader import SAMLoader
 from .models import SAM, SAMMetadataBase, SAMSpecBase, SAMStatusBase
 
@@ -33,20 +33,17 @@ class SAMHandler:
         self._loader = SAMLoader(manifest, file_path, url)
 
         # initialize Pydantic models from the SAMLoader
-        name = self.loader.manifest_metadata(key=SAMMetadataKeys.NAME.value)
-        description = self.loader.manifest_metadata(key=SAMMetadataKeys.DESCRIPTION.value)
-        version = self.loader.manifest_metadata(key=SAMMetadataKeys.VERSION.value)
-        tags = self.loader.manifest_metadata(key=SAMMetadataKeys.TAGS.value)
-        annotations = self.loader.manifest_metadata(key=SAMMetadataKeys.ANNOTATIONS.value)
-
-        metadata = SAMMetadataBase(
-            name=name, description=description, version=version, tags=tags, annotations=annotations
-        )
-        spec = SAMSpecBase()
-        status = SAMStatusBase()
-
         apiVersion = self.loader.get_key(SAMKeys.APIVERSION.value)
         kind = self.loader.get_key(SAMKeys.KIND.value)
+
+        metadata_dict = self.loader.manifest_metadata()
+        metadata = SAMMetadataBase(**metadata_dict)
+
+        spec_dict = self.loader.manifest_spec()
+        spec = SAMSpecBase(**spec_dict)
+
+        status_dict = self.loader.manifest_status()
+        status = SAMStatusBase(**status_dict)
 
         self._manifest = SAM(apiVersion=apiVersion, kind=kind, metadata=metadata, spec=spec, status=status)
 
