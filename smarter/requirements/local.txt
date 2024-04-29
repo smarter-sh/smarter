@@ -29,6 +29,6 @@ pylint==3.1.0
 pylint-django==2.5.5
 bandit==1.7.7
 pydocstringformatter==0.7.3
-tox==4.14.1
+tox==4.15.0
 codespell==2.2.6
 coverage==7.4.4
