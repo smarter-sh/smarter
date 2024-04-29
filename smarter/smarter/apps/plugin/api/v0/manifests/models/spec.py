@@ -9,15 +9,12 @@ from sqlparse.exceptions import SQLParseError
 
 from smarter.apps.api.v0.manifests.exceptions import SAMValidationError
 from smarter.apps.api.v0.manifests.models import HttpRequest, SAMSpecBase, SqlConnection
-
-# Plugin
 from smarter.apps.plugin.api.v0.manifests.enum import (
+    SAMPluginMetadataClassValues,
     SAMPluginSpecSelectorKeyDirectiveValues,
 )
 from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
 from smarter.lib.django.validators import SmarterValidator
-
-from ..enum import SAMPluginMetadataClassValues, SAMPluginSpecSelectorKeyDirectiveValues
 
 
 class SAMPluginSpecSelector(BaseModel):
