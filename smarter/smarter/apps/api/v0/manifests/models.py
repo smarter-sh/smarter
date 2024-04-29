@@ -1,6 +1,7 @@
 """Pydantic models for Smarter API Manifests."""
 
 import re
+from enum import Enum
 from typing import List, Optional
 
 import validators
@@ -16,13 +17,20 @@ from .version import SMARTER_API_VERSION
 class HttpRequest(BaseModel):
     """Smarter API V0 Manifest generic HTTP request model."""
 
+    DEFAULT_PORT = 80
+    DEFAULT_METHOD = "GET"
+
     host: str = Field(..., description="Plugin.spec.data.api_data.host: a valid internet domain name")
     port: int = Field(
-        ..., gt=0, lt=65535, description="Plugin.spec.data.api_data.port: a valid http port number: 0 thru 65,535"
+        DEFAULT_PORT,
+        gt=0,
+        lt=65535,
+        description=f"Plugin.spec.data.api_data.port: a valid http port number: 0 thru 65,535. Default is {DEFAULT_PORT}",
     )
     endpoint: str = Field(..., description="Plugin.spec.data.api_data.endPoint: a valid http url")
     method: str = Field(
-        ..., description="Plugin.spec.data.api_data.method: a valid http method: GET, POST, PUT, DELETE"
+        DEFAULT_METHOD,
+        description=f"Plugin.spec.data.api_data.method: a valid http method: GET, POST, PUT, DELETE. Default is '{DEFAULT_METHOD}'",
     )
     headers: Optional[dict] = Field(None, description="Plugin.spec.data.api_data.headers: a valid http header dict")
     body: Optional[dict] = Field(None, description="Plugin.spec.data.api_data.body: The body of the API connection")
@@ -56,13 +64,37 @@ class HttpRequest(BaseModel):
 class SqlConnection(BaseModel):
     """Smarter API V0 Plugin Manifest - Spec - Data - SQL - Connection class."""
 
+    class PortAssignmentDefaults(Enum):
+        """SQL Port Assignments."""
+
+        MYSQL = 3306
+        POSTGRES = 5432
+        SQLITE = None
+        ORACLE = 1521
+        MSSQL = 1433
+
+    DEFAULT_PORT_ASSIGNMENTS = [
+        (DbEngine.MYSQL.name, PortAssignmentDefaults.MYSQL.value),
+        (DbEngine.POSTGRES.name, PortAssignmentDefaults.POSTGRES.value),
+        (DbEngine.ORACLE.name, PortAssignmentDefaults.ORACLE.value),
+        (DbEngine.SQLITE.name, PortAssignmentDefaults.SQLITE.value),
+        (DbEngine.MSSQL.name, PortAssignmentDefaults.MSSQL.value),
+    ]
+    PRETTY_PORT_ASSIGNMENTS = ", ".join([f"{engine}: {port}" for engine, port in DEFAULT_PORT_ASSIGNMENTS.items()])
+
     db_engine: str = Field(
         ...,
-        description=f"Plugin.spec.data.sql_data.dbEngine: a valid SQL database engine.  Must be one of {DbEngine.all_values()}",
+        description=f"Plugin.spec.data.sql_data.dbEngine: a valid SQL database engine.  Common db_engines: {DbEngine.all_values()}",
     )
-    host: str = Field(..., description="The host of the SQL connection")
-    port: int = Field(..., description="The port of the SQL connection")
-    database: str = Field(..., description="The name of the database to connect to")
+    host: str = Field(
+        ...,
+        description="The remote host of the SQL connection. Should be a valid internet domain name. Example: 'localhost' or 'mysql.mycompany.com' ",
+    )
+    port: int = Field(
+        None,
+        description=f"The port of the SQL connection. Default values are assigned based on the db_engine: {PRETTY_PORT_ASSIGNMENTS}.",
+    )
+    database: str = Field(..., description="The name of the database to connect to. Examples: 'sales' or 'mydb'")
     user: str = Field(..., description="The database username")
     password: str = Field(..., description="The password")
 
@@ -80,8 +112,16 @@ class SqlConnection(BaseModel):
 
     @field_validator("port")
     def validate_port(cls, v) -> int:
+        if v is None:
+            default_port = cls.DEFAULT_PORT_ASSIGNMENTS.get(cls.db_engine, None)
+            if default_port is not None:
+                return default_port
         if v < 1 or v > 65535:
             raise SAMValidationError(f"Invalid SQL connection port: {v}. Must be between 1 and 65535.")
+        if not v:
+            raise SAMValidationError(
+                f"Invalid SQL connection. Port value is missing and no default value was found for db_engine {cls.db_engine}."
+            )
         return v
 
     @field_validator("database")

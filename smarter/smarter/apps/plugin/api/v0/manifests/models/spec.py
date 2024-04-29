@@ -25,7 +25,7 @@ class SAMPluginSpecSelector(BaseModel):
         ...,
         description=(
             "Plugin.spec.selector.directive[str]: Required. the kind of selector directive to use for the Plugin. "
-            "Must be one of: {SAMPluginSpecSelectorKeyDirectiveValues.all_values()}"
+            f"Must be one of: {SAMPluginSpecSelectorKeyDirectiveValues.all_values()}"
         ),
     )
     search_terms: Optional[List[str]] = Field(
@@ -70,7 +70,7 @@ class SAMPluginSpecSelector(BaseModel):
         # 2. searchTerms is not allowed when directive is 'always'
         if self.directive != SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS and self.search_terms is not None:
             raise SAMValidationError(
-                "Plugin.spec.selector.searchTerms is only used when Plugin.spec.selector.directive is 'always'"
+                "Plugin.spec.selector.searchTerms is only used when Plugin.spec.selector.directive is 'searchTerms'"
             )
 
         return self
@@ -143,7 +143,10 @@ class SAMPluginSpecDataSql(BaseModel):
     connection: SqlConnection = Field(
         ..., description="Plugin.spec.data.sqlData.connection[obj]: an sql server connection"
     )
-    sql: str = Field(..., description="Plugin.spec.data.sqlData.sql[str]: a valid SQL query")
+    sql: str = Field(
+        ...,
+        description="Plugin.spec.data.sqlData.sql[str]: a valid SQL query. Example: 'SELECT * FROM customers WHERE id = 100;'",
+    )
 
     @field_validator("sql")
     def validate_sql(cls, v) -> str:
