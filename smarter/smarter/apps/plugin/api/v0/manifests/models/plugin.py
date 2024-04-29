@@ -18,25 +18,22 @@ from .status import SAMPluginStatus
 class SAMPlugin(SAM):
     """Smarter API V0 Manifest - Plugin"""
 
-    metadata: SAMPluginMetadata = Field(..., description="Plugin.metadata: Required, the Plugin metadata.")
-    spec: SAMPluginSpec = Field(..., description="Plugin.spec: Required, the Plugin specification.")
+    metadata: SAMPluginMetadata = Field(..., description="Plugin.metadata[obj]: Required, the Plugin metadata.")
+    spec: SAMPluginSpec = Field(..., description="Plugin.spec[obj]: Required, the Plugin specification.")
     status: Optional[SAMPluginStatus] = Field(
-        ..., description="Plugin.status: Optional, Read-only. Stateful status information about the Plugin."
+        ..., description="Plugin.status[obj]: Optional, Read-only. Stateful status information about the Plugin."
     )
 
     @model_validator(mode="after")
     def validate_business_rules(self) -> "SAMPlugin":
         """Plugin-level business rule validations"""
 
-        # 1. if metadata.class == 'static' then spec.data.staticData is a required field
         if self.metadata.plugin_class == SAMPluginMetadataClassValues.STATIC and not self.spec.data.static_data:
             raise SAMValidationError("spec.data.staticData is required when Plugin.class is 'static'")
 
-        # 2. if metadata.class == 'sql' then spec.data.sqlData is a required field
         if self.metadata.plugin_class == SAMPluginMetadataClassValues.SQL and not self.spec.data.sql_data:
             raise SAMValidationError("spec.data.sqlData is required when Plugin.class is 'sql'")
 
-        # 3. if metadata.class == 'api' then spec.data.apiData is a required field
         if self.metadata.plugin_class == SAMPluginMetadataClassValues.API and not self.spec.data.api_data:
             raise SAMValidationError("spec.data.apiData is required when Plugin.class is 'api'")
 
