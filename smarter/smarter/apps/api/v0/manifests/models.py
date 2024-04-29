@@ -183,11 +183,19 @@ class SAM(BaseModel):
 
     """
 
-    apiVersion: str = Field(..., description="The API version of the SAM")
-    kind: str = Field(..., description=f"The kind of SAM. Must be one of {SAMKinds.all_values()}")
-    metadata: SAMMetadataBase = Field(..., description="The metadata of the SAM")
-    spec: SAMSpecBase = Field(..., description="The spec of the SAM")
-    status: SAMStatusBase = Field(None, description="The status of the SAM")
+    apiVersion: str = Field(
+        ..., description=f"apiVersion[String]: Required. The API version of the SAM. Set this to {SMARTER_API_VERSION}"
+    )
+    kind: str = Field(
+        ...,
+        description=f"kind[String]: Required. The kind of resource described by the manifest. Must be one of {SAMKinds.all_values()}",
+    )
+    metadata: SAMMetadataBase = Field(..., description="metadata[obj]: Required. The manifest metadata.")
+    spec: SAMSpecBase = Field(..., description="spec[obj]: Required. The manifest specification.")
+    status: Optional[SAMStatusBase] = Field(
+        None,
+        description="status[obj]: Optional. Read-only. The run-time state of the resource described by the manifest.",
+    )
 
     @field_validator("apiVersion")
     def validate_apiVersion(cls, v) -> str:

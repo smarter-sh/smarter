@@ -23,18 +23,27 @@ class SAMPluginSpecSelector(BaseModel):
 
     directive: str = Field(
         ...,
-        description=f"Plugin.spec.selector.directive: the kind of selector directive to use for the Plugin. Must be one of: {SAMPluginSpecSelectorKeyDirectiveValues.all_values()}",
+        description=(
+            "Plugin.spec.selector.directive[str]: Required. the kind of selector directive to use for the Plugin. "
+            "Must be one of: {SAMPluginSpecSelectorKeyDirectiveValues.all_values()}"
+        ),
     )
     search_terms: Optional[List[str]] = Field(
         None,
-        description="Plugin.spec.selector.searchTerms. The keyword search terms to use when the Plugin directive is 'searchTerms'. Keywords are most effective when constrained to 1 or 2 words each and lists are limited to a few dozen items.",
+        description=(
+            "Plugin.spec.selector.searchTerms[list]. Optional. The keyword search terms to use when the "
+            "Plugin directive is 'searchTerms'. Keywords are most effective when constrained to 1 or 2 words "
+            "each and lists are limited to a few dozen items."
+        ),
     )
 
     @field_validator("directive")
     def validate_directive(cls, v) -> str:
         if v not in SAMPluginSpecSelectorKeyDirectiveValues.all_values():
             raise SAMValidationError(
-                f"Invalid value found in Plugin.spec.selector.directive: {v}. Must be one of {SAMPluginSpecSelectorKeyDirectiveValues.all_values()}. These values are case-sensitive and camelCase."
+                f"Invalid value found in Plugin.spec.selector.directive: {v}. "
+                f"Must be one of {SAMPluginSpecSelectorKeyDirectiveValues.all_values()}. "
+                "These values are case-sensitive and camelCase."
             )
         return v
 
@@ -44,7 +53,8 @@ class SAMPluginSpecSelector(BaseModel):
             for search_term in v:
                 if not re.match(SmarterValidator.VALID_CLEAN_STRING, search_term):
                     raise SAMValidationError(
-                        f"Invalid value found in Plugin.spec.selector.searchTerms: {search_term}. Avoid using characters that are not URL friendly, like spaces and special ascii characters."
+                        f"Invalid value found in Plugin.spec.selector.searchTerms: {search_term}. "
+                        "Avoid using characters that are not URL friendly, like spaces and special ascii characters."
                     )
         return v
 
@@ -69,13 +79,46 @@ class SAMPluginSpecSelector(BaseModel):
 class SAMPluginSpecPrompt(BaseModel):
     """Smarter API V0 Plugin Manifest - Spec - Prompt class."""
 
+    DEFAULT_MODEL = "gpt-3.5-turbo-1106"
+    DEFAULT_TEMPERATURE = 0.5
+    DEFAULT_MAXTOKENS = 2048
+
     systemrole: str = Field(
         ...,
-        description="The systemrole of the Plugin. Be verbose and specific. Ensure that the systemRole accurately conveys to the LLM how you want it to use the Plugin data that is returned.",
+        description=(
+            "Plugin.spec.prompt.systemRole[str]. Required. The system role that the Plugin will use for the LLM "
+            "text completion prompt. Be verbose and specific. Ensure that systemRole accurately conveys to the LLM "
+            "how you want it to use the Plugin data that is returned."
+        ),
     )
-    model: str = Field(..., description=f"The model of the Plugin. Must be one of: {VALID_CHAT_COMPLETION_MODELS}")
-    temperature: float = Field(..., gt=0, lt=1.0, description="The temperature of the Plugin")
-    maxtokens: int = Field(..., gt=0, description="The maxtokens of the Plugin")
+    model: str = Field(
+        DEFAULT_MODEL,
+        description=(
+            f"Plugin.spec.prompt.model[str] Optional. The model of the Plugin. Defaults to {DEFAULT_MODEL}. "
+            f"Must be one of: {VALID_CHAT_COMPLETION_MODELS}"
+        ),
+    )
+    temperature: float = Field(
+        DEFAULT_TEMPERATURE,
+        gt=0,
+        lt=1.0,
+        description=(
+            "Plugin.spec.prompt.temperature[float] Optional. The temperature of the Plugin. "
+            f"Defaults to {DEFAULT_TEMPERATURE}. "
+            "Should be between 0 and 1.0. "
+            "The higher the temperature, the more creative the response. "
+            "The lower the temperature, the more predictable the response."
+        ),
+    )
+    maxtokens: int = Field(
+        DEFAULT_MAXTOKENS,
+        gt=0,
+        description=(
+            "Plugin.spec.prompt.maxtokens[int]. Optional. "
+            f"The maxtokens of the Plugin. Defaults to {DEFAULT_MAXTOKENS}. "
+            "The maximum number of tokens the LLM should generate in the prompt response. "
+        ),
+    )
 
     @field_validator("systemrole")
     def validate_systemrole(cls, v) -> str:
@@ -85,6 +128,8 @@ class SAMPluginSpecPrompt(BaseModel):
 
     @field_validator("model")
     def validate_model(cls, v) -> str:
+        if v is None:
+            return cls.DEFAULT_MODEL
         if v in VALID_CHAT_COMPLETION_MODELS:
             return v
         raise SAMValidationError(
@@ -95,8 +140,10 @@ class SAMPluginSpecPrompt(BaseModel):
 class SAMPluginSpecDataSql(BaseModel):
     """Smarter API V0 Plugin Manifest Plugin.spec.data.sqlData"""
 
-    connection: SqlConnection = Field(..., description="Plugin.spec.data.sqlData: an sql server connection")
-    sql: str = Field(..., description="Plugin.spec.data.sqlData: a valid SQL query")
+    connection: SqlConnection = Field(
+        ..., description="Plugin.spec.data.sqlData.connection[obj]: an sql server connection"
+    )
+    sql: str = Field(..., description="Plugin.spec.data.sqlData.sql[str]: a valid SQL query")
 
     @field_validator("sql")
     def validate_sql(cls, v) -> str:
@@ -112,19 +159,32 @@ class SAMPluginSpecData(BaseModel):
 
     description: str = Field(
         ...,
-        description="Plugin.spec.data.description: A narrative description of the Plugin features that is provided to the LLM as part of a tool_chain dict",
+        description=(
+            "Plugin.spec.data.description[str]: A narrative description of the Plugin features "
+            "that is provided to the LLM as part of a tool_chain dict"
+        ),
     )
     static_data: Optional[dict] = Field(
         None,
-        description="Plugin.spec.data.staticData: The static data returned by the Plugin when the class is 'static'. LLM's are adept at understanding the context of json data structures. Try to provide granular and specific data elements.",
+        description=(
+            "Plugin.spec.data.staticData[obj]: The static data returned by the Plugin when the "
+            "class is 'static'. LLM's are adept at understanding the context of json data structures. "
+            "Try to provide granular and specific data elements."
+        ),
     )
     sql_data: Optional[SAMPluginSpecDataSql] = Field(
         None,
-        description="Plugin.spec.data.sqlData: The SQL connection and query to use for the Plugin return data when the class is 'sql'",
+        description=(
+            "Plugin.spec.data.sqlData[obj]: The SQL connection and query to use for the Plugin return data when "
+            "the class is 'sql'"
+        ),
     )
     api_data: Optional[HttpRequest] = Field(
         None,
-        description="Plugin.spec.data.apiData: The rest API connection and endpoint to use for the Plugin return data when the class is 'api'",
+        description=(
+            "Plugin.spec.data.apiData[obj]: The rest API connection and endpoint to use for the Plugin "
+            "return data when the class is 'api'"
+        ),
     )
 
 
@@ -132,12 +192,12 @@ class SAMPluginSpec(SAMSpecBase):
     """Smarter API V0 Plugin Manifest Plugin.spec"""
 
     selector: SAMPluginSpecSelector = Field(
-        ..., description="Plugin.spec.selector: the selector logic to use for the Plugin"
+        ..., description="Plugin.spec.selector[obj]: the selector logic to use for the Plugin"
     )
     prompt: SAMPluginSpecPrompt = Field(
-        ..., description="Plugin.spec.prompt: the LLM prompt engineering to apply to the Plugin"
+        ..., description="Plugin.spec.prompt[obj]: the LLM prompt engineering to apply to the Plugin"
     )
-    data: SAMPluginSpecData = Field(..., description="Plugin.spec.data: the json data returned by the Plugin")
+    data: SAMPluginSpecData = Field(..., description="Plugin.spec.data[obj]: the json data returned by the Plugin")
 
     @model_validator(mode="after")
     def validate_business_rules(self) -> "SAMPluginSpec":

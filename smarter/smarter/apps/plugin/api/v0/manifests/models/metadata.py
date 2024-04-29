@@ -9,9 +9,6 @@ from smarter.apps.api.v0.manifests.models import SAMMetadataBase
 from smarter.apps.plugin.api.v0.manifests.enum import SAMPluginMetadataClassValues
 
 
-###############################################################################
-# Plugin metadata
-###############################################################################
 class SAMPluginMetadata(SAMMetadataBase):
     """Smarter API V0 Plugin Manifest - Metadata class."""
 
