@@ -21,17 +21,19 @@ from smarter.lib.django.validators import SmarterValidator
 class SAMPluginSpecSelector(BaseModel):
     """Smarter API V0 Plugin Manifest - Spec - Selector class."""
 
+    err_desc_manifest_kind = "Plugin.spec.selector"
+
     directive: str = Field(
         ...,
         description=(
-            "Plugin.spec.selector.directive[str]: Required. the kind of selector directive to use for the Plugin. "
+            f"{err_desc_manifest_kind}.directive[str]: Required. the kind of selector directive to use for the Plugin. "
             f"Must be one of: {SAMPluginSpecSelectorKeyDirectiveValues.all_values()}"
         ),
     )
-    search_terms: Optional[List[str]] = Field(
+    searchTerms: Optional[List[str]] = Field(
         None,
         description=(
-            "Plugin.spec.selector.searchTerms[list]. Optional. The keyword search terms to use when the "
+            f"{err_desc_manifest_kind}.searchTerms[list]. Optional. The keyword search terms to use when the "
             "Plugin directive is 'searchTerms'. Keywords are most effective when constrained to 1 or 2 words "
             "each and lists are limited to a few dozen items."
         ),
@@ -41,19 +43,19 @@ class SAMPluginSpecSelector(BaseModel):
     def validate_directive(cls, v) -> str:
         if v not in SAMPluginSpecSelectorKeyDirectiveValues.all_values():
             raise SAMValidationError(
-                f"Invalid value found in Plugin.spec.selector.directive: {v}. "
+                f"Invalid value found in {cls.err_desc_manifest_kind}.directive: {v}. "
                 f"Must be one of {SAMPluginSpecSelectorKeyDirectiveValues.all_values()}. "
                 "These values are case-sensitive and camelCase."
             )
         return v
 
-    @field_validator("search_terms")
+    @field_validator("searchTerms")
     def validate_search_terms(cls, v) -> List[str]:
         if isinstance(v, list):
             for search_term in v:
                 if not re.match(SmarterValidator.VALID_CLEAN_STRING, search_term):
                     raise SAMValidationError(
-                        f"Invalid value found in Plugin.spec.selector.searchTerms: {search_term}. "
+                        f"Invalid value found in {cls.err_desc_manifest_kind}.searchTerms: {search_term}. "
                         "Avoid using characters that are not URL friendly, like spaces and special ascii characters."
                     )
         return v
@@ -62,13 +64,13 @@ class SAMPluginSpecSelector(BaseModel):
     def validate_business_rules(self) -> "SAMPluginSpecSelector":
 
         # 1. searchTerms is required when directive is 'searchTerms'
-        if self.directive == SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS and self.search_terms is None:
+        if self.directive == SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS and self.searchTerms is None:
             raise SAMValidationError(
                 "Plugin.spec.selector.searchTerms is required when Plugin.spec.selector.directive is 'searchTerms'"
             )
 
         # 2. searchTerms is not allowed when directive is 'always'
-        if self.directive != SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS and self.search_terms is not None:
+        if self.directive != SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS and self.searchTerms is not None:
             raise SAMValidationError(
                 "Plugin.spec.selector.searchTerms is only used when Plugin.spec.selector.directive is 'searchTerms'"
             )
@@ -83,7 +85,7 @@ class SAMPluginSpecPrompt(BaseModel):
     DEFAULT_TEMPERATURE = 0.5
     DEFAULT_MAXTOKENS = 2048
 
-    systemrole: str = Field(
+    systemRole: str = Field(
         ...,
         description=(
             "Plugin.spec.prompt.systemRole[str]. Required. The system role that the Plugin will use for the LLM "
@@ -110,17 +112,17 @@ class SAMPluginSpecPrompt(BaseModel):
             "The lower the temperature, the more predictable the response."
         ),
     )
-    maxtokens: int = Field(
+    maxTokens: int = Field(
         DEFAULT_MAXTOKENS,
         gt=0,
         description=(
-            "Plugin.spec.prompt.maxtokens[int]. Optional. "
-            f"The maxtokens of the Plugin. Defaults to {DEFAULT_MAXTOKENS}. "
+            "Plugin.spec.prompt.maxTokens[int]. Optional. "
+            f"The maxTokens of the Plugin. Defaults to {DEFAULT_MAXTOKENS}. "
             "The maximum number of tokens the LLM should generate in the prompt response. "
         ),
     )
 
-    @field_validator("systemrole")
+    @field_validator("systemRole")
     def validate_systemrole(cls, v) -> str:
         if re.match(SmarterValidator.VALID_CLEAN_STRING, v):
             return v
