@@ -4,6 +4,8 @@ import re
 from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
+from sqlparse import parse as sql_parse
+from sqlparse.exceptions import SQLParseError
 
 from smarter.apps.api.v0.manifests.exceptions import SAMValidationError
 from smarter.apps.api.v0.manifests.models import HttpRequest, SAMSpecBase, SqlConnection
@@ -94,7 +96,15 @@ class SAMPluginSpecDataSql(BaseModel):
     """Smarter API V0 Plugin Manifest Plugin.spec.data.sqlData"""
 
     connection: SqlConnection = Field(..., description="Plugin.spec.data.sqlData: an sql server connection")
-    query: str = Field(..., description="Plugin.spec.data.sqlData: a valid SQL query")
+    sql: str = Field(..., description="Plugin.spec.data.sqlData: a valid SQL query")
+
+    @field_validator("sql")
+    def validate_sql(cls, v) -> str:
+        try:
+            sql_parse(v)
+        except SQLParseError as e:
+            raise SAMValidationError(f"Invalid SQL syntax found in Plugin.spec.data.sqlData.sql: {v}. {e}") from e
+        return v
 
 
 class SAMPluginSpecData(BaseModel):
