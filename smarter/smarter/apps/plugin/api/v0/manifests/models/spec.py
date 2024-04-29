@@ -16,11 +16,6 @@ from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
 from smarter.lib.django.validators import SmarterValidator
 
 
-###############################################################################
-# Plugin spec
-###############################################################################
-
-
 class SAMPluginSpecSelector(BaseModel):
     """Smarter API V0 Plugin Manifest - Spec - Selector class."""
 

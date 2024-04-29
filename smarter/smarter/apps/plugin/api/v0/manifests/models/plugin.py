@@ -18,9 +18,11 @@ from .status import SAMPluginStatus
 class SAMPlugin(SAM):
     """Smarter API V0 Manifest - Plugin"""
 
-    metadata: SAMPluginMetadata = Field(..., description="Plugin.metadata: the Plugin metadata")
-    spec: SAMPluginSpec = Field(..., description="Plugin.spec: the Plugin spec")
-    status: Optional[SAMPluginStatus] = Field(..., description="Plugin.status: Read-only. the Plugin status")
+    metadata: SAMPluginMetadata = Field(..., description="Plugin.metadata: Required, the Plugin metadata.")
+    spec: SAMPluginSpec = Field(..., description="Plugin.spec: Required, the Plugin specification.")
+    status: Optional[SAMPluginStatus] = Field(
+        ..., description="Plugin.status: Optional, Read-only. Stateful status information about the Plugin."
+    )
 
     @model_validator(mode="after")
     def validate_business_rules(self) -> "SAMPlugin":
