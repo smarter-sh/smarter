@@ -1,4 +1,4 @@
-"""Smarter API V0 Plugin Manifest model spec."""
+"""Smarter API V0 Manifest - Plugin.spec"""
 
 import re
 from typing import List, Optional
