@@ -208,20 +208,14 @@ class SAMPluginSpecData(BaseModel):
 class SAMPluginSpec(SAMSpecBase):
     """Smarter API V0 Plugin Manifest Plugin.spec"""
 
+    err_desc_manifest_kind = "Plugin.spec"
+
     selector: SAMPluginSpecSelector = Field(
-        ..., description="Plugin.spec.selector[obj]: the selector logic to use for the Plugin"
+        ..., description=f"{err_desc_manifest_kind}.selector[obj]: the selector logic to use for the Plugin"
     )
     prompt: SAMPluginSpecPrompt = Field(
-        ..., description="Plugin.spec.prompt[obj]: the LLM prompt engineering to apply to the Plugin"
+        ..., description=f"{err_desc_manifest_kind}.prompt[obj]: the LLM prompt engineering to apply to the Plugin"
     )
-    data: SAMPluginSpecData = Field(..., description="Plugin.spec.data[obj]: the json data returned by the Plugin")
-
-    # @model_validator(mode="after")
-    # def validate_business_rules(self) -> "SAMPluginSpec":
-    #     err_desc_manifest_kind = "Plugin.metadata.spec"
-    #     err_desc_selector_name = self.selector.__class__.__name__
-    #     err_desc_prompt_name = self.prompt.__class__.__name__
-    #     err_desc_data_name = self.data.__class__.__name__
-    #     err_desc_model_name = f"{err_desc_manifest_kind}.{err_desc_selector_name}"
-
-    #     return self
+    data: SAMPluginSpecData = Field(
+        ..., description=f"{err_desc_manifest_kind}.data[obj]: the json data returned by the Plugin"
+    )
