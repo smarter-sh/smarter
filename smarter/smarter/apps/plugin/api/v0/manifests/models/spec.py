@@ -62,17 +62,18 @@ class SAMPluginSpecSelector(BaseModel):
 
     @model_validator(mode="after")
     def validate_business_rules(self) -> "SAMPluginSpecSelector":
+        eff_desc_search_terms = self.searchTerms.__class__.__name__
 
         # 1. searchTerms is required when directive is 'searchTerms'
         if self.directive == SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS and self.searchTerms is None:
             raise SAMValidationError(
-                "Plugin.spec.selector.searchTerms is required when Plugin.spec.selector.directive is 'searchTerms'"
+                f"{self.err_desc_manifest_kind}.{eff_desc_search_terms} is required when {self.err_desc_manifest_kind}.directive is '{eff_desc_search_terms}'"
             )
 
         # 2. searchTerms is not allowed when directive is 'always'
         if self.directive != SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS and self.searchTerms is not None:
             raise SAMValidationError(
-                "Plugin.spec.selector.searchTerms is only used when Plugin.spec.selector.directive is 'searchTerms'"
+                f"{self.err_desc_manifest_kind}.{eff_desc_search_terms} is only used when {self.err_desc_manifest_kind}.directive is '{eff_desc_search_terms}'"
             )
 
         return self
@@ -81,6 +82,8 @@ class SAMPluginSpecSelector(BaseModel):
 class SAMPluginSpecPrompt(BaseModel):
     """Smarter API V0 Plugin Manifest - Spec - Prompt class."""
 
+    err_desc_manifest_kind = "Plugin.spec.prompt"
+
     DEFAULT_MODEL = "gpt-3.5-turbo-1106"
     DEFAULT_TEMPERATURE = 0.5
     DEFAULT_MAXTOKENS = 2048
@@ -88,7 +91,7 @@ class SAMPluginSpecPrompt(BaseModel):
     systemRole: str = Field(
         ...,
         description=(
-            "Plugin.spec.prompt.systemRole[str]. Required. The system role that the Plugin will use for the LLM "
+            f"{err_desc_manifest_kind}.systemRole[str]. Required. The system role that the Plugin will use for the LLM "
             "text completion prompt. Be verbose and specific. Ensure that systemRole accurately conveys to the LLM "
             "how you want it to use the Plugin data that is returned."
         ),
@@ -96,7 +99,7 @@ class SAMPluginSpecPrompt(BaseModel):
     model: str = Field(
         DEFAULT_MODEL,
         description=(
-            f"Plugin.spec.prompt.model[str] Optional. The model of the Plugin. Defaults to {DEFAULT_MODEL}. "
+            f"{err_desc_manifest_kind}.model[str] Optional. The model of the Plugin. Defaults to {DEFAULT_MODEL}. "
             f"Must be one of: {VALID_CHAT_COMPLETION_MODELS}"
         ),
     )
@@ -105,7 +108,7 @@ class SAMPluginSpecPrompt(BaseModel):
         gt=0,
         lt=1.0,
         description=(
-            "Plugin.spec.prompt.temperature[float] Optional. The temperature of the Plugin. "
+            f"{err_desc_manifest_kind}.temperature[float] Optional. The temperature of the Plugin. "
             f"Defaults to {DEFAULT_TEMPERATURE}. "
             "Should be between 0 and 1.0. "
             "The higher the temperature, the more creative the response. "
@@ -116,7 +119,7 @@ class SAMPluginSpecPrompt(BaseModel):
         DEFAULT_MAXTOKENS,
         gt=0,
         description=(
-            "Plugin.spec.prompt.maxTokens[int]. Optional. "
+            f"{err_desc_manifest_kind}.maxTokens[int]. Optional. "
             f"The maxTokens of the Plugin. Defaults to {DEFAULT_MAXTOKENS}. "
             "The maximum number of tokens the LLM should generate in the prompt response. "
         ),
@@ -126,7 +129,8 @@ class SAMPluginSpecPrompt(BaseModel):
     def validate_systemrole(cls, v) -> str:
         if re.match(SmarterValidator.VALID_CLEAN_STRING, v):
             return v
-        raise SAMValidationError(f"Invalid characters found in Plugin.spec.prompt.systemRole: {v}")
+        err_desc_me_name = cls.systemRole.__class__.__name__
+        raise SAMValidationError(f"Invalid characters found in {cls.err_desc_manifest_kind}.{err_desc_me_name}: {v}")
 
     @field_validator("model")
     def validate_model(cls, v) -> str:
@@ -134,20 +138,23 @@ class SAMPluginSpecPrompt(BaseModel):
             return cls.DEFAULT_MODEL
         if v in VALID_CHAT_COMPLETION_MODELS:
             return v
+        err_desc_me_name = cls.model.__class__.__name__
         raise SAMValidationError(
-            f"Invalid value found in Plugin.spec.prompt.model: {v}. Must be one of {VALID_CHAT_COMPLETION_MODELS}"
+            f"Invalid value found in {cls.err_desc_manifest_kind}.{err_desc_me_name}: {v}. Must be one of {VALID_CHAT_COMPLETION_MODELS}"
         )
 
 
 class SAMPluginSpecDataSql(BaseModel):
     """Smarter API V0 Plugin Manifest Plugin.spec.data.sqlData"""
 
+    err_desc_manifest_kind = "Plugin.spec.data.sqlData"
+
     connection: SqlConnection = Field(
-        ..., description="Plugin.spec.data.sqlData.connection[obj]: an sql server connection"
+        ..., description=f"{err_desc_manifest_kind}.connection[obj]: an sql server connection"
     )
     sql: str = Field(
         ...,
-        description="Plugin.spec.data.sqlData.sql[str]: a valid SQL query. Example: 'SELECT * FROM customers WHERE id = 100;'",
+        description=f"{err_desc_manifest_kind}.sql[str]: a valid SQL query. Example: 'SELECT * FROM customers WHERE id = 100;'",  # nosec
     )
 
     @field_validator("sql")
@@ -155,24 +162,29 @@ class SAMPluginSpecDataSql(BaseModel):
         try:
             sql_parse(v)
         except SQLParseError as e:
-            raise SAMValidationError(f"Invalid SQL syntax found in Plugin.spec.data.sqlData.sql: {v}. {e}") from e
+            err_desc_sql_name = cls.sql.__class__.__name__
+            raise SAMValidationError(
+                f"Invalid SQL syntax found in {cls.err_desc_manifest_kind}.{err_desc_sql_name}: {v}. {e}"
+            ) from e
         return v
 
 
 class SAMPluginSpecData(BaseModel):
     """Smarter API V0 Plugin Manifest Plugin.spec.data"""
 
+    err_desc_manifest_kind = "Plugin.spec.data"
+
     description: str = Field(
         ...,
         description=(
-            "Plugin.spec.data.description[str]: A narrative description of the Plugin features "
+            f"{err_desc_manifest_kind}.description[str]: A narrative description of the Plugin features "
             "that is provided to the LLM as part of a tool_chain dict"
         ),
     )
     staticData: Optional[dict] = Field(
         None,
         description=(
-            "Plugin.spec.data.staticData[obj]: The static data returned by the Plugin when the "
+            f"{err_desc_manifest_kind}.staticData[obj]: The static data returned by the Plugin when the "
             "class is 'static'. LLM's are adept at understanding the context of json data structures. "
             "Try to provide granular and specific data elements."
         ),
@@ -180,14 +192,14 @@ class SAMPluginSpecData(BaseModel):
     sqlData: Optional[SAMPluginSpecDataSql] = Field(
         None,
         description=(
-            "Plugin.spec.data.sqlData[obj]: The SQL connection and query to use for the Plugin return data when "
+            f"{err_desc_manifest_kind}.sqlData[obj]: The SQL connection and query to use for the Plugin return data when "
             "the class is 'sql'"
         ),
     )
     apiData: Optional[HttpRequest] = Field(
         None,
         description=(
-            "Plugin.spec.data.apiData[obj]: The rest API connection and endpoint to use for the Plugin "
+            f"{err_desc_manifest_kind}.apiData[obj]: The rest API connection and endpoint to use for the Plugin "
             "return data when the class is 'api'"
         ),
     )
