@@ -43,7 +43,7 @@ django-waffle==4.1.0                     # Feature flagging
 markdown==3.6                           # Markdown reader/parser
 pandas==2.2.2                           # Data manipulation for data science stuff
 python-dotenv==1.0.1                    # for reading environment variables from .env files
-pydantic==2.7.0                         # best data validation library ever!
+pydantic==2.7.1                         # best data validation library ever!
 pydantic-settings==2.2.1                # settings management
 python-hcl2==4.3.3                      # Terraform hcl parser for reading Terraform tfvars files
 
