@@ -3,6 +3,7 @@
 import logging
 from typing import Any
 
+from smarter.apps.account.models import Account
 from smarter.apps.api.v0.manifests.broker import SAMBroker
 
 from .models.plugin import SAMPlugin
@@ -23,9 +24,11 @@ class SAMPluginBroker(SAMBroker):
 
     # override the base abstract manifest model with the Plugin model
     _manifest: Any = None
+    _account: Account = None
 
     def __init__(
         self,
+        account_number: str = None,
         manifest: str = None,
         file_path: str = None,
         url: str = None,
@@ -36,7 +39,7 @@ class SAMPluginBroker(SAMBroker):
         # also performs cursory high-level validation of the manifest, sufficient
         # to ensure that the manifest is a valid yaml file and that it contains
         # the required top-level keys.
-        super().__init__(manifest=manifest, file_path=file_path, url=url)
+        super().__init__(account_number=account_number, manifest=manifest, file_path=file_path, url=url)
 
         # 2.) Initialize the Plugin manifest model. SAMPlugin() is a Pydantic model
         # that is used to represent the Smarter API Plugin manifest. The Pydantic
@@ -54,7 +57,13 @@ class SAMPluginBroker(SAMBroker):
             status=self.loader.manifest_status,
         )
 
+        self._account = Account.objects.get(account_number=account_number)
+
     # override the base abstract manifest model with the Plugin model
     @property
     def manifest(self) -> Any:
         return self._manifest
+
+    @property
+    def account(self) -> Account:
+        return self._account

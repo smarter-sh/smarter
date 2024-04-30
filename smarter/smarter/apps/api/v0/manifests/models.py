@@ -9,6 +9,7 @@ from typing import ClassVar, List, Optional
 import validators
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from smarter.apps.account.models import Account
 from smarter.lib.django.validators import SmarterValidator
 
 from .enum import DbEngine, SAMKinds
@@ -160,8 +161,11 @@ class SqlConnection(SmarterBaseModel):
 class SAMMetadataBase(SmarterBaseModel, abc.ABC):
     """Pydantic Metadata base class. Expected to be subclassed by specific manifest classes."""
 
-    name: str = Field(..., description="The name of the manifest")
-    description: str = Field(..., description="The description of the manifest")
+    name: str = Field(..., description="The name of the manifest resource")
+    accountNumber: Optional[str] = Field(
+        ..., description="The account number of the account that owns the manifest resource"
+    )
+    description: str = Field(..., description="The description of the manifest resource")
     version: str = Field(..., description="The version of the manifest")
     tags: Optional[List[str]] = Field(None, description="The tags of the manifest")
     annotations: Optional[List[str]] = Field(None, description="The annotations of the manifest")
@@ -192,6 +196,13 @@ class SAMMetadataBase(SmarterBaseModel, abc.ABC):
             raise SAMValidationError(
                 f"Invalid semantic version. Expected semantic version (ie '1.0.0-alpha') but got {v}"
             )
+        return v
+
+    @field_validator("accountNumber")
+    def validate_account_number(cls, v) -> str:
+        SmarterValidator.validate_account_number(v)
+        if not Account.objects.filter(account_number=v).exists():
+            raise SAMValidationError(f"Invalid account number: {v}. Account does not exist.")
         return v
 
     @field_validator("tags")

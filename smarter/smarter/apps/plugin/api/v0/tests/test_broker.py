@@ -4,6 +4,7 @@
 import os
 import unittest
 
+from smarter.apps.account.models import Account
 from smarter.apps.plugin.api.v0.manifests.broker import SAMPluginBroker
 from smarter.common.const import PYTHON_ROOT
 
@@ -16,8 +17,10 @@ class TestSAMPluginBroker(unittest.TestCase):
         self.path = os.path.join(PYTHON_ROOT, "smarter", "apps", "plugin", "api", "v0", "tests", "data")
         self.good_manifest_path = os.path.join(self.path, "good-manifest.yaml")
         self.invalid_file_format = os.path.join(self.path, "invalid-file-format.yaml")
+        # create a test account
+        self.account = Account(account_number="1234-5678-9012")
 
     def test_valid_manifest(self):
         """Test valid file path and that we can instantiate without errors"""
 
-        SAMPluginBroker(file_path=self.good_manifest_path)
+        SAMPluginBroker(account_number=self.account.account_number, file_path=self.good_manifest_path)
