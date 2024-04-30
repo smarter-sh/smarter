@@ -14,19 +14,19 @@ from django.core.exceptions import ValidationError
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.api.v0.serializers import (
-    PluginDataSerializer,
+    PluginDataStaticSerializer,
     PluginMetaSerializer,
     PluginPromptSerializer,
     PluginSelectorSerializer,
 )
 from smarter.apps.plugin.models import (
-    PluginData,
+    PluginDataStatic,
     PluginMeta,
     PluginPrompt,
     PluginSelector,
 )
-from smarter.apps.plugin.plugin.base import PluginExamples
 from smarter.apps.plugin.plugin.static import PluginStatic
+from smarter.apps.plugin.plugin.utils import PluginExamples
 from smarter.apps.plugin.signals import (
     plugin_called,
     plugin_cloned,
@@ -135,8 +135,8 @@ class TestPlugin(unittest.TestCase):
         self.assertIsInstance(plugin.plugin_meta, PluginMeta)
         self.assertIsInstance(plugin.plugin_selector, PluginSelector)
         self.assertIsInstance(plugin.plugin_prompt, PluginPrompt)
-        self.assertIsInstance(plugin.plugin_data, PluginData)
-        self.assertIsInstance(plugin.plugin_data_serializer, PluginDataSerializer)
+        self.assertIsInstance(plugin.plugin_data, PluginDataStatic)
+        self.assertIsInstance(plugin.plugin_data_serializer, PluginDataStaticSerializer)
         self.assertIsInstance(plugin.plugin_meta_serializer, PluginMetaSerializer)
         self.assertIsInstance(plugin.plugin_prompt_serializer, PluginPromptSerializer)
         self.assertIsInstance(plugin.plugin_selector_serializer, PluginSelectorSerializer)
@@ -236,8 +236,8 @@ class TestPlugin(unittest.TestCase):
         with self.assertRaises(PluginPrompt.DoesNotExist):
             PluginPrompt.objects.get(plugin_id=plugin_id)
 
-        with self.assertRaises(PluginData.DoesNotExist):
-            PluginData.objects.get(plugin_id=plugin_id)
+        with self.assertRaises(PluginDataStatic.DoesNotExist):
+            PluginDataStatic.objects.get(plugin_id=plugin_id)
 
     def test_add_sample_plugins(self):
         """Test utility function to add sample plugins to a user account."""

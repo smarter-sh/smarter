@@ -149,8 +149,8 @@ class PluginPrompt(TimestampedModel):
         return str(self.plugin.name)
 
 
-class PluginData(TimestampedModel):
-    """PluginData model."""
+class PluginDataStatic(TimestampedModel):
+    """PluginDataStatic model."""
 
     plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_data")
     description = models.TextField(
@@ -171,7 +171,7 @@ class PluginData(TimestampedModel):
             if isinstance(retval, list) and len(retval) > 0:
                 if len(retval) > settings.SMARTER_PLUGIN_MAX_DATA_RESULTS:
                     logger.warning(
-                        "PluginData.sanitized_return_data: Truncating return_data to %s items.",
+                        "PluginDataStatic.sanitized_return_data: Truncating return_data to %s items.",
                         {settings.SMARTER_PLUGIN_MAX_DATA_RESULTS},
                     )
                 retval = retval[: settings.SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136
@@ -195,7 +195,7 @@ class PluginData(TimestampedModel):
             if isinstance(retval, list) and len(retval) > 0:
                 if len(retval) > settings.SMARTER_PLUGIN_MAX_DATA_RESULTS:
                     logger.warning(
-                        "PluginData.return_data_keys: Truncating return_data to %s items.",
+                        "PluginDataStatic.return_data_keys: Truncating return_data to %s items.",
                         {settings.SMARTER_PLUGIN_MAX_DATA_RESULTS},
                     )
                 retval = retval[: settings.SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136

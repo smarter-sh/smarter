@@ -9,14 +9,14 @@ from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.models import PluginMeta
 from smarter.lib.django.user import UserType
 
-from .base import PluginBase
+from .static import PluginStatic
 
 
 class Plugins:
     """A class for working with multiple plugins."""
 
     account: Account = None
-    plugins: list[PluginBase] = []
+    plugins: list[PluginStatic] = []
 
     def __init__(self, user: UserType = None, account: Account = None):
 
@@ -25,7 +25,7 @@ class Plugins:
             self.account = account or UserProfile.objects.get(user=user).account
 
             for plugin in PluginMeta.objects.filter(account=self.account):
-                self.plugins.append(PluginBase(plugin_id=plugin.id))
+                self.plugins.append(PluginStatic(plugin_id=plugin.id))
 
     @property
     def data(self) -> list[dict]:

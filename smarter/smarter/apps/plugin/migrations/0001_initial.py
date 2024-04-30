@@ -81,7 +81,7 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name="PluginData",
+            name="PluginDataStatic",
             fields=[
                 (
                     "id",

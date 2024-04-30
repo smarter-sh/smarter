@@ -11,7 +11,7 @@ from django.forms.models import model_to_dict
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 
 from .models import (
-    PluginData,
+    PluginDataStatic,
     PluginMeta,
     PluginPrompt,
     PluginSelector,
@@ -149,11 +149,11 @@ def handle_plugin_prompt_created(sender, **kwargs):
     logger.info("%s", formatted_text("PluginPrompt() record created."))
 
 
-@receiver(post_save, sender=PluginData)
+@receiver(post_save, sender=PluginDataStatic)
 def handle_plugin_data_created(sender, **kwargs):
     """Handle plugin data created signal."""
 
-    logger.info("%s", formatted_text("PluginData() record created."))
+    logger.info("%s", formatted_text("PluginDataStatic() record created."))
 
 
 @receiver(post_save, sender=PluginSelectorHistory)
