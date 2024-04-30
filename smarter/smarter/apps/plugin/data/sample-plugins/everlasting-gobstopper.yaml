@@ -3,7 +3,7 @@ apiVersion: smarter/v0
 kind: Plugin
 metadata:
   name: EverlastingGobstopper
-  class: static
+  pluginClass: static
   description: Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.
   version: 0.2.0
   tags:
