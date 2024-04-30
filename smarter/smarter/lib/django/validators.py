@@ -2,6 +2,9 @@
 Internal validation features. This module contains functions for validating various data types.
 Before adding anything to this module, please first check if there is a built-in Python function
 or a Django utility that can do the validation.
+
+TODO: add `import validators` and study this library to see what can be removed and/or refactored here
+      see https://python-validators.github.io/validators/
 """
 
 import logging
@@ -37,6 +40,7 @@ class SmarterValidator:
     VALID_SEMANTIC_VERSION = r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$"
     VALID_URL_FRIENDLY_STRING = r"^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$"
     VALID_CLEAN_STRING = r"^[a-zA-Z0-9_-]+$"
+    VALID_CLEAN_STRING_WITH_SPACES = r"^[a-zA-Z0-9_ -]+$"
 
     @staticmethod
     def validate_session_key(session_key: str) -> None:
