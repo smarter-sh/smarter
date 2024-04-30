@@ -3,8 +3,10 @@
 import logging
 from typing import Any
 
-from smarter.apps.account.models import Account
+from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.utils import account_admin_user
 from smarter.apps.api.v0.manifests.broker import SAMBroker
+from smarter.lib.django.user import UserType
 
 from .models.plugin import SAMPlugin
 
@@ -25,6 +27,8 @@ class SAMPluginBroker(SAMBroker):
     # override the base abstract manifest model with the Plugin model
     _manifest: Any = None
     _account: Account = None
+    _user: UserType = None
+    _user_profile: UserProfile = None
 
     def __init__(
         self,
@@ -58,6 +62,8 @@ class SAMPluginBroker(SAMBroker):
         )
 
         self._account = Account.objects.get(account_number=account_number)
+        self._user = account_admin_user(account_number)
+        self._user_profile = UserProfile.objects.get(user=self.user, account=self.account)
 
     # override the base abstract manifest model with the Plugin model
     @property
@@ -67,3 +73,11 @@ class SAMPluginBroker(SAMBroker):
     @property
     def account(self) -> Account:
         return self._account
+
+    @property
+    def user(self) -> UserType:
+        return self._user
+
+    @property
+    def user_profile(self) -> UserProfile:
+        return self._user_profile
