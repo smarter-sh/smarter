@@ -5,9 +5,15 @@ from typing import ClassVar, Optional
 
 from pydantic import Field, model_validator
 
+from smarter.apps.api.v0.manifests.enum import SAMKeys
 from smarter.apps.api.v0.manifests.exceptions import SAMValidationError
 from smarter.apps.api.v0.manifests.models import SAM
-from smarter.apps.plugin.api.v0.manifests.enum import SAMPluginMetadataClassValues
+from smarter.apps.plugin.api.v0.manifests.enum import (
+    SAMPluginMetadataClass,
+    SAMPluginMetadataClassValues,
+    SAMPluginMetadataKeys,
+    SAMPluginSpecKeys,
+)
 
 from .const import OBJECT_IDENTIFIER
 from .metadata import SAMPluginMetadata
@@ -26,43 +32,38 @@ class SAMPlugin(SAM):
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
     metadata: SAMPluginMetadata = Field(
-        ..., description=f"{class_identifier}.metadata[obj]: Required, the {OBJECT_IDENTIFIER} metadata."
+        ...,
+        description=f"{class_identifier}.{SAMKeys.METADATA.value}[obj]: Required, the {OBJECT_IDENTIFIER} metadata.",
     )
     spec: SAMPluginSpec = Field(
-        ..., description=f"{class_identifier}.spec[obj]: Required, the {OBJECT_IDENTIFIER} specification."
+        ...,
+        description=f"{class_identifier}.{SAMKeys.SPEC.value}[obj]: Required, the {OBJECT_IDENTIFIER} specification.",
     )
     status: Optional[SAMPluginStatus] = Field(
         ...,
-        description=f"{class_identifier}.status[obj]: Optional, Read-only. Stateful status information about the {OBJECT_IDENTIFIER}.",
+        description=f"{class_identifier}.{SAMKeys.STATUS.value}[obj]: Optional, Read-only. Stateful status information about the {OBJECT_IDENTIFIER}.",
     )
 
     @model_validator(mode="after")
     def validate_business_rules(self) -> "SAMPlugin":
         """Plugin-level business rule validations"""
-        pluginClass_name = "pluginClass"
-        err_desc_manifest_kind = self.kind
-        err_desc_spec_name = "spec"
-        err_desc_data_name = "data"
-        err_desc_model_name = f"{err_desc_manifest_kind}.{err_desc_spec_name}.{err_desc_data_name}"
+        err_desc_model_name = f"{self.kind}.{SAMKeys.SPEC.value}.{SAMPluginSpecKeys.DATA.value}"
 
         # Validate that the correct Plugin.spec.data is present when the Plugin.metadata.pluginClass is 'static', 'sql', or 'api'
         # example error message: "Plugin.spec.data.staticData is required when Plugin.metadata.pluginClass is 'static'"
-        if self.metadata.pluginClass == SAMPluginMetadataClassValues.STATIC and not self.spec.data.staticData:
-            required_attribute_name = "staticData"
+        if self.metadata.pluginClass == SAMPluginMetadataClassValues.STATIC.value and not self.spec.data.staticData:
             raise SAMValidationError(
-                f"{err_desc_model_name}.{required_attribute_name} is required when {err_desc_manifest_kind}.{pluginClass_name} is '{SAMPluginMetadataClassValues.STATIC.value}'"
+                f"{err_desc_model_name}.{SAMPluginMetadataClass.STATIC_DATA.value} is required when {self.kind}.{SAMPluginMetadataKeys.PLUGIN_CLASS.value} is '{SAMPluginMetadataClassValues.STATIC.value}'"
             )
 
-        if self.metadata.pluginClass == SAMPluginMetadataClassValues.SQL and not self.spec.data.sqlData:
-            required_attribute_name = "sqlData"
+        if self.metadata.pluginClass == SAMPluginMetadataClassValues.SQL.value and not self.spec.data.sqlData:
             raise SAMValidationError(
-                f"{err_desc_model_name}.{required_attribute_name} is required when {err_desc_manifest_kind}.{pluginClass_name} is '{SAMPluginMetadataClassValues.SQL.value}'"
+                f"{err_desc_model_name}.{SAMPluginMetadataClass.SQL_DATA.value} is required when {self.kind}.{SAMPluginMetadataKeys.PLUGIN_CLASS.value} is '{SAMPluginMetadataClassValues.SQL.value}'"
             )
 
-        if self.metadata.pluginClass == SAMPluginMetadataClassValues.API and not self.spec.data.apiData:
-            required_attribute_name = "apiData"
+        if self.metadata.pluginClass == SAMPluginMetadataClassValues.API.value and not self.spec.data.apiData:
             raise SAMValidationError(
-                f"{err_desc_model_name}.{required_attribute_name} is required when {err_desc_manifest_kind}.{pluginClass_name} is '{SAMPluginMetadataClassValues.API.value}'"
+                f"{err_desc_model_name}.{SAMPluginMetadataClass.API_DATA.value} is required when {self.kind}.{SAMPluginMetadataKeys.PLUGIN_CLASS.value} is '{SAMPluginMetadataClassValues.API.value}'"
             )
 
         return self
