@@ -6,8 +6,8 @@ import yaml
 
 from smarter.apps.account.models import UserProfile
 
-from .plugin.base import PluginExamples
 from .plugin.static import PluginStatic
+from .plugin.utils import PluginExamples
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))

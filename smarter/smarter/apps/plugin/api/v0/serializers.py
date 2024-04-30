@@ -8,7 +8,7 @@ from smarter.apps.account.api.v0.serializers import (
     UserProfileSerializer,
 )
 from smarter.apps.plugin.models import (
-    PluginData,
+    PluginDataStatic,
     PluginMeta,
     PluginPrompt,
     PluginSelector,
@@ -59,10 +59,10 @@ class PluginPromptSerializer(serializers.ModelSerializer):
         fields = ["system_role", "model", "temperature", "max_tokens"]
 
 
-class PluginDataSerializer(serializers.ModelSerializer):
-    """PluginData model serializer."""
+class PluginDataStaticSerializer(serializers.ModelSerializer):
+    """PluginDataStatic model serializer."""
 
     # pylint: disable=missing-class-docstring
     class Meta:
-        model = PluginData
+        model = PluginDataStatic
         fields = ["description", "return_data"]

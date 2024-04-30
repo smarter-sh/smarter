@@ -1,10 +1,11 @@
 """A Compound Model class for managing plugins."""
 
-import abc
 import copy
 import json
 import logging
 import re
+from abc import ABC, abstractmethod
+from typing import Any
 
 import requests
 import yaml
@@ -15,17 +16,11 @@ from rest_framework import serializers
 from smarter.apps.account.models import UserProfile
 from smarter.apps.plugin.api.v0.manifests.broker import SAMPluginBroker
 from smarter.apps.plugin.api.v0.serializers import (
-    PluginDataSerializer,
     PluginMetaSerializer,
     PluginPromptSerializer,
     PluginSelectorSerializer,
 )
-from smarter.apps.plugin.models import (
-    PluginData,
-    PluginMeta,
-    PluginPrompt,
-    PluginSelector,
-)
+from smarter.apps.plugin.models import PluginMeta, PluginPrompt, PluginSelector
 from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.signals import (
     plugin_called,
@@ -43,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
-class PluginBase(abc.ABC):
+class PluginBase(ABC):
     """An abstract base class for working with plugins."""
 
     _manifest_broker: SAMPluginBroker = None
@@ -52,14 +47,16 @@ class PluginBase(abc.ABC):
     _plugin_meta: PluginMeta = None
     _plugin_selector: PluginSelector = None
     _plugin_prompt: PluginPrompt = None
-    _plugin_data: PluginData = None
 
-    _plugin_data_serializer: PluginDataSerializer = None
     _plugin_prompt_serializer: PluginPromptSerializer = None
     _plugin_selector_serializer: PluginSelectorSerializer = None
     _plugin_meta_serializer: PluginMetaSerializer = None
 
     _selected: bool = False
+
+    # abstract properties
+    _plugin_data: Any = None
+    _plugin_data_serializer: Any = None
 
     # pylint: disable=too-many-arguments,too-many-branches
     def __init__(
@@ -145,6 +142,37 @@ class PluginBase(abc.ABC):
         """Return the name of the plugin."""
         return self.__str__()
 
+    ###########################################################################
+    # Abstract properties
+    ###########################################################################
+    @property
+    @abstractmethod
+    def plugin_data(self) -> Any:
+        """Return the plugin data."""
+
+    @property
+    @abstractmethod
+    def plugin_data_class(self) -> Any:
+        """Return the plugin data class."""
+
+    @property
+    @abstractmethod
+    def plugin_data_serializer(self) -> Any:
+        """Return the plugin data serializer."""
+
+    @property
+    @abstractmethod
+    def plugin_data_serializer_class(self) -> Any:
+        """Return the plugin data serializer class."""
+
+    @property
+    @abstractmethod
+    def custom_tool(self) -> dict:
+        """Return the plugin tool."""
+
+    ###########################################################################
+    # Base class properties
+    ###########################################################################
     @property
     def manifest_broker(self) -> SAMPluginBroker:
         """Return the Pydandic model of the plugin."""
@@ -183,9 +211,9 @@ class PluginBase(abc.ABC):
             self._plugin_prompt_serializer = None
 
         try:
-            self._plugin_data = PluginData.objects.get(plugin=self.plugin_meta)
-            self._plugin_data_serializer = PluginDataSerializer(self.plugin_data)
-        except PluginData.DoesNotExist:
+            self._plugin_data = self.plugin_data_class.objects.get(plugin=self.plugin_meta)
+            self._plugin_data_serializer = self.plugin_data_serializer_class(self.plugin_data)
+        except self.plugin_data_class.DoesNotExist:
             self._plugin_data = None
             self._plugin_data_serializer = None
 
@@ -220,16 +248,6 @@ class PluginBase(abc.ABC):
         return self._plugin_prompt_serializer
 
     @property
-    def plugin_data(self) -> PluginData:
-        """Return the plugin data."""
-        return self._plugin_data
-
-    @property
-    def plugin_data_serializer(self) -> PluginDataSerializer:
-        """Return the plugin data serializer."""
-        return self._plugin_data_serializer
-
-    @property
     def user_profile(self) -> UserProfile:
         """Return the user profile."""
         return self._user_profile
@@ -256,7 +274,7 @@ class PluginBase(abc.ABC):
             return False
         if not isinstance(self.plugin_prompt, PluginPrompt):
             return False
-        if not isinstance(self.plugin_data, PluginData):
+        if not isinstance(self.plugin_data, self.plugin_data_class):
             return False
 
         # validate the serializers
@@ -266,7 +284,7 @@ class PluginBase(abc.ABC):
             return False
         if not isinstance(self.plugin_prompt_serializer, PluginPromptSerializer):
             return False
-        if not isinstance(self.plugin_data_serializer, PluginDataSerializer):
+        if not isinstance(self.plugin_data_serializer, self.plugin_data_serializer_class):
             return False
 
         return True
@@ -291,29 +309,6 @@ class PluginBase(abc.ABC):
         if self.ready:
             suffix = str(self.id).zfill(4)
             return f"function_calling_plugin_{suffix}"
-        return None
-
-    @property
-    def custom_tool(self) -> dict:
-        """Return the plugin tool."""
-        if self.ready:
-            return {
-                "type": "function",
-                "function": {
-                    "name": self.function_calling_identifier,
-                    "description": self.plugin_data.description,
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "inquiry_type": {
-                                "type": "string",
-                                "enum": self.plugin_data.return_data_keys,
-                            },
-                        },
-                        "required": ["inquiry_type"],
-                    },
-                },
-            }
         return None
 
     def refresh(self):
@@ -570,7 +565,7 @@ class PluginBase(abc.ABC):
 
         # Validate plugin plugin_data
         plugin_data = data.get("plugin_data")
-        plugin_data_serializer = PluginDataSerializer(data=plugin_data)
+        plugin_data_serializer = self.plugin_data_serializer_class(data=plugin_data)
         if not plugin_data_serializer:
             raise ValidationError("Invalid plugin plugin_data.")
         if not plugin_data_serializer.is_valid():
@@ -640,7 +635,7 @@ class PluginBase(abc.ABC):
 
             PluginSelector.objects.create(**selector)
             PluginPrompt.objects.create(**prompt)
-            PluginData.objects.create(**plugin_data)
+            self.plugin_data_class.objects.create(**plugin_data)
 
         transaction.on_commit(lambda: committed(plugin_id=plugin_meta.id))
 
