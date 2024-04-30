@@ -8,9 +8,6 @@ from smarter.apps.api.v0.manifests.broker import SAMBroker
 from .models.plugin import SAMPlugin
 
 
-# from smarter.apps.plugin.plugin import Plugin
-
-
 logger = logging.getLogger(__name__)
 
 
@@ -19,7 +16,6 @@ class SAMPluginBroker(SAMBroker):
     Smarter API Plugin Manifest Broker.This class is responsible for
     - loading, validating and parsing the Smarter Api yaml Plugin manifests
     - using the manifest to initialize the corresponding Pydantic model
-    - using the Pydantic model to initialize the corresponding Python object
 
     The Plugin object provides the generic services for the Plugin, such as
     instantiation, create, update, delete, etc.
@@ -27,7 +23,6 @@ class SAMPluginBroker(SAMBroker):
 
     # override the base abstract manifest model with the Plugin model
     _manifest: Any = None
-    _plugin: Any = None
 
     def __init__(
         self,
@@ -59,15 +54,7 @@ class SAMPluginBroker(SAMBroker):
             status=self.loader.manifest_status,
         )
 
-        # 3.) Initialize the Plugin object. The Plugin object is a Python object
-        # that is used to represent the Smarter Plugin.
-        # self._plugin = Plugin(model=self.manifest)
-
     # override the base abstract manifest model with the Plugin model
     @property
     def manifest(self) -> Any:
         return self._manifest
-
-    @property
-    def plugin(self) -> Any:
-        return self._plugin

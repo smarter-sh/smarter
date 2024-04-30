@@ -13,6 +13,7 @@ from django.db import transaction
 from rest_framework import serializers
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.plugin.api.v0.manifests.broker import SAMPluginBroker
 from smarter.lib.django.user import User, UserType
 
 from .api.v0.serializers import (
@@ -41,7 +42,7 @@ logger = logging.getLogger(__name__)
 class Plugin:
     """A class for working with plugins."""
 
-    _model = None
+    _model_broker: SAMPluginBroker = None
     _user_profile: UserProfile = None
 
     _plugin_meta: PluginMeta = None
@@ -60,7 +61,7 @@ class Plugin:
     def __init__(
         self,
         plugin_id: int = None,
-        model=None,
+        model_broker: SAMPluginBroker = None,
         user_profile: UserProfile = None,
         plugin_meta: PluginMeta = None,
         data=None,
@@ -72,8 +73,9 @@ class Plugin:
         data: yaml or dict representation of a plugin.
               see ./data/sample-plugins/everlasting-gobstopper.yaml for an example.
         """
-        if model:
-            self._model = model
+        if model_broker:
+            self._model_broker = model_broker
+            data = model_broker.loader.yaml_data  # TO DO: refactor to initialize from the Pydantic model
 
         if plugin_id:
             self.id = plugin_id
