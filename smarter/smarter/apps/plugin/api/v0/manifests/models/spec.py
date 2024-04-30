@@ -1,5 +1,6 @@
 """Smarter API V0 Manifest - Plugin.spec"""
 
+import os
 import re
 from typing import ClassVar, List, Optional
 
@@ -10,8 +11,12 @@ from sqlparse.exceptions import SQLParseError
 from smarter.apps.api.v0.manifests.exceptions import SAMValidationError
 from smarter.apps.api.v0.manifests.models import HttpRequest, SAMSpecBase, SqlConnection
 from smarter.apps.plugin.api.v0.manifests.enum import (
+    SAMPluginMetadataClass,
     SAMPluginMetadataClassValues,
+    SAMPluginSpecKeys,
+    SAMPluginSpecPromptKeys,
     SAMPluginSpecSelectorKeyDirectiveValues,
+    SAMPluginSpecSelectorKeys,
 )
 from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
 from smarter.lib.django.validators import SmarterValidator
@@ -19,7 +24,8 @@ from smarter.lib.django.validators import SmarterValidator
 from .const import OBJECT_IDENTIFIER
 
 
-MODULE_IDENTIFIER = f"{OBJECT_IDENTIFIER}.{__file__}"
+filename = os.path.splitext(os.path.basename(__file__))[0]
+MODULE_IDENTIFIER = f"{OBJECT_IDENTIFIER}.{filename}"
 
 
 class SAMPluginSpecSelector(BaseModel):
@@ -48,7 +54,7 @@ class SAMPluginSpecSelector(BaseModel):
     def validate_directive(cls, v) -> str:
         if v not in SAMPluginSpecSelectorKeyDirectiveValues.all_values():
             raise SAMValidationError(
-                f"Invalid value found in {cls.class_identifier}.directive: {v}. "
+                f"Invalid value found in {cls.class_identifier}.{SAMPluginSpecSelectorKeys.DIRECTIVE.value}: '{v}'. "
                 f"Must be one of {SAMPluginSpecSelectorKeyDirectiveValues.all_values()}. "
                 "These values are case-sensitive and camelCase."
             )
@@ -58,17 +64,17 @@ class SAMPluginSpecSelector(BaseModel):
     def validate_search_terms(cls, v) -> List[str]:
         if isinstance(v, list):
             for search_term in v:
-                if not re.match(SmarterValidator.VALID_CLEAN_STRING, search_term):
+                if not re.match(SmarterValidator.VALID_CLEAN_STRING_WITH_SPACES, search_term):
                     raise SAMValidationError(
-                        f"Invalid value found in {cls.class_identifier}.searchTerms: {search_term}. "
+                        f"Invalid value found in {cls.class_identifier}.searchTerms: '{search_term}'. "
                         "Avoid using characters that are not URL friendly, like spaces and special ascii characters."
                     )
         return v
 
     @model_validator(mode="after")
     def validate_business_rules(self) -> "SAMPluginSpecSelector":
-        err_desc_searchTerms_name = self.searchTerms.__class__.__name__
-        directive_name = self.directive.__class__.__name__
+        err_desc_searchTerms_name = SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS.value
+        directive_name = SAMPluginSpecSelectorKeys.DIRECTIVE.value
 
         # 1. searchTerms is required when directive is 'searchTerms'
         if self.directive == SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS and self.searchTerms is None:
@@ -79,7 +85,7 @@ class SAMPluginSpecSelector(BaseModel):
         # 2. searchTerms is not allowed when directive is 'always'
         if self.directive != SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS and self.searchTerms is not None:
             raise SAMValidationError(
-                f"{self.class_identifier}.{err_desc_searchTerms_name} is only used when {self.class_identifier}.{directive_name} is '{err_desc_searchTerms_name}'"
+                f"found {self.class_identifier}.{directive_name} of '{self.directive}' but {self.class_identifier}.{err_desc_searchTerms_name} is only used when {self.class_identifier}.{directive_name} is '{err_desc_searchTerms_name}'"
             )
 
         return self
@@ -133,9 +139,9 @@ class SAMPluginSpecPrompt(BaseModel):
 
     @field_validator("systemRole")
     def validate_systemrole(cls, v) -> str:
-        if re.match(SmarterValidator.VALID_CLEAN_STRING, v):
+        if re.match(SmarterValidator.VALID_CLEAN_STRING_WITH_SPACES, v):
             return v
-        err_desc_me_name = cls.systemRole.__class__.__name__
+        err_desc_me_name = SAMPluginSpecPromptKeys.SYSTEMROLE.value
         raise SAMValidationError(f"Invalid characters found in {cls.class_identifier}.{err_desc_me_name}: {v}")
 
     @field_validator("model")
@@ -144,9 +150,9 @@ class SAMPluginSpecPrompt(BaseModel):
             return cls.DEFAULT_MODEL
         if v in VALID_CHAT_COMPLETION_MODELS:
             return v
-        err_desc_me_name = cls.model.__class__.__name__
+        err_desc_me_name = SAMPluginSpecPromptKeys.MODEL.value
         raise SAMValidationError(
-            f"Invalid value found in {cls.err_desc_manifest_kind}.{err_desc_me_name}: {v}. Must be one of {VALID_CHAT_COMPLETION_MODELS}"
+            f"Invalid value found in {cls.err_desc_manifest_kind}.{err_desc_me_name}: '{v}'. Must be one of {VALID_CHAT_COMPLETION_MODELS}"
         )
 
 
@@ -166,7 +172,7 @@ class SAMPluginSpecDataSql(BaseModel):
         try:
             sql_parse(v)
         except SQLParseError as e:
-            err_desc_sql_name = cls.sql.__class__.__name__
+            err_desc_sql_name = SAMPluginMetadataClass.SQL_DATA.value
             raise SAMValidationError(
                 f"Invalid SQL syntax found in {cls.class_identifier}.{err_desc_sql_name}: {v}. {e}"
             ) from e
@@ -176,7 +182,7 @@ class SAMPluginSpecDataSql(BaseModel):
 class SAMPluginSpecData(BaseModel):
     """Smarter API V0 Plugin Manifest Plugin.spec.data"""
 
-    class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".data"
+    class_identifier: ClassVar[str] = f"{MODULE_IDENTIFIER}.{SAMPluginSpecKeys.DATA.value}"
 
     description: str = Field(
         ...,
@@ -213,9 +219,9 @@ class SAMPluginSpecData(BaseModel):
         total_set = bool(self.staticData) + bool(self.sqlData) + bool(self.apiData)
 
         if total_set != 1:
-            static_name = self.staticData.__class__.__name__
-            sql_name = self.sqlData.__class__.__name__
-            api_name = self.apiData.__class__.__name__
+            static_name = SAMPluginMetadataClass.STATIC_DATA.value
+            sql_name = SAMPluginMetadataClass.SQL_DATA.value
+            api_name = SAMPluginMetadataClass.API_DATA.value
 
             raise SAMValidationError(
                 f"One and only one of {self.class_identifier}.{static_name}, {self.class_identifier}.{sql_name}, or {self.class_identifier}.{api_name} must be provided."

@@ -13,7 +13,7 @@ class TestSAMPluginBroker(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        self.path = os.path.join(PYTHON_ROOT, "smarter", "apps", "plugin", "v0", "tests", "data")
+        self.path = os.path.join(PYTHON_ROOT, "smarter", "apps", "plugin", "api", "v0", "tests", "data")
         self.good_manifest_path = os.path.join(self.path, "good-manifest.yaml")
         self.invalid_file_format = os.path.join(self.path, "invalid-file-format.yaml")
 
