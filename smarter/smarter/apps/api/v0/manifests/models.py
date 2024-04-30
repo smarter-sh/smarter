@@ -24,20 +24,20 @@ class HttpRequest(SmarterBaseModel):
     DEFAULT_PORT = 80
     DEFAULT_METHOD = "GET"
 
-    host: str = Field(..., description="Plugin.spec.data.api_data.host: a valid internet domain name")
+    host: str = Field(..., description="a valid internet domain name")
     port: int = Field(
         DEFAULT_PORT,
         gt=0,
         lt=65535,
-        description=f"Plugin.spec.data.api_data.port: a valid http port number: 0 thru 65,535. Default is {DEFAULT_PORT}",
+        description=f"a valid http port number: 0 thru 65,535. Default is {DEFAULT_PORT}",
     )
-    endpoint: str = Field(..., description="Plugin.spec.data.api_data.endPoint: a valid http url")
+    endpoint: str = Field(..., description="a valid http url")
     method: str = Field(
         DEFAULT_METHOD,
-        description=f"Plugin.spec.data.api_data.method: a valid http method: GET, POST, PUT, DELETE. Default is '{DEFAULT_METHOD}'",
+        description=f"any valid http method: GET, POST, PUT, DELETE. Default is '{DEFAULT_METHOD}'",
     )
-    headers: Optional[dict] = Field(None, description="Plugin.spec.data.api_data.headers: a valid http header dict")
-    body: Optional[dict] = Field(None, description="Plugin.spec.data.api_data.body: The body of the API connection")
+    headers: Optional[dict] = Field(None, description="a valid http header dict")
+    body: Optional[dict] = Field(None, description="The http request body")
 
     @field_validator("host")
     def validate_host(cls, v) -> str:
@@ -66,7 +66,7 @@ class HttpRequest(SmarterBaseModel):
 
 
 class SqlConnection(SmarterBaseModel):
-    """Smarter API V0 Plugin Manifest - Spec - Data - SQL - Connection class."""
+    """Smarter API V0 - generic SQL Connection class."""
 
     class PortAssignmentDefaults(Enum):
         """SQL Port Assignments."""
@@ -88,7 +88,7 @@ class SqlConnection(SmarterBaseModel):
 
     db_engine: str = Field(
         ...,
-        description=f"Plugin.spec.data.sql_data.dbEngine: a valid SQL database engine.  Common db_engines: {DbEngine.all_values()}",
+        description=f"a valid SQL database engine.  Common db_engines: {DbEngine.all_values()}",
     )
     host: str = Field(
         ...,
@@ -150,11 +150,11 @@ class SqlConnection(SmarterBaseModel):
 class SAMMetadataBase(SmarterBaseModel):
     """Pydantic Metadata base class. Expected to be subclassed by specific manifest classes."""
 
-    name: str = Field(..., description="The name of the SAM")
-    description: str = Field(..., description="The description of the SAM")
-    version: str = Field(..., description="The version of the SAM")
-    tags: Optional[List[str]] = Field(None, description="The tags of the SAM")
-    annotations: Optional[List[str]] = Field(None, description="The annotations of the SAM")
+    name: str = Field(..., description="The name of the manifest")
+    description: str = Field(..., description="The description of the manifest")
+    version: str = Field(..., description="The version of the manifest")
+    tags: Optional[List[str]] = Field(None, description="The tags of the manifest")
+    annotations: Optional[List[str]] = Field(None, description="The annotations of the manifest")
 
     @field_validator("name")
     def validate_name(cls, v) -> str:
