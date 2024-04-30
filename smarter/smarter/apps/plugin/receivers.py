@@ -17,7 +17,7 @@ from .models import (
     PluginSelector,
     PluginSelectorHistory,
 )
-from .plugin import Plugin
+from .plugin.static import PluginStatic
 from .signals import (
     plugin_called,
     plugin_cloned,
@@ -45,7 +45,7 @@ def handle_plugin_cloned(sender, **kwargs):
     """Handle plugin cloned signal."""
 
     plugin_id = kwargs.get("plugin_id")
-    plugin = Plugin(plugin_id=plugin_id)
+    plugin = PluginStatic(plugin_id=plugin_id)
     logger.info("%s - %s", formatted_text("plugin_cloned"), plugin.name)
 
 
@@ -102,7 +102,7 @@ def handle_plugin_selected(sender, **kwargs):
     """Handle plugin selected signal."""
 
     plugin = kwargs.get("plugin")
-    plugin = Plugin(plugin_id=plugin.id)
+    plugin = PluginStatic(plugin_id=plugin.id)
     input_text: str = kwargs.get("input_text")
     messages: list[dict] = kwargs.get("messages")
     search_term: str = kwargs.get("search_term")

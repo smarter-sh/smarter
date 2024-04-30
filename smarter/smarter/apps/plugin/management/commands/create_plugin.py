@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import account_admin_user
-from smarter.apps.plugin.plugin import Plugin
+from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.lib.django.user import User, UserType
 
 
@@ -64,5 +64,5 @@ class Command(BaseCommand):
             data["user_profile"] = user_profile
             data["meta_data"]["author"] = user_profile.id
 
-        plugin = Plugin(data=data, url=url, user_profile=user_profile)
+        plugin = PluginStatic(data=data, url=url, user_profile=user_profile)
         print(plugin.to_json())

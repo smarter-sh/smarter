@@ -5,9 +5,9 @@ import os
 import yaml
 
 from smarter.apps.account.models import UserProfile
-from smarter.lib.django.user import UserType
 
-from .plugin import Plugin, PluginExamples, Plugins
+from .plugin.base import PluginExamples
+from .plugin.static import PluginStatic
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -24,20 +24,4 @@ def add_example_plugins(user_profile: UserProfile) -> bool:
         data = plugin.to_yaml()
         data = yaml.safe_load(data)
         data["user_profile"] = user_profile
-        Plugin(data=data)
-
-
-def plugins_for_user(user: UserType) -> list[Plugin]:
-    """
-    DEPRECATE THIS? We switched to using ChatBot and ChatBotPlugin.
-
-    Return the plugins for a user. If the user is associated with an account,
-    return the plugins for that account. If the user is not associated with an
-    account, return the plugins for the user.
-    """
-    try:
-        user_profile = UserProfile.objects.get(user=user)
-    except UserProfile.DoesNotExist:
-        return Plugins(user=user).plugins
-
-    return Plugins(account=user_profile.account).plugins
+        PluginStatic(data=data)

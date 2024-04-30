@@ -25,7 +25,8 @@ from smarter.apps.plugin.models import (
     PluginPrompt,
     PluginSelector,
 )
-from smarter.apps.plugin.plugin import Plugin, PluginExamples
+from smarter.apps.plugin.plugin.base import PluginExamples
+from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.signals import (
     plugin_called,
     plugin_cloned,
@@ -114,12 +115,12 @@ class TestPlugin(unittest.TestCase):
 
     # pylint: disable=broad-exception-caught
     def test_create(self):
-        """Test that we can create a plugin using the Plugin."""
+        """Test that we can create a plugin using the PluginStatic."""
 
         plugin_created.connect(self.plugin_created_signal_handler, dispatch_uid="plugin_created_test_create")
         plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_create")
 
-        plugin = Plugin(data=self.data)
+        plugin = PluginStatic(data=self.data)
 
         # sleep long enough to eliminate race situation
         # between the asynchronous commit and our assertion
@@ -129,7 +130,7 @@ class TestPlugin(unittest.TestCase):
         self.assertTrue(self.signals["plugin_created"])
         self.assertTrue(self.signals["plugin_ready"])
 
-        self.assertIsInstance(plugin, Plugin)
+        self.assertIsInstance(plugin, PluginStatic)
         self.assertTrue(plugin.ready)
         self.assertIsInstance(plugin.plugin_meta, PluginMeta)
         self.assertIsInstance(plugin.plugin_selector, PluginSelector)
@@ -150,12 +151,12 @@ class TestPlugin(unittest.TestCase):
         self.assertEqual(plugin.plugin_data.return_data, self.data["plugin_data"]["return_data"])
 
     def test_update(self):
-        """Test that we can update a plugin using the Plugin."""
+        """Test that we can update a plugin using the PluginStatic."""
         plugin_created.connect(self.plugin_created_signal_handler, dispatch_uid="plugin_created_test_update")
         plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_update")
         plugin_updated.connect(self.plugin_updated_signal_handler, dispatch_uid="plugin_updated_test_update")
 
-        plugin = Plugin(data=self.data)
+        plugin = PluginStatic(data=self.data)
 
         # verify that the signals were sent
         self.assertTrue(self.signals["plugin_created"])
@@ -188,11 +189,11 @@ class TestPlugin(unittest.TestCase):
         self.assertTrue(self.signals["plugin_updated"])
 
     def test_to_json(self):
-        """Test that the Plugin generates correct JSON output."""
+        """Test that the PluginStatic generates correct JSON output."""
         plugin_created.connect(self.plugin_created_signal_handler, dispatch_uid="plugin_created_test_to_json")
         plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_to_json")
 
-        plugin = Plugin(data=self.data)
+        plugin = PluginStatic(data=self.data)
         to_json = plugin.to_json()
 
         # verify that signal was sent
@@ -208,12 +209,12 @@ class TestPlugin(unittest.TestCase):
         self.assertEqual(to_json["prompt"]["max_tokens"], self.data["prompt"]["max_tokens"])
 
     def test_delete(self):
-        """Test that we can delete a plugin using the Plugin."""
+        """Test that we can delete a plugin using the PluginStatic."""
         plugin_created.connect(self.plugin_created_signal_handler, dispatch_uid="plugin_created_test_delete")
         plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_delete")
         plugin_deleted.connect(self.plugin_deleted_signal_handler, dispatch_uid="plugin_deleted_test_delete")
 
-        plugin = Plugin(data=self.data)
+        plugin = PluginStatic(data=self.data)
         plugin_id = plugin.id
         plugin.delete()
 
@@ -251,104 +252,104 @@ class TestPlugin(unittest.TestCase):
         # verify that all of the sample plugins were correctdly created
         # and are in a ready state.
         for plugin in plugins:
-            self.assertTrue(Plugin(plugin_meta=plugin).ready)
+            self.assertTrue(PluginStatic(plugin_meta=plugin).ready)
 
     # pylint: disable=too-many-statements
     def test_validation_bad_structure(self):
-        """Test that the Plugin raises an error when given bad data."""
+        """Test that the PluginStatic raises an error when given bad data."""
         with self.assertRaises(ValidationError):
-            Plugin(data={})
+            PluginStatic(data={})
 
         bad_data = self.data.copy()
         bad_data.pop("meta_data")
         with self.assertRaises(ValidationError):
-            Plugin(data=bad_data)
+            PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
         bad_data.pop("selector")
         with self.assertRaises(ValidationError):
-            Plugin(data=bad_data)
+            PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
         bad_data.pop("prompt")
         with self.assertRaises(ValidationError):
-            Plugin(data=bad_data)
+            PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
         bad_data.pop("plugin_data")
         with self.assertRaises(ValidationError):
-            Plugin(data=bad_data)
+            PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
         bad_data["meta_data"].pop("name")
         with self.assertRaises(ValidationError):
-            Plugin(data=bad_data)
+            PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
         bad_data["selector"].pop("directive")
         with self.assertRaises(ValidationError):
-            Plugin(data=bad_data)
+            PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
         bad_data["prompt"].pop("system_role")
         with self.assertRaises(ValidationError):
-            Plugin(data=bad_data)
+            PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
         bad_data["prompt"].pop("model")
         with self.assertRaises(ValidationError):
-            Plugin(data=bad_data)
+            PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
         bad_data["prompt"].pop("temperature")
         with self.assertRaises(ValidationError):
-            Plugin(data=bad_data)
+            PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
         bad_data["prompt"].pop("max_tokens")
         with self.assertRaises(ValidationError):
-            Plugin(data=bad_data)
+            PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
         bad_data["plugin_data"].pop("description")
         with self.assertRaises(ValidationError):
-            Plugin(data=bad_data)
+            PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
         bad_data["plugin_data"].pop("return_data")
         with self.assertRaises(ValidationError):
-            Plugin(data=bad_data)
+            PluginStatic(data=bad_data)
 
     def test_validation_bad_data_types(self):
-        """Test that the Plugin raises an error when given bad data."""
+        """Test that the PluginStatic raises an error when given bad data."""
         bad_data = self.data.copy()
         bad_data["meta_data"]["tags"] = "not a list"
         with self.assertRaises(ValidationError):
-            Plugin(data=bad_data)
+            PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
         bad_data["selector"]["search_terms"] = "not a list"
         with self.assertRaises(ValidationError):
-            Plugin(data=bad_data)
+            PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
         bad_data["prompt"]["temperature"] = "not a float"
         with self.assertRaises(ValidationError):
-            Plugin(data=bad_data)
+            PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
         bad_data["prompt"]["max_tokens"] = "not an int"
         with self.assertRaises(ValidationError):
-            Plugin(data=bad_data)
+            PluginStatic(data=bad_data)
 
     def test_clone(self):
-        """Test that we can clone a plugin using the Plugin."""
+        """Test that we can clone a plugin using the PluginStatic."""
         plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_clone")
         plugin_cloned.connect(self.plugin_cloned_signal_handler, dispatch_uid="plugin_cloned_test_clone")
 
-        plugin = Plugin(data=self.data)
+        plugin = PluginStatic(data=self.data)
         clone_id = plugin.clone()
-        plugin_clone = Plugin(plugin_id=clone_id)
+        plugin_clone = PluginStatic(plugin_id=clone_id)
 
         # sleep long enough to eliminate race situation
         # between the asynchronous commit and our assertion
@@ -380,10 +381,10 @@ class TestPlugin(unittest.TestCase):
         plugin_clone.delete()
 
     def test_json_serialization(self):
-        """Test that the Plugin generates correct JSON output."""
+        """Test that the PluginStatic generates correct JSON output."""
         plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_json_serialization")
 
-        plugin = Plugin(data=self.data)
+        plugin = PluginStatic(data=self.data)
         to_json = plugin.to_json()
 
         # verify that signal was sent
@@ -405,7 +406,7 @@ class TestPlugin(unittest.TestCase):
         """Test the plugin_called signal."""
         plugin_called.connect(self.plugin_called_signal_handler, dispatch_uid="plugin_called_test_plugin_called_signal")
 
-        plugin = Plugin(data=self.data)
+        plugin = PluginStatic(data=self.data)
         plugin.function_calling_plugin(inquiry_type="sales_promotions")
 
         self.assertTrue(self.signals["plugin_called"])
@@ -421,7 +422,7 @@ class TestPlugin(unittest.TestCase):
             {"role": "user", "content": "have you ever heard of everlasting gobstoppers?"},
         ]
 
-        plugin = Plugin(data=self.data)
+        plugin = PluginStatic(data=self.data)
         plugin.selected(user=self.user, messages=messages)
         self.assertTrue(self.signals["plugin_selected"])
 

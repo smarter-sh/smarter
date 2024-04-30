@@ -15,7 +15,7 @@ from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import account_admin_user
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.tasks import deploy_default_api
-from smarter.apps.plugin.plugin import Plugin
+from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.user import User, UserType
@@ -157,7 +157,7 @@ class Command(BaseCommand):
         data["user_profile"] = self.user_profile
         data["meta_data"]["author"] = self.user_profile.id
 
-        plugin = Plugin(data=data, user_profile=self.user_profile)
+        plugin = PluginStatic(data=data, user_profile=self.user_profile)
         return plugin
 
     def process_repo(self):

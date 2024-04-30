@@ -2,10 +2,11 @@
 
 from django.core.management.base import BaseCommand
 
-from smarter.apps.account.models import Account
+from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.utils import account_admin_user
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.tasks import deploy_default_api
-from smarter.apps.plugin.plugin import Plugins
+from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
 
 
@@ -18,6 +19,8 @@ class Command(BaseCommand):
         print(log_prefix, "Deploying the Smarter demo API...")
 
         account = Account.objects.get(account_number=SMARTER_ACCOUNT_NUMBER)
+        user = account_admin_user(account)
+        user_profile, _ = UserProfile.objects.get_or_create(user=user, account=account)
         chatbot, _ = ChatBot.objects.get_or_create(account=account, name=SMARTER_EXAMPLE_CHATBOT_NAME)
 
         chatbot.default_model = "gpt-3.5-turbo"
@@ -42,7 +45,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(log_prefix + "The Smarter demo API is already deployed."))
             return
 
-        for plugin in Plugins(account=account).plugins:
+        for plugin in PluginStatic(user_profile=user_profile).plugins:
             ChatBotPlugin.objects.create(chatbot=chatbot, plugin_meta=plugin.plugin_meta)
 
         deploy_default_api.delay(chatbot_id=chatbot.id)

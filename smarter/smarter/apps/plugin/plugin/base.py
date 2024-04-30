@@ -1,5 +1,6 @@
 """A Compound Model class for managing plugins."""
 
+import abc
 import copy
 import json
 import logging
@@ -14,17 +15,20 @@ from rest_framework import serializers
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.api.v0.manifests.broker import SAMPluginBroker
-from smarter.lib.django.user import User, UserType
-
-from .api.v0.serializers import (
+from smarter.apps.plugin.api.v0.serializers import (
     PluginDataSerializer,
     PluginMetaSerializer,
     PluginPromptSerializer,
     PluginSelectorSerializer,
 )
-from .models import PluginData, PluginMeta, PluginPrompt, PluginSelector
-from .nlp import does_refer_to
-from .signals import (
+from smarter.apps.plugin.models import (
+    PluginData,
+    PluginMeta,
+    PluginPrompt,
+    PluginSelector,
+)
+from smarter.apps.plugin.nlp import does_refer_to
+from smarter.apps.plugin.signals import (
     plugin_called,
     plugin_cloned,
     plugin_created,
@@ -33,14 +37,15 @@ from .signals import (
     plugin_selected,
     plugin_updated,
 )
+from smarter.lib.django.user import UserType
 
 
 logger = logging.getLogger(__name__)
 
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
-class Plugin:
-    """A class for working with plugins."""
+class PluginBase(abc.ABC):
+    """An abstract base class for working with plugins."""
 
     _manifest_broker: SAMPluginBroker = None
     _user_profile: UserProfile = None
@@ -816,16 +821,16 @@ class Plugins:
     """A class for working with multiple plugins."""
 
     account: Account = None
-    plugins: list[Plugin] = []
+    plugins: list[PluginBase] = []
 
-    def __init__(self, user: User = None, account: Account = None):
+    def __init__(self, user: UserType = None, account: Account = None):
 
         self.plugins = []
         if user or account:
             self.account = account or UserProfile.objects.get(user=user).account
 
             for plugin in PluginMeta.objects.filter(account=self.account):
-                self.plugins.append(Plugin(plugin_id=plugin.id))
+                self.plugins.append(PluginBase(plugin_id=plugin.id))
 
     @property
     def data(self) -> list[dict]:

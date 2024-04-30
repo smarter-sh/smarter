@@ -17,7 +17,7 @@ from rest_framework.response import Response
 from smarter.apps.account.models import UserProfile
 from smarter.apps.plugin.api.v0.serializers import PluginMetaSerializer
 from smarter.apps.plugin.models import PluginMeta
-from smarter.apps.plugin.plugin import Plugin
+from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.user import User
@@ -28,7 +28,7 @@ from smarter.lib.drf.view_helpers import (
 
 
 class PluginView(SmarterAuthenticatedAPIView):
-    """Plugin view for smarter api."""
+    """PluginStatic view for smarter api."""
 
     def get(self, request, plugin_id):
         return get_plugin(request, plugin_id)
@@ -47,11 +47,11 @@ class PluginView(SmarterAuthenticatedAPIView):
 
 
 class PluginCloneView(SmarterAuthenticatedAPIView):
-    """Plugin clone view for smarter api."""
+    """PluginStatic clone view for smarter api."""
 
     def post(self, request, plugin_id, new_name):
         user_profile = UserProfile.objects.get(user=request.user)
-        plugin = Plugin(plugin_id=plugin_id, user_profile=user_profile)
+        plugin = PluginStatic(plugin_id=plugin_id, user_profile=user_profile)
         new_id = plugin.clone(new_name)
         return redirect("/plugins/" + str(new_id) + "/")
 
@@ -87,7 +87,7 @@ class AddPluginExamplesView(SmarterAuthenticatedAPIView):
 
 
 class PluginUploadView(SmarterAuthenticatedAPIView):
-    """Plugin view for smarter api."""
+    """PluginStatic view for smarter api."""
 
     parser_class = (FileUploadParser,)
 
@@ -128,7 +128,7 @@ class PluginUploadView(SmarterAuthenticatedAPIView):
 # -----------------------------------------------------------------------
 def get_plugin(request, plugin_id):
     """Get a plugin json representation by id."""
-    plugin: Plugin = None
+    plugin: PluginStatic = None
 
     try:
         user_profile = UserProfile.objects.get(user=request.user)
@@ -136,9 +136,9 @@ def get_plugin(request, plugin_id):
         return JsonResponse({"error": "User not found"}, status=404)
 
     try:
-        plugin = Plugin(plugin_id=plugin_id, user_profile=user_profile)
+        plugin = PluginStatic(plugin_id=plugin_id, user_profile=user_profile)
     except PluginMeta.DoesNotExist:
-        return JsonResponse({"error": "Plugin not found"}, status=HTTPStatus.NOT_FOUND)
+        return JsonResponse({"error": "PluginStatic not found"}, status=HTTPStatus.NOT_FOUND)
     except ValidationError as e:
         return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
     except Exception as e:
@@ -171,7 +171,7 @@ def create_plugin(request, data: dict = None):
         data["user_profile"] = user_profile
 
     try:
-        plugin = Plugin(data=data)
+        plugin = PluginStatic(data=data)
     except ValidationError as e:
         return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
     except Exception as e:
@@ -204,7 +204,7 @@ def update_plugin(request):
         return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
 
     try:
-        Plugin(data=data)
+        PluginStatic(data=data)
     except ValidationError as e:
         return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
     except Exception as e:
@@ -221,9 +221,9 @@ def delete_plugin(request, plugin_id):
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
 
     try:
-        plugin = Plugin(plugin_id=plugin_id, user_profile=user_profile)
+        plugin = PluginStatic(plugin_id=plugin_id, user_profile=user_profile)
     except PluginMeta.DoesNotExist:
-        return JsonResponse({"error": "Plugin not found"}, status=HTTPStatus.NOT_FOUND)
+        return JsonResponse({"error": "PluginStatic not found"}, status=HTTPStatus.NOT_FOUND)
     except Exception as e:
         return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
