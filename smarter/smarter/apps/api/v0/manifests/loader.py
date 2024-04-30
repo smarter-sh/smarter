@@ -239,20 +239,22 @@ class SAMLoader:
     def manifest_status_keys(self) -> list[str]:
         return []
 
-    def manifest_metadata(self, key: str = None) -> any:
-        meta_data = self.get_key(SAMKeys.METADATA.value)
-        if key in SAMMetadataKeys.all_values():
-            return meta_data.get(key)
-        return meta_data
+    @property
+    def manifest_api_version(self) -> str:
+        return self.get_key(SAMKeys.APIVERSION.value)
 
-    def manifest_spec(self, key: str = None) -> any:
-        spec_data = self.get_key(SAMKeys.SPEC.value)
-        if key:
-            return spec_data.get(key)
-        return spec_data
+    @property
+    def manifest_kind(self) -> str:
+        return self.get_key(SAMKeys.KIND.value)
 
-    def manifest_status(self, key: str = None) -> any:
-        status_data = self.get_key(SAMKeys.STATUS.value)
-        if key:
-            return status_data.get(key)
-        return status_data
+    @property
+    def manifest_metadata(self) -> any:
+        return self.get_key(SAMKeys.METADATA.value)
+
+    @property
+    def manifest_spec(self) -> any:
+        return self.get_key(SAMKeys.SPEC.value)
+
+    @property
+    def manifest_status(self) -> any:
+        return self.get_key(SAMKeys.STATUS.value)
