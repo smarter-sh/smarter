@@ -1,5 +1,6 @@
 """Smarter API V0 Manifest - Plugin.metadata"""
 
+import os
 from typing import ClassVar
 
 from pydantic import Field, field_validator
@@ -13,7 +14,8 @@ from smarter.apps.plugin.api.v0.manifests.enum import SAMPluginMetadataClassValu
 from .const import OBJECT_IDENTIFIER
 
 
-MODULE_IDENTIFIER = f"{OBJECT_IDENTIFIER}.{__file__}"
+filename = os.path.splitext(os.path.basename(__file__))[0]
+MODULE_IDENTIFIER = f"{OBJECT_IDENTIFIER}.{filename}"
 
 
 class SAMPluginMetadata(SAMMetadataBase):
@@ -28,11 +30,11 @@ class SAMPluginMetadata(SAMMetadataBase):
 
     @field_validator("pluginClass")
     def validate_plugin_class(cls, v) -> str:
-        err_desc_class_name = cls.pluginClass.__class__.__name__
+        err_desc_class_name = "pluginClass"
         err_desc_model_name = f"{cls.class_identifier}.{err_desc_class_name}"
 
         if v not in SAMPluginMetadataClassValues.all_values():
             raise SAMValidationError(
-                f"Invalid value found for {err_desc_model_name}: {v}. Must be one of {SAMPluginMetadataClassValues.all_values()}"
+                f"Invalid value found for {err_desc_model_name}: '{v}'. Must be one of {SAMPluginMetadataClassValues.all_values()}"
             )
         return v
