@@ -56,9 +56,9 @@ class TestSAMLoader(unittest.TestCase):
         kind = sam.get_key(key=SAMKeys.KIND.value)
         self.assertEqual(kind, "Plugin", f"sam.manifest_kind is {kind}")
         self.assertEqual(sam.manifest_spec_keys, [], f"sam.manifest_spec_keys is {sam.manifest_spec_keys}")
-        self.assertTrue(isinstance(sam.manifest_spec(), dict), f"sam.manifest_spec() is {type(sam.manifest_spec())}")
+        self.assertTrue(isinstance(sam.manifest_spec, dict), f"sam.manifest_spec() is {type(sam.manifest_spec)}")
         self.assertEqual(sam.manifest_status_keys, [], f"sam.manifest_status_keys is {sam.manifest_status_keys}")
-        self.assertTrue(sam.manifest_status() is None, f"sam.manifest_status() is {sam.manifest_status()}")
+        self.assertTrue(sam.manifest_status is None, f"sam.manifest_status() is {sam.manifest_status}")
 
     def test_get_key(self):
         """Test valid file path and that we can instantiate with errors"""
@@ -67,7 +67,7 @@ class TestSAMLoader(unittest.TestCase):
         sam = handler.loader
         self.assertEqual(sam.get_key("apiVersion"), "smarter/v0")
         self.assertEqual(sam.get_key("kind"), "Plugin")
-        self.assertEqual(sam.get_key("metadata"), sam.manifest_metadata())
+        self.assertEqual(sam.get_key("metadata"), sam.manifest_metadata)
 
     def test_missing_apiversion(self):
         """Test valid file path and that we can instantiate with errors"""
