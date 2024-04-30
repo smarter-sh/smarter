@@ -2,7 +2,7 @@
 
 import re
 from enum import Enum
-from typing import List, Optional
+from typing import ClassVar, List, Optional
 
 import validators
 from pydantic import BaseModel, Field, field_validator
@@ -21,8 +21,8 @@ class SmarterBaseModel(BaseModel):
 class HttpRequest(SmarterBaseModel):
     """Smarter API V0 Manifest generic HTTP request model."""
 
-    DEFAULT_PORT = 80
-    DEFAULT_METHOD = "GET"
+    DEFAULT_PORT: ClassVar[int] = 80
+    DEFAULT_METHOD: ClassVar[str] = "GET"
 
     host: str = Field(..., description="a valid internet domain name")
     port: int = Field(
@@ -77,14 +77,16 @@ class SqlConnection(SmarterBaseModel):
         ORACLE = 1521
         MSSQL = 1433
 
-    DEFAULT_PORT_ASSIGNMENTS = [
+    DEFAULT_PORT_ASSIGNMENTS: ClassVar[list] = [
         (DbEngine.MYSQL.name, PortAssignmentDefaults.MYSQL.value),
         (DbEngine.POSTGRES.name, PortAssignmentDefaults.POSTGRES.value),
         (DbEngine.ORACLE.name, PortAssignmentDefaults.ORACLE.value),
         (DbEngine.SQLITE.name, PortAssignmentDefaults.SQLITE.value),
         (DbEngine.MSSQL.name, PortAssignmentDefaults.MSSQL.value),
     ]
-    PRETTY_PORT_ASSIGNMENTS = ", ".join([f"{engine}: {port}" for engine, port in DEFAULT_PORT_ASSIGNMENTS.items()])
+    PRETTY_PORT_ASSIGNMENTS: ClassVar[list] = ", ".join(
+        [f"{engine}: {port}" for engine, port in DEFAULT_PORT_ASSIGNMENTS]
+    )
 
     db_engine: str = Field(
         ...,

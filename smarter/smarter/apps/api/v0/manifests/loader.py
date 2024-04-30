@@ -23,9 +23,6 @@ from .version import SMARTER_API_VERSION
 logger = logging.getLogger(__name__)
 
 
-###############################################################################
-# Loader
-###############################################################################
 def validate_key(key: str, key_value: Any, spec: Any):
     """
     Validate a key against a spec. Of note:

@@ -1,7 +1,7 @@
 """Smarter API V0 Manifest - Plugin.spec"""
 
 import re
-from typing import List, Optional
+from typing import ClassVar, List, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlparse import parse as sql_parse
@@ -25,7 +25,7 @@ MODULE_IDENTIFIER = f"{OBJECT_IDENTIFIER}.{__file__}"
 class SAMPluginSpecSelector(BaseModel):
     """Smarter API V0 Plugin Manifest - Spec - Selector class."""
 
-    class_identifier = MODULE_IDENTIFIER + ".selector"
+    class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".selector"
 
     directive: str = Field(
         ...,
@@ -88,11 +88,11 @@ class SAMPluginSpecSelector(BaseModel):
 class SAMPluginSpecPrompt(BaseModel):
     """Smarter API V0 Plugin Manifest - Spec - Prompt class."""
 
-    class_identifier = MODULE_IDENTIFIER + ".prompt"
+    class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".prompt"
 
-    DEFAULT_MODEL = "gpt-3.5-turbo-1106"
-    DEFAULT_TEMPERATURE = 0.5
-    DEFAULT_MAXTOKENS = 2048
+    DEFAULT_MODEL: ClassVar[str] = "gpt-3.5-turbo-1106"
+    DEFAULT_TEMPERATURE: ClassVar[float] = 0.5
+    DEFAULT_MAXTOKENS: ClassVar[int] = 2048
 
     systemRole: str = Field(
         ...,
@@ -153,7 +153,7 @@ class SAMPluginSpecPrompt(BaseModel):
 class SAMPluginSpecDataSql(BaseModel):
     """Smarter API V0 Plugin Manifest Plugin.spec.data.sqlData"""
 
-    class_identifier = MODULE_IDENTIFIER + ".data.sqlData"
+    class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".data.sqlData"
 
     connection: SqlConnection = Field(..., description=f"{class_identifier}.connection[obj]: an sql server connection")
     sql: str = Field(
@@ -176,7 +176,7 @@ class SAMPluginSpecDataSql(BaseModel):
 class SAMPluginSpecData(BaseModel):
     """Smarter API V0 Plugin Manifest Plugin.spec.data"""
 
-    class_identifier = MODULE_IDENTIFIER + ".data"
+    class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".data"
 
     description: str = Field(
         ...,
@@ -227,7 +227,7 @@ class SAMPluginSpecData(BaseModel):
 class SAMPluginSpec(SAMSpecBase):
     """Smarter API V0 Plugin Manifest Plugin.spec"""
 
-    class_identifier = MODULE_IDENTIFIER
+    class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
     selector: SAMPluginSpecSelector = Field(
         ..., description=f"{class_identifier}.selector[obj]: the selector logic to use for the {OBJECT_IDENTIFIER}"
