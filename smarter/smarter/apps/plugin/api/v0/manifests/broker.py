@@ -37,7 +37,7 @@ class SAMPluginBroker(SAMBroker):
         # Initialize the Plugin manifest model. SAMPlugin() is a Pydantic model
         # that is used to represent the Smarter API Plugin manifest. The Pydantic
         # model is initialized with the data from the manifest loader, which is
-        # generally passed to the model constructor as **data. However, the top-level
+        # generally passed to the model constructor as **data. However, this top-level
         # manifest model has to be explicitly initialized, whereas its child models
         # are automatically cascade-initialized by the Pydantic model, implicitly
         # passing **data to each child's constructor.
