@@ -9,7 +9,8 @@ from typing import ClassVar, List, Optional
 import validators
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from smarter.apps.account.models import Account
+from smarter.apps.account.models import Account, UserProfile
+from smarter.lib.django.user import UserType
 from smarter.lib.django.validators import SmarterValidator
 
 from .enum import DbEngine, SAMKinds
@@ -24,7 +25,7 @@ class SmarterBaseModel(BaseModel):
     """Smarter API V0 Base Pydantic Model."""
 
     # this ensures that the entire manifest is read-only.
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(arbitrary_types_allowed=True, frozen=True)
 
 
 class HttpRequest(SmarterBaseModel):
@@ -162,8 +163,11 @@ class SAMMetadataBase(SmarterBaseModel, abc.ABC):
     """Pydantic Metadata base class. Expected to be subclassed by specific manifest classes."""
 
     name: str = Field(..., description="The name of the manifest resource")
-    accountNumber: Optional[str] = Field(
-        ..., description="The account number of the account that owns the manifest resource"
+    account: Account = Field(..., description="The account object that owns the manifest resource")
+    accountNumber: str = Field(..., description="The account number of the account that owns the manifest resource")
+    user: Optional[UserType] = Field(None, description="The user object that owns the manifest resource")
+    userProfile: Optional[UserProfile] = Field(
+        None, description="The user profile object that owns the manifest resource"
     )
     description: str = Field(..., description="The description of the manifest resource")
     version: str = Field(..., description="The version of the manifest")

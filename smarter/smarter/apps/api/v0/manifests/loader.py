@@ -9,7 +9,8 @@ import requests
 import waffle
 import yaml
 
-from smarter.apps.account.models import Account
+from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.utils import account_admin_user
 from smarter.lib.django.validators import SmarterValidator
 
 from .enum import (
@@ -139,6 +140,10 @@ class SAMLoader:
     # data setters and getters. Sort out whether we received JSON or YAML data
     # -------------------------------------------------------------------------
     @property
+    def account_number(self) -> str:
+        return self._account_number
+
+    @property
     def specification(self) -> dict:
         return self._specification
 
@@ -182,9 +187,15 @@ class SAMLoader:
         elif self.data_format == SAMDataFormats.YAML:
             self._dict_data = self.yaml_data
 
-        # add account_number to the metadata
+        # add account info to the metadata
         if self._dict_data:
-            self._dict_data[SAMKeys.METADATA.value][SAMMetadataKeys.ACCOUNT_NUMBER.value] = self._account_number
+            account = Account.objects.get(account_number=self.account_number)
+            user = account_admin_user(account)
+            user_profile = UserProfile.objects.get(user=user, account=account)
+            self._dict_data[SAMKeys.METADATA.value][SAMMetadataKeys.ACCOUNT_NUMBER.value] = self.account_number
+            self._dict_data[SAMKeys.METADATA.value][SAMMetadataKeys.USER.value] = user
+            self._dict_data[SAMKeys.METADATA.value][SAMMetadataKeys.ACCOUNT.value] = account
+            self._dict_data[SAMKeys.METADATA.value][SAMMetadataKeys.USER_PROFILE.value] = user_profile
         return self._dict_data
 
     @property

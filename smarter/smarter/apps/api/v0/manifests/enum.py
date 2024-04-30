@@ -60,7 +60,10 @@ class SAMMetadataKeys(SmarterEnumAbstract):
     """Smarter API V0 Plugin Metadata keys enumeration."""
 
     NAME = "name"
+    ACCOUNT = "account"
     ACCOUNT_NUMBER = "accountNumber"
+    USER = "user"
+    USER_PROFILE = "userProfile"
     DESCRIPTION = "description"
     VERSION = "version"
     TAGS = "tags"

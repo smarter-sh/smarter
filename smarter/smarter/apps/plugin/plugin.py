@@ -13,7 +13,6 @@ from django.db import transaction
 from rest_framework import serializers
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.utils import account_admin_user
 from smarter.apps.plugin.api.v0.manifests.broker import SAMPluginBroker
 from smarter.lib.django.user import User, UserType
 
@@ -77,20 +76,18 @@ class Plugin:
 
         # TO DO: refactor to initialize from the Pydantic model
         if manifest_broker:
-            # the account and the manifest are pre-validated.
             self._manifest_broker = manifest_broker
             data = manifest_broker.loader.data
-            account = self.manifest_broker.account
-            user = account_admin_user(account)
-            self._user_profile = UserProfile.objects.get(user=user, account=account)
-            data["account"] = account
-            data["user"] = user
+            self._user_profile = self.manifest_broker.user_profile
+            data["account"] = self.manifest_broker.user_profile.account
+            data["user"] = self.manifest_broker.user_profile.user
             data["user_profile"] = self.user_profile
-            data["meta_data"]["author"] = self.user_profile.id
+            data["metadata"]["author"] = self.user_profile.id
 
             self.create(data)
             if self.ready:
                 plugin_ready.send(sender=self.__class__, plugin=self)
+            return
 
         if plugin_id:
             self.id = plugin_id
@@ -130,7 +127,7 @@ class Plugin:
             data["user"] = self.user_profile.user
             data["account"] = self.user_profile.account
             data["user_profile"] = user_profile
-            data["meta_data"]["author"] = self.user_profile.id
+            data["metadata"]["author"] = self.user_profile.id
 
             self.create(data)
             if self.ready:
@@ -443,7 +440,7 @@ class Plugin:
             raise ValidationError("Invalid data. data['user_profile'] must be a UserProfile instance.")
 
         # plugin required keys
-        if not data.get("meta_data"):
+        if not data.get("metadata"):
             raise ValidationError("Invalid data. Missing meta_data.")
         if not data.get("selector"):
             raise ValidationError("Invalid data. Missing selector.")
@@ -453,7 +450,7 @@ class Plugin:
             raise ValidationError("Invalid data. Missing plugin_data.")
 
         # validate the structure of the data
-        validate_key(data, "meta_data", ["name", "description", "version", "tags"])
+        validate_key(data, "metadata", ["name", "description", "version", "tags"])
         validate_key(data, "selector", ["search_terms"])
         validate_key(data, "prompt", ["system_role", "model", "temperature", "max_tokens"])
         validate_key(data, "plugin_data", ["description", "return_data"])
@@ -466,7 +463,7 @@ class Plugin:
         # top-level prohibited keys
         if data.get("id"):
             raise ValidationError("Invalid data. dict key data['id'] is not writable.")
-        meta_data = data.get("meta_data")
+        meta_data = data.get("metadata")
         if meta_data.get("author"):
             raise ValidationError("Invalid data. dict key data['meta_data']['author'] is not writable.")
 
@@ -494,10 +491,10 @@ class Plugin:
             return True
 
         # validate the data types
-        validate_data_type(data["meta_data"], "name", str)
-        validate_data_type(data["meta_data"], "description", str)
-        validate_data_type(data["meta_data"], "version", str)
-        validate_data_type(data["meta_data"], "tags", list, required=False)
+        validate_data_type(data["metadata"], "name", str)
+        validate_data_type(data["metadata"], "description", str)
+        validate_data_type(data["metadata"], "version", str)
+        validate_data_type(data["metadata"], "tags", list, required=False)
 
         validate_data_type(data["selector"], "directive", str)
         validate_data_type(data["selector"], "search_terms", list)
@@ -539,7 +536,7 @@ class Plugin:
 
     def validate_write_operation(self, data: dict) -> bool:
         """Validate the structural integrity of the input dict."""
-        meta_data = data.get("meta_data")
+        meta_data = data.get("metadata")
         selector = data.get("selector")
         prompt = data.get("prompt")
         plugin_data = data.get("plugin_data")
@@ -611,7 +608,7 @@ class Plugin:
         self.validate_write_operation(data)
 
         # initialize the major sections of the plugin yaml file
-        meta_data = data.get("meta_data")
+        meta_data = data.get("metadata")
         meta_data["name"] = proper_name(meta_data["name"])
         selector = data.get("selector")
         prompt = data.get("prompt")
@@ -660,7 +657,7 @@ class Plugin:
         self.validate_write_operation(data)
 
         # don't want the author field to be writable.
-        meta_data = data.get("meta_data")
+        meta_data = data.get("metadata")
         meta_data.pop("author", None)
         meta_data_tags = meta_data.pop("tags")
 
@@ -806,7 +803,7 @@ class Plugin:
         if self.ready:
             retval = {
                 "id": self.id,
-                "meta_data": {**self.plugin_meta_serializer.data, "id": self.plugin_meta.id},
+                "metadata": {**self.plugin_meta_serializer.data, "id": self.plugin_meta.id},
                 "selector": {**self.plugin_selector_serializer.data, "id": self.plugin_selector.id},
                 "prompt": {**self.plugin_prompt_serializer.data, "id": self.plugin_prompt.id},
                 "plugin_data": {**self.plugin_data_serializer.data, "id": self.plugin_data.id},
