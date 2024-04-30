@@ -41,7 +41,7 @@ class SAMPluginSpecSelectorKeyDirectiveValues(SmarterEnumAbstract):
 class SAMPluginMetadataKeys(SmarterEnumAbstract):
     """Smarter API V0 Plugin Metadata keys enumeration."""
 
-    CLASS = "class"
+    PLUGIN_CLASS = "pluginClass"
 
 
 class SAMPluginMetadataClass(SmarterEnumAbstract):

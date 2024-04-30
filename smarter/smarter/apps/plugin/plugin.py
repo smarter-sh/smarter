@@ -41,6 +41,7 @@ logger = logging.getLogger(__name__)
 class Plugin:
     """A class for working with plugins."""
 
+    _model = None
     _user_profile: UserProfile = None
 
     _plugin_meta: PluginMeta = None
@@ -55,10 +56,11 @@ class Plugin:
 
     _selected: bool = False
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-branches
     def __init__(
         self,
         plugin_id: int = None,
+        model=None,
         user_profile: UserProfile = None,
         plugin_meta: PluginMeta = None,
         data=None,
@@ -70,6 +72,9 @@ class Plugin:
         data: yaml or dict representation of a plugin.
               see ./data/sample-plugins/everlasting-gobstopper.yaml for an example.
         """
+        if model:
+            self._model = model
+
         if plugin_id:
             self.id = plugin_id
             return
@@ -121,6 +126,11 @@ class Plugin:
     def __repr__(self) -> str:
         """Return the name of the plugin."""
         return self.__str__()
+
+    @property
+    def model(self):
+        """Return the Pydandic model of the plugin."""
+        return self._model
 
     @property
     def id(self) -> int:
