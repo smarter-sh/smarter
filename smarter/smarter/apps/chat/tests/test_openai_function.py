@@ -28,7 +28,7 @@ if PYTHON_ROOT not in sys.path:
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.nlp import does_refer_to
-from smarter.apps.plugin.plugin import Plugin
+from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
 
 from ..models import Chat, ChatPluginUsage
@@ -104,7 +104,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
             plugin_json = yaml.safe_load(file)
         plugin_json["user_profile"] = self.user_profile
 
-        self.plugin = Plugin(data=plugin_json)
+        self.plugin = PluginStatic(data=plugin_json)
         self.plugins = [self.plugin]
 
         self.client = Client()

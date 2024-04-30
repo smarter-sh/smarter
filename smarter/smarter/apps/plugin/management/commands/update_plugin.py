@@ -4,7 +4,7 @@ import yaml
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import UserProfile
-from smarter.apps.plugin.plugin import Plugin
+from smarter.apps.plugin.plugin.static import PluginStatic
 
 
 # pylint: disable=E1101
@@ -34,7 +34,7 @@ class Command(BaseCommand):
             data["user"] = user_profile.user
             data["account"] = user_profile.account
 
-            plugin = Plugin(data=data)
+            plugin = PluginStatic(data=data)
             if plugin.ready:
                 print(plugin.to_json())
         else:

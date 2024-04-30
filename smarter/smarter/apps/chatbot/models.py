@@ -14,7 +14,7 @@ from django.db import models
 # our stuff
 from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
 from smarter.apps.plugin.models import PluginMeta
-from smarter.apps.plugin.plugin import Plugin
+from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.model_helpers import TimestampedModel
@@ -260,22 +260,22 @@ class ChatBotPlugin(TimestampedModel):
         return f"{str(self.chatbot.url)} - {str(self.plugin_meta.name)}"
 
     @property
-    def plugin(self) -> Plugin:
-        return Plugin(plugin_meta=self.plugin_meta)
+    def plugin(self) -> PluginStatic:
+        return PluginStatic(plugin_meta=self.plugin_meta)
 
     @classmethod
     def load(cls: Type["ChatBotPlugin"], chatbot: ChatBot, data) -> "ChatBotPlugin":
         """Load (aka import) a plugin from a data file in yaml or json format."""
         user_profile = UserProfile.admin_for_account(chatbot.account)
-        plugin = Plugin(data=data, user_profile=user_profile)
+        plugin = PluginStatic(data=data, user_profile=user_profile)
         return cls.objects.create(chatbot=chatbot, plugin_meta=plugin.meta)
 
     @classmethod
-    def plugins(cls, chatbot: ChatBot) -> List[Plugin]:
+    def plugins(cls, chatbot: ChatBot) -> List[PluginStatic]:
         chatbot_plugins = cls.objects.filter(chatbot=chatbot)
         retval = []
         for chatbot_plugin in chatbot_plugins:
-            retval.append(Plugin(plugin_meta=chatbot_plugin.plugin_meta))
+            retval.append(PluginStatic(plugin_meta=chatbot_plugin.plugin_meta))
         return retval
 
     @classmethod

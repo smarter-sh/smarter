@@ -16,17 +16,17 @@ from smarter.apps.account.models import Account, UserProfile
 # our stuff
 from smarter.lib.django.user import User
 
-from ..plugin import Plugin
+from ..plugin.static import PluginStatic
 from .test_setup import get_test_file_path
 
 
 class TestPluginAPI(unittest.TestCase):
-    """Test Plugin API."""
+    """Test PluginStatic API."""
 
     API_BASE = "/api/v0/plugins/"
     plugin_yaml: str = None
     plugin_yaml_modified: str = None
-    plugin: Plugin = None
+    plugin: PluginStatic = None
     account: Account = None
     admin_user: User = None
     admin_user_profile: UserProfile = None
@@ -86,7 +86,7 @@ class TestPluginAPI(unittest.TestCase):
     # pylint: disable=broad-exception-caught
     def test_create(self):
         """
-        Test that we can create a plugin using the Plugin.
+        Test that we can create a plugin using the PluginStatic.
         /api/v0/plugins/upload/
         """
         client = Client()
@@ -102,12 +102,12 @@ class TestPluginAPI(unittest.TestCase):
         parsed_url = urlparse(url)
         last_slug = parsed_url.path.split("/")[-2]
         plugin_id = int(last_slug)
-        self.plugin = Plugin(plugin_id=plugin_id)
+        self.plugin = PluginStatic(plugin_id=plugin_id)
         self.assertEqual(self.plugin.ready, True)
 
     def test_update(self):
         """
-        Test that we can update a plugin using the Plugin.
+        Test that we can update a plugin using the PluginStatic.
         /api/v0/plugins/upload
         """
         client = Client()
@@ -125,7 +125,7 @@ class TestPluginAPI(unittest.TestCase):
         last_slug = parsed_url.path.split("/")[-2]
         plugin_id = int(last_slug)
 
-        self.plugin = Plugin(plugin_id=plugin_id)
+        self.plugin = PluginStatic(plugin_id=plugin_id)
         self.assertEqual(self.plugin.ready, True)
 
         self.plugin.refresh()
@@ -136,7 +136,7 @@ class TestPluginAPI(unittest.TestCase):
 
     def test_delete(self):
         """
-        Test that we can delete a plugin using the Plugin.
+        Test that we can delete a plugin using the PluginStatic.
         /api/v0/plugins/<pk:int>/
         """
         client = Client()
@@ -152,7 +152,7 @@ class TestPluginAPI(unittest.TestCase):
         parsed_url = urlparse(url)
         last_slug = parsed_url.path.split("/")[-2]
         plugin_id = int(last_slug)
-        self.plugin = Plugin(plugin_id=plugin_id)
+        self.plugin = PluginStatic(plugin_id=plugin_id)
         self.assertEqual(self.plugin.ready, True)
 
         # delete the plugin using the api endpoint
@@ -170,7 +170,7 @@ class TestPluginAPI(unittest.TestCase):
 
     # pylint: disable=too-many-statements
     def test_validation_permissions(self):
-        """Test that the Plugin raises an error when given bad data."""
+        """Test that the PluginStatic raises an error when given bad data."""
 
         client = Client()
         client.force_login(self.mortal_user)
@@ -189,7 +189,7 @@ class TestPluginAPI(unittest.TestCase):
             self.assertIsInstance(e, PermissionError)
 
     def test_validation_bad_data(self):
-        """Test that the Plugin raises an error when given bad data."""
+        """Test that the PluginStatic raises an error when given bad data."""
 
     def test_clone(self):
-        """Test that we can clone a plugin using the Plugin."""
+        """Test that we can clone a plugin using the PluginStatic."""

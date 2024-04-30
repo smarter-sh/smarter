@@ -25,7 +25,7 @@ from smarter.apps.chat.signals import (
     chat_response_success,
 )
 from smarter.apps.plugin.api.v0.serializers import PluginMetaSerializer
-from smarter.apps.plugin.plugin import Plugin
+from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
 from smarter.common.exceptions import EXCEPTION_MAP
@@ -50,7 +50,7 @@ openai.api_key = smarter_settings.openai_api_key.get_secret_value()
 def handler(
     chat: Chat,
     data: dict,
-    plugins: List[Plugin] = None,
+    plugins: List[PluginStatic] = None,
     user: UserType = None,
     default_model: str = smarter_settings.openai_default_model,
     default_temperature: float = smarter_settings.openai_default_temperature,
@@ -163,7 +163,7 @@ def handler(
 
             for tool_call in tool_calls:
                 serialized_tool_call = {}
-                plugin: Plugin = None
+                plugin: PluginStatic = None
                 function_name = tool_call.function.name
                 function_to_call = available_functions[function_name]
                 function_args = json.loads(tool_call.function.arguments)
@@ -180,7 +180,7 @@ def handler(
                     # function_to_call, assigned above. but just to play it safe,
                     # we're directly invoking the plugin's function_calling_plugin() method.
                     plugin_id = int(function_name[-4:])
-                    plugin = Plugin(plugin_id=plugin_id)
+                    plugin = PluginStatic(plugin_id=plugin_id)
                     function_response = plugin.function_calling_plugin(inquiry_type=function_args.get("inquiry_type"))
                     serialized_tool_call["smarter_plugin"] = PluginMetaSerializer(plugin.plugin_meta).data
                 tool_call_message = {

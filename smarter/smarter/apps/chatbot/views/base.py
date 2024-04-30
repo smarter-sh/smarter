@@ -24,7 +24,7 @@ from smarter.apps.chatbot.models import (
     ChatBotPlugin,
 )
 from smarter.apps.chatbot.signals import chatbot_called
-from smarter.apps.plugin.plugin import Plugin
+from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.common.helpers.console_helpers import formatted_text
@@ -55,7 +55,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
     account: Account = None
     user: UserType = None
     chatbot: ChatBot = None
-    plugins: List[Plugin] = None
+    plugins: List[PluginStatic] = None
     session_key: str = None
 
     @property
