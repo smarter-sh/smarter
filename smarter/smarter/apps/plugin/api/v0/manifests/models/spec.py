@@ -16,24 +16,29 @@ from smarter.apps.plugin.api.v0.manifests.enum import (
 from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
 from smarter.lib.django.validators import SmarterValidator
 
+from .const import OBJECT_IDENTIFIER
+
+
+MODULE_IDENTIFIER = f"{OBJECT_IDENTIFIER}.{__file__}"
+
 
 class SAMPluginSpecSelector(BaseModel):
     """Smarter API V0 Plugin Manifest - Spec - Selector class."""
 
-    err_desc_manifest_kind = "Plugin.spec.selector"
+    class_identifier = MODULE_IDENTIFIER + ".selector"
 
     directive: str = Field(
         ...,
         description=(
-            f"{err_desc_manifest_kind}.directive[str]: Required. the kind of selector directive to use for the Plugin. "
+            f"{class_identifier}.directive[str]: Required. the kind of selector directive to use for the {OBJECT_IDENTIFIER}. "
             f"Must be one of: {SAMPluginSpecSelectorKeyDirectiveValues.all_values()}"
         ),
     )
     searchTerms: Optional[List[str]] = Field(
         None,
         description=(
-            f"{err_desc_manifest_kind}.searchTerms[list]. Optional. The keyword search terms to use when the "
-            f"Plugin directive is '{SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS.value}'. "
+            f"{class_identifier}.searchTerms[list]. Optional. The keyword search terms to use when the "
+            f"{OBJECT_IDENTIFIER} directive is '{SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS.value}'. "
             "Keywords are most effective when constrained to 1 or 2 words "
             "each and lists are limited to a few dozen items."
         ),
@@ -43,7 +48,7 @@ class SAMPluginSpecSelector(BaseModel):
     def validate_directive(cls, v) -> str:
         if v not in SAMPluginSpecSelectorKeyDirectiveValues.all_values():
             raise SAMValidationError(
-                f"Invalid value found in {cls.err_desc_manifest_kind}.directive: {v}. "
+                f"Invalid value found in {cls.class_identifier}.directive: {v}. "
                 f"Must be one of {SAMPluginSpecSelectorKeyDirectiveValues.all_values()}. "
                 "These values are case-sensitive and camelCase."
             )
@@ -55,25 +60,26 @@ class SAMPluginSpecSelector(BaseModel):
             for search_term in v:
                 if not re.match(SmarterValidator.VALID_CLEAN_STRING, search_term):
                     raise SAMValidationError(
-                        f"Invalid value found in {cls.err_desc_manifest_kind}.searchTerms: {search_term}. "
+                        f"Invalid value found in {cls.class_identifier}.searchTerms: {search_term}. "
                         "Avoid using characters that are not URL friendly, like spaces and special ascii characters."
                     )
         return v
 
     @model_validator(mode="after")
     def validate_business_rules(self) -> "SAMPluginSpecSelector":
-        eff_desc_search_terms = self.searchTerms.__class__.__name__
+        err_desc_searchTerms_name = self.searchTerms.__class__.__name__
+        directive_name = self.directive.__class__.__name__
 
         # 1. searchTerms is required when directive is 'searchTerms'
         if self.directive == SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS and self.searchTerms is None:
             raise SAMValidationError(
-                f"{self.err_desc_manifest_kind}.{eff_desc_search_terms} is required when {self.err_desc_manifest_kind}.directive is '{eff_desc_search_terms}'"
+                f"{self.class_identifier}.{err_desc_searchTerms_name} is required when {self.class_identifier}.{directive_name} is '{err_desc_searchTerms_name}'"
             )
 
         # 2. searchTerms is not allowed when directive is 'always'
         if self.directive != SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS and self.searchTerms is not None:
             raise SAMValidationError(
-                f"{self.err_desc_manifest_kind}.{eff_desc_search_terms} is only used when {self.err_desc_manifest_kind}.directive is '{eff_desc_search_terms}'"
+                f"{self.class_identifier}.{err_desc_searchTerms_name} is only used when {self.class_identifier}.{directive_name} is '{err_desc_searchTerms_name}'"
             )
 
         return self
@@ -82,7 +88,7 @@ class SAMPluginSpecSelector(BaseModel):
 class SAMPluginSpecPrompt(BaseModel):
     """Smarter API V0 Plugin Manifest - Spec - Prompt class."""
 
-    err_desc_manifest_kind = "Plugin.spec.prompt"
+    class_identifier = MODULE_IDENTIFIER + ".prompt"
 
     DEFAULT_MODEL = "gpt-3.5-turbo-1106"
     DEFAULT_TEMPERATURE = 0.5
@@ -91,15 +97,15 @@ class SAMPluginSpecPrompt(BaseModel):
     systemRole: str = Field(
         ...,
         description=(
-            f"{err_desc_manifest_kind}.systemRole[str]. Required. The system role that the Plugin will use for the LLM "
+            f"{class_identifier}.systemRole[str]. Required. The system role that the {OBJECT_IDENTIFIER} will use for the LLM "
             "text completion prompt. Be verbose and specific. Ensure that systemRole accurately conveys to the LLM "
-            "how you want it to use the Plugin data that is returned."
+            f"how you want it to use the {OBJECT_IDENTIFIER} data that is returned."
         ),
     )
     model: str = Field(
         DEFAULT_MODEL,
         description=(
-            f"{err_desc_manifest_kind}.model[str] Optional. The model of the Plugin. Defaults to {DEFAULT_MODEL}. "
+            f"{class_identifier}.model[str] Optional. The model of the {OBJECT_IDENTIFIER}. Defaults to {DEFAULT_MODEL}. "
             f"Must be one of: {VALID_CHAT_COMPLETION_MODELS}"
         ),
     )
@@ -108,7 +114,7 @@ class SAMPluginSpecPrompt(BaseModel):
         gt=0,
         lt=1.0,
         description=(
-            f"{err_desc_manifest_kind}.temperature[float] Optional. The temperature of the Plugin. "
+            f"{class_identifier}.temperature[float] Optional. The temperature of the {OBJECT_IDENTIFIER}. "
             f"Defaults to {DEFAULT_TEMPERATURE}. "
             "Should be between 0 and 1.0. "
             "The higher the temperature, the more creative the response. "
@@ -119,8 +125,8 @@ class SAMPluginSpecPrompt(BaseModel):
         DEFAULT_MAXTOKENS,
         gt=0,
         description=(
-            f"{err_desc_manifest_kind}.maxTokens[int]. Optional. "
-            f"The maxTokens of the Plugin. Defaults to {DEFAULT_MAXTOKENS}. "
+            f"{class_identifier}.maxTokens[int]. Optional. "
+            f"The maxTokens of the {OBJECT_IDENTIFIER}. Defaults to {DEFAULT_MAXTOKENS}. "
             "The maximum number of tokens the LLM should generate in the prompt response. "
         ),
     )
@@ -130,7 +136,7 @@ class SAMPluginSpecPrompt(BaseModel):
         if re.match(SmarterValidator.VALID_CLEAN_STRING, v):
             return v
         err_desc_me_name = cls.systemRole.__class__.__name__
-        raise SAMValidationError(f"Invalid characters found in {cls.err_desc_manifest_kind}.{err_desc_me_name}: {v}")
+        raise SAMValidationError(f"Invalid characters found in {cls.class_identifier}.{err_desc_me_name}: {v}")
 
     @field_validator("model")
     def validate_model(cls, v) -> str:
@@ -147,14 +153,12 @@ class SAMPluginSpecPrompt(BaseModel):
 class SAMPluginSpecDataSql(BaseModel):
     """Smarter API V0 Plugin Manifest Plugin.spec.data.sqlData"""
 
-    err_desc_manifest_kind = "Plugin.spec.data.sqlData"
+    class_identifier = MODULE_IDENTIFIER + ".data.sqlData"
 
-    connection: SqlConnection = Field(
-        ..., description=f"{err_desc_manifest_kind}.connection[obj]: an sql server connection"
-    )
+    connection: SqlConnection = Field(..., description=f"{class_identifier}.connection[obj]: an sql server connection")
     sql: str = Field(
         ...,
-        description=f"{err_desc_manifest_kind}.sql[str]: a valid SQL query. Example: 'SELECT * FROM customers WHERE id = 100;'",  # nosec
+        description=f"{class_identifier}.sql[str]: a valid SQL query. Example: 'SELECT * FROM customers WHERE id = 100;'",  # nosec
     )
 
     @field_validator("sql")
@@ -164,7 +168,7 @@ class SAMPluginSpecDataSql(BaseModel):
         except SQLParseError as e:
             err_desc_sql_name = cls.sql.__class__.__name__
             raise SAMValidationError(
-                f"Invalid SQL syntax found in {cls.err_desc_manifest_kind}.{err_desc_sql_name}: {v}. {e}"
+                f"Invalid SQL syntax found in {cls.class_identifier}.{err_desc_sql_name}: {v}. {e}"
             ) from e
         return v
 
@@ -172,19 +176,19 @@ class SAMPluginSpecDataSql(BaseModel):
 class SAMPluginSpecData(BaseModel):
     """Smarter API V0 Plugin Manifest Plugin.spec.data"""
 
-    err_desc_manifest_kind = "Plugin.spec.data"
+    class_identifier = MODULE_IDENTIFIER + ".data"
 
     description: str = Field(
         ...,
         description=(
-            f"{err_desc_manifest_kind}.description[str]: A narrative description of the Plugin features "
+            f"{class_identifier}.description[str]: A narrative description of the {OBJECT_IDENTIFIER} features "
             "that is provided to the LLM as part of a tool_chain dict"
         ),
     )
     staticData: Optional[dict] = Field(
         None,
         description=(
-            f"{err_desc_manifest_kind}.staticData[obj]: The static data returned by the Plugin when the "
+            f"{class_identifier}.staticData[obj]: The static data returned by the {OBJECT_IDENTIFIER} when the "
             f"class is '{SAMPluginMetadataClassValues.STATIC.value}'. LLM's are adept at understanding the context of "
             "json data structures. Try to provide granular and specific data elements."
         ),
@@ -192,14 +196,14 @@ class SAMPluginSpecData(BaseModel):
     sqlData: Optional[SAMPluginSpecDataSql] = Field(
         None,
         description=(
-            f"{err_desc_manifest_kind}.sqlData[obj]: The SQL connection and query to use for the Plugin return data when "
+            f"{class_identifier}.sqlData[obj]: The SQL connection and query to use for the {OBJECT_IDENTIFIER} return data when "
             f"the class is '{SAMPluginMetadataClassValues.SQL.value}'"
         ),
     )
     apiData: Optional[HttpRequest] = Field(
         None,
         description=(
-            f"{err_desc_manifest_kind}.apiData[obj]: The rest API connection and endpoint to use for the Plugin "
+            f"{class_identifier}.apiData[obj]: The rest API connection and endpoint to use for the {OBJECT_IDENTIFIER} "
             f"return data when the class is '{SAMPluginMetadataClassValues.API.value}'"
         ),
     )
@@ -214,7 +218,7 @@ class SAMPluginSpecData(BaseModel):
             api_name = self.apiData.__class__.__name__
 
             raise SAMValidationError(
-                f"One and only one of {self.err_desc_manifest_kind}.{static_name}, {self.err_desc_manifest_kind}.{sql_name}, or {self.err_desc_manifest_kind}.{api_name} must be provided."
+                f"One and only one of {self.class_identifier}.{static_name}, {self.class_identifier}.{sql_name}, or {self.class_identifier}.{api_name} must be provided."
             )
 
         return self
@@ -223,14 +227,19 @@ class SAMPluginSpecData(BaseModel):
 class SAMPluginSpec(SAMSpecBase):
     """Smarter API V0 Plugin Manifest Plugin.spec"""
 
-    err_desc_manifest_kind = "Plugin.spec"
+    class_identifier = MODULE_IDENTIFIER
 
     selector: SAMPluginSpecSelector = Field(
-        ..., description=f"{err_desc_manifest_kind}.selector[obj]: the selector logic to use for the Plugin"
+        ..., description=f"{class_identifier}.selector[obj]: the selector logic to use for the {OBJECT_IDENTIFIER}"
     )
     prompt: SAMPluginSpecPrompt = Field(
-        ..., description=f"{err_desc_manifest_kind}.prompt[obj]: the LLM prompt engineering to apply to the Plugin"
+        ...,
+        description=f"{class_identifier}.prompt[obj]: the LLM prompt engineering to apply to the {OBJECT_IDENTIFIER}",
     )
     data: SAMPluginSpecData = Field(
-        ..., description=f"{err_desc_manifest_kind}.data[obj]: the json data returned by the Plugin"
+        ...,
+        description=(
+            f"{class_identifier}.data[obj]: the json data returned by the {OBJECT_IDENTIFIER}. "
+            f"This should be one of the following kinds: {SAMPluginMetadataClassValues.all_values()}"
+        ),
     )
