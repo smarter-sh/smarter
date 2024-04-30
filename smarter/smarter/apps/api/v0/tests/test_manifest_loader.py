@@ -4,9 +4,9 @@
 import os
 import unittest
 
+from smarter.apps.api.v0.manifests.broker import SAMBroker
 from smarter.apps.api.v0.manifests.enum import SAMKeys
 from smarter.apps.api.v0.manifests.exceptions import SAMValidationError
-from smarter.apps.api.v0.manifests.handler import SAMHandler
 from smarter.common.const import PYTHON_ROOT
 
 
@@ -22,18 +22,18 @@ class TestSAMLoader(unittest.TestCase):
     def test_valid_manifest(self):
         """Test valid file path and that we can instantiate with errors"""
 
-        SAMHandler(file_path=self.good_manifest_path)
+        SAMBroker(file_path=self.good_manifest_path)
 
     def test_validate(self):
         """Test valid file path and that we can instantiate with errors"""
 
-        handler = SAMHandler(file_path=self.good_manifest_path)
+        handler = SAMBroker(file_path=self.good_manifest_path)
         handler.loader.validate_manifest()
 
     def test_valid_manifest_properties(self):
         """Test valid file path and that we can instantiate with errors"""
 
-        handler = SAMHandler(file_path=self.good_manifest_path)
+        handler = SAMBroker(file_path=self.good_manifest_path)
         sam = handler.loader
         self.assertTrue(sam.specification is not None, f"sam.specification is {sam.specification}")
         self.assertTrue(isinstance(sam.specification, dict), f"sam.specification is {type(sam.specification)}")
@@ -63,7 +63,7 @@ class TestSAMLoader(unittest.TestCase):
     def test_get_key(self):
         """Test valid file path and that we can instantiate with errors"""
 
-        handler = SAMHandler(file_path=self.good_manifest_path)
+        handler = SAMBroker(file_path=self.good_manifest_path)
         sam = handler.loader
         self.assertEqual(sam.get_key("apiVersion"), "smarter/v0")
         self.assertEqual(sam.get_key("kind"), "Plugin")
@@ -72,7 +72,7 @@ class TestSAMLoader(unittest.TestCase):
     def test_missing_apiversion(self):
         """Test valid file path and that we can instantiate with errors"""
 
-        handler = SAMHandler(file_path=self.good_manifest_path)
+        handler = SAMBroker(file_path=self.good_manifest_path)
         sam = handler.loader
         sam.data.pop("apiVersion")
         try:
@@ -85,7 +85,7 @@ class TestSAMLoader(unittest.TestCase):
     def test_unknown_kind(self):
         """Test valid file path and that we can instantiate with errors"""
 
-        handler = SAMHandler(file_path=self.good_manifest_path)
+        handler = SAMBroker(file_path=self.good_manifest_path)
         sam = handler.loader
         sam.data["kind"] = "WrongKind"
         try:
@@ -102,7 +102,7 @@ class TestSAMLoader(unittest.TestCase):
         """Test that a validation error is raised for an invalid file format"""
 
         try:
-            SAMHandler(file_path=self.invalid_file_format)
+            SAMBroker(file_path=self.invalid_file_format)
         except SAMValidationError as e:
             self.assertEqual(str(e), "Invalid data format. Supported formats: json, yaml")
         else:

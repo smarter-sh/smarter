@@ -6,23 +6,31 @@ from pydantic import Field, model_validator
 
 from smarter.apps.api.v0.manifests.exceptions import SAMValidationError
 from smarter.apps.api.v0.manifests.models import SAM
-
-# Plugin
 from smarter.apps.plugin.api.v0.manifests.enum import SAMPluginMetadataClassValues
 
-from ..enum import SAMPluginMetadataClassValues
+from .const import OBJECT_IDENTIFIER
 from .metadata import SAMPluginMetadata
 from .spec import SAMPluginSpec
 from .status import SAMPluginStatus
 
 
+MODULE_IDENTIFIER = OBJECT_IDENTIFIER
+
+
 class SAMPlugin(SAM):
     """Smarter API V0 Manifest - Plugin"""
 
-    metadata: SAMPluginMetadata = Field(..., description="Plugin.metadata[obj]: Required, the Plugin metadata.")
-    spec: SAMPluginSpec = Field(..., description="Plugin.spec[obj]: Required, the Plugin specification.")
+    class_identifier = MODULE_IDENTIFIER
+
+    metadata: SAMPluginMetadata = Field(
+        ..., description=f"{class_identifier}.metadata[obj]: Required, the {OBJECT_IDENTIFIER} metadata."
+    )
+    spec: SAMPluginSpec = Field(
+        ..., description=f"{class_identifier}.spec[obj]: Required, the {OBJECT_IDENTIFIER} specification."
+    )
     status: Optional[SAMPluginStatus] = Field(
-        ..., description="Plugin.status[obj]: Optional, Read-only. Stateful status information about the Plugin."
+        ...,
+        description=f"{class_identifier}.status[obj]: Optional, Read-only. Stateful status information about the {OBJECT_IDENTIFIER}.",
     )
 
     @model_validator(mode="after")

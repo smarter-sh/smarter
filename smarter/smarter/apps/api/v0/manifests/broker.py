@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 ###############################################################################
 # Handler
 ###############################################################################
-class SAMHandler:
+class SAMBroker:
     """
     Smarter API Manifest Handler ("SAMH") base class. This class is responsible
     for loading, validating and parsing the Smarter Api yaml manifests and then
@@ -45,7 +45,9 @@ class SAMHandler:
         status_dict = self.loader.manifest_status()
         status = SAMStatusBase(**status_dict)
 
-        self._manifest = SAM(apiVersion=apiVersion, kind=kind, metadata=metadata, spec=spec, status=status)
+        self._manifest = SAM(
+            manifest=self.loader.data, apiVersion=apiVersion, kind=kind, metadata=metadata, spec=spec, status=status
+        )
 
     @property
     def manifest(self) -> SAM:

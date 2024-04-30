@@ -14,7 +14,11 @@ from .exceptions import SAMValidationError
 from .version import SMARTER_API_VERSION
 
 
-class HttpRequest(BaseModel):
+class SmarterBaseModel(BaseModel):
+    """Smarter API V0 Base Pydantic Model."""
+
+
+class HttpRequest(SmarterBaseModel):
     """Smarter API V0 Manifest generic HTTP request model."""
 
     DEFAULT_PORT = 80
@@ -61,7 +65,7 @@ class HttpRequest(BaseModel):
         return v
 
 
-class SqlConnection(BaseModel):
+class SqlConnection(SmarterBaseModel):
     """Smarter API V0 Plugin Manifest - Spec - Data - SQL - Connection class."""
 
     class PortAssignmentDefaults(Enum):
@@ -143,7 +147,7 @@ class SqlConnection(BaseModel):
         return v
 
 
-class SAMMetadataBase(BaseModel):
+class SAMMetadataBase(SmarterBaseModel):
     """Pydantic Metadata base class. Expected to be subclassed by specific manifest classes."""
 
     name: str = Field(..., description="The name of the SAM")
@@ -201,15 +205,15 @@ class SAMMetadataBase(BaseModel):
         return v
 
 
-class SAMSpecBase(BaseModel):
+class SAMSpecBase(SmarterBaseModel):
     """Pydantic Spec base class. Expected to be subclassed by specific manifest classes."""
 
 
-class SAMStatusBase(BaseModel):
+class SAMStatusBase(SmarterBaseModel):
     """Pydantic Status base class. Expected to be subclassed by specific manifest classes."""
 
 
-class SAM(BaseModel):
+class SAM(SmarterBaseModel):
     """
     Pydantic Smarter API Manifest ("SAM") base class.
 
