@@ -1,8 +1,13 @@
 """Smarter API Plugin Manifest handler"""
 
+import logging
+
 from smarter.apps.api.v0.manifests.broker import SAMBroker
 
 from .models.plugin import SAMPlugin
+
+
+logger = logging.getLogger(__name__)
 
 
 class SAMPluginBroker(SAMBroker):
@@ -24,7 +29,13 @@ class SAMPluginBroker(SAMBroker):
         super().__init__(manifest=manifest, file_path=file_path, url=url)
 
         # initialize the Plugin manifest model
-        self._manifest = SAMPlugin(**self.loader.data)
+        self._manifest = SAMPlugin(
+            apiVersion=self.loader.manifest_api_version,
+            kind=self.loader.manifest_kind,
+            metadata=self.loader.manifest_metadata,
+            spec=self.loader.manifest_spec,
+            status=self.loader.manifest_status,
+        )
 
     @property
     def manifest(self) -> SAMPlugin:

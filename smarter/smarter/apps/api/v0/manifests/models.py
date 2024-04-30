@@ -1,11 +1,13 @@
 """Pydantic models for Smarter API Manifests."""
 
+import abc
+import logging
 import re
 from enum import Enum
 from typing import ClassVar, List, Optional
 
 import validators
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from smarter.lib.django.validators import SmarterValidator
 
@@ -14,8 +16,14 @@ from .exceptions import SAMValidationError
 from .version import SMARTER_API_VERSION
 
 
+logger = logging.getLogger(__name__)
+
+
 class SmarterBaseModel(BaseModel):
     """Smarter API V0 Base Pydantic Model."""
+
+    # this ensures that the entire manifest is read-only.
+    model_config = ConfigDict(frozen=True)
 
 
 class HttpRequest(SmarterBaseModel):
@@ -149,7 +157,7 @@ class SqlConnection(SmarterBaseModel):
         return v
 
 
-class SAMMetadataBase(SmarterBaseModel):
+class SAMMetadataBase(SmarterBaseModel, abc.ABC):
     """Pydantic Metadata base class. Expected to be subclassed by specific manifest classes."""
 
     name: str = Field(..., description="The name of the manifest")
@@ -207,15 +215,15 @@ class SAMMetadataBase(SmarterBaseModel):
         return v
 
 
-class SAMSpecBase(SmarterBaseModel):
+class SAMSpecBase(SmarterBaseModel, abc.ABC):
     """Pydantic Spec base class. Expected to be subclassed by specific manifest classes."""
 
 
-class SAMStatusBase(SmarterBaseModel):
+class SAMStatusBase(SmarterBaseModel, abc.ABC):
     """Pydantic Status base class. Expected to be subclassed by specific manifest classes."""
 
 
-class SAM(SmarterBaseModel):
+class SAM(SmarterBaseModel, abc.ABC):
     """
     Pydantic Smarter API Manifest ("SAM") base class.
 

@@ -26,6 +26,7 @@ from .const import OBJECT_IDENTIFIER
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{OBJECT_IDENTIFIER}.{filename}"
+SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 
 
 class SAMPluginSpecSelector(BaseModel):
@@ -77,13 +78,13 @@ class SAMPluginSpecSelector(BaseModel):
         directive_name = SAMPluginSpecSelectorKeys.DIRECTIVE.value
 
         # 1. searchTerms is required when directive is 'searchTerms'
-        if self.directive == SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS and self.searchTerms is None:
+        if self.directive == SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS.value and self.searchTerms is None:
             raise SAMValidationError(
                 f"{self.class_identifier}.{err_desc_searchTerms_name} is required when {self.class_identifier}.{directive_name} is '{err_desc_searchTerms_name}'"
             )
 
         # 2. searchTerms is not allowed when directive is 'always'
-        if self.directive != SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS and self.searchTerms is not None:
+        if self.directive != SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS.value and self.searchTerms is not None:
             raise SAMValidationError(
                 f"found {self.class_identifier}.{directive_name} of '{self.directive}' but {self.class_identifier}.{err_desc_searchTerms_name} is only used when {self.class_identifier}.{directive_name} is '{err_desc_searchTerms_name}'"
             )
@@ -117,8 +118,8 @@ class SAMPluginSpecPrompt(BaseModel):
     )
     temperature: float = Field(
         DEFAULT_TEMPERATURE,
-        gt=0,
-        lt=1.0,
+        gte=0,
+        lte=1.0,
         description=(
             f"{class_identifier}.temperature[float] Optional. The temperature of the {OBJECT_IDENTIFIER}. "
             f"Defaults to {DEFAULT_TEMPERATURE}. "
@@ -142,7 +143,13 @@ class SAMPluginSpecPrompt(BaseModel):
         if re.match(SmarterValidator.VALID_CLEAN_STRING_WITH_SPACES, v):
             return v
         err_desc_me_name = SAMPluginSpecPromptKeys.SYSTEMROLE.value
-        raise SAMValidationError(f"Invalid characters found in {cls.class_identifier}.{err_desc_me_name}: {v}")
+
+        if len(v) > SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH:  # replace MAX_LENGTH with your maximum length
+            raise SAMValidationError(
+                f"{cls.class_identifier}.{err_desc_me_name} exceeds maximum length of {SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH}"
+            )
+
+        return v
 
     @field_validator("model")
     def validate_model(cls, v) -> str:

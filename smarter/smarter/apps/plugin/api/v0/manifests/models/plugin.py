@@ -1,5 +1,6 @@
 """Smarter API V0 Plugin Manifest"""
 
+import logging
 from typing import ClassVar, Optional
 
 from pydantic import Field, model_validator
@@ -15,6 +16,8 @@ from .status import SAMPluginStatus
 
 
 MODULE_IDENTIFIER = OBJECT_IDENTIFIER
+
+logger = logging.getLogger(__name__)
 
 
 class SAMPlugin(SAM):
