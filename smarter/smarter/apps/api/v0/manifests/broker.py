@@ -1,18 +1,9 @@
-"""Smarter API Manifest Handler base class."""
+"""Smarter API Manifest Broker base class."""
 
-import logging
-
-from .enum import SAMKeys
 from .loader import SAMLoader
-from .models import SAM, SAMMetadataBase, SAMSpecBase, SAMStatusBase
+from .models import SAM
 
 
-logger = logging.getLogger(__name__)
-
-
-###############################################################################
-# Handler
-###############################################################################
 class SAMBroker:
     """
     Smarter API Manifest Handler ("SAMH") base class. This class is responsible
@@ -32,22 +23,8 @@ class SAMBroker:
         # load, validate and parse the manifest into json
         self._loader = SAMLoader(manifest, file_path, url)
 
-        # initialize Pydantic models from the SAMLoader
-        apiVersion = self.loader.get_key(SAMKeys.APIVERSION.value)
-        kind = self.loader.get_key(SAMKeys.KIND.value)
-
-        metadata_dict = self.loader.manifest_metadata()
-        metadata = SAMMetadataBase(**metadata_dict)
-
-        spec_dict = self.loader.manifest_spec()
-        spec = SAMSpecBase(**spec_dict)
-
-        status_dict = self.loader.manifest_status()
-        status = SAMStatusBase(**status_dict)
-
-        self._manifest = SAM(
-            manifest=self.loader.data, apiVersion=apiVersion, kind=kind, metadata=metadata, spec=spec, status=status
-        )
+        # initialize the manifest model
+        self._manifest = SAM(**self.loader.data)
 
     @property
     def manifest(self) -> SAM:
