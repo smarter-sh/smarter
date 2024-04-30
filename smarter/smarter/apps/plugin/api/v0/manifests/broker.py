@@ -17,6 +17,7 @@ class SAMPluginBroker(SAMBroker):
     using these to initialize the corresponding Pydantic models.
     """
 
+    # override the base abstract manifest model with the Plugin model
     _manifest: SAMPlugin = None
 
     def __init__(
@@ -25,10 +26,21 @@ class SAMPluginBroker(SAMBroker):
         file_path: str = None,
         url: str = None,
     ):
-        # load, validate and parse the manifest
+        # Load, validate and parse the manifest. The parent will initialize
+        # the generic manifest loader class, SAMLoader(), which can then be used to
+        # provide initialization data to any kind of manifest model. the loader
+        # also performs cursory high-level validation of the manifest, sufficient
+        # to ensure that the manifest is a valid yaml file and that it contains
+        # the required top-level keys.
         super().__init__(manifest=manifest, file_path=file_path, url=url)
 
-        # initialize the Plugin manifest model
+        # Initialize the Plugin manifest model. SAMPlugin() is a Pydantic model
+        # that is used to represent the Smarter API Plugin manifest. The Pydantic
+        # model is initialized with the data from the manifest loader, which is
+        # generally passed to the model constructor as **data. However, the top-level
+        # manifest model has to be explicitly initialized, whereas its child models
+        # are automatically cascade-initialized by the Pydantic model, implicitly
+        # passing **data to each child's constructor.
         self._manifest = SAMPlugin(
             apiVersion=self.loader.manifest_api_version,
             kind=self.loader.manifest_kind,
@@ -37,6 +49,7 @@ class SAMPluginBroker(SAMBroker):
             status=self.loader.manifest_status,
         )
 
+    # override the base abstract manifest model with the Plugin model
     @property
     def manifest(self) -> SAMPlugin:
         return self._manifest
