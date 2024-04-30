@@ -13,6 +13,7 @@ from django.db import transaction
 from rest_framework import serializers
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.utils import account_admin_user
 from smarter.apps.plugin.api.v0.manifests.broker import SAMPluginBroker
 from smarter.lib.django.user import User, UserType
 
@@ -42,7 +43,7 @@ logger = logging.getLogger(__name__)
 class Plugin:
     """A class for working with plugins."""
 
-    _model_broker: SAMPluginBroker = None
+    _manifest_broker: SAMPluginBroker = None
     _user_profile: UserProfile = None
 
     _plugin_meta: PluginMeta = None
@@ -61,7 +62,7 @@ class Plugin:
     def __init__(
         self,
         plugin_id: int = None,
-        model_broker: SAMPluginBroker = None,
+        manifest_broker: SAMPluginBroker = None,
         user_profile: UserProfile = None,
         plugin_meta: PluginMeta = None,
         data=None,
@@ -73,9 +74,23 @@ class Plugin:
         data: yaml or dict representation of a plugin.
               see ./data/sample-plugins/everlasting-gobstopper.yaml for an example.
         """
-        if model_broker:
-            self._model_broker = model_broker
-            data = model_broker.loader.yaml_data  # TO DO: refactor to initialize from the Pydantic model
+
+        # TO DO: refactor to initialize from the Pydantic model
+        if manifest_broker:
+            # the account and the manifest are pre-validated.
+            self._manifest_broker = manifest_broker
+            data = manifest_broker.loader.data
+            account = self.manifest_broker.account
+            user = account_admin_user(account)
+            self._user_profile = UserProfile.objects.get(user=user, account=account)
+            data["account"] = account
+            data["user"] = user
+            data["user_profile"] = self.user_profile
+            data["meta_data"]["author"] = self.user_profile.id
+
+            self.create(data)
+            if self.ready:
+                plugin_ready.send(sender=self.__class__, plugin=self)
 
         if plugin_id:
             self.id = plugin_id
@@ -130,9 +145,9 @@ class Plugin:
         return self.__str__()
 
     @property
-    def model(self):
+    def manifest_broker(self) -> SAMPluginBroker:
         """Return the Pydandic model of the plugin."""
-        return self._model
+        return self._manifest_broker
 
     @property
     def id(self) -> int:

@@ -9,6 +9,9 @@ import requests
 import waffle
 import yaml
 
+from smarter.apps.account.models import Account
+from smarter.lib.django.validators import SmarterValidator
+
 from .enum import (
     SAMDataFormats,
     SAMKeys,
@@ -74,6 +77,7 @@ class SAMLoader:
     Smarter API Manifest Loader base class.
     """
 
+    _account_number: str = None
     _raw_data: str = None
     _dict_data: dict = None
     _data_format: SAMDataFormats = None
@@ -82,6 +86,7 @@ class SAMLoader:
         SAMKeys.KIND: SAMKinds.all_values(),
         SAMKeys.METADATA: {
             SAMMetadataKeys.NAME: (str, [SAMSpecificationKeyOptions.REQUIRED]),
+            SAMMetadataKeys.ACCOUNT_NUMBER: (str, [SAMSpecificationKeyOptions.REQUIRED]),
             SAMMetadataKeys.DESCRIPTION: (str, [SAMSpecificationKeyOptions.REQUIRED]),
             SAMMetadataKeys.VERSION: (str, [SAMSpecificationKeyOptions.REQUIRED]),
             SAMMetadataKeys.TAGS: (list, [SAMSpecificationKeyOptions.OPTIONAL]),
@@ -96,10 +101,15 @@ class SAMLoader:
 
     def __init__(
         self,
+        account_number: str,
         manifest: str = None,
         file_path: str = None,
         url: str = None,
     ):
+        SmarterValidator.validate_account_number(account_number)
+        if not Account.objects.filter(account_number=account_number).exists():
+            raise SAMValidationError(f"Account {account_number} does not exist.")
+        self._account_number = account_number
 
         # 1. acquire the manifest data
         # ---------------------------------------------------------------------
@@ -171,6 +181,10 @@ class SAMLoader:
             self._dict_data = self.json_data
         elif self.data_format == SAMDataFormats.YAML:
             self._dict_data = self.yaml_data
+
+        # add account_number to the metadata
+        if self._dict_data:
+            self._dict_data[SAMKeys.METADATA.value][SAMMetadataKeys.ACCOUNT_NUMBER.value] = self._account_number
         return self._dict_data
 
     @property

@@ -16,14 +16,18 @@ class SAMBroker:
 
     def __init__(
         self,
+        account_number: str,
         manifest: str = None,
         file_path: str = None,
         url: str = None,
     ):
         # load, validate and parse the manifest into json
-        self._loader = SAMLoader(manifest, file_path, url)
+        self._loader = SAMLoader(account_number=account_number, manifest=manifest, file_path=file_path, url=url)
 
-        # initialize the manifest model
+        # initialize the manifest model. this will be the first of two passes. in this iteration
+        # we'll initialize the top-level manifest model. the child class overrides manifest with
+        # the appropriate model, which will then reinitialize the manifests, but with additional
+        # child models. Note that there is only one loader and only one manifest data set.
         self._manifest = SAM(**self.loader.data)
 
     @property
