@@ -1,6 +1,6 @@
 """Smarter API V0 Plugin Manifest"""
 
-from typing import Optional
+from typing import ClassVar, Optional
 
 from pydantic import Field, model_validator
 
@@ -20,7 +20,7 @@ MODULE_IDENTIFIER = OBJECT_IDENTIFIER
 class SAMPlugin(SAM):
     """Smarter API V0 Manifest - Plugin"""
 
-    class_identifier = MODULE_IDENTIFIER
+    class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
     metadata: SAMPluginMetadata = Field(
         ..., description=f"{class_identifier}.metadata[obj]: Required, the {OBJECT_IDENTIFIER} metadata."
