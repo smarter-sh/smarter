@@ -127,25 +127,25 @@ class PluginBase(ABC):
     @property
     @abstractmethod
     def plugin_data(self) -> TimestampedModel:
-        """Return the plugin data."""
+        """Return the plugin data Django ORM."""
         raise NotImplementedError()
 
     @property
     @abstractmethod
     def plugin_data_class(self) -> type[TimestampedModel]:
-        """Return the plugin data class."""
+        """Return the plugin data Django ORM class."""
         raise NotImplementedError()
 
     @property
     @abstractmethod
     def plugin_data_serializer(self) -> serializers.ModelSerializer:
-        """Return the plugin data serializer."""
+        """Return the plugin data serializer for the plugin data Django ORM."""
         raise NotImplementedError()
 
     @property
     @abstractmethod
     def plugin_data_serializer_class(self) -> type[serializers.ModelSerializer]:
-        """Return the plugin data serializer class."""
+        """Return the plugin data serializer class for the plugin data Django ORM."""
         raise NotImplementedError()
 
     @property
