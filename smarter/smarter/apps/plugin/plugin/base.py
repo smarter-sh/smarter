@@ -7,14 +7,15 @@ import re
 from abc import ABC, abstractmethod
 from typing import Any
 
-import requests
 import yaml
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from rest_framework import serializers
 
 from smarter.apps.account.models import UserProfile
+from smarter.apps.api.v0.manifests.exceptions import SAMValidationError
 from smarter.apps.plugin.api.v0.manifests.broker import SAMPluginBroker
+from smarter.apps.plugin.api.v0.manifests.models.plugin import SAMPlugin
 from smarter.apps.plugin.api.v0.serializers import (
     PluginMetaSerializer,
     PluginPromptSerializer,
@@ -31,6 +32,7 @@ from smarter.apps.plugin.signals import (
     plugin_selected,
     plugin_updated,
 )
+from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import UserType
 
 
@@ -41,8 +43,7 @@ logger = logging.getLogger(__name__)
 class PluginBase(ABC):
     """An abstract base class for working with plugins."""
 
-    _manifest_broker: SAMPluginBroker = None
-    _user_profile: UserProfile = None
+    _manifest: SAMPlugin = None
 
     _plugin_meta: PluginMeta = None
     _plugin_selector: PluginSelector = None
@@ -61,78 +62,60 @@ class PluginBase(ABC):
     # pylint: disable=too-many-arguments,too-many-branches
     def __init__(
         self,
-        plugin_id: int = None,
-        manifest_broker: SAMPluginBroker = None,
         user_profile: UserProfile = None,
+        selected: bool = False,
+        manifest: SAMPlugin = None,
+        plugin_id: int = None,
         plugin_meta: PluginMeta = None,
         data=None,
-        selected: bool = False,
-        url=None,
     ):
         """
-        Initialize the class.
-        data: yaml or dict representation of a plugin.
-              see ./data/sample-plugins/everlasting-gobstopper.yaml for an example.
+        Options for initialization are:
+        - Pydantic model created by a manifest broker (preferred method).
+        - django model plugin id.
+        - yaml manifest or json representation of a yaml manifest
+        see ./data/sample-plugins/everlasting-gobstopper.yaml for an example.
         """
+        if sum([bool(data), bool(manifest)]) != 1:
+            raise ValidationError("Must specify either manifest or data")
 
-        # TO DO: refactor to initialize from the Pydantic model
-        if manifest_broker:
-            self._manifest_broker = manifest_broker
-            data = manifest_broker.loader.data
-            self._user_profile = self.manifest_broker.user_profile
-            data["account"] = self.manifest_broker.user_profile.account
-            data["user"] = self.manifest_broker.user_profile.user
-            data["user_profile"] = self.user_profile
-            data["metadata"]["author"] = self.user_profile.id
+        self._selected = selected
+        self._user_profile = user_profile
 
-            self.create(data)
-            if self.ready:
-                plugin_ready.send(sender=self.__class__, plugin=self)
-            return
-
+        #######################################################################
+        # identifiers for existing plugins
+        #######################################################################
         if plugin_id:
             self.id = plugin_id
-            return
-
-        if user_profile and plugin_meta:
-            if plugin_meta.author != user_profile:
-                raise ValidationError("User is not the author of this plugin.")
+            return None
 
         if plugin_meta:
             self.id = plugin_meta.id
-            return
+            return None
 
-        if user_profile:
-            self._user_profile = user_profile
-
-        self._selected = selected
-
-        if data and url:
-            raise ValidationError("Cannot specify both data and url.")
-        if not data and not url:
-            raise ValidationError("Must specify either data or url.")
+        #######################################################################
+        # manifests
+        #######################################################################
+        if manifest:
+            self._manifest = manifest
 
         # creating a new plugin or updating an existing plugin from
         # yaml or json data.
-        if data is not None:
+        if data:
+            # work backwards to the Pydantic model.
+            self._manifest = SAMPluginBroker(
+                account_number=self.user_profile.account.account_number, manifest=data
+            ).manifest
+
+        if self.manifest:
+            data = manifest.model_dump_json()
+            self._user_profile = self.manifest.metadata.userProfile
             self.create(data)
-            if self.ready:
-                plugin_ready.send(sender=self.__class__, plugin=self)
 
-        if url:
-            if not self.user_profile:
-                raise ValidationError("User profile is required to create a plugin from a URL.")
+        if self.ready:
+            plugin_ready.send(sender=self.__class__, plugin=self)
 
-            response = requests.get(url, timeout=15)
-            data = response.text
-            data["user"] = self.user_profile.user
-            data["account"] = self.user_profile.account
-            data["user_profile"] = user_profile
-            data["metadata"]["author"] = self.user_profile.id
-
-            self.create(data)
-            if self.ready:
-                plugin_ready.send(sender=self.__class__, plugin=self)
+        return None
 
     def __str__(self) -> str:
         """Return the name of the plugin."""
@@ -147,22 +130,22 @@ class PluginBase(ABC):
     ###########################################################################
     @property
     @abstractmethod
-    def plugin_data(self) -> Any:
+    def plugin_data(self) -> TimestampedModel:
         """Return the plugin data."""
 
     @property
     @abstractmethod
-    def plugin_data_class(self) -> Any:
+    def plugin_data_class(self) -> type[TimestampedModel]:
         """Return the plugin data class."""
 
     @property
     @abstractmethod
-    def plugin_data_serializer(self) -> Any:
+    def plugin_data_serializer(self) -> serializers.ModelSerializer:
         """Return the plugin data serializer."""
 
     @property
     @abstractmethod
-    def plugin_data_serializer_class(self) -> Any:
+    def plugin_data_serializer_class(self) -> type[serializers.ModelSerializer]:
         """Return the plugin data serializer class."""
 
     @property
@@ -174,9 +157,9 @@ class PluginBase(ABC):
     # Base class properties
     ###########################################################################
     @property
-    def manifest_broker(self) -> SAMPluginBroker:
+    def manifest(self) -> SAMPlugin:
         """Return the Pydandic model of the plugin."""
-        return self._manifest_broker
+        return self._manifest
 
     @property
     def id(self) -> int:
@@ -188,34 +171,38 @@ class PluginBase(ABC):
     @id.setter
     def id(self, value: int):
         """Set the id of the plugin."""
-        self._plugin_meta = PluginMeta.objects.get(pk=value)
-        self._plugin_meta_serializer = PluginMetaSerializer(self.plugin_meta)
-        self._user_profile = self.plugin_meta.author
+        if not self.user_profile:
+            raise SAMValidationError(
+                "Configuration error: UserProfile must be set before initializing a plugin instance by its ORM model id."
+            )
 
-        # we expect that all of these 1:1 relationships exist. but, there's
-        # no benefit to raising an exception if they don't as this will
-        # result in the 'ready' property returning False, and the plugin
-        # being excluded in results from Plugins.data.
+        try:
+            self._plugin_meta = PluginMeta.objects.get(pk=value)
+            self._plugin_meta_serializer = PluginMetaSerializer(self.plugin_meta)
+        except PluginMeta.DoesNotExist as e:
+            raise SAMValidationError("PluginMeta.DoesNotExist") from e
+
         try:
             self._plugin_selector = PluginSelector.objects.get(plugin=self.plugin_meta)
             self._plugin_selector_serializer = PluginSelectorSerializer(self.plugin_selector)
-        except PluginSelector.DoesNotExist:
-            self._plugin_selector = None
-            self._plugin_selector_serializer = None
+        except PluginSelector.DoesNotExist as e:
+            raise SAMValidationError("PluginSelector.DoesNotExist") from e
 
         try:
             self._plugin_prompt = PluginPrompt.objects.get(plugin=self.plugin_meta)
             self._plugin_prompt_serializer = PluginPromptSerializer(self.plugin_prompt)
-        except PluginPrompt.DoesNotExist:
-            self._plugin_prompt = None
-            self._plugin_prompt_serializer = None
+        except PluginPrompt.DoesNotExist as e:
+            raise SAMValidationError("PluginPrompt.DoesNotExist") from e
 
         try:
             self._plugin_data = self.plugin_data_class.objects.get(plugin=self.plugin_meta)
             self._plugin_data_serializer = self.plugin_data_serializer_class(self.plugin_data)
-        except self.plugin_data_class.DoesNotExist:
-            self._plugin_data = None
-            self._plugin_data_serializer = None
+        except self.plugin_data_class.DoesNotExist as e:
+            raise SAMValidationError(f"{self.plugin_data_class.__name__}.DoesNotExist") from e
+
+        self._manifest = SAMPluginBroker(
+            account_number=self.user_profile.account.account_number, manifest=self.to_json()
+        ).manifest
 
     @property
     def plugin_meta(self) -> PluginMeta:
@@ -250,7 +237,7 @@ class PluginBase(ABC):
     @property
     def user_profile(self) -> UserProfile:
         """Return the user profile."""
-        return self._user_profile
+        return self.manifest.metadata.userProfile
 
     @property
     def name(self) -> str:
@@ -263,28 +250,58 @@ class PluginBase(ABC):
     # pylint: disable=too-many-return-statements
     def ready(self) -> bool:
         """Return whether the plugin is ready."""
+
+        # ---------------------------------------------------------------------
+        # validate the Pydantic model
+        # ---------------------------------------------------------------------
+        if not self.manifest:
+            return False
+        self.manifest.model_validate()
         if not self.user_profile:
             return False
         if not isinstance(self.user_profile, UserProfile):
             return False
-        # validate the models
+
+        # ---------------------------------------------------------------------
+        # validate the Django ORM models
+        # ---------------------------------------------------------------------
         if not isinstance(self.plugin_meta, PluginMeta):
             return False
+        self.plugin_meta.validate()
+
         if not isinstance(self.plugin_selector, PluginSelector):
             return False
+        self.plugin_selector.validate()
+
         if not isinstance(self.plugin_prompt, PluginPrompt):
             return False
+        self.plugin_prompt.validate()
+
         if not isinstance(self.plugin_data, self.plugin_data_class):
             return False
+        self.plugin_data.validate()
 
+        # ---------------------------------------------------------------------
         # validate the serializers
+        # ---------------------------------------------------------------------
         if not isinstance(self.plugin_meta_serializer, PluginMetaSerializer):
             return False
+        if not self.plugin_meta_serializer.is_valid():
+            return False
+
         if not isinstance(self.plugin_selector_serializer, PluginSelectorSerializer):
             return False
+        if not self.plugin_selector_serializer.is_valid():
+            return False
+
         if not isinstance(self.plugin_prompt_serializer, PluginPromptSerializer):
             return False
+        if not self.plugin_prompt_serializer.is_valid():
+            return False
+
         if not isinstance(self.plugin_data_serializer, self.plugin_data_serializer_class):
+            return False
+        if not self.plugin_data_serializer.is_valid():
             return False
 
         return True
@@ -419,162 +436,15 @@ class PluginBase(ABC):
         except yaml.YAMLError:
             return False
 
-    def validate_data_structure(self, data: dict) -> bool:
-        """Validate the data dict."""
-
-        def validate_key(data, key, subkeys=None):
-            if key not in data:
-                raise ValidationError(f"Invalid data. Missing {key}.")
-            if subkeys:
-                for subkey in subkeys:
-                    if subkey not in data[key]:
-                        raise ValidationError(f"Invalid data: missing {key}['{subkey}']")
-
-        # top-level required keys
-        if not isinstance(data, dict):
-            raise ValidationError("Invalid data. Must be a dictionary.")
-        if not data.get("user_profile"):
-            raise ValidationError("Invalid data. Missing data['user_profile'].")
-        if not isinstance(data["user_profile"], UserProfile):
-            raise ValidationError("Invalid data. data['user_profile'] must be a UserProfile instance.")
-
-        # plugin required keys
-        if not data.get("metadata"):
-            raise ValidationError("Invalid data. Missing meta_data.")
-        if not data.get("selector"):
-            raise ValidationError("Invalid data. Missing selector.")
-        if not data.get("prompt"):
-            raise ValidationError("Invalid data. Missing prompt.")
-        if not data.get("plugin_data"):
-            raise ValidationError("Invalid data. Missing plugin_data.")
-
-        # validate the structure of the data
-        validate_key(data, "metadata", ["name", "description", "version", "tags"])
-        validate_key(data, "selector", ["search_terms"])
-        validate_key(data, "prompt", ["system_role", "model", "temperature", "max_tokens"])
-        validate_key(data, "plugin_data", ["description", "return_data"])
-
-        return True
-
-    def validate_data_policy(self, data: dict) -> bool:
-        """Validate the data dict."""
-
-        # top-level prohibited keys
-        if data.get("id"):
-            raise ValidationError("Invalid data. dict key data['id'] is not writable.")
-        meta_data = data.get("metadata")
-        if meta_data.get("author"):
-            raise ValidationError("Invalid data. dict key data['meta_data']['author'] is not writable.")
-
-        return True
-
-    def validate_data_types(self, data: dict) -> bool:
-        """Validate the data dict."""
-
-        def validate_data_type(data, key, data_type, required=True):
-            if required and key not in data:
-                raise ValidationError(f"Invalid data. Missing {key}.")
-            if required and not data[key]:
-                # Python interprets zero values as None in this case.
-                if data_type in [int, float]:
-                    return True
-                raise ValidationError(f"Invalid data: {key} is required but is empty.")
-
-            if not required and key not in data:
-                return True
-
-            if not isinstance(data[key], data_type):
-                raise ValidationError(
-                    f"Invalid data: {key} must be a {data_type} but received {type(data[key])}: {data[key]}"
-                )
-            return True
-
-        # validate the data types
-        validate_data_type(data["metadata"], "name", str)
-        validate_data_type(data["metadata"], "description", str)
-        validate_data_type(data["metadata"], "version", str)
-        validate_data_type(data["metadata"], "tags", list, required=False)
-
-        validate_data_type(data["selector"], "directive", str)
-        validate_data_type(data["selector"], "search_terms", list)
-
-        validate_data_type(data["prompt"], "system_role", str)
-        validate_data_type(data["prompt"], "model", str)
-        validate_data_type(data["prompt"], "temperature", float)
-        validate_data_type(data["prompt"], "max_tokens", int)
-
-        validate_data_type(data["plugin_data"], "description", str)
-
-        # finally, validate the return_data, which should be yaml, json or a string.
-        return_data = data["plugin_data"]["return_data"]
-        if isinstance(return_data, str):
-            logger.debug("Data is valid.")
-            return True
-        if isinstance(return_data, dict):
-            logger.debug("Data is valid.")
-            return True
-        if isinstance(return_data, list):
-            logger.debug("Data is valid.")
-            return True
-
-        try:
-            yaml.safe_load(return_data)
-            logger.debug("Data is valid.")
-            return True
-        except yaml.YAMLError:
-            pass
-
-        try:
-            json.loads(return_data)
-            logger.debug("Data is valid.")
-            return True
-        except json.JSONDecodeError:
-            pass
-
-        raise ValidationError("Invalid data: return_data must be a string, json or yaml.")
-
     def validate_write_operation(self, data: dict) -> bool:
-        """Validate the structural integrity of the input dict."""
-        meta_data = data.get("metadata")
-        selector = data.get("selector")
-        prompt = data.get("prompt")
-        plugin_data = data.get("plugin_data")
-
-        # Validate plugin meta_data
-        plugin_meta_serializer = PluginMetaSerializer(data=meta_data)
-        if not plugin_meta_serializer:
-            raise ValidationError("Invalid plugin.")
-        if not plugin_meta_serializer.is_valid():
-            raise serializers.ValidationError(plugin_meta_serializer.errors)
-
-        # Validate plugin selector
-        selector = data.get("selector")
-        plugin_selector_serializer = PluginSelectorSerializer(data=selector)
-        if not plugin_selector_serializer:
-            raise ValidationError("Invalid plugin selector.")
-        if not plugin_selector_serializer.is_valid():
-            raise ValidationError(plugin_selector_serializer.errors)
-
-        # Validate plugin prompt
-        prompt = data.get("prompt")
-        plugin_prompt_serializer = PluginPromptSerializer(data=prompt)
-        if not plugin_prompt_serializer:
-            raise ValidationError("Invalid plugin prompt.")
-        if not plugin_prompt_serializer.is_valid():
-            raise ValidationError(plugin_prompt_serializer.errors)
-
-        # Validate plugin plugin_data
-        plugin_data = data.get("plugin_data")
-        plugin_data_serializer = self.plugin_data_serializer_class(data=plugin_data)
-        if not plugin_data_serializer:
-            raise ValidationError("Invalid plugin plugin_data.")
-        if not plugin_data_serializer.is_valid():
-            raise ValidationError(plugin_data_serializer.errors)
-
-        logger.debug("Write operation is valid.")
+        """Validate the structural integrity of the dict."""
+        try:
+            SAMPluginBroker(account_number=self.user_profile.account.account_number, manifest=data)
+        except SAMValidationError:
+            return False
         return True
 
-    def create(self, data):
+    def create(self, data: dict = None, manifest: SAMPlugin = None):
         """Create a plugin from either yaml or a dictionary."""
 
         def committed(plugin_id: int):
@@ -582,52 +452,31 @@ class PluginBase(ABC):
             plugin_created.send(sender=self.__class__, plugin=self)
             logger.debug("Created plugin %s: %s.", self.plugin_meta.name, self.plugin_meta.id)
 
-        def proper_name(name: str) -> str:
-            """Return a proper name."""
+        if sum(bool(data), bool(manifest)) != 1:
+            raise SAMValidationError("Must specify either data or manifest.")
 
-            # convert a string like 'HR policy update'
-            # to HR-Policy-Update
-            return name.title().replace(" ", "-").strip()
-
-        # expected use case is that we received a yaml string.
-        # validate it and convert it to a dictionary.
-        if not isinstance(data, dict):
-            data = self.yaml_to_json(yaml_string=data)
-
-        # extract anything that might have been set
-        # in the constructor.
-        if self.user_profile:
-            data["user_profile"] = self.user_profile
-        else:
-            if data.get("user_profile"):
-                self._user_profile = data.get("user_profile")
-
-        self.validate_data_structure(data)
-        self.validate_data_types(data)
+        if data:
+            # validate and recast the data from a manifest broker.
+            manifest = SAMPluginBroker(account_number=self.user_profile.account.account_number, manifest=data).manifest
+        data = manifest.model_dump_json()
+        if not data:
+            raise SAMValidationError("Invalid data: expected a manifest broker or a manifest in json or yaml format.")
         self.validate_write_operation(data)
 
-        # initialize the major sections of the plugin yaml file
-        meta_data = data.get("metadata")
-        meta_data["name"] = proper_name(meta_data["name"])
-        selector = data.get("selector")
-        prompt = data.get("prompt")
-        plugin_data = data.get("plugin_data")
+        meta_data = manifest.metadata.model_dump_json()
+        selector = manifest.spec.selector.model_dump_json()
+        prompt = manifest.spec.prompt.model_dump_json()
+        plugin_data = manifest.spec.data.model_dump_json()
 
-        # account/name is unique, so if the plugin already exists,
-        # then update it instead of creating a new one.
-        plugin_meta = PluginMeta.objects.filter(account=self.user_profile.account, name=meta_data["name"]).first()
+        # account/name is unique, so if the plugin already exists, then update it instead of creating a new one.
+        plugin_meta = PluginMeta.objects.filter(account=self.user_profile.account, name=manifest.metadata.name).first()
         if plugin_meta:
             self.id = plugin_meta.id
             logger.info("Plugin %s already exists. Updating plugin %s.", meta_data["name"], plugin_meta.id)
-            return self.update(data)
-
-        meta_data["account"] = self.user_profile.account
-        meta_data["author"] = self.user_profile
-        meta_data_tags = meta_data.pop("tags")
+            return self.update(manifest=manifest)
 
         with transaction.atomic():
             plugin_meta = PluginMeta.objects.create(**meta_data)
-            plugin_meta.tags.add(*meta_data_tags)
 
             selector["plugin_id"] = plugin_meta.id
             prompt["plugin_id"] = plugin_meta.id
@@ -641,32 +490,34 @@ class PluginBase(ABC):
 
         return True
 
-    def update(self, data: dict = None):
+    def update(self, data: dict = None, manifest: SAMPlugin = None):
         """Update a plugin."""
 
         def committed():
             plugin_updated.send(sender=self.__class__, plugin=self)
             logger.debug("Updated plugin %s: %s.", self.name, self.id)
 
-        if not data:
-            return self.save()
+        if sum(bool(data), bool(manifest)) != 1:
+            raise SAMValidationError("Must specify either data or manifest.")
 
-        self.validate_data_structure(data)
-        self.validate_data_types(data)
+        if data:
+            # validate and recast the data from a manifest broker.
+            manifest = SAMPluginBroker(account_number=self.user_profile.account.account_number, manifest=data).manifest
+        data = manifest.model_dump_json()
+        if not data:
+            raise SAMValidationError("Invalid data: expected a manifest broker or a manifest in json or yaml format.")
+
         self.validate_write_operation(data)
 
         # don't want the author field to be writable.
-        meta_data = data.get("metadata")
-        meta_data.pop("author", None)
+        meta_data = manifest.metadata.model_dump_json()
+        selector = manifest.spec.selector.model_dump_json()
+        prompt = manifest.spec.prompt.model_dump_json()
+        plugin_data = manifest.spec.data.model_dump_json()
+
         meta_data_tags = meta_data.pop("tags")
 
-        selector = data.get("selector")
-        prompt = data.get("prompt")
-        plugin_data = data.get("plugin_data")
-
-        self.validate_data_policy(data)
-
-        plugin_meta = PluginMeta.objects.filter(account=self.user_profile.account, name=meta_data["name"]).first()
+        plugin_meta = PluginMeta.objects.filter(account=self.user_profile.account, name=manifest.metadata.name).first()
         self.id = plugin_meta.id
 
         with transaction.atomic():

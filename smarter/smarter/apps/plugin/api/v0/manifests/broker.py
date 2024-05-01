@@ -1,7 +1,6 @@
 """Smarter API Plugin Manifest handler"""
 
 import logging
-from typing import Any
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import account_admin_user
@@ -25,7 +24,7 @@ class SAMPluginBroker(SAMBroker):
     """
 
     # override the base abstract manifest model with the Plugin model
-    _manifest: Any = None
+    _manifest: SAMPlugin = None
     _account: Account = None
     _user: UserType = None
     _user_profile: UserProfile = None
@@ -67,7 +66,7 @@ class SAMPluginBroker(SAMBroker):
 
     # override the base abstract manifest model with the Plugin model
     @property
-    def manifest(self) -> Any:
+    def manifest(self) -> SAMPlugin:
         return self._manifest
 
     @property

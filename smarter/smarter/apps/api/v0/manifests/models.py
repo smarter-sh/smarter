@@ -24,8 +24,11 @@ logger = logging.getLogger(__name__)
 class SmarterBaseModel(BaseModel):
     """Smarter API V0 Base Pydantic Model."""
 
-    # this ensures that the entire manifest is read-only.
-    model_config = ConfigDict(arbitrary_types_allowed=True, frozen=True)
+    model_config = ConfigDict(
+        from_attributes=True,  # allow model to be initialized from class attributes
+        arbitrary_types_allowed=True,  # allow Field attributed to be created from custom class types
+        frozen=True,  # models are read-only
+    )
 
 
 class HttpRequest(SmarterBaseModel):
@@ -178,6 +181,7 @@ class SAMMetadataBase(SmarterBaseModel, abc.ABC):
     def validate_name(cls, v) -> str:
         if v in [None, ""]:
             raise SAMValidationError("Missing required key name")
+        v = v.title().replace(" ", "-").strip()
         if len(v) > 50:
             raise SAMValidationError("Name must be less than 50 characters")
         if not re.match(SmarterValidator.VALID_CLEAN_STRING, v):

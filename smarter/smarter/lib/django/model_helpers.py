@@ -12,3 +12,7 @@ class TimestampedModel(models.Model):
     # pylint: disable=missing-class-docstring
     class Meta:
         abstract = True
+
+    def validate(self):
+        """Validate the model."""
+        self.full_clean()
