@@ -1,5 +1,5 @@
 # pylint: disable=wrong-import-position
-"""Test TestSAM."""
+"""Test ManifestApiView."""
 
 import os
 
@@ -11,7 +11,7 @@ from smarter.common.const import PYTHON_ROOT
 
 
 class TestManifestApiView(TestCase):
-    """Test TestSAM"""
+    """Test ManifestApiView"""
 
     def setUp(self):
         """Set up test fixtures."""

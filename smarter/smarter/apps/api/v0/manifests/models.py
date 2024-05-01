@@ -4,11 +4,16 @@ import abc
 import logging
 import re
 from enum import Enum
-from typing import ClassVar, List, Optional
+from typing import ClassVar, List, Optional, Union
 
 import validators
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from smarter.apps.account.api.v0.serializers import (
+    AccountSerializer,
+    UserProfileSerializer,
+    UserSerializer,
+)
 from smarter.apps.account.models import Account, UserProfile
 from smarter.lib.django.user import UserType
 from smarter.lib.django.validators import SmarterValidator
@@ -29,6 +34,42 @@ class SmarterBaseModel(BaseModel):
         arbitrary_types_allowed=True,  # allow Field attributed to be created from custom class types
         frozen=True,  # models are read-only
     )
+
+
+class AccountModel(BaseModel):
+    """Convert Django ORM Account model to a simplified Pydantic model that only tracks the pk."""
+
+    id: int
+
+    @classmethod
+    def from_django(cls, django_model):
+        # Use the Django model serializer to serialize the model to a dictionary
+        data = AccountSerializer(django_model).data
+        return cls(**data)
+
+
+class UserModel(BaseModel):
+    """Convert Django ORM User model to a simplified Pydantic model that only tracks the pk."""
+
+    id: int
+
+    @classmethod
+    def from_django(cls, django_model):
+        # Use the Django model serializer to serialize the model to a dictionary
+        data = UserSerializer(django_model).data
+        return cls(**data)
+
+
+class UserProfileModel(BaseModel):
+    """Convert Django ORM UserProfile model to a simplified Pydantic model that only tracks the pk."""
+
+    id: int
+
+    @classmethod
+    def from_django(cls, django_model):
+        # Use the Django model serializer to serialize the model to a dictionary
+        data = UserProfileSerializer(django_model).data
+        return cls(**data)
 
 
 class HttpRequest(SmarterBaseModel):
@@ -166,10 +207,10 @@ class SAMMetadataBase(SmarterBaseModel, abc.ABC):
     """Pydantic Metadata base class. Expected to be subclassed by specific manifest classes."""
 
     name: str = Field(..., description="The name of the manifest resource")
-    account: Account = Field(..., description="The account object that owns the manifest resource")
+    account: AccountModel = Field(..., description="The account object that owns the manifest resource")
     accountNumber: str = Field(..., description="The account number of the account that owns the manifest resource")
-    user: Optional[UserType] = Field(None, description="The user object that owns the manifest resource")
-    userProfile: Optional[UserProfile] = Field(
+    user: Optional[UserModel] = Field(None, description="The user object that owns the manifest resource")
+    userProfile: Optional[UserProfileModel] = Field(
         None, description="The user profile object that owns the manifest resource"
     )
     description: str = Field(..., description="The description of the manifest resource")
@@ -206,6 +247,32 @@ class SAMMetadataBase(SmarterBaseModel, abc.ABC):
             )
         return v
 
+    @field_validator("account", mode="before")
+    def validate_account(cls, v) -> AccountModel:
+        print(f"Type of v: {type(v)}")
+        print(f"Is v an instance of Account? {isinstance(v, Account)}")
+        if isinstance(v, Account):
+            return AccountModel.from_django(v)
+        if isinstance(v, dict):
+            return AccountModel(**v)
+        return v
+
+    @field_validator("userProfile", mode="before")
+    def validate_user_profile(cls, v) -> UserProfileModel:
+        if isinstance(v, UserProfile):
+            return UserProfileModel.from_django(v)
+        if isinstance(v, dict):
+            return UserProfileModel(**v)
+        return v
+
+    @field_validator("user", mode="before")
+    def validate_user(cls, v) -> UserModel:
+        if isinstance(v, UserType):
+            return UserModel.from_django(v)
+        if isinstance(v, dict):
+            return UserModel(**v)
+        return v
+
     @field_validator("accountNumber")
     def validate_account_number(cls, v) -> str:
         SmarterValidator.validate_account_number(v)
@@ -217,7 +284,7 @@ class SAMMetadataBase(SmarterBaseModel, abc.ABC):
     def validate_tags(cls, v) -> List[str]:
         if isinstance(v, list):
             for tag in v:
-                if not re.match(SmarterValidator.VALID_CLEAN_STRING, tag):
+                if not re.match(SmarterValidator.VALID_CLEAN_STRING_WITH_SPACES, tag):
                     raise SAMValidationError(
                         f"Invalid tag: {tag}. Ensure that you do not include characters that are not URL friendly."
                     )
@@ -227,7 +294,7 @@ class SAMMetadataBase(SmarterBaseModel, abc.ABC):
     def validate_annotations(cls, v) -> List[str]:
         if isinstance(v, list):
             for annotation in v:
-                if not re.match(SmarterValidator.VALID_CLEAN_STRING, annotation):
+                if not re.match(SmarterValidator.VALID_CLEAN_STRING_WITH_SPACES, annotation):
                     raise SAMValidationError(
                         f"Invalid annotation: {annotation}. Ensure that you do not include characters that are not URL friendly."
                     )
@@ -263,7 +330,7 @@ class SAM(SmarterBaseModel, abc.ABC):
         ...,
         description=f"kind[String]: Required. The kind of resource described by the manifest. Must be one of {SAMKinds.all_values()}",
     )
-    metadata: SAMMetadataBase = Field(..., description="metadata[obj]: Required. The manifest metadata.")
+    metadata: Union[SAMMetadataBase, dict] = Field(..., description="metadata[obj]: Required. The manifest metadata.")
     spec: SAMSpecBase = Field(..., description="spec[obj]: Required. The manifest specification.")
     status: Optional[SAMStatusBase] = Field(
         None,
@@ -286,4 +353,11 @@ class SAM(SmarterBaseModel, abc.ABC):
             raise SAMValidationError("Missing required manifest key: kind")
         if v not in SAMKinds.all_values():
             raise SAMValidationError(f"Invalid kind. Must be one of {SAMKinds.all_values()} but got {v}")
+        return v
+
+    @field_validator("metadata")
+    def validate_metadata(cls, v) -> SAMMetadataBase:
+        """Validate metadata"""
+        if isinstance(v, dict):
+            return SAMMetadataBase(**v)
         return v
