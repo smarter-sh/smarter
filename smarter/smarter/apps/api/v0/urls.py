@@ -17,13 +17,13 @@ Including another URLconf
 
 from django.urls import include, path
 
-from .views.manifests import ManifestApiView
-from .views.views import CustomAPIView
+from .views import CustomAPIView
 
 
 urlpatterns = [
     path("", CustomAPIView.as_view(), name="custom_api_root_v0"),
-    path("manifest/", ManifestApiView.as_view(), name="manifest_view"),
+    path("cli/", include("smarter.apps.api.v0.cli.urls")),
+    path("accounts/", include("smarter.apps.account.api.v0.urls")),
     path("accounts/", include("smarter.apps.account.api.v0.urls")),
     path("plugins/", include("smarter.apps.plugin.api.v0.urls")),
     path("chatbots/", include("smarter.apps.chatbot.api.v0.urls")),

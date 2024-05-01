@@ -1,5 +1,5 @@
 # pylint: disable=W0613
-"""This module contains the PluginManifestView for the smarter api."""
+"""Smarter API command-line interface 'apply' view"""
 
 from http import HTTPStatus
 from typing import Dict, Type, Union
@@ -25,8 +25,8 @@ BROKERS: Dict[str, Type[SAMBroker]] = {
 }
 
 
-class ManifestApiView(SmarterAuthenticatedAPIView):
-    """PluginStatic manifest view for smarter api."""
+class ApplyManifestApiView(SmarterAuthenticatedAPIView):
+    """Smarter API command-line interface 'apply' view"""
 
     _loader: SAMLoader = None
     _broker: SAMBroker = None
