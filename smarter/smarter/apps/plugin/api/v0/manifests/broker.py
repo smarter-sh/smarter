@@ -76,11 +76,19 @@ class SAMPluginBroker(SAMBroker):
         return self.plugin.to_json()
 
     def post(self) -> dict:
+        self.plugin.create()
         if self.plugin.ready:
             self.plugin.save()
         return self.plugin.to_json()
 
     def put(self) -> dict:
+        self.plugin.update()
+        if self.plugin.ready:
+            self.plugin.save()
+        return self.plugin.to_json()
+
+    def patch(self) -> dict:
+        self.plugin.update()
         if self.plugin.ready:
             self.plugin.save()
         return self.plugin.to_json()
@@ -88,9 +96,4 @@ class SAMPluginBroker(SAMBroker):
     def delete(self) -> dict:
         if self.plugin.ready:
             self.plugin.delete()
-        return self.plugin.to_json()
-
-    def patch(self) -> dict:
-        if self.plugin.ready:
-            self.plugin.save()
         return self.plugin.to_json()
