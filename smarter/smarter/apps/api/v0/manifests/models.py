@@ -15,7 +15,7 @@ from smarter.apps.account.api.v0.serializers import (
     UserSerializer,
 )
 from smarter.apps.account.models import Account, UserProfile
-from smarter.lib.django.user import UserType
+from smarter.lib.django.user import User
 from smarter.lib.django.validators import SmarterValidator
 
 from .enum import DbEngine, SAMKinds
@@ -267,7 +267,7 @@ class SAMMetadataBase(SmarterBaseModel, abc.ABC):
 
     @field_validator("user", mode="before")
     def validate_user(cls, v) -> UserModel:
-        if isinstance(v, UserType):
+        if isinstance(v, User):
             return UserModel.from_django(v)
         if isinstance(v, dict):
             return UserModel(**v)
