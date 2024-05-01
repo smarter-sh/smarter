@@ -106,8 +106,8 @@ class PluginBase(ABC):
             ).manifest
 
         if self.manifest:
-            data = manifest.model_dump_json()
             self._user_profile = self.manifest.metadata.userProfile
+            data = manifest.model_dump_json()
             self.create(data)
 
         if self.ready:
