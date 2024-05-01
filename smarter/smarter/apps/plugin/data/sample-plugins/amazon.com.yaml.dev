@@ -12,7 +12,7 @@ metadata:
     - source: api
 spec:
   selector:
-    directive: openai_selector
+    directive: llm
   prompt:
     system_role: >
       You are a helpful amazon.com consumer product buying assistant who knows everything about every product sold on the amazon.com website. You can provide information about product availability, pricing, shipping, and customer reviews.
