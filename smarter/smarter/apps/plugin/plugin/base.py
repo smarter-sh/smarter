@@ -16,6 +16,7 @@ from smarter.apps.account.models import UserProfile
 
 # pylint: disable=W0511
 # TODO: these imports need to be parameterized by version.
+from smarter.apps.account.utils import smarter_admin_user_profile
 from smarter.apps.api.v0.manifests.exceptions import SAMValidationError
 from smarter.apps.api.v0.manifests.loader import SAMLoader
 from smarter.apps.plugin.api.v0.manifests.models.plugin import SAMPlugin
@@ -103,7 +104,7 @@ class PluginBase(ABC):
         # creating a new plugin or updating an existing plugin from
         # yaml or json data.
         if data:
-            loader = SAMLoader(account_number=user_profile.account.account_number, manifest=data)
+            loader = SAMLoader(account_number=self.user_profile.account.account_number, manifest=data)
             self._manifest = SAMPlugin(
                 apiVersion=loader.manifest_api_version,
                 kind=loader.manifest_kind,
@@ -246,7 +247,12 @@ class PluginBase(ABC):
     @property
     def user_profile(self) -> UserProfile:
         """Return the user profile."""
-        return self.manifest.metadata.userProfile
+        if not self._user_profile:
+            self._user_profile = self.manifest.metadata.userProfile if self.manifest else None
+            if not self._user_profile:
+                self._user_profile = smarter_admin_user_profile()
+                logger.warning("UserProfile not set. Falling back to Smarter admin user profile.")
+        return self._user_profile
 
     @property
     def name(self) -> str:

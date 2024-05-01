@@ -7,6 +7,7 @@ import yaml
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.models import PluginMeta
+from smarter.common.const import PYTHON_ROOT
 from smarter.lib.django.user import UserType
 
 from .static import PluginStatic
@@ -81,7 +82,7 @@ class PluginExamples:
 
     _plugin_examples: list[PluginExample] = []
     HERE = os.path.abspath(os.path.dirname(__file__))
-    PLUGINS_PATH = os.path.join(HERE, "data", "sample-plugins")
+    PLUGINS_PATH = os.path.join(PYTHON_ROOT, "smarter", "apps", "plugin", "data", "sample-plugins")
 
     def __init__(self):
         """Initialize the class."""

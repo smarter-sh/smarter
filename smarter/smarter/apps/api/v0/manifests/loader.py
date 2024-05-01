@@ -153,6 +153,8 @@ class SAMLoader:
 
     @property
     def json_data(self) -> dict:
+        if isinstance(self.raw_data, dict):
+            return self.raw_data
         try:
             return json.loads(self.raw_data)
         except json.JSONDecodeError:
