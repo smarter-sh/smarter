@@ -122,10 +122,6 @@ class ManifestApiView(SmarterAuthenticatedAPIView):
 
         return wrapper
 
-    def get(self, request):
-        """Get method for PluginManifestView."""
-        return self.handler(self.broker.get)()
-
     def post(self, request):
         """Post method for PluginManifestView."""
         return self.handler(self.broker.post)()
