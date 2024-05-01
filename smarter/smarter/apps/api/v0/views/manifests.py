@@ -11,7 +11,11 @@ from smarter.apps.api.v0.manifests.enum import SAMKinds
 from smarter.apps.api.v0.manifests.exceptions import SAMValidationError
 from smarter.apps.api.v0.manifests.loader import SAMLoader
 from smarter.apps.plugin.api.v0.manifests.broker import SAMPluginBroker
-from smarter.common.exceptions import SmarterBusinessRuleViolation, SmarterValueError
+from smarter.common.exceptions import (
+    SmarterBusinessRuleViolation,
+    SmarterValueError,
+    error_response_factory,
+)
 from smarter.lib.django.request import SmarterRequestHelper
 from smarter.lib.drf.view_helpers import SmarterAuthenticatedAPIView
 
@@ -60,7 +64,7 @@ class ManifestApiView(SmarterAuthenticatedAPIView):
         try:
             self._loader = SAMLoader(account_number=request_helper.account.account_number, manifest=manifest_text)
         except SAMValidationError as e:
-            return JsonResponse({"error": str(e)}, status=HTTPStatus.BAD_REQUEST)
+            return JsonResponse(error_response_factory(e=e), status=HTTPStatus.BAD_REQUEST)
 
         kind = self.loader.manifest_kind
         Broker: SAMBroker = BROKERS.get(kind)
@@ -73,9 +77,10 @@ class ManifestApiView(SmarterAuthenticatedAPIView):
         try:
             self._broker = Broker(account_number=request_helper.account.account_number, manifest=manifest_text)
         except (SAMValidationError, SmarterBusinessRuleViolation, SmarterValueError) as e:
-            return JsonResponse({"error": str(e)}, status=HTTPStatus.BAD_REQUEST)
-        except NotImplementedError as e:
-            return JsonResponse({"error": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            return JsonResponse(error_response_factory(e=e), status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=W0718
+        except Exception as e:
+            return JsonResponse(error_response_factory(e=e), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
         return super().dispatch(request, *args, **kwargs)
 
@@ -89,9 +94,12 @@ class ManifestApiView(SmarterAuthenticatedAPIView):
                     return JsonResponse(retval, status=HTTPStatus.OK)
                 return HttpResponse(status=HTTPStatus.OK)
             except NotImplementedError as e:
-                return JsonResponse({"error": str(e)}, status=HTTPStatus.NOT_IMPLEMENTED)
+                return JsonResponse(error_response_factory(e=e), status=HTTPStatus.NOT_IMPLEMENTED)
             except (SAMValidationError, SmarterBusinessRuleViolation, SmarterValueError) as e:
-                return JsonResponse({"error": str(e)}, status=HTTPStatus.BAD_REQUEST)
+                return JsonResponse(error_response_factory(e=e), status=HTTPStatus.BAD_REQUEST)
+            # pylint: disable=W0718
+            except Exception as e:
+                return JsonResponse(error_response_factory(e=e), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
         return wrapper
 

@@ -40,3 +40,21 @@ EXCEPTION_MAP = {
     openai.OpenAIError: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
     Exception: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
 }
+
+
+def error_response_factory(e: Exception) -> dict:
+    """Create a standard error response."""
+    if isinstance(e, SmarterExceptionBase):
+        error_class = "SmarterExceptionBase"
+    else:
+        error_class = "Exception"
+
+    return {
+        "errorClass": error_class,
+        "stacktrace": str(e),
+        "description": e.description,
+        "status": e.status,
+        "args": e.args,
+        "cause": str(e.__cause__),
+        "context": str(e.__context__),
+    }
