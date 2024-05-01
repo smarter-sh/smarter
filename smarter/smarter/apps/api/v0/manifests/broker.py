@@ -14,11 +14,15 @@ from .models import SAM
 class SAMBroker(ABC):
     """
     Smarter API Manifest Broker abstract base class. This class is responsible
-    for
+    for:
     - loading, and partially validating and parsing a Smarter Api yaml manifest,
       sufficient to enable us to initialize a Pydantic model.
     - implementing the broker service pattern for the underlying object
-    - using these to initialize the corresponding Pydantic models.
+    - initializing the corresponding Pydantic models.
+    - instantiating the underlying Python object
+
+    SAMBroker defines the broker pattern that provides the generic services
+    for the manifest: get, post, put, delete, patch.
     """
 
     _account: Account = None
