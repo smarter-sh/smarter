@@ -5,9 +5,8 @@ import logging
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import account_admin_user
 from smarter.apps.api.v0.manifests.broker import SAMBroker
+from smarter.apps.plugin.api.v0.manifests.models.plugin import SAMPlugin
 from smarter.lib.django.user import UserType
-
-from .models.plugin import SAMPlugin
 
 
 logger = logging.getLogger(__name__)
