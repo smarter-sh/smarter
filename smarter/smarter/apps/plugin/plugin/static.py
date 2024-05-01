@@ -1,9 +1,14 @@
 """A PLugin that returns a static json object stored in the Plugin itself."""
 
+import logging
+
 from smarter.apps.plugin.api.v0.serializers import PluginDataStaticSerializer
 from smarter.apps.plugin.models import PluginDataStatic
 
 from .base import PluginBase
+
+
+logger = logging.getLogger(__name__)
 
 
 class PluginStatic(PluginBase):
@@ -33,6 +38,12 @@ class PluginStatic(PluginBase):
         return PluginDataStaticSerializer
 
     @property
+    def plugin_data_django_model(self) -> dict:
+        """Return the plugin data definition as a json object."""
+        # recast the Pydantic model the the PluginDataStatic Django ORM model
+        return {"description": self.manifest.spec.data.description, "return_data": self.manifest.spec.data.staticData}
+
+    @property
     def custom_tool(self) -> dict:
         """Return the plugin tool."""
         if self.ready:
@@ -54,3 +65,8 @@ class PluginStatic(PluginBase):
                 },
             }
         return None
+
+    def create(self):
+        super().create()
+
+        logger.info("PluginStatic.create() called.")

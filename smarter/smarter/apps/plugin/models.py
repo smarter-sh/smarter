@@ -75,6 +75,7 @@ class PluginMeta(TimestampedModel):
     description = models.TextField(
         help_text="A brief description of the plugin. Be verbose, but not too verbose.",
     )
+    plugin_class = models.CharField(help_text="The class name of the plugin", max_length=255, default="PluginMeta")
     version = models.CharField(max_length=255, default="1.0.0")
     author = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="plugins")
     tags = TaggableManager(blank=True)
