@@ -224,6 +224,11 @@ class SAMPluginSpecData(BaseModel):
     @model_validator(mode="after")
     def validate_business_rules(self) -> "SAMPluginSpecData":
         total_set = bool(self.staticData) + bool(self.sqlData) + bool(self.apiData)
+        set_fields = {
+            "staticData": bool(self.staticData),
+            "sqlData": bool(self.sqlData),
+            "apiData": bool(self.apiData),
+        }
 
         if total_set != 1:
             static_name = SAMPluginMetadataClass.STATIC_DATA.value
@@ -231,7 +236,7 @@ class SAMPluginSpecData(BaseModel):
             api_name = SAMPluginMetadataClass.API_DATA.value
 
             raise SAMValidationError(
-                f"One and only one of {self.class_identifier}.{static_name}, {self.class_identifier}.{sql_name}, or {self.class_identifier}.{api_name} must be provided."
+                f"One and only one of {self.class_identifier}.{static_name}, {self.class_identifier}.{sql_name}, or {self.class_identifier}.{api_name} must be provided. Received data for the following: {set_fields}"
             )
 
         return self
