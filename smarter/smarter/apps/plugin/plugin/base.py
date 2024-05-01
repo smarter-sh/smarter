@@ -97,14 +97,14 @@ class PluginBase(ABC):
             self.id = plugin_meta.id
 
         #######################################################################
-        # manifests
+        # Smarter API Manifest based initialization
         #######################################################################
         if manifest:
+            # we received a Pydantic model from a manifest broker.
             self._manifest = manifest
 
-        # creating a new plugin or updating an existing plugin from
-        # yaml or json data.
         if data:
+            # we received a yaml or json string representation of a manifest.
             loader = SAMLoader(account_number=self.user_profile.account.account_number, manifest=data)
             self._manifest = SAMPlugin(
                 apiVersion=loader.manifest_api_version,
