@@ -19,6 +19,7 @@ from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import smarter_admin_user_profile
 from smarter.apps.api.v0.manifests.exceptions import SAMValidationError
 from smarter.apps.api.v0.manifests.loader import SAMLoader
+from smarter.apps.api.v0.manifests.models import UserProfileModel
 from smarter.apps.plugin.api.v0.manifests.models.plugin import SAMPlugin
 from smarter.apps.plugin.api.v0.serializers import (
     PluginMetaSerializer,
@@ -314,13 +315,9 @@ class PluginBase(ABC):
         # ---------------------------------------------------------------------
         if not self.manifest:
             raise SAMValidationError("Plugin manifest is not set.")
-        self.manifest.model_validate()
+        self.manifest.model_validate(self.manifest.model_dump())
         if not self.user_profile:
             raise SAMValidationError("UserProfile is not set.")
-        if not isinstance(self.user_profile, UserProfile):
-            raise SAMValidationError(
-                f"Expected type of {UserProfile} for self.user_profile, but got {type(self.user_profile)}."
-            )
 
         # ---------------------------------------------------------------------
         # validate the Django ORM models
@@ -356,29 +353,28 @@ class PluginBase(ABC):
             raise SAMValidationError(
                 f"Expected type of {PluginMetaSerializer} for self.plugin_meta_serializer, but got {type(self.plugin_meta_serializer)}."
             )
-        if not self.plugin_meta_serializer.is_valid():
-            raise SAMValidationError("PluginMetaSerializer is not valid.")
-
         if not isinstance(self.plugin_selector_serializer, PluginSelectorSerializer):
             raise SAMValidationError(
                 f"Expected type of {PluginSelectorSerializer} for self.plugin_selector_serializer, but got {type(self.plugin_selector_serializer)}."
             )
-        if not self.plugin_selector_serializer.is_valid():
-            raise SAMValidationError("PluginSelectorSerializer is not valid.")
-
         if not isinstance(self.plugin_prompt_serializer, PluginPromptSerializer):
             raise SAMValidationError(
                 f"Expected type of {PluginPromptSerializer} for self.plugin_prompt_serializer, but got {type(self.plugin_prompt_serializer)}."
             )
-        if not self.plugin_prompt_serializer.is_valid():
-            raise SAMValidationError("PluginPromptSerializer is not valid.")
-
         if not isinstance(self.plugin_data_serializer, self.plugin_data_serializer_class):
             raise SAMValidationError(
                 f"Expected type of {self.plugin_data_serializer_class} for self.plugin_data_serializer, but got {type(self.plugin_data_serializer)}."
             )
-        if not self.plugin_data_serializer.is_valid():
-            raise SAMValidationError("PluginDataSerializer is not valid.")
+
+        # recast data types from Pydantic models to Django ORM models
+        if not isinstance(self.user_profile, UserProfile):
+            # if the user_profile is a Pydantic model, convert it to a Django ORM model.
+            if isinstance(self.user_profile, UserProfileModel):
+                self._user_profile = UserProfile.objects.get(id=self.user_profile.id)
+            else:
+                raise SAMValidationError(
+                    f"Expected type of {UserProfile} for self.user_profile, but got {type(self.user_profile)}."
+                )
 
         return True
 
@@ -558,11 +554,10 @@ class PluginBase(ABC):
         if not self.manifest:
             raise SAMValidationError("Plugin manifest is not set.")
 
-        # don't want the author field to be writable.
-        meta_data = self.manifest.metadata.model_dump_json()
-        selector = self.manifest.spec.selector.model_dump_json()
-        prompt = self.manifest.spec.prompt.model_dump_json()
-        plugin_data = self.manifest.spec.data.model_dump_json()
+        meta_data = self.plugin_meta_django_model
+        selector = self.plugin_selector_django_model
+        prompt = self.plugin_prompt_django_model
+        plugin_data = self.plugin_data_django_model
 
         meta_data_tags = meta_data.pop("tags")
 
