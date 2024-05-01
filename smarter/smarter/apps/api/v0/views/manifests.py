@@ -2,21 +2,17 @@
 """This module contains the PluginManifestView for the smarter api."""
 
 from http import HTTPStatus
-from typing import Dict, Type
+from typing import Dict, Type, Union
 
 from django.http import HttpResponse, JsonResponse
 
+from smarter.apps.account.models import UserProfile
 from smarter.apps.api.v0.manifests.broker import SAMBroker
 from smarter.apps.api.v0.manifests.enum import SAMKinds
 from smarter.apps.api.v0.manifests.exceptions import SAMValidationError
 from smarter.apps.api.v0.manifests.loader import SAMLoader
 from smarter.apps.plugin.api.v0.manifests.broker import SAMPluginBroker
-from smarter.common.exceptions import (
-    SmarterBusinessRuleViolation,
-    SmarterValueError,
-    error_response_factory,
-)
-from smarter.lib.django.request import SmarterRequestHelper
+from smarter.common.exceptions import SmarterExceptionBase, error_response_factory
 from smarter.lib.drf.view_helpers import SmarterAuthenticatedAPIView
 
 
@@ -34,6 +30,7 @@ class ManifestApiView(SmarterAuthenticatedAPIView):
 
     _loader: SAMLoader = None
     _broker: SAMBroker = None
+    _user_profile: UserProfile = None
 
     @property
     def loader(self) -> SAMLoader:
@@ -45,6 +42,11 @@ class ManifestApiView(SmarterAuthenticatedAPIView):
         """Get the SAMBroker instance."""
         return self._broker
 
+    @property
+    def user_profile(self) -> UserProfile:
+        """Get the UserProfile instance."""
+        return self._user_profile
+
     def dispatch(self, request, *args, **kwargs):
         """
         The http request body is expected to contain the manifest text
@@ -53,30 +55,47 @@ class ManifestApiView(SmarterAuthenticatedAPIView):
         fully initialize a Pydantic manifest model. The Pydantic manifest
         model will be passed to a SAMBroker for the manifest 'kind', which
         implements the broker service pattern for the underlying object.
-
-        TODO: setup api key authentication
         """
 
-        request_helper = SmarterRequestHelper(request)
-        manifest_text = request.body.decode("utf-8")
+        def get_user_profile(self, request) -> UserProfile:
+            """Get the user profile."""
 
-        # use the loader to retrieve the manifest 'kind'
+            # pylint: disable=W0511
+            # TODO: setup api key authentication based on an
+            # X-API-KEY header
+            return UserProfile.objects.get(user=request.user)
+
+        Broker: SAMBroker = None
+        manifest_text: Union[str, Dict] = request.body.decode("utf-8")
+        manifest_kind: str = None
+        self._user_profile = get_user_profile(self, request)
+
+        # 1.) use the loader to retrieve the manifest 'kind'
         try:
-            self._loader = SAMLoader(account_number=request_helper.account.account_number, manifest=manifest_text)
-        except SAMValidationError as e:
+            if not self.user_profile.account:
+                raise SAMValidationError("Could not find account for user.")
+            self._loader = SAMLoader(account_number=self.user_profile.account.account_number, manifest=manifest_text)
+            if not self.loader:
+                raise SAMValidationError("Could not load manifest.")
+        except SmarterExceptionBase as e:
             return JsonResponse(error_response_factory(e=e), status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=W0718
+        except Exception as e:
+            return JsonResponse(error_response_factory(e=e), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-        kind = self.loader.manifest_kind
-        Broker: SAMBroker = BROKERS.get(kind)
-        if Broker is None:
-            return JsonResponse(
-                {"error": f"Unsupported manifest kind: {kind}"},
-                status=HTTPStatus.BAD_REQUEST,
-            )
+        manifest_kind = self.loader.manifest_kind
 
+        # 2.) use a manifest broker to convert the manifest text to a
+        #     Pydantic model, and then use this to initialize the underlying
+        #     Python object that will provide the services for the broker pattern.
         try:
-            self._broker = Broker(account_number=request_helper.account.account_number, manifest=manifest_text)
-        except (SAMValidationError, SmarterBusinessRuleViolation, SmarterValueError) as e:
+            Broker = BROKERS.get(manifest_kind)
+            if Broker is None:
+                raise SAMValidationError(f"Unsupported manifest kind: {manifest_kind}")
+            self._broker = Broker(account_number=self.user_profile.account.account_number, manifest=manifest_text)
+            if not self.broker:
+                raise SAMValidationError("Could not load manifest.")
+        except SmarterExceptionBase as e:
             return JsonResponse(error_response_factory(e=e), status=HTTPStatus.BAD_REQUEST)
         # pylint: disable=W0718
         except Exception as e:
@@ -95,7 +114,7 @@ class ManifestApiView(SmarterAuthenticatedAPIView):
                 return HttpResponse(status=HTTPStatus.OK)
             except NotImplementedError as e:
                 return JsonResponse(error_response_factory(e=e), status=HTTPStatus.NOT_IMPLEMENTED)
-            except (SAMValidationError, SmarterBusinessRuleViolation, SmarterValueError) as e:
+            except SmarterExceptionBase as e:
                 return JsonResponse(error_response_factory(e=e), status=HTTPStatus.BAD_REQUEST)
             # pylint: disable=W0718
             except Exception as e:
