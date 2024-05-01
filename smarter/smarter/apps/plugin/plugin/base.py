@@ -56,8 +56,8 @@ class PluginBase(ABC):
     _selected: bool = False
 
     # abstract properties
-    _plugin_data: Any = None
-    _plugin_data_serializer: Any = None
+    _plugin_data: Any = TimestampedModel
+    _plugin_data_serializer: serializers = None
 
     # pylint: disable=too-many-arguments,too-many-branches
     def __init__(
@@ -76,8 +76,8 @@ class PluginBase(ABC):
         - yaml manifest or json representation of a yaml manifest
         see ./data/sample-plugins/everlasting-gobstopper.yaml for an example.
         """
-        if sum([bool(data), bool(manifest)]) != 1:
-            raise ValidationError("Must specify either manifest or data")
+        if sum([bool(data), bool(manifest), bool(plugin_id), bool(plugin_meta)]) != 1:
+            raise ValidationError("Must specify one and only one of: manifest, data, plugin_id, or plugin_meta")
 
         self._selected = selected
         self._user_profile = user_profile
@@ -87,11 +87,9 @@ class PluginBase(ABC):
         #######################################################################
         if plugin_id:
             self.id = plugin_id
-            return None
 
         if plugin_meta:
             self.id = plugin_meta.id
-            return None
 
         #######################################################################
         # manifests
@@ -115,8 +113,6 @@ class PluginBase(ABC):
         if self.ready:
             plugin_ready.send(sender=self.__class__, plugin=self)
 
-        return None
-
     def __str__(self) -> str:
         """Return the name of the plugin."""
         return str(self.name)
@@ -132,26 +128,31 @@ class PluginBase(ABC):
     @abstractmethod
     def plugin_data(self) -> TimestampedModel:
         """Return the plugin data."""
+        raise NotImplementedError()
 
     @property
     @abstractmethod
     def plugin_data_class(self) -> type[TimestampedModel]:
         """Return the plugin data class."""
+        raise NotImplementedError()
 
     @property
     @abstractmethod
     def plugin_data_serializer(self) -> serializers.ModelSerializer:
         """Return the plugin data serializer."""
+        raise NotImplementedError()
 
     @property
     @abstractmethod
     def plugin_data_serializer_class(self) -> type[serializers.ModelSerializer]:
         """Return the plugin data serializer class."""
+        raise NotImplementedError()
 
     @property
     @abstractmethod
     def custom_tool(self) -> dict:
         """Return the plugin tool."""
+        raise NotImplementedError()
 
     ###########################################################################
     # Base class properties
@@ -255,54 +256,72 @@ class PluginBase(ABC):
         # validate the Pydantic model
         # ---------------------------------------------------------------------
         if not self.manifest:
-            return False
+            raise SAMValidationError("Plugin manifest is not set.")
         self.manifest.model_validate()
         if not self.user_profile:
-            return False
+            raise SAMValidationError("UserProfile is not set.")
         if not isinstance(self.user_profile, UserProfile):
-            return False
+            raise SAMValidationError(
+                f"Expected type of {UserProfile} for self.user_profile, but got {type(self.user_profile)}."
+            )
 
         # ---------------------------------------------------------------------
         # validate the Django ORM models
         # ---------------------------------------------------------------------
         if not isinstance(self.plugin_meta, PluginMeta):
-            return False
+            raise SAMValidationError(
+                f"Expected type of {PluginMeta} for self.plugin_meta, but got {type(self.plugin_meta)}."
+            )
         self.plugin_meta.validate()
 
         if not isinstance(self.plugin_selector, PluginSelector):
-            return False
+            raise SAMValidationError(
+                f"Expected type of {PluginSelector} for self.plugin_selector, but got {type(self.plugin_selector)}."
+            )
         self.plugin_selector.validate()
 
         if not isinstance(self.plugin_prompt, PluginPrompt):
-            return False
+            raise SAMValidationError(
+                f"Expected type of {PluginPrompt} for self.plugin_prompt, but got {type(self.plugin_prompt)}."
+            )
         self.plugin_prompt.validate()
 
         if not isinstance(self.plugin_data, self.plugin_data_class):
-            return False
+            raise SAMValidationError(
+                f"Expected type of {self.plugin_data_class} for self.plugin_data, but got {type(self.plugin_data)}."
+            )
         self.plugin_data.validate()
 
         # ---------------------------------------------------------------------
         # validate the serializers
         # ---------------------------------------------------------------------
         if not isinstance(self.plugin_meta_serializer, PluginMetaSerializer):
-            return False
+            raise SAMValidationError(
+                f"Expected type of {PluginMetaSerializer} for self.plugin_meta_serializer, but got {type(self.plugin_meta_serializer)}."
+            )
         if not self.plugin_meta_serializer.is_valid():
-            return False
+            raise SAMValidationError("PluginMetaSerializer is not valid.")
 
         if not isinstance(self.plugin_selector_serializer, PluginSelectorSerializer):
-            return False
+            raise SAMValidationError(
+                f"Expected type of {PluginSelectorSerializer} for self.plugin_selector_serializer, but got {type(self.plugin_selector_serializer)}."
+            )
         if not self.plugin_selector_serializer.is_valid():
-            return False
+            raise SAMValidationError("PluginSelectorSerializer is not valid.")
 
         if not isinstance(self.plugin_prompt_serializer, PluginPromptSerializer):
-            return False
+            raise SAMValidationError(
+                f"Expected type of {PluginPromptSerializer} for self.plugin_prompt_serializer, but got {type(self.plugin_prompt_serializer)}."
+            )
         if not self.plugin_prompt_serializer.is_valid():
-            return False
+            raise SAMValidationError("PluginPromptSerializer is not valid.")
 
         if not isinstance(self.plugin_data_serializer, self.plugin_data_serializer_class):
-            return False
+            raise SAMValidationError(
+                f"Expected type of {self.plugin_data_serializer_class} for self.plugin_data_serializer, but got {type(self.plugin_data_serializer)}."
+            )
         if not self.plugin_data_serializer.is_valid():
-            return False
+            raise SAMValidationError("PluginDataSerializer is not valid.")
 
         return True
 
