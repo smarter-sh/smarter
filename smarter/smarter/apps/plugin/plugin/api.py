@@ -1,7 +1,7 @@
-"""A PLugin that uses a REST API to retrieve its return data"""
+"""A Plugin that uses a REST API to retrieve its return data"""
 
 from .base import PluginBase
 
 
 class PluginApi(PluginBase):
-    """REST API based PLugin"""
+    """A Plugin that uses an http request to a REST API to retrieve its return data"""

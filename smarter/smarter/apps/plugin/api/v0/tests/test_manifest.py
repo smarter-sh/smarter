@@ -5,8 +5,8 @@ import os
 import unittest
 
 from smarter.apps.account.models import Account
-from smarter.apps.api.v0.manifests.broker import SAMBroker
 from smarter.apps.api.v0.manifests.version import SMARTER_API_VERSION
+from smarter.apps.plugin.api.v0.manifests.broker import SAMPluginBroker
 from smarter.common.const import PYTHON_ROOT
 
 
@@ -23,7 +23,7 @@ class TestSAM(unittest.TestCase):
     def test_valid_manifest(self):
         """Test valid file path and that we can instantiate with errors"""
 
-        handler = SAMBroker(account_number=self.account.account_number, file_path=self.good_manifest_path)
+        handler = SAMPluginBroker(account_number=self.account.account_number, file_path=self.good_manifest_path)
         manifest = handler.manifest
         self.assertEqual(manifest.apiVersion, SMARTER_API_VERSION)
         self.assertEqual(manifest.kind, "Plugin")

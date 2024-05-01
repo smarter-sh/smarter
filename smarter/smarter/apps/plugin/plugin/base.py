@@ -14,7 +14,6 @@ from rest_framework import serializers
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.api.v0.manifests.exceptions import SAMValidationError
-from smarter.apps.plugin.api.v0.manifests.broker import SAMPluginBroker
 from smarter.apps.plugin.api.v0.manifests.models.plugin import SAMPlugin
 from smarter.apps.plugin.api.v0.serializers import (
     PluginMetaSerializer,
@@ -100,10 +99,7 @@ class PluginBase(ABC):
         # creating a new plugin or updating an existing plugin from
         # yaml or json data.
         if data:
-            # work backwards to the Pydantic model.
-            self._manifest = SAMPluginBroker(
-                account_number=self.user_profile.account.account_number, manifest=data
-            ).manifest
+            self.create(data)
 
         if self.manifest:
             self._user_profile = self.manifest.metadata.userProfile
@@ -200,10 +196,6 @@ class PluginBase(ABC):
             self._plugin_data_serializer = self.plugin_data_serializer_class(self.plugin_data)
         except self.plugin_data_class.DoesNotExist as e:
             raise SAMValidationError(f"{self.plugin_data_class.__name__}.DoesNotExist") from e
-
-        self._manifest = SAMPluginBroker(
-            account_number=self.user_profile.account.account_number, manifest=self.to_json()
-        ).manifest
 
     @property
     def plugin_meta(self) -> PluginMeta:
@@ -455,14 +447,6 @@ class PluginBase(ABC):
         except yaml.YAMLError:
             return False
 
-    def validate_write_operation(self, data: dict) -> bool:
-        """Validate the structural integrity of the dict."""
-        try:
-            SAMPluginBroker(account_number=self.user_profile.account.account_number, manifest=data)
-        except SAMValidationError:
-            return False
-        return True
-
     def create(self, data: dict = None, manifest: SAMPlugin = None):
         """Create a plugin from either yaml or a dictionary."""
 
@@ -474,13 +458,10 @@ class PluginBase(ABC):
         if sum(bool(data), bool(manifest)) != 1:
             raise SAMValidationError("Must specify either data or manifest.")
 
-        if data:
-            # validate and recast the data from a manifest broker.
-            manifest = SAMPluginBroker(account_number=self.user_profile.account.account_number, manifest=data).manifest
-        data = manifest.model_dump_json()
+        if manifest:
+            data = manifest.model_dump_json()
         if not data:
             raise SAMValidationError("Invalid data: expected a manifest broker or a manifest in json or yaml format.")
-        self.validate_write_operation(data)
 
         meta_data = manifest.metadata.model_dump_json()
         selector = manifest.spec.selector.model_dump_json()
@@ -519,14 +500,10 @@ class PluginBase(ABC):
         if sum(bool(data), bool(manifest)) != 1:
             raise SAMValidationError("Must specify either data or manifest.")
 
-        if data:
-            # validate and recast the data from a manifest broker.
-            manifest = SAMPluginBroker(account_number=self.user_profile.account.account_number, manifest=data).manifest
-        data = manifest.model_dump_json()
+        if manifest:
+            data = manifest.model_dump_json()
         if not data:
             raise SAMValidationError("Invalid data: expected a manifest broker or a manifest in json or yaml format.")
-
-        self.validate_write_operation(data)
 
         # don't want the author field to be writable.
         meta_data = manifest.metadata.model_dump_json()

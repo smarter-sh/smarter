@@ -1,18 +1,31 @@
-"""Smarter API Manifest Broker base class."""
+"""Smarter API Manifest Abstract Broker class."""
+
+from abc import ABC, abstractmethod
+
+from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.utils import account_admin_user
+from smarter.lib.django.user import UserType
+from smarter.lib.django.validators import SmarterValidator
 
 from .loader import SAMLoader
 from .models import SAM
 
 
-class SAMBroker:
+class SAMBroker(ABC):
     """
-    Smarter API Manifest Handler ("SAMH") base class. This class is responsible
-    for loading, validating and parsing the Smarter Api yaml manifests and then
-    using these to initialize the corresponding Pydantic models.
+    Smarter API Manifest Broker abstract base class. This class is responsible
+    for
+    - loading, and partially validating and parsing a Smarter Api yaml manifest,
+      sufficient to enable us to initialize a Pydantic model.
+    - implementing the broker service pattern for the underlying object
+    - using these to initialize the corresponding Pydantic models.
     """
 
-    _manifest: SAM = None
+    _account: Account = None
+    _user: UserType = None
+    _user_profile: UserProfile = None
     _loader: SAMLoader = None
+    _manifest: SAM = None
 
     def __init__(
         self,
@@ -21,19 +34,76 @@ class SAMBroker:
         file_path: str = None,
         url: str = None,
     ):
+        SmarterValidator.validate_account_number(account_number)
+        self._account = Account.objects.get(account_number=account_number)
+
         # load, validate and parse the manifest into json
         self._loader = SAMLoader(account_number=account_number, manifest=manifest, file_path=file_path, url=url)
 
-        # initialize the manifest model. this will be the first of two passes. in this iteration
-        # we'll initialize the top-level manifest model. the child class overrides manifest with
-        # the appropriate model, which will then reinitialize the manifests, but with additional
-        # child models. Note that there is only one loader and only one manifest data set.
-        self._manifest = SAM(**self.loader.data)
-
+    ###########################################################################
+    # Abstract Properties
+    ###########################################################################
     @property
+    @abstractmethod
     def manifest(self) -> SAM:
+        """
+        The Pydantic model representing the manifest. This is a reference
+        implementation of the abstract property, for documentation purposes
+        to illustrate the correct way to initialize a SAM Pydantic model.
+        The actual property must be implemented by the concrete broker class.
+        """
+        if self._manifest:
+            return self._manifest
+        self._manifest = SAM(
+            apiVersion=self.loader.manifest_api_version,
+            kind=self.loader.manifest_kind,
+            metadata=self.loader.manifest_metadata,
+            spec=self.loader.manifest_spec,
+            status=self.loader.manifest_status,
+        )
         return self._manifest
 
+    @abstractmethod
+    def get(self) -> dict:
+        raise NotImplementedError
+
+    @abstractmethod
+    def post(self) -> dict:
+        raise NotImplementedError
+
+    @abstractmethod
+    def put(self) -> dict:
+        raise NotImplementedError
+
+    @abstractmethod
+    def delete(self) -> dict:
+        raise NotImplementedError
+
+    @abstractmethod
+    def patch(self) -> dict:
+        raise NotImplementedError
+
+    ###########################################################################
+    # Class Instance Properties
+    ###########################################################################
     @property
     def loader(self) -> SAMLoader:
         return self._loader
+
+    @property
+    def account(self) -> Account:
+        return self._account
+
+    @property
+    def user(self) -> UserType:
+        if self._user:
+            return self._user
+        self._user = account_admin_user(self.manifest.metadata.account)
+        return self._user
+
+    @property
+    def user_profile(self) -> UserProfile:
+        if self._user_profile:
+            return self._user_profile
+        self._user_profile = UserProfile.objects.get(user=self.user, account=self.account)
+        return self._user_profile
