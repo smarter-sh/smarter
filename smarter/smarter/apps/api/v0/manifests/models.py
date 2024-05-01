@@ -249,8 +249,6 @@ class SAMMetadataBase(SmarterBaseModel, abc.ABC):
 
     @field_validator("account", mode="before")
     def validate_account(cls, v) -> AccountModel:
-        print(f"Type of v: {type(v)}")
-        print(f"Is v an instance of Account? {isinstance(v, Account)}")
         if isinstance(v, Account):
             return AccountModel.from_django(v)
         if isinstance(v, dict):

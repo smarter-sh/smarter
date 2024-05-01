@@ -12,7 +12,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from rest_framework import serializers
 
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.models import Account, UserProfile
 
 # pylint: disable=W0511
 # TODO: these imports need to be parameterized by version.
@@ -162,6 +162,12 @@ class PluginBase(ABC):
         """Return the plugin tool."""
         raise NotImplementedError()
 
+    @property
+    @abstractmethod
+    def plugin_data_django_model(self) -> dict:
+        """Return the plugin data definition as a json object."""
+        raise NotImplementedError()
+
     ###########################################################################
     # Base class properties
     ###########################################################################
@@ -225,6 +231,21 @@ class PluginBase(ABC):
         return self._plugin_meta_serializer
 
     @property
+    def plugin_meta_django_model(self) -> dict:
+        """Return a dict for loading the plugin meta Django ORM model."""
+        if not self.manifest:
+            return None
+        return {
+            "account": Account.objects.get(id=self.manifest.metadata.account.id),
+            "name": self.manifest.metadata.name,
+            "description": self.manifest.metadata.description,
+            "plugin_class": self.manifest.metadata.pluginClass,
+            "version": self.manifest.metadata.version,
+            "author": UserProfile.objects.get(id=self.manifest.metadata.userProfile.id),
+            "tags": self.manifest.metadata.tags,
+        }
+
+    @property
     def plugin_selector(self) -> PluginSelector:
         """Return the plugin selector."""
         return self._plugin_selector
@@ -235,6 +256,16 @@ class PluginBase(ABC):
         return self._plugin_selector_serializer
 
     @property
+    def plugin_selector_django_model(self) -> dict:
+        """Return the plugin selector definition as a json object."""
+        if not self.manifest:
+            return None
+        return {
+            "directive": self.manifest.spec.selector.directive,
+            "search_terms": self.manifest.spec.selector.searchTerms,
+        }
+
+    @property
     def plugin_prompt(self) -> PluginPrompt:
         """Return the plugin prompt."""
         return self._plugin_prompt
@@ -243,6 +274,18 @@ class PluginBase(ABC):
     def plugin_prompt_serializer(self) -> PluginPromptSerializer:
         """Return the plugin prompt serializer."""
         return self._plugin_prompt_serializer
+
+    @property
+    def plugin_prompt_django_model(self) -> dict:
+        """Return the plugin prompt definition as a json object."""
+        if not self.manifest:
+            return None
+        return {
+            "system_role": self.manifest.spec.prompt.systemRole,
+            "model": self.manifest.spec.prompt.model,
+            "temperature": self.manifest.spec.prompt.temperature,
+            "max_tokens": self.manifest.spec.prompt.maxTokens,
+        }
 
     @property
     def user_profile(self) -> UserProfile:
@@ -480,10 +523,10 @@ class PluginBase(ABC):
         if not self.manifest:
             raise SAMValidationError("Plugin manifest is not set.")
 
-        meta_data = self.manifest.metadata.model_dump_json()
-        selector = self.manifest.spec.selector.model_dump_json()
-        prompt = self.manifest.spec.prompt.model_dump_json()
-        plugin_data = self.manifest.spec.data.model_dump_json()
+        meta_data = self.plugin_meta_django_model
+        selector = self.plugin_selector_django_model
+        prompt = self.plugin_prompt_django_model
+        plugin_data = self.plugin_data_django_model
 
         if self.plugin_meta:
             self.id = self.plugin_meta.id
