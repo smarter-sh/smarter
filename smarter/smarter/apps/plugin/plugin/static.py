@@ -7,7 +7,7 @@ from .base import PluginBase
 
 
 class PluginStatic(PluginBase):
-    """Static Plugin"""
+    """A PLugin that returns a static json object stored in the Plugin itself."""
 
     _plugin_data: PluginDataStatic = None
     _plugin_data_serializer: PluginDataStaticSerializer = None

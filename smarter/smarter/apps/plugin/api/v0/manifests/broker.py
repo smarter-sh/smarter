@@ -1,13 +1,9 @@
 """Smarter API Plugin Manifest handler"""
 
-from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.utils import account_admin_user
 from smarter.apps.api.v0.manifests.broker import SAMBroker
 from smarter.apps.plugin.api.v0.manifests.models.plugin import SAMPlugin
+from smarter.apps.plugin.controller import PluginController
 from smarter.apps.plugin.plugin.base import PluginBase
-from smarter.apps.plugin.plugin.controller import PluginController
-from smarter.lib.django.user import UserType
-from smarter.lib.django.validators import SmarterValidator
 
 
 class SAMPluginBroker(SAMBroker):
@@ -22,9 +18,6 @@ class SAMPluginBroker(SAMBroker):
 
     # override the base abstract manifest model with the Plugin model
     _manifest: SAMPlugin = None
-    _account: Account = None
-    _user: UserType = None
-    _user_profile: UserProfile = None
     _plugin: PluginBase = None
 
     def __init__(
@@ -42,8 +35,6 @@ class SAMPluginBroker(SAMBroker):
         to ensure that the manifest is a valid yaml file and that it contains
         the required top-level keys.
         """
-        SmarterValidator.validate_account_number(account_number)
-        self._account = Account.objects.get(account_number=account_number)
         super().__init__(account_number=account_number, manifest=manifest, file_path=file_path, url=url)
 
     # override the base abstract manifest model with the Plugin model
@@ -70,24 +61,6 @@ class SAMPluginBroker(SAMBroker):
         return self._manifest
 
     @property
-    def account(self) -> Account:
-        return self._account
-
-    @property
-    def user(self) -> UserType:
-        if self._user:
-            return self._user
-        self._user = account_admin_user(self.manifest.metadata.account)
-        return self._user
-
-    @property
-    def user_profile(self) -> UserProfile:
-        if self._user_profile:
-            return self._user_profile
-        self._user_profile = UserProfile.objects.get(user=self.user, account=self.account)
-        return self._user_profile
-
-    @property
     def plugin(self) -> PluginBase:
         """
         PluginController() is a helper class to map the manifest model
@@ -98,3 +71,26 @@ class SAMPluginBroker(SAMBroker):
         controller = PluginController(self.manifest)
         self._plugin = controller.plugin
         return self._plugin
+
+    def get(self) -> dict:
+        return self.plugin.to_json()
+
+    def post(self) -> dict:
+        if self.plugin.ready:
+            self.plugin.save()
+        return self.plugin.to_json()
+
+    def put(self) -> dict:
+        if self.plugin.ready:
+            self.plugin.save()
+        return self.plugin.to_json()
+
+    def delete(self) -> dict:
+        if self.plugin.ready:
+            self.plugin.delete()
+        return self.plugin.to_json()
+
+    def patch(self) -> dict:
+        if self.plugin.ready:
+            self.plugin.save()
+        return self.plugin.to_json()
