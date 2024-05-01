@@ -5,7 +5,7 @@ import json
 import logging
 import re
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Union
 
 import yaml
 from django.core.exceptions import ValidationError
@@ -13,7 +13,11 @@ from django.db import transaction
 from rest_framework import serializers
 
 from smarter.apps.account.models import UserProfile
+
+# pylint: disable=W0511
+# TODO: these imports need to be parameterized by version.
 from smarter.apps.api.v0.manifests.exceptions import SAMValidationError
+from smarter.apps.api.v0.manifests.loader import SAMLoader
 from smarter.apps.plugin.api.v0.manifests.models.plugin import SAMPlugin
 from smarter.apps.plugin.api.v0.serializers import (
     PluginMetaSerializer,
@@ -66,7 +70,7 @@ class PluginBase(ABC):
         manifest: SAMPlugin = None,
         plugin_id: int = None,
         plugin_meta: PluginMeta = None,
-        data=None,
+        data: Union[dict, str] = None,
     ):
         """
         Options for initialization are:
@@ -99,12 +103,19 @@ class PluginBase(ABC):
         # creating a new plugin or updating an existing plugin from
         # yaml or json data.
         if data:
-            self.create(data)
+            loader = SAMLoader(account_number=user_profile.account.account_number, manifest=data)
+            self._manifest = SAMPlugin(
+                apiVersion=loader.manifest_api_version,
+                kind=loader.manifest_kind,
+                metadata=loader.manifest_metadata,
+                spec=loader.manifest_spec,
+                status=loader.manifest_status,
+            )
+            self.create()
 
         if self.manifest:
             self._user_profile = self.manifest.metadata.userProfile
-            data = manifest.model_dump_json()
-            self.create(data)
+            self.create()
 
         if self.ready:
             plugin_ready.send(sender=self.__class__, plugin=self)
@@ -200,6 +211,11 @@ class PluginBase(ABC):
     @property
     def plugin_meta(self) -> PluginMeta:
         """Return the plugin meta."""
+        if self._plugin_meta:
+            return self._plugin_meta
+        self._plugin_meta = PluginMeta.objects.filter(
+            account=self.user_profile.account, name=self.manifest.metadata.name
+        ).first()
         return self._plugin_meta
 
     @property
@@ -447,7 +463,7 @@ class PluginBase(ABC):
         except yaml.YAMLError:
             return False
 
-    def create(self, data: dict = None, manifest: SAMPlugin = None):
+    def create(self):
         """Create a plugin from either yaml or a dictionary."""
 
         def committed(plugin_id: int):
@@ -455,25 +471,18 @@ class PluginBase(ABC):
             plugin_created.send(sender=self.__class__, plugin=self)
             logger.debug("Created plugin %s: %s.", self.plugin_meta.name, self.plugin_meta.id)
 
-        if sum(bool(data), bool(manifest)) != 1:
-            raise SAMValidationError("Must specify either data or manifest.")
+        if not self.manifest:
+            raise SAMValidationError("Plugin manifest is not set.")
 
-        if manifest:
-            data = manifest.model_dump_json()
-        if not data:
-            raise SAMValidationError("Invalid data: expected a manifest broker or a manifest in json or yaml format.")
+        meta_data = self.manifest.metadata.model_dump_json()
+        selector = self.manifest.spec.selector.model_dump_json()
+        prompt = self.manifest.spec.prompt.model_dump_json()
+        plugin_data = self.manifest.spec.data.model_dump_json()
 
-        meta_data = manifest.metadata.model_dump_json()
-        selector = manifest.spec.selector.model_dump_json()
-        prompt = manifest.spec.prompt.model_dump_json()
-        plugin_data = manifest.spec.data.model_dump_json()
-
-        # account/name is unique, so if the plugin already exists, then update it instead of creating a new one.
-        plugin_meta = PluginMeta.objects.filter(account=self.user_profile.account, name=manifest.metadata.name).first()
-        if plugin_meta:
-            self.id = plugin_meta.id
-            logger.info("Plugin %s already exists. Updating plugin %s.", meta_data["name"], plugin_meta.id)
-            return self.update(manifest=manifest)
+        if self.plugin_meta:
+            self.id = self.plugin_meta.id
+            logger.info("Plugin %s already exists. Updating plugin %s.", meta_data["name"], self.plugin_meta.id)
+            return self.update()
 
         with transaction.atomic():
             plugin_meta = PluginMeta.objects.create(**meta_data)
@@ -490,31 +499,29 @@ class PluginBase(ABC):
 
         return True
 
-    def update(self, data: dict = None, manifest: SAMPlugin = None):
+    def update(self):
         """Update a plugin."""
 
         def committed():
             plugin_updated.send(sender=self.__class__, plugin=self)
             logger.debug("Updated plugin %s: %s.", self.name, self.id)
 
-        if sum(bool(data), bool(manifest)) != 1:
-            raise SAMValidationError("Must specify either data or manifest.")
-
-        if manifest:
-            data = manifest.model_dump_json()
-        if not data:
-            raise SAMValidationError("Invalid data: expected a manifest broker or a manifest in json or yaml format.")
+        if not self.manifest:
+            raise SAMValidationError("Plugin manifest is not set.")
 
         # don't want the author field to be writable.
-        meta_data = manifest.metadata.model_dump_json()
-        selector = manifest.spec.selector.model_dump_json()
-        prompt = manifest.spec.prompt.model_dump_json()
-        plugin_data = manifest.spec.data.model_dump_json()
+        meta_data = self.manifest.metadata.model_dump_json()
+        selector = self.manifest.spec.selector.model_dump_json()
+        prompt = self.manifest.spec.prompt.model_dump_json()
+        plugin_data = self.manifest.spec.data.model_dump_json()
 
         meta_data_tags = meta_data.pop("tags")
 
-        plugin_meta = PluginMeta.objects.filter(account=self.user_profile.account, name=manifest.metadata.name).first()
-        self.id = plugin_meta.id
+        if not self.plugin_meta:
+            raise SAMValidationError(
+                f"Plugin {self.manifest.metadata.name} for account {self.user_profile.account.account_number} does not exist."
+            )
+        self.id = self.plugin_meta.id
 
         with transaction.atomic():
             for key, value in meta_data.items():
