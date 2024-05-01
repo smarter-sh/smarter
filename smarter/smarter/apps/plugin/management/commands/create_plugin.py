@@ -21,7 +21,6 @@ class Command(BaseCommand):
         parser.add_argument(
             "-u", "--username", type=str, nargs="?", default=None, help="A user associated with the account."
         )
-        parser.add_argument("--url", type=str, default=None, help="A public url to a plugin YAML file")
         parser.add_argument(
             "--file_path", type=str, default=None, help="The local file system path to a plugin YAML file"
         )
@@ -30,7 +29,6 @@ class Command(BaseCommand):
         """create the plugin."""
         account_number = options["account_number"]
         username = options["username"]
-        url = options["url"]
         file_path = options["file_path"]
 
         account: Account = None
@@ -64,5 +62,5 @@ class Command(BaseCommand):
             data["user_profile"] = user_profile
             data["meta_data"]["author"] = user_profile.id
 
-        plugin = PluginStatic(data=data, url=url, user_profile=user_profile)
+        plugin = PluginStatic(data=data, user_profile=user_profile)
         print(plugin.to_json())
