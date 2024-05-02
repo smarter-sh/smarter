@@ -1,0 +1,31 @@
+"""
+Abstract helper class to map a manifest model's metadata.kindClass to an
+instance of the the correct Python subclass.
+"""
+
+import abc
+from typing import Any
+
+from smarter.apps.api.v0.manifests.models import SAM
+
+
+class AbstractController(abc.ABC):
+    """Map the Pydantic metadata.kindClass to the corresponding object instance."""
+
+    ###########################################################################
+    # Abstract property implementations
+    ###########################################################################
+    @property
+    @abc.abstractmethod
+    def manifest(self) -> SAM:
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def map(self):
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def obj(self) -> Any:
+        raise NotImplementedError

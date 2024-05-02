@@ -11,7 +11,7 @@ from .loader import SAMLoader
 from .models import SAM
 
 
-class SAMBroker(ABC):
+class AbstractBroker(ABC):
     """
     Smarter API Manifest Broker abstract base class. This class is responsible
     for:
@@ -21,7 +21,7 @@ class SAMBroker(ABC):
     - initializing the corresponding Pydantic models.
     - instantiating the underlying Python object
 
-    SAMBroker defines the broker pattern that provides the generic services
+    AbstractBroker defines the broker pattern that provides the generic services
     for the manifest: get, post, put, delete, patch.
     """
 
