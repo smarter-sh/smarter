@@ -3,11 +3,14 @@
 This implements the REST API endpoints that back the Smarter command-line application (CLI), written in Go lang.
 The Smarter CLI is available to download for Windows, macOS and Linux at these sites:
 
-- [somewhere](https://somewhere.org)
-- [somewhere](https://somewhere.org)
-- [somewhere](https://somewhere.org)
+- [GitHub Releases](https://somewhere.org)
+- [Homebrew](https://somewhere.org)
+- [smarter.sh](https://somewhere.org)
+- [snap](https://somewhere.org)
 
-## Get
+## Describe
+
+calls: https://api.smarter.sh/v0/cli/describe/
 
 ```console
 smarter get plugins
@@ -25,6 +28,9 @@ Applies a Smarter manifest.
 smarter apply -f 'desktop/plugins/sales-demo.yaml' --json
 ```
 
+calls https://api.smarter.sh/v0/cli/apply/
+
+
 ## Delete
 
 Deletes a Smarter resource
@@ -32,3 +38,28 @@ Deletes a Smarter resource
 ```console
 smarter delete plugin sales-demo
 ```
+
+calls: https://api.smarter.sh/v0/cli/delete/
+
+## Deploy
+
+Deploys a Smarter resource
+
+```console
+smarter deploy []obj
+```
+
+
+calls: https://api.smarter.sh/v0/cli/deploy/
+
+## Logs
+
+prints log data for a resource
+
+calls: https://api.smarter.sh/v0/cli/logs/
+
+## Status
+
+prints real-time status information about the state and availability of the Smarter platform
+
+calls: https://api.smarter.sh/v0/cli/status/
