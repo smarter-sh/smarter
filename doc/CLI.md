@@ -1,8 +1,6 @@
 # Smarter API Command-line Interface
 
-The Smarter cli is a standalone application that runs on Windows, macOS and Linux. It is [separately managed](https://github.com/QueriumCorp/smarter-cli).
-
-[Example Plugin](../smarter/smarter/apps/plugin/data/sample-plugins/example-configuration.yaml)
+The Smarter cli is a standalone application written in Go lang that runs on Windows, macOS and Linux. It is separately managed in [github.com/QueriumCorp/smarter-cli](https://github.com/QueriumCorp/smarter-cli). It is a lightweight command-line UI for interacting with the Smarter API.
 
 ## Commands
 
@@ -15,9 +13,22 @@ The cli implements a set of verbs for working with Smarter resources
 - [logs](../smarter/smarter/apps/api/v0/cli/views/describe.py): returns log data in standard console log format for a Smarter resource
 - [status](../smarter/smarter/apps/api/v0/cli/views/status.py): returns a report in yaml or json format that provides real-time information on the state of the Smarter platform.
 
+<!-- markdownlint-disable MD034 -->
+
+## Related API endpoints
+
+- https://api.smarter.sh/v0/cli/apply/ # Apply a manifest
+- https://api.smarter.sh/v0/cli/describe/ # print the manifest
+- https://api.smarter.sh/v0/cli/deploy/ # Deploy a resource
+- https://api.smarter.sh/v0/cli/logs/ # Get logs for a resource
+- https://api.smarter.sh/v0/cli/delete/ # Delete a resource
+- https://api.smarter.sh/v0/cli/status/ # Smarter platform status
+
 ## Manifest Spec
 
 The cli is designed to work with a manifest utf-8 text document, in yaml or json format, inspired by Kubernetes' kubectl, itself modeled on the [OpenAPI Specification v3.x](https://spec.openapis.org/oas/latest.html). The actual implementation of this specification is located [here](../smarter/smarter/apps/api/v0/cli/). The Smarter API can manage [escaped](https://en.wikipedia.org/wiki/Escape_character) representations of characters outside of the utf-8 standard.
+
+[Example manifest](../smarter/smarter/apps/plugin/data/sample-plugins/example-configuration.yaml)
 
 ### Kind
 
