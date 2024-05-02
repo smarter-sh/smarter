@@ -15,7 +15,7 @@ class CliPlatformStatusApiView(SmarterTokenAuthentication):
     def get(self, request):
         """Get method for PluginManifestView."""
         try:
-            data = {"status": "ok"}
+            data = {"CliPlatformStatusApiView": "ok"}
             return JsonResponse(data=data, status=HTTPStatus.OK)
         except NotImplementedError as e:
             return JsonResponse(error_response_factory(e=e), status=HTTPStatus.NOT_IMPLEMENTED)
