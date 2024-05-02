@@ -14,7 +14,7 @@ class CliDeleteObjectApiView(SmarterTokenAuthentication):
 
     def delete(self, request):
         try:
-            data = {"status": "ok"}
+            data = {"CliDeleteObjectApiView": "ok"}
             return JsonResponse(data=data, status=HTTPStatus.OK)
         except NotImplementedError as e:
             return JsonResponse(error_response_factory(e=e), status=HTTPStatus.NOT_IMPLEMENTED)

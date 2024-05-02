@@ -15,7 +15,7 @@ class CliDeployApiView(SmarterTokenAuthentication):
     def post(self, request):
         """Post method for PluginManifestView."""
         try:
-            data = {"status": "ok"}
+            data = {"CliDeployApiView": "ok"}
             return JsonResponse(data=data, status=HTTPStatus.OK)
         except NotImplementedError as e:
             return JsonResponse(error_response_factory(e=e), status=HTTPStatus.NOT_IMPLEMENTED)
