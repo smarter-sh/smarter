@@ -8,7 +8,7 @@ from django.http import HttpResponse, JsonResponse
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.api.v0.cli.brokers import BROKERS
-from smarter.apps.api.v0.manifests.broker import SAMBroker
+from smarter.apps.api.v0.manifests.broker import AbstractBroker
 from smarter.apps.api.v0.manifests.exceptions import SAMValidationError
 from smarter.apps.api.v0.manifests.loader import SAMLoader
 from smarter.common.exceptions import SmarterExceptionBase, error_response_factory
@@ -19,7 +19,7 @@ class CliApplyManifestApiView(SmarterTokenAuthentication):
     """Smarter API command-line interface 'apply' view"""
 
     _loader: SAMLoader = None
-    _broker: SAMBroker = None
+    _broker: AbstractBroker = None
     _user_profile: UserProfile = None
 
     @property
@@ -28,8 +28,8 @@ class CliApplyManifestApiView(SmarterTokenAuthentication):
         return self._loader
 
     @property
-    def broker(self) -> SAMBroker:
-        """Get the SAMBroker instance."""
+    def broker(self) -> AbstractBroker:
+        """Get the AbstractBroker instance."""
         return self._broker
 
     @property
@@ -43,7 +43,7 @@ class CliApplyManifestApiView(SmarterTokenAuthentication):
         in yaml format. The manifest text is passed to the SAMLoader that will load,
         and partially validate and parse the manifest. This is then used to
         fully initialize a Pydantic manifest model. The Pydantic manifest
-        model will be passed to a SAMBroker for the manifest 'kind', which
+        model will be passed to a AbstractBroker for the manifest 'kind', which
         implements the broker service pattern for the underlying object.
         """
 
@@ -55,7 +55,7 @@ class CliApplyManifestApiView(SmarterTokenAuthentication):
             # X-API-KEY header
             return UserProfile.objects.get(user=request.user)
 
-        Broker: SAMBroker = None
+        Broker: AbstractBroker = None
         manifest_text: Union[str, Dict] = request.body.decode("utf-8")
         manifest_kind: str = None
         self._user_profile = get_user_profile(self, request)

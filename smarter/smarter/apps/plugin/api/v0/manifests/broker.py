@@ -1,12 +1,12 @@
 """Smarter API Plugin Manifest handler"""
 
-from smarter.apps.api.v0.manifests.broker import SAMBroker
+from smarter.apps.api.v0.manifests.broker import AbstractBroker
 from smarter.apps.plugin.api.v0.manifests.models.plugin import SAMPlugin
 from smarter.apps.plugin.controller import PluginController
 from smarter.apps.plugin.plugin.base import PluginBase
 
 
-class SAMPluginBroker(SAMBroker):
+class SAMPluginBroker(AbstractBroker):
     """
     Smarter API Plugin Manifest Broker.This class is responsible for
     - loading, validating and parsing the Smarter Api yaml Plugin manifests
@@ -69,7 +69,7 @@ class SAMPluginBroker(SAMBroker):
         if self._plugin:
             return self._plugin
         controller = PluginController(self.manifest)
-        self._plugin = controller.plugin
+        self._plugin = controller.obj
         return self._plugin
 
     def get(self) -> dict:

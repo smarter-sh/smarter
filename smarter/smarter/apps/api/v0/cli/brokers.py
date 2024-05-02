@@ -9,12 +9,12 @@ the necessary operations to facilitate get, post, put, and delete operations.
 
 from typing import Dict, Type
 
-from smarter.apps.api.v0.manifests.broker import SAMBroker
+from smarter.apps.api.v0.manifests.broker import AbstractBroker
 from smarter.apps.api.v0.manifests.enum import SAMKinds
 from smarter.apps.plugin.api.v0.manifests.broker import SAMPluginBroker
 
 
-BROKERS: Dict[str, Type[SAMBroker]] = {
+BROKERS: Dict[str, Type[AbstractBroker]] = {
     SAMKinds.PLUGIN.value: SAMPluginBroker,
     SAMKinds.ACCOUNT.value: None,
     SAMKinds.USER.value: None,
