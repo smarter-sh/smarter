@@ -9,12 +9,13 @@ from smarter.common.exceptions import SmarterExceptionBase, error_response_facto
 from smarter.lib.drf.view_helpers import SmarterTokenAuthentication
 
 
-class CliDeleteObjectApiView(SmarterTokenAuthentication):
+class CliLogsApiView(SmarterTokenAuthentication):
     """Smarter API command-line interface 'apply' view"""
 
-    def delete(self, request):
+    def post(self, request):
+        """Post method for PluginManifestView."""
         try:
-            data = {"status": "ok"}
+            data = {"logdata": "ok"}
             return JsonResponse(data=data, status=HTTPStatus.OK)
         except NotImplementedError as e:
             return JsonResponse(error_response_factory(e=e), status=HTTPStatus.NOT_IMPLEMENTED)

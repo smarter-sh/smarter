@@ -2,30 +2,20 @@
 """Smarter API command-line interface 'apply' view"""
 
 from http import HTTPStatus
-from typing import Dict, Type, Union
+from typing import Dict, Union
 
 from django.http import HttpResponse, JsonResponse
 
 from smarter.apps.account.models import UserProfile
+from smarter.apps.api.v0.cli.brokers import BROKERS
 from smarter.apps.api.v0.manifests.broker import SAMBroker
-from smarter.apps.api.v0.manifests.enum import SAMKinds
 from smarter.apps.api.v0.manifests.exceptions import SAMValidationError
 from smarter.apps.api.v0.manifests.loader import SAMLoader
-from smarter.apps.plugin.api.v0.manifests.broker import SAMPluginBroker
 from smarter.common.exceptions import SmarterExceptionBase, error_response_factory
-from smarter.lib.drf.view_helpers import SmarterAuthenticatedAPIView
+from smarter.lib.drf.view_helpers import SmarterTokenAuthentication
 
 
-BROKERS: Dict[str, Type[SAMBroker]] = {
-    SAMKinds.PLUGIN.value: SAMPluginBroker,
-    SAMKinds.ACCOUNT.value: None,
-    SAMKinds.USER.value: None,
-    SAMKinds.CHAT.value: None,
-    SAMKinds.CHATBOT.value: None,
-}
-
-
-class ApplyManifestApiView(SmarterAuthenticatedAPIView):
+class CliApplyManifestApiView(SmarterTokenAuthentication):
     """Smarter API command-line interface 'apply' view"""
 
     _loader: SAMLoader = None

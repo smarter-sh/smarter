@@ -9,10 +9,11 @@ from smarter.common.exceptions import SmarterExceptionBase, error_response_facto
 from smarter.lib.drf.view_helpers import SmarterTokenAuthentication
 
 
-class CliDeleteObjectApiView(SmarterTokenAuthentication):
+class CliPlatformStatusApiView(SmarterTokenAuthentication):
     """Smarter API command-line interface 'apply' view"""
 
-    def delete(self, request):
+    def get(self, request):
+        """Get method for PluginManifestView."""
         try:
             data = {"status": "ok"}
             return JsonResponse(data=data, status=HTTPStatus.OK)

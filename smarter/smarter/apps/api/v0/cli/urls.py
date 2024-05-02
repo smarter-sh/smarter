@@ -1,15 +1,29 @@
-"""Smarter API command-line interface URL configuration."""
+"""
+Smarter API command-line interface URL configuration.
+
+- https://api.smarter.sh/v0/cli/apply/          # Apply a manifest
+- https://api.smarter.sh/v0/cli/describe/       # print the manifest
+- https://api.smarter.sh/v0/cli/deploy/         # Deploy a resource
+- https://api.smarter.sh/v0/cli/logs/           # Get logs for a resource
+- https://api.smarter.sh/v0/cli/delete/         # Delete a resource
+- https://api.smarter.sh/v0/cli/status/         # Smarter platform status
+"""
 
 from django.urls import path
 
-from .views.apply import ApplyManifestApiView
-from .views.delete import DeleteObjectApiView
-from .views.get import GetObjectsApiView
+from .views.apply import CliApplyManifestApiView
+from .views.delete import CliDeleteObjectApiView
+from .views.deploy import CliDeployApiView
+from .views.describe import CliDescribeApiView
+from .views.logs import CliLogsApiView
+from .views.status import CliPlatformStatusApiView
 
 
 urlpatterns = [
-    path("", ApplyManifestApiView.as_view(), name="cli_default_view"),
-    path("apply/", ApplyManifestApiView.as_view(), name="cli_apply_manifest_view"),
-    path("get/", GetObjectsApiView.as_view(), name="cli_get_objects_view"),
-    path("delete/", DeleteObjectApiView.as_view(), name="cli_get_objects_view"),
+    path("apply/", CliApplyManifestApiView.as_view(), name="cli_apply_view"),
+    path("describe/<str:kind>/<str:name>/", CliDescribeApiView.as_view(), name="cli_describe_view"),
+    path("deploy/<str:kind>/<str:name>/", CliDeployApiView.as_view(), name="cli_deploy_view"),
+    path("logs/<str:kind>/<str:name>/", CliLogsApiView.as_view(), name="cli_logs_view"),
+    path("delete/<str:kind>/<str:name>/", CliDeleteObjectApiView.as_view(), name="cli_delete_view"),
+    path("status/", CliPlatformStatusApiView.as_view(), name="cli_status_view"),
 ]

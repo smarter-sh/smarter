@@ -3,19 +3,20 @@
 
 from http import HTTPStatus
 
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 
 from smarter.common.exceptions import SmarterExceptionBase, error_response_factory
 from smarter.lib.drf.view_helpers import SmarterTokenAuthentication
 
 
-class CliDeleteObjectApiView(SmarterTokenAuthentication):
+class CliDescribeApiView(SmarterTokenAuthentication):
     """Smarter API command-line interface 'apply' view"""
 
-    def delete(self, request):
+    def post(self, request):
+        """Post method for PluginManifestView."""
         try:
             data = {"status": "ok"}
-            return JsonResponse(data=data, status=HTTPStatus.OK)
+            return HttpResponse(data=data, status=HTTPStatus.OK)
         except NotImplementedError as e:
             return JsonResponse(error_response_factory(e=e), status=HTTPStatus.NOT_IMPLEMENTED)
         except SmarterExceptionBase as e:
