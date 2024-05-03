@@ -6,7 +6,7 @@ instance of the the correct Python subclass.
 import abc
 from typing import Any
 
-from smarter.apps.api.v0.manifests.models import SAM
+from smarter.apps.api.v0.manifests.models import AbstractSAMBase
 
 
 class AbstractController(abc.ABC):
@@ -17,7 +17,7 @@ class AbstractController(abc.ABC):
     ###########################################################################
     @property
     @abc.abstractmethod
-    def manifest(self) -> SAM:
+    def manifest(self) -> AbstractSAMBase:
         raise NotImplementedError
 
     @property

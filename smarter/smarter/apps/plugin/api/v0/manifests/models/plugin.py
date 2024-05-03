@@ -7,7 +7,7 @@ from pydantic import Field, model_validator
 
 from smarter.apps.api.v0.manifests.enum import SAMKeys
 from smarter.apps.api.v0.manifests.exceptions import SAMValidationError
-from smarter.apps.api.v0.manifests.models import SAM
+from smarter.apps.api.v0.manifests.models import AbstractSAMBase
 from smarter.apps.plugin.api.v0.manifests.enum import (
     SAMPluginMetadataClass,
     SAMPluginMetadataClassValues,
@@ -26,7 +26,7 @@ MODULE_IDENTIFIER = OBJECT_IDENTIFIER
 logger = logging.getLogger(__name__)
 
 
-class SAMPlugin(SAM):
+class SAMPlugin(AbstractSAMBase):
     """Smarter API V0 Manifest - Plugin"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER

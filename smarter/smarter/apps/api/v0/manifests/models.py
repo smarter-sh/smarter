@@ -203,7 +203,7 @@ class SqlConnection(SmarterBaseModel):
         return v
 
 
-class SAMMetadataBase(SmarterBaseModel, abc.ABC):
+class AbstractSAMMetadataBase(SmarterBaseModel, abc.ABC):
     """Pydantic Metadata base class. Expected to be subclassed by specific manifest classes."""
 
     name: str = Field(..., description="The name of the manifest resource")
@@ -299,38 +299,37 @@ class SAMMetadataBase(SmarterBaseModel, abc.ABC):
         return v
 
 
-class SAMSpecBase(SmarterBaseModel, abc.ABC):
+class AbstractSAMSpecBase(SmarterBaseModel, abc.ABC):
     """Pydantic Spec base class. Expected to be subclassed by specific manifest classes."""
 
 
-class SAMStatusBase(SmarterBaseModel, abc.ABC):
+class AbstractSAMStatusBase(SmarterBaseModel, abc.ABC):
     """Pydantic Status base class. Expected to be subclassed by specific manifest classes."""
 
 
-class SAM(SmarterBaseModel, abc.ABC):
+class AbstractSAMBase(SmarterBaseModel, abc.ABC):
     """
-    Pydantic Smarter API Manifest ("SAM") base class.
-
-    The SAM class is a base class for all Smarter API manifests. It provides
-    methods for validating the manifest data against a strongly-typed specification,
-    and for accessing the manifest data in a structured way.
-
-    The SAM class is designed to be subclassed by specific manifest classes
-    that implement the specific manifest data and methods for that manifest.
-
-
+    Pydantic Smarter API Manifest ("SAM") base class. This is a base class
+    for all Smarter API manifests. It provides methods for validating the
+    manifest data against a strongly-typed specification, and for accessing
+    the manifest data in a structured way. It is designed to be subclassed by
+    specific manifest classes that implement the specific manifest data and
+    methods for that manifest.
     """
 
     apiVersion: str = Field(
-        ..., description=f"apiVersion[String]: Required. The API version of the SAM. Set this to {SMARTER_API_VERSION}"
+        ...,
+        description=f"apiVersion[String]: Required. The API version of the AbstractSAMBase. Set this to {SMARTER_API_VERSION}",
     )
     kind: str = Field(
         ...,
         description=f"kind[String]: Required. The kind of resource described by the manifest. Must be one of {SAMKinds.all_values()}",
     )
-    metadata: Union[SAMMetadataBase, dict] = Field(..., description="metadata[obj]: Required. The manifest metadata.")
-    spec: SAMSpecBase = Field(..., description="spec[obj]: Required. The manifest specification.")
-    status: Optional[SAMStatusBase] = Field(
+    metadata: Union[AbstractSAMMetadataBase, dict] = Field(
+        ..., description="metadata[obj]: Required. The manifest metadata."
+    )
+    spec: AbstractSAMSpecBase = Field(..., description="spec[obj]: Required. The manifest specification.")
+    status: Optional[AbstractSAMStatusBase] = Field(
         None,
         description="status[obj]: Optional. Read-only. The run-time state of the resource described by the manifest.",
     )
@@ -354,8 +353,8 @@ class SAM(SmarterBaseModel, abc.ABC):
         return v
 
     @field_validator("metadata")
-    def validate_metadata(cls, v) -> SAMMetadataBase:
+    def validate_metadata(cls, v) -> AbstractSAMMetadataBase:
         """Validate metadata"""
         if isinstance(v, dict):
-            return SAMMetadataBase(**v)
+            return AbstractSAMMetadataBase(**v)
         return v

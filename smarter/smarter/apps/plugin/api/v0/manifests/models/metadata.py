@@ -6,7 +6,7 @@ from typing import ClassVar
 from pydantic import Field, field_validator
 
 from smarter.apps.api.v0.manifests.exceptions import SAMValidationError
-from smarter.apps.api.v0.manifests.models import SAMMetadataBase
+from smarter.apps.api.v0.manifests.models import AbstractSAMMetadataBase
 
 # Plugin
 from smarter.apps.plugin.api.v0.manifests.enum import SAMPluginMetadataClassValues
@@ -18,7 +18,7 @@ filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{OBJECT_IDENTIFIER}.{filename}"
 
 
-class SAMPluginMetadata(SAMMetadataBase):
+class SAMPluginMetadata(AbstractSAMMetadataBase):
     """Smarter API V0 Plugin Manifest - Metadata class."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER

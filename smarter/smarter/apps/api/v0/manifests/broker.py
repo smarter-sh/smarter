@@ -8,7 +8,7 @@ from smarter.lib.django.user import UserType
 from smarter.lib.django.validators import SmarterValidator
 
 from .loader import SAMLoader
-from .models import SAM
+from .models import AbstractSAMBase
 
 
 class AbstractBroker(ABC):
@@ -29,7 +29,7 @@ class AbstractBroker(ABC):
     _user: UserType = None
     _user_profile: UserProfile = None
     _loader: SAMLoader = None
-    _manifest: SAM = None
+    _manifest: AbstractSAMBase = None
 
     def __init__(
         self,
@@ -49,16 +49,16 @@ class AbstractBroker(ABC):
     ###########################################################################
     @property
     @abstractmethod
-    def manifest(self) -> SAM:
+    def manifest(self) -> AbstractSAMBase:
         """
         The Pydantic model representing the manifest. This is a reference
         implementation of the abstract property, for documentation purposes
-        to illustrate the correct way to initialize a SAM Pydantic model.
+        to illustrate the correct way to initialize a AbstractSAMBase Pydantic model.
         The actual property must be implemented by the concrete broker class.
         """
         if self._manifest:
             return self._manifest
-        self._manifest = SAM(
+        self._manifest = AbstractSAMBase(
             apiVersion=self.loader.manifest_api_version,
             kind=self.loader.manifest_kind,
             metadata=self.loader.manifest_metadata,

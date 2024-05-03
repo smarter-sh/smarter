@@ -6,10 +6,10 @@ from http import HTTPStatus
 from django.http import JsonResponse
 
 from smarter.common.exceptions import SmarterExceptionBase, error_response_factory
-from smarter.lib.drf.view_helpers import SmarterTokenAuthentication
+from smarter.lib.drf.view_helpers import SmarterUnauthenticatedAPIView
 
 
-class CliLogsApiView(SmarterTokenAuthentication):
+class CliLogsApiView(SmarterUnauthenticatedAPIView):
     """Smarter API command-line interface 'apply' view"""
 
     def post(self, request):

@@ -9,7 +9,11 @@ from sqlparse import parse as sql_parse
 from sqlparse.exceptions import SQLParseError
 
 from smarter.apps.api.v0.manifests.exceptions import SAMValidationError
-from smarter.apps.api.v0.manifests.models import HttpRequest, SAMSpecBase, SqlConnection
+from smarter.apps.api.v0.manifests.models import (
+    AbstractSAMSpecBase,
+    HttpRequest,
+    SqlConnection,
+)
 from smarter.apps.plugin.api.v0.manifests.enum import (
     SAMPluginMetadataClass,
     SAMPluginMetadataClassValues,
@@ -242,7 +246,7 @@ class SAMPluginSpecData(BaseModel):
         return self
 
 
-class SAMPluginSpec(SAMSpecBase):
+class SAMPluginSpec(AbstractSAMSpecBase):
     """Smarter API V0 Plugin Manifest Plugin.spec"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
