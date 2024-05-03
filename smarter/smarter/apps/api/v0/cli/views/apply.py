@@ -12,10 +12,10 @@ from smarter.apps.api.v0.manifests.broker import AbstractBroker
 from smarter.apps.api.v0.manifests.exceptions import SAMValidationError
 from smarter.apps.api.v0.manifests.loader import SAMLoader
 from smarter.common.exceptions import SmarterExceptionBase, error_response_factory
-from smarter.lib.drf.view_helpers import SmarterTokenAuthentication
+from smarter.lib.drf.view_helpers import SmarterUnauthenticatedAPIView
 
 
-class CliApplyManifestApiView(SmarterTokenAuthentication):
+class CliApplyManifestApiView(SmarterUnauthenticatedAPIView):
     """Smarter API command-line interface 'apply' view"""
 
     _loader: SAMLoader = None

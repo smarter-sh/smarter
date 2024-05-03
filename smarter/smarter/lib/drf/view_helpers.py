@@ -34,14 +34,12 @@ class SmarterUnauthenticatedAPIView(APIView):
     """Base API view for smarter."""
 
     permission_classes = [UnauthenticatedPermissionClass]
-    http_method_names = ["get"]
 
 
 class SmarterUnauthenticatedAPIListView(ListAPIView):
     """Base API listview for smarter."""
 
     permission_classes = [UnauthenticatedPermissionClass]
-    http_method_names = ["get"]
 
 
 # ------------------------------------------------------------------------------

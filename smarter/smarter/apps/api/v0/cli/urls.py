@@ -24,6 +24,8 @@ urlpatterns = [
     path("describe/<str:kind>/<str:name>/", CliDescribeApiView.as_view(), name="cli_describe_view"),
     path("deploy/<str:kind>/<str:name>/", CliDeployApiView.as_view(), name="cli_deploy_view"),
     path("logs/<str:kind>/<str:name>/", CliLogsApiView.as_view(), name="cli_logs_view"),
+    path("logs/<str:kind>/", CliLogsApiView.as_view(), name="cli_logs_view"),
+    path("logs/", CliLogsApiView.as_view(), name="cli_logs_view"),
     path("delete/<str:kind>/<str:name>/", CliDeleteObjectApiView.as_view(), name="cli_delete_view"),
     path("status/", CliPlatformStatusApiView.as_view(), name="cli_status_view"),
 ]
