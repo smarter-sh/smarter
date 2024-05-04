@@ -16,6 +16,7 @@ from .views.delete import CliDeleteObjectApiView
 from .views.deploy import CliDeployApiView
 from .views.describe import CliDescribeApiView
 from .views.logs import CliLogsApiView
+from .views.manifest import CliManifestExampleApiView
 from .views.status import CliPlatformStatusApiView
 
 
@@ -28,4 +29,5 @@ urlpatterns = [
     path("logs/", CliLogsApiView.as_view(), name="cli_logs_view"),
     path("delete/<str:kind>/<str:name>/", CliDeleteObjectApiView.as_view(), name="cli_delete_view"),
     path("status/", CliPlatformStatusApiView.as_view(), name="cli_status_view"),
+    path("manifest/<str:kind>/", CliManifestExampleApiView.as_view(), name="cli_manifest_view"),
 ]
