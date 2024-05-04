@@ -412,6 +412,11 @@ class Settings(BaseSettings):
         return None
 
     @property
+    def environment_cdn_domain(self) -> str:
+        """Return the CDN domain."""
+        return f"cdn.{self.environment_domain}"
+
+    @property
     def environment_domain(self) -> str:
         """Return the complete domain name."""
         if self.environment == SmarterEnvironments.PROD:

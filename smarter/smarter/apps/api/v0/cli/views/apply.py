@@ -1,18 +1,23 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'apply' view"""
 
+import logging
 from http import HTTPStatus
 from typing import Dict, Union
 
 from django.http import HttpResponse, JsonResponse
 
 from smarter.apps.account.models import UserProfile
+from smarter.apps.account.utils import smarter_admin_user_profile
 from smarter.apps.api.v0.cli.brokers import BROKERS
 from smarter.apps.api.v0.manifests.broker import AbstractBroker
 from smarter.apps.api.v0.manifests.exceptions import SAMValidationError
 from smarter.apps.api.v0.manifests.loader import SAMLoader
 from smarter.common.exceptions import SmarterExceptionBase, error_response_factory
 from smarter.lib.drf.view_helpers import SmarterUnauthenticatedAPIView
+
+
+logger = logging.getLogger(__name__)
 
 
 class CliApplyManifestApiView(SmarterUnauthenticatedAPIView):
@@ -53,7 +58,9 @@ class CliApplyManifestApiView(SmarterUnauthenticatedAPIView):
             # pylint: disable=W0511
             # TODO: setup api key authentication based on an
             # X-API-KEY header
-            return UserProfile.objects.get(user=request.user)
+            # return UserProfile.objects.get(user=request.user)
+            logger.warning("Using smarter_admin_user_profile for user profile.")
+            return smarter_admin_user_profile()
 
         Broker: AbstractBroker = None
         manifest_text: Union[str, Dict] = request.body.decode("utf-8")

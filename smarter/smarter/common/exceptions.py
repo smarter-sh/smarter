@@ -52,8 +52,8 @@ def error_response_factory(e: Exception) -> dict:
     return {
         "errorClass": error_class,
         "stacktrace": str(e),
-        "description": e.description,
-        "status": e.status,
+        "description": e.args[0] if e.args else "",  # get the error message from args
+        "status": e.status if hasattr(e, "status") else "",  # check if status attribute exists
         "args": e.args,
         "cause": str(e.__cause__),
         "context": str(e.__context__),
