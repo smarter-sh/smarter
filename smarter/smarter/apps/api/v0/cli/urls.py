@@ -18,6 +18,7 @@ from .views.describe import CliDescribeApiView
 from .views.logs import CliLogsApiView
 from .views.manifest import CliManifestExampleApiView
 from .views.status import CliPlatformStatusApiView
+from .views.whoami import CliPlatformWhoamiApiView
 
 
 urlpatterns = [
@@ -30,4 +31,5 @@ urlpatterns = [
     path("delete/<str:kind>/<str:name>/", CliDeleteObjectApiView.as_view(), name="cli_delete_view"),
     path("status/", CliPlatformStatusApiView.as_view(), name="cli_status_view"),
     path("manifest/<str:kind>/", CliManifestExampleApiView.as_view(), name="cli_manifest_view"),
+    path("whoami/", CliPlatformWhoamiApiView.as_view(), name="cli_whoami_view"),
 ]
