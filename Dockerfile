@@ -10,6 +10,8 @@
 # Use the official Python image as a parent image
 FROM --platform=linux/amd64 python:3.11-buster
 
+LABEL maintainer="Lawrence McDaniel <lawrence@querium.com"
+
 # Environment: local, alpha, beta, next, or production
 ARG ENVIRONMENT
 ENV ENVIRONMENT=$ENVIRONMENT
