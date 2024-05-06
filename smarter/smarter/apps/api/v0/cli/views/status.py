@@ -12,7 +12,7 @@ from smarter.lib.drf.view_helpers import SmarterUnauthenticatedAPIView
 class CliPlatformStatusApiView(SmarterUnauthenticatedAPIView):
     """Smarter API command-line interface 'apply' view"""
 
-    def get(self, request):
+    def post(self, request):
         """Get method for PluginManifestView."""
         try:
             data = {"CliPlatformStatusApiView": "ok"}
