@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import account_admin_user
+from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django.user import UserType
 from smarter.lib.django.validators import SmarterValidator
 
@@ -30,6 +31,7 @@ class AbstractBroker(ABC):
     _user_profile: UserProfile = None
     _loader: SAMLoader = None
     _manifest: AbstractSAMBase = None
+    _kind: str = None
 
     def __init__(
         self,
@@ -43,10 +45,17 @@ class AbstractBroker(ABC):
 
         # load, validate and parse the manifest into json
         self._loader = SAMLoader(account_number=account_number, manifest=manifest, file_path=file_path, url=url)
+        self._kind = self.loader.manifest_kind
+
+    @property
+    def kind(self) -> str:
+        """The kind of manifest."""
+        return self._kind
 
     ###########################################################################
     # Abstract Properties
     ###########################################################################
+
     @property
     @abstractmethod
     def manifest(self) -> AbstractSAMBase:
@@ -67,6 +76,9 @@ class AbstractBroker(ABC):
         )
         return self._manifest
 
+    ###########################################################################
+    # Abstract Methods
+    ###########################################################################
     @abstractmethod
     def get(self) -> dict:
         raise NotImplementedError
@@ -85,6 +97,26 @@ class AbstractBroker(ABC):
 
     @abstractmethod
     def patch(self) -> dict:
+        raise NotImplementedError
+
+    ###########################################################################
+    # Smarter manifest abstract methods. These are methods that do not intuitively
+    # map to an http verb, but are specific to the Smarter API.
+    ###########################################################################
+    def example_manifest(self) -> str:
+        """Returns an example yaml manifest document for the kind of resource."""
+        filename = self.kind + ".yaml"
+        data = {"filepath": f"https://{smarter_settings.environment_cdn_domain}/cli/example-manifests/{filename}"}
+        return data
+
+    @abstractmethod
+    def deploy(self):
+        """Deploy the resource described in the manifest."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def logs(self) -> dict:
+        """Get the logs for the resource described in the manifest."""
         raise NotImplementedError
 
     ###########################################################################
@@ -112,9 +144,12 @@ class AbstractBroker(ABC):
         self._user_profile = UserProfile.objects.get(user=self.user, account=self.account)
         return self._user_profile
 
+    def __str__(self):
+        return f"{self.manifest.apiVersion} {self.kind} Broker"
+
 
 class BrokerNotImplemented(AbstractBroker):
-    """Placeholder class for a broker that has not been implemented."""
+    """An error class to proxy for a broker class that has not been implemented."""
 
     # pylint: disable=W0231
     def __init__(self):
