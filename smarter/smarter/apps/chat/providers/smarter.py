@@ -24,7 +24,7 @@ from smarter.apps.chat.signals import (
     chat_response_failure,
     chat_response_success,
 )
-from smarter.apps.plugin.api.v0.serializers import PluginMetaSerializer
+from smarter.apps.plugin.api.v1.serializers import PluginMetaSerializer
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import VALID_CHAT_COMPLETION_MODELS

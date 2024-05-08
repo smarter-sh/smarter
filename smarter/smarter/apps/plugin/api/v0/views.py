@@ -15,7 +15,7 @@ from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 
 from smarter.apps.account.models import UserProfile
-from smarter.apps.plugin.api.v0.serializers import PluginMetaSerializer
+from smarter.apps.plugin.api.v1.serializers import PluginMetaSerializer
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.utils import add_example_plugins
@@ -83,7 +83,7 @@ class AddPluginExamplesView(SmarterAuthenticatedAPIView):
                 {"error": "Internal error", "exception": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-        return HttpResponseRedirect("/v0/plugins/")
+        return HttpResponseRedirect("/v1/plugins/")
 
 
 class PluginUploadView(SmarterAuthenticatedAPIView):
@@ -178,7 +178,7 @@ def create_plugin(request, data: dict = None):
         return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
     base_url = f"{settings.SMARTER_API_SCHEMA}://{request.get_host()}/"
-    plugins_api_url = urljoin(base_url, "/api/v0/plugins/")
+    plugins_api_url = urljoin(base_url, "/api/v1/plugins/")
 
     return HttpResponseRedirect(plugins_api_url + str(plugin.id) + "/")
 

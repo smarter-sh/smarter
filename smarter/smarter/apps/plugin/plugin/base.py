@@ -17,11 +17,11 @@ from smarter.apps.account.models import Account, UserProfile
 # pylint: disable=W0511
 # TODO: these imports need to be parameterized by version.
 from smarter.apps.account.utils import smarter_admin_user_profile
-from smarter.apps.api.v0.manifests.exceptions import SAMValidationError
-from smarter.apps.api.v0.manifests.loader import SAMLoader
-from smarter.apps.api.v0.manifests.models import UserProfileModel
-from smarter.apps.plugin.api.v0.manifests.models.plugin import SAMPlugin
-from smarter.apps.plugin.api.v0.serializers import (
+from smarter.apps.api.v1.manifests.exceptions import SAMValidationError
+from smarter.apps.api.v1.manifests.loader import SAMLoader
+from smarter.apps.api.v1.manifests.models import UserProfileModel
+from smarter.apps.plugin.api.v1.manifests.models.plugin import SAMPlugin
+from smarter.apps.plugin.api.v1.serializers import (
     PluginMetaSerializer,
     PluginPromptSerializer,
     PluginSelectorSerializer,

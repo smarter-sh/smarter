@@ -3,9 +3,9 @@ Helper class to map a Pydantic manifest model's metadata.pluginClass to an
 instance of the the correct plugin class.
 """
 
-from smarter.apps.api.v0.cli.controller import AbstractController
-from smarter.apps.plugin.api.v0.manifests.enum import SAMPluginMetadataClassValues
-from smarter.apps.plugin.api.v0.manifests.models.plugin import SAMPlugin
+from smarter.apps.api.v1.cli.controller import AbstractController
+from smarter.apps.plugin.api.v1.manifests.enum import SAMPluginMetadataClassValues
+from smarter.apps.plugin.api.v1.manifests.models.plugin import SAMPlugin
 
 from .plugin.api import PluginApi
 from .plugin.base import PluginBase

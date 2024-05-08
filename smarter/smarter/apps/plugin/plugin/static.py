@@ -2,7 +2,7 @@
 
 import logging
 
-from smarter.apps.plugin.api.v0.serializers import PluginDataStaticSerializer
+from smarter.apps.plugin.api.v1.serializers import PluginDataStaticSerializer
 from smarter.apps.plugin.models import PluginDataStatic
 
 from .base import PluginBase
