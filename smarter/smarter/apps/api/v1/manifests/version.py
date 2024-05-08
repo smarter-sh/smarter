@@ -1,3 +1,3 @@
 """Smarter Api Manifest Handler Version."""
 
-SMARTER_API_VERSION = "smarter/v1"
+SMARTER_API_VERSION = "smarter.sh/v1"
