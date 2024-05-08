@@ -111,3 +111,11 @@ class AbstractBroker(ABC):
             return self._user_profile
         self._user_profile = UserProfile.objects.get(user=self.user, account=self.account)
         return self._user_profile
+
+
+class BrokerNotImplemented(AbstractBroker):
+    """Placeholder class for a broker that has not been implemented."""
+
+    # pylint: disable=W0231
+    def __init__(self):
+        raise NotImplementedError("No broker class has been implemented for this kind of manifest.")
