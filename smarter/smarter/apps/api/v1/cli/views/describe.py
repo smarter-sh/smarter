@@ -1,26 +1,14 @@
 # pylint: disable=W0613
-"""Smarter API command-line interface 'apply' view"""
+"""Smarter API command-line interface 'describe' view"""
 
-from http import HTTPStatus
-
-from django.http import HttpResponse, JsonResponse
-
-from smarter.common.exceptions import SmarterExceptionBase, error_response_factory
-from smarter.lib.drf.view_helpers import SmarterUnauthenticatedAPIView
+from .base import CliBaseApiView
 
 
-class CliDescribeApiView(SmarterUnauthenticatedAPIView):
-    """Smarter API command-line interface 'apply' view"""
+class CliDescribeApiView(CliBaseApiView):
+    """
+    Smarter API command-line interface 'describe' view. Returns the object
+    in yaml manifest format.
+    """
 
     def post(self, request):
-        """Post method for PluginManifestView."""
-        try:
-            data = {"CliDescribeApiView": "ok"}
-            return HttpResponse(data=data, status=HTTPStatus.OK)
-        except NotImplementedError as e:
-            return JsonResponse(error_response_factory(e=e), status=HTTPStatus.NOT_IMPLEMENTED)
-        except SmarterExceptionBase as e:
-            return JsonResponse(error_response_factory(e=e), status=HTTPStatus.BAD_REQUEST)
-        # pylint: disable=W0718
-        except Exception as e:
-            return JsonResponse(error_response_factory(e=e), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+        return self.handler(self.broker.get)()

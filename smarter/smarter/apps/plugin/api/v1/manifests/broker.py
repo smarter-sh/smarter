@@ -37,7 +37,21 @@ class SAMPluginBroker(AbstractBroker):
         """
         super().__init__(account_number=account_number, manifest=manifest, file_path=file_path, url=url)
 
-    # override the base abstract manifest model with the Plugin model
+    @property
+    def plugin(self) -> PluginBase:
+        """
+        PluginController() is a helper class to map the manifest model
+        metadata.pluginClass to an instance of the the correct plugin class.
+        """
+        if self._plugin:
+            return self._plugin
+        controller = PluginController(self.manifest)
+        self._plugin = controller.obj
+        return self._plugin
+
+    ###########################################################################
+    # Smarter abstract property implementations
+    ###########################################################################
     @property
     def manifest(self) -> SAMPlugin:
         """
@@ -60,18 +74,9 @@ class SAMPluginBroker(AbstractBroker):
         )
         return self._manifest
 
-    @property
-    def plugin(self) -> PluginBase:
-        """
-        PluginController() is a helper class to map the manifest model
-        metadata.pluginClass to an instance of the the correct plugin class.
-        """
-        if self._plugin:
-            return self._plugin
-        controller = PluginController(self.manifest)
-        self._plugin = controller.obj
-        return self._plugin
-
+    ###########################################################################
+    # Smarter manifest abstract method implementations
+    ###########################################################################
     def get(self) -> dict:
         return self.plugin.to_json()
 
@@ -93,7 +98,16 @@ class SAMPluginBroker(AbstractBroker):
             self.plugin.save()
         return self.plugin.to_json()
 
-    def delete(self) -> dict:
+    def delete(self):
         if self.plugin.ready:
             self.plugin.delete()
-        return self.plugin.to_json()
+
+    def deploy(self):
+        # nothing to deploy in this case
+        return None
+
+    def logs(self) -> dict:
+        return {
+            "status": "success",
+            "message": "No logs available for this plugin",
+        }
