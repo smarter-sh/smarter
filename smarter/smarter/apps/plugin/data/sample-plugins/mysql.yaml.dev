@@ -1,5 +1,5 @@
 ---
-apiVersion: smarter.sh/v0
+apiVersion: smarter.sh/v1
 kind: Plugin
 metadata:
   name: AmazonProductApi

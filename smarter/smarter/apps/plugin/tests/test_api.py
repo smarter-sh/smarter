@@ -14,7 +14,7 @@ from django.test import Client
 from smarter.apps.account.models import Account, UserProfile
 
 # our stuff
-from smarter.lib.django.user import User
+from smarter.lib.django.user import User, UserType
 
 from ..plugin.static import PluginStatic
 from .test_setup import get_test_file_path
@@ -23,14 +23,14 @@ from .test_setup import get_test_file_path
 class TestPluginAPI(unittest.TestCase):
     """Test PluginStatic API."""
 
-    API_BASE = "/api/v0/plugins/"
+    API_BASE = "/api/v1/plugins/"
     plugin_yaml: str = None
     plugin_yaml_modified: str = None
     plugin: PluginStatic = None
     account: Account = None
-    admin_user: User = None
+    admin_user: UserType = None
     admin_user_profile: UserProfile = None
-    mortal_user: User = None
+    mortal_user: UserType = None
     mortal_user_profile: UserProfile = None
 
     @property
@@ -87,7 +87,7 @@ class TestPluginAPI(unittest.TestCase):
     def test_create(self):
         """
         Test that we can create a plugin using the PluginStatic.
-        /api/v0/plugins/upload/
+        /api/v1/plugins/upload/
         """
         client = Client()
         client.force_login(self.admin_user)
@@ -108,7 +108,7 @@ class TestPluginAPI(unittest.TestCase):
     def test_update(self):
         """
         Test that we can update a plugin using the PluginStatic.
-        /api/v0/plugins/upload
+        /api/v1/plugins/upload
         """
         client = Client()
         client.force_login(self.admin_user)
@@ -137,7 +137,7 @@ class TestPluginAPI(unittest.TestCase):
     def test_delete(self):
         """
         Test that we can delete a plugin using the PluginStatic.
-        /api/v0/plugins/<pk:int>/
+        /api/v1/plugins/<pk:int>/
         """
         client = Client()
         client.force_login(self.admin_user)

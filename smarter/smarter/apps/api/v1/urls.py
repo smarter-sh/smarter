@@ -16,19 +16,12 @@ Including another URLconf
 """
 
 from django.urls import include, path
-from django.views.generic import RedirectView
 
 from .views import CustomAPIView
 
 
 urlpatterns = [
-    path("", CustomAPIView.as_view(), name="custom_api_root_v0"),
-    path("accounts/", include("smarter.apps.account.api.v0.urls")),
-    path("accounts/", include("smarter.apps.account.api.v0.urls")),
-    path("chatbots/", include("smarter.apps.chatbot.api.v0.urls")),
-    path("chat/", include("smarter.apps.chat.api.v0.urls")),
-    # shouldn't receive traffic here. plugin was permanently ported to v1
-    path("plugin/", RedirectView.as_view(url="/api/v1/plugins/", permanent=True)),
-    # shouldn't receive traffic here. cli was developed as part of v1
-    path("cli/", RedirectView.as_view(url="/api/v1/cli/", permanent=True)),
+    path("", CustomAPIView.as_view(), name="custom_api_root_v1"),
+    path("plugins/", include("smarter.apps.plugin.api.v0.urls")),
+    path("cli/", include("smarter.apps.api.v1.cli.urls")),
 ]

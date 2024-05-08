@@ -13,7 +13,7 @@ from django.core.exceptions import ValidationError
 
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.plugin.api.v0.serializers import (
+from smarter.apps.plugin.api.v1.serializers import (
     PluginDataStaticSerializer,
     PluginMetaSerializer,
     PluginPromptSerializer,
