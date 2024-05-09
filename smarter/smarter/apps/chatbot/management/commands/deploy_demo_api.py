@@ -6,7 +6,7 @@ from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import account_admin_user
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.tasks import deploy_default_api
-from smarter.apps.plugin.plugin.static import PluginStatic
+from smarter.apps.plugin.models import PluginMeta
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
 
 
@@ -45,7 +45,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(log_prefix + "The Smarter demo API is already deployed."))
             return
 
-        for plugin in PluginStatic(user_profile=user_profile).plugins:
-            ChatBotPlugin.objects.create(chatbot=chatbot, plugin_meta=plugin.plugin_meta)
+        for plugin_meta in PluginMeta.objects.filter(account=user_profile.account):
+            ChatBotPlugin.objects.create(chatbot=chatbot, plugin_meta=plugin_meta)
 
         deploy_default_api.delay(chatbot_id=chatbot.id)

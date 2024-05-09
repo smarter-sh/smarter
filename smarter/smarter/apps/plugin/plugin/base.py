@@ -82,7 +82,11 @@ class PluginBase(ABC):
         see ./data/sample-plugins/everlasting-gobstopper.yaml for an example.
         """
         if sum([bool(data), bool(manifest), bool(plugin_id), bool(plugin_meta)]) != 1:
-            raise ValidationError("Must specify one and only one of: manifest, data, plugin_id, or plugin_meta")
+            raise ValidationError(
+                f"Must specify one and only one of: manifest, data, plugin_id, or plugin_meta. "
+                f"Received: data {bool(data)}, manifest {bool(manifest)}, "
+                f"plugin_id {bool(plugin_id)}, plugin_meta {bool(plugin_meta)}."
+            )
 
         self._selected = selected
         self._user_profile = user_profile
@@ -310,14 +314,15 @@ class PluginBase(ABC):
     def ready(self) -> bool:
         """Return whether the plugin is ready."""
 
-        # ---------------------------------------------------------------------
-        # validate the Pydantic model
-        # ---------------------------------------------------------------------
-        if not self.manifest:
-            raise SAMValidationError("Plugin manifest is not set.")
-        self.manifest.model_validate(self.manifest.model_dump())
         if not self.user_profile:
             raise SAMValidationError("UserProfile is not set.")
+
+        # ---------------------------------------------------------------------
+        # validate the Pydantic model if it exists. This is only set
+        # if we arrived here via the cli.
+        # ---------------------------------------------------------------------
+        if self.manifest:
+            self.manifest.model_validate(self.manifest.model_dump())
 
         # ---------------------------------------------------------------------
         # validate the Django ORM models
