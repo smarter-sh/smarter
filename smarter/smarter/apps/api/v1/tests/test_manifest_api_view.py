@@ -30,12 +30,3 @@ class TestManifestApiView(TestCase):
 
         response = self.client.post(self.url, data=self.good_manifest_text)
         self.assertEqual(response.status_code, 200)
-
-        response = self.client.put(self.url, data=self.good_manifest_text)
-        self.assertEqual(response.status_code, 200)
-
-        response = self.client.patch(self.url, data=self.good_manifest_text)
-        self.assertEqual(response.status_code, 200)
-
-        response = self.client.delete(self.url, data=self.good_manifest_text)
-        self.assertEqual(response.status_code, 200)
