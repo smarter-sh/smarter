@@ -155,7 +155,7 @@ class Command(BaseCommand):
         data["user"] = self.user_profile.user
         data["account"] = self.user_profile.account
         data["user_profile"] = self.user_profile
-        data["meta_data"]["author"] = self.user_profile.id
+        data["metadata"]["author"] = self.user_profile.id
 
         plugin = PluginStatic(data=data, user_profile=self.user_profile)
         return plugin
