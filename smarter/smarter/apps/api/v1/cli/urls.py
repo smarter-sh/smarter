@@ -22,14 +22,14 @@ from .views.whoami import CliPlatformWhoamiApiView
 
 
 urlpatterns = [
-    path("apply/", CliApplyManifestApiView.as_view(), name="cli_apply_view"),
-    path("describe/<str:kind>/<str:name>/", CliDescribeApiView.as_view(), name="cli_describe_view"),
-    path("deploy/<str:kind>/<str:name>/", CliDeployApiView.as_view(), name="cli_deploy_view"),
-    path("logs/<str:kind>/<str:name>/", CliLogsApiView.as_view(), name="cli_logs_view"),
-    path("logs/<str:kind>/", CliLogsApiView.as_view(), name="cli_logs_view"),
-    path("logs/", CliLogsApiView.as_view(), name="cli_logs_view"),
-    path("delete/<str:kind>/<str:name>/", CliDeleteObjectApiView.as_view(), name="cli_delete_view"),
-    path("status/", CliPlatformStatusApiView.as_view(), name="cli_status_view"),
-    path("manifest/<str:kind>/", CliManifestExampleApiView.as_view(), name="cli_manifest_view"),
-    path("whoami/", CliPlatformWhoamiApiView.as_view(), name="cli_whoami_view"),
+    path("apply/", CliApplyManifestApiView.as_view(), name="api_v1_cli_apply_view"),
+    path("describe/<str:kind>/<str:name>/", CliDescribeApiView.as_view(), name="api_v1_cli_describe_view"),
+    path("deploy/<str:kind>/<str:name>/", CliDeployApiView.as_view(), name="api_v1_cli_deploy_view"),
+    path("logs/<str:kind>/<str:name>/", CliLogsApiView.as_view(), name="api_v1_cli_logs_kind_name_view"),
+    path("logs/<str:kind>/", CliLogsApiView.as_view(), name="api_v1_cli_logs_kind_view"),
+    path("logs/", CliLogsApiView.as_view(), name="api_v1_cli_logs_view"),
+    path("delete/<str:kind>/<str:name>/", CliDeleteObjectApiView.as_view(), name="api_v1_cli_delete_view"),
+    path("status/", CliPlatformStatusApiView.as_view(), name="api_v1_cli_status_view"),
+    path("manifest/<str:kind>/", CliManifestExampleApiView.as_view(), name="api_v1_cli_manifest_view"),
+    path("whoami/", CliPlatformWhoamiApiView.as_view(), name="api_v1_cli_whoami_view"),
 ]
