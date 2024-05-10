@@ -5,23 +5,23 @@ from typing import ClassVar, Optional
 
 from pydantic import Field, model_validator
 
-from smarter.apps.api.v1.manifests.enum import SAMKeys
-from smarter.apps.api.v1.manifests.exceptions import SAMValidationError
-from smarter.apps.api.v1.manifests.models import AbstractSAMBase
-from smarter.apps.plugin.api.v1.manifests.enum import (
+from smarter.lib.manifest.enum import SAMKeys
+from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.manifest.models import AbstractSAMBase
+
+from ..const import MANIFEST_KIND
+from ..enum import (
     SAMPluginMetadataClass,
     SAMPluginMetadataClassValues,
     SAMPluginMetadataKeys,
     SAMPluginSpecKeys,
 )
-
-from .const import OBJECT_IDENTIFIER
 from .metadata import SAMPluginMetadata
 from .spec import SAMPluginSpec
 from .status import SAMPluginStatus
 
 
-MODULE_IDENTIFIER = OBJECT_IDENTIFIER
+MODULE_IDENTIFIER = MANIFEST_KIND
 
 logger = logging.getLogger(__name__)
 
@@ -33,15 +33,15 @@ class SAMPlugin(AbstractSAMBase):
 
     metadata: SAMPluginMetadata = Field(
         ...,
-        description=f"{class_identifier}.{SAMKeys.METADATA.value}[obj]: Required, the {OBJECT_IDENTIFIER} metadata.",
+        description=f"{class_identifier}.{SAMKeys.METADATA.value}[obj]: Required, the {MANIFEST_KIND} metadata.",
     )
     spec: SAMPluginSpec = Field(
         ...,
-        description=f"{class_identifier}.{SAMKeys.SPEC.value}[obj]: Required, the {OBJECT_IDENTIFIER} specification.",
+        description=f"{class_identifier}.{SAMKeys.SPEC.value}[obj]: Required, the {MANIFEST_KIND} specification.",
     )
     status: Optional[SAMPluginStatus] = Field(
         ...,
-        description=f"{class_identifier}.{SAMKeys.STATUS.value}[obj]: Optional, Read-only. Stateful status information about the {OBJECT_IDENTIFIER}.",
+        description=f"{class_identifier}.{SAMKeys.STATUS.value}[obj]: Optional, Read-only. Stateful status information about the {MANIFEST_KIND}.",
     )
 
     @model_validator(mode="after")

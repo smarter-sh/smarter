@@ -8,13 +8,13 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlparse import parse as sql_parse
 from sqlparse.exceptions import SQLParseError
 
-from smarter.apps.api.v1.manifests.exceptions import SAMValidationError
-from smarter.apps.api.v1.manifests.models import (
-    AbstractSAMSpecBase,
-    HttpRequest,
-    SqlConnection,
-)
-from smarter.apps.plugin.api.v1.manifests.enum import (
+from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
+from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.manifest.models import AbstractSAMSpecBase
+
+from ..const import MANIFEST_KIND
+from ..enum import (
     SAMPluginMetadataClass,
     SAMPluginMetadataClassValues,
     SAMPluginSpecKeys,
@@ -22,14 +22,12 @@ from smarter.apps.plugin.api.v1.manifests.enum import (
     SAMPluginSpecSelectorKeyDirectiveValues,
     SAMPluginSpecSelectorKeys,
 )
-from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
-from smarter.lib.django.validators import SmarterValidator
-
-from .const import OBJECT_IDENTIFIER
+from .http_request import HttpRequest
+from .sql_connection import SqlConnection
 
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
-MODULE_IDENTIFIER = f"{OBJECT_IDENTIFIER}.{filename}"
+MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 
 
@@ -41,7 +39,7 @@ class SAMPluginSpecSelector(BaseModel):
     directive: str = Field(
         ...,
         description=(
-            f"{class_identifier}.directive[str]: Required. the kind of selector directive to use for the {OBJECT_IDENTIFIER}. "
+            f"{class_identifier}.directive[str]: Required. the kind of selector directive to use for the {MANIFEST_KIND}. "
             f"Must be one of: {SAMPluginSpecSelectorKeyDirectiveValues.all_values()}"
         ),
     )
@@ -49,7 +47,7 @@ class SAMPluginSpecSelector(BaseModel):
         None,
         description=(
             f"{class_identifier}.searchTerms[list]. Optional. The keyword search terms to use when the "
-            f"{OBJECT_IDENTIFIER} directive is '{SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS.value}'. "
+            f"{MANIFEST_KIND} directive is '{SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS.value}'. "
             "Keywords are most effective when constrained to 1 or 2 words "
             "each and lists are limited to a few dozen items."
         ),
@@ -108,15 +106,15 @@ class SAMPluginSpecPrompt(BaseModel):
     systemRole: str = Field(
         ...,
         description=(
-            f"{class_identifier}.systemRole[str]. Required. The system role that the {OBJECT_IDENTIFIER} will use for the LLM "
+            f"{class_identifier}.systemRole[str]. Required. The system role that the {MANIFEST_KIND} will use for the LLM "
             "text completion prompt. Be verbose and specific. Ensure that systemRole accurately conveys to the LLM "
-            f"how you want it to use the {OBJECT_IDENTIFIER} data that is returned."
+            f"how you want it to use the {MANIFEST_KIND} data that is returned."
         ),
     )
     model: str = Field(
         DEFAULT_MODEL,
         description=(
-            f"{class_identifier}.model[str] Optional. The model of the {OBJECT_IDENTIFIER}. Defaults to {DEFAULT_MODEL}. "
+            f"{class_identifier}.model[str] Optional. The model of the {MANIFEST_KIND}. Defaults to {DEFAULT_MODEL}. "
             f"Must be one of: {VALID_CHAT_COMPLETION_MODELS}"
         ),
     )
@@ -125,7 +123,7 @@ class SAMPluginSpecPrompt(BaseModel):
         gte=0,
         lte=1.0,
         description=(
-            f"{class_identifier}.temperature[float] Optional. The temperature of the {OBJECT_IDENTIFIER}. "
+            f"{class_identifier}.temperature[float] Optional. The temperature of the {MANIFEST_KIND}. "
             f"Defaults to {DEFAULT_TEMPERATURE}. "
             "Should be between 0 and 1.0. "
             "The higher the temperature, the more creative the response. "
@@ -137,7 +135,7 @@ class SAMPluginSpecPrompt(BaseModel):
         gt=0,
         description=(
             f"{class_identifier}.maxTokens[int]. Optional. "
-            f"The maxTokens of the {OBJECT_IDENTIFIER}. Defaults to {DEFAULT_MAXTOKENS}. "
+            f"The maxTokens of the {MANIFEST_KIND}. Defaults to {DEFAULT_MAXTOKENS}. "
             "The maximum number of tokens the LLM should generate in the prompt response. "
         ),
     )
@@ -198,14 +196,14 @@ class SAMPluginSpecData(BaseModel):
     description: str = Field(
         ...,
         description=(
-            f"{class_identifier}.description[str]: A narrative description of the {OBJECT_IDENTIFIER} features "
+            f"{class_identifier}.description[str]: A narrative description of the {MANIFEST_KIND} features "
             "that is provided to the LLM as part of a tool_chain dict"
         ),
     )
     staticData: Optional[dict] = Field(
         None,
         description=(
-            f"{class_identifier}.staticData[obj]: The static data returned by the {OBJECT_IDENTIFIER} when the "
+            f"{class_identifier}.staticData[obj]: The static data returned by the {MANIFEST_KIND} when the "
             f"class is '{SAMPluginMetadataClassValues.STATIC.value}'. LLM's are adept at understanding the context of "
             "json data structures. Try to provide granular and specific data elements."
         ),
@@ -213,14 +211,14 @@ class SAMPluginSpecData(BaseModel):
     sqlData: Optional[SAMPluginSpecDataSql] = Field(
         None,
         description=(
-            f"{class_identifier}.sqlData[obj]: The SQL connection and query to use for the {OBJECT_IDENTIFIER} return data when "
+            f"{class_identifier}.sqlData[obj]: The SQL connection and query to use for the {MANIFEST_KIND} return data when "
             f"the class is '{SAMPluginMetadataClassValues.SQL.value}'"
         ),
     )
     apiData: Optional[HttpRequest] = Field(
         None,
         description=(
-            f"{class_identifier}.apiData[obj]: The rest API connection and endpoint to use for the {OBJECT_IDENTIFIER} "
+            f"{class_identifier}.apiData[obj]: The rest API connection and endpoint to use for the {MANIFEST_KIND} "
             f"return data when the class is '{SAMPluginMetadataClassValues.API.value}'"
         ),
     )
@@ -252,16 +250,16 @@ class SAMPluginSpec(AbstractSAMSpecBase):
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
     selector: SAMPluginSpecSelector = Field(
-        ..., description=f"{class_identifier}.selector[obj]: the selector logic to use for the {OBJECT_IDENTIFIER}"
+        ..., description=f"{class_identifier}.selector[obj]: the selector logic to use for the {MANIFEST_KIND}"
     )
     prompt: SAMPluginSpecPrompt = Field(
         ...,
-        description=f"{class_identifier}.prompt[obj]: the LLM prompt engineering to apply to the {OBJECT_IDENTIFIER}",
+        description=f"{class_identifier}.prompt[obj]: the LLM prompt engineering to apply to the {MANIFEST_KIND}",
     )
     data: SAMPluginSpecData = Field(
         ...,
         description=(
-            f"{class_identifier}.data[obj]: the json data returned by the {OBJECT_IDENTIFIER}. "
+            f"{class_identifier}.data[obj]: the json data returned by the {MANIFEST_KIND}. "
             f"This should be one of the following kinds: {SAMPluginMetadataClassValues.all_values()}"
         ),
     )

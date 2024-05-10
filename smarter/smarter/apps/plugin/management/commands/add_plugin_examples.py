@@ -1,3 +1,4 @@
+# pylint: disable=W0613
 """Add plugin examples to a user account."""
 
 from django.core.management.base import BaseCommand

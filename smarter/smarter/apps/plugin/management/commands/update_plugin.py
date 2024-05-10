@@ -1,3 +1,4 @@
+# pylint: disable=W0613
 """This module is used to update an existing plugin using manage.py"""
 
 import yaml
@@ -29,7 +30,7 @@ class Command(BaseCommand):
             except yaml.YAMLError as exc:
                 print("Error in configuration file:", exc)
 
-            user_profile = data["meta_data"]["author"]
+            user_profile = data["metadata"]["author"]
             data["user_profile"] = user_profile
             data["user"] = user_profile.user
             data["account"] = user_profile.account

@@ -5,7 +5,6 @@ import logging
 from functools import lru_cache
 
 import yaml
-from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from taggit.managers import TaggableManager
@@ -16,6 +15,8 @@ from smarter.lib.django.model_helpers import TimestampedModel
 
 
 logger = logging.getLogger(__name__)
+
+SMARTER_PLUGIN_MAX_DATA_RESULTS = 50
 
 
 def dict_key_cleaner(key: str) -> str:
@@ -70,7 +71,6 @@ class PluginMeta(TimestampedModel):
     name = models.CharField(
         help_text="The name of the plugin. Example: 'HR Policy Update' or 'Public Relation Talking Points'.",
         max_length=255,
-        default="PluginMeta",
     )
     description = models.TextField(
         help_text="A brief description of the plugin. Be verbose, but not too verbose.",
@@ -170,12 +170,12 @@ class PluginDataStatic(TimestampedModel):
         if isinstance(self.return_data, list):
             retval = self.return_data
             if isinstance(retval, list) and len(retval) > 0:
-                if len(retval) > settings.SMARTER_PLUGIN_MAX_DATA_RESULTS:
+                if len(retval) > SMARTER_PLUGIN_MAX_DATA_RESULTS:
                     logger.warning(
                         "PluginDataStatic.sanitized_return_data: Truncating return_data to %s items.",
-                        {settings.SMARTER_PLUGIN_MAX_DATA_RESULTS},
+                        {SMARTER_PLUGIN_MAX_DATA_RESULTS},
                     )
-                retval = retval[: settings.SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136
+                retval = retval[:SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136
                 retval = list_of_dicts_to_dict(data=retval)
         else:
             raise SmarterValueError("return_data must be a dict or a list or None")
@@ -194,17 +194,17 @@ class PluginDataStatic(TimestampedModel):
         elif isinstance(self.return_data, list):
             retval = self.return_data
             if isinstance(retval, list) and len(retval) > 0:
-                if len(retval) > settings.SMARTER_PLUGIN_MAX_DATA_RESULTS:
+                if len(retval) > SMARTER_PLUGIN_MAX_DATA_RESULTS:
                     logger.warning(
                         "PluginDataStatic.return_data_keys: Truncating return_data to %s items.",
-                        {settings.SMARTER_PLUGIN_MAX_DATA_RESULTS},
+                        {SMARTER_PLUGIN_MAX_DATA_RESULTS},
                     )
-                retval = retval[: settings.SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136
+                retval = retval[:SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136
                 retval = list_of_dicts_to_list(data=retval)
         else:
             raise SmarterValueError("return_data must be a dict or a list or None")
 
-        return retval[: settings.SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136
+        return retval[:SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136
 
     @property
     def data(self) -> dict:

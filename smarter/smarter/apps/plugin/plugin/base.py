@@ -1,3 +1,4 @@
+# pylint: disable=import-outside-toplevel
 """A Compound Model class for managing plugins."""
 
 import copy
@@ -8,24 +9,12 @@ from abc import ABC, abstractmethod
 from typing import Any, Union
 
 import yaml
-from django.core.exceptions import ValidationError
 from django.db import transaction
 from rest_framework import serializers
 
+from smarter.apps.account.api.v1.manifests.models import UserProfileModel
 from smarter.apps.account.models import Account, UserProfile
-
-# pylint: disable=W0511
-# TODO: these imports need to be parameterized by version.
 from smarter.apps.account.utils import smarter_admin_user_profile
-from smarter.apps.api.v1.manifests.exceptions import SAMValidationError
-from smarter.apps.api.v1.manifests.loader import SAMLoader
-from smarter.apps.api.v1.manifests.models import UserProfileModel
-from smarter.apps.plugin.api.v1.manifests.models.plugin import SAMPlugin
-from smarter.apps.plugin.api.v1.serializers import (
-    PluginMetaSerializer,
-    PluginPromptSerializer,
-    PluginSelectorSerializer,
-)
 from smarter.apps.plugin.models import PluginMeta, PluginPrompt, PluginSelector
 from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.signals import (
@@ -37,8 +26,15 @@ from smarter.apps.plugin.signals import (
     plugin_selected,
     plugin_updated,
 )
+
+# FIX NOTE: these imports need to be parameterized by version.
+from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import UserType
+from smarter.lib.manifest.loader import SAMLoader
+
+from ..manifest.const import MANIFEST_KIND
+from ..manifest.models.plugin import SAMPlugin
 
 
 logger = logging.getLogger(__name__)
@@ -48,15 +44,16 @@ logger = logging.getLogger(__name__)
 class PluginBase(ABC):
     """An abstract base class for working with plugins."""
 
+    _kind: str = MANIFEST_KIND
     _manifest: SAMPlugin = None
 
     _plugin_meta: PluginMeta = None
     _plugin_selector: PluginSelector = None
     _plugin_prompt: PluginPrompt = None
 
-    _plugin_prompt_serializer: PluginPromptSerializer = None
-    _plugin_selector_serializer: PluginSelectorSerializer = None
-    _plugin_meta_serializer: PluginMetaSerializer = None
+    _plugin_prompt_serializer: dict = None
+    _plugin_selector_serializer: dict = None
+    _plugin_meta_serializer: dict = None
 
     _selected: bool = False
 
@@ -82,7 +79,7 @@ class PluginBase(ABC):
         see ./data/sample-plugins/everlasting-gobstopper.yaml for an example.
         """
         if sum([bool(data), bool(manifest), bool(plugin_id), bool(plugin_meta)]) != 1:
-            raise ValidationError(
+            raise SmarterValueError(
                 f"Must specify one and only one of: manifest, data, plugin_id, or plugin_meta. "
                 f"Received: data {bool(data)}, manifest {bool(manifest)}, "
                 f"plugin_id {bool(plugin_id)}, plugin_meta {bool(plugin_meta)}."
@@ -109,7 +106,11 @@ class PluginBase(ABC):
 
         if data:
             # we received a yaml or json string representation of a manifest.
-            loader = SAMLoader(account_number=self.user_profile.account.account_number, manifest=data)
+            loader = SAMLoader(
+                api_version=data["apiVersion"],
+                kind=self.kind,
+                manifest=data,
+            )
             self._manifest = SAMPlugin(
                 apiVersion=loader.manifest_api_version,
                 kind=loader.manifest_kind,
@@ -177,6 +178,11 @@ class PluginBase(ABC):
     # Base class properties
     ###########################################################################
     @property
+    def kind(self) -> str:
+        """Return the kind of the plugin."""
+        return self._kind
+
+    @property
     def manifest(self) -> SAMPlugin:
         """Return the Pydandic model of the plugin."""
         return self._manifest
@@ -192,33 +198,29 @@ class PluginBase(ABC):
     def id(self, value: int):
         """Set the id of the plugin."""
         if not self.user_profile:
-            raise SAMValidationError(
+            raise SmarterValueError(
                 "Configuration error: UserProfile must be set before initializing a plugin instance by its ORM model id."
             )
 
         try:
             self._plugin_meta = PluginMeta.objects.get(pk=value)
-            self._plugin_meta_serializer = PluginMetaSerializer(self.plugin_meta)
         except PluginMeta.DoesNotExist as e:
-            raise SAMValidationError("PluginMeta.DoesNotExist") from e
+            raise SmarterValueError("PluginMeta.DoesNotExist") from e
 
         try:
             self._plugin_selector = PluginSelector.objects.get(plugin=self.plugin_meta)
-            self._plugin_selector_serializer = PluginSelectorSerializer(self.plugin_selector)
         except PluginSelector.DoesNotExist as e:
-            raise SAMValidationError("PluginSelector.DoesNotExist") from e
+            raise SmarterValueError("PluginSelector.DoesNotExist") from e
 
         try:
             self._plugin_prompt = PluginPrompt.objects.get(plugin=self.plugin_meta)
-            self._plugin_prompt_serializer = PluginPromptSerializer(self.plugin_prompt)
         except PluginPrompt.DoesNotExist as e:
-            raise SAMValidationError("PluginPrompt.DoesNotExist") from e
+            raise SmarterValueError("PluginPrompt.DoesNotExist") from e
 
         try:
             self._plugin_data = self.plugin_data_class.objects.get(plugin=self.plugin_meta)
-            self._plugin_data_serializer = self.plugin_data_serializer_class(self.plugin_data)
         except self.plugin_data_class.DoesNotExist as e:
-            raise SAMValidationError(f"{self.plugin_data_class.__name__}.DoesNotExist") from e
+            raise SmarterValueError(f"{self.plugin_data_class.__name__}.DoesNotExist") from e
 
     @property
     def plugin_meta(self) -> PluginMeta:
@@ -231,8 +233,12 @@ class PluginBase(ABC):
         return self._plugin_meta
 
     @property
-    def plugin_meta_serializer(self) -> PluginMetaSerializer:
+    def plugin_meta_serializer(self) -> dict:
         """Return the plugin meta serializer."""
+        if not self._plugin_meta_serializer:
+            from smarter.apps.plugin.api.v1.serializers import PluginMetaSerializer
+
+            self._plugin_meta_serializer = PluginMetaSerializer(self.plugin_meta)
         return self._plugin_meta_serializer
 
     @property
@@ -256,8 +262,12 @@ class PluginBase(ABC):
         return self._plugin_selector
 
     @property
-    def plugin_selector_serializer(self) -> PluginSelectorSerializer:
+    def plugin_selector_serializer(self) -> dict:
         """Return the plugin selector serializer."""
+        if not self._plugin_selector_serializer:
+            from smarter.apps.plugin.api.v1.serializers import PluginSelectorSerializer
+
+            self._plugin_selector_serializer = PluginSelectorSerializer(self.plugin_selector)
         return self._plugin_selector_serializer
 
     @property
@@ -276,8 +286,12 @@ class PluginBase(ABC):
         return self._plugin_prompt
 
     @property
-    def plugin_prompt_serializer(self) -> PluginPromptSerializer:
+    def plugin_prompt_serializer(self) -> dict:
         """Return the plugin prompt serializer."""
+        if not self._plugin_prompt_serializer:
+            from smarter.apps.plugin.api.v1.serializers import PluginPromptSerializer
+
+            self._plugin_prompt_serializer = PluginPromptSerializer(self.plugin_prompt)
         return self._plugin_prompt_serializer
 
     @property
@@ -315,7 +329,7 @@ class PluginBase(ABC):
         """Return whether the plugin is ready."""
 
         if not self.user_profile:
-            raise SAMValidationError("UserProfile is not set.")
+            raise SmarterValueError("UserProfile is not set.")
 
         # ---------------------------------------------------------------------
         # validate the Pydantic model if it exists. This is only set
@@ -328,48 +342,28 @@ class PluginBase(ABC):
         # validate the Django ORM models
         # ---------------------------------------------------------------------
         if not isinstance(self.plugin_meta, PluginMeta):
-            raise SAMValidationError(
+            raise SmarterValueError(
                 f"Expected type of {PluginMeta} for self.plugin_meta, but got {type(self.plugin_meta)}."
             )
         self.plugin_meta.validate()
 
         if not isinstance(self.plugin_selector, PluginSelector):
-            raise SAMValidationError(
+            raise SmarterValueError(
                 f"Expected type of {PluginSelector} for self.plugin_selector, but got {type(self.plugin_selector)}."
             )
         self.plugin_selector.validate()
 
         if not isinstance(self.plugin_prompt, PluginPrompt):
-            raise SAMValidationError(
+            raise SmarterValueError(
                 f"Expected type of {PluginPrompt} for self.plugin_prompt, but got {type(self.plugin_prompt)}."
             )
         self.plugin_prompt.validate()
 
         if not isinstance(self.plugin_data, self.plugin_data_class):
-            raise SAMValidationError(
+            raise SmarterValueError(
                 f"Expected type of {self.plugin_data_class} for self.plugin_data, but got {type(self.plugin_data)}."
             )
         self.plugin_data.validate()
-
-        # ---------------------------------------------------------------------
-        # validate the serializers
-        # ---------------------------------------------------------------------
-        if not isinstance(self.plugin_meta_serializer, PluginMetaSerializer):
-            raise SAMValidationError(
-                f"Expected type of {PluginMetaSerializer} for self.plugin_meta_serializer, but got {type(self.plugin_meta_serializer)}."
-            )
-        if not isinstance(self.plugin_selector_serializer, PluginSelectorSerializer):
-            raise SAMValidationError(
-                f"Expected type of {PluginSelectorSerializer} for self.plugin_selector_serializer, but got {type(self.plugin_selector_serializer)}."
-            )
-        if not isinstance(self.plugin_prompt_serializer, PluginPromptSerializer):
-            raise SAMValidationError(
-                f"Expected type of {PluginPromptSerializer} for self.plugin_prompt_serializer, but got {type(self.plugin_prompt_serializer)}."
-            )
-        if not isinstance(self.plugin_data_serializer, self.plugin_data_serializer_class):
-            raise SAMValidationError(
-                f"Expected type of {self.plugin_data_serializer_class} for self.plugin_data_serializer, but got {type(self.plugin_data_serializer)}."
-            )
 
         # recast data types from Pydantic models to Django ORM models
         if not isinstance(self.user_profile, UserProfile):
@@ -377,7 +371,7 @@ class PluginBase(ABC):
             if isinstance(self.user_profile, UserProfileModel):
                 self._user_profile = UserProfile.objects.get(id=self.user_profile.id)
             else:
-                raise SAMValidationError(
+                raise SmarterValueError(
                     f"Expected type of {UserProfile} for self.user_profile, but got {type(self.user_profile)}."
                 )
 
@@ -458,7 +452,7 @@ class PluginBase(ABC):
         """Modify the system prompt based on the plugin object"""
 
         if not self.ready:
-            raise ValidationError("Plugin is not ready.")
+            raise SmarterValueError("Plugin is not ready.")
 
         for i, message in enumerate(messages):
             if message.get("role") == "system":
@@ -503,7 +497,7 @@ class PluginBase(ABC):
 
         if self.is_valid_yaml(yaml_string):
             return yaml.safe_load(yaml_string)
-        raise ValidationError("Invalid data: must be a dictionary or valid YAML.")
+        raise SmarterValueError("Invalid data: must be a dictionary or valid YAML.")
 
     def is_valid_yaml(self, data):
         """Validate a yaml string."""
@@ -522,7 +516,7 @@ class PluginBase(ABC):
             logger.debug("Created plugin %s: %s.", self.plugin_meta.name, self.plugin_meta.id)
 
         if not self.manifest:
-            raise SAMValidationError("Plugin manifest is not set.")
+            raise SmarterValueError("Plugin manifest is not set.")
 
         meta_data = self.plugin_meta_django_model
         selector = self.plugin_selector_django_model
@@ -557,7 +551,7 @@ class PluginBase(ABC):
             logger.debug("Updated plugin %s: %s.", self.name, self.id)
 
         if not self.manifest:
-            raise SAMValidationError("Plugin manifest is not set.")
+            raise SmarterValueError("Plugin manifest is not set.")
 
         meta_data = self.plugin_meta_django_model
         selector = self.plugin_selector_django_model
@@ -567,7 +561,7 @@ class PluginBase(ABC):
         meta_data_tags = meta_data.pop("tags")
 
         if not self.plugin_meta:
-            raise SAMValidationError(
+            raise SmarterValueError(
                 f"Plugin {self.manifest.metadata.name} for account {self.user_profile.account.account_number} does not exist."
             )
         self.id = self.plugin_meta.id
@@ -700,15 +694,19 @@ class PluginBase(ABC):
         transaction.on_commit(lambda: committed(new_plugin_id=plugin_meta_copy.id))
         return plugin_meta_copy.id
 
-    def to_json(self) -> dict:
+    def to_json(self, version: str = "v1") -> dict:
         """Return a plugin in JSON format."""
         if self.ready:
-            retval = {
-                "id": self.id,
-                "metadata": {**self.plugin_meta_serializer.data, "id": self.plugin_meta.id},
-                "selector": {**self.plugin_selector_serializer.data, "id": self.plugin_selector.id},
-                "prompt": {**self.plugin_prompt_serializer.data, "id": self.plugin_prompt.id},
-                "plugin_data": {**self.plugin_data_serializer.data, "id": self.plugin_data.id},
-            }
-            return json.loads(json.dumps(retval))
+            if version == "v1":
+                retval = {
+                    "id": self.id,
+                    "metadata": {**self.plugin_meta_serializer.data, "id": self.plugin_meta.id},
+                    "spec": {
+                        "selector": {**self.plugin_selector_serializer.data, "id": self.plugin_selector.id},
+                        "prompt": {**self.plugin_prompt_serializer.data, "id": self.plugin_prompt.id},
+                        "data": {**self.plugin_data_serializer.data, "id": self.plugin_data.id},
+                    },
+                }
+                return json.loads(json.dumps(retval))
+            raise SmarterValueError(f"Invalid version: {version}")
         return None

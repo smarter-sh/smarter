@@ -1,6 +1,6 @@
 """Smarter API V0 PLugin Manifest - enumerated datatypes."""
 
-from smarter.apps.api.v1.manifests.enum import SmarterEnumAbstract
+from smarter.lib.manifest.enum import SmarterEnumAbstract
 
 
 ###############################################################################
