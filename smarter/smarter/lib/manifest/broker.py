@@ -1,14 +1,17 @@
 """Smarter API Manifest Abstract Broker class."""
 
+import typing
 from abc import ABC, abstractmethod
 
-from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.utils import account_admin_user
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django.user import UserType
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.models import AbstractSAMBase
+
+
+if typing.TYPE_CHECKING:
+    from smarter.apps.account.models import Account, UserProfile
 
 
 class AbstractBroker(ABC):
@@ -26,9 +29,6 @@ class AbstractBroker(ABC):
     """
 
     _api_version: str = None
-    _account: Account = None
-    _user: UserType = None
-    _user_profile: UserProfile = None
     _loader: SAMLoader = None
     _manifest: AbstractSAMBase = None
     _kind: str = None
@@ -44,7 +44,6 @@ class AbstractBroker(ABC):
     ):
         SmarterValidator.validate_account_number(account_number)
         self._api_version = api_version
-        self._account = Account.objects.get(account_number=account_number)
 
         # load, validate and parse the manifest into json
         # FIX NOTE: need to iron out how to handle the manifest kind
@@ -141,22 +140,16 @@ class AbstractBroker(ABC):
         return self._loader
 
     @property
-    def account(self) -> Account:
-        return self._account
+    def account(self) -> "Account":
+        raise NotImplementedError
 
     @property
-    def user(self) -> UserType:
-        if self._user:
-            return self._user
-        self._user = account_admin_user(self.manifest.metadata.account)
-        return self._user
+    def user(self) -> "UserType":
+        raise NotImplementedError
 
     @property
-    def user_profile(self) -> UserProfile:
-        if self._user_profile:
-            return self._user_profile
-        self._user_profile = UserProfile.objects.get(user=self.user, account=self.account)
-        return self._user_profile
+    def user_profile(self) -> "UserProfile":
+        raise NotImplementedError
 
     def __str__(self):
         return f"{self.manifest.apiVersion} {self.kind} Broker"

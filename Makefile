@@ -159,6 +159,7 @@ python-init:
 python-lint:
 	make check-python
 	make pre-commit-run
+	pylint smarter/smarter
 
 python-clean:
 	rm -rf venv

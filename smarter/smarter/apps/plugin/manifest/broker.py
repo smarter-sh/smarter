@@ -1,12 +1,13 @@
 """Smarter API Plugin Manifest handler"""
 
+from smarter.apps.account.account_mixin import AccountMixin
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.plugin import SAMPlugin
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.lib.manifest.broker import AbstractBroker
 
 
-class SAMPluginBroker(AbstractBroker):
+class SAMPluginBroker(AbstractBroker, AccountMixin):
     """
     Smarter API Plugin Manifest Broker.This class is responsible for
     - loading, validating and parsing the Smarter Api yaml Plugin manifests
