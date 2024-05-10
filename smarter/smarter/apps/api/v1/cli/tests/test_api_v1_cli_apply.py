@@ -76,7 +76,7 @@ class TestApiV1CliApply(TestCase):
 
         client = Client()
         url = reverse("api_v1_cli_describe_view", kwargs={"kind": "plugin", "name": "CliTestPlugin"})
-        response = client.post(url, data=self.good_manifest_text)
+        response = client.post(url)
 
         self.assertEqual(response.status_code, 200)
 
@@ -96,7 +96,7 @@ class TestApiV1CliApply(TestCase):
 
         client = Client()
         url = reverse("api_v1_cli_logs_kind_name_view", kwargs={"kind": "chatbot", "name": "CliTestPlugin"})
-        response = client.post(url, data=self.good_manifest_text)
+        response = client.post(url)
 
         self.assertEqual(response.status_code, 200)
 
@@ -105,7 +105,7 @@ class TestApiV1CliApply(TestCase):
 
         client = Client()
         url = reverse("api_v1_cli_status_view")
-        response = client.post(url, data=self.good_manifest_text)
+        response = client.post(url)
 
         self.assertEqual(response.status_code, 200)
 
@@ -113,8 +113,8 @@ class TestApiV1CliApply(TestCase):
         """manifest - test that we get OK responses on post using a valid manifest"""
 
         client = Client()
-        url = reverse("api_v1_cli_manifest_view", kwargs={"kind": "chatbot"})
-        response = client.post(url, data=self.good_manifest_text)
+        url = reverse("api_v1_cli_manifest_view", kwargs={"kind": "plugin"})
+        response = client.post(url)
 
         self.assertEqual(response.status_code, 200)
 
@@ -123,7 +123,7 @@ class TestApiV1CliApply(TestCase):
 
         client = Client()
         url = reverse("api_v1_cli_whoami_view")
-        response = client.post(url, data=self.good_manifest_text)
+        response = client.post(url)
 
         self.assertEqual(response.status_code, 200)
 
