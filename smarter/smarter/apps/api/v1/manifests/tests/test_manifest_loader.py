@@ -5,10 +5,12 @@ import os
 import unittest
 
 from smarter.apps.account.models import Account
-from smarter.apps.api.v1.manifests.enum import SAMKeys
-from smarter.apps.api.v1.manifests.exceptions import SAMValidationError
-from smarter.apps.api.v1.manifests.loader import SAMLoader
 from smarter.common.const import PYTHON_ROOT
+from smarter.lib.manifest.enum import SAMKeys
+from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.manifest.loader import SAMLoader
+
+from ..version import SMARTER_API_VERSION
 
 
 class TestSAMLoader(unittest.TestCase):
@@ -24,18 +26,30 @@ class TestSAMLoader(unittest.TestCase):
     def test_valid_manifest(self):
         """Test valid file path and that we can instantiate with errors"""
 
-        SAMLoader(account_number=self.account.account_number, file_path=self.good_manifest_path)
+        SAMLoader(
+            api_version=SMARTER_API_VERSION,
+            kind="Plugin",
+            file_path=self.good_manifest_path,
+        )
 
     def test_validate(self):
         """Test valid file path and that we can instantiate with errors"""
 
-        loader = SAMLoader(account_number=self.account.account_number, file_path=self.good_manifest_path)
+        loader = SAMLoader(
+            api_version=SMARTER_API_VERSION,
+            kind="Plugin",
+            file_path=self.good_manifest_path,
+        )
         loader.validate_manifest()
 
     def test_valid_manifest_properties(self):
         """Test valid file path and that we can instantiate with errors"""
 
-        loader = SAMLoader(account_number=self.account.account_number, file_path=self.good_manifest_path)
+        loader = SAMLoader(
+            api_version=SMARTER_API_VERSION,
+            kind="Plugin",
+            file_path=self.good_manifest_path,
+        )
         sam = loader
         self.assertTrue(sam.specification is not None, f"sam.specification is {sam.specification}")
         self.assertTrue(isinstance(sam.specification, dict), f"sam.specification is {type(sam.specification)}")
@@ -65,7 +79,11 @@ class TestSAMLoader(unittest.TestCase):
     def test_get_key(self):
         """Test valid file path and that we can instantiate with errors"""
 
-        loader = SAMLoader(account_number=self.account.account_number, file_path=self.good_manifest_path)
+        loader = SAMLoader(
+            api_version=SMARTER_API_VERSION,
+            kind="Plugin",
+            file_path=self.good_manifest_path,
+        )
         sam = loader
         self.assertEqual(sam.get_key("apiVersion"), "smarter/v1")
         self.assertEqual(sam.get_key("kind"), "Plugin")
@@ -74,7 +92,11 @@ class TestSAMLoader(unittest.TestCase):
     def test_missing_apiversion(self):
         """Test valid file path and that we can instantiate with errors"""
 
-        loader = SAMLoader(account_number=self.account.account_number, file_path=self.good_manifest_path)
+        loader = SAMLoader(
+            api_version=SMARTER_API_VERSION,
+            kind="Plugin",
+            file_path=self.good_manifest_path,
+        )
         sam = loader
         sam.data.pop("apiVersion")
         try:
@@ -87,7 +109,11 @@ class TestSAMLoader(unittest.TestCase):
     def test_unknown_kind(self):
         """Test valid file path and that we can instantiate with errors"""
 
-        loader = SAMLoader(account_number=self.account.account_number, file_path=self.good_manifest_path)
+        loader = SAMLoader(
+            api_version=SMARTER_API_VERSION,
+            kind="Plugin",
+            file_path=self.good_manifest_path,
+        )
         sam = loader
         sam.data["kind"] = "WrongKind"
         try:
@@ -104,7 +130,11 @@ class TestSAMLoader(unittest.TestCase):
         """Test that a validation error is raised for an invalid file format"""
 
         try:
-            SAMLoader(account_number=self.account.account_number, file_path=self.invalid_file_format)
+            SAMLoader(
+                api_version=SMARTER_API_VERSION,
+                kind="Plugin",
+                file_path=self.invalid_file_format,
+            )
         except SAMValidationError as e:
             self.assertEqual(str(e), "Invalid data format. Supported formats: json, yaml")
         else:

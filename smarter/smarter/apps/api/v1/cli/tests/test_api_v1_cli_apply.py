@@ -1,5 +1,5 @@
 # pylint: disable=wrong-import-position
-"""Test Api V1 CLI - Apply."""
+"""Test api/v1/cli - Apply"""
 
 import os
 
@@ -16,8 +16,8 @@ from smarter.apps.plugin.models import (
 from smarter.common.const import PYTHON_ROOT
 
 
-class TestV1CliApply(TestCase):
-    """Test Api V1 CLI - Apply"""
+class TestApiV1CliApply(TestCase):
+    """Test api/v1/cli - Apply"""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -48,7 +48,7 @@ class TestV1CliApply(TestCase):
         self.assertTrue(plugin_data_static.description.startswith("an example plugin to integrate with OpenAI"))
         static_data = plugin_data_static.sanitized_return_data
         self.assertTrue(isinstance(static_data, dict))
-        self.assertIsNone(static_data.get("platformPprovider"))
+        self.assertIsNone(static_data.get("platformProvider"))
         self.assertIsNone(static_data.get("about"))
         self.assertIsNone(static_data.get("links"))
 
