@@ -1,0 +1,260 @@
+"""Smarter API Manifest Loader base class."""
+
+import json
+import logging
+from enum import Enum
+from typing import Any
+
+import requests
+import waffle
+import yaml
+
+from .enum import SAMDataFormats, SAMKeys, SAMMetadataKeys, SAMSpecificationKeyOptions
+from .exceptions import SAMValidationError
+
+
+logger = logging.getLogger(__name__)
+
+
+def validate_key(key: str, key_value: Any, spec: Any):
+    """
+    Validate a key against a spec. Of note:
+    - If a key's value is a list then validate the value of the key against the list
+    - If a key's value is a tuple then validate the value of the key against the tuple, as follows:
+        - The first element of the tuple is the expected data type
+        - The second element of the tuple is the key type (required, optional, readonly)
+    - otherwise, validate the value of the key against spec value
+    """
+    # all keys must be strings
+    if isinstance(key, Enum):
+        key = key.value
+    if not isinstance(key, str):
+        raise SAMValidationError(f"Invalid data type for key {key}. Expected str but got {type(key)}")
+
+    # validate that key's value exists in the spec list
+    if isinstance(spec, list):
+        if key_value not in spec:
+            raise SAMValidationError(f"Invalid value {key_value} for key {key}. Expected one of {spec}")
+
+    # validate that key value's data type matches the spec's data type, and if required, that the key exists
+    elif isinstance(spec, tuple):
+        type_spec = spec[0]
+        options_list = spec[1]
+        # validate that value exists for required key
+        if SAMSpecificationKeyOptions.REQUIRED in options_list and not key_value:
+            raise SAMValidationError(f"Missing required key {key}")
+        if not SAMSpecificationKeyOptions.OPTIONAL and not isinstance(key_value, type_spec):
+            raise SAMValidationError(
+                f"Invalid data type for key {key}. Expected {spec[0]} but got {type(key_value)}: key_value={key_value} spec={spec[0]}"
+            )
+
+    # validate that key value is the same as the spec value
+    else:
+        if not isinstance(key_value, type(spec)):
+            # possibility #1: the data is missing, so it's a NoneType
+            if key_value is None:
+                raise SAMValidationError(f"Missing required key {key}")
+            # possibility #2: the data exists but is the wrong type
+            raise SAMValidationError(
+                f"Invalid key_value type for key {key}. Expected {type(spec)} but got {type(key_value)}"
+            )
+        if key_value != spec:
+            raise SAMValidationError(f"Invalid value for key {key}. Expected {spec} but got {key_value}")
+
+
+class SAMLoader:
+    """
+    Smarter API Manifest Loader base class.
+    """
+
+    _raw_data: str = None
+    _dict_data: dict = None
+    _data_format: SAMDataFormats = None
+    _specification: dict = {
+        SAMKeys.APIVERSION: "smarter.sh/v1",
+        SAMKeys.KIND: "PLACEHOLDER",
+        SAMKeys.METADATA: {
+            SAMMetadataKeys.NAME: (str, [SAMSpecificationKeyOptions.REQUIRED]),
+            SAMMetadataKeys.DESCRIPTION: (str, [SAMSpecificationKeyOptions.REQUIRED]),
+            SAMMetadataKeys.VERSION: (str, [SAMSpecificationKeyOptions.REQUIRED]),
+            SAMMetadataKeys.TAGS: (list, [SAMSpecificationKeyOptions.OPTIONAL]),
+            SAMMetadataKeys.ANNOTATIONS: (list, [SAMSpecificationKeyOptions.OPTIONAL]),
+        },
+        SAMKeys.SPEC: (dict, [SAMSpecificationKeyOptions.REQUIRED]),
+        SAMKeys.STATUS: (
+            dict,
+            [SAMSpecificationKeyOptions.READONLY, SAMSpecificationKeyOptions.OPTIONAL],
+        ),
+    }
+
+    # pylint: disable=too-many-arguments
+    def __init__(
+        self,
+        api_version: str,
+        kind: str,
+        manifest: str = None,
+        file_path: str = None,
+        url: str = None,
+    ):
+        self._specification[SAMKeys.APIVERSION] = api_version
+        self._specification[SAMKeys.KIND] = kind
+
+        # 1. acquire the manifest data
+        # ---------------------------------------------------------------------
+        if sum([bool(manifest), bool(file_path), bool(url)]) == 0:
+            raise SAMValidationError("One of manifest, file_path, or url is required.")
+        if sum([bool(manifest), bool(file_path), bool(url)]) > 1:
+            raise SAMValidationError("Only one of manifest, file_path, or url is allowed.")
+
+        if manifest:
+            self._raw_data = manifest
+        elif file_path:
+            with open(file_path, encoding="utf-8") as file:
+                self._raw_data = file.read()
+        elif url:
+            self._raw_data = requests.get(url, timeout=30).text
+
+        # 2. validate a json representation of the manifest using our in-house Enumerated data types.
+        # ---------------------------------------------------------------------
+        # Note that child classes are expected to
+        # override the specification as well as validate() in order to add
+        # the specification details of their own individual manfiests.
+        # Therefore, this call will only validate the top-level keys and values
+        # of the manifest.
+        self.validate_manifest()
+
+    # -------------------------------------------------------------------------
+    # data setters and getters. Sort out whether we received JSON or YAML data
+    # -------------------------------------------------------------------------
+    @property
+    def specification(self) -> dict:
+        return self._specification
+
+    @property
+    def raw_data(self) -> str:
+        return self._raw_data
+
+    @property
+    def json_data(self) -> dict:
+        if isinstance(self.raw_data, dict):
+            return self.raw_data
+        try:
+            return json.loads(self.raw_data)
+        except json.JSONDecodeError:
+            return None
+
+    @property
+    def yaml_data(self) -> str:
+        try:
+            data = yaml.safe_load(self.raw_data)
+            if isinstance(data, dict):
+                return data
+        except yaml.YAMLError:
+            pass
+        return None
+
+    @property
+    def data_format(self) -> SAMDataFormats:
+        if self._data_format:
+            return self._data_format
+        if self.json_data:
+            self._data_format = SAMDataFormats.JSON
+        elif self.yaml_data:
+            self._data_format = SAMDataFormats.YAML
+        return self._data_format
+
+    @property
+    def data(self) -> dict:
+        if self._dict_data:
+            return self._dict_data
+        if self.data_format == SAMDataFormats.JSON:
+            self._dict_data = self.json_data
+        elif self.data_format == SAMDataFormats.YAML:
+            self._dict_data = self.yaml_data
+        return self._dict_data
+
+    @property
+    def formatted_data(self) -> str:
+        return json.dumps(self.data, indent=4)
+
+    # -------------------------------------------------------------------------
+    # class methods
+    # -------------------------------------------------------------------------
+    def get_key(self, key) -> any:
+        try:
+            return self.data[key]
+        except KeyError:
+            pass
+        return None
+
+    def validate_manifest(self):
+        """
+        Validate the manifest data. Recursively validate dict keys based on the
+        contents of spec.
+        """
+
+        def recursive_validator(recursed_data: dict = None, recursed_spec: dict = None):
+            this_overall_spec = recursed_spec or self.specification
+            this_data = recursed_data or self.data
+            if not this_data:
+                raise SAMValidationError("Received empty or invalid data.")
+
+            for key, key_spec in this_overall_spec.items():
+                if isinstance(key, Enum):
+                    key = key.value
+                key_value = this_data.get(key)
+                if isinstance(key_spec, dict):
+                    if waffle.switch_is_active("manifest_logging"):
+                        logger.info("recursing to key %s with spec %s using data %s", key, key_spec, key_value)
+                    recursive_validator(recursed_data=key_value, recursed_spec=key_spec)
+                else:
+                    if waffle.switch_is_active("manifest_logging"):
+                        logger.info("Validating key %s with spec %s using data %s", key, key_spec, key_value)
+                    validate_key(
+                        key=key,
+                        key_value=key_value,
+                        spec=key_spec,
+                    )
+
+        # top-level validations of the manifest itself.
+        if not self.raw_data:
+            raise SAMValidationError("Received empty or invalid data.")
+        if not self.data:
+            raise SAMValidationError("Invalid data format. Supported formats: json, yaml")
+        # recursively validate the json representation of the manifest data
+        recursive_validator()
+
+    # -------------------------------------------------------------------------
+    # manifest properties
+    # -------------------------------------------------------------------------
+    @property
+    def manifest_metadata_keys(self) -> list[str]:
+        return SAMMetadataKeys.all_values()
+
+    @property
+    def manifest_spec_keys(self) -> list[str]:
+        return []
+
+    @property
+    def manifest_status_keys(self) -> list[str]:
+        return []
+
+    @property
+    def manifest_api_version(self) -> str:
+        return self.get_key(SAMKeys.APIVERSION.value)
+
+    @property
+    def manifest_kind(self) -> str:
+        return self.get_key(SAMKeys.KIND.value)
+
+    @property
+    def manifest_metadata(self) -> any:
+        return self.get_key(SAMKeys.METADATA.value)
+
+    @property
+    def manifest_spec(self) -> any:
+        return self.get_key(SAMKeys.SPEC.value)
+
+    @property
+    def manifest_status(self) -> any:
+        return self.get_key(SAMKeys.STATUS.value)
