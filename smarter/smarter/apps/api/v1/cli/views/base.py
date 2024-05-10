@@ -8,12 +8,14 @@ from django.http import HttpResponse, JsonResponse
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import smarter_admin_user_profile
-from smarter.apps.api.v1.cli.brokers import BROKERS
-from smarter.apps.api.v1.manifests.broker import AbstractBroker
-from smarter.apps.api.v1.manifests.exceptions import SAMValidationError
-from smarter.apps.api.v1.manifests.loader import SAMLoader
 from smarter.common.exceptions import SmarterExceptionBase, error_response_factory
 from smarter.lib.drf.view_helpers import SmarterUnauthenticatedAPIView
+from smarter.lib.manifest.broker import AbstractBroker
+from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.manifest.loader import SAMLoader
+
+from ...manifests.version import SMARTER_API_VERSION
+from ..brokers import BROKERS
 
 
 logger = logging.getLogger(__name__)
@@ -76,7 +78,13 @@ class CliBaseApiView(SmarterUnauthenticatedAPIView):
         try:
             if not self.user_profile.account:
                 raise SAMValidationError("Could not find account for user.")
-            self._loader = SAMLoader(account_number=self.user_profile.account.account_number, manifest=manifest_text)
+
+            # FIX NOTE: need to iron out how to handle the manifest kind.
+            self._loader = SAMLoader(
+                api_version=SMARTER_API_VERSION,
+                kind="Plugin",
+                manifest=manifest_text,
+            )
             if not self.loader:
                 raise SAMValidationError("Could not load manifest.")
         except SmarterExceptionBase as e:
