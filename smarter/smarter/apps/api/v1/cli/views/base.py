@@ -7,7 +7,7 @@ from typing import Dict, Union
 from django.http import JsonResponse
 
 from smarter.apps.account.models import UserProfile
-from smarter.apps.account.utils import smarter_admin_user_profile
+from smarter.apps.account.utils import smarter_admin_user_profile, user_profile_for_user
 from smarter.common.exceptions import SmarterExceptionBase, error_response_factory
 from smarter.lib.drf.view_helpers import SmarterUnauthenticatedAPIView
 from smarter.lib.manifest.broker import AbstractBroker
@@ -32,21 +32,65 @@ class CliBaseApiView(SmarterUnauthenticatedAPIView):
     _loader: SAMLoader = None
     _broker: AbstractBroker = None
     _user_profile: UserProfile = None
+    _manifest_text: Union[str, Dict] = None
+    _manifest_kind: str = None
+    _manifest_load_failed: bool = False
 
     @property
     def loader(self) -> SAMLoader:
-        """Get the SAMLoader instance."""
+        """
+        Get the SAMLoader instance. a SAMLoader instance is used to load
+        raw manifest text into a Pydantic model. It performs cursory validations
+        on identifying keys values like the api version and kind.
+        """
+        if not self._loader and not self._manifest_load_failed:
+            try:
+                self._loader = SAMLoader(
+                    api_version=SMARTER_API_VERSION,
+                    manifest=self.manifest_text,
+                )
+                if not self._loader:
+                    raise SAMValidationError("")
+            except SAMValidationError:
+                # some endpoints don't require a manifest, so we
+                # deal with this inside the downstream views.
+                self._manifest_load_failed = True
+
         return self._loader
 
     @property
     def broker(self) -> AbstractBroker:
-        """Get the AbstractBroker instance."""
+        """
+        Use a loader to try to instantiate a broker. A broker is a class that
+        implements the broker service pattern. It provides a service interface
+        that 'brokers' the http request for the underlying object that provides
+        the object-specific service (create, update, get, delete, etc).
+        """
+        if self.loader and not self._broker:
+            Broker = BROKERS.get(self.manifest_kind)
+            if not Broker:
+                raise NotImplementedError(f"Unsupported manifest kind: {self.manifest_kind or 'None'}")
+            self._broker = Broker(
+                account_number=self.user_profile.account.account_number, manifest=self.loader.yaml_data
+            )
+            if not self._broker:
+                raise SAMValidationError("Could not load manifest.")
+
         return self._broker
 
     @property
     def user_profile(self) -> UserProfile:
-        """Get the UserProfile instance."""
         return self._user_profile
+
+    @property
+    def manifest_text(self) -> Union[str, Dict]:
+        return self._manifest_text
+
+    @property
+    def manifest_kind(self) -> str:
+        if not self._manifest_kind:
+            self._manifest_kind = self.loader.manifest_kind if self.loader else None
+        return self._manifest_kind
 
     def dispatch(self, request, *args, **kwargs):
         """
@@ -63,58 +107,27 @@ class CliBaseApiView(SmarterUnauthenticatedAPIView):
             """Get the user profile."""
 
             # pylint: disable=W0511
-            # TODO: setup api key authentication based on an
-            # X-API-KEY header
-            # return UserProfile.objects.get(user=request.user)
-            logger.warning("Using smarter_admin_user_profile for user profile.")
-            return smarter_admin_user_profile()
+            # TODO: setup api key authentication based on an X-API-KEY header
+            logger.warning("Provisionally using django authentication.")
 
-        Broker: AbstractBroker = None
-        manifest_text: Union[str, Dict] = request.body.decode("utf-8")
-        manifest_kind: str = None
-        self._user_profile = get_user_profile(self, request)
+            if request.user.is_anonymous:
+                return smarter_admin_user_profile()
 
-        # 1.) ensure that we're idientifiable
-        try:
-            if not self.user_profile.account:
-                raise SAMValidationError("Could not find account for user.")
-
-        except SmarterExceptionBase as e:
-            return JsonResponse(error_response_factory(e=e), status=HTTPStatus.BAD_REQUEST)
-        # pylint: disable=W0718
-        except Exception as e:
-            return JsonResponse(error_response_factory(e=e), status=HTTPStatus.INTERNAL_SERVER_ERROR)
-
-        # 2.) use the loader to retrieve the manifest 'kind'
-        try:
-            self._loader = SAMLoader(
-                api_version=SMARTER_API_VERSION,
-                kind="Plugin",
-                manifest=manifest_text,
-            )
-        except SAMValidationError:
-            # some endpoints don't require a manifest, so we
-            # deal with this inside the downstream views.
-            pass
-
-        # 3.) use a manifest broker to convert the manifest text to a
-        #     Pydantic model, and then use this to initialize the underlying
-        #     Python object that will provide the services for the broker pattern.
-        if self.loader:
-            manifest_kind = self.loader.manifest_kind
+            user_profile = user_profile_for_user(user=request.user)
+            if user_profile:
+                return user_profile
 
             try:
-                Broker = BROKERS.get(manifest_kind)
-                if Broker is None:
-                    raise NotImplementedError(f"Unsupported manifest kind: {manifest_kind}")
-                self._broker = Broker(account_number=self.user_profile.account.account_number, manifest=manifest_text)
-                if not self.broker:
-                    raise SAMValidationError("Could not load manifest.")
+                raise SAMValidationError("Could not find account for user.")
             except SmarterExceptionBase as e:
-                return JsonResponse(error_response_factory(e=e), status=HTTPStatus.BAD_REQUEST)
-            # pylint: disable=W0718
-            except Exception as e:
-                return JsonResponse(error_response_factory(e=e), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+                return JsonResponse(error_response_factory(e=e), status=HTTPStatus.FORBIDDEN)
+
+        # Manifest parsing and broker instantiation are lazy implementations.
+        # So for now, we'll only set the private class variable _manifest_text
+        # from the request body, and then we'll leave it to the child views to
+        # decide if/when to actually parse the manifest and instantiate the broker.
+        self._manifest_text = request.body.decode("utf-8")
+        self._user_profile = get_user_profile(self, request)
 
         return super().dispatch(request, *args, **kwargs)
 

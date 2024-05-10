@@ -91,13 +91,14 @@ class SAMLoader:
     def __init__(
         self,
         api_version: str,
-        kind: str,
+        kind: str = None,
         manifest: str = None,
         file_path: str = None,
         url: str = None,
     ):
         self._specification[SAMKeys.APIVERSION] = api_version
-        self._specification[SAMKeys.KIND] = kind
+        if kind:
+            self._specification[SAMKeys.KIND] = kind
 
         # 1. acquire the manifest data
         # ---------------------------------------------------------------------
@@ -148,7 +149,7 @@ class SAMLoader:
         try:
             data = yaml.safe_load(self.raw_data)
             if isinstance(data, dict):
-                return data
+                return self.raw_data
         except yaml.YAMLError:
             pass
         return None
@@ -245,6 +246,8 @@ class SAMLoader:
 
     @property
     def manifest_kind(self) -> str:
+        if not self._specification[SAMKeys.KIND]:
+            self._specification[SAMKeys.KIND] = self.get_key(SAMKeys.KIND.value)
         return self.get_key(SAMKeys.KIND.value)
 
     @property

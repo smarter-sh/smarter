@@ -17,6 +17,17 @@ def account_for_user(user) -> Account:
     return user_profile.account
 
 
+def user_profile_for_user(user) -> Account:
+    """
+    Locates the user_profile for a given user, or None.
+    """
+    try:
+        user_profile = UserProfile.objects.get(user=user)
+    except UserProfile.DoesNotExist:
+        return None
+    return user_profile
+
+
 def account_admin_user(account: Account) -> UserType:
     """
     Returns the account admin user for the given account.
