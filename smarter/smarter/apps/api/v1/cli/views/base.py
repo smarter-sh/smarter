@@ -17,6 +17,7 @@ from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 
+from ...manifests.enum import SAMKinds
 from ...manifests.version import SMARTER_API_VERSION
 from ..brokers import BROKERS
 
@@ -96,8 +97,6 @@ class CliBaseApiView(APIView):
             )
             if not self._broker:
                 raise SAMValidationError("Could not load manifest.")
-        if self.manifest_kind and not self._broker:
-            pass
 
         return self._broker
 
@@ -125,6 +124,12 @@ class CliBaseApiView(APIView):
         implements the broker service pattern for the underlying object.
         """
         self._manifest_kind = str(kwargs.get("kind")).title()
+        if self.manifest_kind:
+            if str(self.manifest_kind).lower() not in SAMKinds.all_slugs():
+                return JsonResponse(
+                    error_response_factory(e=NotImplementedError(f"Unsupported manifest kind: {self.manifest_kind}")),
+                    status=HTTPStatus.NOT_IMPLEMENTED,
+                )
 
         # Manifest parsing and broker instantiation are lazy implementations.
         # So for now, we'll only set the private class variable _manifest_text
