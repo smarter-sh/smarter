@@ -41,15 +41,17 @@ class Command(BaseCommand):
 
         # generate an auth token (api key) for this job.
         token_record, token_key = SmarterAuthToken.objects.create(
-            account=account, user=user, description="single-use key created by manage.py verify_api_v1_cli_endpoints"
+            account=account,
+            user=user,
+            description="DELETE ME: single-use key created by manage.py verify_api_v1_cli_endpoints",
         )
 
-        self.stdout.write("*" * 80)
         self.stdout.write(self.style.NOTICE("Running API CLI endpoint verifications."))
-        self.stdout.write(f"Environment: {smarter_settings.environment}")
-        self.stdout.write(f"Account: {account_number}")
-        self.stdout.write(f"User: {user.username}")
-        self.stdout.write(self.style.SUCCESS(f"single-use API key: {token_key}"))
+        self.stdout.write("*" * 80)
+        self.stdout.write("Environment: " + self.style.SUCCESS(f"{smarter_settings.environment}"))
+        self.stdout.write("Account: " + self.style.SUCCESS(f"{account_number}"))
+        self.stdout.write("User: " + self.style.SUCCESS(f"{user.username}"))
+        self.stdout.write("single-use API key: " + self.style.SUCCESS(f"{token_key}"))
         self.stdout.write("*" * 80)
 
         def get_response(path):
@@ -69,8 +71,9 @@ class Command(BaseCommand):
             response_content = response.content.decode("utf-8")
             response_json = json.loads(response_content)
 
-            print("url: ", url)
-            print("response: ", json.dumps(response_json, indent=4), "\n")
+            self.stdout.write("url: " + self.style.NOTICE(url))
+            response = json.dumps(response_json, indent=4) + "\n"
+            self.stdout.write("response: " + self.style.SUCCESS(response))
 
         path = reverse("api_v1_cli_status_view")
         get_response(path)
