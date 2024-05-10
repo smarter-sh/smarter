@@ -125,7 +125,6 @@ class PluginBase(ABC):
             self.create()
 
         if self.manifest:
-            self._user_profile = self.manifest.metadata.userProfile
             self.create()
 
         if self.ready:
@@ -250,12 +249,12 @@ class PluginBase(ABC):
         if not self.manifest:
             return None
         return {
-            "account": Account.objects.get(id=self.manifest.metadata.account.id),
+            "account": self.user_profile.account,
             "name": self.manifest.metadata.name,
             "description": self.manifest.metadata.description,
             "plugin_class": self.manifest.metadata.pluginClass,
             "version": self.manifest.metadata.version,
-            "author": UserProfile.objects.get(id=self.manifest.metadata.userProfile.id),
+            "author": self.user_profile,
             "tags": self.manifest.metadata.tags,
         }
 
@@ -311,10 +310,8 @@ class PluginBase(ABC):
     def user_profile(self) -> UserProfile:
         """Return the user profile."""
         if not self._user_profile:
-            self._user_profile = self.manifest.metadata.userProfile if self.manifest else None
-            if not self._user_profile:
-                self._user_profile = smarter_admin_user_profile()
-                logger.warning("UserProfile not set. Falling back to Smarter admin user profile.")
+            self._user_profile = smarter_admin_user_profile()
+            logger.warning("UserProfile not set. Falling back to Smarter admin user profile.")
         return self._user_profile
 
     @property

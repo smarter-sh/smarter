@@ -137,7 +137,7 @@ docker-test:
 docker-prune:
 	make docker-check && \
 	find ./ -name celerybeat-schedule -type f -exec rm -f {} + && \
-	docker system prune -a && \
+	docker system prune -a --volumes && \
 	docker volume prune -f && \
 	docker builder prune -a -f
 

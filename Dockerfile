@@ -55,12 +55,15 @@ RUN apt-get install -y ca-certificates curl gnupg && \
     echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list  && \
     apt-get update && apt-get install nodejs -y
 
-# Install system packages for the Smarter application.
-RUN apt-get install default-mysql-client build-essential libssl-dev libffi-dev python3-dev python-dev -y && \
-    rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update
+
+RUN apt-get install default-mysql-client build-essential libssl-dev libffi-dev python3-dev python-dev -y
+
+RUN rm -rf /var/lib/apt/lists/*
 
 # Download kubectl, which is a requirement for using the Kubernetes API
-RUN apt-get update && apt-get install -y curl && \
+RUN apt-get install -y curl && \
     curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" && \
     chmod +x ./kubectl && \
     mv ./kubectl /usr/local/bin/kubectl

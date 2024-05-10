@@ -9,7 +9,7 @@ services:
   smarter-mysql:
     container_name: smarter-mysql
     image: mysql:latest
-    command: --default-authentication-plugin=mysql_native_password
+    command: ["mysqld", "--mysql-native-password=ON"]
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: smarter
