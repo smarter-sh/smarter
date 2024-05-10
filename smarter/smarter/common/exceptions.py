@@ -1,9 +1,5 @@
 """Module exceptions.py"""
 
-from http import HTTPStatus
-
-import openai
-
 
 class SmarterExceptionBase(Exception):
     """Exception raised for errors in the configuration."""
@@ -27,19 +23,6 @@ class SmarterIlligalInvocationError(SmarterExceptionBase):
 
 class SmarterBusinessRuleViolation(SmarterExceptionBase):
     """Exception raised when policies are violated."""
-
-
-EXCEPTION_MAP = {
-    SmarterValueError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
-    SmarterConfigurationError: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
-    SmarterIlligalInvocationError: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
-    openai.APIError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
-    ValueError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
-    TypeError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
-    NotImplementedError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
-    openai.OpenAIError: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
-    Exception: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
-}
 
 
 def error_response_factory(e: Exception) -> dict:

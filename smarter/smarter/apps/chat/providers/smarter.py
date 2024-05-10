@@ -28,7 +28,11 @@ from smarter.apps.plugin.api.v1.serializers import PluginMetaSerializer
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
-from smarter.common.exceptions import EXCEPTION_MAP
+from smarter.common.exceptions import (
+    SmarterConfigurationError,
+    SmarterIlligalInvocationError,
+    SmarterValueError,
+)
 from smarter.lib.django.user import UserType
 
 from .utils import (
@@ -44,6 +48,18 @@ from .validators import validate_completion_request, validate_item
 logger = logging.getLogger(__name__)
 openai.organization = smarter_settings.openai_api_organization
 openai.api_key = smarter_settings.openai_api_key.get_secret_value()
+
+EXCEPTION_MAP = {
+    SmarterValueError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
+    SmarterConfigurationError: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
+    SmarterIlligalInvocationError: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
+    openai.APIError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
+    ValueError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
+    TypeError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
+    NotImplementedError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
+    openai.OpenAIError: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
+    Exception: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
+}
 
 
 # pylint: disable=too-many-locals,too-many-statements,too-many-arguments
@@ -233,6 +249,6 @@ def handler(
 
     # success!! return the response
     response = second_iteration.get("response") or first_iteration.get("response")
-    response["meta_data"] = {"tool_calls": serialized_tool_calls, **request_meta_data}
+    response["metadata"] = {"tool_calls": serialized_tool_calls, **request_meta_data}
     chat_response_success.send(sender=handler, chat=chat, request=first_iteration.get("request"), response=response)
     return http_response_factory(status_code=HTTPStatus.OK, body=response)
