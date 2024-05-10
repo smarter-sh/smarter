@@ -77,6 +77,13 @@ class Account(TimestampedModel):
         SmarterValidator.validate_account_number(self.account_number)
         super().save(*args, **kwargs)
 
+    @classmethod
+    def get_account_by_number(cls, account_number):
+        try:
+            return cls.objects.get(account_number=account_number)
+        except cls.DoesNotExist:
+            return None
+
     # pylint: disable=missing-class-docstring
     class Meta:
         verbose_name = "Account"
