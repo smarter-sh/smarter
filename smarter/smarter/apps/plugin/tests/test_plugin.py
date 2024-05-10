@@ -9,9 +9,8 @@ import unittest
 from time import sleep
 
 import yaml
-from django.core.exceptions import ValidationError
+from pydantic_core import ValidationError as PydanticValidationError
 
-# our stuff
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.api.v1.serializers import (
     PluginDataStaticSerializer,
@@ -39,6 +38,9 @@ from smarter.apps.plugin.signals import (
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.lib.django.user import User
+
+# our stuff
+from smarter.lib.manifest.exceptions import SAMValidationError
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes
@@ -101,11 +103,11 @@ class TestPlugin(unittest.TestCase):
 
         # create a 4-digit random string of alphanumeric characters
         username = "testuser_" + os.urandom(4).hex()
-        self.user = User.objects.create(username=username, password="12345")
+        self.user = User.objects.create(
+            username=username, password="12345", is_active=True, is_staff=True, is_superuser=False
+        )
         self.account = Account.objects.create(company_name="Test Account")
         self.user_profile = UserProfile.objects.create(user=self.user, account=self.account, is_test=True)
-
-        self.data["user_profile"] = self.user_profile
 
     def tearDown(self):
         """Clean up test fixtures."""
@@ -141,7 +143,7 @@ class TestPlugin(unittest.TestCase):
         self.assertIsInstance(plugin.plugin_prompt_serializer, PluginPromptSerializer)
         self.assertIsInstance(plugin.plugin_selector_serializer, PluginSelectorSerializer)
 
-        self.assertEqual(plugin.plugin_meta.name, self.data["meta_data"]["name"])
+        self.assertEqual(plugin.plugin_meta.name, self.data["metadata"]["name"])
         self.assertEqual(plugin.plugin_selector.directive, self.data["selector"]["directive"])
         self.assertEqual(plugin.plugin_prompt.system_role, self.data["prompt"]["system_role"])
         self.assertEqual(plugin.plugin_prompt.model, self.data["prompt"]["model"])
@@ -193,7 +195,7 @@ class TestPlugin(unittest.TestCase):
         plugin_created.connect(self.plugin_created_signal_handler, dispatch_uid="plugin_created_test_to_json")
         plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_to_json")
 
-        plugin = PluginStatic(data=self.data)
+        plugin = PluginStatic(user_profile=self.user_profile, data=self.data)
         to_json = plugin.to_json()
 
         # verify that signal was sent
@@ -201,12 +203,12 @@ class TestPlugin(unittest.TestCase):
         self.assertTrue(self.signals["plugin_ready"])
 
         self.assertIsInstance(to_json, dict)
-        self.assertEqual(to_json["meta_data"]["name"], self.data["meta_data"]["name"])
-        self.assertEqual(to_json["selector"]["directive"], self.data["selector"]["directive"])
-        self.assertEqual(to_json["prompt"]["system_role"], self.data["prompt"]["system_role"])
-        self.assertEqual(to_json["prompt"]["model"], self.data["prompt"]["model"])
-        self.assertEqual(to_json["prompt"]["temperature"], self.data["prompt"]["temperature"])
-        self.assertEqual(to_json["prompt"]["max_tokens"], self.data["prompt"]["max_tokens"])
+        self.assertEqual(to_json["metadata"]["name"], self.data["metadata"]["name"])
+        self.assertEqual(to_json["spec"]["selector"]["directive"], self.data["spec"]["selector"]["directive"])
+        self.assertEqual(to_json["spec"]["prompt"]["system_role"], self.data["spec"]["prompt"]["systemRole"])
+        self.assertEqual(to_json["spec"]["prompt"]["model"], self.data["spec"]["prompt"]["model"])
+        self.assertEqual(to_json["spec"]["prompt"]["temperature"], self.data["spec"]["prompt"]["temperature"])
+        self.assertEqual(to_json["spec"]["prompt"]["max_tokens"], self.data["spec"]["prompt"]["maxTokens"])
 
     def test_delete(self):
         """Test that we can delete a plugin using the PluginStatic."""
@@ -257,89 +259,93 @@ class TestPlugin(unittest.TestCase):
     # pylint: disable=too-many-statements
     def test_validation_bad_structure(self):
         """Test that the PluginStatic raises an error when given bad data."""
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(PydanticValidationError):
             PluginStatic(data={})
 
         bad_data = self.data.copy()
-        bad_data.pop("meta_data")
-        with self.assertRaises(ValidationError):
+        bad_data.pop("metadata")
+        with self.assertRaises(KeyError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data.pop("selector")
-        with self.assertRaises(ValidationError):
+        bad_data["spec"].pop("selector")
+        with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data.pop("prompt")
-        with self.assertRaises(ValidationError):
+        bad_data["spec"].pop("prompt")
+        with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data.pop("plugin_data")
-        with self.assertRaises(ValidationError):
+        bad_data["spec"].pop("data")
+        with self.assertRaises(SAMValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["meta_data"].pop("name")
-        with self.assertRaises(ValidationError):
+        bad_data["metadata"].pop("name")
+        with self.assertRaises(SAMValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["selector"].pop("directive")
-        with self.assertRaises(ValidationError):
+
+        print("I AM HERE.")
+        print(self.data)
+
+        bad_data["spec"]["selector"].pop("directive")
+        with self.assertRaises(SAMValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["prompt"].pop("system_role")
-        with self.assertRaises(ValidationError):
+        bad_data["spec"]["prompt"].pop("systemRole")
+        with self.assertRaises(SAMValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["prompt"].pop("model")
-        with self.assertRaises(ValidationError):
+        bad_data["spec"]["prompt"].pop("model")
+        with self.assertRaises(SAMValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["prompt"].pop("temperature")
-        with self.assertRaises(ValidationError):
+        bad_data["spec"]["prompt"].pop("temperature")
+        with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["prompt"].pop("max_tokens")
-        with self.assertRaises(ValidationError):
+        bad_data["spec"]["prompt"].pop("max_tokens")
+        with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["plugin_data"].pop("description")
-        with self.assertRaises(ValidationError):
+        bad_data["spec"]["data"].pop("description")
+        with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["plugin_data"].pop("return_data")
-        with self.assertRaises(ValidationError):
+        bad_data["spec"]["data"].pop("staticData")
+        with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
     def test_validation_bad_data_types(self):
         """Test that the PluginStatic raises an error when given bad data."""
         bad_data = self.data.copy()
-        bad_data["meta_data"]["tags"] = "not a list"
-        with self.assertRaises(ValidationError):
+        bad_data["metadata"]["tags"] = "not a list"
+        with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["selector"]["search_terms"] = "not a list"
-        with self.assertRaises(ValidationError):
+        bad_data["spec"]["selector"]["searchTerms"] = "not a list"
+        with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["prompt"]["temperature"] = "not a float"
-        with self.assertRaises(ValidationError):
+        bad_data["spec"]["prompt"]["temperature"] = "not a float"
+        with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["prompt"]["max_tokens"] = "not an int"
-        with self.assertRaises(ValidationError):
+        bad_data["spec"]["prompt"]["max_tokens"] = "not an int"
+        with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
     def test_clone(self):
@@ -395,7 +401,7 @@ class TestPlugin(unittest.TestCase):
 
         # ensure that the json output still matches the original data
         self.assertIsInstance(to_json, dict)
-        self.assertEqual(to_json["meta_data"]["name"], self.data["meta_data"]["name"])
+        self.assertEqual(to_json["metadata"]["name"], self.data["metadata"]["name"])
         self.assertEqual(to_json["selector"]["directive"], self.data["selector"]["directive"])
         self.assertEqual(to_json["prompt"]["system_role"], self.data["prompt"]["system_role"])
         self.assertEqual(to_json["prompt"]["model"], self.data["prompt"]["model"])

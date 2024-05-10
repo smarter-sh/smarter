@@ -5,17 +5,16 @@ from typing import ClassVar
 
 from pydantic import Field, field_validator
 
-from smarter.apps.api.v1.manifests.exceptions import SAMValidationError
-from smarter.apps.api.v1.manifests.models import AbstractSAMMetadataBase
-
 # Plugin
-from smarter.apps.plugin.api.v1.manifests.enum import SAMPluginMetadataClassValues
+from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.manifest.models import AbstractSAMMetadataBase
 
-from .const import OBJECT_IDENTIFIER
+from ..const import MANIFEST_KIND
+from ..enum import SAMPluginMetadataClassValues
 
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
-MODULE_IDENTIFIER = f"{OBJECT_IDENTIFIER}.{filename}"
+MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 
 
 class SAMPluginMetadata(AbstractSAMMetadataBase):
@@ -25,7 +24,7 @@ class SAMPluginMetadata(AbstractSAMMetadataBase):
 
     pluginClass: str = Field(
         ...,
-        description=f"{class_identifier}.pluginClass: The class of the {OBJECT_IDENTIFIER}. Must be one of {SAMPluginMetadataClassValues.all_values()}",
+        description=f"{class_identifier}.pluginClass: The class of the {MANIFEST_KIND}. Must be one of {SAMPluginMetadataClassValues.all_values()}",
     )
 
     @field_validator("pluginClass")

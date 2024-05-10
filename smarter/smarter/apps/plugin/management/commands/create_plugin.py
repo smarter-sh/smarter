@@ -1,3 +1,4 @@
+# pylint: disable=W0613
 """This module is used to create a new plugin using manage.py"""
 
 import yaml
@@ -60,7 +61,7 @@ class Command(BaseCommand):
             data["user"] = user
             data["account"] = account
             data["user_profile"] = user_profile
-            data["meta_data"]["author"] = user_profile.id
+            data["metadata"]["author"] = user_profile.id
 
         plugin = PluginStatic(data=data, user_profile=user_profile)
         print(plugin.to_json())

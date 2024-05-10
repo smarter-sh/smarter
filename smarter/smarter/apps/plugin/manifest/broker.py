@@ -1,9 +1,9 @@
 """Smarter API Plugin Manifest handler"""
 
-from smarter.apps.api.v1.manifests.broker import AbstractBroker
-from smarter.apps.plugin.api.v1.manifests.models.plugin import SAMPlugin
-from smarter.apps.plugin.controller import PluginController
+from smarter.apps.plugin.manifest.controller import PluginController
+from smarter.apps.plugin.manifest.models.plugin import SAMPlugin
 from smarter.apps.plugin.plugin.base import PluginBase
+from smarter.lib.manifest.broker import AbstractBroker
 
 
 class SAMPluginBroker(AbstractBroker):
@@ -20,8 +20,10 @@ class SAMPluginBroker(AbstractBroker):
     _manifest: SAMPlugin = None
     _plugin: PluginBase = None
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
+        api_version: str,
         account_number: str,
         manifest: str = None,
         file_path: str = None,
@@ -35,7 +37,9 @@ class SAMPluginBroker(AbstractBroker):
         to ensure that the manifest is a valid yaml file and that it contains
         the required top-level keys.
         """
-        super().__init__(account_number=account_number, manifest=manifest, file_path=file_path, url=url)
+        super().__init__(
+            api_version=api_version, account_number=account_number, manifest=manifest, file_path=file_path, url=url
+        )
 
     @property
     def plugin(self) -> PluginBase:

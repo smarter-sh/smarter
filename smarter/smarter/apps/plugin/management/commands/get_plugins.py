@@ -1,3 +1,4 @@
+# pylint: disable=W0613
 """This module retrieves a list of plugins for an account using manage.py on the command line."""
 
 from django.core.management.base import BaseCommand
@@ -27,5 +28,5 @@ class Command(BaseCommand):
             return
 
         plugins = Plugins(account=account)
-        retval = [{"id": plugin["id"], "name": plugin["meta_data"]["name"]} for plugin in plugins.data]
+        retval = [{"id": plugin["id"], "name": plugin["metadata"]["name"]} for plugin in plugins.data]
         print(retval)

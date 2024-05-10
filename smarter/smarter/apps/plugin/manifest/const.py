@@ -1,3 +1,3 @@
 """Smarter API V0 Plugin Manifest Constants"""
 
-OBJECT_IDENTIFIER = "Plugin"
+MANIFEST_KIND = "Plugin"

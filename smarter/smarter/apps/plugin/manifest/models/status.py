@@ -3,13 +3,13 @@
 import os
 from typing import ClassVar
 
-from smarter.apps.api.v1.manifests.models import AbstractSAMStatusBase
+from smarter.lib.manifest.models import AbstractSAMStatusBase
 
-from .const import OBJECT_IDENTIFIER
+from ..const import MANIFEST_KIND
 
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
-MODULE_IDENTIFIER = f"{OBJECT_IDENTIFIER}.{filename}"
+MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 
 
 class SAMPluginStatus(AbstractSAMStatusBase):
