@@ -1,9 +1,9 @@
-# pylint: disable=import-outside-toplevel
 """A PLugin that returns a static json object stored in the Plugin itself."""
 
 import logging
 
 from smarter.apps.plugin.models import PluginDataStatic
+from smarter.apps.plugin.serializers import PluginDataStaticSerializer
 
 from .base import PluginBase
 
@@ -15,7 +15,7 @@ class PluginStatic(PluginBase):
     """A PLugin that returns a static json object stored in the Plugin itself."""
 
     _plugin_data: PluginDataStatic = None
-    _plugin_data_serializer: dict = None
+    _plugin_data_serializer: PluginDataStaticSerializer = None
 
     @property
     def plugin_data(self) -> PluginDataStatic:
@@ -28,21 +28,15 @@ class PluginStatic(PluginBase):
         return PluginDataStatic
 
     @property
-    def plugin_data_serializer(self) -> dict:
+    def plugin_data_serializer(self) -> PluginDataStaticSerializer:
         """Return the plugin data serializer."""
         if not self._plugin_data_serializer:
-            from smarter.apps.plugin.api.v1.serializers import (
-                PluginDataStaticSerializer,
-            )
-
             self._plugin_data_serializer = PluginDataStaticSerializer(self.plugin_data)
         return self._plugin_data_serializer
 
     @property
-    def plugin_data_serializer_class(self) -> type:
+    def plugin_data_serializer_class(self) -> PluginDataStaticSerializer:
         """Return the plugin data serializer class."""
-        from smarter.apps.plugin.api.v1.serializers import PluginDataStaticSerializer
-
         return PluginDataStaticSerializer
 
     @property

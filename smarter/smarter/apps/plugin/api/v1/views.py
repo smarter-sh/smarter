@@ -15,9 +15,9 @@ from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 
 from smarter.apps.account.models import UserProfile
-from smarter.apps.plugin.api.v1.serializers import PluginMetaSerializer
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.static import PluginStatic
+from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.user import User

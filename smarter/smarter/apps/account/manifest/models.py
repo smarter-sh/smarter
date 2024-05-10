@@ -2,7 +2,11 @@
 
 from pydantic import BaseModel
 
-from ..serializers import AccountSerializer, UserProfileSerializer, UserSerializer
+from smarter.apps.account.serializers import (
+    AccountSerializer,
+    UserProfileSerializer,
+    UserSerializer,
+)
 
 
 class AccountModel(BaseModel):

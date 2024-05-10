@@ -1,4 +1,3 @@
-# pylint: disable=import-outside-toplevel
 """A Compound Model class for managing plugins."""
 
 import copy
@@ -12,11 +11,16 @@ import yaml
 from django.db import transaction
 from rest_framework import serializers
 
-from smarter.apps.account.api.v1.manifests.models import UserProfileModel
+from smarter.apps.account.manifest.models import UserProfileModel
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import smarter_admin_user_profile
 from smarter.apps.plugin.models import PluginMeta, PluginPrompt, PluginSelector
 from smarter.apps.plugin.nlp import does_refer_to
+from smarter.apps.plugin.serializers import (
+    PluginMetaSerializer,
+    PluginPromptSerializer,
+    PluginSelectorSerializer,
+)
 from smarter.apps.plugin.signals import (
     plugin_called,
     plugin_cloned,
@@ -233,10 +237,9 @@ class PluginBase(ABC):
         return self._plugin_meta
 
     @property
-    def plugin_meta_serializer(self) -> dict:
+    def plugin_meta_serializer(self) -> PluginMetaSerializer:
         """Return the plugin meta serializer."""
         if not self._plugin_meta_serializer:
-            from smarter.apps.plugin.api.v1.serializers import PluginMetaSerializer
 
             self._plugin_meta_serializer = PluginMetaSerializer(self.plugin_meta)
         return self._plugin_meta_serializer
@@ -262,10 +265,9 @@ class PluginBase(ABC):
         return self._plugin_selector
 
     @property
-    def plugin_selector_serializer(self) -> dict:
+    def plugin_selector_serializer(self) -> PluginSelectorSerializer:
         """Return the plugin selector serializer."""
         if not self._plugin_selector_serializer:
-            from smarter.apps.plugin.api.v1.serializers import PluginSelectorSerializer
 
             self._plugin_selector_serializer = PluginSelectorSerializer(self.plugin_selector)
         return self._plugin_selector_serializer
@@ -286,10 +288,9 @@ class PluginBase(ABC):
         return self._plugin_prompt
 
     @property
-    def plugin_prompt_serializer(self) -> dict:
+    def plugin_prompt_serializer(self) -> PluginPromptSerializer:
         """Return the plugin prompt serializer."""
         if not self._plugin_prompt_serializer:
-            from smarter.apps.plugin.api.v1.serializers import PluginPromptSerializer
 
             self._plugin_prompt_serializer = PluginPromptSerializer(self.plugin_prompt)
         return self._plugin_prompt_serializer
