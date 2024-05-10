@@ -10,6 +10,10 @@ from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
 from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
+from smarter.apps.account.views.token_authentication_helpers import (
+    SmarterAdminAPIView,
+    SmarterAdminListAPIView,
+)
 from smarter.apps.chatbot.models import (
     ChatBot,
     ChatBotAPIKey,
@@ -20,7 +24,6 @@ from smarter.apps.chatbot.models import (
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.models import PluginMeta
 from smarter.lib.django.user import User
-from smarter.lib.drf.view_helpers import SmarterAdminAPIView, SmarterAdminListAPIView
 
 from .serializers import (
     ChatBotAPIKeySerializer,
