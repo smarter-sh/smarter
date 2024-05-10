@@ -74,42 +74,47 @@ class CliBaseApiView(SmarterUnauthenticatedAPIView):
         manifest_kind: str = None
         self._user_profile = get_user_profile(self, request)
 
-        # 1.) use the loader to retrieve the manifest 'kind'
+        # 1.) ensure that we're idientifiable
         try:
             if not self.user_profile.account:
                 raise SAMValidationError("Could not find account for user.")
 
-            # FIX NOTE: need to iron out how to handle the manifest kind.
+        except SmarterExceptionBase as e:
+            return JsonResponse(error_response_factory(e=e), status=HTTPStatus.BAD_REQUEST)
+        # pylint: disable=W0718
+        except Exception as e:
+            return JsonResponse(error_response_factory(e=e), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+        # 2.) use the loader to retrieve the manifest 'kind'
+        try:
             self._loader = SAMLoader(
                 api_version=SMARTER_API_VERSION,
                 kind="Plugin",
                 manifest=manifest_text,
             )
-            if not self.loader:
-                raise SAMValidationError("Could not load manifest.")
-        except SmarterExceptionBase as e:
-            return JsonResponse(error_response_factory(e=e), status=HTTPStatus.BAD_REQUEST)
-        # pylint: disable=W0718
-        except Exception as e:
-            return JsonResponse(error_response_factory(e=e), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+        except SAMValidationError:
+            # some endpoints don't require a manifest, so we
+            # deal with this inside the downstream views.
+            pass
 
-        manifest_kind = self.loader.manifest_kind
-
-        # 2.) use a manifest broker to convert the manifest text to a
+        # 3.) use a manifest broker to convert the manifest text to a
         #     Pydantic model, and then use this to initialize the underlying
         #     Python object that will provide the services for the broker pattern.
-        try:
-            Broker = BROKERS.get(manifest_kind)
-            if Broker is None:
-                raise SAMValidationError(f"Unsupported manifest kind: {manifest_kind}")
-            self._broker = Broker(account_number=self.user_profile.account.account_number, manifest=manifest_text)
-            if not self.broker:
-                raise SAMValidationError("Could not load manifest.")
-        except SmarterExceptionBase as e:
-            return JsonResponse(error_response_factory(e=e), status=HTTPStatus.BAD_REQUEST)
-        # pylint: disable=W0718
-        except Exception as e:
-            return JsonResponse(error_response_factory(e=e), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+        if self.loader:
+            manifest_kind = self.loader.manifest_kind
+
+            try:
+                Broker = BROKERS.get(manifest_kind)
+                if Broker is None:
+                    raise SAMValidationError(f"Unsupported manifest kind: {manifest_kind}")
+                self._broker = Broker(account_number=self.user_profile.account.account_number, manifest=manifest_text)
+                if not self.broker:
+                    raise SAMValidationError("Could not load manifest.")
+            except SmarterExceptionBase as e:
+                return JsonResponse(error_response_factory(e=e), status=HTTPStatus.BAD_REQUEST)
+            # pylint: disable=W0718
+            except Exception as e:
+                return JsonResponse(error_response_factory(e=e), status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
         return super().dispatch(request, *args, **kwargs)
 

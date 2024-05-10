@@ -5,17 +5,23 @@ from http import HTTPStatus
 
 from django.http import JsonResponse
 
+from smarter.apps.account.serializers import AccountSerializer, UserSerializer
 from smarter.common.exceptions import SmarterExceptionBase, error_response_factory
-from smarter.lib.drf.view_helpers import SmarterUnauthenticatedAPIView
+
+from .base import CliBaseApiView
 
 
-class CliPlatformWhoamiApiView(SmarterUnauthenticatedAPIView):
+class CliPlatformWhoamiApiView(CliBaseApiView):
     """Smarter API command-line interface 'apply' view"""
 
     def post(self, request):
         """Get method for PluginManifestView."""
+
         try:
-            data = {"CliPlatformWhoamiApiView": "ok"}
+            data = {
+                "user": UserSerializer(self.user_profile.user).data,
+                "account": AccountSerializer(self.user_profile.account).data,
+            }
             return JsonResponse(data=data, status=HTTPStatus.OK)
         except NotImplementedError as e:
             return JsonResponse(error_response_factory(e=e), status=HTTPStatus.NOT_IMPLEMENTED)
