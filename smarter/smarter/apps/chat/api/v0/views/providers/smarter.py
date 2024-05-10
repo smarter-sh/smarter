@@ -1,7 +1,9 @@
 # pylint: disable=R0801
 """Customer API views."""
 
-from smarter.lib.drf.view_helpers import SmarterAuthenticatedAPIView
+from smarter.apps.account.views.token_authentication_helpers import (
+    SmarterAuthenticatedAPIView,
+)
 
 
 class SmarterChatApiViewSet(SmarterAuthenticatedAPIView):
