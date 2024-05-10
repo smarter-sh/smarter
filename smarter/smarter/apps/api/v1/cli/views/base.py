@@ -4,7 +4,7 @@ import logging
 from http import HTTPStatus
 from typing import Dict, Union
 
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import smarter_admin_user_profile
@@ -106,7 +106,7 @@ class CliBaseApiView(SmarterUnauthenticatedAPIView):
             try:
                 Broker = BROKERS.get(manifest_kind)
                 if Broker is None:
-                    raise SAMValidationError(f"Unsupported manifest kind: {manifest_kind}")
+                    raise NotImplementedError(f"Unsupported manifest kind: {manifest_kind}")
                 self._broker = Broker(account_number=self.user_profile.account.account_number, manifest=manifest_text)
                 if not self.broker:
                     raise SAMValidationError("Could not load manifest.")
@@ -126,10 +126,7 @@ class CliBaseApiView(SmarterUnauthenticatedAPIView):
 
         def wrapper(*args, **kwargs):
             try:
-                retval = func(*args, **kwargs)
-                if isinstance(retval, dict):
-                    return JsonResponse(retval, status=HTTPStatus.OK)
-                return HttpResponse(status=HTTPStatus.OK)
+                return func(*args, **kwargs)
             except NotImplementedError as e:
                 return JsonResponse(error_response_factory(e=e), status=HTTPStatus.NOT_IMPLEMENTED)
             except SmarterExceptionBase as e:

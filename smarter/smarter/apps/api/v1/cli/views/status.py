@@ -8,7 +8,6 @@ from botocore.exceptions import ClientError
 from django.http import JsonResponse
 
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.exceptions import SmarterExceptionBase, error_response_factory
 
 from .base import CliBaseApiView
 
@@ -47,25 +46,20 @@ class CliPlatformStatusApiView(CliBaseApiView):
         except ClientError as e:
             return {"error": str(e)}
 
+    def status(self):
+        data = {
+            "infrastructure": {
+                "eks": self.get_eks_status(smarter_settings.aws_eks_cluster_name),
+                "mysql": self.get_rds_status(smarter_settings.aws_eks_cluster_name),
+                "aws": {
+                    "region": smarter_settings.aws_region,
+                    "status": self.get_service_status(smarter_settings.aws_region),
+                },
+            },
+        }
+
+        return JsonResponse(data=data, status=HTTPStatus.OK)
+
     def post(self, request):
         """Get method for PluginManifestView."""
-        try:
-            data = {
-                "infrastructure": {
-                    "eks": self.get_eks_status(smarter_settings.aws_eks_cluster_name),
-                    "mysql": self.get_rds_status(smarter_settings.aws_eks_cluster_name),
-                    "aws": {
-                        "region": smarter_settings.aws_region,
-                        "status": self.get_service_status(smarter_settings.aws_region),
-                    },
-                },
-            }
-
-            return JsonResponse(data=data, status=HTTPStatus.OK)
-        except NotImplementedError as e:
-            return JsonResponse(error_response_factory(e=e), status=HTTPStatus.NOT_IMPLEMENTED)
-        except SmarterExceptionBase as e:
-            return JsonResponse(error_response_factory(e=e), status=HTTPStatus.BAD_REQUEST)
-        # pylint: disable=W0718
-        except Exception as e:
-            return JsonResponse(error_response_factory(e=e), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+        return self.handler(self.status)()
