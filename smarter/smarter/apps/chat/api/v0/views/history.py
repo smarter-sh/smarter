@@ -3,16 +3,16 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
+from smarter.apps.account.token_authentication.views import (
+    SmarterAuthenticatedAPIView,
+    SmarterAuthenticatedListAPIView,
+)
 from smarter.apps.chat.api.v0.serializers import (
     ChatPluginUsageSerializer,
     ChatSerializer,
     ChatToolCallSerializer,
 )
 from smarter.apps.chat.models import Chat, ChatPluginUsage, ChatToolCall
-from smarter.lib.drf.view_helpers import (
-    SmarterAuthenticatedAPIView,
-    SmarterAuthenticatedListAPIView,
-)
 
 
 class ChatToolCallHistoryListView(SmarterAuthenticatedListAPIView):
