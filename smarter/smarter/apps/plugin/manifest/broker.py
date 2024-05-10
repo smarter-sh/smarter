@@ -6,6 +6,8 @@ from smarter.apps.plugin.manifest.models.plugin import SAMPlugin
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.lib.manifest.broker import AbstractBroker
 
+from .const import MANIFEST_KIND
+
 
 class SAMPluginBroker(AbstractBroker, AccountMixin):
     """
@@ -26,6 +28,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         self,
         api_version: str,
         account_number: str,
+        kind: str = None,
         manifest: str = None,
         file_path: str = None,
         url: str = None,
@@ -39,7 +42,12 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         the required top-level keys.
         """
         super().__init__(
-            api_version=api_version, account_number=account_number, manifest=manifest, file_path=file_path, url=url
+            api_version=api_version,
+            account_number=account_number,
+            kind=kind,
+            manifest=manifest,
+            file_path=file_path,
+            url=url,
         )
 
     @property
@@ -57,6 +65,10 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter abstract property implementations
     ###########################################################################
+    @property
+    def kind(self) -> str:
+        return MANIFEST_KIND
+
     @property
     def manifest(self) -> SAMPlugin:
         """

@@ -9,6 +9,8 @@ from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.models import AbstractSAMBase
 
+from .exceptions import SAMValidationError
+
 
 if typing.TYPE_CHECKING:
     from smarter.apps.account.models import Account, UserProfile
@@ -32,12 +34,14 @@ class AbstractBroker(ABC):
     _loader: SAMLoader = None
     _manifest: AbstractSAMBase = None
     _kind: str = None
+    _validated: bool = False
 
     # pylint: disable=too-many-arguments
     def __init__(
         self,
         api_version: str,
         account_number: str,
+        kind: str = None,
         manifest: str = None,
         file_path: str = None,
         url: str = None,
@@ -45,16 +49,24 @@ class AbstractBroker(ABC):
         SmarterValidator.validate_account_number(account_number)
         self._api_version = api_version
 
-        # load, validate and parse the manifest into json
-        # FIX NOTE: need to iron out how to handle the manifest kind
-        self._loader = SAMLoader(
-            api_version=account_number,
-            kind=self.loader.manifest_kind,
-            manifest=manifest,
-            file_path=file_path,
-            url=url,
-        )
-        self._kind = self.loader.manifest_kind
+        try:
+            self._loader = SAMLoader(
+                api_version=account_number,
+                kind=kind,
+                manifest=manifest,
+                file_path=file_path,
+                url=url,
+            )
+            if self._loader:
+                self._validated = True
+        except SAMValidationError:
+            pass
+
+        self._kind = kind or self.loader.manifest_kind if self.loader else None
+
+    @property
+    def is_valid(self) -> bool:
+        return self._validated
 
     @property
     def kind(self) -> str:
@@ -114,7 +126,7 @@ class AbstractBroker(ABC):
     ###########################################################################
     def example_manifest(self) -> str:
         """Returns an example yaml manifest document for the kind of resource."""
-        filename = self.kind + ".yaml"
+        filename = str(self.kind).lower() + ".yaml"
         data = {"filepath": f"https://{smarter_settings.environment_cdn_domain}/cli/example-manifests/{filename}"}
         return data
 
