@@ -102,8 +102,8 @@ class SAMLoader:
 
         # 1. acquire the manifest data
         # ---------------------------------------------------------------------
-        if sum([bool(manifest), bool(file_path), bool(url)]) == 0:
-            raise SAMValidationError("One of manifest, file_path, or url is required.")
+        if sum([bool(kind), bool(manifest), bool(file_path), bool(url)]) == 0:
+            raise SAMValidationError("One of kind, manifest, file_path, or url is required.")
         if sum([bool(manifest), bool(file_path), bool(url)]) > 1:
             raise SAMValidationError("Only one of manifest, file_path, or url is allowed.")
 
