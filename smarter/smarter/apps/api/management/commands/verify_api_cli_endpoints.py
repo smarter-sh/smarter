@@ -1,6 +1,8 @@
 # pylint: disable=W0613
 """utility for running api/v1 cli endpoints to verify that they work."""
 
+import json
+
 from django.core.management.base import BaseCommand
 from django.test import Client
 from django.urls import reverse
@@ -43,16 +45,17 @@ class Command(BaseCommand):
                 response = client.post(path=path)
                 url = f"http://localhost:8000{path}"
 
-            return response, url
+            response_content = response.content.decode("utf-8")
+            response_json = json.loads(response_content)
+
+            print("url: ", url)
+            print("response: ", json.dumps(response_json, indent=4), "\n")
 
         path = reverse("api_v1_cli_status_view")
-        response, url = get_response(path)
-        print(url, response.content)
+        get_response(path)
 
         path = reverse("api_v1_cli_whoami_view")
-        response, url = get_response(path)
-        print(url, response.content)
+        get_response(path)
 
         path = reverse("api_v1_cli_manifest_view", kwargs={"kind": "plugin"})
-        response, url = get_response(path)
-        print(url, response.content)
+        get_response(path)
