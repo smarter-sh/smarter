@@ -9,7 +9,6 @@ import subprocess
 
 import yaml
 from django.core.management.base import BaseCommand
-from django.core.validators import URLValidator
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import account_admin_user
@@ -19,6 +18,7 @@ from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.user import User, UserType
+from smarter.lib.django.validators import SmarterValidator
 
 
 # pylint: disable=E1101,too-many-instance-attributes
@@ -102,8 +102,7 @@ class Command(BaseCommand):
 
     @url.setter
     def url(self, value):
-        validate = URLValidator()
-        validate(value)
+        SmarterValidator.validate_url(value)
         self._url = value
 
     @property
@@ -151,11 +150,6 @@ class Command(BaseCommand):
                 print("Error in configuration file:", exc)
         else:
             raise SmarterValueError("Could not read the file.")
-
-        data["user"] = self.user_profile.user
-        data["account"] = self.user_profile.account
-        data["user_profile"] = self.user_profile
-        data["metadata"]["author"] = self.user_profile.id
 
         plugin = PluginStatic(data=data, user_profile=self.user_profile)
         return plugin
