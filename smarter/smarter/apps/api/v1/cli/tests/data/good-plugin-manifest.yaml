@@ -6,14 +6,14 @@ kind: Plugin
 # Each of these fields is required.
 # ------------------------------------------------------------
 metadata:
-  name: ExampleConfiguration
+  name: CliTestPlugin
   pluginClass: static
   description: A 'hello world' style plugin. This is an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.
   version: 0.2.0
   tags:
-    - red
-    - green
-    - blue
+    - up
+    - down
+    - all-around
 spec:
   # ------------------------------------------------------------
   # 2. Required field: prompting
@@ -26,9 +26,9 @@ spec:
     # search terms that will trigger the chatbot to use this customized configuration.
     #------------------------------------------------------------
     searchTerms:
-      - example function calling configuration
-      - Example configuration
-      - example function calling
+      - Cli Test
+      - cli test plugin
+      - test plugin
   prompt:
     #------------------------------------------------------------
     # if this module is able to locate any of the search terms in the user prompt

@@ -28,13 +28,13 @@ class TestApiV1CliApply(TestCase):
         with open(self.good_manifest_path, encoding="utf-8") as file:
             self.good_manifest_text = file.read()
 
-        self.client = Client()
-        self.url = reverse("api_v1_cli_apply_view")
-
-    def test_valid_manifest(self):
+    def test_valid_manifest_apply(self):
         """Test that we get OK responses for post, put, patch, delete when passing a valid manifest"""
 
-        response = self.client.post(self.url, data=self.good_manifest_text)
+        client = Client()
+        url = reverse("api_v1_cli_apply_view")
+        response = client.post(url, data=self.good_manifest_text)
+
         self.assertEqual(response.status_code, 200)
 
         # meta data
@@ -70,3 +70,68 @@ class TestApiV1CliApply(TestCase):
         self.assertEqual(plugin_selector.directive, "directive")
         self.assertTrue(isinstance(plugin_selector.search_terms, list))
         self.assertTrue("example function calling configuration" in plugin_selector.search_terms)
+
+    def test_valid_manifest_describe(self):
+        """describe - test that we get OK responses on post using a valid manifest"""
+
+        client = Client()
+        url = reverse("api_v1_cli_describe_view", kwargs={"kind": "plugin", "name": "CliTestPlugin"})
+        response = client.post(url, data=self.good_manifest_text)
+
+        self.assertEqual(response.status_code, 200)
+
+        print(response.content)
+
+    def test_valid_manifest_api_v1_cli_deploy(self):
+        """deploy - test that we get OK responses on post using a valid manifest"""
+
+        client = Client()
+        url = reverse("api_v1_cli_deploy_view", kwargs={"kind": "chatbot", "name": "example"})
+        response = client.post(url, data=self.good_manifest_text)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_valid_manifest_api_v1_cli_logs(self):
+        """logs - test that we get OK responses on post using a valid manifest"""
+
+        client = Client()
+        url = reverse("api_v1_cli_logs_kind_name_view", kwargs={"kind": "chatbot", "name": "CliTestPlugin"})
+        response = client.post(url, data=self.good_manifest_text)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_valid_manifest_api_v1_cli_status(self):
+        """status - test that we get OK responses on post using a valid manifest"""
+
+        client = Client()
+        url = reverse("api_v1_cli_status_view")
+        response = client.post(url, data=self.good_manifest_text)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_valid_manifest_api_v1_cli_manifest(self):
+        """manifest - test that we get OK responses on post using a valid manifest"""
+
+        client = Client()
+        url = reverse("api_v1_cli_manifest_view", kwargs={"kind": "chatbot"})
+        response = client.post(url, data=self.good_manifest_text)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_valid_manifest_api_v1_cli_whoami(self):
+        """whoami - test that we get OK responses on post using a valid manifest"""
+
+        client = Client()
+        url = reverse("api_v1_cli_whoami_view")
+        response = client.post(url, data=self.good_manifest_text)
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_valid_manifest_api_v1_cli_delete(self):
+        """delete - test that we get OK responses on post using a valid manifest"""
+
+        client = Client()
+        url = reverse("api_v1_cli_delete_view", kwargs={"kind": "chatbot", "name": "CliTestPlugin"})
+        response = client.post(url, data=self.good_manifest_text)
+
+        self.assertEqual(response.status_code, 200)
