@@ -120,8 +120,13 @@ class CliBaseApiView(SmarterUnauthenticatedAPIView):
 
     def handler(self, func):
         """
-        Handler decorator for PluginManifestView. Provides consistent http responses
-        for the view methods.
+        wrapper handler for child view verb implementations: get, post, put, delete, etc.
+        Provides consistent http responses for the view methods. Works like a diffy
+        in javascript, where the function is passed as an argument to the wrapper.
+
+        Usage:
+            def post(self, request):
+                return self.handler(self.function_that_returns_JsonResponse)()
         """
 
         def wrapper(*args, **kwargs):
