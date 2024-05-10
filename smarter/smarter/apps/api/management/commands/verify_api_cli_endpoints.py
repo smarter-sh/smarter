@@ -11,7 +11,6 @@ from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
 
 
-# pylint: disable=E1101
 class Command(BaseCommand):
     """utility for running api/v1 cli endpoints to verify that they work."""
 
@@ -21,7 +20,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         """Add arguments to the command."""
         parser.add_argument(
-            "username", type=str, nargs="?", default="admin", help="A user associated with the account."
+            "username", type=str, nargs="?", default="admin", help="A user associated with the Smarter account."
         )
 
     def handle(self, *args, **options):
@@ -37,7 +36,7 @@ class Command(BaseCommand):
             client = Client()
             client.force_login(self.user)
 
-            if smarter_settings.environment != SmarterEnvironments.LOCAL:
+            if smarter_settings.environment in SmarterEnvironments.aws_environments:
                 response = client.post(path=path, HTTP_HOST=smarter_settings.environment_domain)
                 url = f"https://{smarter_settings.environment_domain}{path}"
             else:
