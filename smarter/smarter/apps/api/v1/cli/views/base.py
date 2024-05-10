@@ -5,11 +5,18 @@ from http import HTTPStatus
 from typing import Dict, Union
 
 from django.http import JsonResponse
+from knox.auth import TokenAuthentication
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
 
-from smarter.apps.account.models import UserProfile
-from smarter.apps.account.utils import smarter_admin_user_profile, user_profile_for_user
-from smarter.common.exceptions import SmarterExceptionBase, error_response_factory
-from smarter.lib.drf.view_helpers import SmarterUnauthenticatedAPIView
+from smarter.apps.account.models import SmarterAuthToken, UserProfile
+from smarter.apps.account.utils import user_profile_for_user
+from smarter.common.exceptions import (
+    SmarterExceptionBase,
+    SmarterInvalidApiKey,
+    error_response_factory,
+)
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
@@ -21,13 +28,16 @@ from ..brokers import BROKERS
 logger = logging.getLogger(__name__)
 
 
-class CliBaseApiView(SmarterUnauthenticatedAPIView):
+class CliBaseApiView(APIView):
     """
     Smarter API command-line interface Base class API view.
     - Initializes the SAMLoader and AbstractBroker instances.
     - Resolves the manifest kind and broker for the yaml manifest document.
     - Sets the user profile for the request.
     """
+
+    authentication_classes = (TokenAuthentication, SessionAuthentication)
+    permission_classes = (IsAuthenticated,)
 
     _loader: SAMLoader = None
     _broker: AbstractBroker = None
@@ -102,32 +112,17 @@ class CliBaseApiView(SmarterUnauthenticatedAPIView):
         implements the broker service pattern for the underlying object.
         """
 
-        # pylint: disable=W0613
-        def get_user_profile(self, request) -> UserProfile:
-            """Get the user profile."""
-
-            # pylint: disable=W0511
-            # TODO: setup api key authentication based on an X-API-KEY header
-            logger.warning("Provisionally using django authentication.")
-
-            if request.user.is_anonymous:
-                return smarter_admin_user_profile()
-
-            user_profile = user_profile_for_user(user=request.user)
-            if user_profile:
-                return user_profile
-
-            try:
-                raise SAMValidationError("Could not find account for user.")
-            except SmarterExceptionBase as e:
-                return JsonResponse(error_response_factory(e=e), status=HTTPStatus.FORBIDDEN)
-
         # Manifest parsing and broker instantiation are lazy implementations.
         # So for now, we'll only set the private class variable _manifest_text
         # from the request body, and then we'll leave it to the child views to
         # decide if/when to actually parse the manifest and instantiate the broker.
         self._manifest_text = request.body.decode("utf-8")
-        self._user_profile = get_user_profile(self, request)
+        try:
+            self._user_profile = user_profile_for_user(user=request.user)
+            if not self._user_profile:
+                raise SAMValidationError("Could not find account for user.")
+        except SmarterExceptionBase as e:
+            return JsonResponse(error_response_factory(e=e), status=HTTPStatus.FORBIDDEN)
 
         return super().dispatch(request, *args, **kwargs)
 

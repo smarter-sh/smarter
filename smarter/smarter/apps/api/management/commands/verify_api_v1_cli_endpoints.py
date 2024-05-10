@@ -7,7 +7,7 @@ from django.core.management.base import BaseCommand
 from django.test import Client
 from django.urls import reverse
 
-from smarter.apps.account.models import Account
+from smarter.apps.account.models import Account, SmarterAuthToken
 from smarter.apps.account.utils import account_admin_user
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
@@ -39,22 +39,31 @@ class Command(BaseCommand):
         if username != user.get_username():
             user = User.objects.get(username=username)
 
-        print("*" * 80)
-        print("Running API CLI endpoint verifications.")
-        print("Environment: ", smarter_settings.environment)
-        print("Account: ", account_number)
-        print("User: ", user.username)
-        print("*" * 80)
+        # generate an auth token (api key) for this job.
+        token_record, token_key = SmarterAuthToken.objects.create(
+            account=account, user=user, description="single-use key created by manage.py verify_api_v1_cli_endpoints"
+        )
+
+        self.stdout.write("*" * 80)
+        self.stdout.write(self.style.NOTICE("Running API CLI endpoint verifications."))
+        self.stdout.write(f"Environment: {smarter_settings.environment}")
+        self.stdout.write(f"Account: {account_number}")
+        self.stdout.write(f"User: {user.username}")
+        self.stdout.write(self.style.SUCCESS(f"single-use API key: {token_key}"))
+        self.stdout.write("*" * 80)
 
         def get_response(path):
             client = Client()
             client.force_login(user)
 
+            headers = {"Content-Type": "application/json", "Authorization": f"Token {token_key}"}
+            http_host = smarter_settings.environment_domain
+
             if smarter_settings.environment in SmarterEnvironments.aws_environments:
-                response = client.post(path=path, HTTP_HOST=smarter_settings.environment_domain)
+                response = client.post(path=path, HTTP_HOST=http_host, **headers)
                 url = f"https://{smarter_settings.environment_domain}{path}"
             else:
-                response = client.post(path=path)
+                response = client.post(path=path, **headers)
                 url = f"http://localhost:8000{path}"
 
             response_content = response.content.decode("utf-8")
@@ -71,3 +80,6 @@ class Command(BaseCommand):
 
         path = reverse("api_v1_cli_manifest_view", kwargs={"kind": "plugin"})
         get_response(path)
+
+        token_record.delete()
+        self.stdout.write(self.style.SUCCESS("API CLI endpoint verifications complete."))
