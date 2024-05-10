@@ -17,6 +17,10 @@ class SmarterValueError(SmarterExceptionBase):
     """Exception raised for illegal or invalid values."""
 
 
+class SmarterInvalidApiKey(SmarterExceptionBase):
+    """Exception raised when an invalid api key is received."""
+
+
 class SmarterIlligalInvocationError(SmarterExceptionBase):
     """Exception raised when the service is illegally invoked."""
 
