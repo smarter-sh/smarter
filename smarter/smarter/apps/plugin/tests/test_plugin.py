@@ -12,12 +12,6 @@ import yaml
 from pydantic_core import ValidationError as PydanticValidationError
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.plugin.api.v1.serializers import (
-    PluginDataStaticSerializer,
-    PluginMetaSerializer,
-    PluginPromptSerializer,
-    PluginSelectorSerializer,
-)
 from smarter.apps.plugin.models import (
     PluginDataStatic,
     PluginMeta,
@@ -26,6 +20,12 @@ from smarter.apps.plugin.models import (
 )
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.plugin.utils import PluginExamples
+from smarter.apps.plugin.serializers import (
+    PluginDataStaticSerializer,
+    PluginMetaSerializer,
+    PluginPromptSerializer,
+    PluginSelectorSerializer,
+)
 from smarter.apps.plugin.signals import (
     plugin_called,
     plugin_cloned,
