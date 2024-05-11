@@ -12,13 +12,22 @@ from smarter.lib.django.user import UserType
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.models import AbstractSAMBase
 
-from .exceptions import SAMValidationError
+from .enum import SAMApiVersions
+from .exceptions import SAMExceptionBase
 
 
 if typing.TYPE_CHECKING:
     from smarter.apps.account.models import Account, UserProfile
 
-SUPPORTED_API_VERSIONS = ["smarter.sh/v1"]
+SUPPORTED_API_VERSIONS = [SAMApiVersions.V1.value]
+
+
+class SAMBrokerError(SAMExceptionBase):
+    """Base class for all SAMBroker errors."""
+
+    @property
+    def get_readable_name(self):
+        return "Smarter API Manifest Broker Error"
 
 
 class AbstractBroker(ABC):
@@ -56,7 +65,7 @@ class AbstractBroker(ABC):
         self._account = account
         self._loader = loader
         if api_version not in SUPPORTED_API_VERSIONS:
-            raise SAMValidationError(f"Unsupported apiVersion: {api_version}")
+            raise SAMBrokerError(f"Unsupported apiVersion: {api_version}")
         self._api_version = api_version
 
         try:
@@ -69,7 +78,7 @@ class AbstractBroker(ABC):
             )
             if self._loader:
                 self._validated = True
-        except SAMValidationError:
+        except SAMBrokerError:
             pass
 
         self._kind = kind or self.loader.manifest_kind if self.loader else None

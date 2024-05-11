@@ -7,6 +7,7 @@ import unittest
 from smarter.apps.account.models import Account
 from smarter.apps.plugin.manifest.broker import SAMPluginBroker
 from smarter.common.const import PYTHON_ROOT
+from smarter.lib.manifest.enum import SAMApiVersions
 
 
 class TestSAMPluginBroker(unittest.TestCase):
@@ -23,4 +24,4 @@ class TestSAMPluginBroker(unittest.TestCase):
     def test_valid_manifest(self):
         """Test valid file path and that we can instantiate without errors"""
 
-        SAMPluginBroker(api_version="smarter.sh/v1", account=self.account, file_path=self.good_manifest_path)
+        SAMPluginBroker(api_version=SAMApiVersions.V1.value, account=self.account, file_path=self.good_manifest_path)

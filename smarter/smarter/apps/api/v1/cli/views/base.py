@@ -2,6 +2,7 @@
 
 import json
 import logging
+import re
 from http import HTTPStatus
 from typing import Type
 
@@ -16,7 +17,7 @@ from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import user_profile_for_user
 from smarter.common.exceptions import SmarterExceptionBase, error_response_factory
 from smarter.lib.manifest.broker import AbstractBroker
-from smarter.lib.manifest.exceptions import SAMBadRequestError, SAMValidationError
+from smarter.lib.manifest.exceptions import SAMBadRequestError
 from smarter.lib.manifest.loader import SAMLoader
 
 from ...manifests.enum import SAMKinds
@@ -25,6 +26,14 @@ from ..brokers import BROKERS
 
 
 logger = logging.getLogger(__name__)
+
+
+class APIV1CLIViewError(SmarterExceptionBase):
+    """Base class for all APIV1CLIView errors."""
+
+    @property
+    def get_readable_name(self):
+        return "Smarter api v1 command-line interface error"
 
 
 class CliBaseApiView(APIView):
@@ -66,8 +75,8 @@ class CliBaseApiView(APIView):
                 )
                 if not self._loader:
                     print("loader() -  exception: SAMValidationError")
-                    raise SAMValidationError("")
-            except SAMValidationError as e:
+                    raise APIV1CLIViewError("")
+            except APIV1CLIViewError as e:
                 print("loader() -  exception: SAMValidationError", e)
                 # not all endpoints require a manifest, so we
                 # should fail gracefully if the manifest is not provided.
@@ -85,7 +94,7 @@ class CliBaseApiView(APIView):
             if self.manifest_kind:
                 self._BrokerClass = BROKERS.get(self.manifest_kind)
             if not self._BrokerClass:
-                raise SAMValidationError(f"Could not find broker for {self.manifest_kind} manifest.")
+                raise APIV1CLIViewError(f"Could not find broker for {self.manifest_kind} manifest.")
         return self._BrokerClass
 
     @property
@@ -106,7 +115,7 @@ class CliBaseApiView(APIView):
                 manifest=self.loader.yaml_data if self.loader else None,
             )
             if not self._broker:
-                raise SAMValidationError("Could not load manifest.")
+                raise APIV1CLIViewError("Could not load manifest.")
 
         return self._broker
 
@@ -167,7 +176,7 @@ class CliBaseApiView(APIView):
         try:
             self._user_profile = user_profile_for_user(user=request.user)
             if not self._user_profile:
-                raise SAMValidationError("Could not find account for user.")
+                raise APIV1CLIViewError("Could not find account for user.")
         except SmarterExceptionBase as e:
             return JsonResponse(error_response_factory(e=e), status=HTTPStatus.FORBIDDEN)
 

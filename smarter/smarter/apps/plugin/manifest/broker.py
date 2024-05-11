@@ -1,8 +1,6 @@
 # pylint: disable=W0718
 """Smarter API Plugin Manifest handler"""
 
-import json
-
 from django.http import HttpRequest, JsonResponse
 from taggit.models import Tag
 

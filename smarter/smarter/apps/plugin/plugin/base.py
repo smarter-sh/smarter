@@ -19,6 +19,7 @@ from smarter.apps.account.utils import smarter_admin_user_profile
 from smarter.common.exceptions import SmarterExceptionBase
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import UserType
+from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -44,8 +45,8 @@ from ..signals import (
 
 logger = logging.getLogger(__name__)
 
-SMARTER_API_MANIFEST_COMPATIBILITY = ["smarter.sh/v1"]
-SMARTER_API_MANIFEST_DEFAULT_VERSION = "smarter.sh/v1"
+SMARTER_API_MANIFEST_COMPATIBILITY = [SAMApiVersions.V1.value]
+SMARTER_API_MANIFEST_DEFAULT_VERSION = SAMApiVersions.V1.value
 
 
 class SmarterPluginError(SmarterExceptionBase):

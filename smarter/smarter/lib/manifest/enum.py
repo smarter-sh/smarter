@@ -3,12 +3,22 @@
 from enum import Enum
 
 
+VERSION_PREFIX = "smarter.sh "
+
+
 class SmarterEnumAbstract(Enum):
     """Smarter enumeration helper class."""
 
     @classmethod
     def all_values(cls) -> list[str]:
         return [member.value for _, member in cls.__members__.items()]
+
+
+class SAMApiVersions(SmarterEnumAbstract):
+    """API Version enumeration."""
+
+    V0 = f"{VERSION_PREFIX}/v0"
+    V1 = f"{VERSION_PREFIX}/v1"
 
 
 class SAMDataFormats(SmarterEnumAbstract):
