@@ -130,6 +130,10 @@ class AbstractBroker(ABC):
         data = {"filepath": f"https://{smarter_settings.environment_cdn_domain}/cli/example-manifests/{filename}"}
         return data
 
+    def not_implemented_response(self) -> JsonResponse:
+        data = {"smarter": f"operation not implemented for {self.kind} "}
+        return JsonResponse(data=data, status=HTTPStatus.NOT_IMPLEMENTED)
+
     def not_ready_response(self) -> JsonResponse:
         data = {"smarter": f"{self.kind} not ready"}
         return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
