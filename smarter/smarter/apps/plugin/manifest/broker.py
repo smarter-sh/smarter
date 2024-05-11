@@ -1,6 +1,8 @@
 # pylint: disable=W0718
 """Smarter API Plugin Manifest handler"""
 
+import json
+
 from django.http import HttpRequest, JsonResponse
 from taggit.models import Tag
 
@@ -113,8 +115,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         self, request: HttpRequest = None, name: str = None, all_objects: bool = False, tags: str = None
     ) -> JsonResponse:
 
-        print("SAMPluginBroker.get() - self.account: ", self.account)
-        data = [dict]
+        data = []
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
         if name:
@@ -134,9 +135,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for plugin_meta in plugins:
-            print("getting plugin_meta: ", plugin_meta)
             controller = PluginController(account=self.account, plugin_meta=plugin_meta)
-            print("controller: ", controller.account, controller.plugin_meta, controller.name, controller.plugin.name)
             try:
                 model_dump = controller.model_dump_json()
                 if not model_dump:
@@ -144,6 +143,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
                 data.append(model_dump)
             except Exception as e:
                 return self.err_response(self.get.__name__, e)
+
         return self.success_response(data)
 
     def apply(self, request: HttpRequest = None) -> JsonResponse:

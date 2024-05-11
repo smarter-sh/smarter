@@ -218,7 +218,6 @@ class PluginBase(ABC):
         if not self._manifest and self.ready:
             # if we don't have a manifest but we do have Django ORM data then
             # we can work backwards to the Pydantic model
-            print("self.to_json(): \n", json.dumps(self.to_json(), indent=4))
             self._manifest = SAMPlugin(**self.to_json())
         return self._manifest
 
@@ -738,6 +737,7 @@ class PluginBase(ABC):
                         "prompt": {**self.plugin_prompt_serializer.data, "id": self.plugin_prompt.id},
                         "data": {**self.plugin_data_serializer.data, "id": self.plugin_data.id},
                     },
+                    "status": {},
                 }
                 return json.loads(json.dumps(retval))
             raise SamrterPluginError(f"Invalid version: {version}")

@@ -202,7 +202,7 @@ class AbstractBroker(ABC):
 
     def success_response(self, data: dict) -> JsonResponse:
         """Return a common success response."""
-        return JsonResponse(data=data, status=HTTPStatus.OK)
+        return JsonResponse(data=data, status=HTTPStatus.OK, safe=False)
 
 
 class BrokerNotImplemented(AbstractBroker):
