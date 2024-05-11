@@ -742,6 +742,8 @@ class PluginBase(ABC):
                         "data": {**self.plugin_data_serializer.data, "id": self.plugin_data.id},
                     },
                     "status": {
+                        "account_number": self.user_profile.account.account_number,
+                        "username": self.user_profile.user.get_username(),
                         "created": self.plugin_meta.created_at.isoformat(),
                         "modified": self.plugin_meta.updated_at.isoformat(),
                     },
