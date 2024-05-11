@@ -132,7 +132,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         return self.not_ready_response()
 
     def deploy(self) -> JsonResponse:
-        return JsonResponse(data={}, status=HTTPStatus.NOT_IMPLEMENTED)
+        return self.not_implemented_response()
 
     def logs(self) -> JsonResponse:
-        return JsonResponse(data={}, status=HTTPStatus.NOT_IMPLEMENTED)
+        return self.not_implemented_response()
