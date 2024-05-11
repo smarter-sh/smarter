@@ -724,7 +724,11 @@ class PluginBase(ABC):
         return plugin_meta_copy.id
 
     def to_json(self, version: str = "v1") -> dict:
-        """Return a plugin in JSON format."""
+        """
+        Serialize a plugin in JSON format that is importable by Pydantic. This
+        is used to create a Pydantic model from a Django ORM model, for purposes
+        of rendering a Plugin manifest for the Smarter API.
+        """
         if self.ready:
             if version == "v1":
                 retval = {
@@ -737,7 +741,10 @@ class PluginBase(ABC):
                         "prompt": {**self.plugin_prompt_serializer.data, "id": self.plugin_prompt.id},
                         "data": {**self.plugin_data_serializer.data, "id": self.plugin_data.id},
                     },
-                    "status": {},
+                    "status": {
+                        "created": self.plugin_meta.created_at.isoformat(),
+                        "modified": self.plugin_meta.updated_at.isoformat(),
+                    },
                 }
                 return json.loads(json.dumps(retval))
             raise SamrterPluginError(f"Invalid version: {version}")
