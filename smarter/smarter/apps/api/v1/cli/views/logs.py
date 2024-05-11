@@ -8,4 +8,4 @@ class ApiV1CliLogsApiView(CliBaseApiView):
     """Smarter API command-line interface 'apply' view"""
 
     def post(self, request):
-        return self.broker.logs()
+        return self.broker.logs(request)

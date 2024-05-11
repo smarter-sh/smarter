@@ -1,9 +1,7 @@
 # pylint: disable=W0718
 """Smarter API Plugin Manifest handler"""
 
-from http import HTTPStatus
-
-from django.http import JsonResponse
+from django.http import HttpRequest, JsonResponse
 
 from smarter.apps.account.account_mixin import AccountMixin
 from smarter.apps.plugin.manifest.controller import PluginController
@@ -99,7 +97,16 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def apply(self) -> JsonResponse:
+    def get(self, request: HttpRequest = None) -> JsonResponse:
+        if self.plugin.ready:
+            try:
+                data = self.plugin.to_json()
+                return self.success_response(data)
+            except Exception as e:
+                return self.err_response(self.get.__name__, e)
+        return self.not_ready_response()
+
+    def apply(self, request: HttpRequest = None) -> JsonResponse:
         try:
             self.plugin.create()
         except Exception as e:
@@ -113,7 +120,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
                 return self.err_response(self.apply.__name__, e)
         return self.not_ready_response()
 
-    def describe(self) -> JsonResponse:
+    def describe(self, request: HttpRequest = None) -> JsonResponse:
         if self.plugin.ready:
             try:
                 data = self.plugin.to_json()
@@ -122,7 +129,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
                 return self.err_response(self.describe.__name__, e)
         return self.not_ready_response()
 
-    def delete(self) -> JsonResponse:
+    def delete(self, request: HttpRequest = None) -> JsonResponse:
         if self.plugin.ready:
             try:
                 self.plugin.delete()
@@ -131,8 +138,8 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
                 return self.err_response(self.delete.__name__, e)
         return self.not_ready_response()
 
-    def deploy(self) -> JsonResponse:
+    def deploy(self, request: HttpRequest = None) -> JsonResponse:
         return self.not_implemented_response()
 
-    def logs(self) -> JsonResponse:
+    def logs(self, request: HttpRequest = None) -> JsonResponse:
         return self.not_implemented_response()
