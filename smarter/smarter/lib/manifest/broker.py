@@ -2,6 +2,7 @@
 
 import typing
 from abc import ABC, abstractmethod
+from http import HTTPStatus
 
 from django.http import JsonResponse
 
@@ -128,6 +129,17 @@ class AbstractBroker(ABC):
         filename = str(self.kind).lower() + ".yaml"
         data = {"filepath": f"https://{smarter_settings.environment_cdn_domain}/cli/example-manifests/{filename}"}
         return data
+
+    def not_ready_response(self) -> JsonResponse:
+        data = {"smarter": f"{self.kind} not ready"}
+        return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
+
+    def err_response(self, e: Exception) -> JsonResponse:
+        data = {"smarter": "could not complete the operation", "error": str(e)}
+        return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
+
+    def success_response(self, data: dict) -> JsonResponse:
+        return JsonResponse(data=data, status=HTTPStatus.OK)
 
     ###########################################################################
     # Class Instance Properties
