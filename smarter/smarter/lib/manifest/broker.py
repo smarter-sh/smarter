@@ -3,6 +3,8 @@
 import typing
 from abc import ABC, abstractmethod
 
+from django.http import JsonResponse
+
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django.user import UserType
 from smarter.lib.django.validators import SmarterValidator
@@ -101,44 +103,31 @@ class AbstractBroker(ABC):
     # Abstract Methods
     ###########################################################################
     @abstractmethod
-    def get(self) -> dict:
+    def apply(self) -> JsonResponse:
+        """apply a manifest, which works like a upsert."""
         raise NotImplementedError
 
     @abstractmethod
-    def post(self) -> dict:
+    def describe(self) -> JsonResponse:
         raise NotImplementedError
 
     @abstractmethod
-    def put(self) -> dict:
+    def delete(self) -> JsonResponse:
         raise NotImplementedError
 
     @abstractmethod
-    def delete(self) -> dict:
+    def deploy(self) -> JsonResponse:
         raise NotImplementedError
 
     @abstractmethod
-    def patch(self) -> dict:
+    def logs(self) -> JsonResponse:
         raise NotImplementedError
 
-    ###########################################################################
-    # Smarter manifest abstract methods. These are methods that do not intuitively
-    # map to an http verb, but are specific to the Smarter API.
-    ###########################################################################
     def example_manifest(self) -> str:
         """Returns an example yaml manifest document for the kind of resource."""
         filename = str(self.kind).lower() + ".yaml"
         data = {"filepath": f"https://{smarter_settings.environment_cdn_domain}/cli/example-manifests/{filename}"}
         return data
-
-    @abstractmethod
-    def deploy(self):
-        """Deploy the resource described in the manifest."""
-        raise NotImplementedError
-
-    @abstractmethod
-    def logs(self) -> dict:
-        """Get the logs for the resource described in the manifest."""
-        raise NotImplementedError
 
     ###########################################################################
     # Class Instance Properties
