@@ -1,4 +1,9 @@
+# pylint: disable=W0718
 """Smarter API Plugin Manifest handler"""
+
+from http import HTTPStatus
+
+from django.http import JsonResponse
 
 from smarter.apps.account.account_mixin import AccountMixin
 from smarter.apps.plugin.manifest.controller import PluginController
@@ -94,37 +99,42 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def get(self) -> dict:
-        return self.plugin.to_json()
+    def apply(self) -> dict:
+        try:
+            self.plugin.create()
 
-    def post(self) -> dict:
-        self.plugin.create()
+        except Exception as e:
+            data = {"smarter": "could not create Plugin", "error": str(e)}
+            return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
         if self.plugin.ready:
-            self.plugin.save()
-        return self.plugin.to_json()
+            try:
+                self.plugin.save()
+                return JsonResponse(data={}, status=HTTPStatus.OK)
+            except Exception as e:
+                data = {"smarter": "could not save Plugin", "error": str(e)}
+                return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
+        data = {"error": "Plugin not ready"}
+        return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
 
-    def put(self) -> dict:
-        self.plugin.update()
+    def describe(self) -> dict:
         if self.plugin.ready:
-            self.plugin.save()
-        return self.plugin.to_json()
-
-    def patch(self) -> dict:
-        self.plugin.update()
-        if self.plugin.ready:
-            self.plugin.save()
-        return self.plugin.to_json()
+            return JsonResponse(data=self.plugin.to_json(), status=HTTPStatus.OK)
+        data = {"error": "Plugin not ready"}
+        return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
 
     def delete(self):
         if self.plugin.ready:
-            self.plugin.delete()
+            try:
+                self.plugin.delete()
+                return JsonResponse(data={}, status=HTTPStatus.OK)
+            except Exception as e:
+                data = {"smarter": "could not delete Plugin", "error": str(e)}
+                return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
+        data = {"error": "Plugin not ready"}
+        return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
 
     def deploy(self):
-        # nothing to deploy in this case
-        return None
+        return JsonResponse(data={}, status=HTTPStatus.NOT_IMPLEMENTED)
 
     def logs(self) -> dict:
-        return {
-            "status": "success",
-            "message": "No logs available for this plugin",
-        }
+        return JsonResponse(data={}, status=HTTPStatus.NOT_IMPLEMENTED)
