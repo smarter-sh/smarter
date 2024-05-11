@@ -1,29 +1,45 @@
 """
-Helper class to map a Pydantic manifest model's metadata.pluginClass to an
-instance of the the correct plugin class.
+Helper class to map to/from Pydantic manifest model, Plugin and Django ORM models.
 """
 
-from smarter.lib.manifest.controller import AbstractController
+from smarter.apps.account.models import Account
 
+# lib manifest
+from smarter.lib.manifest.controller import AbstractController
+from smarter.lib.manifest.exceptions import SAMValidationError
+
+# plugin
 from ..models import PluginMeta
 from ..plugin.api import PluginApi
 from ..plugin.base import PluginBase
 from ..plugin.sql import PluginSql
 from ..plugin.static import PluginStatic
+
+# plugin manifest
+from .const import MANIFEST_KIND
 from .enum import SAMPluginMetadataClassValues
 from .models.plugin import SAMPlugin
 
 
 class PluginController(AbstractController):
-    """Map the Pydantic metadata.pluginClass to the corresponding instance of PluginBase."""
+    """Helper class to map to/from Pydantic manifest model, Plugin and Django ORM models."""
 
     _manifest: SAMPlugin = None
     _plugin: PluginBase = None
     _plugin_meta: PluginMeta = None
 
-    def __init__(self, manifest: SAMPlugin = None, plugin_meta: PluginMeta = None):
+    def __init__(self, account: Account, manifest: SAMPlugin = None, plugin_meta: PluginMeta = None):
+        if (bool(manifest) and bool(plugin_meta)) or (not bool(manifest) and not bool(plugin_meta)):
+            raise SAMValidationError("One and only one of manifest or plugin_meta should be provided.")
+        self._account = account
         self._manifest = manifest
         self._plugin_meta = plugin_meta
+
+        if self.manifest:
+            if self.manifest.kind != MANIFEST_KIND:
+                raise SAMValidationError(
+                    f"Manifest kind {self.manifest.kind} does not match expected kind {MANIFEST_KIND}."
+                )
 
     ###########################################################################
     # Abstract property implementations
@@ -33,8 +49,25 @@ class PluginController(AbstractController):
         return self._manifest
 
     @property
+    def name(self) -> str:
+        if self.manifest:
+            return self.manifest.metadata.name
+
+    @property
     def plugin_meta(self) -> PluginMeta:
+        if not self._plugin_meta and self.manifest:
+            try:
+                self._plugin_meta = PluginMeta(
+                    account=self.account,
+                    name=self.name,
+                )
+            except PluginMeta.DoesNotExist as e:
+                raise SAMValidationError(f"{self.manifest.kind} {self.name} does not exist.") from e
         return self._plugin_meta
+
+    @property
+    def plugin(self) -> PluginBase:
+        return self.obj
 
     @property
     def map(self):
@@ -48,10 +81,16 @@ class PluginController(AbstractController):
     def obj(self) -> PluginBase:
         if self._plugin:
             return self._plugin
-        if self.manifest:
-            Plugin = self.map[self.manifest.metadata.pluginClass]
-            self._plugin = Plugin(self.manifest)
-        if self.plugin_meta:
+        if self._plugin_meta:
             Plugin = self.map[self.plugin_meta.plugin_class]
             self._plugin = Plugin(self.manifest)
+            self._manifest = self._plugin.manifest
+        elif self.manifest:
+            Plugin = self.map[self.manifest.metadata.pluginClass]
+            self._plugin = Plugin(self.manifest)
         return self._plugin
+
+    def model_dump_json(self) -> dict:
+        if self.plugin:
+            return self.plugin.manifest.model_dump_json()
+        return None

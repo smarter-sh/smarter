@@ -2,6 +2,7 @@
 """Smarter API Plugin Manifest handler"""
 
 from django.http import HttpRequest, JsonResponse
+from taggit.models import Tag
 
 from smarter.apps.account.account_mixin import AccountMixin
 from smarter.lib.manifest.broker import AbstractBroker
@@ -11,6 +12,9 @@ from ..manifest.models.plugin import SAMPlugin
 from ..models import PluginMeta
 from ..plugin.base import PluginBase
 from .const import MANIFEST_KIND
+
+
+MAX_RESULTS = 1000
 
 
 class SAMPluginBroker(AbstractBroker, AccountMixin):
@@ -101,16 +105,34 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     def get(
         self, request: HttpRequest = None, name: str = None, all_objects: bool = False, tags: str = None
     ) -> JsonResponse:
-        if name:
-            plugin_meta = PluginMeta.objects.get(account=self.account, name=name)
 
-        if self.plugin.ready:
+        data = [dict]
+
+        # generate a QuerySet of PluginMeta objects that match our search criteria
+        if name:
+            plugins = PluginMeta.objects.filter(account=self.account, name=name)
+        else:
+            if all_objects:
+                plugins = PluginMeta.objects.filter(account=self.account)
+            else:
+                if tags:
+                    tags = Tag.objects.filter(name__in=tags)
+                    plugins = PluginMeta.objects.filter(account=self.account, tags__in=tags)[:MAX_RESULTS]
+                else:
+                    plugins = PluginMeta.objects.filter(account=self.account)[:MAX_RESULTS]
+
+        if not plugins.exists():
+            return self.not_found_response()
+
+        # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
+        for plugin_meta in plugins:
+            controller = PluginController(plugin_meta)
             try:
-                data = self.plugin.to_json()
-                return self.success_response(data)
+                model_dump = controller.model_dump_json()
+                data.append(model_dump)
             except Exception as e:
                 return self.err_response(self.get.__name__, e)
-        return self.not_ready_response()
+        return self.success_response(data)
 
     def apply(self, request: HttpRequest = None) -> JsonResponse:
         try:

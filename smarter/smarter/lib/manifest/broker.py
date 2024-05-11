@@ -190,6 +190,11 @@ class AbstractBroker(ABC):
         data = {"smarter": f"could not {operation} {self.kind} {self.name}", "error": str(e)}
         return JsonResponse(data=data, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
+    def not_found_response(self) -> JsonResponse:
+        """Return a common not found response."""
+        data = {"smarter": f"{self.kind} {self.name} not found"}
+        return JsonResponse(data=data, status=HTTPStatus.NOT_FOUND)
+
     def success_response(self, data: dict) -> JsonResponse:
         """Return a common success response."""
         return JsonResponse(data=data, status=HTTPStatus.OK)

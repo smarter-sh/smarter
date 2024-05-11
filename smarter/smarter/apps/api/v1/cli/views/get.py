@@ -22,6 +22,8 @@ class ApiV1CliGetApiView(CliBaseApiView):
         """
         all_objects: bool = request.GET.get("all", False)
         tags: str = request.GET.get("tags", None)
+        if tags:
+            tags = tags.split(",")
 
         # Validate the manifest kind: plugins, users, chatbots, chats, etc.
         if kind not in SAMKinds.plural_slugs():
