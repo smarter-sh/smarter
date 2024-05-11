@@ -4,7 +4,7 @@
 from .base import CliBaseApiView
 
 
-class CliDeleteObjectApiView(CliBaseApiView):
+class ApiV1CliDeleteApiView(CliBaseApiView):
     """Smarter API command-line interface 'delete' view"""
 
     def post(self, request):

@@ -12,7 +12,7 @@ from smarter.common.conf import settings as smarter_settings
 from .base import CliBaseApiView
 
 
-class CliPlatformStatusApiView(CliBaseApiView):
+class ApiV1CliStatusApiView(CliBaseApiView):
     """Smarter API command-line interface 'apply' view"""
 
     def get_eks_status(self, cluster_name):

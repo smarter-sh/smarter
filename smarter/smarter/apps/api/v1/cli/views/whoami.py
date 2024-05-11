@@ -10,7 +10,7 @@ from smarter.apps.account.serializers import AccountSerializer, UserSerializer
 from .base import CliBaseApiView
 
 
-class CliPlatformWhoamiApiView(CliBaseApiView):
+class ApiV1CliWhoamiApiView(CliBaseApiView):
     """Smarter API command-line interface 'apply' view"""
 
     def whoami(self):

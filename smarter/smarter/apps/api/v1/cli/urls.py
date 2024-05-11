@@ -11,25 +11,25 @@ Smarter API command-line interface URL configuration.
 
 from django.urls import path
 
-from .views.apply import CliApplyManifestApiView
-from .views.delete import CliDeleteObjectApiView
-from .views.deploy import CliDeployApiView
-from .views.describe import CliDescribeApiView
-from .views.logs import CliLogsApiView
-from .views.manifest import CliManifestExampleApiView
-from .views.status import CliPlatformStatusApiView
-from .views.whoami import CliPlatformWhoamiApiView
+from .views.apply import ApiV1CliApplyApiView
+from .views.delete import ApiV1CliDeleteApiView
+from .views.deploy import ApiV1CliDeployApiView
+from .views.describe import ApiV1CliDescribeApiView
+from .views.logs import ApiV1CliLogsApiView
+from .views.manifest import ApiV1CliManifestApiView
+from .views.status import ApiV1CliStatusApiView
+from .views.whoami import ApiV1CliWhoamiApiView
 
 
 urlpatterns = [
-    path("apply/", CliApplyManifestApiView.as_view(), name="api_v1_cli_apply_view"),
-    path("describe/<str:kind>/<str:name>/", CliDescribeApiView.as_view(), name="api_v1_cli_describe_view"),
-    path("deploy/<str:kind>/<str:name>/", CliDeployApiView.as_view(), name="api_v1_cli_deploy_view"),
-    path("logs/<str:kind>/<str:name>/", CliLogsApiView.as_view(), name="api_v1_cli_logs_kind_name_view"),
-    path("logs/<str:kind>/", CliLogsApiView.as_view(), name="api_v1_cli_logs_kind_view"),
-    path("logs/", CliLogsApiView.as_view(), name="api_v1_cli_logs_view"),
-    path("delete/<str:kind>/<str:name>/", CliDeleteObjectApiView.as_view(), name="api_v1_cli_delete_view"),
-    path("status/", CliPlatformStatusApiView.as_view(), name="api_v1_cli_status_view"),
-    path("manifest/<str:kind>/", CliManifestExampleApiView.as_view(), name="api_v1_cli_manifest_view"),
-    path("whoami/", CliPlatformWhoamiApiView.as_view(), name="api_v1_cli_whoami_view"),
+    path("apply/", ApiV1CliApplyApiView.as_view(), name="api_v1_cli_apply_view"),
+    path("describe/<str:kind>/<str:name>/", ApiV1CliDescribeApiView.as_view(), name="api_v1_cli_describe_view"),
+    path("deploy/<str:kind>/<str:name>/", ApiV1CliDeployApiView.as_view(), name="api_v1_cli_deploy_view"),
+    path("logs/<str:kind>/<str:name>/", ApiV1CliLogsApiView.as_view(), name="api_v1_cli_logs_kind_name_view"),
+    path("logs/<str:kind>/", ApiV1CliLogsApiView.as_view(), name="api_v1_cli_logs_kind_view"),
+    path("logs/", ApiV1CliLogsApiView.as_view(), name="api_v1_cli_logs_view"),
+    path("delete/<str:kind>/<str:name>/", ApiV1CliDeleteApiView.as_view(), name="api_v1_cli_delete_view"),
+    path("status/", ApiV1CliStatusApiView.as_view(), name="api_v1_cli_status_view"),
+    path("manifest/<str:kind>/", ApiV1CliManifestApiView.as_view(), name="api_v1_cli_manifest_view"),
+    path("whoami/", ApiV1CliWhoamiApiView.as_view(), name="api_v1_cli_whoami_view"),
 ]
