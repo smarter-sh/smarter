@@ -1,4 +1,4 @@
-"""Smarter API V0 Plugin Manifest"""
+"""Smarter API Plugin Manifest"""
 
 import logging
 from typing import ClassVar, Optional
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 class SAMPlugin(AbstractSAMBase):
-    """Smarter API V0 Manifest - Plugin"""
+    """Smarter API Manifest - Plugin"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 

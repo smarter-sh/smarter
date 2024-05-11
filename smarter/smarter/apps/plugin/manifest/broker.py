@@ -4,11 +4,12 @@
 from django.http import HttpRequest, JsonResponse
 
 from smarter.apps.account.account_mixin import AccountMixin
-from smarter.apps.plugin.manifest.controller import PluginController
-from smarter.apps.plugin.manifest.models.plugin import SAMPlugin
-from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.lib.manifest.broker import AbstractBroker
 
+from ..manifest.controller import PluginController
+from ..manifest.models.plugin import SAMPlugin
+from ..models import PluginMeta
+from ..plugin.base import PluginBase
 from .const import MANIFEST_KIND
 
 
@@ -97,7 +98,12 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def get(self, request: HttpRequest = None) -> JsonResponse:
+    def get(
+        self, request: HttpRequest = None, name: str = None, all_objects: bool = False, tags: str = None
+    ) -> JsonResponse:
+        if name:
+            plugin_meta = PluginMeta.objects.get(account=self.account, name=name)
+
         if self.plugin.ready:
             try:
                 data = self.plugin.to_json()

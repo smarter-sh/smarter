@@ -15,7 +15,7 @@ from smarter.lib.manifest.exceptions import SAMValidationError
 
 
 class SmarterBaseModel(BaseModel):
-    """Smarter API V0 Base Pydantic Model."""
+    """Smarter API Base Pydantic Model."""
 
     model_config = ConfigDict(
         from_attributes=True,  # allow model to be initialized from class attributes

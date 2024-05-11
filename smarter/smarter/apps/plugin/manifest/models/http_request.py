@@ -1,4 +1,4 @@
-"""Pydantic model for the Smarter API V0 Manifest HTTP request."""
+"""Pydantic model for the Smarter API Manifest HTTP request."""
 
 import re
 from typing import ClassVar, Optional
@@ -11,7 +11,7 @@ from smarter.lib.manifest.models import SmarterBaseModel
 
 
 class HttpRequest(SmarterBaseModel):
-    """Smarter API V0 Manifest generic HTTP request model."""
+    """Smarter API Manifest generic HTTP request model."""
 
     DEFAULT_PORT: ClassVar[int] = 80
     DEFAULT_METHOD: ClassVar[str] = "GET"

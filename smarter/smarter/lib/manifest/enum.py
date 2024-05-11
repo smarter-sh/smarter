@@ -1,4 +1,4 @@
-"""Smarter API V0 Manifests Enumerations."""
+"""Smarter API Manifests Enumerations."""
 
 from enum import Enum
 
@@ -27,7 +27,7 @@ class SAMSpecificationKeyOptions(SmarterEnumAbstract):
 
 
 class SAMKeys(SmarterEnumAbstract):
-    """Smarter API V0 required keys enumeration."""
+    """Smarter API required keys enumeration."""
 
     APIVERSION = "apiVersion"
     KIND = "kind"
@@ -37,7 +37,7 @@ class SAMKeys(SmarterEnumAbstract):
 
 
 class SAMMetadataKeys(SmarterEnumAbstract):
-    """Smarter API V0 Plugin Metadata keys enumeration."""
+    """Smarter API Plugin Metadata keys enumeration."""
 
     NAME = "name"
     DESCRIPTION = "description"

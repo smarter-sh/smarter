@@ -12,24 +12,8 @@ from django.db import transaction
 from rest_framework import serializers
 
 from smarter.apps.account.manifest.models import UserProfileModel
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import smarter_admin_user_profile
-from smarter.apps.plugin.models import PluginMeta, PluginPrompt, PluginSelector
-from smarter.apps.plugin.nlp import does_refer_to
-from smarter.apps.plugin.serializers import (
-    PluginMetaSerializer,
-    PluginPromptSerializer,
-    PluginSelectorSerializer,
-)
-from smarter.apps.plugin.signals import (
-    plugin_called,
-    plugin_cloned,
-    plugin_created,
-    plugin_deleted,
-    plugin_ready,
-    plugin_selected,
-    plugin_updated,
-)
 
 # FIX NOTE: these imports need to be parameterized by version.
 from smarter.common.exceptions import SmarterValueError
@@ -39,6 +23,22 @@ from smarter.lib.manifest.loader import SAMLoader
 
 from ..manifest.const import MANIFEST_KIND
 from ..manifest.models.plugin import SAMPlugin
+from ..models import PluginMeta, PluginPrompt, PluginSelector
+from ..nlp import does_refer_to
+from ..serializers import (
+    PluginMetaSerializer,
+    PluginPromptSerializer,
+    PluginSelectorSerializer,
+)
+from ..signals import (
+    plugin_called,
+    plugin_cloned,
+    plugin_created,
+    plugin_deleted,
+    plugin_ready,
+    plugin_selected,
+    plugin_updated,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -188,6 +188,8 @@ class PluginBase(ABC):
     @property
     def manifest(self) -> SAMPlugin:
         """Return the Pydandic model of the plugin."""
+        if not self._manifest:
+            pass
         return self._manifest
 
     @property

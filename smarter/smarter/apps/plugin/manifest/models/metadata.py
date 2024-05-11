@@ -1,4 +1,4 @@
-"""Smarter API V0 Manifest - Plugin.metadata"""
+"""Smarter API Manifest - Plugin.metadata"""
 
 import os
 from typing import ClassVar
@@ -18,7 +18,7 @@ MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 
 
 class SAMPluginMetadata(AbstractSAMMetadataBase):
-    """Smarter API V0 Plugin Manifest - Metadata class."""
+    """Smarter API Plugin Manifest - Metadata class."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
