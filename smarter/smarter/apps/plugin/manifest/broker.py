@@ -103,14 +103,14 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         try:
             self.plugin.create()
         except Exception as e:
-            return self.err_response(e)
+            return self.err_response("create", e)
 
         if self.plugin.ready:
             try:
                 self.plugin.save()
-                return self.success_response({})
+                return self.success_response(data={})
             except Exception as e:
-                return self.err_response(e)
+                return self.err_response(self.apply.__name__, e)
         return self.not_ready_response()
 
     def describe(self) -> JsonResponse:
@@ -119,16 +119,16 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
                 data = self.plugin.to_json()
                 return self.success_response(data)
             except Exception as e:
-                return self.err_response(e)
+                return self.err_response(self.describe.__name__, e)
         return self.not_ready_response()
 
     def delete(self) -> JsonResponse:
         if self.plugin.ready:
             try:
                 self.plugin.delete()
-                return self.success_response({})
+                return self.success_response(data={})
             except Exception as e:
-                return self.err_response(e)
+                return self.err_response(self.delete.__name__, e)
         return self.not_ready_response()
 
     def deploy(self) -> JsonResponse:

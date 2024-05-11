@@ -14,12 +14,16 @@ class CliPlatformWhoamiApiView(CliBaseApiView):
     """Smarter API command-line interface 'apply' view"""
 
     def whoami(self):
-        data = {
-            "user": UserSerializer(self.user_profile.user).data,
-            "account": AccountSerializer(self.user_profile.account).data,
-        }
-        return JsonResponse(data=data, status=HTTPStatus.OK)
+        try:
+            data = {
+                "user": UserSerializer(self.user_profile.user).data,
+                "account": AccountSerializer(self.user_profile.account).data,
+            }
+            return JsonResponse(data=data, status=HTTPStatus.OK)
+        # pylint: disable=W0718
+        except Exception as e:
+            return JsonResponse(data={"error": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
     def post(self, request):
         """Get method for PluginManifestView."""
-        return self.handler(self.whoami)()
+        return self.whoami()

@@ -8,4 +8,4 @@ class CliApplyManifestApiView(CliBaseApiView):
     """Smarter API command-line interface 'apply' view"""
 
     def post(self, request):
-        return self.handler(self.broker.apply)()
+        return self.broker.apply()

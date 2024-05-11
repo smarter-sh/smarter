@@ -8,4 +8,4 @@ class CliDeleteObjectApiView(CliBaseApiView):
     """Smarter API command-line interface 'delete' view"""
 
     def post(self, request):
-        return self.handler(self.broker.delete)()
+        return self.broker.delete()

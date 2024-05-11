@@ -144,27 +144,3 @@ class CliBaseApiView(APIView):
             return JsonResponse(error_response_factory(e=e), status=HTTPStatus.FORBIDDEN)
 
         return super().dispatch(request, *args, **kwargs)
-
-    def handler(self, func):
-        """
-        wrapper handler for child view verb implementations: get, post, put, delete, etc.
-        Provides consistent http responses for the view methods. Works like a diffy
-        in javascript, where the function is passed as an argument to the wrapper.
-
-        Usage:
-            def post(self, request):
-                return self.handler(self.function_that_returns_JsonResponse)()
-        """
-
-        def wrapper(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except NotImplementedError as e:
-                return JsonResponse(error_response_factory(e=e), status=HTTPStatus.NOT_IMPLEMENTED)
-            except SmarterExceptionBase as e:
-                return JsonResponse(error_response_factory(e=e), status=HTTPStatus.BAD_REQUEST)
-            # pylint: disable=W0718
-            except Exception as e:
-                return JsonResponse(error_response_factory(e=e), status=HTTPStatus.INTERNAL_SERVER_ERROR)
-
-        return wrapper

@@ -67,6 +67,9 @@ class AbstractBroker(ABC):
 
         self._kind = kind or self.loader.manifest_kind if self.loader else None
 
+    ###########################################################################
+    # Class Instance Properties
+    ###########################################################################
     @property
     def is_valid(self) -> bool:
         return self._validated
@@ -75,6 +78,36 @@ class AbstractBroker(ABC):
     def kind(self) -> str:
         """The kind of manifest."""
         return self._kind
+
+    @property
+    def name(self) -> str:
+        """The name of the manifest."""
+        if self.manifest and self.manifest.metadata and self.manifest.metadata.name:
+            return self.manifest.metadata.name
+        return None
+
+    @property
+    def api_version(self) -> str:
+        return self._api_version
+
+    @property
+    def loader(self) -> SAMLoader:
+        return self._loader
+
+    @property
+    def account(self) -> "Account":
+        raise NotImplementedError
+
+    @property
+    def user(self) -> "UserType":
+        raise NotImplementedError
+
+    @property
+    def user_profile(self) -> "UserProfile":
+        raise NotImplementedError
+
+    def __str__(self):
+        return f"{self.manifest.apiVersion} {self.kind} Broker"
 
     ###########################################################################
     # Abstract Properties
@@ -131,45 +164,19 @@ class AbstractBroker(ABC):
         return data
 
     def not_implemented_response(self) -> JsonResponse:
-        data = {"smarter": f"operation not implemented for {self.kind} "}
+        data = {"smarter": f"operation not implemented for {self.kind} resources"}
         return JsonResponse(data=data, status=HTTPStatus.NOT_IMPLEMENTED)
 
     def not_ready_response(self) -> JsonResponse:
-        data = {"smarter": f"{self.kind} not ready"}
+        data = {"smarter": f"{self.kind} {self.name} not ready"}
         return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
 
-    def err_response(self, e: Exception) -> JsonResponse:
-        data = {"smarter": "could not complete the operation", "error": str(e)}
-        return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
+    def err_response(self, operation: str, e: Exception) -> JsonResponse:
+        data = {"smarter": f"could not {operation} {self.kind} {self.name}", "error": str(e)}
+        return JsonResponse(data=data, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
     def success_response(self, data: dict) -> JsonResponse:
         return JsonResponse(data=data, status=HTTPStatus.OK)
-
-    ###########################################################################
-    # Class Instance Properties
-    ###########################################################################
-    @property
-    def api_version(self) -> str:
-        return self._api_version
-
-    @property
-    def loader(self) -> SAMLoader:
-        return self._loader
-
-    @property
-    def account(self) -> "Account":
-        raise NotImplementedError
-
-    @property
-    def user(self) -> "UserType":
-        raise NotImplementedError
-
-    @property
-    def user_profile(self) -> "UserProfile":
-        raise NotImplementedError
-
-    def __str__(self):
-        return f"{self.manifest.apiVersion} {self.kind} Broker"
 
 
 class BrokerNotImplemented(AbstractBroker):

@@ -47,19 +47,23 @@ class CliPlatformStatusApiView(CliBaseApiView):
             return {"error": str(e)}
 
     def status(self):
-        data = {
-            "infrastructure": {
-                "eks": self.get_eks_status(smarter_settings.aws_eks_cluster_name),
-                "mysql": self.get_rds_status(smarter_settings.aws_eks_cluster_name),
-                "aws": {
-                    "region": smarter_settings.aws_region,
-                    "status": self.get_service_status(smarter_settings.aws_region),
+        try:
+            data = {
+                "infrastructure": {
+                    "eks": self.get_eks_status(smarter_settings.aws_eks_cluster_name),
+                    "mysql": self.get_rds_status(smarter_settings.aws_eks_cluster_name),
+                    "aws": {
+                        "region": smarter_settings.aws_region,
+                        "status": self.get_service_status(smarter_settings.aws_region),
+                    },
                 },
-            },
-        }
+            }
 
-        return JsonResponse(data=data, status=HTTPStatus.OK)
+            return JsonResponse(data=data, status=HTTPStatus.OK)
+        # pylint: disable=W0718
+        except Exception as e:
+            return JsonResponse(data={"error": str(e)}, status=HTTPStatus.BAD_REQUEST)
 
     def post(self, request):
         """Get method for PluginManifestView."""
-        return self.handler(self.status)()
+        return self.status()
