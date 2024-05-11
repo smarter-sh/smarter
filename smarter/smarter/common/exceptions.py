@@ -1,5 +1,7 @@
 """Module exceptions.py"""
 
+import re
+
 
 class SmarterExceptionBase(Exception):
     """Exception raised for errors in the configuration."""
@@ -7,6 +9,14 @@ class SmarterExceptionBase(Exception):
     def __init__(self, message):
         self.message = message
         super().__init__(self.message)
+
+    def __str__(self):
+        return self.get_readable_name + ": " + self.message
+
+    @property
+    def get_readable_name(self):
+        words = re.findall("[A-Z][^A-Z]*", self.__name__)
+        return " ".join(word for word in words)
 
 
 class SmarterConfigurationError(SmarterExceptionBase):
@@ -17,7 +27,7 @@ class SmarterValueError(SmarterExceptionBase):
     """Exception raised for illegal or invalid values."""
 
 
-class SmarterInvalidApiKey(SmarterExceptionBase):
+class SmarterInvalidApiKeyError(SmarterExceptionBase):
     """Exception raised when an invalid api key is received."""
 
 

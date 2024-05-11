@@ -6,6 +6,7 @@ from taggit.models import Tag
 
 from smarter.apps.account.account_mixin import AccountMixin
 from smarter.lib.manifest.broker import AbstractBroker
+from smarter.lib.manifest.exceptions import SAMExceptionBase
 
 from ..manifest.controller import PluginController
 from ..manifest.models.plugin import SAMPlugin
@@ -15,6 +16,10 @@ from .const import MANIFEST_KIND
 
 
 MAX_RESULTS = 1000
+
+
+class SAMPluginBrokerError(SAMExceptionBase):
+    """Base exception for Smarter API Plugin Broker handling."""
 
 
 class SAMPluginBroker(AbstractBroker, AccountMixin):
@@ -129,6 +134,8 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
             controller = PluginController(plugin_meta)
             try:
                 model_dump = controller.model_dump_json()
+                if not model_dump:
+                    raise SAMPluginBrokerError(f"Model dump failed for {self.kind} {plugin_meta.name}")
                 data.append(model_dump)
             except Exception as e:
                 return self.err_response(self.get.__name__, e)

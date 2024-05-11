@@ -6,7 +6,7 @@ from smarter.apps.account.models import Account
 
 # lib manifest
 from smarter.lib.manifest.controller import AbstractController
-from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.manifest.exceptions import SAMExceptionBase
 
 # plugin
 from ..models import PluginMeta
@@ -21,6 +21,10 @@ from .enum import SAMPluginMetadataClassValues
 from .models.plugin import SAMPlugin
 
 
+class SAMPluginControllerError(SAMExceptionBase):
+    """Base exception for Smarter API Plugin Controller handling."""
+
+
 class PluginController(AbstractController):
     """Helper class to map to/from Pydantic manifest model, Plugin and Django ORM models."""
 
@@ -30,14 +34,14 @@ class PluginController(AbstractController):
 
     def __init__(self, account: Account, manifest: SAMPlugin = None, plugin_meta: PluginMeta = None):
         if (bool(manifest) and bool(plugin_meta)) or (not bool(manifest) and not bool(plugin_meta)):
-            raise SAMValidationError("One and only one of manifest or plugin_meta should be provided.")
+            raise SAMPluginControllerError("One and only one of manifest or plugin_meta should be provided.")
         self._account = account
         self._manifest = manifest
         self._plugin_meta = plugin_meta
 
         if self.manifest:
             if self.manifest.kind != MANIFEST_KIND:
-                raise SAMValidationError(
+                raise SAMPluginControllerError(
                     f"Manifest kind {self.manifest.kind} does not match expected kind {MANIFEST_KIND}."
                 )
 
@@ -62,7 +66,7 @@ class PluginController(AbstractController):
                     name=self.name,
                 )
             except PluginMeta.DoesNotExist as e:
-                raise SAMValidationError(f"{self.manifest.kind} {self.name} does not exist.") from e
+                raise SAMPluginControllerError(f"{self.manifest.kind} {self.name} does not exist.") from e
         return self._plugin_meta
 
     @property
