@@ -78,7 +78,7 @@ class Account(TimestampedModel):
         super().save(*args, **kwargs)
 
     @classmethod
-    def get_account_by_number(cls, account_number):
+    def get_by_account_number(cls, account_number):
         try:
             return cls.objects.get(account_number=account_number)
         except cls.DoesNotExist:

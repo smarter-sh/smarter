@@ -7,11 +7,10 @@ from django.core.management.base import BaseCommand
 from django.test import Client
 from django.urls import reverse
 
-from smarter.apps.account.models import Account, SmarterAuthToken
+from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
 from smarter.apps.account.utils import account_admin_user
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
-from smarter.lib.django.user import User
 
 
 class Command(BaseCommand):
@@ -19,6 +18,13 @@ class Command(BaseCommand):
     Utility for running api/v1/cli/ endpoints to verify that they work.
     This largely recreates the unit tests for the endpoints, albeit with
     formatted screen output.
+
+    This is an instructional tool as much as a utility, demonstrating the
+    following:
+    - how to generate an API key for a user
+    - how to add the API key to an http request to api/v1/cli/ endpoints
+    - how to setup an http request for an api/v1/cli/ endpoint
+    - how to work with the response object
     """
 
     def add_arguments(self, parser):
@@ -34,10 +40,17 @@ class Command(BaseCommand):
         username = options["username"]
         account_number = options["account_number"]
 
-        account = Account.get_account_by_number(account_number)
+        account = Account.get_by_account_number(account_number)
         user = account_admin_user(account=account)
         if username != user.get_username():
-            user = User.objects.get(username=username)
+            try:
+                user_profile = UserProfile.objects.get(account=account, user__username=username)
+                user = user_profile.user
+            except UserProfile.DoesNotExist:
+                self.stdout.write(
+                    self.style.ERROR(f"No user '{username}' associated with account {account.account_number}.")
+                )
+                return
 
         # generate an auth token (api key) for this job.
         token_record, token_key = SmarterAuthToken.objects.create(
@@ -55,6 +68,11 @@ class Command(BaseCommand):
         self.stdout.write("*" * 80)
 
         def get_response(path):
+            """
+            Prepare and get a response from an api/v1/cli endpoint.
+            We need to be mindful of the environment we are in, as the
+            endpoint may be hosted over https or http.
+            """
             client = Client()
             client.force_login(user)
 
