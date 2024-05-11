@@ -4,8 +4,7 @@ Helper class to map to/from Pydantic manifest model, Plugin and Django ORM model
 
 from typing import Dict, Type
 
-from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.utils import account_admin_user
+from smarter.apps.account.models import Account
 
 # lib manifest
 from smarter.lib.manifest.controller import AbstractController
@@ -92,13 +91,11 @@ class PluginController(AbstractController):
             return self._plugin
         if self._plugin_meta:
             Plugin = self.map[self.plugin_meta.plugin_class]
-            user_profile = UserProfile.objects.get(account=self.account, user=account_admin_user(self.account))
-            self._plugin = Plugin(plugin_meta=self.plugin_meta, user_profile=user_profile)
+            self._plugin = Plugin(plugin_meta=self.plugin_meta, user_profile=self.user_profile)
             self._manifest = self._plugin.manifest
         elif self.manifest:
             Plugin = self.map[self.manifest.metadata.pluginClass]
-            user_profile = UserProfile.objects.get(account=self.account, user=account_admin_user(self.account))
-            self._plugin = Plugin(manifest=self.manifest, user_profile=user_profile)
+            self._plugin = Plugin(manifest=self.manifest, user_profile=self.user_profile)
         return self._plugin
 
     def model_dump_json(self) -> dict:

@@ -4,28 +4,18 @@ instance of the the correct Python subclass.
 """
 
 import abc
-import typing
 from typing import Any
 
+from smarter.apps.account.mixins import AccountMixin
 from smarter.lib.manifest.models import AbstractSAMBase
 
 
-if typing.TYPE_CHECKING:
-    from smarter.apps.account.models import Account
-
-
-class AbstractController(abc.ABC):
+class AbstractController(abc.ABC, AccountMixin):
     """Map the Pydantic metadata.kindClass to the corresponding object instance."""
-
-    _account: "Account" = None
 
     ###########################################################################
     # Abstract property implementations
     ###########################################################################
-    @property
-    def account(self) -> "Account":
-        return self._account
-
     @property
     @abc.abstractmethod
     def manifest(self) -> AbstractSAMBase:
