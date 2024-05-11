@@ -10,6 +10,7 @@ from smarter.apps.account.account_mixin import AccountMixin
 from smarter.apps.account.models import Account
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.exceptions import SAMExceptionBase
+from smarter.lib.manifest.loader import SAMLoader
 
 from ..manifest.controller import PluginController
 from ..manifest.models.plugin import SAMPlugin
@@ -45,6 +46,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         api_version: str,
         account: Account,
         kind: str = None,
+        loader: SAMLoader = None,
         manifest: str = None,
         file_path: str = None,
         url: str = None,
@@ -61,6 +63,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
             api_version=api_version,
             account=account,
             kind=kind,
+            loader=loader,
             manifest=manifest,
             file_path=file_path,
             url=url,
@@ -74,7 +77,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         """
         if self._plugin:
             return self._plugin
-        controller = PluginController(self.manifest)
+        controller = PluginController(account=self.account, manifest=self.manifest)
         self._plugin = controller.obj
         return self._plugin
 

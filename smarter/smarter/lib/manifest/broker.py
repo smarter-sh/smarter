@@ -9,7 +9,6 @@ from django.http import HttpRequest, JsonResponse
 
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django.user import UserType
-from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.models import AbstractSAMBase
 
@@ -49,11 +48,13 @@ class AbstractBroker(ABC):
         api_version: str,
         account: "Account",
         kind: str = None,
+        loader: SAMLoader = None,
         manifest: str = None,
         file_path: str = None,
         url: str = None,
     ):
         self._account = account
+        self._loader = loader
         if api_version not in SUPPORTED_API_VERSIONS:
             raise SAMValidationError(f"Unsupported apiVersion: {api_version}")
         self._api_version = api_version

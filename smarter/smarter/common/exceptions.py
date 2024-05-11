@@ -16,7 +16,7 @@ class SmarterExceptionBase(Exception):
 
     @property
     def get_readable_name(self):
-        words = re.findall("[A-Z][^A-Z]*", self.__name__)
+        words = re.findall("[A-Z][^A-Z]*", type(self).__name__)
         return " ".join(word for word in words)
 
 

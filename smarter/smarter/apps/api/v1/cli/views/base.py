@@ -1,9 +1,11 @@
 """Smarter API command-line interface Base class API view"""
 
+import json
 import logging
 from http import HTTPStatus
-from typing import Dict, Type, Union
+from typing import Type
 
+import yaml
 from django.http import JsonResponse
 from knox.auth import TokenAuthentication
 from rest_framework.authentication import SessionAuthentication
@@ -42,7 +44,7 @@ class CliBaseApiView(APIView):
     _loader: SAMLoader = None
     _broker: AbstractBroker = None
     _user_profile: UserProfile = None
-    _manifest_text: Union[str, Dict] = None
+    _manifest_data: json = None
     _manifest_kind: str = None
     _manifest_load_failed: bool = False
     _BrokerClass: Type[AbstractBroker] = None
@@ -55,15 +57,18 @@ class CliBaseApiView(APIView):
         such as validating the file format, and identifying required dict key values
         such as the api version, the manifest kind and its name.
         """
-        if not self._loader and self.manifest_text and not self._manifest_load_failed:
+        if not self._loader and self.manifest_data and not self._manifest_load_failed:
             try:
                 self._loader = SAMLoader(
                     api_version=SMARTER_API_VERSION,
-                    manifest=self.manifest_text,
+                    kind=self.manifest_kind,
+                    manifest=self.manifest_data,
                 )
                 if not self._loader:
+                    print("loader() -  exception: SAMValidationError")
                     raise SAMValidationError("")
-            except SAMValidationError:
+            except SAMValidationError as e:
+                print("loader() -  exception: SAMValidationError", e)
                 # not all endpoints require a manifest, so we
                 # should fail gracefully if the manifest is not provided.
                 self._manifest_load_failed = True
@@ -80,7 +85,7 @@ class CliBaseApiView(APIView):
             if self.manifest_kind:
                 self._BrokerClass = BROKERS.get(self.manifest_kind)
             if not self._BrokerClass:
-                raise SAMValidationError(f"Could not find broker for {self.kind} manifest.")
+                raise SAMValidationError(f"Could not find broker for {self.manifest_kind} manifest.")
         return self._BrokerClass
 
     @property
@@ -97,6 +102,7 @@ class CliBaseApiView(APIView):
                 api_version=SMARTER_API_VERSION,
                 kind=self.manifest_kind,
                 account=self.user_profile.account,
+                loader=self.loader,
                 manifest=self.loader.yaml_data if self.loader else None,
             )
             if not self._broker:
@@ -109,11 +115,13 @@ class CliBaseApiView(APIView):
         return self._user_profile
 
     @property
-    def manifest_text(self) -> Union[str, Dict]:
-        return self._manifest_text
+    def manifest_data(self) -> json:
+        return self._manifest_data
 
     @property
     def manifest_kind(self) -> str:
+        if not self._manifest_kind and self.manifest_data:
+            self._manifest_kind = self.manifest_data.get("kind", None)
         if not self._manifest_kind and self.loader:
             self._manifest_kind = self.loader.manifest_kind if self.loader else None
         return self._manifest_kind
@@ -144,10 +152,18 @@ class CliBaseApiView(APIView):
                     )
 
         # Manifest parsing and broker instantiation are lazy implementations.
-        # So for now, we'll only set the private class variable _manifest_text
+        # So for now, we'll only set the private class variable _manifest_data
         # from the request body, and then we'll leave it to the child views to
         # decide if/when to actually parse the manifest and instantiate the broker.
-        self._manifest_text = request.body.decode("utf-8")
+        data = request.body.decode("utf-8")
+        try:
+            self._manifest_data = json.loads(data)
+        except json.JSONDecodeError:
+            try:
+                self._manifest_data = yaml.safe_load(data)
+            except yaml.YAMLError as e:
+                return JsonResponse(error_response_factory(e=e), status=HTTPStatus.BAD_REQUEST)
+        print(f"Manifest data: {self.manifest_data}")
         try:
             self._user_profile = user_profile_for_user(user=request.user)
             if not self._user_profile:

@@ -3,7 +3,7 @@
 import json
 import logging
 from enum import Enum
-from typing import Any
+from typing import Any, Union
 
 import requests
 import waffle
@@ -137,7 +137,7 @@ class SAMLoader:
         return self._specification
 
     @property
-    def raw_data(self) -> str:
+    def raw_data(self) -> Union[str, dict]:
         return self._raw_data
 
     @property
@@ -155,7 +155,7 @@ class SAMLoader:
             data = yaml.safe_load(self.raw_data)
             if isinstance(data, dict):
                 return self.raw_data
-        except yaml.YAMLError:
+        except Exception:
             pass
         return None
 

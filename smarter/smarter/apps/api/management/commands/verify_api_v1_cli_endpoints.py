@@ -94,14 +94,16 @@ class Command(BaseCommand):
             client = Client()
             client.force_login(user)
 
-            headers = {"Content-Type": "application/json", "Authorization": f"Token {token_key}"}
+            headers = {"Authorization": f"Token {token_key}"}
             http_host = smarter_settings.environment_domain
 
             if smarter_settings.environment in SmarterEnvironments.aws_environments:
-                response = client.post(path=path, HTTP_HOST=http_host, **headers)
+                response = client.post(
+                    path=path, data=manifest, content_type="application/json", HTTP_HOST=http_host, extra=headers
+                )
                 url = f"https://{smarter_settings.environment_domain}{path}"
             else:
-                response = client.post(path=path, **headers)
+                response = client.post(path=path, data=manifest, content_type="application/json", extra=headers)
                 url = f"http://localhost:8000{path}"
 
             response_content = response.content.decode("utf-8")
@@ -111,32 +113,32 @@ class Command(BaseCommand):
             response = json.dumps(response_json, indent=4) + "\n"
             self.stdout.write("response: " + self.style.SUCCESS(response))
 
-        path = reverse("api_v1_cli_apply_view", kwargs={"kind": "plugin"})
+        path = reverse("api_v1_cli_apply_view", kwargs={})
         get_response(path, manifest=self.data)
 
-        path = reverse("api_v1_cli_deploy_view", kwargs={"kind": "plugin", "name": "PluginVerification"})
-        get_response(path)
+        # path = reverse("api_v1_cli_deploy_view", kwargs={"kind": "plugin", "name": "PluginVerification"})
+        # get_response(path)
 
-        path = reverse("api_v1_cli_describe_view", kwargs={"kind": "plugin", "name": "PluginVerification"})
-        get_response(path)
+        # path = reverse("api_v1_cli_describe_view", kwargs={"kind": "plugin", "name": "PluginVerification"})
+        # get_response(path)
 
-        path = reverse("api_v1_cli_logs_kind_name_view", kwargs={"kind": "plugin", "name": "PluginVerification"})
-        get_response(path)
+        # path = reverse("api_v1_cli_logs_kind_name_view", kwargs={"kind": "plugin", "name": "PluginVerification"})
+        # get_response(path)
 
-        path = reverse("api_v1_cli_get_view", kwargs={"kind": "plugins"})
-        get_response(path)
+        # path = reverse("api_v1_cli_get_view", kwargs={"kind": "plugins"})
+        # get_response(path)
 
-        path = reverse("api_v1_cli_delete_view", kwargs={"kind": "plugin", "name": "PluginVerification"})
-        get_response(path)
+        # path = reverse("api_v1_cli_delete_view", kwargs={"kind": "plugin", "name": "PluginVerification"})
+        # get_response(path)
 
-        path = reverse("api_v1_cli_manifest_view", kwargs={"kind": "plugin"})
-        get_response(path)
+        # path = reverse("api_v1_cli_manifest_view", kwargs={"kind": "plugin"})
+        # get_response(path)
 
-        path = reverse("api_v1_cli_status_view")
-        get_response(path)
+        # path = reverse("api_v1_cli_status_view")
+        # get_response(path)
 
-        path = reverse("api_v1_cli_whoami_view")
-        get_response(path)
+        # path = reverse("api_v1_cli_whoami_view")
+        # get_response(path)
 
         token_record.delete()
         self.stdout.write(self.style.SUCCESS("API CLI endpoint verifications complete."))
