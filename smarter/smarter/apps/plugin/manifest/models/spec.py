@@ -1,4 +1,4 @@
-"""Smarter API V0 Manifest - Plugin.spec"""
+"""Smarter API Manifest - Plugin.spec"""
 
 import os
 import re
@@ -32,7 +32,7 @@ SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 
 
 class SAMPluginSpecSelector(BaseModel):
-    """Smarter API V0 Plugin Manifest - Spec - Selector class."""
+    """Smarter API Plugin Manifest - Spec - Selector class."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".selector"
 
@@ -95,7 +95,7 @@ class SAMPluginSpecSelector(BaseModel):
 
 
 class SAMPluginSpecPrompt(BaseModel):
-    """Smarter API V0 Plugin Manifest - Spec - Prompt class."""
+    """Smarter API Plugin Manifest - Spec - Prompt class."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".prompt"
 
@@ -166,7 +166,7 @@ class SAMPluginSpecPrompt(BaseModel):
 
 
 class SAMPluginSpecDataSql(BaseModel):
-    """Smarter API V0 Plugin Manifest Plugin.spec.data.sqlData"""
+    """Smarter API Plugin Manifest Plugin.spec.data.sqlData"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".data.sqlData"
 
@@ -189,7 +189,7 @@ class SAMPluginSpecDataSql(BaseModel):
 
 
 class SAMPluginSpecData(BaseModel):
-    """Smarter API V0 Plugin Manifest Plugin.spec.data"""
+    """Smarter API Plugin Manifest Plugin.spec.data"""
 
     class_identifier: ClassVar[str] = f"{MODULE_IDENTIFIER}.{SAMPluginSpecKeys.DATA.value}"
 
@@ -245,7 +245,7 @@ class SAMPluginSpecData(BaseModel):
 
 
 class SAMPluginSpec(AbstractSAMSpecBase):
-    """Smarter API V0 Plugin Manifest Plugin.spec"""
+    """Smarter API Plugin Manifest Plugin.spec"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 

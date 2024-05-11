@@ -138,7 +138,9 @@ class AbstractBroker(ABC):
     # Abstract Methods
     ###########################################################################
     @abstractmethod
-    def get(self, request: HttpRequest = None) -> JsonResponse:
+    def get(
+        self, request: HttpRequest = None, name: str = None, all_objects: bool = False, tags: str = None
+    ) -> JsonResponse:
         """get information about specified resources."""
         raise NotImplementedError
 

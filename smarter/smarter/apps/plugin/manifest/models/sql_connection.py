@@ -1,4 +1,4 @@
-"""Smarter API V0 - SQL Connection model."""
+"""Smarter API - SQL Connection model."""
 
 import re
 from enum import Enum
@@ -14,7 +14,7 @@ from .enum import DbEngine
 
 
 class SqlConnection(SmarterBaseModel):
-    """Smarter API V0 - generic SQL Connection class."""
+    """Smarter API - generic SQL Connection class."""
 
     class PortAssignmentDefaults(Enum):
         """SQL Port Assignments."""

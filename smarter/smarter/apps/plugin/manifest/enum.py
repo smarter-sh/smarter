@@ -1,4 +1,4 @@
-"""Smarter API V0 PLugin Manifest - enumerated datatypes."""
+"""Smarter API PLugin Manifest - enumerated datatypes."""
 
 from smarter.lib.manifest.enum import SmarterEnumAbstract
 
@@ -7,7 +7,7 @@ from smarter.lib.manifest.enum import SmarterEnumAbstract
 # Enums for describing possible manifest key values
 ###############################################################################
 class SAMPluginMetadataClassValues(SmarterEnumAbstract):
-    """Smarter API V0 Plugin Metadata Class keys enumeration."""
+    """Smarter API Plugin Metadata Class keys enumeration."""
 
     # a plugin that returns a static json response contained inside the plugin manifest
     STATIC = "static"
@@ -22,7 +22,7 @@ class SAMPluginMetadataClassValues(SmarterEnumAbstract):
 
 
 class SAMPluginSpecSelectorKeyDirectiveValues(SmarterEnumAbstract):
-    """Smarter API V0 Plugin Spec Selector keys enumeration."""
+    """Smarter API Plugin Spec Selector keys enumeration."""
 
     # Smarter handler applied key word search
     SEARCHTERMS = "searchTerms"
@@ -39,13 +39,13 @@ class SAMPluginSpecSelectorKeyDirectiveValues(SmarterEnumAbstract):
 # Enums for manifest keys in error handlers and other on-screen messages
 ###############################################################################
 class SAMPluginMetadataKeys(SmarterEnumAbstract):
-    """Smarter API V0 Plugin Metadata keys enumeration."""
+    """Smarter API Plugin Metadata keys enumeration."""
 
     PLUGIN_CLASS = "pluginClass"
 
 
 class SAMPluginMetadataClass(SmarterEnumAbstract):
-    """Smarter API V0 Plugin Metadata Class keys enumeration."""
+    """Smarter API Plugin Metadata Class keys enumeration."""
 
     STATIC_DATA = "staticData"
     API_DATA = "apiData"
@@ -53,7 +53,7 @@ class SAMPluginMetadataClass(SmarterEnumAbstract):
 
 
 class SAMPluginSpecKeys(SmarterEnumAbstract):
-    """Smarter API V0 Plugin Spec keys enumeration."""
+    """Smarter API Plugin Spec keys enumeration."""
 
     SELECTOR = "selector"
     PROMPT = "prompt"
@@ -61,13 +61,13 @@ class SAMPluginSpecKeys(SmarterEnumAbstract):
 
 
 class SAMPluginSpecSelectorKeys(SmarterEnumAbstract):
-    """Smarter API V0 Plugin Spec Selector keys enumeration."""
+    """Smarter API Plugin Spec Selector keys enumeration."""
 
     DIRECTIVE = "directive"
 
 
 class SAMPluginSpecPromptKeys(SmarterEnumAbstract):
-    """Smarter API V0 Plugin Spec Prompt keys enumeration."""
+    """Smarter API Plugin Spec Prompt keys enumeration."""
 
     SYSTEMROLE = "systemRole"
     MODEL = "model"
@@ -76,6 +76,6 @@ class SAMPluginSpecPromptKeys(SmarterEnumAbstract):
 
 
 class SmartApiPluginSpecDataKeys(SmarterEnumAbstract):
-    """Smarter API V0 Plugin Spec Data keys enumeration."""
+    """Smarter API Plugin Spec Data keys enumeration."""
 
     DESCRIPTION = "description"

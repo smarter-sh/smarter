@@ -14,7 +14,7 @@ from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import user_profile_for_user
 from smarter.common.exceptions import SmarterExceptionBase, error_response_factory
 from smarter.lib.manifest.broker import AbstractBroker
-from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.manifest.exceptions import SAMBadRequestError, SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 
 from ...manifests.enum import SAMKinds
@@ -129,10 +129,11 @@ class CliBaseApiView(APIView):
         """
         self._manifest_kind = str(kwargs.get("kind")).title()
         if self.manifest_kind:
+            # Validate the manifest kind: plugin, plugins, user, users, chatbot, chatbots, etc.
             if str(self.manifest_kind).lower() not in SAMKinds.all_slugs():
                 return JsonResponse(
-                    error_response_factory(e=NotImplementedError(f"Unsupported manifest kind: {self.manifest_kind}")),
-                    status=HTTPStatus.NOT_IMPLEMENTED,
+                    error_response_factory(e=SAMBadRequestError(f"Unsupported manifest kind: {self.manifest_kind}")),
+                    status=HTTPStatus.BAD_REQUEST,
                 )
 
         # Manifest parsing and broker instantiation are lazy implementations.

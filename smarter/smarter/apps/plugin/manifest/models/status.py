@@ -1,4 +1,4 @@
-"""Smarter API V0 Manifest - Plugin.status"""
+"""Smarter API Manifest - Plugin.status"""
 
 import os
 from typing import ClassVar
@@ -13,6 +13,6 @@ MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 
 
 class SAMPluginStatus(AbstractSAMStatusBase):
-    """Smarter API V0 Plugin Manifest - Status class."""
+    """Smarter API Plugin Manifest - Status class."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER

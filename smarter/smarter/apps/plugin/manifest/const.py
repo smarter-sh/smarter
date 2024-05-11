@@ -1,3 +1,3 @@
-"""Smarter API V0 Plugin Manifest Constants"""
+"""Smarter API Plugin Manifest Constants"""
 
 MANIFEST_KIND = "Plugin"

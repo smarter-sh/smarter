@@ -15,4 +15,12 @@ class SAMKinds(SmarterEnumAbstract):
 
     @classmethod
     def all_slugs(cls):
+        return cls.singular_slugs() + cls.plural_slugs()
+
+    @classmethod
+    def singular_slugs(cls):
         return [slug.lower() for slug in cls.all_values()]
+
+    @classmethod
+    def plural_slugs(cls):
+        return [f"{slug.lower()}s" for slug in cls.all_values()]
