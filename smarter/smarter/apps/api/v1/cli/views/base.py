@@ -27,7 +27,10 @@ logger = logging.getLogger(__name__)
 
 class CliBaseApiView(APIView):
     """
-    Smarter API command-line interface Base class API view.
+    Smarter API command-line interface Base class API view. Handles
+    common tasks for all /api/v1/cli views:
+    - Authenticates the request using either knox TokenAuthentication
+      or Django SessionAuthentication.
     - Initializes the SAMLoader and AbstractBroker instances.
     - Resolves the manifest kind and broker for the yaml manifest document.
     - Sets the user profile for the request.
@@ -49,9 +52,10 @@ class CliBaseApiView(APIView):
         """
         Get the SAMLoader instance. a SAMLoader instance is used to load
         raw manifest text into a Pydantic model. It performs cursory validations
-        on identifying keys values like the api version and kind.
+        such as validating the file format, and identifying required dict key values
+        such as the api version, the manifest kind and its name.
         """
-        if not self._loader and not self._manifest_load_failed:
+        if not self._loader and self.manifest_text and not self._manifest_load_failed:
             try:
                 self._loader = SAMLoader(
                     api_version=SMARTER_API_VERSION,
@@ -60,8 +64,8 @@ class CliBaseApiView(APIView):
                 if not self._loader:
                     raise SAMValidationError("")
             except SAMValidationError:
-                # some endpoints don't require a manifest, so we
-                # deal with this inside the downstream views.
+                # not all endpoints require a manifest, so we
+                # should fail gracefully if the manifest is not provided.
                 self._manifest_load_failed = True
 
         return self._loader
@@ -143,4 +147,10 @@ class CliBaseApiView(APIView):
         except SmarterExceptionBase as e:
             return JsonResponse(error_response_factory(e=e), status=HTTPStatus.FORBIDDEN)
 
-        return super().dispatch(request, *args, **kwargs)
+        # generic exception handler that simply ensures that in all cases
+        # the response is a JsonResponse with a status code.
+        try:
+            return super().dispatch(request, *args, **kwargs)
+        # pylint: disable=broad-except
+        except Exception as e:
+            return JsonResponse(error_response_factory(e=e), status=HTTPStatus.INTERNAL_SERVER_ERROR)
