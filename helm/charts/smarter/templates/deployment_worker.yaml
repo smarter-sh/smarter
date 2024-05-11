@@ -86,9 +86,6 @@ spec:
           command: ["celery", "-A", "smarter.smarter_celery.app", "worker", "--loglevel=info", "-Q default_celery_task_queue"]
           imagePullPolicy: Always
           name: {{ .Values.workerName }}
-          ports:
-            - containerPort: {{ .Values.deployment.containerPort }}
-              protocol: TCP
           resources: {}
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
