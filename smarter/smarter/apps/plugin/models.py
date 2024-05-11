@@ -157,62 +157,62 @@ class PluginDataStatic(TimestampedModel):
     description = models.TextField(
         help_text="A brief description of what this plugin returns. Be verbose, but not too verbose.",
     )
-    return_data = models.JSONField(
+    static_data = models.JSONField(
         help_text="The JSON data that this plugin returns to OpenAI API when invoked by the user prompt.", default=dict
     )
 
     @property
     def sanitized_return_data(self) -> dict:
-        """Returns a dict of self.return_data."""
+        """Returns a dict of self.static_data."""
         retval: dict = {}
-        if isinstance(self.return_data, dict):
-            return self.return_data
-        if isinstance(self.return_data, list):
-            retval = self.return_data
+        if isinstance(self.static_data, dict):
+            return self.static_data
+        if isinstance(self.static_data, list):
+            retval = self.static_data
             if isinstance(retval, list) and len(retval) > 0:
                 if len(retval) > SMARTER_PLUGIN_MAX_DATA_RESULTS:
                     logger.warning(
-                        "PluginDataStatic.sanitized_return_data: Truncating return_data to %s items.",
+                        "PluginDataStatic.sanitized_return_data: Truncating static_data to %s items.",
                         {SMARTER_PLUGIN_MAX_DATA_RESULTS},
                     )
                 retval = retval[:SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136
                 retval = list_of_dicts_to_dict(data=retval)
         else:
-            raise SmarterValueError("return_data must be a dict or a list or None")
+            raise SmarterValueError("static_data must be a dict or a list or None")
 
         return retval
 
     @property
     @lru_cache(maxsize=128)
     def return_data_keys(self) -> list:
-        """Return all keys in the return_data."""
+        """Return all keys in the static_data."""
 
         retval: list = []
-        if isinstance(self.return_data, dict):
-            retval = dict_keys_to_list(data=self.return_data)
+        if isinstance(self.static_data, dict):
+            retval = dict_keys_to_list(data=self.static_data)
             retval = list(retval)
-        elif isinstance(self.return_data, list):
-            retval = self.return_data
+        elif isinstance(self.static_data, list):
+            retval = self.static_data
             if isinstance(retval, list) and len(retval) > 0:
                 if len(retval) > SMARTER_PLUGIN_MAX_DATA_RESULTS:
                     logger.warning(
-                        "PluginDataStatic.return_data_keys: Truncating return_data to %s items.",
+                        "PluginDataStatic.return_data_keys: Truncating static_data to %s items.",
                         {SMARTER_PLUGIN_MAX_DATA_RESULTS},
                     )
                 retval = retval[:SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136
                 retval = list_of_dicts_to_list(data=retval)
         else:
-            raise SmarterValueError("return_data must be a dict or a list or None")
+            raise SmarterValueError("static_data must be a dict or a list or None")
 
         return retval[:SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136
 
     @property
     def data(self) -> dict:
-        return yaml.dump(self.return_data)
+        return yaml.dump(self.static_data)
 
     def __str__(self) -> str:
         return str(self.plugin.name)
 
     class Meta:
-        verbose_name = "Plugin Data"
-        verbose_name_plural = "Plugin Data"
+        verbose_name = "Plugin Static Data"
+        verbose_name_plural = "Plugin Static Data"

@@ -150,7 +150,7 @@ class TestPlugin(unittest.TestCase):
         self.assertEqual(plugin.plugin_prompt.temperature, self.data["prompt"]["temperature"])
         self.assertEqual(plugin.plugin_prompt.max_tokens, self.data["prompt"]["max_tokens"])
         self.assertEqual(plugin.plugin_data.description, self.data["plugin_data"]["description"])
-        self.assertEqual(plugin.plugin_data.return_data, self.data["plugin_data"]["return_data"])
+        self.assertEqual(plugin.plugin_data.static_data, self.data["plugin_data"]["static_data"])
 
     def test_update(self):
         """Test that we can update a plugin using the PluginStatic."""
@@ -171,7 +171,7 @@ class TestPlugin(unittest.TestCase):
         plugin.plugin_prompt.temperature = 0.5
         plugin.plugin_prompt.max_tokens = 100
         plugin.plugin_data.description = "New Description"
-        plugin.plugin_data.return_data = "New Return Data"
+        plugin.plugin_data.static_data = "New Return Data"
 
         plugin.update()
 
@@ -182,7 +182,7 @@ class TestPlugin(unittest.TestCase):
         self.assertEqual(plugin.plugin_prompt.temperature, 0.5)
         self.assertEqual(plugin.plugin_prompt.max_tokens, 100)
         self.assertEqual(plugin.plugin_data.description, "New Description")
-        self.assertEqual(plugin.plugin_data.return_data, "New Return Data")
+        self.assertEqual(plugin.plugin_data.static_data, "New Return Data")
 
         # sleep long enough to eliminate race situation
         # between the asynchronous commit and our assertion
@@ -381,7 +381,7 @@ class TestPlugin(unittest.TestCase):
         self.assertEqual(plugin.plugin_prompt.max_tokens, plugin_clone.plugin_prompt.max_tokens)
 
         self.assertEqual(plugin.plugin_data.description, plugin_clone.plugin_data.description)
-        self.assertEqual(plugin.plugin_data.return_data, plugin_clone.plugin_data.return_data)
+        self.assertEqual(plugin.plugin_data.static_data, plugin_clone.plugin_data.static_data)
 
         plugin.delete()
         plugin_clone.delete()

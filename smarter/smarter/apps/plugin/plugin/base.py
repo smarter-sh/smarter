@@ -16,7 +16,7 @@ from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import smarter_admin_user_profile
 
 # FIX NOTE: these imports need to be parameterized by version.
-from smarter.common.exceptions import SmarterValueError
+from smarter.common.exceptions import SmarterExceptionBase
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import UserType
 from smarter.lib.manifest.exceptions import SAMValidationError
@@ -46,6 +46,10 @@ logger = logging.getLogger(__name__)
 
 SMARTER_API_MANIFEST_COMPATIBILITY = ["smarter.sh/v1"]
 SMARTER_API_MANIFEST_DEFAULT_VERSION = "smarter.sh/v1"
+
+
+class SamrterPluginError(SmarterExceptionBase):
+    """Base exception for Smarter API Plugin handling."""
 
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
@@ -89,7 +93,7 @@ class PluginBase(ABC):
         see ./data/sample-plugins/everlasting-gobstopper.yaml for an example.
         """
         if sum([bool(data), bool(manifest), bool(plugin_id), bool(plugin_meta)]) != 1:
-            raise SmarterValueError(
+            raise SamrterPluginError(
                 f"Must specify one and only one of: manifest, data, plugin_id, or plugin_meta. "
                 f"Received: data {bool(data)}, manifest {bool(manifest)}, "
                 f"plugin_id {bool(plugin_id)}, plugin_meta {bool(plugin_meta)}."
@@ -214,6 +218,7 @@ class PluginBase(ABC):
         if not self._manifest and self.ready:
             # if we don't have a manifest but we do have Django ORM data then
             # we can work backwards to the Pydantic model
+            print("self.to_json(): \n", json.dumps(self.to_json(), indent=4))
             self._manifest = SAMPlugin(**self.to_json())
         return self._manifest
 
@@ -228,29 +233,29 @@ class PluginBase(ABC):
     def id(self, value: int):
         """Set the id of the plugin."""
         if not self.user_profile:
-            raise SmarterValueError(
+            raise SamrterPluginError(
                 "Configuration error: UserProfile must be set before initializing a plugin instance by its ORM model id."
             )
 
         try:
             self._plugin_meta = PluginMeta.objects.get(pk=value)
         except PluginMeta.DoesNotExist as e:
-            raise SmarterValueError("PluginMeta.DoesNotExist") from e
+            raise SamrterPluginError("PluginMeta.DoesNotExist") from e
 
         try:
             self._plugin_selector = PluginSelector.objects.get(plugin=self.plugin_meta)
         except PluginSelector.DoesNotExist as e:
-            raise SmarterValueError("PluginSelector.DoesNotExist") from e
+            raise SamrterPluginError("PluginSelector.DoesNotExist") from e
 
         try:
             self._plugin_prompt = PluginPrompt.objects.get(plugin=self.plugin_meta)
         except PluginPrompt.DoesNotExist as e:
-            raise SmarterValueError("PluginPrompt.DoesNotExist") from e
+            raise SamrterPluginError("PluginPrompt.DoesNotExist") from e
 
         try:
             self._plugin_data = self.plugin_data_class.objects.get(plugin=self.plugin_meta)
         except self.plugin_data_class.DoesNotExist as e:
-            raise SmarterValueError(f"{self.plugin_data_class.__name__}.DoesNotExist") from e
+            raise SamrterPluginError(f"{self.plugin_data_class.__name__}.DoesNotExist") from e
 
     @property
     def plugin_meta(self) -> PluginMeta:
@@ -354,7 +359,7 @@ class PluginBase(ABC):
         """Return whether the plugin is ready."""
 
         if not self.user_profile:
-            raise SmarterValueError("UserProfile is not set.")
+            raise SamrterPluginError("UserProfile is not set.")
 
         # ---------------------------------------------------------------------
         # validate the Pydantic model if it exists. This is only set
@@ -367,25 +372,25 @@ class PluginBase(ABC):
         # validate the Django ORM models
         # ---------------------------------------------------------------------
         if not isinstance(self.plugin_meta, PluginMeta):
-            raise SmarterValueError(
+            raise SamrterPluginError(
                 f"Expected type of {PluginMeta} for self.plugin_meta, but got {type(self.plugin_meta)}."
             )
         self.plugin_meta.validate()
 
         if not isinstance(self.plugin_selector, PluginSelector):
-            raise SmarterValueError(
+            raise SamrterPluginError(
                 f"Expected type of {PluginSelector} for self.plugin_selector, but got {type(self.plugin_selector)}."
             )
         self.plugin_selector.validate()
 
         if not isinstance(self.plugin_prompt, PluginPrompt):
-            raise SmarterValueError(
+            raise SamrterPluginError(
                 f"Expected type of {PluginPrompt} for self.plugin_prompt, but got {type(self.plugin_prompt)}."
             )
         self.plugin_prompt.validate()
 
         if not isinstance(self.plugin_data, self.plugin_data_class):
-            raise SmarterValueError(
+            raise SamrterPluginError(
                 f"Expected type of {self.plugin_data_class} for self.plugin_data, but got {type(self.plugin_data)}."
             )
         self.plugin_data.validate()
@@ -396,7 +401,7 @@ class PluginBase(ABC):
             if isinstance(self.user_profile, UserProfileModel):
                 self._user_profile = UserProfile.objects.get(id=self.user_profile.id)
             else:
-                raise SmarterValueError(
+                raise SamrterPluginError(
                     f"Expected type of {UserProfile} for self.user_profile, but got {type(self.user_profile)}."
                 )
 
@@ -477,7 +482,7 @@ class PluginBase(ABC):
         """Modify the system prompt based on the plugin object"""
 
         if not self.ready:
-            raise SmarterValueError("Plugin is not ready.")
+            raise SamrterPluginError("Plugin is not ready.")
 
         for i, message in enumerate(messages):
             if message.get("role") == "system":
@@ -522,7 +527,7 @@ class PluginBase(ABC):
 
         if self.is_valid_yaml(yaml_string):
             return yaml.safe_load(yaml_string)
-        raise SmarterValueError("Invalid data: must be a dictionary or valid YAML.")
+        raise SamrterPluginError("Invalid data: must be a dictionary or valid YAML.")
 
     def is_valid_yaml(self, data):
         """Validate a yaml string."""
@@ -541,7 +546,7 @@ class PluginBase(ABC):
             logger.debug("Created plugin %s: %s.", self.plugin_meta.name, self.plugin_meta.id)
 
         if not self.manifest:
-            raise SmarterValueError("Plugin manifest is not set.")
+            raise SamrterPluginError("Plugin manifest is not set.")
 
         meta_data = self.plugin_meta_django_model
         selector = self.plugin_selector_django_model
@@ -576,7 +581,7 @@ class PluginBase(ABC):
             logger.debug("Updated plugin %s: %s.", self.name, self.id)
 
         if not self.manifest:
-            raise SmarterValueError("Plugin manifest is not set.")
+            raise SamrterPluginError("Plugin manifest is not set.")
 
         meta_data = self.plugin_meta_django_model
         selector = self.plugin_selector_django_model
@@ -586,7 +591,7 @@ class PluginBase(ABC):
         meta_data_tags = meta_data.pop("tags")
 
         if not self.plugin_meta:
-            raise SmarterValueError(
+            raise SamrterPluginError(
                 f"Plugin {self.manifest.metadata.name} for account {self.user_profile.account.account_number} does not exist."
             )
         self.id = self.plugin_meta.id
@@ -735,5 +740,5 @@ class PluginBase(ABC):
                     },
                 }
                 return json.loads(json.dumps(retval))
-            raise SmarterValueError(f"Invalid version: {version}")
+            raise SamrterPluginError(f"Invalid version: {version}")
         return None
