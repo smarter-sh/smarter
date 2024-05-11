@@ -87,9 +87,6 @@ spec:
           command: ["celery", "-A", "smarter.smarter_celerybeat.app", "beat", "--loglevel=info"]
           imagePullPolicy: Always
           name: {{ .Values.beatName }}
-          ports:
-            - containerPort: {{ .Values.deployment.containerPort }}
-              protocol: TCP
           resources: {}
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
