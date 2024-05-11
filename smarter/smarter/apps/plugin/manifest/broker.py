@@ -99,42 +99,40 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def apply(self) -> dict:
+    def apply(self) -> JsonResponse:
         try:
             self.plugin.create()
-
         except Exception as e:
-            data = {"smarter": "could not create Plugin", "error": str(e)}
-            return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
+            return self.err_response(e)
+
         if self.plugin.ready:
             try:
                 self.plugin.save()
-                return JsonResponse(data={}, status=HTTPStatus.OK)
+                return self.success_response({})
             except Exception as e:
-                data = {"smarter": "could not save Plugin", "error": str(e)}
-                return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
-        data = {"error": "Plugin not ready"}
-        return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
+                return self.err_response(e)
+        return self.not_ready_response()
 
-    def describe(self) -> dict:
+    def describe(self) -> JsonResponse:
         if self.plugin.ready:
-            return JsonResponse(data=self.plugin.to_json(), status=HTTPStatus.OK)
-        data = {"error": "Plugin not ready"}
-        return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
+            try:
+                data = self.plugin.to_json()
+                return self.success_response(data)
+            except Exception as e:
+                return self.err_response(e)
+        return self.not_ready_response()
 
-    def delete(self):
+    def delete(self) -> JsonResponse:
         if self.plugin.ready:
             try:
                 self.plugin.delete()
-                return JsonResponse(data={}, status=HTTPStatus.OK)
+                return self.success_response({})
             except Exception as e:
-                data = {"smarter": "could not delete Plugin", "error": str(e)}
-                return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
-        data = {"error": "Plugin not ready"}
-        return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
+                return self.err_response(e)
+        return self.not_ready_response()
 
-    def deploy(self):
+    def deploy(self) -> JsonResponse:
         return JsonResponse(data={}, status=HTTPStatus.NOT_IMPLEMENTED)
 
-    def logs(self) -> dict:
+    def logs(self) -> JsonResponse:
         return JsonResponse(data={}, status=HTTPStatus.NOT_IMPLEMENTED)
