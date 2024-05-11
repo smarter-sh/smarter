@@ -6,7 +6,7 @@ import logging
 from smarter.apps.plugin.models import PluginDataStatic
 from smarter.apps.plugin.serializers import PluginDataStaticSerializer
 
-from .base import PluginBase, SamrterPluginError
+from .base import PluginBase, SmarterPluginError
 
 
 logger = logging.getLogger(__name__)
