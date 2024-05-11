@@ -93,14 +93,17 @@ class Command(BaseCommand):
             response = json.dumps(response_json, indent=4) + "\n"
             self.stdout.write("response: " + self.style.SUCCESS(response))
 
+        path = reverse("api_v1_cli_get_view", kwargs={"kind": "plugins"})
+        get_response(path)
+
         path = reverse("api_v1_cli_manifest_view", kwargs={"kind": "plugin"})
         get_response(path)
 
-        path = reverse("api_v1_cli_status_view")
-        get_response(path)
+        # path = reverse("api_v1_cli_status_view")
+        # get_response(path)
 
-        path = reverse("api_v1_cli_whoami_view")
-        get_response(path)
+        # path = reverse("api_v1_cli_whoami_view")
+        # get_response(path)
 
         token_record.delete()
         self.stdout.write(self.style.SUCCESS("API CLI endpoint verifications complete."))

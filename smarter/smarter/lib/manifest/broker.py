@@ -35,6 +35,7 @@ class AbstractBroker(ABC):
     """
 
     _api_version: str = None
+    _account: "Account" = None
     _loader: SAMLoader = None
     _manifest: AbstractSAMBase = None
     _kind: str = None
@@ -97,7 +98,7 @@ class AbstractBroker(ABC):
 
     @property
     def account(self) -> "Account":
-        raise NotImplementedError
+        return self._account
 
     @property
     def user(self) -> "UserType":
@@ -115,7 +116,6 @@ class AbstractBroker(ABC):
     ###########################################################################
 
     @property
-    @abstractmethod
     def manifest(self) -> AbstractSAMBase:
         """
         The Pydantic model representing the manifest. This is a reference
@@ -125,13 +125,14 @@ class AbstractBroker(ABC):
         """
         if self._manifest:
             return self._manifest
-        self._manifest = AbstractSAMBase(
-            apiVersion=self.loader.manifest_api_version,
-            kind=self.loader.manifest_kind,
-            metadata=self.loader.manifest_metadata,
-            spec=self.loader.manifest_spec,
-            status=self.loader.manifest_status,
-        )
+        if self.loader:
+            self._manifest = AbstractSAMBase(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=self.loader.manifest_metadata,
+                spec=self.loader.manifest_spec,
+                status=self.loader.manifest_status,
+            )
         return self._manifest
 
     ###########################################################################

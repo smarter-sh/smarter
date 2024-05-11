@@ -95,13 +95,14 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         """
         if self._manifest:
             return self._manifest
-        self._manifest = SAMPlugin(
-            apiVersion=self.loader.manifest_api_version,
-            kind=self.loader.manifest_kind,
-            metadata=self.loader.manifest_metadata,
-            spec=self.loader.manifest_spec,
-            status=self.loader.manifest_status,
-        )
+        if self.loader:
+            self._manifest = SAMPlugin(
+                apiVersion=self.loader.manifest_api_version,
+                kind=self.loader.manifest_kind,
+                metadata=self.loader.manifest_metadata,
+                spec=self.loader.manifest_spec,
+                status=self.loader.manifest_status,
+            )
         return self._manifest
 
     ###########################################################################
