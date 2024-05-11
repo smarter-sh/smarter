@@ -80,7 +80,7 @@ class CliBaseApiView(APIView):
             if self.manifest_kind:
                 self._BrokerClass = BROKERS.get(self.manifest_kind)
                 if not self._BrokerClass:
-                    raise NotImplementedError(f"Unsupported manifest kind: {self.manifest_kind or 'None'}")
+                    raise NotImplementedError(f"Unsupported manifest kind: {self.manifest_kind}")
         return self._BrokerClass
 
     @property
@@ -114,7 +114,7 @@ class CliBaseApiView(APIView):
 
     @property
     def manifest_kind(self) -> str:
-        if not self._manifest_kind:
+        if not self._manifest_kind and self.loader:
             self._manifest_kind = self.loader.manifest_kind if self.loader else None
         return self._manifest_kind
 
@@ -127,14 +127,18 @@ class CliBaseApiView(APIView):
         model will be passed to a AbstractBroker for the manifest 'kind', which
         implements the broker service pattern for the underlying object.
         """
-        self._manifest_kind = str(kwargs.get("kind")).title()
-        if self.manifest_kind:
-            # Validate the manifest kind: plugin, plugins, user, users, chatbot, chatbots, etc.
-            if str(self.manifest_kind).lower() not in SAMKinds.all_slugs():
-                return JsonResponse(
-                    error_response_factory(e=SAMBadRequestError(f"Unsupported manifest kind: {self.manifest_kind}")),
-                    status=HTTPStatus.BAD_REQUEST,
-                )
+        kind = kwargs.get("kind", None)
+        if kind:
+            self._manifest_kind = str(kind).title()
+            if self.manifest_kind:
+                # Validate the manifest kind: plugin, plugins, user, users, chatbot, chatbots, etc.
+                if str(self.manifest_kind).lower() not in SAMKinds.all_slugs():
+                    return JsonResponse(
+                        error_response_factory(
+                            e=SAMBadRequestError(f"Unsupported manifest kind: {self.manifest_kind}")
+                        ),
+                        status=HTTPStatus.BAD_REQUEST,
+                    )
 
         # Manifest parsing and broker instantiation are lazy implementations.
         # So for now, we'll only set the private class variable _manifest_text

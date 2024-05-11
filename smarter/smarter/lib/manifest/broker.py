@@ -173,7 +173,7 @@ class AbstractBroker(ABC):
         """Returns an example yaml manifest document for the kind of resource."""
         filename = str(self.kind).lower() + ".yaml"
         data = {"filepath": f"https://{smarter_settings.environment_cdn_domain}/cli/example-manifests/{filename}"}
-        return data
+        return self.success_response(data)
 
     def not_implemented_response(self) -> JsonResponse:
         """Return a common not implemented response."""

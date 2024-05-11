@@ -13,7 +13,8 @@ class SAMExceptionBase(SmarterExceptionBase):
         name = self.__class__.__name__
         name = name.replace("SAM", "Smarter API Manifest ")
         words = re.findall("[A-Z][^A-Z]*", name)
-        return " ".join(word for word in words)
+        retval = " ".join(str(word).lower() for word in words)
+        return retval.replace("smarter  a p i  manifest", "Smarter API Manifest").replace("  ", " ")
 
 
 class SAMBadRequestError(SAMExceptionBase):
