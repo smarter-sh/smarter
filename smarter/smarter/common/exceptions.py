@@ -1,6 +1,7 @@
 """Module exceptions.py"""
 
 import re
+import traceback
 
 
 class SmarterExceptionBase(Exception):
@@ -48,7 +49,7 @@ def error_response_factory(e: Exception) -> dict:
 
     return {
         "errorClass": error_class,
-        "stacktrace": str(e),
+        "stacktrace": traceback.format_exc(),
         "description": e.args[0] if e.args else "",  # get the error message from args
         "status": e.status if hasattr(e, "status") else "",  # check if status attribute exists
         "args": e.args,

@@ -79,8 +79,8 @@ class CliBaseApiView(APIView):
         if not self._BrokerClass:
             if self.manifest_kind:
                 self._BrokerClass = BROKERS.get(self.manifest_kind)
-                if not self._BrokerClass:
-                    raise NotImplementedError(f"Unsupported manifest kind: {self.manifest_kind}")
+            if not self._BrokerClass:
+                raise SAMValidationError(f"Could not find broker for {self.kind} manifest.")
         return self._BrokerClass
 
     @property
@@ -130,9 +130,12 @@ class CliBaseApiView(APIView):
         kind = kwargs.get("kind", None)
         if kind:
             self._manifest_kind = str(kind).title()
+            if self.manifest_kind.endswith("s"):
+                self._manifest_kind = self.manifest_kind[:-1]
             if self.manifest_kind:
                 # Validate the manifest kind: plugin, plugins, user, users, chatbot, chatbots, etc.
                 if str(self.manifest_kind).lower() not in SAMKinds.all_slugs():
+                    print(f"Unsupported manifest kind: {self.manifest_kind}. should be one of {SAMKinds.all_slugs()}")
                     return JsonResponse(
                         error_response_factory(
                             e=SAMBadRequestError(f"Unsupported manifest kind: {self.manifest_kind}")
