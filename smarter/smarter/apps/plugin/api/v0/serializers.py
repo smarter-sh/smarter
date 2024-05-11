@@ -62,4 +62,4 @@ class PluginDataStaticSerializer(serializers.ModelSerializer):
     # pylint: disable=missing-class-docstring
     class Meta:
         model = PluginDataStatic
-        fields = ["description", "return_data"]
+        fields = ["description", "static_data"]

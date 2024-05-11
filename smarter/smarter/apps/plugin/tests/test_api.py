@@ -132,7 +132,7 @@ class TestPluginAPI(unittest.TestCase):
         self.assertEqual(self.plugin.ready, True)
         self.assertEqual(self.plugin.plugin_meta.description, "MODIFIED")
         self.assertEqual(self.plugin.plugin_data.description, "MODIFIED")
-        self.assertEqual(self.plugin.plugin_data.return_data, "MODIFIED")
+        self.assertEqual(self.plugin.plugin_data.static_data, "MODIFIED")
 
     def test_delete(self):
         """
