@@ -6,7 +6,7 @@ import json
 from django.http import HttpRequest, JsonResponse
 from taggit.models import Tag
 
-from smarter.apps.account.account_mixin import AccountMixin
+from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.exceptions import SAMExceptionBase
