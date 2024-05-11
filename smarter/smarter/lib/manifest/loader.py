@@ -9,13 +9,27 @@ import requests
 import waffle
 import yaml
 
-from .enum import SAMDataFormats, SAMKeys, SAMMetadataKeys, SAMSpecificationKeyOptions
-from .exceptions import SAMValidationError
+from .enum import (
+    SAMApiVersions,
+    SAMDataFormats,
+    SAMKeys,
+    SAMMetadataKeys,
+    SAMSpecificationKeyOptions,
+)
+from .exceptions import SAMExceptionBase
 
 
 logger = logging.getLogger(__name__)
 
-SUPPORTED_API_VERSIONS = ["smarter.sh/v1"]
+SUPPORTED_API_VERSIONS = [SAMApiVersions.V1.value]
+
+
+class SAMLoaderError(SAMExceptionBase):
+    """Base class for all SAMLoader errors."""
+
+    @property
+    def get_readable_name(self):
+        return "Smarter API Manifest Loader Error"
 
 
 def validate_key(key: str, key_value: Any, spec: Any):
@@ -31,12 +45,12 @@ def validate_key(key: str, key_value: Any, spec: Any):
     if isinstance(key, Enum):
         key = key.value
     if not isinstance(key, str):
-        raise SAMValidationError(f"Invalid data type for key {key}. Expected str but got {type(key)}")
+        raise SAMLoaderError(f"Invalid data type for key {key}. Expected str but got {type(key)}")
 
     # validate that key's value exists in the spec list
     if isinstance(spec, list):
         if key_value not in spec:
-            raise SAMValidationError(f"Invalid value {key_value} for key {key}. Expected one of {spec}")
+            raise SAMLoaderError(f"Invalid value {key_value} for key {key}. Expected one of {spec}")
 
     # validate that key value's data type matches the spec's data type, and if required, that the key exists
     elif isinstance(spec, tuple):
@@ -44,9 +58,9 @@ def validate_key(key: str, key_value: Any, spec: Any):
         options_list = spec[1]
         # validate that value exists for required key
         if SAMSpecificationKeyOptions.REQUIRED in options_list and not key_value:
-            raise SAMValidationError(f"Missing required key {key}")
+            raise SAMLoaderError(f"Missing required key {key}")
         if not SAMSpecificationKeyOptions.OPTIONAL and not isinstance(key_value, type_spec):
-            raise SAMValidationError(
+            raise SAMLoaderError(
                 f"Invalid data type for key {key}. Expected {spec[0]} but got {type(key_value)}: key_value={key_value} spec={spec[0]}"
             )
 
@@ -55,13 +69,13 @@ def validate_key(key: str, key_value: Any, spec: Any):
         if not isinstance(key_value, type(spec)):
             # possibility #1: the data is missing, so it's a NoneType
             if key_value is None:
-                raise SAMValidationError(f"Missing required key {key}")
+                raise SAMLoaderError(f"Missing required key {key}")
             # possibility #2: the data exists but is the wrong type
-            raise SAMValidationError(
+            raise SAMLoaderError(
                 f"Invalid key_value type for key {key}. Expected {type(spec)} but got {type(key_value)}"
             )
         if key_value != spec:
-            raise SAMValidationError(f"Invalid value for key {key}. Expected {spec} but got {key_value}")
+            raise SAMLoaderError(f"Invalid value for key {key}. Expected {spec} but got {key_value}")
 
 
 class SAMLoader:
@@ -73,7 +87,7 @@ class SAMLoader:
     _dict_data: dict = None
     _data_format: SAMDataFormats = None
     _specification: dict = {
-        SAMKeys.APIVERSION: "smarter.sh/v1",
+        SAMKeys.APIVERSION: SAMApiVersions.V1.value,
         SAMKeys.KIND: "PLACEHOLDER",
         SAMKeys.METADATA: {
             SAMMetadataKeys.NAME: (str, [SAMSpecificationKeyOptions.REQUIRED]),
@@ -99,7 +113,7 @@ class SAMLoader:
         url: str = None,
     ):
         if api_version not in SUPPORTED_API_VERSIONS:
-            raise SAMValidationError(f"Unsupported API version: {api_version}")
+            raise SAMLoaderError(f"Unsupported API version: {api_version}")
 
         self._specification[SAMKeys.APIVERSION] = api_version
         if kind:
@@ -108,9 +122,9 @@ class SAMLoader:
         # 1. acquire the manifest data
         # ---------------------------------------------------------------------
         if sum([bool(kind), bool(manifest), bool(file_path), bool(url)]) == 0:
-            raise SAMValidationError("One of kind, manifest, file_path, or url is required.")
+            raise SAMLoaderError("One of kind, manifest, file_path, or url is required.")
         if sum([bool(manifest), bool(file_path), bool(url)]) > 1:
-            raise SAMValidationError("Only one of manifest, file_path, or url is allowed.")
+            raise SAMLoaderError("Only one of manifest, file_path, or url is allowed.")
 
         if manifest:
             self._raw_data = manifest
@@ -203,7 +217,7 @@ class SAMLoader:
             this_overall_spec = recursed_spec or self.specification
             this_data = recursed_data or self.data
             if not this_data:
-                raise SAMValidationError("Received empty or invalid data.")
+                raise SAMLoaderError("Received empty or invalid data.")
 
             for key, key_spec in this_overall_spec.items():
                 if isinstance(key, Enum):
@@ -224,9 +238,9 @@ class SAMLoader:
 
         # top-level validations of the manifest itself.
         if not self.raw_data:
-            raise SAMValidationError("Received empty or invalid data.")
+            raise SAMLoaderError("Received empty or invalid data.")
         if not self.data:
-            raise SAMValidationError("Invalid data format. Supported formats: json, yaml")
+            raise SAMLoaderError("Invalid data format. Supported formats: json, yaml")
         # recursively validate the json representation of the manifest data
         recursive_validator()
 

@@ -1,3 +1,6 @@
 """Smarter Api Manifest Handler Version."""
 
-SMARTER_API_VERSION = "smarter.sh/v1"
+from smarter.lib.manifest.enum import SAMApiVersions
+
+
+SMARTER_API_VERSION = SAMApiVersions.V1.value
