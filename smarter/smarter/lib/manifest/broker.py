@@ -19,6 +19,8 @@ from .exceptions import SAMValidationError
 if typing.TYPE_CHECKING:
     from smarter.apps.account.models import Account, UserProfile
 
+SUPPORTED_API_VERSIONS = ["smarter.sh/v1"]
+
 
 class AbstractBroker(ABC):
     """
@@ -45,18 +47,20 @@ class AbstractBroker(ABC):
     def __init__(
         self,
         api_version: str,
-        account_number: str,
+        account: "Account",
         kind: str = None,
         manifest: str = None,
         file_path: str = None,
         url: str = None,
     ):
-        SmarterValidator.validate_account_number(account_number)
+        self._account = account
+        if api_version not in SUPPORTED_API_VERSIONS:
+            raise SAMValidationError(f"Unsupported apiVersion: {api_version}")
         self._api_version = api_version
 
         try:
             self._loader = SAMLoader(
-                api_version=account_number,
+                api_version=api_version,
                 kind=kind,
                 manifest=manifest,
                 file_path=file_path,

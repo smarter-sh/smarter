@@ -5,6 +5,7 @@ from django.http import HttpRequest, JsonResponse
 from taggit.models import Tag
 
 from smarter.apps.account.account_mixin import AccountMixin
+from smarter.apps.account.models import Account
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.exceptions import SAMExceptionBase
 
@@ -40,7 +41,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     def __init__(
         self,
         api_version: str,
-        account_number: str,
+        account: Account,
         kind: str = None,
         manifest: str = None,
         file_path: str = None,
@@ -56,7 +57,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         """
         super().__init__(
             api_version=api_version,
-            account_number=account_number,
+            account=account,
             kind=kind,
             manifest=manifest,
             file_path=file_path,
@@ -112,6 +113,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         self, request: HttpRequest = None, name: str = None, all_objects: bool = False, tags: str = None
     ) -> JsonResponse:
 
+        print("SAMPluginBroker.get() - self.account: ", self.account)
         data = [dict]
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
@@ -132,7 +134,9 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for plugin_meta in plugins:
-            controller = PluginController(plugin_meta)
+            print("getting plugin_meta: ", plugin_meta)
+            controller = PluginController(account=self.account, plugin_meta=plugin_meta)
+            print("controller: ", controller.account, controller.plugin_meta, controller.name, controller.plugin.name)
             try:
                 model_dump = controller.model_dump_json()
                 if not model_dump:

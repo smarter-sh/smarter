@@ -23,9 +23,7 @@ class TestSAM(unittest.TestCase):
     def test_valid_manifest(self):
         """Test valid file path and that we can instantiate with errors"""
 
-        handler = SAMPluginBroker(
-            api_version="smarter.sh/v1", account_number=self.account.account_number, file_path=self.good_manifest_path
-        )
+        handler = SAMPluginBroker(api_version="smarter.sh/v1", account=self.account, file_path=self.good_manifest_path)
         manifest = handler.manifest
         self.assertEqual(manifest.kind, MANIFEST_KIND)
         self.assertEqual(manifest.metadata.name, "ExampleConfiguration")

@@ -360,8 +360,8 @@ class PluginBase(ABC):
         # validate the Pydantic model if it exists. This is only set
         # if we arrived here via the cli.
         # ---------------------------------------------------------------------
-        if self.manifest:
-            self.manifest.model_validate(self.manifest.model_dump())
+        if self._manifest:
+            self._manifest.model_validate(self._manifest.model_dump())
 
         # ---------------------------------------------------------------------
         # validate the Django ORM models
