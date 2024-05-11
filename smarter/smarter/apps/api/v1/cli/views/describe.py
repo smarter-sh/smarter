@@ -4,7 +4,7 @@
 from .base import CliBaseApiView
 
 
-class CliDescribeApiView(CliBaseApiView):
+class ApiV1CliDescribeApiView(CliBaseApiView):
     """
     Smarter API command-line interface 'describe' view. Returns the object
     in yaml manifest format.

@@ -4,7 +4,7 @@
 from .base import CliBaseApiView
 
 
-class CliManifestExampleApiView(CliBaseApiView):
+class ApiV1CliManifestApiView(CliBaseApiView):
     """
     Smarter API command-line interface 'manifest' view.
     Returns an example yaml manifest file for the given 'kind'.
