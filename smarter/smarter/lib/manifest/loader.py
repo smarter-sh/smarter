@@ -15,6 +15,8 @@ from .exceptions import SAMValidationError
 
 logger = logging.getLogger(__name__)
 
+SUPPORTED_API_VERSIONS = ["smarter.sh/v1"]
+
 
 def validate_key(key: str, key_value: Any, spec: Any):
     """
@@ -96,6 +98,9 @@ class SAMLoader:
         file_path: str = None,
         url: str = None,
     ):
+        if api_version not in SUPPORTED_API_VERSIONS:
+            raise SAMValidationError(f"Unsupported API version: {api_version}")
+
         self._specification[SAMKeys.APIVERSION] = api_version
         if kind:
             self._specification[SAMKeys.KIND] = kind

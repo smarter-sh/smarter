@@ -96,7 +96,7 @@ class CliBaseApiView(APIView):
             self._broker = BrokerClass(
                 api_version=SMARTER_API_VERSION,
                 kind=self.manifest_kind,
-                account_number=self.user_profile.account.account_number,
+                account=self.user_profile.account,
                 manifest=self.loader.yaml_data if self.loader else None,
             )
             if not self._broker:

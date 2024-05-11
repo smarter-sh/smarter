@@ -2,6 +2,8 @@
 Helper class to map to/from Pydantic manifest model, Plugin and Django ORM models.
 """
 
+from typing import Dict, Type
+
 from smarter.apps.account.models import Account
 
 # lib manifest
@@ -35,7 +37,7 @@ class PluginController(AbstractController):
     def __init__(self, account: Account, manifest: SAMPlugin = None, plugin_meta: PluginMeta = None):
         if (bool(manifest) and bool(plugin_meta)) or (not bool(manifest) and not bool(plugin_meta)):
             raise SAMPluginControllerError(
-                "One and only one of manifest or plugin_meta should be provided. Received? manifest: {bool(manifest)}, plugin_meta: {bool(plugin_meta)}."
+                f"One and only one of manifest or plugin_meta should be provided. Received? manifest: {bool(manifest)}, plugin_meta: {bool(plugin_meta)}."
             )
         self._account = account
         self._manifest = manifest
@@ -76,11 +78,11 @@ class PluginController(AbstractController):
         return self.obj
 
     @property
-    def map(self):
+    def map(self) -> Dict[str, Type[PluginBase]]:
         return {
-            SAMPluginMetadataClassValues.API: PluginApi,
-            SAMPluginMetadataClassValues.SQL: PluginSql,
-            SAMPluginMetadataClassValues.STATIC: PluginStatic,
+            SAMPluginMetadataClassValues.API.value: PluginApi,
+            SAMPluginMetadataClassValues.SQL.value: PluginSql,
+            SAMPluginMetadataClassValues.STATIC.value: PluginStatic,
         }
 
     @property
@@ -89,7 +91,7 @@ class PluginController(AbstractController):
             return self._plugin
         if self._plugin_meta:
             Plugin = self.map[self.plugin_meta.plugin_class]
-            self._plugin = Plugin(self.manifest)
+            self._plugin = Plugin(plugin_meta=self.plugin_meta)
             self._manifest = self._plugin.manifest
         elif self.manifest:
             Plugin = self.map[self.manifest.metadata.pluginClass]
