@@ -1,10 +1,11 @@
+# pylint: disable=W0613
 """Smarter API Manifest Abstract Broker class."""
 
 import typing
 from abc import ABC, abstractmethod
 from http import HTTPStatus
 
-from django.http import JsonResponse
+from django.http import HttpRequest, JsonResponse
 
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django.user import UserType
@@ -137,45 +138,58 @@ class AbstractBroker(ABC):
     # Abstract Methods
     ###########################################################################
     @abstractmethod
-    def apply(self) -> JsonResponse:
+    def get(self, request: HttpRequest = None) -> JsonResponse:
+        """get information about specified resources."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def apply(self, request: HttpRequest = None) -> JsonResponse:
         """apply a manifest, which works like a upsert."""
         raise NotImplementedError
 
     @abstractmethod
-    def describe(self) -> JsonResponse:
+    def describe(self, request: HttpRequest = None) -> JsonResponse:
+        """print the manifest."""
         raise NotImplementedError
 
     @abstractmethod
-    def delete(self) -> JsonResponse:
+    def delete(self, request: HttpRequest = None) -> JsonResponse:
+        """delete a resource."""
         raise NotImplementedError
 
     @abstractmethod
-    def deploy(self) -> JsonResponse:
+    def deploy(self, request: HttpRequest = None) -> JsonResponse:
+        """deploy a resource."""
         raise NotImplementedError
 
     @abstractmethod
-    def logs(self) -> JsonResponse:
+    def logs(self, request: HttpRequest = None) -> JsonResponse:
+        """get logs for a resource."""
         raise NotImplementedError
 
-    def example_manifest(self) -> str:
+    def example_manifest(self, request: HttpRequest = None) -> str:
         """Returns an example yaml manifest document for the kind of resource."""
         filename = str(self.kind).lower() + ".yaml"
         data = {"filepath": f"https://{smarter_settings.environment_cdn_domain}/cli/example-manifests/{filename}"}
         return data
 
     def not_implemented_response(self) -> JsonResponse:
+        """Return a common not implemented response."""
         data = {"smarter": f"operation not implemented for {self.kind} resources"}
         return JsonResponse(data=data, status=HTTPStatus.NOT_IMPLEMENTED)
 
     def not_ready_response(self) -> JsonResponse:
+        """Return a common not ready response."""
         data = {"smarter": f"{self.kind} {self.name} not ready"}
         return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
 
     def err_response(self, operation: str, e: Exception) -> JsonResponse:
+        """Return a common error response."""
         data = {"smarter": f"could not {operation} {self.kind} {self.name}", "error": str(e)}
         return JsonResponse(data=data, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
     def success_response(self, data: dict) -> JsonResponse:
+        """Return a common success response."""
         return JsonResponse(data=data, status=HTTPStatus.OK)
 
 
