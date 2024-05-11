@@ -19,6 +19,7 @@ from smarter.apps.account.utils import smarter_admin_user_profile
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import UserType
+from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 
 from ..manifest.const import MANIFEST_KIND
@@ -43,11 +44,15 @@ from ..signals import (
 
 logger = logging.getLogger(__name__)
 
+SMARTER_API_MANIFEST_COMPATIBILITY = ["smarter.sh/v1"]
+SMARTER_API_MANIFEST_DEFAULT_VERSION = "smarter.sh/v1"
+
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
 class PluginBase(ABC):
     """An abstract base class for working with plugins."""
 
+    _api_version: str = SMARTER_API_MANIFEST_DEFAULT_VERSION
     _kind: str = MANIFEST_KIND
     _manifest: SAMPlugin = None
 
@@ -70,6 +75,7 @@ class PluginBase(ABC):
         self,
         user_profile: UserProfile = None,
         selected: bool = False,
+        api_version: str = None,
         manifest: SAMPlugin = None,
         plugin_id: int = None,
         plugin_meta: PluginMeta = None,
@@ -88,7 +94,7 @@ class PluginBase(ABC):
                 f"Received: data {bool(data)}, manifest {bool(manifest)}, "
                 f"plugin_id {bool(plugin_id)}, plugin_meta {bool(plugin_meta)}."
             )
-
+        self.api_version = api_version or self.api_version
         self._selected = selected
         self._user_profile = user_profile
 
@@ -110,6 +116,9 @@ class PluginBase(ABC):
 
         if data:
             # we received a yaml or json string representation of a manifest.
+            self.api_version = data.get("apiVersion", self.api_version)
+            if data.get("kind") != self.kind:
+                raise SAMValidationError(f"Expected kind of {self.kind}, but got {data.get('kind')}.")
             loader = SAMLoader(
                 api_version=data["apiVersion"],
                 kind=self.kind,
@@ -181,6 +190,20 @@ class PluginBase(ABC):
     # Base class properties
     ###########################################################################
     @property
+    def api_version(self) -> str:
+        """Return the api version of the plugin."""
+        return self._api_version
+
+    @api_version.setter
+    def api_version(self, value: str):
+        """Set the api version of the plugin."""
+        if value not in SMARTER_API_MANIFEST_COMPATIBILITY:
+            raise SAMValidationError(
+                f"Invalid api version: {value}. Must be one of: {SMARTER_API_MANIFEST_COMPATIBILITY}"
+            )
+        self._api_version = value
+
+    @property
     def kind(self) -> str:
         """Return the kind of the plugin."""
         return self._kind
@@ -188,8 +211,10 @@ class PluginBase(ABC):
     @property
     def manifest(self) -> SAMPlugin:
         """Return the Pydandic model of the plugin."""
-        if not self._manifest:
-            pass
+        if not self._manifest and self.ready:
+            # if we don't have a manifest but we do have Django ORM data then
+            # we can work backwards to the Pydantic model
+            self._manifest = SAMPlugin(**self.to_json())
         return self._manifest
 
     @property
@@ -699,6 +724,8 @@ class PluginBase(ABC):
         if self.ready:
             if version == "v1":
                 retval = {
+                    "apiVersion": self.api_version,
+                    "kind": self.kind,
                     "id": self.id,
                     "metadata": {**self.plugin_meta_serializer.data, "id": self.plugin_meta.id},
                     "spec": {
