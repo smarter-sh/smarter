@@ -14,15 +14,5 @@ class SAMKinds(SmarterEnumAbstract):
     CHATBOT = "Chatbot"
 
     @classmethod
-    def all(cls):
-        return [
-            str(cls.PLUGIN.value),
-            str(cls.ACCOUNT.value),
-            str(cls.USER.value),
-            str(cls.CHAT.value),
-            str(cls.CHATBOT.value),
-        ]
-
-    @classmethod
     def all_slugs(cls):
-        return [slug.lower() for slug in cls.all()]
+        return [slug.lower() for slug in cls.all_values()]
