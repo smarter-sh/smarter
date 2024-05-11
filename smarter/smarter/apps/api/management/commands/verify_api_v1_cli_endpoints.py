@@ -2,7 +2,9 @@
 """utility for running api/v1 cli endpoints to verify that they work."""
 
 import json
+import os
 
+import yaml
 from django.core.management.base import BaseCommand
 from django.test import Client
 from django.urls import reverse
@@ -11,6 +13,9 @@ from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
 from smarter.apps.account.utils import account_admin_user
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
+
+
+HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 class Command(BaseCommand):
@@ -26,6 +31,19 @@ class Command(BaseCommand):
     - how to setup an http request for an api/v1/cli/ endpoint
     - how to work with the response object
     """
+
+    help = "Run API CLI endpoint verifications."
+    _data: str = None
+
+    @property
+    def data(self) -> json:
+        """Return the plugin.yaml data."""
+        if self._data is None:
+            file_path = os.path.join(HERE, "data", "plugin.yaml")
+            with open(file_path, encoding="utf-8") as file:
+                data = file.read()
+                self._data = yaml.safe_load(data)
+        return self._data
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
@@ -67,7 +85,7 @@ class Command(BaseCommand):
         self.stdout.write("single-use API key: " + self.style.SUCCESS(f"{token_key}"))
         self.stdout.write("*" * 80)
 
-        def get_response(path):
+        def get_response(path, manifest: str = None):
             """
             Prepare and get a response from an api/v1/cli endpoint.
             We need to be mindful of the environment we are in, as the
@@ -93,17 +111,32 @@ class Command(BaseCommand):
             response = json.dumps(response_json, indent=4) + "\n"
             self.stdout.write("response: " + self.style.SUCCESS(response))
 
+        path = reverse("api_v1_cli_apply_view", kwargs={"kind": "plugin"})
+        get_response(path, manifest=self.data)
+
+        path = reverse("api_v1_cli_deploy_view", kwargs={"kind": "plugin", "name": "PluginVerification"})
+        get_response(path)
+
+        path = reverse("api_v1_cli_describe_view", kwargs={"kind": "plugin", "name": "PluginVerification"})
+        get_response(path)
+
+        path = reverse("api_v1_cli_logs_kind_name_view", kwargs={"kind": "plugin", "name": "PluginVerification"})
+        get_response(path)
+
         path = reverse("api_v1_cli_get_view", kwargs={"kind": "plugins"})
+        get_response(path)
+
+        path = reverse("api_v1_cli_delete_view", kwargs={"kind": "plugin", "name": "PluginVerification"})
         get_response(path)
 
         path = reverse("api_v1_cli_manifest_view", kwargs={"kind": "plugin"})
         get_response(path)
 
-        # path = reverse("api_v1_cli_status_view")
-        # get_response(path)
+        path = reverse("api_v1_cli_status_view")
+        get_response(path)
 
-        # path = reverse("api_v1_cli_whoami_view")
-        # get_response(path)
+        path = reverse("api_v1_cli_whoami_view")
+        get_response(path)
 
         token_record.delete()
         self.stdout.write(self.style.SUCCESS("API CLI endpoint verifications complete."))
