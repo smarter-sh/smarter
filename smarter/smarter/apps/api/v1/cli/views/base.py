@@ -2,7 +2,6 @@
 
 import json
 import logging
-import re
 from http import HTTPStatus
 from typing import Type
 
@@ -13,7 +12,7 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
-from smarter.apps.account.models import UserProfile
+from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.utils import user_profile_for_user
 from smarter.common.exceptions import SmarterExceptionBase, error_response_factory
 from smarter.lib.manifest.broker import AbstractBroker
@@ -36,7 +35,7 @@ class APIV1CLIViewError(SmarterExceptionBase):
         return "Smarter api v1 command-line interface error"
 
 
-class CliBaseApiView(APIView):
+class CliBaseApiView(APIView, AccountMixin):
     """
     Smarter API command-line interface Base class API view. Handles
     common tasks for all /api/v1/cli views:
@@ -52,7 +51,6 @@ class CliBaseApiView(APIView):
 
     _loader: SAMLoader = None
     _broker: AbstractBroker = None
-    _user_profile: UserProfile = None
     _manifest_data: json = None
     _manifest_kind: str = None
     _manifest_load_failed: bool = False
@@ -120,10 +118,6 @@ class CliBaseApiView(APIView):
         return self._broker
 
     @property
-    def user_profile(self) -> UserProfile:
-        return self._user_profile
-
-    @property
     def manifest_data(self) -> json:
         return self._manifest_data
 
@@ -171,10 +165,15 @@ class CliBaseApiView(APIView):
             try:
                 self._manifest_data = yaml.safe_load(data)
             except yaml.YAMLError as e:
-                return JsonResponse(error_response_factory(e=e), status=HTTPStatus.BAD_REQUEST)
+                try:
+                    raise APIV1CLIViewError("Could not parse manifest. Valid formats: yaml, json.") from e
+                except APIV1CLIViewError as ex:
+                    return JsonResponse(error_response_factory(e=ex), status=HTTPStatus.BAD_REQUEST)
         print(f"Manifest data: {self.manifest_data}")
         try:
             self._user_profile = user_profile_for_user(user=request.user)
+            self._account = self._user_profile.account
+            self._user = self._user_profile.user
             if not self._user_profile:
                 raise APIV1CLIViewError("Could not find account for user.")
         except SmarterExceptionBase as e:
