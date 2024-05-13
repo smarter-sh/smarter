@@ -12,8 +12,10 @@ from django.test import Client
 from django.urls import reverse
 
 from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
+from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.const import PYTHON_ROOT
 from smarter.lib.django.user import User
+from smarter.lib.manifest.enum import SAMApiVersions
 
 
 class TestApiV1CliApply(unittest.TestCase):
@@ -98,7 +100,12 @@ class TestApiV1CliApply(unittest.TestCase):
 
         path = reverse("api_v1_cli_describe_view", kwargs={"kind": "plugin", "name": self.name})
         response, status = self.get_response(path)
-        print(response)
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertIsInstance(response, dict)
+        self.assertEqual(response["apiVersion"], SAMApiVersions.V1.value)
+        self.assertEqual(response["kind"], SAMKinds.PLUGIN.value)
+        self.assertIsInstance(response.get("metadata", None), dict)
+        self.assertEqual(response.get("metadata", {}).get("name", None), self.name)
 
         # path = reverse("api_v1_cli_logs_kind_name_view", kwargs={"kind": "plugin", "name": self.name})
         # get_response(path)
