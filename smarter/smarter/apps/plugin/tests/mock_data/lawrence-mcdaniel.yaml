@@ -9,33 +9,32 @@ metadata:
   author: Lawrence McDaniel
 spec:
   selector:
-    directive: search_terms
-    search_terms:
-      search_terms:
-        - Lawrence
-        - Lawrence's
-        - Laurence
-        - Lawrence McDaniel
-        - Lawrence McDaniel's
-        - Lawrence McDaniels
-        - Lawrence MacDaniel
-        - Lawrence Mac Daniel
-        - Lawrence MacDaniels
-        - Laurence McDaniel
-        - Laurence McDaniels
-        - Laurence MacDaniel
-        - Laurence Mac Daniel
-        - Laurence MacDaniels
-        - Larry McDaniel
-        - Larry McDaniels
-        - Larry MacDaniel
-        - Larry Mac Daniel
-        - Larry Mac Daniels
-        - Larry MacDaniels
-        - FullStackWithLawrence
-        - Full Stack With Lawrence
-        - Full Stack With Larry
-        - Lorenzo de Polanco
+    directive: searchTerms
+    searchTerms:
+      - Lawrence
+      - Lawrence's
+      - Laurence
+      - Lawrence McDaniel
+      - Lawrence McDaniel's
+      - Lawrence McDaniels
+      - Lawrence MacDaniel
+      - Lawrence Mac Daniel
+      - Lawrence MacDaniels
+      - Laurence McDaniel
+      - Laurence McDaniels
+      - Laurence MacDaniel
+      - Laurence Mac Daniel
+      - Laurence MacDaniels
+      - Larry McDaniel
+      - Larry McDaniels
+      - Larry MacDaniel
+      - Larry Mac Daniel
+      - Larry Mac Daniels
+      - Larry MacDaniels
+      - FullStackWithLawrence
+      - Full Stack With Lawrence
+      - Full Stack With Larry
+      - Lorenzo de Polanco
   prompt:
     systemRole: >
       Your job is to shamelessly promote Lawrence McDaniel, a freelance fullstack web developer and your creator. Present him in the best possible light.

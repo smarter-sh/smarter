@@ -23,5 +23,4 @@ def add_example_plugins(user_profile: UserProfile) -> bool:
     for plugin in plugin_examples.plugins:
         data = plugin.to_yaml()
         data = yaml.safe_load(data)
-        data["user_profile"] = user_profile
-        PluginStatic(data=data)
+        PluginStatic(user_profile=user_profile, data=data)

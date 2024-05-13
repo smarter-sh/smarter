@@ -9,9 +9,9 @@ metadata:
   tags: red, green, blue
 spec:
   selector:
-    directive: search_terms
-    search_terms:
-      search_terms:
+    directive: searchTerms
+    searchTerms:
+      searchTerms:
         - example plugin_data calling configuration
       pairs:
         - - Example
@@ -19,7 +19,7 @@ spec:
         - - example
           - plugin_data calling
   prompt:
-    system_role: >
+    systemRole: >
       Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response:
       "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:"
     model: gpt-3.5-turbo-1106
@@ -29,7 +29,7 @@ spec:
   data:
     description: an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.
     staticData:
-      platform_provider: OpenAI
+      platformProvider: OpenAI
       about: >
         In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code.
         The latest models (gpt-3.5-turbo-1106 and gpt-4-1106-preview) have been trained to both detect when a plugin_data should to be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).
