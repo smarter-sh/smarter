@@ -31,7 +31,7 @@ class AccountMixin:
     def user(self) -> UserType:
         if self._user:
             return self._user
-        self._user = account_admin_user(self.manifest.metadata.account)
+        self._user = account_admin_user(self.account)
         return self._user
 
     @property
