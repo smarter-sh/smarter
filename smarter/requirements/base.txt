@@ -24,7 +24,7 @@ whitenoise==6.6.0                       # static file serving
 
 # Django
 # ------------
-Django==5.0.4
+Django==5.0.6
 django-extensions==3.2.3
 django-debug-toolbar==4.3.0
 django-redis==5.4.0                     # object caching
