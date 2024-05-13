@@ -1,6 +1,7 @@
 # pylint: disable=W0613
 """Smarter API Manifest Abstract Broker class."""
 
+import traceback
 import typing
 from abc import ABC, abstractmethod
 from http import HTTPStatus
@@ -202,7 +203,8 @@ class AbstractBroker(ABC):
 
     def err_response(self, operation: str, e: Exception) -> JsonResponse:
         """Return a common error response."""
-        data = {"smarter": f"could not {operation} {self.kind} {self.name}", "error": str(e)}
+        tb_str = "".join(traceback.format_tb(e.__traceback__))
+        data = {"smarter": f"could not {operation} {self.kind} {self.name}", "error": str(e), "stacktrace": tb_str}
         return JsonResponse(data=data, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
     def not_found_response(self) -> JsonResponse:
