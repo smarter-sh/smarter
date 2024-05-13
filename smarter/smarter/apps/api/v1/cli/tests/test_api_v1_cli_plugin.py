@@ -70,7 +70,7 @@ class TestApiV1CliPlugin(unittest.TestCase):
         except SmarterAuthToken.DoesNotExist:
             pass
 
-    def get_response(self, path, manifest: str = None):
+    def get_response(self, path, manifest: str = None) -> tuple[dict, int]:
         """
         Prepare and get a response from an api/v1/cli endpoint.
         """
