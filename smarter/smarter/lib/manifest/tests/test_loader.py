@@ -1,5 +1,4 @@
-# pylint: disable=wrong-import-position
-"""Test api/v1/cli - Apply"""
+"""Test SAMLoader"""
 
 import os
 import unittest
@@ -13,7 +12,7 @@ from ..loader import SAMLoader, SAMLoaderError
 
 
 class TestManifestLoader(unittest.TestCase):
-    """Test api/v1/cli - Apply"""
+    """Test SAMLoader"""
 
     def setUp(self):
         """Set up test fixtures."""
