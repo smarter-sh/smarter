@@ -37,7 +37,7 @@ class AbstractSAMMetadataBase(SmarterBaseModel, abc.ABC):
             raise SAMValidationError("Missing required key name")
         if len(v) > 50:
             raise SAMValidationError("Name must be less than 50 characters")
-        if not re.match(SmarterValidator.VALID_CLEAN_STRING, v):
+        if not re.match(SmarterValidator.VALID_CLEAN_STRING_WITH_SPACES, v):
             raise SAMValidationError(
                 f"Invalid name: {v}. Ensure that you do not include characters that are not URL friendly."
             )

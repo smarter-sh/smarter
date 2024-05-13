@@ -158,8 +158,8 @@ class CliBaseApiView(APIView, AccountMixin):
         # So for now, we'll only set the private class variable _manifest_data
         # from the request body, and then we'll leave it to the child views to
         # decide if/when to actually parse the manifest and instantiate the broker.
-        data = request.body.decode("utf-8")
         try:
+            data = request.body.decode("utf-8")
             self._manifest_data = json.loads(data)
         except json.JSONDecodeError:
             try:
@@ -169,7 +169,6 @@ class CliBaseApiView(APIView, AccountMixin):
                     raise APIV1CLIViewError("Could not parse manifest. Valid formats: yaml, json.") from e
                 except APIV1CLIViewError as ex:
                     return JsonResponse(error_response_factory(e=ex), status=HTTPStatus.BAD_REQUEST)
-        print(f"Manifest data: {self.manifest_data}")
         try:
             self._user_profile = user_profile_for_user(user=request.user)
             self._account = self._user_profile.account
