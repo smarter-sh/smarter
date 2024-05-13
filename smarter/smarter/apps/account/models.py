@@ -12,7 +12,7 @@ from django.utils import timezone
 from knox.models import AuthToken, AuthTokenManager
 
 # our stuff
-from smarter.common.exceptions import SmarterValueError
+from smarter.common.exceptions import SmarterBusinessRuleViolation, SmarterValueError
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import User, UserType
@@ -335,7 +335,7 @@ class SmarterAuthToken(AuthToken, TimestampedModel):
 
     def save(self, *args, **kwargs):
         if not self.user.is_staff:
-            raise SmarterValueError("API Keys can only be created for staff users.")
+            raise SmarterBusinessRuleViolation("API Keys can only be created for staff users.")
         user_profile = UserProfile.objects.get(user=self.user)
         self.account = user_profile.account
         if self.created is None:
