@@ -6,7 +6,6 @@ from enum import Enum
 from typing import Any, Union
 
 import requests
-import waffle
 import yaml
 
 from .enum import (
@@ -115,10 +114,6 @@ class SAMLoader:
         if api_version not in SUPPORTED_API_VERSIONS:
             raise SAMLoaderError(f"Unsupported API version: {api_version}")
 
-        self._specification[SAMKeys.APIVERSION] = api_version
-        if kind:
-            self._specification[SAMKeys.KIND] = kind
-
         # 1. acquire the manifest data
         # ---------------------------------------------------------------------
         if sum([bool(kind), bool(manifest), bool(file_path), bool(url)]) == 0:
@@ -134,7 +129,14 @@ class SAMLoader:
         elif url:
             self._raw_data = requests.get(url, timeout=30).text
 
-        # 2. validate a json representation of the manifest using our in-house Enumerated data types.
+        # 2. set specification key values
+        self._specification[SAMKeys.APIVERSION] = api_version
+        if kind:
+            self._specification[SAMKeys.KIND] = kind
+        else:
+            self._specification[SAMKeys.KIND] = self.get_key(SAMKeys.KIND.value)
+
+        # 3. validate a json representation of the manifest using our in-house Enumerated data types.
         # ---------------------------------------------------------------------
         # Note that child classes are expected to
         # override the specification as well as validate() in order to add
@@ -156,56 +158,54 @@ class SAMLoader:
 
     @property
     def json_data(self) -> dict:
-        if isinstance(self.raw_data, dict):
+        if self.data_format == SAMDataFormats.JSON:
             return self.raw_data
-        try:
-            return json.loads(self.raw_data)
-        except json.JSONDecodeError:
-            return None
+        elif self.data_format == SAMDataFormats.YAML:
+            return yaml.safe_load(self.raw_data)
+        return None
 
     @property
     def yaml_data(self) -> str:
-        try:
-            data = yaml.safe_load(self.raw_data)
-            if isinstance(data, dict):
-                return self.raw_data
-        except Exception:
-            pass
+        if self.data_format == SAMDataFormats.YAML:
+            return self.raw_data
+        elif self.data_format == SAMDataFormats.JSON:
+            return yaml.dump(self.json_data)
         return None
 
     @property
     def data_format(self) -> SAMDataFormats:
         if self._data_format:
             return self._data_format
-        if self.json_data:
+        if isinstance(self.raw_data, dict):
+            # we are a json dict
             self._data_format = SAMDataFormats.JSON
-        elif self.yaml_data:
-            self._data_format = SAMDataFormats.YAML
+        else:
+            try:
+                # we are a json string, so convert to dict
+                json_data = json.loads(self.raw_data)
+                self._raw_data = json_data
+                self._data_format = SAMDataFormats.JSON
+            except json.JSONDecodeError:
+                try:
+                    # we are a yaml string
+                    yaml.safe_load(self.raw_data)
+                    self._data_format = SAMDataFormats.YAML
+                except yaml.YAMLError as e:
+                    raise SAMLoaderError("Invalid data format. Supported formats: json, yaml") from e
         return self._data_format
 
     @property
-    def data(self) -> dict:
-        if self._dict_data:
-            return self._dict_data
-        if self.data_format == SAMDataFormats.JSON:
-            self._dict_data = self.json_data
-        elif self.data_format == SAMDataFormats.YAML:
-            self._dict_data = self.yaml_data
-        return self._dict_data
-
-    @property
     def formatted_data(self) -> str:
-        return json.dumps(self.data, indent=4)
+        return json.dumps(self.json_data, indent=4)
 
     # -------------------------------------------------------------------------
     # class methods
     # -------------------------------------------------------------------------
     def get_key(self, key) -> any:
         try:
-            return self.data[key]
+            return self.json_data[key]
         except KeyError:
-            pass
-        return None
+            return None
 
     def validate_manifest(self):
         """
@@ -215,7 +215,7 @@ class SAMLoader:
 
         def recursive_validator(recursed_data: dict = None, recursed_spec: dict = None):
             this_overall_spec = recursed_spec or self.specification
-            this_data = recursed_data or self.data
+            this_data = recursed_data or self.json_data
             if not this_data:
                 raise SAMLoaderError("Received empty or invalid data.")
 
@@ -224,12 +224,8 @@ class SAMLoader:
                     key = key.value
                 key_value = this_data.get(key)
                 if isinstance(key_spec, dict):
-                    if waffle.switch_is_active("manifest_logging"):
-                        logger.info("recursing to key %s with spec %s using data %s", key, key_spec, key_value)
                     recursive_validator(recursed_data=key_value, recursed_spec=key_spec)
                 else:
-                    if waffle.switch_is_active("manifest_logging"):
-                        logger.info("Validating key %s with spec %s using data %s", key, key_spec, key_value)
                     validate_key(
                         key=key,
                         key_value=key_value,
@@ -239,7 +235,7 @@ class SAMLoader:
         # top-level validations of the manifest itself.
         if not self.raw_data:
             raise SAMLoaderError("Received empty or invalid data.")
-        if not self.data:
+        if not self.data_format:
             raise SAMLoaderError("Invalid data format. Supported formats: json, yaml")
         # recursively validate the json representation of the manifest data
         recursive_validator()
