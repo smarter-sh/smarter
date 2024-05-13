@@ -266,13 +266,13 @@ class SAMLoader:
         return self.get_key(SAMKeys.KIND.value)
 
     @property
-    def manifest_metadata(self) -> any:
+    def manifest_metadata(self) -> dict:
         return self.get_key(SAMKeys.METADATA.value)
 
     @property
-    def manifest_spec(self) -> any:
+    def manifest_spec(self) -> dict:
         return self.get_key(SAMKeys.SPEC.value)
 
     @property
-    def manifest_status(self) -> any:
+    def manifest_status(self) -> dict:
         return self.get_key(SAMKeys.STATUS.value)

@@ -53,6 +53,7 @@ class CliBaseApiView(APIView, AccountMixin):
     _broker: AbstractBroker = None
     _manifest_data: json = None
     _manifest_kind: str = None
+    _manifest_name: str = None
     _manifest_load_failed: bool = False
     _BrokerClass: Type[AbstractBroker] = None
 
@@ -107,6 +108,7 @@ class CliBaseApiView(APIView, AccountMixin):
             BrokerClass = self.BrokerClass
             self._broker = BrokerClass(
                 api_version=SMARTER_API_VERSION,
+                name=self.manifest_name,
                 kind=self.manifest_kind,
                 account=self.user_profile.account,
                 loader=self.loader,
@@ -120,6 +122,14 @@ class CliBaseApiView(APIView, AccountMixin):
     @property
     def manifest_data(self) -> json:
         return self._manifest_data
+
+    @property
+    def manifest_name(self) -> str:
+        if not self._manifest_name and self.manifest_data:
+            self._manifest_name = self.manifest_data.get("metadata", {}).get("name", None)
+        if not self._manifest_kind and self.loader:
+            self._manifest_kind = self.loader.manifest_metadata.get("name") if self.loader else None
+        return self._manifest_name
 
     @property
     def manifest_kind(self) -> str:
@@ -138,6 +148,7 @@ class CliBaseApiView(APIView, AccountMixin):
         model will be passed to a AbstractBroker for the manifest 'kind', which
         implements the broker service pattern for the underlying object.
         """
+        self._manifest_name = kwargs.get("name", None)
         kind = kwargs.get("kind", None)
         if kind:
             self._manifest_kind = str(kind).title()
