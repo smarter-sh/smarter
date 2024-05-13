@@ -130,9 +130,9 @@ def handle_plugin_selected(sender, **kwargs):
 
 
 @receiver(post_save, sender=PluginMeta)
-def handle_plugin_meta_created(sender, **kwargs):
+def handle_plugin_meta_created(sender, instance, **kwargs):
 
-    logger.info("%s", formatted_text("PluginMeta() record created."))
+    logger.info("%s %s", formatted_text("PluginMeta() record created:"), instance.name)
 
 
 @receiver(post_save, sender=PluginSelector)
