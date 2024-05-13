@@ -119,8 +119,11 @@ class TestApiV1CliPlugin(unittest.TestCase):
         self.assertEqual(response["kind"], SAMKinds.PLUGIN.value)
         self.assertEqual(response["apiVersion"], SAMApiVersions.V1.value)
 
-        # path = reverse("api_v1_cli_manifest_view", kwargs={"kind": "plugin"})
-        # get_response(path)
+        path = reverse("api_v1_cli_manifest_view", kwargs={"kind": "plugin"})
+        response, status = self.get_response(path)
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertIsInstance(response, dict)
+        self.assertEqual(response["filepath"], "https://cdn.localhost:8000/cli/example-manifests/plugin.yaml")
 
         path = reverse("api_v1_cli_delete_view", kwargs={"kind": "plugin", "name": self.name})
         response, status = self.get_response(path)
@@ -129,9 +132,3 @@ class TestApiV1CliPlugin(unittest.TestCase):
         self.assertEqual(response["message"], "Plugin CliTestPlugin deleted successfully")
         with self.assertRaises(PluginMeta.DoesNotExist):
             PluginMeta.objects.get(name=self.name, account=self.account)
-
-        # path = reverse("api_v1_cli_status_view")
-        # get_response(path)
-
-        # path = reverse("api_v1_cli_whoami_view")
-        # get_response(path)
