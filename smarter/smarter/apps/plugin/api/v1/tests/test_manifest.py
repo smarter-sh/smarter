@@ -16,7 +16,7 @@ class TestSAM(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        self.path = os.path.join(PYTHON_ROOT, "smarter", "apps", "api", "v1", "tests", "data")
+        self.path = os.path.join(PYTHON_ROOT, "smarter", "apps", "plugin", "api", "v1", "tests", "data")
         self.good_manifest_path = os.path.join(self.path, "good-manifest.yaml")
         self.invalid_file_format = os.path.join(self.path, "invalid-file-format.yaml")
         self.account = Account.objects.create(

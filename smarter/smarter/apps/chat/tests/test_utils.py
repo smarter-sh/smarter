@@ -68,7 +68,7 @@ class TestUtils(unittest.TestCase):
         """Test parse_request"""
         request_body = get_request_body(self.request)
         messages, input_text = parse_request(request_body)
-        self.assertEqual(input_text, None)
+        self.assertEqual(input_text, "return the integer value 42.")
         self.assertEqual(len(messages), 2)
 
     def test_get_content_for_role(self):

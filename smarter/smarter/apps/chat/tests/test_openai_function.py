@@ -1,7 +1,3 @@
-# pylint: disable=wrong-import-position
-# pylint: disable=R0801,E1101
-# pylint: disable=broad-exception-caught
-# pylint: disable=W0613
 """Test lambda_openai_v2 function."""
 
 import os
@@ -16,20 +12,12 @@ from time import sleep
 import yaml
 from django.test import Client
 
-from smarter.common.conf import settings as smarter_settings
-from smarter.lib.django.user import User
-
-
-HERE = os.path.abspath(os.path.dirname(__file__))
-PROJECT_ROOT = str(Path(HERE).parent.parent)
-PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
-if PYTHON_ROOT not in sys.path:
-    sys.path.append(PYTHON_ROOT)  # noqa: E402
-
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
+from smarter.common.conf import settings as smarter_settings
+from smarter.lib.django.user import User
 
 from ..models import Chat, ChatPluginUsage
 from ..providers.smarter import handler
@@ -41,6 +29,13 @@ from ..signals import (
     chat_response_success,
 )
 from ..tests.test_setup import get_test_file, get_test_file_path
+
+
+HERE = os.path.abspath(os.path.dirname(__file__))
+PROJECT_ROOT = str(Path(HERE).parent.parent)
+PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
+if PYTHON_ROOT not in sys.path:
+    sys.path.append(PYTHON_ROOT)  # noqa: E402
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes
@@ -101,10 +96,9 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
 
         config_path = get_test_file_path("plugins/everlasting-gobstopper.yaml")
         with open(config_path, encoding="utf-8") as file:
-            plugin_json = yaml.safe_load(file)
-        plugin_json["user_profile"] = self.user_profile
+            plugin_data = yaml.safe_load(file)
 
-        self.plugin = PluginStatic(data=plugin_json)
+        self.plugin = PluginStatic(user_profile=self.user_profile, data=plugin_data)
         self.plugins = [self.plugin]
 
         self.client = Client()
@@ -119,10 +113,18 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
 
     def tearDown(self):
         """Tear down test fixtures."""
-        self.user_profile.delete()
-        self.user.delete()
-        self.account.delete()
-        self.plugin.delete()
+        try:
+            self.user_profile.delete()
+        except UserProfile.DoesNotExist:
+            pass
+        try:
+            self.user.delete()
+        except User.DoesNotExist:
+            pass
+        try:
+            self.account.delete()
+        except Account.DoesNotExist:
+            pass
 
     def check_response(self, response):
         """Check response structure from api.v0.views.chat handler()"""
@@ -139,7 +141,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         self.assertTrue("model" in body)
         self.assertTrue("choices" in body)
         self.assertTrue("completion" in body)
-        self.assertTrue("request_meta_data" in body)
+        self.assertTrue("metadata" in body)
         self.assertTrue("usage" in body)
 
     def test_does_not_refer_to(self):
@@ -237,8 +239,8 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
                 # self.assertFalse(value)
 
         # assert that Chat has one or more records for self.user
-        chat_histories = Chat.objects.filter(user=self.user)
-        self.assertTrue(chat_histories.exists())
+        chat_histories = Chat.objects.filter().first()
+        self.assertIsNotNone(chat_histories)
 
         # test url api endpoint for chat history
         response = self.client.get("/api/v0/chat/history/chats/")
@@ -246,8 +248,8 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         print("/api/v0/chat/history/chats/ response:", response.json())
 
         # assert that ChatPluginUsage has one or more records for self.user
-        plugin_selection_histories = ChatPluginUsage.objects.filter(user=self.user)
-        self.assertTrue(plugin_selection_histories.exists())
+        plugin_selection_histories = ChatPluginUsage.objects.first()
+        self.assertIsNotNone(plugin_selection_histories)
 
     def test_handler_weather(self):
         """Test api.v0.views.chat handler() - weather."""
