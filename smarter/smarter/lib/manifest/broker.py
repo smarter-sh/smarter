@@ -6,6 +6,7 @@ import typing
 from abc import ABC, abstractmethod
 from http import HTTPStatus
 
+import inflect
 from django.http import HttpRequest, JsonResponse
 
 from smarter.common.conf import settings as smarter_settings
@@ -19,6 +20,8 @@ from .exceptions import SAMExceptionBase
 
 if typing.TYPE_CHECKING:
     from smarter.apps.account.models import Account, UserProfile
+
+inflect_engine = inflect.engine()
 
 SUPPORTED_API_VERSIONS = [SAMApiVersions.V1.value]
 
@@ -242,8 +245,14 @@ class AbstractBroker(ABC):
         data: dict,
     ) -> JsonResponse:
         """Return a common success response."""
+        operated = self.Operations.past_tense().get(operation, operation)
+        if operation == self.Operations.GET:
+            kind = inflect_engine.plural(self.kind)
+            message = f"{kind} {operated} successfully"
+        else:
+            kind = self.kind
+            message = f"{kind} {self.name} {operated} successfully"
         operation = self.Operations.past_tense().get(operation, operation)
-        message = f"{self.kind} {self.name} {operation} successfully"
         data.update({"message": message})
         return JsonResponse(data=data, status=HTTPStatus.OK, safe=False)
 

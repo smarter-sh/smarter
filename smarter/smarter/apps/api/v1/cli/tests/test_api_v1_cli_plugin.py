@@ -107,11 +107,14 @@ class TestApiV1CliApply(unittest.TestCase):
         self.assertIsInstance(response.get("metadata", None), dict)
         self.assertEqual(response.get("metadata", {}).get("name", None), self.name)
 
-        # path = reverse("api_v1_cli_logs_kind_name_view", kwargs={"kind": "plugin", "name": self.name})
-        # get_response(path)
+        path = reverse("api_v1_cli_logs_kind_name_view", kwargs={"kind": "plugin", "name": self.name})
+        response, status = self.get_response(path)
+        self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
+        self.assertEqual(response["message"], "operation not implemented for Plugin resources")
 
-        # path = reverse("api_v1_cli_get_view", kwargs={"kind": "plugins"})
-        # get_response(path)
+        path = reverse("api_v1_cli_get_view", kwargs={"kind": "plugins"})
+        response, status = self.get_response(path)
+        print(response, status)
 
         # path = reverse("api_v1_cli_delete_view", kwargs={"kind": "plugin", "name": self.name})
         # get_response(path)
