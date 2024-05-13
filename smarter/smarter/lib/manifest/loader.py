@@ -218,6 +218,8 @@ class SAMLoader:
             this_data = recursed_data or self.json_data
             if not this_data:
                 raise SAMLoaderError("Received empty or invalid data.")
+            if not isinstance(this_data, dict):
+                raise SAMLoaderError(f"Invalid data format. Expected dict but got {type(this_data)}")
 
             for key, key_spec in this_overall_spec.items():
                 if isinstance(key, Enum):
