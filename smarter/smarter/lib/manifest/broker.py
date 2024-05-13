@@ -10,7 +10,7 @@ from django.http import HttpRequest, JsonResponse
 
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django.user import UserType
-from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 from smarter.lib.manifest.models import AbstractSAMBase
 
 from .enum import SAMApiVersions
@@ -70,6 +70,7 @@ class AbstractBroker(ABC):
     _account: "Account" = None
     _loader: SAMLoader = None
     _manifest: AbstractSAMBase = None
+    _name: str = None
     _kind: str = None
     _validated: bool = False
 
@@ -78,12 +79,14 @@ class AbstractBroker(ABC):
         self,
         api_version: str,
         account: "Account",
+        name: str = None,
         kind: str = None,
         loader: SAMLoader = None,
         manifest: str = None,
         file_path: str = None,
         url: str = None,
     ):
+        self._name = name
         self._account = account
         self._loader = loader
         if api_version not in SUPPORTED_API_VERSIONS:
@@ -100,7 +103,7 @@ class AbstractBroker(ABC):
             )
             if self._loader:
                 self._validated = True
-        except SAMBrokerError:
+        except SAMLoaderError:
             pass
 
         self._kind = kind or self.loader.manifest_kind if self.loader else None
@@ -120,9 +123,9 @@ class AbstractBroker(ABC):
     @property
     def name(self) -> str:
         """The name of the manifest."""
-        if self.manifest and self.manifest.metadata and self.manifest.metadata.name:
-            return self.manifest.metadata.name
-        return None
+        if not self._name and self.manifest and self.manifest.metadata and self.manifest.metadata.name:
+            self._name = self.manifest.metadata.name
+        return self._name
 
     @property
     def api_version(self) -> str:
@@ -210,27 +213,27 @@ class AbstractBroker(ABC):
         """Returns an example yaml manifest document for the kind of resource."""
         filename = str(self.kind).lower() + ".yaml"
         data = {"filepath": f"https://{smarter_settings.environment_cdn_domain}/cli/example-manifests/{filename}"}
-        return self.success_response(data)
+        return self.success_response(self.Operations.GET, data=data)
 
     def not_implemented_response(self) -> JsonResponse:
         """Return a common not implemented response."""
-        data = {"smarter": f"operation not implemented for {self.kind} resources"}
+        data = {"message": f"operation not implemented for {self.kind} resources"}
         return JsonResponse(data=data, status=HTTPStatus.NOT_IMPLEMENTED)
 
     def not_ready_response(self) -> JsonResponse:
         """Return a common not ready response."""
-        data = {"smarter": f"{self.kind} {self.name} not ready"}
+        data = {"message": f"{self.kind} {self.name} not ready"}
         return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
 
     def err_response(self, operation: str, e: Exception) -> JsonResponse:
         """Return a common error response."""
         tb_str = "".join(traceback.format_tb(e.__traceback__))
-        data = {"smarter": f"could not {operation} {self.kind} {self.name}", "error": str(e), "stacktrace": tb_str}
+        data = {"message": f"could not {operation} {self.kind} {self.name}", "error": str(e), "stacktrace": tb_str}
         return JsonResponse(data=data, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
     def not_found_response(self) -> JsonResponse:
         """Return a common not found response."""
-        data = {"smarter": f"{self.kind} {self.name} not found"}
+        data = {"message": f"{self.kind} {self.name} not found"}
         return JsonResponse(data=data, status=HTTPStatus.NOT_FOUND)
 
     def success_response(
