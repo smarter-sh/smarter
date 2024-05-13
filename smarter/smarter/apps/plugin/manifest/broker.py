@@ -75,7 +75,6 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         if self._plugin_meta:
             return self._plugin_meta
         if self.name and self.account:
-            print("SAMPluginBroker.plugin_meta()", self.name, self.account)
             try:
                 self._plugin_meta = PluginMeta.objects.get(account=self.account, name=self.name)
             except PluginMeta.DoesNotExist:
@@ -90,6 +89,9 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         """
         if self._plugin:
             return self._plugin
+        print("plugin() -  self.plugin_meta", self.plugin_meta)
+        print("account", self.account)
+        print("name", self.name)
         controller = PluginController(account=self.account, manifest=self.manifest, plugin_meta=self.plugin_meta)
         self._plugin = controller.obj
         return self._plugin

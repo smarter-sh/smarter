@@ -20,6 +20,7 @@ class TestApiV1CliApply(unittest.TestCase):
     """Test api/v1/cli endpoints on the Plugin model."""
 
     def setUp(self):
+        self.name = "CliTestPlugin"
         hash_suffix = "_" + hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()
 
         self.account = Account.objects.create(
@@ -89,3 +90,30 @@ class TestApiV1CliApply(unittest.TestCase):
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
         self.assertEqual(response["message"], "Plugin CliTestPlugin applied successfully")
+
+        path = reverse("api_v1_cli_deploy_view", kwargs={"kind": "plugin", "name": self.name})
+        response, status = self.get_response(path)
+        self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
+        self.assertEqual(response["message"], "operation not implemented for Plugin resources")
+
+        path = reverse("api_v1_cli_describe_view", kwargs={"kind": "plugin", "name": self.name})
+        response, status = self.get_response(path)
+        print(response)
+
+        # path = reverse("api_v1_cli_logs_kind_name_view", kwargs={"kind": "plugin", "name": self.name})
+        # get_response(path)
+
+        # path = reverse("api_v1_cli_get_view", kwargs={"kind": "plugins"})
+        # get_response(path)
+
+        # path = reverse("api_v1_cli_delete_view", kwargs={"kind": "plugin", "name": self.name})
+        # get_response(path)
+
+        # path = reverse("api_v1_cli_manifest_view", kwargs={"kind": "plugin"})
+        # get_response(path)
+
+        # path = reverse("api_v1_cli_status_view")
+        # get_response(path)
+
+        # path = reverse("api_v1_cli_whoami_view")
+        # get_response(path)
