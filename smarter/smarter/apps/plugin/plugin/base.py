@@ -118,6 +118,7 @@ class PluginBase(ABC):
         if manifest:
             # we received a Pydantic model from a manifest broker.
             self._manifest = manifest
+            self.create()
 
         if data:
             # we received a yaml or json string representation of a manifest.
@@ -136,9 +137,6 @@ class PluginBase(ABC):
                 spec=loader.manifest_spec,
                 status=loader.manifest_status,
             )
-            self.create()
-
-        if self.manifest:
             self.create()
 
         if self.ready:
@@ -281,6 +279,7 @@ class PluginBase(ABC):
         if not self.manifest:
             return None
         return {
+            "id": self.id,
             "account": self.user_profile.account,
             "name": self.manifest.metadata.name,
             "description": self.manifest.metadata.description,
@@ -309,6 +308,7 @@ class PluginBase(ABC):
         if not self.manifest:
             return None
         return {
+            "plugin": self.plugin_meta,
             "directive": self.manifest.spec.selector.directive,
             "search_terms": self.manifest.spec.selector.searchTerms,
         }
@@ -332,6 +332,7 @@ class PluginBase(ABC):
         if not self.manifest:
             return None
         return {
+            "plugin": self.plugin_meta,
             "system_role": self.manifest.spec.prompt.systemRole,
             "model": self.manifest.spec.prompt.model,
             "temperature": self.manifest.spec.prompt.temperature,
@@ -578,40 +579,37 @@ class PluginBase(ABC):
 
         def committed():
             plugin_updated.send(sender=self.__class__, plugin=self)
+            self.id = self.plugin_meta.id
             logger.debug("Updated plugin %s: %s.", self.name, self.id)
 
         if not self.manifest:
             raise SmarterPluginError("Plugin manifest is not set.")
 
-        meta_data = self.plugin_meta_django_model
-        selector = self.plugin_selector_django_model
-        prompt = self.plugin_prompt_django_model
-        plugin_data = self.plugin_data_django_model
-
-        meta_data_tags = meta_data.pop("tags")
-
-        if not self.plugin_meta:
+        plugin_meta_django_model = self.plugin_meta_django_model
+        if not plugin_meta_django_model:
             raise SmarterPluginError(
                 f"Plugin {self.manifest.metadata.name} for account {self.user_profile.account.account_number} does not exist."
             )
-        self.id = self.plugin_meta.id
+
+        plugin_selector_django_model = self.plugin_selector_django_model
+        plugin_prompt_django_model = self.plugin_prompt_django_model
+        plugin_data_django_model = self.plugin_data_django_model
 
         with transaction.atomic():
-            for key, value in meta_data.items():
-                setattr(self.plugin_meta, key, value)
-            self.plugin_meta.tags.set(meta_data_tags)
+            for attr, value in plugin_meta_django_model.items():
+                setattr(self._plugin_meta, attr, value)
             self.plugin_meta.save()
 
-            for key, value in selector.items():
-                setattr(self.plugin_selector, key, value)
+            for attr, value in plugin_selector_django_model.items():
+                setattr(self._plugin_selector, attr, value)
             self.plugin_selector.save()
 
-            for key, value in prompt.items():
-                setattr(self.plugin_prompt, key, value)
+            for attr, value in plugin_prompt_django_model.items():
+                setattr(self._plugin_prompt, attr, value)
             self.plugin_prompt.save()
 
-            for key, value in plugin_data.items():
-                setattr(self.plugin_data, key, value)
+            for attr, value in plugin_data_django_model.items():
+                setattr(self._plugin_data, attr, value)
             self.plugin_data.save()
 
         transaction.on_commit(committed)

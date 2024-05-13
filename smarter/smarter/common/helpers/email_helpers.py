@@ -42,7 +42,7 @@ class EmailHelper(metaclass=Singleton):
         mail_to = EmailHelper.validate_mail_list(emails=to, quiet=quiet)
 
         if quiet:
-            logger.info("EmailHelper.send_email() quite mode. would have sent subject '%s' to: %s", subject, mail_to)
+            logger.info("EmailHelper.send_email() quiet mode. would have sent subject '%s' to: %s", subject, mail_to)
             return
 
         if not mail_to:

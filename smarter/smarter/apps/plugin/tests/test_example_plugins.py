@@ -11,6 +11,7 @@ from django.test import Client
 from smarter.apps.account.models import Account, UserProfile
 from smarter.lib.django.user import User
 
+from ..models import PluginMeta
 from ..plugin.static import PluginStatic
 from ..utils import add_example_plugins
 
@@ -60,7 +61,7 @@ class TestPluginUrls(unittest.TestCase):
             self.assertIsInstance(json_data, dict)
             self.assertGreaterEqual(len(json_data), 1)
 
-        plugins = PluginStatic(user_profile=self.user_profile).plugins
+        plugins = PluginMeta.objects.filter(account=self.account)
         self.assertGreaterEqual(len(plugins), 1)
 
         for plugin in plugins:

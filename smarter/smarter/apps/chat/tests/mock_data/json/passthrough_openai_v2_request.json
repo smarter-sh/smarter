@@ -1,5 +1,8 @@
 {
   "chat_id": 1,
+  "model": "gpt-3.5-turbo",
+  "temperature": 0.0,
+  "max_tokens": 4096,
   "messages": [
     {
       "role": "system",
