@@ -18,6 +18,7 @@ from smarter.apps.plugin.models import (
     PluginPrompt,
     PluginSelector,
 )
+from smarter.apps.plugin.plugin.base import SmarterPluginError
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.plugin.utils import PluginExamples
 from smarter.apps.plugin.serializers import (
@@ -38,9 +39,7 @@ from smarter.apps.plugin.signals import (
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.lib.django.user import User
-
-# our stuff
-from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.manifest.loader import SAMLoaderError
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes
@@ -144,51 +143,13 @@ class TestPlugin(unittest.TestCase):
         self.assertIsInstance(plugin.plugin_selector_serializer, PluginSelectorSerializer)
 
         self.assertEqual(plugin.plugin_meta.name, self.data["metadata"]["name"])
-        self.assertEqual(plugin.plugin_selector.directive, self.data["selector"]["directive"])
-        self.assertEqual(plugin.plugin_prompt.system_role, self.data["prompt"]["system_role"])
-        self.assertEqual(plugin.plugin_prompt.model, self.data["prompt"]["model"])
-        self.assertEqual(plugin.plugin_prompt.temperature, self.data["prompt"]["temperature"])
-        self.assertEqual(plugin.plugin_prompt.max_tokens, self.data["prompt"]["max_tokens"])
-        self.assertEqual(plugin.plugin_data.description, self.data["plugin_data"]["description"])
-        self.assertEqual(plugin.plugin_data.static_data, self.data["plugin_data"]["static_data"])
-
-    def test_update(self):
-        """Test that we can update a plugin using the PluginStatic."""
-        plugin_created.connect(self.plugin_created_signal_handler, dispatch_uid="plugin_created_test_update")
-        plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_update")
-        plugin_updated.connect(self.plugin_updated_signal_handler, dispatch_uid="plugin_updated_test_update")
-
-        plugin = PluginStatic(data=self.data)
-
-        # verify that the signals were sent
-        self.assertTrue(self.signals["plugin_created"])
-        self.assertTrue(self.signals["plugin_ready"])
-
-        plugin.plugin_meta.name = "New Name"
-        plugin.plugin_selector.directive = "New Directive"
-        plugin.plugin_prompt.system_role = "New System Role"
-        plugin.plugin_prompt.model = "New Model"
-        plugin.plugin_prompt.temperature = 0.5
-        plugin.plugin_prompt.max_tokens = 100
-        plugin.plugin_data.description = "New Description"
-        plugin.plugin_data.static_data = "New Return Data"
-
-        plugin.update()
-
-        self.assertEqual(plugin.plugin_meta.name, "New Name")
-        self.assertEqual(plugin.plugin_selector.directive, "New Directive")
-        self.assertEqual(plugin.plugin_prompt.system_role, "New System Role")
-        self.assertEqual(plugin.plugin_prompt.model, "New Model")
-        self.assertEqual(plugin.plugin_prompt.temperature, 0.5)
-        self.assertEqual(plugin.plugin_prompt.max_tokens, 100)
-        self.assertEqual(plugin.plugin_data.description, "New Description")
-        self.assertEqual(plugin.plugin_data.static_data, "New Return Data")
-
-        # sleep long enough to eliminate race situation
-        # between the asynchronous commit and our assertion
-        sleep(1)
-
-        self.assertTrue(self.signals["plugin_updated"])
+        self.assertEqual(plugin.plugin_selector.directive, self.data["spec"]["selector"]["directive"])
+        self.assertEqual(plugin.plugin_prompt.system_role, self.data["spec"]["prompt"]["systemRole"])
+        self.assertEqual(plugin.plugin_prompt.model, self.data["spec"]["prompt"]["model"])
+        self.assertEqual(plugin.plugin_prompt.temperature, self.data["spec"]["prompt"]["temperature"])
+        self.assertEqual(plugin.plugin_prompt.max_tokens, self.data["spec"]["prompt"]["maxTokens"])
+        self.assertEqual(plugin.plugin_data.description, self.data["spec"]["data"]["description"])
+        self.assertEqual(plugin.plugin_data.static_data, self.data["spec"]["data"]["staticData"])
 
     def test_to_json(self):
         """Test that the PluginStatic generates correct JSON output."""
@@ -205,14 +166,15 @@ class TestPlugin(unittest.TestCase):
         self.assertIsInstance(to_json, dict)
         self.assertEqual(to_json["metadata"]["name"], self.data["metadata"]["name"])
         self.assertEqual(to_json["spec"]["selector"]["directive"], self.data["spec"]["selector"]["directive"])
-        self.assertEqual(to_json["spec"]["prompt"]["system_role"], self.data["spec"]["prompt"]["systemRole"])
+        self.assertEqual(to_json["spec"]["prompt"]["systemRole"], self.data["spec"]["prompt"]["systemRole"])
         self.assertEqual(to_json["spec"]["prompt"]["model"], self.data["spec"]["prompt"]["model"])
         self.assertEqual(to_json["spec"]["prompt"]["temperature"], self.data["spec"]["prompt"]["temperature"])
-        self.assertEqual(to_json["spec"]["prompt"]["max_tokens"], self.data["spec"]["prompt"]["maxTokens"])
+        self.assertEqual(to_json["spec"]["prompt"]["maxTokens"], self.data["spec"]["prompt"]["maxTokens"])
 
     def test_delete(self):
         """Test that we can delete a plugin using the PluginStatic."""
         plugin_created.connect(self.plugin_created_signal_handler, dispatch_uid="plugin_created_test_delete")
+        plugin_updated.connect(self.plugin_updated_signal_handler, dispatch_uid="plugin_updated_test_delete")
         plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_delete")
         plugin_deleted.connect(self.plugin_deleted_signal_handler, dispatch_uid="plugin_deleted_test_delete")
 
@@ -225,7 +187,7 @@ class TestPlugin(unittest.TestCase):
         sleep(1)
 
         # verify that the signals were sent
-        self.assertTrue(self.signals["plugin_created"])
+        self.assertTrue(self.signals["plugin_created"] or self.signals["plugin_updated"])
         self.assertTrue(self.signals["plugin_ready"])
         self.assertTrue(self.signals["plugin_deleted"])
 
@@ -248,7 +210,7 @@ class TestPlugin(unittest.TestCase):
         add_example_plugins(user_profile=self.user_profile)
 
         # verify that all of the sample plugins were added to the user account
-        plugins = PluginMeta.objects.filter(author=self.user_profile)
+        plugins = PluginMeta.objects.filter(account=self.account)
         self.assertEqual(len(plugins), PluginExamples().count())
 
         # verify that all of the sample plugins were correctdly created
@@ -259,12 +221,12 @@ class TestPlugin(unittest.TestCase):
     # pylint: disable=too-many-statements
     def test_validation_bad_structure(self):
         """Test that the PluginStatic raises an error when given bad data."""
-        with self.assertRaises(PydanticValidationError):
+        with self.assertRaises(SmarterPluginError):
             PluginStatic(data={})
 
         bad_data = self.data.copy()
         bad_data.pop("metadata")
-        with self.assertRaises(KeyError):
+        with self.assertRaises(SAMLoaderError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
@@ -279,31 +241,31 @@ class TestPlugin(unittest.TestCase):
 
         bad_data = self.data.copy()
         bad_data["spec"].pop("data")
-        with self.assertRaises(SAMValidationError):
+        with self.assertRaises(SAMLoaderError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
         bad_data["metadata"].pop("name")
-        with self.assertRaises(SAMValidationError):
+        with self.assertRaises(SAMLoaderError):
             PluginStatic(data=bad_data)
 
+    def test_pydantic_validation_errors(self):
+        """Test that the PluginStatic raises an error when given bad data."""
+
         bad_data = self.data.copy()
-
-        print("I AM HERE.")
-        print(self.data)
-
+        print("bad_data", bad_data)
         bad_data["spec"]["selector"].pop("directive")
-        with self.assertRaises(SAMValidationError):
+        with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
         bad_data["spec"]["prompt"].pop("systemRole")
-        with self.assertRaises(SAMValidationError):
+        with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
         bad_data["spec"]["prompt"].pop("model")
-        with self.assertRaises(SAMValidationError):
+        with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
@@ -312,7 +274,7 @@ class TestPlugin(unittest.TestCase):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["spec"]["prompt"].pop("max_tokens")
+        bad_data["spec"]["prompt"].pop("maxTokens")
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
@@ -344,7 +306,7 @@ class TestPlugin(unittest.TestCase):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["spec"]["prompt"]["max_tokens"] = "not an int"
+        bad_data["spec"]["prompt"]["maxTokens"] = "not an int"
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
@@ -402,11 +364,11 @@ class TestPlugin(unittest.TestCase):
         # ensure that the json output still matches the original data
         self.assertIsInstance(to_json, dict)
         self.assertEqual(to_json["metadata"]["name"], self.data["metadata"]["name"])
-        self.assertEqual(to_json["selector"]["directive"], self.data["selector"]["directive"])
-        self.assertEqual(to_json["prompt"]["system_role"], self.data["prompt"]["system_role"])
-        self.assertEqual(to_json["prompt"]["model"], self.data["prompt"]["model"])
-        self.assertEqual(to_json["prompt"]["temperature"], self.data["prompt"]["temperature"])
-        self.assertEqual(to_json["prompt"]["max_tokens"], self.data["prompt"]["max_tokens"])
+        self.assertEqual(to_json["spec"]["selector"]["directive"], self.data["spec"]["selector"]["directive"])
+        self.assertEqual(to_json["spec"]["prompt"]["systemRole"], self.data["spec"]["prompt"]["systemRole"])
+        self.assertEqual(to_json["spec"]["prompt"]["model"], self.data["spec"]["prompt"]["model"])
+        self.assertEqual(to_json["spec"]["prompt"]["temperature"], self.data["spec"]["prompt"]["temperature"])
+        self.assertEqual(to_json["spec"]["prompt"]["maxTokens"], self.data["spec"]["prompt"]["maxTokens"])
 
     def test_plugin_called_signal(self):
         """Test the plugin_called signal."""

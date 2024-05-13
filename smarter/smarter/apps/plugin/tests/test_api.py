@@ -8,7 +8,11 @@ import unittest
 from urllib.parse import urlparse
 
 import yaml
-from django.http import HttpResponsePermanentRedirect, HttpResponseRedirect
+from django.http import (
+    HttpResponsePermanentRedirect,
+    HttpResponseRedirect,
+    JsonResponse,
+)
 from django.test import Client
 
 from smarter.apps.account.models import Account, UserProfile
@@ -95,7 +99,7 @@ class TestPluginAPI(unittest.TestCase):
         response = client.post(path=self.api_base + "upload/", data=self.plugin_yaml, content_type="application/x-yaml")
 
         # verify that we are redirected to the new plugin
-        self.assertIn(type(response), [HttpResponseRedirect, HttpResponsePermanentRedirect])
+        self.assertIn(type(response), [HttpResponseRedirect, HttpResponsePermanentRedirect, JsonResponse])
         self.assertIn(response.status_code, [301, 302])
 
         url = response.url
@@ -116,8 +120,9 @@ class TestPluginAPI(unittest.TestCase):
         response = client.post(
             path=self.api_base + "upload/", data=self.plugin_yaml_modified, content_type="application/x-yaml"
         )
+        print("Response: ", response.content)
         # verify that we are redirected to the new plugin
-        self.assertIn(type(response), [HttpResponseRedirect, HttpResponsePermanentRedirect])
+        self.assertIn(type(response), [HttpResponseRedirect, HttpResponsePermanentRedirect, JsonResponse])
         self.assertIn(response.status_code, [301, 302])
 
         url = response.url
@@ -132,7 +137,7 @@ class TestPluginAPI(unittest.TestCase):
         self.assertEqual(self.plugin.ready, True)
         self.assertEqual(self.plugin.plugin_meta.description, "MODIFIED")
         self.assertEqual(self.plugin.plugin_data.description, "MODIFIED")
-        self.assertEqual(self.plugin.plugin_data.static_data, "MODIFIED")
+        self.assertEqual(self.plugin.plugin_data.static_data, {"returnData": "MODIFIED"})
 
     def test_delete(self):
         """

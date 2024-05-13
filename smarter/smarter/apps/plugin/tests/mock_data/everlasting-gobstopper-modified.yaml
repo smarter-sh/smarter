@@ -10,17 +10,17 @@ metadata:
     - MODIFIED
 spec:
   selector:
-    directive: search_terms
-    search_terms:
+    directive: searchTerms
+    searchTerms:
       - MODIFIED
   prompt:
-    system_role: >
+    systemRole: >
       MODIFIED
     model: gpt-3.5-turbo-1106
     temperature: 1.0
-    max_tokens: 256
+    maxTokens: 256
 
   data:
     description: MODIFIED
     staticData:
-      return_data: MODIFIED
+      returnData: MODIFIED
