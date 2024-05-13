@@ -13,12 +13,13 @@ from django.urls import reverse
 
 from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.apps.plugin.models import PluginMeta
 from smarter.common.const import PYTHON_ROOT
 from smarter.lib.django.user import User
 from smarter.lib.manifest.enum import SAMApiVersions
 
 
-class TestApiV1CliApply(unittest.TestCase):
+class TestApiV1CliPlugin(unittest.TestCase):
     """Test api/v1/cli endpoints on the Plugin model."""
 
     def setUp(self):
@@ -114,13 +115,20 @@ class TestApiV1CliApply(unittest.TestCase):
 
         path = reverse("api_v1_cli_get_view", kwargs={"kind": "plugins"})
         response, status = self.get_response(path)
-        print(response, status)
-
-        # path = reverse("api_v1_cli_delete_view", kwargs={"kind": "plugin", "name": self.name})
-        # get_response(path)
+        self.assertIsInstance(response["items"], list)
+        self.assertEqual(response["kind"], SAMKinds.PLUGIN.value)
+        self.assertEqual(response["apiVersion"], SAMApiVersions.V1.value)
 
         # path = reverse("api_v1_cli_manifest_view", kwargs={"kind": "plugin"})
         # get_response(path)
+
+        path = reverse("api_v1_cli_delete_view", kwargs={"kind": "plugin", "name": self.name})
+        response, status = self.get_response(path)
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertIsInstance(response, dict)
+        self.assertEqual(response["message"], "Plugin CliTestPlugin deleted successfully")
+        with self.assertRaises(PluginMeta.DoesNotExist):
+            PluginMeta.objects.get(name=self.name, account=self.account)
 
         # path = reverse("api_v1_cli_status_view")
         # get_response(path)
