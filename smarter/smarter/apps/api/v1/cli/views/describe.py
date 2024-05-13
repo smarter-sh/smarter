@@ -10,5 +10,5 @@ class ApiV1CliDescribeApiView(CliBaseApiView):
     in yaml manifest format.
     """
 
-    def post(self, request):
+    def post(self, request, kind: str, name: str):
         return self.broker.describe(request)
