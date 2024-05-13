@@ -161,7 +161,15 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
                 data.append(model_dump)
             except Exception as e:
                 return self.err_response(self.get.__name__, e)
-
+        data = {
+            "apiVersion": self.api_version,
+            "kind": self.kind,
+            "name": name,
+            "all_objects": all_objects,
+            "tags": tags,
+            "metadata": {"count": len(data)},
+            "items": data,
+        }
         return self.success_response(operation=self.get.__name__, data=data)
 
     def apply(self, request: HttpRequest = None) -> JsonResponse:
