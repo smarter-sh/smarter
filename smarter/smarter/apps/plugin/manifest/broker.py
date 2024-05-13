@@ -37,12 +37,14 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     # override the base abstract manifest model with the Plugin model
     _manifest: SAMPlugin = None
     _plugin: PluginBase = None
+    _plugin_meta: PluginMeta = None
 
     # pylint: disable=too-many-arguments
     def __init__(
         self,
         api_version: str,
         account: Account,
+        name: str = None,
         kind: str = None,
         loader: SAMLoader = None,
         manifest: str = None,
@@ -60,12 +62,25 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         super().__init__(
             api_version=api_version,
             account=account,
+            name=name,
             kind=kind,
             loader=loader,
             manifest=manifest,
             file_path=file_path,
             url=url,
         )
+
+    @property
+    def plugin_meta(self) -> PluginMeta:
+        if self._plugin_meta:
+            return self._plugin_meta
+        if self.name and self.account:
+            print("SAMPluginBroker.plugin_meta()", self.name, self.account)
+            try:
+                self._plugin_meta = PluginMeta.objects.get(account=self.account, name=self.name)
+            except PluginMeta.DoesNotExist:
+                pass
+        return self._plugin_meta
 
     @property
     def plugin(self) -> PluginBase:
@@ -75,7 +90,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         """
         if self._plugin:
             return self._plugin
-        controller = PluginController(account=self.account, manifest=self.manifest)
+        controller = PluginController(account=self.account, manifest=self.manifest, plugin_meta=self.plugin_meta)
         self._plugin = controller.obj
         return self._plugin
 
