@@ -45,6 +45,27 @@ class AbstractBroker(ABC):
     for the manifest: get, post, put, delete, patch.
     """
 
+    class Operations:
+        """Common operations for the broker."""
+
+        GET = "get"
+        APPLY = "apply"
+        DESCRIBE = "describe"
+        DELETE = "delete"
+        DEPLOY = "deploy"
+        LOGS = "logs"
+
+        @classmethod
+        def past_tense(cls) -> dict:
+            return {
+                cls.GET: "gotten",
+                cls.APPLY: "applied",
+                cls.DESCRIBE: "described",
+                cls.DELETE: "deleted",
+                cls.DEPLOY: "deployed",
+                cls.LOGS: "got logs for",
+            }
+
     _api_version: str = None
     _account: "Account" = None
     _loader: SAMLoader = None
@@ -212,8 +233,15 @@ class AbstractBroker(ABC):
         data = {"smarter": f"{self.kind} {self.name} not found"}
         return JsonResponse(data=data, status=HTTPStatus.NOT_FOUND)
 
-    def success_response(self, data: dict) -> JsonResponse:
+    def success_response(
+        self,
+        operation: str,
+        data: dict,
+    ) -> JsonResponse:
         """Return a common success response."""
+        operation = self.Operations.past_tense().get(operation, operation)
+        message = f"{self.kind} {self.name} {operation} successfully"
+        data.update({"message": message})
         return JsonResponse(data=data, status=HTTPStatus.OK, safe=False)
 
 

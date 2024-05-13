@@ -145,7 +145,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
             except Exception as e:
                 return self.err_response(self.get.__name__, e)
 
-        return self.success_response(data)
+        return self.success_response(operation=self.get.__name__, data=data)
 
     def apply(self, request: HttpRequest = None) -> JsonResponse:
         try:
@@ -156,7 +156,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         if self.plugin.ready:
             try:
                 self.plugin.save()
-                return self.success_response(data={})
+                return self.success_response(operation=self.apply.__name__, data={})
             except Exception as e:
                 return self.err_response(self.apply.__name__, e)
         return self.not_ready_response()
@@ -165,7 +165,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         if self.plugin.ready:
             try:
                 data = self.plugin.to_json()
-                return self.success_response(data)
+                return self.success_response(operation=self.describe.__name__, data=data)
             except Exception as e:
                 return self.err_response(self.describe.__name__, e)
         return self.not_ready_response()
@@ -174,7 +174,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         if self.plugin.ready:
             try:
                 self.plugin.delete()
-                return self.success_response(data={})
+                return self.success_response(operation=self.delete.__name__, data={})
             except Exception as e:
                 return self.err_response(self.delete.__name__, e)
         return self.not_ready_response()
