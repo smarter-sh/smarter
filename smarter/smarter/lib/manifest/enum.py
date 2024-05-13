@@ -3,7 +3,7 @@
 from enum import Enum
 
 
-VERSION_PREFIX = "smarter.sh "
+VERSION_PREFIX = "smarter.sh"
 
 
 class SmarterEnumAbstract(Enum):
