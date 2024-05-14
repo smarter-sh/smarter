@@ -56,12 +56,26 @@ class EmailHelper(metaclass=Singleton):
         part2 = MIMEText(body, "html") if html else MIMEText(body)
         msg.attach(part2)
 
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
-            if settings.SMTP_USE_TLS:
-                server.starttls()
-            server.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
-            server.sendmail(msg["From"], [msg["To"]], msg.as_string())
-            logger.info("smtp email sent to %s: %s", to, subject)
+        try:
+            with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+                if settings.SMTP_USE_TLS:
+                    server.starttls()
+                server.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
+                server.sendmail(msg["From"], [msg["To"]], msg.as_string())
+                logger.info("smtp email sent to %s: %s", to, subject)
+        except (
+            smtplib.SMTPDataError,
+            smtplib.SMTPAuthenticationError,
+            smtplib.SMTPConnectError,
+            smtplib.SMTPHeloError,
+            smtplib.SMTPRecipientsRefused,
+            smtplib.SMTPSenderRefused,
+            smtplib.SMTPServerDisconnected,
+            smtplib.SMTPNotSupportedError,
+        ) as e:
+            logger.error(
+                "smtp error while attempting to send email. error: %s from: %s to. %s", e, msg["From"], msg["To"]
+            )
 
 
 email_helper = EmailHelper()
