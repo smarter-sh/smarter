@@ -1,21 +1,28 @@
+# Change Log
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
 ## [0.1.2](https://github.com/QueriumCorp/smarter/compare/v0.1.1...v0.1.2) (2024-05-14)
 
+Introduces a powerful new architecture for processing Kubernetes-style manifests for managing Smarter resources. The new Broker model facilitates lightweight implementations of the smarter command-line implementation and the REST API that backs it.
+
+- add /api/v1/cli back end services for Go lang command-line interface
+- add Pydantic to formally model cli manifests. Enforces manifest structural integrity as well as data and business rule validations.
+- add SAMLoader, a generic yaml loader for Pydantic
+- add Broker model to abstract cli services implementations
+- implement all Plugin cli services
 
 ### Bug Fixes
 
-* force a new release ([ddd6ca9](https://github.com/QueriumCorp/smarter/commit/ddd6ca985f556e87da95a976cccd5045e27abcf2))
+- force a new release ([ddd6ca9](https://github.com/QueriumCorp/smarter/commit/ddd6ca985f556e87da95a976cccd5045e27abcf2))
 
 ## [0.1.1](https://github.com/QueriumCorp/smarter/compare/v0.1.0...v0.1.1) (2024-04-02)
 
 ### Bug Fixes
 
 - force a new release ([dae31bd](https://github.com/QueriumCorp/smarter/commit/dae31bd88a633da0a0d2595ad0ae17420d49db7a))
-
-# Change Log
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.1.0](https://github.com/QueriumCorp/smarter/compare/v0.0.1...v0.1.0) (2024-04-01)
 
