@@ -1,0 +1,15 @@
+---
+apiVersion: smarter.sh/v1
+kind: SqlConnection
+metadata:
+  name: default
+  description: points to the Django mysql database
+spec:
+  connection:
+    name: default
+    db_engine: mysql
+    hostname: localhost
+    port: 3306
+    username: admin
+    password: smarter
+    database: smarter
