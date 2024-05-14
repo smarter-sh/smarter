@@ -171,9 +171,30 @@ class SAMPluginSpecDataSql(BaseModel):
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".data.sqlData"
 
     connection: SqlConnection = Field(..., description=f"{class_identifier}.connection[obj]: an sql server connection")
-    sql: str = Field(
+    parameters: Optional[dict] = Field(
+        None,
+        description=(
+            f"{class_identifier}.parameters[obj]: a dictionary of parameters to use in the SQL query. "
+            "Example: {'company_id': 'int'}"
+        ),
+    )
+    sql_query: str = Field(
         ...,
         description=f"{class_identifier}.sql[str]: a valid SQL query. Example: 'SELECT * FROM customers WHERE id = 100;'",  # nosec
+    )
+    test_values: Optional[dict] = Field(
+        None,
+        description=(
+            f"{class_identifier}.test_values[obj]: a dictionary of test values to use in the SQL query. "
+            "Example: {'company_id': 100}"
+        ),
+    )
+    limit: Optional[int] = Field(
+        None,
+        description=(
+            f"{class_identifier}.limit[int]: an optional limit to the number of rows returned by the SQL query. "
+            "Example: 100"
+        ),
     )
 
     @field_validator("sql")

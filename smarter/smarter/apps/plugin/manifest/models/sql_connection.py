@@ -2,7 +2,7 @@
 
 import re
 from enum import Enum
-from typing import ClassVar
+from typing import ClassVar, List, Optional
 
 from pydantic import Field, field_validator
 
@@ -49,8 +49,18 @@ class SqlConnection(SmarterBaseModel):
         description=f"The port of the SQL connection. Default values are assigned based on the db_engine: {PRETTY_PORT_ASSIGNMENTS}.",
     )
     database: str = Field(..., description="The name of the database to connect to. Examples: 'sales' or 'mydb'")
-    user: str = Field(..., description="The database username")
+    username: str = Field(..., description="The database username")
     password: str = Field(..., description="The password")
+    proxy_host: Optional[str] = Field(
+        None,
+        description="The remote host of the SQL proxy connection. Should be a valid internet domain name. Example: 'mysql.mycompany.com' ",
+    )
+    proxy_port: Optional[int] = Field(
+        None,
+        description=f"The port of the SQL proxy connection. Default values are assigned based on the db_engine: {PRETTY_PORT_ASSIGNMENTS}.",
+    )
+    proxy_username: Optional[str] = Field(None, description="The username for the proxy connection")
+    proxy_password: Optional[str] = Field(None, description="The password for the proxy connection")
 
     @field_validator("db_engine")
     def validate_db_engine(cls, v) -> str:
@@ -78,20 +88,15 @@ class SqlConnection(SmarterBaseModel):
             )
         return v
 
-    @field_validator("database")
-    def validate_database(cls, v) -> str:
-        if re.match(SmarterValidator.VALID_CLEAN_STRING, v):
-            return v
-        raise SAMValidationError(
-            f"Invalid characters found in SQL connection database: {v}. Ensure that you do not include characters that are not URL friendly."
-        )
+    @field_validator("proxy_host")
+    def validate_proxy_host(cls, v) -> str:
+        if v:
+            if not SmarterValidator.is_valid_domain(v):
+                raise SAMValidationError(f"Invalid SQL proxy host: {v}. Must be a valid domain, IPv4, or IPv6 address.")
+        return v
 
-    @field_validator("user")
-    def validate_user(cls, v) -> str:
-        if re.match(SmarterValidator.VALID_CLEAN_STRING, v):
-            return v
-        raise SAMValidationError(f"Invalid characters found in SQL connection user: {v}")
-
-    @field_validator("password")
-    def validate_password(cls, v) -> str:
+    @field_validator("proxy_port")
+    def validate_proxy_port(cls, v) -> int:
+        if v and (v < 1 or v > 65535):
+            raise SAMValidationError(f"Invalid SQL proxy port: {v}. Must be between 1 and 65535.")
         return v
