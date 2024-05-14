@@ -1,15 +1,15 @@
-# -*- coding: utf-8 -*-
-"""This module retrieves the json representation of a plugin using manage.py on the command line."""
+"""This module retrieves the json representation of a plugin."""
+
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account
 from smarter.apps.plugin.models import PluginMeta
-from smarter.apps.plugin.plugin import Plugin
+from smarter.apps.plugin.plugin.static import PluginStatic
 
 
 # pylint: disable=E1101
 class Command(BaseCommand):
-    """Django manage.py retrieve_plugin command. This command is used to retrieve a plugin."""
+    """Prints the json representation of a plugin to the console."""
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
@@ -35,5 +35,5 @@ class Command(BaseCommand):
         except PluginMeta.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"Plugin {name} does not exist."))
 
-        plugin = Plugin(plugin_id=plugin_meta.id)
+        plugin = PluginStatic(plugin_id=plugin_meta.id)
         print(plugin.data)

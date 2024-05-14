@@ -1,7 +1,8 @@
-# -*- coding: utf-8 -*-
 """Django custom project settings"""
 
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SmarterEnvironments  # pylint: disable=W0611
+from smarter.common.exceptions import SmarterConfigurationError  # pylint: disable=W0611
 
 
 # SMARTER settings
@@ -23,3 +24,8 @@ SMARTER_BRANDING_SUPPORT_HOURS = "9:00 AM - 5:00 PM GMT-6 (CST)"
 SMARTER_BRANDING_URL_FACEBOOK = "https://www.facebook.com/Querium"
 SMARTER_BRANDING_URL_TWITTER = "https://twitter.com/QueriumCorp"
 SMARTER_BRANDING_URL_LINKEDIN = "https://www.linkedin.com/company/querium-corporation/"
+
+SMARTER_CHAT_CACHE_EXPIRATION = 60 * 30  # 5 minutes
+SMARTER_CHATBOT_CACHE_EXPIRATION = 60 * 30  # 5 minutes
+SMARTER_CHATBOT_MAX_RETURNED_HISTORY = 25
+SMARTER_PLUGIN_MAX_DATA_RESULTS = 50

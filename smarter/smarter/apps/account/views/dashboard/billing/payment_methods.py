@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=W0511,W0613
 """Billing Views for the account dashboard."""
 import logging
@@ -7,7 +6,7 @@ from http import HTTPStatus
 from django import forms, http
 
 from smarter.apps.account.tests.factories import payment_method_factory
-from smarter.common.view_helpers import SmarterAdminWebView
+from smarter.lib.django.view_helpers import SmarterAdminWebView
 
 
 logger = logging.getLogger(__name__)
@@ -63,13 +62,13 @@ class PaymentMethodView(SmarterAdminWebView):
         return http.JsonResponse(data=retval, safe=False, status=HTTPStatus.OK)
 
     def post(self, request, payment_method_id: str = None):
-        self.process_form(request)
+        return self.process_form(request)
 
     def patch(self, request, payment_method_id: str = None):
-        self.process_form(request)
+        return self.process_form(request)
 
     def put(self, request, payment_method_id: str = None):
-        self.process_form(request)
+        return self.process_form(request)
 
     def delete(self, request, payment_method_id: str):
         logger.info("Deleting payment method %s", payment_method_id)

@@ -1,5 +1,7 @@
 import { MESSAGE_DIRECTION, SENDER_ROLE, VALID_MESSAGE_ROLES } from "./constants.js";
 
+
+
 export function chat_restore_from_backend(chat_history, last_response) {
   /*
   Rebuild the message thread from the most recently persisted chat history.
@@ -12,11 +14,11 @@ export function chat_restore_from_backend(chat_history, last_response) {
       } else if (chat.role === SENDER_ROLE.SYSTEM) {
         return messageFactory(chat.content, MESSAGE_DIRECTION.INCOMING, chat.role);
       } else if (chat.role === SENDER_ROLE.ASSISTANT) {
-        if (!chat.hasOwnProperty('tool_calls')) {
-          return messageFactory(chat.content, MESSAGE_DIRECTION.INCOMING, chat.role);
-        }
+        return messageFactory(chat.content, MESSAGE_DIRECTION.INCOMING, chat.role);
       }
-      console.error(`chat_restore_from_backend() Invalid role received: ${chat.role}`);
+      if (chat.role !== SENDER_ROLE.TOOL) {
+        console.error(`chat_restore_from_backend() Invalid role received: ${chat.role}`);
+      }
     })
     .filter(message => message && typeof message === 'object' && !Array.isArray(message));
 

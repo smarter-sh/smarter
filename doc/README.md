@@ -10,7 +10,7 @@ Table of contents:
 - [How to Get an OpenAI API Key](./OPENAI_API_GETTING_STARTED_GUIDE.md)
 - [Semantic Versioning Guide](./SEMANTIC_VERSIONING.md)
 - [Getting Started With AWS and Terraform](./TERRAFORM_GETTING_STARTED_GUIDE.md)
-- [12-Factor Methodology](./Twelve_Factor_Methodology.md)
+- [12-Factor Methodology](./12-FACTOR.md)
 
 ## Stack
 
@@ -69,6 +69,10 @@ _Why do we use it: Aside from being a fantastic web framework, Django is arguabl
 [Django REST framework](https://www.django-rest-framework.org/) is a powerful and flexible toolkit for building Web APIs. Some reasons you might want to use REST framework: The Web browsable API is a huge usability win for your developers.
 
 _Why do we use it: given that we're standardized on Python-Django, Django REST framework is the gold standard for implementing sophisticated REST APIs._
+
+### Django Waffle
+
+[Waffle](https://waffle.readthedocs.io/en/stable/) is feature flipper for Django. You can define the conditions for which a flag should be active, and use it in a number of ways.
 
 ### Pydantic
 

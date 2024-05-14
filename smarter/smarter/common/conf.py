@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=no-member,no-self-argument,unused-argument,R0801
 """
 Configuration for Lambda functions.
@@ -32,24 +31,29 @@ from typing import Any, List, Optional, Tuple, Union
 # 3rd party stuff
 import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
 import pkg_resources
-from botocore.config import Config
 from botocore.exceptions import NoCredentialsError, ProfileNotFound
 from dotenv import load_dotenv
 from pydantic import Field, SecretStr, ValidationError, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings
 
+from ..lib.django.validators import SmarterValidator
+
 # our stuff
-from .const import IS_USING_TFVARS, TFVARS, VERSION
-from .exceptions import OpenAIAPIConfigurationError, OpenAIAPIValueError
+from .const import (
+    IS_USING_TFVARS,
+    SMARTER_CUSTOMER_API_SUBDOMAIN,
+    SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN,
+    TFVARS,
+    VERSION,
+    SmarterEnvironments,
+)
+from .exceptions import SmarterConfigurationError, SmarterValueError
 from .utils import recursive_sort_dict
 
 
 logger = logging.getLogger(__name__)
 TFVARS = TFVARS or {}
 DOT_ENV_LOADED = load_dotenv()
-
-VALID_DOMAIN_PATTERN = r"(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]"
-VALID_EMAIL_PATTERN = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
 
 
 def get_semantic_version() -> str:
@@ -121,7 +125,7 @@ class Services:
     def raise_error_on_disabled(cls, service: Union[str, Tuple[str, bool]]) -> None:
         """Raise an error if the service is disabled"""
         if not cls.enabled(service):
-            raise OpenAIAPIConfigurationError(f"{service} is not enabled. See conf.Services")
+            raise SmarterConfigurationError(f"{service} is not enabled. See conf.Services")
 
     @classmethod
     def to_dict(cls):
@@ -157,8 +161,12 @@ class SettingsDefaults:
       3. defaults.
     """
 
+    OPENAI_DEFAULT_MODEL = "gpt-3.5-turbo"
+    OPENAI_DEFAULT_TEMPERATURE = 0.5
+    OPENAI_DEFAULT_MAX_TOKENS = 256
+
     # defaults for this Python package
-    ENVIRONMENT = os.environ.get("ENVIRONMENT", TFVARS.get("environment", "local"))
+    ENVIRONMENT = os.environ.get("ENVIRONMENT", TFVARS.get("environment", SmarterEnvironments.LOCAL))
     ROOT_DOMAIN = os.environ.get("ROOT_DOMAIN", TFVARS.get("root_domain", "example.com"))
     SHARED_RESOURCE_IDENTIFIER = os.environ.get(
         "SHARED_RESOURCE_IDENTIFIER", TFVARS.get("shared_resource_identifier", "smarter")
@@ -179,6 +187,10 @@ class SettingsDefaults:
     AWS_APIGATEWAY_READ_TIMEOUT: int = TFVARS.get("aws_apigateway_read_timeout", 70)
     AWS_APIGATEWAY_CONNECT_TIMEOUT: int = TFVARS.get("aws_apigateway_connect_timeout", 70)
     AWS_APIGATEWAY_MAX_ATTEMPTS: int = TFVARS.get("aws_apigateway_max_attempts", 10)
+
+    AWS_EKS_CLUSTER_NAME = os.environ.get(
+        "AWS_EKS_CLUSTER_NAME", TFVARS.get("aws_eks_cluster_name", "apps-hosting-service")
+    )
 
     GOOGLE_MAPS_API_KEY: str = os.environ.get(
         "GOOGLE_MAPS_API_KEY",
@@ -209,6 +221,10 @@ class SettingsDefaults:
 
     STRIPE_LIVE_SECRET_KEY = os.environ.get("STRIPE_LIVE_SECRET_KEY", "SET-ME-PLEASE")
     STRIPE_TEST_SECRET_KEY = os.environ.get("STRIPE_TEST_SECRET_KEY", "SET-ME-PLEASE")
+
+    LOCAL_HOSTS = ["localhost", "127.0.0.1"]
+    LOCAL_HOSTS += [host + ":8000" for host in LOCAL_HOSTS]
+    LOCAL_HOSTS.append("testserver")
 
     @classmethod
     def to_dict(cls):
@@ -252,91 +268,25 @@ def empty_str_to_int_default(v: str, default: int) -> int:
 class Settings(BaseSettings):
     """Settings for Lambda functions"""
 
-    _aws_session: boto3.Session = None
-    _aws_apigateway_client = None
-    _aws_s3_client = None
-    _aws_dynamodb_client = None
-    _aws_rekognition_client = None
+    # pylint: disable=too-few-public-methods
+    class Config:
+        """Pydantic configuration"""
+
+        frozen = True
+
     _aws_access_key_id_source: str = "unset"
     _aws_secret_access_key_source: str = "unset"
     _dump: dict = None
-    _initialized: bool = False
 
     # pylint: disable=too-many-branches,too-many-statements
     def __init__(self, **data: Any):  # noqa: C901
         super().__init__(**data)
-        if not Services.enabled(Services.AWS_CLI):
-            self._initialized = True
-            return
-
-        if bool(os.environ.get("AWS_DEPLOYED", False)):
-            # If we're running inside AWS Lambda, then we don't need to set the AWS credentials.
-            logger.debug("running inside AWS Lambda")
-            self._aws_access_key_id_source: str = "overridden by IAM role-based security"
-            self._aws_secret_access_key_source: str = "overridden by IAM role-based security"
-            self._aws_session = boto3.Session(region_name=self.aws_region)
-            self._initialized = True
-
-        if not self.initialized and bool(os.environ.get("GITHUB_ACTIONS", False)):
-            logger.debug("running inside GitHub Actions")
-            aws_access_key_id = os.environ.get("AWS_ACCESS_KEY_ID", None)
-            aws_secret_access_key = os.environ.get("AWS_SECRET_ACCESS_KEY", None)
-            if not aws_access_key_id or not aws_secret_access_key and not self.aws_profile:
-                raise OpenAIAPIConfigurationError(
-                    "required environment variable(s) AWS_ACCESS_KEY_ID and/or AWS_SECRET_ACCESS_KEY not set"
-                )
-            region_name = self.aws_region
-            if not region_name and not self.aws_profile:
-                raise OpenAIAPIConfigurationError("required environment variable AWS_REGION not set")
-            try:
-                self._aws_session = boto3.Session(
-                    region_name=region_name,
-                    aws_access_key_id=aws_access_key_id,
-                    aws_secret_access_key=aws_secret_access_key,
-                )
-                self._initialized = True
-                self._aws_access_key_id_source = "environ"
-                self._aws_secret_access_key_source = "environ"
-            except ProfileNotFound:
-                # only log this if the aws_profile is set
-                if self.aws_profile:
-                    logger.warning("aws_profile %s not found", self.aws_profile)
-
-            if self.aws_profile:
-                self._aws_access_key_id_source = "aws_profile"
-                self._aws_secret_access_key_source = "aws_profile"
-            else:
-                self._aws_access_key_id_source = "environ"
-                self._aws_secret_access_key_source = "environ"
-
-            self._initialized = True
-
-        if not self.initialized:
-            if self.aws_profile:
-                self._aws_access_key_id_source = "aws_profile"
-                self._aws_secret_access_key_source = "aws_profile"
-                self._initialized = True
-
-        if not self.initialized:
-            if "aws_access_key_id" in data or "aws_secret_access_key" in data:
-                if "aws_access_key_id" in data:
-                    self._aws_access_key_id_source = "constructor"
-                if "aws_secret_access_key" in data:
-                    self._aws_secret_access_key_source = "constructor"
-                self._initialized = True
-
-        if not self.initialized:
-            if "AWS_ACCESS_KEY_ID" in os.environ:
-                self._aws_access_key_id_source = "environ"
-            if "AWS_SECRET_ACCESS_KEY" in os.environ:
-                self._aws_secret_access_key_source = "environ"
 
         if self.debug_mode:
             logger.setLevel(logging.DEBUG)
 
         # pylint: disable=logging-fstring-interpolation
-        logger.debug(f"initialized settings: {self.aws_auth}")
-        self._initialized = True
+        logger.debug("Settings initialized")
 
     shared_resource_identifier: Optional[str] = Field(
         SettingsDefaults.SHARED_RESOURCE_IDENTIFIER, env="SHARED_RESOURCE_IDENTIFIER"
@@ -376,9 +326,17 @@ class Settings(BaseSettings):
         pre=True,
         getter=lambda v: empty_str_to_bool_default(v, SettingsDefaults.AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN),
     )
+    aws_eks_cluster_name: Optional[str] = Field(
+        SettingsDefaults.AWS_EKS_CLUSTER_NAME,
+        env="AWS_EKS_CLUSTER_NAME",
+    )
     environment: Optional[str] = Field(
         SettingsDefaults.ENVIRONMENT,
         env="ENVIRONMENT",
+    )
+    local_hosts: Optional[List[str]] = Field(
+        SettingsDefaults.LOCAL_HOSTS,
+        env="LOCAL_HOSTS",
     )
     root_domain: Optional[str] = Field(
         SettingsDefaults.ROOT_DOMAIN,
@@ -405,6 +363,13 @@ class Settings(BaseSettings):
     openai_endpoint_image_size: Optional[str] = Field(
         SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE, env="OPENAI_ENDPOINT_IMAGE_SIZE"
     )
+    openai_default_model: Optional[str] = Field(SettingsDefaults.OPENAI_DEFAULT_MODEL, env="OPENAI_DEFAULT_MODEL")
+    openai_default_temperature: Optional[float] = Field(
+        SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE, env="OPENAI_DEFAULT_TEMPERATURE"
+    )
+    openai_default_max_tokens: Optional[int] = Field(
+        SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS, env="OPENAI_DEFAULT_MAX_TOKENS"
+    )
     pinecone_api_key: Optional[SecretStr] = Field(SettingsDefaults.PINECONE_API_KEY, env="PINECONE_API_KEY")
     stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY, env="STRIPE_LIVE_SECRET_KEY")
     stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY, env="STRIPE_TEST_SECRET_KEY")
@@ -424,106 +389,9 @@ class Settings(BaseSettings):
     stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY, env="STRIPE_TEST_SECRET_KEY")
 
     @property
-    def initialized(self):
-        """Is settings initialized?"""
-        return self._initialized
-
-    @property
-    def aws_account_id(self):
-        """AWS account id"""
-        Services.raise_error_on_disabled(Services.AWS_CLI)
-        sts_client = self.aws_session.client("sts")
-        if not sts_client:
-            logger.warning("could not initialize sts_client")
-            return None
-        retval = sts_client.get_caller_identity()
-        if not isinstance(retval, dict):
-            logger.warning("sts_client.get_caller_identity() did not return a dict")
-            return None
-        return retval.get("Account", None)
-
-    @property
-    def aws_access_key_id_source(self):
-        """Source of aws_access_key_id"""
-        return self._aws_access_key_id_source
-
-    @property
-    def aws_secret_access_key_source(self):
-        """Source of aws_secret_access_key"""
-        return self._aws_secret_access_key_source
-
-    @property
-    def aws_auth(self) -> dict:
-        """AWS authentication"""
-        retval = {
-            "aws_profile": self.aws_profile,
-            "aws_access_key_id_source": self.aws_access_key_id_source,
-            "aws_secret_access_key_source": self.aws_secret_access_key_source,
-            "aws_region": self.aws_region,
-        }
-        if self.init_info:
-            retval["init_info"] = self.init_info
-        return retval
-
-    @property
-    def aws_session(self):
-        """AWS session"""
-        Services.raise_error_on_disabled(Services.AWS_CLI)
-        if not self._aws_session:
-            if self.aws_profile:
-                logger.debug("creating new aws_session with aws_profile: %s", self.aws_profile)
-                try:
-                    self._aws_session = boto3.Session(profile_name=self.aws_profile, region_name=self.aws_region)
-                except ProfileNotFound:
-                    logger.warning("aws_profile %s not found", self.aws_profile)
-
-                return self._aws_session
-            if self.aws_access_key_id.get_secret_value() is not None and self.aws_secret_access_key is not None:
-                logger.debug("creating new aws_session with aws keypair: %s", self.aws_access_key_id_source)
-                self._aws_session = boto3.Session(
-                    region_name=self.aws_region,
-                    aws_access_key_id=self.aws_access_key_id.get_secret_value(),
-                    aws_secret_access_key=self.aws_secret_access_key.get_secret_value(),
-                )
-                return self._aws_session
-            logger.debug("creating new aws_session without aws credentials")
-            self._aws_session = boto3.Session(region_name=self.aws_region)
-        return self._aws_session
-
-    @property
-    def aws_route53_client(self):
-        """Route53 client"""
-        Services.raise_error_on_disabled(Services.AWS_ROUTE53)
-        return self.aws_session.client("route53")
-
-    @property
-    def aws_apigateway_client(self):
-        """API Gateway client"""
-        Services.raise_error_on_disabled(Services.AWS_APIGATEWAY)
-        if not self._aws_apigateway_client:
-            config = Config(
-                read_timeout=SettingsDefaults.AWS_APIGATEWAY_READ_TIMEOUT,
-                connect_timeout=SettingsDefaults.AWS_APIGATEWAY_CONNECT_TIMEOUT,
-                retries={"max_attempts": SettingsDefaults.AWS_APIGATEWAY_MAX_ATTEMPTS},
-            )
-            self._aws_apigateway_client = self.aws_session.client("apigateway", config=config)
-        return self._aws_apigateway_client
-
-    @property
-    def aws_dynamodb_client(self):
-        """DynamoDB client"""
-        Services.raise_error_on_disabled(Services.AWS_DYNAMODB)
-        if not self._aws_dynamodb_client:
-            self._aws_dynamodb_client = self.aws_session.client("dynamodb")
-        return self._aws_dynamodb_client
-
-    @property
-    def aws_s3_client(self):
-        """S3 client"""
-        Services.raise_error_on_disabled(Services.AWS_S3)
-        if not self._aws_s3_client:
-            self._aws_s3_client = self.aws_session.client("s3")
-        return self._aws_s3_client
+    def data_directory(self) -> str:
+        """Data directory"""
+        return "/data"
 
     @property
     def aws_apigateway_name(self) -> str:
@@ -544,9 +412,57 @@ class Settings(BaseSettings):
         return None
 
     @property
+    def environment_cdn_domain(self) -> str:
+        """Return the CDN domain."""
+        return f"cdn.{self.environment_domain}"
+
+    @property
     def environment_domain(self) -> str:
         """Return the complete domain name."""
-        return self.environment + ".api." + self.root_domain
+        if self.environment == SmarterEnvironments.PROD:
+            return SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN + "." + self.root_domain
+        if self.environment in SmarterEnvironments.aws_environments:
+            return self.environment + "." + SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN + "." + self.root_domain
+        if self.environment == SmarterEnvironments.LOCAL:
+            return "localhost:8000"
+        # default domain format
+        return self.environment + "." + SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN + "." + self.root_domain
+
+    @property
+    def environment_url(self) -> str:
+        if self.environment == SmarterEnvironments.LOCAL:
+            return SmarterValidator.urlify(self.environment_domain)
+        return SmarterValidator.urlify(self.environment_domain)
+
+    @property
+    def platform_name(self) -> str:
+        """Return the platform name."""
+        return self.root_domain.split(".")[0]
+
+    @property
+    def environment_namespace(self) -> str:
+        """Return the Kubernetes namespace for the environment."""
+        return f"{self.platform_name}-{SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN}-{settings.environment}"
+
+    @property
+    def customer_api_domain(self) -> str:
+        """Return the customer API domain name."""
+        if self.environment == SmarterEnvironments.PROD:
+            # api.smarter.sh
+            return f"{SMARTER_CUSTOMER_API_SUBDOMAIN}.{self.root_domain}"
+        if self.environment in SmarterEnvironments.aws_environments:
+            # alpha.api.smarter.sh, beta.api.smarter.sh, next.api.smarter.sh
+            return f"{self.environment}.{SMARTER_CUSTOMER_API_SUBDOMAIN}.{self.root_domain}"
+        if self.environment == SmarterEnvironments.LOCAL:
+            return f"{SMARTER_CUSTOMER_API_SUBDOMAIN}.localhost:8000"
+        # default domain format
+        return f"{self.environment}.{SMARTER_CUSTOMER_API_SUBDOMAIN}.{self.root_domain}"
+
+    @property
+    def customer_api_url(self) -> str:
+        if self.environment == SmarterEnvironments.LOCAL:
+            return SmarterValidator.urlify(self.customer_api_domain)
+        return SmarterValidator.urlify(self.customer_api_domain)
 
     @property
     def aws_s3_bucket_name(self) -> str:
@@ -591,24 +507,19 @@ class Settings(BaseSettings):
             package_list = [(d.project_name, d.version) for d in installed_packages]
             return package_list
 
-        if self._dump and self.initialized:
+        if self._dump:
             return self._dump
-
-        if not self.initialized:
-            return {}
 
         packages = get_installed_packages()
         packages_dict = [{"name": name, "version": version} for name, version in packages]
 
         self._dump = {
-            "services": Services.enabled_services(),
             "environment": {
                 "is_using_tfvars_file": self.is_using_tfvars_file,
                 "is_using_dotenv_file": self.is_using_dotenv_file,
                 "os": os.name,
                 "system": platform.system(),
                 "release": platform.release(),
-                "boto3": boto3.__version__,
                 "shared_resource_identifier": self.shared_resource_identifier,
                 "debug_mode": self.debug_mode,
                 "dump_defaults": self.dump_defaults,
@@ -619,8 +530,6 @@ class Settings(BaseSettings):
                 "python_build": platform.python_build(),
                 "python_installed_packages": packages_dict,
             },
-            "aws_auth": self.aws_auth,
-            "aws_lambda": {},
             "google": {
                 "google_maps_api_key": self.google_maps_api_key,
             },
@@ -631,14 +540,6 @@ class Settings(BaseSettings):
                 "openai_endpoint_image_size": self.openai_endpoint_image_size,
             },
         }
-        if Services.enabled(Services.AWS_APIGATEWAY):
-            self._dump["aws_apigateway"] = {
-                "aws_apigateway_create_custom_domaim": self.aws_apigateway_create_custom_domaim,
-                "aws_apigateway_name": self.aws_apigateway_name,
-                "root_domain": self.root_domain,
-                "aws_apigateway_domain_name": self.aws_apigateway_domain_name,
-            }
-
         if self.dump_defaults:
             settings_defaults = SettingsDefaults.to_dict()
             self._dump["settings_defaults"] = settings_defaults
@@ -651,12 +552,6 @@ class Settings(BaseSettings):
 
         self._dump = recursive_sort_dict(self._dump)
         return self._dump
-
-    # pylint: disable=too-few-public-methods
-    class Config:
-        """Pydantic configuration"""
-
-        frozen = True
 
     @field_validator("shared_resource_identifier")
     def validate_shared_resource_identifier(cls, v) -> str:
@@ -707,7 +602,7 @@ class Settings(BaseSettings):
         if v in [None, ""]:
             return SettingsDefaults.AWS_REGION
         if v not in valid_regions:
-            raise OpenAIAPIValueError(f"aws_region {v} not in aws_regions: {valid_regions}")
+            raise SmarterValueError(f"aws_region {v} not in aws_regions: {valid_regions}")
         return v
 
     @field_validator("environment")
@@ -715,6 +610,13 @@ class Settings(BaseSettings):
         """Validate environment"""
         if v in [None, ""]:
             return SettingsDefaults.ENVIRONMENT
+        return v
+
+    @field_validator("local_hosts")
+    def validate_local_hosts(cls, v) -> List[str]:
+        """Validate local_hosts"""
+        if v in [None, ""]:
+            return SettingsDefaults.LOCAL_HOSTS
         return v
 
     @field_validator("root_domain")
@@ -729,6 +631,13 @@ class Settings(BaseSettings):
         """Validate aws_apigateway_create_custom_domaim"""
         if v in [None, ""]:
             return SettingsDefaults.AWS_APIGATEWAY_CREATE_CUSTOM_DOMAIN
+        return v
+
+    @field_validator("aws_eks_cluster_name")
+    def validate_aws_eks_cluster_name(cls, v) -> str:
+        """Validate aws_eks_cluster_name"""
+        if v in [None, ""]:
+            return SettingsDefaults.AWS_EKS_CLUSTER_NAME
         return v
 
     @field_validator("debug_mode")
@@ -809,6 +718,31 @@ class Settings(BaseSettings):
             return SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE
         return v
 
+    @field_validator("openai_default_model")
+    def check_openai_default_model(cls, v) -> str:
+        """Check openai_default_model"""
+        if v in [None, ""]:
+            return SettingsDefaults.OPENAI_DEFAULT_MODEL
+        return v
+
+    @field_validator("openai_default_temperature")
+    def check_openai_default_temperature(cls, v) -> float:
+        """Check openai_default_temperature"""
+        if isinstance(v, float):
+            return v
+        if v in [None, ""]:
+            return SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE
+        return float(v)
+
+    @field_validator("openai_default_max_tokens")
+    def check_openai_default_max_tokens(cls, v) -> int:
+        """Check openai_default_max_tokens"""
+        if isinstance(v, int):
+            return v
+        if v in [None, ""]:
+            return SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS
+        return int(v)
+
     @field_validator("pinecone_api_key")
     def check_pinecone_api_key(cls, v) -> SecretStr:
         """Check pinecone_api_key"""
@@ -842,10 +776,7 @@ class Settings(BaseSettings):
         """Check smtp_sender"""
         if v in [None, ""]:
             v = SettingsDefaults.SMTP_SENDER
-        pattern = VALID_DOMAIN_PATTERN
-        if v not in [None, ""]:
-            if not re.match(pattern, v):
-                raise ValueError("Invalid domain name")
+            SmarterValidator.validate_domain(v)
         return v
 
     @field_validator("smtp_from_email")
@@ -854,9 +785,7 @@ class Settings(BaseSettings):
         if v in [None, ""]:
             v = SettingsDefaults.SMTP_FROM_EMAIL
         if v not in [None, ""]:
-            pattern = VALID_EMAIL_PATTERN
-            if not re.match(pattern, v):
-                raise ValueError("Invalid email address")
+            SmarterValidator.validate_email(v)
         return v
 
     @field_validator("smtp_host")
@@ -864,10 +793,7 @@ class Settings(BaseSettings):
         """Check smtp_host"""
         if v in [None, ""]:
             v = SettingsDefaults.SMTP_HOST
-        pattern = VALID_DOMAIN_PATTERN
-        if v not in [None, ""]:
-            if not re.match(pattern, v):
-                raise ValueError("Invalid domain name")
+            SmarterValidator.validate_domain(v)
         return v
 
     @field_validator("smtp_password")
@@ -883,7 +809,7 @@ class Settings(BaseSettings):
         if v in [None, ""]:
             v = SettingsDefaults.SMTP_PORT
         if not str(v).isdigit() or not 1 <= int(v) <= 65535:
-            raise ValueError("Invalid port number")
+            raise SmarterValueError("Invalid port number")
         return int(v)
 
     @field_validator("smtp_use_ssl")
@@ -909,18 +835,28 @@ class Settings(BaseSettings):
 
 
 class SingletonSettings:
-    """Singleton for Settings"""
+    """
+    Alternative Singleton pattern to resolve metaclass inheritance conflict
+    from Pydantic BaseSettings.
+
+    Traceback (most recent call last):
+    File "/smarter/manage.py", line 8, in <module>
+        from smarter.common.conf import settings as smarter_settings
+    File "/smarter/smarter/common/conf.py", line 262, in <module>
+        class Settings(BaseSettings, metaclass=Singleton):
+    TypeError: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases
+    """
 
     _instance = None
 
     def __new__(cls):
         """Create a new instance of Settings"""
         if cls._instance is None:
-            cls._instance = super(SingletonSettings, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
             try:
                 cls._instance._settings = Settings()
             except ValidationError as e:
-                raise OpenAIAPIConfigurationError("Invalid configuration: " + str(e)) from e
+                raise SmarterConfigurationError("Invalid configuration: " + str(e)) from e
         return cls._instance
 
     @property

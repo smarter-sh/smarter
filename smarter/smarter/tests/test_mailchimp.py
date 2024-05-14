@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position
 """Test User."""
 
 # python stuff
 import unittest
 
-from smarter.common.mailchimp_helpers import MailchimpHelper
+from smarter.common.helpers.mailchimp_helpers import MailchimpHelper
 
 
 class TestMailChimp(unittest.TestCase):

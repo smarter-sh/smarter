@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
 """Django views"""
+
 import logging
 
-from smarter.common.view_helpers import SmarterWebView
+from smarter.lib.django.view_helpers import SmarterWebView
 
 
 logger = logging.getLogger(__name__)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position
 # pylint: disable=duplicate-code
 """Test Search Lambda function."""
@@ -25,14 +24,14 @@ def noop():
 def get_test_file(filename: str):
     """Load a mock lambda_index event."""
     path = os.path.join(HERE, "mock_data", filename)
-    with open(path, "r", encoding="utf-8") as file:
+    with open(path, encoding="utf-8") as file:
         return json.load(file)
 
 
 def get_test_file_yaml(filename: str):
     """Load a mock yaml file"""
     path = os.path.join(HERE, "mock_data", filename)
-    with open(path, "r", encoding="utf-8") as file:
+    with open(path, encoding="utf-8") as file:
         return yaml.safe_load(file)
 
 

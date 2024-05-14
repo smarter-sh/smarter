@@ -1,10 +1,11 @@
-# -*- coding: utf-8 -*-
+# pylint: disable=W0613
 """This module is used to update an existing plugin using manage.py"""
+
 import yaml
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import UserProfile
-from smarter.apps.plugin.plugin import Plugin
+from smarter.apps.plugin.plugin.static import PluginStatic
 
 
 # pylint: disable=E1101
@@ -20,7 +21,7 @@ class Command(BaseCommand):
         user_profile: UserProfile = None
 
         file_path = options["plugin_file_path"]
-        with open(file_path, "r", encoding="utf-8") as file:
+        with open(file_path, encoding="utf-8") as file:
             data = file.read()
 
         if data:
@@ -29,12 +30,12 @@ class Command(BaseCommand):
             except yaml.YAMLError as exc:
                 print("Error in configuration file:", exc)
 
-            user_profile = data["meta_data"]["author"]
+            user_profile = data["metadata"]["author"]
             data["user_profile"] = user_profile
             data["user"] = user_profile.user
             data["account"] = user_profile.account
 
-            plugin = Plugin(data=data)
+            plugin = PluginStatic(data=data)
             if plugin.ready:
                 print(plugin.to_json())
         else:

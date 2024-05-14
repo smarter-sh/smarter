@@ -1,20 +1,18 @@
-# -*- coding: utf-8 -*-
 """Views for the account settings."""
+
 import json
 import logging
 from http import HTTPStatus
 from uuid import UUID
 
 from django import forms, http
-from django.contrib.auth import get_user_model
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
-from smarter.apps.account.models import APIKey, UserProfile
-from smarter.common.view_helpers import SmarterAdminWebView
+from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
+from smarter.lib.django.view_helpers import SmarterAdminWebView
 
 
-User = get_user_model()
 logger = logging.getLogger(__name__)
 excluded_fields = ["password", "date_joined"]
 
@@ -25,18 +23,29 @@ class APIKeyForm(forms.ModelForm):
     class Meta:
         """Meta class for APIKeyForm with all fields."""
 
-        model = APIKey
+        model = SmarterAuthToken
         fields = ["description", "is_active"]
 
 
-class APIKeysView(SmarterAdminWebView):
+class APIKeyBase(SmarterAdminWebView):
+    """Base class for API key views."""
+
+    account: Account = None
+    user_profile: UserProfile = None
+
+    def dispatch(self, request, *args, **kwargs):
+        self.user_profile = UserProfile.objects.get(user=request.user)
+        self.account = self.user_profile.account
+        return super().dispatch(request, *args, **kwargs)
+
+
+class APIKeysView(APIKeyBase):
     """View for the account API keys."""
 
     template_path = "account/dashboard/api-keys.html"
 
     def get(self, request):
-        account = UserProfile.objects.get(user=request.user).account
-        api_keys = APIKey.objects.filter(account=account).only(
+        api_keys = SmarterAuthToken.objects.filter(account=self.account).only(
             "user", "description", "created", "last_used_at", "is_active"
         )
         context = {
@@ -47,14 +56,14 @@ class APIKeysView(SmarterAdminWebView):
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
 
-class APIKeyView(SmarterAdminWebView):
+class APIKeyView(APIKeyBase):
     """detail View for api key management."""
 
     template_path = "account/dashboard/api-key.html"
 
     def _handle_create(self, request):
-        new_api_key, token = APIKey.objects.create(
-            user=request.user, expiry=None, description=f"New API key created by {request.user}"
+        new_api_key, token = SmarterAuthToken.objects.create(
+            user=request.user, description=f"New API key created by {request.user}"
         )
         url = reverse(
             "account_new_api_key",
@@ -67,8 +76,8 @@ class APIKeyView(SmarterAdminWebView):
 
     def _handle_multipart_form(self, request, key_id):
         try:
-            apikey = APIKey.objects.get(key_id=key_id)
-        except APIKey.DoesNotExist:
+            apikey = SmarterAuthToken.objects.get(key_id=key_id)
+        except SmarterAuthToken.DoesNotExist:
             return self._handle_create(request)
 
         if not apikey.has_permissions(user=request.user):
@@ -79,7 +88,7 @@ class APIKeyView(SmarterAdminWebView):
         data = request.POST
         apikey_form = APIKeyForm(data, instance=apikey)
         if apikey_form.is_valid():
-            api_key = APIKey.objects.get(key_id=key_id)
+            api_key = SmarterAuthToken.objects.get(key_id=key_id)
             api_key.description = apikey_form.cleaned_data["description"]
             api_key.is_active = apikey_form.cleaned_data["is_active"]
             api_key.save()
@@ -88,8 +97,8 @@ class APIKeyView(SmarterAdminWebView):
 
     def _handle_json(self, request, key_id):
         try:
-            api_key = APIKey.objects.get(key_id=key_id)
-        except APIKey.DoesNotExist:
+            api_key = SmarterAuthToken.objects.get(key_id=key_id)
+        except SmarterAuthToken.DoesNotExist:
             return http.JsonResponse(status=HTTPStatus.NOT_FOUND, data={"error": "API Key not found"})
 
         data = json.loads(request.body)
@@ -143,7 +152,7 @@ class APIKeyView(SmarterAdminWebView):
 
         try:
             # cases where we received a uuid identifier for an existing api key
-            apikey = APIKey.objects.get(key_id=key_id)
+            apikey = SmarterAuthToken.objects.get(key_id=key_id)
             apikey_form = APIKeyForm(instance=apikey)
             if not apikey.has_permissions(user=request.user):
                 return http.JsonResponse(
@@ -153,8 +162,9 @@ class APIKeyView(SmarterAdminWebView):
             # ensure that the string value we received is a valid token that
             # can actually be used to authenticate via Django.
             if new_api_key:
-                apikey.validate_token(new_api_key)
-        except (APIKey.DoesNotExist, ValueError):
+                if not apikey.validate_token(new_api_key):
+                    raise ValueError("Invalid token")
+        except (SmarterAuthToken.DoesNotExist, ValueError):
             return http.HttpResponseNotFound({"error": "API Key not found"})
 
         context = {
@@ -178,8 +188,8 @@ class APIKeyView(SmarterAdminWebView):
     def delete(self, request, key_id):
         logger.info("Received DELETE request: %s", request)
         try:
-            apikey = APIKey.objects.get(key_id=key_id)
-        except APIKey.DoesNotExist:
+            apikey = SmarterAuthToken.objects.get(key_id=key_id)
+        except SmarterAuthToken.DoesNotExist:
             return http.JsonResponse(status=HTTPStatus.NOT_FOUND, data={"error": "API Key not found"})
         if not apikey.has_permissions(user=request.user):
             return http.HttpResponseForbidden({"error": "You are not allowed to delete this api key"})

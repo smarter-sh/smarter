@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position
 """Test API end points."""
 
@@ -6,17 +5,15 @@
 import os
 import unittest
 
-from django.contrib.auth import get_user_model
 from django.test import Client
 
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
+from smarter.lib.django.user import User
 
-from ..plugin import Plugins
+from ..models import PluginMeta
+from ..plugin.static import PluginStatic
 from ..utils import add_example_plugins
-
-
-User = get_user_model()
 
 
 class TestPluginUrls(unittest.TestCase):
@@ -41,6 +38,7 @@ class TestPluginUrls(unittest.TestCase):
         self.user_profile = UserProfile.objects.create(
             user=self.user,
             account=self.account,
+            is_test=True,
         )
         add_example_plugins(user_profile=self.user_profile)
         self.client = Client()
@@ -54,7 +52,7 @@ class TestPluginUrls(unittest.TestCase):
 
     def test_account_users_add_plugins_view(self):
         """test that we can add example plugins using the api end point."""
-        response = self.client.post("/api/v0/plugins/add-example-plugins/" + str(self.user.id) + "/")
+        response = self.client.post("/api/v1/plugins/add-example-plugins/" + str(self.user.id) + "/")
 
         # we should have been redirected to a list of the plugins for the user
         self.assertEqual(response.status_code, 302)
@@ -63,7 +61,7 @@ class TestPluginUrls(unittest.TestCase):
             self.assertIsInstance(json_data, dict)
             self.assertGreaterEqual(len(json_data), 1)
 
-        plugins = Plugins(user=self.user).plugins
+        plugins = PluginMeta.objects.filter(account=self.account)
         self.assertGreaterEqual(len(plugins), 1)
 
         for plugin in plugins:

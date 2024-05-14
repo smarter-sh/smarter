@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=E1101
 """A module containing constants for the OpenAI API."""
 import importlib.util
@@ -13,12 +12,19 @@ import openai
 
 logger = logging.getLogger(__name__)
 
-MODULE_NAME = "openai_passthrough"
-HERE = os.path.abspath(os.path.dirname(__file__))
-PROJECT_ROOT = str(Path(HERE).parent)
-PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
-TERRAFORM_ROOT = str(Path(PROJECT_ROOT).parent.parent)
-REPO_ROOT = str(Path(TERRAFORM_ROOT).parent.parent)
+SMARTER_ACCOUNT_NUMBER = "3141-5926-5359"
+SMARTER_CUSTOMER_API_SUBDOMAIN = "api"
+SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN = "platform"
+SMARTER_COMPANY_NAME = "Smarter"
+SMARTER_EXAMPLE_CHATBOT_NAME = "example"
+SMARTER_CUSTOMER_SUPPORT = "support@smarter.sh"
+
+
+HERE = os.path.abspath(os.path.dirname(__file__))  # smarter/smarter/common
+PROJECT_ROOT = str(Path(HERE).parent)  # smarter/smarter
+PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)  # smarter
+TERRAFORM_ROOT = str(Path(PROJECT_ROOT).parent.parent)  # ./
+REPO_ROOT = str(Path(TERRAFORM_ROOT).parent.parent)  # ./
 
 TERRAFORM_TFVARS = os.path.join(TERRAFORM_ROOT, "terraform.tfvars")
 if not os.path.exists(TERRAFORM_TFVARS):
@@ -28,7 +34,7 @@ TFVARS = {}
 IS_USING_TFVARS = False
 
 try:
-    with open(TERRAFORM_TFVARS, "r", encoding="utf-8") as f:
+    with open(TERRAFORM_TFVARS, encoding="utf-8") as f:
         TFVARS = hcl2.load(f)
     IS_USING_TFVARS = True
 except FileNotFoundError:
@@ -48,14 +54,19 @@ VERSION = load_version()
 
 
 # pylint: disable=too-few-public-methods
-class OpenAIResponseCodes:
-    """Http response codes from openai API"""
+class SmarterEnvironments:
+    """A class representing the fixed set environments for the Smarter API."""
 
-    HTTP_RESPONSE_OK = 200
-    HTTP_RESPONSE_BAD_REQUEST = 400
-    HTTP_RESPONSE_INTERNAL_SERVER_ERROR = 500
+    LOCAL = "local"
+    ALPHA = "alpha"
+    BETA = "beta"
+    NEXT = "next"
+    PROD = "prod"
+    all = [LOCAL, ALPHA, BETA, NEXT, PROD]
+    aws_environments = [ALPHA, BETA, NEXT, PROD]
 
 
+# pylint: disable=too-few-public-methods
 class OpenAIObjectTypes:
     """V1 API Object Types (replace OpeanAIEndPoint)"""
 

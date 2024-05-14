@@ -1,6 +1,9 @@
 ---
-meta_data:
+apiVersion: smarter.sh/v1
+kind: Plugin
+metadata:
   name: EverlastingGobstopper
+  pluginClass: static
   description: Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.
   version: 0.1.0
   tags:
@@ -9,23 +12,24 @@ meta_data:
     - chocolate
     - Gobstoppers
     - Willy Wonka
-selector:
-  directive: search_terms
-  # Complete search terms that will trigger the chatbot to use your customized system prompt.
-  search_terms:
-    - Gobstopper
-    - Gobstoppers
-    - Gobbstopper
-    - Gobbstoppers
-prompt:
-  system_role_invalid: [{ "key1": "not a string" }]
-  model: gpt-3.5-turbo-1106
-  temperature: 1.0
-  max_tokens: 256
+spec:
+  selector:
+    directive: searchTerms
+    # Complete search terms that will trigger the chatbot to use your customized system prompt.
+    searchTerms:
+      - Gobstopper
+      - Gobstoppers
+      - Gobbstopper
+      - Gobbstoppers
+  prompt:
+    systemRole_invalid: [{ "key1": "not a string" }]
+    model: gpt-3.5-turbo-1106
+    temperature: 1.0
+    max_tokens: 256
 
-plugin_data:
-  description: Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.
-  # ---------------------------------------------------------------------------
-  # Information provided to the OpenAI "Function Calling" algorithm to help it generate custom responses.
-  # ---------------------------------------------------------------------------
-  return_data: "not the correct type"
+  data:
+    description: Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.
+    # ---------------------------------------------------------------------------
+    # Information provided to the OpenAI "Function Calling" algorithm to help it generate custom responses.
+    # ---------------------------------------------------------------------------
+    staticData: "not the correct type"

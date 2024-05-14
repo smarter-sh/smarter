@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position
 """Test API end points."""
 
@@ -6,14 +5,12 @@
 import os
 import unittest
 
-from django.contrib.auth import get_user_model
 from django.test import Client
 
-# our stuff
 from smarter.apps.account.models import Account, UserProfile
 
-
-User = get_user_model()
+# our stuff
+from smarter.lib.django.user import User
 
 
 class TestDashboard(unittest.TestCase):
@@ -36,10 +33,7 @@ class TestDashboard(unittest.TestCase):
             state="TX",
             postal_code="12345",
         )
-        self.user_profile = UserProfile.objects.create(
-            user=self.user,
-            account=self.account,
-        )
+        self.user_profile = UserProfile.objects.create(user=self.user, account=self.account, is_test=True)
         self.client = Client()
         # self.client.login(username="testuser", password="12345")
         self.client.force_login(self.user)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position
 """Test API end points."""
 
@@ -6,20 +5,18 @@
 import os
 import unittest
 
-from django.contrib.auth import get_user_model
 from django.test import Client
 
 # our stuff
+from smarter.lib.django.user import User, UserType
+
 from ..models import Account, PaymentMethod, UserProfile
-
-
-User = get_user_model()
 
 
 class TestUrls(unittest.TestCase):
     """Test Account API end points."""
 
-    user: User
+    user: UserType
 
     def setUp(self):
         """Set up test fixtures."""
@@ -38,6 +35,7 @@ class TestUrls(unittest.TestCase):
         self.user_profile = UserProfile.objects.create(
             user=self.user,
             account=self.account,
+            is_test=True,
         )
         self.payment_method = PaymentMethod.objects.create(
             account=self.account,
@@ -95,7 +93,6 @@ class TestUrls(unittest.TestCase):
     def test_accounts_index_view(self):
         """test that we can see an account from inside the list view and that it matches the account data."""
         response = self.client.get("/api/v0/accounts/" + str(self.account.id) + "/")
-
         self.assertEqual(response.status_code, 200)
         json_data = response.json()
         self.assertIsInstance(json_data, dict)

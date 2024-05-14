@@ -3,25 +3,25 @@
 
 locals {
   s3_bucket_domain = "${local.s3_bucket_name}.s3.${var.aws_region}.amazonaws.com"
-  cdn_name         = "cdn.${local.environment_domain}"
+  cdn_name         = "cdn.${local.environment_platform_domain}"
 }
 
-# see ./route53.tf for creation of data.aws_route53_zone.environment_domain.id
-resource "aws_route53_record" "cdn_environment_domain" {
-  zone_id = aws_route53_zone.environment_domain.id
+# see ./route53.tf for creation of data.aws_route53_zone.environment_platform_domain.id
+resource "aws_route53_record" "cdn_environment_platform_domain" {
+  zone_id = aws_route53_zone.environment_platform_domain.id
   name    = local.cdn_name
   type    = "A"
 
   alias {
-    name                   = module.cdn_environment_domain.cloudfront_distribution_domain_name
-    zone_id                = module.cdn_environment_domain.cloudfront_distribution_hosted_zone_id
+    name                   = module.cdn_environment_platform_domain.cloudfront_distribution_domain_name
+    zone_id                = module.cdn_environment_platform_domain.cloudfront_distribution_hosted_zone_id
     evaluate_target_health = false
   }
 
 }
 
 
-module "cdn_environment_domain" {
+module "cdn_environment_platform_domain" {
   source  = "terraform-aws-modules/cloudfront/aws"
   version = "~> 3.2"
 
@@ -64,7 +64,7 @@ module "cdn_environment_domain" {
   ]
 
   viewer_certificate = {
-    acm_certificate_arn = module.acm_environment_domain.acm_certificate_arn
+    acm_certificate_arn = module.acm_environment_platform_domain.acm_certificate_arn
     ssl_support_method  = "sni-only"
   }
 

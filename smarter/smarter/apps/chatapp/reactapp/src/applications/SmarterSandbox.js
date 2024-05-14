@@ -1,33 +1,21 @@
-import {
-  BACKEND_API_URL,
-  AWS_API_GATEWAY_KEY,
-  INFO_URL,
-} from "../config";
-const SLUG = "chat";
+export const getSmarterSandbox = (config) => {
 
-let api_url = new URL(SLUG, BACKEND_API_URL).href;
-if (!api_url.endsWith('/')) {
-  api_url += '/';
-}
-
-const SmarterSandbox = {
-  sidebar_title: "Smarter Sandbox",
-  api_url: api_url,
-  api_key: AWS_API_GATEWAY_KEY,
-  app_name: "Smarter Sandbox",
-  assistant_name: "Sam",
-  system_role: "You are a helpful assistant.",
-  welcome_message: `Hello, I'm Sam, the Smarter sandbox assistant.`,
-  example_prompts: [],
-  placeholder_text: `say something to Sam`,
-  info_url: INFO_URL,
-  file_attach_button: false,
-  // background_image_url: "/applications/SarcasticChat/SarcasticChat-bg.png",
-  // application_logo: "https://www.querium.com/wp-content/uploads/2022/03/cropped-favicon-1-1-192x192.png",
-  // uses_openai: true,
-  // uses_openai_api: false,
-  // uses_langchain: true,
-  // uses_memory: true,
+  return {
+    sidebar_title: config.chatbot.app_name,
+    api_url: config.chatbot.url_chatbot,
+    session_key: config.session_key,
+    api_key: null,
+    app_name: config.chatbot.app_name,
+    assistant_name: config.chatbot.app_assistant,
+    system_role: "You are a helpful assistant.",
+    welcome_message: config.chatbot.app_welcome_message,
+    example_prompts: config.chatbot.app_example_prompts,
+    placeholder_text: config.chatbot.app_placeholder,
+    info_url: config.chatbot.app_info_url,
+    file_attach_button: config.chatbot.app_file_attachment,
+    background_image_url: config.chatbot.app_background_image_url,
+    application_logo: config.chatbot.app_logo_url,
+    history: config.history,
+    config: config,
+  };
 };
-
-export default SmarterSandbox;

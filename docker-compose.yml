@@ -5,13 +5,11 @@
 # server, a Celery worker, and the application itself. The application
 # will be available at http://localhost:8000.
 #------------------------------------------------------------------------------
-version: "3"
-
 services:
   smarter-mysql:
     container_name: smarter-mysql
     image: mysql:latest
-    command: --default-authentication-plugin=mysql_native_password
+    command: ["mysqld", "--mysql-native-password=ON"]
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: smarter
@@ -41,7 +39,7 @@ services:
       args:
         ENVIRONMENT: ${ENVIRONMENT}
     image: smarter
-    command: celery -A smarter.smarter_celery.app worker --loglevel=info
+    command: celery -A smarter.smarter_celery.app worker --loglevel=info -Q default_celery_task_queue
     depends_on:
       - smarter-mysql
       - smarter-redis
@@ -54,7 +52,7 @@ services:
     container_name: smarter-beat
     user: smarter_user
     image: smarter
-    command: celery -A smarter.smarter_celery.app beat --loglevel=info
+    command: celery -A smarter.smarter_celerybeat.app beat --loglevel=info
     depends_on:
       - smarter-mysql
       - smarter-redis

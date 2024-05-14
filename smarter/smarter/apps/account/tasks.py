@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=W0613,C0115,R0913
 """
 Celery tasks for account app.
@@ -20,6 +19,13 @@ from .models import (
 
 
 logger = logging.getLogger(__name__)
+
+
+def aggregate_charges():
+    """summarize detail charges into aggregate records."""
+
+    # FIX NOTE: implement me.
+    logger.info("Aggregating charges.")
 
 
 @app.task(autoretry_for=(Exception,), retry_backoff=True, max_retries=3)

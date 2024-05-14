@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position
 """Test Account payment methods."""
 
@@ -7,17 +6,16 @@ import os
 # python stuff
 import unittest
 
-from django.contrib.auth import authenticate, get_user_model
-from django.test import RequestFactory
+from django.contrib.auth import authenticate
+from django.test import Client
 
 # our stuff
-from ..models import Account, PaymentMethod
-from ..views.dashboard.billing.payment_methods import PaymentMethodsView
+from smarter.lib.django.user import User
+
+from ..models import Account, PaymentMethod, UserProfile
 
 
-User = get_user_model()
-
-
+# pylint: disable=too-many-instance-attributes
 class TestPaymentMethods(unittest.TestCase):
     """Test Account Payment Methods."""
 
@@ -42,6 +40,7 @@ class TestPaymentMethods(unittest.TestCase):
             state="TX",
             postal_code="12345",
         )
+        self.user_profile = UserProfile.objects.create(user=self.user, account=self.account)
         self.payment_method = self.create_payment_method()
 
     def tearDown(self):
@@ -96,9 +95,8 @@ class TestPaymentMethods(unittest.TestCase):
 
     def test_payment_methods_view(self):
         """Test that we can get the payment methods view."""
-        factory = RequestFactory()
-        request = factory.get(self.base_url)
-        request.user = self.user
+        client = Client()
+        client.force_login(self.user)
 
-        response = PaymentMethodsView.as_view()(request)
+        response = client.get(self.base_url)
         self.assertEqual(response.status_code, 200)

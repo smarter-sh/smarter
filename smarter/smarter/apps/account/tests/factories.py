@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """Dict factories for testing views."""
+
 import random
 import uuid
 from datetime import datetime

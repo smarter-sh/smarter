@@ -1,56 +1,54 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=W0707,W0718,C0115,W0613
 """Account views for smarter api."""
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
-from smarter.apps.account.api.view_helpers import SmarterAPIListView, SmarterAPIView
+from smarter.apps.account.views.token_authentication_helpers import (
+    SmarterAuthenticatedAPIView,
+    SmarterAuthenticatedListAPIView,
+)
 from smarter.apps.chat.api.v0.serializers import (
-    ChatHistorySerializer,
-    ChatToolCallHistorySerializer,
-    PluginUsageHistorySerializer,
+    ChatPluginUsageSerializer,
+    ChatSerializer,
+    ChatToolCallSerializer,
 )
-from smarter.apps.chat.models import (
-    ChatHistory,
-    ChatToolCallHistory,
-    PluginUsageHistory,
-)
+from smarter.apps.chat.models import Chat, ChatPluginUsage, ChatToolCall
 
 
-class ChatToolCallHistoryListView(SmarterAPIListView):
-    queryset = ChatToolCallHistory.objects.all()
-    serializer_class = ChatToolCallHistorySerializer
+class ChatToolCallHistoryListView(SmarterAuthenticatedListAPIView):
+    queryset = ChatToolCall.objects.all()
+    serializer_class = ChatToolCallSerializer
 
 
-class ChatToolCallHistoryView(SmarterAPIView):
+class ChatToolCallHistoryView(SmarterAuthenticatedAPIView):
 
     def get(self, request, *args, **kwargs):
-        instance = get_object_or_404(ChatToolCallHistory, pk=kwargs["pk"])
-        serializer = ChatToolCallHistorySerializer(instance)
+        instance = get_object_or_404(ChatToolCall, pk=kwargs["pk"])
+        serializer = ChatToolCallSerializer(instance)
         return Response(serializer.data)
 
 
-class PluginUsageHistoryListView(SmarterAPIListView):
-    queryset = PluginUsageHistory.objects.all()
-    serializer_class = PluginUsageHistorySerializer
+class PluginUsageHistoryListView(SmarterAuthenticatedListAPIView):
+    queryset = ChatPluginUsage.objects.all()
+    serializer_class = ChatPluginUsageSerializer
 
 
-class PluginUsageHistoryView(SmarterAPIView):
+class PluginUsageHistoryView(SmarterAuthenticatedAPIView):
 
     def get(self, request, *args, **kwargs):
         instance = get_object_or_404(PluginUsageHistoryView, pk=kwargs["pk"])
-        serializer = PluginUsageHistorySerializer(instance)
+        serializer = ChatPluginUsageSerializer(instance)
         return Response(serializer.data)
 
 
-class ChatHistoryListView(SmarterAPIListView):
-    queryset = ChatHistory.objects.all()
-    serializer_class = ChatHistorySerializer
+class ChatHistoryListView(SmarterAuthenticatedListAPIView):
+    queryset = Chat.objects.all()
+    serializer_class = ChatSerializer
 
 
-class ChatHistoryView(SmarterAPIView):
+class ChatHistoryView(SmarterAuthenticatedAPIView):
 
     def get(self, request, *args, **kwargs):
-        instance = get_object_or_404(ChatHistory, pk=kwargs["pk"])
-        serializer = ChatHistorySerializer(instance)
+        instance = get_object_or_404(Chat, pk=kwargs["pk"])
+        serializer = ChatSerializer(instance)
         return Response(serializer.data)

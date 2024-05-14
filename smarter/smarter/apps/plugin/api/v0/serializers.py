@@ -1,14 +1,11 @@
-# -*- coding: utf-8 -*-
 """PluginMeta serializers."""
+
 from rest_framework import serializers
 from taggit.models import Tag
 
-from smarter.apps.account.api.v0.serializers import (
-    AccountSerializer,
-    UserProfileSerializer,
-)
+from smarter.apps.account.serializers import AccountSerializer, UserProfileSerializer
 from smarter.apps.plugin.models import (
-    PluginData,
+    PluginDataStatic,
     PluginMeta,
     PluginPrompt,
     PluginSelector,
@@ -59,10 +56,10 @@ class PluginPromptSerializer(serializers.ModelSerializer):
         fields = ["system_role", "model", "temperature", "max_tokens"]
 
 
-class PluginDataSerializer(serializers.ModelSerializer):
-    """PluginData model serializer."""
+class PluginDataStaticSerializer(serializers.ModelSerializer):
+    """PluginDataStatic model serializer."""
 
     # pylint: disable=missing-class-docstring
     class Meta:
-        model = PluginData
-        fields = ["description", "return_data"]
+        model = PluginDataStatic
+        fields = ["description", "static_data"]

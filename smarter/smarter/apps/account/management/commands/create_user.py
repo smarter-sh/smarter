@@ -1,15 +1,12 @@
-# -*- coding: utf-8 -*-
 """This module is used to manage the superuser account."""
+
 import secrets
 import string
 
-from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
-from smarter.apps.account.models import Account, APIKey, UserProfile
-
-
-User = get_user_model()
+from smarter.apps.account.models import Account, UserProfile
+from smarter.lib.django.user import User
 
 
 # pylint: disable=E1101
@@ -18,6 +15,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
+        parser.add_argument("--account_number", type=str, help="The Smarter account number to which the user belongs")
         parser.add_argument("--username", type=str, help="The username for the new superuser")
         parser.add_argument("--email", type=str, help="The email address for the new superuser")
         parser.add_argument("--password", type=str, help="The password for the new superuser")
@@ -39,10 +37,13 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         """create the superuser account."""
+        account_number = options["account_number"]
         username = options["username"]
         email = options["email"]
         password = options["password"]
         is_admin = options["admin"]
+
+        account = Account.objects.get(account_number=account_number)
 
         if not password:
             password_length = 16
@@ -52,31 +53,23 @@ class Command(BaseCommand):
         if username and email:
             if not User.objects.filter(username=username).exists():
                 user = User.objects.create_user(username=username, email=email)
-                if username == "admin":
-                    user.is_superuser = True
+                if is_admin:
                     user.is_staff = True
-                else:
-                    if is_admin:
-                        user.is_superuser = False
-                        user.is_staff = True
-                    else:
-                        user.is_superuser = False
-                        user.is_staff = False
                 user.is_active = True
                 user.set_password(password)
                 user.save()
-                msg = "Admin user" if is_admin else "User" + f" {username} {email} has been created."
-                self.stdout.write(self.style.SUCCESS(msg))
+                self.stdout.write(self.style.SUCCESS("User" + f" {username} {email} has been created."))
                 self.stdout.write(self.style.SUCCESS(f"Password: {password}"))
             else:
-                user = self.change_password(username, password)
+                if password:
+                    self.change_password(username, password)
+                    self.stdout.write(self.style.SUCCESS("Updated password."))
         else:
             self.stdout.write(self.style.ERROR("Username and email are required."))
 
-        account, _ = Account.objects.get_or_create(company_name="Smarter")
-        UserProfile.objects.get_or_create(user=User.objects.get(username=username), account=account)
-
-        # ensure that the admin user has at least one auth token (api key)
-        if APIKey.objects.filter(user=user).count() == 0:
-            _, token_key = APIKey.objects.create(user=user, description="created by manage.py", expiry=None)
-            self.stdout.write(self.style.SUCCESS(f"created API key: {token_key}"))
+        user = User.objects.get(username=username)
+        user_profile, created = UserProfile.objects.get_or_create(user=user, account=account)
+        if created:
+            self.stdout.write(
+                self.style.SUCCESS(f"User profile created for {user_profile.user} {user_profile.account.company_name}.")
+            )
