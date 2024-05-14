@@ -10,12 +10,9 @@ locals {
   global_vars = read_terragrunt_config(find_in_parent_folders("global.hcl"))
 
   # environment vars
-<<<<<<<< HEAD:aws/test/terragrunt.hcl
   environment           = "test"
-========
-  environment           = "beta"
->>>>>>>> main:aws/beta/terragrunt.hcl
-  subdomain             = "${local.environment}.platform"
+  platform_subdomain    = "${local.environment}.platform"
+  api_subdomain         = "${local.environment}.api"
 }
 
 # Terragrunt will copy the Terraform configurations specified by the source parameter, along with any files in the
@@ -34,7 +31,8 @@ include {
 inputs = merge(
   local.global_vars.locals,
   {
-    environment  = local.environment
-    subdomain    = local.subdomain
+    environment           = local.environment
+    platform_subdomain    = local.platform_subdomain
+    api_subdomain         = local.api_subdomain
   }
 )

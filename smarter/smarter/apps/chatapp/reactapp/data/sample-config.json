@@ -1,0 +1,329 @@
+{
+  "session_key": "0fb658a1db43641d88e37790867911dc2d8273096eed2f2c69e275ee7200596f",
+  "sandbox_mode": true,
+  "chatbot": {
+    "account": {
+      "id": 1,
+      "created_at": "2024-04-23T14:00:16.556401Z",
+      "updated_at": "2024-04-23T14:00:16.558418Z",
+      "account_number": "3141-5926-5359",
+      "company_name": "Smarter",
+      "phone_number": "+1 (512) 833-6955",
+      "address1": "1700 South Lamar Blvd",
+      "address2": "Suite 338",
+      "city": "Austin",
+      "state": "TX",
+      "postal_code": "78704",
+      "country": "USA",
+      "language": "",
+      "timezone": "America/Chicago",
+      "currency": "USD"
+    },
+    "name": "example",
+    "subdomain": null,
+    "custom_domain": null,
+    "deployed": true,
+    "default_model": "gpt-3.5-turbo",
+    "default_temperature": 0.5,
+    "default_max_tokens": 256,
+    "app_name": "Smarter Demo",
+    "app_assistant": "Kent",
+    "app_welcome_message": "Welcome to the Smarter demo!",
+    "app_example_prompts": [
+      "What is the weather in San Francisco?",
+      "What is an Everlasting Gobstopper?",
+      "example function calling configuration"
+    ],
+    "app_placeholder": "Ask me anything...",
+    "app_info_url": "https://smarter.sh",
+    "app_background_image_url": null,
+    "app_logo_url": "/static/querium/querium-logo-white-transparent.png",
+    "app_file_attachment": false,
+    "default_host": "example.3141-5926-5359.api.localhost:8000",
+    "default_url": "http://example.3141-5926-5359.api.localhost:8000/",
+    "custom_host": null,
+    "custom_url": null,
+    "sandbox_host": "localhost:8000/api/v0/chatbots/1/",
+    "sandbox_url": "http://localhost:8000/api/v0/chatbots/1/",
+    "hostname": "example.3141-5926-5359.api.localhost:8000",
+    "scheme": "http",
+    "url": "http://example.3141-5926-5359.api.localhost:8000/",
+    "url_chatbot": "http://example.3141-5926-5359.api.localhost:8000/chatbot/",
+    "url_chatapp": "http://example.3141-5926-5359.api.localhost:8000/chatapp/"
+  },
+  "plugins": {
+    "meta_data": {
+      "total_plugins": 2,
+      "plugins_returned": 2
+    },
+    "plugins": [
+      {
+        "plugin": {
+          "id": 2,
+          "meta_data": {
+            "name": "Exampleconfiguration",
+            "account": {
+              "id": 1,
+              "created_at": "2024-04-23T14:00:16.556401Z",
+              "updated_at": "2024-04-23T14:00:16.558418Z",
+              "account_number": "3141-5926-5359",
+              "company_name": "Smarter",
+              "phone_number": "+1 (512) 833-6955",
+              "address1": "1700 South Lamar Blvd",
+              "address2": "Suite 338",
+              "city": "Austin",
+              "state": "TX",
+              "postal_code": "78704",
+              "country": "USA",
+              "language": "",
+              "timezone": "America/Chicago",
+              "currency": "USD"
+            },
+            "description": "A 'hello world' style plugin. This is an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.",
+            "version": "0.1.0",
+            "author": {
+              "id": 1,
+              "user": {
+                "id": 1,
+                "username": "admin",
+                "first_name": "",
+                "last_name": "",
+                "email": "admin@smarter.sh",
+                "is_staff": true,
+                "is_superuser": true
+              },
+              "account": {
+                "id": 1,
+                "created_at": "2024-04-23T14:00:16.556401Z",
+                "updated_at": "2024-04-23T14:00:16.558418Z",
+                "account_number": "3141-5926-5359",
+                "company_name": "Smarter",
+                "phone_number": "+1 (512) 833-6955",
+                "address1": "1700 South Lamar Blvd",
+                "address2": "Suite 338",
+                "city": "Austin",
+                "state": "TX",
+                "postal_code": "78704",
+                "country": "USA",
+                "language": "",
+                "timezone": "America/Chicago",
+                "currency": "USD"
+              },
+              "created_at": "2024-04-23T14:00:17.428311Z",
+              "updated_at": "2024-04-23T14:00:17.428336Z",
+              "is_test": false
+            },
+            "tags": [
+              "red",
+              "green",
+              "blue"
+            ],
+            "id": 2
+          },
+          "selector": {
+            "directive": "search_terms",
+            "search_terms": [
+              "example function calling configuration",
+              "Example configuration",
+              "example function calling"
+            ],
+            "id": 2
+          },
+          "prompt": {
+            "system_role": "Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response: \"Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\"\n",
+            "model": "gpt-3.5-turbo-1106",
+            "temperature": 0.0,
+            "max_tokens": 256,
+            "id": 2
+          },
+          "plugin_data": {
+            "description": "an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.",
+            "return_data": {
+              "about": "In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-3.5-turbo-1106 and gpt-4-1106-preview) have been trained to both detect when a plugin_data should to be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\n",
+              "links": [
+                {
+                  "documentation": "https://platform.openai.com/docs/guides/function-calling"
+                },
+                {
+                  "website": "https://openai.com/"
+                },
+                {
+                  "wikipedia": "https://en.wikipedia.org/wiki/OpenAI"
+                }
+              ],
+              "platform_provider": "OpenAI"
+            },
+            "id": 2
+          }
+        }
+      },
+      {
+        "plugin": {
+          "id": 1,
+          "meta_data": {
+            "name": "EverlastingGobstopper",
+            "account": {
+              "id": 1,
+              "created_at": "2024-04-23T14:00:16.556401Z",
+              "updated_at": "2024-04-23T14:00:16.558418Z",
+              "account_number": "3141-5926-5359",
+              "company_name": "Smarter",
+              "phone_number": "+1 (512) 833-6955",
+              "address1": "1700 South Lamar Blvd",
+              "address2": "Suite 338",
+              "city": "Austin",
+              "state": "TX",
+              "postal_code": "78704",
+              "country": "USA",
+              "language": "",
+              "timezone": "America/Chicago",
+              "currency": "USD"
+            },
+            "description": "Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
+            "version": "0.1.0",
+            "author": {
+              "id": 1,
+              "user": {
+                "id": 1,
+                "username": "admin",
+                "first_name": "",
+                "last_name": "",
+                "email": "admin@smarter.sh",
+                "is_staff": true,
+                "is_superuser": true
+              },
+              "account": {
+                "id": 1,
+                "created_at": "2024-04-23T14:00:16.556401Z",
+                "updated_at": "2024-04-23T14:00:16.558418Z",
+                "account_number": "3141-5926-5359",
+                "company_name": "Smarter",
+                "phone_number": "+1 (512) 833-6955",
+                "address1": "1700 South Lamar Blvd",
+                "address2": "Suite 338",
+                "city": "Austin",
+                "state": "TX",
+                "postal_code": "78704",
+                "country": "USA",
+                "language": "",
+                "timezone": "America/Chicago",
+                "currency": "USD"
+              },
+              "created_at": "2024-04-23T14:00:17.428311Z",
+              "updated_at": "2024-04-23T14:00:17.428336Z",
+              "is_test": false
+            },
+            "tags": [
+              "candy",
+              "treats",
+              "chocolate",
+              "Gobstoppers",
+              "Willy Wonka"
+            ],
+            "id": 1
+          },
+          "selector": {
+            "directive": "search_terms",
+            "search_terms": [
+              "Gobstopper",
+              "Gobstoppers",
+              "Gobbstopper",
+              "Gobbstoppers"
+            ],
+            "id": 1
+          },
+          "prompt": {
+            "system_role": "You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com).\n",
+            "model": "gpt-3.5-turbo-1106",
+            "temperature": 1.0,
+            "max_tokens": 256,
+            "id": 1
+          },
+          "plugin_data": {
+            "description": "Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
+            "return_data": {
+              "contact": [
+                {
+                  "name": "Willy Wonka"
+                },
+                {
+                  "title": "Founder and CEO"
+                },
+                {
+                  "location": "1234 Chocolate Factory Way, Chocolate City, Chocolate State, USA"
+                },
+                {
+                  "phone": "+1 123-456-7890"
+                },
+                {
+                  "website": "https://wwcf.com"
+                },
+                {
+                  "whatsapp": 11234567890
+                },
+                {
+                  "email": "ww@wwcf.com"
+                }
+              ],
+              "biographical": "Willy Wonka is a fictional character appearing in British author Roald Dahl's 1964 children's novel Charlie and the Chocolate Factory, its 1972 sequel Charlie and the Great Glass Elevator and several films based on those books. He is the eccentric founder and proprietor of the Wonka Chocolate Factory\n",
+              "coupon_codes": [
+                {
+                  "code": "10OFF",
+                  "name": "10% off",
+                  "description": "10% off your next purchase\n"
+                },
+                {
+                  "code": "20OFF",
+                  "name": "20% off",
+                  "description": "20% off your next purchase\n"
+                }
+              ],
+              "sales_promotions": [
+                {
+                  "name": "Everlasting Gobstopper",
+                  "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Everlasting_Gobstopper.jpg/220px-Everlasting_Gobstopper.jpg",
+                  "price": "$1.00",
+                  "description": "The Everlasting Gobstopper is a candy that, according to Willy Wonka, \"Never Gets Smaller Or Ever Gets Eaten\". It is the main focus of Charlie and the Chocolate Factory, both the 1971 film and the 2005 film, and Willy Wonka and the Chocolate Factory, the 1971 film adaptation of the novel.\n"
+                },
+                {
+                  "name": "Wonka Bar",
+                  "image": "https://m.media-amazon.com/images/I/81E-734cMzL._AC_UF894,1000_QL80_.jpg",
+                  "price": "$1.00",
+                  "description": "Wonka Bars are a fictional brand of chocolate made by Willy Wonka, and also a chocolate bar inspired by the Willy Wonka Bar from the novel and the films Willy Wonka & the Chocolate Factory and Charlie and the Chocolate Factory.\n"
+                }
+              ]
+            },
+            "id": 1
+          }
+        }
+      }
+    ]
+  },
+  "meta_data": {
+    "url": "http://localhost:8000/chatapp/example/config/",
+    "environment": "local",
+    "domain": "localhost:8000",
+    "path": "/chatapp/example/config/",
+    "root_domain": "localhost:8000",
+    "subdomain": "",
+    "account_number": "3141-5926-5359",
+    "api_subdomain": "localhost:8000",
+    "api_host": "/chatapp/example/config/",
+    "customer_api_domain": "api.localhost:8000",
+    "is_sandbox_domain": true,
+    "is_default_domain": false,
+    "is_custom_domain": false,
+    "is_deployed": true,
+    "is_valid": true,
+    "is_authentication_required": false,
+    "user": "admin",
+    "account": "3141-5926-5359",
+    "chatbot": "example"
+  },
+  "chat": {
+    "id": 32,
+    "history": [],
+    "tool_calls": [],
+    "plugin_usage": []
+  }
+}

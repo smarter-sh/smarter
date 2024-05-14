@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=E0402,E0602,unused-wildcard-import,wildcard-import
 """
 Django local settings for smarter project.
@@ -16,9 +15,12 @@ import os
 from .base import *
 
 
-print("Loading smarter.settings.local")
-ENVIRONMENT_DOMAIN = "local.platform.smarter.sh"
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+logger.info("Loading smarter.settings.local")
+
+ENVIRONMENT_DOMAIN = smarter_settings.environment_domain
+CUSTOMER_API_DOMAIN = smarter_settings.customer_api_domain
+
+SMARTER_ALLOWED_HOSTS = LOCAL_HOSTS
 
 # dev only:
 # Bootstrap theme source files and static assets.
@@ -34,10 +36,17 @@ INSTALLED_APPS += [
 MIDDLEWARE += [
     "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
-
 CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:5173",  # Django
+    "http://127.0.0.1:3000",  # React
+    "http://127.0.0.1:8000",  # Django
     "http://localhost:5173",
+    "http://localhost:8000",
+    "http://localhost:3000",
 ]
+CSRF_TRUSTED_ORIGINS = [f"http://{host}" for host in smarter_settings.local_hosts]
+CSRF_COOKIE_DOMAIN = ENVIRONMENT_DOMAIN.split(":")[0]
+CSRF_COOKIE_SAMESITE = "lax"
 
 # prevent browser caching in dev.
 for template in TEMPLATES:
@@ -56,3 +65,12 @@ DJSTRIPE_FOREIGN_KEY_TO_FIELD = "id"
 
 SMTP_SENDER = smarter_settings.smtp_sender or ENVIRONMENT_DOMAIN
 SMTP_FROM_EMAIL = smarter_settings.smtp_from_email or "no-reply@" + SMTP_SENDER
+SESSION_COOKIE_DOMAIN = ENVIRONMENT_DOMAIN.split(":")[0]
+SESSION_COOKIE_SECURE = False
+SESSION_COOKIE_SAMESITE = "lax"
+
+
+logger.info("ENVIRONMENT_DOMAIN: %s", ENVIRONMENT_DOMAIN)
+logger.info("CUSTOMER_API_DOMAIN: %s", CUSTOMER_API_DOMAIN)
+logger.debug("SESSION_COOKIE_DOMAIN: %s", SESSION_COOKIE_DOMAIN)
+logger.debug("SESSION_COOKIE_SECURE: %s", SESSION_COOKIE_SECURE)

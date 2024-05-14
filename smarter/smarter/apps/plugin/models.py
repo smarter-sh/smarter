@@ -1,21 +1,67 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=C0114,C0115
 """PluginMeta app models."""
+import json
+import logging
 from functools import lru_cache
 
 import yaml
-from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from taggit.managers import TaggableManager
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.common.model_utils import TimestampedModel
+from smarter.common.exceptions import SmarterValueError
+from smarter.lib.django.model_helpers import TimestampedModel
 
-from .signals import plugin_selector_history_created
+
+logger = logging.getLogger(__name__)
+
+SMARTER_PLUGIN_MAX_DATA_RESULTS = 50
 
 
-User = get_user_model()
+def dict_key_cleaner(key: str) -> str:
+    """Clean a key by replacing spaces with underscores."""
+    return str(key).replace("\n", "").replace("\r", "").replace("\t", "").replace(" ", "_")
+
+
+def dict_keys_to_list(data: dict, keys=None) -> list[str]:
+    """recursive function to extract all keys from a nested dictionary."""
+    if keys is None:
+        keys = []
+    for key, value in data.items():
+        keys.append(key)
+        if isinstance(value, dict):
+            dict_keys_to_list(value, keys)
+    return keys
+
+
+def list_of_dicts_to_list(data: list[dict]) -> list[str]:
+    """Convert a list of dictionaries into a single dict with keys extracted
+    from the first key in the first dict."""
+    if not data or not isinstance(data[0], dict):
+        return None
+    logger.warning("converting list of dicts to a single dict")
+    retval = []
+    key = next(iter(data[0]))
+    for d in data:
+        if key in d:
+            cleaned_key = dict_key_cleaner(d[key])
+            retval.append(cleaned_key)
+    return retval
+
+
+def list_of_dicts_to_dict(data: list[dict]) -> dict:
+    """Convert a list of dictionaries into a single dict with keys extracted
+    from the first key in the first dict."""
+    if not data or not isinstance(data[0], dict):
+        return None
+    retval = {}
+    key = next(iter(data[0]))
+    for d in data:
+        if key in d:
+            cleaned_key = dict_key_cleaner(d[key])
+            retval[cleaned_key] = d[key]
+    return retval
 
 
 class PluginMeta(TimestampedModel):
@@ -25,11 +71,11 @@ class PluginMeta(TimestampedModel):
     name = models.CharField(
         help_text="The name of the plugin. Example: 'HR Policy Update' or 'Public Relation Talking Points'.",
         max_length=255,
-        default="PluginMeta",
     )
     description = models.TextField(
         help_text="A brief description of the plugin. Be verbose, but not too verbose.",
     )
+    plugin_class = models.CharField(help_text="The class name of the plugin", max_length=255, default="PluginMeta")
     version = models.CharField(max_length=255, default="1.0.0")
     author = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="plugins")
     tags = TaggableManager(blank=True)
@@ -60,26 +106,22 @@ class PluginSelector(TimestampedModel):
     )
 
     def __str__(self) -> str:
-        return str(self.directive) or ""
+        search_terms = json.dumps(self.search_terms)[:50]
+        return f"{str(self.directive)} - {search_terms}"
 
 
 class PluginSelectorHistory(TimestampedModel):
     """PluginSelectorHistory model."""
 
     plugin_selector = models.ForeignKey(PluginSelector, on_delete=models.CASCADE, related_name="history")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="plugin_selector_history")
     search_term = models.CharField(max_length=255, blank=True, null=True, default="")
     messages = models.JSONField(help_text="The user prompt messages.", default=list, blank=True, null=True)
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        plugin_selector_history_created.send(sender=self.__class__, plugin_selector_history=self)
-
     def __str__(self) -> str:
-        return str(self.user.username) or ""
+        return f"{str(self.plugin_selector.plugin.name)} - {self.search_term}"
 
     class Meta:
-        verbose_name_plural = "Plugin Selector Histories"
+        verbose_name_plural = "Plugin Selector History"
 
 
 class PluginPrompt(TimestampedModel):
@@ -108,41 +150,69 @@ class PluginPrompt(TimestampedModel):
         return str(self.plugin.name)
 
 
-class PluginData(TimestampedModel):
-    """PluginData model."""
+class PluginDataStatic(TimestampedModel):
+    """PluginDataStatic model."""
 
     plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_data")
     description = models.TextField(
         help_text="A brief description of what this plugin returns. Be verbose, but not too verbose.",
     )
-    return_data = models.JSONField(
+    static_data = models.JSONField(
         help_text="The JSON data that this plugin returns to OpenAI API when invoked by the user prompt.", default=dict
     )
 
     @property
+    def sanitized_return_data(self) -> dict:
+        """Returns a dict of self.static_data."""
+        retval: dict = {}
+        if isinstance(self.static_data, dict):
+            return self.static_data
+        if isinstance(self.static_data, list):
+            retval = self.static_data
+            if isinstance(retval, list) and len(retval) > 0:
+                if len(retval) > SMARTER_PLUGIN_MAX_DATA_RESULTS:
+                    logger.warning(
+                        "PluginDataStatic.sanitized_return_data: Truncating static_data to %s items.",
+                        {SMARTER_PLUGIN_MAX_DATA_RESULTS},
+                    )
+                retval = retval[:SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136
+                retval = list_of_dicts_to_dict(data=retval)
+        else:
+            raise SmarterValueError("static_data must be a dict or a list or None")
+
+        return retval
+
+    @property
     @lru_cache(maxsize=128)
     def return_data_keys(self) -> list:
-        """Return all keys in the return_data."""
+        """Return all keys in the static_data."""
 
-        def find_keys(data, keys=None):
-            if keys is None:
-                keys = []
-            for key, value in data.items():
-                keys.append(key)
-                if isinstance(value, dict):
-                    find_keys(value, keys)
-            return keys
+        retval: list = []
+        if isinstance(self.static_data, dict):
+            retval = dict_keys_to_list(data=self.static_data)
+            retval = list(retval)
+        elif isinstance(self.static_data, list):
+            retval = self.static_data
+            if isinstance(retval, list) and len(retval) > 0:
+                if len(retval) > SMARTER_PLUGIN_MAX_DATA_RESULTS:
+                    logger.warning(
+                        "PluginDataStatic.return_data_keys: Truncating static_data to %s items.",
+                        {SMARTER_PLUGIN_MAX_DATA_RESULTS},
+                    )
+                retval = retval[:SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136
+                retval = list_of_dicts_to_list(data=retval)
+        else:
+            raise SmarterValueError("static_data must be a dict or a list or None")
 
-        retval = find_keys(self.return_data)
-        return list(retval)
+        return retval[:SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136
 
     @property
     def data(self) -> dict:
-        return yaml.dump(self.return_data)
+        return yaml.dump(self.static_data)
 
     def __str__(self) -> str:
         return str(self.plugin.name)
 
     class Meta:
-        verbose_name = "Plugin Data"
-        verbose_name_plural = "Plugin Data"
+        verbose_name = "Plugin Static Data"
+        verbose_name_plural = "Plugin Static Data"

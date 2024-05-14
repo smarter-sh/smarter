@@ -1,19 +1,18 @@
-# -*- coding: utf-8 -*-
 """Views for the account settings."""
+
 import json
 import logging
 from http import HTTPStatus
 
 from django import forms, http
-from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.shortcuts import redirect
 
 from smarter.apps.account.models import UserProfile
-from smarter.common.view_helpers import SmarterAdminWebView
+from smarter.lib.django.user import User
+from smarter.lib.django.view_helpers import SmarterAdminWebView
 
 
-User = get_user_model()
 logger = logging.getLogger(__name__)
 excluded_fields = ["password", "date_joined"]
 

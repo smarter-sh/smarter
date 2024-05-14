@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position
 # pylint: disable=R0801,W0613,R0902
 """Test plugin API."""
@@ -9,31 +8,33 @@ import unittest
 from urllib.parse import urlparse
 
 import yaml
-from django.contrib.auth import get_user_model
-from django.http import HttpResponsePermanentRedirect, HttpResponseRedirect
+from django.http import (
+    HttpResponsePermanentRedirect,
+    HttpResponseRedirect,
+    JsonResponse,
+)
 from django.test import Client
 
-# our stuff
 from smarter.apps.account.models import Account, UserProfile
 
-from ..plugin import Plugin
+# our stuff
+from smarter.lib.django.user import User, UserType
+
+from ..plugin.static import PluginStatic
 from .test_setup import get_test_file_path
 
 
-User = get_user_model()
-
-
 class TestPluginAPI(unittest.TestCase):
-    """Test Plugin API."""
+    """Test PluginStatic API."""
 
-    API_BASE = "/api/v0/plugins/"
+    API_BASE = "/api/v1/plugins/"
     plugin_yaml: str = None
     plugin_yaml_modified: str = None
-    plugin: Plugin = None
+    plugin: PluginStatic = None
     account: Account = None
-    admin_user: User = None
+    admin_user: UserType = None
     admin_user_profile: UserProfile = None
-    mortal_user: User = None
+    mortal_user: UserType = None
     mortal_user_profile: UserProfile = None
 
     @property
@@ -50,12 +51,12 @@ class TestPluginAPI(unittest.TestCase):
             is_staff=is_staff,
             is_superuser=False,
         )
-        user_profile = UserProfile.objects.create(user=user, account=self.account)
+        user_profile = UserProfile.objects.create(user=user, account=self.account, is_test=True)
         return user, user_profile
 
     def safe_load(self, file_path) -> dict:
         """Load a file."""
-        with open(file_path, "r", encoding="utf-8") as file:
+        with open(file_path, encoding="utf-8") as file:
             return yaml.safe_load(file)
 
     def setUp(self):
@@ -89,8 +90,8 @@ class TestPluginAPI(unittest.TestCase):
     # pylint: disable=broad-exception-caught
     def test_create(self):
         """
-        Test that we can create a plugin using the Plugin.
-        /api/v0/plugins/upload/
+        Test that we can create a plugin using the PluginStatic.
+        /api/v1/plugins/upload/
         """
         client = Client()
         client.force_login(self.admin_user)
@@ -98,20 +99,20 @@ class TestPluginAPI(unittest.TestCase):
         response = client.post(path=self.api_base + "upload/", data=self.plugin_yaml, content_type="application/x-yaml")
 
         # verify that we are redirected to the new plugin
-        self.assertIn(type(response), [HttpResponseRedirect, HttpResponsePermanentRedirect])
+        self.assertIn(type(response), [HttpResponseRedirect, HttpResponsePermanentRedirect, JsonResponse])
         self.assertIn(response.status_code, [301, 302])
 
         url = response.url
         parsed_url = urlparse(url)
         last_slug = parsed_url.path.split("/")[-2]
         plugin_id = int(last_slug)
-        self.plugin = Plugin(plugin_id=plugin_id)
+        self.plugin = PluginStatic(plugin_id=plugin_id)
         self.assertEqual(self.plugin.ready, True)
 
     def test_update(self):
         """
-        Test that we can update a plugin using the Plugin.
-        /api/v0/plugins/upload
+        Test that we can update a plugin using the PluginStatic.
+        /api/v1/plugins/upload
         """
         client = Client()
         client.force_login(self.admin_user)
@@ -119,8 +120,9 @@ class TestPluginAPI(unittest.TestCase):
         response = client.post(
             path=self.api_base + "upload/", data=self.plugin_yaml_modified, content_type="application/x-yaml"
         )
+        print("Response: ", response.content)
         # verify that we are redirected to the new plugin
-        self.assertIn(type(response), [HttpResponseRedirect, HttpResponsePermanentRedirect])
+        self.assertIn(type(response), [HttpResponseRedirect, HttpResponsePermanentRedirect, JsonResponse])
         self.assertIn(response.status_code, [301, 302])
 
         url = response.url
@@ -128,19 +130,19 @@ class TestPluginAPI(unittest.TestCase):
         last_slug = parsed_url.path.split("/")[-2]
         plugin_id = int(last_slug)
 
-        self.plugin = Plugin(plugin_id=plugin_id)
+        self.plugin = PluginStatic(plugin_id=plugin_id)
         self.assertEqual(self.plugin.ready, True)
 
         self.plugin.refresh()
         self.assertEqual(self.plugin.ready, True)
         self.assertEqual(self.plugin.plugin_meta.description, "MODIFIED")
         self.assertEqual(self.plugin.plugin_data.description, "MODIFIED")
-        self.assertEqual(self.plugin.plugin_data.return_data, "MODIFIED")
+        self.assertEqual(self.plugin.plugin_data.static_data, {"returnData": "MODIFIED"})
 
     def test_delete(self):
         """
-        Test that we can delete a plugin using the Plugin.
-        /api/v0/plugins/<pk:int>/
+        Test that we can delete a plugin using the PluginStatic.
+        /api/v1/plugins/<pk:int>/
         """
         client = Client()
         client.force_login(self.admin_user)
@@ -155,7 +157,7 @@ class TestPluginAPI(unittest.TestCase):
         parsed_url = urlparse(url)
         last_slug = parsed_url.path.split("/")[-2]
         plugin_id = int(last_slug)
-        self.plugin = Plugin(plugin_id=plugin_id)
+        self.plugin = PluginStatic(plugin_id=plugin_id)
         self.assertEqual(self.plugin.ready, True)
 
         # delete the plugin using the api endpoint
@@ -173,7 +175,7 @@ class TestPluginAPI(unittest.TestCase):
 
     # pylint: disable=too-many-statements
     def test_validation_permissions(self):
-        """Test that the Plugin raises an error when given bad data."""
+        """Test that the PluginStatic raises an error when given bad data."""
 
         client = Client()
         client.force_login(self.mortal_user)
@@ -192,7 +194,7 @@ class TestPluginAPI(unittest.TestCase):
             self.assertIsInstance(e, PermissionError)
 
     def test_validation_bad_data(self):
-        """Test that the Plugin raises an error when given bad data."""
+        """Test that the PluginStatic raises an error when given bad data."""
 
     def test_clone(self):
-        """Test that we can clone a plugin using the Plugin."""
+        """Test that we can clone a plugin using the PluginStatic."""

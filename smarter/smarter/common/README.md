@@ -1,6 +1,6 @@
-# OpenAI API shared code
+# Smarter common
 
-Common constants, validations and misc utility functions that are called by both the openai and langchain lambdas.
+Contains Python-specific (ie not Django-specific) common constants, validations and misc utility functions.
 
 ## Settings class
 

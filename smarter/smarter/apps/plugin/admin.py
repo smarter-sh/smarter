@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=C0114,C0115
 """Plugin admin."""
 import re
 
 from django.contrib import admin
 
-from .models import PluginData, PluginMeta, PluginPrompt, PluginSelector
+from .models import PluginDataStatic, PluginMeta, PluginPrompt, PluginSelector
 
 
 # Register your models here.
@@ -26,7 +25,7 @@ class PluginPromptInline(admin.StackedInline):
 class PluginDataInline(admin.StackedInline):
     """Inline form for Plugin"""
 
-    model = PluginData
+    model = PluginDataStatic
     extra = 0  # This will not show extra empty forms
 
     class Meta:

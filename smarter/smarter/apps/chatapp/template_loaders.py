@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """ReactJS integration with Django."""
 
 import os

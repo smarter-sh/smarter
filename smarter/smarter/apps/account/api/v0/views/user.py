@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=W0707,W0718
 """User views for smarter api."""
 from http import HTTPStatus
 
-from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import Http404, HttpResponseRedirect, JsonResponse
@@ -11,17 +9,13 @@ from rest_framework import status
 from rest_framework.response import Response
 
 from smarter.apps.account.api.v0.serializers import UserSerializer
-from smarter.apps.account.api.view_helpers import (
-    SmarterAPIAdminView,
-    SmarterAPIListAdminView,
-)
 from smarter.apps.account.models import Account, UserProfile
+from smarter.lib.django.user import User, UserType
+
+from .base import AccountListViewBase, AccountViewBase
 
 
-User = get_user_model()
-
-
-class UserView(SmarterAPIAdminView):
+class UserView(AccountViewBase):
     """User view for smarter api."""
 
     def get(self, request, user_id: int):
@@ -42,7 +36,7 @@ class UserView(SmarterAPIAdminView):
         return super().handle_exception(exc)
 
 
-class UserListView(SmarterAPIListAdminView):
+class UserListView(AccountListViewBase):
     """User list view for smarter api."""
 
     serializer_class = UserSerializer
@@ -81,7 +75,7 @@ def validate_request_body(request):
     return None
 
 
-def eval_permissions(request, user_to_update: User, user_to_update_profile: UserProfile = None):
+def eval_permissions(request, user_to_update: UserType, user_to_update_profile: UserProfile = None):
     if not request.user.is_superuser:
         # if the user is not a superuser then they need to have a UserProfile
         try:
@@ -106,8 +100,11 @@ def eval_permissions(request, user_to_update: User, user_to_update_profile: User
 
 
 def get_user_for_operation(request):
-    user: User = None
+    user: UserType = None
     user_profile: UserProfile = None
+
+    if not isinstance(request.user, User):
+        return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
 
     try:
         user = User.objects.get(id=request.data.get("id"))
@@ -125,7 +122,7 @@ def get_user_for_operation(request):
 # pylint: disable=too-many-return-statements
 def get_user(request, user_id: int = None):
     """Get an account json representation by id."""
-    user: User = None
+    user: UserType = None
     if user_id is None:
         serializer = UserSerializer(request.user)
         return Response(serializer.data, status=HTTPStatus.OK)
@@ -187,7 +184,7 @@ def create_user(request):
 def update_user(request):
     """update an account from a json representation in the body of the request."""
     data: dict = None
-    user_to_update: User = None
+    user_to_update: UserType = None
     user_to_update_profile: UserProfile = None
 
     validate_request_body(request)

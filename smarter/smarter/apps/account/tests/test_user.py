@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position
 """Test User."""
 
@@ -6,13 +5,10 @@
 import os
 import unittest
 
-from django.contrib.auth import get_user_model
-
 # our stuff
+from smarter.lib.django.user import User
+
 from ..models import Account, UserProfile
-
-
-User = get_user_model()
 
 
 class TestAccount(unittest.TestCase):
@@ -43,6 +39,7 @@ class TestAccount(unittest.TestCase):
         profile = UserProfile.objects.create(
             user=self.user,
             account=account,
+            is_test=True,
         )
 
         self.assertEqual(profile.account, account)

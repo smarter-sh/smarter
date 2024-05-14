@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=missing-class-docstring,missing-function-docstring
 """Rebuild the admin site to restrict access to certain apps and models."""
 from django.apps import apps
@@ -6,7 +5,12 @@ from django.contrib import admin
 from django.contrib.auth.models import Group, Permission, User
 
 from smarter.__version__ import __version__
-from smarter.apps.account.models import Account, APIKey, PaymentMethod, UserProfile
+from smarter.apps.account.models import (
+    Account,
+    PaymentMethod,
+    SmarterAuthToken,
+    UserProfile,
+)
 
 from .models import EmailContactList
 
@@ -50,7 +54,7 @@ restricted_site.register(Permission, RestrictedModelAdmin)
 restricted_site.register(Account, RestrictedModelAdmin)
 restricted_site.register(UserProfile, RestrictedModelAdmin)
 restricted_site.register(PaymentMethod, RestrictedModelAdmin)
-restricted_site.register(APIKey, RestrictedAPIKeyAdmin)
+restricted_site.register(SmarterAuthToken, RestrictedAPIKeyAdmin)
 restricted_site.register(EmailContactList, EmailContactListAdmin)
 
 models = apps.get_models()

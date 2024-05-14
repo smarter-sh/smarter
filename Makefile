@@ -101,7 +101,15 @@ docker-init:
 	echo "Initializing Docker..." && \
 	docker exec smarter-mysql bash -c "sleep 20; until echo '\q' | mysql -u smarter -psmarter; do sleep 10; done" && \
 	docker exec smarter-mysql mysql -u smarter -psmarter -e 'DROP DATABASE IF EXISTS smarter; CREATE DATABASE smarter;' && \
-	docker exec smarter-app bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py create_user --username admin --email admin@smarter.sh --password smarter --admin && python manage.py add_plugin_examples admin && python manage.py seed_chat_history" && \
+	docker exec smarter-app bash -c \
+		"python manage.py makemigrations && python manage.py migrate && \
+		python manage.py initialize_waffle && \
+		python manage.py create_smarter_admin --username admin --email admin@smarter.sh --password smarter && \
+		python manage.py add_plugin_examples admin && \
+		python manage.py verify_api_infrastructure && \
+		python manage.py deploy_demo_api && \
+		python manage.py seed_chat_history && \
+		python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/QueriumCorp/smarter-demo" && \
 	echo "Docker and Smarter are initialized." && \
 	docker ps
 
@@ -129,7 +137,7 @@ docker-test:
 docker-prune:
 	make docker-check && \
 	find ./ -name celerybeat-schedule -type f -exec rm -f {} + && \
-	docker system prune -a && \
+	docker system prune -a --volumes && \
 	docker volume prune -f && \
 	docker builder prune -a -f
 
@@ -151,6 +159,7 @@ python-init:
 python-lint:
 	make check-python
 	make pre-commit-run
+	pylint smarter/smarter
 
 python-clean:
 	rm -rf venv
@@ -216,6 +225,10 @@ terraform-build:
 terraform-clean:
 	find ./ -name .terragrunt-cache -type d -exec rm -rf {} +
 	find ./ -name .terraform.lock.hcl -type f -exec rm {} +
+
+terraform-lint:
+	cd aws
+	terraform fmt -recursive
 
 helm-update:
 	cd helm/charts/smarter && \

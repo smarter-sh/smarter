@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=W0707,W0718
 """Account Payment method views for smarter api."""
 import logging
 from http import HTTPStatus
 
-from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
@@ -12,15 +10,16 @@ from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
 from smarter.apps.account.api.v0.serializers import PaymentMethodSerializer
-from smarter.apps.account.api.view_helpers import SmarterAPIListView, SmarterAPIView
 from smarter.apps.account.models import Account, PaymentMethod, UserProfile
+from smarter.lib.django.user import User, UserType
+
+from .base import AccountListViewBase, AccountViewBase
 
 
-User = get_user_model()
 logger = logging.getLogger(__name__)
 
 
-class PaymentMethodView(SmarterAPIView):
+class PaymentMethodView(AccountViewBase):
     """Payment method view for smarter api."""
 
     def get(self, request, payment_method_id: int = None):
@@ -36,7 +35,7 @@ class PaymentMethodView(SmarterAPIView):
         return delete_payment_method(request, payment_method_id)
 
 
-class PaymentMethodsListView(SmarterAPIListView):
+class PaymentMethodsListView(AccountListViewBase):
     """Payment methods list view for smarter api."""
 
     serializer_class = PaymentMethodSerializer
@@ -78,10 +77,15 @@ def get_payment_method(request, payment_method_id: int):
     except PaymentMethod.DoesNotExist:
         return JsonResponse({"error": "Payment method not found"}, status=HTTPStatus.NOT_FOUND)
 
-    user_profile = UserProfile.objects.get(user=request.user)
+    if isinstance(request.user, User):
+        user_profile = UserProfile.objects.get(user=request.user)
 
     # staff can manage payment methods for their account
-    if request.user.is_superuser or (user_profile.account == account and request.user.is_staff):
+    if (
+        isinstance(request.user, User)
+        and request.user.is_superuser
+        or (user_profile.account == account and request.user.is_staff)
+    ):
         serializer = PaymentMethodSerializer(payment_method)
         return Response(serializer.data, status=HTTPStatus.OK)
 
@@ -117,7 +121,7 @@ def create_payment_method(request):
 def update_payment_method(request):
     """update an account from a json representation in the body of the request."""
     data: dict = None
-    payment_method_to_update: User = None
+    payment_method_to_update: UserType = None
 
     if not request.user.is_superuser and not request.user.is_staff:
         return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
@@ -131,10 +135,13 @@ def update_payment_method(request):
     except PaymentMethod.DoesNotExist:
         return JsonResponse({"error": "Payment method not found"}, status=HTTPStatus.NOT_FOUND)
 
-    user_profile = UserProfile.objects.get(user=request.user)
+    if isinstance(request.user, User):
+        user_profile = UserProfile.objects.get(user=request.user)
 
     # superusers can manage any payment method. staff can manage payment methods for their account
-    if not (request.user.is_superuser or (user_profile.account == account and request.user.is_staff)):
+    if isinstance(request.user, User) and not (
+        request.user.is_superuser or (user_profile.account == account and request.user.is_staff)
+    ):
         return JsonResponse({"error": "You are not authorized to modify this account."}, status=HTTPStatus.UNAUTHORIZED)
 
     try:

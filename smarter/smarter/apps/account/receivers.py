@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 """Django signal receivers for account app."""
 

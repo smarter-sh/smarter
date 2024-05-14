@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
 """This module deletes a plugin using manage.py on the command line."""
+
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account
 from smarter.apps.plugin.models import PluginMeta
-from smarter.apps.plugin.plugin import Plugin
+from smarter.apps.plugin.plugin.static import PluginStatic
 
 
 # pylint: disable=E1101
@@ -35,6 +35,6 @@ class Command(BaseCommand):
         except PluginMeta.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"Plugin {name} does not exist."))
 
-        plugin = Plugin(plugin_id=plugin_meta.id)
+        plugin = PluginStatic(plugin_id=plugin_meta.id)
         plugin.delete()
         self.stdout.write(self.style.SUCCESS(f"Plugin {name} has been deleted."))

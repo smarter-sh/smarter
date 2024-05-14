@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """Plugin urls."""
+
 from django.urls import path
 from django.views import View
 

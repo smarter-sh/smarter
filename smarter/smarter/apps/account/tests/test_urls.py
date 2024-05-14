@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position
 """Test API end points."""
 
@@ -6,20 +5,18 @@
 import os
 import unittest
 
-from django.contrib.auth import get_user_model
 from django.test import Client
 
 # our stuff
+from smarter.lib.django.user import User, UserType
+
 from ..models import Account, UserProfile
-
-
-User = get_user_model()
 
 
 class TestUrls(unittest.TestCase):
     """Test Account views."""
 
-    user: User
+    user: UserType
 
     def setUp(self):
         """Set up test fixtures."""
@@ -40,6 +37,7 @@ class TestUrls(unittest.TestCase):
         self.user_profile = UserProfile.objects.create(
             user=self.user,
             account=self.account,
+            is_test=True,
         )
 
     def tearDown(self):

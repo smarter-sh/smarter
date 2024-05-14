@@ -1,0 +1,53 @@
+---
+apiVersion: smarter.sh/v1
+kind: Plugin
+metadata:
+  name: AmazonAPIPlugin
+  class: api
+  description: query Amazon API for product information in JSON format.
+  version: 0.0.1
+  tags:
+  annotations:
+    - name: amazon
+    - source: api
+spec:
+  selector:
+    directive: llm
+  prompt:
+    system_role: >
+      You are a helpful amazon.com consumer product buying assistant who knows everything about every product sold on the amazon.com website. You can provide information about product availability, pricing, shipping, and customer reviews.
+      You should attempt to express product inquires using the provided parameters of the function-calling API that is included with this plugin.
+    model: gpt-3.5-turbo-1106
+    temperature: 1.0
+    max_tokens: 256
+  data:
+    description: Get detailed product information from the amazon.com product API. Information includes product availability, images, pricing, shipping, and customer reviews and product reviews.
+    parameters:
+      - name: product
+        type: string
+        required: true
+        description: The unique identifier for the Everlasting Gobstopper product.
+      - name: manufacturer
+        type: string
+        required: true
+        description: The unique identifier for the Willy Wonka Chocolate Factory manufacturer.
+      - product_category:
+        type: string
+        required: true
+        description: The unique identifier for the product category.
+      - price_range_min:
+        type: float
+        required: true
+        description: The unique identifier for the price range.
+    api:
+      - host: api.example.com/everlasting-gobstopper
+      - protocol: https
+      - mmethod: GET
+      - X-API-Key: 1234567890
+      - accept: application/json
+    meta_data:
+      - host: api.example.com/everlasting-gobstopper/meta-data/
+      - protocol: https
+      - mmethod: GET
+      - X-API-Key: 1234567890
+      - accept: application/json

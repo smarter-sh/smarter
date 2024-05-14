@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """Django app for the OpenAI Function Calling app."""
+
 from django.apps import AppConfig
 
 

@@ -1,13 +1,11 @@
-# -*- coding: utf-8 -*-
+# pylint: disable=W0613
 """Add plugin examples to a user account."""
-from django.contrib.auth import get_user_model
+
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.plugin.utils import add_example_plugins
-
-
-User = get_user_model()
+from smarter.lib.django.user import User
 
 
 # pylint: disable=E1101

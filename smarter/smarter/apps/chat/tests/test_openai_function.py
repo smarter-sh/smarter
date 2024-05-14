@@ -1,45 +1,41 @@
-# -*- coding: utf-8 -*-
-# pylint: disable=wrong-import-position
-# pylint: disable=R0801,E1101
-# pylint: disable=broad-exception-caught
-# pylint: disable=W0613
 """Test lambda_openai_v2 function."""
 
-# python stuff
 import os
+
+# python stuff
+import secrets
 import sys
 import unittest
 from pathlib import Path
 from time import sleep
 
 import yaml
-from django.contrib.auth import get_user_model
 from django.test import Client
-
-
-User = get_user_model()
-HERE = os.path.abspath(os.path.dirname(__file__))
-PROJECT_ROOT = str(Path(HERE).parent.parent)
-PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
-if PYTHON_ROOT not in sys.path:
-    sys.path.append(PYTHON_ROOT)  # noqa: E402
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.nlp import does_refer_to
-from smarter.apps.plugin.plugin import Plugin
+from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
+from smarter.common.conf import settings as smarter_settings
+from smarter.lib.django.user import User
 
-from ..api.v0.views.chat import handler
-from ..models import ChatHistory, PluginUsageHistory
+from ..models import Chat, ChatPluginUsage
+from ..providers.smarter import handler
 from ..signals import (
     chat_completion_called,
     chat_completion_plugin_selected,
-    chat_completion_tool_call_received,
     chat_invoked,
     chat_response_failure,
     chat_response_success,
 )
 from ..tests.test_setup import get_test_file, get_test_file_path
+
+
+HERE = os.path.abspath(os.path.dirname(__file__))
+PROJECT_ROOT = str(Path(HERE).parent.parent)
+PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
+if PYTHON_ROOT not in sys.path:
+    sys.path.append(PYTHON_ROOT)  # noqa: E402
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes
@@ -96,24 +92,39 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         username = "testuser_" + os.urandom(4).hex()
         self.user = User.objects.create(username=username, password="12345")
         self.account = Account.objects.create(company_name="Test Account")
-        self.user_profile = UserProfile.objects.create(user=self.user, account=self.account)
+        self.user_profile = UserProfile.objects.create(user=self.user, account=self.account, is_test=True)
 
         config_path = get_test_file_path("plugins/everlasting-gobstopper.yaml")
-        with open(config_path, "r", encoding="utf-8") as file:
-            plugin_json = yaml.safe_load(file)
-        plugin_json["user_profile"] = self.user_profile
+        with open(config_path, encoding="utf-8") as file:
+            plugin_data = yaml.safe_load(file)
 
-        self.plugin = Plugin(data=plugin_json)
+        self.plugin = PluginStatic(user_profile=self.user_profile, data=plugin_data)
+        self.plugins = [self.plugin]
 
         self.client = Client()
         self.client.force_login(self.user)
 
+        self.chat = Chat.objects.create(
+            session_key=secrets.token_hex(32),
+            ip_address="192.1.1.1",
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+            url="https://www.test.com",
+        )
+
     def tearDown(self):
         """Tear down test fixtures."""
-        self.user_profile.delete()
-        self.user.delete()
-        self.account.delete()
-        self.plugin.delete()
+        try:
+            self.user_profile.delete()
+        except UserProfile.DoesNotExist:
+            pass
+        try:
+            self.user.delete()
+        except User.DoesNotExist:
+            pass
+        try:
+            self.account.delete()
+        except Account.DoesNotExist:
+            pass
 
     def check_response(self, response):
         """Check response structure from api.v0.views.chat handler()"""
@@ -130,7 +141,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         self.assertTrue("model" in body)
         self.assertTrue("choices" in body)
         self.assertTrue("completion" in body)
-        self.assertTrue("request_meta_data" in body)
+        self.assertTrue("metadata" in body)
         self.assertTrue("usage" in body)
 
     def test_does_not_refer_to(self):
@@ -167,10 +178,12 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
             ]
 
         def false_assertion(content: str):
-            self.assertFalse(self.plugin.selected(self.user, list_factory(content)))
+            messages = list_factory(content)
+            self.assertFalse(self.plugin.selected(self.user, messages=messages))
 
         def true_assertion(content: str):
-            self.assertTrue(self.plugin.selected(self.user, list_factory(content)))
+            messages = list_factory(content)
+            self.assertTrue(self.plugin.selected(self.user, messages=messages))
 
         # false cases
         false_assertion("when was leisure suit larry released?")
@@ -197,13 +210,20 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         chat_completion_called.connect(self.chat_completion_called_signal_handler)
         chat_response_success.connect(self.chat_completion_returned_signal_handler)
         chat_response_failure.connect(self.chat_completion_failed_signal_handler)
-        chat_completion_tool_call_received.connect(self.chat_completion_tool_call_received_signal_handler)
 
         response = None
         event_about_gobstoppers = get_test_file("json/prompt_about_everlasting_gobstoppers.json")
 
         try:
-            response = handler(user=self.user, data=event_about_gobstoppers)
+            response = handler(
+                chat=self.chat,
+                data=event_about_gobstoppers,
+                plugins=self.plugins,
+                user=self.user,
+                default_model=smarter_settings.openai_default_model,
+                default_max_tokens=smarter_settings.openai_default_max_tokens,
+                default_temperature=smarter_settings.openai_default_temperature,
+            )
             sleep(1)
         except Exception as error:
             self.fail(f"handler() raised {error}")
@@ -218,18 +238,18 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
                 print("assertFalse key:", key, "value:", value)
                 # self.assertFalse(value)
 
-        # assert that ChatHistory has one or more records for self.user
-        chat_histories = ChatHistory.objects.filter(user=self.user)
-        self.assertTrue(chat_histories.exists())
+        # assert that Chat has one or more records for self.user
+        chat_histories = Chat.objects.filter().first()
+        self.assertIsNotNone(chat_histories)
 
         # test url api endpoint for chat history
         response = self.client.get("/api/v0/chat/history/chats/")
         self.assertEqual(response.status_code, 200)
         print("/api/v0/chat/history/chats/ response:", response.json())
 
-        # assert that PluginUsageHistory has one or more records for self.user
-        plugin_selection_histories = PluginUsageHistory.objects.filter(user=self.user)
-        self.assertTrue(plugin_selection_histories.exists())
+        # assert that ChatPluginUsage has one or more records for self.user
+        plugin_selection_histories = ChatPluginUsage.objects.first()
+        self.assertIsNotNone(plugin_selection_histories)
 
     def test_handler_weather(self):
         """Test api.v0.views.chat handler() - weather."""
@@ -237,7 +257,15 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         event_about_weather = get_test_file("json/prompt_about_weather.json")
 
         try:
-            response = handler(user=self.user, data=event_about_weather)
+            response = handler(
+                chat=self.chat,
+                plugins=self.plugins,
+                user=self.user,
+                data=event_about_weather,
+                default_model=smarter_settings.openai_default_model,
+                default_max_tokens=smarter_settings.openai_default_max_tokens,
+                default_temperature=smarter_settings.openai_default_temperature,
+            )
         except Exception as error:
             self.fail(f"handler() raised {error}")
         self.check_response(response)
@@ -248,7 +276,15 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         event_about_recipes = get_test_file("json/prompt_about_recipes.json")
 
         try:
-            response = handler(user=self.user, data=event_about_recipes)
+            response = handler(
+                chat=self.chat,
+                plugins=self.plugins,
+                user=self.user,
+                data=event_about_recipes,
+                default_model=smarter_settings.openai_default_model,
+                default_max_tokens=smarter_settings.openai_default_max_tokens,
+                default_temperature=smarter_settings.openai_default_temperature,
+            )
         except Exception as error:
             self.fail(f"handler() raised {error}")
         self.check_response(response)

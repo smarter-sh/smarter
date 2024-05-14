@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
 """Views for the account settings."""
+
 import csv
 import logging
 import os
@@ -8,7 +8,7 @@ from http import HTTPStatus
 from django import forms, http
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.common.view_helpers import SmarterAdminWebView
+from smarter.lib.django.view_helpers import SmarterAdminWebView
 
 
 logger = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 def get_from_csv(file_path):
     """Reads a CSV file and returns a list of dictionaries."""
-    with open(file_path, mode="r", encoding="utf-8") as file:
+    with open(file_path, encoding="utf-8") as file:
         reader = csv.DictReader(file)
         return list(reader)
 

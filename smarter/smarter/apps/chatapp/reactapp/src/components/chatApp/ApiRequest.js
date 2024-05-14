@@ -21,67 +21,58 @@
     v0.1.0 - v0.4.0:  ./test/events/openai.response.v0.4.0.json
     v0.5.0:       ./test/events/langchain.response.v0.5.0.json
 -----------------------------------------------------------------------------*/
-import {
-  BACKEND_API_DEFAULT_MODEL_TYPE,
-  BACKEND_API_DEFAULT_MODEL,
-  BACKEND_API_DEFAULT_TEMPERATURE,
-  BACKEND_API_DEFAULT_MAX_TOKENS
-} from "../../config";
+import { getCookie } from "../../cookies.js";
 
 
-function getCookie(name) {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i].trim();
-          if (cookie.substring(0, name.length + 1) === (name + '=')) {
-              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-              break;
-          }
-      }
-  }
-  return cookieValue;
-}
-
-function requestBodyFactory(messages) {
+function requestBodyFactory(messages, session_key) {
 
   const retval = {
-    "model": BACKEND_API_DEFAULT_MODEL,
-    "end_point": BACKEND_API_DEFAULT_MODEL_TYPE,
-    "temperature": BACKEND_API_DEFAULT_TEMPERATURE,
-    "max_tokens": BACKEND_API_DEFAULT_MAX_TOKENS,
+    "session_key": session_key,
     "messages": messages,
   };
   return JSON.stringify(retval);
 }
 
 export async function processApiRequest(
+  props,
   messages,
   apiURL,
   openChatModal,
 ) {
 
-  const csrftoken = getCookie('csrftoken');
+  console.log("processApiRequest(): props: ", props);
+
+  const csrftoken = getCookie("csrftoken");
+  const sessionid = getCookie('sessionid');
+
   const headers = {
     "Accept": "*/*",
     "Content-Type": "application/json",
     "X-CSRFToken": csrftoken,
     "Origin": window.location.origin,
+    "Cookie": `sessionid=${sessionid}`,
   };
   const init = {
     method: "POST",
     credentials: 'include',
     mode: "cors",
     headers: headers,
-    body: requestBodyFactory(messages),
+    body: requestBodyFactory(messages, props.config.session_key),
   };
+  if (props.config.debug_mode) {
+    console.log("processApiRequest() - apiURL:", apiURL);
+    console.log("processApiRequest() - init:", init);
+    console.log("processApiRequest() - props:", props);
+  }
 
   try {
     const response = await fetch(apiURL, init);
     const status = await response.status;
     const response_json = await response.json(); // Convert the ReadableStream to a JSON object
     const response_body = await response_json.body; // ditto
+
+    console.log("processApiRequest(): response status: ", status);
+    console.log("processApiRequest(): response: ", response_json);
 
     if (response.ok) {
       return JSON.parse(response_body);
@@ -95,27 +86,14 @@ export async function processApiRequest(
         - the response_body object is intended to always be available when the status is 400.
           However, there potentially COULD be a case where the response itself contains message text.
       */
+      console.log("processApiRequest(): error: ", status, response.statusText, response_body.message);
+
       let errTitle = "Error " + status;
-      let errMessage = "An unknown error occurred.";
-      switch (status) {
-        case 400:
-          errMessage =
-            response.statusText ||
-            response_body.message ||
-            "The request was invalid.";
-          break;
-        case 500:
-          errMessage =
-            response.statusText ||
-            response_body.message ||
-            "An internal server error occurred.";
-          break;
-        case 504:
-          errMessage =
-            response.statusText ||
-            "Gateway timeout error. This is a known consequence of using AWS Lambda for integrations to the OpenAI API. Note that AWS Lambda has a hard 29 second timeout. If OpenAI requests take longer, which is frequently the case with chatgpt-4 then you will receive this error. If the timeout persists then you might try using chatgpt-3.5 instead as it is more performant.";
-          break;
-      }
+      let errMessage = response.statusText ||
+                        response_body.message ||
+                        "The request was invalid.";
+
+      console.error(errTitle, errMessage);
       openChatModal(errTitle, errMessage);
     }
   } catch (error) {

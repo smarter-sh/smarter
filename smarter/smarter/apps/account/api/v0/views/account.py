@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=W0707,W0718
 """Account views for smarter api."""
+import logging
 from http import HTTPStatus
 
 from django.core.exceptions import ValidationError
@@ -9,41 +9,12 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
-from smarter.apps.account.api.v0.serializers import AccountSerializer
-from smarter.apps.account.api.view_helpers import (
-    SmarterAPIAdminView,
-    SmarterAPIListAdminView,
-)
 from smarter.apps.account.models import Account, UserProfile
 
-
-class AccountViewBase(SmarterAPIAdminView):
-    """Base class for account views."""
-
-    user_profile: UserProfile = None
-    serializer_class = AccountSerializer
-
-    def dispatch(self, request, *args, **kwargs):
-        self.user_profile = get_object_or_404(UserProfile, user=request.user)
-        response = super().dispatch(request, *args, **kwargs)
-        return response
-
-    def is_superuser_or_unauthorized(self):
-        if not self.request.user.is_superuser:
-            return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
-        return True
+from .base import AccountListViewBase, AccountViewBase
 
 
-class AccountListViewBase(SmarterAPIListAdminView):
-    """Base class for account list views."""
-
-    user_profile: UserProfile = None
-    serializer_class = AccountSerializer
-
-    def dispatch(self, request, *args, **kwargs):
-        self.user_profile = get_object_or_404(UserProfile, user=request.user)
-        response = super().dispatch(request, *args, **kwargs)
-        return response
+logger = logging.getLogger(__name__)
 
 
 class AccountView(AccountViewBase):

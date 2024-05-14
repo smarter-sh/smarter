@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=unused-wildcard-import, wildcard-import, unused-import, wrong-import-position
 """
 Django base settings.
@@ -13,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 import glob
+import logging
 import logging.config
 import os
 import sys
@@ -24,6 +24,14 @@ from corsheaders.defaults import default_headers
 from .smarter import *  # noqa: E402, F401, W0401
 
 
+logger = logging.getLogger(__name__)
+
+
+# We implemented our own middleware to validate host names
+ALLOWED_HOSTS = ["*"]
+SMARTER_ALLOWED_HOSTS = []
+LOCAL_HOSTS = smarter_settings.local_hosts
+
 # to disable redis/celery in collectstatic
 if "collectstatic" in sys.argv:
     CELERY_TASK_ALWAYS_EAGER = True
@@ -31,6 +39,16 @@ if "collectstatic" in sys.argv:
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "x-api-key",
 ]
+CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_ALLOW_ALL = False
+
+CSRF_COOKIE_SECURE = False
+CSRF_COOKIE_NAME = "csrftoken"
+CSRF_COOKIE_SAMESITE = "lax"
+
+SESSION_COOKIE_SAMESITE = "lax"
+SESSION_COOKIE_SECURE = False
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -46,7 +64,6 @@ LOGIN_REDIRECT_URL = "/"
 
 SECRET_KEY = smarter_settings.secret_key
 DEBUG = smarter_settings.debug_mode
-ALLOWED_HOSTS = []
 
 CACHES = {
     "default": {
@@ -81,6 +98,7 @@ INSTALLED_APPS = [
     "smarter.apps.chatapp",
     "smarter.apps.dashboard",
     "smarter.apps.api",
+    "smarter.apps.chatbot",
     # 3rd party apps
     # -------------------------------
     "djstripe",
@@ -90,18 +108,28 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_yasg",
     "django_celery_beat",
+    "waffle",
 ]
 
 MIDDLEWARE = [
-    "django.middleware.security.SecurityMiddleware",
+    # this replaces corsheaders.middleware.CorsMiddleware"
+    "smarter.apps.chatbot.middleware.cors.CorsMiddleware",
+    # this replaces django.middleware.security.SecurityMiddleware
+    # simple middleware to block requests for common sensitive files
+    # like .env, private key files, etc.
+    "smarter.lib.django.middleware.BlockSensitiveFilesMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+    # this replaces django.middleware.csrf.CsrfViewMiddleware
+    # to add chatbot-specific CSRF handling
+    "smarter.apps.chatbot.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # to manage ALLOWED_HOSTS
+    "smarter.apps.chatbot.middleware.security.SecurityMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
+    "waffle.middleware.WaffleMiddleware",
 ]
 
 ROOT_URLCONF = "smarter.urls"
@@ -144,7 +172,6 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "smarter.apps.account.context_processors.base",
                 "smarter.apps.dashboard.context_processors.base",
-                "smarter.apps.dashboard.context_processors.react",
             ],
         },
     },
@@ -221,7 +248,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"],
     "DEFAULT_PARSER_CLASSES": [
         "rest_framework.parsers.JSONParser",
-        "smarter.apps.plugin.parsers.YAMLParser",
+        "smarter.lib.drf.parsers.YAMLParser",
         "rest_framework.parsers.FormParser",
         "rest_framework.parsers.MultiPartParser",
     ],
@@ -239,6 +266,13 @@ LOGGING = {
     "root": {
         "handlers": ["console"],
         "level": "INFO",
+    },
+    "loggers": {
+        "django.security.DisallowedHost": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
     },
 }
 logging.config.dictConfig(LOGGING)

@@ -1,32 +1,43 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=C0115
 """Django REST framework serializers for the API admin app."""
 from rest_framework import serializers
 
-from smarter.apps.chat.models import (
-    ChatHistory,
-    ChatToolCallHistory,
-    PluginUsageHistory,
-)
+from smarter.apps.chat.models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
+from smarter.apps.plugin.api.v0.serializers import PluginMetaSerializer
+
+
+class ChatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Chat
+        fields = "__all__"
 
 
 class ChatHistorySerializer(serializers.ModelSerializer):
+    """Serializer for the ChatHistory model."""
+
+    chat = ChatSerializer(read_only=True)
+
     class Meta:
         model = ChatHistory
         fields = "__all__"
 
 
-class PluginUsageHistorySerializer(serializers.ModelSerializer):
-    """Serializer for the PluginUsageHistory model."""
+class ChatPluginUsageSerializer(serializers.ModelSerializer):
+    """Serializer for the ChatPluginUsage model."""
+
+    chat = ChatSerializer(read_only=True)
+    plugin = PluginMetaSerializer()
 
     class Meta:
-        model = PluginUsageHistory
+        model = ChatPluginUsage
         fields = "__all__"
 
 
-class ChatToolCallHistorySerializer(serializers.ModelSerializer):
-    """Serializer for the ChatToolCallHistory model."""
+class ChatToolCallSerializer(serializers.ModelSerializer):
+    """Serializer for the ChatToolCall model."""
+
+    chat = ChatSerializer(read_only=True)
 
     class Meta:
-        model = ChatToolCallHistory
+        model = ChatToolCall
         fields = "__all__"
