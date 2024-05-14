@@ -266,7 +266,7 @@ class PluginDataSqlConnection(TimestampedModel):
         max_length=255,
         validators=[validate_no_spaces],
     )
-    dbms = models.CharField(
+    db_engine = models.CharField(
         help_text="The type of database management system. Example: 'MySQL', 'PostgreSQL', 'MS SQL Server', 'Oracle'.",
         max_length=255,
         choices=DBMS_CHOICES,
@@ -305,7 +305,7 @@ class PluginDataSqlConnection(TimestampedModel):
     def connect(self) -> Union[BaseDatabaseWrapper, bool]:
         databases = {
             "default": {
-                "ENGINE": self.DBMS_ENGINES[self.dbms],
+                "ENGINE": self.DBMS_ENGINES[self.db_engine],
                 "NAME": self.database,
                 "USER": self.username,
                 "PASSWORD": self.password,
@@ -345,7 +345,7 @@ class PluginDataSqlConnection(TimestampedModel):
 
     def get_connection_string(self):
         """Return the connection string."""
-        return f"{self.dbms}://{self.username}@{self.hostname}:{self.port}/{self.database}"
+        return f"{self.db_engine}://{self.username}@{self.hostname}:{self.port}/{self.database}"
 
     def __str__(self) -> str:
         return self.name + " - " + self.get_connection_string()
@@ -406,6 +406,7 @@ class PluginDataSql(PluginDataAbstractBase):
         return "ok"
 
     def prepare_sql(self, params: dict) -> str:
+        params = params or {}
         self.validate_params(params)
         sql = self.sql_query
         for key, value in params.items():
