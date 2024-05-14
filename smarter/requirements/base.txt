@@ -6,7 +6,7 @@
 
 # General back end
 # ------------
-boto3==1.34.84                          # AWS CLI SDK
+boto3==1.34.103                          # AWS CLI SDK
 botocore                                # AWS CLI SDK
 cachetools==5.3.3                       # Python object caching library
 celery==5.4.0                           # asynchronous task queue. works with redis.
@@ -26,7 +26,7 @@ whitenoise==6.6.0                       # static file serving
 
 # Django
 # ------------
-Django==5.0.4
+Django==5.0.6
 django-extensions==3.2.3
 django-debug-toolbar==4.3.0
 django-redis==5.4.0                     # object caching
@@ -54,7 +54,7 @@ python-hcl2==4.3.3                      # Terraform hcl parser for reading Terra
 openai==1.23.2                          # OpenAI API
 pyyaml==6.0.1                           # YAML parser
 langchain==0.1.16                       # LLM abstractions library for building complex workflows
-langchain-openai==0.1.4                 # OpenAI plugin for Langchain
+langchain-openai==0.1.6                 # OpenAI plugin for Langchain
 python-Levenshtein==0.25.1              # Levenshtein distance calculation for LLMs
 nltk==3.8.1                             # Natural Language Toolkit
 textblob==0.18.0.post0                  # Text processing library
