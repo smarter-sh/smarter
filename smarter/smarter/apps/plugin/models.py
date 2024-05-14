@@ -2,11 +2,19 @@
 """PluginMeta app models."""
 import json
 import logging
+import re
+from abc import ABC, abstractmethod
 from functools import lru_cache
+from http import HTTPStatus
+from typing import Union
 
+import requests
 import yaml
+from django.contrib.auth.hashers import check_password, make_password
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import models
+from django.db import DatabaseError, models
+from django.db.backends.base.base import BaseDatabaseWrapper
+from django.db.utils import ConnectionHandler
 from taggit.managers import TaggableManager
 
 from smarter.apps.account.models import Account, UserProfile
@@ -17,6 +25,11 @@ from smarter.lib.django.model_helpers import TimestampedModel
 logger = logging.getLogger(__name__)
 
 SMARTER_PLUGIN_MAX_DATA_RESULTS = 50
+
+
+def validate_no_spaces(value):
+    if re.search(r"\s", value):
+        raise SmarterValueError("The name should not include spaces.")
 
 
 def dict_key_cleaner(key: str) -> str:
@@ -150,13 +163,24 @@ class PluginPrompt(TimestampedModel):
         return str(self.plugin.name)
 
 
-class PluginDataStatic(TimestampedModel):
-    """PluginDataStatic model."""
+class PluginDataAbstractBase(ABC, TimestampedModel):
+    """PluginDataAbstractBase model."""
 
     plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_data")
+
     description = models.TextField(
         help_text="A brief description of what this plugin returns. Be verbose, but not too verbose.",
     )
+
+    @property
+    @abstractmethod
+    def data(self) -> dict:
+        raise NotImplementedError
+
+
+class PluginDataStatic(PluginDataAbstractBase):
+    """PluginDataStatic model."""
+
     static_data = models.JSONField(
         help_text="The JSON data that this plugin returns to OpenAI API when invoked by the user prompt.", default=dict
     )
@@ -216,3 +240,184 @@ class PluginDataStatic(TimestampedModel):
     class Meta:
         verbose_name = "Plugin Static Data"
         verbose_name_plural = "Plugin Static Data"
+
+
+class PluginDataSqlConnection(TimestampedModel):
+    """PluginDataSql Connection model."""
+
+    DBMS_CHOICES = [
+        ("mysql", "MySQL"),
+        ("postgresql", "PostgreSQL"),
+        ("sqlite3", "SQLite3"),
+        ("oracle", "Oracle"),
+        ("mssqlserver", "MS SQL Server"),
+        ("sybase", "Sybase"),
+    ]
+    DBMS_ENGINES = {
+        "mysql": "django.db.backends.mysql",
+        "postgresql": "django.db.backends.postgresql",
+        "sqlite3": "django.db.backends.sqlite3",
+        "oracle": "django.db.backends.oracle",
+        "mssqlserver": "django.db.backends.mssql",
+        "sybase": "django.db.backends.sybase",
+    }
+    name = models.CharField(
+        help_text="The name of the connection, without spaces. Example: 'HRDatabase', 'SalesDatabase', 'InventoryDatabase'.",
+        max_length=255,
+        validators=[validate_no_spaces],
+    )
+    dbms = models.CharField(
+        help_text="The type of database management system. Example: 'MySQL', 'PostgreSQL', 'MS SQL Server', 'Oracle'.",
+        max_length=255,
+        choices=DBMS_CHOICES,
+    )
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="plugins")
+    hostname = models.CharField(max_length=255)
+    port = models.IntegerField()
+    database = models.CharField(max_length=255)
+    username = models.CharField(max_length=255)
+    password = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+    )
+
+    # Proxy fields
+    proxy_host = models.CharField(max_length=255, blank=True, null=True)
+    proxy_port = models.IntegerField(blank=True, null=True)
+    proxy_username = models.CharField(max_length=255, blank=True, null=True)
+    proxy_password = models.CharField(max_length=255, blank=True, null=True)
+
+    def set_password(self, raw_password):
+        self.password = make_password(raw_password)
+        self.save()
+
+    def check_password(self, raw_password):
+        return check_password(raw_password, self.password)
+
+    def set_proxy_password(self, raw_password):
+        self.proxy_password = make_password(raw_password)
+        self.save()
+
+    def check_proxy_password(self, raw_password):
+        return check_password(raw_password, self.proxy_password)
+
+    def connect(self) -> Union[BaseDatabaseWrapper, bool]:
+        databases = {
+            "default": {
+                "ENGINE": self.DBMS_ENGINES[self.dbms],
+                "NAME": self.database,
+                "USER": self.username,
+                "PASSWORD": self.password,
+                "HOST": self.hostname,
+                "PORT": str(self.port),
+            }
+        }
+        try:
+            connection_handler = ConnectionHandler(databases)
+            connection = connection_handler["default"]
+            connection.ensure_connection()
+            return connection
+        except DatabaseError as e:
+            logger.error("db test connection failed: %s", e)
+            return False
+
+    def execute_query(self, sql: str) -> Union[list, bool]:
+        connection = self.connect()
+        if not connection:
+            return False
+        with connection.cursor() as cursor:
+            cursor.execute(sql)
+            rows = cursor.fetchall()
+            return rows
+
+    def test_proxy(self) -> bool:
+        proxy_dict = {
+            "http": f"http://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}",
+            "https": f"https://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}",
+        }
+        try:
+            response = requests.get("http://www.google.com", proxies=proxy_dict, timeout=30)
+            return response.status_code in [HTTPStatus.OK, HTTPStatus.PERMANENT_REDIRECT]
+        except requests.exceptions.RequestException as e:
+            logger.error("proxy test connection failed: %s", e)
+            return False
+
+    def get_connection_string(self):
+        """Return the connection string."""
+        return f"{self.dbms}://{self.username}@{self.hostname}:{self.port}/{self.database}"
+
+    def __str__(self) -> str:
+        return self.name + " - " + self.get_connection_string()
+
+
+class PluginDataSql(PluginDataAbstractBase):
+    """PluginDataSql model."""
+
+    connection = models.ForeignKey(PluginDataSqlConnection, on_delete=models.CASCADE, related_name="plugin_data")
+    parameters = models.JSONField(
+        help_text="A JSON dict containing parameter names and data types. Example: {'product_id': 'int'}",
+        default=dict,
+        blank=True,
+        null=True,
+    )
+    sql_query = models.TextField(
+        help_text="The SQL query that this plugin will execute when invoked by the user prompt.",
+    )
+    test_values = models.JSONField(
+        help_text="A JSON dict containing test values for each parameter. Example: {'product_id': 1234}",
+        default=dict,
+        blank=True,
+        null=True,
+    )
+    limit = models.IntegerField(
+        help_text="The maximum number of rows to return from the query.",
+        default=100,
+        validators=[MinValueValidator(0)],
+        blank=True,
+        null=True,
+    )
+
+    @property
+    def data(self) -> dict:
+        return {
+            "parameters": self.parameters,
+            "sql_query": self.sql_query,
+        }
+
+    def validate_params(self, params: dict) -> str:
+        for key, value in params.items():
+            if key not in self.parameters:
+                raise SmarterValueError(f"Sql parameter '{key}' is not valid for this plugin.")
+            if self.parameters[key] == "int" and not isinstance(value, int):
+                raise SmarterValueError(f"Parameter '{key}' must be an integer.")
+            if self.parameters[key] == "str" and not isinstance(value, str):
+                raise SmarterValueError(f"Parameter '{key}' must be a string.")
+            if self.parameters[key] == "float" and not isinstance(value, float):
+                raise SmarterValueError(f"Parameter '{key}' must be a float.")
+            if self.parameters[key] == "bool" and not isinstance(value, bool):
+                raise SmarterValueError(f"Parameter '{key}' must be a boolean.")
+            if self.parameters[key] == "list" and not isinstance(value, list):
+                raise SmarterValueError(f"Parameter '{key}' must be a list.")
+            if self.parameters[key] == "dict" and not isinstance(value, dict):
+                raise SmarterValueError(f"Parameter '{key}' must be a dict.")
+            if self.parameters[key] == "null" and value is not None:
+                raise SmarterValueError(f"Parameter '{key}' must be null.")
+        return "ok"
+
+    def prepare_sql(self, params: dict) -> str:
+        self.validate_params(params)
+        sql = self.sql_query
+        for key, value in params.items():
+            placeholder = "{" + key + "}"
+            sql = sql.replace(placeholder, str(value))
+        if self.limit:
+            sql += f" LIMIT {self.limit}"
+        return sql
+
+    def execute_query(self, params: dict) -> Union[list, bool]:
+        sql = self.prepare_sql(params)
+        return self.connection.execute_query(sql)
+
+    def test(self) -> Union[list, bool]:
+        return self.execute_query(self.test_values)
