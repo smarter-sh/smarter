@@ -6,15 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## [0.1.2](https://github.com/QueriumCorp/smarter/compare/v0.1.1...v0.1.2) (2024-05-14)
 
-Introduces a powerful new architecture for processing Kubernetes-style manifests for managing Smarter resources. The new Broker model facilitates lightweight implementations of the smarter command-line implementation and the REST API that backs it.
+Introduces a powerful new architecture for processing Kubernetes-style manifests for managing Smarter resources. The new Broker class architecture facilitates lightweight implementations of the smarter command-line implementation and the REST API that backs it.
 
 ### New features
 
 - add /api/v1/cli rest api backing services for Go lang command-line interface
 - add Pydantic to formally model cli manifests. Enforces manifest structural integrity as well as data and business rule validations.
-- add SAMLoader, a generic yaml loader for Pydantic
-- add Broker model to abstract cli services implementations
+- add SAMLoader, a generic yaml manifest loader for Pydantic
+- add Broker class to abstract cli services implementations
 - implement all Plugin cli services
+- add a Controller class to Plugin, facilitating the future introduction of new data classes to support remote SQl databases and REST API data sources.
 
 ## [0.1.1](https://github.com/QueriumCorp/smarter/compare/v0.1.0...v0.1.1) (2024-04-02)
 
