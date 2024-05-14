@@ -4,7 +4,9 @@ import logging
 
 from smarter.apps.plugin.models import PluginDataSql
 from smarter.apps.plugin.serializers import PluginDataSqlSerializer
+from smarter.common.exceptions import SmarterConfigurationError
 
+from ..models import PluginDataSql
 from .base import PluginBase
 
 
@@ -42,7 +44,7 @@ class PluginSql(PluginBase):
     @property
     def plugin_data_django_model(self) -> dict:
         """Return the plugin data definition as a json object."""
-        # recast the Pydantic model the the PluginDataSql Django ORM model
+        # recast the Pydantic model to the PluginDataSql Django ORM model
         return {
             "plugin": self.plugin_meta,
             "description": self.manifest.spec.data.description,
@@ -51,7 +53,38 @@ class PluginSql(PluginBase):
 
     @property
     def custom_tool(self) -> dict:
-        """Return the plugin tool."""
+        """Return the plugin tool. see https://platform.openai.com/docs/assistants/tools/function-calling/quickstart"""
+
+        def property_factory(param) -> dict:
+            try:
+                param_type = param["type"]
+                param_enum = param["enum"] if "enum" in param else None
+                param_description = param["description"]
+            except KeyError as e:
+                raise SmarterConfigurationError(
+                    f"{self.name} PluginSql custom_tool() error: missing required parameter key: {e}"
+                ) from e
+
+            if param_type not in PluginDataSql.DataTypes.all():
+                raise SmarterConfigurationError(
+                    f"{self.name} PluginSql custom_tool() error: invalid parameter type: {param_type}"
+                )
+
+            if param_enum and not isinstance(param_enum, list):
+                raise SmarterConfigurationError(
+                    f"{self.name} PluginSql custom_tool() error: invalid parameter enum: {param_enum}. Must be a list."
+                )
+
+            return {
+                "type": param_type,
+                "enum": param_enum,
+                "description": param_description,
+            }
+
+        properties = {}
+        for key in self.plugin_data.parameters.keys() if self.plugin_data.parameters else {}:
+            properties[key] = property_factory(param=self.plugin_data.parameters[key])
+
         if self.ready:
             return {
                 "type": "function",
@@ -60,13 +93,8 @@ class PluginSql(PluginBase):
                     "description": self.plugin_data.description,
                     "parameters": {
                         "type": "object",
-                        "properties": {
-                            "inquiry_type": {
-                                "type": "string",
-                                "enum": self.plugin_data.parameters.keys() if self.plugin_data.parameters else None,
-                            },
-                        },
-                        "required": ["inquiry_type"],
+                        "properties": properties,
+                        "required": [],
                     },
                 },
             }

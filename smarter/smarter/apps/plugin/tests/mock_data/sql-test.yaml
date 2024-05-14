@@ -1,0 +1,34 @@
+---
+apiVersion: smarter.sh/v1
+kind: Plugin
+metadata:
+  name: SqlTest
+  pluginClass: sql
+  description: Get additional information about the admin account of the Smarter platform.
+  version: 0.1.0
+  tags:
+    - db
+    - sql
+    - database
+spec:
+  selector:
+    directive: searchTerms
+    searchTerms:
+      - admin
+      - Smarter platform
+      - admin account
+  prompt:
+    systemRole: >
+      You are a helpful assistant for Smarter platform. You can provide information about the admin account of the Smarter platform.
+    model: gpt-3.5-turbo-1106
+    temperature: 0.0
+    maxTokens: 256
+  data:
+    description: Query the Django User model to retrieve detailed account information about the admin account for the Smarter platform .
+    sqlData:
+      connection: defaultConnection
+      sql_query: >
+        SELECT * FROM auth_user WHERE username = 'admin';
+      parameters:
+      test_values:
+      limit: 1

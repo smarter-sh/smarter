@@ -172,9 +172,12 @@ class PluginDataAbstractBase(ABC, TimestampedModel):
         help_text="A brief description of what this plugin returns. Be verbose, but not too verbose.",
     )
 
-    @property
+    def sanitized_return_data(self, params: dict = None) -> dict:
+        """Returns a dict of custom data return results."""
+        raise NotImplementedError
+
     @abstractmethod
-    def data(self) -> dict:
+    def data(self, params: dict = None) -> dict:
         raise NotImplementedError
 
 
@@ -185,8 +188,7 @@ class PluginDataStatic(PluginDataAbstractBase):
         help_text="The JSON data that this plugin returns to OpenAI API when invoked by the user prompt.", default=dict
     )
 
-    @property
-    def sanitized_return_data(self) -> dict:
+    def sanitized_return_data(self, params: dict = None) -> dict:
         """Returns a dict of self.static_data."""
         retval: dict = {}
         if isinstance(self.static_data, dict):
@@ -230,8 +232,7 @@ class PluginDataStatic(PluginDataAbstractBase):
 
         return retval[:SMARTER_PLUGIN_MAX_DATA_RESULTS]  # pylint: disable=E1136
 
-    @property
-    def data(self) -> dict:
+    def data(self, params: dict = None) -> dict:
         return yaml.dump(self.static_data)
 
     def __str__(self) -> str:
@@ -354,9 +355,22 @@ class PluginDataSqlConnection(TimestampedModel):
 class PluginDataSql(PluginDataAbstractBase):
     """PluginDataSql model."""
 
+    class DataTypes:
+        INT = "int"
+        FLOAT = "float"
+        STR = "str"
+        BOOL = "bool"
+        LIST = "list"
+        DICT = "dict"
+        NULL = "null"
+
+        @classmethod
+        def all(cls) -> list:
+            return [cls.INT, cls.FLOAT, cls.STR, cls.BOOL, cls.LIST, cls.DICT, cls.NULL]
+
     connection = models.ForeignKey(PluginDataSqlConnection, on_delete=models.CASCADE, related_name="plugin_data")
     parameters = models.JSONField(
-        help_text="A JSON dict containing parameter names and data types. Example: {'product_id': 'int'}",
+        help_text="A JSON dict containing parameter names and data types. Example: {'unit': {'type': 'string', 'enum': ['Celsius', 'Fahrenheit'], 'description': 'The temperature unit to use. Infer this from the user's location.'}}",
         default=dict,
         blank=True,
         null=True,
@@ -378,14 +392,84 @@ class PluginDataSql(PluginDataAbstractBase):
         null=True,
     )
 
-    @property
-    def data(self) -> dict:
+    def data(self, params: dict = None) -> dict:
         return {
             "parameters": self.parameters,
-            "sql_query": self.sql_query,
+            "sql_query": self.prepare_sql(params=params),
         }
 
+    def validate_parameter(self, param) -> dict:
+        """
+        Validate a parameter dict. The overall structure of the parameter dict is:
+         "properties": {
+            "location": {
+              "type": "string",
+              "description": "The city and state, e.g., San Francisco, CA"
+            },
+            "unit": {
+              "type": "string",
+              "enum": ["Celsius", "Fahrenheit"],
+              "description": "The temperature unit to use. Infer this from the user's location."
+            }
+          }
+        """
+        try:
+            param_type = param["type"]
+            param_enum = param["enum"] if "enum" in param else None
+            param_description = param["description"]
+        except KeyError as e:
+            raise SmarterValueError(
+                f"{self.name} PluginSql custom_tool() error: missing required parameter key: {e}"
+            ) from e
+
+        if param_type not in PluginDataSql.DataTypes.all():
+            raise SmarterValueError(
+                f"{self.plugin.name} PluginSql custom_tool() error: invalid parameter type: {param_type}"
+            )
+
+        if param_enum and not isinstance(param_enum, list):
+            raise SmarterValueError(
+                f"{self.plugin.name} PluginSql custom_tool() error: invalid parameter enum: {param_enum}. Must be a list."
+            )
+
+        if not isinstance(param_description, str):
+            raise SmarterValueError(
+                f"{self.plugin.name} PluginSql custom_tool() error: invalid parameter description: {param_description}. Must be a string."
+            )
+
+    def validate_test_values(self) -> bool:
+        """
+        Validate the test values. The overall structure of the test values is:
+        {
+            "key1": "value 1",
+            "key2": "value 2"
+        }
+        """
+        for key, value in self.test_values or {}:
+            if key not in self.parameters.keys():
+                raise SmarterValueError(f"Sql parameter '{key}' not found in parameters.")
+            if self.parameters[key] == "int" and not isinstance(value, int):
+                raise SmarterValueError(f"Parameter '{key}' must be an integer.")
+            if self.parameters[key] == "str" and not isinstance(value, str):
+                raise SmarterValueError(f"Parameter '{key}' must be a string.")
+            if self.parameters[key] == "float" and not isinstance(value, float):
+                raise SmarterValueError(f"Parameter '{key}' must be a float.")
+            if self.parameters[key] == "bool" and not isinstance(value, bool):
+                raise SmarterValueError(f"Parameter '{key}' must be a boolean.")
+            if self.parameters[key] == "list" and not isinstance(value, list):
+                raise SmarterValueError(f"Parameter '{key}' must be a list.")
+            if self.parameters[key] == "dict" and not isinstance(value, dict):
+                raise SmarterValueError(f"Parameter '{key}' must be a dict.")
+            if self.parameters[key] == "null" and value is not None:
+                raise SmarterValueError(f"Parameter '{key}' must be null.")
+        return True
+
     def validate_params(self, params: dict) -> str:
+        """validate the input params against self.parameters."""
+        for key in params.keys():
+            if key not in self.parameters.keys():
+                raise SmarterValueError(f"Sql parameter '{key}' not found in parameters.")
+
         for key, value in params.items():
             if key not in self.parameters:
                 raise SmarterValueError(f"Sql parameter '{key}' is not valid for this plugin.")
@@ -405,7 +489,14 @@ class PluginDataSql(PluginDataAbstractBase):
                 raise SmarterValueError(f"Parameter '{key}' must be null.")
         return "ok"
 
+    def validate(self) -> bool:
+        for _, value in self.parameters or {}:
+            self.validate_parameter(value)
+            self.validate_test_values()
+        return True
+
     def prepare_sql(self, params: dict) -> str:
+        """Prepare the SQL query by replacing placeholders with values."""
         params = params or {}
         self.validate_params(params)
         sql = self.sql_query
@@ -417,8 +508,23 @@ class PluginDataSql(PluginDataAbstractBase):
         return sql
 
     def execute_query(self, params: dict) -> Union[list, bool]:
+        """Execute the SQL query and return the results."""
         sql = self.prepare_sql(params)
         return self.connection.execute_query(sql)
 
     def test(self) -> Union[list, bool]:
+        """Test the SQL query using the test_values in the record."""
         return self.execute_query(self.test_values)
+
+    def sanitized_return_data(self, params: dict = None) -> dict:
+        """Return a dict by executing the query with the provided params."""
+        logger.info("PluginDataSql.sanitized_return_data called. - %s", params)
+        return self.execute_query(params)
+
+    def save(self, *args, **kwargs):
+        """Override the save method to validate the field dicts."""
+        super().save(*args, **kwargs)
+        self.validate()
+
+    def __str__(self) -> str:
+        return str(self.plugin.account.account_number + " - " + self.plugin.name)
