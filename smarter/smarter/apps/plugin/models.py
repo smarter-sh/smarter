@@ -1,9 +1,10 @@
+# pylint: disable=missing-docstring,missing-module-docstring,missing-class-docstring,missing-function-docstring
 # pylint: disable=C0114,C0115
 """PluginMeta app models."""
 import json
 import logging
 import re
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from functools import lru_cache
 from http import HTTPStatus
 from typing import Union
@@ -80,7 +81,7 @@ def list_of_dicts_to_dict(data: list[dict]) -> dict:
 class PluginMeta(TimestampedModel):
     """PluginMeta model."""
 
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="plugins")
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="plugin_meta")
     name = models.CharField(
         help_text="The name of the plugin. Example: 'HR Policy Update' or 'Public Relation Talking Points'.",
         max_length=255,
@@ -90,7 +91,7 @@ class PluginMeta(TimestampedModel):
     )
     plugin_class = models.CharField(help_text="The class name of the plugin", max_length=255, default="PluginMeta")
     version = models.CharField(max_length=255, default="1.0.0")
-    author = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="plugins")
+    author = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="plugin_meta")
     tags = TaggableManager(blank=True)
 
     def __str__(self):
@@ -109,7 +110,7 @@ class PluginMeta(TimestampedModel):
 class PluginSelector(TimestampedModel):
     """PluginSelector model."""
 
-    plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="selector")
+    plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_selector")
     directive = models.CharField(
         help_text="The selection strategy to use for this plugin.", max_length=255, default="search_terms"
     )
@@ -126,7 +127,9 @@ class PluginSelector(TimestampedModel):
 class PluginSelectorHistory(TimestampedModel):
     """PluginSelectorHistory model."""
 
-    plugin_selector = models.ForeignKey(PluginSelector, on_delete=models.CASCADE, related_name="history")
+    plugin_selector = models.ForeignKey(
+        PluginSelector, on_delete=models.CASCADE, related_name="plugin_selector_history"
+    )
     search_term = models.CharField(max_length=255, blank=True, null=True, default="")
     messages = models.JSONField(help_text="The user prompt messages.", default=list, blank=True, null=True)
 
@@ -140,7 +143,7 @@ class PluginSelectorHistory(TimestampedModel):
 class PluginPrompt(TimestampedModel):
     """PluginPrompt model."""
 
-    plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="prompt")
+    plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_prompt")
     system_role = models.TextField(
         help_text="The role of the system in the conversation.",
         null=True,
@@ -163,19 +166,10 @@ class PluginPrompt(TimestampedModel):
         return str(self.plugin.name)
 
 
-from abc import ABCMeta
+class PluginDataBase(TimestampedModel):
+    """PluginDataBase model."""
 
-from django.db.models.base import ModelBase
-
-
-class PluginDataMeta(ModelBase, ABCMeta):
-    pass
-
-
-class PluginDataAbstractBase(metaclass=PluginDataMeta):
-    """PluginDataAbstractBase model."""
-
-    plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_data")
+    plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_data_base")
 
     description = models.TextField(
         help_text="A brief description of what this plugin returns. Be verbose, but not too verbose.",
@@ -190,7 +184,7 @@ class PluginDataAbstractBase(metaclass=PluginDataMeta):
         raise NotImplementedError
 
 
-class PluginDataStatic(PluginDataAbstractBase, TimestampedModel):
+class PluginDataStatic(PluginDataBase):
     """PluginDataStatic model."""
 
     static_data = models.JSONField(
@@ -281,7 +275,7 @@ class PluginDataSqlConnection(TimestampedModel):
         max_length=255,
         choices=DBMS_CHOICES,
     )
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="plugins")
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="plugin_data_sql_connections")
     hostname = models.CharField(max_length=255)
     port = models.IntegerField()
     database = models.CharField(max_length=255)
@@ -361,7 +355,7 @@ class PluginDataSqlConnection(TimestampedModel):
         return self.name + " - " + self.get_connection_string()
 
 
-class PluginDataSql(PluginDataAbstractBase, TimestampedModel):
+class PluginDataSql(PluginDataBase):
     """PluginDataSql model."""
 
     class DataTypes:
@@ -377,7 +371,7 @@ class PluginDataSql(PluginDataAbstractBase, TimestampedModel):
         def all(cls) -> list:
             return [cls.INT, cls.FLOAT, cls.STR, cls.BOOL, cls.LIST, cls.DICT, cls.NULL]
 
-    connection = models.ForeignKey(PluginDataSqlConnection, on_delete=models.CASCADE, related_name="plugin_data")
+    connection = models.ForeignKey(PluginDataSqlConnection, on_delete=models.CASCADE, related_name="plugin_data_sql")
     parameters = models.JSONField(
         help_text="A JSON dict containing parameter names and data types. Example: {'unit': {'type': 'string', 'enum': ['Celsius', 'Fahrenheit'], 'description': 'The temperature unit to use. Infer this from the user's location.'}}",
         default=dict,
@@ -454,7 +448,14 @@ class PluginDataSql(PluginDataAbstractBase, TimestampedModel):
             "key2": "value 2"
         }
         """
-        for key, value in self.test_values or {}:
+        if not self.test_values:
+            return True
+
+        if not isinstance(self.test_values, dict):
+            raise SmarterValueError(f"{self.name} PluginSql custom_tool() error: test_values must be a dict.")
+
+        # pylint: disable=E1136
+        for key, value in self.test_values.items():
             if key not in self.parameters.keys():
                 raise SmarterValueError(f"Sql parameter '{key}' not found in parameters.")
             if self.parameters[key] == "int" and not isinstance(value, int):
@@ -479,8 +480,9 @@ class PluginDataSql(PluginDataAbstractBase, TimestampedModel):
             if key not in self.parameters.keys():
                 raise SmarterValueError(f"Sql parameter '{key}' not found in parameters.")
 
+        # pylint: disable=E1136
         for key, value in params.items():
-            if key not in self.parameters:
+            if key not in self.parameters.keys():
                 raise SmarterValueError(f"Sql parameter '{key}' is not valid for this plugin.")
             if self.parameters[key] == "int" and not isinstance(value, int):
                 raise SmarterValueError(f"Parameter '{key}' must be an integer.")
@@ -499,7 +501,9 @@ class PluginDataSql(PluginDataAbstractBase, TimestampedModel):
         return "ok"
 
     def validate(self) -> bool:
-        for _, value in self.parameters or {}:
+        if not self.parameters:
+            return True
+        for _, value in self.parameters.items():
             self.validate_parameter(value)
             self.validate_test_values()
         return True
