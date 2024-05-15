@@ -191,6 +191,7 @@ class TestPluginDataSqlConnection(unittest.TestCase):
         plugindatasql.test_values = bad_test_values
         with self.assertRaises(SmarterValueError):
             plugindatasql.save()
+        plugindatasql.delete()
 
         # test value with type clash
         bad_test_values = test_values.copy()
@@ -198,6 +199,7 @@ class TestPluginDataSqlConnection(unittest.TestCase):
         plugindatasql.test_values = bad_test_values
         with self.assertRaises(SmarterValueError):
             plugindatasql.save()
+        plugindatasql.delete()
 
     def test_PluginDataSql_prepare_sql(self):
         plugindatasql = self.plugindatasql_factory()
