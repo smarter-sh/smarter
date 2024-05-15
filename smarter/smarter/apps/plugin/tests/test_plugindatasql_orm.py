@@ -204,5 +204,5 @@ class TestPluginDataSqlConnection(unittest.TestCase):
             "location": "CDMX, Roma Norte",
         }
         sql = plugindatasql.prepare_sql(params)
-        print(sql)
+        self.assertIsInstance(sql, str)
         plugindatasql.delete()
