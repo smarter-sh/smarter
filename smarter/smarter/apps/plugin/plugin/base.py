@@ -25,7 +25,7 @@ from smarter.lib.manifest.loader import SAMLoader
 
 from ..manifest.const import MANIFEST_KIND
 from ..manifest.models.plugin import SAMPlugin
-from ..models import PluginDataAbstractBase, PluginMeta, PluginPrompt, PluginSelector
+from ..models import PluginDataBase, PluginMeta, PluginPrompt, PluginSelector
 from ..nlp import does_refer_to
 from ..serializers import (
     PluginMetaSerializer,
@@ -156,7 +156,7 @@ class PluginBase(ABC):
     ###########################################################################
     @property
     @abstractmethod
-    def plugin_data(self) -> PluginDataAbstractBase:
+    def plugin_data(self) -> PluginDataBase:
         """Return the plugin data Django ORM."""
         raise NotImplementedError()
 
