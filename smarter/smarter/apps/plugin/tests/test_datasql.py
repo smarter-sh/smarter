@@ -1,18 +1,18 @@
-"""Test lambda_openai_v2 function."""
+"""Test PluginDataSql class"""
 
 import hashlib
 import os
 import random
-
-# python stuff
-import sys
 import unittest
-from pathlib import Path
 
 import yaml
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.manifest.controller import PluginController
+from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
+from smarter.apps.plugin.manifest.models.sql_connection.model import (
+    SAMPluginDataSqlConnection,
+)
 from smarter.apps.plugin.models import (
     PluginDataSql,
     PluginDataSqlConnection,
@@ -28,39 +28,66 @@ from smarter.lib.manifest.loader import SAMLoader
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-PROJECT_ROOT = str(Path(HERE).parent.parent)
-PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
-if PYTHON_ROOT not in sys.path:
-    sys.path.append(PYTHON_ROOT)  # noqa: E402
 
 
-# pylint: disable=too-many-public-methods,too-many-instance-attributes
-class TestOpenaiFunctionCallingSqlData(unittest.TestCase):
-    """Test Index Lambda function."""
+class TestPluginDataSql(unittest.TestCase):
+    """Test PluginDataSql class"""
 
     def setUp(self):
         """Set up test fixtures."""
-        hashed_slug = hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:16]
 
+        # set user, account, user_profile
+        # ---------------------------------------------------------------------
+        hashed_slug = hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:16]
         username = f"test_{hashed_slug}"
         self.user = User.objects.create(username=username, password="12345")
         self.account = Account.objects.create(company_name=f"Test_{hashed_slug}", phone_number="123-456-789")
         self.user_profile = UserProfile.objects.create(user=self.user, account=self.account, is_test=True)
 
+        # setup an instance of PluginDataSqlConnection() - a Django model
+        # ---------------------------------------------------------------------
+        # 1. load the yaml manifest file
         config_path = os.path.join(HERE, "mock_data/sql-connection.yaml")
         with open(config_path, encoding="utf-8") as file:
             connection_manifest = yaml.safe_load(file)
 
+        # 2. initialize a SAMLoader object with the manifest raw data
+        connection_loader = SAMLoader(api_version=SAMApiVersions.V1.value, manifest=connection_manifest)
+
+        # 3. create a SAMPluginDataSqlConnection pydantic model from the loader
+        self.sam_connection = SAMPluginDataSqlConnection(
+            apiVersion=connection_loader.manifest_api_version,
+            kind=connection_loader.manifest_kind,
+            metadata=connection_loader.manifest_metadata,
+            spec=connection_loader.manifest_spec,
+            status=connection_loader.manifest_status,
+        )
+
+        # setup an instance of PluginSql() - a Python class descended from PluginBase()
+        # ---------------------------------------------------------------------
+        # 1. load the yaml manifest file
         config_path = os.path.join(HERE, "mock_data/sql-test.yaml")
         with open(config_path, encoding="utf-8") as file:
             plugin_manifest = yaml.safe_load(file)
 
-        connection_loader = SAMLoader(api_version=SAMApiVersions.V1.value, manifest=connection_manifest)
+        # 2. initialize a SAMLoader object with the manifest raw data
+        plugin_loader = SAMLoader(api_version=SAMApiVersions.V1.value, manifest=plugin_manifest)
+
+        # 3. create a SAMPlugin pydantic model from the loader
+        sam_plugin = SAMPlugin(
+            apiVersion=plugin_loader.manifest_api_version,
+            kind=plugin_loader.manifest_kind,
+            metadata=plugin_loader.manifest_metadata,
+            spec=plugin_loader.manifest_spec,
+            status=plugin_loader.manifest_status,
+        )
+
         cnx = connection_loader.manifest_spec["connection"]
         cnx["account"] = self.account
         self.connection = PluginDataSqlConnection(**cnx)
 
-        controller = PluginController(account=self.account, manifest=plugin_manifest)
+        # 4. use the PluginController to resolve which kind of Plugin to instantiate
+        controller = PluginController(account=self.account, manifest=sam_plugin)
         self.plugin = controller.obj
         self.plugins = [self.plugin]
 

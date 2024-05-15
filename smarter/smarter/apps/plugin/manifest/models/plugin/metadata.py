@@ -6,11 +6,10 @@ from typing import ClassVar
 from pydantic import Field, field_validator
 
 # Plugin
+from smarter.apps.plugin.manifest.const import MANIFEST_KIND
+from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMMetadataBase
-
-from ..const import MANIFEST_KIND
-from ..enum import SAMPluginMetadataClassValues
 
 
 filename = os.path.splitext(os.path.basename(__file__))[0]

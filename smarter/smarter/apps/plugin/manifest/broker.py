@@ -11,7 +11,7 @@ from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
 from ..manifest.controller import PluginController
-from ..manifest.models.plugin import SAMPlugin
+from ..manifest.models.plugin.model import SAMPlugin
 from ..models import PluginMeta
 from ..plugin.base import PluginBase
 from .const import MANIFEST_KIND
