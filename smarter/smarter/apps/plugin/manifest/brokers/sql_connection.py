@@ -17,7 +17,7 @@ from ..models.sql_connection.model import SAMPluginDataSqlConnection
 MAX_RESULTS = 1000
 
 
-class SAMPluginBrokerError(SAMExceptionBase):
+class SAMPluginDataSqlConnectionBrokerError(SAMExceptionBase):
     """Base exception for Smarter API Plugin Broker handling."""
 
 
@@ -128,7 +128,9 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
             try:
                 model_dump = model_to_dict(sql_connection)
                 if not model_dump:
-                    raise SAMPluginBrokerError(f"Model dump failed for {self.kind} {sql_connection.name}")
+                    raise SAMPluginDataSqlConnectionBrokerError(
+                        f"Model dump failed for {self.kind} {sql_connection.name}"
+                    )
                 data.append(model_dump)
             except Exception as e:
                 return self.err_response(self.get.__name__, e)
