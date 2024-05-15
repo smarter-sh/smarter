@@ -1,6 +1,6 @@
 ---
 apiVersion: smarter.sh/v1
-kind: SqlConnection
+kind: PluginDataSqlConnection
 metadata:
   name: default
   description: points to the Django mysql database
