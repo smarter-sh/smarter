@@ -5,19 +5,19 @@ from typing import ClassVar, Optional
 
 from pydantic import Field, model_validator
 
-from smarter.lib.manifest.enum import SAMKeys
-from smarter.lib.manifest.exceptions import SAMValidationError
-from smarter.lib.manifest.models import AbstractSAMBase
-
-from ..const import MANIFEST_KIND
-from ..enum import (
+from smarter.apps.plugin.manifest.const import MANIFEST_KIND
+from smarter.apps.plugin.manifest.enum import (
     SAMPluginMetadataClass,
     SAMPluginMetadataClassValues,
     SAMPluginMetadataKeys,
     SAMPluginSpecKeys,
 )
+from smarter.lib.manifest.enum import SAMKeys
+from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.manifest.models import AbstractSAMBase
+
 from .metadata import SAMPluginMetadata
-from .plugin_spec import SAMPluginSpec
+from .spec import SAMPluginSpec
 from .status import SAMPluginStatus
 
 

@@ -8,13 +8,8 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlparse import parse as sql_parse
 from sqlparse.exceptions import SQLParseError
 
-from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
-from smarter.lib.django.validators import SmarterValidator
-from smarter.lib.manifest.exceptions import SAMValidationError
-from smarter.lib.manifest.models import AbstractSAMSpecBase
-
-from ..const import MANIFEST_KIND
-from ..enum import (
+from smarter.apps.plugin.manifest.const import MANIFEST_KIND
+from smarter.apps.plugin.manifest.enum import (
     SAMPluginMetadataClass,
     SAMPluginMetadataClassValues,
     SAMPluginSpecKeys,
@@ -22,8 +17,14 @@ from ..enum import (
     SAMPluginSpecSelectorKeyDirectiveValues,
     SAMPluginSpecSelectorKeys,
 )
-from .http_request import HttpRequest
-from .sql_connection import SqlConnection
+from smarter.apps.plugin.manifest.models.http_request.model import HttpRequest
+from smarter.apps.plugin.manifest.models.sql_connection.model import (
+    SAMPluginDataSqlConnection,
+)
+from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
+from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.manifest.models import AbstractSAMSpecBase
 
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
@@ -170,7 +171,9 @@ class SAMPluginSpecDataSql(BaseModel):
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".data.sqlData"
 
-    connection: SqlConnection = Field(..., description=f"{class_identifier}.connection[obj]: an sql server connection")
+    connection: SAMPluginDataSqlConnection = Field(
+        ..., description=f"{class_identifier}.connection[obj]: an sql server connection"
+    )
     parameters: Optional[dict] = Field(
         None,
         description=(

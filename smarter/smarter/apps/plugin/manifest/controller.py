@@ -20,7 +20,7 @@ from ..plugin.static import PluginStatic
 # plugin manifest
 from .const import MANIFEST_KIND
 from .enum import SAMPluginMetadataClassValues
-from .models.plugin import SAMPlugin
+from .models.plugin.model import SAMPlugin
 
 
 class SAMPluginControllerError(SAMExceptionBase):

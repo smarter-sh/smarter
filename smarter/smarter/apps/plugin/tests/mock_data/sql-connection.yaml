@@ -4,6 +4,7 @@ kind: SqlConnection
 metadata:
   name: default
   description: points to the Django mysql database
+  version: 0.1.0
 spec:
   connection:
     name: default

@@ -1,16 +1,22 @@
-"""Smarter API - SQL Connection model."""
+"""Smarter API Manifest - Plugin.spec"""
 
-import re
+import os
 from enum import Enum
 from typing import ClassVar, List, Optional
 
 from pydantic import Field, field_validator
 
+from smarter.apps.plugin.manifest.const import MANIFEST_KIND
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
-from smarter.lib.manifest.models import SmarterBaseModel
+from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBaseModel
 
 from .enum import DbEngine
+
+
+filename = os.path.splitext(os.path.basename(__file__))[0]
+MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
+SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 
 
 class SqlConnection(SmarterBaseModel):
@@ -100,3 +106,13 @@ class SqlConnection(SmarterBaseModel):
         if v and (v < 1 or v > 65535):
             raise SAMValidationError(f"Invalid SQL proxy port: {v}. Must be between 1 and 65535.")
         return v
+
+
+class SAMPluginDataSqlConnectionSpec(AbstractSAMSpecBase):
+    """Smarter API Sql Connection Manifest SqlConnection.spec"""
+
+    class_identifier: ClassVar[str] = MODULE_IDENTIFIER
+
+    connection: SqlConnection = Field(
+        ..., description=f"{class_identifier}.selector[obj]: the selector logic to use for the {MANIFEST_KIND}"
+    )

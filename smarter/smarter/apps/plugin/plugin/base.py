@@ -24,7 +24,7 @@ from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 
 from ..manifest.const import MANIFEST_KIND
-from ..manifest.models.plugin import SAMPlugin
+from ..manifest.models.plugin.model import SAMPlugin
 from ..models import PluginDataBase, PluginMeta, PluginPrompt, PluginSelector
 from ..nlp import does_refer_to
 from ..serializers import (
