@@ -16,10 +16,10 @@ from ..plugin.api import PluginApi
 from ..plugin.base import PluginBase
 from ..plugin.sql import PluginSql
 from ..plugin.static import PluginStatic
+from .enum import SAMPluginMetadataClassValues
 
 # plugin manifest
-from .const import MANIFEST_KIND
-from .enum import SAMPluginMetadataClassValues
+from .models.plugin.const import MANIFEST_KIND
 from .models.plugin.model import SAMPlugin
 
 

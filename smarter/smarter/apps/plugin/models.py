@@ -23,6 +23,7 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.model_helpers import TimestampedModel
 
 from .manifest.enum import SAMPluginMetadataClassValues
+from .manifest.models.sql_connection.enum import DbEngines
 
 
 logger = logging.getLogger(__name__)
@@ -260,12 +261,12 @@ class PluginDataSqlConnection(TimestampedModel):
     """PluginDataSql Connection model."""
 
     DBMS_CHOICES = [
-        ("django.db.backends.mysql", "MySQL"),
-        ("django.db.backends.postgresql", "PostgreSQL"),
-        ("django.db.backends.sqlite3", "SQLite3"),
-        ("django.db.backends.oracle", "Oracle"),
-        ("django.db.backends.mssql", "MS SQL Server"),
-        ("django.db.backends.sybase", "Sybase"),
+        (DbEngines.MYSQL.value, "MySQL"),
+        (DbEngines.POSTGRES.value, "PostgreSQL"),
+        (DbEngines.SQLITE.value, "SQLite3"),
+        (DbEngines.ORACLE.value, "Oracle"),
+        (DbEngines.MSSQL.value, "MS SQL Server"),
+        (DbEngines.SYBASE.value, "Sybase"),
     ]
     name = models.CharField(
         help_text="The name of the connection, without spaces. Example: 'HRDatabase', 'SalesDatabase', 'InventoryDatabase'.",

@@ -3,11 +3,12 @@
 from smarter.lib.manifest.enum import SmarterEnumAbstract
 
 
-class DbEngine(SmarterEnumAbstract):
+class DbEngines(SmarterEnumAbstract):
     """SQL database engine enumeration."""
 
-    POSTGRES = "postgres"
-    MYSQL = "mysql"
-    ORACLE = "oracle"
-    SQLITE = "sqlite"
-    MSSQL = "mssql"
+    POSTGRES = "django.db.backends.postgresql"
+    MYSQL = "django.db.backends.mysql"
+    ORACLE = "django.db.backends.oracle"
+    SQLITE = "django.db.backends.sqlite3"
+    MSSQL = "django.db.backends.mssql"
+    SYBASE = "django.db.backends.sybase"

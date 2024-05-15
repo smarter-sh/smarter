@@ -9,6 +9,7 @@ import yaml
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.manifest.controller import PluginController
+from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
 from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
 from smarter.apps.plugin.manifest.models.sql_connection.model import (
     SAMPluginDataSqlConnection,
@@ -43,6 +44,15 @@ class TestPluginDataSql(unittest.TestCase):
         self.user = User.objects.create(username=username, password="12345")
         self.account = Account.objects.create(company_name=f"Test_{hashed_slug}", phone_number="123-456-789")
         self.user_profile = UserProfile.objects.create(user=self.user, account=self.account, is_test=True)
+        self.meta_data = PluginMeta(
+            account=self.account,
+            name="Test Plugin",
+            description="Test Plugin Description",
+            plugin_class=SAMPluginMetadataClassValues.SQL.value,
+            version="1.0.0",
+            author=self.user_profile,
+        )
+        self.meta_data.save()
 
         # setup an instance of PluginDataSqlConnection() - a Django model
         # ---------------------------------------------------------------------
@@ -71,15 +81,15 @@ class TestPluginDataSql(unittest.TestCase):
             plugin_manifest = yaml.safe_load(file)
 
         # 2. initialize a SAMLoader object with the manifest raw data
-        plugin_loader = SAMLoader(api_version=SAMApiVersions.V1.value, manifest=plugin_manifest)
+        self.plugin_loader = SAMLoader(api_version=SAMApiVersions.V1.value, manifest=plugin_manifest)
 
         # 3. create a SAMPlugin pydantic model from the loader
-        sam_plugin = SAMPlugin(
-            apiVersion=plugin_loader.manifest_api_version,
-            kind=plugin_loader.manifest_kind,
-            metadata=plugin_loader.manifest_metadata,
-            spec=plugin_loader.manifest_spec,
-            status=plugin_loader.manifest_status,
+        self.sam_plugin = SAMPlugin(
+            apiVersion=self.plugin_loader.manifest_api_version,
+            kind=self.plugin_loader.manifest_kind,
+            metadata=self.plugin_loader.manifest_metadata,
+            spec=self.plugin_loader.manifest_spec,
+            status=self.plugin_loader.manifest_status,
         )
 
         cnx = connection_loader.manifest_spec["connection"]
@@ -87,7 +97,7 @@ class TestPluginDataSql(unittest.TestCase):
         self.connection = PluginDataSqlConnection(**cnx)
 
         # 4. use the PluginController to resolve which kind of Plugin to instantiate
-        controller = PluginController(account=self.account, manifest=sam_plugin)
+        controller = PluginController(account=self.account, manifest=self.sam_plugin)
         self.plugin = controller.obj
         self.plugins = [self.plugin]
 
@@ -160,6 +170,12 @@ class TestPluginDataSql(unittest.TestCase):
         )
         data_sql.save()
         return data_sql
+
+    def test_plugin_loader(self):
+        """Test that the Loader can load the manifest."""
+        self.assertEqual(self.plugin_loader.manifest_api_version, SAMApiVersions.V1.value)
+        self.assertEqual(self.plugin_loader.manifest_kind, "PluginDataSqlConnection")
+        self.assertIsNot
 
     def test_plugin_data_sql_create(self):
         plugin_meta = self.plugin_meta_factory()

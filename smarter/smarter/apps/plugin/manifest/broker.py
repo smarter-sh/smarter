@@ -14,7 +14,7 @@ from ..manifest.controller import PluginController
 from ..manifest.models.plugin.model import SAMPlugin
 from ..models import PluginMeta
 from ..plugin.base import PluginBase
-from .const import MANIFEST_KIND
+from .models.plugin.const import MANIFEST_KIND
 
 
 MAX_RESULTS = 1000
