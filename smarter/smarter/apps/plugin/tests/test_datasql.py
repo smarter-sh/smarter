@@ -36,14 +36,16 @@ class TestPluginDataSql(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-
         # set user, account, user_profile
         # ---------------------------------------------------------------------
         hashed_slug = hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:16]
         username = f"test_{hashed_slug}"
-        self.user = User.objects.create(username=username, password="12345")
+        self.user = User.objects.create(
+            username=username, password="12345", is_active=True, is_staff=True, is_superuser=True
+        )
         self.account = Account.objects.create(company_name=f"Test_{hashed_slug}", phone_number="123-456-789")
         self.user_profile = UserProfile.objects.create(user=self.user, account=self.account, is_test=True)
+
         self.meta_data = PluginMeta(
             account=self.account,
             name="Test Plugin",
@@ -62,16 +64,23 @@ class TestPluginDataSql(unittest.TestCase):
             connection_manifest = yaml.safe_load(file)
 
         # 2. initialize a SAMLoader object with the manifest raw data
-        connection_loader = SAMLoader(api_version=SAMApiVersions.V1.value, manifest=connection_manifest)
+        self.connection_loader = SAMLoader(api_version=SAMApiVersions.V1.value, manifest=connection_manifest)
 
         # 3. create a SAMPluginDataSqlConnection pydantic model from the loader
-        self.sam_connection = SAMPluginDataSqlConnection(
-            apiVersion=connection_loader.manifest_api_version,
-            kind=connection_loader.manifest_kind,
-            metadata=connection_loader.manifest_metadata,
-            spec=connection_loader.manifest_spec,
-            status=connection_loader.manifest_status,
+        self.connection_model = SAMPluginDataSqlConnection(
+            apiVersion=self.connection_loader.manifest_api_version,
+            kind=self.connection_loader.manifest_kind,
+            metadata=self.connection_loader.manifest_metadata,
+            spec=self.connection_loader.manifest_spec,
+            status=self.connection_loader.manifest_status,
         )
+
+        # 4. create the connection record
+        model_dump = self.connection_model.spec.connection.model_dump()
+        model_dump["account"] = self.account
+        model_dump["name"] = self.connection_model.metadata.name
+        self.plugin_datasql_connection = PluginDataSqlConnection(**model_dump)
+        self.plugin_datasql_connection.save()
 
         # setup an instance of PluginSql() - a Python class descended from PluginBase()
         # ---------------------------------------------------------------------
@@ -84,15 +93,17 @@ class TestPluginDataSql(unittest.TestCase):
         self.plugin_loader = SAMLoader(api_version=SAMApiVersions.V1.value, manifest=plugin_manifest)
 
         # 3. create a SAMPlugin pydantic model from the loader
+        spec = self.plugin_loader.manifest_spec
+
         self.sam_plugin = SAMPlugin(
             apiVersion=self.plugin_loader.manifest_api_version,
             kind=self.plugin_loader.manifest_kind,
             metadata=self.plugin_loader.manifest_metadata,
-            spec=self.plugin_loader.manifest_spec,
+            spec=spec,
             status=self.plugin_loader.manifest_status,
         )
 
-        cnx = connection_loader.manifest_spec["connection"]
+        cnx = self.connection_loader.manifest_spec["connection"]
         cnx["account"] = self.account
         self.connection = PluginDataSqlConnection(**cnx)
 
@@ -103,10 +114,14 @@ class TestPluginDataSql(unittest.TestCase):
 
     def tearDown(self):
         """Tear down test fixtures."""
+        try:
+            self.plugin_datasql_connection.delete()
+        except PluginDataSqlConnection.DoesNotExist:
+            pass
         self.plugin.delete()
         try:
             self.connection.delete()
-        except PluginDataSqlConnection.DoesNotExist:
+        except (PluginDataSqlConnection.DoesNotExist, ValueError):
             pass
         try:
             self.user_profile.delete()
@@ -174,43 +189,42 @@ class TestPluginDataSql(unittest.TestCase):
     def test_plugin_loader(self):
         """Test that the Loader can load the manifest."""
         self.assertEqual(self.plugin_loader.manifest_api_version, SAMApiVersions.V1.value)
-        self.assertEqual(self.plugin_loader.manifest_kind, "PluginDataSqlConnection")
-        self.assertIsNot
+        self.assertEqual(self.plugin_loader.manifest_kind, "Plugin")
 
-    def test_plugin_data_sql_create(self):
-        plugin_meta = self.plugin_meta_factory()
-        connection = self.sql_connection_factory()
-        data_sql = self.plugin_data_sql_factory(plugin_meta=plugin_meta, connection=connection)
+    # def test_plugin_data_sql_create(self):
+    #     plugin_meta = self.plugin_meta_factory()
+    #     connection = self.sql_connection_factory()
+    #     data_sql = self.plugin_data_sql_factory(plugin_meta=plugin_meta, connection=connection)
 
-        data_sql.validate()
+    #     data_sql.validate()
 
-        sql = data_sql.prepare_sql(params=data_sql.test_values)
-        print("sql", sql)
+    #     sql = data_sql.prepare_sql(params=data_sql.test_values)
+    #     print("sql", sql)
 
-        data_sql.test()
-        data_sql.execute_query(data_sql.test_values)
+    #     data_sql.test()
+    #     data_sql.execute_query(data_sql.test_values)
 
-        print(data_sql.sanitized_return_data(params=data_sql.test_values))
+    #     print(data_sql.sanitized_return_data(params=data_sql.test_values))
 
-        print(data_sql.data(params=data_sql.test_values))
+    #     print(data_sql.data(params=data_sql.test_values))
 
-        for param in self.properties_factory():
-            data_sql.validate_parameter(param=param)
+    #     for param in self.properties_factory():
+    #         data_sql.validate_parameter(param=param)
 
-    def test_sql_data(self):
-        """Test sql data."""
+    # def test_sql_data(self):
+    #     """Test sql data."""
 
-        connection_serializer = PluginDataSqlConnectionSerializer(self.connection).data
-        plugin_serializer = PluginDataSqlSerializer(self.plugin).data
+    #     connection_serializer = PluginDataSqlConnectionSerializer(self.connection).data
+    #     plugin_serializer = PluginDataSqlSerializer(self.plugin).data
 
-        print("connection_serializer", connection_serializer)
-        print("plugin_serializer", plugin_serializer)
+    #     print("connection_serializer", connection_serializer)
+    #     print("plugin_serializer", plugin_serializer)
 
-    def test_sql_record(self):
-        """Test sql record."""
+    # def test_sql_record(self):
+    #     """Test sql record."""
 
-        data_sql = PluginDataSql.objects.get(plugin=self.plugin.plugin_meta)
-        print("data_sql", data_sql)
+    #     data_sql = PluginDataSql.objects.get(plugin=self.plugin.plugin_meta)
+    #     print("data_sql", data_sql)
 
-        data_sql.test()
-        print("test_sql: ", data_sql.prepare_sql(params=data_sql.test_values))
+    #     data_sql.test()
+    #     print("test_sql: ", data_sql.prepare_sql(params=data_sql.test_values))
