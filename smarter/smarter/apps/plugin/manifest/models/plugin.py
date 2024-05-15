@@ -17,7 +17,7 @@ from ..enum import (
     SAMPluginSpecKeys,
 )
 from .metadata import SAMPluginMetadata
-from .spec import SAMPluginSpec
+from .plugin_spec import SAMPluginSpec
 from .status import SAMPluginStatus
 
 
