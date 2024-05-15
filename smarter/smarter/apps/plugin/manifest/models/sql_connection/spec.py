@@ -46,7 +46,7 @@ class SqlConnection(SmarterBaseModel):
         ...,
         description=f"a valid SQL database engine.  Common db_engines: {DbEngine.all_values()}",
     )
-    host: str = Field(
+    hostname: str = Field(
         ...,
         description="The remote host of the SQL connection. Should be a valid internet domain name. Example: 'localhost' or 'mysql.mycompany.com' ",
     )
@@ -74,7 +74,7 @@ class SqlConnection(SmarterBaseModel):
             return v
         raise SAMValidationError(f"Invalid SQL connection engine: {v}. Must be one of {DbEngine.all_values()}")
 
-    @field_validator("host")
+    @field_validator("hostname")
     def validate_host(cls, v) -> str:
         if SmarterValidator.is_valid_domain(v):
             return v
