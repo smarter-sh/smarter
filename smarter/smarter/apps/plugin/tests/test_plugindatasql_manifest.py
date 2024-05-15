@@ -1,4 +1,4 @@
-"""Test PluginDataSql class"""
+"""Test SAM Plugin manifest using PluginDataSql"""
 
 import hashlib
 import os
@@ -10,19 +10,12 @@ import yaml
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
+from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
 from smarter.apps.plugin.manifest.models.sql_connection.model import (
     SAMPluginDataSqlConnection,
 )
-from smarter.apps.plugin.models import (
-    PluginDataSql,
-    PluginDataSqlConnection,
-    PluginMeta,
-)
-from smarter.apps.plugin.serializers import (
-    PluginDataSqlConnectionSerializer,
-    PluginDataSqlSerializer,
-)
+from smarter.apps.plugin.models import PluginDataSqlConnection, PluginMeta
 from smarter.lib.django.user import User
 from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.loader import SAMLoader
@@ -32,7 +25,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 class TestPluginDataSql(unittest.TestCase):
-    """Test PluginDataSql class"""
+    """Test SAM Plugin manifest using PluginDataSql"""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -148,83 +141,7 @@ class TestPluginDataSql(unittest.TestCase):
             },
         }
 
-    def plugin_meta_factory(self) -> PluginMeta:
-        plugin_meta = PluginMeta(
-            account=self.account,
-            name="TestPlugin",
-            description="Test Plugin",
-            version="0.0.1",
-            plugin_type="sql",
-        )
-        plugin_meta.save()
-        return plugin_meta
-
-    def sql_connection_factory(self) -> PluginDataSqlConnection:
-        connection = PluginDataSqlConnection(
-            account=self.account,
-            name="TestConnection",
-            db_engine="sqlite",
-            hostname="localhost",
-            port=3306,
-            username="root",
-            password="password",
-            database="test",
-        )
-        connection.save()
-        return connection
-
-    def plugin_data_sql_factory(self, plugin_meta, connection) -> PluginDataSql:
-        data_sql = PluginDataSql(
-            plugin=plugin_meta,
-            connection=connection,
-            description="Test Data SQL",
-            parameters={},
-            sql_query="SELECT * FROM test",
-            test_values={},
-            limit=10,
-        )
-        data_sql.save()
-        return data_sql
-
     def test_plugin_loader(self):
         """Test that the Loader can load the manifest."""
         self.assertEqual(self.plugin_loader.manifest_api_version, SAMApiVersions.V1.value)
-        self.assertEqual(self.plugin_loader.manifest_kind, "Plugin")
-
-    # def test_plugin_data_sql_create(self):
-    #     plugin_meta = self.plugin_meta_factory()
-    #     connection = self.sql_connection_factory()
-    #     data_sql = self.plugin_data_sql_factory(plugin_meta=plugin_meta, connection=connection)
-
-    #     data_sql.validate()
-
-    #     sql = data_sql.prepare_sql(params=data_sql.test_values)
-    #     print("sql", sql)
-
-    #     data_sql.test()
-    #     data_sql.execute_query(data_sql.test_values)
-
-    #     print(data_sql.sanitized_return_data(params=data_sql.test_values))
-
-    #     print(data_sql.data(params=data_sql.test_values))
-
-    #     for param in self.properties_factory():
-    #         data_sql.validate_parameter(param=param)
-
-    # def test_sql_data(self):
-    #     """Test sql data."""
-
-    #     connection_serializer = PluginDataSqlConnectionSerializer(self.connection).data
-    #     plugin_serializer = PluginDataSqlSerializer(self.plugin).data
-
-    #     print("connection_serializer", connection_serializer)
-    #     print("plugin_serializer", plugin_serializer)
-
-    # def test_sql_record(self):
-    #     """Test sql record."""
-
-    #     data_sql = PluginDataSql.objects.get(plugin=self.plugin.plugin_meta)
-    #     print("data_sql", data_sql)
-
-    #     data_sql.test()
-    #     print("test_sql: ", data_sql.prepare_sql(params=data_sql.test_values))
+        self.assertEqual(self.plugin_loader.manifest_kind, MANIFEST_KIND)
