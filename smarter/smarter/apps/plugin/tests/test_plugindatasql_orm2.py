@@ -153,11 +153,16 @@ class TestPluginDataSqlConnection(unittest.TestCase):
 
     def test_test(self):
         plugindatasql = self.plugindatasql_factory()
-        sql = plugindatasql.prepare_sql(params=plugindatasql.test_values)
-        print(sql)
         plugindatasql.test()
         plugindatasql.delete()
 
     def test_sanitized_return_data(self):
         plugindatasql = self.plugindatasql_factory()
+        retval = plugindatasql.sanitized_return_data(
+            {
+                "username": "admin",
+                "is_active": True,
+            }
+        )
+        self.assertIsInstance(retval, tuple)
         plugindatasql.delete()
