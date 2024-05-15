@@ -197,7 +197,7 @@ class SAMPluginSpecDataSql(BaseModel):
         ),
     )
 
-    @field_validator("sql")
+    @field_validator("sql_query")
     def validate_sql(cls, v) -> str:
         try:
             sql_parse(v)

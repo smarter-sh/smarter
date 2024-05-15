@@ -84,6 +84,18 @@ class TestOpenaiFunctionCallingSqlData(unittest.TestCase):
         except Account.DoesNotExist:
             pass
 
+    def properties_factory(self) -> dict:
+        return {
+            "properties": {
+                "location": {"type": "string", "description": "The city and state, e.g., San Francisco, CA"},
+                "unit": {
+                    "type": "string",
+                    "enum": ["Celsius", "Fahrenheit"],
+                    "description": "The temperature unit to use. Infer this from the user's location.",
+                },
+            },
+        }
+
     def plugin_meta_factory(self) -> PluginMeta:
         plugin_meta = PluginMeta(
             account=self.account,
@@ -138,6 +150,9 @@ class TestOpenaiFunctionCallingSqlData(unittest.TestCase):
         print(data_sql.sanitized_return_data(params=data_sql.test_values))
 
         print(data_sql.data(params=data_sql.test_values))
+
+        for param in self.properties_factory():
+            data_sql.validate_parameter(param=param)
 
     def test_sql_data(self):
         """Test sql data."""
