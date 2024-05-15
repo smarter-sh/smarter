@@ -1,4 +1,4 @@
-"""Test PluginDataSql Django ORM"""
+"""Test PluginDataSql Django ORM - validators and sql preparation"""
 
 import hashlib
 import os
@@ -9,9 +9,6 @@ import yaml
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
-from smarter.apps.plugin.manifest.models.sql_connection.const import (
-    MANIFEST_KIND as SQL_CONNECTION_KIND,
-)
 from smarter.apps.plugin.manifest.models.sql_connection.model import (
     SAMPluginDataSqlConnection,
 )
@@ -30,7 +27,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 class TestPluginDataSqlConnection(unittest.TestCase):
-    """Test PluginDataSql Django ORM"""
+    """Test PluginDataSql Django ORM - validators and sql preparation"""
 
     def setUp(self):
         """Set up test fixtures."""

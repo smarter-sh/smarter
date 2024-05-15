@@ -531,10 +531,19 @@ class PluginDataSql(PluginDataBase):
         sql = self.sql_query
         for key, value in params.items():
             placeholder = "{" + key + "}"
-            sql = sql.replace(placeholder, str(value))
+            opening_tag = "<" + key + ">"
+            closing_tag = "</" + key + ">"
+            sql = sql.replace(placeholder, str(value)).replace(opening_tag, "").replace(closing_tag, "")
         if self.limit:
             sql += f" LIMIT {self.limit}"
         sql += ";"
+
+        # Remove remaining tag pairs and any text between them
+        sql = re.sub("<[^>]+>.*?</[^>]+>", "", sql)
+
+        # Remove extra blank spaces
+        sql = re.sub("\\s+", " ", sql)
+
         return sql
 
     def execute_query(self, params: dict) -> Union[list, bool]:

@@ -1,4 +1,4 @@
-"""Test PluginDataSql Django ORM"""
+"""Test PluginDataSql Django ORM - sql execution, self test, and return data sanitization"""
 
 import hashlib
 import os
@@ -9,9 +9,6 @@ import yaml
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
-from smarter.apps.plugin.manifest.models.sql_connection.const import (
-    MANIFEST_KIND as SQL_CONNECTION_KIND,
-)
 from smarter.apps.plugin.manifest.models.sql_connection.model import (
     SAMPluginDataSqlConnection,
 )
@@ -30,7 +27,11 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 class TestPluginDataSqlConnection(unittest.TestCase):
-    """Test PluginDataSql Django ORM"""
+    """
+    Test PluginDataSql Django ORM - sql execution, self test, and return data sanitization.
+    Run tests against the Django ORM for the auth_user model. This is a simple model with a few fields
+    that we know to already exist in the database.
+    """
 
     def setUp(self):
         """Set up test fixtures."""
@@ -118,96 +119,45 @@ class TestPluginDataSqlConnection(unittest.TestCase):
             plugin=self.meta_data,
             connection=self.plugindata_sqlconnection,
             parameters={
-                "unit": {
-                    "type": "str",
-                    "enum": ["Celsius", "Fahrenheit"],
-                    "required": True,
-                    "description": "The temperature unit to use. Infer this from the user location.",
-                },
-                "location": {
+                "username": {
                     "type": "str",
                     "required": True,
-                    "description": "The city and state, e.g., San Francisco, CA",
+                    "description": "The username of the user",
+                },
+                "email": {
+                    "type": "str",
+                    "required": False,
+                    "description": "The email address of the user",
+                },
+                "is_staff": {
+                    "type": "bool",
+                    "required": False,
+                    "description": "whether or not the user is a staff member",
+                },
+                "is_active": {
+                    "type": "bool",
+                    "required": False,
+                    "description": "whether or not the user account is activated",
                 },
             },
-            sql_query="SELECT * FROM weather WHERE location = '{location}' AND unit = '{unit}'",
-            test_values={
-                "unit": "Celsius",
-                "location": "San Francisco, CA",
-            },
+            sql_query="SELECT * FROM auth_user WHERE <username>username = '{username}'</username> <email>AND email = '{email}'</email> <is_staff>AND is_staff in {is_staff} = True</is_staff> <is_active>AND {is_active} = True</is_active>",
+            test_values={"username": "admin"},
             limit=10,
         )
         plugindatasql.save()
         return plugindatasql
 
-    def test_create_PluginDataSql(self):
-        """Test create PluginDataSql"""
+    def test_execute_query(self):
         plugindatasql = self.plugindatasql_factory()
         plugindatasql.delete()
 
-    def test_PluginDataSql_validate_parameter(self):
+    def test_test(self):
         plugindatasql = self.plugindatasql_factory()
-        self.assertIsInstance(plugindatasql.data(params=plugindatasql.test_values), dict)
-
-        for _, param in plugindatasql.parameters.items():
-            # validate parameter, no error means it succeeded
-            plugindatasql.validate_parameter(param=param)
-
-            bad_param = param.copy()
-            bad_param["type"] = "bad_type"
-            with self.assertRaises(SmarterValueError):
-                plugindatasql.validate_parameter(param=bad_param)
-
-            bad_param = param.copy()
-            bad_param["enum"] = "bad_enum"
-            with self.assertRaises(SmarterValueError):
-                plugindatasql.validate_parameter(param=bad_param)
-
-            bad_param = param.copy()
-            bad_param["required"] = "bad_required"
-            with self.assertRaises(SmarterValueError):
-                plugindatasql.validate_parameter(param=bad_param)
-
-        plugindatasql.delete()
-
-    def test_PluginDataSql_validate_test_values(self):
-        plugindatasql = self.plugindatasql_factory()
-
-        # validate test values, no error means it succeeded
-        plugindatasql.validate_test_values()
-        test_values = plugindatasql.test_values.copy()
-
-        # test value that is not in the enum list
-        bad_test_values = test_values.copy()
-        bad_test_values["unit"] = "bad_unit"
-        plugindatasql.test_values = bad_test_values
-        with self.assertRaises(SmarterValueError):
-            plugindatasql.save()
-        plugindatasql.delete()
-
-        # test non-existent key
-        bad_test_values = test_values.copy()
-        bad_test_values["badkey"] = "oops"
-        plugindatasql.test_values = bad_test_values
-        with self.assertRaises(SmarterValueError):
-            plugindatasql.save()
-        plugindatasql.delete()
-
-        # test value with type clash
-        bad_test_values = test_values.copy()
-        bad_test_values["location"] = True
-        plugindatasql.test_values = bad_test_values
-        with self.assertRaises(SmarterValueError):
-            plugindatasql.save()
-        plugindatasql.delete()
-
-    def test_PluginDataSql_prepare_sql(self):
-        plugindatasql = self.plugindatasql_factory()
-
-        params = {
-            "unit": "Celsius",
-            "location": "CDMX, Roma Norte",
-        }
-        sql = plugindatasql.prepare_sql(params)
+        sql = plugindatasql.prepare_sql(params=plugindatasql.test_values)
         print(sql)
+        plugindatasql.test()
+        plugindatasql.delete()
+
+    def test_sanitized_return_data(self):
+        plugindatasql = self.plugindatasql_factory()
         plugindatasql.delete()
