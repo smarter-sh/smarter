@@ -7,7 +7,7 @@ import re
 from abc import abstractmethod
 from functools import lru_cache
 from http import HTTPStatus
-from typing import Union
+from typing import Any, Union
 
 import requests
 import yaml
@@ -260,21 +260,13 @@ class PluginDataSqlConnection(TimestampedModel):
     """PluginDataSql Connection model."""
 
     DBMS_CHOICES = [
-        ("mysql", "MySQL"),
-        ("postgresql", "PostgreSQL"),
-        ("sqlite3", "SQLite3"),
-        ("oracle", "Oracle"),
-        ("mssqlserver", "MS SQL Server"),
-        ("sybase", "Sybase"),
+        ("django.db.backends.mysql", "MySQL"),
+        ("django.db.backends.postgresql", "PostgreSQL"),
+        ("django.db.backends.sqlite3", "SQLite3"),
+        ("django.db.backends.oracle", "Oracle"),
+        ("django.db.backends.mssql", "MS SQL Server"),
+        ("django.db.backends.sybase", "Sybase"),
     ]
-    DBMS_ENGINES = {
-        "mysql": "django.db.backends.mysql",
-        "postgresql": "django.db.backends.postgresql",
-        "sqlite3": "django.db.backends.sqlite3",
-        "oracle": "django.db.backends.oracle",
-        "mssqlserver": "django.db.backends.mssql",
-        "sybase": "django.db.backends.sybase",
-    }
     name = models.CharField(
         help_text="The name of the connection, without spaces. Example: 'HRDatabase', 'SalesDatabase', 'InventoryDatabase'.",
         max_length=255,
@@ -319,7 +311,7 @@ class PluginDataSqlConnection(TimestampedModel):
     def connect(self) -> Union[BaseDatabaseWrapper, bool]:
         databases = {
             "default": {
-                "ENGINE": self.DBMS_ENGINES[self.db_engine],
+                "ENGINE": self.db_engine,
                 "NAME": self.database,
                 "USER": self.username,
                 "PASSWORD": self.password,
@@ -336,7 +328,7 @@ class PluginDataSqlConnection(TimestampedModel):
             logger.error("db test connection failed: %s", e)
             return False
 
-    def execute_query(self, sql: str) -> Union[list, bool]:
+    def execute_query(self, sql: str) -> Union[list[tuple[Any, ...]], bool]:
         connection = self.connect()
         if not connection:
             return False
@@ -360,6 +352,9 @@ class PluginDataSqlConnection(TimestampedModel):
     def get_connection_string(self):
         """Return the connection string."""
         return f"{self.db_engine}://{self.username}@{self.hostname}:{self.port}/{self.database}"
+
+    def validate(self) -> bool:
+        return isinstance(self.connect(), BaseDatabaseWrapper)
 
     def __str__(self) -> str:
         return self.name + " - " + self.get_connection_string()

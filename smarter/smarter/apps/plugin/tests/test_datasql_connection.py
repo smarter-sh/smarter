@@ -6,6 +6,8 @@ import random
 import unittest
 
 import yaml
+from django.conf import settings
+from django.db.backends.base.base import BaseDatabaseWrapper
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
@@ -115,6 +117,41 @@ class TestPluginDataSqlConnection(unittest.TestCase):
         model_dump = self.model.spec.connection.model_dump()
 
         model_dump["account"] = self.account
+        model_dump["name"] = self.model.metadata.name
         django_model = PluginDataSqlConnection(**model_dump)
         django_model.save()
+
         self.assertIsNotNone(django_model)
+        self.assertEqual(django_model.account, self.account)
+        self.assertEqual(django_model.name, self.model.metadata.name)
+        self.assertEqual(django_model.db_engine, self.model.spec.connection.db_engine)
+        self.assertEqual(django_model.database, self.model.spec.connection.database)
+        self.assertEqual(django_model.hostname, self.model.spec.connection.hostname)
+        self.assertEqual(django_model.port, self.model.spec.connection.port)
+        self.assertEqual(django_model.username, self.model.spec.connection.username)
+        self.assertEqual(django_model.password, self.model.spec.connection.password)
+
+        django_model.delete()
+
+    def test_plugin_datasql_connection_methods(self):
+        """Test the Django model properties and built-in functions."""
+
+        cnx = PluginDataSqlConnection(
+            account=self.account,
+            name="Local Development Database",
+            db_engine=settings.DATABASES["default"]["ENGINE"],
+            database=settings.DATABASES["default"]["NAME"],
+            hostname=settings.DATABASES["default"]["HOST"],
+            port=settings.DATABASES["default"]["PORT"],
+            username=settings.DATABASES["default"]["USER"],
+            password=settings.DATABASES["default"]["PASSWORD"],
+        )
+        cnx.save()
+
+        self.assertTrue(cnx.validate())
+
+        connection = cnx.connect()
+        self.assertIsInstance(connection, BaseDatabaseWrapper)
+
+        result = cnx.execute_query(sql="SELECT count(*) FROM auth_user")
+        self.assertIsInstance(result[0][0], int)
