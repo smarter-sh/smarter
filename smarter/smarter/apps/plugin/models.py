@@ -22,6 +22,8 @@ from smarter.apps.account.models import Account, UserProfile
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.model_helpers import TimestampedModel
 
+from .manifest.enum import SAMPluginMetadataClassValues
+
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +83,12 @@ def list_of_dicts_to_dict(data: list[dict]) -> dict:
 class PluginMeta(TimestampedModel):
     """PluginMeta model."""
 
+    PLUGIN_CLASSES = [
+        (SAMPluginMetadataClassValues.STATIC.value, "PluginStatic"),
+        (SAMPluginMetadataClassValues.SQL.value, "PluginDataSql"),
+        (SAMPluginMetadataClassValues.API.value, "PluginDataSqlConnection"),
+    ]
+
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="plugin_meta")
     name = models.CharField(
         help_text="The name of the plugin. Example: 'HR Policy Update' or 'Public Relation Talking Points'.",
@@ -89,7 +97,9 @@ class PluginMeta(TimestampedModel):
     description = models.TextField(
         help_text="A brief description of the plugin. Be verbose, but not too verbose.",
     )
-    plugin_class = models.CharField(help_text="The class name of the plugin", max_length=255, default="PluginMeta")
+    plugin_class = models.CharField(
+        choices=PLUGIN_CLASSES, help_text="The class name of the plugin", max_length=255, default="PluginMeta"
+    )
     version = models.CharField(max_length=255, default="1.0.0")
     author = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="plugin_meta")
     tags = TaggableManager(blank=True)

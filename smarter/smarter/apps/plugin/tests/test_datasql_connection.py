@@ -8,10 +8,11 @@ import unittest
 import yaml
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
 from smarter.apps.plugin.manifest.models.sql_connection.model import (
     SAMPluginDataSqlConnection,
 )
-from smarter.apps.plugin.models import PluginDataSqlConnection
+from smarter.apps.plugin.models import PluginDataSqlConnection, PluginMeta
 from smarter.lib.django.user import User
 from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.loader import SAMLoader
@@ -34,6 +35,16 @@ class TestPluginDataSqlConnection(unittest.TestCase):
         self.account = Account.objects.create(company_name=f"Test_{hashed_slug}", phone_number="123-456-789")
         self.user_profile = UserProfile.objects.create(user=self.user, account=self.account, is_test=True)
 
+        self.meta_data = PluginMeta(
+            account=self.account,
+            name="Test Plugin",
+            description="Test Plugin Description",
+            plugin_class=SAMPluginMetadataClassValues.SQL.value,
+            version="1.0.0",
+            author=self.user_profile,
+        )
+        self.meta_data.save()
+
         # setup an instance of PluginDataSqlConnection() - a Django model
         # ---------------------------------------------------------------------
         # 1. load the yaml manifest file
@@ -55,6 +66,10 @@ class TestPluginDataSqlConnection(unittest.TestCase):
 
     def tearDown(self):
         """Tear down test fixtures."""
+        try:
+            self.meta_data.delete()
+        except PluginMeta.DoesNotExist:
+            pass
         try:
             self.user_profile.delete()
         except UserProfile.DoesNotExist:
@@ -87,8 +102,19 @@ class TestPluginDataSqlConnection(unittest.TestCase):
         self.assertIsNotNone(self.loader.manifest_metadata)
         self.assertIsNotNone(self.loader.manifest_spec)
 
+    def test_model(self):
+        """Test the model."""
         self.assertIsNotNone(self.model)
         self.assertEqual(self.model.apiVersion, SAMApiVersions.V1.value)
         self.assertEqual(self.model.kind, "PluginDataSqlConnection")
         self.assertIsNotNone(self.model.metadata)
         self.assertIsNotNone(self.model.spec)
+
+    def test_django_model(self):
+        """Test the Django model."""
+        model_dump = self.model.spec.connection.model_dump()
+
+        model_dump["account"] = self.account
+        django_model = PluginDataSqlConnection(**model_dump)
+        django_model.save()
+        self.assertIsNotNone(django_model)
