@@ -1,20 +1,17 @@
 # pylint: disable=W0718
 """Smarter API Plugin Manifest handler"""
 
+from django.forms.models import model_to_dict
 from django.http import HttpRequest, JsonResponse
-from taggit.models import Tag
 
 from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Account
+from smarter.apps.plugin.models import PluginDataSqlConnection
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
-from ..manifest.controller import PluginController
-from ..manifest.models.plugin.model import SAMPlugin
-from ..models import PluginMeta
-from ..plugin.base import PluginBase
-from .models.plugin.const import MANIFEST_KIND
+from ..models.sql_connection.const import MANIFEST_KIND
+from ..models.sql_connection.model import SAMPluginDataSqlConnection
 
 
 MAX_RESULTS = 1000
@@ -24,7 +21,7 @@ class SAMPluginBrokerError(SAMExceptionBase):
     """Base exception for Smarter API Plugin Broker handling."""
 
 
-class SAMPluginBroker(AbstractBroker, AccountMixin):
+class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
     """
     Smarter API Plugin Manifest Broker.This class is responsible for
     - loading, validating and parsing the Smarter Api yaml Plugin manifests
@@ -35,17 +32,14 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     """
 
     # override the base abstract manifest model with the Plugin model
-    _manifest: SAMPlugin = None
-    _plugin: PluginBase = None
-    _plugin_meta: PluginMeta = None
+    _manifest: SAMPluginDataSqlConnection = None
+    _sql_connection: PluginDataSqlConnection = None
 
     # pylint: disable=too-many-arguments
     def __init__(
         self,
         api_version: str,
-        account: Account,
         name: str = None,
-        kind: str = None,
         loader: SAMLoader = None,
         manifest: str = None,
         file_path: str = None,
@@ -61,40 +55,14 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         """
         super().__init__(
             api_version=api_version,
-            account=account,
+            account=self.account,
             name=name,
-            kind=kind,
+            kind=MANIFEST_KIND,
             loader=loader,
             manifest=manifest,
             file_path=file_path,
             url=url,
         )
-
-    @property
-    def plugin_meta(self) -> PluginMeta:
-        if self._plugin_meta:
-            return self._plugin_meta
-        if self.name and self.account:
-            try:
-                self._plugin_meta = PluginMeta.objects.get(account=self.account, name=self.name)
-            except PluginMeta.DoesNotExist:
-                pass
-        return self._plugin_meta
-
-    @property
-    def plugin(self) -> PluginBase:
-        """
-        PluginController() is a helper class to map the manifest model
-        metadata.pluginClass to an instance of the the correct plugin class.
-        """
-        if self._plugin:
-            return self._plugin
-        print("plugin() -  self.plugin_meta", self.plugin_meta)
-        print("account", self.account)
-        print("name", self.name)
-        controller = PluginController(account=self.account, manifest=self.manifest, plugin_meta=self.plugin_meta)
-        self._plugin = controller.obj
-        return self._plugin
 
     ###########################################################################
     # Smarter abstract property implementations
@@ -104,9 +72,9 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> SAMPlugin:
+    def manifest(self) -> SAMPluginDataSqlConnection:
         """
-        SAMPlugin() is a Pydantic model
+        SAMPluginDataSqlConnection() is a Pydantic model
         that is used to represent the Smarter API Plugin manifest. The Pydantic
         model is initialized with the data from the manifest loader, which is
         generally passed to the model constructor as **data. However, this top-level
@@ -117,7 +85,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         if self._manifest:
             return self._manifest
         if self.loader:
-            self._manifest = SAMPlugin(
+            self._manifest = SAMPluginDataSqlConnection(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
                 metadata=self.loader.manifest_metadata,
@@ -125,6 +93,17 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
                 status=self.loader.manifest_status,
             )
         return self._manifest
+
+    @property
+    def sql_connection(self) -> PluginDataSqlConnection:
+        if not self._sql_connection:
+            model_dump = self.manifest.spec.connection.model_dump()
+            model_dump["account"] = self.account
+            model_dump["name"] = self.manifest.metadata.name
+            self._sql_connection = PluginDataSqlConnection(**model_dump)
+            self._sql_connection.save()
+
+        return self._sql_connection
 
     ###########################################################################
     # Smarter manifest abstract method implementations
@@ -135,29 +114,21 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
 
         data = []
 
-        # generate a QuerySet of PluginMeta objects that match our search criteria
+        # generate a QuerySet of PluginDataSqlConnection objects that match our search criteria
         if name:
-            plugins = PluginMeta.objects.filter(account=self.account, name=name)
+            sql_connections = PluginDataSqlConnection.objects.filter(account=self.account, name=name)
         else:
-            if all_objects:
-                plugins = PluginMeta.objects.filter(account=self.account)
-            else:
-                if tags:
-                    tags = Tag.objects.filter(name__in=tags)
-                    plugins = PluginMeta.objects.filter(account=self.account, tags__in=tags)[:MAX_RESULTS]
-                else:
-                    plugins = PluginMeta.objects.filter(account=self.account)[:MAX_RESULTS]
+            sql_connections = PluginDataSqlConnection.objects.filter(account=self.account)
 
-        if not plugins.exists():
+        if not sql_connections.exists():
             return self.not_found_response()
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
-        for plugin_meta in plugins:
-            controller = PluginController(account=self.account, plugin_meta=plugin_meta)
+        for sql_connection in sql_connections:
             try:
-                model_dump = controller.model_dump_json()
+                model_dump = model_to_dict(sql_connection)
                 if not model_dump:
-                    raise SAMPluginBrokerError(f"Model dump failed for {self.kind} {plugin_meta.name}")
+                    raise SAMPluginBrokerError(f"Model dump failed for {self.kind} {sql_connection.name}")
                 data.append(model_dump)
             except Exception as e:
                 return self.err_response(self.get.__name__, e)
@@ -174,31 +145,24 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
 
     def apply(self, request: HttpRequest = None) -> JsonResponse:
         try:
-            self.plugin.create()
+            self.sql_connection.save()
         except Exception as e:
             return self.err_response("create", e)
-
-        if self.plugin.ready:
-            try:
-                self.plugin.save()
-                return self.success_response(operation=self.apply.__name__, data={})
-            except Exception as e:
-                return self.err_response(self.apply.__name__, e)
-        return self.not_ready_response()
+        return self.success_response(operation=self.apply.__name__, data={})
 
     def describe(self, request: HttpRequest = None) -> JsonResponse:
-        if self.plugin.ready:
+        if self.sql_connection:
             try:
-                data = self.plugin.to_json()
+                data = model_to_dict(self.sql_connection)
                 return self.success_response(operation=self.describe.__name__, data=data)
             except Exception as e:
                 return self.err_response(self.describe.__name__, e)
         return self.not_ready_response()
 
     def delete(self, request: HttpRequest = None) -> JsonResponse:
-        if self.plugin.ready:
+        if self.sql_connection:
             try:
-                self.plugin.delete()
+                self.sql_connection.delete()
                 return self.success_response(operation=self.delete.__name__, data={})
             except Exception as e:
                 return self.err_response(self.delete.__name__, e)
