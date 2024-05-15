@@ -130,7 +130,7 @@ class TestPluginDataSqlConnection(unittest.TestCase):
                     "description": "The city and state, e.g., San Francisco, CA",
                 },
             },
-            sql_query="SELECT * FROM weather WHERE location = {location} AND unit = {unit}",
+            sql_query="SELECT * FROM weather WHERE location = '{location}' AND unit = '{unit}'",
             test_values={
                 "unit": "Celsius",
                 "location": "San Francisco, CA",
@@ -147,7 +147,7 @@ class TestPluginDataSqlConnection(unittest.TestCase):
 
     def test_PluginDataSql_validate_parameter(self):
         plugindatasql = self.plugindatasql_factory()
-        self.assertIsInstance(plugindatasql.data(params=plugindatasql.parameters), dict)
+        self.assertIsInstance(plugindatasql.data(params=plugindatasql.test_values), dict)
 
         for _, param in plugindatasql.parameters.items():
             # validate parameter, no error means it succeeded
@@ -191,7 +191,6 @@ class TestPluginDataSqlConnection(unittest.TestCase):
         plugindatasql.test_values = bad_test_values
         with self.assertRaises(SmarterValueError):
             plugindatasql.save()
-        plugindatasql.delete()
 
         # test value with type clash
         bad_test_values = test_values.copy()
@@ -199,4 +198,14 @@ class TestPluginDataSqlConnection(unittest.TestCase):
         plugindatasql.test_values = bad_test_values
         with self.assertRaises(SmarterValueError):
             plugindatasql.save()
+
+    def test_PluginDataSql_prepare_sql(self):
+        plugindatasql = self.plugindatasql_factory()
+
+        params = {
+            "unit": "Celsius",
+            "location": "CDMX, Roma Norte",
+        }
+        sql = plugindatasql.prepare_sql(params)
+        print(sql)
         plugindatasql.delete()
