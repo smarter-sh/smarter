@@ -574,9 +574,9 @@ class PluginBase(ABC):
         with transaction.atomic():
             plugin_meta = PluginMeta.objects.create(**meta_data)
 
-            selector["plugin_id"] = plugin_meta.id
-            prompt["plugin_id"] = plugin_meta.id
-            plugin_data["plugin_id"] = plugin_meta.id
+            selector["plugin"] = plugin_meta
+            prompt["plugin"] = plugin_meta
+            plugin_data["plugin"] = plugin_meta
 
             PluginSelector.objects.create(**selector)
             PluginPrompt.objects.create(**prompt)

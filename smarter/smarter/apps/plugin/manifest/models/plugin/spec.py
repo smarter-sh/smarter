@@ -18,9 +18,6 @@ from smarter.apps.plugin.manifest.enum import (
 )
 from smarter.apps.plugin.manifest.models.http_request.model import HttpRequest
 from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
-from smarter.apps.plugin.manifest.models.sql_connection.model import (
-    SAMPluginDataSqlConnection,
-)
 from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
@@ -171,9 +168,7 @@ class SAMPluginSpecDataSql(BaseModel):
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".data.sqlData"
 
-    connection: SAMPluginDataSqlConnection = Field(
-        ..., description=f"{class_identifier}.connection[obj]: an sql server connection"
-    )
+    connection: str = Field(..., description=f"{class_identifier}.connection[obj]: an sql server connection")
     parameters: Optional[dict] = Field(
         None,
         description=(

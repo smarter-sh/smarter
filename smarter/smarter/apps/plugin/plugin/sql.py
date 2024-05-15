@@ -2,7 +2,7 @@
 
 import logging
 
-from smarter.apps.plugin.models import PluginDataSql
+from smarter.apps.plugin.models import PluginDataSql, PluginDataSqlConnection
 from smarter.apps.plugin.serializers import PluginDataSqlSerializer
 from smarter.common.exceptions import SmarterConfigurationError
 
@@ -45,10 +45,15 @@ class PluginSql(PluginBase):
     def plugin_data_django_model(self) -> dict:
         """Return the plugin data definition as a json object."""
         # recast the Pydantic model to the PluginDataSql Django ORM model
+        plugin_data_sqlconnection = PluginDataSqlConnection.objects.get(
+            account=self.user_profile.account, name=self.manifest.spec.data.sqlData.connection
+        )
+        sql_data = self.manifest.spec.data.sqlData.model_dump()
+        sql_data["connection"] = plugin_data_sqlconnection
         return {
             "plugin": self.plugin_meta,
             "description": self.manifest.spec.data.description,
-            "sql_data": self.manifest.spec.data.sqlData,
+            **sql_data,
         }
 
     @property
