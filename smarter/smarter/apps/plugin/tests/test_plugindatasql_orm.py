@@ -1,4 +1,4 @@
-"""Test PluginDataSqlConnection class"""
+"""Test PluginDataSql Django ORM"""
 
 import hashlib
 import os
@@ -6,8 +6,6 @@ import random
 import unittest
 
 import yaml
-from django.conf import settings
-from django.db.backends.base.base import BaseDatabaseWrapper
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
@@ -17,7 +15,12 @@ from smarter.apps.plugin.manifest.models.sql_connection.const import (
 from smarter.apps.plugin.manifest.models.sql_connection.model import (
     SAMPluginDataSqlConnection,
 )
-from smarter.apps.plugin.models import PluginDataSqlConnection, PluginMeta
+from smarter.apps.plugin.models import (
+    PluginDataSql,
+    PluginDataSqlConnection,
+    PluginMeta,
+)
+from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.user import User
 from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.loader import SAMLoader
@@ -27,7 +30,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 class TestPluginDataSqlConnection(unittest.TestCase):
-    """Test PluginDataSqlConnection class"""
+    """Test PluginDataSql Django ORM"""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -69,8 +72,18 @@ class TestPluginDataSqlConnection(unittest.TestCase):
             status=self.loader.manifest_status,
         )
 
+        model_dump = self.model.spec.connection.model_dump()
+        model_dump["account"] = self.account
+        model_dump["name"] = self.model.metadata.name
+        self.plugindata_sqlconnection = PluginDataSqlConnection(**model_dump)
+        self.plugindata_sqlconnection.save()
+
     def tearDown(self):
         """Tear down test fixtures."""
+        try:
+            self.plugindata_sqlconnection.delete()
+        except PluginDataSqlConnection.DoesNotExist:
+            pass
         try:
             self.meta_data.delete()
         except PluginMeta.DoesNotExist:
@@ -100,61 +113,54 @@ class TestPluginDataSqlConnection(unittest.TestCase):
             },
         }
 
-    def test_manifest(self):
-        """Test that the Loader can load the manifest."""
-        self.assertEqual(self.loader.manifest_api_version, SAMApiVersions.V1.value)
-        self.assertEqual(self.loader.manifest_kind, SQL_CONNECTION_KIND)
-        self.assertIsNotNone(self.loader.manifest_metadata)
-        self.assertIsNotNone(self.loader.manifest_spec)
-
-    def test_model(self):
-        """Test that the Pydantic model populates from the manifest."""
-        self.assertIsNotNone(self.model)
-        self.assertEqual(self.model.apiVersion, SAMApiVersions.V1.value)
-        self.assertEqual(self.model.kind, SQL_CONNECTION_KIND)
-        self.assertIsNotNone(self.model.metadata)
-        self.assertIsNotNone(self.model.spec)
-
-    def test_django_model(self):
-        """Test that the Django model can be initialized from the Pydantic model."""
-        model_dump = self.model.spec.connection.model_dump()
-
-        model_dump["account"] = self.account
-        model_dump["name"] = self.model.metadata.name
-        django_model = PluginDataSqlConnection(**model_dump)
-        django_model.save()
-
-        self.assertIsNotNone(django_model)
-        self.assertEqual(django_model.account, self.account)
-        self.assertEqual(django_model.name, self.model.metadata.name)
-        self.assertEqual(django_model.db_engine, self.model.spec.connection.db_engine)
-        self.assertEqual(django_model.database, self.model.spec.connection.database)
-        self.assertEqual(django_model.hostname, self.model.spec.connection.hostname)
-        self.assertEqual(django_model.port, self.model.spec.connection.port)
-        self.assertEqual(django_model.username, self.model.spec.connection.username)
-        self.assertEqual(django_model.password, self.model.spec.connection.password)
-
-        django_model.delete()
-
-    def test_plugin_datasql_connection_methods(self):
-        """use the local dev db settings to Test the Django model properties and built-in functions."""
-
-        cnx = PluginDataSqlConnection(
-            account=self.account,
-            name="Local Development Database",
-            db_engine=settings.DATABASES["default"]["ENGINE"],
-            database=settings.DATABASES["default"]["NAME"],
-            hostname=settings.DATABASES["default"]["HOST"],
-            port=settings.DATABASES["default"]["PORT"],
-            username=settings.DATABASES["default"]["USER"],
-            password=settings.DATABASES["default"]["PASSWORD"],
+    def plugindatasql_factory(self) -> PluginDataSql:
+        plugindatasql = PluginDataSql(
+            plugin=self.meta_data,
+            connection=self.plugindata_sqlconnection,
+            parameters={
+                "unit": {
+                    "type": "str",
+                    "enum": ["Celsius", "Fahrenheit"],
+                    "required": True,
+                    "description": "The temperature unit to use. Infer this from the user location.",
+                }
+            },
+            sql_query="SELECT * FROM weather WHERE location = {location} AND unit = {unit}",
+            test_values={},
+            limit=10,
         )
-        cnx.save()
+        plugindatasql.save()
+        return plugindatasql
 
-        self.assertTrue(cnx.validate())
+    def test_create_PluginDataSql(self):
+        """Test create PluginDataSql"""
+        plugindatasql = self.plugindatasql_factory()
+        plugindatasql.delete()
 
-        connection = cnx.connect()
-        self.assertIsInstance(connection, BaseDatabaseWrapper)
+    def test_PluginDataSql_methods(self):
+        plugindatasql = self.plugindatasql_factory()
+        self.assertIsInstance(plugindatasql.data(params=plugindatasql.parameters), dict)
 
-        result = cnx.execute_query(sql="SELECT count(*) FROM auth_user")
-        self.assertIsInstance(result[0][0], int)
+        # {'type': 'str', 'enum': ['Celsius', 'Fahrenheit'], 'required': True, 'description': 'The temperature unit to use. Infer this from the user location.'}
+        for _, param in plugindatasql.parameters.items():
+            print("param value: ", param)
+
+            # validate parameter, no error means it succeeded
+            plugindatasql.validate_parameter(param=param)
+
+            bad_param = param.copy()
+            bad_param["type"] = "bad_type"
+            with self.assertRaises(SmarterValueError):
+                plugindatasql.validate_parameter(param=bad_param)
+
+            bad_param = param.copy()
+            bad_param["enum"] = "bad_enum"
+            with self.assertRaises(SmarterValueError):
+                plugindatasql.validate_parameter(param=bad_param)
+
+            bad_param = param.copy()
+            bad_param["required"] = "bad_required"
+            with self.assertRaises(SmarterValueError):
+                plugindatasql.validate_parameter(param=bad_param)
+
+        plugindatasql.delete()

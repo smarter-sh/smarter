@@ -426,6 +426,7 @@ class PluginDataSql(PluginDataBase):
             param_type = param["type"]
             param_enum = param["enum"] if "enum" in param else None
             param_description = param["description"]
+            param_required = param["required"] if "required" in param else False
         except KeyError as e:
             raise SmarterValueError(
                 f"{self.name} PluginSql custom_tool() error: missing required parameter key: {e}"
@@ -433,12 +434,17 @@ class PluginDataSql(PluginDataBase):
 
         if param_type not in PluginDataSql.DataTypes.all():
             raise SmarterValueError(
-                f"{self.plugin.name} PluginSql custom_tool() error: invalid parameter type: {param_type}"
+                f"{self.plugin.name} PluginSql custom_tool() error: invalid parameter type: {param_type}. Valid types are: {PluginDataSql.DataTypes.all()}"
             )
 
         if param_enum and not isinstance(param_enum, list):
             raise SmarterValueError(
                 f"{self.plugin.name} PluginSql custom_tool() error: invalid parameter enum: {param_enum}. Must be a list."
+            )
+
+        if not isinstance(param_required, bool):
+            raise SmarterValueError(
+                f"{self.plugin.name} PluginSql custom_tool() error: invalid parameter required: {param_required}. Must be a boolean."
             )
 
         if not isinstance(param_description, str):
