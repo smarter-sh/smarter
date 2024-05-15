@@ -123,10 +123,18 @@ class TestPluginDataSqlConnection(unittest.TestCase):
                     "enum": ["Celsius", "Fahrenheit"],
                     "required": True,
                     "description": "The temperature unit to use. Infer this from the user location.",
-                }
+                },
+                "location": {
+                    "type": "str",
+                    "required": True,
+                    "description": "The city and state, e.g., San Francisco, CA",
+                },
             },
             sql_query="SELECT * FROM weather WHERE location = {location} AND unit = {unit}",
-            test_values={},
+            test_values={
+                "unit": "Celsius",
+                "location": "San Francisco, CA",
+            },
             limit=10,
         )
         plugindatasql.save()
@@ -137,14 +145,11 @@ class TestPluginDataSqlConnection(unittest.TestCase):
         plugindatasql = self.plugindatasql_factory()
         plugindatasql.delete()
 
-    def test_PluginDataSql_methods(self):
+    def test_PluginDataSql_validate_parameter(self):
         plugindatasql = self.plugindatasql_factory()
         self.assertIsInstance(plugindatasql.data(params=plugindatasql.parameters), dict)
 
-        # {'type': 'str', 'enum': ['Celsius', 'Fahrenheit'], 'required': True, 'description': 'The temperature unit to use. Infer this from the user location.'}
         for _, param in plugindatasql.parameters.items():
-            print("param value: ", param)
-
             # validate parameter, no error means it succeeded
             plugindatasql.validate_parameter(param=param)
 
@@ -163,4 +168,35 @@ class TestPluginDataSqlConnection(unittest.TestCase):
             with self.assertRaises(SmarterValueError):
                 plugindatasql.validate_parameter(param=bad_param)
 
+        plugindatasql.delete()
+
+    def test_PluginDataSql_validate_test_values(self):
+        plugindatasql = self.plugindatasql_factory()
+
+        # validate test values, no error means it succeeded
+        plugindatasql.validate_test_values()
+        test_values = plugindatasql.test_values.copy()
+
+        # test value that is not in the enum list
+        bad_test_values = test_values.copy()
+        bad_test_values["unit"] = "bad_unit"
+        plugindatasql.test_values = bad_test_values
+        with self.assertRaises(SmarterValueError):
+            plugindatasql.save()
+        plugindatasql.delete()
+
+        # test non-existent key
+        bad_test_values = test_values.copy()
+        bad_test_values["badkey"] = "oops"
+        plugindatasql.test_values = bad_test_values
+        with self.assertRaises(SmarterValueError):
+            plugindatasql.save()
+        plugindatasql.delete()
+
+        # test value with type clash
+        bad_test_values = test_values.copy()
+        bad_test_values["location"] = True
+        plugindatasql.test_values = bad_test_values
+        with self.assertRaises(SmarterValueError):
+            plugindatasql.save()
         plugindatasql.delete()

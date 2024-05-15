@@ -470,20 +470,24 @@ class PluginDataSql(PluginDataBase):
         for key, value in self.test_values.items():
             if key not in self.parameters.keys():
                 raise SmarterValueError(f"Sql parameter '{key}' not found in parameters.")
-            if self.parameters[key] == "int" and not isinstance(value, int):
+            if self.parameters[key]["type"] == "int" and not isinstance(value, int):
                 raise SmarterValueError(f"Parameter '{key}' must be an integer.")
-            if self.parameters[key] == "str" and not isinstance(value, str):
+            if self.parameters[key]["type"] == "str" and not isinstance(value, str):
                 raise SmarterValueError(f"Parameter '{key}' must be a string.")
-            if self.parameters[key] == "float" and not isinstance(value, float):
+            if self.parameters[key]["type"] == "float" and not isinstance(value, float):
                 raise SmarterValueError(f"Parameter '{key}' must be a float.")
-            if self.parameters[key] == "bool" and not isinstance(value, bool):
+            if self.parameters[key]["type"] == "bool" and not isinstance(value, bool):
                 raise SmarterValueError(f"Parameter '{key}' must be a boolean.")
-            if self.parameters[key] == "list" and not isinstance(value, list):
+            if self.parameters[key]["type"] == "list" and not isinstance(value, list):
                 raise SmarterValueError(f"Parameter '{key}' must be a list.")
-            if self.parameters[key] == "dict" and not isinstance(value, dict):
+            if self.parameters[key]["type"] == "dict" and not isinstance(value, dict):
                 raise SmarterValueError(f"Parameter '{key}' must be a dict.")
-            if self.parameters[key] == "null" and value is not None:
+            if self.parameters[key]["type"] == "null" and value is not None:
                 raise SmarterValueError(f"Parameter '{key}' must be null.")
+
+            enums = self.parameters[key].get("enum")
+            if enums and value not in enums:
+                raise SmarterValueError(f"Parameter '{key}' must be one of {enums}.")
         return True
 
     def validate_params(self, params: dict) -> str:
