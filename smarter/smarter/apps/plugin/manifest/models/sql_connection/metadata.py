@@ -4,7 +4,7 @@ import os
 from typing import ClassVar
 
 # Plugin
-from smarter.apps.plugin.manifest.const import MANIFEST_KIND
+from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
 from smarter.lib.manifest.models import AbstractSAMMetadataBase
 
 

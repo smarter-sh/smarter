@@ -2,16 +2,16 @@
 
 import os
 from enum import Enum
-from typing import ClassVar, List, Optional
+from typing import ClassVar, Optional
 
 from pydantic import Field, field_validator
 
-from smarter.apps.plugin.manifest.const import MANIFEST_KIND
+from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBaseModel
 
-from .enum import DbEngine
+from .enum import DbEngines
 
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
@@ -32,11 +32,11 @@ class SqlConnection(SmarterBaseModel):
         MSSQL = 1433
 
     DEFAULT_PORT_ASSIGNMENTS: ClassVar[list] = [
-        (DbEngine.MYSQL.name, PortAssignmentDefaults.MYSQL.value),
-        (DbEngine.POSTGRES.name, PortAssignmentDefaults.POSTGRES.value),
-        (DbEngine.ORACLE.name, PortAssignmentDefaults.ORACLE.value),
-        (DbEngine.SQLITE.name, PortAssignmentDefaults.SQLITE.value),
-        (DbEngine.MSSQL.name, PortAssignmentDefaults.MSSQL.value),
+        (DbEngines.MYSQL.name, PortAssignmentDefaults.MYSQL.value),
+        (DbEngines.POSTGRES.name, PortAssignmentDefaults.POSTGRES.value),
+        (DbEngines.ORACLE.name, PortAssignmentDefaults.ORACLE.value),
+        (DbEngines.SQLITE.name, PortAssignmentDefaults.SQLITE.value),
+        (DbEngines.MSSQL.name, PortAssignmentDefaults.MSSQL.value),
     ]
     PRETTY_PORT_ASSIGNMENTS: ClassVar[list] = ", ".join(
         [f"{engine}: {port}" for engine, port in DEFAULT_PORT_ASSIGNMENTS]
@@ -44,7 +44,7 @@ class SqlConnection(SmarterBaseModel):
 
     db_engine: str = Field(
         ...,
-        description=f"a valid SQL database engine.  Common db_engines: {DbEngine.all_values()}",
+        description=f"a valid SQL database engine.  Common db_engines: {DbEngines.all_values()}",
     )
     hostname: str = Field(
         ...,
@@ -70,13 +70,13 @@ class SqlConnection(SmarterBaseModel):
 
     @field_validator("db_engine")
     def validate_db_engine(cls, v) -> str:
-        if v in DbEngine.all_values():
+        if v in DbEngines.all_values():
             return v
-        raise SAMValidationError(f"Invalid SQL connection engine: {v}. Must be one of {DbEngine.all_values()}")
+        raise SAMValidationError(f"Invalid SQL connection engine: {v}. Must be one of {DbEngines.all_values()}")
 
     @field_validator("hostname")
     def validate_host(cls, v) -> str:
-        if SmarterValidator.is_valid_domain(v):
+        if SmarterValidator.is_valid_cleanstring(v):
             return v
         raise SAMValidationError(f"Invalid SQL connection host: {v}. Must be a valid domain, IPv4, or IPv6 address.")
 

@@ -11,6 +11,9 @@ from django.db.backends.base.base import BaseDatabaseWrapper
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
+from smarter.apps.plugin.manifest.models.sql_connection.const import (
+    MANIFEST_KIND as SQL_CONNECTION_KIND,
+)
 from smarter.apps.plugin.manifest.models.sql_connection.model import (
     SAMPluginDataSqlConnection,
 )
@@ -98,22 +101,22 @@ class TestPluginDataSqlConnection(unittest.TestCase):
         }
 
     def test_manifest(self):
-        """Test the manifest."""
+        """Test that the Loader can load the manifest."""
         self.assertEqual(self.loader.manifest_api_version, SAMApiVersions.V1.value)
-        self.assertEqual(self.loader.manifest_kind, "PluginDataSqlConnection")
+        self.assertEqual(self.loader.manifest_kind, SQL_CONNECTION_KIND)
         self.assertIsNotNone(self.loader.manifest_metadata)
         self.assertIsNotNone(self.loader.manifest_spec)
 
     def test_model(self):
-        """Test the model."""
+        """Test that the Pydantic model populates from the manifest."""
         self.assertIsNotNone(self.model)
         self.assertEqual(self.model.apiVersion, SAMApiVersions.V1.value)
-        self.assertEqual(self.model.kind, "PluginDataSqlConnection")
+        self.assertEqual(self.model.kind, SQL_CONNECTION_KIND)
         self.assertIsNotNone(self.model.metadata)
         self.assertIsNotNone(self.model.spec)
 
     def test_django_model(self):
-        """Test the Django model."""
+        """Test that the Django model can be initialized from the Pydantic model."""
         model_dump = self.model.spec.connection.model_dump()
 
         model_dump["account"] = self.account
@@ -134,7 +137,7 @@ class TestPluginDataSqlConnection(unittest.TestCase):
         django_model.delete()
 
     def test_plugin_datasql_connection_methods(self):
-        """Test the Django model properties and built-in functions."""
+        """use the local dev db settings to Test the Django model properties and built-in functions."""
 
         cnx = PluginDataSqlConnection(
             account=self.account,

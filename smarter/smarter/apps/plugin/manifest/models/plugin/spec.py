@@ -8,7 +8,6 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlparse import parse as sql_parse
 from sqlparse.exceptions import SQLParseError
 
-from smarter.apps.plugin.manifest.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginMetadataClass,
     SAMPluginMetadataClassValues,
@@ -18,6 +17,7 @@ from smarter.apps.plugin.manifest.enum import (
     SAMPluginSpecSelectorKeys,
 )
 from smarter.apps.plugin.manifest.models.http_request.model import HttpRequest
+from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.sql_connection.model import (
     SAMPluginDataSqlConnection,
 )

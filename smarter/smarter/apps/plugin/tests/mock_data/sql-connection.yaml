@@ -7,10 +7,11 @@ metadata:
   version: 0.1.0
 spec:
   connection:
+    # these are the DATABASE["default"] local settings values for the Django backing database
     name: default
-    db_engine: mysql
-    hostname: localhost
+    db_engine: django.db.backends.mysql
+    hostname: smarter-mysql
     port: 3306
-    username: admin
+    username: smarter
     password: smarter
     database: smarter
