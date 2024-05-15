@@ -163,7 +163,16 @@ class PluginPrompt(TimestampedModel):
         return str(self.plugin.name)
 
 
-class PluginDataAbstractBase(ABC, TimestampedModel):
+from abc import ABCMeta
+
+from django.db.models.base import ModelBase
+
+
+class PluginDataMeta(ModelBase, ABCMeta):
+    pass
+
+
+class PluginDataAbstractBase(metaclass=PluginDataMeta):
     """PluginDataAbstractBase model."""
 
     plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_data")
@@ -181,7 +190,7 @@ class PluginDataAbstractBase(ABC, TimestampedModel):
         raise NotImplementedError
 
 
-class PluginDataStatic(PluginDataAbstractBase):
+class PluginDataStatic(PluginDataAbstractBase, TimestampedModel):
     """PluginDataStatic model."""
 
     static_data = models.JSONField(
@@ -352,7 +361,7 @@ class PluginDataSqlConnection(TimestampedModel):
         return self.name + " - " + self.get_connection_string()
 
 
-class PluginDataSql(PluginDataAbstractBase):
+class PluginDataSql(PluginDataAbstractBase, TimestampedModel):
     """PluginDataSql model."""
 
     class DataTypes:

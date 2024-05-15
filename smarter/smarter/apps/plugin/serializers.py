@@ -140,7 +140,7 @@ class PluginDataSqlConnectionSerializer(serializers.ModelSerializer):
 class PluginDataSqlSerializer(serializers.ModelSerializer):
     """PluginDataSql model serializer."""
 
-    plugin = serializers.StringRelatedField(slug_field="id")
+    plugin = serializers.SlugRelatedField(slug_field="id", queryset=PluginMeta.objects.all())
     connection = PluginDataSqlConnectionSerializer(read_only=True)
 
     # pylint: disable=missing-class-docstring
