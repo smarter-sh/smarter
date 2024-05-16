@@ -1,0 +1,29 @@
+---
+apiVersion: smarter.sh/v1
+kind: Chatbot
+metadata:
+  name: TestChatbot
+  description: chatbot for running unit test
+  version: 1.0.0
+spec:
+  config:
+    deployed: true
+    defaultModel: gpt-3.5-turbo
+    defaultTemperature: 0.5
+    defaultMax_tokens: 512
+    appName: Test Chatbot
+    appAssistant: Tatiana
+    appWelcome_message: Welcome to Test Chatbot! How can I help you today?
+    appExample_prompts: ["What is the weather in New York?", "Tell me a joke", "What is the capital of France?"]
+    appPlaceholder: "Ask me anything..."
+    appInfo_url: https://smarter.sh
+    appBackground_image_url: https://smarter.sh/assets/img/bg.jpg
+    appLogo_url: https://smarter.sh/assets/img/logo.png
+    appFile_attachment: false
+    subdomain:
+      enabled: true
+      name: test
+    customDomain:
+      enabled: false
+      domain: ""
+  plugins:
