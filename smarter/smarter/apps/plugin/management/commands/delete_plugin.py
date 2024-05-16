@@ -3,6 +3,7 @@
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account
+from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.static import PluginStatic
 
@@ -35,6 +36,7 @@ class Command(BaseCommand):
         except PluginMeta.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"Plugin {name} does not exist."))
 
-        plugin = PluginStatic(plugin_id=plugin_meta.id)
+        controller = PluginController(account=account, plugin_meta=plugin_meta)
+        plugin = controller.obj
         plugin.delete()
         self.stdout.write(self.style.SUCCESS(f"Plugin {name} has been deleted."))
