@@ -12,7 +12,6 @@
 ![Unit Tests](https://github.com/QueriumCorp/smarter/actions/workflows/test.yml/badge.svg?branch=main)
 ![Release Status](https://github.com/QueriumCorp/smarter/actions/workflows/release.yml/badge.svg?branch=main)
 ![Auto Assign](https://github.com/QueriumCorp/smarter/actions/workflows/auto-assign.yml/badge.svg)
-[![Release Notes](https://img.shields.io/github/release/QueriumCorp/smarter)](https://github.com/QueriumCorp/smarter/releases)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![hack.d Lawrence McDaniel](https://img.shields.io/badge/hack.d-Lawrence%20McDaniel-orange.svg)](https://lawrencemcdaniel.com)
 
