@@ -9,17 +9,16 @@ from django.test import Client
 
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
-from smarter.lib.django.user import User
+from smarter.lib.django.user import User, UserType
 
 from ..models import PluginMeta
-from ..plugin.static import PluginStatic
 from ..utils import add_example_plugins
 
 
 class TestPluginUrls(unittest.TestCase):
     """Test Account API end points."""
 
-    user: User
+    user: UserType
 
     def setUp(self):
         """Set up test fixtures."""

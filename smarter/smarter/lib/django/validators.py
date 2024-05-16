@@ -109,6 +109,12 @@ class SmarterValidator:
         if not re.match(SmarterValidator.VALID_UUID_PATTERN, uuid):
             raise SmarterValueError(f"Invalid UUID {uuid}")
 
+    @staticmethod
+    def validate_clean_string(v: str) -> None:
+        """Validate clean string format"""
+        if not re.match(SmarterValidator.VALID_CLEAN_STRING, v):
+            raise SmarterValueError(f"Invalid clean string {v}")
+
     # --------------------------------------------------------------------------
     # boolean helpers
     # --------------------------------------------------------------------------
@@ -176,6 +182,14 @@ class SmarterValidator:
     def is_valid_uuid(uuid: str) -> bool:
         try:
             SmarterValidator.validate_uuid(uuid)
+            return True
+        except SmarterValueError:
+            return False
+
+    @staticmethod
+    def is_valid_cleanstring(v: str) -> bool:
+        try:
+            SmarterValidator.validate_clean_string(v)
             return True
         except SmarterValueError:
             return False

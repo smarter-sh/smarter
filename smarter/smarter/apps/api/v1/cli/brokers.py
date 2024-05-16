@@ -9,7 +9,10 @@ the necessary operations to facilitate get, post, put, and delete operations.
 
 from typing import Dict, Type
 
-from smarter.apps.plugin.manifest.broker import SAMPluginBroker
+from smarter.apps.plugin.manifest.brokers.plugin import SAMPluginBroker
+from smarter.apps.plugin.manifest.brokers.sql_connection import (
+    SAMPluginDataSqlConnectionBroker,
+)
 from smarter.lib.manifest.broker import AbstractBroker, BrokerNotImplemented
 
 from ..manifests.enum import SAMKinds
@@ -17,6 +20,7 @@ from ..manifests.enum import SAMKinds
 
 BROKERS: Dict[str, Type[AbstractBroker]] = {
     SAMKinds.PLUGIN.value: SAMPluginBroker,
+    SAMKinds.SQL_CONNECTION.value: SAMPluginDataSqlConnectionBroker,
     SAMKinds.ACCOUNT.value: BrokerNotImplemented,
     SAMKinds.USER.value: BrokerNotImplemented,
     SAMKinds.CHAT.value: BrokerNotImplemented,
