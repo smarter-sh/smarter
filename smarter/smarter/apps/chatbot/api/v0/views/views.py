@@ -25,7 +25,7 @@ from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.models import PluginMeta
 from smarter.lib.django.user import User
 
-from .serializers import (
+from ..serializers import (
     ChatBotAPIKeySerializer,
     ChatBotCustomDomainSerializer,
     ChatBotFunctionsSerializer,

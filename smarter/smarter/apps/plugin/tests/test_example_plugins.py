@@ -2,14 +2,13 @@
 """Test API end points."""
 
 # python stuff
-import os
 import unittest
 
 from django.test import Client
 
 # our stuff
-from smarter.apps.account.models import Account, UserProfile
-from smarter.lib.django.user import User, UserType
+from smarter.apps.account.tests.factories import admin_user_factory
+from smarter.lib.django.user import UserType
 
 from ..models import PluginMeta
 from ..utils import add_example_plugins
@@ -22,23 +21,7 @@ class TestPluginUrls(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        username = "testuser_" + os.urandom(4).hex()
-        self.user = User.objects.create(
-            username=username, password="12345", is_staff=True, is_active=True, is_superuser=True
-        )
-        self.account = Account.objects.create(
-            company_name="Test Company",
-            phone_number="1234567890",
-            address1="123 Test St",
-            address2="Apt 1",
-            city="Test City",
-            state="TX",
-        )
-        self.user_profile = UserProfile.objects.create(
-            user=self.user,
-            account=self.account,
-            is_test=True,
-        )
+        self.user, self.account, self.user_profile = admin_user_factory()
         add_example_plugins(user_profile=self.user_profile)
         self.client = Client()
         self.client.force_login(self.user)

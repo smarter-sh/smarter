@@ -1,13 +1,11 @@
 """Tests for manage.py create_plugin."""
 
-import os
 import unittest
 
 from django.core.management import call_command
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.tests.factories import admin_user_factory
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
-from smarter.lib.django.user import User
 
 
 class ManageCommandCreatePluginTestCase(unittest.TestCase):
@@ -17,14 +15,7 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
         """Set up test fixtures."""
         self.file_path = get_test_file_path("everlasting-gobstopper.yaml")
         self.plugin_name = "MYEverlastingSUPERDUPERGobstopper"
-
-        # create a 4-digit random string of alphanumeric characters
-        username = "testuser_" + os.urandom(4).hex()
-        self.user = User.objects.create(
-            username=username, password="12345", is_active=True, is_staff=True, is_superuser=False
-        )
-        self.account = Account.objects.create(company_name="Test Account")
-        self.user_profile = UserProfile.objects.create(user=self.user, account=self.account, is_test=True)
+        self.user, self.account, self.user_profile = admin_user_factory()
 
     def tearDown(self):
         """Clean up test fixtures."""
