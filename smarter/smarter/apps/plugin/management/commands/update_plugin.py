@@ -6,7 +6,6 @@ from django.core.management.base import BaseCommand
 from smarter.apps.account.models import Account
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
-from smarter.apps.plugin.models import PluginMeta
 from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -24,7 +23,6 @@ class Command(BaseCommand):
         """create the plugin."""
         account_number = options["account_number"]
         file_path = options["plugin_file_path"]
-        plugin_meta: PluginMeta = None
 
         account = Account.objects.get(account_number=account_number)
         loader = SAMLoader(
