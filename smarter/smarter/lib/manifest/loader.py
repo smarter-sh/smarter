@@ -198,6 +198,21 @@ class SAMLoader:
     def formatted_data(self) -> str:
         return json.dumps(self.json_data, indent=4)
 
+    def pydantic_model_dump(self) -> dict:
+        """
+        Returns a Pydantic model of the manifest data. This *SHOULD* be
+        readable by any descedent of the AbstractSAMBase class using
+        this syntax:
+            `SAMObject(**loader.pydantic_model_dump())`
+        """
+        return {
+            "apiVersion": self.manifest_api_version,
+            "kind": self.manifest_kind,
+            "metadata": self.manifest_metadata,
+            "spec": self.manifest_spec,
+            "status": self.manifest_status,
+        }
+
     # -------------------------------------------------------------------------
     # class methods
     # -------------------------------------------------------------------------
