@@ -17,7 +17,6 @@ from smarter.apps.plugin.models import (
     PluginMeta,
 )
 from smarter.lib.django.user import User
-from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.loader import SAMLoader
 
 from .factories import plugin_meta_factory
@@ -49,7 +48,7 @@ class TestPluginDataSqlConnection(unittest.TestCase):
             manifest = yaml.safe_load(file)
 
         # 2. initialize a SAMLoader object with the manifest raw data
-        self.loader = SAMLoader(api_version=SAMApiVersions.V1.value, manifest=manifest)
+        self.loader = SAMLoader(manifest=manifest)
 
         # 3. create a SAMPluginDataSqlConnection pydantic model from the loader
         self.model = SAMPluginDataSqlConnection(**self.loader.pydantic_model_dump())

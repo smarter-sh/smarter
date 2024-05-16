@@ -105,7 +105,7 @@ class SAMLoader:
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        api_version: str,
+        api_version: str = SAMApiVersions.V1.value,
         kind: str = None,
         manifest: str = None,
         file_path: str = None,

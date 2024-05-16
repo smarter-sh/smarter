@@ -45,16 +45,9 @@ class TestPluginDataSql(unittest.TestCase):
             connection_manifest = yaml.safe_load(file)
 
         # 2. initialize a SAMLoader object with the manifest raw data
-        self.connection_loader = SAMLoader(api_version=SAMApiVersions.V1.value, manifest=connection_manifest)
+        self.connection_loader = SAMLoader(manifest=connection_manifest)
 
         # 3. create a SAMPluginDataSqlConnection pydantic model from the loader
-        # self.connection_model = SAMPluginDataSqlConnection(
-        #     apiVersion=self.connection_loader.manifest_api_version,
-        #     kind=self.connection_loader.manifest_kind,
-        #     metadata=self.connection_loader.manifest_metadata,
-        #     spec=self.connection_loader.manifest_spec,
-        #     status=self.connection_loader.manifest_status,
-        # )
         self.connection_model = SAMPluginDataSqlConnection(**self.connection_loader.pydantic_model_dump())
 
         # 4. create the connection record
@@ -72,7 +65,7 @@ class TestPluginDataSql(unittest.TestCase):
             plugin_manifest = yaml.safe_load(file)
 
         # 2. initialize a SAMLoader object with the manifest raw data
-        self.plugin_loader = SAMLoader(api_version=SAMApiVersions.V1.value, manifest=plugin_manifest)
+        self.plugin_loader = SAMLoader(manifest=plugin_manifest)
 
         # 3. create a SAMPlugin pydantic model from the loader
         self.sam_plugin = SAMPlugin(**self.plugin_loader.pydantic_model_dump())
