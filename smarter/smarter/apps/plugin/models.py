@@ -279,6 +279,10 @@ class PluginDataSqlConnection(TimestampedModel):
         choices=DBMS_CHOICES,
     )
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="plugin_data_sql_connections")
+    description = models.TextField(
+        help_text="A brief description of the connection. Be verbose, but not too verbose.",
+    )
+    version = models.CharField(max_length=255, default="1.0.0")
     hostname = models.CharField(max_length=255)
     port = models.IntegerField()
     database = models.CharField(max_length=255)
