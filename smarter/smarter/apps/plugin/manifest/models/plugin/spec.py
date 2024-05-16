@@ -8,13 +8,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlparse import parse as sql_parse
 from sqlparse.exceptions import SQLParseError
 
-from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
-from smarter.lib.django.validators import SmarterValidator
-from smarter.lib.manifest.exceptions import SAMValidationError
-from smarter.lib.manifest.models import AbstractSAMSpecBase
-
-from ..const import MANIFEST_KIND
-from ..enum import (
+from smarter.apps.plugin.manifest.enum import (
     SAMPluginMetadataClass,
     SAMPluginMetadataClassValues,
     SAMPluginSpecKeys,
@@ -22,8 +16,12 @@ from ..enum import (
     SAMPluginSpecSelectorKeyDirectiveValues,
     SAMPluginSpecSelectorKeys,
 )
-from .http_request import HttpRequest
-from .sql_connection import SqlConnection
+from smarter.apps.plugin.manifest.models.http_request.model import HttpRequest
+from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
+from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
+from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.manifest.exceptions import SAMValidationError
+from smarter.lib.manifest.models import AbstractSAMSpecBase
 
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
@@ -170,13 +168,34 @@ class SAMPluginSpecDataSql(BaseModel):
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".data.sqlData"
 
-    connection: SqlConnection = Field(..., description=f"{class_identifier}.connection[obj]: an sql server connection")
-    sql: str = Field(
+    connection: str = Field(..., description=f"{class_identifier}.connection[obj]: an sql server connection")
+    parameters: Optional[dict] = Field(
+        None,
+        description=(
+            f"{class_identifier}.parameters[obj]: a dictionary of parameters to use in the SQL query. "
+            "Example: {'company_id': 'int'}"
+        ),
+    )
+    sql_query: str = Field(
         ...,
         description=f"{class_identifier}.sql[str]: a valid SQL query. Example: 'SELECT * FROM customers WHERE id = 100;'",  # nosec
     )
+    test_values: Optional[dict] = Field(
+        None,
+        description=(
+            f"{class_identifier}.test_values[obj]: a dictionary of test values to use in the SQL query. "
+            "Example: {'company_id': 100}"
+        ),
+    )
+    limit: Optional[int] = Field(
+        None,
+        description=(
+            f"{class_identifier}.limit[int]: an optional limit to the number of rows returned by the SQL query. "
+            "Example: 100"
+        ),
+    )
 
-    @field_validator("sql")
+    @field_validator("sql_query")
     def validate_sql(cls, v) -> str:
         try:
             sql_parse(v)

@@ -197,6 +197,7 @@ def handler(
                     # we're directly invoking the plugin's function_calling_plugin() method.
                     plugin_id = int(function_name[-4:])
                     plugin = PluginStatic(plugin_id=plugin_id)
+                    plugin.params = function_args
                     function_response = plugin.function_calling_plugin(inquiry_type=function_args.get("inquiry_type"))
                     serialized_tool_call["smarter_plugin"] = PluginMetaSerializer(plugin.plugin_meta).data
                 tool_call_message = {

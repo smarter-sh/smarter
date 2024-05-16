@@ -5,7 +5,7 @@ import os
 import unittest
 
 from smarter.apps.account.models import Account
-from smarter.apps.plugin.manifest.broker import SAMPluginBroker
+from smarter.apps.plugin.manifest.brokers.plugin import SAMPluginBroker
 from smarter.common.const import PYTHON_ROOT
 from smarter.lib.manifest.enum import SAMApiVersions
 
