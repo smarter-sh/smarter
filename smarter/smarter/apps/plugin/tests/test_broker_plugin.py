@@ -46,13 +46,14 @@ class TestPluginBroker(unittest.TestCase):
         self.connection_loader = SAMLoader(api_version=SAMApiVersions.V1.value, manifest=connection_manifest)
 
         # 3. create a SAMPluginDataSqlConnection pydantic model from the loader
-        self.connection_model = SAMPluginDataSqlConnection(
-            apiVersion=self.connection_loader.manifest_api_version,
-            kind=self.connection_loader.manifest_kind,
-            metadata=self.connection_loader.manifest_metadata,
-            spec=self.connection_loader.manifest_spec,
-            status=self.connection_loader.manifest_status,
-        )
+        # self.connection_model = SAMPluginDataSqlConnection(
+        #     apiVersion=self.connection_loader.manifest_api_version,
+        #     kind=self.connection_loader.manifest_kind,
+        #     metadata=self.connection_loader.manifest_metadata,
+        #     spec=self.connection_loader.manifest_spec,
+        #     status=self.connection_loader.manifest_status,
+        # )
+        self.connection_model = SAMPluginDataSqlConnection(**self.connection_loader.pydantic_model_dump())
 
         # 4. create the connection record
         model_dump = self.connection_model.spec.connection.model_dump()
@@ -72,15 +73,7 @@ class TestPluginBroker(unittest.TestCase):
         self.plugin_loader = SAMLoader(api_version=SAMApiVersions.V1.value, manifest=plugin_manifest)
 
         # 3. create a SAMPlugin pydantic model from the loader
-        spec = self.plugin_loader.manifest_spec
-
-        self.sam_plugin = SAMPlugin(
-            apiVersion=self.plugin_loader.manifest_api_version,
-            kind=self.plugin_loader.manifest_kind,
-            metadata=self.plugin_loader.manifest_metadata,
-            spec=spec,
-            status=self.plugin_loader.manifest_status,
-        )
+        self.sam_plugin = SAMPlugin(**self.plugin_loader.pydantic_model_dump())
 
         cnx = self.connection_loader.manifest_spec["connection"]
         cnx["account"] = self.account
