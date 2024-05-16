@@ -5,6 +5,8 @@ from taggit.models import Tag
 
 from smarter.apps.account.serializers import AccountSerializer, UserProfileSerializer
 from smarter.apps.plugin.models import (
+    PluginDataSql,
+    PluginDataSqlConnection,
     PluginDataStatic,
     PluginMeta,
     PluginPrompt,
@@ -89,6 +91,70 @@ class PluginDataStaticSerializer(serializers.ModelSerializer):
     class Meta:
         model = PluginDataStatic
         fields = ["description", "static_data"]
+
+    def to_representation(self, instance):
+        """Convert `username` to `userName`."""
+        representation = super().to_representation(instance)
+        new_representation = {}
+        for key in representation.keys():
+            new_key = "".join(word.capitalize() for word in key.split("_"))
+            new_key = new_key[0].lower() + new_key[1:]
+            new_representation[new_key] = representation[key]
+        return new_representation
+
+
+class PluginDataSqlConnectionSerializer(serializers.ModelSerializer):
+    """PluginDataSql model serializer."""
+
+    account = AccountSerializer(read_only=True)
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = PluginDataSqlConnection
+        fields = [
+            "name",
+            "account",
+            "description",
+            "hostname",
+            "port",
+            "database",
+            "username",
+            "password",
+            "proxy_host",
+            "proxy_port",
+            "proxy_username",
+            "proxy_password",
+        ]
+
+    def to_representation(self, instance):
+        """Convert `username` to `userName`."""
+        representation = super().to_representation(instance)
+        new_representation = {}
+        for key in representation.keys():
+            new_key = "".join(word.capitalize() for word in key.split("_"))
+            new_key = new_key[0].lower() + new_key[1:]
+            new_representation[new_key] = representation[key]
+        return new_representation
+
+
+class PluginDataSqlSerializer(serializers.ModelSerializer):
+    """PluginDataSql model serializer."""
+
+    plugin = serializers.SlugRelatedField(slug_field="id", queryset=PluginMeta.objects.all())
+    connection = PluginDataSqlConnectionSerializer(read_only=True)
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = PluginDataSql
+        fields = [
+            "plugin",
+            "connection",
+            "description",
+            "parameters",
+            "sql_query",
+            "test_values",
+            "limit",
+        ]
 
     def to_representation(self, instance):
         """Convert `username` to `userName`."""
