@@ -89,9 +89,6 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         """
         if self._plugin:
             return self._plugin
-        print("plugin() -  self.plugin_meta", self.plugin_meta)
-        print("account", self.account)
-        print("name", self.name)
         controller = PluginController(account=self.account, manifest=self.manifest, plugin_meta=self.plugin_meta)
         self._plugin = controller.obj
         return self._plugin
