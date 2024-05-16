@@ -20,6 +20,8 @@ from smarter.lib.django.user import User
 from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.loader import SAMLoader
 
+from .factories import plugin_meta_factory
+
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -35,16 +37,9 @@ class TestPluginDataSqlConnection(unittest.TestCase):
         """Set up test fixtures."""
 
         self.user, self.account, self.user_profile = admin_user_factory()
-
-        self.meta_data = PluginMeta(
-            account=self.account,
-            name="Test Plugin",
-            description="Test Plugin Description",
-            plugin_class=SAMPluginMetadataClassValues.SQL.value,
-            version="1.0.0",
-            author=self.user_profile,
+        self.meta_data = plugin_meta_factory(
+            plugin_class=SAMPluginMetadataClassValues.SQL.value, account=self.account, user_profile=self.user_profile
         )
-        self.meta_data.save()
 
         # setup an instance of PluginDataSqlConnection() - a Django model
         # ---------------------------------------------------------------------
