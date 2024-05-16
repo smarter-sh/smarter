@@ -7,6 +7,7 @@ from taggit.models import Tag
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account
 from smarter.lib.manifest.broker import AbstractBroker
+from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -42,8 +43,8 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        api_version: str,
         account: Account,
+        api_version: str = SAMApiVersions.V1.value,
         name: str = None,
         kind: str = None,
         loader: SAMLoader = None,
@@ -60,8 +61,8 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         the required top-level keys.
         """
         super().__init__(
-            api_version=api_version,
             account=account,
+            api_version=api_version,
             name=name,
             kind=kind,
             loader=loader,

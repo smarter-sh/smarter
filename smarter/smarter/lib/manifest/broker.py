@@ -11,6 +11,7 @@ from django.http import HttpRequest, JsonResponse
 
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django.user import UserType
+from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 from smarter.lib.manifest.models import AbstractSAMBase
 
@@ -80,8 +81,8 @@ class AbstractBroker(ABC):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        api_version: str,
         account: "Account",
+        api_version: str = SAMApiVersions.V1.value,
         name: str = None,
         kind: str = None,
         loader: SAMLoader = None,
