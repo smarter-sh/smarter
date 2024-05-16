@@ -1,19 +1,20 @@
-# [0.2.0](https://github.com/QueriumCorp/smarter/compare/v0.1.2...v0.2.0) (2024-05-16)
-
-
-### Features
-
-* add SAMPluginDataSqlConnectionBroker to api/v1/cli ([f120cfd](https://github.com/QueriumCorp/smarter/commit/f120cfd3600a8e865e9dd43f9cde41a0312591df))
-* add SAMPluginDataSqlConnectionBroker to api/v1/cli ([54fa4da](https://github.com/QueriumCorp/smarter/commit/54fa4da9f91d010adef4b737d0f7887e154767ac))
-* add unit tests ([2c9e355](https://github.com/QueriumCorp/smarter/commit/2c9e35501d1824da521eb51cb937567627ab0dcb))
-* scaffold PluginSql and Pydantic model ([e1bb076](https://github.com/QueriumCorp/smarter/commit/e1bb076ad428853c97505203cf35b476fc6dd30d))
-* scaffold PluginSql models ([17daf61](https://github.com/QueriumCorp/smarter/commit/17daf615e74ed3f826fbf21db97d10d5174879bd))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+# [0.2.0](https://github.com/QueriumCorp/smarter/compare/v0.1.2...v0.2.0) (2024-05-16)
+
+Introduces remote Sql server integration to the Plugin class. New Django ORMs PluginDataSql and PluginDataSqlConnection have been added for persinsting remote sql server connections, and parameterized sql queries. SAMPluginDataSqlConnectionBroker is added to fully integrate these models to /api/v1/cli.
+
+### Features
+
+- add SAMPluginDataSqlConnectionBroker to api/v1/cli ([f120cfd](https://github.com/QueriumCorp/smarter/commit/f120cfd3600a8e865e9dd43f9cde41a0312591df))
+- add SAMPluginDataSqlConnectionBroker to api/v1/cli ([54fa4da](https://github.com/QueriumCorp/smarter/commit/54fa4da9f91d010adef4b737d0f7887e154767ac))
+- add unit tests ([2c9e355](https://github.com/QueriumCorp/smarter/commit/2c9e35501d1824da521eb51cb937567627ab0dcb))
+- scaffold PluginSql and Pydantic model ([e1bb076](https://github.com/QueriumCorp/smarter/commit/e1bb076ad428853c97505203cf35b476fc6dd30d))
+- scaffold PluginSql models ([17daf61](https://github.com/QueriumCorp/smarter/commit/17daf615e74ed3f826fbf21db97d10d5174879bd))
 
 ## [0.1.2](https://github.com/QueriumCorp/smarter/compare/v0.1.1...v0.1.2) (2024-05-14)
 
