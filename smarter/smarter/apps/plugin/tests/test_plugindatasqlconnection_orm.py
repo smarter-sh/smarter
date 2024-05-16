@@ -1,8 +1,6 @@
 """Test PluginDataSqlConnection Django ORM"""
 
-import hashlib
 import os
-import random
 import unittest
 
 import yaml
@@ -10,6 +8,7 @@ from django.conf import settings
 from django.db.backends.base.base import BaseDatabaseWrapper
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.tests.factories import admin_user_factory
 from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
 from smarter.apps.plugin.manifest.models.sql_connection.const import (
     MANIFEST_KIND as SQL_CONNECTION_KIND,
@@ -22,6 +21,8 @@ from smarter.lib.django.user import User
 from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.loader import SAMLoader
 
+from .factories import plugin_meta_factory
+
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -32,23 +33,10 @@ class TestPluginDataSqlConnection(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
 
-        # set user, account, user_profile
-        # ---------------------------------------------------------------------
-        hashed_slug = hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:16]
-        username = f"test_{hashed_slug}"
-        self.user = User.objects.create(username=username, password="12345")
-        self.account = Account.objects.create(company_name=f"Test_{hashed_slug}", phone_number="123-456-789")
-        self.user_profile = UserProfile.objects.create(user=self.user, account=self.account, is_test=True)
-
-        self.meta_data = PluginMeta(
-            account=self.account,
-            name="Test Plugin",
-            description="Test Plugin Description",
-            plugin_class=SAMPluginMetadataClassValues.SQL.value,
-            version="1.0.0",
-            author=self.user_profile,
+        self.user, self.account, self.user_profile = admin_user_factory()
+        self.meta_data = plugin_meta_factory(
+            plugin_class=SAMPluginMetadataClassValues.SQL.value, account=self.account, user_profile=self.user_profile
         )
-        self.meta_data.save()
 
         # setup an instance of PluginDataSqlConnection() - a Django model
         # ---------------------------------------------------------------------

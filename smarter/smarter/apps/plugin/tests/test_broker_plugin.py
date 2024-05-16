@@ -1,4 +1,4 @@
-"""Test SAM Plugin manifest using PluginDataSql"""
+"""Test SAM Plugin Broker"""
 
 import os
 import unittest
@@ -25,13 +25,11 @@ from .factories import plugin_meta_factory
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
-class TestPluginDataSql(unittest.TestCase):
-    """Test SAM Plugin manifest using PluginDataSql"""
+class TestPluginBroker(unittest.TestCase):
+    """Test SAM Plugin Broker"""
 
     def setUp(self):
         """Set up test fixtures."""
-        # set user, account, user_profile
-        # ---------------------------------------------------------------------
         self.user, self.account, self.user_profile = admin_user_factory()
         self.meta_data = plugin_meta_factory(
             plugin_class=SAMPluginMetadataClassValues.SQL.value, account=self.account, user_profile=self.user_profile
