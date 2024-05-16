@@ -1,13 +1,13 @@
 # pylint: disable=W0613
 """This module is used to create a new plugin using manage.py"""
 
-import yaml
 from django.core.management.base import BaseCommand
 
-from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.utils import account_admin_user
-from smarter.apps.plugin.plugin.static import PluginStatic
-from smarter.lib.django.user import User, UserType
+from smarter.apps.account.models import Account
+from smarter.apps.plugin.manifest.controller import PluginController
+from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
+from smarter.lib.manifest.enum import SAMApiVersions
+from smarter.lib.manifest.loader import SAMLoader
 
 
 # pylint: disable=E1101
@@ -20,48 +20,31 @@ class Command(BaseCommand):
             "-a", "--account_number", type=str, nargs="?", help="Account number that will own the new plugin."
         )
         parser.add_argument(
-            "-u", "--username", type=str, nargs="?", default=None, help="A user associated with the account."
-        )
-        parser.add_argument(
             "--file_path", type=str, default=None, help="The local file system path to a plugin YAML file"
         )
 
     def handle(self, *args, **options):
         """create the plugin."""
         account_number = options["account_number"]
-        username = options["username"]
         file_path = options["file_path"]
 
-        account: Account = None
-        user: UserType = None
-        user_profile: UserProfile = None
-        data = None
-
         account = Account.objects.get(account_number=account_number)
-        if username:
-            user = User.objects.get(username=username)
+        loader = SAMLoader(
+            api_version=SAMApiVersions.V1.value,
+            file_path=file_path,
+        )
+        manifest = SAMPlugin(
+            apiVersion=loader.manifest_api_version,
+            kind=loader.manifest_kind,
+            metadata=loader.manifest_metadata,
+            spec=loader.manifest_spec,
+            status=loader.manifest_status,
+        )
+        controller = PluginController(account=account, manifest=manifest)
+        plugin = controller.obj
+
+        if plugin.ready:
+            plugin.save()
+            print(plugin.to_json())
         else:
-            user = account_admin_user(account)
-        user_profile = UserProfile.objects.get(user=user, account=account)
-
-        if file_path:
-            with open(file_path, encoding="utf-8") as file:
-                data = file.read()
-
-            if data:
-                try:
-                    data = yaml.safe_load(data)
-                except yaml.YAMLError as exc:
-                    print("Error in configuration file:", exc)
-            else:
-                self.stdout.write(self.style.ERROR("Could not read the file."))
-                return
-
-        if data:
-            data["user"] = user
-            data["account"] = account
-            data["user_profile"] = user_profile
-            data["metadata"]["author"] = user_profile.id
-
-        plugin = PluginStatic(data=data, user_profile=user_profile)
-        print(plugin.to_json())
+            self.stdout.write(self.style.ERROR("Could not open the file."))
