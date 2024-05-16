@@ -4,9 +4,11 @@
 from django.forms.models import model_to_dict
 from django.http import HttpRequest, JsonResponse
 
-from smarter.apps.account.mixins import AccountMixin
+from smarter.apps.account.mixins import Account, AccountMixin, UserProfile
 from smarter.apps.plugin.models import PluginDataSqlConnection
+from smarter.lib.django.user import User, UserType
 from smarter.lib.manifest.broker import AbstractBroker
+from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -38,7 +40,10 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        api_version: str,
+        api_version: str = SAMApiVersions.V1.value,
+        account: Account = None,
+        user: UserType = None,
+        user_profile: UserProfile = None,
         name: str = None,
         loader: SAMLoader = None,
         manifest: str = None,
@@ -53,9 +58,12 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
         to ensure that the manifest is a valid yaml file and that it contains
         the required top-level keys.
         """
+        self._account = account
+        self._user = user
+        self._user_profile = user_profile
         super().__init__(
-            api_version=api_version,
             account=self.account,
+            api_version=api_version,
             name=name,
             kind=MANIFEST_KIND,
             loader=loader,
