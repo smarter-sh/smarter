@@ -6,7 +6,6 @@ import unittest
 
 from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
 from smarter.common.const import PYTHON_ROOT
-from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.loader import SAMLoader
 
 
@@ -25,7 +24,7 @@ class TestSAM(unittest.TestCase):
     def test_valid_manifest(self):
         """Test valid file path and that we can instantiate with errors"""
 
-        loader = SAMLoader(api_version=SAMApiVersions.V1.value, kind=MANIFEST_KIND, manifest=self.good_manifest)
+        loader = SAMLoader(kind=MANIFEST_KIND, manifest=self.good_manifest)
 
         self.assertIsNotNone(loader)
         self.assertIsInstance(loader.json_data, dict)

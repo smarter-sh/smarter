@@ -46,7 +46,7 @@ class TestPluginDataSqlConnection(unittest.TestCase):
             manifest = yaml.safe_load(file)
 
         # 2. initialize a SAMLoader object with the manifest raw data
-        self.loader = SAMLoader(api_version=SAMApiVersions.V1.value, manifest=manifest)
+        self.loader = SAMLoader(manifest=manifest)
 
         # 3. create a SAMPluginDataSqlConnection pydantic model from the loader
         self.model = SAMPluginDataSqlConnection(**self.loader.pydantic_model_dump())

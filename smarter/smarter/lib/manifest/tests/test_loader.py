@@ -25,7 +25,7 @@ class TestManifestLoader(unittest.TestCase):
 
     def test_valid_manifest(self):
         """Test that we can load a valid manifest"""
-        loader = SAMLoader(api_version=SAMApiVersions.V1.value, manifest=self.good_manifest_text)
+        loader = SAMLoader(manifest=self.good_manifest_text)
         self.assertIsInstance(loader.json_data, dict)
         self.assertIsInstance(loader.specification, dict)
         self.assertIsInstance(loader.yaml_data, str)
@@ -47,7 +47,7 @@ class TestManifestLoader(unittest.TestCase):
 
     def init_from_filepath(self):
         filepath = self.path + "/good-plugin-manifest.yaml"
-        loader = SAMLoader(api_version=SAMApiVersions.V1.value, manifest=filepath)
+        loader = SAMLoader(manifest=filepath)
         loader.validate_manifest()
         self.assertIsInstance(loader.json_data, dict)
         self.assertIsInstance(loader.specification, dict)
@@ -56,7 +56,7 @@ class TestManifestLoader(unittest.TestCase):
         self.assertIsInstance(loader.formatted_data, str)
 
     def init_from_url(self):
-        loader = SAMLoader(api_version=SAMApiVersions.V1.value, manifest=self.url)
+        loader = SAMLoader(manifest=self.url)
         loader.validate_manifest()
         self.assertIsInstance(loader.json_data, dict)
         self.assertIsInstance(loader.specification, dict)
@@ -65,7 +65,7 @@ class TestManifestLoader(unittest.TestCase):
         self.assertIsInstance(loader.formatted_data, str)
 
     def test_getkey(self):
-        loader = SAMLoader(api_version=SAMApiVersions.V1.value, manifest=self.good_manifest_text)
+        loader = SAMLoader(manifest=self.good_manifest_text)
         self.assertEqual(loader.get_key("metadata"), loader.manifest_metadata)
         self.assertEqual(loader.get_key("spec"), loader.manifest_spec)
         self.assertEqual(loader.get_key("status"), loader.manifest_status)
@@ -81,14 +81,14 @@ class TestManifestLoader(unittest.TestCase):
         """Test that we can load a valid manifest"""
 
         def test_missing(element: str):
-            loader = SAMLoader(api_version=SAMApiVersions.V1.value, manifest=self.good_manifest_text)
+            loader = SAMLoader(manifest=self.good_manifest_text)
             json_data = loader.json_data
             del json_data[element]
 
             # convert back to yaml
             yaml_data = yaml.dump(json_data)
             with self.assertRaises(SAMLoaderError):
-                SAMLoader(api_version=SAMApiVersions.V1.value, manifest=yaml_data)
+                SAMLoader(manifest=yaml_data)
 
         for element in ["metadata", "spec"]:
             test_missing(element)

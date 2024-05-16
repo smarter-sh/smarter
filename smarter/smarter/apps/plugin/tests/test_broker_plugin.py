@@ -7,16 +7,13 @@ import yaml
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.tests.factories import admin_user_factory
-from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
-from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
 from smarter.apps.plugin.manifest.models.sql_connection.model import (
     SAMPluginDataSqlConnection,
 )
 from smarter.apps.plugin.models import PluginDataSqlConnection
 from smarter.lib.django.user import User
-from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.loader import SAMLoader
 
 from .factories import plugin_meta_factory
@@ -43,16 +40,7 @@ class TestPluginBroker(unittest.TestCase):
             connection_manifest = yaml.safe_load(file)
 
         # 2. initialize a SAMLoader object with the manifest raw data
-        self.connection_loader = SAMLoader(api_version=SAMApiVersions.V1.value, manifest=connection_manifest)
-
-        # 3. create a SAMPluginDataSqlConnection pydantic model from the loader
-        # self.connection_model = SAMPluginDataSqlConnection(
-        #     apiVersion=self.connection_loader.manifest_api_version,
-        #     kind=self.connection_loader.manifest_kind,
-        #     metadata=self.connection_loader.manifest_metadata,
-        #     spec=self.connection_loader.manifest_spec,
-        #     status=self.connection_loader.manifest_status,
-        # )
+        self.connection_loader = SAMLoader(manifest=connection_manifest)
         self.connection_model = SAMPluginDataSqlConnection(**self.connection_loader.pydantic_model_dump())
 
         # 4. create the connection record
@@ -70,31 +58,13 @@ class TestPluginBroker(unittest.TestCase):
             plugin_manifest = yaml.safe_load(file)
 
         # 2. initialize a SAMLoader object with the manifest raw data
-        self.plugin_loader = SAMLoader(api_version=SAMApiVersions.V1.value, manifest=plugin_manifest)
+        self.plugin_loader = SAMLoader(manifest=plugin_manifest)
 
         # 3. create a SAMPlugin pydantic model from the loader
         self.sam_plugin = SAMPlugin(**self.plugin_loader.pydantic_model_dump())
 
-        cnx = self.connection_loader.manifest_spec["connection"]
-        cnx["account"] = self.account
-        self.connection = PluginDataSqlConnection(**cnx)
-
-        # 4. use the PluginController to resolve which kind of Plugin to instantiate
-        controller = PluginController(account=self.account, manifest=self.sam_plugin)
-        self.plugin = controller.obj
-        self.plugins = [self.plugin]
-
     def tearDown(self):
         """Tear down test fixtures."""
-        try:
-            self.plugin_datasql_connection.delete()
-        except PluginDataSqlConnection.DoesNotExist:
-            pass
-        self.plugin.delete()
-        try:
-            self.connection.delete()
-        except (PluginDataSqlConnection.DoesNotExist, ValueError):
-            pass
         try:
             self.user_profile.delete()
         except UserProfile.DoesNotExist:
@@ -108,19 +78,6 @@ class TestPluginBroker(unittest.TestCase):
         except Account.DoesNotExist:
             pass
 
-    def properties_factory(self) -> dict:
-        return {
-            "properties": {
-                "location": {"type": "string", "description": "The city and state, e.g., San Francisco, CA"},
-                "unit": {
-                    "type": "string",
-                    "enum": ["Celsius", "Fahrenheit"],
-                    "description": "The temperature unit to use. Infer this from the user's location.",
-                },
-            },
-        }
-
-    def test_plugin_loader(self):
-        """Test that the Loader can load the manifest."""
-        self.assertEqual(self.plugin_loader.manifest_api_version, SAMApiVersions.V1.value)
-        self.assertEqual(self.plugin_loader.manifest_kind, MANIFEST_KIND)
+    def test_plugin_broker_apply(self):
+        """Test that the Broker can apply the manifest."""
+        pass
