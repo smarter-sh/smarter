@@ -16,6 +16,7 @@ from django.http import (
 from django.test import Client
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.tests.factories import admin_user_factory
 
 # our stuff
 from smarter.lib.django.user import User, UserType
@@ -67,12 +68,7 @@ class TestPluginAPI(unittest.TestCase):
         plugin_path = get_test_file_path("everlasting-gobstopper-modified.yaml")
         self.plugin_yaml_modified = self.safe_load(file_path=plugin_path)
 
-        # create a 4-digit random string of alphanumeric characters
-        self.account = Account.objects.create(company_name="Test Account")
-        admin_username = "test_admin_" + os.urandom(4).hex()
-        self.admin_user, self.admin_user_profile = self.create_user(
-            username=admin_username, password="12345", is_staff=True
-        )
+        self.admin_user, self.account, self.admin_user_profile = admin_user_factory()
 
         mortal_username = "test_mortal_" + os.urandom(4).hex()
         self.mortal_user, self.mortal_user_profile = self.create_user(
