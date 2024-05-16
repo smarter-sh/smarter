@@ -49,13 +49,7 @@ class TestPluginDataSqlConnection(unittest.TestCase):
         self.loader = SAMLoader(api_version=SAMApiVersions.V1.value, manifest=manifest)
 
         # 3. create a SAMPluginDataSqlConnection pydantic model from the loader
-        self.model = SAMPluginDataSqlConnection(
-            apiVersion=self.loader.manifest_api_version,
-            kind=self.loader.manifest_kind,
-            metadata=self.loader.manifest_metadata,
-            spec=self.loader.manifest_spec,
-            status=self.loader.manifest_status,
-        )
+        self.model = SAMPluginDataSqlConnection(**self.loader.pydantic_model_dump())
 
     def tearDown(self):
         """Tear down test fixtures."""

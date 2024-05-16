@@ -131,13 +131,7 @@ class PluginBase(ABC):
                 kind=self.kind,
                 manifest=data,
             )
-            self._manifest = SAMPlugin(
-                apiVersion=loader.manifest_api_version,
-                kind=loader.manifest_kind,
-                metadata=loader.manifest_metadata,
-                spec=loader.manifest_spec,
-                status=loader.manifest_status,
-            )
+            self._manifest = SAMPlugin(**loader.pydantic_model_dump())
             self.create()
 
         if self.ready:

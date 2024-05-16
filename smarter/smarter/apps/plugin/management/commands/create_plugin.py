@@ -33,13 +33,7 @@ class Command(BaseCommand):
             api_version=SAMApiVersions.V1.value,
             file_path=file_path,
         )
-        manifest = SAMPlugin(
-            apiVersion=loader.manifest_api_version,
-            kind=loader.manifest_kind,
-            metadata=loader.manifest_metadata,
-            spec=loader.manifest_spec,
-            status=loader.manifest_status,
-        )
+        manifest = SAMPlugin(**loader.pydantic_model_dump())
         controller = PluginController(account=account, manifest=manifest)
         plugin = controller.obj
 
