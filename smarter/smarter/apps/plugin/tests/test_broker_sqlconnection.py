@@ -41,3 +41,28 @@ class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
         self.assertIsInstance(content, dict)
         self.assertIn("message", content.keys())
         self.assertEqual(content["message"], "PluginDataSqlConnection testConnection applied successfully")
+
+    def test_plugin_broker_describe(self):
+        """Test that the Broker can generate and return the manifest."""
+        retval = self.broker.apply()
+        self.assertEqual(retval.status_code, HTTPStatus.OK)
+
+        retval = self.broker.describe()
+        self.assertEqual(retval.status_code, HTTPStatus.OK)
+        content = json.loads(retval.content.decode())
+        self.assertIsInstance(content, dict)
+        print(content)
+        # self.assertIn("message", content.keys())
+        # self.assertEqual(content["message"], "PluginDataSqlConnection testConnection deleted successfully")
+
+    def test_plugin_broker_delete(self):
+        """Test that the Broker can delete the object."""
+        retval = self.broker.apply()
+        self.assertEqual(retval.status_code, HTTPStatus.OK)
+
+        retval = self.broker.delete()
+        self.assertEqual(retval.status_code, HTTPStatus.OK)
+        content = json.loads(retval.content.decode())
+        self.assertIsInstance(content, dict)
+        self.assertIn("message", content.keys())
+        self.assertEqual(content["message"], "PluginDataSqlConnection testConnection deleted successfully")

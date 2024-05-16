@@ -6,7 +6,7 @@ from django.http import HttpRequest, JsonResponse
 
 from smarter.apps.account.mixins import Account, AccountMixin, UserProfile
 from smarter.apps.plugin.models import PluginDataSqlConnection
-from smarter.lib.django.user import User, UserType
+from smarter.lib.django.user import UserType
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.exceptions import SAMExceptionBase
@@ -108,6 +108,8 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
             model_dump = self.manifest.spec.connection.model_dump()
             model_dump["account"] = self.account
             model_dump["name"] = self.manifest.metadata.name
+            model_dump["version"] = self.manifest.metadata.version
+            model_dump["description"] = self.manifest.metadata.description
             self._sql_connection = PluginDataSqlConnection(**model_dump)
             self._sql_connection.save()
 
@@ -161,10 +163,31 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
         return self.success_response(operation=self.apply.__name__, data={})
 
     def describe(self, request: HttpRequest = None) -> JsonResponse:
+        """Return a JSON response with the manifest data."""
         if self.sql_connection:
             try:
                 data = model_to_dict(self.sql_connection)
-                return self.success_response(operation=self.describe.__name__, data=data)
+                data.pop("id")
+                data.pop("account")
+                data.pop("name")
+                data.pop("version")
+                data.pop("description")
+                retval = {
+                    "apiVersion": self.api_version,
+                    "kind": self.kind,
+                    "metadata": {
+                        "name": self.sql_connection.name,
+                        "description": self.sql_connection.description,
+                        "version": self.sql_connection.version,
+                    },
+                    "spec": {"connection": data},
+                    "status": {
+                        "connection_string": self.sql_connection.get_connection_string(),
+                        "is_valid": self.sql_connection.validate(),
+                    },
+                }
+
+                return self.success_response(operation=self.describe.__name__, data=retval)
             except Exception as e:
                 return self.err_response(self.describe.__name__, e)
         return self.not_ready_response()

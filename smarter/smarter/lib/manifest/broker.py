@@ -254,8 +254,11 @@ class AbstractBroker(ABC):
             kind = self.kind
             message = f"{kind} {self.name} {operated} successfully"
         operation = self.Operations.past_tense().get(operation, operation)
-        data.update({"message": message})
-        return JsonResponse(data=data, status=HTTPStatus.OK, safe=False)
+        retval = {
+            "data": data,
+            "message": message,
+        }
+        return JsonResponse(data=retval, status=HTTPStatus.OK, safe=False)
 
 
 class BrokerNotImplemented(AbstractBroker):
