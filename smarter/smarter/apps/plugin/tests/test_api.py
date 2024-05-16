@@ -15,11 +15,11 @@ from django.http import (
 )
 from django.test import Client
 
-from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.tests.factories import admin_user_factory
+from smarter.apps.account.models import UserProfile
+from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
 
 # our stuff
-from smarter.lib.django.user import User, UserType
+from smarter.lib.django.user import User
 
 from ..plugin.static import PluginStatic
 from .test_setup import get_test_file_path
@@ -29,14 +29,6 @@ class TestPluginAPI(unittest.TestCase):
     """Test PluginStatic API."""
 
     API_BASE = "/api/v1/plugins/"
-    plugin_yaml: str = None
-    plugin_yaml_modified: str = None
-    plugin: PluginStatic = None
-    account: Account = None
-    admin_user: UserType = None
-    admin_user_profile: UserProfile = None
-    mortal_user: UserType = None
-    mortal_user_profile: UserProfile = None
 
     @property
     def api_base(self):
@@ -77,11 +69,9 @@ class TestPluginAPI(unittest.TestCase):
 
     def tearDown(self):
         """Clean up test fixtures."""
-        self.admin_user_profile.delete()
         self.mortal_user_profile.delete()
-        self.admin_user.delete()
         self.mortal_user.delete()
-        self.account.delete()
+        admin_user_teardown(self.admin_user, self.account, self.admin_user_profile)
 
     # pylint: disable=broad-exception-caught
     def test_create(self):

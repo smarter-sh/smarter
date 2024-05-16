@@ -11,7 +11,7 @@ import yaml
 from pydantic_core import ValidationError as PydanticValidationError
 
 from smarter.apps.account.models import UserProfile
-from smarter.apps.account.tests.factories import admin_user_factory
+from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
 from smarter.apps.plugin.models import (
     PluginDataStatic,
     PluginMeta,
@@ -38,7 +38,6 @@ from smarter.apps.plugin.signals import (
 )
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 from smarter.apps.plugin.utils import add_example_plugins
-from smarter.lib.django.user import User
 from smarter.lib.manifest.loader import SAMLoaderError
 
 
@@ -103,9 +102,7 @@ class TestPlugin(unittest.TestCase):
 
     def tearDown(self):
         """Clean up test fixtures."""
-        self.user_profile.delete()
-        self.user.delete()
-        self.account.delete()
+        admin_user_teardown(self.user, self.account, self.user_profile)
 
     # pylint: disable=broad-exception-caught
     def test_create(self):
