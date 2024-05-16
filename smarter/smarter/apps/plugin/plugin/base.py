@@ -23,9 +23,9 @@ from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 
-from ..manifest.const import MANIFEST_KIND
-from ..manifest.models.plugin import SAMPlugin
-from ..models import PluginMeta, PluginPrompt, PluginSelector
+from ..manifest.models.plugin.const import MANIFEST_KIND
+from ..manifest.models.plugin.model import SAMPlugin
+from ..models import PluginDataBase, PluginMeta, PluginPrompt, PluginSelector
 from ..nlp import does_refer_to
 from ..serializers import (
     PluginMetaSerializer,
@@ -70,6 +70,7 @@ class PluginBase(ABC):
     _plugin_meta_serializer: dict = None
 
     _selected: bool = False
+    _params: dict = None
 
     # abstract properties
     _plugin_data: Any = TimestampedModel
@@ -155,7 +156,7 @@ class PluginBase(ABC):
     ###########################################################################
     @property
     @abstractmethod
-    def plugin_data(self) -> TimestampedModel:
+    def plugin_data(self) -> PluginDataBase:
         """Return the plugin data Django ORM."""
         raise NotImplementedError()
 
@@ -192,6 +193,17 @@ class PluginBase(ABC):
     ###########################################################################
     # Base class properties
     ###########################################################################
+    @property
+    def params(self) -> dict:
+        """Return the plugin parameters."""
+        return self._params
+
+    @params.setter
+    def params(self, value: dict):
+        """Set the plugin parameters."""
+        logger.info("Setting plugin parameters: %s", value)
+        self._params = value
+
     @property
     def api_version(self) -> str:
         """Return the api version of the plugin."""
@@ -503,7 +515,7 @@ class PluginBase(ABC):
             return None
 
         try:
-            return_data = self.plugin_data.sanitized_return_data
+            return_data = self.plugin_data.sanitized_return_data(self.params)
             retval = return_data[inquiry_type]
             retval = json.dumps(retval)
             plugin_called.send(
@@ -562,9 +574,9 @@ class PluginBase(ABC):
         with transaction.atomic():
             plugin_meta = PluginMeta.objects.create(**meta_data)
 
-            selector["plugin_id"] = plugin_meta.id
-            prompt["plugin_id"] = plugin_meta.id
-            plugin_data["plugin_id"] = plugin_meta.id
+            selector["plugin"] = plugin_meta
+            prompt["plugin"] = plugin_meta
+            plugin_data["plugin"] = plugin_meta
 
             PluginSelector.objects.create(**selector)
             PluginPrompt.objects.create(**prompt)

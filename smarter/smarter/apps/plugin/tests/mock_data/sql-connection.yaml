@@ -1,0 +1,16 @@
+---
+apiVersion: smarter.sh/v1
+kind: PluginDataSqlConnection
+metadata:
+  name: testConnection
+  description: points to the Django mysql database
+  version: 0.1.0
+spec:
+  connection:
+    # these are the DATABASE["default"] local settings values for the Django backing database
+    db_engine: django.db.backends.mysql
+    hostname: smarter-mysql
+    port: 3306
+    username: smarter
+    password: smarter
+    database: smarter
