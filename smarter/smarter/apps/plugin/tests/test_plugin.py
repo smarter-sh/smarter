@@ -4,14 +4,14 @@
 
 # python stuff
 import json
-import os
 import unittest
 from time import sleep
 
 import yaml
 from pydantic_core import ValidationError as PydanticValidationError
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import UserProfile
+from smarter.apps.account.tests.factories import admin_user_factory
 from smarter.apps.plugin.models import (
     PluginDataStatic,
     PluginMeta,
@@ -99,14 +99,7 @@ class TestPlugin(unittest.TestCase):
         config_path = get_test_file_path("everlasting-gobstopper.yaml")
         with open(config_path, encoding="utf-8") as file:
             self.data = yaml.safe_load(file)
-
-        # create a 4-digit random string of alphanumeric characters
-        username = "testuser_" + os.urandom(4).hex()
-        self.user = User.objects.create(
-            username=username, password="12345", is_active=True, is_staff=True, is_superuser=False
-        )
-        self.account = Account.objects.create(company_name="Test Account")
-        self.user_profile = UserProfile.objects.create(user=self.user, account=self.account, is_test=True)
+        self.user, self.account, self.user_profile = admin_user_factory()
 
     def tearDown(self):
         """Clean up test fixtures."""

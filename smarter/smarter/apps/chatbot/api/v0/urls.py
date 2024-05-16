@@ -2,9 +2,9 @@
 
 from django.urls import path
 
-from smarter.apps.chatbot.views.smarter import SmarterChatBotApiView
+from smarter.apps.chatbot.api.v1.views.smarter import SmarterChatBotApiView
 
-from .views import (
+from .views.views import (
     ChatBotAPIKeyListView,
     ChatBotAPIKeyView,
     ChatBotCustomDomainListView,
