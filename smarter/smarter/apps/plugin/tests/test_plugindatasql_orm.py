@@ -5,8 +5,7 @@ import unittest
 
 import yaml
 
-from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.tests.factories import admin_user_factory
+from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
 from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
 from smarter.apps.plugin.manifest.models.sql_connection.model import (
     SAMPluginDataSqlConnection,
@@ -17,7 +16,6 @@ from smarter.apps.plugin.models import (
     PluginMeta,
 )
 from smarter.common.exceptions import SmarterValueError
-from smarter.lib.django.user import User
 from smarter.lib.manifest.loader import SAMLoader
 
 from .factories import plugin_meta_factory
@@ -66,18 +64,7 @@ class TestPluginDataSqlConnection(unittest.TestCase):
             self.meta_data.delete()
         except PluginMeta.DoesNotExist:
             pass
-        try:
-            self.user_profile.delete()
-        except UserProfile.DoesNotExist:
-            pass
-        try:
-            self.user.delete()
-        except User.DoesNotExist:
-            pass
-        try:
-            self.account.delete()
-        except Account.DoesNotExist:
-            pass
+        admin_user_teardown(self.user, self.account, self.user_profile)
 
     def properties_factory(self) -> dict:
         return {
