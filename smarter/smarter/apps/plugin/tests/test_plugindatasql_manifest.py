@@ -14,10 +14,12 @@ from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
 from smarter.apps.plugin.manifest.models.sql_connection.model import (
     SAMPluginDataSqlConnection,
 )
-from smarter.apps.plugin.models import PluginDataSqlConnection, PluginMeta
+from smarter.apps.plugin.models import PluginDataSqlConnection
 from smarter.lib.django.user import User
 from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.loader import SAMLoader
+
+from .factories import plugin_meta_factory
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -31,16 +33,9 @@ class TestPluginDataSql(unittest.TestCase):
         # set user, account, user_profile
         # ---------------------------------------------------------------------
         self.user, self.account, self.user_profile = admin_user_factory()
-
-        self.meta_data = PluginMeta(
-            account=self.account,
-            name="Test Plugin",
-            description="Test Plugin Description",
-            plugin_class=SAMPluginMetadataClassValues.SQL.value,
-            version="1.0.0",
-            author=self.user_profile,
+        self.meta_data = plugin_meta_factory(
+            plugin_class=SAMPluginMetadataClassValues.SQL.value, account=self.account, user_profile=self.user_profile
         )
-        self.meta_data.save()
 
         # setup an instance of PluginDataSqlConnection() - a Django model
         # ---------------------------------------------------------------------
