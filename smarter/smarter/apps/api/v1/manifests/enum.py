@@ -1,6 +1,11 @@
 """Smarter API V0 Manifests Enumerations."""
 
-from smarter.apps.plugin.manifest.const import MANIFEST_KIND as PLUGIN_KIND
+from smarter.apps.plugin.manifest.models.plugin.const import (
+    MANIFEST_KIND as PLUGIN_KIND,
+)
+from smarter.apps.plugin.manifest.models.sql_connection.const import (
+    MANIFEST_KIND as SQL_CONNECTION_KIND,
+)
 from smarter.lib.manifest.enum import SmarterEnumAbstract
 
 
@@ -12,6 +17,7 @@ class SAMKinds(SmarterEnumAbstract):
     USER = "User"
     CHAT = "Chat"
     CHATBOT = "Chatbot"
+    SQL_CONNECTION = SQL_CONNECTION_KIND
 
     @classmethod
     def all_slugs(cls):
