@@ -7,7 +7,6 @@ import os
 import unittest
 from urllib.parse import urlparse
 
-import yaml
 from django.http import (
     HttpResponsePermanentRedirect,
     HttpResponseRedirect,
@@ -16,7 +15,11 @@ from django.http import (
 from django.test import Client
 
 from smarter.apps.account.models import UserProfile
-from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
+from smarter.apps.account.tests.factories import (
+    admin_user_factory,
+    admin_user_teardown,
+    mortal_user_factory,
+)
 
 # our stuff
 from smarter.lib.django.user import User
@@ -36,18 +39,6 @@ class TestPluginAPI(unittest.TestCase):
         """Return the API base."""
         return self.API_BASE
 
-    def create_user(self, username, password, is_staff: bool = False) -> tuple:
-        """Create a user."""
-        user = User.objects.create(
-            username=username,
-            password=password,
-            is_active=True,
-            is_staff=is_staff,
-            is_superuser=False,
-        )
-        user_profile = UserProfile.objects.create(user=user, account=self.account, is_test=True)
-        return user, user_profile
-
     def setUp(self):
         """Set up test fixtures."""
         plugin_path = get_test_file_path("everlasting-gobstopper.yaml")
@@ -57,11 +48,7 @@ class TestPluginAPI(unittest.TestCase):
         self.plugin_yaml_modified = get_readonly_yaml_file(plugin_path)
 
         self.admin_user, self.account, self.admin_user_profile = admin_user_factory()
-
-        mortal_username = "test_mortal_" + os.urandom(4).hex()
-        self.mortal_user, self.mortal_user_profile = self.create_user(
-            username=mortal_username, password="12345", is_staff=False
-        )
+        self.mortal_user, _, self.mortal_user_profile = mortal_user_factory(self.account)
 
     def tearDown(self):
         """Clean up test fixtures."""
@@ -114,11 +101,11 @@ class TestPluginAPI(unittest.TestCase):
         plugin = PluginStatic(plugin_id=plugin_id)
         self.assertEqual(plugin.ready, True)
 
-        self.plugin.refresh()
-        self.assertEqual(self.plugin.ready, True)
-        self.assertEqual(self.plugin.plugin_meta.description, "MODIFIED")
-        self.assertEqual(self.plugin.plugin_data.description, "MODIFIED")
-        self.assertEqual(self.plugin.plugin_data.static_data, {"returnData": "MODIFIED"})
+        plugin.refresh()
+        self.assertEqual(plugin.ready, True)
+        self.assertEqual(plugin.plugin_meta.description, "MODIFIED")
+        self.assertEqual(plugin.plugin_data.description, "MODIFIED")
+        self.assertEqual(plugin.plugin_data.static_data, {"returnData": "MODIFIED"})
 
     def test_delete(self):
         """
@@ -143,7 +130,7 @@ class TestPluginAPI(unittest.TestCase):
 
         # delete the plugin using the api endpoint
         response = client.delete(
-            path=self.api_base + str(self.plugin.id) + "/",
+            path=self.api_base + str(plugin.id) + "/",
         )
         self.assertIn(response.status_code, [301, 302])
 
