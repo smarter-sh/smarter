@@ -6,6 +6,7 @@ from django.http import HttpRequest, JsonResponse
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account
 from smarter.lib.manifest.broker import AbstractBroker
+from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -38,8 +39,8 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        api_version: str,
         account: Account,
+        api_version: str = SAMApiVersions.V1.value,
         name: str = None,
         kind: str = None,
         loader: SAMLoader = None,
@@ -121,6 +122,28 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
+    def example_manifest(self, request: HttpRequest = None) -> JsonResponse:
+        data = {
+            "apiVersion": SAMApiVersions.V1.value,
+            "kind": self.kind,
+            "metadata": {
+                "name": "exampleConnection",
+                "description": "points to the Django mysql database",
+                "version": "0.1.0",
+            },
+            "spec": {
+                "connection": {
+                    "db_engine": "django.db.backends.mysql",
+                    "hostname": "smarter-mysql",
+                    "port": 3306,
+                    "username": "smarter",
+                    "password": "smarter",
+                    "database": "smarter",
+                }
+            },
+        }
+        return self.success_response(operation=self.get.__name__, data=data)
+
     def get(
         self, request: HttpRequest = None, name: str = None, all_objects: bool = False, tags: str = None
     ) -> JsonResponse:
