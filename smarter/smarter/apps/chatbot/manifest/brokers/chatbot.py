@@ -8,7 +8,8 @@ from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account
 from smarter.apps.chatbot.manifest.models.chatbot.const import MANIFEST_KIND
 from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
-from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
+from smarter.apps.chatbot.models import ChatBot, ChatBotFunctions, ChatBotPlugin
+from smarter.apps.plugin.utils import get_plugin_examples_by_name
 from smarter.common.conf import SettingsDefaults
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.enum import SAMApiVersions
@@ -129,6 +130,9 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         plugins = ChatBotPlugin.objects.filter(chatbot=self.chatbot)
         plugin_names = [plugin.plugin_meta.name for plugin in plugins]
 
+        functions = ChatBotFunctions.objects.filter(chatbot=self.chatbot)
+        function_names = [function.name for function in functions]
+
         data = {
             "apiVersion": self.api_version,
             "kind": self.kind,
@@ -140,6 +144,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
             "spec": {
                 "config": chatbot_dict,
                 "plugins": plugin_names,
+                "functions": function_names,
             },
             "status": {
                 "created": self.chatbot.created_at.isoformat(),
@@ -224,7 +229,8 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                     "subdomain": "example-chatbot",
                     "customDomain": None,
                 },
-                "plugins": ["ExamplePlugin1", "ExamplePlugin2", "ExamplePlugin3"],
+                "plugins": get_plugin_examples_by_name(),
+                "functions": ["weather"],
             },
         }
 
@@ -305,4 +311,5 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         return self.not_ready_response()
 
     def logs(self, request: HttpRequest = None) -> JsonResponse:
-        return self.not_implemented_response()
+        data = {}
+        return self.success_response(operation=self.logs.__name__, data=data)

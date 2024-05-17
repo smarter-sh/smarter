@@ -10,6 +10,7 @@ import yaml
 from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
 from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
+from smarter.common.utils import dict_is_contained_in
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.unittest.utils import get_readonly_yaml_file
 
@@ -36,7 +37,6 @@ class TestSAMChatbotBroker(unittest.TestCase):
         """Test that the Broker can apply the manifest."""
         retval = self.broker.apply()
         content = json.loads(retval.content.decode())
-        print(content)
         self.assertEqual(retval.status_code, HTTPStatus.OK)
         self.assertIsInstance(content, dict)
         self.assertIn("message", content.keys())
@@ -52,21 +52,6 @@ class TestSAMChatbotBroker(unittest.TestCase):
         - create a pydantic model from the loader
         - dump the pydantic model to a dictionary
         """
-
-        def dict_is_contained_in(dict1, dict2):
-            for key, value in dict1.items():
-                if key not in dict2:
-                    print("key not in dict2: ", key)
-                    return False
-                if isinstance(value, dict):
-                    if not dict_is_contained_in(value, dict2[key]):
-                        print("dict not in dict2: ", value)
-                        return False
-                else:
-                    if dict2[key] != value:
-                        print("value not in dict2: ", value)
-                        return False
-            return True
 
         retval = self.broker.apply()
         self.assertEqual(retval.status_code, HTTPStatus.OK)
@@ -116,13 +101,12 @@ class TestSAMChatbotBroker(unittest.TestCase):
         self.assertIn("message", content.keys())
         self.assertEqual(content["message"], "Chatbot TestChatbot deployed successfully")
 
-    # def test_chatbot_broker_logs(self):
-    #     """Test that the Broker can generate log data."""
+    def test_chatbot_broker_logs(self):
+        """Test that the Broker can generate log data."""
 
-    #     retval = self.broker.logs()
-    #     self.assertEqual(retval.status_code, HTTPStatus.OK)
-    #     content = json.loads(retval.content.decode())
-    #     print(content)
-    #     self.assertIsInstance(content, dict)
-    #     self.assertIn("message", content.keys())
-    #     # self.assertEqual(content["message"], "operation not implemented for Chatbot resources")
+        retval = self.broker.logs()
+        self.assertEqual(retval.status_code, HTTPStatus.OK)
+        content = json.loads(retval.content.decode())
+        self.assertIsInstance(content, dict)
+        self.assertIn("message", content.keys())
+        self.assertEqual(content["message"], "Chatbot TestChatbot successfully retrieved logs")
