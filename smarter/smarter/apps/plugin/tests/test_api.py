@@ -106,7 +106,6 @@ class TestPluginAPI(unittest.TestCase):
         response = client.post(
             path=self.api_base + "upload/", data=self.plugin_yaml_modified, content_type="application/x-yaml"
         )
-        print("Response: ", response.content)
         # verify that we are redirected to the new plugin
         self.assertIn(type(response), [HttpResponseRedirect, HttpResponsePermanentRedirect, JsonResponse])
         self.assertIn(response.status_code, [301, 302])

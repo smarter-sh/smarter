@@ -99,7 +99,6 @@ class TestPlugin(unittest.TestCase):
         with open(config_path, encoding="utf-8") as file:
             self.data = yaml.safe_load(file)
         self.user, self.account, self.user_profile = admin_user_factory()
-        print(self.data)
 
     def tearDown(self):
         """Clean up test fixtures."""
