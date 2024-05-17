@@ -206,11 +206,11 @@ class SAMLoader:
             `SAMObject(**loader.pydantic_model_dump())`
         """
         return {
-            "apiVersion": self.manifest_api_version,
-            "kind": self.manifest_kind,
-            "metadata": self.manifest_metadata,
-            "spec": self.manifest_spec,
-            "status": self.manifest_status,
+            SAMKeys.APIVERSION.value: self.manifest_api_version,
+            SAMKeys.KIND.value: self.manifest_kind,
+            SAMKeys.METADATA.value: self.manifest_metadata,
+            SAMKeys.SPEC.value: self.manifest_spec,
+            SAMKeys.STATUS.value: self.manifest_status,
         }
 
     # -------------------------------------------------------------------------

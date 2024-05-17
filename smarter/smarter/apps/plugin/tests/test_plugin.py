@@ -11,6 +11,12 @@ from pydantic_core import ValidationError as PydanticValidationError
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
+from smarter.apps.plugin.manifest.enum import (
+    SAMPluginSpecKeys,
+    SAMPluginSpecPromptKeys,
+    SAMPluginSpecSelectorKeyDirectiveValues,
+    SAMPluginSpecSelectorKeys,
+)
 from smarter.apps.plugin.models import (
     PluginDataStatic,
     PluginMeta,
@@ -37,6 +43,7 @@ from smarter.apps.plugin.signals import (
 )
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 from smarter.apps.plugin.utils import add_example_plugins
+from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.loader import SAMLoaderError
 from smarter.lib.unittest.utils import get_readonly_yaml_file
 
@@ -131,14 +138,33 @@ class TestPlugin(unittest.TestCase):
         self.assertIsInstance(plugin.plugin_prompt_serializer, PluginPromptSerializer)
         self.assertIsInstance(plugin.plugin_selector_serializer, PluginSelectorSerializer)
 
-        self.assertEqual(plugin.plugin_meta.name, self.data["metadata"]["name"])
-        self.assertEqual(plugin.plugin_selector.directive, self.data["spec"]["selector"]["directive"])
-        self.assertEqual(plugin.plugin_prompt.system_role, self.data["spec"]["prompt"]["systemRole"])
-        self.assertEqual(plugin.plugin_prompt.model, self.data["spec"]["prompt"]["model"])
-        self.assertEqual(plugin.plugin_prompt.temperature, self.data["spec"]["prompt"]["temperature"])
-        self.assertEqual(plugin.plugin_prompt.max_tokens, self.data["spec"]["prompt"]["maxTokens"])
-        self.assertEqual(plugin.plugin_data.description, self.data["spec"]["data"]["description"])
-        self.assertEqual(plugin.plugin_data.static_data, self.data["spec"]["data"]["staticData"])
+        self.assertEqual(plugin.plugin_meta.name, self.data[SAMKeys.METADATA.value]["name"])
+        self.assertEqual(
+            plugin.plugin_selector.directive,
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][SAMPluginSpecSelectorKeys.DIRECTIVE.value],
+        )
+        self.assertEqual(
+            plugin.plugin_prompt.system_role,
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.SYSTEMROLE.value],
+        )
+        self.assertEqual(
+            plugin.plugin_prompt.model,
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.MODEL.value],
+        )
+        self.assertEqual(
+            plugin.plugin_prompt.temperature,
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.TEMPERATURE.value],
+        )
+        self.assertEqual(
+            plugin.plugin_prompt.max_tokens,
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.MAXTOKENS.value],
+        )
+        self.assertEqual(
+            plugin.plugin_data.description, self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.DATA.value]["description"]
+        )
+        self.assertEqual(
+            plugin.plugin_data.static_data, self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.DATA.value]["staticData"]
+        )
 
     def test_to_json(self):
         """Test that the PluginStatic generates correct JSON output."""
@@ -153,16 +179,35 @@ class TestPlugin(unittest.TestCase):
         self.assertTrue(self.signals["plugin_ready"])
 
         self.assertIsInstance(to_json, dict)
-        self.assertEqual(to_json["metadata"]["name"], self.data["metadata"]["name"])
+        self.assertEqual(to_json[SAMKeys.METADATA.value]["name"], self.data[SAMKeys.METADATA.value]["name"])
         self.assertEqual(
-            to_json["spec"]["selector"]["directive"].strip(), self.data["spec"]["selector"]["directive"].strip()
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
+                SAMPluginSpecSelectorKeys.DIRECTIVE.value
+            ].strip(),
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
+                SAMPluginSpecSelectorKeys.DIRECTIVE.value
+            ].strip(),
         )
         self.assertEqual(
-            to_json["spec"]["prompt"]["systemRole"].strip(), self.data["spec"]["prompt"]["systemRole"].strip()
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginSpecPromptKeys.SYSTEMROLE.value
+            ].strip(),
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginSpecPromptKeys.SYSTEMROLE.value
+            ].strip(),
         )
-        self.assertEqual(to_json["spec"]["prompt"]["model"].strip(), self.data["spec"]["prompt"]["model"].strip())
-        self.assertEqual(to_json["spec"]["prompt"]["temperature"], self.data["spec"]["prompt"]["temperature"])
-        self.assertEqual(to_json["spec"]["prompt"]["maxTokens"], self.data["spec"]["prompt"]["maxTokens"])
+        self.assertEqual(
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.MODEL.value].strip(),
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.MODEL.value].strip(),
+        )
+        self.assertEqual(
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.TEMPERATURE.value],
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.TEMPERATURE.value],
+        )
+        self.assertEqual(
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.MAXTOKENS.value],
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.MAXTOKENS.value],
+        )
 
     def test_delete(self):
         """Test that we can delete a plugin using the PluginStatic."""
@@ -218,27 +263,27 @@ class TestPlugin(unittest.TestCase):
             PluginStatic(data={})
 
         bad_data = self.data.copy()
-        bad_data.pop("metadata")
+        bad_data.pop(SAMKeys.METADATA.value)
         with self.assertRaises(SAMLoaderError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["spec"].pop("selector")
+        bad_data[SAMKeys.SPEC.value].pop(SAMPluginSpecKeys.SELECTOR.value)
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["spec"].pop("prompt")
+        bad_data[SAMKeys.SPEC.value].pop(SAMPluginSpecKeys.PROMPT.value)
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["spec"].pop("data")
+        bad_data[SAMKeys.SPEC.value].pop(SAMPluginSpecKeys.DATA.value)
         with self.assertRaises(SAMLoaderError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["metadata"].pop("name")
+        bad_data[SAMKeys.METADATA.value].pop("name")
         with self.assertRaises(SAMLoaderError):
             PluginStatic(data=bad_data)
 
@@ -246,59 +291,65 @@ class TestPlugin(unittest.TestCase):
         """Test that the PluginStatic raises an error when given bad data."""
 
         bad_data = self.data.copy()
-        bad_data["spec"]["selector"].pop("directive")
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value].pop(SAMPluginSpecSelectorKeys.DIRECTIVE.value)
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["spec"]["prompt"].pop("systemRole")
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginSpecPromptKeys.SYSTEMROLE.value)
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["spec"]["prompt"].pop("model")
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginSpecPromptKeys.MODEL.value)
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["spec"]["prompt"].pop("temperature")
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginSpecPromptKeys.TEMPERATURE.value)
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["spec"]["prompt"].pop("maxTokens")
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginSpecPromptKeys.MAXTOKENS.value)
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["spec"]["data"].pop("description")
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.DATA.value].pop("description")
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["spec"]["data"].pop("staticData")
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.DATA.value].pop("staticData")
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
     def test_validation_bad_data_types(self):
         """Test that the PluginStatic raises an error when given bad data."""
         bad_data = self.data.copy()
-        bad_data["metadata"]["tags"] = "not a list"
+        bad_data[SAMKeys.METADATA.value]["tags"] = "not a list"
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["spec"]["selector"]["searchTerms"] = "not a list"
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
+            SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS.value
+        ] = "not a list"
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["spec"]["prompt"]["temperature"] = "not a float"
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+            SAMPluginSpecPromptKeys.TEMPERATURE.value
+        ] = "not a float"
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data["spec"]["prompt"]["maxTokens"] = "not an int"
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+            SAMPluginSpecPromptKeys.MAXTOKENS.value
+        ] = "not an int"
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
@@ -355,16 +406,35 @@ class TestPlugin(unittest.TestCase):
 
         # ensure that the json output still matches the original data
         self.assertIsInstance(to_json, dict)
-        self.assertEqual(to_json["metadata"]["name"], self.data["metadata"]["name"])
+        self.assertEqual(to_json[SAMKeys.METADATA.value]["name"], self.data[SAMKeys.METADATA.value]["name"])
         self.assertEqual(
-            to_json["spec"]["selector"]["directive"].strip(), self.data["spec"]["selector"]["directive"].strip()
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
+                SAMPluginSpecSelectorKeys.DIRECTIVE.value
+            ].strip(),
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
+                SAMPluginSpecSelectorKeys.DIRECTIVE.value
+            ].strip(),
         )
         self.assertEqual(
-            to_json["spec"]["prompt"]["systemRole"].strip(), self.data["spec"]["prompt"]["systemRole"].strip()
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginSpecPromptKeys.SYSTEMROLE.value
+            ].strip(),
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginSpecPromptKeys.SYSTEMROLE.value
+            ].strip(),
         )
-        self.assertEqual(to_json["spec"]["prompt"]["model"].strip(), self.data["spec"]["prompt"]["model"].strip())
-        self.assertEqual(to_json["spec"]["prompt"]["temperature"], self.data["spec"]["prompt"]["temperature"])
-        self.assertEqual(to_json["spec"]["prompt"]["maxTokens"], self.data["spec"]["prompt"]["maxTokens"])
+        self.assertEqual(
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.MODEL.value].strip(),
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.MODEL.value].strip(),
+        )
+        self.assertEqual(
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.TEMPERATURE.value],
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.TEMPERATURE.value],
+        )
+        self.assertEqual(
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.MAXTOKENS.value],
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.MAXTOKENS.value],
+        )
 
     def test_plugin_called_signal(self):
         """Test the plugin_called signal."""

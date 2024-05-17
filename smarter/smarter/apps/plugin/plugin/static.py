@@ -5,11 +5,16 @@ import logging
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginMetadataClass,
     SAMPluginMetadataClassValues,
+    SAMPluginMetadataKeys,
+    SAMPluginSpecKeys,
+    SAMPluginSpecPromptKeys,
+    SAMPluginSpecSelectorKeys,
+    SmartApiPluginSpecDataKeys,
 )
 from smarter.apps.plugin.models import PluginDataStatic
 from smarter.apps.plugin.serializers import PluginDataStaticSerializer
 from smarter.common.conf import SettingsDefaults
-from smarter.lib.manifest.enum import SAMApiVersions
+from smarter.lib.manifest.enum import SAMApiVersions, SAMKeys, SAMMetadataKeys
 
 from ..manifest.models.plugin.const import MANIFEST_KIND
 from .base import PluginBase
@@ -83,29 +88,34 @@ class PluginStatic(PluginBase):
     @classmethod
     def example_manifest(cls, kwargs: dict = None) -> dict:
         return {
-            "apiVersion": SAMApiVersions.V1.value,
-            "kind": MANIFEST_KIND,
-            "metadata": {
-                "name": "EverlastingGobstopper",
-                "pluginClass": SAMPluginMetadataClassValues.STATIC.value,
-                "description": "Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
-                "version": "0.1.0",
-                "tags": ["candy", "treats", "chocolate", "Gobstoppers", "Willy Wonka"],
+            SAMKeys.APIVERSION.value: SAMApiVersions.V1.value,
+            SAMKeys.KIND.value: MANIFEST_KIND,
+            SAMKeys.METADATA.value: {
+                SAMMetadataKeys.NAME.value: "EverlastingGobstopper",
+                SAMPluginMetadataKeys.PLUGIN_CLASS.value: SAMPluginMetadataClassValues.STATIC.value,
+                SAMMetadataKeys.DESCRIPTION.value: "Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
+                SAMMetadataKeys.VERSION.value: "0.1.0",
+                SAMMetadataKeys.TAGS.value: ["candy", "treats", "chocolate", "Gobstoppers", "Willy Wonka"],
             },
-            "spec": {
-                "selector": {
-                    "directive": "searchTerms",
-                    "searchTerms": ["Gobstopper", "Gobstoppers", "Gobbstopper", "Gobbstoppers"],
+            SAMKeys.SPEC.value: {
+                SAMPluginSpecKeys.SELECTOR.value: {
+                    SAMPluginSpecSelectorKeys.DIRECTIVE.value: SAMPluginSpecSelectorKeys.SEARCHTERMS.value,
+                    SAMPluginSpecSelectorKeys.SEARCHTERMS.value: [
+                        "Gobstopper",
+                        "Gobstoppers",
+                        "Gobbstopper",
+                        "Gobbstoppers",
+                    ],
                 },
-                "prompt": {
-                    "systemRole": "You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com).\n",
-                    "model": SettingsDefaults.OPENAI_DEFAULT_MODEL,
-                    "temperature": SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE,
-                    "maxTokens": SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS,
+                SAMPluginSpecKeys.PROMPT.value: {
+                    SAMPluginSpecPromptKeys.SYSTEMROLE.value: "You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com).\n",
+                    SAMPluginSpecPromptKeys.MODEL.value: SettingsDefaults.OPENAI_DEFAULT_MODEL,
+                    SAMPluginSpecPromptKeys.TEMPERATURE.value: SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE,
+                    SAMPluginSpecPromptKeys.MAXTOKENS.value: SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS,
                 },
-                "data": {
-                    "description": "Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
-                    "staticData": {
+                SAMPluginSpecKeys.DATA.value: {
+                    SmartApiPluginSpecDataKeys.DESCRIPTION.value: "Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
+                    SmartApiPluginSpecDataKeys.STATIC_DATA.value: {
                         "contact": [
                             {"name": "Willy Wonka"},
                             {"title": "Founder and CEO"},
