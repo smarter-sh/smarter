@@ -20,10 +20,6 @@ spec:
     appBackgroundImageUrl: https://smarter.sh/assets/img/bg.jpg
     appLogoUrl: https://smarter.sh/assets/img/logo.png
     appFileAttachment: false
-    subdomain:
-      enabled: true
-      name: test
-    customDomain:
-      enabled: false
-      domain: ""
+    subdomain: test-chatbot
+    customDomain: null
   plugins:
