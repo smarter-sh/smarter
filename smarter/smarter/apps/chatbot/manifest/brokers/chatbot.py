@@ -286,9 +286,9 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         return self.not_ready_response()
 
     def delete(self, request: HttpRequest = None) -> JsonResponse:
-        if self.plugin.ready:
+        if self.chatbot:
             try:
-                self.plugin.delete()
+                self.chatbot.delete()
                 return self.success_response(operation=self.delete.__name__, data={})
             except Exception as e:
                 return self.err_response(self.delete.__name__, e)
@@ -299,7 +299,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
             try:
                 self.chatbot.deployed = True
                 self.chatbot.save()
-                return self.success_response(operation=self.describe.__name__, data={})
+                return self.success_response(operation=self.deploy.__name__, data={})
             except Exception as e:
                 return self.err_response(self.deploy.__name__, e)
         return self.not_ready_response()
