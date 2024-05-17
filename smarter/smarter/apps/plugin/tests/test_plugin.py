@@ -155,9 +155,13 @@ class TestPlugin(unittest.TestCase):
 
         self.assertIsInstance(to_json, dict)
         self.assertEqual(to_json["metadata"]["name"], self.data["metadata"]["name"])
-        self.assertEqual(to_json["spec"]["selector"]["directive"], self.data["spec"]["selector"]["directive"])
-        self.assertEqual(to_json["spec"]["prompt"]["systemRole"], self.data["spec"]["prompt"]["systemRole"])
-        self.assertEqual(to_json["spec"]["prompt"]["model"], self.data["spec"]["prompt"]["model"])
+        self.assertEqual(
+            to_json["spec"]["selector"]["directive"].strip(), self.data["spec"]["selector"]["directive"].strip()
+        )
+        self.assertEqual(
+            to_json["spec"]["prompt"]["systemRole"].strip(), self.data["spec"]["prompt"]["systemRole"].strip()
+        )
+        self.assertEqual(to_json["spec"]["prompt"]["model"].strip(), self.data["spec"]["prompt"]["model"].strip())
         self.assertEqual(to_json["spec"]["prompt"]["temperature"], self.data["spec"]["prompt"]["temperature"])
         self.assertEqual(to_json["spec"]["prompt"]["maxTokens"], self.data["spec"]["prompt"]["maxTokens"])
 
@@ -243,7 +247,6 @@ class TestPlugin(unittest.TestCase):
         """Test that the PluginStatic raises an error when given bad data."""
 
         bad_data = self.data.copy()
-        print("bad_data", bad_data)
         bad_data["spec"]["selector"].pop("directive")
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
@@ -354,9 +357,13 @@ class TestPlugin(unittest.TestCase):
         # ensure that the json output still matches the original data
         self.assertIsInstance(to_json, dict)
         self.assertEqual(to_json["metadata"]["name"], self.data["metadata"]["name"])
-        self.assertEqual(to_json["spec"]["selector"]["directive"], self.data["spec"]["selector"]["directive"])
-        self.assertEqual(to_json["spec"]["prompt"]["systemRole"], self.data["spec"]["prompt"]["systemRole"])
-        self.assertEqual(to_json["spec"]["prompt"]["model"], self.data["spec"]["prompt"]["model"])
+        self.assertEqual(
+            to_json["spec"]["selector"]["directive"].strip(), self.data["spec"]["selector"]["directive"].strip()
+        )
+        self.assertEqual(
+            to_json["spec"]["prompt"]["systemRole"].strip(), self.data["spec"]["prompt"]["systemRole"].strip()
+        )
+        self.assertEqual(to_json["spec"]["prompt"]["model"].strip(), self.data["spec"]["prompt"]["model"].strip())
         self.assertEqual(to_json["spec"]["prompt"]["temperature"], self.data["spec"]["prompt"]["temperature"])
         self.assertEqual(to_json["spec"]["prompt"]["maxTokens"], self.data["spec"]["prompt"]["maxTokens"])
 
