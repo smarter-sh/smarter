@@ -2,6 +2,7 @@
 
 import logging
 
+from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClass
 from smarter.apps.plugin.models import PluginDataStatic
 from smarter.apps.plugin.serializers import PluginDataStaticSerializer
 
@@ -14,6 +15,7 @@ logger = logging.getLogger(__name__)
 class PluginStatic(PluginBase):
     """A PLugin that returns a static json object stored in the Plugin itself."""
 
+    _metadata_class = SAMPluginMetadataClass.STATIC_DATA.value
     _plugin_data: PluginDataStatic = None
     _plugin_data_serializer: PluginDataStaticSerializer = None
 

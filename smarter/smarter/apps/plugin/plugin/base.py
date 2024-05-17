@@ -59,6 +59,7 @@ class PluginBase(ABC):
 
     _api_version: str = SMARTER_API_MANIFEST_DEFAULT_VERSION
     _kind: str = MANIFEST_KIND
+    _metadata_class: str = None
     _manifest: SAMPlugin = None
 
     _plugin_meta: PluginMeta = None
@@ -187,6 +188,11 @@ class PluginBase(ABC):
     ###########################################################################
     # Base class properties
     ###########################################################################
+    @property
+    def metadata_class(self) -> str:
+        """Return the metadata class."""
+        return self._metadata_class
+
     @property
     def params(self) -> dict:
         """Return the plugin parameters."""
@@ -734,17 +740,21 @@ class PluginBase(ABC):
         is used to create a Pydantic model from a Django ORM model, for purposes
         of rendering a Plugin manifest for the Smarter API.
         """
+        data = {**self.plugin_data_serializer.data, "id": self.plugin_data.id}
+        description = data.pop("description")
         if self.ready:
             if version == "v1":
                 retval = {
                     "apiVersion": self.api_version,
                     "kind": self.kind,
-                    "id": self.id,
-                    "metadata": {**self.plugin_meta_serializer.data, "id": self.plugin_meta.id},
+                    "metadata": self.plugin_meta_serializer.data,
                     "spec": {
-                        "selector": {**self.plugin_selector_serializer.data, "id": self.plugin_selector.id},
-                        "prompt": {**self.plugin_prompt_serializer.data, "id": self.plugin_prompt.id},
-                        "data": {**self.plugin_data_serializer.data, "id": self.plugin_data.id},
+                        "selector": self.plugin_selector_serializer.data,
+                        "prompt": self.plugin_prompt_serializer.data,
+                        "data": {
+                            "description": description,
+                            f"{self.metadata_class}": self.plugin_data_serializer.data,
+                        },
                     },
                     "status": {
                         "account_number": self.user_profile.account.account_number,
