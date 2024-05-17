@@ -21,6 +21,7 @@ lambda_dist_pkg
 
 # coverage artifacts
 # -------------------------------------
+/smarter/.coverage
 .coverage
 .coverage.*
 htmlcov
