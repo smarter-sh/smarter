@@ -160,7 +160,7 @@ class SAMLoader:
     def json_data(self) -> dict:
         if self.data_format == SAMDataFormats.JSON:
             return self.raw_data
-        elif self.data_format == SAMDataFormats.YAML:
+        if self.data_format == SAMDataFormats.YAML:
             return yaml.safe_load(self.raw_data)
         return None
 
@@ -168,7 +168,7 @@ class SAMLoader:
     def yaml_data(self) -> str:
         if self.data_format == SAMDataFormats.YAML:
             return self.raw_data
-        elif self.data_format == SAMDataFormats.JSON:
+        if self.data_format == SAMDataFormats.JSON:
             return yaml.dump(self.json_data)
         return None
 

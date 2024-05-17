@@ -135,6 +135,3 @@ class PluginStatic(PluginBase):
                 },
             },
         }
-
-    def create(self):
-        super().create()

@@ -1,3 +1,5 @@
+"""Plug helper functions for plugin unit tests."""
+
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import account_admin_user, user_profile_for_user
 from smarter.common.exceptions import SmarterValueError

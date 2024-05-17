@@ -9,7 +9,6 @@ from http import HTTPStatus
 import inflect
 from django.http import HttpRequest, JsonResponse
 
-from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django.user import UserType
 from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
@@ -35,6 +34,7 @@ class SAMBrokerError(SAMExceptionBase):
         return "Smarter API Manifest Broker Error"
 
 
+# pylint: disable=too-many-public-methods
 class AbstractBroker(ABC):
     """
     Smarter API Manifest Broker abstract base class. This class is responsible

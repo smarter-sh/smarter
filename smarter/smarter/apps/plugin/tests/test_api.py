@@ -92,8 +92,8 @@ class TestPluginAPI(unittest.TestCase):
         parsed_url = urlparse(url)
         last_slug = parsed_url.path.split("/")[-2]
         plugin_id = int(last_slug)
-        self.plugin = PluginStatic(plugin_id=plugin_id)
-        self.assertEqual(self.plugin.ready, True)
+        plugin = PluginStatic(plugin_id=plugin_id)
+        self.assertEqual(plugin.ready, True)
 
     def test_update(self):
         """
@@ -116,8 +116,8 @@ class TestPluginAPI(unittest.TestCase):
         last_slug = parsed_url.path.split("/")[-2]
         plugin_id = int(last_slug)
 
-        self.plugin = PluginStatic(plugin_id=plugin_id)
-        self.assertEqual(self.plugin.ready, True)
+        plugin = PluginStatic(plugin_id=plugin_id)
+        self.assertEqual(plugin.ready, True)
 
         self.plugin.refresh()
         self.assertEqual(self.plugin.ready, True)
@@ -143,8 +143,8 @@ class TestPluginAPI(unittest.TestCase):
         parsed_url = urlparse(url)
         last_slug = parsed_url.path.split("/")[-2]
         plugin_id = int(last_slug)
-        self.plugin = PluginStatic(plugin_id=plugin_id)
-        self.assertEqual(self.plugin.ready, True)
+        plugin = PluginStatic(plugin_id=plugin_id)
+        self.assertEqual(plugin.ready, True)
 
         # delete the plugin using the api endpoint
         response = client.delete(
