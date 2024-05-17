@@ -105,13 +105,18 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
     @property
     def sql_connection(self) -> PluginDataSqlConnection:
         if not self._sql_connection:
-            model_dump = self.manifest.spec.connection.model_dump()
-            model_dump["account"] = self.account
-            model_dump["name"] = self.manifest.metadata.name
-            model_dump["version"] = self.manifest.metadata.version
-            model_dump["description"] = self.manifest.metadata.description
-            self._sql_connection = PluginDataSqlConnection(**model_dump)
-            self._sql_connection.save()
+            try:
+                self._sql_connection = PluginDataSqlConnection.objects.get(
+                    account=self.account, name=self.manifest.metadata.name
+                )
+            except PluginDataSqlConnection.DoesNotExist:
+                model_dump = self.manifest.spec.connection.model_dump()
+                model_dump["account"] = self.account
+                model_dump["name"] = self.manifest.metadata.name
+                model_dump["version"] = self.manifest.metadata.version
+                model_dump["description"] = self.manifest.metadata.description
+                self._sql_connection = PluginDataSqlConnection(**model_dump)
+                self._sql_connection.save()
 
         return self._sql_connection
 

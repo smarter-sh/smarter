@@ -14,12 +14,15 @@ spec:
     appName: Test Chatbot
     appAssistant: Tatiana
     appWelcomeMessage: Welcome to Test Chatbot! How can I help you today?
-    appExamplePrompts: ["What is the weather in New York?", "Tell me a joke", "What is the capital of France?"]
+    appExamplePrompts:
+      - "What is the weather in New York?"
+      - "Tell me a joke"
+      - "What is the capital of France?"
     appPlaceholder: "Ask me anything..."
     appInfoUrl: https://smarter.sh
     appBackgroundImageUrl: https://smarter.sh/assets/img/bg.jpg
     appLogoUrl: https://smarter.sh/assets/img/logo.png
     appFileAttachment: false
-    subdomain: test-chatbot
+    subdomain: null
     customDomain: null
   plugins:

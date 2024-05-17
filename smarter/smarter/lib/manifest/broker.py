@@ -1,6 +1,7 @@
 # pylint: disable=W0613
 """Smarter API Manifest Abstract Broker class."""
 
+import re
 import traceback
 import typing
 from abc import ABC, abstractmethod
@@ -257,6 +258,21 @@ class AbstractBroker(ABC):
             "message": message,
         }
         return JsonResponse(data=retval, status=HTTPStatus.OK, safe=False)
+
+    def camel_to_snake(self, dictionary: dict) -> dict:
+        """Converts camelCase dict keys to snake_case."""
+
+        def convert(name: str):
+            s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+            return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+
+        retval = {}
+        for key, value in dictionary.items():
+            if isinstance(value, dict):
+                value = self.camel_to_snake(value)
+            new_key = convert(key)
+            retval[new_key] = value
+        return retval
 
 
 class BrokerNotImplemented(AbstractBroker):
