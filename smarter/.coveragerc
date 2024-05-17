@@ -1,13 +1,14 @@
 [run]
 source =
-    smarter
+    smarter/
 omit =
     **/tests/*
     **/migrations/*
     smarter/apps/account/models.py
     smarter/apps/chat/models.py
     smarter/apps/chatbot/models.py
-
+    smarter/common/
+    smarter/lib/
 [report]
 exclude_lines =
     pragma: no cover
