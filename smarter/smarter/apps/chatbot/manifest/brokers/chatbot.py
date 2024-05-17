@@ -26,12 +26,15 @@ class SAMChatbotBrokerError(SAMExceptionBase):
 
 class SAMChatbotBroker(AbstractBroker, AccountMixin):
     """
-    Smarter API Plugin Manifest Broker.This class is responsible for
+    Smarter API Chatbot Manifest Broker. This class is responsible for
     - loading, validating and parsing the Smarter Api yaml Plugin manifests
     - using the manifest to initialize the corresponding Pydantic model
 
-    The Plugin object provides the generic services for the Plugin, such as
-    instantiation, create, update, delete, etc.
+    This Broker class interacts with the collection of Django ORM models that
+    represent the Smarter API Chatbot manifests. The Broker class is responsible
+    for creating, updating, deleting and querying the Django ORM models, as well
+    as transforming the Django ORM models into Pydantic models for serialization
+    and deserialization.
     """
 
     # override the base abstract manifest model with the Plugin model
