@@ -214,7 +214,8 @@ class AbstractBroker(ABC):
         """get logs for a resource."""
         raise NotImplementedError
 
-    def example_manifest(self, request: HttpRequest = None) -> JsonResponse:
+    @abstractmethod
+    def example_manifest(self, kwargs: dict = None) -> JsonResponse:
         """Returns an example yaml manifest document for the kind of resource."""
         raise NotImplementedError
 

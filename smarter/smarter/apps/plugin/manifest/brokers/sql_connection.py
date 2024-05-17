@@ -120,7 +120,7 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
 
         return self._sql_connection
 
-    def example_manifest(self, request: HttpRequest = None) -> JsonResponse:
+    def example_manifest(self, kwargs: dict = None) -> JsonResponse:
         data = {
             "apiVersion": self.api_version,
             "kind": self.kind,

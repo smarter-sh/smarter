@@ -66,7 +66,8 @@ class TestApiV1CliPlugin(ApiV1TestBase):
         data = response["data"]
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
-        self.assertEqual(data["filepath"], "https://cdn.localhost:8000/cli/example-manifests/plugin.yaml")
+        self.assertEqual(data["kind"], SAMKinds.PLUGIN.value)
+        self.assertEqual(data["apiVersion"], SAMApiVersions.V1.value)
 
         path = reverse("api_v1_cli_delete_view", kwargs={"kind": "plugin", "name": self.name})
         response, status = self.get_response(path)

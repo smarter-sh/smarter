@@ -9,7 +9,9 @@ from smarter.apps.plugin.manifest.enum import (
 from smarter.apps.plugin.models import PluginDataStatic
 from smarter.apps.plugin.serializers import PluginDataStaticSerializer
 from smarter.common.conf import SettingsDefaults
+from smarter.lib.manifest.enum import SAMApiVersions
 
+from ..manifest.models.plugin.const import MANIFEST_KIND
 from .base import PluginBase
 
 
@@ -78,10 +80,11 @@ class PluginStatic(PluginBase):
             }
         return None
 
-    def example_manifest(self) -> dict:
+    @classmethod
+    def example_manifest(cls, kwargs: dict = None) -> dict:
         return {
-            "apiVersion": self.api_version,
-            "kind": self.kind,
+            "apiVersion": SAMApiVersions.V1.value,
+            "kind": MANIFEST_KIND,
             "metadata": {
                 "name": "EverlastingGobstopper",
                 "pluginClass": SAMPluginMetadataClassValues.STATIC.value,

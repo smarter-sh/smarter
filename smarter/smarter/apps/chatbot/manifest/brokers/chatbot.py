@@ -197,7 +197,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def example_manifest(self, request: HttpRequest = None) -> JsonResponse:
+    def example_manifest(self, kwargs: dict = None) -> JsonResponse:
         data = {
             "apiVersion": self.api_version,
             "kind": self.kind,

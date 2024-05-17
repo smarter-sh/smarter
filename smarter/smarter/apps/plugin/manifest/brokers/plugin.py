@@ -24,7 +24,7 @@ from ..models.plugin.model import SAMPlugin
 
 MAX_RESULTS = 1000
 
-PluginMap: dict[PluginBase] = {
+PluginMap: dict[str, PluginBase] = {
     SAMPluginMetadataClassValues.STATIC.value: PluginStatic,
     SAMPluginMetadataClassValues.SQL.value: PluginSql,
 }
@@ -136,17 +136,15 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def example_manifest(
-        self, request: HttpRequest = None, plugin_class: str = SAMPluginMetadataClassValues.STATIC.value
-    ) -> JsonResponse:
-        plugin: PluginBase = None
+    def example_manifest(self, kwargs: dict = None) -> JsonResponse:
+        plugin_class: str = kwargs.get("plugin_class", SAMPluginMetadataClassValues.STATIC.value)
         try:
-            plugin = PluginMap[plugin_class]
+            Plugin = PluginMap[plugin_class]
         except KeyError as e:
             raise SAMPluginBrokerError(f"Plugin class {plugin_class} not found") from e
 
-        data = plugin.example_manifest()
-        self.success_response(operation=self.example_manifest.__name__, data=data)
+        data = Plugin.example_manifest(kwargs=kwargs)
+        return self.success_response(operation=self.example_manifest.__name__, data=data)
 
     def get(
         self, request: HttpRequest = None, name: str = None, all_objects: bool = False, tags: str = None
