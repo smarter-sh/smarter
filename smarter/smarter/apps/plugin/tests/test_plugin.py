@@ -39,6 +39,7 @@ from smarter.apps.plugin.signals import (
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.lib.manifest.loader import SAMLoaderError
+from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes
@@ -96,8 +97,7 @@ class TestPlugin(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         config_path = get_test_file_path("everlasting-gobstopper.yaml")
-        with open(config_path, encoding="utf-8") as file:
-            self.data = yaml.safe_load(file)
+        self.data = get_readonly_yaml_file(config_path)
         self.user, self.account, self.user_profile = admin_user_factory()
 
     def tearDown(self):

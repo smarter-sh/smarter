@@ -1,6 +1,5 @@
 """Views for the account settings."""
 
-import csv
 import logging
 import os
 from http import HTTPStatus
@@ -9,30 +8,24 @@ from django import forms, http
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.lib.django.view_helpers import SmarterAdminWebView
+from smarter.lib.unittest.utils import get_readonly_csv_file
 
 
 logger = logging.getLogger(__name__)
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
-def get_from_csv(file_path):
-    """Reads a CSV file and returns a list of dictionaries."""
-    with open(file_path, encoding="utf-8") as file:
-        reader = csv.DictReader(file)
-        return list(reader)
-
-
 countries_csv = os.path.join(HERE, "./data/countries.csv")
-COUNTRIES = get_from_csv(countries_csv)
+COUNTRIES = get_readonly_csv_file(countries_csv)
 
 languages_csv = os.path.join(HERE, "./data/languages.csv")
-LANGUAGES = get_from_csv(languages_csv)
+LANGUAGES = get_readonly_csv_file(languages_csv)
 
 timezones_csv = os.path.join(HERE, "./data/timezones.csv")
-TIMEZONES = get_from_csv(timezones_csv)
+TIMEZONES = get_readonly_csv_file(timezones_csv)
 
 currencies_csv = os.path.join(HERE, "./data/currencies.csv")
-CURRENCIES = get_from_csv(currencies_csv)
+CURRENCIES = get_readonly_csv_file(currencies_csv)
 
 
 class AccountForm(forms.ModelForm):

@@ -20,6 +20,7 @@ from smarter.apps.account.tests.factories import admin_user_factory, admin_user_
 
 # our stuff
 from smarter.lib.django.user import User
+from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 from ..plugin.static import PluginStatic
 from .test_setup import get_test_file_path
@@ -47,18 +48,13 @@ class TestPluginAPI(unittest.TestCase):
         user_profile = UserProfile.objects.create(user=user, account=self.account, is_test=True)
         return user, user_profile
 
-    def safe_load(self, file_path) -> dict:
-        """Load a file."""
-        with open(file_path, encoding="utf-8") as file:
-            return yaml.safe_load(file)
-
     def setUp(self):
         """Set up test fixtures."""
         plugin_path = get_test_file_path("everlasting-gobstopper.yaml")
-        self.plugin_yaml = self.safe_load(file_path=plugin_path)
+        self.plugin_yaml = get_readonly_yaml_file(plugin_path)
 
         plugin_path = get_test_file_path("everlasting-gobstopper-modified.yaml")
-        self.plugin_yaml_modified = self.safe_load(file_path=plugin_path)
+        self.plugin_yaml_modified = get_readonly_yaml_file(plugin_path)
 
         self.admin_user, self.account, self.admin_user_profile = admin_user_factory()
 
