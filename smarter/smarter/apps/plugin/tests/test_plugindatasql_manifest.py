@@ -24,6 +24,7 @@ from .factories import plugin_meta_factory
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
+# pylint: disable=too-many-instance-attributes
 class TestPluginDataSql(unittest.TestCase):
     """Test SAM Plugin manifest using PluginDataSql"""
 

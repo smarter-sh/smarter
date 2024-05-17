@@ -14,15 +14,11 @@ from django.http import (
 )
 from django.test import Client
 
-from smarter.apps.account.models import UserProfile
 from smarter.apps.account.tests.factories import (
     admin_user_factory,
     admin_user_teardown,
     mortal_user_factory,
 )
-
-# our stuff
-from smarter.lib.django.user import User
 from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 from ..plugin.static import PluginStatic

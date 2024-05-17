@@ -8,8 +8,6 @@ import sys
 import unittest
 from pathlib import Path
 
-import yaml
-
 from smarter.lib.django.user import User
 from smarter.lib.unittest.utils import get_readonly_yaml_file
 

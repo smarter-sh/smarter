@@ -7,7 +7,7 @@ import yaml
 
 from smarter.common.const import PYTHON_ROOT
 
-from ..enum import SAMApiVersions, SAMDataFormats, SAMKeys, SAMMetadataKeys
+from ..enum import SAMDataFormats, SAMKeys, SAMMetadataKeys
 from ..loader import SAMLoader, SAMLoaderError
 
 
