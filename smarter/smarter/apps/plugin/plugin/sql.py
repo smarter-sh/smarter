@@ -1,6 +1,7 @@
 """A PLugin that uses a remote SQL database server to retrieve its return data"""
 
 import logging
+import re
 
 from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClass
 from smarter.apps.plugin.models import PluginDataSql, PluginDataSqlConnection
@@ -46,11 +47,17 @@ class PluginSql(PluginBase):
     @property
     def plugin_data_django_model(self) -> dict:
         """Return the plugin data definition as a json object."""
+
+        def camel_to_snake(name):
+            name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+            return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
+
         # recast the Pydantic model to the PluginDataSql Django ORM model
         plugin_data_sqlconnection = PluginDataSqlConnection.objects.get(
             account=self.user_profile.account, name=self.manifest.spec.data.sqlData.connection
         )
         sql_data = self.manifest.spec.data.sqlData.model_dump()
+        sql_data = {camel_to_snake(key): value for key, value in sql_data.items()}
         sql_data["connection"] = plugin_data_sqlconnection
         return {
             "plugin": self.plugin_meta,
