@@ -184,7 +184,8 @@ class PluginBase(ABC):
         """Return the plugin data definition as a json object."""
         raise NotImplementedError()
 
-    def example_manifest(self) -> dict:
+    @classmethod
+    def example_manifest(cls, kwargs: dict = None) -> dict:
         raise NotImplementedError()
 
     ###########################################################################

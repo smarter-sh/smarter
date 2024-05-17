@@ -10,5 +10,5 @@ class ApiV1CliManifestApiView(CliBaseApiView):
     Returns an example yaml manifest file for the given 'kind'.
     """
 
-    def post(self, request, kind):
-        return self.broker.example_manifest(request)
+    def post(self, request, kind, *args, **kwargs):
+        return self.broker.example_manifest(kwargs=kwargs)
