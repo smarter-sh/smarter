@@ -188,6 +188,8 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         if self.plugin.ready:
             try:
                 data = self.plugin.to_json()
+                data["metadata"].pop("account")
+                data["metadata"].pop("author")
                 return self.success_response(operation=self.describe.__name__, data=data)
             except Exception as e:
                 return self.err_response(self.describe.__name__, e)

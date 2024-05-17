@@ -2,6 +2,7 @@
 
 import logging
 
+from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClass
 from smarter.apps.plugin.models import PluginDataSql, PluginDataSqlConnection
 from smarter.apps.plugin.serializers import PluginDataSqlSerializer
 from smarter.common.exceptions import SmarterConfigurationError
@@ -16,6 +17,7 @@ logger = logging.getLogger(__name__)
 class PluginSql(PluginBase):
     """A PLugin that uses an SQL query executed on a remote SQL database server to retrieve its return data"""
 
+    _metadata_class = SAMPluginMetadataClass.SQL_DATA.value
     _plugin_data: PluginDataSql = None
     _plugin_data_serializer: PluginDataSqlSerializer = None
 

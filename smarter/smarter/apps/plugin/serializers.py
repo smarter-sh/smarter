@@ -30,7 +30,6 @@ class PluginMetaSerializer(serializers.ModelSerializer):
     """PluginMeta model serializer."""
 
     tags = TagListSerializerField()
-    # tags = serializers.StringRelatedField(many=True)
     author = UserProfileSerializer(read_only=True)
     account = AccountSerializer(read_only=True)
 
@@ -106,14 +105,11 @@ class PluginDataStaticSerializer(serializers.ModelSerializer):
 class PluginDataSqlConnectionSerializer(serializers.ModelSerializer):
     """PluginDataSql model serializer."""
 
-    account = AccountSerializer(read_only=True)
-
     # pylint: disable=missing-class-docstring
     class Meta:
         model = PluginDataSqlConnection
         fields = [
             "name",
-            "account",
             "description",
             "hostname",
             "port",

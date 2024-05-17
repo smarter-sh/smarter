@@ -37,7 +37,7 @@ class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
         """Tear down test fixtures."""
         admin_user_teardown(self.user, self.account, self.user_profile)
 
-    def test_plugin_broker_apply(self):
+    def test_sqlconnection_broker_apply(self):
         """Test that the Broker can apply the manifest."""
         retval = self.broker.apply()
         self.assertEqual(retval.status_code, HTTPStatus.OK)
@@ -46,7 +46,7 @@ class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
         self.assertIn("message", content.keys())
         self.assertEqual(content["message"], "PluginDataSqlConnection testConnection applied successfully")
 
-    def test_plugin_broker_describe(self):
+    def test_sqlconnection_broker_describe(self):
         """
         Test that the Broker can generate and return a valid manifest.
         - create a resource from a manifest
@@ -98,7 +98,7 @@ class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
         # assert that everything in content is in round_trip_dict
         self.assertTrue(dict_is_contained_in(content, round_trip_dict))
 
-    def test_plugin_broker_delete(self):
+    def test_sqlconnection_broker_delete(self):
         """Test that the Broker can delete the object."""
         retval = self.broker.apply()
         self.assertEqual(retval.status_code, HTTPStatus.OK)
@@ -110,7 +110,7 @@ class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
         self.assertIn("message", content.keys())
         self.assertEqual(content["message"], "PluginDataSqlConnection testConnection deleted successfully")
 
-    def test_plugin_broker_deploy(self):
+    def test_sqlconnection_broker_deploy(self):
         """Test that the Broker does not implement a deploy() method."""
 
         retval = self.broker.deploy()
