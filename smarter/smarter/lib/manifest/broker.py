@@ -213,11 +213,9 @@ class AbstractBroker(ABC):
         """get logs for a resource."""
         raise NotImplementedError
 
-    def example_manifest(self, request: HttpRequest = None) -> str:
+    def example_manifest(self, request: HttpRequest = None) -> JsonResponse:
         """Returns an example yaml manifest document for the kind of resource."""
-        filename = str(self.kind).lower() + ".yaml"
-        data = {"filepath": f"https://{smarter_settings.environment_cdn_domain}/cli/example-manifests/{filename}"}
-        return self.success_response(self.Operations.GET, data=data)
+        raise NotImplementedError
 
     def not_implemented_response(self) -> JsonResponse:
         """Return a common not implemented response."""

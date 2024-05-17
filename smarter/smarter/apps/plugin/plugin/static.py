@@ -2,9 +2,13 @@
 
 import logging
 
-from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClass
+from smarter.apps.plugin.manifest.enum import (
+    SAMPluginMetadataClass,
+    SAMPluginMetadataClassValues,
+)
 from smarter.apps.plugin.models import PluginDataStatic
 from smarter.apps.plugin.serializers import PluginDataStaticSerializer
+from smarter.lib.manifest.enum import SAMApiVersions
 
 from .base import PluginBase
 
@@ -74,7 +78,63 @@ class PluginStatic(PluginBase):
             }
         return None
 
+    def example_manifest(self) -> dict:
+        return {
+            "apiVersion": SAMApiVersions.V1.value,
+            "kind": self.kind,
+            "metadata": {
+                "name": "EverlastingGobstopper",
+                "pluginClass": SAMPluginMetadataClassValues.STATIC.value,
+                "description": "Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
+                "version": "0.1.0",
+                "tags": ["candy", "treats", "chocolate", "Gobstoppers", "Willy Wonka"],
+            },
+            "spec": {
+                "selector": {
+                    "directive": "searchTerms",
+                    "searchTerms": ["Gobstopper", "Gobstoppers", "Gobbstopper", "Gobbstoppers"],
+                },
+                "prompt": {
+                    "systemRole": "You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com).\n",
+                    "model": "gpt-3.5-turbo-1106",
+                    "temperature": 1.0,
+                    "maxTokens": 256,
+                },
+                "data": {
+                    "description": "Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
+                    "staticData": {
+                        "contact": [
+                            {"name": "Willy Wonka"},
+                            {"title": "Founder and CEO"},
+                            {"location": "1234 Chocolate Factory Way, Chocolate City, Chocolate State, USA"},
+                            {"phone": "+1 123-456-7890"},
+                            {"website": "https://wwcf.com"},
+                            {"whatsapp": 11234567890},
+                            {"email": "ww@wwcf.com"},
+                        ],
+                        "biographical": "Willy Wonka is a fictional character appearing in British author Roald Dahl's 1964 children's novel Charlie and the Chocolate Factory, its 1972 sequel Charlie and the Great Glass Elevator and several films based on those books. He is the eccentric founder and proprietor of the Wonka Chocolate Factory\n",
+                        "sales_promotions": [
+                            {
+                                "name": "Everlasting Gobstopper",
+                                "description": 'The Everlasting Gobstopper is a candy that, according to Willy Wonka, "Never Gets Smaller Or Ever Gets Eaten". It is the main focus of Charlie and the Chocolate Factory, both the 1971 film and the 2005 film, and Willy Wonka and the Chocolate Factory, the 1971 film adaptation of the novel.\n',
+                                "price": "$1.00",
+                                "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Everlasting_Gobstopper.jpg/220px-Everlasting_Gobstopper.jpg",
+                            },
+                            {
+                                "name": "Wonka Bar",
+                                "description": "Wonka Bars are a fictional brand of chocolate made by Willy Wonka, and also a chocolate bar inspired by the Willy Wonka Bar from the novel and the films Willy Wonka & the Chocolate Factory and Charlie and the Chocolate Factory.\n",
+                                "price": "$1.00",
+                                "image": "https://m.media-amazon.com/images/I/81E-734cMzL._AC_UF894,1000_QL80_.jpg",
+                            },
+                        ],
+                        "coupon_codes": [
+                            {"name": "10% off", "code": "10OFF", "description": "10% off your next purchase\n"},
+                            {"name": "20% off", "code": "20OFF", "description": "20% off your next purchase\n"},
+                        ],
+                    },
+                },
+            },
+        }
+
     def create(self):
         super().create()
-
-        logger.info("PluginStatic.create() called.")

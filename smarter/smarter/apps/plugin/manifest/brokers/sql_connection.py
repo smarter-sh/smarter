@@ -115,6 +115,28 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
 
         return self._sql_connection
 
+    def example_manifest(self, request: HttpRequest = None) -> JsonResponse:
+        data = {
+            "apiVersion": SAMApiVersions.V1.value,
+            "kind": self.kind,
+            "metadata": {
+                "name": "exampleConnection",
+                "description": "points to the Django mysql database",
+                "version": "0.1.0",
+            },
+            "spec": {
+                "connection": {
+                    "db_engine": "django.db.backends.mysql",
+                    "hostname": "smarter-mysql",
+                    "port": 3306,
+                    "username": "smarter",
+                    "password": "smarter",
+                    "database": "smarter",
+                }
+            },
+        }
+        return self.success_response(operation=self.get.__name__, data=data)
+
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################

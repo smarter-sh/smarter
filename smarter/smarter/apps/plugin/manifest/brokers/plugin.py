@@ -6,6 +6,10 @@ from taggit.models import Tag
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account
+from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
+from smarter.apps.plugin.plugin.base import PluginBase
+from smarter.apps.plugin.plugin.sql import PluginSql
+from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.exceptions import SAMExceptionBase
@@ -19,6 +23,11 @@ from ..models.plugin.model import SAMPlugin
 
 
 MAX_RESULTS = 1000
+
+PluginMap: dict[PluginBase] = {
+    SAMPluginMetadataClassValues.STATIC.value: PluginStatic,
+    SAMPluginMetadataClassValues.SQL.value: PluginSql,
+}
 
 
 class SAMPluginBrokerError(SAMExceptionBase):
@@ -127,6 +136,18 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
+    def example_manifest(
+        self, request: HttpRequest = None, plugin_class: str = SAMPluginMetadataClassValues.STATIC.value
+    ) -> JsonResponse:
+        plugin: PluginBase = None
+        try:
+            plugin = PluginMap[plugin_class]
+        except KeyError as e:
+            raise SAMPluginBrokerError(f"Plugin class {plugin_class} not found") from e
+
+        data = plugin.example_manifest()
+        self.success_response(operation=self.example_manifest.__name__, data=data)
+
     def get(
         self, request: HttpRequest = None, name: str = None, all_objects: bool = False, tags: str = None
     ) -> JsonResponse:
