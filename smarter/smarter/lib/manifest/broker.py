@@ -274,6 +274,21 @@ class AbstractBroker(ABC):
             retval[new_key] = value
         return retval
 
+    def snake_to_camel(self, dictionary: dict) -> dict:
+        """Converts snake_case dict keys to camelCase."""
+
+        def convert(name: str):
+            components = name.split("_")
+            return components[0] + "".join(x.title() for x in components[1:])
+
+        retval = {}
+        for key, value in dictionary.items():
+            if isinstance(value, dict):
+                value = self.snake_to_camel(value)
+            new_key = convert(key)
+            retval[new_key] = value
+        return retval
+
 
 class BrokerNotImplemented(AbstractBroker):
     """An error class to proxy for a broker class that has not been implemented."""

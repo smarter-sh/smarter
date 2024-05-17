@@ -1,21 +1,22 @@
 # pylint: disable=W0718
 """Smarter API Plugin Manifest handler"""
 
-import re
+import json
 
+from django.forms.models import model_to_dict
 from django.http import HttpRequest, JsonResponse
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account
+from smarter.apps.chatbot.manifest.models.chatbot.const import MANIFEST_KIND
+from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
+from smarter.apps.chatbot.models import ChatBot
+from smarter.apps.chatbot.serializers import ChatBotSerializer
 from smarter.common.conf import SettingsDefaults
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
-
-from ...models import ChatBot
-from ..models.chatbot.const import MANIFEST_KIND
-from ..models.chatbot.model import SAMChatbot
 
 
 MAX_RESULTS = 1000
@@ -73,24 +74,17 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
     @property
     def chatbot(self) -> ChatBot:
         """
-        PluginController() is a helper class to map the manifest model
-        metadata.pluginClass to an instance of the the correct plugin class.
+        The ChatBot object is a Django ORM model that represents the Smarter ChatBot.
+        The ChatBot object is used to store the configuration and state of the ChatBot
+        in the database. The ChatBot object is retrieved from the database, if it exists,
+        or created from the manifest if it does not.
         """
         if self._chatbot:
             return self._chatbot
         try:
             self._chatbot = ChatBot.objects.get(account=self.account, name=self.manifest.metadata)
-            print("found chatbot")
         except ChatBot.DoesNotExist:
-            print("Creating new chatbot")
-            config_dump = self.manifest.spec.config.model_dump()
-            config_dump = self.camel_to_snake(config_dump)
-            data = {
-                "account": self.account,
-                "name": self.manifest.metadata.name,
-                **config_dump,
-            }
-            print("data:\n", data)
+            data = self.manifest_to_django_orm()
             self._chatbot = ChatBot.objects.create(**data)
 
         return self._chatbot
@@ -104,6 +98,47 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         if self.account:
             retval["metadata"]["account"] = self.account
         return retval
+
+    def manifest_to_django_orm(self) -> dict:
+        config_dump = self.manifest.spec.config.model_dump()
+        config_dump = self.camel_to_snake(config_dump)
+        return {
+            "account": self.account,
+            "name": self.manifest.metadata.name,
+            "description": self.manifest.metadata.description,
+            "version": self.manifest.metadata.version,
+            **config_dump,
+        }
+
+    def django_orm_to_manifest_dict(self) -> dict:
+
+        chatbot_dict = model_to_dict(self.chatbot)
+        chatbot_dict = self.snake_to_camel(chatbot_dict)
+        chatbot_dict.pop("id")
+        chatbot_dict.pop("account")
+        chatbot_dict.pop("name")
+        chatbot_dict.pop("description")
+        chatbot_dict.pop("version")
+
+        data = {
+            "apiVersion": self.api_version,
+            "kind": self.kind,
+            "metadata": {
+                "name": self.chatbot.name,
+                "description": self.chatbot.description,
+                "version": self.chatbot.version,
+            },
+            "spec": {
+                "config": chatbot_dict,
+                "plugins": None,
+            },
+            "status": {
+                "created": self.chatbot.created_at,
+                "updated": self.chatbot.updated_at,
+                "deployed": self.chatbot.deployed,
+            },
+        }
+        return data
 
     ###########################################################################
     # Smarter abstract property implementations
@@ -214,15 +249,18 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
 
     def apply(self, request: HttpRequest = None) -> JsonResponse:
         try:
+            data = self.manifest_to_django_orm()
+            for key, value in data.items():
+                setattr(self.chatbot, key, value)
             self.chatbot.save()
         except Exception as e:
             return self.err_response(self.apply.__name__, e)
         return self.success_response(operation=self.apply.__name__, data={})
 
     def describe(self, request: HttpRequest = None) -> JsonResponse:
-        if self.plugin.ready:
+        if self.chatbot:
             try:
-                data = self.plugin.to_json()
+                data = self.django_orm_to_manifest_dict()
                 return self.success_response(operation=self.describe.__name__, data=data)
             except Exception as e:
                 return self.err_response(self.describe.__name__, e)

@@ -97,6 +97,8 @@ class ChatBot(TimestampedModel):
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    version = models.CharField(max_length=255, blank=True, null=True)
     subdomain = models.ForeignKey(ChatBotCustomDomainDNS, on_delete=models.CASCADE, blank=True, null=True)
     custom_domain = models.ForeignKey(ChatBotCustomDomain, on_delete=models.CASCADE, blank=True, null=True)
     deployed = models.BooleanField(default=False, blank=True, null=True)
