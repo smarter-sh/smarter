@@ -1,8 +1,6 @@
 # pylint: disable=W0718
 """Smarter API Plugin Manifest handler"""
 
-import json
-
 from django.forms.models import model_to_dict
 from django.http import HttpRequest, JsonResponse
 
@@ -10,8 +8,7 @@ from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account
 from smarter.apps.chatbot.manifest.models.chatbot.const import MANIFEST_KIND
 from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
-from smarter.apps.chatbot.models import ChatBot
-from smarter.apps.chatbot.serializers import ChatBotSerializer
+from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.common.conf import SettingsDefaults
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.enum import SAMApiVersions
@@ -89,17 +86,23 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
 
         return self._chatbot
 
-    def model_dump(self) -> dict:
-
-        retval = self.manifest.model_dump()
-        retval = self.camel_to_snake(retval)
-        if self._chatbot:
-            retval["metadata"]["id"] = self._chatbot.id
-        if self.account:
-            retval["metadata"]["account"] = self.account
-        return retval
+    # def model_dump(self) -> dict:
+    #     """
+    #     Transform the Smarter API Plugin manifest into a
+    #     Django ORM Chatbot readable dictionary.
+    #     """
+    #     retval = self.manifest.model_dump()
+    #     retval = self.camel_to_snake(retval)
+    #     if self._chatbot:
+    #         retval["metadata"]["id"] = self._chatbot.id
+    #     if self.account:
+    #         retval["metadata"]["account"] = self.account
+    #     return retval
 
     def manifest_to_django_orm(self) -> dict:
+        """
+        Transform the Smarter API Plugin manifest into a Django ORM model.
+        """
         config_dump = self.manifest.spec.config.model_dump()
         config_dump = self.camel_to_snake(config_dump)
         return {
@@ -111,7 +114,10 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         }
 
     def django_orm_to_manifest_dict(self) -> dict:
-
+        """
+        Transform the Django ORM model into a Pydantic readable
+        Smarter API Chatbot manifest dict.
+        """
         chatbot_dict = model_to_dict(self.chatbot)
         chatbot_dict = self.snake_to_camel(chatbot_dict)
         chatbot_dict.pop("id")
@@ -119,6 +125,9 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         chatbot_dict.pop("name")
         chatbot_dict.pop("description")
         chatbot_dict.pop("version")
+
+        plugins = ChatBotPlugin.objects.filter(chatbot=self.chatbot)
+        plugin_names = [plugin.plugin_meta.name for plugin in plugins]
 
         data = {
             "apiVersion": self.api_version,
@@ -130,12 +139,22 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
             },
             "spec": {
                 "config": chatbot_dict,
-                "plugins": None,
+                "plugins": plugin_names,
             },
             "status": {
-                "created": self.chatbot.created_at,
-                "updated": self.chatbot.updated_at,
+                "created": self.chatbot.created_at.isoformat(),
+                "modified": self.chatbot.updated_at.isoformat(),
                 "deployed": self.chatbot.deployed,
+                "defaultHost": self.chatbot.default_host,
+                "defaultUrl": self.chatbot.default_url,
+                "customUrl": self.chatbot.custom_url,
+                "sandboxHost": self.chatbot.sandbox_host,
+                "sandboxUrl": self.chatbot.sandbox_url,
+                "hostname": self.chatbot.hostname,
+                "scheme": self.chatbot.scheme,
+                "url": self.chatbot.url,
+                "urlChatbot": self.chatbot.url_chatbot,
+                "urlChatapp": self.chatbot.url_chatapp,
             },
         }
         return data
@@ -261,6 +280,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         if self.chatbot:
             try:
                 data = self.django_orm_to_manifest_dict()
+                print(data)
                 return self.success_response(operation=self.describe.__name__, data=data)
             except Exception as e:
                 return self.err_response(self.describe.__name__, e)
