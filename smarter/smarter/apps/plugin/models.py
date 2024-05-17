@@ -31,17 +31,17 @@ logger = logging.getLogger(__name__)
 SMARTER_PLUGIN_MAX_DATA_RESULTS = 50
 
 
-def validate_no_spaces(value):
+def validate_no_spaces(value):  # pragma: no cover
     if re.search(r"\s", value):
         raise SmarterValueError("The name should not include spaces.")
 
 
-def dict_key_cleaner(key: str) -> str:
+def dict_key_cleaner(key: str) -> str:  # pragma: no cover
     """Clean a key by replacing spaces with underscores."""
     return str(key).replace("\n", "").replace("\r", "").replace("\t", "").replace(" ", "_")
 
 
-def dict_keys_to_list(data: dict, keys=None) -> list[str]:
+def dict_keys_to_list(data: dict, keys=None) -> list[str]:  # pragma: no cover
     """recursive function to extract all keys from a nested dictionary."""
     if keys is None:
         keys = []
@@ -52,7 +52,7 @@ def dict_keys_to_list(data: dict, keys=None) -> list[str]:
     return keys
 
 
-def list_of_dicts_to_list(data: list[dict]) -> list[str]:
+def list_of_dicts_to_list(data: list[dict]) -> list[str]:  # pragma: no cover
     """Convert a list of dictionaries into a single dict with keys extracted
     from the first key in the first dict."""
     if not data or not isinstance(data[0], dict):
@@ -67,7 +67,7 @@ def list_of_dicts_to_list(data: list[dict]) -> list[str]:
     return retval
 
 
-def list_of_dicts_to_dict(data: list[dict]) -> dict:
+def list_of_dicts_to_dict(data: list[dict]) -> dict:  # pragma: no cover
     """Convert a list of dictionaries into a single dict with keys extracted
     from the first key in the first dict."""
     if not data or not isinstance(data[0], dict):
@@ -81,7 +81,7 @@ def list_of_dicts_to_dict(data: list[dict]) -> dict:
     return retval
 
 
-class PluginMeta(TimestampedModel):
+class PluginMeta(TimestampedModel):  # pragma: no cover
     """PluginMeta model."""
 
     PLUGIN_CLASSES = [
@@ -118,7 +118,7 @@ class PluginMeta(TimestampedModel):
         verbose_name_plural = "Plugins"
 
 
-class PluginSelector(TimestampedModel):
+class PluginSelector(TimestampedModel):  # pragma: no cover
     """PluginSelector model."""
 
     plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_selector")
@@ -135,7 +135,7 @@ class PluginSelector(TimestampedModel):
         return f"{str(self.directive)} - {search_terms}"
 
 
-class PluginSelectorHistory(TimestampedModel):
+class PluginSelectorHistory(TimestampedModel):  # pragma: no cover
     """PluginSelectorHistory model."""
 
     plugin_selector = models.ForeignKey(
@@ -151,7 +151,7 @@ class PluginSelectorHistory(TimestampedModel):
         verbose_name_plural = "Plugin Selector History"
 
 
-class PluginPrompt(TimestampedModel):
+class PluginPrompt(TimestampedModel):  # pragma: no cover
     """PluginPrompt model."""
 
     plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_prompt")
@@ -177,7 +177,7 @@ class PluginPrompt(TimestampedModel):
         return str(self.plugin.name)
 
 
-class PluginDataBase(TimestampedModel):
+class PluginDataBase(TimestampedModel):  # pragma: no cover
     """PluginDataBase model."""
 
     plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_data_base")

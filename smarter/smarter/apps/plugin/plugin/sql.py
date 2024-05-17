@@ -3,10 +3,14 @@
 import logging
 import re
 
-from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClass
+from smarter.apps.plugin.manifest.enum import (
+    SAMPluginMetadataClass,
+    SAMPluginMetadataClassValues,
+)
 from smarter.apps.plugin.models import PluginDataSql, PluginDataSqlConnection
 from smarter.apps.plugin.serializers import PluginDataSqlSerializer
 from smarter.common.exceptions import SmarterConfigurationError
+from smarter.lib.manifest.enum import SAMApiVersions
 
 from ..models import PluginDataSql
 from .base import PluginBase
@@ -113,6 +117,38 @@ class PluginSql(PluginBase):
                 },
             }
         return None
+
+    def example_manifest(self) -> dict:
+        return {
+            "apiVersion": SAMApiVersions.V1.value,
+            "kind": self.kind,
+            "metadata": {
+                "name": "SqlExample",
+                "pluginClass": SAMPluginMetadataClassValues.SQL.value,
+                "description": "Get additional information about the admin account of the Smarter platform.",
+                "version": "0.1.0",
+                "tags": ["db", "sql", "database"],
+            },
+            "spec": {
+                "selector": {"directive": "searchTerms", "searchTerms": ["admin", "Smarter platform", "admin account"]},
+                "prompt": {
+                    "systemRole": "You are a helpful assistant for Smarter platform. You can provide information about the admin account of the Smarter platform.\n",
+                    "model": "gpt-3.5-turbo-1106",
+                    "temperature": 0.0,
+                    "maxTokens": 256,
+                },
+                "data": {
+                    "description": "Query the Django User model to retrieve detailed account information about the admin account for the Smarter platform .",
+                    "sqlData": {
+                        "connection": "exampleConnection",
+                        "sqlQuery": "SELECT * FROM auth_user WHERE username = 'admin';\n",
+                        "parameters": None,
+                        "testValues": None,
+                        "limit": 1,
+                    },
+                },
+            },
+        }
 
     def create(self):
         super().create()
