@@ -249,6 +249,9 @@ class AbstractBroker(ABC):
         if operation == self.Operations.GET:
             kind = inflect_engine.plural(self.kind)
             message = f"{kind} {operated} successfully"
+        elif operation == self.Operations.LOGS:
+            kind = self.kind
+            message = f"{kind} {self.name} successfully retrieved logs"
         else:
             kind = self.kind
             message = f"{kind} {self.name} {operated} successfully"

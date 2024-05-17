@@ -13,6 +13,7 @@ from smarter.apps.plugin.manifest.brokers.sql_connection import (
     SAMPluginDataSqlConnectionBroker,
 )
 from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
+from smarter.common.utils import dict_is_contained_in
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.unittest.utils import get_readonly_yaml_file
 
@@ -62,21 +63,6 @@ class TestSAMPluginSql(unittest.TestCase):
         - create a pydantic model from the loader
         - dump the pydantic model to a dictionary
         """
-
-        def dict_is_contained_in(dict1, dict2):
-            for key, value in dict1.items():
-                if key not in dict2:
-                    print("key not in dict2: ", key)
-                    return False
-                if isinstance(value, dict):
-                    if not dict_is_contained_in(value, dict2[key]):
-                        print("dict not in dict2: ", value)
-                        return False
-                else:
-                    if dict2[key] != value:
-                        print("value not in dict2: ", value)
-                        return False
-            return True
 
         retval = self.plugin_broker.apply()
         self.assertEqual(retval.status_code, HTTPStatus.OK)

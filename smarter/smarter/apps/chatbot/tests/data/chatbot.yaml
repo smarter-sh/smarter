@@ -26,3 +26,7 @@ spec:
     subdomain: null
     customDomain: null
   plugins:
+    - ExampleConfiguration
+    - EverlastingGobstopper
+  functions:
+    - weather

@@ -117,3 +117,10 @@ class SAMChatbotSpec(AbstractSAMSpecBase):
         None,
         description=(f"{class_identifier}.searchTerms[list]. Optional. The Plugins to add to the " f"{MANIFEST_KIND}."),
     )
+    functions: Optional[List[str]] = Field(
+        None,
+        description=(
+            f"{class_identifier}.functions[list]. Optional. The built-in Smarter Functions to add to the "
+            f"{MANIFEST_KIND}."
+        ),
+    )
