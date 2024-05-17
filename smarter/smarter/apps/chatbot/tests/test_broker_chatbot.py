@@ -94,27 +94,27 @@ class TestSAMChatbotBroker(unittest.TestCase):
         # assert that everything in content is in round_trip_dict
         self.assertTrue(dict_is_contained_in(content, round_trip_dict))
 
-    # def test_chatbot_broker_delete(self):
-    #     """Test that the Broker can delete the object."""
-    #     retval = self.broker.apply()
-    #     self.assertEqual(retval.status_code, HTTPStatus.OK)
+    def test_chatbot_broker_delete(self):
+        """Test that the Broker can delete the object."""
+        retval = self.broker.apply()
+        self.assertEqual(retval.status_code, HTTPStatus.OK)
 
-    #     retval = self.broker.delete()
-    #     self.assertEqual(retval.status_code, HTTPStatus.OK)
-    #     content = json.loads(retval.content.decode())
-    #     self.assertIsInstance(content, dict)
-    #     self.assertIn("message", content.keys())
-    #     self.assertEqual(content["message"], "Chatbot testConnection deleted successfully")
+        retval = self.broker.delete()
+        self.assertEqual(retval.status_code, HTTPStatus.OK)
+        content = json.loads(retval.content.decode())
+        self.assertIsInstance(content, dict)
+        self.assertIn("message", content.keys())
+        self.assertEqual(content["message"], "Chatbot TestChatbot deleted successfully")
 
-    # def test_chatbot_broker_deploy(self):
-    #     """Test that the Broker does not implement a deploy() method."""
+    def test_chatbot_broker_deploy(self):
+        """Test that the Broker does not implement a deploy() method."""
 
-    #     retval = self.broker.deploy()
-    #     self.assertEqual(retval.status_code, HTTPStatus.NOT_IMPLEMENTED)
-    #     content = json.loads(retval.content.decode())
-    #     self.assertIsInstance(content, dict)
-    #     self.assertIn("message", content.keys())
-    #     self.assertEqual(content["message"], "operation not implemented for Chatbot resources")
+        retval = self.broker.deploy()
+        self.assertEqual(retval.status_code, HTTPStatus.OK)
+        content = json.loads(retval.content.decode())
+        self.assertIsInstance(content, dict)
+        self.assertIn("message", content.keys())
+        self.assertEqual(content["message"], "Chatbot TestChatbot deployed successfully")
 
     # def test_chatbot_broker_logs(self):
     #     """Test that the Broker can generate log data."""
