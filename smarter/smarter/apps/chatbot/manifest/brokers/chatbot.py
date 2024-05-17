@@ -12,7 +12,7 @@ from smarter.apps.chatbot.models import ChatBot, ChatBotFunctions, ChatBotPlugin
 from smarter.apps.plugin.utils import get_plugin_examples_by_name
 from smarter.common.conf import SettingsDefaults
 from smarter.lib.manifest.broker import AbstractBroker
-from smarter.lib.manifest.enum import SAMApiVersions
+from smarter.lib.manifest.enum import SAMApiVersions, SAMKeys
 from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -124,19 +124,19 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         function_names = [function.name for function in functions]
 
         data = {
-            "apiVersion": self.api_version,
-            "kind": self.kind,
-            "metadata": {
+            SAMKeys.APIVERSION.value: self.api_version,
+            SAMKeys.KIND.value: self.kind,
+            SAMKeys.METADATA.value: {
                 "name": self.chatbot.name,
                 "description": self.chatbot.description,
                 "version": self.chatbot.version,
             },
-            "spec": {
+            SAMKeys.SPEC.value: {
                 "config": chatbot_dict,
                 "plugins": plugin_names,
                 "functions": function_names,
             },
-            "status": {
+            SAMKeys.STATUS.value: {
                 "created": self.chatbot.created_at.isoformat(),
                 "modified": self.chatbot.updated_at.isoformat(),
                 "deployed": self.chatbot.deployed,
@@ -189,14 +189,14 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     def example_manifest(self, kwargs: dict = None) -> JsonResponse:
         data = {
-            "apiVersion": self.api_version,
-            "kind": self.kind,
-            "metadata": {
+            SAMKeys.APIVERSION: self.api_version,
+            SAMKeys.KIND: self.kind,
+            SAMKeys.METADATA: {
                 "name": "ExampleChatbot",
                 "description": "To create and deploy an example Smarter chatbot. Prompt with 'example function calling' to trigger the example Static Plugin",
                 "version": "0.1.0",
             },
-            "spec": {
+            SAMKeys.SPEC: {
                 "config": {
                     "deployed": True,
                     "defaultModel": SettingsDefaults.OPENAI_DEFAULT_MODEL,

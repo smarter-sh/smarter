@@ -6,12 +6,17 @@ import re
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginMetadataClass,
     SAMPluginMetadataClassValues,
+    SAMPluginMetadataKeys,
+    SAMPluginSpecKeys,
+    SAMPluginSpecPromptKeys,
+    SAMPluginSpecSelectorKeys,
+    SmartApiPluginSpecDataKeys,
 )
 from smarter.apps.plugin.models import PluginDataSql, PluginDataSqlConnection
 from smarter.apps.plugin.serializers import PluginDataSqlSerializer
 from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterConfigurationError
-from smarter.lib.manifest.enum import SAMApiVersions
+from smarter.lib.manifest.enum import SAMApiVersions, SAMKeys, SAMMetadataKeys
 
 from ..manifest.models.plugin.const import MANIFEST_KIND
 from ..models import PluginDataSql
@@ -123,26 +128,29 @@ class PluginSql(PluginBase):
     @classmethod
     def example_manifest(cls, kwargs: dict = None) -> dict:
         return {
-            "apiVersion": SAMApiVersions.V1.value,
-            "kind": MANIFEST_KIND,
-            "metadata": {
-                "name": "SqlExample",
-                "pluginClass": SAMPluginMetadataClassValues.SQL.value,
-                "description": "Get additional information about the admin account of the Smarter platform.",
-                "version": "0.1.0",
-                "tags": ["db", "sql", "database"],
+            SAMKeys.APIVERSION.value: SAMApiVersions.V1.value,
+            SAMKeys.KIND.value: MANIFEST_KIND,
+            SAMKeys.METADATA.value: {
+                SAMMetadataKeys.name: "SqlExample",
+                SAMPluginMetadataKeys.PLUGIN_CLASS.value: SAMPluginMetadataClassValues.SQL.value,
+                SAMMetadataKeys.DESCRIPTION.value: "Get additional information about the admin account of the Smarter platform.",
+                SAMMetadataKeys.VERSION.value: "0.1.0",
+                SAMMetadataKeys.TAGS.value: ["db", "sql", "database"],
             },
-            "spec": {
-                "selector": {"directive": "searchTerms", "searchTerms": ["admin", "Smarter platform", "admin account"]},
-                "prompt": {
-                    "systemRole": "You are a helpful assistant for Smarter platform. You can provide information about the admin account of the Smarter platform.\n",
-                    "model": SettingsDefaults.OPENAI_DEFAULT_MODEL,
-                    "temperature": SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE,
-                    "maxTokens": SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS,
+            SAMKeys.SPEC.value: {
+                SAMPluginSpecKeys.SELECTOR.value: {
+                    SAMPluginSpecSelectorKeys.DIRECTIVE.value: SAMPluginSpecSelectorKeys.SEARCHTERMS.value,
+                    SAMPluginSpecSelectorKeys.SEARCHTERMS.value: ["admin", "Smarter platform", "admin account"],
                 },
-                "data": {
+                SAMPluginSpecKeys.PROMPT.value: {
+                    SAMPluginSpecPromptKeys.SYSTEMROLE.value: "You are a helpful assistant for Smarter platform. You can provide information about the admin account of the Smarter platform.\n",
+                    SAMPluginSpecPromptKeys.MODEL.value: SettingsDefaults.OPENAI_DEFAULT_MODEL,
+                    SAMPluginSpecPromptKeys.TEMPERATURE.value: SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE,
+                    SAMPluginSpecPromptKeys.MAXTOKENS.value: SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS,
+                },
+                SAMPluginSpecKeys.DATA.value: {
                     "description": "Query the Django User model to retrieve detailed account information about the admin account for the Smarter platform .",
-                    "sqlData": {
+                    SAMPluginMetadataClass.SQL_DATA.value: {
                         "connection": "exampleConnection",
                         "sqlQuery": "SELECT * FROM auth_user WHERE username = 'admin';\n",
                         "parameters": None,

@@ -6,6 +6,7 @@ import unittest
 import yaml
 
 from smarter.common.const import PYTHON_ROOT
+from smarter.lib.manifest.enum import SAMKeys
 
 from ..enum import SAMDataFormats, SAMKeys, SAMMetadataKeys
 from ..loader import SAMLoader, SAMLoaderError
@@ -66,9 +67,9 @@ class TestManifestLoader(unittest.TestCase):
 
     def test_getkey(self):
         loader = SAMLoader(manifest=self.good_manifest_text)
-        self.assertEqual(loader.get_key("metadata"), loader.manifest_metadata)
-        self.assertEqual(loader.get_key("spec"), loader.manifest_spec)
-        self.assertEqual(loader.get_key("status"), loader.manifest_status)
+        self.assertEqual(loader.get_key(SAMKeys.METADATA.value), loader.manifest_metadata)
+        self.assertEqual(loader.get_key(SAMKeys.SPEC.value), loader.manifest_spec)
+        self.assertEqual(loader.get_key(SAMKeys.STATUS.value), loader.manifest_status)
         self.assertEqual(loader.get_key(SAMKeys.KIND.value), loader.manifest_kind)
         self.assertIsNone(loader.get_key("bad"))
 
@@ -90,5 +91,5 @@ class TestManifestLoader(unittest.TestCase):
             with self.assertRaises(SAMLoaderError):
                 SAMLoader(manifest=yaml_data)
 
-        for element in ["metadata", "spec"]:
+        for element in [SAMKeys.METADATA.value, SAMKeys.SPEC.value]:
             test_missing(element)
