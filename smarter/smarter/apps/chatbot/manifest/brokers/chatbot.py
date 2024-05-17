@@ -6,13 +6,14 @@ from django.http import HttpRequest, JsonResponse
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account
+from smarter.apps.chatbot.manifest.enum import SAMChatbotSpecKeys
 from smarter.apps.chatbot.manifest.models.chatbot.const import MANIFEST_KIND
 from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
 from smarter.apps.chatbot.models import ChatBot, ChatBotFunctions, ChatBotPlugin
 from smarter.apps.plugin.utils import get_plugin_examples_by_name
 from smarter.common.conf import SettingsDefaults
 from smarter.lib.manifest.broker import AbstractBroker
-from smarter.lib.manifest.enum import SAMApiVersions, SAMKeys
+from smarter.lib.manifest.enum import SAMApiVersions, SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -132,9 +133,9 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 "version": self.chatbot.version,
             },
             SAMKeys.SPEC.value: {
-                "config": chatbot_dict,
-                "plugins": plugin_names,
-                "functions": function_names,
+                SAMChatbotSpecKeys.CONFIG.value: chatbot_dict,
+                SAMChatbotSpecKeys.PLUGINS.value: plugin_names,
+                SAMChatbotSpecKeys.FUNCTIONS.value: function_names,
             },
             SAMKeys.STATUS.value: {
                 "created": self.chatbot.created_at.isoformat(),
@@ -192,12 +193,12 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
             SAMKeys.APIVERSION: self.api_version,
             SAMKeys.KIND: self.kind,
             SAMKeys.METADATA: {
-                "name": "ExampleChatbot",
-                "description": "To create and deploy an example Smarter chatbot. Prompt with 'example function calling' to trigger the example Static Plugin",
-                "version": "0.1.0",
+                SAMMetadataKeys.NAME.value: "ExampleChatbot",
+                SAMMetadataKeys.DESCRIPTION.value: "To create and deploy an example Smarter chatbot. Prompt with 'example function calling' to trigger the example Static Plugin",
+                SAMMetadataKeys.VERSION.value: "0.1.0",
             },
             SAMKeys.SPEC: {
-                "config": {
+                SAMChatbotSpecKeys.CONFIG.value: {
                     "deployed": True,
                     "defaultModel": SettingsDefaults.OPENAI_DEFAULT_MODEL,
                     "defaultTemperature": SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE,
@@ -219,8 +220,8 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                     "subdomain": "example-chatbot",
                     "customDomain": None,
                 },
-                "plugins": get_plugin_examples_by_name(),
-                "functions": ["weather"],
+                SAMChatbotSpecKeys.PLUGINS.value: get_plugin_examples_by_name(),
+                SAMChatbotSpecKeys.FUNCTIONS.value: ["weather"],
             },
         }
 
@@ -252,12 +253,12 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
             except Exception as e:
                 return self.err_response(self.get.__name__, e)
         data = {
-            "apiVersion": self.api_version,
-            "kind": self.kind,
-            "name": name,
+            SAMKeys.APIVERSION.value: self.api_version,
+            SAMKeys.KIND.value: self.kind,
+            SAMMetadataKeys.NAME.value: name,
             "all_objects": all_objects,
-            "tags": tags,
-            "metadata": {"count": len(data)},
+            SAMMetadataKeys.TAGS.value: tags,
+            SAMKeys.METADATA.value: {"count": len(data)},
             "items": data,
         }
         return self.success_response(operation=self.get.__name__, data=data)
