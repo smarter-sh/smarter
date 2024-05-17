@@ -58,7 +58,6 @@ class PluginBase(ABC):
     """An abstract base class for working with plugins."""
 
     _api_version: str = SMARTER_API_MANIFEST_DEFAULT_VERSION
-    _kind: str = MANIFEST_KIND
     _metadata_class: str = None
     _manifest: SAMPlugin = None
 
@@ -185,8 +184,7 @@ class PluginBase(ABC):
         """Return the plugin data definition as a json object."""
         raise NotImplementedError()
 
-    @classmethod
-    def example_manifest(cls) -> dict:
+    def example_manifest(self) -> dict:
         raise NotImplementedError()
 
     ###########################################################################
@@ -225,7 +223,7 @@ class PluginBase(ABC):
     @property
     def kind(self) -> str:
         """Return the kind of the plugin."""
-        return self._kind
+        return MANIFEST_KIND
 
     @property
     def manifest(self) -> SAMPlugin:

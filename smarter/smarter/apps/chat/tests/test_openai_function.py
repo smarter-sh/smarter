@@ -1,3 +1,4 @@
+# pylint: disable=W0613,W0718
 """Test lambda_openai_v2 function."""
 
 import os
