@@ -7,7 +7,6 @@ import json
 import unittest
 from time import sleep
 
-import yaml
 from pydantic_core import ValidationError as PydanticValidationError
 
 from smarter.apps.account.models import UserProfile

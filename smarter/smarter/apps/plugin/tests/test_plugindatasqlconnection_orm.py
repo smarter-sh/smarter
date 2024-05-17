@@ -3,7 +3,6 @@
 import os
 import unittest
 
-import yaml
 from django.conf import settings
 from django.db.backends.base.base import BaseDatabaseWrapper
 
