@@ -127,7 +127,11 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         data = {
             "apiVersion": self.api_version,
             "kind": self.kind,
-            "metadata": {"name": "ExampleChatbot", "description": "an example Smarter chatbot", "version": "0.1.0"},
+            "metadata": {
+                "name": "ExampleChatbot",
+                "description": "To create and deploy an example Smarter chatbot. Prompt with 'example function calling' to trigger the example Static Plugin",
+                "version": "0.1.0",
+            },
             "spec": {
                 "config": {
                     "deployed": True,
@@ -140,6 +144,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                     "appExamplePrompts": [
                         "What is the weather in New York?",
                         "Tell me a joke",
+                        "example function calling",
                         "What is the capital of France?",
                     ],
                     "appPlaceholder": "Ask me anything...",
