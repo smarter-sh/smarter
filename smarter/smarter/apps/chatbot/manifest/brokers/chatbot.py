@@ -1,6 +1,8 @@
 # pylint: disable=W0718
 """Smarter API Plugin Manifest handler"""
 
+import re
+
 from django.http import HttpRequest, JsonResponse
 
 from smarter.apps.account.mixins import AccountMixin
@@ -78,16 +80,29 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
             return self._chatbot
         try:
             self._chatbot = ChatBot.objects.get(account=self.account, name=self.manifest.metadata)
+            print("found chatbot")
         except ChatBot.DoesNotExist:
-            pass
+            print("Creating new chatbot")
+            config_dump = self.manifest.spec.config.model_dump()
+            config_dump = self.camel_to_snake(config_dump)
+            data = {
+                "account": self.account,
+                "name": self.manifest.metadata.name,
+                **config_dump,
+            }
+            print("data:\n", data)
+            self._chatbot = ChatBot.objects.create(**data)
+
         return self._chatbot
 
     def model_dump(self) -> dict:
-        retval = self.manifest.spec.model_dump()
-        if self.chatbot:
-            retval["id"] = self.chatbot.id
+
+        retval = self.manifest.model_dump()
+        retval = self.camel_to_snake(retval)
+        if self._chatbot:
+            retval["metadata"]["id"] = self._chatbot.id
         if self.account:
-            retval["account"] = self.account
+            retval["metadata"]["account"] = self.account
         return retval
 
     ###########################################################################
@@ -198,23 +213,10 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         return self.success_response(operation=self.get.__name__, data=data)
 
     def apply(self, request: HttpRequest = None) -> JsonResponse:
-        if self.chatbot:
-            # update the existing chatbot
-            try:
-                data = self.model_dump()
-                for key, value in data.items():
-                    setattr(self.chatbot, key, value)
-                self.chatbot.save()
-            except Exception as e:
-                return self.err_response(self.apply.__name__, e)
-        else:
-            # create a new chatbot
-            try:
-                # TODO: add the subdomain, and custom_domain object to this.
-                data = self.model_dump()
-                ChatBot.objects.create(**data)
-            except Exception as e:
-                return self.err_response(self.apply.__name__, e)
+        try:
+            self.chatbot.save()
+        except Exception as e:
+            return self.err_response(self.apply.__name__, e)
         return self.success_response(operation=self.apply.__name__, data={})
 
     def describe(self, request: HttpRequest = None) -> JsonResponse:
