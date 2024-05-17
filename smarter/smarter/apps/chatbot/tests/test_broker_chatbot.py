@@ -26,8 +26,6 @@ class TestSAMChatbotBroker(unittest.TestCase):
 
         config_path = os.path.join(HERE, "data/chatbot.yaml")
         manifest = get_readonly_yaml_file(config_path)
-        print(manifest)
-
         self.broker = SAMChatbotBroker(account=self.account, manifest=manifest)
 
     def tearDown(self):

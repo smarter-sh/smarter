@@ -77,7 +77,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         if self._chatbot:
             return self._chatbot
         try:
-            self._chatbot = ChatBot().objects.get(account=self.account, name=self.manifest.metadata)
+            self._chatbot = ChatBot.objects.get(account=self.account, name=self.manifest.metadata)
         except ChatBot.DoesNotExist:
             pass
         return self._chatbot
@@ -147,8 +147,8 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                     "appBackgroundImageUrl": "https://example.com/background-image.jpg",
                     "appLogoUrl": "https://example.com/logo.png",
                     "appFileAttachment": False,
-                    "subdomain": {"enabled": True, "name": "example-chatbot"},
-                    "customDomain": {"enabled": False, "domain": ""},
+                    "subdomain": "example-chatbot",
+                    "customDomain": None,
                 },
                 "plugins": None,
             },
