@@ -49,11 +49,9 @@ class TestSAMPluginSql(unittest.TestCase):
         retval = self.plugin_broker.apply()
         self.assertEqual(retval.status_code, HTTPStatus.OK)
         content = json.loads(retval.content.decode())
-        print(content)
         self.assertIsInstance(content, dict)
         self.assertIn("message", content.keys())
-        # self.assertEqual(content["message"], "PluginDataSqlConnection testConnection applied successfully")
-        print(content)
+        self.assertEqual(content["message"], "Plugin SqlTest applied successfully")
 
     def test_plugin_broker_describe(self):
         """
