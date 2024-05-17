@@ -1,5 +1,5 @@
 # pylint: disable=W0718
-"""Smarter API Plugin Manifest handler"""
+"""Smarter API Chatbot Manifest handler"""
 
 from django.forms.models import model_to_dict
 from django.http import HttpRequest, JsonResponse
@@ -21,13 +21,13 @@ MAX_RESULTS = 1000
 
 
 class SAMChatbotBrokerError(SAMExceptionBase):
-    """Base exception for Smarter API Plugin Broker handling."""
+    """Base exception for Smarter API Chatbot Broker handling."""
 
 
 class SAMChatbotBroker(AbstractBroker, AccountMixin):
     """
     Smarter API Chatbot Manifest Broker. This class is responsible for
-    - loading, validating and parsing the Smarter Api yaml Plugin manifests
+    - loading, validating and parsing the Smarter Api yaml Chatbot manifests
     - using the manifest to initialize the corresponding Pydantic model
 
     This Broker class interacts with the collection of Django ORM models that
@@ -37,7 +37,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
     and deserialization.
     """
 
-    # override the base abstract manifest model with the Plugin model
+    # override the base abstract manifest model with the Chatbot model
     _manifest: SAMChatbot = None
     _chatbot: ChatBot = None
 
@@ -92,7 +92,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
 
     def manifest_to_django_orm(self) -> dict:
         """
-        Transform the Smarter API Plugin manifest into a Django ORM model.
+        Transform the Smarter API Chatbot manifest into a Django ORM model.
         """
         config_dump = self.manifest.spec.config.model_dump()
         config_dump = self.camel_to_snake(config_dump)
@@ -165,7 +165,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
     def manifest(self) -> SAMChatbot:
         """
         SAMChatbot() is a Pydantic model
-        that is used to represent the Smarter API Plugin manifest. The Pydantic
+        that is used to represent the Smarter API Chatbot manifest. The Pydantic
         model is initialized with the data from the manifest loader, which is
         generally passed to the model constructor as **data. However, this top-level
         manifest model has to be explicitly initialized, whereas its child models
