@@ -5,6 +5,7 @@ from django.http import HttpRequest, JsonResponse
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account
+from smarter.common.conf import SettingsDefaults
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.exceptions import SAMExceptionBase
@@ -124,24 +125,35 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     def example_manifest(self, request: HttpRequest = None) -> JsonResponse:
         data = {
-            "apiVersion": SAMApiVersions.V1.value,
+            "apiVersion": self.api_version,
             "kind": self.kind,
-            "metadata": {
-                "name": "exampleConnection",
-                "description": "points to the Django mysql database",
-                "version": "0.1.0",
-            },
+            "metadata": {"name": "ExampleChatbot", "description": "an example Smarter chatbot", "version": "0.1.0"},
             "spec": {
-                "connection": {
-                    "db_engine": "django.db.backends.mysql",
-                    "hostname": "smarter-mysql",
-                    "port": 3306,
-                    "username": "smarter",
-                    "password": "smarter",
-                    "database": "smarter",
-                }
+                "config": {
+                    "deployed": True,
+                    "defaultModel": SettingsDefaults.OPENAI_DEFAULT_MODEL,
+                    "defaultTemperature": SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE,
+                    "defaultMaxTokens": SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS,
+                    "appName": "Example Chatbot",
+                    "appAssistant": "Elle",
+                    "appWelcomeMessage": "Welcome to the Example Chatbot! How can I help you today?",
+                    "appExamplePrompts": [
+                        "What is the weather in New York?",
+                        "Tell me a joke",
+                        "What is the capital of France?",
+                    ],
+                    "appPlaceholder": "Ask me anything...",
+                    "appInfoUrl": "https://example.com",
+                    "appBackgroundImageUrl": "https://example.com/background-image.jpg",
+                    "appLogoUrl": "https://example.com/logo.png",
+                    "appFileAttachment": False,
+                    "subdomain": {"enabled": True, "name": "example-chatbot"},
+                    "customDomain": {"enabled": False, "domain": ""},
+                },
+                "plugins": None,
             },
         }
+
         return self.success_response(operation=self.get.__name__, data=data)
 
     def get(

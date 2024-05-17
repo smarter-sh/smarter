@@ -9,8 +9,8 @@ from smarter.apps.plugin.manifest.enum import (
 )
 from smarter.apps.plugin.models import PluginDataSql, PluginDataSqlConnection
 from smarter.apps.plugin.serializers import PluginDataSqlSerializer
+from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterConfigurationError
-from smarter.lib.manifest.enum import SAMApiVersions
 
 from ..models import PluginDataSql
 from .base import PluginBase
@@ -120,7 +120,7 @@ class PluginSql(PluginBase):
 
     def example_manifest(self) -> dict:
         return {
-            "apiVersion": SAMApiVersions.V1.value,
+            "apiVersion": self.api_version,
             "kind": self.kind,
             "metadata": {
                 "name": "SqlExample",
@@ -133,9 +133,9 @@ class PluginSql(PluginBase):
                 "selector": {"directive": "searchTerms", "searchTerms": ["admin", "Smarter platform", "admin account"]},
                 "prompt": {
                     "systemRole": "You are a helpful assistant for Smarter platform. You can provide information about the admin account of the Smarter platform.\n",
-                    "model": "gpt-3.5-turbo-1106",
-                    "temperature": 0.0,
-                    "maxTokens": 256,
+                    "model": SettingsDefaults.OPENAI_DEFAULT_MODEL,
+                    "temperature": SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE,
+                    "maxTokens": SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS,
                 },
                 "data": {
                     "description": "Query the Django User model to retrieve detailed account information about the admin account for the Smarter platform .",

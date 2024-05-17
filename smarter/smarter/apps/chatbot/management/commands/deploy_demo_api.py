@@ -7,6 +7,7 @@ from smarter.apps.account.utils import account_admin_user
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.models import PluginMeta
+from smarter.common.conf import SettingsDefaults
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
 
 
@@ -23,7 +24,7 @@ class Command(BaseCommand):
         user_profile, _ = UserProfile.objects.get_or_create(user=user, account=account)
         chatbot, _ = ChatBot.objects.get_or_create(account=account, name=SMARTER_EXAMPLE_CHATBOT_NAME)
 
-        chatbot.default_model = "gpt-3.5-turbo"
+        chatbot.default_model = SettingsDefaults.OPENAI_DEFAULT_MODEL
         chatbot.default_temperature = 0.5
         chatbot.default_max_tokens = 256
 
