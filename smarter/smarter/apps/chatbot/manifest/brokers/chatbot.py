@@ -224,7 +224,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                     "subdomain": "example-chatbot",
                     "customDomain": None,
                 },
-                "plugins": None,
+                "plugins": ["ExamplePlugin1", "ExamplePlugin2", "ExamplePlugin3"],
             },
         }
 
@@ -280,7 +280,6 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         if self.chatbot:
             try:
                 data = self.django_orm_to_manifest_dict()
-                print(data)
                 return self.success_response(operation=self.describe.__name__, data=data)
             except Exception as e:
                 return self.err_response(self.describe.__name__, e)

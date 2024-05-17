@@ -81,7 +81,6 @@ class TestSAMChatbotBroker(unittest.TestCase):
         content = content["data"]  # the manifest is loaded into the 'data' key
         content.pop("status")  # status is read-only
         manifest = yaml.dump(content)
-        print(manifest)
 
         # load the yaml manifest into a SAMLoader object
         loader = SAMLoader(manifest=manifest)
