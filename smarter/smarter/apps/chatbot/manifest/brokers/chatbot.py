@@ -87,19 +87,6 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
 
         return self._chatbot
 
-    # def model_dump(self) -> dict:
-    #     """
-    #     Transform the Smarter API Plugin manifest into a
-    #     Django ORM Chatbot readable dictionary.
-    #     """
-    #     retval = self.manifest.model_dump()
-    #     retval = self.camel_to_snake(retval)
-    #     if self._chatbot:
-    #         retval["metadata"]["id"] = self._chatbot.id
-    #     if self.account:
-    #         retval["metadata"]["account"] = self.account
-    #     return retval
-
     def manifest_to_django_orm(self) -> dict:
         """
         Transform the Smarter API Plugin manifest into a Django ORM model.
