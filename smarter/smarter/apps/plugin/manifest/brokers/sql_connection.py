@@ -117,7 +117,7 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
 
     def example_manifest(self, request: HttpRequest = None) -> JsonResponse:
         data = {
-            "apiVersion": SAMApiVersions.V1.value,
+            "apiVersion": self.api_version,
             "kind": self.kind,
             "metadata": {
                 "name": "exampleConnection",

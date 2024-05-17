@@ -19,69 +19,69 @@ class SAMChatbotSpecConfig(AbstractSAMSpecBase):
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".configuration"
 
-    subdomain = Optional[str] = Field(
+    subdomain: Optional[str] = Field(
         None,
         description=(f"{class_identifier}.subdomain[str]. Optional. The subdomain to use for the chatbot."),
     )
-    custom_domain = Optional[str] = Field(
+    custom_domain: Optional[str] = Field(
         None,
         description=(f"{class_identifier}.custom_domain[str]. Optional. The custom domain to use for the chatbot."),
     )
-    deployed = bool = (
+    deployed: bool = (
         Field(..., description=(f"{class_identifier}.deployed[bool]. Required. Whether the chatbot is deployed.")),
     )
-    default_model = Optional[str] = Field(
+    default_model: Optional[str] = Field(
         None,
         description=(f"{class_identifier}.default_model[str]. Optional. The default model to use for the chatbot."),
     )
-    default_temperature = Optional[float] = Field(
+    default_temperature: Optional[float] = Field(
         None,
         description=(
             f"{class_identifier}.default_temperature[float]. Optional. The default temperature to use for the chatbot."
         ),
     )
-    default_max_tokens = Optional[int] = Field(
+    default_max_tokens: Optional[int] = Field(
         None,
         description=(
             f"{class_identifier}.default_max_tokens[int]. Optional. The default max tokens to use for the chatbot."
         ),
     )
 
-    app_name = Optional[str] = Field(
+    app_name: Optional[str] = Field(
         None,
         description=(f"{class_identifier}.app_name[str]. Optional. The name of the chatbot."),
     )
-    app_assistant = Optional[str] = Field(
+    app_assistant: Optional[str] = Field(
         None,
         description=(f"{class_identifier}.app_assistant[str]. Optional. The assistant name of the chatbot."),
     )
-    app_welcome_message = Optional[str] = Field(
+    app_welcome_message: Optional[str] = Field(
         None,
         description=(f"{class_identifier}.app_welcome_message[str]. Optional. The welcome message of the chatbot."),
     )
-    app_example_prompts = Optional[List[dict]] = Field(
+    app_example_prompts: Optional[List[dict]] = Field(
         None,
         description=(f"{class_identifier}.app_example_prompts[list]. Optional. The example prompts of the chatbot."),
     )
-    app_placeholder = Optional[str] = Field(
+    app_placeholder: Optional[str] = Field(
         None,
         description=(f"{class_identifier}.app_placeholder[str]. Optional. The placeholder of the chatbot."),
     )
-    app_info_url = Optional[str] = Field(
+    app_info_url: Optional[str] = Field(
         None,
         description=(f"{class_identifier}.app_info_url[str]. Optional. The info URL of the chatbot."),
     )
-    app_background_image_url = Optional[str] = Field(
+    app_background_image_url: Optional[str] = Field(
         None,
         description=(
             f"{class_identifier}.app_background_image_url[str]. Optional. The background image URL of the chatbot."
         ),
     )
-    app_logo_url = Optional[str] = Field(
+    app_logo_url: Optional[str] = Field(
         None,
         description=(f"{class_identifier}.app_logo_url[str]. Optional. The logo URL of the chatbot."),
     )
-    app_file_attachment = Optional[bool] = Field(
+    app_file_attachment: Optional[bool] = Field(
         None,
         description=(
             f"{class_identifier}.app_file_attachment[bool]. Optional. Whether the chatbot supports file attachment."

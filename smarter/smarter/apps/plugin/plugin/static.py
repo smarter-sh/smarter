@@ -8,7 +8,7 @@ from smarter.apps.plugin.manifest.enum import (
 )
 from smarter.apps.plugin.models import PluginDataStatic
 from smarter.apps.plugin.serializers import PluginDataStaticSerializer
-from smarter.lib.manifest.enum import SAMApiVersions
+from smarter.common.conf import SettingsDefaults
 
 from .base import PluginBase
 
@@ -80,7 +80,7 @@ class PluginStatic(PluginBase):
 
     def example_manifest(self) -> dict:
         return {
-            "apiVersion": SAMApiVersions.V1.value,
+            "apiVersion": self.api_version,
             "kind": self.kind,
             "metadata": {
                 "name": "EverlastingGobstopper",
@@ -96,9 +96,9 @@ class PluginStatic(PluginBase):
                 },
                 "prompt": {
                     "systemRole": "You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com).\n",
-                    "model": "gpt-3.5-turbo-1106",
-                    "temperature": 1.0,
-                    "maxTokens": 256,
+                    "model": SettingsDefaults.OPENAI_DEFAULT_MODEL,
+                    "temperature": SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE,
+                    "maxTokens": SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS,
                 },
                 "data": {
                     "description": "Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
