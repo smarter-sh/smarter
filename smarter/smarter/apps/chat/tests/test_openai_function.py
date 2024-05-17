@@ -10,7 +10,6 @@ import unittest
 from pathlib import Path
 from time import sleep
 
-import yaml
 from django.test import Client
 
 from smarter.apps.account.models import Account, UserProfile
@@ -19,6 +18,7 @@ from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django.user import User
+from smarter.lib.unittest.utils import get_readonly_csv_file
 
 from ..models import Chat, ChatPluginUsage
 from ..providers.smarter import handler
@@ -96,8 +96,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         self.user_profile = UserProfile.objects.create(user=self.user, account=self.account, is_test=True)
 
         config_path = get_test_file_path("plugins/everlasting-gobstopper.yaml")
-        with open(config_path, encoding="utf-8") as file:
-            plugin_data = yaml.safe_load(file)
+        plugin_data = get_readonly_csv_file(config_path)
 
         self.plugin = PluginStatic(user_profile=self.user_profile, data=plugin_data)
         self.plugins = [self.plugin]

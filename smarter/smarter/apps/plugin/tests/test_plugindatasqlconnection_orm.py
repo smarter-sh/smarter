@@ -18,6 +18,7 @@ from smarter.apps.plugin.manifest.models.sql_connection.model import (
 from smarter.apps.plugin.models import PluginDataSqlConnection, PluginMeta
 from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 from .factories import plugin_meta_factory
 
@@ -40,8 +41,7 @@ class TestPluginDataSqlConnection(unittest.TestCase):
         # ---------------------------------------------------------------------
         # 1. load the yaml manifest file
         config_path = os.path.join(HERE, "mock_data/sql-connection.yaml")
-        with open(config_path, encoding="utf-8") as file:
-            manifest = yaml.safe_load(file)
+        manifest = get_readonly_yaml_file(config_path)
 
         # 2. initialize a SAMLoader object with the manifest raw data
         self.loader = SAMLoader(manifest=manifest)

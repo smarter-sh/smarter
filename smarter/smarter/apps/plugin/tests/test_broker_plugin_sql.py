@@ -14,6 +14,7 @@ from smarter.apps.plugin.manifest.brokers.sql_connection import (
 )
 from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -28,15 +29,13 @@ class TestSAMPluginSql(unittest.TestCase):
 
         # create a sql connection
         config_path = os.path.join(HERE, "mock_data/sql-connection.yaml")
-        with open(config_path, encoding="utf-8") as file:
-            connection_manifest = yaml.safe_load(file)
+        connection_manifest = get_readonly_yaml_file(config_path)
         self.connection_broker = SAMPluginDataSqlConnectionBroker(account=self.account, manifest=connection_manifest)
         self.connection_broker.apply()
 
         # create a plugin broker
         config_path = os.path.join(HERE, "mock_data/sql-test.yaml")
-        with open(config_path, encoding="utf-8") as file:
-            plugin_manifest = yaml.safe_load(file)
+        plugin_manifest = get_readonly_yaml_file(config_path)
         self.plugin_broker = SAMPluginBroker(account=self.account, manifest=plugin_manifest)
 
     def tearDown(self):

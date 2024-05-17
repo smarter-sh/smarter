@@ -11,6 +11,7 @@ from pathlib import Path
 import yaml
 
 from smarter.lib.django.user import User
+from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -39,8 +40,7 @@ class TestPlugin(unittest.TestCase):
         self.user_profile = UserProfile.objects.create(user=self.user, account=self.account, is_test=True)
 
         config_path = get_test_file_path("plugins/everlasting-gobstopper.yaml")
-        with open(config_path, encoding="utf-8") as file:
-            plugin_json = yaml.safe_load(file)
+        plugin_json = get_readonly_yaml_file(config_path)
         plugin_json["user_profile"] = self.user_profile
 
         self.plugin = PluginStatic(data=plugin_json)

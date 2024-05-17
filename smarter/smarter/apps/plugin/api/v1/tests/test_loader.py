@@ -7,6 +7,7 @@ import unittest
 from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
 from smarter.common.const import PYTHON_ROOT
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 
 class TestSAM(unittest.TestCase):
@@ -18,8 +19,7 @@ class TestSAM(unittest.TestCase):
         self.good_manifest_path = os.path.join(self.path, "good-manifest.yaml")
         self.invalid_file_format = os.path.join(self.path, "invalid-file-format.yaml")
 
-        with open(self.good_manifest_path, encoding="utf-8") as file:
-            self.good_manifest = file.read()
+        self.good_manifest = get_readonly_yaml_file(self.good_manifest_path)
 
     def test_valid_manifest(self):
         """Test valid file path and that we can instantiate with errors"""

@@ -15,6 +15,7 @@ from smarter.apps.plugin.manifest.models.sql_connection.model import (
     SAMPluginDataSqlConnection,
 )
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -28,8 +29,7 @@ class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
         self.user, self.account, self.user_profile = admin_user_factory()
 
         config_path = os.path.join(HERE, "mock_data/sql-connection.yaml")
-        with open(config_path, encoding="utf-8") as file:
-            connection_manifest = yaml.safe_load(file)
+        connection_manifest = get_readonly_yaml_file(config_path)
 
         self.broker = SAMPluginDataSqlConnectionBroker(account=self.account, manifest=connection_manifest)
 
