@@ -49,6 +49,7 @@ class TestSAMPluginSql(unittest.TestCase):
         retval = self.plugin_broker.apply()
         self.assertEqual(retval.status_code, HTTPStatus.OK)
         content = json.loads(retval.content.decode())
+        print(content)
         self.assertIsInstance(content, dict)
         self.assertIn("message", content.keys())
         # self.assertEqual(content["message"], "PluginDataSqlConnection testConnection applied successfully")
@@ -98,6 +99,7 @@ class TestSAMPluginSql(unittest.TestCase):
         # load the yaml manifest into a SAMLoader object
         loader = SAMLoader(manifest=manifest)
         # create a pydantic model from the loader
+        print(loader.pydantic_model_dump())
         pydantic_model = SAMPlugin(**loader.pydantic_model_dump())
 
         # dump the pydantic model to a dictionary

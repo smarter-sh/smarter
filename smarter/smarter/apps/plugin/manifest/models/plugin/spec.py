@@ -176,11 +176,11 @@ class SAMPluginSpecDataSql(BaseModel):
             "Example: {'company_id': 'int'}"
         ),
     )
-    sql_query: str = Field(
+    sqlQuery: str = Field(
         ...,
         description=f"{class_identifier}.sql[str]: a valid SQL query. Example: 'SELECT * FROM customers WHERE id = 100;'",  # nosec
     )
-    test_values: Optional[dict] = Field(
+    testValues: Optional[dict] = Field(
         None,
         description=(
             f"{class_identifier}.test_values[obj]: a dictionary of test values to use in the SQL query. "
@@ -195,7 +195,7 @@ class SAMPluginSpecDataSql(BaseModel):
         ),
     )
 
-    @field_validator("sql_query")
+    @field_validator("sqlQuery")
     def validate_sql(cls, v) -> str:
         try:
             sql_parse(v)
