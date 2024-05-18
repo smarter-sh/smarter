@@ -46,7 +46,7 @@ class Command(BaseCommand):
             raise SmarterValueError("You must provide either an account number or a company name.")
 
         try:
-            chatbot, _ = ChatBot.objects.get(account=account, name=name)
+            chatbot = ChatBot.objects.get(account=account, name=name)
         except ChatBot.DoesNotExist:
             print(f"Chatbot {name} not found for account {account.account_number} {account.company_name}.")
             return
