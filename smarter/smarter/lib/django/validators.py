@@ -108,7 +108,6 @@ class SmarterValidator:
                 return
             if validators.url(url):
                 return
-            print("url - fuck a duck", url)
             raise SmarterValueError(f"Invalid url {url}") from e
 
     @staticmethod
