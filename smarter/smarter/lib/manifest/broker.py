@@ -59,6 +59,7 @@ class AbstractBroker(ABC):
         DELETE = "delete"
         DEPLOY = "deploy"
         LOGS = "logs"
+        MANIFEST_EXAMPLE = "example_manifest"
 
         @classmethod
         def past_tense(cls) -> dict:
@@ -253,6 +254,9 @@ class AbstractBroker(ABC):
         elif operation == self.Operations.LOGS:
             kind = self.kind
             message = f"{kind} {self.name} successfully retrieved logs"
+        elif operation == self.Operations.MANIFEST_EXAMPLE:
+            kind = self.kind
+            message = f"{kind} example manifest successfully generated"
         else:
             kind = self.kind
             message = f"{kind} {self.name} {operated} successfully"
