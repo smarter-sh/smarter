@@ -130,7 +130,7 @@ docker-collectstatic:
 
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "run manage.py test"
+	docker exec smarter-app bash -c "./manage.py test"
 
 docker-prune:
 	make docker-check && \
