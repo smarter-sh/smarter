@@ -6,11 +6,13 @@ import unittest
 from http import HTTPStatus
 
 import yaml
+from django.http import JsonResponse
 
 from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
 from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
 from smarter.common.utils import dict_is_contained_in
+from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.unittest.utils import get_readonly_yaml_file
 
@@ -26,8 +28,8 @@ class TestSAMChatbotBroker(unittest.TestCase):
         self.user, self.account, self.user_profile = admin_user_factory()
 
         config_path = os.path.join(HERE, "data/chatbot.yaml")
-        manifest = get_readonly_yaml_file(config_path)
-        self.broker = SAMChatbotBroker(account=self.account, manifest=manifest)
+        self.manifest = get_readonly_yaml_file(config_path)
+        self.broker = SAMChatbotBroker(account=self.account, manifest=self.manifest)
 
     def tearDown(self):
         """Tear down test fixtures."""
@@ -110,3 +112,18 @@ class TestSAMChatbotBroker(unittest.TestCase):
         self.assertIsInstance(content, dict)
         self.assertIn("message", content.keys())
         self.assertEqual(content["message"], "Chatbot TestChatbot successfully retrieved logs")
+
+    def test_example_manifest(self):
+        """Test that the example manifest is valid."""
+
+        response = self.broker.example_manifest()
+        self.assertIsInstance(response, JsonResponse)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        content = json.loads(response.content)
+        self.assertIsInstance(content, dict)
+        self.assertIn("data", content.keys())
+        self.assertIn("message", content.keys())
+        self.assertEqual(content["message"], "Chatbot example manifest successfully generated")
+        for key in content["data"].keys():
+            self.assertIn(key, SAMKeys.all_values())

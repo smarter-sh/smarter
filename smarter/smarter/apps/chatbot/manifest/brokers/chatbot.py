@@ -190,14 +190,14 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     def example_manifest(self, kwargs: dict = None) -> JsonResponse:
         data = {
-            SAMKeys.APIVERSION: self.api_version,
-            SAMKeys.KIND: self.kind,
-            SAMKeys.METADATA: {
+            SAMKeys.APIVERSION.value: self.api_version,
+            SAMKeys.KIND.value: self.kind,
+            SAMKeys.METADATA.value: {
                 SAMMetadataKeys.NAME.value: "ExampleChatbot",
                 SAMMetadataKeys.DESCRIPTION.value: "To create and deploy an example Smarter chatbot. Prompt with 'example function calling' to trigger the example Static Plugin",
                 SAMMetadataKeys.VERSION.value: "0.1.0",
             },
-            SAMKeys.SPEC: {
+            SAMKeys.SPEC.value: {
                 SAMChatbotSpecKeys.CONFIG.value: {
                     "deployed": True,
                     "defaultModel": SettingsDefaults.OPENAI_DEFAULT_MODEL,
@@ -224,8 +224,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 SAMChatbotSpecKeys.FUNCTIONS.value: ["weather"],
             },
         }
-
-        return self.success_response(operation=self.get.__name__, data=data)
+        return self.success_response(operation=self.example_manifest.__name__, data=data)
 
     def get(
         self, request: HttpRequest = None, name: str = None, all_objects: bool = False, tags: str = None

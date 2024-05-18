@@ -11,6 +11,7 @@ import logging
 import re
 from urllib.parse import urlparse, urlunparse
 
+import validators
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator, validate_email, validate_ipv4_address
 
@@ -35,6 +36,7 @@ class SmarterValidator:
     VALID_ACCOUNT_NUMBER_PATTERN = r"^\d{4}-\d{4}-\d{4}$"
     VALID_PORT_PATTERN = r"^[0-9]{1,5}$"
     VALID_URL_PATTERN = r"^(http|https)://[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}(:[0-9]{1,5})?$"
+    VALID_HOSTNAME_PATTERN = r"^(?!-)[A-Z\d-]{1,63}(?<!-)$"
     VALID_UUID_PATTERN = r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
     VALID_SESSION_KEY = r"^[a-fA-F0-9]{64}$"
     VALID_SEMANTIC_VERSION = r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$"
@@ -93,15 +95,37 @@ class SmarterValidator:
         try:
             if any(local_url in url for local_url in SmarterValidator.LOCAL_URLS):
                 return
-        except TypeError as e:
-            raise SmarterValueError(f"Invalid url {url}") from e
+        except TypeError:
+            pass
         try:
             validator = URLValidator()
             validator(url)
         except ValidationError as e:
+            parsed = urlparse(url)
+            if all([parsed.scheme, parsed.netloc]) or url.startswith("localhost"):
+                return
             if SmarterValidator.is_valid_ip(url):
                 return
+            if validators.url(url):
+                return
+            print("url - fuck a duck", url)
             raise SmarterValueError(f"Invalid url {url}") from e
+
+    @staticmethod
+    def validate_hostname(hostname: str) -> None:
+        """Validate hostname format"""
+        if ":" in hostname:
+            hostname, port = hostname.split(":")
+            if not port.isdigit() or not (0 <= int(port) <= 65535):
+                raise SmarterValueError(f"Invalid port {port}")
+        if len(hostname) > 255:
+            raise SmarterValueError(f"Invalid hostname {hostname}")
+        if hostname[-1] == ".":
+            hostname = hostname[:-1]  # strip exactly one dot from the right, if present
+        allowed = re.compile(SmarterValidator.VALID_HOSTNAME_PATTERN, re.IGNORECASE)
+        if all(allowed.match(x) for x in hostname.split(".")):
+            return
+        raise SmarterValueError(f"Invalid hostname {hostname}")
 
     @staticmethod
     def validate_uuid(uuid: str) -> None:
@@ -174,6 +198,14 @@ class SmarterValidator:
     def is_valid_url(url: str) -> bool:
         try:
             SmarterValidator.validate_url(url)
+            return True
+        except SmarterValueError:
+            return False
+
+    @staticmethod
+    def is_valid_hostname(hostname: str) -> bool:
+        try:
+            SmarterValidator.validate_hostname(hostname)
             return True
         except SmarterValueError:
             return False
