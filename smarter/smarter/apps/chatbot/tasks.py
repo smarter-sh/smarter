@@ -356,12 +356,6 @@ def verify_domain(domain_name: str, activate_chatbot: bool = False) -> bool:
     return False
 
 
-@app.task(
-    autoretry_for=(Exception,),
-    retry_backoff=CELERY_RETRY_BACKOFF,
-    max_retries=CELERY_MAX_RETRIES,
-    queue=CELERY_TASK_QUEUE,
-)
 def create_domain_A_record(hostname: str, api_host_domain: str):
     """Create an A record for the API domain."""
     fn_name = "create_domain_A_record()"
@@ -426,20 +420,34 @@ def destroy_domain_A_record(hostname: str, api_host_domain: str):
     logger.info("%s found hosted zone %s for parent domain %s", fn_name, hosted_zone_id, api_host_domain)
 
     # retrieve the A record from the environment domain hosted zone. we'll
-    # use this to create the A record in the customer API domain
-    a_record = aws_helper.route53.get_environment_A_record(domain=api_host_domain)
+    # use this to create the A record in the customer API domain. example:
+    # {
+    #     "Name": "example.com.",
+    #     "Type": "A",
+    #     "TTL": 300,
+    #     "ResourceRecords": [{"Value": "192.1.1.1"}]
+    # }
+
+    a_record = aws_helper.route53.get_dns_record(
+        hosted_zone_id=hosted_zone_id,
+        record_name=hostname,
+        record_type="A",
+    )
     if not a_record:
         logger.error("%s a record not found for %s. Nothing to do, returning.", fn_name, api_host_domain)
         return
 
-    record_type = a_record["Type"]
-    record_ttl = a_record["TTL"]
-    record_resource_records = a_record["ResourceRecords"]
+    print(f"{fn_name} a_record: ", a_record)
+    record_type = a_record.get("Type", "A")
+    record_ttl = a_record.get("TTL", DEFAULT_TTL)
+    alias_target = a_record.get("AliasTarget")
+    record_resource_records = a_record.get("ResourceRecords")
     aws_helper.route53.destroy_dns_record(
         hosted_zone_id=hosted_zone_id,
         record_name=hostname,
         record_type=record_type,
         record_ttl=record_ttl,
+        alias_target=alias_target,
         record_resource_records=record_resource_records,
     )
 

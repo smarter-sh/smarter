@@ -61,6 +61,10 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
             account=self.account,
             name=f"{hashed_slug}",
         )
+        self._chatbot_dns_verification_status_changed = False
+        self._chatbot_dns_failed = False
+        self._chatbot_dns_verification_initiated = False
+        self._chatbot_dns_verified = False
 
     def tearDown(self):
         """Clean up test fixtures."""
@@ -126,29 +130,23 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
 
     def test_deploy_and_undeploy(self):
         """Test deploy_api and undeploy_api commands."""
-        chatbot_dns_verification_status_changed.connect(
-            self.chatbot_dns_verification_status_changed_signal_handler,
-            dispatch_uid="chatbot_dns_verification_status_changed_test_plugin_called_signal",
-        )
-        chatbot_dns_failed.connect(
-            self.chatbot_dns_failed_signal_handler, dispatch_uid="chatbot_dns_failed_test_plugin_called_signal"
-        )
-        chatbot_dns_verification_initiated.connect(
-            self.chatbot_dns_verification_initiated_signal_handler,
-            dispatch_uid="chatbot_dns_verification_initiated_test_plugin_called_signal",
-        )
-        chatbot_dns_verified.connect(
-            self.chatbot_dns_verified_signal_handler, dispatch_uid="chatbot_dns_verified_test_plugin_called_signal"
-        )
+
+        #######################################################################
+        # Deploy the chatbot
+        #######################################################################
+        print("test_deploy_and_undeploy(): initiating deploy...")
+        print("-" * 80)
+
         # hosted zone for the Customer api domain
         api_hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(
             domain_name=smarter_settings.customer_api_domain
         )
 
         call_command("deploy_api", "--account_number", f"{self.account.account_number}", "--name", self.chatbot.name)
-        print("sleeping for 3 seconds to allow DNS record to be created")
-        time.sleep(3)
+        print("sleeping for 15 seconds to allow DNS record to be created")
+        time.sleep(15)
         chatbot = ChatBot.objects.get(name=self.chatbot.name, account=self.account)
+        print(f"found chatbot.id={chatbot.id} chatbot.default_host={chatbot.default_host}")
 
         # verify that a DNS record was created for the chatbot
         chatbot_default_host = chatbot.default_host
@@ -166,6 +164,12 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
             [chatbot.DnsVerificationStatusChoices.VERIFYING, chatbot.DnsVerificationStatusChoices.VERIFIED],
         )
 
+        #######################################################################
+        # Undeploy the chatbot
+        #######################################################################
+        print("test_deploy_and_undeploy(): initiating undeploy...")
+        print("-" * 80)
+
         call_command(
             "undeploy_api",
             "--account_number",
@@ -174,8 +178,9 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
             self.chatbot.name,
             "--foreground",
         )
-        chatbot = ChatBot.objects.filter(name=self.chatbot.name, account=self.account).first()
-        self.assertIsNone(chatbot)
+        chatbot = ChatBot.objects.get(name=self.chatbot.name, account=self.account)
+        self.assertEqual(chatbot.deployed, False)
+        self.assertEqual(chatbot.dns_verification_status, chatbot.DnsVerificationStatusChoices.NOT_VERIFIED)
         a_record = aws_helper.route53.get_dns_record(
             hosted_zone_id=api_hosted_zone_id, record_name=chatbot_default_host
         )

@@ -7,6 +7,7 @@ from typing import Tuple
 
 # our stuff
 from .aws import AWSBase
+from .exceptions import AWSRoute53RecordVerificationTimeout
 
 
 logger = logging.getLogger(__name__)
@@ -142,14 +143,15 @@ class AWSRoute53(AWSBase):
         def name_match(record_name, record) -> bool:
             return record["Name"] == record_name or record["Name"] == f"{record_name}."
 
-        response = self.client.list_resource_record_sets(HostedZoneId=hosted_zone_id)
-        for record in response["ResourceRecordSets"]:
-            if (
-                name_match(record_name=record_name, record=record)
-                and str(record["Type"]).upper() == record_type.upper()
-            ):
-                logger.info("get_dns_record() found record: %s", record)
-                return record
+        paginator = self.client.get_paginator("list_resource_record_sets")
+        for page in paginator.paginate(HostedZoneId=hosted_zone_id):
+            for record in page["ResourceRecordSets"]:
+                if (
+                    name_match(record_name=record_name, record=record)
+                    and str(record["Type"]).upper() == record_type.upper()
+                ):
+                    logger.info("get_dns_record() found record: %s", record)
+                    return record
         logger.warning("get_dns_record() did not find record for %s %s", record_name, record_type)
         return None
 
@@ -190,8 +192,10 @@ class AWSRoute53(AWSBase):
         record_value=None,  # can be a single text value of a list of dict
     ) -> Tuple[dict, bool]:
         action: str = None
+        fn_name = "get_or_create_dns_record()"
         logger.info(
-            "get_or_create_dns_record() hosted_zone_id: %s record_name: %s record_type: %s",
+            "%s hosted_zone_id: %s record_name: %s record_type: %s",
+            fn_name,
             hosted_zone_id,
             record_name,
             record_type,
@@ -227,10 +231,10 @@ class AWSRoute53(AWSBase):
                 logger.info("get_or_create_dns_record() returning matched record: %s", fetched_record)
                 return (fetched_record, False)
             action = "UPSERT"
-            logger.info("Updating %s %s record", record_name, record_type)
+            logger.info("%s updating %s %s record", fn_name, record_name, record_type)
         else:
             action = "CREATE"
-            logger.info("Creating %s %s record", record_name, record_type)
+            logger.info("%s creating %s %s record", fn_name, record_name, record_type)
 
         change_batch = {
             "Changes": [
@@ -258,9 +262,31 @@ class AWSRoute53(AWSBase):
             HostedZoneId=hosted_zone_id,
             ChangeBatch=change_batch,
         )
-        logger.info("Posting aws route53 change batch %s", change_batch)
-        record = self.get_dns_record(hosted_zone_id=hosted_zone_id, record_name=record_name, record_type=record_type)
-        logger.info("Posted aws routed53 DNS record %s", change_batch)
+        logger.info("%s posted aws route53 change batch %s", fn_name, change_batch)
+
+        record = None
+        attempts = 0
+        max_attempts = 10
+        sleep_time = 15
+        while not record:
+            record = self.get_dns_record(
+                hosted_zone_id=hosted_zone_id, record_name=record_name, record_type=record_type
+            )
+            if record:
+                break
+            logger.info(
+                "%s waiting %s seconds for record to be created. Attempt %s of %s",
+                fn_name,
+                sleep_time,
+                attempts,
+                max_attempts,
+            )
+            time.sleep(sleep_time)
+            attempts += 1
+            if attempts >= max_attempts:
+                raise AWSRoute53RecordVerificationTimeout(
+                    f"DNS record verification timeout. Waited unsuccessfully for {attempts * sleep_time} seconds for record {record_name} {record_type} to be created."
+                )
         return (record, action == "CREATE")
 
     def destroy_dns_record(
@@ -269,6 +295,7 @@ class AWSRoute53(AWSBase):
         record_name: str,
         record_type: str,
         record_ttl: int,
+        alias_target=None,  # may or may not exist
         record_resource_records=None,  # can be a single text value of a list of dict
     ) -> None:
         """Destroy the DNS record."""
@@ -278,21 +305,34 @@ class AWSRoute53(AWSBase):
             record_name,
             record_type,
         )
+        change_batch = {
+            "Changes": [
+                {
+                    "Action": "DELETE",
+                    "ResourceRecordSet": {
+                        "Name": record_name,
+                        "Type": record_type,
+                    },
+                },
+            ]
+        }
+        if alias_target:
+            change_batch["Changes"][0]["ResourceRecordSet"]["AliasTarget"] = alias_target
+        if record_resource_records:
+            change_batch["Changes"][0]["ResourceRecordSet"]["TTL"] = record_ttl
+            if isinstance(record_resource_records, list):
+                change_batch["Changes"][0]["ResourceRecordSet"]["ResourceRecords"] = [
+                    {"Value": item["Value"]} for item in record_resource_records if "Value" in item
+                ]
+            else:
+                change_batch["Changes"][0]["ResourceRecordSet"]["ResourceRecords"] = [
+                    {"Value": f'"{record_resource_records}"'}
+                ]
+
+        print("change_batch", change_batch)
         self.client.change_resource_record_sets(
             HostedZoneId=hosted_zone_id,
-            ChangeBatch={
-                "Changes": [
-                    {
-                        "Action": "DELETE",
-                        "ResourceRecordSet": {
-                            "Name": record_name,
-                            "Type": record_type,
-                            "TTL": record_ttl,
-                            "ResourceRecords": record_resource_records,
-                        },
-                    },
-                ]
-            },
+            ChangeBatch=change_batch,
         )
 
     def get_environment_A_record(self, domain: str = None) -> dict:

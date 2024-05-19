@@ -110,9 +110,9 @@ class TestChatBotTasks(unittest.TestCase):
         print("FIX NOTE: test_create_domain_A_record() dns_record: ", dns_record)
         # mcdaniel: 2021-09-29: This test is failing even though the the record is being created.
         # aws_helper.route53.get_dns_record() weirdly returns None even though the record is there.
-        # self.assertIsNotNone(dns_record)
-        # self.assertEqual(dns_record["Name"], resolved_domain)
-        # self.assertEqual(dns_record["Type"], "A")
+        self.assertIsNotNone(dns_record)
+        self.assertEqual(dns_record["Name"], resolved_domain)
+        self.assertEqual(dns_record["Type"], "A")
 
     def test_deploy_default_api(self):
         """Test that we can deploy the default API."""

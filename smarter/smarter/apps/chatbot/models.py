@@ -257,7 +257,6 @@ class ChatBot(TimestampedModel):
         super().save(*args, **kwargs)
         if self.pk is not None:
             if orig.dns_verification_status != self.dns_verification_status:
-                print("save() - dns_verification_status changed: ", self.dns_verification_status)
                 chatbot_dns_verification_status_changed.send(sender=self.__class__, chatbot=self)
                 if self.dns_verification_status == ChatBot.DnsVerificationStatusChoices.VERIFYING:
                     chatbot_dns_verification_initiated.send(sender=self.__class__, chatbot=self)
