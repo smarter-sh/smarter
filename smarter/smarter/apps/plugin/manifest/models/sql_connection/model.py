@@ -30,6 +30,6 @@ class SAMPluginDataSqlConnection(AbstractSAMBase):
         description=f"{class_identifier}.{SAMKeys.SPEC.value}[obj]: Required, the {MANIFEST_KIND} specification.",
     )
     status: Optional[SAMPluginDataSqlConnectionStatus] = Field(
-        ...,
+        None,
         description=f"{class_identifier}.{SAMKeys.STATUS.value}[obj]: Optional, Read-only. Stateful status information about the {MANIFEST_KIND}.",
     )

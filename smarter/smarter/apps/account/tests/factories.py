@@ -29,6 +29,21 @@ def mortal_user_factory(account: Account = None) -> tuple[UserType, Account, Use
     return user, account, user_profile
 
 
+def admin_user_teardown(user: UserType, account: Account, user_profile: UserProfile):
+    try:
+        user_profile.delete()
+    except UserProfile.DoesNotExist:
+        pass
+    try:
+        user.delete()
+    except User.DoesNotExist:
+        pass
+    try:
+        account.delete()
+    except Account.DoesNotExist:
+        pass
+
+
 def billing_address_factory():
     """Factory for testing billing addresses."""
 

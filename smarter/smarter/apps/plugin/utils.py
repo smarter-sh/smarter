@@ -24,3 +24,9 @@ def add_example_plugins(user_profile: UserProfile) -> bool:
         data = plugin.to_yaml()
         data = yaml.safe_load(data)
         PluginStatic(user_profile=user_profile, data=data)
+
+
+def get_plugin_examples_by_name() -> list[str]:
+    """Get the names of all example plugins."""
+    plugin_examples = PluginExamples()
+    return [plugin.name for plugin in plugin_examples.plugins]

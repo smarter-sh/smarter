@@ -18,10 +18,16 @@ class AccountMixin:
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        account_number: str,
+        account: Account = None,
+        user: UserType = None,
+        account_number: str = None,
     ):
         SmarterValidator.validate_account_number(account_number)
-        self._account = Account.objects.get(account_number=account_number)
+        self._account = account or Account.objects.get(account_number=account_number)
+        self._user = user
+
+        if self._user and self._account:
+            self._user_profile = UserProfile.objects.get(user=self._user, account=self._account)
 
     @property
     def account(self) -> Account:

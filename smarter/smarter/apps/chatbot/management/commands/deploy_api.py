@@ -20,12 +20,14 @@ class Command(BaseCommand):
         parser.add_argument("--account_number", type=str, help="The Smarter account number to which the user belongs")
         parser.add_argument("--company_name", type=str, help="The company name to which the user belongs")
         parser.add_argument("--name", type=str, help="The name/subdomain for the new API")
+        parser.add_argument("--foreground", action="store_true", help="Run the task in the foreground")
 
     def handle(self, *args, **options):
 
         account_number = options["account_number"]
         company_name = options["company_name"]
         name = options["name"]
+        foreground = options["foreground"]
 
         account: Account = None
         chatbot: ChatBot = None
@@ -46,14 +48,19 @@ class Command(BaseCommand):
             raise SmarterValueError("You must provide either an account number or a company name.")
 
         try:
-            chatbot, _ = ChatBot.objects.get(account=account, name=name)
+            chatbot = ChatBot.objects.get(account=account, name=name)
         except ChatBot.DoesNotExist:
             print(f"Chatbot {name} not found for account {account.account_number} {account.company_name}.")
             return
 
-        if chatbot.deployed:
-            print(f"You're all set! {chatbot.hostname} is already deployed.")
+        if chatbot.deployed and chatbot.dns_verification_status == ChatBot.DnsVerificationStatusChoices.VERIFIED:
+            self.stdout.write(self.style.SUCCESS(f"You're all set! {chatbot.hostname} is already deployed."))
             return
 
-        print(f"Deploying {chatbot.hostname}")
-        deploy_default_api.delay(chatbot_id=chatbot.id)
+        if foreground:
+            self.stdout.write(self.style.NOTICE(f"Deploying {chatbot.hostname}"))
+            print()
+            deploy_default_api(chatbot_id=chatbot.id)
+        else:
+            self.stdout.write(self.style.NOTICE(f"Deploying {chatbot.hostname} as a Celery task."))
+            deploy_default_api.delay(chatbot_id=chatbot.id)

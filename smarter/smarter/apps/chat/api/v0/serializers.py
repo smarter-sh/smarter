@@ -3,7 +3,7 @@
 from rest_framework import serializers
 
 from smarter.apps.chat.models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
-from smarter.apps.plugin.api.v0.serializers import PluginMetaSerializer
+from smarter.apps.plugin.serializers import PluginMetaSerializer
 
 
 class ChatSerializer(serializers.ModelSerializer):

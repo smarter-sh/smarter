@@ -10,8 +10,6 @@ import os
 import sys
 from pathlib import Path
 
-import yaml
-
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 PROJECT_ROOT = str(Path(HERE).parent.parent.parent.parent)
@@ -27,13 +25,6 @@ def get_test_file(filename: str):
     path = os.path.join(HERE, "mock_data", filename)
     with open(path, encoding="utf-8") as file:
         return json.load(file)
-
-
-def get_test_file_yaml(filename: str):
-    """Load a mock yaml file"""
-    path = os.path.join(HERE, "mock_data", filename)
-    with open(path, encoding="utf-8") as file:
-        return yaml.safe_load(file)
 
 
 def get_test_file_path(filename: str):

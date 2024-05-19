@@ -6,7 +6,12 @@ from taggit.models import Tag
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account
+from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
+from smarter.apps.plugin.plugin.base import PluginBase
+from smarter.apps.plugin.plugin.sql import PluginSql
+from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.lib.manifest.broker import AbstractBroker
+from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -18,6 +23,11 @@ from ..models.plugin.model import SAMPlugin
 
 
 MAX_RESULTS = 1000
+
+PluginMap: dict[str, PluginBase] = {
+    SAMPluginMetadataClassValues.STATIC.value: PluginStatic,
+    SAMPluginMetadataClassValues.SQL.value: PluginSql,
+}
 
 
 class SAMPluginBrokerError(SAMExceptionBase):
@@ -42,8 +52,8 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        api_version: str,
         account: Account,
+        api_version: str = SAMApiVersions.V1.value,
         name: str = None,
         kind: str = None,
         loader: SAMLoader = None,
@@ -60,8 +70,8 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         the required top-level keys.
         """
         super().__init__(
-            api_version=api_version,
             account=account,
+            api_version=api_version,
             name=name,
             kind=kind,
             loader=loader,
@@ -126,6 +136,16 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
+    def example_manifest(self, kwargs: dict = None) -> JsonResponse:
+        plugin_class: str = kwargs.get("plugin_class", SAMPluginMetadataClassValues.STATIC.value)
+        try:
+            Plugin = PluginMap[plugin_class]
+        except KeyError as e:
+            raise SAMPluginBrokerError(f"Plugin class {plugin_class} not found") from e
+
+        data = Plugin.example_manifest(kwargs=kwargs)
+        return self.success_response(operation=self.example_manifest.__name__, data=data)
+
     def get(
         self, request: HttpRequest = None, name: str = None, all_objects: bool = False, tags: str = None
     ) -> JsonResponse:
@@ -187,6 +207,8 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         if self.plugin.ready:
             try:
                 data = self.plugin.to_json()
+                data["metadata"].pop("account")
+                data["metadata"].pop("author")
                 return self.success_response(operation=self.describe.__name__, data=data)
             except Exception as e:
                 return self.err_response(self.describe.__name__, e)

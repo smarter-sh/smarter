@@ -1,6 +1,5 @@
 """Billing Views for the account dashboard."""
 
-import csv
 import datetime
 import json
 import logging
@@ -8,6 +7,7 @@ import os
 from pathlib import Path
 
 from smarter.lib.django.view_helpers import SmarterAdminWebView
+from smarter.lib.unittest.utils import get_readonly_csv_file
 
 from .billing_addresses import BillingAddressesView, BillingAddressForm
 from .payment_methods import PaymentMethodForm, PaymentMethodsView
@@ -18,15 +18,8 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 DASHBOARD = str(Path(HERE).parent)
 
 
-def get_from_csv(file_path):
-    """Reads a CSV file and returns a list of dictionaries."""
-    with open(file_path, encoding="utf-8") as file:
-        reader = csv.DictReader(file)
-        return list(reader)
-
-
 countries_csv = os.path.join(DASHBOARD, "./data/countries.csv")
-COUNTRIES = get_from_csv(countries_csv)
+COUNTRIES = get_readonly_csv_file(countries_csv)
 
 
 # pylint: disable=W0511,C0415

@@ -5,8 +5,7 @@ import unittest
 
 import yaml
 
-from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.tests.factories import admin_user_factory
+from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
 from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
@@ -15,9 +14,9 @@ from smarter.apps.plugin.manifest.models.sql_connection.model import (
     SAMPluginDataSqlConnection,
 )
 from smarter.apps.plugin.models import PluginDataSqlConnection
-from smarter.lib.django.user import User
 from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 from .factories import plugin_meta_factory
 
@@ -25,6 +24,7 @@ from .factories import plugin_meta_factory
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
+# pylint: disable=too-many-instance-attributes
 class TestPluginDataSql(unittest.TestCase):
     """Test SAM Plugin manifest using PluginDataSql"""
 
@@ -41,20 +41,12 @@ class TestPluginDataSql(unittest.TestCase):
         # ---------------------------------------------------------------------
         # 1. load the yaml manifest file
         config_path = os.path.join(HERE, "mock_data/sql-connection.yaml")
-        with open(config_path, encoding="utf-8") as file:
-            connection_manifest = yaml.safe_load(file)
+        connection_manifest = get_readonly_yaml_file(config_path)
 
         # 2. initialize a SAMLoader object with the manifest raw data
-        self.connection_loader = SAMLoader(api_version=SAMApiVersions.V1.value, manifest=connection_manifest)
+        self.connection_loader = SAMLoader(manifest=connection_manifest)
 
         # 3. create a SAMPluginDataSqlConnection pydantic model from the loader
-        # self.connection_model = SAMPluginDataSqlConnection(
-        #     apiVersion=self.connection_loader.manifest_api_version,
-        #     kind=self.connection_loader.manifest_kind,
-        #     metadata=self.connection_loader.manifest_metadata,
-        #     spec=self.connection_loader.manifest_spec,
-        #     status=self.connection_loader.manifest_status,
-        # )
         self.connection_model = SAMPluginDataSqlConnection(**self.connection_loader.pydantic_model_dump())
 
         # 4. create the connection record
@@ -72,7 +64,7 @@ class TestPluginDataSql(unittest.TestCase):
             plugin_manifest = yaml.safe_load(file)
 
         # 2. initialize a SAMLoader object with the manifest raw data
-        self.plugin_loader = SAMLoader(api_version=SAMApiVersions.V1.value, manifest=plugin_manifest)
+        self.plugin_loader = SAMLoader(manifest=plugin_manifest)
 
         # 3. create a SAMPlugin pydantic model from the loader
         self.sam_plugin = SAMPlugin(**self.plugin_loader.pydantic_model_dump())
@@ -97,18 +89,7 @@ class TestPluginDataSql(unittest.TestCase):
             self.connection.delete()
         except (PluginDataSqlConnection.DoesNotExist, ValueError):
             pass
-        try:
-            self.user_profile.delete()
-        except UserProfile.DoesNotExist:
-            pass
-        try:
-            self.user.delete()
-        except User.DoesNotExist:
-            pass
-        try:
-            self.account.delete()
-        except Account.DoesNotExist:
-            pass
+        admin_user_teardown(self.user, self.account, self.user_profile)
 
     def properties_factory(self) -> dict:
         return {
