@@ -1,11 +1,24 @@
 """A PLugin that uses a remote SQL database server to retrieve its return data"""
 
 import logging
+import re
 
+from smarter.apps.plugin.manifest.enum import (
+    SAMPluginMetadataClass,
+    SAMPluginMetadataClassValues,
+    SAMPluginMetadataKeys,
+    SAMPluginSpecKeys,
+    SAMPluginSpecPromptKeys,
+    SAMPluginSpecSelectorKeys,
+    SmartApiPluginSpecDataKeys,
+)
 from smarter.apps.plugin.models import PluginDataSql, PluginDataSqlConnection
 from smarter.apps.plugin.serializers import PluginDataSqlSerializer
+from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterConfigurationError
+from smarter.lib.manifest.enum import SAMApiVersions, SAMKeys, SAMMetadataKeys
 
+from ..manifest.models.plugin.const import MANIFEST_KIND
 from ..models import PluginDataSql
 from .base import PluginBase
 
@@ -16,6 +29,7 @@ logger = logging.getLogger(__name__)
 class PluginSql(PluginBase):
     """A PLugin that uses an SQL query executed on a remote SQL database server to retrieve its return data"""
 
+    _metadata_class = SAMPluginMetadataClass.SQL_DATA.value
     _plugin_data: PluginDataSql = None
     _plugin_data_serializer: PluginDataSqlSerializer = None
 
@@ -44,11 +58,17 @@ class PluginSql(PluginBase):
     @property
     def plugin_data_django_model(self) -> dict:
         """Return the plugin data definition as a json object."""
+
+        def camel_to_snake(name):
+            name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+            return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
+
         # recast the Pydantic model to the PluginDataSql Django ORM model
         plugin_data_sqlconnection = PluginDataSqlConnection.objects.get(
             account=self.user_profile.account, name=self.manifest.spec.data.sqlData.connection
         )
         sql_data = self.manifest.spec.data.sqlData.model_dump()
+        sql_data = {camel_to_snake(key): value for key, value in sql_data.items()}
         sql_data["connection"] = plugin_data_sqlconnection
         return {
             "plugin": self.plugin_meta,
@@ -104,6 +124,42 @@ class PluginSql(PluginBase):
                 },
             }
         return None
+
+    @classmethod
+    def example_manifest(cls, kwargs: dict = None) -> dict:
+        return {
+            SAMKeys.APIVERSION.value: SAMApiVersions.V1.value,
+            SAMKeys.KIND.value: MANIFEST_KIND,
+            SAMKeys.METADATA.value: {
+                SAMMetadataKeys.name: "SqlExample",
+                SAMPluginMetadataKeys.PLUGIN_CLASS.value: SAMPluginMetadataClassValues.SQL.value,
+                SAMMetadataKeys.DESCRIPTION.value: "Get additional information about the admin account of the Smarter platform.",
+                SAMMetadataKeys.VERSION.value: "0.1.0",
+                SAMMetadataKeys.TAGS.value: ["db", "sql", "database"],
+            },
+            SAMKeys.SPEC.value: {
+                SAMPluginSpecKeys.SELECTOR.value: {
+                    SAMPluginSpecSelectorKeys.DIRECTIVE.value: SAMPluginSpecSelectorKeys.SEARCHTERMS.value,
+                    SAMPluginSpecSelectorKeys.SEARCHTERMS.value: ["admin", "Smarter platform", "admin account"],
+                },
+                SAMPluginSpecKeys.PROMPT.value: {
+                    SAMPluginSpecPromptKeys.SYSTEMROLE.value: "You are a helpful assistant for Smarter platform. You can provide information about the admin account of the Smarter platform.\n",
+                    SAMPluginSpecPromptKeys.MODEL.value: SettingsDefaults.OPENAI_DEFAULT_MODEL,
+                    SAMPluginSpecPromptKeys.TEMPERATURE.value: SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE,
+                    SAMPluginSpecPromptKeys.MAXTOKENS.value: SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS,
+                },
+                SAMPluginSpecKeys.DATA.value: {
+                    "description": "Query the Django User model to retrieve detailed account information about the admin account for the Smarter platform .",
+                    SAMPluginMetadataClass.SQL_DATA.value: {
+                        "connection": "exampleConnection",
+                        "sqlQuery": "SELECT * FROM auth_user WHERE username = 'admin';\n",
+                        "parameters": None,
+                        "testValues": None,
+                        "limit": 1,
+                    },
+                },
+            },
+        }
 
     def create(self):
         super().create()

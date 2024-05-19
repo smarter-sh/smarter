@@ -1,7 +1,9 @@
 """Smarter API Manifest - Plugin.metadata"""
 
 import os
-from typing import ClassVar
+from typing import ClassVar, Optional
+
+from pydantic import Field
 
 # Plugin
 from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
@@ -16,3 +18,13 @@ class SAMPluginDataSqlConnectionMetadata(AbstractSAMMetadataBase):
     """Smarter API Plugin Manifest - Metadata class."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
+
+    description: Optional[str] = Field(
+        None,
+        description=f"{class_identifier}.description[str]: Required, a brief description of the {MANIFEST_KIND}.",
+    )
+
+    version: Optional[str] = Field(
+        None,
+        description=f"{class_identifier}.version[str]: Required, the version of the {MANIFEST_KIND}.",
+    )

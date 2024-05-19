@@ -109,7 +109,7 @@ class AWSCertificateManager(AWSBase):
         hosted_zone, _ = self.route53.get_or_create_hosted_zone(domain_name)
         hosted_zone_id = self.route53.get_hosted_zone_id(hosted_zone)
 
-        dns_record = self.route53.get_or_create_dns_record(
+        dns_record, _ = self.route53.get_or_create_dns_record(
             hosted_zone_id=hosted_zone_id,
             record_name=dns_record_name,
             record_type=dns_record_type,

@@ -7,6 +7,7 @@ from smarter.apps.account.utils import account_admin_user
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.models import PluginMeta
+from smarter.common.conf import SettingsDefaults
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
 
 
@@ -14,7 +15,13 @@ from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT
 class Command(BaseCommand):
     """Deploy the Smarter demo API."""
 
+    def add_arguments(self, parser):
+        """Add arguments to the command."""
+        parser.add_argument("--foreground", action="store_true", help="Run the task in the foreground")
+
     def handle(self, *args, **options):
+        foreground = options["foreground"]
+
         log_prefix = "manage.py deploy_demo_api:"
         print(log_prefix, "Deploying the Smarter demo API...")
 
@@ -23,7 +30,7 @@ class Command(BaseCommand):
         user_profile, _ = UserProfile.objects.get_or_create(user=user, account=account)
         chatbot, _ = ChatBot.objects.get_or_create(account=account, name=SMARTER_EXAMPLE_CHATBOT_NAME)
 
-        chatbot.default_model = "gpt-3.5-turbo"
+        chatbot.default_model = SettingsDefaults.OPENAI_DEFAULT_MODEL
         chatbot.default_temperature = 0.5
         chatbot.default_max_tokens = 256
 
@@ -41,11 +48,15 @@ class Command(BaseCommand):
         chatbot.app_logo_url = "/static/querium/querium-logo-white-transparent.png"
         chatbot.save()
 
-        if chatbot.deployed:
+        if chatbot.deployed and chatbot.dns_verification_status == ChatBot.DnsVerificationStatusChoices.VERIFIED:
             self.stdout.write(self.style.SUCCESS(log_prefix + "The Smarter demo API is already deployed."))
             return
 
         for plugin_meta in PluginMeta.objects.filter(account=user_profile.account):
             ChatBotPlugin.objects.create(chatbot=chatbot, plugin_meta=plugin_meta)
 
-        deploy_default_api.delay(chatbot_id=chatbot.id)
+        if foreground:
+            deploy_default_api(chatbot_id=chatbot.id)
+        else:
+            self.stdout.write(self.style.NOTICE(log_prefix + "Deploying example api as a Celery task."))
+            deploy_default_api.delay(chatbot_id=chatbot.id)

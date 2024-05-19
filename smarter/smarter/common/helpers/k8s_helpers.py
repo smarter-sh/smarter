@@ -4,7 +4,7 @@ import logging
 import os
 import subprocess
 
-import yaml
+from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 from ..classes import Singleton
 from ..conf import settings as smarter_settings
@@ -27,8 +27,7 @@ class KubernetesHelper(metaclass=Singleton):
         """Return the kubeconfig file as a dictionary."""
         if self._kubeconfig:
             return self._kubeconfig
-        with open(self.kubeconfig_path, encoding="utf-8") as f:
-            self._kubeconfig = yaml.safe_load(f)
+        self._kubeconfig = get_readonly_yaml_file(self.kubeconfig_path)
         return self._kubeconfig
 
     def update_kubeconfig(self):

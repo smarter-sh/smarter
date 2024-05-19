@@ -30,7 +30,6 @@ class PluginMetaSerializer(serializers.ModelSerializer):
     """PluginMeta model serializer."""
 
     tags = TagListSerializerField()
-    # tags = serializers.StringRelatedField(many=True)
     author = UserProfileSerializer(read_only=True)
     account = AccountSerializer(read_only=True)
 
@@ -80,7 +79,10 @@ class PluginPromptSerializer(serializers.ModelSerializer):
         for key in representation.keys():
             new_key = "".join(word.capitalize() for word in key.split("_"))
             new_key = new_key[0].lower() + new_key[1:]
-            new_representation[new_key] = representation[key]
+            if isinstance(representation[key], str):
+                new_representation[new_key] = representation[key].strip()
+            else:
+                new_representation[new_key] = representation[key]
         return new_representation
 
 
@@ -99,21 +101,21 @@ class PluginDataStaticSerializer(serializers.ModelSerializer):
         for key in representation.keys():
             new_key = "".join(word.capitalize() for word in key.split("_"))
             new_key = new_key[0].lower() + new_key[1:]
-            new_representation[new_key] = representation[key]
+            if isinstance(representation[key], str):
+                new_representation[new_key] = representation[key].strip()
+            else:
+                new_representation[new_key] = representation[key]
         return new_representation
 
 
 class PluginDataSqlConnectionSerializer(serializers.ModelSerializer):
     """PluginDataSql model serializer."""
 
-    account = AccountSerializer(read_only=True)
-
     # pylint: disable=missing-class-docstring
     class Meta:
         model = PluginDataSqlConnection
         fields = [
             "name",
-            "account",
             "description",
             "hostname",
             "port",
@@ -133,21 +135,22 @@ class PluginDataSqlConnectionSerializer(serializers.ModelSerializer):
         for key in representation.keys():
             new_key = "".join(word.capitalize() for word in key.split("_"))
             new_key = new_key[0].lower() + new_key[1:]
-            new_representation[new_key] = representation[key]
+            if isinstance(representation[key], str):
+                new_representation[new_key] = representation[key].strip()
+            else:
+                new_representation[new_key] = representation[key]
         return new_representation
 
 
 class PluginDataSqlSerializer(serializers.ModelSerializer):
     """PluginDataSql model serializer."""
 
-    plugin = serializers.SlugRelatedField(slug_field="id", queryset=PluginMeta.objects.all())
-    connection = PluginDataSqlConnectionSerializer(read_only=True)
+    connection = serializers.SlugRelatedField(slug_field="name", queryset=PluginDataSqlConnection.objects.all())
 
     # pylint: disable=missing-class-docstring
     class Meta:
         model = PluginDataSql
         fields = [
-            "plugin",
             "connection",
             "description",
             "parameters",
@@ -163,5 +166,8 @@ class PluginDataSqlSerializer(serializers.ModelSerializer):
         for key in representation.keys():
             new_key = "".join(word.capitalize() for word in key.split("_"))
             new_key = new_key[0].lower() + new_key[1:]
-            new_representation[new_key] = representation[key]
+            if isinstance(representation[key], str):
+                new_representation[new_key] = representation[key].strip()
+            else:
+                new_representation[new_key] = representation[key]
         return new_representation
