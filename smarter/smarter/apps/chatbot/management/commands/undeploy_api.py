@@ -50,16 +50,20 @@ class Command(BaseCommand):
         try:
             chatbot = ChatBot.objects.get(account=account, name=name)
         except ChatBot.DoesNotExist:
-            print(f"Chatbot {name} not found for account {account.account_number} {account.company_name}.")
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Chatbot {name} not found for account {account.account_number} {account.company_name}."
+                )
+            )
             return
 
-        if chatbot.deployed:
-            print(f"You're all set! {chatbot.hostname} is already deployed.")
+        if not chatbot.deployed:
+            print(f"{chatbot.hostname} is not currently deployed.")
             return
 
         if foreground:
-            print(f"Deploying {chatbot.hostname}")
+            self.stdout.write(self.style.NOTICE(f"Deploying {chatbot.hostname}"))
             undeploy_default_api(chatbot_id=chatbot.id)
         else:
-            print(f"Deploying {chatbot.hostname} as a Celery task.")
+            self.stdout.write(self.style.NOTICE(f"Deploying {chatbot.hostname} as a Celery task."))
             undeploy_default_api.delay(chatbot_id=chatbot.id)

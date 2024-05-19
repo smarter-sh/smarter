@@ -191,11 +191,11 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
     def test_deploy_demo_api(self):
         """Test deploy_demo_api command."""
         call_command("deploy_demo_api")
-        print("sleeping for 10 seconds to allow DNS record to be created")
+        print("sleeping for 15 seconds to allow DNS record to be created")
+        time.sleep(15)
 
         account = Account.objects.get(account_number=SMARTER_ACCOUNT_NUMBER)
         chatbot = ChatBot.objects.get(name=SMARTER_EXAMPLE_CHATBOT_NAME, account=account)
-        print("chatbot.dns_verification_status", chatbot.dns_verification_status)
         self.assertIn(
             chatbot.dns_verification_status,
             [chatbot.DnsVerificationStatusChoices.VERIFYING, chatbot.DnsVerificationStatusChoices.VERIFIED],

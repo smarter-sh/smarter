@@ -53,13 +53,14 @@ class Command(BaseCommand):
             print(f"Chatbot {name} not found for account {account.account_number} {account.company_name}.")
             return
 
-        if chatbot.deployed:
-            print(f"You're all set! {chatbot.hostname} is already deployed.")
+        if chatbot.deployed and chatbot.dns_verification_status == ChatBot.DnsVerificationStatusChoices.VERIFIED:
+            self.stdout.write(self.style.SUCCESS(f"You're all set! {chatbot.hostname} is already deployed."))
             return
 
         if foreground:
-            print(f"Deploying {chatbot.hostname}")
+            self.stdout.write(self.style.NOTICE(f"Deploying {chatbot.hostname}"))
+            print()
             deploy_default_api(chatbot_id=chatbot.id)
         else:
-            print(f"Deploying {chatbot.hostname} as a Celery task.")
+            self.stdout.write(self.style.NOTICE(f"Deploying {chatbot.hostname} as a Celery task."))
             deploy_default_api.delay(chatbot_id=chatbot.id)
