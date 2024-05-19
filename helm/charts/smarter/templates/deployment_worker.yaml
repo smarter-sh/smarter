@@ -83,7 +83,7 @@ spec:
             - name: CELERY_RESULT_BACKEND
               value: "{{ .Values.env.CELERY_RESULT_BACKEND }}"
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
-          command: ["celery", "-A", "smarter.smarter_celery.app", "worker", "--loglevel=info", "-Q default_celery_task_queue"]
+          command: ["celery", "-A", "smarter.smarter_celery.app", "worker", "--concurrency=4", "--loglevel=info", "-Q default_celery_task_queue"]
           imagePullPolicy: Always
           name: {{ .Values.workerName }}
           resources: {}
