@@ -182,7 +182,9 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
         self.assertEqual(chatbot.deployed, False)
         self.assertEqual(chatbot.dns_verification_status, chatbot.DnsVerificationStatusChoices.NOT_VERIFIED)
         a_record = aws_helper.route53.get_dns_record(
-            hosted_zone_id=api_hosted_zone_id, record_name=chatbot_default_host
+            hosted_zone_id=api_hosted_zone_id,
+            record_name=chatbot_default_host,
+            record_type="A",
         )
         self.assertIsNone(a_record)
 
