@@ -10,6 +10,12 @@ from django.core.management import call_command
 from smarter.apps.account.models import Account, SmarterAuthToken
 from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey
+from smarter.apps.chatbot.signals import (
+    chatbot_dns_failed,
+    chatbot_dns_verification_initiated,
+    chatbot_dns_verification_status_changed,
+    chatbot_dns_verified,
+)
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
 from smarter.common.helpers.aws_helpers import aws_helper
@@ -17,6 +23,32 @@ from smarter.common.helpers.aws_helpers import aws_helper
 
 class ManageCommandCreatePluginTestCase(unittest.TestCase):
     """Tests for manage.py create_plugin."""
+
+    _chatbot_dns_verification_status_changed = False
+    _chatbot_dns_failed = False
+    _chatbot_dns_verification_initiated = False
+    _chatbot_dns_verified = False
+
+    def chatbot_dns_verification_status_changed_signal_handler(self, *args, **kwargs):
+        self._chatbot_dns_verification_status_changed = True
+
+    def chatbot_dns_failed_signal_handler(self, *args, **kwargs):
+        self._chatbot_dns_failed = True
+
+    def chatbot_dns_verification_initiated_signal_handler(self, *args, **kwargs):
+        self._chatbot_dns_verification_initiated = True
+
+    def chatbot_dns_verified_signal_handler(self, *args, **kwargs):
+        self._chatbot_dns_verified = True
+
+    @property
+    def signals(self):
+        return {
+            "chatbot_dns_verification_status_changed": self._chatbot_dns_verification_status_changed,
+            "chatbot_dns_failed": self._chatbot_dns_failed,
+            "chatbot_dns_verification_initiated": self._chatbot_dns_verification_initiated,
+            "chatbot_dns_verified": self._chatbot_dns_verified,
+        }
 
     def setUp(self):
         """Set up test fixtures."""
@@ -50,9 +82,64 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
         chatbot_api_key = ChatBotAPIKey.objects.get(api_key=self.auth_token)
         self.assertEqual(chatbot_api_key.chatbot, self.chatbot)
 
+    def test_chatbot_dns_status_signals(self):
+        chatbot_dns_verification_status_changed.connect(
+            self.chatbot_dns_verification_status_changed_signal_handler,
+            dispatch_uid="chatbot_dns_verification_status_changed_test_plugin_called_signal",
+        )
+        chatbot_dns_failed.connect(
+            self.chatbot_dns_failed_signal_handler, dispatch_uid="chatbot_dns_failed_test_plugin_called_signal"
+        )
+        chatbot_dns_verification_initiated.connect(
+            self.chatbot_dns_verification_initiated_signal_handler,
+            dispatch_uid="chatbot_dns_verification_initiated_test_plugin_called_signal",
+        )
+        chatbot_dns_verified.connect(
+            self.chatbot_dns_verified_signal_handler, dispatch_uid="chatbot_dns_verified_test_plugin_called_signal"
+        )
+
+        self.chatbot.dns_verification_status = ChatBot.DnsVerificationStatusChoices.VERIFYING
+        self.chatbot.save()
+        time.sleep(1)
+        self.assertTrue(self.signals["chatbot_dns_verification_status_changed"])
+        self.assertTrue(self.signals["chatbot_dns_verification_initiated"])
+
+        self._chatbot_dns_verification_status_changed = False
+        self.chatbot.dns_verification_status = ChatBot.DnsVerificationStatusChoices.FAILED
+        self.chatbot.save()
+        time.sleep(1)
+        self.assertTrue(self.signals["chatbot_dns_verification_status_changed"])
+        self.assertTrue(self.signals["chatbot_dns_failed"])
+
+        self._chatbot_dns_verification_status_changed = False
+        self.chatbot.dns_verification_status = ChatBot.DnsVerificationStatusChoices.VERIFIED
+        self.chatbot.save()
+        time.sleep(1)
+        self.assertTrue(self.signals["chatbot_dns_verification_status_changed"])
+        self.assertTrue(self.signals["chatbot_dns_verified"])
+
+        self._chatbot_dns_verification_status_changed = False
+        self.chatbot.dns_verification_status = ChatBot.DnsVerificationStatusChoices.NOT_VERIFIED
+        self.chatbot.save()
+        time.sleep(1)
+        self.assertTrue(self.signals["chatbot_dns_verification_status_changed"])
+
     def test_deploy_and_undeploy(self):
         """Test deploy_api and undeploy_api commands."""
-
+        chatbot_dns_verification_status_changed.connect(
+            self.chatbot_dns_verification_status_changed_signal_handler,
+            dispatch_uid="chatbot_dns_verification_status_changed_test_plugin_called_signal",
+        )
+        chatbot_dns_failed.connect(
+            self.chatbot_dns_failed_signal_handler, dispatch_uid="chatbot_dns_failed_test_plugin_called_signal"
+        )
+        chatbot_dns_verification_initiated.connect(
+            self.chatbot_dns_verification_initiated_signal_handler,
+            dispatch_uid="chatbot_dns_verification_initiated_test_plugin_called_signal",
+        )
+        chatbot_dns_verified.connect(
+            self.chatbot_dns_verified_signal_handler, dispatch_uid="chatbot_dns_verified_test_plugin_called_signal"
+        )
         # hosted zone for the Customer api domain
         api_hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(
             domain_name=smarter_settings.customer_api_domain

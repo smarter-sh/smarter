@@ -2,7 +2,6 @@
 """All models for the OpenAI Function Calling API app."""
 import logging
 import re
-from enum import Enum
 from typing import List, Type
 from urllib.parse import urljoin, urlparse
 
@@ -21,6 +20,13 @@ from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
+
+from .signals import (
+    chatbot_dns_failed,
+    chatbot_dns_verification_initiated,
+    chatbot_dns_verification_status_changed,
+    chatbot_dns_verified,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -247,7 +253,18 @@ class ChatBot(TimestampedModel):
 
     def save(self, *args, **kwargs):
         SmarterValidator.validate_domain(self.hostname)
+        orig = ChatBot.objects.get(pk=self.pk) if self.pk is not None else self
         super().save(*args, **kwargs)
+        if self.pk is not None:
+            if orig.dns_verification_status != self.dns_verification_status:
+                print("save() - dns_verification_status changed: ", self.dns_verification_status)
+                chatbot_dns_verification_status_changed.send(sender=self.__class__, chatbot=self)
+                if self.dns_verification_status == ChatBot.DnsVerificationStatusChoices.VERIFYING:
+                    chatbot_dns_verification_initiated.send(sender=self.__class__, chatbot=self)
+                if self.dns_verification_status == ChatBot.DnsVerificationStatusChoices.VERIFIED:
+                    chatbot_dns_verified.send(sender=self.__class__, chatbot=self)
+                if self.dns_verification_status == ChatBot.DnsVerificationStatusChoices.FAILED:
+                    chatbot_dns_failed.send(sender=self.__class__, chatbot=self)
 
     def __str__(self):
         return self.url
