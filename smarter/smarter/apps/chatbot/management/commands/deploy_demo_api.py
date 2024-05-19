@@ -15,7 +15,13 @@ from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT
 class Command(BaseCommand):
     """Deploy the Smarter demo API."""
 
+    def add_arguments(self, parser):
+        """Add arguments to the command."""
+        parser.add_argument("--foreground", action="store_true", help="Run the task in the foreground")
+
     def handle(self, *args, **options):
+        foreground = options["foreground"]
+
         log_prefix = "manage.py deploy_demo_api:"
         print(log_prefix, "Deploying the Smarter demo API...")
 
@@ -49,4 +55,8 @@ class Command(BaseCommand):
         for plugin_meta in PluginMeta.objects.filter(account=user_profile.account):
             ChatBotPlugin.objects.create(chatbot=chatbot, plugin_meta=plugin_meta)
 
-        deploy_default_api.delay(chatbot_id=chatbot.id)
+        if foreground:
+            deploy_default_api(chatbot_id=chatbot.id)
+        else:
+            print("Deploying example api as a Celery task.")
+            deploy_default_api.delay(chatbot_id=chatbot.id)

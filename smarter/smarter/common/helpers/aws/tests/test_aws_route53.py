@@ -62,7 +62,7 @@ class TestAWSRoute53(unittest.TestCase):
     def test_get_or_create_dns_record(self):
         """Test that we can get or create a DNS record."""
         ns_record = aws_helper.route53.get_dns_record(self.root_hosted_zone_id, self.root_domain, "NS")
-        record = aws_helper.route53.get_or_create_dns_record(
+        record, created = aws_helper.route53.get_or_create_dns_record(
             hosted_zone_id=self.root_hosted_zone_id,
             record_name=self.root_domain,
             record_type="NS",
@@ -71,6 +71,7 @@ class TestAWSRoute53(unittest.TestCase):
         )
 
         self.assertIsNotNone(record)
+        self.assertTrue(created)
         self.assertIn(record["Name"], [self.root_domain, self.root_domain + "."])
         self.assertEqual(record["Type"], "NS")
         self.assertEqual(record["TTL"], ns_record["TTL"])

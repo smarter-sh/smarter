@@ -43,7 +43,7 @@ class Command(BaseCommand):
             f"{self.log_prefix} found Hosted Zone {root_domain_hosted_zone_id} for root domain {smarter_settings.root_domain}"
         )
 
-        ns_record = aws_helper.route53.get_or_create_dns_record(
+        ns_record, _ = aws_helper.route53.get_or_create_dns_record(
             hosted_zone_id=root_domain_hosted_zone_id,
             record_name=domain,
             record_type="NS",
@@ -75,7 +75,7 @@ class Command(BaseCommand):
                 f"{self.log_prefix} Checked the following domains: {environments} but couldn't find an A record to propagate to domain: {domain}. Cannot proceed."
             )
 
-        this_a_record = aws_helper.route53.get_or_create_dns_record(
+        this_a_record, _ = aws_helper.route53.get_or_create_dns_record(
             hosted_zone_id=hosted_zone_id,
             record_name=domain,
             record_type="A",
