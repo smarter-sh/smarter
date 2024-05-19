@@ -39,7 +39,7 @@ services:
       args:
         ENVIRONMENT: ${ENVIRONMENT}
     image: smarter
-    command: celery -A smarter.smarter_celery.app worker --loglevel=info -Q default_celery_task_queue
+    command: celery -A smarter.smarter_celery.app worker --concurrency=4 --loglevel=info -Q default_celery_task_queue
     depends_on:
       - smarter-mysql
       - smarter-redis
