@@ -57,7 +57,10 @@ class Command(BaseCommand):
             )
             return
 
-        if not chatbot.deployed:
+        if (
+            not chatbot.deployed
+            and chatbot.dns_verification_status == chatbot.DnsVerificationStatusChoices.NOT_VERIFIED
+        ):
             print(f"{chatbot.hostname} is not currently deployed.")
             return
 
