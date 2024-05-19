@@ -1,17 +1,28 @@
-## [0.2.1](https://github.com/QueriumCorp/smarter/compare/v0.2.0...v0.2.1) (2024-05-19)
-
-
-### Bug Fixes
-
-* force a new release ([20a13d3](https://github.com/QueriumCorp/smarter/commit/20a13d3d4d086dcf0ad547f39db0260fc81173bb))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-# [0.2.0](https://github.com/QueriumCorp/smarter/compare/v0.1.2...v0.2.0) (2024-05-16)
+## [0.2.1](https://github.com/QueriumCorp/smarter/compare/v0.2.0...v0.2.1) (2024-05-19)
+
+A refactor of the Django chatbot app.
+
+### Feature
+
+- add ChatBot.dns_verification_status
+- add Django signals:
+  - chatbot_dns_verification_initiated
+  - chatbot_dns_verified
+  - chatbot_dns_failed
+  - chatbot_dns_verification_status_changed
+- refactor aws route53 processes for asynchronous request handling
+- add task to Undeploy a ChatBot
+- add unit tests for tasks and manage.py commands
+- refactor Dockerfile to improve layer caching
+- refactor docker-compose.yaml and Helm chart to enable multiple worker threads
+
+## [0.2.0](https://github.com/QueriumCorp/smarter/compare/v0.1.2...v0.2.0) (2024-05-16)
 
 Introduces remote Sql server integration to the Plugin class. New Django ORMs PluginDataSql and PluginDataSqlConnection have been added for persinsting remote sql server connections, and parameterized sql queries. SAMPluginDataSqlConnectionBroker is added to fully integrate these models to /api/v1/cli.
 
