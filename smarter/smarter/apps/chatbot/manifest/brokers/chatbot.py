@@ -151,6 +151,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 "url": self.chatbot.url,
                 "urlChatbot": self.chatbot.url_chatbot,
                 "urlChatapp": self.chatbot.url_chatapp,
+                "dnsVerificationStatus": self.chatbot.dns_verification_status,
             },
         }
         return data

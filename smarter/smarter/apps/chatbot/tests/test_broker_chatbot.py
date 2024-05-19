@@ -67,6 +67,7 @@ class TestSAMChatbotBroker(unittest.TestCase):
         self.assertIsInstance(content, dict)
         content = content["data"]  # the manifest is loaded into the 'data' key
         content.pop("status")  # status is read-only
+        content["spec"]["config"].pop("dnsVerificationStatus")  # dnsVerificationStatus is read-only
         manifest = yaml.dump(content)
 
         # load the yaml manifest into a SAMLoader object
