@@ -1,3 +1,10 @@
+## [0.2.1](https://github.com/QueriumCorp/smarter/compare/v0.2.0...v0.2.1) (2024-05-19)
+
+
+### Bug Fixes
+
+* force a new release ([20a13d3](https://github.com/QueriumCorp/smarter/commit/20a13d3d4d086dcf0ad547f39db0260fc81173bb))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
