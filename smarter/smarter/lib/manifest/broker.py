@@ -1,6 +1,7 @@
 # pylint: disable=W0613
 """Smarter API Manifest Abstract Broker class."""
 
+import re
 import traceback
 import typing
 from abc import ABC, abstractmethod
@@ -9,8 +10,8 @@ from http import HTTPStatus
 import inflect
 from django.http import HttpRequest, JsonResponse
 
-from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django.user import UserType
+from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 from smarter.lib.manifest.models import AbstractSAMBase
 
@@ -34,6 +35,7 @@ class SAMBrokerError(SAMExceptionBase):
         return "Smarter API Manifest Broker Error"
 
 
+# pylint: disable=too-many-public-methods
 class AbstractBroker(ABC):
     """
     Smarter API Manifest Broker abstract base class. This class is responsible
@@ -57,6 +59,7 @@ class AbstractBroker(ABC):
         DELETE = "delete"
         DEPLOY = "deploy"
         LOGS = "logs"
+        MANIFEST_EXAMPLE = "example_manifest"
 
         @classmethod
         def past_tense(cls) -> dict:
@@ -80,8 +83,8 @@ class AbstractBroker(ABC):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        api_version: str,
         account: "Account",
+        api_version: str = SAMApiVersions.V1.value,
         name: str = None,
         kind: str = None,
         loader: SAMLoader = None,
@@ -212,11 +215,10 @@ class AbstractBroker(ABC):
         """get logs for a resource."""
         raise NotImplementedError
 
-    def example_manifest(self, request: HttpRequest = None) -> str:
+    @abstractmethod
+    def example_manifest(self, kwargs: dict = None) -> JsonResponse:
         """Returns an example yaml manifest document for the kind of resource."""
-        filename = str(self.kind).lower() + ".yaml"
-        data = {"filepath": f"https://{smarter_settings.environment_cdn_domain}/cli/example-manifests/{filename}"}
-        return self.success_response(self.Operations.GET, data=data)
+        raise NotImplementedError
 
     def not_implemented_response(self) -> JsonResponse:
         """Return a common not implemented response."""
@@ -249,12 +251,51 @@ class AbstractBroker(ABC):
         if operation == self.Operations.GET:
             kind = inflect_engine.plural(self.kind)
             message = f"{kind} {operated} successfully"
+        elif operation == self.Operations.LOGS:
+            kind = self.kind
+            message = f"{kind} {self.name} successfully retrieved logs"
+        elif operation == self.Operations.MANIFEST_EXAMPLE:
+            kind = self.kind
+            message = f"{kind} example manifest successfully generated"
         else:
             kind = self.kind
             message = f"{kind} {self.name} {operated} successfully"
         operation = self.Operations.past_tense().get(operation, operation)
-        data.update({"message": message})
-        return JsonResponse(data=data, status=HTTPStatus.OK, safe=False)
+        retval = {
+            "data": data,
+            "message": message,
+        }
+        return JsonResponse(data=retval, status=HTTPStatus.OK, safe=False)
+
+    def camel_to_snake(self, dictionary: dict) -> dict:
+        """Converts camelCase dict keys to snake_case."""
+
+        def convert(name: str):
+            s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+            return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+
+        retval = {}
+        for key, value in dictionary.items():
+            if isinstance(value, dict):
+                value = self.camel_to_snake(value)
+            new_key = convert(key)
+            retval[new_key] = value
+        return retval
+
+    def snake_to_camel(self, dictionary: dict) -> dict:
+        """Converts snake_case dict keys to camelCase."""
+
+        def convert(name: str):
+            components = name.split("_")
+            return components[0] + "".join(x.title() for x in components[1:])
+
+        retval = {}
+        for key, value in dictionary.items():
+            if isinstance(value, dict):
+                value = self.snake_to_camel(value)
+            new_key = convert(key)
+            retval[new_key] = value
+        return retval
 
 
 class BrokerNotImplemented(AbstractBroker):

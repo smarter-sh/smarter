@@ -7,10 +7,9 @@ import random
 import unittest
 from urllib.parse import urljoin
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
 from smarter.apps.chatbot.models import ChatBot, ChatBotCustomDomain, ChatBotHelper
 from smarter.common.conf import settings as smarter_settings
-from smarter.lib.django.user import User
 from smarter.lib.django.validators import SmarterValidator
 
 
@@ -23,13 +22,7 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
         hashed_slug = hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:16]
         self.domain_name = f"{hashed_slug}.{smarter_settings.customer_api_domain}"
 
-        username = f"test_{hashed_slug}"
-
-        self.user = User.objects.create(
-            username=username, password="12345", is_active=True, is_staff=True, is_superuser=True
-        )
-        self.account = Account.objects.create(company_name=f"Test_{hashed_slug}", phone_number="123-456-789")
-        self.user_profile = UserProfile.objects.create(user=self.user, account=self.account, is_test=True)
+        self.user, self.account, self.user_profile = admin_user_factory()
 
         self.chatbot = ChatBot.objects.create(
             account=self.account,
@@ -55,11 +48,9 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
     def tearDown(self):
         """Clean up test fixtures."""
         self.chatbot.delete()
-        self.user_profile.delete()
-        self.account.delete()
-        self.user.delete()
         self.custom_chatbot.delete()
         self.custom_domain.delete()
+        admin_user_teardown(user=self.user, account=self.account, user_profile=self.user_profile)
 
     def test_valid_url(self):
         """Test a url for the chatbot we created."""

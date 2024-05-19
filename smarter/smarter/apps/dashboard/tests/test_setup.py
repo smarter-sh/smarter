@@ -9,8 +9,6 @@ import json
 import os
 import sys
 
-import yaml
-
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 PYTHON_ROOT = os.path.dirname(HERE)
@@ -26,13 +24,6 @@ def get_test_file(filename: str):
     path = os.path.join(HERE, "mock_data", filename)
     with open(path, encoding="utf-8") as file:
         return json.load(file)
-
-
-def get_test_file_yaml(filename: str):
-    """Load a mock yaml file"""
-    path = os.path.join(HERE, "mock_data", filename)
-    with open(path, encoding="utf-8") as file:
-        return yaml.safe_load(file)
 
 
 def get_test_file_path(filename: str):

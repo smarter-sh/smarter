@@ -21,6 +21,13 @@ from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
 
+from .signals import (
+    chatbot_dns_failed,
+    chatbot_dns_verification_initiated,
+    chatbot_dns_verification_status_changed,
+    chatbot_dns_verified,
+)
+
 
 logger = logging.getLogger(__name__)
 
@@ -95,8 +102,16 @@ class ChatBot(TimestampedModel):
         HTTP = "http"
         HTTPS = "https"
 
+    class DnsVerificationStatusChoices(models.TextChoices):
+        VERIFYING = "Verifying", "Verifying"
+        NOT_VERIFIED = "Not Verified", "Not Verified"
+        VERIFIED = "Verified", "Verified"
+        FAILED = "Failed", "Failed"
+
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    version = models.CharField(max_length=255, blank=True, null=True)
     subdomain = models.ForeignKey(ChatBotCustomDomainDNS, on_delete=models.CASCADE, blank=True, null=True)
     custom_domain = models.ForeignKey(ChatBotCustomDomain, on_delete=models.CASCADE, blank=True, null=True)
     deployed = models.BooleanField(default=False, blank=True, null=True)
@@ -115,6 +130,13 @@ class ChatBot(TimestampedModel):
     app_background_image_url = models.URLField(blank=True, null=True)
     app_logo_url = models.URLField(blank=True, null=True)
     app_file_attachment = models.BooleanField(default=False, blank=True, null=True)
+    dns_verification_status = models.CharField(
+        max_length=255,
+        default=DnsVerificationStatusChoices.NOT_VERIFIED,
+        blank=True,
+        null=True,
+        choices=DnsVerificationStatusChoices.choices,
+    )
 
     @property
     def default_host(self):
@@ -231,7 +253,17 @@ class ChatBot(TimestampedModel):
 
     def save(self, *args, **kwargs):
         SmarterValidator.validate_domain(self.hostname)
+        orig = ChatBot.objects.get(pk=self.pk) if self.pk is not None else self
         super().save(*args, **kwargs)
+        if self.pk is not None:
+            if orig.dns_verification_status != self.dns_verification_status:
+                chatbot_dns_verification_status_changed.send(sender=self.__class__, chatbot=self)
+                if self.dns_verification_status == ChatBot.DnsVerificationStatusChoices.VERIFYING:
+                    chatbot_dns_verification_initiated.send(sender=self.__class__, chatbot=self)
+                if self.dns_verification_status == ChatBot.DnsVerificationStatusChoices.VERIFIED:
+                    chatbot_dns_verified.send(sender=self.__class__, chatbot=self)
+                if self.dns_verification_status == ChatBot.DnsVerificationStatusChoices.FAILED:
+                    chatbot_dns_failed.send(sender=self.__class__, chatbot=self)
 
     def __str__(self):
         return self.url

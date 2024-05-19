@@ -7,7 +7,7 @@ import unittest
 from django.test import Client
 
 # our stuff
-from smarter.apps.account.tests.factories import admin_user_factory
+from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
 from smarter.lib.django.user import UserType
 
 from ..models import PluginMeta
@@ -28,9 +28,7 @@ class TestPluginUrls(unittest.TestCase):
 
     def tearDown(self):
         """Clean up test fixtures."""
-        self.user.delete()
-        self.account.delete()
-        self.user_profile.delete()
+        admin_user_teardown(self.user, self.account, self.user_profile)
 
     def test_account_users_add_plugins_view(self):
         """test that we can add example plugins using the api end point."""

@@ -9,4 +9,6 @@ from smarter.lib.manifest.enum import SmarterEnumAbstract
 class SAMChatbotSpecKeys(SmarterEnumAbstract):
     """Smarter API Plugin Spec keys enumeration."""
 
+    CONFIG = "config"
     PLUGINS = "plugins"
+    FUNCTIONS = "functions"
