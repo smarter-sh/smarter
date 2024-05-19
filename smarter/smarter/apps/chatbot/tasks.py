@@ -309,7 +309,7 @@ def verify_custom_domain(
     max_retries=CELERY_MAX_RETRIES,
     queue=CELERY_TASK_QUEUE,
 )
-def verify_domain(domain_name: str, activate_chatbot: bool = False) -> bool:
+def verify_domain(domain_name: str, record_type="A", activate_chatbot: bool = False) -> bool:
     """Verify that an Internet domain name resolves to NS records."""
     fn_name = "verify_domain()"
 
@@ -329,13 +329,27 @@ def verify_domain(domain_name: str, activate_chatbot: bool = False) -> bool:
 
         # Check NS and SOA records
         try:
+            # 1. verify that the DNS record actually exists. If it doesn't then there's no point in proceeding.
+            customer_api_domain_hosted_zone = aws_helper.route53.get_hosted_zone(smarter_settings.customer_api_domain)
+            hosted_zone_id = aws_helper.route53.get_hosted_zone_id(hosted_zone=customer_api_domain_hosted_zone)
+
+            dns_record = aws_helper.route53.get_dns_record(
+                hosted_zone_id=hosted_zone_id, record_name=domain_name, record_type=record_type
+            )
+            if not dns_record:
+                logger.warning(
+                    "%s DNS record for domain %s not found. Nothing more to do, bailing out.", fn_name, domain_name
+                )
+                return False
+
+            # 2. verify that the domain resolves to the correct NS records
             dns_ns_records = {rdata.to_text() for rdata in dns.resolver.query(domain_name)}
             logger.info("%s successfully resolved domain %s using NS records %s", fn_name, domain_name, dns_ns_records)
 
             if not activate_chatbot:
                 return True
 
-            # if this domain is associated with a ChatBot then we should ensure that it is activated
+            # 3. if this domain is associated with a ChatBot then we should ensure that it is activated
             try:
                 chatbot = ChatBot.objects.get(default_host=domain_name)
                 chatbot.deployed = True
@@ -353,9 +367,16 @@ def verify_domain(domain_name: str, activate_chatbot: bool = False) -> bool:
             logger.warning("%s timeout exceeded while querying the domain %s.", fn_name, domain_name)
             continue
 
+    logger.error("%s unable to verify domain %s after %s attempts.", fn_name, domain_name, max_attempts)
     return False
 
 
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=CELERY_RETRY_BACKOFF,
+    max_retries=CELERY_MAX_RETRIES,
+    queue=CELERY_TASK_QUEUE,
+)
 def create_domain_A_record(hostname: str, api_host_domain: str):
     """Create an A record for the API domain."""
     fn_name = "create_domain_A_record()"
@@ -479,7 +500,7 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     if with_domain_verification:
         chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.VERIFYING
         chatbot.save()
-        activate = verify_domain(domain_name)
+        activate = verify_domain(domain_name, record_type="A", activate_chatbot=True)
         if not activate:
             chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.FAILED
             chatbot.save()
