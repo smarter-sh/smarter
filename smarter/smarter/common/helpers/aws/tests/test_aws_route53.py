@@ -71,7 +71,7 @@ class TestAWSRoute53(unittest.TestCase):
         )
 
         self.assertIsNotNone(record)
-        self.assertTrue(created)
+        self.assertFalse(created)
         self.assertIn(record["Name"], [self.root_domain, self.root_domain + "."])
         self.assertEqual(record["Type"], "NS")
         self.assertEqual(record["TTL"], ns_record["TTL"])

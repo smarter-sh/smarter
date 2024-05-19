@@ -309,7 +309,13 @@ def verify_custom_domain(
     max_retries=CELERY_MAX_RETRIES,
     queue=CELERY_TASK_QUEUE,
 )
-def verify_domain(domain_name: str, record_type="A", chatbot: ChatBot = None, activate_chatbot: bool = False) -> bool:
+def verify_domain(
+    domain_name: str,
+    record_type="A",
+    chatbot: ChatBot = None,
+    activate_chatbot: bool = False,
+    hosted_zone_id: str = None,
+) -> bool:
     """Verify that an Internet domain name resolves to NS records."""
     fn_name = "verify_domain()"
 
@@ -330,8 +336,11 @@ def verify_domain(domain_name: str, record_type="A", chatbot: ChatBot = None, ac
         # Check NS and SOA records
         try:
             # 1. verify that the DNS record actually exists. If it doesn't then there's no point in proceeding.
-            customer_api_domain_hosted_zone = aws_helper.route53.get_hosted_zone(smarter_settings.customer_api_domain)
-            hosted_zone_id = aws_helper.route53.get_hosted_zone_id(hosted_zone=customer_api_domain_hosted_zone)
+            if not hosted_zone_id:
+                customer_api_domain_hosted_zone = aws_helper.route53.get_hosted_zone(
+                    smarter_settings.customer_api_domain
+                )
+                hosted_zone_id = aws_helper.route53.get_hosted_zone_id(hosted_zone=customer_api_domain_hosted_zone)
 
             dns_record = aws_helper.route53.get_dns_record(
                 hosted_zone_id=hosted_zone_id, record_name=domain_name, record_type=record_type
@@ -372,7 +381,7 @@ def verify_domain(domain_name: str, record_type="A", chatbot: ChatBot = None, ac
     max_retries=CELERY_MAX_RETRIES,
     queue=CELERY_TASK_QUEUE,
 )
-def create_domain_A_record(hostname: str, api_host_domain: str):
+def create_domain_A_record(hostname: str, api_host_domain: str) -> dict:
     """Create an A record for the API domain."""
     fn_name = "create_domain_A_record()"
     logger.info("%s for hostname %s, api_host_domain %s", fn_name, hostname, api_host_domain)
@@ -418,6 +427,7 @@ def create_domain_A_record(hostname: str, api_host_domain: str):
             api_host_domain,
             hosted_zone_id,
         )
+        return deployment_record
 
     except botocore.exceptions.ClientError as e:
         # If the domain already exists, we can ignore the error

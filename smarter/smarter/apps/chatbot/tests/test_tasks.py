@@ -92,26 +92,35 @@ class TestChatBotTasks(unittest.TestCase):
 
     def test_verify_domain(self):
         """Test that we can verify a domain."""
-
-        is_verified = verify_domain(domain_name=smarter_settings.root_domain)
+        hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=smarter_settings.root_domain)
+        is_verified = verify_domain(
+            domain_name=smarter_settings.root_domain, record_type="NS", hosted_zone_id=hosted_zone_id
+        )
         self.assertTrue(is_verified)
 
     def test_create_domain_A_record(self):
         """Test that we can create an A record for a domain."""
 
         resolved_domain = aws_helper.aws.domain_resolver(self.domain_name)
-        hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=resolved_domain)
-        create_domain_A_record(hostname=resolved_domain, api_host_domain=aws_helper.aws.customer_api_domain)
+        hosted_zone = aws_helper.route53.get_hosted_zone(domain_name=aws_helper.aws.customer_api_domain)
+        hosted_zone_id = aws_helper.route53.get_hosted_zone_id(hosted_zone=hosted_zone)
 
+        print("resolved_domain", resolved_domain)
+        print("hosted_zone", hosted_zone)
+        print("hosted_zone_id", hosted_zone_id)
+        dns_record = create_domain_A_record(
+            hostname=resolved_domain, api_host_domain=aws_helper.aws.customer_api_domain
+        )
+
+        print("dns_record", dns_record)
         dns_record = aws_helper.route53.get_dns_record(
             hosted_zone_id=hosted_zone_id, record_name=resolved_domain, record_type="A"
         )
-        print("test_create_domain_A_record() dns_record: ", dns_record)
-        print("FIX NOTE: test_create_domain_A_record() dns_record: ", dns_record)
+        print("dns_record (queried)", dns_record)
         # mcdaniel: 2021-09-29: This test is failing even though the the record is being created.
         # aws_helper.route53.get_dns_record() weirdly returns None even though the record is there.
         self.assertIsNotNone(dns_record)
-        self.assertEqual(dns_record["Name"], resolved_domain)
+        self.assertEqual(str(dns_record["Name"]).rstrip("."), str(resolved_domain).rstrip("."))
         self.assertEqual(dns_record["Type"], "A")
 
     def test_deploy_default_api(self):
