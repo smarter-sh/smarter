@@ -27,8 +27,8 @@ spec:
     description: Query the Django User model to retrieve detailed account information about the admin account for the Smarter platform .
     sqlData:
       connection: testConnection
-      sql_query: >
+      sqlQuery: >
         SELECT * FROM auth_user WHERE username = 'admin';
       parameters:
-      test_values:
+      testValues:
       limit: 1

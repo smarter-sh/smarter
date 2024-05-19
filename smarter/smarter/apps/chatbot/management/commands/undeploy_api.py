@@ -4,15 +4,15 @@ from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account
 from smarter.apps.chatbot.models import ChatBot
-from smarter.apps.chatbot.tasks import deploy_default_api
+from smarter.apps.chatbot.tasks import undeploy_default_api
 from smarter.common.exceptions import SmarterValueError
 
 
 # pylint: disable=E1101
 class Command(BaseCommand):
     """
-    Deploy a customer API. Provide either an account number or a company name.
-    Deploys to a URL of the form [user-defined-subdomain].####-####-####.api.smarter.sh/chatbot/
+    Undeploy a customer API. Provide either an account number or a company name.
+    Undeploys by deleting the DNS A record of the form [user-defined-subdomain].####-####-####.api.smarter.sh/chatbot/
     """
 
     def add_arguments(self, parser):
@@ -50,17 +50,23 @@ class Command(BaseCommand):
         try:
             chatbot = ChatBot.objects.get(account=account, name=name)
         except ChatBot.DoesNotExist:
-            print(f"Chatbot {name} not found for account {account.account_number} {account.company_name}.")
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Chatbot {name} not found for account {account.account_number} {account.company_name}."
+                )
+            )
             return
 
-        if chatbot.deployed and chatbot.dns_verification_status == ChatBot.DnsVerificationStatusChoices.VERIFIED:
-            self.stdout.write(self.style.SUCCESS(f"You're all set! {chatbot.hostname} is already deployed."))
+        if (
+            not chatbot.deployed
+            and chatbot.dns_verification_status == chatbot.DnsVerificationStatusChoices.NOT_VERIFIED
+        ):
+            print(f"{chatbot.hostname} is not currently deployed.")
             return
 
         if foreground:
             self.stdout.write(self.style.NOTICE(f"Deploying {chatbot.hostname}"))
-            print()
-            deploy_default_api(chatbot_id=chatbot.id)
+            undeploy_default_api(chatbot_id=chatbot.id)
         else:
             self.stdout.write(self.style.NOTICE(f"Deploying {chatbot.hostname} as a Celery task."))
-            deploy_default_api.delay(chatbot_id=chatbot.id)
+            undeploy_default_api.delay(chatbot_id=chatbot.id)

@@ -10,7 +10,6 @@ from smarter.apps.account.models import Account
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.const import PYTHON_ROOT
 from smarter.lib.manifest.enum import SAMApiVersions, SAMKeys
-from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 
 from ..version import SMARTER_API_VERSION

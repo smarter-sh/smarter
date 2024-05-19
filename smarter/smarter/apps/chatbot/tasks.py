@@ -20,11 +20,12 @@ from smarter.common.helpers.aws.exceptions import (
     AWSACMCertificateNotFound,
     AWSACMVerificationNotFound,
 )
+from smarter.common.helpers.aws.route53 import AWSHostedZoneNotFound
 from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.common.helpers.k8s_helpers import kubernetes_helper
 from smarter.smarter_celery import app
 
-from .exceptions import ChatBotCustomDomainExists
+from .exceptions import SmarterChatBotException
 from .models import (
     ChatBot,
     ChatBotCustomDomain,
@@ -40,6 +41,18 @@ DEFAULT_TTL = 600
 CELERY_MAX_RETRIES = 3
 CELERY_RETRY_BACKOFF = True
 CELERY_TASK_QUEUE = "default_celery_task_queue"
+
+
+class ChatBotCustomDomainNotFound(SmarterChatBotException):
+    """Raised when the custom domain for the chatbot is not found."""
+
+
+class ChatBotCustomDomainExists(SmarterChatBotException):
+    """Raised when the custom domain for the chatbot already exists."""
+
+
+class ChatBotTaskError(SmarterChatBotException):
+    """Base class for ChatBot task exceptions."""
 
 
 def aggregate_chatbot_history():
@@ -161,7 +174,7 @@ def create_custom_domain_dns_record(
         }
     """
     custom_domain = ChatBotCustomDomain.objects.get(id=chatbot_custom_domain_id)
-    record = aws_helper.route53.get_or_create_dns_record(
+    record, _ = aws_helper.route53.get_or_create_dns_record(
         hosted_zone_id=custom_domain.aws_hosted_zone_id,
         record_name=record_name,
         record_type=record_type,
@@ -199,6 +212,7 @@ def verify_custom_domain(
     Verify the NS records of an AWS Route53 hosted zone. Custom domains
     are periodically reverified to ensure that the NS records are still valid.
     """
+    fn_name = "verify_custom_domain()"
     HOURS = 24
     hosted_zone = smarter_settings.aws_route53_client.get_hosted_zone(Id=hosted_zone_id)
     domain_name = hosted_zone["HostedZone"]["Name"]
@@ -206,11 +220,13 @@ def verify_custom_domain(
     sleep_interval = sleep_interval or 1800
     max_attempts = max_attempts or HOURS * (3600 / sleep_interval)
 
+    logger.info("%s - %s %s", fn_name, hosted_zone_id, domain_name)
     for i in range(max_attempts):  # 24 hours * attempts per hour * 2 days
         if i > 0:
             time.sleep(sleep_interval)  # Wait for 30 minutes before the next attempt
             logger.warning(
-                "Retrying verification of AWS Route53 Hosted Zone %s %s Attempt: %s",
+                "%s retrying verification of AWS Route53 Hosted Zone %s %s Attempt: %s",
+                fn_name,
                 hosted_zone_id,
                 domain_name,
                 i + 1,
@@ -220,16 +236,16 @@ def verify_custom_domain(
         try:
             dns_ns_records = {rdata.to_text() for rdata in dns.resolver.query(domain_name, "NS")}
         except dns.resolver.NXDOMAIN:
-            logger.warning("Domain %s does not exist.", domain_name)
+            logger.warning("%s domain %s does not exist.", fn_name, domain_name)
             continue
         except dns.resolver.Timeout:
-            logger.warning("Timeout while querying the domain %s.", domain_name)
+            logger.warning("%s timeout exceeded while querying the domain %s.", fn_name, domain_name)
             continue
 
         for record in aws_ns_records:
             aws_ns_value = record["Value"]
             if aws_ns_value in dns_ns_records:
-                logger.info("AWS Route53 Hosted Zone %s %s verified.", hosted_zone_id, domain_name)
+                logger.info("%s AWS Route53 Hosted Zone %s %s verified.", fn_name, hosted_zone_id, domain_name)
                 # if this is a customer custom domain, we should update the database to reflect that
                 # the domain is verified.
                 try:
@@ -237,7 +253,7 @@ def verify_custom_domain(
                     custom_domain.is_verified = True
                     custom_domain.save()
                 except ChatBotCustomDomain.DoesNotExist:
-                    pass
+                    logger.info("%s domain %s is not a ChatBot custom domain.", fn_name, domain_name)
 
                 # send an email to the account owner to notify them that the domain has been verified
                 subject = f"Domain Verification for {domain_name} Successful"
@@ -293,12 +309,21 @@ def verify_custom_domain(
     max_retries=CELERY_MAX_RETRIES,
     queue=CELERY_TASK_QUEUE,
 )
-def verify_domain(domain_name: str, activate_chatbot: bool = False) -> bool:
+def verify_domain(
+    domain_name: str,
+    record_type="A",
+    chatbot: ChatBot = None,
+    activate_chatbot: bool = False,
+    hosted_zone_id: str = None,
+) -> bool:
     """Verify that an Internet domain name resolves to NS records."""
+    fn_name = "verify_domain()"
+
     domain_name = aws_helper.aws.domain_resolver(domain_name)
     sleep_interval = 300
     max_attempts = 48
 
+    logger.info("%s - %s", fn_name, domain_name)
     for i in range(max_attempts):
         if i > 0:
             time.sleep(sleep_interval)
@@ -310,28 +335,43 @@ def verify_domain(domain_name: str, activate_chatbot: bool = False) -> bool:
 
         # Check NS and SOA records
         try:
+            # 1. verify that the DNS record actually exists. If it doesn't then there's no point in proceeding.
+            if not hosted_zone_id:
+                customer_api_domain_hosted_zone = aws_helper.route53.get_hosted_zone(
+                    smarter_settings.customer_api_domain
+                )
+                hosted_zone_id = aws_helper.route53.get_hosted_zone_id(hosted_zone=customer_api_domain_hosted_zone)
+
+            dns_record = aws_helper.route53.get_dns_record(
+                hosted_zone_id=hosted_zone_id, record_name=domain_name, record_type=record_type
+            )
+            if not dns_record:
+                logger.warning(
+                    "%s DNS record for domain %s not found. Nothing more to do, bailing out.", fn_name, domain_name
+                )
+                return False
+
+            # 2. verify that the domain resolves to the correct NS records
             dns_ns_records = {rdata.to_text() for rdata in dns.resolver.query(domain_name)}
-            logger.info("Found NS records %s for domain %s", dns_ns_records, domain_name)
+            logger.info("%s successfully resolved domain %s using NS records %s", fn_name, domain_name, dns_ns_records)
 
             if not activate_chatbot:
                 return True
 
-            # if this domain is associated with a ChatBot then we should ensure that it is activated
-            try:
-                chatbot = ChatBot.objects.get(default_host=domain_name)
+            # 3. if this domain is associated with a ChatBot then we should ensure that it is activated
+            if chatbot:
                 chatbot.deployed = True
                 chatbot.save()
-                logger.info("Chatbot %s has been deployed to %s", chatbot.name, domain_name)
-            except ChatBot.DoesNotExist:
-                pass
+                logger.info("%s Chatbot %s has been deployed to %s", fn_name, chatbot.name, domain_name)
             return True
         except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
-            logger.warning("Domain %s does not exist.", domain_name)
+            logger.warning("%s unable to resolve domain %s.", fn_name, domain_name)
             continue
         except dns.resolver.Timeout:
-            logger.warning("Timeout while querying the domain %s.", domain_name)
+            logger.warning("%s timeout exceeded while querying the domain %s.", fn_name, domain_name)
             continue
 
+    logger.error("%s unable to verify domain %s after %s attempts.", fn_name, domain_name, max_attempts)
     return False
 
 
@@ -341,31 +381,36 @@ def verify_domain(domain_name: str, activate_chatbot: bool = False) -> bool:
     max_retries=CELERY_MAX_RETRIES,
     queue=CELERY_TASK_QUEUE,
 )
-def create_domain_A_record(hostname: str, api_host_domain: str):
+def create_domain_A_record(hostname: str, api_host_domain: str) -> dict:
     """Create an A record for the API domain."""
+    fn_name = "create_domain_A_record()"
+    logger.info("%s for hostname %s, api_host_domain %s", fn_name, hostname, api_host_domain)
 
     try:
         hostname = aws_helper.aws.domain_resolver(hostname)
         api_host_domain = aws_helper.aws.domain_resolver(api_host_domain)
 
-        logger.info("Deploying %s", hostname)
+        logger.info("%s resolved hostname: %s", fn_name, hostname)
 
         # add the A record to the customer API domain
         hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=api_host_domain)
-        logger.info("Found hosted zone %s for parent domain %s", hosted_zone_id, api_host_domain)
+        logger.info("%s found hosted zone %s for parent domain %s", fn_name, hosted_zone_id, api_host_domain)
 
         # retrieve the A record from the environment domain hosted zone. we'll
         # use this to create the A record in the customer API domain
         a_record = aws_helper.route53.get_environment_A_record(domain=api_host_domain)
         if not a_record:
-            logger.error("A record not found for %s", api_host_domain)
-            return
+            raise AWSHostedZoneNotFound(f"Hosted zone not found for domain {api_host_domain}")
 
         logger.info(
-            "Propagating A record %s from parent domain %s to deployment target %s", a_record, api_host_domain, hostname
+            "%s propagating A record %s from parent domain %s to deployment target %s",
+            fn_name,
+            a_record,
+            api_host_domain,
+            hostname,
         )
 
-        deployment_record = aws_helper.route53.get_or_create_dns_record(
+        deployment_record, created = aws_helper.route53.get_or_create_dns_record(
             hosted_zone_id=hosted_zone_id,
             record_name=hostname,
             record_type="A",
@@ -373,18 +418,64 @@ def create_domain_A_record(hostname: str, api_host_domain: str):
             record_value=a_record["ResourceRecords"] if "ResourceRecords" in a_record else None,
             record_ttl=DEFAULT_TTL,
         )
-
+        verb = "Created" if created else "Verified"
         logger.info(
-            "Verified deployment DNS record %s AWS Route53 hosted zone %s %s",
+            "%s %s deployment DNS record %s AWS Route53 hosted zone %s %s",
+            fn_name,
+            verb,
             deployment_record,
             api_host_domain,
             hosted_zone_id,
         )
+        return deployment_record
 
     except botocore.exceptions.ClientError as e:
         # If the domain already exists, we can ignore the error
         if "InvalidChangeBatch" not in str(e):
             raise
+
+
+def destroy_domain_A_record(hostname: str, api_host_domain: str):
+    fn_name = "destroy_domain_A_record()"
+    hostname = aws_helper.aws.domain_resolver(hostname)
+    api_host_domain = aws_helper.aws.domain_resolver(api_host_domain)
+    logger.info("%s - %s", fn_name, hostname)
+
+    # locate the aws route53 hosted zone for the customer API domain
+    hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=api_host_domain)
+    logger.info("%s found hosted zone %s for parent domain %s", fn_name, hosted_zone_id, api_host_domain)
+
+    # retrieve the A record from the environment domain hosted zone. we'll
+    # use this to create the A record in the customer API domain. example:
+    # {
+    #     "Name": "example.com.",
+    #     "Type": "A",
+    #     "TTL": 300,
+    #     "ResourceRecords": [{"Value": "192.1.1.1"}]
+    # }
+
+    a_record = aws_helper.route53.get_dns_record(
+        hosted_zone_id=hosted_zone_id,
+        record_name=hostname,
+        record_type="A",
+    )
+    if not a_record:
+        logger.error("%s a record not found for %s. Nothing to do, returning.", fn_name, api_host_domain)
+        return
+
+    print(f"{fn_name} a_record: ", a_record)
+    record_type = a_record.get("Type", "A")
+    record_ttl = a_record.get("TTL", DEFAULT_TTL)
+    alias_target = a_record.get("AliasTarget")
+    record_resource_records = a_record.get("ResourceRecords")
+    aws_helper.route53.destroy_dns_record(
+        hosted_zone_id=hosted_zone_id,
+        record_name=hostname,
+        record_type=record_type,
+        record_ttl=record_ttl,
+        alias_target=alias_target,
+        record_resource_records=record_resource_records,
+    )
 
 
 @app.task(
@@ -395,22 +486,35 @@ def create_domain_A_record(hostname: str, api_host_domain: str):
 )
 def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     """Create a customer API default domain A record for a chatbot."""
+    fn_name = "deploy_default_api()"
+
+    logger.info("%s - chatbot %s", fn_name, chatbot_id)
+    chatbot: ChatBot = None
+
+    try:
+        chatbot = ChatBot.objects.get(id=chatbot_id)
+    except ChatBot.DoesNotExist as e:
+        raise ChatBotTaskError(f"Chatbot {chatbot_id} not found.") from e
 
     # ensure that the customer API domain has an A record that we can use to create the chatbot's A record
     create_domain_A_record(hostname=smarter_settings.customer_api_domain, api_host_domain=smarter_settings.root_domain)
-
-    chatbot = ChatBot.objects.get(id=chatbot_id)
     domain_name = chatbot.default_host
     create_domain_A_record(hostname=domain_name, api_host_domain=smarter_settings.customer_api_domain)
 
     activate = True
     if with_domain_verification:
-        activate = verify_domain(domain_name)
+        chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.VERIFYING
+        chatbot.save()
+        activate = verify_domain(domain_name, record_type="A", chatbot=chatbot, activate_chatbot=True)
+        if not activate:
+            chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.FAILED
+            chatbot.save()
 
     if activate:
         chatbot.deployed = True
+        chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.VERIFIED
         chatbot.save()
-        logger.info("Chatbot %s has been deployed to %s", chatbot.name, domain_name)
+        logger.info("%s Chatbot %s has been deployed to %s", fn_name, chatbot.name, domain_name)
 
         # send an email to the account owner to notify them that the chatbot has been deployed
         subject = f"Chatbot {chatbot.name} has been deployed"
@@ -423,7 +527,7 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     # if we're running in Kubernetes then we should create an ingress manifest
     # for the customer API domain so that we can issue a certificate for it.
     if smarter_settings.environment != SmarterEnvironments.LOCAL:
-        logger.info("Creating ingress manifest for %s", domain_name)
+        logger.info("%s creating ingress manifest for %s", fn_name, domain_name)
         ingress_values = {
             "cluster_issuer": smarter_settings.customer_api_domain,
             "environment_namespace": smarter_settings.environment_namespace,
@@ -439,6 +543,28 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
             template = Template(ingress_template.read())
             manifest = template.substitute(ingress_values)
         kubernetes_helper.apply_manifest(manifest)
+
+
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=CELERY_RETRY_BACKOFF,
+    max_retries=CELERY_MAX_RETRIES,
+    queue=CELERY_TASK_QUEUE,
+)
+def undeploy_default_api(chatbot_id: int):
+    """Reverse a Chatbot deployment by destroying the customer API default domain A record for a chatbot."""
+
+    chatbot: ChatBot = None
+    try:
+        chatbot = ChatBot.objects.get(id=chatbot_id)
+    except ChatBot.DoesNotExist:
+        logger.info("Chatbot %s not found. Nothing to do, returning.", chatbot_id)
+
+    destroy_domain_A_record(hostname=chatbot.default_host, api_host_domain=smarter_settings.customer_api_domain)
+
+    chatbot.deployed = False
+    chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.NOT_VERIFIED
+    chatbot.save()
 
 
 @app.task(

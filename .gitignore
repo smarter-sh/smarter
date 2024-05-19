@@ -21,8 +21,8 @@ lambda_dist_pkg
 
 # coverage artifacts
 # -------------------------------------
-.coverage
-.coverage.*
+**/.coverage
+**/.coverage.*
 htmlcov
 
 # Jupyter Notebook
@@ -73,6 +73,7 @@ config.json
 
 # Python
 # -------------------------------------
+pypi_packages
 __pycache__
 .pytest_cache
 venv
