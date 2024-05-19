@@ -35,6 +35,7 @@ class APIV1CLIViewError(SmarterExceptionBase):
         return "Smarter api v1 command-line interface error"
 
 
+# pylint: disable=too-many-instance-attributes
 class CliBaseApiView(APIView, AccountMixin):
     """
     Smarter API command-line interface Base class API view. Handles

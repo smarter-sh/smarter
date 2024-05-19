@@ -60,6 +60,7 @@ class PluginController(AbstractController):
     def name(self) -> str:
         if self.manifest:
             return self.manifest.metadata.name
+        return None
 
     @property
     def plugin_meta(self) -> PluginMeta:

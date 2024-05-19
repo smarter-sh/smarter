@@ -1,9 +1,7 @@
 """Chatbot exceptions."""
 
-
-class ChatBotCustomDomainNotFound(Exception):
-    """Raised when the custom domain for the chatbot is not found."""
+from smarter.common.exceptions import SmarterExceptionBase
 
 
-class ChatBotCustomDomainExists(Exception):
-    """Raised when the custom domain for the chatbot already exists."""
+class SmarterChatBotException(SmarterExceptionBase):
+    """Base class for all chatbot exceptions."""

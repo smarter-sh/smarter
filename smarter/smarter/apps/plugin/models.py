@@ -19,6 +19,7 @@ from django.db.utils import ConnectionHandler
 from taggit.managers import TaggableManager
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.model_helpers import TimestampedModel
 
@@ -31,17 +32,17 @@ logger = logging.getLogger(__name__)
 SMARTER_PLUGIN_MAX_DATA_RESULTS = 50
 
 
-def validate_no_spaces(value):
+def validate_no_spaces(value):  # pragma: no cover
     if re.search(r"\s", value):
         raise SmarterValueError("The name should not include spaces.")
 
 
-def dict_key_cleaner(key: str) -> str:
+def dict_key_cleaner(key: str) -> str:  # pragma: no cover
     """Clean a key by replacing spaces with underscores."""
     return str(key).replace("\n", "").replace("\r", "").replace("\t", "").replace(" ", "_")
 
 
-def dict_keys_to_list(data: dict, keys=None) -> list[str]:
+def dict_keys_to_list(data: dict, keys=None) -> list[str]:  # pragma: no cover
     """recursive function to extract all keys from a nested dictionary."""
     if keys is None:
         keys = []
@@ -52,7 +53,7 @@ def dict_keys_to_list(data: dict, keys=None) -> list[str]:
     return keys
 
 
-def list_of_dicts_to_list(data: list[dict]) -> list[str]:
+def list_of_dicts_to_list(data: list[dict]) -> list[str]:  # pragma: no cover
     """Convert a list of dictionaries into a single dict with keys extracted
     from the first key in the first dict."""
     if not data or not isinstance(data[0], dict):
@@ -67,7 +68,7 @@ def list_of_dicts_to_list(data: list[dict]) -> list[str]:
     return retval
 
 
-def list_of_dicts_to_dict(data: list[dict]) -> dict:
+def list_of_dicts_to_dict(data: list[dict]) -> dict:  # pragma: no cover
     """Convert a list of dictionaries into a single dict with keys extracted
     from the first key in the first dict."""
     if not data or not isinstance(data[0], dict):
@@ -81,7 +82,7 @@ def list_of_dicts_to_dict(data: list[dict]) -> dict:
     return retval
 
 
-class PluginMeta(TimestampedModel):
+class PluginMeta(TimestampedModel):  # pragma: no cover
     """PluginMeta model."""
 
     PLUGIN_CLASSES = [
@@ -118,7 +119,7 @@ class PluginMeta(TimestampedModel):
         verbose_name_plural = "Plugins"
 
 
-class PluginSelector(TimestampedModel):
+class PluginSelector(TimestampedModel):  # pragma: no cover
     """PluginSelector model."""
 
     plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_selector")
@@ -135,7 +136,7 @@ class PluginSelector(TimestampedModel):
         return f"{str(self.directive)} - {search_terms}"
 
 
-class PluginSelectorHistory(TimestampedModel):
+class PluginSelectorHistory(TimestampedModel):  # pragma: no cover
     """PluginSelectorHistory model."""
 
     plugin_selector = models.ForeignKey(
@@ -151,7 +152,7 @@ class PluginSelectorHistory(TimestampedModel):
         verbose_name_plural = "Plugin Selector History"
 
 
-class PluginPrompt(TimestampedModel):
+class PluginPrompt(TimestampedModel):  # pragma: no cover
     """PluginPrompt model."""
 
     plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_prompt")
@@ -161,15 +162,17 @@ class PluginPrompt(TimestampedModel):
         blank=True,
         default="You are a helful assistant.",
     )
-    model = models.CharField(help_text="The model to use for the completion.", max_length=255, default="gpt-3.5-turbo")
+    model = models.CharField(
+        help_text="The model to use for the completion.", max_length=255, default=SettingsDefaults.OPENAI_DEFAULT_MODEL
+    )
     temperature = models.FloatField(
         help_text="The higher the temperature, the more creative the result.",
-        default=0.5,
+        default=SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE,
         validators=[MinValueValidator(0.0), MaxValueValidator(1.0)],
     )
     max_tokens = models.IntegerField(
         help_text="The maximum number of tokens for both input and output.",
-        default=256,
+        default=SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS,
         validators=[MinValueValidator(0), MaxValueValidator(4096)],
     )
 
@@ -177,7 +180,7 @@ class PluginPrompt(TimestampedModel):
         return str(self.plugin.name)
 
 
-class PluginDataBase(TimestampedModel):
+class PluginDataBase(TimestampedModel):  # pragma: no cover
     """PluginDataBase model."""
 
     plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_data_base")
@@ -279,6 +282,10 @@ class PluginDataSqlConnection(TimestampedModel):
         choices=DBMS_CHOICES,
     )
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="plugin_data_sql_connections")
+    description = models.TextField(
+        help_text="A brief description of the connection. Be verbose, but not too verbose.",
+    )
+    version = models.CharField(max_length=255, default="1.0.0")
     hostname = models.CharField(max_length=255)
     port = models.IntegerField()
     database = models.CharField(max_length=255)

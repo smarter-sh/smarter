@@ -42,10 +42,12 @@ class TestApiV1CliPlugin(ApiV1TestBase):
         response, status = self.get_response(path)
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
-        self.assertEqual(response["apiVersion"], SAMApiVersions.V1.value)
-        self.assertEqual(response["kind"], SAMKinds.PLUGIN.value)
-        self.assertIsInstance(response.get("metadata", None), dict)
-        self.assertEqual(response.get("metadata", {}).get("name", None), self.name)
+
+        data = response["data"]
+        self.assertEqual(data["apiVersion"], SAMApiVersions.V1.value)
+        self.assertEqual(data["kind"], SAMKinds.PLUGIN.value)
+        self.assertIsInstance(data.get("metadata", None), dict)
+        self.assertEqual(data.get("metadata", {}).get("name", None), self.name)
 
         path = reverse("api_v1_cli_logs_kind_name_view", kwargs={"kind": "plugin", "name": self.name})
         response, status = self.get_response(path)
@@ -54,15 +56,18 @@ class TestApiV1CliPlugin(ApiV1TestBase):
 
         path = reverse("api_v1_cli_get_view", kwargs={"kind": "plugins"})
         response, status = self.get_response(path)
-        self.assertIsInstance(response["items"], list)
-        self.assertEqual(response["kind"], SAMKinds.PLUGIN.value)
-        self.assertEqual(response["apiVersion"], SAMApiVersions.V1.value)
+        data = response["data"]
+        self.assertIsInstance(data["items"], list)
+        self.assertEqual(data["kind"], SAMKinds.PLUGIN.value)
+        self.assertEqual(data["apiVersion"], SAMApiVersions.V1.value)
 
         path = reverse("api_v1_cli_manifest_view", kwargs={"kind": "plugin"})
         response, status = self.get_response(path)
+        data = response["data"]
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
-        self.assertEqual(response["filepath"], "https://cdn.localhost:8000/cli/example-manifests/plugin.yaml")
+        self.assertEqual(data["kind"], SAMKinds.PLUGIN.value)
+        self.assertEqual(data["apiVersion"], SAMApiVersions.V1.value)
 
         path = reverse("api_v1_cli_delete_view", kwargs={"kind": "plugin", "name": self.name})
         response, status = self.get_response(path)
