@@ -10,7 +10,7 @@
 # Use the official Python image as a parent image
 FROM --platform=linux/amd64 python:3.11-buster
 
-LABEL maintainer="Lawrence McDaniel <lawrence@querium.com"
+LABEL maintainer="Lawrence McDaniel <lawrence@querium.com>"
 
 # Environment: local, alpha, beta, next, or production
 ARG ENVIRONMENT
@@ -33,10 +33,9 @@ RUN mkdir -p /data/.kube && \
 ENV KUBECONFIG=/data/.kube/config
 
 # Setup our file system.
-# Add our source code and make the 'smarter' directory the working directory
 # so that the Docker file system matches up with the local file system.
 WORKDIR /smarter
-COPY ./smarter .
+COPY ./smarter/requirements ./requirements
 RUN chown smarter_user:smarter_user -R .
 
 COPY ./scripts/pull_s3_env.sh .
@@ -81,6 +80,10 @@ RUN pip install -r requirements/docker.txt
 # we're going to run python unit tests in the Docker container.
 RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r requirements/local.txt ; fi
 
+# Add our source code and make the 'smarter' directory the working directory
+# we want this to be the last step so that we can take advantage of Docker's
+# caching mechanism.
+COPY ./smarter .
 
 # Build the React app and collect static files
 RUN cd smarter/apps/chatapp/reactapp/ && npm install && npm run build && cd ../../../../

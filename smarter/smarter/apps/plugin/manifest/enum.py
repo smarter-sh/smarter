@@ -64,6 +64,7 @@ class SAMPluginSpecSelectorKeys(SmarterEnumAbstract):
     """Smarter API Plugin Spec Selector keys enumeration."""
 
     DIRECTIVE = "directive"
+    SEARCHTERMS = "searchTerms"
 
 
 class SAMPluginSpecPromptKeys(SmarterEnumAbstract):
@@ -79,3 +80,4 @@ class SmartApiPluginSpecDataKeys(SmarterEnumAbstract):
     """Smarter API Plugin Spec Data keys enumeration."""
 
     DESCRIPTION = "description"
+    STATIC_DATA = "staticData"

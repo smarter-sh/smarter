@@ -4,9 +4,11 @@
 from django.forms.models import model_to_dict
 from django.http import HttpRequest, JsonResponse
 
-from smarter.apps.account.mixins import AccountMixin
+from smarter.apps.account.mixins import Account, AccountMixin, UserProfile
 from smarter.apps.plugin.models import PluginDataSqlConnection
+from smarter.lib.django.user import UserType
 from smarter.lib.manifest.broker import AbstractBroker
+from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -38,7 +40,10 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        api_version: str,
+        api_version: str = SAMApiVersions.V1.value,
+        account: Account = None,
+        user: UserType = None,
+        user_profile: UserProfile = None,
         name: str = None,
         loader: SAMLoader = None,
         manifest: str = None,
@@ -53,9 +58,12 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
         to ensure that the manifest is a valid yaml file and that it contains
         the required top-level keys.
         """
+        self._account = account
+        self._user = user
+        self._user_profile = user_profile
         super().__init__(
-            api_version=api_version,
             account=self.account,
+            api_version=api_version,
             name=name,
             kind=MANIFEST_KIND,
             loader=loader,
@@ -97,13 +105,42 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
     @property
     def sql_connection(self) -> PluginDataSqlConnection:
         if not self._sql_connection:
-            model_dump = self.manifest.spec.connection.model_dump()
-            model_dump["account"] = self.account
-            model_dump["name"] = self.manifest.metadata.name
-            self._sql_connection = PluginDataSqlConnection(**model_dump)
-            self._sql_connection.save()
+            try:
+                self._sql_connection = PluginDataSqlConnection.objects.get(
+                    account=self.account, name=self.manifest.metadata.name
+                )
+            except PluginDataSqlConnection.DoesNotExist:
+                model_dump = self.manifest.spec.connection.model_dump()
+                model_dump["account"] = self.account
+                model_dump["name"] = self.manifest.metadata.name
+                model_dump["version"] = self.manifest.metadata.version
+                model_dump["description"] = self.manifest.metadata.description
+                self._sql_connection = PluginDataSqlConnection(**model_dump)
+                self._sql_connection.save()
 
         return self._sql_connection
+
+    def example_manifest(self, kwargs: dict = None) -> JsonResponse:
+        data = {
+            "apiVersion": self.api_version,
+            "kind": self.kind,
+            "metadata": {
+                "name": "exampleConnection",
+                "description": "points to the Django mysql database",
+                "version": "0.1.0",
+            },
+            "spec": {
+                "connection": {
+                    "db_engine": "django.db.backends.mysql",
+                    "hostname": "smarter-mysql",
+                    "port": 3306,
+                    "username": "smarter",
+                    "password": "smarter",
+                    "database": "smarter",
+                }
+            },
+        }
+        return self.success_response(operation=self.get.__name__, data=data)
 
     ###########################################################################
     # Smarter manifest abstract method implementations
@@ -153,10 +190,31 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
         return self.success_response(operation=self.apply.__name__, data={})
 
     def describe(self, request: HttpRequest = None) -> JsonResponse:
+        """Return a JSON response with the manifest data."""
         if self.sql_connection:
             try:
                 data = model_to_dict(self.sql_connection)
-                return self.success_response(operation=self.describe.__name__, data=data)
+                data.pop("id")
+                data.pop("account")
+                data.pop("name")
+                data.pop("version")
+                data.pop("description")
+                retval = {
+                    "apiVersion": self.api_version,
+                    "kind": self.kind,
+                    "metadata": {
+                        "name": self.sql_connection.name,
+                        "description": self.sql_connection.description,
+                        "version": self.sql_connection.version,
+                    },
+                    "spec": {"connection": data},
+                    "status": {
+                        "connection_string": self.sql_connection.get_connection_string(),
+                        "is_valid": self.sql_connection.validate(),
+                    },
+                }
+
+                return self.success_response(operation=self.describe.__name__, data=retval)
             except Exception as e:
                 return self.err_response(self.describe.__name__, e)
         return self.not_ready_response()

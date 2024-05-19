@@ -17,7 +17,7 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
 from smarter.apps.chat.models import Chat, ChatHelper
-from smarter.apps.chatbot.api.v0.serializers import (
+from smarter.apps.chatbot.api.v1.serializers import (
     ChatBotPluginSerializer,
     ChatBotSerializer,
 )

@@ -105,7 +105,7 @@ class SAMLoader:
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        api_version: str,
+        api_version: str = SAMApiVersions.V1.value,
         kind: str = None,
         manifest: str = None,
         file_path: str = None,
@@ -160,7 +160,7 @@ class SAMLoader:
     def json_data(self) -> dict:
         if self.data_format == SAMDataFormats.JSON:
             return self.raw_data
-        elif self.data_format == SAMDataFormats.YAML:
+        if self.data_format == SAMDataFormats.YAML:
             return yaml.safe_load(self.raw_data)
         return None
 
@@ -168,7 +168,7 @@ class SAMLoader:
     def yaml_data(self) -> str:
         if self.data_format == SAMDataFormats.YAML:
             return self.raw_data
-        elif self.data_format == SAMDataFormats.JSON:
+        if self.data_format == SAMDataFormats.JSON:
             return yaml.dump(self.json_data)
         return None
 
@@ -206,11 +206,11 @@ class SAMLoader:
             `SAMObject(**loader.pydantic_model_dump())`
         """
         return {
-            "apiVersion": self.manifest_api_version,
-            "kind": self.manifest_kind,
-            "metadata": self.manifest_metadata,
-            "spec": self.manifest_spec,
-            "status": self.manifest_status,
+            SAMKeys.APIVERSION.value: self.manifest_api_version,
+            SAMKeys.KIND.value: self.manifest_kind,
+            SAMKeys.METADATA.value: self.manifest_metadata,
+            SAMKeys.SPEC.value: self.manifest_spec,
+            SAMKeys.STATUS.value: self.manifest_status,
         }
 
     # -------------------------------------------------------------------------
