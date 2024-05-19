@@ -48,7 +48,7 @@ class Command(BaseCommand):
         chatbot.app_logo_url = "/static/querium/querium-logo-white-transparent.png"
         chatbot.save()
 
-        if chatbot.deployed:
+        if chatbot.deployed and chatbot.dns_verification_status == ChatBot.DnsVerificationStatusChoices.VERIFIED:
             self.stdout.write(self.style.SUCCESS(log_prefix + "The Smarter demo API is already deployed."))
             return
 
@@ -58,5 +58,5 @@ class Command(BaseCommand):
         if foreground:
             deploy_default_api(chatbot_id=chatbot.id)
         else:
-            print("Deploying example api as a Celery task.")
+            self.stdout.write(self.style.NOTICE(log_prefix + "Deploying example api as a Celery task."))
             deploy_default_api.delay(chatbot_id=chatbot.id)

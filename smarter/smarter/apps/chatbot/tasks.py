@@ -309,7 +309,7 @@ def verify_custom_domain(
     max_retries=CELERY_MAX_RETRIES,
     queue=CELERY_TASK_QUEUE,
 )
-def verify_domain(domain_name: str, record_type="A", activate_chatbot: bool = False) -> bool:
+def verify_domain(domain_name: str, record_type="A", chatbot: ChatBot = None, activate_chatbot: bool = False) -> bool:
     """Verify that an Internet domain name resolves to NS records."""
     fn_name = "verify_domain()"
 
@@ -350,15 +350,10 @@ def verify_domain(domain_name: str, record_type="A", activate_chatbot: bool = Fa
                 return True
 
             # 3. if this domain is associated with a ChatBot then we should ensure that it is activated
-            try:
-                chatbot = ChatBot.objects.get(default_host=domain_name)
+            if chatbot:
                 chatbot.deployed = True
                 chatbot.save()
                 logger.info("%s Chatbot %s has been deployed to %s", fn_name, chatbot.name, domain_name)
-            except ChatBot.DoesNotExist:
-                logger.info(
-                    "%s domain %s is not associated with a ChatBot. Nothing more to do, returning", fn_name, domain_name
-                )
             return True
         except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
             logger.warning("%s unable to resolve domain %s.", fn_name, domain_name)
@@ -484,15 +479,15 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     fn_name = "deploy_default_api()"
 
     logger.info("%s - chatbot %s", fn_name, chatbot_id)
-
-    # ensure that the customer API domain has an A record that we can use to create the chatbot's A record
-    create_domain_A_record(hostname=smarter_settings.customer_api_domain, api_host_domain=smarter_settings.root_domain)
+    chatbot: ChatBot = None
 
     try:
         chatbot = ChatBot.objects.get(id=chatbot_id)
     except ChatBot.DoesNotExist as e:
         raise ChatBotTaskError(f"Chatbot {chatbot_id} not found.") from e
 
+    # ensure that the customer API domain has an A record that we can use to create the chatbot's A record
+    create_domain_A_record(hostname=smarter_settings.customer_api_domain, api_host_domain=smarter_settings.root_domain)
     domain_name = chatbot.default_host
     create_domain_A_record(hostname=domain_name, api_host_domain=smarter_settings.customer_api_domain)
 
@@ -500,7 +495,7 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     if with_domain_verification:
         chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.VERIFYING
         chatbot.save()
-        activate = verify_domain(domain_name, record_type="A", activate_chatbot=True)
+        activate = verify_domain(domain_name, record_type="A", chatbot=chatbot, activate_chatbot=True)
         if not activate:
             chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.FAILED
             chatbot.save()
