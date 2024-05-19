@@ -4,15 +4,15 @@ from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account
 from smarter.apps.chatbot.models import ChatBot
-from smarter.apps.chatbot.tasks import deploy_default_api
+from smarter.apps.chatbot.tasks import undeploy_default_api
 from smarter.common.exceptions import SmarterValueError
 
 
 # pylint: disable=E1101
 class Command(BaseCommand):
     """
-    Deploy a customer API. Provide either an account number or a company name.
-    Deploys to a URL of the form [user-defined-subdomain].####-####-####.api.smarter.sh/chatbot/
+    Undeploy a customer API. Provide either an account number or a company name.
+    Undeploys by deleting the DNS A record of the form [user-defined-subdomain].####-####-####.api.smarter.sh/chatbot/
     """
 
     def add_arguments(self, parser):
@@ -59,7 +59,7 @@ class Command(BaseCommand):
 
         if foreground:
             print(f"Deploying {chatbot.hostname}")
-            deploy_default_api(chatbot_id=chatbot.id)
+            undeploy_default_api(chatbot_id=chatbot.id)
         else:
             print(f"Deploying {chatbot.hostname} as a Celery task.")
-            deploy_default_api.delay(chatbot_id=chatbot.id)
+            undeploy_default_api.delay(chatbot_id=chatbot.id)

@@ -146,6 +146,7 @@ check-python:
 	@command -v $(PYTHON) >/dev/null 2>&1 || { echo >&2 "This project requires $(PYTHON) but it's not installed.  Aborting."; exit 1; }
 
 python-init:
+	mkdir -p pypi_packages && \
 	make check-python
 	make python-clean && \
 	npm install && \

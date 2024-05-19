@@ -73,6 +73,7 @@ config.json
 
 # Python
 # -------------------------------------
+pypi_packages
 __pycache__
 .pytest_cache
 venv

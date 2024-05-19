@@ -2,6 +2,7 @@
 """All models for the OpenAI Function Calling API app."""
 import logging
 import re
+from enum import Enum
 from typing import List, Type
 from urllib.parse import urljoin, urlparse
 
@@ -95,6 +96,12 @@ class ChatBot(TimestampedModel):
         HTTP = "http"
         HTTPS = "https"
 
+    class DnsVerificationStatusChoices(models.TextChoices):
+        VERIFYING = "Verifying", "Verifying"
+        NOT_VERIFIED = "Not Verified", "Not Verified"
+        VERIFIED = "Verified", "Verified"
+        FAILED = "Failed", "Failed"
+
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
@@ -117,6 +124,13 @@ class ChatBot(TimestampedModel):
     app_background_image_url = models.URLField(blank=True, null=True)
     app_logo_url = models.URLField(blank=True, null=True)
     app_file_attachment = models.BooleanField(default=False, blank=True, null=True)
+    dns_verification_status = models.CharField(
+        max_length=255,
+        default=DnsVerificationStatusChoices.NOT_VERIFIED,
+        blank=True,
+        null=True,
+        choices=DnsVerificationStatusChoices.choices,
+    )
 
     @property
     def default_host(self):
