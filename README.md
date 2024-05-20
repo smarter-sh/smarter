@@ -17,11 +17,11 @@
 
 **Smarter is an enterprise-class platform for designing and managing chat solutions. Think of Smarter as the 'Redhat Linux' of chat.**
 
-Smarter gives prompt engineering teams an intuitive workbench approach to designing, prototyping, testing and deploying powerful chat solutions for enterprise use cases including customer sales support, vendor/supplier management, human resources, and more. Smarter's chat backend solutions are compatible with a wide variety of chatbot UIs for technology ecosystems such as NPM, Wordpress, Squarespace, Drupal, Office 365, .Net, salesforce.com, and SAP. It is developed for OEMs and for business analyst & data science teams. Smarter provides common enterprise features like security, accounting cost codes, and audit capabilities.
+Smarter gives prompt engineering teams an intuitive workbench approach to designing, prototyping, testing, deploying and managing powerful chat solutions for common corporate use cases including customer sales support, vendor/supplier management, human resources, and more. Smarter is compatible with a wide variety of chatbot UI front ends for technology ecosystems such as NPM, Wordpress, Squarespace, Drupal, Office 365, Sharepoint, .Net, Netsuite, salesforce.com, and SAP. It is developed to support prompt engineering teams working in large organizations. Accordindly, Smarter provides common enterprise features such as security, accounting cost codes, and audit capabilities.
 
-Smarter is LLM provider-agnostic, and provides seamless integrations to a continuously evolving list of value added services for security management, prompt content moderation, audit, cost accounting, and workflow management. It can be used as a pay-as-you-go service, or installed to your own AWS cloud account and supported by Querium's professional services team. It can also be installed on-premise in a hybrid model.
+Smarter is LLM provider-agnostic, and provides seamless integrations to a continuously evolving list of value added services for security management, prompt content moderation, audit, cost accounting, and workflow management. It can be used as a pay-as-you-go, platform as a service, or, installed in your own AWS cloud account and supported by Querium's professional services team. It can also be installed on-premise in a hybrid model.
 
-Smarter is highly cost effective when running at scale. It extensible and architected on the philosophy of a compact core that does not require customization nor forking. It is natively multi-tenant, and can be installed alongside your existing systems. The principal technologies in the Smarter platform stack include:
+Smarter is cost effective when running at scale. It is extensible and architected on the philosophy of a compact core that does not require customization nor forking. It is horizontally scalable. It is natively multi-tenant, and can be installed alongside your existing systems. The principal technologies in the Smarter platform stack include:
 
 - Ubuntu Linux
 - Docker/Kubernetes/Helm
@@ -42,7 +42,7 @@ Smarter provides design teams with a web console, and a convenient yaml manifest
 
 ### Plugin Architecture
 
-Smarter features an extensible Plugin architecture for developing knowledge domain specific generative AI text completions that are uncharacteristically accurate. Its unique 'selector' feature gives prompt engineers a sosphisticated strategy for managing when and how LLM's can make use of Smarter Plugin's powerful data integrations.
+Smarter features a unique Plugin architecture for extending the knowledge domain of any LLM aimed at generative AI text completions. Smarter Plugins are uncharacteristically accurate, highly cost effective, and have been designed around the needs of enterprise customers. Its unique 'selector' feature gives prompt engineers a sosphisticated strategy for managing when and how LLM's can make use of Smarter Plugin's powerful data integrations, which include the following:
 
 - **Static**: an easy to implement scheme in which your private data is simply included in yaml Plugin manifest file.
 - **Sql**: a flexible parameterized manifest scheme that exposes query parameters to the LLM, enabling it to make precise requests via proxy to your corporate databases.
@@ -50,7 +50,7 @@ Smarter features an extensible Plugin architecture for developing knowledge doma
 
 ### Yaml Manifest Resource Management
 
-Smarter brings a [yaml-based manifest file](./smarter/smarter/apps/plugin/data/sample-plugins/example-configuration.yaml) approach to managing chat resources, inspired by the [kubectl](https://kubernetes.io/docs/reference/kubectl/) command-line interface for [Kubernetes](https://kubernetes.io/).
+Smarter brings a [yaml-based manifest file](./smarter/smarter/apps/plugin/data/sample-plugins/example-configuration.yaml) approach to prompt engineering, originally inspired by the [kubectl](https://kubernetes.io/docs/reference/kubectl/) command-line interface for [Kubernetes](https://kubernetes.io/).
 
 ### Smarter ChatBot APIs
 
