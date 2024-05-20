@@ -21,7 +21,7 @@ Smarter gives prompt engineering teams an intuitive workbench approach to design
 
 Smarter is LLM provider-agnostic, and provides seamless integrations to a continuously evolving list of value added services for security management, prompt content moderation, audit, cost accounting, and workflow management. It can be used as a pay-as-you-go service, or installed to your own AWS cloud account and supported by Querium's professional services team. It can also be installed on-premise in a hybrid model.
 
-Smarter is highly cost effective when running at scale. It is natively multi-tenant, and can be installed alongside your existing systems. The principal technologies in the Smarter platform stack include:
+Smarter is highly cost effective when running at scale. It extensible and architected on the philosophy of a compact core that does not require customization nor forking. It is natively multi-tenant, and can be installed alongside your existing systems. The principal technologies in the Smarter platform stack include:
 
 - Ubuntu Linux
 - Docker/Kubernetes/Helm
