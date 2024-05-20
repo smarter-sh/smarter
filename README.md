@@ -85,6 +85,11 @@ Customers can optionally register a custom domain which typically can be verifie
 
 ## Developer Quickstart
 
+See onboarding videos:
+
+- [Querium Smarter Developer Onboarding #1](https://youtu.be/-hZEO9sMm1s)
+- [Smarter Developer Workflow Tutorial](https://youtu.be/XolFLX1u9Kg)
+
 Works with Linux, Windows and macOS environments.
 
 1. Verify project requirements: [Python 3.11](https://www.python.org/), [NPM](https://www.npmjs.com/) [Docker](https://www.docker.com/products/docker-desktop/), and [Docker Compose](https://docs.docker.com/compose/install/). Docker will need around 1 vCPU, 2Gib memory, and 30Gib of storage space.
