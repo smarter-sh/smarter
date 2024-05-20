@@ -146,14 +146,14 @@ check-python:
 	@command -v $(PYTHON) >/dev/null 2>&1 || { echo >&2 "This project requires $(PYTHON) but it's not installed.  Aborting."; exit 1; }
 
 python-init:
-	mkdir -p pypi_packages && \
+	mkdir -p .pypi_cache && \
 	make check-python
 	make python-clean && \
 	npm install && \
 	$(PYTHON) -m venv venv && \
 	$(ACTIVATE_VENV) && \
-	$(PIP) install --upgrade pip && \
-	$(PIP) install -r smarter/requirements/local.txt
+	PIP_CACHE_DIR=.pypi_cache $(PIP) install --upgrade pip && \
+	PIP_CACHE_DIR=.pypi_cache $(PIP) install -r smarter/requirements/local.txt
 
 python-lint:
 	make check-python
@@ -162,7 +162,7 @@ python-lint:
 
 python-clean:
 	rm -rf venv
-	find ./ -name __pycache__ -type d -exec rm -rf {} +
+	find ./smarter/ -name __pycache__ -type d -exec rm -rf {} +
 
 # ---------------------------------------------------------
 # Keen
