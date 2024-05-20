@@ -88,7 +88,7 @@ Customers can optionally register a custom domain which typically can be verifie
 See onboarding videos:
 
 - [Querium Smarter Developer Onboarding #1](https://youtu.be/-hZEO9sMm1s)
-- [Querium Smarter Developer Onboarding #2](https://youtu.be/XolFLX1u9Kg)
+- [Smarter Developer Workflow Tutorial](https://youtu.be/XolFLX1u9Kg)
 
 Works with Linux, Windows and macOS environments.
 
