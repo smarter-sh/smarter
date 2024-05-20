@@ -15,9 +15,25 @@
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![hack.d Lawrence McDaniel](https://img.shields.io/badge/hack.d-Lawrence%20McDaniel-orange.svg)](https://lawrencemcdaniel.com)
 
-**Smarter provides highly skilled non-programmers with a means of creating uncharacteristically accurate and skilled chatbots, backed by their choice of LLM, and that are easy to manage, customizable, scalable, resilient, and secure.**
+**Smarter is an enterprise-class platform for designing and managing chat solutions. Think of Smarter as the 'Redhat Linux' of chat.**
 
-Smarter is an extensible web platform for developing knowledge domain specific generative AI text completion REST APIs. It provides users with a workbench approach to designing, prototyping, testing and deploying custom APIs in a standardized format that will be compatible with a wide variety of chatbot UIs for technology ecosystems such as NPM, Wordpress, Squarespace, Drupal, Office 365, .Net, salesforce.com, and SAP. It is developed for OEMs, and large business analyst & data science teams, and provides common enterprise features like security, accounting cost codes, and audit capabilities. Additionally It is envisioned being packaged and resold through large professional services firms and technology solutions providers.
+Smarter provides highly skilled non-programmers with an intuitive approach to designing and managing uncharacteristically accurate and skilled chatbots, backed by their choice of LLM, and that are easy to manage, customizable, scalable, resilient, and secure. It provides common enterprise features like security, accounting cost codes, and audit capabilities.
+
+Smarter can be used as a service, or installed to your own AWS cloud account and supported by Querium's professional services team. It can also be installed on-premise in a hybrid model. Smarter provides prompt engineering design teams with a web console as well as a robust command-line interface for Windows, macOS, and Linux.
+
+## Plugin Architecture
+
+Smarter features an extensible Plugin architecture for developing knowledge domain specific generative AI text completion REST APIs. It provides users with a workbench approach to designing, prototyping, testing and deploying custom chat APIs in a standardized format that will be compatible with a wide variety of chatbot UIs for technology ecosystems such as NPM, Wordpress, Squarespace, Drupal, Office 365, .Net, salesforce.com, and SAP. It is developed for OEMs and for business analyst & data science teams.
+
+Smarter plugins implement a 'selector' configuration that gives prompt engineers a sosphisticated strategy for managing the LLM's discovery process. Plugins provide common data source integration schemes.
+
+- Static: an easy to implement scheme in which your private data is simply included in yaml Plugin manifest file.
+- Sql: a flexible parameterized manifest scheme that exposes query parameters to the LLM, enabling it to make precise requests via proxy to your corporate databases.
+- Rest Api: Similarly, you can also configure proxy connections to your Rest Api's, enabling the LLM to make precise requests to an unlimited range of private data sources.
+
+## Yaml Manifest Resource Management
+
+Smarter brings a [yaml-based manifest file](./smarter/smarter/apps/plugin/data/sample-plugins/example-configuration.yaml) approach to managing chat resources, inspired by the [kubectl](https://kubernetes.io/docs/reference/kubectl/) command-line interface for [Kubernetes](https://kubernetes.io/).
 
 ## Smarter ChatBot APIs
 
