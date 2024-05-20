@@ -21,11 +21,11 @@ Smarter provides highly skilled non-programmers with an intuitive approach to de
 
 Smarter can be used as a service, or installed to your own AWS cloud account and supported by Querium's professional services team. It can also be installed on-premise in a hybrid model. Smarter provides prompt engineering design teams with a web console as well as a robust command-line interface for Windows, macOS, and Linux.
 
+Smarter provides users with an intuitive workbench approach to designing, prototyping, testing and deploying custom chat APIs in a standardized format that will be compatible with a wide variety of chatbot UIs for technology ecosystems such as NPM, Wordpress, Squarespace, Drupal, Office 365, .Net, salesforce.com, and SAP. It is developed for OEMs and for business analyst & data science teams.
+
 ## Plugin Architecture
 
-Smarter features an extensible Plugin architecture for developing knowledge domain specific generative AI text completion REST APIs. It provides users with a workbench approach to designing, prototyping, testing and deploying custom chat APIs in a standardized format that will be compatible with a wide variety of chatbot UIs for technology ecosystems such as NPM, Wordpress, Squarespace, Drupal, Office 365, .Net, salesforce.com, and SAP. It is developed for OEMs and for business analyst & data science teams.
-
-Smarter plugins implement a 'selector' configuration that gives prompt engineers a sosphisticated strategy for managing the LLM's discovery process. Plugins provide common data source integration schemes.
+Smarter features an extensible Plugin architecture for developing knowledge domain specific generative AI text completions. Its unique 'selector' feature gives prompt engineers a sosphisticated strategy for managing when and how LLM's can make use of Smarter Plugin's powerful data integrations.
 
 - Static: an easy to implement scheme in which your private data is simply included in yaml Plugin manifest file.
 - Sql: a flexible parameterized manifest scheme that exposes query parameters to the LLM, enabling it to make precise requests via proxy to your corporate databases.
