@@ -27,8 +27,17 @@ class Command(BaseCommand):
         username = options["username"]
         description = options["description"]
 
-        account = Account.objects.get(account_number=account_number)
-        user = User.objects.get(username=username) if username else account_admin_user(account)
+        if not account_number and not username:
+            self.stdout.write(self.style.ERROR("You must provide an account number or a username"))
+            return
+
+        if account_number:
+            account = Account.objects.get(account_number=account_number)
+        if username:
+            user = User.objects.get(username=username)
+            account = UserProfile.objects.get(user=user).account
+        if not user:
+            user = User.objects.get(username=username) if username else account_admin_user(account)
         UserProfile.objects.get(user=user, account=account)
 
         auth_token, token_key = SmarterAuthToken.objects.create(account=account, user=user, description=description)
