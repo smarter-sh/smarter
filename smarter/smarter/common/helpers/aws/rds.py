@@ -1,0 +1,23 @@
+"""AWS RDS helper class."""
+
+from smarter.common.conf import settings as smarter_settings
+
+from .aws import AWSBase
+
+
+class AWSRds(AWSBase):
+    """AWS RDS helper class."""
+
+    _client = None
+
+    @property
+    def client(self):
+        """Return the AWS DynamoDB client."""
+        if not self._client:
+            self._client = self.aws_session.client("rds")
+        return self._client
+
+    def get_mysql_info(self):
+        """Return the version of the MySQL server"""
+        response = self.client.describe_db_instances(DBInstanceIdentifier=smarter_settings.aws_db_instance_identifier)
+        return response["DBInstances"][0]
