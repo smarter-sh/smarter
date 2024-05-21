@@ -3,12 +3,10 @@
 
 import platform
 from http import HTTPStatus
-from subprocess import check_output
 
 from celery import __version__ as celery_version
 from django import get_version as get_django_version
 from django.http import JsonResponse
-from django_redis import get_redis_connection
 from langchain import __version__ as langchain_version
 from Levenshtein import __version__ as levenshtein_version
 from openai.version import VERSION as openai_version
@@ -25,17 +23,6 @@ from .base import CliBaseApiView
 class ApiV1CliVersionApiView(CliBaseApiView):
     """Smarter API command-line interface 'version' view"""
 
-    def get_redis_info(self):
-        client = get_redis_connection("default")
-        info = client.info()
-        retval = {
-            "gcc_version": info.get("gcc_version"),
-            "os": info.get("os"),
-            "redis_build_id": info.get("redis_build_id"),
-            "redis_version": info.get("redis_version"),
-        }
-        return retval
-
     def info(self):
         try:
             data = {
@@ -51,19 +38,6 @@ class ApiV1CliVersionApiView(CliBaseApiView):
                     "pydantic": pydantic_version,
                     "python": platform.python_version(),
                     "rest_framework": rest_framework_version,
-                },
-                "infrastructures": {
-                    "kubernetes": aws_helper.eks.get_kubernetes_info(),
-                    "mysql": aws_helper.rds.get_mysql_info(),
-                    "redis": self.get_redis_info(),
-                },
-                "compute": {
-                    "machine": platform.machine(),
-                    "release": platform.release(),
-                    "platform": platform.platform(aliased=True),
-                    "processor": platform.processor(),
-                    "system": platform.system(),
-                    "version": platform.version(),
                 },
             }
 
