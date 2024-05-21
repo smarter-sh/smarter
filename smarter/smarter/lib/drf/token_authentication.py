@@ -1,3 +1,5 @@
+"""knox TokenAuthentication subclass that checks if the token is active."""
+
 import logging
 
 from knox.auth import TokenAuthentication
@@ -19,7 +21,6 @@ class SmarterTokenAuthentication(TokenAuthentication):
     model = SmarterAuthToken
 
     def authenticate_credentials(self, token):
-        logger.info("SmarterTokenAuthentication().authenticate_credentials() Authenticating token %s", token)
         # authenticate the user using the normal token authentication
         # this will raise an AuthenticationFailed exception if the token is invalid
         user, auth_token = super().authenticate_credentials(token)
