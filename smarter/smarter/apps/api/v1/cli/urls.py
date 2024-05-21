@@ -20,6 +20,7 @@ from .views.get import ApiV1CliGetApiView
 from .views.logs import ApiV1CliLogsApiView
 from .views.manifest import ApiV1CliManifestApiView
 from .views.status import ApiV1CliStatusApiView
+from .views.version import ApiV1CliVersionApiView
 from .views.whoami import ApiV1CliWhoamiApiView
 
 
@@ -35,5 +36,6 @@ urlpatterns = [
     path("logs/", ApiV1CliLogsApiView.as_view(), name="api_v1_cli_logs_view"),
     path("manifest/<str:kind>/", ApiV1CliManifestApiView.as_view(), name="api_v1_cli_manifest_view"),
     path("status/", ApiV1CliStatusApiView.as_view(), name="api_v1_cli_status_view"),
+    path("version/", ApiV1CliVersionApiView.as_view(), name="api_v1_cli_version_view"),
     path("whoami/", ApiV1CliWhoamiApiView.as_view(), name="api_v1_cli_whoami_view"),
 ]

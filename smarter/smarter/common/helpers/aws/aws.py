@@ -133,6 +133,11 @@ class AWSBase:
             raise AWSNotReadyError(msg)
 
     @property
+    def version(self):
+        """Return the version."""
+        return boto3.__version__
+
+    @property
     def debug_mode(self):
         """Debug mode"""
         return self._debug_mode
