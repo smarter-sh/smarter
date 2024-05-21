@@ -8,6 +8,8 @@ Smarter API command-line interface URL configuration.
 - https://platform.smarter.sh/api/v1/cli/logs/           # Get logs for a resource
 - https://platform.smarter.sh/api/v1/cli/delete/         # Delete a resource
 - https://platform.smarter.sh/api/v1/cli/status/         # Smarter platform status
+- https://platform.smarter.sh/api/v1/cli/version/        # returns detailed version information on the platform
+- https://platform.smarter.sh/api/v1/cli/whoami/         # Return information about the current IAM user
 """
 
 from django.urls import path
