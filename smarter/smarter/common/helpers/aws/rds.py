@@ -20,4 +20,9 @@ class AWSRds(AWSBase):
     def get_mysql_info(self):
         """Return the version of the MySQL server"""
         response = self.client.describe_db_instances(DBInstanceIdentifier=smarter_settings.aws_db_instance_identifier)
-        return response["DBInstances"][0]
+        response = response["DBInstances"][0]
+        retval = {
+            "Engine": response.get("Engine"),
+            "EngineVersion": response.get("EngineVersion"),
+        }
+        return retval
