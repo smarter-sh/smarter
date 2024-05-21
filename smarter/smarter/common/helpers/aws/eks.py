@@ -20,4 +20,11 @@ class AWSEks(AWSBase):
     def get_kubernetes_info(self):
         """Return the version of the MySQL server"""
         response = self.client.describe_cluster(name=smarter_settings.aws_eks_cluster_name)
-        return response["cluster"]
+        response = response["cluster"]
+        retval = {
+            "health": response.get("health"),
+            "platformVersion": response.get("platformVersion"),
+            "status": response.get("status"),
+            "version": response.get("version"),
+        }
+        return retval

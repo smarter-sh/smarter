@@ -28,15 +28,17 @@ class ApiV1CliVersionApiView(CliBaseApiView):
     def get_redis_info(self):
         client = get_redis_connection("default")
         info = client.info()
-        return info
-
-    def get_latest_commit_sha(self):
-        return check_output(["git", "rev-parse", "HEAD"]).strip().decode("utf-8")
+        retval = {
+            "gcc_version": info.get("gcc_version"),
+            "os": info.get("os"),
+            "redis_build_id": info.get("redis_build_id"),
+            "redis_version": info.get("redis_version"),
+        }
+        return retval
 
     def info(self):
         try:
             data = {
-                "commit": self.get_latest_commit_sha(),
                 "smarter": smarter_settings.version,
                 "python": {
                     "botocore": aws_helper.aws.version,
