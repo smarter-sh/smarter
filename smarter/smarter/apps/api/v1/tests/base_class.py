@@ -7,8 +7,9 @@ import unittest
 
 from django.test import Client
 
-from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
+from smarter.apps.account.models import Account, UserProfile
 from smarter.lib.django.user import User
+from smarter.lib.drf.models import SmarterAuthToken
 
 
 class ApiV1TestBase(unittest.TestCase):
@@ -33,7 +34,6 @@ class ApiV1TestBase(unittest.TestCase):
         self.user_profile = UserProfile.objects.create(user=self.user, account=self.account)
 
         self.token_record, self.token_key = SmarterAuthToken.objects.create(
-            account=self.account,
             user=self.user,
             description="testToken" + hash_suffix,
         )

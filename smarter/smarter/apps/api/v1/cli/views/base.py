@@ -6,15 +6,14 @@ from http import HTTPStatus
 from typing import Type
 
 import yaml
-from django.http import JsonResponse
-from knox.auth import TokenAuthentication
-from rest_framework.authentication import SessionAuthentication
+from django.http import HttpResponseForbidden, JsonResponse
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.utils import user_profile_for_user
 from smarter.common.exceptions import SmarterExceptionBase, error_response_factory
+from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.exceptions import SAMBadRequestError
 from smarter.lib.manifest.loader import SAMLoader
@@ -47,7 +46,7 @@ class CliBaseApiView(APIView, AccountMixin):
     - Sets the user profile for the request.
     """
 
-    authentication_classes = (TokenAuthentication, SessionAuthentication)
+    authentication_classes = (SmarterTokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     _loader: SAMLoader = None
@@ -149,6 +148,18 @@ class CliBaseApiView(APIView, AccountMixin):
         model will be passed to a AbstractBroker for the manifest 'kind', which
         implements the broker service pattern for the underlying object.
         """
+        logger.info("authentication_classes: %s", self.authentication_classes)
+        logger.info("permission_classes: %s", self.permission_classes)
+        if not hasattr(request, "auth"):
+            logger.warning("No authentication scheme detected. headers: %s", request.headers)
+            return HttpResponseForbidden("You are not authenticated")
+        if not request.user.is_authenticated:
+            return HttpResponseForbidden("You are not authenticated")
+
+        user_agent = request.headers.get("User-Agent", "")
+        if "Go-http-client" not in user_agent:
+            logger.warning("The User-Agent is not a Go lang application: %s", user_agent)
+
         self._manifest_name = kwargs.get("name", None)
         kind = kwargs.get("kind", None)
         if kind:

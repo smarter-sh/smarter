@@ -5,9 +5,10 @@ import string
 
 from django.core.management.base import BaseCommand
 
-from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
+from smarter.apps.account.models import Account, UserProfile
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_COMPANY_NAME
 from smarter.lib.django.user import User
+from smarter.lib.drf.models import SmarterAuthToken
 
 
 # pylint: disable=E1101
@@ -69,7 +70,5 @@ class Command(BaseCommand):
 
         # ensure that the Smarter admin user has at least one auth token (api key)
         if not SmarterAuthToken.objects.filter(user=user).exists():
-            _, token_key = SmarterAuthToken.objects.create(
-                account=account, user=user, description="created by manage.py"
-            )
+            _, token_key = SmarterAuthToken.objects.create(user=user, description="created by manage.py")
             self.stdout.write(self.style.SUCCESS(f"created API key: {token_key}"))

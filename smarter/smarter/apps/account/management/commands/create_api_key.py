@@ -2,9 +2,10 @@
 
 from django.core.management.base import BaseCommand
 
-from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
+from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import account_admin_user
 from smarter.lib.django.user import User
+from smarter.lib.drf.models import SmarterAuthToken
 
 
 # pylint: disable=E1101
@@ -40,7 +41,12 @@ class Command(BaseCommand):
             user = User.objects.get(username=username) if username else account_admin_user(account)
         UserProfile.objects.get(user=user, account=account)
 
-        auth_token, token_key = SmarterAuthToken.objects.create(account=account, user=user, description=description)
+        auth_token, token_key = SmarterAuthToken.objects.create(user=user, description=description)
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"API key created successfully for account {account.account_number} and user {user.username}"
+            )
+        )
         self.stdout.write(self.style.SUCCESS("*" * 80))
         self.stdout.write(self.style.SUCCESS(f"API key: {token_key}"))
         self.stdout.write(self.style.SUCCESS("*" * 80))
