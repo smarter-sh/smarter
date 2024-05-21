@@ -7,6 +7,7 @@ from typing import Type
 
 import yaml
 from django.http import HttpResponseForbidden, JsonResponse
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
@@ -148,11 +149,22 @@ class CliBaseApiView(APIView, AccountMixin):
         model will be passed to a AbstractBroker for the manifest 'kind', which
         implements the broker service pattern for the underlying object.
         """
-        logger.info("authentication_classes: %s", self.authentication_classes)
-        logger.info("permission_classes: %s", self.permission_classes)
+
+        # TO DO: This is a temporary fix to mitigate a configuration issue
+        # where DRF is not properly authenticating the request. This is a
+        # temporary fix until we can properly configure the DRF authentication
         if not hasattr(request, "auth"):
-            logger.warning("No authentication scheme detected. headers: %s", request.headers)
-            return HttpResponseForbidden("You are not authenticated")
+            logger.info("authentication_classes: %s", self.authentication_classes)
+            logger.info("permission_classes: %s", self.permission_classes)
+            logger.warning(
+                "No authentication scheme detected in the request object. forcing authentication via SmarterTokenAuthentication."
+            )
+            request.auth = SmarterTokenAuthentication()
+            try:
+                user, _ = request.auth.authenticate(request)
+                request.user = user
+            except AuthenticationFailed:
+                return HttpResponseForbidden("You are not authenticated")
         if not request.user.is_authenticated:
             return HttpResponseForbidden("You are not authenticated")
 
