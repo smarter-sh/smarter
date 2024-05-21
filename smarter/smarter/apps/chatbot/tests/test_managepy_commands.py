@@ -7,7 +7,7 @@ import unittest
 
 from django.core.management import call_command
 
-from smarter.apps.account.models import Account, SmarterAuthToken
+from smarter.apps.account.models import Account
 from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey
 from smarter.apps.chatbot.signals import (
@@ -19,6 +19,7 @@ from smarter.apps.chatbot.signals import (
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
 from smarter.common.helpers.aws_helpers import aws_helper
+from smarter.lib.drf.models import SmarterAuthToken
 
 
 class ManageCommandCreatePluginTestCase(unittest.TestCase):

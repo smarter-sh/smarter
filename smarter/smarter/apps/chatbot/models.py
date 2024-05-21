@@ -12,7 +12,7 @@ from django.core.cache import cache
 from django.db import models
 
 # our stuff
-from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
+from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
@@ -20,6 +20,7 @@ from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.drf.models import SmarterAuthToken
 
 from .signals import (
     chatbot_dns_failed,

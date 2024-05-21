@@ -12,8 +12,9 @@ from django.test import RequestFactory
 
 # our stuff
 from smarter.lib.django.user import User
+from smarter.lib.drf.models import SmarterAuthToken
 
-from ..models import Account, SmarterAuthToken, UserProfile
+from ..models import Account, UserProfile
 from ..views.dashboard.api_keys import APIKeysView, APIKeyView
 
 
@@ -90,7 +91,6 @@ class TestAPIKeys(unittest.TestCase):
     def create_api_key(self):
         """Create an API Key."""
         api_key, _ = SmarterAuthToken.objects.create(
-            account=self.account,
             user=self.user,
             description="Test API Key",
             is_active=True,
