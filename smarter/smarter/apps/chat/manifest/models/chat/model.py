@@ -1,4 +1,4 @@
-"""Smarter API SmarterAuthToken Manifest"""
+"""Smarter API Chat Manifest"""
 
 from typing import ClassVar, Optional
 
@@ -8,28 +8,28 @@ from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.models import AbstractSAMBase
 
-from .metadata import SAMSmarterAuthTokenMetadata
-from .spec import SAMSmarterAuthTokenSpec
-from .status import SAMSmarterAuthTokenStatus
+from .metadata import SAMChatMetadata
+from .spec import SAMChatSpecConfig
+from .status import SAMChatStatus
 
 
 MODULE_IDENTIFIER = MANIFEST_KIND
 
 
-class SAMSmarterAuthToken(AbstractSAMBase):
-    """Smarter API Manifest - SmarterAuthToken"""
+class SAMChat(AbstractSAMBase):
+    """Smarter API Manifest - Chat"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
-    metadata: SAMSmarterAuthTokenMetadata = Field(
+    metadata: SAMChatMetadata = Field(
         ...,
         description=f"{class_identifier}.{SAMKeys.METADATA.value}[obj]: Required, the {MANIFEST_KIND} metadata.",
     )
-    spec: SAMSmarterAuthTokenSpec = Field(
+    spec: SAMChatSpecConfig = Field(
         ...,
         description=f"{class_identifier}.{SAMKeys.SPEC.value}[obj]: Required, the {MANIFEST_KIND} specification.",
     )
-    status: Optional[SAMSmarterAuthTokenStatus] = Field(
+    status: Optional[SAMChatStatus] = Field(
         ...,
         description=f"{class_identifier}.{SAMKeys.STATUS.value}[obj]: Optional, Read-only. Stateful status information about the {MANIFEST_KIND}.",
     )

@@ -1,53 +1,43 @@
 # pylint: disable=W0718
-"""Smarter API Plugin Manifest handler"""
+"""Smarter API Chat Manifest handler"""
 
+from django.forms.models import model_to_dict
 from django.http import HttpRequest, JsonResponse
-from taggit.models import Tag
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account
-from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
-from smarter.apps.plugin.plugin.base import PluginBase
-from smarter.apps.plugin.plugin.sql import PluginSql
-from smarter.apps.plugin.plugin.static import PluginStatic
+from smarter.apps.chat.manifest.models.chat.const import MANIFEST_KIND
+from smarter.apps.chat.manifest.models.chat.model import SAMChat
+from smarter.apps.chat.models import Chat
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.enum import SAMApiVersions, SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
-from ...models import PluginMeta
-from ...plugin.base import PluginBase
-from ..controller import PluginController
-from ..models.plugin.const import MANIFEST_KIND
-from ..models.plugin.model import SAMPlugin
-
 
 MAX_RESULTS = 1000
 
-PluginMap: dict[str, PluginBase] = {
-    SAMPluginMetadataClassValues.STATIC.value: PluginStatic,
-    SAMPluginMetadataClassValues.SQL.value: PluginSql,
-}
+
+class SAMChatBrokerError(SAMExceptionBase):
+    """Base exception for Smarter API Chat Broker handling."""
 
 
-class SAMPluginBrokerError(SAMExceptionBase):
-    """Base exception for Smarter API Plugin Broker handling."""
-
-
-class SAMPluginBroker(AbstractBroker, AccountMixin):
+class SAMChatBroker(AbstractBroker, AccountMixin):
     """
-    Smarter API Plugin Manifest Broker.This class is responsible for
-    - loading, validating and parsing the Smarter Api yaml Plugin manifests
+    Smarter API Chat Manifest Broker. This class is responsible for
+    - loading, validating and parsing the Smarter Api yaml Chat manifests
     - using the manifest to initialize the corresponding Pydantic model
 
-    The Plugin object provides the generic services for the Plugin, such as
-    instantiation, create, update, delete, etc.
+    This Broker class interacts with the collection of Django ORM models that
+    represent the Smarter API SAMChat manifests. The Broker class
+    is responsible for creating, updating, deleting and querying the Django ORM
+    models, as well as transforming the Django ORM models into Pydantic models
+    for serialization and deserialization.
     """
 
-    # override the base abstract manifest model with the Plugin model
-    _manifest: SAMPlugin = None
-    _plugin: PluginBase = None
-    _plugin_meta: PluginMeta = None
+    # override the base abstract manifest model with the SAMChat model
+    _manifest: SAMChat = None
+    _chat: Chat = None
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -70,8 +60,8 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         the required top-level keys.
         """
         super().__init__(
-            account=account,
             api_version=api_version,
+            account=account,
             name=name,
             kind=kind,
             loader=loader,
@@ -81,27 +71,55 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         )
 
     @property
-    def plugin_meta(self) -> PluginMeta:
-        if self._plugin_meta:
-            return self._plugin_meta
-        if self.name and self.account:
-            try:
-                self._plugin_meta = PluginMeta.objects.get(account=self.account, name=self.name)
-            except PluginMeta.DoesNotExist:
-                pass
-        return self._plugin_meta
+    def chat(self) -> Chat:
+        """
+        The Chat object is a Django ORM model subclass from knox.AuthToken
+        that represents a Chat api key. The Chat object is
+        used to store the authentication hash and Smarter metadata for the Smarter API.
+        The Chat object is retrieved from the database, if it exists,
+        or created from the manifest if it does not.
+        """
+        if self._chat:
+            return self._chat
+        try:
+            self._chat = Chat.objects.get(user=self.user, description=self.manifest.metadata.description)
+        except Chat.DoesNotExist:
+            pass
 
-    @property
-    def plugin(self) -> PluginBase:
+        return self._chat
+
+    def manifest_to_django_orm(self) -> dict:
         """
-        PluginController() is a helper class to map the manifest model
-        metadata.pluginClass to an instance of the the correct plugin class.
+        Transform the Smarter API SAMChat manifest into a Django ORM model.
         """
-        if self._plugin:
-            return self._plugin
-        controller = PluginController(account=self.account, manifest=self.manifest, plugin_meta=self.plugin_meta)
-        self._plugin = controller.obj
-        return self._plugin
+        config_dump = self.manifest.spec.config.model_dump()
+        config_dump = self.camel_to_snake(config_dump)
+        return config_dump
+
+    def django_orm_to_manifest_dict(self) -> dict:
+        """
+        Transform the Django ORM model into a Pydantic readable
+        Smarter API SAMChat manifest dict.
+        """
+        chat_dict = model_to_dict(self.chat)
+        chat_dict = self.snake_to_camel(chat_dict)
+        chat_dict.pop("id")
+
+        data = {
+            SAMKeys.APIVERSION.value: self.api_version,
+            SAMKeys.KIND.value: self.kind,
+            SAMKeys.METADATA.value: {
+                SAMMetadataKeys.NAME.value: self.chat.name,
+                SAMMetadataKeys.DESCRIPTION.value: self.chat.description,
+                SAMMetadataKeys.VERSION.value: self.chat.version,
+            },
+            SAMKeys.SPEC.value: None,
+            SAMKeys.STATUS.value: {
+                "created": self.chat.created_at.isoformat(),
+                "modified": self.chat.updated_at.isoformat(),
+            },
+        }
+        return data
 
     ###########################################################################
     # Smarter abstract property implementations
@@ -111,10 +129,10 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> SAMPlugin:
+    def manifest(self) -> SAMChat:
         """
-        SAMPlugin() is a Pydantic model
-        that is used to represent the Smarter API Plugin manifest. The Pydantic
+        SAMChat() is a Pydantic model
+        that is used to represent the Smarter API SAMChat manifest. The Pydantic
         model is initialized with the data from the manifest loader, which is
         generally passed to the model constructor as **data. However, this top-level
         manifest model has to be explicitly initialized, whereas its child models
@@ -124,7 +142,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         if self._manifest:
             return self._manifest
         if self.loader:
-            self._manifest = SAMPlugin(
+            self._manifest = SAMChat(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
                 metadata=self.loader.manifest_metadata,
@@ -137,51 +155,38 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     # Smarter manifest abstract method implementations
     ###########################################################################
     def example_manifest(self, kwargs: dict = None) -> JsonResponse:
-        plugin_class: str = kwargs.get("plugin_class", SAMPluginMetadataClassValues.STATIC.value)
-        try:
-            Plugin = PluginMap[plugin_class]
-        except KeyError as e:
-            raise SAMPluginBrokerError(f"Plugin class {plugin_class} not found") from e
-
-        data = Plugin.example_manifest(kwargs=kwargs)
+        data = {
+            SAMKeys.APIVERSION.value: self.api_version,
+            SAMKeys.KIND.value: self.kind,
+            SAMKeys.METADATA.value: {
+                SAMMetadataKeys.NAME.value: "camelCaseName",
+                SAMMetadataKeys.DESCRIPTION.value: "An example Smarter API manifest for a Chat",
+                SAMMetadataKeys.VERSION.value: "1.0.0",
+            },
+            SAMKeys.SPEC.value: None,
+        }
         return self.success_response(operation=self.example_manifest.__name__, data=data)
 
     def get(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
-        name: str = kwargs.get("name", None)
-        all_objects: bool = kwargs.get("all_objects", False)
-        tags: str = kwargs.get("tags", None)
+
         data = []
+        chats = Chat.objects.filter(account=self.account)
 
-        # generate a QuerySet of PluginMeta objects that match our search criteria
-        if name:
-            plugins = PluginMeta.objects.filter(account=self.account, name=name)
-        else:
-            if all_objects:
-                plugins = PluginMeta.objects.filter(account=self.account)
-            else:
-                if tags:
-                    tags = Tag.objects.filter(name__in=tags)
-                    plugins = PluginMeta.objects.filter(account=self.account, tags__in=tags)[:MAX_RESULTS]
-                else:
-                    plugins = PluginMeta.objects.filter(account=self.account)[:MAX_RESULTS]
-
-        if not plugins.exists():
+        if not chats.exists():
             return self.not_found_response()
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
-        for plugin_meta in plugins:
-            controller = PluginController(account=self.account, plugin_meta=plugin_meta)
+        for chat in chats:
             try:
-                model_dump = controller.model_dump_json()
+                model_dump = chat.model_dump_json()
                 if not model_dump:
-                    raise SAMPluginBrokerError(f"Model dump failed for {self.kind} {plugin_meta.name}")
+                    raise SAMChatBrokerError(f"Model dump failed for {self.kind} {chat.id}")
                 data.append(model_dump)
             except Exception as e:
                 return self.err_response(self.get.__name__, e)
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
-            SAMMetadataKeys.NAME.value: name,
             SAMKeys.METADATA.value: {"count": len(data)},
             "kwargs": kwargs,
             "items": data,
@@ -189,34 +194,21 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         return self.success_response(operation=self.get.__name__, data=data)
 
     def apply(self, request: HttpRequest = None) -> JsonResponse:
-        try:
-            self.plugin.create()
-        except Exception as e:
-            return self.err_response("create", e)
-
-        if self.plugin.ready:
-            try:
-                self.plugin.save()
-                return self.success_response(operation=self.apply.__name__, data={})
-            except Exception as e:
-                return self.err_response(self.apply.__name__, e)
-        return self.not_ready_response()
+        return self.not_implemented_response()
 
     def describe(self, request: HttpRequest = None) -> JsonResponse:
-        if self.plugin.ready:
+        if self.chat:
             try:
-                data = self.plugin.to_json()
-                data["metadata"].pop("account")
-                data["metadata"].pop("author")
+                data = self.django_orm_to_manifest_dict()
                 return self.success_response(operation=self.describe.__name__, data=data)
             except Exception as e:
                 return self.err_response(self.describe.__name__, e)
         return self.not_ready_response()
 
     def delete(self, request: HttpRequest = None) -> JsonResponse:
-        if self.plugin.ready:
+        if self.chat:
             try:
-                self.plugin.delete()
+                self.chat.delete()
                 return self.success_response(operation=self.delete.__name__, data={})
             except Exception as e:
                 return self.err_response(self.delete.__name__, e)
@@ -226,4 +218,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         return self.not_implemented_response()
 
     def logs(self, request: HttpRequest = None) -> JsonResponse:
-        return self.not_implemented_response()
+        if self.chat:
+            data = {}
+            return self.success_response(operation=self.logs.__name__, data=data)
+        return self.not_ready_response()
