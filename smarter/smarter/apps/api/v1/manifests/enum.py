@@ -3,6 +3,9 @@
 from smarter.apps.account.manifest.models.account.const import (
     MANIFEST_KIND as ACCOUNT_MANIFEST_KIND,
 )
+from smarter.apps.account.manifest.models.user.const import (
+    MANIFEST_KIND as USER_MANIFEST_KIND,
+)
 from smarter.apps.chat.manifest.models.chat.const import (
     MANIFEST_KIND as CHAT_MANIFEST_KIND,
 )
@@ -27,7 +30,7 @@ class SAMKinds(SmarterEnumAbstract):
     PLUGIN = PLUGIN_MANIFEST_KIND
     ACCOUNT = ACCOUNT_MANIFEST_KIND
     APIKEY = AUTH_TOKEN_MANIFEST_KIND
-    USER = "User"
+    USER = USER_MANIFEST_KIND
     CHAT = CHAT_MANIFEST_KIND
     CHATBOT = CHATBOT_MANIFEST_KIND
     SQLCONNECTION = SQLCONNECTION_MANIFEST_KIND
