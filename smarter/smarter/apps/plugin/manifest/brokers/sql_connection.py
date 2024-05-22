@@ -8,7 +8,7 @@ from smarter.apps.account.mixins import Account, AccountMixin, UserProfile
 from smarter.apps.plugin.models import PluginDataSqlConnection
 from smarter.lib.django.user import UserType
 from smarter.lib.manifest.broker import AbstractBroker
-from smarter.lib.manifest.enum import SAMApiVersions
+from smarter.lib.manifest.enum import SAMApiVersions, SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -145,10 +145,9 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def get(
-        self, request: HttpRequest = None, name: str = None, all_objects: bool = False, tags: str = None
-    ) -> JsonResponse:
+    def get(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
 
+        name: str = kwargs.get("name", None)
         data = []
 
         # generate a QuerySet of PluginDataSqlConnection objects that match our search criteria
@@ -172,12 +171,11 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
             except Exception as e:
                 return self.err_response(self.get.__name__, e)
         data = {
-            "apiVersion": self.api_version,
-            "kind": self.kind,
-            "name": name,
-            "all_objects": all_objects,
-            "tags": tags,
-            "metadata": {"count": len(data)},
+            SAMKeys.APIVERSION.value: self.api_version,
+            SAMKeys.KIND.value: self.kind,
+            SAMMetadataKeys.NAME.value: name,
+            SAMKeys.METADATA.value: {"count": len(data)},
+            "kwargs": kwargs,
             "items": data,
         }
         return self.success_response(operation=self.get.__name__, data=data)

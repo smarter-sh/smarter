@@ -13,15 +13,14 @@ from rest_framework.views import APIView
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.utils import user_profile_for_user
+from smarter.apps.api.v1.cli.brokers import BROKERS
+from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
 from smarter.common.exceptions import SmarterExceptionBase, error_response_factory
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.exceptions import SAMBadRequestError
 from smarter.lib.manifest.loader import SAMLoader
-
-from ...manifests.enum import SAMKinds
-from ...manifests.version import SMARTER_API_VERSION
-from ..brokers import BROKERS
 
 
 logger = logging.getLogger(__name__)

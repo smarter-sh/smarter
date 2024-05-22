@@ -1,5 +1,8 @@
 """Smarter API V0 Manifests Enumerations."""
 
+from smarter.apps.chat.manifest.models.chat.const import (
+    MANIFEST_KIND as CHAT_MANIFEST_KIND,
+)
 from smarter.apps.chatbot.manifest.models.chatbot.const import (
     MANIFEST_KIND as CHATBOT_MANIFEST_KIND,
 )
@@ -22,9 +25,10 @@ class SAMKinds(SmarterEnumAbstract):
     ACCOUNT = "Account"
     APIKEY = AUTH_TOKEN_MANIFEST_KIND
     USER = "User"
-    CHAT = "Chat"
+    CHAT = CHAT_MANIFEST_KIND
     CHATBOT = CHATBOT_MANIFEST_KIND
     SQLCONNECTION = SQLCONNECTION_MANIFEST_KIND
+    APICONNECTION = "PluginDataApiConnection"
 
     @classmethod
     def all_slugs(cls):

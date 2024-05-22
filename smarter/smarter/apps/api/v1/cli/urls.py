@@ -32,7 +32,6 @@ urlpatterns = [
     path("deploy/<str:kind>/<str:name>/", ApiV1CliDeployApiView.as_view(), name="api_v1_cli_deploy_view"),
     path("describe/<str:kind>/<str:name>/", ApiV1CliDescribeApiView.as_view(), name="api_v1_cli_describe_view"),
     path("get/<str:kind>/", ApiV1CliGetApiView.as_view(), name="api_v1_cli_get_view"),
-    path("get/<str:kind>/<str:name>", ApiV1CliGetApiView.as_view(), name="api_v1_cli_get_view"),
     path("logs/<str:kind>/<str:name>/", ApiV1CliLogsApiView.as_view(), name="api_v1_cli_logs_kind_name_view"),
     path("logs/<str:kind>/", ApiV1CliLogsApiView.as_view(), name="api_v1_cli_logs_kind_view"),
     path("logs/", ApiV1CliLogsApiView.as_view(), name="api_v1_cli_logs_view"),

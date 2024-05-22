@@ -1,7 +1,7 @@
 """Smarter API SmarterAuthToken - SmarterAuthToken.spec"""
 
 import os
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 from pydantic import Field
 
@@ -32,7 +32,7 @@ class SAMSmarterAuthTokenSpecConfig(AbstractSAMSpecBase):
     )
 
 
-class SAMSAMSmarterAuthTokenSpecConfigSpec(AbstractSAMSpecBase):
+class SAMSmarterAuthTokenSpec(AbstractSAMSpecBase):
     """Smarter API SmarterAuthToken Manifest SmarterAuthToken.spec"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER

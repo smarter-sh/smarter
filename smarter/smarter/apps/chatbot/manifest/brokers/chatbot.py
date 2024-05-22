@@ -250,11 +250,11 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         }
         return self.success_response(operation=self.example_manifest.__name__, data=data)
 
-    def get(
-        self, request: HttpRequest = None, name: str = None, all_objects: bool = False, tags: str = None
-    ) -> JsonResponse:
-
+    def get(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+        # name: str = None, all_objects: bool = False, tags: str = None
         data = []
+        name: str = kwargs.get("name", None)
+        all_objects: bool = kwargs.get("all", False)
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
         if name:
@@ -279,9 +279,8 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMMetadataKeys.NAME.value: name,
-            "all_objects": all_objects,
-            SAMMetadataKeys.TAGS.value: tags,
             SAMKeys.METADATA.value: {"count": len(data)},
+            "kwargs": kwargs,
             "items": data,
         }
         return self.success_response(operation=self.get.__name__, data=data)

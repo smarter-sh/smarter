@@ -188,18 +188,10 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         }
         return self.success_response(operation=self.example_manifest.__name__, data=data)
 
-    def get(
-        self, request: HttpRequest = None, name: str = None, all_objects: bool = False, tags: str = None
-    ) -> JsonResponse:
+    def get(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
 
         data = []
-
-        # generate a QuerySet of PluginMeta objects that match our search criteria
-        if name:
-            smarter_auth_tokens = SmarterAuthToken.objects.filter(account=self.account, name=name)
-        else:
-            if all_objects:
-                smarter_auth_tokens = SmarterAuthToken.objects.filter(account=self.account)
+        smarter_auth_tokens = SmarterAuthToken.objects.filter(account=self.account)
 
         if not smarter_auth_tokens.exists():
             return self.not_found_response()
@@ -216,10 +208,8 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
-            SAMMetadataKeys.NAME.value: name,
-            "all_objects": all_objects,
-            SAMMetadataKeys.TAGS.value: tags,
             SAMKeys.METADATA.value: {"count": len(data)},
+            "kwargs": kwargs,
             "items": data,
         }
         return self.success_response(operation=self.get.__name__, data=data)

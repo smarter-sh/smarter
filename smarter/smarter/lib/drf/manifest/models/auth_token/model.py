@@ -9,7 +9,7 @@ from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.models import AbstractSAMBase
 
 from .metadata import SAMSmarterAuthTokenMetadata
-from .spec import SAMSAMSmarterAuthTokenSpecConfigSpec
+from .spec import SAMSmarterAuthTokenSpec
 from .status import SAMSmarterAuthTokenStatus
 
 
@@ -25,7 +25,7 @@ class SAMSmarterAuthToken(AbstractSAMBase):
         ...,
         description=f"{class_identifier}.{SAMKeys.METADATA.value}[obj]: Required, the {MANIFEST_KIND} metadata.",
     )
-    spec: SAMSAMSmarterAuthTokenSpecConfigSpec = Field(
+    spec: SAMSmarterAuthTokenSpec = Field(
         ...,
         description=f"{class_identifier}.{SAMKeys.SPEC.value}[obj]: Required, the {MANIFEST_KIND} specification.",
     )
