@@ -34,6 +34,7 @@ class ApiV1TestBase(unittest.TestCase):
         self.user_profile = UserProfile.objects.create(user=self.user, account=self.account)
 
         self.token_record, self.token_key = SmarterAuthToken.objects.create(
+            name="testToken" + hash_suffix,
             user=self.user,
             description="testToken" + hash_suffix,
         )

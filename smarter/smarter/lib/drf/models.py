@@ -37,6 +37,7 @@ class SmarterAuthToken(AuthToken, TimestampedModel):
         verbose_name_plural = "API Keys"
 
     key_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    name = models.CharField(max_length=255)
     description = models.CharField(max_length=255, blank=True, null=True)
     last_used_at = models.DateTimeField(blank=True, null=True)
     is_active = models.BooleanField(default=True)

@@ -1,3 +1,4 @@
+# pylint: disable=W0613
 """Tests for manage.py create_plugin."""
 
 import hashlib
@@ -22,6 +23,7 @@ from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.lib.drf.models import SmarterAuthToken
 
 
+# pylint: disable=too-many-instance-attributes
 class ManageCommandCreatePluginTestCase(unittest.TestCase):
     """Tests for manage.py create_plugin."""
 
@@ -56,7 +58,7 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
         hashed_slug = hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:16]
         self.user, self.account, self.user_profile = admin_user_factory()
         self.auth_token, self.secret_key = SmarterAuthToken.objects.create(
-            account=self.account, user=self.user, description="unit test"
+            name="testKey", user=self.user, description="unit test"
         )
         self.chatbot = ChatBot.objects.create(
             account=self.account,

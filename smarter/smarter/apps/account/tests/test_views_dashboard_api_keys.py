@@ -91,6 +91,7 @@ class TestAPIKeys(unittest.TestCase):
     def create_api_key(self):
         """Create an API Key."""
         api_key, _ = SmarterAuthToken.objects.create(
+            name="testAPIKey",
             user=self.user,
             description="Test API Key",
             is_active=True,

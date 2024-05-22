@@ -124,3 +124,9 @@ class SAMChatbotSpec(AbstractSAMSpecBase):
             f"{MANIFEST_KIND}."
         ),
     )
+    apiKey: Optional[str] = Field(
+        None,
+        description=(
+            f"{class_identifier}.api_key[str]. Optional. The name of the API key that this chatbot uses for authentication."
+        ),
+    )

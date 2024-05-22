@@ -9,7 +9,12 @@ from smarter.apps.account.models import Account
 from smarter.apps.chatbot.manifest.enum import SAMChatbotSpecKeys
 from smarter.apps.chatbot.manifest.models.chatbot.const import MANIFEST_KIND
 from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
-from smarter.apps.chatbot.models import ChatBot, ChatBotFunctions, ChatBotPlugin
+from smarter.apps.chatbot.models import (
+    ChatBot,
+    ChatBotAPIKey,
+    ChatBotFunctions,
+    ChatBotPlugin,
+)
 from smarter.apps.plugin.utils import get_plugin_examples_by_name
 from smarter.common.conf import SettingsDefaults
 from smarter.lib.manifest.broker import AbstractBroker
@@ -41,6 +46,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
     # override the base abstract manifest model with the Chatbot model
     _manifest: SAMChatbot = None
     _chatbot: ChatBot = None
+    _chatbot_api_key: ChatBotAPIKey = None
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -91,6 +97,21 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
 
         return self._chatbot
 
+    @property
+    def chatbot_api_key(self) -> ChatBotAPIKey:
+        """
+        The ChatBotAPIKey object is a Django ORM model that represents the API Key
+        used by the ChatBot for authentication. The ChatBotAPIKey object is used to
+        store the API Key in the database.
+        """
+        if self._chatbot_api_key:
+            return self._chatbot_api_key
+        try:
+            self._chatbot_api_key = ChatBotAPIKey.objects.get(chatbot=self.chatbot)
+        except ChatBotAPIKey.DoesNotExist:
+            return None
+        return self._chatbot_api_key
+
     def manifest_to_django_orm(self) -> dict:
         """
         Transform the Smarter API Chatbot manifest into a Django ORM model.
@@ -128,14 +149,15 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {
-                "name": self.chatbot.name,
-                "description": self.chatbot.description,
-                "version": self.chatbot.version,
+                SAMMetadataKeys.NAME.value: self.chatbot.name,
+                SAMMetadataKeys.DESCRIPTION.value: self.chatbot.description,
+                SAMMetadataKeys.VERSION.value: self.chatbot.version,
             },
             SAMKeys.SPEC.value: {
                 SAMChatbotSpecKeys.CONFIG.value: chatbot_dict,
                 SAMChatbotSpecKeys.PLUGINS.value: plugin_names,
                 SAMChatbotSpecKeys.FUNCTIONS.value: function_names,
+                SAMChatbotSpecKeys.APIKEY.value: self.chatbot_api_key.api_key.name,
             },
             SAMKeys.STATUS.value: {
                 "created": self.chatbot.created_at.isoformat(),
@@ -223,6 +245,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 },
                 SAMChatbotSpecKeys.PLUGINS.value: get_plugin_examples_by_name(),
                 SAMChatbotSpecKeys.FUNCTIONS.value: ["weather"],
+                SAMChatbotSpecKeys.APIKEY.value: "camelCaseNameOfApiKey",
             },
         }
         return self.success_response(operation=self.example_manifest.__name__, data=data)

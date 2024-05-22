@@ -13,7 +13,8 @@ from smarter.apps.plugin.manifest.brokers.sql_connection import (
     SAMPluginDataSqlConnectionBroker,
 )
 from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
-from smarter.common.utils import dict_is_contained_in
+
+# from smarter.common.utils import dict_is_contained_in
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.unittest.utils import get_readonly_yaml_file
 
@@ -84,7 +85,8 @@ class TestSAMPluginSql(unittest.TestCase):
         pydantic_model = SAMPlugin(**loader.pydantic_model_dump())
 
         # dump the pydantic model to a dictionary
-        round_trip_dict = pydantic_model.model_dump()
+        # round_trip_dict = pydantic_model.model_dump()
+        pydantic_model.model_dump()
 
         # assert that everything in content is in round_trip_dict
         print("FIX NOTE: CANNOT ROUND-TRIP THE PLUGIN MANIFEST")

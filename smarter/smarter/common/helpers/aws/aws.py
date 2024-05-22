@@ -28,7 +28,7 @@ from .exceptions import AWSNotReadyError
 logger = logging.getLogger(__name__)
 
 
-# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-instance-attributes,too-many-public-methods
 class AWSBase:
     """
     AWS helper base class. Responsible for

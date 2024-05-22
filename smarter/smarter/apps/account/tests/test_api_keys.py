@@ -71,6 +71,7 @@ class TestSmarterAuthToken(unittest.TestCase):
 
         with self.assertRaises(SmarterBusinessRuleViolation):
             SmarterAuthToken.objects.create(
+                name="testToken",
                 user=self.non_admin_user,
                 description="testToken" + self.hash_suffix,
             )
