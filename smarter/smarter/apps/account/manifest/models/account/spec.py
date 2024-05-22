@@ -73,5 +73,5 @@ class SAMAccountSpec(AbstractSAMSpecBase):
 
     config: SAMAccountSpecConfig = Field(
         ...,
-        description=(f"{class_identifier}.config[object]. Optional. The configuration for the Account."),
+        description=(f"{class_identifier}.config[object]. The configuration for the {MANIFEST_KIND}."),
     )

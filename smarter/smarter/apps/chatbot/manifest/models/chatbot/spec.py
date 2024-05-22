@@ -111,7 +111,7 @@ class SAMChatbotSpec(AbstractSAMSpecBase):
 
     config: SAMChatbotSpecConfig = Field(
         ...,
-        description=(f"{class_identifier}.config[object]. Optional. The configuration for the chatbot."),
+        description=(f"{class_identifier}.config[object]. The configuration for the {MANIFEST_KIND}."),
     )
     plugins: Optional[List[str]] = Field(
         None,

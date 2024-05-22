@@ -146,6 +146,9 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         data = Plugin.example_manifest(kwargs=kwargs)
         return self.success_response(operation=self.example_manifest.__name__, data=data)
 
+    def get_model_titles(self) -> list[dict[str, str]]:
+        return [{"name": f, "type": str(t)} for f, (_, t) in self.plugin.manifest.__annotations__.items()]
+
     def get(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         name: str = kwargs.get("name", None)
         all_objects: bool = kwargs.get("all_objects", False)
@@ -184,7 +187,10 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
             SAMMetadataKeys.NAME.value: name,
             SAMKeys.METADATA.value: {"count": len(data)},
             "kwargs": kwargs,
-            "items": data,
+            "data": {
+                "titles": self.get_model_titles(),
+                "items": data,
+            },
         }
         return self.success_response(operation=self.get.__name__, data=data)
 

@@ -125,6 +125,10 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
     # Smarter abstract property implementations
     ###########################################################################
     @property
+    def model_class(self) -> Chat:
+        return Chat
+
+    @property
     def kind(self) -> str:
         return MANIFEST_KIND
 
@@ -189,7 +193,10 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {"count": len(data)},
             "kwargs": kwargs,
-            "items": data,
+            "data": {
+                "titles": self.get_model_titles(),
+                "items": data,
+            },
         }
         return self.success_response(operation=self.get.__name__, data=data)
 

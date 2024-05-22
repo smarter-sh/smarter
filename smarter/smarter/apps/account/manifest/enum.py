@@ -10,3 +10,9 @@ class SAMAccountSpecKeys(SmarterEnumAbstract):
     """Smarter API Plugin Spec keys enumeration."""
 
     CONFIG = "config"
+
+
+class SAMUserSpecKeys(SmarterEnumAbstract):
+    """Smarter API User Spec keys enumeration."""
+
+    CONFIG = "config"

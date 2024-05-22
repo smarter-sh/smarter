@@ -170,6 +170,10 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
+    @property
+    def model_class(self) -> SAMSmarterAuthToken:
+        return SAMSmarterAuthToken
+
     def example_manifest(self, kwargs: dict = None) -> JsonResponse:
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
@@ -210,7 +214,10 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {"count": len(data)},
             "kwargs": kwargs,
-            "items": data,
+            "data": {
+                "titles": self.get_model_titles(),
+                "items": data,
+            },
         }
         return self.success_response(operation=self.get.__name__, data=data)
 

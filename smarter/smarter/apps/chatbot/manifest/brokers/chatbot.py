@@ -211,6 +211,10 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
+    @property
+    def model_class(self) -> ChatBot:
+        return ChatBot
+
     def example_manifest(self, kwargs: dict = None) -> JsonResponse:
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
@@ -281,7 +285,10 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
             SAMMetadataKeys.NAME.value: name,
             SAMKeys.METADATA.value: {"count": len(data)},
             "kwargs": kwargs,
-            "items": data,
+            "data": {
+                "titles": self.get_model_titles(),
+                "items": data,
+            },
         }
         return self.success_response(operation=self.get.__name__, data=data)
 
