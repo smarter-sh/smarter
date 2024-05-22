@@ -1,14 +1,15 @@
 # pylint: disable=W0718
-"""Smarter API Account Manifest handler"""
+"""Smarter API User Manifest handler"""
 
 from django.forms.models import model_to_dict
 from django.http import HttpRequest, JsonResponse
 
-from smarter.apps.account.manifest.enum import SAMAccountSpecKeys
-from smarter.apps.account.manifest.models.account.const import MANIFEST_KIND
-from smarter.apps.account.manifest.models.account.model import SAMAccount
+from smarter.apps.account.manifest.enum import SAMUserSpecKeys
+from smarter.apps.account.manifest.models.user.const import MANIFEST_KIND
+from smarter.apps.account.manifest.models.user.model import SAMUser
 from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Account
+from smarter.apps.account.models import Account, UserProfile
+from smarter.lib.django.user import User, UserType
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.enum import SAMApiVersions, SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.exceptions import SAMExceptionBase
@@ -18,26 +19,26 @@ from smarter.lib.manifest.loader import SAMLoader
 MAX_RESULTS = 1000
 
 
-class SAMAccountBrokerError(SAMExceptionBase):
-    """Base exception for Smarter API Account Broker handling."""
+class SAMUserBrokerError(SAMExceptionBase):
+    """Base exception for Smarter API User Broker handling."""
 
 
-class SAMAccountBroker(AbstractBroker, AccountMixin):
+class SAMUserBroker(AbstractBroker, AccountMixin):
     """
-    Smarter API Account Manifest Broker. This class is responsible for
-    - loading, validating and parsing the Smarter Api yaml Account manifests
+    Smarter API User Manifest Broker. This class is responsible for
+    - loading, validating and parsing the Smarter Api yaml User manifests
     - using the manifest to initialize the corresponding Pydantic model
 
     This Broker class interacts with the collection of Django ORM models that
-    represent the Smarter API Account manifests. The Broker class is responsible
+    represent the Smarter API User manifests. The Broker class is responsible
     for creating, updating, deleting and querying the Django ORM models, as well
     as transforming the Django ORM models into Pydantic models for serialization
     and deserialization.
     """
 
-    # override the base abstract manifest model with the Account model
-    _manifest: SAMAccount = None
-    _account: Account = None
+    # override the base abstract manifest model with the User model
+    _manifest: SAMUser = None
+    _user: UserType = None
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -70,47 +71,54 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
             url=url,
         )
 
+    @property
+    def user(self) -> UserType:
+        """
+        The User object is a Django ORM model that represents the Smarter User.
+        The User object is used to store the configuration and state of the User
+        in the database. The User object is retrieved from the database, if it exists,
+        or created from the manifest if it does not.
+        """
+        if self._user:
+            return self._user
+        try:
+            self._user = User.objects.get(account=self.account, username=self.manifest.metadata.username)
+        except User.DoesNotExist:
+            data = self.manifest_to_django_orm()
+            self._user = User.objects.create(**data)
+
+        return self._user
+
     def manifest_to_django_orm(self) -> dict:
         """
-        Transform the Smarter API Account manifest into a Django ORM model.
+        Transform the Smarter API User manifest into a Django ORM model.
         """
         config_dump = self.manifest.spec.config.model_dump()
         config_dump = self.camel_to_snake(config_dump)
-        return {
-            "account": self.account,
-            "name": self.manifest.metadata.name,
-            "description": self.manifest.metadata.description,
-            "version": self.manifest.metadata.version,
-            **config_dump,
-        }
+        return config_dump
 
     def django_orm_to_manifest_dict(self) -> dict:
         """
         Transform the Django ORM model into a Pydantic readable
-        Smarter API Account manifest dict.
+        Smarter API User manifest dict.
         """
-        account_dict = model_to_dict(self.account)
-        account_dict = self.snake_to_camel(account_dict)
-        account_dict.pop("id")
-        account_dict.pop("account")
-        account_dict.pop("name")
-        account_dict.pop("description")
-        account_dict.pop("version")
+        user_dict = model_to_dict(self.user)
+        user_dict = self.snake_to_camel(user_dict)
+        user_dict.pop("id")
 
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: self.account.name,
-                SAMMetadataKeys.DESCRIPTION.value: self.account.description,
-                SAMMetadataKeys.VERSION.value: self.account.version,
+                SAMMetadataKeys.NAME.value: self.user.username,
+                SAMMetadataKeys.DESCRIPTION.value: self.user.get_full_name(),
+                SAMMetadataKeys.VERSION.value: "1.0.0",
             },
             SAMKeys.SPEC.value: {
-                SAMAccountSpecKeys.CONFIG.value: account_dict,
+                SAMUserSpecKeys.CONFIG.value: user_dict,
             },
             SAMKeys.STATUS.value: {
-                "created": self.account.created_at.isoformat(),
-                "modified": self.account.updated_at.isoformat(),
+                "dateJoined": self.user.date_joined.isoformat(),
             },
         }
         return data
@@ -123,10 +131,10 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> SAMAccount:
+    def manifest(self) -> SAMUser:
         """
-        SAMAccount() is a Pydantic model
-        that is used to represent the Smarter API Account manifest. The Pydantic
+        SAMUser() is a Pydantic model
+        that is used to represent the Smarter API User manifest. The Pydantic
         model is initialized with the data from the manifest loader, which is
         generally passed to the model constructor as **data. However, this top-level
         manifest model has to be explicitly initialized, whereas its child models
@@ -136,7 +144,7 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
         if self._manifest:
             return self._manifest
         if self.loader:
-            self._manifest = SAMAccount(
+            self._manifest = SAMUser(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
                 metadata=self.loader.manifest_metadata,
@@ -149,66 +157,49 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
     # Smarter manifest abstract method implementations
     ###########################################################################
     @property
-    def model_class(self) -> Account:
-        return Account
+    def model_class(self):
+        return User
 
     def example_manifest(self, kwargs: dict = None) -> JsonResponse:
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: "ExampleAccount",
-                SAMMetadataKeys.DESCRIPTION.value: "an example Account manifest",
+                SAMMetadataKeys.NAME.value: "ExampleUser",
+                SAMMetadataKeys.DESCRIPTION.value: "an example user manifest for the Smarter API User",
                 SAMMetadataKeys.VERSION.value: "1.0.0",
-                "accountNumber": self.account.account_number,
             },
             SAMKeys.SPEC.value: {
-                SAMAccountSpecKeys.CONFIG.value: {
-                    "companyName": self.account.company_name or "Humble Geniuses, Inc.",
-                    "phoneNumber": self.account.phone_number or "617-555-1212",
-                    "address1": self.account.address1 or "1 Main St",
-                    "address2": self.account.address2 or "Suite 100",
-                    "city": self.account.city or "Cambridge",
-                    "state": self.account.state or "MA",
-                    "postalCode": self.account.postal_code or "02139",
-                    "country": self.account.country or "USA",
-                    "language": self.account.language or "en-US",
-                    "timezone": self.account.timezone or "America/New_York",
-                    "currency": self.account.currency or "USD",
+                SAMUserSpecKeys.CONFIG.value: {
+                    "firstName": self.user.first_name or "John",
+                    "lastName": self.user.last_name or "Doe",
+                    "email": self.user.email or "joe@mail.com",
+                    "isStaff": self.user.is_staff or False,
+                    "isActive": self.user.is_active or True,
                 },
             },
         }
         return self.success_response(operation=self.example_manifest.__name__, data=data)
 
     def get(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
-        # name: str = None, all_objects: bool = False, tags: str = None
         data = []
-        name: str = kwargs.get("name", None)
-        all_objects: bool = kwargs.get("all", False)
-
-        # generate a QuerySet of PluginMeta objects that match our search criteria
-        if name:
-            accounts = Account.objects.filter(account=self.account, name=name)
-        else:
-            if all_objects:
-                accounts = Account.objects.filter(account=self.account)
-
-        if not accounts.exists():
+        user_profiles = UserProfile.objects.filter(account=self.account)
+        users = [user_profile.user for user_profile in user_profiles]
+        if not users.exists():
             return self.not_found_response()
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
-        for account in accounts:
+        for user in users:
             try:
-                model_dump = account.model_dump_json()
+                model_dump = user.model_dump_json()
                 if not model_dump:
-                    raise SAMAccountBrokerError(f"Model dump failed for {self.kind} {account.name}")
+                    raise SAMUserBrokerError(f"Model dump failed for {self.kind} {user.name}")
                 data.append(model_dump)
             except Exception as e:
                 return self.err_response(self.get.__name__, e)
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
-            SAMMetadataKeys.NAME.value: name,
             SAMKeys.METADATA.value: {"count": len(data)},
             "kwargs": kwargs,
             "data": {
@@ -222,14 +213,14 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
         try:
             data = self.manifest_to_django_orm()
             for key, value in data.items():
-                setattr(self.account, key, value)
-            self.account.save()
+                setattr(self.user, key, value)
+            self.user.save()
         except Exception as e:
             return self.err_response(self.apply.__name__, e)
         return self.success_response(operation=self.apply.__name__, data={})
 
     def describe(self, request: HttpRequest = None) -> JsonResponse:
-        if self.account:
+        if self.user:
             try:
                 data = self.django_orm_to_manifest_dict()
                 return self.success_response(operation=self.describe.__name__, data=data)
@@ -238,19 +229,19 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
         return self.not_ready_response()
 
     def delete(self, request: HttpRequest = None) -> JsonResponse:
-        if self.account:
+        if self.user:
             try:
-                self.account.delete()
+                self.user.delete()
                 return self.success_response(operation=self.delete.__name__, data={})
             except Exception as e:
                 return self.err_response(self.delete.__name__, e)
         return self.not_ready_response()
 
     def deploy(self, request: HttpRequest = None) -> JsonResponse:
-        if self.account:
+        if self.user:
             try:
-                self.account.deployed = True
-                self.account.save()
+                self.user.deployed = True
+                self.user.save()
                 return self.success_response(operation=self.deploy.__name__, data={})
             except Exception as e:
                 return self.err_response(self.deploy.__name__, e)

@@ -76,6 +76,10 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
     # Smarter abstract property implementations
     ###########################################################################
     @property
+    def model_class(self) -> PluginDataSqlConnection:
+        return PluginDataSqlConnection
+
+    @property
     def kind(self) -> str:
         return MANIFEST_KIND
 
@@ -176,7 +180,10 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
             SAMMetadataKeys.NAME.value: name,
             SAMKeys.METADATA.value: {"count": len(data)},
             "kwargs": kwargs,
-            "items": data,
+            "data": {
+                "titles": self.get_model_titles(),
+                "items": data,
+            },
         }
         return self.success_response(operation=self.get.__name__, data=data)
 

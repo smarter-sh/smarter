@@ -21,13 +21,13 @@ class SAMSmarterAuthTokenSpecConfig(AbstractSAMSpecBase):
     isActive: bool = (
         Field(
             ...,
-            description=(f"{class_identifier}.isActive[bool]. Required. Whether the SmarterAuthToken is activated."),
+            description=(f"{class_identifier}.isActive[bool]. Required. Whether the {MANIFEST_KIND} is activated."),
         ),
     )
     username: str = Field(
         ...,
         description=(
-            f"{class_identifier}.username[str]. The Smarter username to which this SmarterAuthToken is attached."
+            f"{class_identifier}.username[str]. The Smarter username to which this {MANIFEST_KIND} is attached."
         ),
     )
 
@@ -39,5 +39,5 @@ class SAMSmarterAuthTokenSpec(AbstractSAMSpecBase):
 
     config: SAMSmarterAuthTokenSpecConfig = Field(
         ...,
-        description=(f"{class_identifier}.config[object]. The configuration for the SmarterAuthToken."),
+        description=(f"{class_identifier}.config[object]. The configuration for the {MANIFEST_KIND}."),
     )
