@@ -1,5 +1,8 @@
 """Smarter API V0 Manifests Enumerations."""
 
+from smarter.apps.account.manifest.models.account.const import (
+    MANIFEST_KIND as ACCOUNT_MANIFEST_KIND,
+)
 from smarter.apps.chat.manifest.models.chat.const import (
     MANIFEST_KIND as CHAT_MANIFEST_KIND,
 )
@@ -22,7 +25,7 @@ class SAMKinds(SmarterEnumAbstract):
     """Smarter manifest kinds enumeration."""
 
     PLUGIN = PLUGIN_MANIFEST_KIND
-    ACCOUNT = "Account"
+    ACCOUNT = ACCOUNT_MANIFEST_KIND
     APIKEY = AUTH_TOKEN_MANIFEST_KIND
     USER = "User"
     CHAT = CHAT_MANIFEST_KIND
