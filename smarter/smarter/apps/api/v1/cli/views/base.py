@@ -140,6 +140,7 @@ class CliBaseApiView(APIView, AccountMixin):
             self._manifest_kind = self.loader.manifest_kind if self.loader else None
         return self._manifest_kind
 
+    # pylint: disable=too-many-return-statements,too-many-branches
     def dispatch(self, request, *args, **kwargs):
         """
         The http request body is expected to contain the manifest text

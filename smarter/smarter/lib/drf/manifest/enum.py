@@ -1,4 +1,4 @@
-"""Smarter API PLugin Manifest - enumerated datatypes."""
+"""Smarter API SmarterAuthToken Manifest - enumerated datatypes."""
 
 from smarter.lib.manifest.enum import SmarterEnumAbstract
 
@@ -6,10 +6,7 @@ from smarter.lib.manifest.enum import SmarterEnumAbstract
 ###############################################################################
 # Enums for manifest keys in error handlers and other on-screen messages
 ###############################################################################
-class SAMChatbotSpecKeys(SmarterEnumAbstract):
-    """Smarter API Plugin Spec keys enumeration."""
+class SAMSmarterAuthTokenSpecKeys(SmarterEnumAbstract):
+    """Smarter API SmarterAuthToken Spec Keys"""
 
     CONFIG = "config"
-    PLUGINS = "plugins"
-    FUNCTIONS = "functions"
-    APIKEY = "apiKey"

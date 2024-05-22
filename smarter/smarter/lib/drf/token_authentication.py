@@ -1,6 +1,7 @@
 """knox TokenAuthentication subclass that checks if the token is active."""
 
 import logging
+import time
 
 from knox.auth import TokenAuthentication
 from rest_framework.exceptions import AuthenticationFailed
@@ -28,8 +29,12 @@ class SmarterTokenAuthentication(TokenAuthentication):
         # next, we need to ensure that the token is active, otherwise
         # we should raise an exception that exactly matches the one
         # raised by the default token authentication
-        if not SmarterAuthToken.objects.filter(token_key=auth_token.token_key, is_active=True).exists():
+        if not auth_token.is_active:
             raise AuthenticationFailed
+
+        # update the last used time for the token
+        auth_token.last_used_at = time.time()
+        auth_token.save()
 
         # if the token is active, we can return the user and token as a tuple
         # exactly as the default token authentication does.

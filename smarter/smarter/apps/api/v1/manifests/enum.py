@@ -1,10 +1,16 @@
 """Smarter API V0 Manifests Enumerations."""
 
+from smarter.apps.chatbot.manifest.models.chatbot.const import (
+    MANIFEST_KIND as CHATBOT_MANIFEST_KIND,
+)
 from smarter.apps.plugin.manifest.models.plugin.const import (
-    MANIFEST_KIND as PLUGIN_KIND,
+    MANIFEST_KIND as PLUGIN_MANIFEST_KIND,
 )
 from smarter.apps.plugin.manifest.models.sql_connection.const import (
-    MANIFEST_KIND as SQL_CONNECTION_KIND,
+    MANIFEST_KIND as SQLCONNECTION_MANIFEST_KIND,
+)
+from smarter.lib.drf.manifest.models.auth_token.const import (
+    MANIFEST_KIND as AUTH_TOKEN_MANIFEST_KIND,
 )
 from smarter.lib.manifest.enum import SmarterEnumAbstract
 
@@ -12,12 +18,13 @@ from smarter.lib.manifest.enum import SmarterEnumAbstract
 class SAMKinds(SmarterEnumAbstract):
     """Smarter manifest kinds enumeration."""
 
-    PLUGIN = PLUGIN_KIND
+    PLUGIN = PLUGIN_MANIFEST_KIND
     ACCOUNT = "Account"
+    APIKEY = AUTH_TOKEN_MANIFEST_KIND
     USER = "User"
     CHAT = "Chat"
-    CHATBOT = "Chatbot"
-    SQL_CONNECTION = SQL_CONNECTION_KIND
+    CHATBOT = CHATBOT_MANIFEST_KIND
+    SQLCONNECTION = SQLCONNECTION_MANIFEST_KIND
 
     @classmethod
     def all_slugs(cls):

@@ -73,6 +73,7 @@ class Command(BaseCommand):
 
         # generate an auth token (api key) for this job.
         token_record, token_key = SmarterAuthToken.objects.create(
+            name="verify_api_v1_cli_endpoints",
             user=user,
             description="DELETE ME: single-use key created by manage.py verify_api_v1_cli_endpoints",
         )

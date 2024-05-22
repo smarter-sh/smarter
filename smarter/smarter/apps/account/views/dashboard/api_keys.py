@@ -64,7 +64,7 @@ class APIKeyView(APIKeyBase):
 
     def _handle_create(self, request):
         new_api_key, token = SmarterAuthToken.objects.create(
-            user=request.user, description=f"New API key created by {request.user}"
+            name="New API Key", user=request.user, description=f"New API key created by {request.user}"
         )
         url = reverse(
             "account_new_api_key",
