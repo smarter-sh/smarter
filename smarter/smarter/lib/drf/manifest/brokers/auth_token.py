@@ -207,9 +207,6 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         data = []
         smarter_auth_tokens = SmarterAuthToken.objects.filter(user=self.user)
 
-        if not smarter_auth_tokens.exists():
-            return self.not_found_response()
-
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for smarter_auth_token in smarter_auth_tokens:
             try:

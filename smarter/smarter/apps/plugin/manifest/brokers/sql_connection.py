@@ -160,9 +160,6 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
         else:
             sql_connections = PluginDataSqlConnection.objects.filter(account=self.account)
 
-        if not sql_connections.exists():
-            return self.not_found_response()
-
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for sql_connection in sql_connections:
             try:

@@ -3,6 +3,7 @@
 
 from django.forms.models import model_to_dict
 from django.http import HttpRequest, JsonResponse
+from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account
@@ -20,6 +21,15 @@ MAX_RESULTS = 1000
 
 class SAMChatBrokerError(SAMExceptionBase):
     """Base exception for Smarter API Chat Broker handling."""
+
+
+class ChatSerializer(ModelSerializer):
+    """Django REST Framework serializer for get()"""
+
+    # pylint: disable=C0115
+    class Meta:
+        model = Chat
+        fields = "__all__"
 
 
 class SAMChatBroker(AbstractBroker, AccountMixin):
@@ -173,16 +183,14 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
 
     def get(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
 
+        # session_key: str = kwargs.get("session_key", None)
         data = []
         chats = Chat.objects.filter(account=self.account)
-
-        if not chats.exists():
-            return self.not_found_response()
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for chat in chats:
             try:
-                model_dump = chat.model_dump_json()
+                model_dump = ChatSerializer(chat).data
                 if not model_dump:
                     raise SAMChatBrokerError(f"Model dump failed for {self.kind} {chat.id}")
                 data.append(model_dump)
@@ -194,7 +202,7 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
             SAMKeys.METADATA.value: {"count": len(data)},
             "kwargs": kwargs,
             "data": {
-                "titles": self.get_model_titles(),
+                "titles": self.get_model_titles(serializer=ChatSerializer()),
                 "items": data,
             },
         }

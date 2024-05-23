@@ -168,9 +168,6 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
                 else:
                     plugins = PluginMeta.objects.filter(account=self.account)[:MAX_RESULTS]
 
-        if not plugins.exists():
-            return self.not_found_response()
-
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for plugin_meta in plugins:
             controller = PluginController(account=self.account, plugin_meta=plugin_meta)
