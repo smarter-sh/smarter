@@ -3,6 +3,7 @@
 
 from django.forms.models import model_to_dict
 from django.http import HttpRequest, JsonResponse
+from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account
@@ -28,6 +29,15 @@ MAX_RESULTS = 1000
 
 class SAMChatbotBrokerError(SAMExceptionBase):
     """Base exception for Smarter API Chatbot Broker handling."""
+
+
+class ChatBotSerializer(ModelSerializer):
+    """Django ORM model serializer for get()"""
+
+    # pylint: disable=C0115
+    class Meta:
+        model = ChatBot
+        fields = ["name", "url", "dns_verification_status", "deployed", "created_at", "updated_at"]
 
 
 class SAMChatbotBroker(AbstractBroker, AccountMixin):
@@ -258,14 +268,12 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         # name: str = None, all_objects: bool = False, tags: str = None
         data = []
         name: str = kwargs.get("name", None)
-        all_objects: bool = kwargs.get("all", False)
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
         if name:
             chatbots = ChatBot.objects.filter(account=self.account, name=name)
         else:
-            if all_objects:
-                chatbots = ChatBot.objects.filter(account=self.account)
+            chatbots = ChatBot.objects.filter(account=self.account)
 
         if not chatbots.exists():
             return self.not_found_response()
@@ -273,7 +281,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for chatbot in chatbots:
             try:
-                model_dump = chatbot.model_dump_json()
+                model_dump = ChatBotSerializer(chatbot).data
                 if not model_dump:
                     raise SAMChatbotBrokerError(f"Model dump failed for {self.kind} {chatbot.name}")
                 data.append(model_dump)
@@ -286,7 +294,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
             SAMKeys.METADATA.value: {"count": len(data)},
             "kwargs": kwargs,
             "data": {
-                "titles": self.get_model_titles(),
+                "titles": self.get_model_titles(serializer=ChatBotSerializer()),
                 "items": data,
             },
         }
