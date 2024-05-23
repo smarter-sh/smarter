@@ -335,6 +335,16 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 return self.err_response(self.deploy.__name__, e)
         return self.not_ready_response()
 
+    def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        if self.chatbot:
+            try:
+                self.chatbot.deployed = False
+                self.chatbot.save()
+                return self.success_response(operation=self.deploy.__name__, data={})
+            except Exception as e:
+                return self.err_response(self.deploy.__name__, e)
+        return self.not_ready_response()
+
     def logs(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         data = {}
         return self.success_response(operation=self.logs.__name__, data=data)

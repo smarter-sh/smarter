@@ -263,6 +263,9 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
                 return self.err_response(self.deploy.__name__, e)
         return self.not_ready_response()
 
+    def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        return self.not_implemented_response()
+
     def logs(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         data = {}
         return self.success_response(operation=self.logs.__name__, data=data)

@@ -228,7 +228,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         }
         return self.success_response(operation=self.get.__name__, data=data)
 
-    def apply(self, request: HttpRequest = None) -> JsonResponse:
+    def apply(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         try:
             data = self.manifest_to_django_orm()
             for key, value in data.items():
@@ -238,7 +238,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
             return self.err_response(self.apply.__name__, e)
         return self.success_response(operation=self.apply.__name__, data={})
 
-    def describe(self, request: HttpRequest = None) -> JsonResponse:
+    def describe(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         if self.smarter_auth_token:
             try:
                 data = self.django_orm_to_manifest_dict()
@@ -247,7 +247,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
                 return self.err_response(self.describe.__name__, e)
         return self.not_ready_response()
 
-    def delete(self, request: HttpRequest = None) -> JsonResponse:
+    def delete(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         if self.smarter_auth_token:
             try:
                 self.smarter_auth_token.delete()
@@ -256,10 +256,13 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
                 return self.err_response(self.delete.__name__, e)
         return self.not_ready_response()
 
-    def deploy(self, request: HttpRequest = None) -> JsonResponse:
+    def deploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         return self.not_implemented_response()
 
-    def logs(self, request: HttpRequest = None) -> JsonResponse:
+    def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        return self.not_implemented_response()
+
+    def logs(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         if self.smarter_auth_token:
             data = {}
             return self.success_response(operation=self.logs.__name__, data=data)

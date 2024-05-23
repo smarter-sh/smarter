@@ -90,24 +90,6 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
             url=url,
         )
 
-    @property
-    def user(self) -> UserType:
-        """
-        The User object is a Django ORM model that represents the Smarter User.
-        The User object is used to store the configuration and state of the User
-        in the database. The User object is retrieved from the database, if it exists,
-        or created from the manifest if it does not.
-        """
-        if self._user:
-            return self._user
-        try:
-            self._user = User.objects.get(account=self.account, username=self.manifest.metadata.username)
-        except User.DoesNotExist:
-            data = self.manifest_to_django_orm()
-            self._user = User.objects.create(**data)
-
-        return self._user
-
     def manifest_to_django_orm(self) -> dict:
         """
         Transform the Smarter API User manifest into a Django ORM model.
@@ -263,6 +245,9 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
             except Exception as e:
                 return self.err_response(self.deploy.__name__, e)
         return self.not_ready_response()
+
+    def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        return self.not_implemented_response()
 
     def logs(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         data = {}

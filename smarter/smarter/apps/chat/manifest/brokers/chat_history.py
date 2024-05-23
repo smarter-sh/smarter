@@ -174,7 +174,7 @@ class SAMChatHistoryBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def example_manifest(self, request: HttpRequest, args: list = None, kwargs: dict = None) -> JsonResponse:
+    def example_manifest(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -187,7 +187,7 @@ class SAMChatHistoryBroker(AbstractBroker, AccountMixin):
         }
         return self.success_response(operation=self.example_manifest.__name__, data=data)
 
-    def get(self, request: HttpRequest, args: list = None, kwargs: dict = None) -> JsonResponse:
+    def get(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
 
         self._session_key: str = kwargs.get("session_id", None)
         data = []
@@ -220,11 +220,10 @@ class SAMChatHistoryBroker(AbstractBroker, AccountMixin):
         }
         return self.success_response(operation=self.get.__name__, data=data)
 
-    def apply(self, request: HttpRequest = None, args: list = None, kwargs: dict = None) -> JsonResponse:
-        self._session_key: str = kwargs.get("session_id", None)
-        return self.not_implemented_response()
+    def apply(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
+        return self.readonly_response()
 
-    def describe(self, request: HttpRequest = None, args: list = None, kwargs: dict = None) -> JsonResponse:
+    def describe(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
         self._session_key: str = kwargs.get("session_id", None)
         if self.chat_history:
             try:
@@ -234,21 +233,16 @@ class SAMChatHistoryBroker(AbstractBroker, AccountMixin):
                 return self.err_response(self.describe.__name__, e)
         return self.not_ready_response()
 
-    def delete(self, request: HttpRequest = None, args: list = None, kwargs: dict = None) -> JsonResponse:
-        self._session_key: str = kwargs.get("session_id", None)
-        if self.chat_history:
-            try:
-                self.chat_history.delete()
-                return self.success_response(operation=self.delete.__name__, data={})
-            except Exception as e:
-                return self.err_response(self.delete.__name__, e)
-        return self.not_ready_response()
+    def delete(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
+        return self.readonly_response()
 
-    def deploy(self, request: HttpRequest = None, args: list = None, kwargs: dict = None) -> JsonResponse:
-        self._session_key: str = kwargs.get("session_id", None)
+    def deploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         return self.not_implemented_response()
 
-    def logs(self, request: HttpRequest = None, args: list = None, kwargs: dict = None) -> JsonResponse:
+    def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        return self.not_implemented_response()
+
+    def logs(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
         self._session_key: str = kwargs.get("session_id", None)
         if self.chat_history:
             data = {}
