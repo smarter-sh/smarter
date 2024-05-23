@@ -6,7 +6,7 @@ from http import HTTPStatus
 from typing import Type
 
 import yaml
-from django.http import HttpResponseForbidden, JsonResponse
+from django.http import JsonResponse
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -164,9 +164,15 @@ class CliBaseApiView(APIView, AccountMixin):
                 user, _ = request.auth.authenticate(request)
                 request.user = user
             except AuthenticationFailed:
-                return HttpResponseForbidden("You are not authenticated")
+                try:
+                    raise APIV1CLIViewError("Authentication failed.") from None
+                except APIV1CLIViewError as e:
+                    return JsonResponse(error_response_factory(e=e), status=HTTPStatus.FORBIDDEN)
         if not request.user.is_authenticated:
-            return HttpResponseForbidden("You are not authenticated")
+            try:
+                raise APIV1CLIViewError("Authentication failed.")
+            except APIV1CLIViewError as e:
+                return JsonResponse(error_response_factory(e=e), status=HTTPStatus.FORBIDDEN)
 
         user_agent = request.headers.get("User-Agent", "")
         if "Go-http-client" not in user_agent:
