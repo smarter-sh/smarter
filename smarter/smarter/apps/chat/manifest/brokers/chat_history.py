@@ -1,4 +1,4 @@
-# pylint: disable=W0718
+# pylint: disable=W0718,W0613
 """Smarter API Chat Manifest handler"""
 
 from django.forms.models import model_to_dict
@@ -7,9 +7,9 @@ from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account
-from smarter.apps.chat.manifest.models.chat.const import MANIFEST_KIND
-from smarter.apps.chat.manifest.models.chat.model import SAMChat
-from smarter.apps.chat.models import Chat
+from smarter.apps.chat.manifest.models.chat_history.const import MANIFEST_KIND
+from smarter.apps.chat.manifest.models.chat_history.model import SAMChatHistory
+from smarter.apps.chat.models import Chat, ChatHistory
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.enum import SAMApiVersions, SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.exceptions import SAMExceptionBase
@@ -19,40 +19,36 @@ from smarter.lib.manifest.loader import SAMLoader
 MAX_RESULTS = 1000
 
 
-class SAMChatBrokerError(SAMExceptionBase):
+class SAMChatHistoryBrokerError(SAMExceptionBase):
     """Base exception for Smarter API Chat Broker handling."""
 
 
-class ChatSerializer(ModelSerializer):
+class ChatHistorySerializer(ModelSerializer):
     """Django REST Framework serializer for get()"""
 
     # pylint: disable=C0115
     class Meta:
-        model = Chat
-        fields = ["session_key", "id", "user_agent"]
-
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        representation["id"] = str(instance)
-        return representation
+        model = ChatHistory
+        fields = "__all__"
 
 
-class SAMChatBroker(AbstractBroker, AccountMixin):
+class SAMChatHistoryBroker(AbstractBroker, AccountMixin):
     """
     Smarter API Chat Manifest Broker. This class is responsible for
     - loading, validating and parsing the Smarter Api yaml Chat manifests
     - using the manifest to initialize the corresponding Pydantic model
 
     This Broker class interacts with the collection of Django ORM models that
-    represent the Smarter API SAMChat manifests. The Broker class
+    represent the Smarter API SAMChatHistory manifests. The Broker class
     is responsible for creating, updating, deleting and querying the Django ORM
     models, as well as transforming the Django ORM models into Pydantic models
     for serialization and deserialization.
     """
 
-    # override the base abstract manifest model with the SAMChat model
-    _manifest: SAMChat = None
-    _chat: Chat = None
+    # override the base abstract manifest model with the SAMChatHistory model
+    _manifest: SAMChatHistory = None
+    _chat_history: ChatHistory = None
+    _session_key: str = None
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -86,7 +82,11 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
         )
 
     @property
-    def chat(self) -> Chat:
+    def session_key(self) -> str:
+        return self._session_key
+
+    @property
+    def chat_history(self) -> ChatHistory:
         """
         The Chat object is a Django ORM model subclass from knox.AuthToken
         that represents a Chat api key. The Chat object is
@@ -94,18 +94,19 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
         The Chat object is retrieved from the database, if it exists,
         or created from the manifest if it does not.
         """
-        if self._chat:
-            return self._chat
+        if self._chat_history:
+            return self._chat_history
         try:
-            self._chat = Chat.objects.get(user=self.user, description=self.manifest.metadata.description)
-        except Chat.DoesNotExist:
+            chat = Chat.objects.get(session_key=self.session_key)
+            self._chat_history = ChatHistory.objects.get(chat=chat)
+        except (ChatHistory.DoesNotExist, Chat.DoesNotExist):
             pass
 
-        return self._chat
+        return self._chat_history
 
     def manifest_to_django_orm(self) -> dict:
         """
-        Transform the Smarter API SAMChat manifest into a Django ORM model.
+        Transform the Smarter API SAMChatHistory manifest into a Django ORM model.
         """
         config_dump = self.manifest.spec.config.model_dump()
         config_dump = self.camel_to_snake(config_dump)
@@ -114,9 +115,9 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
     def django_orm_to_manifest_dict(self) -> dict:
         """
         Transform the Django ORM model into a Pydantic readable
-        Smarter API SAMChat manifest dict.
+        Smarter API SAMChatHistory manifest dict.
         """
-        chat_dict = model_to_dict(self.chat)
+        chat_dict = model_to_dict(self.chat_history)
         chat_dict = self.snake_to_camel(chat_dict)
         chat_dict.pop("id")
 
@@ -124,14 +125,14 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: self.chat.name,
-                SAMMetadataKeys.DESCRIPTION.value: self.chat.description,
-                SAMMetadataKeys.VERSION.value: self.chat.version,
+                SAMMetadataKeys.NAME.value: self.chat_history.name,
+                SAMMetadataKeys.DESCRIPTION.value: self.chat_history.description,
+                SAMMetadataKeys.VERSION.value: self.chat_history.version,
             },
             SAMKeys.SPEC.value: None,
             SAMKeys.STATUS.value: {
-                "created": self.chat.created_at.isoformat(),
-                "modified": self.chat.updated_at.isoformat(),
+                "created": self.chat_history.created_at.isoformat(),
+                "modified": self.chat_history.updated_at.isoformat(),
             },
         }
         return data
@@ -140,18 +141,18 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
     # Smarter abstract property implementations
     ###########################################################################
     @property
-    def model_class(self) -> Chat:
-        return Chat
+    def model_class(self) -> ChatHistory:
+        return ChatHistory
 
     @property
     def kind(self) -> str:
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> SAMChat:
+    def manifest(self) -> SAMChatHistory:
         """
-        SAMChat() is a Pydantic model
-        that is used to represent the Smarter API SAMChat manifest. The Pydantic
+        SAMChatHistory() is a Pydantic model
+        that is used to represent the Smarter API SAMChatHistory manifest. The Pydantic
         model is initialized with the data from the manifest loader, which is
         generally passed to the model constructor as **data. However, this top-level
         manifest model has to be explicitly initialized, whereas its child models
@@ -161,7 +162,7 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
         if self._manifest:
             return self._manifest
         if self.loader:
-            self._manifest = SAMChat(
+            self._manifest = SAMChatHistory(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
                 metadata=self.loader.manifest_metadata,
@@ -179,25 +180,27 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {
                 SAMMetadataKeys.NAME.value: "camelCaseName",
-                SAMMetadataKeys.DESCRIPTION.value: "An example Smarter API manifest for a Chat",
+                SAMMetadataKeys.DESCRIPTION.value: "An example Smarter API manifest for a ChatHistory",
                 SAMMetadataKeys.VERSION.value: "1.0.0",
             },
             SAMKeys.SPEC.value: None,
         }
         return self.success_response(operation=self.example_manifest.__name__, data=data)
 
-    def get(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+    def get(self, request: HttpRequest, args: list = None, kwargs: dict = None) -> JsonResponse:
 
-        # session_key: str = kwargs.get("session_key", None)
+        self._session_key: str = kwargs.get("session_id", None)
         data = []
-        chats = Chat.objects.filter(account=self.account)
+        if self.session_key:
+            self.account = ChatHistory.objects.filter(session_key=self.session_key)
+        chats = ChatHistory.objects.filter(account=self.account)
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for chat in chats:
             try:
-                model_dump = ChatSerializer(chat).data
+                model_dump = ChatHistorySerializer(chat).data
                 if not model_dump:
-                    raise SAMChatBrokerError(f"Model dump failed for {self.kind} {chat.id}")
+                    raise SAMChatHistoryBrokerError(f"Model dump failed for {self.kind} {chat.id}")
                 data.append(model_dump)
             except Exception as e:
                 return self.err_response(self.get.__name__, e)
@@ -207,17 +210,19 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
             SAMKeys.METADATA.value: {"count": len(data)},
             "kwargs": kwargs,
             "data": {
-                "titles": self.get_model_titles(serializer=ChatSerializer()),
+                "titles": self.get_model_titles(serializer=ChatHistorySerializer()),
                 "items": data,
             },
         }
         return self.success_response(operation=self.get.__name__, data=data)
 
-    def apply(self, request: HttpRequest = None) -> JsonResponse:
+    def apply(self, request: HttpRequest = None, args: list = None, kwargs: dict = None) -> JsonResponse:
+        self._session_key: str = kwargs.get("session_id", None)
         return self.not_implemented_response()
 
-    def describe(self, request: HttpRequest = None) -> JsonResponse:
-        if self.chat:
+    def describe(self, request: HttpRequest = None, args: list = None, kwargs: dict = None) -> JsonResponse:
+        self._session_key: str = kwargs.get("session_id", None)
+        if self.chat_history:
             try:
                 data = self.django_orm_to_manifest_dict()
                 return self.success_response(operation=self.describe.__name__, data=data)
@@ -225,20 +230,23 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
                 return self.err_response(self.describe.__name__, e)
         return self.not_ready_response()
 
-    def delete(self, request: HttpRequest = None) -> JsonResponse:
-        if self.chat:
+    def delete(self, request: HttpRequest = None, args: list = None, kwargs: dict = None) -> JsonResponse:
+        self._session_key: str = kwargs.get("session_id", None)
+        if self.chat_history:
             try:
-                self.chat.delete()
+                self.chat_history.delete()
                 return self.success_response(operation=self.delete.__name__, data={})
             except Exception as e:
                 return self.err_response(self.delete.__name__, e)
         return self.not_ready_response()
 
-    def deploy(self, request: HttpRequest = None) -> JsonResponse:
+    def deploy(self, request: HttpRequest = None, args: list = None, kwargs: dict = None) -> JsonResponse:
+        self._session_key: str = kwargs.get("session_id", None)
         return self.not_implemented_response()
 
-    def logs(self, request: HttpRequest = None) -> JsonResponse:
-        if self.chat:
+    def logs(self, request: HttpRequest = None, args: list = None, kwargs: dict = None) -> JsonResponse:
+        self._session_key: str = kwargs.get("session_id", None)
+        if self.chat_history:
             data = {}
             return self.success_response(operation=self.logs.__name__, data=data)
         return self.not_ready_response()
