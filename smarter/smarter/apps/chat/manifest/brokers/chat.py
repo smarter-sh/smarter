@@ -29,7 +29,12 @@ class ChatSerializer(ModelSerializer):
     # pylint: disable=C0115
     class Meta:
         model = Chat
-        fields = "__all__"
+        fields = ["session_key", "id", "user_agent"]
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["id"] = str(instance)
+        return representation
 
 
 class SAMChatBroker(AbstractBroker, AccountMixin):
