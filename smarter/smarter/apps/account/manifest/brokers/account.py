@@ -1,22 +1,36 @@
 # pylint: disable=W0718
 """Smarter API Account Manifest handler"""
 
+import logging
+
 from django.forms.models import model_to_dict
 from django.http import HttpRequest, JsonResponse
+from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.manifest.enum import SAMAccountSpecKeys
 from smarter.apps.account.manifest.models.account.const import MANIFEST_KIND
 from smarter.apps.account.manifest.models.account.model import SAMAccount
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account
-from smarter.apps.account.serializers import AccountSerializer
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.enum import SAMApiVersions, SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
 
+logger = logging.getLogger(__name__)
+
+
 MAX_RESULTS = 1000
+
+
+class AccountSerializer(ModelSerializer):
+    """Account serializer for smarter api."""
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = Account
+        fields = ["account_number", "company_name", "created_at", "updated_at"]
 
 
 class SAMAccountBrokerError(SAMExceptionBase):
@@ -198,6 +212,7 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
                     raise SAMAccountBrokerError(f"Model dump failed for {self.kind} {account.name}")
                 data.append(model_dump)
             except Exception as e:
+                logger.error("Error in %s: %s", self.get.__name__, e)
                 return self.err_response(self.get.__name__, e)
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
@@ -206,7 +221,7 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
             SAMKeys.METADATA.value: {"count": len(data)},
             "kwargs": kwargs,
             "data": {
-                "titles": self.get_model_titles(),
+                "titles": self.get_model_titles(serializer=AccountSerializer()),
                 "items": data,
             },
         }

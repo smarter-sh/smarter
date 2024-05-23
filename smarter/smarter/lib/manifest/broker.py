@@ -9,6 +9,7 @@ from http import HTTPStatus
 
 import inflect
 from django.http import HttpRequest, JsonResponse
+from rest_framework.serializers import ModelSerializer
 
 from smarter.lib.django.user import UserType
 from smarter.lib.manifest.enum import SAMApiVersions
@@ -222,9 +223,9 @@ class AbstractBroker(ABC):
         raise NotImplementedError
 
     # pylint: disable=W0212
-    def get_model_titles(self) -> list[dict[str, str]]:
+    def get_model_titles(self, serializer: ModelSerializer) -> list[dict[str, str]]:
         fields_and_types = [
-            {"name": field.name, "type": field.get_internal_type()} for field in self.model_class._meta.fields
+            {"name": field_name, "type": type(field).__name__} for field_name, field in serializer.fields.items()
         ]
         return fields_and_types
 
