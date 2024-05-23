@@ -9,6 +9,15 @@ from smarter.apps.account.manifest.models.user.const import (
 from smarter.apps.chat.manifest.models.chat.const import (
     MANIFEST_KIND as CHAT_MANIFEST_KIND,
 )
+from smarter.apps.chat.manifest.models.chat_history.const import (
+    MANIFEST_KIND as CHAT_HISTORY_MANIFEST_KIND,
+)
+from smarter.apps.chat.manifest.models.chat_plugin_usage.const import (
+    MANIFEST_KIND as CHAT_PLUGIN_USAGE_MANIFEST_KIND,
+)
+from smarter.apps.chat.manifest.models.chat_tool_call.const import (
+    MANIFEST_KIND as CHAT_TOOL_CALL_MANIFEST_KIND,
+)
 from smarter.apps.chatbot.manifest.models.chatbot.const import (
     MANIFEST_KIND as CHATBOT_MANIFEST_KIND,
 )
@@ -32,6 +41,9 @@ class SAMKinds(SmarterEnumAbstract):
     APIKEY = AUTH_TOKEN_MANIFEST_KIND.lower()
     USER = USER_MANIFEST_KIND.lower()
     CHAT = CHAT_MANIFEST_KIND.lower()
+    CHAT_HISTORY = CHAT_HISTORY_MANIFEST_KIND.lower()
+    CHAT_PLUGIN_USAGE = CHAT_PLUGIN_USAGE_MANIFEST_KIND.lower()
+    CHAT_TOOL_CALL = CHAT_TOOL_CALL_MANIFEST_KIND.lower()
     CHATBOT = CHATBOT_MANIFEST_KIND.lower()
     SQLCONNECTION = SQLCONNECTION_MANIFEST_KIND.lower()
     APICONNECTION = "PluginDataApiConnection".lower()

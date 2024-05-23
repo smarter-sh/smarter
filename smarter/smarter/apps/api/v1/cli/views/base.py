@@ -149,7 +149,8 @@ class CliBaseApiView(APIView, AccountMixin):
         model will be passed to a AbstractBroker for the manifest 'kind', which
         implements the broker service pattern for the underlying object.
         """
-
+        logger.info("dispatch() - kwargs: %s", kwargs)
+        logger.info("dispatch() - request.GET: %s", request.GET)
         # TO DO: This is a temporary fix to mitigate a configuration issue
         # where DRF is not properly authenticating the request. This is a
         # temporary fix until we can properly configure the DRF authentication
@@ -222,7 +223,7 @@ class CliBaseApiView(APIView, AccountMixin):
         # generic exception handler that simply ensures that in all cases
         # the response is a JsonResponse with a status code.
         try:
-            return super().dispatch(request, *args, **kwargs)
+            return super().dispatch(request, *args, **{**request.GET.dict(), **kwargs})
         # pylint: disable=broad-except
         except Exception as e:
             return JsonResponse(error_response_factory(e=e), status=HTTPStatus.INTERNAL_SERVER_ERROR)

@@ -174,7 +174,7 @@ class SAMChatHistoryBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def example_manifest(self, kwargs: dict = None) -> JsonResponse:
+    def example_manifest(self, request: HttpRequest, args: list = None, kwargs: dict = None) -> JsonResponse:
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -192,11 +192,15 @@ class SAMChatHistoryBroker(AbstractBroker, AccountMixin):
         self._session_key: str = kwargs.get("session_id", None)
         data = []
         if self.session_key:
-            self.account = ChatHistory.objects.filter(session_key=self.session_key)
-        chats = ChatHistory.objects.filter(account=self.account)
+            chat: Chat = None
+            try:
+                chat = Chat.objects.get(session_key=self.session_key)
+            except Chat.DoesNotExist:
+                pass
+            chat_history = ChatHistory.objects.filter(chat=chat).order_by("-created_at")[:MAX_RESULTS]
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
-        for chat in chats:
+        for chat in chat_history:
             try:
                 model_dump = ChatHistorySerializer(chat).data
                 if not model_dump:

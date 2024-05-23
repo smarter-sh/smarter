@@ -173,7 +173,7 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def example_manifest(self, kwargs: dict = None) -> JsonResponse:
+    def example_manifest(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -213,10 +213,10 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
         }
         return self.success_response(operation=self.get.__name__, data=data)
 
-    def apply(self, request: HttpRequest = None) -> JsonResponse:
+    def apply(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         return self.not_implemented_response()
 
-    def describe(self, request: HttpRequest = None) -> JsonResponse:
+    def describe(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         if self.chat:
             try:
                 data = self.django_orm_to_manifest_dict()
@@ -225,7 +225,7 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
                 return self.err_response(self.describe.__name__, e)
         return self.not_ready_response()
 
-    def delete(self, request: HttpRequest = None) -> JsonResponse:
+    def delete(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         if self.chat:
             try:
                 self.chat.delete()
@@ -234,10 +234,10 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
                 return self.err_response(self.delete.__name__, e)
         return self.not_ready_response()
 
-    def deploy(self, request: HttpRequest = None) -> JsonResponse:
+    def deploy(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         return self.not_implemented_response()
 
-    def logs(self, request: HttpRequest = None) -> JsonResponse:
+    def logs(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         if self.chat:
             data = {}
             return self.success_response(operation=self.logs.__name__, data=data)

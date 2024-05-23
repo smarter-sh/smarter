@@ -124,7 +124,7 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
 
         return self._sql_connection
 
-    def example_manifest(self, kwargs: dict = None) -> JsonResponse:
+    def example_manifest(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         data = {
             "apiVersion": self.api_version,
             "kind": self.kind,
@@ -184,14 +184,14 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
         }
         return self.success_response(operation=self.get.__name__, data=data)
 
-    def apply(self, request: HttpRequest = None) -> JsonResponse:
+    def apply(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         try:
             self.sql_connection.save()
         except Exception as e:
             return self.err_response("create", e)
         return self.success_response(operation=self.apply.__name__, data={})
 
-    def describe(self, request: HttpRequest = None) -> JsonResponse:
+    def describe(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         """Return a JSON response with the manifest data."""
         if self.sql_connection:
             try:
@@ -221,7 +221,7 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
                 return self.err_response(self.describe.__name__, e)
         return self.not_ready_response()
 
-    def delete(self, request: HttpRequest = None) -> JsonResponse:
+    def delete(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         if self.sql_connection:
             try:
                 self.sql_connection.delete()
@@ -230,8 +230,8 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
                 return self.err_response(self.delete.__name__, e)
         return self.not_ready_response()
 
-    def deploy(self, request: HttpRequest = None) -> JsonResponse:
+    def deploy(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         return self.not_implemented_response()
 
-    def logs(self, request: HttpRequest = None) -> JsonResponse:
+    def logs(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         return self.not_implemented_response()
