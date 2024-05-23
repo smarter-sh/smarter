@@ -4,9 +4,9 @@
 from django.forms.models import model_to_dict
 from django.http import HttpRequest, JsonResponse
 
-from smarter.apps.account.mixins import Account, AccountMixin, UserProfile
+from smarter.apps.account.mixins import Account, AccountMixin
 from smarter.apps.plugin.models import PluginDataSqlConnection
-from smarter.lib.django.user import UserType
+from smarter.apps.plugin.serializers import PluginDataSqlConnectionSerializer
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.enum import SAMApiVersions, SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.exceptions import SAMExceptionBase
@@ -40,11 +40,10 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
+        account: Account,
         api_version: str = SAMApiVersions.V1.value,
-        account: Account = None,
-        user: UserType = None,
-        user_profile: UserProfile = None,
         name: str = None,
+        kind: str = None,
         loader: SAMLoader = None,
         manifest: str = None,
         file_path: str = None,
@@ -58,14 +57,11 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
         to ensure that the manifest is a valid yaml file and that it contains
         the required top-level keys.
         """
-        self._account = account
-        self._user = user
-        self._user_profile = user_profile
         super().__init__(
-            account=self.account,
             api_version=api_version,
+            account=account,
             name=name,
-            kind=MANIFEST_KIND,
+            kind=kind,
             loader=loader,
             manifest=manifest,
             file_path=file_path,
@@ -124,7 +120,7 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
 
         return self._sql_connection
 
-    def example_manifest(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+    def example_manifest(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         data = {
             "apiVersion": self.api_version,
             "kind": self.kind,
@@ -149,7 +145,7 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def get(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+    def get(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
 
         name: str = kwargs.get("name", None)
         data = []
@@ -163,7 +159,7 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for sql_connection in sql_connections:
             try:
-                model_dump = model_to_dict(sql_connection)
+                model_dump = PluginDataSqlConnectionSerializer(sql_connection).data
                 if not model_dump:
                     raise SAMPluginDataSqlConnectionBrokerError(
                         f"Model dump failed for {self.kind} {sql_connection.name}"
@@ -178,20 +174,20 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
             SAMKeys.METADATA.value: {"count": len(data)},
             "kwargs": kwargs,
             "data": {
-                "titles": self.get_model_titles(),
+                "titles": self.get_model_titles(serializer=PluginDataSqlConnectionSerializer()),
                 "items": data,
             },
         }
         return self.success_response(operation=self.get.__name__, data=data)
 
-    def apply(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+    def apply(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         try:
             self.sql_connection.save()
         except Exception as e:
             return self.err_response("create", e)
         return self.success_response(operation=self.apply.__name__, data={})
 
-    def describe(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+    def describe(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         """Return a JSON response with the manifest data."""
         if self.sql_connection:
             try:
@@ -221,7 +217,7 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
                 return self.err_response(self.describe.__name__, e)
         return self.not_ready_response()
 
-    def delete(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+    def delete(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         if self.sql_connection:
             try:
                 self.sql_connection.delete()
@@ -230,8 +226,8 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
                 return self.err_response(self.delete.__name__, e)
         return self.not_ready_response()
 
-    def deploy(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+    def deploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         return self.not_implemented_response()
 
-    def logs(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+    def logs(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         return self.not_implemented_response()

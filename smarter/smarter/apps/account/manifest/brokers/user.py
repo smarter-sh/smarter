@@ -179,7 +179,7 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
     def model_class(self):
         return User
 
-    def example_manifest(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+    def example_manifest(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -200,7 +200,7 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
         }
         return self.success_response(operation=self.example_manifest.__name__, data=data)
 
-    def get(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+    def get(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         data = []
         user_profiles = UserProfile.objects.filter(account=self.account)
         users = [user_profile.user for user_profile in user_profiles]
@@ -226,7 +226,7 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
         }
         return self.success_response(operation=self.get.__name__, data=data)
 
-    def apply(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+    def apply(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         try:
             data = self.manifest_to_django_orm()
             for key, value in data.items():
@@ -236,7 +236,7 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
             return self.err_response(self.apply.__name__, e)
         return self.success_response(operation=self.apply.__name__, data={})
 
-    def describe(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+    def describe(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         if self.user:
             try:
                 data = self.django_orm_to_manifest_dict()
@@ -245,7 +245,7 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
                 return self.err_response(self.describe.__name__, e)
         return self.not_ready_response()
 
-    def delete(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+    def delete(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         if self.user:
             try:
                 self.user.delete()
@@ -254,7 +254,7 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
                 return self.err_response(self.delete.__name__, e)
         return self.not_ready_response()
 
-    def deploy(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+    def deploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         if self.user:
             try:
                 self.user.deployed = True
@@ -264,6 +264,6 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
                 return self.err_response(self.deploy.__name__, e)
         return self.not_ready_response()
 
-    def logs(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+    def logs(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         data = {}
         return self.success_response(operation=self.logs.__name__, data=data)

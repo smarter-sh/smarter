@@ -176,37 +176,37 @@ class AbstractBroker(ABC):
     # Abstract Methods
     ###########################################################################
     @abstractmethod
-    def get(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+    def get(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         """get information about specified resources."""
         raise NotImplementedError
 
     @abstractmethod
-    def apply(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+    def apply(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         """apply a manifest, which works like a upsert."""
         raise NotImplementedError
 
     @abstractmethod
-    def describe(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+    def describe(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         """print the manifest."""
         raise NotImplementedError
 
     @abstractmethod
-    def delete(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+    def delete(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         """delete a resource."""
         raise NotImplementedError
 
     @abstractmethod
-    def deploy(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+    def deploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         """deploy a resource."""
         raise NotImplementedError
 
     @abstractmethod
-    def logs(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+    def logs(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         """get logs for a resource."""
         raise NotImplementedError
 
     @abstractmethod
-    def example_manifest(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+    def example_manifest(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         """Returns an example yaml manifest document for the kind of resource."""
         raise NotImplementedError
 

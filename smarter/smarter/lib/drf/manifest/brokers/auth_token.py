@@ -184,7 +184,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
     def model_class(self) -> SAMSmarterAuthToken:
         return SAMSmarterAuthToken
 
-    def example_manifest(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+    def example_manifest(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -202,7 +202,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         }
         return self.success_response(operation=self.example_manifest.__name__, data=data)
 
-    def get(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
+    def get(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
 
         data = []
         smarter_auth_tokens = SmarterAuthToken.objects.filter(user=self.user)

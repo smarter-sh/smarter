@@ -13,4 +13,4 @@ class ApiV1CliGetApiView(CliBaseApiView):
         'all': boolean = False
         'tags': comma-delimited str = None
         """
-        return self.broker.get(request=request, *args, kwargs=kwargs)
+        return self.broker.get(request=request, kwargs=kwargs)
