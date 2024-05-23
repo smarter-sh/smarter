@@ -9,7 +9,6 @@ from http import HTTPStatus
 
 import inflect
 from django.http import HttpRequest, JsonResponse
-from sqlalchemy import inspect
 
 from smarter.lib.django.user import UserType
 from smarter.lib.manifest.enum import SAMApiVersions
@@ -222,9 +221,11 @@ class AbstractBroker(ABC):
         """Returns an example yaml manifest document for the kind of resource."""
         raise NotImplementedError
 
+    # pylint: disable=W0212
     def get_model_titles(self) -> list[dict[str, str]]:
-        inspector = inspect(self.model_class)
-        fields_and_types = [{"name": column.key, "type": str(column.type)} for column in inspector.columns]
+        fields_and_types = [
+            {"name": field.name, "type": field.get_internal_type()} for field in self.model_class._meta.fields
+        ]
         return fields_and_types
 
     def not_implemented_response(self) -> JsonResponse:

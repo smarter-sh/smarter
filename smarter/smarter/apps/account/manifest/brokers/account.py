@@ -9,6 +9,7 @@ from smarter.apps.account.manifest.models.account.const import MANIFEST_KIND
 from smarter.apps.account.manifest.models.account.model import SAMAccount
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account
+from smarter.apps.account.serializers import AccountSerializer
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.enum import SAMApiVersions, SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.exceptions import SAMExceptionBase
@@ -183,23 +184,16 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
     def get(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         # name: str = None, all_objects: bool = False, tags: str = None
         data = []
-        name: str = kwargs.get("name", None)
-        all_objects: bool = kwargs.get("all", False)
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
-        if name:
-            accounts = Account.objects.filter(account=self.account, name=name)
-        else:
-            if all_objects:
-                accounts = Account.objects.filter(account=self.account)
-
+        accounts = Account.objects.filter(id=self.account.id)
         if not accounts.exists():
             return self.not_found_response()
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for account in accounts:
             try:
-                model_dump = account.model_dump_json()
+                model_dump = AccountSerializer(account).data
                 if not model_dump:
                     raise SAMAccountBrokerError(f"Model dump failed for {self.kind} {account.name}")
                 data.append(model_dump)
@@ -208,7 +202,7 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
-            SAMMetadataKeys.NAME.value: name,
+            SAMMetadataKeys.NAME.value: self.account.account_number,
             SAMKeys.METADATA.value: {"count": len(data)},
             "kwargs": kwargs,
             "data": {
