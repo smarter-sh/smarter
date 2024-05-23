@@ -192,7 +192,12 @@ class SAMChatToolCallBroker(AbstractBroker, AccountMixin):
         self._session_key: str = kwargs.get("session_id", None)
         data = []
         if self.session_key:
-            tool_calls = ChatToolCall.objects.filter(session_key=self.session_key)
+            chat: Chat = None
+            try:
+                chat = Chat.objects.get(session_key=self.session_key)
+            except Chat.DoesNotExist:
+                pass
+            tool_calls = ChatToolCall.objects.filter(chat=chat).order_by("-created_at")[:MAX_RESULTS]
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for tool_call in tool_calls:
