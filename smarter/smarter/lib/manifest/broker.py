@@ -142,18 +142,6 @@ class AbstractBroker(ABC):
     def loader(self) -> SAMLoader:
         return self._loader
 
-    @property
-    def account(self) -> "Account":
-        return self._account
-
-    @property
-    def user(self) -> "UserType":
-        raise NotImplementedError
-
-    @property
-    def user_profile(self) -> "UserProfile":
-        raise NotImplementedError
-
     def __str__(self):
         return f"{self.manifest.apiVersion} {self.kind} Broker"
 
