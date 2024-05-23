@@ -229,5 +229,8 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
     def deploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         return self.not_implemented_response()
 
+    def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        return self.not_implemented_response()
+
     def logs(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         return self.not_implemented_response()

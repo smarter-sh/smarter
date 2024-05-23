@@ -11,7 +11,6 @@ import inflect
 from django.http import HttpRequest, JsonResponse
 from rest_framework.serializers import ModelSerializer
 
-from smarter.lib.django.user import UserType
 from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 from smarter.lib.manifest.models import AbstractSAMBase
@@ -59,6 +58,7 @@ class AbstractBroker(ABC):
         DESCRIBE = "describe"
         DELETE = "delete"
         DEPLOY = "deploy"
+        UNDEPLOY = "undeploy"
         LOGS = "logs"
         MANIFEST_EXAMPLE = "example_manifest"
 
@@ -70,6 +70,7 @@ class AbstractBroker(ABC):
                 cls.DESCRIBE: "described",
                 cls.DELETE: "deleted",
                 cls.DEPLOY: "deployed",
+                cls.UNDEPLOY: "undeployed",
                 cls.LOGS: "got logs for",
             }
 
@@ -201,6 +202,11 @@ class AbstractBroker(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        """undeploy a resource."""
+        raise NotImplementedError
+
+    @abstractmethod
     def logs(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         """get logs for a resource."""
         raise NotImplementedError
@@ -216,6 +222,11 @@ class AbstractBroker(ABC):
             {"name": field_name, "type": type(field).__name__} for field_name, field in serializer.fields.items()
         ]
         return fields_and_types
+
+    def readonly_response(self) -> JsonResponse:
+        """Return a common read-only response."""
+        data = {"message": f"{self.kind} {self.name} is read-only"}
+        return JsonResponse(data=data, status=HTTPStatus.METHOD_NOT_ALLOWED)
 
     def not_implemented_response(self) -> JsonResponse:
         """Return a common not implemented response."""
