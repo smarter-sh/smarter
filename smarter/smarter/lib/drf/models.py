@@ -18,8 +18,9 @@ class SmarterAuthTokenManager(AuthTokenManager):
     """API Key manager."""
 
     # pylint: disable=too-many-arguments
-    def create(self, user, expiry=None, description: str = None, is_active: bool = True, **kwargs):
+    def create(self, user, expiry=None, name: str = None, description: str = None, is_active: bool = True, **kwargs):
         auth_token, token = super().create(user, expiry=expiry, **kwargs)
+        auth_token.name = name
         auth_token.description = description
         auth_token.is_active = is_active
         auth_token.save()

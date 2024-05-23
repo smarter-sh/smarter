@@ -13,7 +13,10 @@ class SmarterAuthTokenAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
-    list_display = "__all__"
+
+    def __init__(self, model, admin_site):
+        super().__init__(model, admin_site)
+        self.list_display = [field.name for field in model._meta.fields]
 
 
 admin.site.register(SmarterAuthToken, SmarterAuthTokenAdmin)

@@ -2,13 +2,8 @@
 
 [![OpenAI](https://a11ybadges.com/badge?logo=openai)](https://platform.openai.com/)
 [![LangChain](https://a11ybadges.com/badge?text=LangChain&badgeColor=0834ac)](https://www.langchain.com/)
-[![Amazon AWS](https://a11ybadges.com/badge?logo=amazonaws)](https://aws.amazon.com/)
-[![Bootstrap](https://a11ybadges.com/badge?logo=bootstrap)](https://getbootstrap.com/)
-[![ReactJS](https://a11ybadges.com/badge?logo=react)](https://react.dev/)
-[![NPM](https://a11ybadges.com/badge?logo=npm)](https://www.npmjs.com/)
 [![Python](https://a11ybadges.com/badge?logo=python)](https://www.python.org/)
 [![Django](https://a11ybadges.com/badge?logo=django)](https://www.djangoproject.com/)
-[![Terraform](https://a11ybadges.com/badge?logo=terraform)](https://www.terraform.io/)<br>
 [![Unit Tests](https://github.com/QueriumCorp/smarter/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/QueriumCorp/smarter/actions/workflows/releaseController.yml)
 ![Release Status](https://github.com/QueriumCorp/smarter/actions/workflows/release.yml/badge.svg?branch=main)
 ![Auto Assign](https://github.com/QueriumCorp/smarter/actions/workflows/auto-assign.yml/badge.svg)
