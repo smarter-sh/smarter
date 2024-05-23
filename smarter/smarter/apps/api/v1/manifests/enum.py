@@ -27,14 +27,14 @@ from smarter.lib.manifest.enum import SmarterEnumAbstract
 class SAMKinds(SmarterEnumAbstract):
     """Smarter manifest kinds enumeration."""
 
-    PLUGIN = PLUGIN_MANIFEST_KIND
-    ACCOUNT = ACCOUNT_MANIFEST_KIND
-    APIKEY = AUTH_TOKEN_MANIFEST_KIND
-    USER = USER_MANIFEST_KIND
-    CHAT = CHAT_MANIFEST_KIND
-    CHATBOT = CHATBOT_MANIFEST_KIND
-    SQLCONNECTION = SQLCONNECTION_MANIFEST_KIND
-    APICONNECTION = "PluginDataApiConnection"
+    PLUGIN = PLUGIN_MANIFEST_KIND.lower()
+    ACCOUNT = ACCOUNT_MANIFEST_KIND.lower()
+    APIKEY = AUTH_TOKEN_MANIFEST_KIND.lower()
+    USER = USER_MANIFEST_KIND.lower()
+    CHAT = CHAT_MANIFEST_KIND.lower()
+    CHATBOT = CHATBOT_MANIFEST_KIND.lower()
+    SQLCONNECTION = SQLCONNECTION_MANIFEST_KIND.lower()
+    APICONNECTION = "PluginDataApiConnection".lower()
 
     @classmethod
     def all_slugs(cls):

@@ -5,6 +5,7 @@ import typing
 
 from django.forms.models import model_to_dict
 from django.http import HttpRequest, JsonResponse
+from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.lib.drf.manifest.enum import SAMSmarterAuthTokenSpecKeys
@@ -25,6 +26,15 @@ MAX_RESULTS = 1000
 
 class SAMSmarterAuthTokenBrokerError(SAMExceptionBase):
     """Base exception for Smarter API SmarterAuthToken Broker handling."""
+
+
+class SmarterAuthTokenSerializer(ModelSerializer):
+    """API key serializer for smarter api."""
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = SmarterAuthToken
+        fields = ["key_id", "name", "description", "is_active", "last_used_at", "created_at", "updated_at"]
 
 
 class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
@@ -195,7 +205,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
     def get(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
 
         data = []
-        smarter_auth_tokens = SmarterAuthToken.objects.filter(account=self.account)
+        smarter_auth_tokens = SmarterAuthToken.objects.filter(user=self.user)
 
         if not smarter_auth_tokens.exists():
             return self.not_found_response()
@@ -203,7 +213,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for smarter_auth_token in smarter_auth_tokens:
             try:
-                model_dump = smarter_auth_token.model_dump_json()
+                model_dump = SmarterAuthTokenSerializer(smarter_auth_token).data
                 if not model_dump:
                     raise SAMSmarterAuthTokenBrokerError(f"Model dump failed for {self.kind} {smarter_auth_token.name}")
                 data.append(model_dump)
@@ -215,7 +225,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
             SAMKeys.METADATA.value: {"count": len(data)},
             "kwargs": kwargs,
             "data": {
-                "titles": self.get_model_titles(),
+                "titles": self.get_model_titles(serializer=SmarterAuthTokenSerializer()),
                 "items": data,
             },
         }

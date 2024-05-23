@@ -134,10 +134,10 @@ class CliBaseApiView(APIView, AccountMixin):
     @property
     def manifest_kind(self) -> str:
         if not self._manifest_kind and self.manifest_data:
-            self._manifest_kind = self.manifest_data.get("kind", None)
+            self._manifest_kind = str(self.manifest_data.get("kind", None))
         if not self._manifest_kind and self.loader:
-            self._manifest_kind = self.loader.manifest_kind if self.loader else None
-        return self._manifest_kind
+            self._manifest_kind = str(self.loader.manifest_kind) if self.loader else None
+        return self._manifest_kind.lower() if self._manifest_kind else None
 
     # pylint: disable=too-many-return-statements,too-many-branches
     def dispatch(self, request, *args, **kwargs):
@@ -181,7 +181,7 @@ class CliBaseApiView(APIView, AccountMixin):
         self._manifest_name = kwargs.get("name", None)
         kind = kwargs.get("kind", None)
         if kind:
-            self._manifest_kind = str(kind).title()
+            self._manifest_kind = kind
             if self.manifest_kind.endswith("s"):
                 self._manifest_kind = self.manifest_kind[:-1]
             if self.manifest_kind:
