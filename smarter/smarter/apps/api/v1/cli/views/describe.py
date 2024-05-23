@@ -11,4 +11,4 @@ class ApiV1CliDescribeApiView(CliBaseApiView):
     """
 
     def post(self, request, kind: str, *args, **kwargs):
-        return self.broker.describe(request=request, *args, kwargs=kwargs)
+        return self.broker.describe(request=request, kwargs=kwargs)
