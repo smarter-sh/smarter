@@ -3,6 +3,7 @@
 
 from django.forms.models import model_to_dict
 from django.http import HttpRequest, JsonResponse
+from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.manifest.enum import SAMUserSpecKeys
 from smarter.apps.account.manifest.models.user.const import MANIFEST_KIND
@@ -21,6 +22,24 @@ MAX_RESULTS = 1000
 
 class SAMUserBrokerError(SAMExceptionBase):
     """Base exception for Smarter API User Broker handling."""
+
+
+class UserSerializer(ModelSerializer):
+    """User serializer for smarter api."""
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = User
+        fields = [
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "is_staff",
+            "is_superuser",
+            "date_joined",
+            "last_login",
+        ]
 
 
 class SAMUserBroker(AbstractBroker, AccountMixin):
@@ -185,13 +204,13 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
         data = []
         user_profiles = UserProfile.objects.filter(account=self.account)
         users = [user_profile.user for user_profile in user_profiles]
-        if not users.exists():
+        if len(users) == 0:
             return self.not_found_response()
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for user in users:
             try:
-                model_dump = user.model_dump_json()
+                model_dump = UserSerializer(user).data
                 if not model_dump:
                     raise SAMUserBrokerError(f"Model dump failed for {self.kind} {user.name}")
                 data.append(model_dump)
@@ -203,7 +222,7 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
             SAMKeys.METADATA.value: {"count": len(data)},
             "kwargs": kwargs,
             "data": {
-                "titles": self.get_model_titles(),
+                "titles": self.get_model_titles(serializer=UserSerializer()),
                 "items": data,
             },
         }
