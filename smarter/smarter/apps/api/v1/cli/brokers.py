@@ -3,8 +3,15 @@
 Smarter API command-line interface Brokers. These are the broker classes
 that implement the broker service pattern for an underlying object. Brokers
 receive a Yaml manifest representation of a model, convert this to a Pydantic
-model, and then instantiate the appropriate Python class that perform
-the necessary operations to facilitate get, post, put, and delete operations.
+model, and then instantiate the appropriate Python class that performs
+the necessary operations to facilitate cli requests that include:
+    - delete
+    - deploy
+    - describe
+    - get
+    - logs
+    - manifest
+    - undeploy
 """
 
 from typing import Dict, Type
@@ -18,6 +25,7 @@ from smarter.apps.plugin.manifest.brokers.plugin import SAMPluginBroker
 from smarter.apps.plugin.manifest.brokers.sql_connection import (
     SAMPluginDataSqlConnectionBroker,
 )
+from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib.drf.manifest.brokers.auth_token import SAMSmarterAuthTokenBroker
 from smarter.lib.manifest.broker import AbstractBroker, BrokerNotImplemented
 
@@ -32,3 +40,15 @@ BROKERS: Dict[str, Type[AbstractBroker]] = {
     SAMKinds.APICONNECTION.value: BrokerNotImplemented,
     SAMKinds.USER.value: SAMUserBroker,
 }
+
+# an internal self-check to ensure that all SAMKinds have a Broker implementation
+if not all(item in SAMKinds.all_values() for item in BROKERS):
+    brokers_keys = set(BROKERS.keys())
+    samkinds_values = set(SAMKinds.all_values())
+    difference = brokers_keys.difference(samkinds_values)
+    difference_list = list(difference)
+    if len(difference_list) == 1:
+        difference_list = difference_list[0]
+    raise SmarterConfigurationError(
+        f"The following broker(s) is missing from the master BROKERS dictionary: {difference_list}"
+    )
