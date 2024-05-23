@@ -1,5 +1,6 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'get' view"""
+
 from .base import CliBaseApiView
 
 
@@ -12,4 +13,4 @@ class ApiV1CliGetApiView(CliBaseApiView):
         'all': boolean = False
         'tags': comma-delimited str = None
         """
-        return self.broker.get(request, args=args, kwargs=kwargs)
+        return self.broker.get(request=request, *args, kwargs=kwargs)

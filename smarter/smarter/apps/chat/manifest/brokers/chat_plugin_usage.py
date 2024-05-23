@@ -174,7 +174,7 @@ class SAMChatPluginUsageBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def example_manifest(self, kwargs: dict = None) -> JsonResponse:
+    def example_manifest(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -192,15 +192,14 @@ class SAMChatPluginUsageBroker(AbstractBroker, AccountMixin):
         self._session_key: str = kwargs.get("session_id", None)
         data = []
         if self.session_key:
-            self.account = ChatPluginUsage.objects.filter(session_key=self.session_key)
-        chats = ChatPluginUsage.objects.filter(account=self.account)
+            plugin_usages = ChatPluginUsage.objects.filter(session_key=self.session_key)
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
-        for chat in chats:
+        for plugin_usage in plugin_usages:
             try:
-                model_dump = ChatPluginUsageSerializer(chat).data
+                model_dump = ChatPluginUsageSerializer(plugin_usage).data
                 if not model_dump:
-                    raise SAMChatPluginUsageBrokerError(f"Model dump failed for {self.kind} {chat.id}")
+                    raise SAMChatPluginUsageBrokerError(f"Model dump failed for {self.kind} {plugin_usage.id}")
                 data.append(model_dump)
             except Exception as e:
                 return self.err_response(self.get.__name__, e)

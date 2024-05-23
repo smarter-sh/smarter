@@ -20,6 +20,11 @@ from smarter.apps.account.manifest.brokers.account import SAMAccountBroker
 from smarter.apps.account.manifest.brokers.user import SAMUserBroker
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.chat.manifest.brokers.chat import SAMChatBroker
+from smarter.apps.chat.manifest.brokers.chat_history import SAMChatHistoryBroker
+from smarter.apps.chat.manifest.brokers.chat_plugin_usage import (
+    SAMChatPluginUsageBroker,
+)
+from smarter.apps.chat.manifest.brokers.chat_tool_call import SAMChatToolCallBroker
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
 from smarter.apps.plugin.manifest.brokers.plugin import SAMPluginBroker
 from smarter.apps.plugin.manifest.brokers.sql_connection import (
@@ -34,6 +39,9 @@ BROKERS: Dict[str, Type[AbstractBroker]] = {
     SAMKinds.ACCOUNT.value: SAMAccountBroker,
     SAMKinds.APIKEY.value: SAMSmarterAuthTokenBroker,
     SAMKinds.CHAT.value: SAMChatBroker,
+    SAMKinds.CHAT_HISTORY.value: SAMChatHistoryBroker,
+    SAMKinds.CHAT_PLUGIN_USAGE.value: SAMChatPluginUsageBroker,
+    SAMKinds.CHAT_TOOL_CALL.value: SAMChatToolCallBroker,
     SAMKinds.CHATBOT.value: SAMChatbotBroker,
     SAMKinds.PLUGIN.value: SAMPluginBroker,
     SAMKinds.SQLCONNECTION.value: SAMPluginDataSqlConnectionBroker,

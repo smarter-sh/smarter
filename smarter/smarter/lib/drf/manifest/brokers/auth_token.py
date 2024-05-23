@@ -184,7 +184,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
     def model_class(self) -> SAMSmarterAuthToken:
         return SAMSmarterAuthToken
 
-    def example_manifest(self, kwargs: dict = None) -> JsonResponse:
+    def example_manifest(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,

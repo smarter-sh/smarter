@@ -136,7 +136,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def example_manifest(self, kwargs: dict = None) -> JsonResponse:
+    def example_manifest(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         plugin_class: str = kwargs.get("plugin_class", SAMPluginMetadataClassValues.STATIC.value)
         try:
             Plugin = PluginMap[plugin_class]
@@ -146,6 +146,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         data = Plugin.example_manifest(kwargs=kwargs)
         return self.success_response(operation=self.example_manifest.__name__, data=data)
 
+    # pylint: disable=W0221
     def get_model_titles(self) -> list[dict[str, str]]:
         return [{"name": f, "type": str(t)} for f, (_, t) in self.plugin.manifest.__annotations__.items()]
 
@@ -191,7 +192,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         }
         return self.success_response(operation=self.get.__name__, data=data)
 
-    def apply(self, request: HttpRequest = None) -> JsonResponse:
+    def apply(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         try:
             self.plugin.create()
         except Exception as e:
@@ -205,7 +206,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
                 return self.err_response(self.apply.__name__, e)
         return self.not_ready_response()
 
-    def describe(self, request: HttpRequest = None) -> JsonResponse:
+    def describe(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         if self.plugin.ready:
             try:
                 data = self.plugin.to_json()
@@ -216,7 +217,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
                 return self.err_response(self.describe.__name__, e)
         return self.not_ready_response()
 
-    def delete(self, request: HttpRequest = None) -> JsonResponse:
+    def delete(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         if self.plugin.ready:
             try:
                 self.plugin.delete()
@@ -225,8 +226,8 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
                 return self.err_response(self.delete.__name__, e)
         return self.not_ready_response()
 
-    def deploy(self, request: HttpRequest = None) -> JsonResponse:
+    def deploy(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         return self.not_implemented_response()
 
-    def logs(self, request: HttpRequest = None) -> JsonResponse:
+    def logs(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         return self.not_implemented_response()

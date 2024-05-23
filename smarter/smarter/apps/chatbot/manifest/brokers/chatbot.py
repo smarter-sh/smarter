@@ -225,7 +225,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
     def model_class(self) -> ChatBot:
         return ChatBot
 
-    def example_manifest(self, kwargs: dict = None) -> JsonResponse:
+    def example_manifest(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -297,7 +297,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         }
         return self.success_response(operation=self.get.__name__, data=data)
 
-    def apply(self, request: HttpRequest = None) -> JsonResponse:
+    def apply(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         try:
             data = self.manifest_to_django_orm()
             for key, value in data.items():
@@ -307,7 +307,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
             return self.err_response(self.apply.__name__, e)
         return self.success_response(operation=self.apply.__name__, data={})
 
-    def describe(self, request: HttpRequest = None) -> JsonResponse:
+    def describe(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         if self.chatbot:
             try:
                 data = self.django_orm_to_manifest_dict()
@@ -316,7 +316,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 return self.err_response(self.describe.__name__, e)
         return self.not_ready_response()
 
-    def delete(self, request: HttpRequest = None) -> JsonResponse:
+    def delete(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         if self.chatbot:
             try:
                 self.chatbot.delete()
@@ -325,7 +325,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 return self.err_response(self.delete.__name__, e)
         return self.not_ready_response()
 
-    def deploy(self, request: HttpRequest = None) -> JsonResponse:
+    def deploy(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         if self.chatbot:
             try:
                 self.chatbot.deployed = True
@@ -335,6 +335,6 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 return self.err_response(self.deploy.__name__, e)
         return self.not_ready_response()
 
-    def logs(self, request: HttpRequest = None) -> JsonResponse:
+    def logs(self, request: HttpRequest, args: list, kwargs: dict) -> JsonResponse:
         data = {}
         return self.success_response(operation=self.logs.__name__, data=data)
