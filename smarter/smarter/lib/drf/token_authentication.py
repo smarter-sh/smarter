@@ -1,8 +1,8 @@
 """knox TokenAuthentication subclass that checks if the token is active."""
 
 import logging
-from datetime import datetime
 
+from django.utils import timezone
 from knox.auth import TokenAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
@@ -34,7 +34,7 @@ class SmarterTokenAuthentication(TokenAuthentication):
             raise AuthenticationFailed
 
         # update the last used time for the token
-        smarter_auth_token.last_used_at = datetime.now()
+        smarter_auth_token.last_used_at = timezone.now()
         smarter_auth_token.save()
 
         # if the token is active, we can return the user and token as a tuple
