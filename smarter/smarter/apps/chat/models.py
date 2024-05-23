@@ -8,6 +8,8 @@ from django.conf import settings
 from django.core.cache import cache
 from django.db import models
 
+from smarter.apps.account.models import Account
+from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.model_helpers import TimestampedModel
@@ -27,6 +29,8 @@ class Chat(TimestampedModel):
         verbose_name_plural = "Chats"
 
     session_key = models.CharField(max_length=255, blank=True, null=True)
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, blank=True, null=True)
+    chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE, blank=True, null=True)
     ip_address = models.GenericIPAddressField(blank=True, null=True)
     user_agent = models.CharField(max_length=255, blank=True, null=True)
     url = models.URLField(blank=True, null=True)

@@ -201,8 +201,6 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
         accounts = Account.objects.filter(id=self.account.id)
-        if not accounts.exists():
-            return self.not_found_response()
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for account in accounts:

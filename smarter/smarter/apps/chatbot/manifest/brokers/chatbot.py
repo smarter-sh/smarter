@@ -275,9 +275,6 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         else:
             chatbots = ChatBot.objects.filter(account=self.account)
 
-        if not chatbots.exists():
-            return self.not_found_response()
-
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for chatbot in chatbots:
             try:

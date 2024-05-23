@@ -204,8 +204,6 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
         data = []
         user_profiles = UserProfile.objects.filter(account=self.account)
         users = [user_profile.user for user_profile in user_profiles]
-        if len(users) == 0:
-            return self.not_found_response()
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for user in users:
