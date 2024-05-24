@@ -6,7 +6,7 @@ from http import HTTPStatus
 from typing import Type
 
 import yaml
-from django.http import JsonResponse
+from django.http import JsonResponse, QueryDict
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -73,10 +73,8 @@ class CliBaseApiView(APIView, AccountMixin):
                     manifest=self.manifest_data,
                 )
                 if not self._loader:
-                    print("loader() -  exception: SAMValidationError")
                     raise APIV1CLIViewError("")
             except APIV1CLIViewError as e:
-                print("loader() -  exception: SAMValidationError", e)
                 # not all endpoints require a manifest, so we
                 # should fail gracefully if the manifest is not provided.
                 self._manifest_load_failed = True
@@ -180,7 +178,9 @@ class CliBaseApiView(APIView, AccountMixin):
         if "Go-http-client" not in user_agent:
             logger.warning("The User-Agent is not a Go lang application: %s", user_agent)
 
-        self._manifest_name = kwargs.get("name", None)
+        query_string = request.META.get("QUERY_STRING", "")
+        query_dict = QueryDict(query_string)
+        self._manifest_name = query_dict.get("name", None)
         kind = kwargs.get("kind", None)
         if kind:
             self._manifest_kind = kind
@@ -188,11 +188,12 @@ class CliBaseApiView(APIView, AccountMixin):
                 self._manifest_kind = self.manifest_kind[:-1]
             if self.manifest_kind:
                 # Validate the manifest kind: plugin, plugins, user, users, chatbot, chatbots, etc.
-                if str(self.manifest_kind).lower() not in SAMKinds.all_slugs():
-                    print(f"Unsupported manifest kind: {self.manifest_kind}. should be one of {SAMKinds.all_slugs()}")
+                if str(self.manifest_kind) not in SAMKinds.all_values():
                     return JsonResponse(
                         error_response_factory(
-                            e=SAMBadRequestError(f"Unsupported manifest kind: {self.manifest_kind}")
+                            e=SAMBadRequestError(
+                                f"Unsupported manifest kind: {self.manifest_kind}. should be one of {SAMKinds.all_values()}"
+                            )
                         ),
                         status=HTTPStatus.BAD_REQUEST,
                     )

@@ -154,7 +154,12 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
 
     # pylint: disable=W0221
     def get_model_titles(self) -> list[dict[str, str]]:
-        return [{"name": f, "type": str(t)} for f, (_, t) in self.plugin.manifest.__annotations__.items()]
+        titles = [
+            {"name": f, "type": str(t)}
+            for f, t in self.plugin.manifest.__annotations__.items()
+            if f != "class_identifier"
+        ]
+        return titles
 
     def get(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         name: str = kwargs.get("name", None)
@@ -190,10 +195,10 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
             SAMKeys.KIND.value: self.kind,
             SAMMetadataKeys.NAME.value: name,
             SAMKeys.METADATA.value: {"count": len(data)},
-            SCLIResponseGet.KWARGS: kwargs,
-            SCLIResponseGet.DATA: {
-                SCLIResponseGetData.TITLES: self.get_model_titles(),
-                SCLIResponseGetData.ITEMS: data,
+            SCLIResponseGet.KWARGS.value: kwargs,
+            SCLIResponseGet.DATA.value: {
+                SCLIResponseGetData.TITLES.value: self.get_model_titles(),
+                SCLIResponseGetData.ITEMS.value: data,
             },
         }
         return self.json_response_ok(operation=self.get.__name__, data=data)
