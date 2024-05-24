@@ -5,8 +5,10 @@ import os
 import unittest
 from http import HTTPStatus
 
+import requests
 import yaml
 from django.http import JsonResponse
+from django.test import Client
 
 from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
@@ -20,8 +22,19 @@ from smarter.lib.unittest.utils import get_readonly_yaml_file
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
+# pylint: disable=too-many-instance-attributes
 class TestSAMChatbotBroker(unittest.TestCase):
     """Test SAM Chatbot Broker"""
+
+    def create_generic_request(self):
+        url = "http://example.com"
+        headers = {"Content-Type": "application/json"}
+        data = {}
+
+        request = requests.Request("GET", url, headers=headers, data=data)
+        prepared_request = request.prepare()
+
+        return prepared_request
 
     def setUp(self):
         """Set up test fixtures."""
@@ -30,6 +43,9 @@ class TestSAMChatbotBroker(unittest.TestCase):
         config_path = os.path.join(HERE, "data/chatbot.yaml")
         self.manifest = get_readonly_yaml_file(config_path)
         self.broker = SAMChatbotBroker(account=self.account, manifest=self.manifest)
+        self.client = Client()
+        self.request = self.create_generic_request()
+        self.kwargs = {}
 
     def tearDown(self):
         """Tear down test fixtures."""
@@ -37,7 +53,7 @@ class TestSAMChatbotBroker(unittest.TestCase):
 
     def test_chatbot_broker_apply(self):
         """Test that the Broker can apply the manifest."""
-        retval = self.broker.apply()
+        retval = self.broker.apply(request=self.request, kwargs=self.kwargs)
         content = json.loads(retval.content.decode())
         self.assertEqual(retval.status_code, HTTPStatus.OK)
         self.assertIsInstance(content, dict)
@@ -55,11 +71,11 @@ class TestSAMChatbotBroker(unittest.TestCase):
         - dump the pydantic model to a dictionary
         """
 
-        retval = self.broker.apply()
+        retval = self.broker.apply(request=self.request, kwargs=self.kwargs)
         self.assertEqual(retval.status_code, HTTPStatus.OK)
 
         # generate the manifest
-        retval = self.broker.describe()
+        retval = self.broker.describe(request=self.request, kwargs=self.kwargs)
         self.assertEqual(retval.status_code, HTTPStatus.OK)
 
         # transform the json content to a yaml manifest
@@ -84,10 +100,10 @@ class TestSAMChatbotBroker(unittest.TestCase):
 
     def test_chatbot_broker_delete(self):
         """Test that the Broker can delete the object."""
-        retval = self.broker.apply()
+        retval = self.broker.apply(request=self.request, kwargs=self.kwargs)
         self.assertEqual(retval.status_code, HTTPStatus.OK)
 
-        retval = self.broker.delete()
+        retval = self.broker.delete(request=self.request, kwargs=self.kwargs)
         self.assertEqual(retval.status_code, HTTPStatus.OK)
         content = json.loads(retval.content.decode())
         self.assertIsInstance(content, dict)
@@ -97,7 +113,7 @@ class TestSAMChatbotBroker(unittest.TestCase):
     def test_chatbot_broker_deploy(self):
         """Test that the Broker does not implement a deploy() method."""
 
-        retval = self.broker.deploy()
+        retval = self.broker.deploy(request=self.request, kwargs=self.kwargs)
         self.assertEqual(retval.status_code, HTTPStatus.OK)
         content = json.loads(retval.content.decode())
         self.assertIsInstance(content, dict)
@@ -107,7 +123,7 @@ class TestSAMChatbotBroker(unittest.TestCase):
     def test_chatbot_broker_logs(self):
         """Test that the Broker can generate log data."""
 
-        retval = self.broker.logs()
+        retval = self.broker.logs(request=self.request, kwargs=self.kwargs)
         self.assertEqual(retval.status_code, HTTPStatus.OK)
         content = json.loads(retval.content.decode())
         self.assertIsInstance(content, dict)
@@ -117,7 +133,7 @@ class TestSAMChatbotBroker(unittest.TestCase):
     def test_example_manifest(self):
         """Test that the example manifest is valid."""
 
-        response = self.broker.example_manifest()
+        response = self.broker.example_manifest(request=self.request, kwargs=self.kwargs)
         self.assertIsInstance(response, JsonResponse)
         self.assertEqual(response.status_code, HTTPStatus.OK)
 

@@ -1,6 +1,9 @@
 # pylint: disable=W0718
 """Smarter API Chatbot Manifest handler"""
 
+import logging
+
+from django.db import transaction
 from django.forms.models import model_to_dict
 from django.http import HttpRequest, JsonResponse
 from rest_framework.serializers import ModelSerializer
@@ -16,8 +19,10 @@ from smarter.apps.chatbot.models import (
     ChatBotFunctions,
     ChatBotPlugin,
 )
+from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.utils import get_plugin_examples_by_name
 from smarter.common.conf import SettingsDefaults
+from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.enum import (
     SAMApiVersions,
@@ -30,6 +35,7 @@ from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
 
+logger = logging.getLogger(__name__)
 MAX_RESULTS = 1000
 
 
@@ -303,16 +309,87 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         }
         return self.json_response_ok(operation=self.get.__name__, data=data)
 
+    # pylint: disable=too-many-branches
     def apply(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        """
+        apply the manifest. copy the manifest data to the Django ORM model and
+        save the model to the database. Call super().apply() to ensure that the
+        manifest is loaded and validated before applying the manifest to the
+        Django ORM model.
+        Note that there are fields included in the manifest that are not editable
+        and are therefore removed from the Django ORM model dict prior to attempting
+        the save() operation. These fields are defined in the readonly_fields list.
+
+        Chatbot is a composite model that includes the ChatBot, ChatBotAPIKey,
+        ChatBotPlugin and ChatBotFunctions models. All of these are represented
+        in the manifest spec and are created or updated as needed.
+        """
         super().apply(request, kwargs)
-        try:
-            data = self.manifest_to_django_orm()
-            for key, value in data.items():
-                setattr(self.chatbot, key, value)
-            self.chatbot.save()
-        except Exception as e:
-            return self.json_response_err(self.apply.__name__, e)
-        return self.json_response_ok(operation=self.apply.__name__, data={})
+        with transaction.atomic():
+            # ChatBot
+            # -------------
+            readonly_fields = ["id", "created_at", "updated_at"]
+            try:
+                data = self.manifest_to_django_orm()
+                for field in readonly_fields:
+                    data.pop(field, None)
+                for key, value in data.items():
+                    setattr(self.chatbot, key, value)
+                self.chatbot.save()
+            except Exception as e:
+                return self.json_response_err(self.apply.__name__, e)
+
+            # ChatBotAPIKey: create or update the API Key
+            # -------------
+            if self.manifest.spec.apiKey:
+                try:
+                    api_key = SmarterAuthToken.objects.get(name=self.manifest.spec.apiKey, user=self.user)
+                except SmarterAuthToken.DoesNotExist:
+                    return self.json_response_err_notfound(
+                        message=f"SmarterAuthToken {self.manifest.spec.apiKey} not found"
+                    )
+                for key in ChatBotAPIKey.objects.filter(chatbot=self.chatbot):
+                    if key.api_key != api_key:
+                        key.delete()
+                        logger.info("Detached SmarterAuthToken %s from ChatBot %s", key.name, self.chatbot.name)
+                _, created = ChatBotAPIKey.objects.get_or_create(chatbot=self.chatbot, api_key=api_key)
+                if created:
+                    logger.info(
+                        "SmarterAuthToken %s attached to ChatBot %s", self.manifest.spec.apiKey, self.chatbot.name
+                    )
+
+            # ChatBotPlugin: add what's missing, remove what in the model but not in the manifest
+            # -------------
+            for plugin in ChatBotPlugin.objects.filter(chatbot=self.chatbot):
+                if plugin.plugin_meta.name not in self.manifest.spec.plugins:
+                    plugin.delete()
+                    logger.info("Detached Plugin %s from ChatBot %s", plugin.plugin_meta.name, self.chatbot.name)
+            for plugin_name in self.manifest.spec.plugins:
+                try:
+                    plugin = PluginMeta.objects.get(name=plugin_name, account=self.account)
+                except PluginMeta.DoesNotExist:
+                    return self.json_response_err_notfound(message=f"PluginMeta {plugin_name} not found")
+                _, created = ChatBotPlugin.objects.get_or_create(chatbot=self.chatbot, plugin_meta=plugin)
+                if created:
+                    logger.info("Attached Plugin %s to ChatBot %s", plugin.name, self.chatbot.name)
+
+            # ChatBotFunctions: add what's missing, remove what in the model but not in the manifest
+            # -------------
+            for function in ChatBotFunctions.objects.filter(chatbot=self.chatbot):
+                if function.name not in self.manifest.spec.functions:
+                    function.delete()
+                    logger.info("Detached Function %s from ChatBot %s", function.name, self.chatbot.name)
+            for function in self.manifest.spec.functions:
+                if function not in ChatBotFunctions.choices_list():
+                    return self.json_response_err_notfound(
+                        message=f"Function {function} not found. Valid functions are: {ChatBotFunctions.choices_list()}"
+                    )
+                _, created = ChatBotFunctions.objects.get_or_create(chatbot=self.chatbot, name=function)
+                if created:
+                    logger.info("Attached Function %s to ChatBot %s", function, self.chatbot.name)
+
+            # done! return the response. Django will take care of committing the transaction
+            return self.json_response_ok(operation=self.apply.__name__, data={})
 
     def describe(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         if self.chatbot:

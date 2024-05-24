@@ -335,6 +335,10 @@ class ChatBotFunctions(TimestampedModel):
     chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE)
     name = models.CharField(max_length=255, choices=CHOICES, blank=True, null=True)
 
+    @classmethod
+    def choices_list(cls):
+        return [item[0] for item in cls.CHOICES]
+
 
 class ChatBotRequests(TimestampedModel):
     """List of Requests for a ChatBot"""

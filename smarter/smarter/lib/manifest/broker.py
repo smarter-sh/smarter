@@ -193,7 +193,6 @@ class AbstractBroker(ABC):
         """apply a manifest, which works like a upsert."""
         if self.manifest.status:
             raise SAMBrokerReadOnlyError("status is a read-only manifest field for")
-        return None
 
     @abstractmethod
     def describe(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
@@ -293,9 +292,9 @@ class AbstractBroker(ABC):
         data = {"message": f"could not {operation} {self.kind} {self.name}", "error": str(e), "stacktrace": tb_str}
         return JsonResponse(data=data, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-    def json_response_err_notfound(self, data: dict = None) -> JsonResponse:
+    def json_response_err_notfound(self, message: str = None) -> JsonResponse:
         """Return a common not found response."""
-        message = f"{self.kind} {self.name} not found"
+        message = message or f"{self.kind} {self.name} not found"
         retval = self._retval(message=message)
         return JsonResponse(data=retval, status=HTTPStatus.NOT_FOUND)
 

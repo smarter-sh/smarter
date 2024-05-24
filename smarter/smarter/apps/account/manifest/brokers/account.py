@@ -232,9 +232,21 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
         return self.json_response_ok(operation=self.get.__name__, data=data)
 
     def apply(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        """
+        apply the manifest. copy the manifest data to the Django ORM model and
+        save the model to the database. Call super().apply() to ensure that the
+        manifest is loaded and validated before applying the manifest to the
+        Django ORM model.
+        Note that there are fields included in the manifest that are not editable
+        and are therefore removed from the Django ORM model dict prior to attempting
+        the save() operation. These fields are defined in the readonly_fields list.
+        """
         super().apply(request, kwargs)
+        readonly_fields = ["id", "created_at", "updated_at", "account_number"]
         try:
             data = self.manifest_to_django_orm()
+            for field in readonly_fields:
+                data.pop(field, None)
             for key, value in data.items():
                 setattr(self.account, key, value)
             self.account.save()

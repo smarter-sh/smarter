@@ -199,6 +199,12 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         return self.json_response_ok(operation=self.get.__name__, data=data)
 
     def apply(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        """
+        apply the manifest. copy the manifest data to the Django ORM model and
+        save the model to the database. Call super().apply() to ensure that the
+        manifest is loaded and validated before applying the manifest to the
+        Django ORM model.
+        """
         super().apply(request, kwargs)
         try:
             self.plugin.create()
@@ -208,9 +214,9 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         if self.plugin.ready:
             try:
                 self.plugin.save()
-                return self.json_response_ok(operation=self.apply.__name__, data={})
             except Exception as e:
                 return self.json_response_err(self.apply.__name__, e)
+            return self.json_response_ok(operation=self.apply.__name__, data={})
         return self.json_response_err_notready()
 
     def describe(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
