@@ -140,7 +140,7 @@ class SAMLoader:
         # ---------------------------------------------------------------------
         # Note that child classes are expected to
         # override the specification as well as validate() in order to add
-        # the specification details of their own individual manfiests.
+        # the specification details of their own individual manifests.
         # Therefore, this call will only validate the top-level keys and values
         # of the manifest.
         self.validate_manifest()

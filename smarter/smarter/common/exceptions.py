@@ -1,7 +1,11 @@
 """Module exceptions.py"""
 
+import logging
 import re
 import traceback
+
+
+logger = logging.getLogger(__name__)
 
 
 class SmarterExceptionBase(Exception):
@@ -47,7 +51,7 @@ def error_response_factory(e: Exception) -> dict:
     else:
         error_class = "Exception"
 
-    return {
+    retval = {
         "errorClass": error_class,
         "stacktrace": traceback.format_exc(),
         "description": e.args[0] if e.args else "",  # get the error message from args
@@ -56,3 +60,5 @@ def error_response_factory(e: Exception) -> dict:
         "cause": str(e.__cause__),
         "context": str(e.__context__),
     }
+    logger.error(retval)
+    return retval

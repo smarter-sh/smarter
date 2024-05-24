@@ -11,7 +11,13 @@ from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.plugin.sql import PluginSql
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.lib.manifest.broker import AbstractBroker
-from smarter.lib.manifest.enum import SAMApiVersions
+from smarter.lib.manifest.enum import (
+    SAMApiVersions,
+    SAMKeys,
+    SAMMetadataKeys,
+    SCLIResponseGet,
+    SCLIResponseGetData,
+)
 from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -136,7 +142,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def example_manifest(self, kwargs: dict = None) -> JsonResponse:
+    def example_manifest(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         plugin_class: str = kwargs.get("plugin_class", SAMPluginMetadataClassValues.STATIC.value)
         try:
             Plugin = PluginMap[plugin_class]
@@ -144,12 +150,21 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
             raise SAMPluginBrokerError(f"Plugin class {plugin_class} not found") from e
 
         data = Plugin.example_manifest(kwargs=kwargs)
-        return self.success_response(operation=self.example_manifest.__name__, data=data)
+        return self.json_response_ok(operation=self.example_manifest.__name__, data=data)
 
-    def get(
-        self, request: HttpRequest = None, name: str = None, all_objects: bool = False, tags: str = None
-    ) -> JsonResponse:
+    # pylint: disable=W0221
+    def get_model_titles(self) -> list[dict[str, str]]:
+        titles = [
+            {"name": f, "type": str(t)}
+            for f, t in self.plugin.manifest.__annotations__.items()
+            if f != "class_identifier"
+        ]
+        return titles
 
+    def get(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        name: str = kwargs.get("name", None)
+        all_objects: bool = kwargs.get("all_objects", False)
+        tags: str = kwargs.get("tags", None)
         data = []
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
@@ -165,9 +180,6 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
                 else:
                     plugins = PluginMeta.objects.filter(account=self.account)[:MAX_RESULTS]
 
-        if not plugins.exists():
-            return self.not_found_response()
-
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for plugin_meta in plugins:
             controller = PluginController(account=self.account, plugin_meta=plugin_meta)
@@ -177,54 +189,66 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
                     raise SAMPluginBrokerError(f"Model dump failed for {self.kind} {plugin_meta.name}")
                 data.append(model_dump)
             except Exception as e:
-                return self.err_response(self.get.__name__, e)
+                return self.json_response_err(self.get.__name__, e)
         data = {
-            "apiVersion": self.api_version,
-            "kind": self.kind,
-            "name": name,
-            "all_objects": all_objects,
-            "tags": tags,
-            "metadata": {"count": len(data)},
-            "items": data,
+            SAMKeys.APIVERSION.value: self.api_version,
+            SAMKeys.KIND.value: self.kind,
+            SAMMetadataKeys.NAME.value: name,
+            SAMKeys.METADATA.value: {"count": len(data)},
+            SCLIResponseGet.KWARGS.value: kwargs,
+            SCLIResponseGet.DATA.value: {
+                SCLIResponseGetData.TITLES.value: self.get_model_titles(),
+                SCLIResponseGetData.ITEMS.value: data,
+            },
         }
-        return self.success_response(operation=self.get.__name__, data=data)
+        return self.json_response_ok(operation=self.get.__name__, data=data)
 
-    def apply(self, request: HttpRequest = None) -> JsonResponse:
+    def apply(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        """
+        apply the manifest. copy the manifest data to the Django ORM model and
+        save the model to the database. Call super().apply() to ensure that the
+        manifest is loaded and validated before applying the manifest to the
+        Django ORM model.
+        """
+        super().apply(request, kwargs)
         try:
             self.plugin.create()
         except Exception as e:
-            return self.err_response("create", e)
+            return self.json_response_err("create", e)
 
         if self.plugin.ready:
             try:
                 self.plugin.save()
-                return self.success_response(operation=self.apply.__name__, data={})
             except Exception as e:
-                return self.err_response(self.apply.__name__, e)
-        return self.not_ready_response()
+                return self.json_response_err(self.apply.__name__, e)
+            return self.json_response_ok(operation=self.apply.__name__, data={})
+        return self.json_response_err_notready()
 
-    def describe(self, request: HttpRequest = None) -> JsonResponse:
+    def describe(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         if self.plugin.ready:
             try:
                 data = self.plugin.to_json()
                 data["metadata"].pop("account")
                 data["metadata"].pop("author")
-                return self.success_response(operation=self.describe.__name__, data=data)
+                return self.json_response_ok(operation=self.describe.__name__, data=data)
             except Exception as e:
-                return self.err_response(self.describe.__name__, e)
-        return self.not_ready_response()
+                return self.json_response_err(self.describe.__name__, e)
+        return self.json_response_err_notready()
 
-    def delete(self, request: HttpRequest = None) -> JsonResponse:
+    def delete(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         if self.plugin.ready:
             try:
                 self.plugin.delete()
-                return self.success_response(operation=self.delete.__name__, data={})
+                return self.json_response_ok(operation=self.delete.__name__, data={})
             except Exception as e:
-                return self.err_response(self.delete.__name__, e)
-        return self.not_ready_response()
+                return self.json_response_err(self.delete.__name__, e)
+        return self.json_response_err_notready()
 
-    def deploy(self, request: HttpRequest = None) -> JsonResponse:
-        return self.not_implemented_response()
+    def deploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        return self.json_response_err_notimplemented()
 
-    def logs(self, request: HttpRequest = None) -> JsonResponse:
-        return self.not_implemented_response()
+    def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        return self.json_response_err_notimplemented()
+
+    def logs(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        return self.json_response_err_notimplemented()

@@ -5,12 +5,8 @@ from django.contrib import admin
 from django.contrib.auth.models import Group, Permission, User
 
 from smarter.__version__ import __version__
-from smarter.apps.account.models import (
-    Account,
-    PaymentMethod,
-    SmarterAuthToken,
-    UserProfile,
-)
+from smarter.apps.account.models import Account, PaymentMethod, UserProfile
+from smarter.lib.drf.models import SmarterAuthToken
 
 from .models import EmailContactList
 
@@ -42,7 +38,7 @@ class RestrictedAPIKeyAdmin(RestrictedModelAdmin):
         "description",
         "user",
     ]
-    readonly_fields = ("created", "token_key", "last_used_at", "digest", "user", "account")
+    readonly_fields = ("created", "token_key", "last_used_at", "digest", "user")
     ordering = ("-created",)
 
 

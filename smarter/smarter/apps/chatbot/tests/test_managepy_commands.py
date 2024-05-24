@@ -1,3 +1,4 @@
+# pylint: disable=W0613
 """Tests for manage.py create_plugin."""
 
 import hashlib
@@ -7,7 +8,7 @@ import unittest
 
 from django.core.management import call_command
 
-from smarter.apps.account.models import Account, SmarterAuthToken
+from smarter.apps.account.models import Account
 from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey
 from smarter.apps.chatbot.signals import (
@@ -19,8 +20,10 @@ from smarter.apps.chatbot.signals import (
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
 from smarter.common.helpers.aws_helpers import aws_helper
+from smarter.lib.drf.models import SmarterAuthToken
 
 
+# pylint: disable=too-many-instance-attributes
 class ManageCommandCreatePluginTestCase(unittest.TestCase):
     """Tests for manage.py create_plugin."""
 
@@ -55,7 +58,7 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
         hashed_slug = hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:16]
         self.user, self.account, self.user_profile = admin_user_factory()
         self.auth_token, self.secret_key = SmarterAuthToken.objects.create(
-            account=self.account, user=self.user, description="unit test"
+            name="testKey", user=self.user, description="unit test"
         )
         self.chatbot = ChatBot.objects.create(
             account=self.account,

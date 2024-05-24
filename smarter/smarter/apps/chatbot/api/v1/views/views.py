@@ -9,11 +9,7 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
-from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
-from smarter.apps.account.views.token_authentication_helpers import (
-    SmarterAdminAPIView,
-    SmarterAdminListAPIView,
-)
+from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.chatbot.models import (
     ChatBot,
     ChatBotAPIKey,
@@ -21,16 +17,20 @@ from smarter.apps.chatbot.models import (
     ChatBotFunctions,
     ChatBotPlugin,
 )
-from smarter.apps.chatbot.tasks import deploy_default_api
-from smarter.apps.plugin.models import PluginMeta
-from smarter.lib.django.user import User
-
-from ..serializers import (
+from smarter.apps.chatbot.serializers import (
     ChatBotAPIKeySerializer,
     ChatBotCustomDomainSerializer,
     ChatBotFunctionsSerializer,
     ChatBotPluginSerializer,
     ChatBotSerializer,
+)
+from smarter.apps.chatbot.tasks import deploy_default_api
+from smarter.apps.plugin.models import PluginMeta
+from smarter.lib.django.user import User
+from smarter.lib.drf.models import SmarterAuthToken
+from smarter.lib.drf.views.token_authentication_helpers import (
+    SmarterAdminAPIView,
+    SmarterAdminListAPIView,
 )
 
 

@@ -1,5 +1,7 @@
 """Plug helper functions for plugin unit tests."""
 
+import requests
+
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import account_admin_user, user_profile_for_user
 from smarter.common.exceptions import SmarterValueError
@@ -30,3 +32,14 @@ def plugin_meta_factory(plugin_class: str, account: Account, user_profile: UserP
     meta_data.save()
 
     return meta_data
+
+
+def create_generic_request():
+    url = "http://example.com"
+    headers = {"Content-Type": "application/json"}
+    data = {}
+
+    request = requests.Request("GET", url, headers=headers, data=data)
+    prepared_request = request.prepare()
+
+    return prepared_request
