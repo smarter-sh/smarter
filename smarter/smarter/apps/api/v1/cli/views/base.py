@@ -74,7 +74,7 @@ class CliBaseApiView(APIView, AccountMixin):
                 )
                 if not self._loader:
                     raise APIV1CLIViewError("")
-            except APIV1CLIViewError as e:
+            except APIV1CLIViewError:
                 # not all endpoints require a manifest, so we
                 # should fail gracefully if the manifest is not provided.
                 self._manifest_load_failed = True
