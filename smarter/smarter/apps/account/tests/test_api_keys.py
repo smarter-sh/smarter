@@ -5,9 +5,10 @@ import hashlib
 import random
 import unittest
 
-from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
+from smarter.apps.account.models import Account, UserProfile
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib.django.user import User
+from smarter.lib.drf.models import SmarterAuthToken
 
 
 class TestSmarterAuthToken(unittest.TestCase):
@@ -57,8 +58,8 @@ class TestSmarterAuthToken(unittest.TestCase):
         """Test create auth token."""
 
         token_record, token_key = SmarterAuthToken.objects.create(
-            account=self.account,
             user=self.admin_user,
+            name="testToken" + self.hash_suffix,
             description="testToken" + self.hash_suffix,
         )
 
@@ -71,7 +72,7 @@ class TestSmarterAuthToken(unittest.TestCase):
 
         with self.assertRaises(SmarterBusinessRuleViolation):
             SmarterAuthToken.objects.create(
-                account=self.account,
+                name="testToken",
                 user=self.non_admin_user,
                 description="testToken" + self.hash_suffix,
             )

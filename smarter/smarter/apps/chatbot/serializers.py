@@ -2,7 +2,13 @@
 """Chatbot serializers."""
 from rest_framework import serializers
 
-from .models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain, ChatBotPlugin
+from .models import (
+    ChatBot,
+    ChatBotAPIKey,
+    ChatBotCustomDomain,
+    ChatBotFunctions,
+    ChatBotPlugin,
+)
 
 
 class ChatBotSerializer(serializers.ModelSerializer):
@@ -30,4 +36,11 @@ class ChatBotPluginSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChatBotPlugin
+        fields = "__all__"
+
+
+class ChatBotFunctionsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ChatBotFunctions
         fields = "__all__"

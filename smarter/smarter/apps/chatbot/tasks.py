@@ -196,7 +196,7 @@ def create_custom_domain_dns_record(
 # API's are deployed to the customer's default domain in Smarter, and are also
 # optionally deployed to a custom domain.
 # ------------------------------------------------------------------------------
-# pylint: disable=too-many-locals
+# pylint: disable=too-many-locals,too-many-branches,too-many-statements
 @app.task(
     autoretry_for=(Exception,),
     retry_backoff=CELERY_RETRY_BACKOFF,
@@ -433,6 +433,7 @@ def create_domain_A_record(hostname: str, api_host_domain: str) -> dict:
         # If the domain already exists, we can ignore the error
         if "InvalidChangeBatch" not in str(e):
             raise
+    return None
 
 
 def destroy_domain_A_record(hostname: str, api_host_domain: str):

@@ -9,10 +9,11 @@ from django.core.management.base import BaseCommand
 from django.test import Client
 from django.urls import reverse
 
-from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
+from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import account_admin_user
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
+from smarter.lib.drf.models import SmarterAuthToken
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -72,7 +73,7 @@ class Command(BaseCommand):
 
         # generate an auth token (api key) for this job.
         token_record, token_key = SmarterAuthToken.objects.create(
-            account=account,
+            name="verify_api_v1_cli_endpoints",
             user=user,
             description="DELETE ME: single-use key created by manage.py verify_api_v1_cli_endpoints",
         )

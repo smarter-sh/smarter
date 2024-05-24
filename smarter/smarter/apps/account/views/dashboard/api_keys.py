@@ -9,8 +9,9 @@ from django import forms, http
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
-from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
+from smarter.apps.account.models import Account, UserProfile
 from smarter.lib.django.view_helpers import SmarterAdminWebView
+from smarter.lib.drf.models import SmarterAuthToken
 
 
 logger = logging.getLogger(__name__)
@@ -45,7 +46,7 @@ class APIKeysView(APIKeyBase):
     template_path = "account/dashboard/api-keys.html"
 
     def get(self, request):
-        api_keys = SmarterAuthToken.objects.filter(account=self.account).only(
+        api_keys = SmarterAuthToken.objects.filter(user=self.user_profile.user).only(
             "user", "description", "created", "last_used_at", "is_active"
         )
         context = {
@@ -63,7 +64,7 @@ class APIKeyView(APIKeyBase):
 
     def _handle_create(self, request):
         new_api_key, token = SmarterAuthToken.objects.create(
-            user=request.user, description=f"New API key created by {request.user}"
+            name="New API Key", user=request.user, description=f"New API key created by {request.user}"
         )
         url = reverse(
             "account_new_api_key",
