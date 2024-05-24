@@ -13,7 +13,6 @@ from smarter.common.const import PYTHON_ROOT
 from smarter.lib.manifest.enum import (
     SAMApiVersions,
     SAMKeys,
-    SAMMetadataKeys,
     SCLIResponseGet,
     SCLIResponseGetData,
 )

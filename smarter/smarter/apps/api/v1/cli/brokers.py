@@ -14,7 +14,6 @@ the necessary operations to facilitate cli requests that include:
     - undeploy
 """
 
-import re
 from typing import Dict, Type
 
 from smarter.apps.account.manifest.brokers.account import SAMAccountBroker

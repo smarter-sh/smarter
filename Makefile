@@ -75,7 +75,6 @@ coverage:
 pre-commit-init:
 	pre-commit install
 	pre-commit autoupdate
-	pre-commit run --all-files
 
 pre-commit-run:
 	pre-commit run --all-files
