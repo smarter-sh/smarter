@@ -11,7 +11,13 @@ from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.plugin.sql import PluginSql
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.lib.manifest.broker import AbstractBroker
-from smarter.lib.manifest.enum import SAMApiVersions, SAMKeys, SAMMetadataKeys
+from smarter.lib.manifest.enum import (
+    SAMApiVersions,
+    SAMKeys,
+    SAMMetadataKeys,
+    SCLIResponseGet,
+    SCLIResponseGetData,
+)
 from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -184,10 +190,10 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
             SAMKeys.KIND.value: self.kind,
             SAMMetadataKeys.NAME.value: name,
             SAMKeys.METADATA.value: {"count": len(data)},
-            "kwargs": kwargs,
-            "data": {
-                "titles": self.get_model_titles(),
-                "items": data,
+            SCLIResponseGet.KWARGS: kwargs,
+            SCLIResponseGet.DATA: {
+                SCLIResponseGetData.TITLES: self.get_model_titles(),
+                SCLIResponseGetData.ITEMS: data,
             },
         }
         return self.json_response_ok(operation=self.get.__name__, data=data)

@@ -13,7 +13,13 @@ from smarter.apps.account.manifest.models.account.model import SAMAccount
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account
 from smarter.lib.manifest.broker import AbstractBroker
-from smarter.lib.manifest.enum import SAMApiVersions, SAMKeys, SAMMetadataKeys
+from smarter.lib.manifest.enum import (
+    SAMApiVersions,
+    SAMKeys,
+    SAMMetadataKeys,
+    SCLIResponseGet,
+    SCLIResponseGetData,
+)
 from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -217,10 +223,10 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
             SAMKeys.KIND.value: self.kind,
             SAMMetadataKeys.NAME.value: self.account.account_number,
             SAMKeys.METADATA.value: {"count": len(data)},
-            "kwargs": kwargs,
-            "data": {
-                "titles": self.get_model_titles(serializer=AccountSerializer()),
-                "items": data,
+            SCLIResponseGet.KWARGS: kwargs,
+            SCLIResponseGet.DATA: {
+                SCLIResponseGetData.TITLES: self.get_model_titles(serializer=AccountSerializer()),
+                SCLIResponseGetData.ITEMS: data,
             },
         }
         return self.json_response_ok(operation=self.get.__name__, data=data)
