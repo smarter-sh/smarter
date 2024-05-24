@@ -14,6 +14,7 @@ the necessary operations to facilitate cli requests that include:
     - undeploy
 """
 
+import re
 from typing import Dict, Type
 
 from smarter.apps.account.manifest.brokers.account import SAMAccountBroker
@@ -35,23 +36,58 @@ from smarter.lib.drf.manifest.brokers.auth_token import SAMSmarterAuthTokenBroke
 from smarter.lib.manifest.broker import AbstractBroker, BrokerNotImplemented
 
 
-BROKERS: Dict[str, Type[AbstractBroker]] = {
-    SAMKinds.ACCOUNT.value: SAMAccountBroker,
-    SAMKinds.APIKEY.value: SAMSmarterAuthTokenBroker,
-    SAMKinds.CHAT.value: SAMChatBroker,
-    SAMKinds.CHAT_HISTORY.value: SAMChatHistoryBroker,
-    SAMKinds.CHAT_PLUGIN_USAGE.value: SAMChatPluginUsageBroker,
-    SAMKinds.CHAT_TOOL_CALL.value: SAMChatToolCallBroker,
-    SAMKinds.CHATBOT.value: SAMChatbotBroker,
-    SAMKinds.PLUGIN.value: SAMPluginBroker,
-    SAMKinds.SQLCONNECTION.value: SAMPluginDataSqlConnectionBroker,
-    SAMKinds.APICONNECTION.value: BrokerNotImplemented,
-    SAMKinds.USER.value: SAMUserBroker,
-}
+class Brokers:
+    """Broker service pattern for an underlying object. Maps SAMKinds to Broker classes."""
+
+    _brokers: Dict[str, Type[AbstractBroker]] = {
+        SAMKinds.ACCOUNT.value: SAMAccountBroker,
+        SAMKinds.APIKEY.value: SAMSmarterAuthTokenBroker,
+        SAMKinds.CHAT.value: SAMChatBroker,
+        SAMKinds.CHAT_HISTORY.value: SAMChatHistoryBroker,
+        SAMKinds.CHAT_PLUGIN_USAGE.value: SAMChatPluginUsageBroker,
+        SAMKinds.CHAT_TOOL_CALL.value: SAMChatToolCallBroker,
+        SAMKinds.CHATBOT.value: SAMChatbotBroker,
+        SAMKinds.PLUGIN.value: SAMPluginBroker,
+        SAMKinds.SQLCONNECTION.value: SAMPluginDataSqlConnectionBroker,
+        SAMKinds.APICONNECTION.value: BrokerNotImplemented,
+        SAMKinds.USER.value: SAMUserBroker,
+    }
+
+    @classmethod
+    def _lower_brokers(cls):
+        return {k.lower(): v for k, v in cls._brokers.items()}
+
+    @classmethod
+    def get_broker(cls, kind: str) -> Type[AbstractBroker]:
+        """Case insensitive broker getter."""
+        return cls._brokers.get(kind) or cls._lower_brokers().get(kind.lower())
+
+    @classmethod
+    def snake_to_camel(cls, snake_str):
+        components = snake_str.split("_")
+        return components[0] + "".join(x.title() for x in components[1:])
+
+    @classmethod
+    def get_broker_kind(cls, kind: str) -> str:
+        """
+        Case insensitive broker kind getter. Returns the original SAMKinds
+        key string from cls._brokers for the given kind.
+        """
+        kind = cls.snake_to_camel(kind)
+        lower_kind = kind.lower()
+        for key in cls._brokers:
+            if key.lower() == lower_kind:
+                return key
+        return None
+
+    @classmethod
+    def all_brokers(cls) -> list[str]:
+        return list(cls._brokers.keys())
+
 
 # an internal self-check to ensure that all SAMKinds have a Broker implementation
-if not all(item in SAMKinds.all_values() for item in BROKERS):
-    brokers_keys = set(BROKERS.keys())
+if not all(item in SAMKinds.all_values() for item in Brokers.all_brokers()):
+    brokers_keys = set(Brokers.all_brokers())
     samkinds_values = set(SAMKinds.all_values())
     difference = brokers_keys.difference(samkinds_values)
     difference_list = list(difference)
