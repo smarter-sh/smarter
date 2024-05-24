@@ -6,6 +6,7 @@ import unittest
 from http import HTTPStatus
 
 import yaml
+from django.test import Client
 
 from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
 from smarter.apps.plugin.manifest.brokers.sql_connection import (
@@ -18,6 +19,8 @@ from smarter.common.utils import dict_is_contained_in
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.unittest.utils import get_readonly_yaml_file
 
+from .factories import create_generic_request
+
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -28,6 +31,9 @@ class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.user, self.account, self.user_profile = admin_user_factory()
+        self.client = Client()
+        self.request = create_generic_request()
+        self.kwargs = {}
 
         config_path = os.path.join(HERE, "mock_data/sql-connection.yaml")
         connection_manifest = get_readonly_yaml_file(config_path)
@@ -40,7 +46,7 @@ class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
 
     def test_sqlconnection_broker_apply(self):
         """Test that the Broker can apply the manifest."""
-        retval = self.broker.apply()
+        retval = self.broker.apply(request=self.request, kwargs=self.kwargs)
         self.assertEqual(retval.status_code, HTTPStatus.OK)
         content = json.loads(retval.content.decode())
         self.assertIsInstance(content, dict)
@@ -58,11 +64,11 @@ class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
         - dump the pydantic model to a dictionary
         """
 
-        retval = self.broker.apply()
+        retval = self.broker.apply(request=self.request, kwargs=self.kwargs)
         self.assertEqual(retval.status_code, HTTPStatus.OK)
 
         # generate the manifest
-        retval = self.broker.describe()
+        retval = self.broker.describe(request=self.request, kwargs=self.kwargs)
         self.assertEqual(retval.status_code, HTTPStatus.OK)
 
         # transform the json content to a yaml manifest
@@ -86,10 +92,10 @@ class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
 
     def test_sqlconnection_broker_delete(self):
         """Test that the Broker can delete the object."""
-        retval = self.broker.apply()
+        retval = self.broker.apply(request=self.request, kwargs=self.kwargs)
         self.assertEqual(retval.status_code, HTTPStatus.OK)
 
-        retval = self.broker.delete()
+        retval = self.broker.delete(request=self.request, kwargs=self.kwargs)
         self.assertEqual(retval.status_code, HTTPStatus.OK)
         content = json.loads(retval.content.decode())
         self.assertIsInstance(content, dict)
@@ -99,7 +105,7 @@ class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
     def test_sqlconnection_broker_deploy(self):
         """Test that the Broker does not implement a deploy() method."""
 
-        retval = self.broker.deploy()
+        retval = self.broker.deploy(request=self.request, kwargs=self.kwargs)
         self.assertEqual(retval.status_code, HTTPStatus.NOT_IMPLEMENTED)
         content = json.loads(retval.content.decode())
         self.assertIsInstance(content, dict)

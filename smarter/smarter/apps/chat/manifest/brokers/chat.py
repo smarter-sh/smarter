@@ -220,8 +220,10 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
         return self.json_response_ok(operation=self.get.__name__, data=data)
 
     def apply(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
-        super().apply(request, kwargs)
-        return self.json_response_err_notimplemented()
+        """
+        Chat is a read-only django table, populated by the LLM handlers
+        """
+        return self.json_response_err_readonly()
 
     def describe(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         if self.chat:
