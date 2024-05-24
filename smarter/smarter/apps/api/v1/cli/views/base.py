@@ -13,7 +13,7 @@ from rest_framework.views import APIView
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.utils import user_profile_for_user
-from smarter.apps.api.v1.cli.brokers import BROKERS
+from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
 from smarter.common.exceptions import SmarterExceptionBase, error_response_factory
@@ -91,7 +91,7 @@ class CliBaseApiView(APIView, AccountMixin):
         """
         if not self._BrokerClass:
             if self.manifest_kind:
-                self._BrokerClass = BROKERS.get(self.manifest_kind)
+                self._BrokerClass = Brokers.get_broker(self.manifest_kind)
             if not self._BrokerClass:
                 raise APIV1CLIViewError(f"Could not find broker for {self.manifest_kind} manifest.")
         return self._BrokerClass
@@ -137,7 +137,10 @@ class CliBaseApiView(APIView, AccountMixin):
             self._manifest_kind = str(self.manifest_data.get("kind", None))
         if not self._manifest_kind and self.loader:
             self._manifest_kind = str(self.loader.manifest_kind) if self.loader else None
-        return self._manifest_kind.lower() if self._manifest_kind else None
+        # resolve any inconsistencies in the casing of the manifest kind
+        # that we might have received.
+        # example: 'chatbot' vs 'ChatBot', 'plugin_data_sql_connection' vs 'PluginDataSqlConnection'
+        return Brokers.get_broker_kind(self._manifest_kind)
 
     # pylint: disable=too-many-return-statements,too-many-branches
     def dispatch(self, request, *args, **kwargs):
