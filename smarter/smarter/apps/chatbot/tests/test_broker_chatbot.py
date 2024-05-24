@@ -13,6 +13,7 @@ from django.test import Client
 from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
 from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
+from smarter.apps.plugin.utils import add_example_plugins
 from smarter.common.utils import dict_is_contained_in
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.loader import SAMLoader
@@ -26,7 +27,8 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 class TestSAMChatbotBroker(unittest.TestCase):
     """Test SAM Chatbot Broker"""
 
-    def create_generic_request(self):
+    @classmethod
+    def create_generic_request(cls):
         url = "http://example.com"
         headers = {"Content-Type": "application/json"}
         data = {}
@@ -36,25 +38,29 @@ class TestSAMChatbotBroker(unittest.TestCase):
 
         return prepared_request
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         """Set up test fixtures."""
-        self.user, self.account, self.user_profile = admin_user_factory()
+        cls.user, cls.account, cls.user_profile = admin_user_factory()
 
         config_path = os.path.join(HERE, "data/chatbot.yaml")
-        self.manifest = get_readonly_yaml_file(config_path)
-        self.broker = SAMChatbotBroker(account=self.account, manifest=self.manifest)
-        self.client = Client()
-        self.request = self.create_generic_request()
-        self.kwargs = {}
+        cls.manifest = get_readonly_yaml_file(config_path)
+        cls.broker = SAMChatbotBroker(account=cls.account, manifest=cls.manifest)
+        cls.client = Client()
+        cls.request = cls.create_generic_request()
+        cls.kwargs = {}
+        add_example_plugins(user_profile=cls.user_profile)
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(cls):
         """Tear down test fixtures."""
-        admin_user_teardown(self.user, self.account, self.user_profile)
+        admin_user_teardown(cls.user, cls.account, cls.user_profile)
 
     def test_chatbot_broker_apply(self):
         """Test that the Broker can apply the manifest."""
         retval = self.broker.apply(request=self.request, kwargs=self.kwargs)
         content = json.loads(retval.content.decode())
+        print(content)
         self.assertEqual(retval.status_code, HTTPStatus.OK)
         self.assertIsInstance(content, dict)
         self.assertIn("message", content.keys())
