@@ -62,10 +62,8 @@ class ApiV1TestBase(unittest.TestCase):
         Prepare and get a response from an api/v1/cli endpoint.
         """
         client = Client()
-        client.force_login(self.user)
-
-        headers = {"Authorization": f"Token {self.token_key}"}
-        response = client.post(path=path, data=manifest, content_type="application/json", extra=headers)
+        headers = {"HTTP_AUTHORIZATION": f"Token {self.token_key}"}
+        response = client.post(path=path, data=manifest, content_type="application/json", **headers)
 
         response_content = response.content.decode("utf-8")
         response_json = json.loads(response_content)

@@ -46,7 +46,7 @@ class APIKeysView(APIKeyBase):
     template_path = "account/dashboard/api-keys.html"
 
     def get(self, request):
-        api_keys = SmarterAuthToken.objects.filter(account=self.account).only(
+        api_keys = SmarterAuthToken.objects.filter(user=self.user_profile.user).only(
             "user", "description", "created", "last_used_at", "is_active"
         )
         context = {

@@ -59,6 +59,7 @@ class TestSmarterAuthToken(unittest.TestCase):
 
         token_record, token_key = SmarterAuthToken.objects.create(
             user=self.admin_user,
+            name="testToken" + self.hash_suffix,
             description="testToken" + self.hash_suffix,
         )
 
