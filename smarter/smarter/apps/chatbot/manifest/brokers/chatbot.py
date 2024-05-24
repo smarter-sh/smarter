@@ -167,6 +167,8 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         functions = ChatBotFunctions.objects.filter(chatbot=self.chatbot)
         function_names = [function.name for function in functions]
 
+        api_key = self.chatbot_api_key.api_key if self.chatbot_api_key else None
+
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -179,7 +181,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 SAMChatbotSpecKeys.CONFIG.value: chatbot_dict,
                 SAMChatbotSpecKeys.PLUGINS.value: plugin_names,
                 SAMChatbotSpecKeys.FUNCTIONS.value: function_names,
-                SAMChatbotSpecKeys.APIKEY.value: self.chatbot_api_key.api_key.name,
+                SAMChatbotSpecKeys.APIKEY.value: api_key.name if api_key else None,
             },
             SAMKeys.STATUS.value: {
                 "created": self.chatbot.created_at.isoformat(),
