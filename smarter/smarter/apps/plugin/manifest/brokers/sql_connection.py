@@ -108,6 +108,14 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
             )
         return self._manifest
 
+    def manifest_to_django_orm(self) -> dict:
+        """
+        Transform the Smarter API User manifest into a Django ORM model.
+        """
+        config_dump = self.manifest.spec.connection.model_dump()
+        config_dump = self.camel_to_snake(config_dump)
+        return config_dump
+
     @property
     def sql_connection(self) -> PluginDataSqlConnection:
         if not self._sql_connection:

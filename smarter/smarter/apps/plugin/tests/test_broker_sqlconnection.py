@@ -28,21 +28,23 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
     """Test SAM PluginDataSqlConnection Broker"""
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         """Set up test fixtures."""
-        self.user, self.account, self.user_profile = admin_user_factory()
-        self.client = Client()
-        self.request = create_generic_request()
-        self.kwargs = {}
+        cls.user, cls.account, cls.user_profile = admin_user_factory()
+        cls.client = Client()
+        cls.request = create_generic_request()
+        cls.kwargs = {}
 
         config_path = os.path.join(HERE, "mock_data/sql-connection.yaml")
         connection_manifest = get_readonly_yaml_file(config_path)
 
-        self.broker = SAMPluginDataSqlConnectionBroker(account=self.account, manifest=connection_manifest)
+        cls.broker = SAMPluginDataSqlConnectionBroker(account=cls.account, manifest=connection_manifest)
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(cls):
         """Tear down test fixtures."""
-        admin_user_teardown(self.user, self.account, self.user_profile)
+        admin_user_teardown(cls.user, cls.account, cls.user_profile)
 
     def test_sqlconnection_broker_apply(self):
         """Test that the Broker can apply the manifest."""

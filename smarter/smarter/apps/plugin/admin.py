@@ -4,7 +4,13 @@ import re
 
 from django.contrib import admin
 
-from .models import PluginDataStatic, PluginMeta, PluginPrompt, PluginSelector
+from .models import (
+    PluginDataSqlConnection,
+    PluginDataStatic,
+    PluginMeta,
+    PluginPrompt,
+    PluginSelector,
+)
 
 
 # Register your models here.
@@ -55,4 +61,25 @@ class PluginAdmin(admin.ModelAdmin):
     list_display = ("id", "author_company_name", "plugin_name", "version", "created_at", "updated_at")
 
 
+class PluginDataSqlConnectionAdmin(admin.ModelAdmin):
+    """Plugin Data SQL Connection model admin."""
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+    list_display = (
+        "id",
+        "account",
+        "name",
+        "db_engine",
+        "hostname",
+        "database",
+        "username",
+        "created_at",
+        "updated_at",
+    )
+
+
 admin.site.register(PluginMeta, PluginAdmin)
+admin.site.register(PluginDataSqlConnection, PluginDataSqlConnectionAdmin)

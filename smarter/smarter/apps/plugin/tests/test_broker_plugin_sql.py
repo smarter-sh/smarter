@@ -29,32 +29,35 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 class TestSAMPluginSql(unittest.TestCase):
     """Test SAM Plugin Broker with sql manifest"""
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         """Set up test fixtures."""
-        self.user, self.account, self.user_profile = admin_user_factory()
-        self.client = Client()
-        self.request = create_generic_request()
-        self.kwargs = {}
+        cls.user, cls.account, cls.user_profile = admin_user_factory()
+        cls.client = Client()
+        cls.request = create_generic_request()
+        cls.kwargs = {}
 
         # create a sql connection
         config_path = os.path.join(HERE, "mock_data/sql-connection.yaml")
         connection_manifest = get_readonly_yaml_file(config_path)
-        self.connection_broker = SAMPluginDataSqlConnectionBroker(account=self.account, manifest=connection_manifest)
-        self.connection_broker.apply(request=self.request, kwargs=self.kwargs)
+        cls.connection_broker = SAMPluginDataSqlConnectionBroker(account=cls.account, manifest=connection_manifest)
+        cls.connection_broker.apply(request=cls.request, kwargs=cls.kwargs)
 
         # create a plugin broker
         config_path = os.path.join(HERE, "mock_data/sql-test.yaml")
         plugin_manifest = get_readonly_yaml_file(config_path)
-        self.plugin_broker = SAMPluginBroker(account=self.account, manifest=plugin_manifest)
+        cls.plugin_broker = SAMPluginBroker(account=cls.account, manifest=plugin_manifest)
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(cls):
         """Tear down test fixtures."""
-        self.connection_broker.delete(request=self.request, kwargs=self.kwargs)
-        admin_user_teardown(self.user, self.account, self.user_profile)
+        cls.connection_broker.delete(request=cls.request, kwargs=cls.kwargs)
+        admin_user_teardown(cls.user, cls.account, cls.user_profile)
 
     def test_plugin_broker_apply(self):
         """Test that the Broker can apply the manifest."""
         retval = self.plugin_broker.apply(request=self.request, kwargs=self.kwargs)
+        print(retval.content)
         self.assertEqual(retval.status_code, HTTPStatus.OK)
         content = json.loads(retval.content.decode())
         self.assertIsInstance(content, dict)
