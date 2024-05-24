@@ -7,5 +7,5 @@ from .base import CliBaseApiView
 class ApiV1CliDeleteApiView(CliBaseApiView):
     """Smarter API command-line interface 'delete' view"""
 
-    def post(self, request, kind: str, name: str):
-        return self.broker.delete(request)
+    def post(self, request, kind: str, *args, **kwargs):
+        return self.broker.delete(request=request, kwargs=kwargs)

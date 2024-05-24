@@ -11,7 +11,7 @@ import yaml
 from django.db import transaction
 from rest_framework import serializers
 
-from smarter.apps.account.manifest.models import UserProfileModel
+from smarter.apps.account.manifest.models.user_profile import UserProfileModel
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import smarter_admin_user_profile
 

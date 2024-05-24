@@ -28,7 +28,7 @@ from .exceptions import AWSNotReadyError
 logger = logging.getLogger(__name__)
 
 
-# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-instance-attributes,too-many-public-methods
 class AWSBase:
     """
     AWS helper base class. Responsible for
@@ -131,6 +131,11 @@ class AWSBase:
             if self.environment not in SmarterEnvironments.aws_environments:
                 msg += f" Please note AWS classes only work with the following environments: {SmarterEnvironments.aws_environments}"
             raise AWSNotReadyError(msg)
+
+    @property
+    def version(self):
+        """Return the version."""
+        return boto3.__version__
 
     @property
     def debug_mode(self):

@@ -2,8 +2,9 @@
 
 from django.core.management.base import BaseCommand
 
-from smarter.apps.account.models import Account, SmarterAuthToken
+from smarter.apps.account.models import Account
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey
+from smarter.lib.drf.models import SmarterAuthToken
 
 
 # pylint: disable=E1101

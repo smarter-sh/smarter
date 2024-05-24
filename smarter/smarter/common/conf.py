@@ -191,6 +191,7 @@ class SettingsDefaults:
     AWS_EKS_CLUSTER_NAME = os.environ.get(
         "AWS_EKS_CLUSTER_NAME", TFVARS.get("aws_eks_cluster_name", "apps-hosting-service")
     )
+    AWS_RDS_DB_INSTANCE_IDENTIFIER = os.environ.get("AWS_RDS_DB_INSTANCE_IDENTIFIER", "apps-hosting-service")
 
     GOOGLE_MAPS_API_KEY: str = os.environ.get(
         "GOOGLE_MAPS_API_KEY",
@@ -329,6 +330,10 @@ class Settings(BaseSettings):
     aws_eks_cluster_name: Optional[str] = Field(
         SettingsDefaults.AWS_EKS_CLUSTER_NAME,
         env="AWS_EKS_CLUSTER_NAME",
+    )
+    aws_db_instance_identifier: Optional[str] = Field(
+        SettingsDefaults.AWS_RDS_DB_INSTANCE_IDENTIFIER,
+        env="AWS_RDS_DB_INSTANCE_IDENTIFIER",
     )
     environment: Optional[str] = Field(
         SettingsDefaults.ENVIRONMENT,
@@ -638,6 +643,13 @@ class Settings(BaseSettings):
         """Validate aws_eks_cluster_name"""
         if v in [None, ""]:
             return SettingsDefaults.AWS_EKS_CLUSTER_NAME
+        return v
+
+    @field_validator("aws_db_instance_identifier")
+    def validate_aws_db_instance_identifier(cls, v) -> str:
+        """Validate aws_db_instance_identifier"""
+        if v in [None, ""]:
+            return SettingsDefaults.AWS_RDS_DB_INSTANCE_IDENTIFIER
         return v
 
     @field_validator("debug_mode")

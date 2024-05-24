@@ -14,6 +14,9 @@ class SmarterEnumAbstract(Enum):
         return [member.value for _, member in cls.__members__.items()]
 
 
+###############################################################################
+# Smarter API Manifest Enumerations
+###############################################################################
 class SAMApiVersions(SmarterEnumAbstract):
     """API Version enumeration."""
 
@@ -54,3 +57,20 @@ class SAMMetadataKeys(SmarterEnumAbstract):
     VERSION = "version"
     TAGS = "tags"
     ANNOTATIONS = "annotations"
+
+
+###############################################################################
+# Smarter API cli response Enumerations
+###############################################################################
+class SCLIResponseGet(SmarterEnumAbstract):
+    """CLI get response enumeration."""
+
+    KWARGS = "kwargs"
+    DATA = "data"
+
+
+class SCLIResponseGetData(SmarterEnumAbstract):
+    """CLI get response data enumeration."""
+
+    TITLES = "titles"
+    ITEMS = "items"

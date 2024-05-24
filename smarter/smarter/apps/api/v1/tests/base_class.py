@@ -7,8 +7,9 @@ import unittest
 
 from django.test import Client
 
-from smarter.apps.account.models import Account, SmarterAuthToken, UserProfile
+from smarter.apps.account.models import Account, UserProfile
 from smarter.lib.django.user import User
+from smarter.lib.drf.models import SmarterAuthToken
 
 
 class ApiV1TestBase(unittest.TestCase):
@@ -33,7 +34,7 @@ class ApiV1TestBase(unittest.TestCase):
         self.user_profile = UserProfile.objects.create(user=self.user, account=self.account)
 
         self.token_record, self.token_key = SmarterAuthToken.objects.create(
-            account=self.account,
+            name="testToken" + hash_suffix,
             user=self.user,
             description="testToken" + hash_suffix,
         )
@@ -61,10 +62,8 @@ class ApiV1TestBase(unittest.TestCase):
         Prepare and get a response from an api/v1/cli endpoint.
         """
         client = Client()
-        client.force_login(self.user)
-
-        headers = {"Authorization": f"Token {self.token_key}"}
-        response = client.post(path=path, data=manifest, content_type="application/json", extra=headers)
+        headers = {"HTTP_AUTHORIZATION": f"Token {self.token_key}"}
+        response = client.post(path=path, data=manifest, content_type="application/json", **headers)
 
         response_content = response.content.decode("utf-8")
         response_json = json.loads(response_content)
