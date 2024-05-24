@@ -60,7 +60,6 @@ class TestSAMChatbotBroker(unittest.TestCase):
         """Test that the Broker can apply the manifest."""
         retval = self.broker.apply(request=self.request, kwargs=self.kwargs)
         content = json.loads(retval.content.decode())
-        print(content)
         self.assertEqual(retval.status_code, HTTPStatus.OK)
         self.assertIsInstance(content, dict)
         self.assertIn("message", content.keys())
