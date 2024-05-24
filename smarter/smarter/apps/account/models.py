@@ -3,16 +3,12 @@
 import logging
 import os
 import random
-import uuid
-from datetime import datetime, timedelta
 
 from django.core.validators import RegexValidator
 from django.db import models
-from django.utils import timezone
-from knox.models import AuthToken, AuthTokenManager
 
 # our stuff
-from smarter.common.exceptions import SmarterBusinessRuleViolation, SmarterValueError
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import User, UserType
@@ -293,80 +289,3 @@ class Charge(TimestampedModel):
 
     def __str__(self):
         return str(self.id) + " - " + self.model + " - " + self.total_tokens
-
-
-###############################################################################
-# API Key Management
-###############################################################################
-class SmarterAuthTokenManager(AuthTokenManager):
-    """API Key manager."""
-
-    # pylint: disable=too-many-arguments
-    def create(self, user, expiry=None, description: str = None, account=None, is_active: bool = True, **kwargs):
-        auth_token, token = super().create(user, expiry=expiry, **kwargs)
-        if not account:
-            account = UserProfile.objects.get(user=user).account
-        auth_token.account = account
-        auth_token.description = description
-        auth_token.is_active = is_active
-        auth_token.save()
-        return auth_token, token
-
-
-class SmarterAuthToken(AuthToken, TimestampedModel):
-    """API Key model."""
-
-    objects = SmarterAuthTokenManager()
-
-    # pylint: disable=C0115
-    class Meta:
-        verbose_name = "API Key"
-        verbose_name_plural = "API Keys"
-
-    key_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="api_keys", blank=True, null=True)
-    description = models.CharField(max_length=255, blank=True, null=True)
-    last_used_at = models.DateTimeField(blank=True, null=True)
-    is_active = models.BooleanField(default=True)
-
-    @property
-    def identifier(self):
-        return "******" + str(self.digest)[:8]
-
-    def save(self, *args, **kwargs):
-        if not self.user.is_staff:
-            raise SmarterBusinessRuleViolation("API Keys can only be created for staff users.")
-        user_profile = UserProfile.objects.get(user=self.user)
-        self.account = user_profile.account
-        if self.created is None:
-            self.created = timezone.now()
-        super().save(*args, **kwargs)
-
-    def has_permissions(self, user) -> bool:
-        """Determine if the authenticated user has permissions to manage this key."""
-        account = UserProfile.objects.get(user=user).account
-        return user.is_staff and account == self.account
-
-    def activate(self):
-        """Activate the API key."""
-        self.is_active = True
-        self.save()
-
-    def deactivate(self):
-        """Deactivate the API key."""
-        self.is_active = False
-        self.save()
-
-    def toggle_active(self):
-        """Toggle the active status of the API key."""
-        self.is_active = not self.is_active
-        self.save()
-
-    def accessed(self):
-        """Update the last used time."""
-        if self.last_used_at is None or (datetime.now() - self.last_used_at) > timedelta(minutes=5):
-            self.last_used_at = datetime.now()
-            self.save()
-
-    def __str__(self):
-        return self.identifier

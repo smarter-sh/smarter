@@ -115,7 +115,7 @@ class SmarterValidator:
         """Validate hostname format"""
         if ":" in hostname:
             hostname, port = hostname.split(":")
-            if not port.isdigit() or not (0 <= int(port) <= 65535):
+            if not port.isdigit() or not 0 <= int(port) <= 65535:
                 raise SmarterValueError(f"Invalid port {port}")
         if len(hostname) > 255:
             raise SmarterValueError(f"Invalid hostname {hostname}")

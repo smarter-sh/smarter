@@ -11,4 +11,4 @@ class ApiV1CliManifestApiView(CliBaseApiView):
     """
 
     def post(self, request, kind, *args, **kwargs):
-        return self.broker.example_manifest(kwargs=kwargs)
+        return self.broker.example_manifest(request=request, kwargs=kwargs)

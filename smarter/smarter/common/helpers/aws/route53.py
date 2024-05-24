@@ -181,7 +181,7 @@ class AWSRoute53(AWSBase):
                 return record["ResourceRecords"]
         return None
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-locals
     def get_or_create_dns_record(
         self,
         hosted_zone_id: str,
