@@ -9,8 +9,8 @@ from http import HTTPStatus
 
 import inflect
 from django.http import HttpRequest, JsonResponse
+from rest_framework.serializers import ModelSerializer
 
-from smarter.lib.django.user import UserType
 from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 from smarter.lib.manifest.models import AbstractSAMBase
@@ -33,6 +33,14 @@ class SAMBrokerError(SAMExceptionBase):
     @property
     def get_readable_name(self):
         return "Smarter API Manifest Broker Error"
+
+
+class SAMBrokerReadOnlyError(SAMBrokerError):
+    """Error for read-only broker operations."""
+
+    @property
+    def get_readable_name(self):
+        return "Smarter API Manifest Broker Read-Only Error"
 
 
 # pylint: disable=too-many-public-methods
@@ -58,6 +66,7 @@ class AbstractBroker(ABC):
         DESCRIBE = "describe"
         DELETE = "delete"
         DEPLOY = "deploy"
+        UNDEPLOY = "undeploy"
         LOGS = "logs"
         MANIFEST_EXAMPLE = "example_manifest"
 
@@ -69,6 +78,7 @@ class AbstractBroker(ABC):
                 cls.DESCRIBE: "described",
                 cls.DELETE: "deleted",
                 cls.DEPLOY: "deployed",
+                cls.UNDEPLOY: "undeployed",
                 cls.LOGS: "got logs for",
             }
 
@@ -141,24 +151,15 @@ class AbstractBroker(ABC):
     def loader(self) -> SAMLoader:
         return self._loader
 
-    @property
-    def account(self) -> "Account":
-        return self._account
-
-    @property
-    def user(self) -> "UserType":
-        raise NotImplementedError
-
-    @property
-    def user_profile(self) -> "UserProfile":
-        raise NotImplementedError
-
     def __str__(self):
         return f"{self.manifest.apiVersion} {self.kind} Broker"
 
     ###########################################################################
     # Abstract Properties
     ###########################################################################
+    @property
+    def model_class(self):
+        raise NotImplementedError
 
     @property
     def manifest(self) -> AbstractSAMBase:
@@ -184,69 +185,69 @@ class AbstractBroker(ABC):
     # Abstract Methods
     ###########################################################################
     @abstractmethod
-    def get(
-        self, request: HttpRequest = None, name: str = None, all_objects: bool = False, tags: str = None
-    ) -> JsonResponse:
+    def get(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         """get information about specified resources."""
         raise NotImplementedError
 
-    @abstractmethod
-    def apply(self, request: HttpRequest = None) -> JsonResponse:
+    def apply(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         """apply a manifest, which works like a upsert."""
-        raise NotImplementedError
+        if self.manifest.status:
+            raise SAMBrokerReadOnlyError("status is a read-only manifest field for")
 
     @abstractmethod
-    def describe(self, request: HttpRequest = None) -> JsonResponse:
+    def describe(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         """print the manifest."""
         raise NotImplementedError
 
     @abstractmethod
-    def delete(self, request: HttpRequest = None) -> JsonResponse:
+    def delete(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         """delete a resource."""
         raise NotImplementedError
 
     @abstractmethod
-    def deploy(self, request: HttpRequest = None) -> JsonResponse:
+    def deploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         """deploy a resource."""
         raise NotImplementedError
 
     @abstractmethod
-    def logs(self, request: HttpRequest = None) -> JsonResponse:
+    def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        """undeploy a resource."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def logs(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         """get logs for a resource."""
         raise NotImplementedError
 
     @abstractmethod
-    def example_manifest(self, kwargs: dict = None) -> JsonResponse:
+    def example_manifest(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         """Returns an example yaml manifest document for the kind of resource."""
         raise NotImplementedError
 
-    def not_implemented_response(self) -> JsonResponse:
-        """Return a common not implemented response."""
-        data = {"message": f"operation not implemented for {self.kind} resources"}
-        return JsonResponse(data=data, status=HTTPStatus.NOT_IMPLEMENTED)
+    # pylint: disable=W0212
+    def get_model_titles(self, serializer: ModelSerializer) -> list[dict[str, str]]:
+        fields_and_types = [
+            {"name": field_name, "type": type(field).__name__} for field_name, field in serializer.fields.items()
+        ]
+        return fields_and_types
 
-    def not_ready_response(self) -> JsonResponse:
-        """Return a common not ready response."""
-        data = {"message": f"{self.kind} {self.name} not ready"}
-        return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
+    ###########################################################################
+    # http json response helpers
+    ###########################################################################
+    def _retval(self, data: dict = None, message: str = None) -> dict:
+        return (
+            {"data": data, "message": message}
+            if data and message
+            else {"data": data} if data else {"message": message} if message else {}
+        )
 
-    def err_response(self, operation: str, e: Exception) -> JsonResponse:
-        """Return a common error response."""
-        tb_str = "".join(traceback.format_tb(e.__traceback__))
-        data = {"message": f"could not {operation} {self.kind} {self.name}", "error": str(e), "stacktrace": tb_str}
-        return JsonResponse(data=data, status=HTTPStatus.INTERNAL_SERVER_ERROR)
-
-    def not_found_response(self) -> JsonResponse:
-        """Return a common not found response."""
-        data = {"message": f"{self.kind} {self.name} not found"}
-        return JsonResponse(data=data, status=HTTPStatus.NOT_FOUND)
-
-    def success_response(
+    def json_response_ok(
         self,
         operation: str,
-        data: dict,
+        data: dict = None,
     ) -> JsonResponse:
         """Return a common success response."""
+        data = data or {}
         operated = self.Operations.past_tense().get(operation, operation)
         if operation == self.Operations.GET:
             kind = inflect_engine.plural(self.kind)
@@ -261,12 +262,45 @@ class AbstractBroker(ABC):
             kind = self.kind
             message = f"{kind} {self.name} {operated} successfully"
         operation = self.Operations.past_tense().get(operation, operation)
-        retval = {
-            "data": data,
-            "message": message,
-        }
+        retval = self._retval(data=data, message=message)
         return JsonResponse(data=retval, status=HTTPStatus.OK, safe=False)
 
+    def json_response_err_readonly(self, data: dict = None) -> JsonResponse:
+        """Return a common read-only response."""
+        message = f"{self.kind} {self.name} is read-only"
+        retval = self._retval(message=message)
+        return JsonResponse(data=retval, status=HTTPStatus.METHOD_NOT_ALLOWED)
+
+    def json_response_err_notimplemented(self, data: dict = None) -> JsonResponse:
+        """Return a common not implemented response."""
+        message = f"operation not implemented for {self.kind} resources"
+        retval = self._retval(message=message)
+        return JsonResponse(data=retval, status=HTTPStatus.NOT_IMPLEMENTED)
+
+    def json_response_err_notready(self, data: dict = None) -> JsonResponse:
+        """Return a common not ready response."""
+        message = f"{self.kind} {self.name} not ready"
+        retval = self._retval(message=message)
+        return JsonResponse(data=retval, status=HTTPStatus.BAD_REQUEST)
+
+    def json_response_err(self, operation: str, e: Exception) -> JsonResponse:
+        """
+        Return a structured error response that can be unpacked and rendered
+        by the cli in a variety of formats.
+        """
+        tb_str = "".join(traceback.format_tb(e.__traceback__))
+        data = {"message": f"could not {operation} {self.kind} {self.name}", "error": str(e), "stacktrace": tb_str}
+        return JsonResponse(data=data, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+    def json_response_err_notfound(self, message: str = None) -> JsonResponse:
+        """Return a common not found response."""
+        message = message or f"{self.kind} {self.name} not found"
+        retval = self._retval(message=message)
+        return JsonResponse(data=retval, status=HTTPStatus.NOT_FOUND)
+
+    ###########################################################################
+    # data transformation helpers
+    ###########################################################################
     def camel_to_snake(self, dictionary: dict) -> dict:
         """Converts camelCase dict keys to snake_case."""
 

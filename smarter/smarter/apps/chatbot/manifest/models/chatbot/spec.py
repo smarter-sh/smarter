@@ -111,7 +111,7 @@ class SAMChatbotSpec(AbstractSAMSpecBase):
 
     config: SAMChatbotSpecConfig = Field(
         ...,
-        description=(f"{class_identifier}.config[object]. Optional. The configuration for the chatbot."),
+        description=(f"{class_identifier}.config[object]. The configuration for the {MANIFEST_KIND}."),
     )
     plugins: Optional[List[str]] = Field(
         None,
@@ -122,5 +122,11 @@ class SAMChatbotSpec(AbstractSAMSpecBase):
         description=(
             f"{class_identifier}.functions[list]. Optional. The built-in Smarter Functions to add to the "
             f"{MANIFEST_KIND}."
+        ),
+    )
+    apiKey: Optional[str] = Field(
+        None,
+        description=(
+            f"{class_identifier}.api_key[str]. Optional. The name of the API key that this chatbot uses for authentication."
         ),
     )

@@ -19,8 +19,10 @@ from .aws.acm import AWSCertificateManager
 from .aws.api_gateway import AWSAPIGateway
 from .aws.aws import AWSBase
 from .aws.dynamodb import AWSDynamoDB
+from .aws.eks import AWSEks
 from .aws.iam import AWSIdentifyAccessManagement
 from .aws.lambda_function import AWSLambdaFunction
+from .aws.rds import AWSRds
 from .aws.rekognition import AWSRekognition
 from .aws.route53 import AWSRoute53
 from .aws.s3 import AWSSimpleStorageSystem
@@ -34,11 +36,18 @@ class AWSInfrastructureConfig(metaclass=Singleton):
     _acm: AWSCertificateManager = None
     _api_gateway: AWSAPIGateway = None
     _dynamodb: AWSDynamoDB = None
+    _eks: AWSEks = None
     _iam: AWSIdentifyAccessManagement = None
     _lambda_function: AWSLambdaFunction = None
     _rekognition: AWSRekognition = None
     _route53: AWSRoute53 = None
     _s3: AWSSimpleStorageSystem = None
+    _rds: AWSRds = None
+
+    @property
+    def get_botocore_version(self):
+        """Return the botocore version"""
+        return self.aws.get_botocore_version()
 
     @property
     def aws(self) -> AWSBase:
@@ -69,6 +78,13 @@ class AWSInfrastructureConfig(metaclass=Singleton):
         return self._dynamodb
 
     @property
+    def eks(self) -> AWSEks:
+        """Return the AWS EKS"""
+        if not self._eks:
+            self._eks = AWSEks()
+        return self._eks
+
+    @property
     def lambda_function(self) -> AWSLambdaFunction:
         """Return the AWS Lambda Function"""
         if not self._lambda_function:
@@ -81,6 +97,13 @@ class AWSInfrastructureConfig(metaclass=Singleton):
         if not self._iam:
             self._iam = AWSIdentifyAccessManagement()
         return self._iam
+
+    @property
+    def rds(self) -> AWSRds:
+        """Return the AWS RDS"""
+        if not self._rds:
+            self._rds = AWSRds()
+        return self._rds
 
     @property
     def rekognition(self) -> AWSRekognition:

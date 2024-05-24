@@ -8,6 +8,8 @@ Smarter API command-line interface URL configuration.
 - https://platform.smarter.sh/api/v1/cli/logs/           # Get logs for a resource
 - https://platform.smarter.sh/api/v1/cli/delete/         # Delete a resource
 - https://platform.smarter.sh/api/v1/cli/status/         # Smarter platform status
+- https://platform.smarter.sh/api/v1/cli/version/        # returns detailed version information on the platform
+- https://platform.smarter.sh/api/v1/cli/whoami/         # Return information about the current IAM user
 """
 
 from django.urls import path
@@ -20,20 +22,19 @@ from .views.get import ApiV1CliGetApiView
 from .views.logs import ApiV1CliLogsApiView
 from .views.manifest import ApiV1CliManifestApiView
 from .views.status import ApiV1CliStatusApiView
+from .views.version import ApiV1CliVersionApiView
 from .views.whoami import ApiV1CliWhoamiApiView
 
 
 urlpatterns = [
     path("apply/", ApiV1CliApplyApiView.as_view(), name="api_v1_cli_apply_view"),
-    path("delete/<str:kind>/<str:name>/", ApiV1CliDeleteApiView.as_view(), name="api_v1_cli_delete_view"),
-    path("deploy/<str:kind>/<str:name>/", ApiV1CliDeployApiView.as_view(), name="api_v1_cli_deploy_view"),
-    path("describe/<str:kind>/<str:name>/", ApiV1CliDescribeApiView.as_view(), name="api_v1_cli_describe_view"),
+    path("delete/<str:kind>/", ApiV1CliDeleteApiView.as_view(), name="api_v1_cli_delete_view"),
+    path("deploy/<str:kind>/", ApiV1CliDeployApiView.as_view(), name="api_v1_cli_deploy_view"),
+    path("describe/<str:kind>/", ApiV1CliDescribeApiView.as_view(), name="api_v1_cli_describe_view"),
     path("get/<str:kind>/", ApiV1CliGetApiView.as_view(), name="api_v1_cli_get_view"),
-    path("get/<str:kind>/<str:name>", ApiV1CliGetApiView.as_view(), name="api_v1_cli_get_view"),
-    path("logs/<str:kind>/<str:name>/", ApiV1CliLogsApiView.as_view(), name="api_v1_cli_logs_kind_name_view"),
     path("logs/<str:kind>/", ApiV1CliLogsApiView.as_view(), name="api_v1_cli_logs_kind_view"),
-    path("logs/", ApiV1CliLogsApiView.as_view(), name="api_v1_cli_logs_view"),
     path("manifest/<str:kind>/", ApiV1CliManifestApiView.as_view(), name="api_v1_cli_manifest_view"),
     path("status/", ApiV1CliStatusApiView.as_view(), name="api_v1_cli_status_view"),
+    path("version/", ApiV1CliVersionApiView.as_view(), name="api_v1_cli_version_view"),
     path("whoami/", ApiV1CliWhoamiApiView.as_view(), name="api_v1_cli_whoami_view"),
 ]

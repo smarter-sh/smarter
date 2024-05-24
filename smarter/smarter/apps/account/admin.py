@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 
-from .models import Account, PaymentMethod, SmarterAuthToken, UserProfile
+from .models import Account, PaymentMethod, UserProfile
 
 
 # Register your models here.
@@ -36,15 +36,6 @@ class PaymentMethodModelAdmin(admin.ModelAdmin):
     list_display = ("name", "created_at", "updated_at")
 
 
-class APIKeyModelAdmin(admin.ModelAdmin):
-    """API Key model admin."""
-
-    readonly_fields = ("created",)
-    # pylint: disable=W0212
-    list_display = ["key_id", "account", "description", "is_active", "last_used_at", "created_at", "updated_at"]
-
-
 admin.site.register(Account, AccountAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(PaymentMethod, PaymentMethodModelAdmin)
-admin.site.register(SmarterAuthToken, APIKeyModelAdmin)

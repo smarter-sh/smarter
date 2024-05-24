@@ -4,11 +4,17 @@
 from django.forms.models import model_to_dict
 from django.http import HttpRequest, JsonResponse
 
-from smarter.apps.account.mixins import Account, AccountMixin, UserProfile
+from smarter.apps.account.mixins import Account, AccountMixin
 from smarter.apps.plugin.models import PluginDataSqlConnection
-from smarter.lib.django.user import UserType
+from smarter.apps.plugin.serializers import PluginDataSqlConnectionSerializer
 from smarter.lib.manifest.broker import AbstractBroker
-from smarter.lib.manifest.enum import SAMApiVersions
+from smarter.lib.manifest.enum import (
+    SAMApiVersions,
+    SAMKeys,
+    SAMMetadataKeys,
+    SCLIResponseGet,
+    SCLIResponseGetData,
+)
 from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -40,11 +46,10 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
+        account: Account,
         api_version: str = SAMApiVersions.V1.value,
-        account: Account = None,
-        user: UserType = None,
-        user_profile: UserProfile = None,
         name: str = None,
+        kind: str = None,
         loader: SAMLoader = None,
         manifest: str = None,
         file_path: str = None,
@@ -58,14 +63,11 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
         to ensure that the manifest is a valid yaml file and that it contains
         the required top-level keys.
         """
-        self._account = account
-        self._user = user
-        self._user_profile = user_profile
         super().__init__(
-            account=self.account,
             api_version=api_version,
+            account=account,
             name=name,
-            kind=MANIFEST_KIND,
+            kind=kind,
             loader=loader,
             manifest=manifest,
             file_path=file_path,
@@ -75,6 +77,10 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter abstract property implementations
     ###########################################################################
+    @property
+    def model_class(self) -> PluginDataSqlConnection:
+        return PluginDataSqlConnection
+
     @property
     def kind(self) -> str:
         return MANIFEST_KIND
@@ -102,6 +108,14 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
             )
         return self._manifest
 
+    def manifest_to_django_orm(self) -> dict:
+        """
+        Transform the Smarter API User manifest into a Django ORM model.
+        """
+        config_dump = self.manifest.spec.connection.model_dump()
+        config_dump = self.camel_to_snake(config_dump)
+        return config_dump
+
     @property
     def sql_connection(self) -> PluginDataSqlConnection:
         if not self._sql_connection:
@@ -120,7 +134,7 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
 
         return self._sql_connection
 
-    def example_manifest(self, kwargs: dict = None) -> JsonResponse:
+    def example_manifest(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         data = {
             "apiVersion": self.api_version,
             "kind": self.kind,
@@ -140,15 +154,14 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
                 }
             },
         }
-        return self.success_response(operation=self.get.__name__, data=data)
+        return self.json_response_ok(operation=self.get.__name__, data=data)
 
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def get(
-        self, request: HttpRequest = None, name: str = None, all_objects: bool = False, tags: str = None
-    ) -> JsonResponse:
+    def get(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
 
+        name: str = kwargs.get("name", None)
         data = []
 
         # generate a QuerySet of PluginDataSqlConnection objects that match our search criteria
@@ -157,39 +170,54 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
         else:
             sql_connections = PluginDataSqlConnection.objects.filter(account=self.account)
 
-        if not sql_connections.exists():
-            return self.not_found_response()
-
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for sql_connection in sql_connections:
             try:
-                model_dump = model_to_dict(sql_connection)
+                model_dump = PluginDataSqlConnectionSerializer(sql_connection).data
                 if not model_dump:
                     raise SAMPluginDataSqlConnectionBrokerError(
                         f"Model dump failed for {self.kind} {sql_connection.name}"
                     )
                 data.append(model_dump)
             except Exception as e:
-                return self.err_response(self.get.__name__, e)
+                return self.json_response_err(self.get.__name__, e)
         data = {
-            "apiVersion": self.api_version,
-            "kind": self.kind,
-            "name": name,
-            "all_objects": all_objects,
-            "tags": tags,
-            "metadata": {"count": len(data)},
-            "items": data,
+            SAMKeys.APIVERSION.value: self.api_version,
+            SAMKeys.KIND.value: self.kind,
+            SAMMetadataKeys.NAME.value: name,
+            SAMKeys.METADATA.value: {"count": len(data)},
+            SCLIResponseGet.KWARGS.value: kwargs,
+            SCLIResponseGet.DATA.value: {
+                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=PluginDataSqlConnectionSerializer()),
+                SCLIResponseGetData.ITEMS.value: data,
+            },
         }
-        return self.success_response(operation=self.get.__name__, data=data)
+        return self.json_response_ok(operation=self.get.__name__, data=data)
 
-    def apply(self, request: HttpRequest = None) -> JsonResponse:
+    def apply(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        """
+        apply the manifest. copy the manifest data to the Django ORM model and
+        save the model to the database. Call super().apply() to ensure that the
+        manifest is loaded and validated before applying the manifest to the
+        Django ORM model.
+        Note that there are fields included in the manifest that are not editable
+        and are therefore removed from the Django ORM model dict prior to attempting
+        the save() operation. These fields are defined in the readonly_fields list.
+        """
+        super().apply(request, kwargs)
+        readonly_fields = ["id", "created_at", "updated_at"]
         try:
+            data = self.manifest_to_django_orm()
+            for field in readonly_fields:
+                data.pop(field, None)
+            for key, value in data.items():
+                setattr(self.sql_connection, key, value)
             self.sql_connection.save()
         except Exception as e:
-            return self.err_response("create", e)
-        return self.success_response(operation=self.apply.__name__, data={})
+            return self.json_response_err(operation=self.apply.__name__, e=e)
+        return self.json_response_ok(operation=self.apply.__name__, data={})
 
-    def describe(self, request: HttpRequest = None) -> JsonResponse:
+    def describe(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         """Return a JSON response with the manifest data."""
         if self.sql_connection:
             try:
@@ -214,22 +242,25 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
                     },
                 }
 
-                return self.success_response(operation=self.describe.__name__, data=retval)
+                return self.json_response_ok(operation=self.describe.__name__, data=retval)
             except Exception as e:
-                return self.err_response(self.describe.__name__, e)
-        return self.not_ready_response()
+                return self.json_response_err(self.describe.__name__, e)
+        return self.json_response_err_notready()
 
-    def delete(self, request: HttpRequest = None) -> JsonResponse:
+    def delete(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         if self.sql_connection:
             try:
                 self.sql_connection.delete()
-                return self.success_response(operation=self.delete.__name__, data={})
+                return self.json_response_ok(operation=self.delete.__name__, data={})
             except Exception as e:
-                return self.err_response(self.delete.__name__, e)
-        return self.not_ready_response()
+                return self.json_response_err(self.delete.__name__, e)
+        return self.json_response_err_notready()
 
-    def deploy(self, request: HttpRequest = None) -> JsonResponse:
-        return self.not_implemented_response()
+    def deploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        return self.json_response_err_notimplemented()
 
-    def logs(self, request: HttpRequest = None) -> JsonResponse:
-        return self.not_implemented_response()
+    def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        return self.json_response_err_notimplemented()
+
+    def logs(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        return self.json_response_err_notimplemented()

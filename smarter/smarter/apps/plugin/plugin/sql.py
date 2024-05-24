@@ -10,7 +10,6 @@ from smarter.apps.plugin.manifest.enum import (
     SAMPluginSpecKeys,
     SAMPluginSpecPromptKeys,
     SAMPluginSpecSelectorKeys,
-    SmartApiPluginSpecDataKeys,
 )
 from smarter.apps.plugin.models import PluginDataSql, PluginDataSqlConnection
 from smarter.apps.plugin.serializers import PluginDataSqlSerializer

@@ -1,35 +1,21 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'apply' view"""
 
+import platform
 from http import HTTPStatus
 
 import boto3
 from botocore.exceptions import ClientError
 from django.http import JsonResponse
+from django_redis import get_redis_connection
 
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.helpers.aws_helpers import aws_helper
 
 from .base import CliBaseApiView
 
 
 class ApiV1CliStatusApiView(CliBaseApiView):
     """Smarter API command-line interface 'apply' view"""
-
-    def get_eks_status(self, cluster_name):
-        try:
-            client = boto3.client("eks", region_name=smarter_settings.aws_region)
-            response = client.describe_cluster(name=cluster_name)
-            return response["cluster"]["status"]
-        except ClientError as e:
-            return {"error": str(e)}
-
-    def get_rds_status(self, db_instance_identifier):
-        try:
-            client = boto3.client("rds", region_name=smarter_settings.aws_region)
-            response = client.describe_db_instances(DBInstanceIdentifier=db_instance_identifier)
-            return response["DBInstances"][0]["DBInstanceStatus"]
-        except ClientError as e:
-            return {"error": str(e)}
 
     def get_service_status(self, region_name):
         try:
@@ -46,19 +32,34 @@ class ApiV1CliStatusApiView(CliBaseApiView):
         except ClientError as e:
             return {"error": str(e)}
 
+    def get_redis_info(self):
+        client = get_redis_connection("default")
+        info = client.info()
+        retval = {
+            "gcc_version": info.get("gcc_version"),
+            "os": info.get("os"),
+            "redis_build_id": info.get("redis_build_id"),
+            "redis_version": info.get("redis_version"),
+        }
+        return retval
+
     def status(self):
         try:
             data = {
-                "infrastructure": {
-                    "eks": self.get_eks_status(smarter_settings.aws_eks_cluster_name),
-                    "mysql": self.get_rds_status(smarter_settings.aws_eks_cluster_name),
-                    "aws": {
-                        "region": smarter_settings.aws_region,
-                        "status": self.get_service_status(smarter_settings.aws_region),
-                    },
+                "infrastructures": {
+                    "kubernetes": aws_helper.eks.get_kubernetes_info(),
+                    "mysql": aws_helper.rds.get_mysql_info(),
+                    "redis": self.get_redis_info(),
+                },
+                "compute": {
+                    "machine": platform.machine(),
+                    "release": platform.release(),
+                    "platform": platform.platform(aliased=True),
+                    "processor": platform.processor(),
+                    "system": platform.system(),
+                    "version": platform.version(),
                 },
             }
-
             return JsonResponse(data=data, status=HTTPStatus.OK)
         # pylint: disable=W0718
         except Exception as e:

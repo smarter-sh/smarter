@@ -27,8 +27,11 @@ class TestApiV1CliCommon(ApiV1TestBase):
         response, status = self.get_response(path)
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
-        self.assertIsInstance(response["infrastructure"], dict)
-        self.assertIsInstance(response["infrastructure"]["aws"], dict)
+        self.assertIsInstance(response["compute"], dict)
+        self.assertIsInstance(response["infrastructures"], dict)
+        self.assertIsInstance(response["infrastructures"]["kubernetes"], dict)
+        self.assertIsInstance(response["infrastructures"]["mysql"], dict)
+        self.assertIsInstance(response["infrastructures"]["redis"], dict)
 
         path = reverse("api_v1_cli_whoami_view")
         response, status = self.get_response(path)

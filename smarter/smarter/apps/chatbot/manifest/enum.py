@@ -12,3 +12,4 @@ class SAMChatbotSpecKeys(SmarterEnumAbstract):
     CONFIG = "config"
     PLUGINS = "plugins"
     FUNCTIONS = "functions"
+    APIKEY = "apiKey"
