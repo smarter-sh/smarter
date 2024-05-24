@@ -163,6 +163,7 @@ class TestAPIKeys(unittest.TestCase):
         """Test that we can't get an api key without permissions."""
         another_api_key, _ = SmarterAuthToken.objects.create(
             user=self.user,
+            name=self.user.username,
             description="ANOTHER Test API Key",
         )
         url = self.base_url + str(another_api_key) + "/"
