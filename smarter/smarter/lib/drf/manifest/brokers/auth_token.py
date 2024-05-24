@@ -226,10 +226,10 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {"count": len(data)},
-            SCLIResponseGet.KWARGS: kwargs,
-            SCLIResponseGet.DATA: {
-                SCLIResponseGetData.TITLES: self.get_model_titles(serializer=SmarterAuthTokenSerializer()),
-                SCLIResponseGetData.ITEMS: data,
+            SCLIResponseGet.KWARGS.value: kwargs,
+            SCLIResponseGet.DATA.value: {
+                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=SmarterAuthTokenSerializer()),
+                SCLIResponseGetData.ITEMS.value: data,
             },
         }
         return self.json_response_ok(operation=self.get.__name__, data=data)
