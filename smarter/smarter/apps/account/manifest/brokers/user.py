@@ -12,7 +12,13 @@ from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account, UserProfile
 from smarter.lib.django.user import User, UserType
 from smarter.lib.manifest.broker import AbstractBroker
-from smarter.lib.manifest.enum import SAMApiVersions, SAMKeys, SAMMetadataKeys
+from smarter.lib.manifest.enum import (
+    SAMApiVersions,
+    SAMKeys,
+    SAMMetadataKeys,
+    SCLIResponseGet,
+    SCLIResponseGetData,
+)
 from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -200,10 +206,10 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {"count": len(data)},
-            "kwargs": kwargs,
-            "data": {
-                "titles": self.get_model_titles(serializer=UserSerializer()),
-                "items": data,
+            SCLIResponseGet.KWARGS: kwargs,
+            SCLIResponseGet.DATA: {
+                SCLIResponseGetData.TITLES: self.get_model_titles(serializer=UserSerializer()),
+                SCLIResponseGetData.ITEMS: data,
             },
         }
         return self.json_response_ok(operation=self.get.__name__, data=data)

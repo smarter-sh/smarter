@@ -13,7 +13,13 @@ from smarter.lib.drf.manifest.models.auth_token.const import MANIFEST_KIND
 from smarter.lib.drf.manifest.models.auth_token.model import SAMSmarterAuthToken
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.manifest.broker import AbstractBroker
-from smarter.lib.manifest.enum import SAMApiVersions, SAMKeys, SAMMetadataKeys
+from smarter.lib.manifest.enum import (
+    SAMApiVersions,
+    SAMKeys,
+    SAMMetadataKeys,
+    SCLIResponseGet,
+    SCLIResponseGetData,
+)
 from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -220,10 +226,10 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {"count": len(data)},
-            "kwargs": kwargs,
-            "data": {
-                "titles": self.get_model_titles(serializer=SmarterAuthTokenSerializer()),
-                "items": data,
+            SCLIResponseGet.KWARGS: kwargs,
+            SCLIResponseGet.DATA: {
+                SCLIResponseGetData.TITLES: self.get_model_titles(serializer=SmarterAuthTokenSerializer()),
+                SCLIResponseGetData.ITEMS: data,
             },
         }
         return self.json_response_ok(operation=self.get.__name__, data=data)
