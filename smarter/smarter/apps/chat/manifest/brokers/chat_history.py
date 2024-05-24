@@ -185,7 +185,7 @@ class SAMChatHistoryBroker(AbstractBroker, AccountMixin):
             },
             SAMKeys.SPEC.value: None,
         }
-        return self.success_response(operation=self.example_manifest.__name__, data=data)
+        return self.json_response_ok(operation=self.example_manifest.__name__, data=data)
 
     def get(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
 
@@ -207,7 +207,7 @@ class SAMChatHistoryBroker(AbstractBroker, AccountMixin):
                     raise SAMChatHistoryBrokerError(f"Model dump failed for {self.kind} {chat.id}")
                 data.append(model_dump)
             except Exception as e:
-                return self.err_response(self.get.__name__, e)
+                return self.json_response_err(self.get.__name__, e)
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -218,33 +218,34 @@ class SAMChatHistoryBroker(AbstractBroker, AccountMixin):
                 "items": data,
             },
         }
-        return self.success_response(operation=self.get.__name__, data=data)
+        return self.json_response_ok(operation=self.get.__name__, data=data)
 
     def apply(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
-        return self.readonly_response()
+        super().apply(request, kwargs)
+        return self.json_response_err_readonly()
 
     def describe(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
         self._session_key: str = kwargs.get("session_id", None)
         if self.chat_history:
             try:
                 data = self.django_orm_to_manifest_dict()
-                return self.success_response(operation=self.describe.__name__, data=data)
+                return self.json_response_ok(operation=self.describe.__name__, data=data)
             except Exception as e:
-                return self.err_response(self.describe.__name__, e)
-        return self.not_ready_response()
+                return self.json_response_err(self.describe.__name__, e)
+        return self.json_response_err_notready()
 
     def delete(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
-        return self.readonly_response()
+        return self.json_response_err_readonly()
 
     def deploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
-        return self.not_implemented_response()
+        return self.json_response_err_notimplemented()
 
     def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
-        return self.not_implemented_response()
+        return self.json_response_err_notimplemented()
 
     def logs(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
         self._session_key: str = kwargs.get("session_id", None)
         if self.chat_history:
             data = {}
-            return self.success_response(operation=self.logs.__name__, data=data)
-        return self.not_ready_response()
+            return self.json_response_ok(operation=self.logs.__name__, data=data)
+        return self.json_response_err_notready()

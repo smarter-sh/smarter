@@ -26,7 +26,7 @@ class ApiV1CliVersionApiView(CliBaseApiView):
     def info(self):
         try:
             data = {
-                "smarter": smarter_settings.version,
+                "api": smarter_settings.version,
                 "python": {
                     "botocore": aws_helper.aws.version,
                     "celery": celery_version,

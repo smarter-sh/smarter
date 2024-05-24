@@ -193,7 +193,7 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
                 },
             },
         }
-        return self.success_response(operation=self.example_manifest.__name__, data=data)
+        return self.json_response_ok(operation=self.example_manifest.__name__, data=data)
 
     def get(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         # name: str = None, all_objects: bool = False, tags: str = None
@@ -211,7 +211,7 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
                 data.append(model_dump)
             except Exception as e:
                 logger.error("Error in %s: %s", self.get.__name__, e)
-                return self.err_response(self.get.__name__, e)
+                return self.json_response_err(self.get.__name__, e)
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -223,49 +223,50 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
                 "items": data,
             },
         }
-        return self.success_response(operation=self.get.__name__, data=data)
+        return self.json_response_ok(operation=self.get.__name__, data=data)
 
     def apply(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        super().apply(request, kwargs)
         try:
             data = self.manifest_to_django_orm()
             for key, value in data.items():
                 setattr(self.account, key, value)
             self.account.save()
         except Exception as e:
-            return self.err_response(self.apply.__name__, e)
-        return self.success_response(operation=self.apply.__name__, data={})
+            return self.json_response_err(self.apply.__name__, e)
+        return self.json_response_ok(operation=self.apply.__name__, data={})
 
     def describe(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         if self.account:
             try:
                 data = self.django_orm_to_manifest_dict()
-                return self.success_response(operation=self.describe.__name__, data=data)
+                return self.json_response_ok(operation=self.describe.__name__, data=data)
             except Exception as e:
-                return self.err_response(self.describe.__name__, e)
-        return self.not_ready_response()
+                return self.json_response_err(self.describe.__name__, e)
+        return self.json_response_err_notready()
 
     def delete(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         if self.account:
             try:
                 self.account.delete()
-                return self.success_response(operation=self.delete.__name__, data={})
+                return self.json_response_ok(operation=self.delete.__name__, data={})
             except Exception as e:
-                return self.err_response(self.delete.__name__, e)
-        return self.not_ready_response()
+                return self.json_response_err(self.delete.__name__, e)
+        return self.json_response_err_notready()
 
     def deploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         if self.account:
             try:
                 self.account.deployed = True
                 self.account.save()
-                return self.success_response(operation=self.deploy.__name__, data={})
+                return self.json_response_ok(operation=self.deploy.__name__, data={})
             except Exception as e:
-                return self.err_response(self.deploy.__name__, e)
-        return self.not_ready_response()
+                return self.json_response_err(self.deploy.__name__, e)
+        return self.json_response_err_notready()
 
     def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
-        return self.not_implemented_response()
+        return self.json_response_err_notimplemented()
 
     def logs(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         data = {}
-        return self.success_response(operation=self.logs.__name__, data=data)
+        return self.json_response_ok(operation=self.logs.__name__, data=data)
