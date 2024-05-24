@@ -16,7 +16,7 @@ else
     $(shell cp ./doc/example-dot-env .env)
 endif
 
-.PHONY: init activate build run clean tear-down lint analyze coverage release pre-commit-init pre-commit-run python-init python-activate python-lint python-clean python-test react-init react-lint react-update react-run react-build terraform-build terraform-clean docker-init docker-build docker-run docker-collectstatic docker-test python-init python-lint python-clean keen-init keen-build keen-server react-clean react-init react-lint react-update react-run react-build help
+.PHONY: init activate build run clean tear-down lint analyze coverage release pre-commit-init pre-commit-run python-init python-activate python-lint python-clean python-test react-init react-lint react-update react-run react-build docker-init docker-build docker-run docker-collectstatic docker-test python-init python-lint python-clean keen-init keen-build keen-server react-clean react-init react-lint react-update react-run react-build help
 
 # Default target executed when no arguments are given to make.
 all: help
@@ -75,7 +75,6 @@ coverage:
 pre-commit-init:
 	pre-commit install
 	pre-commit autoupdate
-	pre-commit run --all-files
 
 pre-commit-run:
 	pre-commit run --all-files
@@ -216,19 +215,6 @@ react-build:
 # -------------------------------------------------------------------------
 # AWS and deployment
 # -------------------------------------------------------------------------
-terraform-build:
-	cd aws
-	terraform init
-	terraform apply
-
-terraform-clean:
-	find ./ -name .terragrunt-cache -type d -exec rm -rf {} +
-	find ./ -name .terraform.lock.hcl -type f -exec rm {} +
-
-terraform-lint:
-	cd aws
-	terraform fmt -recursive
-
 helm-update:
 	cd helm/charts/smarter && \
 	helm dependency update
@@ -254,8 +240,6 @@ help:
 	@echo 'pre-commit-run         - runs all pre-commit hooks on all files'
 	@echo 'release                - Force a new Github release'
 	@echo '<************************** AWS **************************>'
-	@echo 'terraform-build        - Run Terraform to create AWS infrastructure'
-	@echo 'terraform-clean        - Prune Terraform cache and lock files'
 	@echo 'helm-update            - Update Helm chart dependencies'
 	@echo '<************************** Python **************************>'
 	@echo 'python-init            - Create a Python virtual environment and install dependencies'

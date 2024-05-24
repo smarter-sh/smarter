@@ -92,6 +92,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # smarter apps
     # -------------------------------
+    "smarter.lib.drf",
     "smarter.apps.account",
     "smarter.apps.plugin",
     "smarter.apps.chat",
@@ -240,12 +241,10 @@ STATICFILES_DIRS.extend(reactapp_dirs)
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
-    # Use Django's standard `django.contrib.auth` permissions,
-    # or allow read-only access for unauthenticated users.
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "knox.auth.TokenAuthentication",
+        "smarter.lib.drf.token_authentication.SmarterTokenAuthentication",
     ],
-    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly"],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_PARSER_CLASSES": [
         "rest_framework.parsers.JSONParser",
         "smarter.lib.drf.parsers.YAMLParser",

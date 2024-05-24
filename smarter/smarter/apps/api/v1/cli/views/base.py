@@ -6,22 +6,21 @@ from http import HTTPStatus
 from typing import Type
 
 import yaml
-from django.http import JsonResponse
-from knox.auth import TokenAuthentication
-from rest_framework.authentication import SessionAuthentication
+from django.http import JsonResponse, QueryDict
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.utils import user_profile_for_user
+from smarter.apps.api.v1.cli.brokers import Brokers
+from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
 from smarter.common.exceptions import SmarterExceptionBase, error_response_factory
+from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.exceptions import SAMBadRequestError
 from smarter.lib.manifest.loader import SAMLoader
-
-from ...manifests.enum import SAMKinds
-from ...manifests.version import SMARTER_API_VERSION
-from ..brokers import BROKERS
 
 
 logger = logging.getLogger(__name__)
@@ -47,7 +46,7 @@ class CliBaseApiView(APIView, AccountMixin):
     - Sets the user profile for the request.
     """
 
-    authentication_classes = (TokenAuthentication, SessionAuthentication)
+    authentication_classes = (SmarterTokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
     _loader: SAMLoader = None
@@ -74,10 +73,8 @@ class CliBaseApiView(APIView, AccountMixin):
                     manifest=self.manifest_data,
                 )
                 if not self._loader:
-                    print("loader() -  exception: SAMValidationError")
                     raise APIV1CLIViewError("")
-            except APIV1CLIViewError as e:
-                print("loader() -  exception: SAMValidationError", e)
+            except APIV1CLIViewError:
                 # not all endpoints require a manifest, so we
                 # should fail gracefully if the manifest is not provided.
                 self._manifest_load_failed = True
@@ -92,7 +89,7 @@ class CliBaseApiView(APIView, AccountMixin):
         """
         if not self._BrokerClass:
             if self.manifest_kind:
-                self._BrokerClass = BROKERS.get(self.manifest_kind)
+                self._BrokerClass = Brokers.get_broker(self.manifest_kind)
             if not self._BrokerClass:
                 raise APIV1CLIViewError(f"Could not find broker for {self.manifest_kind} manifest.")
         return self._BrokerClass
@@ -135,11 +132,15 @@ class CliBaseApiView(APIView, AccountMixin):
     @property
     def manifest_kind(self) -> str:
         if not self._manifest_kind and self.manifest_data:
-            self._manifest_kind = self.manifest_data.get("kind", None)
+            self._manifest_kind = str(self.manifest_data.get("kind", None))
         if not self._manifest_kind and self.loader:
-            self._manifest_kind = self.loader.manifest_kind if self.loader else None
-        return self._manifest_kind
+            self._manifest_kind = str(self.loader.manifest_kind) if self.loader else None
+        # resolve any inconsistencies in the casing of the manifest kind
+        # that we might have received.
+        # example: 'chatbot' vs 'ChatBot', 'plugin_data_sql_connection' vs 'PluginDataSqlConnection'
+        return Brokers.get_broker_kind(self._manifest_kind)
 
+    # pylint: disable=too-many-return-statements,too-many-branches
     def dispatch(self, request, *args, **kwargs):
         """
         The http request body is expected to contain the manifest text
@@ -149,19 +150,50 @@ class CliBaseApiView(APIView, AccountMixin):
         model will be passed to a AbstractBroker for the manifest 'kind', which
         implements the broker service pattern for the underlying object.
         """
-        self._manifest_name = kwargs.get("name", None)
+        # TO DO: This is a temporary fix to mitigate a configuration issue
+        # where DRF is not properly authenticating the request. This is a
+        # temporary fix until we can properly configure the DRF authentication
+        if not hasattr(request, "auth"):
+            logger.info("authentication_classes: %s", self.authentication_classes)
+            logger.info("permission_classes: %s", self.permission_classes)
+            logger.warning(
+                "No authentication scheme detected in the request object. forcing authentication via SmarterTokenAuthentication."
+            )
+            request.auth = SmarterTokenAuthentication()
+            try:
+                user, _ = request.auth.authenticate(request)
+                request.user = user
+            except AuthenticationFailed:
+                try:
+                    raise APIV1CLIViewError("Authentication failed.") from None
+                except APIV1CLIViewError as e:
+                    return JsonResponse(error_response_factory(e=e), status=HTTPStatus.FORBIDDEN)
+        if not request.user.is_authenticated:
+            try:
+                raise APIV1CLIViewError("Authentication failed.")
+            except APIV1CLIViewError as e:
+                return JsonResponse(error_response_factory(e=e), status=HTTPStatus.FORBIDDEN)
+
+        user_agent = request.headers.get("User-Agent", "")
+        if "Go-http-client" not in user_agent:
+            logger.warning("The User-Agent is not a Go lang application: %s", user_agent)
+
+        query_string = request.META.get("QUERY_STRING", "")
+        query_dict = QueryDict(query_string)
+        self._manifest_name = query_dict.get("name", None)
         kind = kwargs.get("kind", None)
         if kind:
-            self._manifest_kind = str(kind).title()
+            self._manifest_kind = kind
             if self.manifest_kind.endswith("s"):
                 self._manifest_kind = self.manifest_kind[:-1]
             if self.manifest_kind:
                 # Validate the manifest kind: plugin, plugins, user, users, chatbot, chatbots, etc.
-                if str(self.manifest_kind).lower() not in SAMKinds.all_slugs():
-                    print(f"Unsupported manifest kind: {self.manifest_kind}. should be one of {SAMKinds.all_slugs()}")
+                if str(self.manifest_kind) not in SAMKinds.all_values():
                     return JsonResponse(
                         error_response_factory(
-                            e=SAMBadRequestError(f"Unsupported manifest kind: {self.manifest_kind}")
+                            e=SAMBadRequestError(
+                                f"Unsupported manifest kind: {self.manifest_kind}. should be one of {SAMKinds.all_values()}"
+                            )
                         ),
                         status=HTTPStatus.BAD_REQUEST,
                     )
@@ -193,7 +225,7 @@ class CliBaseApiView(APIView, AccountMixin):
         # generic exception handler that simply ensures that in all cases
         # the response is a JsonResponse with a status code.
         try:
-            return super().dispatch(request, *args, **kwargs)
+            return super().dispatch(request, *args, **{**request.GET.dict(), **kwargs})
         # pylint: disable=broad-except
         except Exception as e:
             return JsonResponse(error_response_factory(e=e), status=HTTPStatus.INTERNAL_SERVER_ERROR)

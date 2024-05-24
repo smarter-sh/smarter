@@ -3,26 +3,95 @@
 Smarter API command-line interface Brokers. These are the broker classes
 that implement the broker service pattern for an underlying object. Brokers
 receive a Yaml manifest representation of a model, convert this to a Pydantic
-model, and then instantiate the appropriate Python class that perform
-the necessary operations to facilitate get, post, put, and delete operations.
+model, and then instantiate the appropriate Python class that performs
+the necessary operations to facilitate cli requests that include:
+    - delete
+    - deploy
+    - describe
+    - get
+    - logs
+    - manifest
+    - undeploy
 """
 
 from typing import Dict, Type
 
+from smarter.apps.account.manifest.brokers.account import SAMAccountBroker
+from smarter.apps.account.manifest.brokers.user import SAMUserBroker
+from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.apps.chat.manifest.brokers.chat import SAMChatBroker
+from smarter.apps.chat.manifest.brokers.chat_history import SAMChatHistoryBroker
+from smarter.apps.chat.manifest.brokers.chat_plugin_usage import (
+    SAMChatPluginUsageBroker,
+)
+from smarter.apps.chat.manifest.brokers.chat_tool_call import SAMChatToolCallBroker
+from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
 from smarter.apps.plugin.manifest.brokers.plugin import SAMPluginBroker
 from smarter.apps.plugin.manifest.brokers.sql_connection import (
     SAMPluginDataSqlConnectionBroker,
 )
+from smarter.common.exceptions import SmarterConfigurationError
+from smarter.lib.drf.manifest.brokers.auth_token import SAMSmarterAuthTokenBroker
 from smarter.lib.manifest.broker import AbstractBroker, BrokerNotImplemented
 
-from ..manifests.enum import SAMKinds
+
+class Brokers:
+    """Broker service pattern for an underlying object. Maps SAMKinds to Broker classes."""
+
+    _brokers: Dict[str, Type[AbstractBroker]] = {
+        SAMKinds.ACCOUNT.value: SAMAccountBroker,
+        SAMKinds.APIKEY.value: SAMSmarterAuthTokenBroker,
+        SAMKinds.CHAT.value: SAMChatBroker,
+        SAMKinds.CHAT_HISTORY.value: SAMChatHistoryBroker,
+        SAMKinds.CHAT_PLUGIN_USAGE.value: SAMChatPluginUsageBroker,
+        SAMKinds.CHAT_TOOL_CALL.value: SAMChatToolCallBroker,
+        SAMKinds.CHATBOT.value: SAMChatbotBroker,
+        SAMKinds.PLUGIN.value: SAMPluginBroker,
+        SAMKinds.SQLCONNECTION.value: SAMPluginDataSqlConnectionBroker,
+        SAMKinds.APICONNECTION.value: BrokerNotImplemented,
+        SAMKinds.USER.value: SAMUserBroker,
+    }
+
+    @classmethod
+    def _lower_brokers(cls):
+        return {k.lower(): v for k, v in cls._brokers.items()}
+
+    @classmethod
+    def get_broker(cls, kind: str) -> Type[AbstractBroker]:
+        """Case insensitive broker getter."""
+        return cls._brokers.get(kind) or cls._lower_brokers().get(kind.lower())
+
+    @classmethod
+    def snake_to_camel(cls, snake_str):
+        components = snake_str.split("_")
+        return components[0] + "".join(x.title() for x in components[1:])
+
+    @classmethod
+    def get_broker_kind(cls, kind: str) -> str:
+        """
+        Case insensitive broker kind getter. Returns the original SAMKinds
+        key string from cls._brokers for the given kind.
+        """
+        kind = cls.snake_to_camel(kind)
+        lower_kind = kind.lower()
+        for key in cls._brokers:
+            if key.lower() == lower_kind:
+                return key
+        return None
+
+    @classmethod
+    def all_brokers(cls) -> list[str]:
+        return list(cls._brokers.keys())
 
 
-BROKERS: Dict[str, Type[AbstractBroker]] = {
-    SAMKinds.PLUGIN.value: SAMPluginBroker,
-    SAMKinds.SQL_CONNECTION.value: SAMPluginDataSqlConnectionBroker,
-    SAMKinds.ACCOUNT.value: BrokerNotImplemented,
-    SAMKinds.USER.value: BrokerNotImplemented,
-    SAMKinds.CHAT.value: BrokerNotImplemented,
-    SAMKinds.CHATBOT.value: BrokerNotImplemented,
-}
+# an internal self-check to ensure that all SAMKinds have a Broker implementation
+if not all(item in SAMKinds.all_values() for item in Brokers.all_brokers()):
+    brokers_keys = set(Brokers.all_brokers())
+    samkinds_values = set(SAMKinds.all_values())
+    difference = brokers_keys.difference(samkinds_values)
+    difference_list = list(difference)
+    if len(difference_list) == 1:
+        difference_list = difference_list[0]
+    raise SmarterConfigurationError(
+        f"The following broker(s) is missing from the master BROKERS dictionary: {difference_list}"
+    )
