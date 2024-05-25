@@ -22,7 +22,7 @@ watchdog==4.0.0
 black==24.4.0
 flake8==7.0.0
 flake8-coding==1.3.2
-pre-commit==3.7.0
+pre-commit==3.7.1
 isort==5.13.2
 mypy==1.10.0
 pylint==3.2.2
