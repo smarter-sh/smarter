@@ -56,6 +56,7 @@ class CliBaseApiView(APIView, AccountMixin):
     _manifest_name: str = None
     _manifest_load_failed: bool = False
     _BrokerClass: Type[AbstractBroker] = None
+    _params: dict[str, any] = None
 
     @property
     def loader(self) -> SAMLoader:
@@ -80,6 +81,10 @@ class CliBaseApiView(APIView, AccountMixin):
                 self._manifest_load_failed = True
 
         return self._loader
+
+    @property
+    def params(self) -> dict[str, any]:
+        return self._params
 
     @property
     def BrokerClass(self) -> Type[AbstractBroker]:
@@ -150,6 +155,12 @@ class CliBaseApiView(APIView, AccountMixin):
         model will be passed to a AbstractBroker for the manifest 'kind', which
         implements the broker service pattern for the underlying object.
         """
+
+        # Parse the query string parameters from the request into a dictionary.
+        # This is used to pass additional parameters to the child view's post method.
+        self._params = QueryDict(request.META.get("QUERY_STRING", ""))
+        self._manifest_name = self.params.get("name", None)
+
         # TO DO: This is a temporary fix to mitigate a configuration issue
         # where DRF is not properly authenticating the request. This is a
         # temporary fix until we can properly configure the DRF authentication
@@ -178,25 +189,18 @@ class CliBaseApiView(APIView, AccountMixin):
         if "Go-http-client" not in user_agent:
             logger.warning("The User-Agent is not a Go lang application: %s", user_agent)
 
-        query_string = request.META.get("QUERY_STRING", "")
-        query_dict = QueryDict(query_string)
-        self._manifest_name = query_dict.get("name", None)
         kind = kwargs.get("kind", None)
         if kind:
-            self._manifest_kind = kind
-            if self.manifest_kind.endswith("s"):
-                self._manifest_kind = self.manifest_kind[:-1]
-            if self.manifest_kind:
-                # Validate the manifest kind: plugin, plugins, user, users, chatbot, chatbots, etc.
-                if str(self.manifest_kind) not in SAMKinds.all_values():
-                    return JsonResponse(
-                        error_response_factory(
-                            e=SAMBadRequestError(
-                                f"Unsupported manifest kind: {self.manifest_kind}. should be one of {SAMKinds.all_values()}"
-                            )
-                        ),
-                        status=HTTPStatus.BAD_REQUEST,
-                    )
+            self._manifest_kind = Brokers.get_broker_kind(kind)
+            if not self.manifest_kind:
+                return JsonResponse(
+                    error_response_factory(
+                        e=SAMBadRequestError(
+                            f"Unsupported manifest kind: {self.manifest_kind}. should be one of {SAMKinds.all_values()}"
+                        )
+                    ),
+                    status=HTTPStatus.BAD_REQUEST,
+                )
 
         # Manifest parsing and broker instantiation are lazy implementations.
         # So for now, we'll only set the private class variable _manifest_data
@@ -224,8 +228,13 @@ class CliBaseApiView(APIView, AccountMixin):
 
         # generic exception handler that simply ensures that in all cases
         # the response is a JsonResponse with a status code.
+        #
+        # note that we are combining the dictionary of parameters with the
+        # keyword arguments. This is because the keyword arguments are passed
+        # to the super class dispatch method, and the parameters are passed
+        # to the child view's post method.
         try:
-            return super().dispatch(request, *args, **{**request.GET.dict(), **kwargs})
+            return super().dispatch(request, *args, **{**self.params, **kwargs})
         # pylint: disable=broad-except
         except Exception as e:
             return JsonResponse(error_response_factory(e=e), status=HTTPStatus.INTERNAL_SERVER_ERROR)
