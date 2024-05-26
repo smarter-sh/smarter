@@ -4,7 +4,7 @@
 import typing
 
 from django.forms.models import model_to_dict
-from django.http import HttpRequest, JsonResponse
+from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.mixins import AccountMixin
@@ -13,6 +13,7 @@ from smarter.lib.drf.manifest.enum import SAMSmarterAuthTokenSpecKeys
 from smarter.lib.drf.manifest.models.auth_token.const import MANIFEST_KIND
 from smarter.lib.drf.manifest.models.auth_token.model import SAMSmarterAuthToken
 from smarter.lib.drf.models import SmarterAuthToken
+from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -192,7 +193,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
     def model_class(self) -> SAMSmarterAuthToken:
         return SAMSmarterAuthToken
 
-    def example_manifest(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
@@ -211,7 +212,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def get(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         data = []
         smarter_auth_tokens = SmarterAuthToken.objects.filter(user=self.user)
@@ -237,7 +238,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def apply(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """
         apply the manifest. copy the manifest data to the Django ORM model and
         save the model to the database. Call super().apply() to ensure that the
@@ -261,7 +262,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
             return self.json_response_err(command=command, e=e)
         return self.json_response_ok(command=command, data={})
 
-    def describe(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         if self.smarter_auth_token:
             try:
@@ -271,7 +272,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
                 return self.json_response_err(command=command, e=e)
         return self.json_response_err_notready(command=command)
 
-    def delete(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         if self.smarter_auth_token:
             try:
@@ -281,15 +282,15 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
                 return self.json_response_err(command=command, e=e)
         return self.json_response_err_notready(command=command)
 
-    def deploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         return self.json_response_err_notimplemented(command=command)
 
-    def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
         return self.json_response_err_notimplemented(command=command)
 
-    def logs(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         if self.smarter_auth_token:
             data = {}

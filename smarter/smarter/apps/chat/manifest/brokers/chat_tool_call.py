@@ -2,7 +2,7 @@
 """Smarter API ChatToolCall Manifest handler"""
 
 from django.forms.models import model_to_dict
-from django.http import HttpRequest, JsonResponse
+from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.mixins import AccountMixin
@@ -11,6 +11,7 @@ from smarter.apps.chat.manifest.models.chat_tool_call.const import MANIFEST_KIND
 from smarter.apps.chat.manifest.models.chat_tool_call.model import SAMChatToolCall
 from smarter.apps.chat.models import Chat, ChatToolCall
 from smarter.common.api import SmarterApiVersions
+from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.enum import (
     SAMKeys,
@@ -182,7 +183,7 @@ class SAMChatToolCallBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def example_manifest(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
@@ -196,7 +197,7 @@ class SAMChatToolCallBroker(AbstractBroker, AccountMixin):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def get(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
+    def get(self, request: HttpRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         self._session_key: str = kwargs.get("session_id", None)
         data = []
@@ -229,14 +230,14 @@ class SAMChatToolCallBroker(AbstractBroker, AccountMixin):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
+    def apply(self, request: HttpRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
         """
         Chat is a read-only django table, populated by the LLM handlers
         """
         command = self.apply.__name__
         return self.json_response_err_readonly(command=command)
 
-    def describe(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
+    def describe(self, request: HttpRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         self._session_key: str = kwargs.get("session_id", None)
         if self.chat_tool_call:
@@ -247,19 +248,19 @@ class SAMChatToolCallBroker(AbstractBroker, AccountMixin):
                 return self.json_response_err(self.describe.__name__, e)
         return self.json_response_err_notready(command=command)
 
-    def delete(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
+    def delete(self, request: HttpRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         return self.json_response_err_readonly(command=command)
 
-    def deploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         return self.json_response_err_notimplemented(command=command)
 
-    def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
         return self.json_response_err_notimplemented(command=command)
 
-    def logs(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
+    def logs(self, request: HttpRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
         self._session_key: str = kwargs.get("session_id", None)
         if self.chat_tool_call:
