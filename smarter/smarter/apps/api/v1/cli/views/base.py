@@ -6,7 +6,7 @@ from http import HTTPStatus
 from typing import Type
 
 import yaml
-from django.http import JsonResponse, QueryDict
+from django.http import QueryDict
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -16,8 +16,9 @@ from smarter.apps.account.utils import user_profile_for_user
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
-from smarter.common.exceptions import SmarterExceptionBase, error_response_factory
+from smarter.common.exceptions import SmarterExceptionBase
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
+from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.exceptions import SAMBadRequestError
 from smarter.lib.manifest.loader import SAMLoader
@@ -178,12 +179,16 @@ class CliBaseApiView(APIView, AccountMixin):
                 try:
                     raise APIV1CLIViewError("Authentication failed.") from None
                 except APIV1CLIViewError as e:
-                    return JsonResponse(error_response_factory(e=e), status=HTTPStatus.FORBIDDEN)
+                    return SmarterJournaledJsonErrorResponse(
+                        request=request, thing=self.manifest_kind, command=None, e=e, status=HTTPStatus.FORBIDDEN
+                    )
         if not request.user.is_authenticated:
             try:
                 raise APIV1CLIViewError("Authentication failed.")
             except APIV1CLIViewError as e:
-                return JsonResponse(error_response_factory(e=e), status=HTTPStatus.FORBIDDEN)
+                return SmarterJournaledJsonErrorResponse(
+                    request=request, thing=self.manifest_kind, command=None, e=e, status=HTTPStatus.FORBIDDEN
+                )
 
         user_agent = request.headers.get("User-Agent", "")
         if "Go-http-client" not in user_agent:
@@ -193,11 +198,12 @@ class CliBaseApiView(APIView, AccountMixin):
         if kind:
             self._manifest_kind = Brokers.get_broker_kind(kind)
             if not self.manifest_kind:
-                return JsonResponse(
-                    error_response_factory(
-                        e=SAMBadRequestError(
-                            f"Unsupported manifest kind: {self.manifest_kind}. should be one of {SAMKinds.all_values()}"
-                        )
+                return SmarterJournaledJsonErrorResponse(
+                    request=request,
+                    thing=self.manifest_kind,
+                    command=None,
+                    e=SAMBadRequestError(
+                        f"Unsupported manifest kind: {self.manifest_kind}. should be one of {SAMKinds.all_values()}"
                     ),
                     status=HTTPStatus.BAD_REQUEST,
                 )
@@ -216,7 +222,9 @@ class CliBaseApiView(APIView, AccountMixin):
                 try:
                     raise APIV1CLIViewError("Could not parse manifest. Valid formats: yaml, json.") from e
                 except APIV1CLIViewError as ex:
-                    return JsonResponse(error_response_factory(e=ex), status=HTTPStatus.BAD_REQUEST)
+                    return SmarterJournaledJsonErrorResponse(
+                        request=request, thing=self.manifest_kind, command=None, e=ex, status=HTTPStatus.BAD_REQUEST
+                    )
         try:
             self._user_profile = user_profile_for_user(user=request.user)
             self._account = self._user_profile.account
@@ -224,7 +232,9 @@ class CliBaseApiView(APIView, AccountMixin):
             if not self._user_profile:
                 raise APIV1CLIViewError("Could not find account for user.")
         except SmarterExceptionBase as e:
-            return JsonResponse(error_response_factory(e=e), status=HTTPStatus.FORBIDDEN)
+            return SmarterJournaledJsonErrorResponse(
+                request=request, thing=self.manifest_kind, command=None, e=e, status=HTTPStatus.FORBIDDEN
+            )
 
         # generic exception handler that simply ensures that in all cases
         # the response is a JsonResponse with a status code.
@@ -237,4 +247,11 @@ class CliBaseApiView(APIView, AccountMixin):
             return super().dispatch(request, *args, **{**self.params, **kwargs})
         # pylint: disable=broad-except
         except Exception as e:
-            return JsonResponse(error_response_factory(e=e), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=None,
+                e=e,
+                e=e,
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
