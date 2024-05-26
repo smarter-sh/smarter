@@ -20,6 +20,7 @@ class SmarterJournalApiResponseKeys:
     API = "api"
     THING = "thing"
     METADATA = "metadata"
+    DATA = "data"
 
 
 class SCLIResponseMetadata:
