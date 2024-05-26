@@ -7,9 +7,9 @@ from django.http import HttpRequest, JsonResponse
 from smarter.apps.account.mixins import Account, AccountMixin
 from smarter.apps.plugin.models import PluginDataSqlConnection
 from smarter.apps.plugin.serializers import PluginDataSqlConnectionSerializer
+from smarter.common.api import SmarterApiVersions
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.enum import (
-    SAMApiVersions,
     SAMKeys,
     SAMMetadataKeys,
     SCLIResponseGet,
@@ -46,8 +46,9 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
+        request: HttpRequest,
         account: Account,
-        api_version: str = SAMApiVersions.V1.value,
+        api_version: str = SmarterApiVersions.V1.value,
         name: str = None,
         kind: str = None,
         loader: SAMLoader = None,
@@ -64,6 +65,7 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
         the required top-level keys.
         """
         super().__init__(
+            request=request,
             api_version=api_version,
             account=account,
             name=name,
@@ -135,6 +137,7 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
         return self._sql_connection
 
     def example_manifest(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        command = self.get.__name__
         data = {
             "apiVersion": self.api_version,
             "kind": self.kind,
@@ -154,13 +157,13 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
                 }
             },
         }
-        return self.json_response_ok(operation=self.get.__name__, data=data)
+        return self.json_response_ok(command=command, data=data)
 
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
     def get(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
-
+        command = self.get.__name__
         name: str = kwargs.get("name", None)
         data = []
 
@@ -180,7 +183,7 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
                     )
                 data.append(model_dump)
             except Exception as e:
-                return self.json_response_err(self.get.__name__, e)
+                return self.json_response_err(command=command, e=e)
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -192,7 +195,7 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
                 SCLIResponseGetData.ITEMS.value: data,
             },
         }
-        return self.json_response_ok(operation=self.get.__name__, data=data)
+        return self.json_response_ok(command=command, data=data)
 
     def apply(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         """
@@ -202,9 +205,10 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
         Django ORM model.
         Note that there are fields included in the manifest that are not editable
         and are therefore removed from the Django ORM model dict prior to attempting
-        the save() operation. These fields are defined in the readonly_fields list.
+        the save() command. These fields are defined in the readonly_fields list.
         """
         super().apply(request, kwargs)
+        command = self.apply.__name__
         readonly_fields = ["id", "created_at", "updated_at"]
         try:
             data = self.manifest_to_django_orm()
@@ -214,11 +218,12 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
                 setattr(self.sql_connection, key, value)
             self.sql_connection.save()
         except Exception as e:
-            return self.json_response_err(operation=self.apply.__name__, e=e)
-        return self.json_response_ok(operation=self.apply.__name__, data={})
+            return self.json_response_err(command=command, e=e)
+        return self.json_response_ok(command=command, data={})
 
     def describe(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         """Return a JSON response with the manifest data."""
+        command = self.describe.__name__
         if self.sql_connection:
             try:
                 data = model_to_dict(self.sql_connection)
@@ -242,25 +247,29 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
                     },
                 }
 
-                return self.json_response_ok(operation=self.describe.__name__, data=retval)
+                return self.json_response_ok(command=command, data=retval)
             except Exception as e:
-                return self.json_response_err(self.describe.__name__, e)
-        return self.json_response_err_notready()
+                return self.json_response_err(command=command, e=e)
+        return self.json_response_err_notready(command=command)
 
     def delete(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        command = self.delete.__name__
         if self.sql_connection:
             try:
                 self.sql_connection.delete()
-                return self.json_response_ok(operation=self.delete.__name__, data={})
+                return self.json_response_ok(command=command, data={})
             except Exception as e:
-                return self.json_response_err(self.delete.__name__, e)
-        return self.json_response_err_notready()
+                return self.json_response_err(command=command, e=e)
+        return self.json_response_err_notready(command=command)
 
     def deploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
-        return self.json_response_err_notimplemented()
+        command = self.deploy.__name__
+        return self.json_response_err_notimplemented(command=command)
 
     def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
-        return self.json_response_err_notimplemented()
+        command = self.undeploy.__name__
+        return self.json_response_err_notimplemented(command=command)
 
     def logs(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
-        return self.json_response_err_notimplemented()
+        command = self.logs.__name__
+        return self.json_response_err_notimplemented(command=command)

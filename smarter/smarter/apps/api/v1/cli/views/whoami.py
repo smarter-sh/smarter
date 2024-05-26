@@ -5,7 +5,8 @@ from http import HTTPStatus
 
 from django.http import JsonResponse
 
-from smarter.apps.account.serializers import AccountSerializer, UserSerializer
+from smarter.apps.account.serializers import AccountSerializer
+from smarter.lib.django.serializers import UserSerializer
 
 from .base import CliBaseApiView
 

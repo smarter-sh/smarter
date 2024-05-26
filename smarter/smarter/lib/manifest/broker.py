@@ -11,20 +11,21 @@ import inflect
 from django.http import HttpRequest, JsonResponse
 from rest_framework.serializers import ModelSerializer
 
-from smarter.lib.manifest.enum import SAMApiVersions
+from smarter.common.api import SmarterApiVersions
+from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
+from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 from smarter.lib.manifest.models import AbstractSAMBase
 
-from .enum import SAMApiVersions
 from .exceptions import SAMExceptionBase
 
 
 if typing.TYPE_CHECKING:
-    from smarter.apps.account.models import Account, UserProfile
+    from smarter.apps.account.models import Account
 
 inflect_engine = inflect.engine()
 
-SUPPORTED_API_VERSIONS = [SAMApiVersions.V1.value]
+SUPPORTED_API_VERSIONS = [SmarterApiVersions.V1.value]
 
 
 class SAMBrokerError(SAMExceptionBase):
@@ -43,7 +44,7 @@ class SAMBrokerReadOnlyError(SAMBrokerError):
         return "Smarter API Manifest Broker Read-Only Error"
 
 
-# pylint: disable=too-many-public-methods
+# pylint: disable=too-many-public-methods,too-many-instance-attributes
 class AbstractBroker(ABC):
     """
     Smarter API Manifest Broker abstract base class. This class is responsible
@@ -58,30 +59,7 @@ class AbstractBroker(ABC):
     for the manifest: get, post, put, delete, patch.
     """
 
-    class Operations:
-        """Common operations for the broker."""
-
-        GET = "get"
-        APPLY = "apply"
-        DESCRIBE = "describe"
-        DELETE = "delete"
-        DEPLOY = "deploy"
-        UNDEPLOY = "undeploy"
-        LOGS = "logs"
-        MANIFEST_EXAMPLE = "example_manifest"
-
-        @classmethod
-        def past_tense(cls) -> dict:
-            return {
-                cls.GET: "gotten",
-                cls.APPLY: "applied",
-                cls.DESCRIBE: "described",
-                cls.DELETE: "deleted",
-                cls.DEPLOY: "deployed",
-                cls.UNDEPLOY: "undeployed",
-                cls.LOGS: "got logs for",
-            }
-
+    _request: HttpRequest = None
     _api_version: str = None
     _account: "Account" = None
     _loader: SAMLoader = None
@@ -93,8 +71,9 @@ class AbstractBroker(ABC):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
+        request: HttpRequest,
         account: "Account",
-        api_version: str = SAMApiVersions.V1.value,
+        api_version: str = SmarterApiVersions.V1.value,
         name: str = None,
         kind: str = None,
         loader: SAMLoader = None,
@@ -102,6 +81,7 @@ class AbstractBroker(ABC):
         file_path: str = None,
         url: str = None,
     ):
+        self._request = request
         self._name = name
         self._account = account
         self._loader = loader
@@ -128,8 +108,16 @@ class AbstractBroker(ABC):
     # Class Instance Properties
     ###########################################################################
     @property
+    def request(self) -> HttpRequest:
+        return self._request
+
+    @property
     def is_valid(self) -> bool:
         return self._validated
+
+    @property
+    def thing(self) -> SmarterJournalThings:
+        return SmarterJournalThings(self.kind)
 
     @property
     def kind(self) -> str:
@@ -241,62 +229,71 @@ class AbstractBroker(ABC):
             else {"data": data} if data else {"message": message} if message else {}
         )
 
-    def json_response_ok(
-        self,
-        operation: str,
-        data: dict = None,
-    ) -> JsonResponse:
+    def json_response_ok(self, command: SmarterJournalCliCommands, data: dict = None) -> SmarterJournaledJsonResponse:
         """Return a common success response."""
         data = data or {}
-        operated = self.Operations.past_tense().get(operation, operation)
-        if operation == self.Operations.GET:
+        operated = SmarterJournalCliCommands.past_tense().get(command, command)
+        if command == SmarterJournalCliCommands.GET:
             kind = inflect_engine.plural(self.kind)
             message = f"{kind} {operated} successfully"
-        elif operation == self.Operations.LOGS:
+        elif command == SmarterJournalCliCommands.LOGS:
             kind = self.kind
             message = f"{kind} {self.name} successfully retrieved logs"
-        elif operation == self.Operations.MANIFEST_EXAMPLE:
+        elif command == SmarterJournalCliCommands.MANIFEST_EXAMPLE:
             kind = self.kind
             message = f"{kind} example manifest successfully generated"
         else:
             kind = self.kind
             message = f"{kind} {self.name} {operated} successfully"
-        operation = self.Operations.past_tense().get(operation, operation)
         retval = self._retval(data=data, message=message)
-        return JsonResponse(data=retval, status=HTTPStatus.OK, safe=False)
+        return SmarterJournaledJsonResponse(
+            request=self.request, thing=self.thing, command=command, data=retval, status=HTTPStatus.OK, safe=False
+        )
 
-    def json_response_err_readonly(self, data: dict = None) -> JsonResponse:
+    def json_response_err_readonly(self, command: SmarterJournalCliCommands) -> SmarterJournaledJsonResponse:
         """Return a common read-only response."""
         message = f"{self.kind} {self.name} is read-only"
         retval = self._retval(message=message)
-        return JsonResponse(data=retval, status=HTTPStatus.METHOD_NOT_ALLOWED)
+        return SmarterJournaledJsonResponse(
+            request=self.request, thing=self.thing, command=command, data=retval, status=HTTPStatus.METHOD_NOT_ALLOWED
+        )
 
-    def json_response_err_notimplemented(self, data: dict = None) -> JsonResponse:
+    def json_response_err_notimplemented(self, command: SmarterJournalCliCommands) -> SmarterJournaledJsonResponse:
         """Return a common not implemented response."""
-        message = f"operation not implemented for {self.kind} resources"
+        message = f"command not implemented for {self.kind} resources"
         retval = self._retval(message=message)
-        return JsonResponse(data=retval, status=HTTPStatus.NOT_IMPLEMENTED)
+        return SmarterJournaledJsonResponse(
+            request=self.request, thing=self.thing, command=command, data=retval, status=HTTPStatus.NOT_IMPLEMENTED
+        )
 
-    def json_response_err_notready(self, data: dict = None) -> JsonResponse:
+    def json_response_err_notready(self, command: SmarterJournalCliCommands) -> SmarterJournaledJsonResponse:
         """Return a common not ready response."""
         message = f"{self.kind} {self.name} not ready"
         retval = self._retval(message=message)
-        return JsonResponse(data=retval, status=HTTPStatus.BAD_REQUEST)
+        return SmarterJournaledJsonResponse(
+            request=self.request, thing=self.thing, command=command, data=retval, status=HTTPStatus.BAD_REQUEST
+        )
 
-    def json_response_err(self, operation: str, e: Exception) -> JsonResponse:
+    def json_response_err(self, command: SmarterJournalCliCommands, e: Exception) -> SmarterJournaledJsonResponse:
         """
         Return a structured error response that can be unpacked and rendered
         by the cli in a variety of formats.
         """
         tb_str = "".join(traceback.format_tb(e.__traceback__))
-        data = {"message": f"could not {operation} {self.kind} {self.name}", "error": str(e), "stacktrace": tb_str}
-        return JsonResponse(data=data, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+        data = {"message": f"could not {command} {self.kind} {self.name}", "error": str(e), "stacktrace": tb_str}
+        return SmarterJournaledJsonResponse(
+            request=self.request, thing=self.thing, command=command, data=data, status=HTTPStatus.INTERNAL_SERVER_ERROR
+        )
 
-    def json_response_err_notfound(self, message: str = None) -> JsonResponse:
+    def json_response_err_notfound(
+        self, command: SmarterJournalCliCommands, message: str = None
+    ) -> SmarterJournaledJsonResponse:
         """Return a common not found response."""
         message = message or f"{self.kind} {self.name} not found"
         retval = self._retval(message=message)
-        return JsonResponse(data=retval, status=HTTPStatus.NOT_FOUND)
+        return SmarterJournaledJsonResponse(
+            request=self.request, thing=self.thing, command=command, data=retval, status=HTTPStatus.NOT_FOUND
+        )
 
     ###########################################################################
     # data transformation helpers

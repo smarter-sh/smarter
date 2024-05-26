@@ -40,13 +40,15 @@ class TestSAMPluginSql(unittest.TestCase):
         # create a sql connection
         config_path = os.path.join(HERE, "mock_data/sql-connection.yaml")
         connection_manifest = get_readonly_yaml_file(config_path)
-        cls.connection_broker = SAMPluginDataSqlConnectionBroker(account=cls.account, manifest=connection_manifest)
+        cls.connection_broker = SAMPluginDataSqlConnectionBroker(
+            request=cls.request, account=cls.account, manifest=connection_manifest
+        )
         cls.connection_broker.apply(request=cls.request, kwargs=cls.kwargs)
 
         # create a plugin broker
         config_path = os.path.join(HERE, "mock_data/sql-test.yaml")
         plugin_manifest = get_readonly_yaml_file(config_path)
-        cls.plugin_broker = SAMPluginBroker(account=cls.account, manifest=plugin_manifest)
+        cls.plugin_broker = SAMPluginBroker(request=cls.request, account=cls.account, manifest=plugin_manifest)
 
     @classmethod
     def tearDownClass(cls):

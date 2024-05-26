@@ -10,9 +10,9 @@ from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.plugin.sql import PluginSql
 from smarter.apps.plugin.plugin.static import PluginStatic
+from smarter.common.api import SmarterApiVersions
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.enum import (
-    SAMApiVersions,
     SAMKeys,
     SAMMetadataKeys,
     SCLIResponseGet,
@@ -58,8 +58,9 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
+        request: HttpRequest,
         account: Account,
-        api_version: str = SAMApiVersions.V1.value,
+        api_version: str = SmarterApiVersions.V1.value,
         name: str = None,
         kind: str = None,
         loader: SAMLoader = None,
@@ -76,6 +77,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         the required top-level keys.
         """
         super().__init__(
+            request=request,
             account=account,
             api_version=api_version,
             name=name,
@@ -143,6 +145,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     # Smarter manifest abstract method implementations
     ###########################################################################
     def example_manifest(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        command = self.example_manifest.__name__
         plugin_class: str = kwargs.get("plugin_class", SAMPluginMetadataClassValues.STATIC.value)
         try:
             Plugin = PluginMap[plugin_class]
@@ -150,7 +153,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
             raise SAMPluginBrokerError(f"Plugin class {plugin_class} not found") from e
 
         data = Plugin.example_manifest(kwargs=kwargs)
-        return self.json_response_ok(operation=self.example_manifest.__name__, data=data)
+        return self.json_response_ok(command=command, data=data)
 
     # pylint: disable=W0221
     def get_model_titles(self) -> list[dict[str, str]]:
@@ -162,6 +165,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         return titles
 
     def get(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        command = self.get.__name__
         name: str = kwargs.get("name", None)
         all_objects: bool = kwargs.get("all_objects", False)
         tags: str = kwargs.get("tags", None)
@@ -189,7 +193,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
                     raise SAMPluginBrokerError(f"Model dump failed for {self.kind} {plugin_meta.name}")
                 data.append(model_dump)
             except Exception as e:
-                return self.json_response_err(self.get.__name__, e)
+                return self.json_response_err(command=command, e=e)
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -201,7 +205,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
                 SCLIResponseGetData.ITEMS.value: data,
             },
         }
-        return self.json_response_ok(operation=self.get.__name__, data=data)
+        return self.json_response_ok(command=command, data=data)
 
     def apply(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         """
@@ -211,6 +215,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         Django ORM model.
         """
         super().apply(request, kwargs)
+        command = self.apply.__name__
         try:
             self.plugin.create()
         except Exception as e:
@@ -220,35 +225,40 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
             try:
                 self.plugin.save()
             except Exception as e:
-                return self.json_response_err(self.apply.__name__, e)
-            return self.json_response_ok(operation=self.apply.__name__, data={})
-        return self.json_response_err_notready()
+                return self.json_response_err(command=command, e=e)
+            return self.json_response_ok(command=command, data={})
+        return self.json_response_err_notready(command=command)
 
     def describe(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        command = self.describe.__name__
         if self.plugin.ready:
             try:
                 data = self.plugin.to_json()
                 data["metadata"].pop("account")
                 data["metadata"].pop("author")
-                return self.json_response_ok(operation=self.describe.__name__, data=data)
+                return self.json_response_ok(command=command, data=data)
             except Exception as e:
-                return self.json_response_err(self.describe.__name__, e)
-        return self.json_response_err_notready()
+                return self.json_response_err(command=command, e=e)
+        return self.json_response_err_notready(command=command)
 
     def delete(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        command = self.delete.__name__
         if self.plugin.ready:
             try:
                 self.plugin.delete()
-                return self.json_response_ok(operation=self.delete.__name__, data={})
+                return self.json_response_ok(command=command, data={})
             except Exception as e:
-                return self.json_response_err(self.delete.__name__, e)
-        return self.json_response_err_notready()
+                return self.json_response_err(command=command, e=e)
+        return self.json_response_err_notready(command=command)
 
     def deploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
-        return self.json_response_err_notimplemented()
+        command = self.deploy.__name__
+        return self.json_response_err_notimplemented(command=command)
 
     def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
-        return self.json_response_err_notimplemented()
+        command = self.undeploy.__name__
+        return self.json_response_err_notimplemented(command=command)
 
     def logs(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
-        return self.json_response_err_notimplemented()
+        command = self.logs.__name__
+        return self.json_response_err_notimplemented(command=command)
