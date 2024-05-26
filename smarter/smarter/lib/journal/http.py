@@ -65,4 +65,4 @@ class SmarterJournaledJsonResponse(JsonResponse):
             SCLIResponseMetadata.KEY.value: journal.key,
         }
 
-        super().__init__(data, encoder, safe, json_dumps_params, **kwargs)
+        super().__init__(data=data, encoder=encoder, safe=safe, json_dumps_params=json_dumps_params, **kwargs)
