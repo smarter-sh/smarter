@@ -112,10 +112,14 @@ class SmarterJournalCliCommands(SmarterJounalDjangoModelBase):
             cls.DELETE: "deleted",
             cls.DEPLOY: "deployed",
             cls.DESCRIBE: "described",
-            cls.GET: "gotten",
+            cls.GET: "got",
             cls.JOURNAL: "journaled",
-            cls.LOGS: "got logs for",
+            cls.LOGS: "retrieved logs",
+            cls.MANIFEST_EXAMPLE: "got example manifest",
+            cls.STATUS: "got status",
+            cls.VERSION: "got version",
             cls.UNDEPLOY: "undeployed",
+            cls.WHOAMI: "user account identified",
         }
 
     def __init__(self, kind: str = None) -> None:
