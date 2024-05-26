@@ -14,12 +14,12 @@ from rest_framework import serializers
 from smarter.apps.account.manifest.models.user_profile import UserProfileModel
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import smarter_admin_user_profile
+from smarter.common.api import SmarterApiVersions
 
 # FIX NOTE: these imports need to be parameterized by version.
 from smarter.common.exceptions import SmarterExceptionBase
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import UserType
-from smarter.lib.manifest.enum import SAMApiVersions
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -45,8 +45,8 @@ from ..signals import (
 
 logger = logging.getLogger(__name__)
 
-SMARTER_API_MANIFEST_COMPATIBILITY = [SAMApiVersions.V1.value]
-SMARTER_API_MANIFEST_DEFAULT_VERSION = SAMApiVersions.V1.value
+SMARTER_API_MANIFEST_COMPATIBILITY = [SmarterApiVersions.V1.value]
+SMARTER_API_MANIFEST_DEFAULT_VERSION = SmarterApiVersions.V1.value
 
 
 class SmarterPluginError(SmarterExceptionBase):

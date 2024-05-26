@@ -21,11 +21,11 @@ from smarter.apps.chatbot.models import (
 )
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.utils import get_plugin_examples_by_name
+from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.enum import (
-    SAMApiVersions,
     SAMKeys,
     SAMMetadataKeys,
     SCLIResponseGet,
@@ -73,8 +73,9 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
+        request: HttpRequest,
         account: Account,
-        api_version: str = SAMApiVersions.V1.value,
+        api_version: str = SmarterApiVersions.V1.value,
         name: str = None,
         kind: str = None,
         loader: SAMLoader = None,
@@ -91,6 +92,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         the required top-level keys.
         """
         super().__init__(
+            request=request,
             api_version=api_version,
             account=account,
             name=name,
@@ -240,6 +242,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         return ChatBot
 
     def example_manifest(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        command = self.example_manifest.__name__
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -276,9 +279,10 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 SAMChatbotSpecKeys.APIKEY.value: "camelCaseNameOfApiKey",
             },
         }
-        return self.json_response_ok(operation=self.example_manifest.__name__, data=data)
+        return self.json_response_ok(command=command, data=data)
 
     def get(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        command = self.get.__name__
         # name: str = None, all_objects: bool = False, tags: str = None
         data = []
         name: str = kwargs.get("name", None)
@@ -309,7 +313,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 SCLIResponseGetData.ITEMS: data,
             },
         }
-        return self.json_response_ok(operation=self.get.__name__, data=data)
+        return self.json_response_ok(command=command, data=data)
 
     # pylint: disable=too-many-branches
     def apply(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
@@ -320,13 +324,14 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         Django ORM model.
         Note that there are fields included in the manifest that are not editable
         and are therefore removed from the Django ORM model dict prior to attempting
-        the save() operation. These fields are defined in the readonly_fields list.
+        the save() command. These fields are defined in the readonly_fields list.
 
         Chatbot is a composite model that includes the ChatBot, ChatBotAPIKey,
         ChatBotPlugin and ChatBotFunctions models. All of these are represented
         in the manifest spec and are created or updated as needed.
         """
         super().apply(request, kwargs)
+        command = self.apply.__name__
         with transaction.atomic():
             # ChatBot
             # -------------
@@ -348,7 +353,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                     api_key = SmarterAuthToken.objects.get(name=self.manifest.spec.apiKey, user=self.user)
                 except SmarterAuthToken.DoesNotExist:
                     return self.json_response_err_notfound(
-                        message=f"SmarterAuthToken {self.manifest.spec.apiKey} not found"
+                        command=command, message=f"SmarterAuthToken {self.manifest.spec.apiKey} not found"
                     )
                 for key in ChatBotAPIKey.objects.filter(chatbot=self.chatbot):
                     if key.api_key != api_key:
@@ -370,7 +375,9 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 try:
                     plugin = PluginMeta.objects.get(name=plugin_name, account=self.account)
                 except PluginMeta.DoesNotExist:
-                    return self.json_response_err_notfound(message=f"PluginMeta {plugin_name} not found")
+                    return self.json_response_err_notfound(
+                        command=command, message=f"PluginMeta {plugin_name} not found"
+                    )
                 _, created = ChatBotPlugin.objects.get_or_create(chatbot=self.chatbot, plugin_meta=plugin)
                 if created:
                     logger.info("Attached Plugin %s to ChatBot %s", plugin.name, self.chatbot.name)
@@ -384,53 +391,59 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
             for function in self.manifest.spec.functions:
                 if function not in ChatBotFunctions.choices_list():
                     return self.json_response_err_notfound(
-                        message=f"Function {function} not found. Valid functions are: {ChatBotFunctions.choices_list()}"
+                        command=command,
+                        message=f"Function {function} not found. Valid functions are: {ChatBotFunctions.choices_list()}",
                     )
                 _, created = ChatBotFunctions.objects.get_or_create(chatbot=self.chatbot, name=function)
                 if created:
                     logger.info("Attached Function %s to ChatBot %s", function, self.chatbot.name)
 
             # done! return the response. Django will take care of committing the transaction
-            return self.json_response_ok(operation=self.apply.__name__, data={})
+            return self.json_response_ok(command=command, data={})
 
     def describe(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        command = self.describe.__name__
         if self.chatbot:
             try:
                 data = self.django_orm_to_manifest_dict()
-                return self.json_response_ok(operation=self.describe.__name__, data=data)
+                return self.json_response_ok(command=command, data=data)
             except Exception as e:
-                return self.json_response_err(self.describe.__name__, e)
-        return self.json_response_err_notready()
+                return self.json_response_err(command=command, e=e)
+        return self.json_response_err_notready(command=command)
 
     def delete(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        command = self.delete.__name__
         if self.chatbot:
             try:
                 self.chatbot.delete()
-                return self.json_response_ok(operation=self.delete.__name__, data={})
+                return self.json_response_ok(command=command, data={})
             except Exception as e:
-                return self.json_response_err(self.delete.__name__, e)
-        return self.json_response_err_notready()
+                return self.json_response_err(command=command, e=e)
+        return self.json_response_err_notready(command=command)
 
     def deploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        command = self.deploy.__name__
         if self.chatbot:
             try:
                 self.chatbot.deployed = True
                 self.chatbot.save()
-                return self.json_response_ok(operation=self.deploy.__name__, data={})
+                return self.json_response_ok(command=command, data={})
             except Exception as e:
-                return self.json_response_err(self.deploy.__name__, e)
-        return self.json_response_err_notready()
+                return self.json_response_err(command=command, e=e)
+        return self.json_response_err_notready(command=command)
 
     def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        command = self.deploy.__name__
         if self.chatbot:
             try:
                 self.chatbot.deployed = False
                 self.chatbot.save()
-                return self.json_response_ok(operation=self.deploy.__name__, data={})
+                return self.json_response_ok(command=command, data={})
             except Exception as e:
-                return self.json_response_err(self.deploy.__name__, e)
-        return self.json_response_err_notready()
+                return self.json_response_err(command=command, e=e)
+        return self.json_response_err_notready(command=command)
 
     def logs(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        command = self.logs.__name__
         data = {}
-        return self.json_response_ok(operation=self.logs.__name__, data=data)
+        return self.json_response_ok(command=command, data=data)

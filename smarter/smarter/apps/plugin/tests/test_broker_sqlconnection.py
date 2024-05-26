@@ -39,7 +39,9 @@ class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
         config_path = os.path.join(HERE, "mock_data/sql-connection.yaml")
         connection_manifest = get_readonly_yaml_file(config_path)
 
-        cls.broker = SAMPluginDataSqlConnectionBroker(account=cls.account, manifest=connection_manifest)
+        cls.broker = SAMPluginDataSqlConnectionBroker(
+            request=cls.request, account=cls.account, manifest=connection_manifest
+        )
 
     @classmethod
     def tearDownClass(cls):

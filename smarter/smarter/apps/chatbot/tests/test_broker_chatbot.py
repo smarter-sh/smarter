@@ -45,7 +45,7 @@ class TestSAMChatbotBroker(unittest.TestCase):
 
         config_path = os.path.join(HERE, "data/chatbot.yaml")
         cls.manifest = get_readonly_yaml_file(config_path)
-        cls.broker = SAMChatbotBroker(account=cls.account, manifest=cls.manifest)
+        cls.broker = SAMChatbotBroker(request=cls.request, account=cls.account, manifest=cls.manifest)
         cls.client = Client()
         cls.request = cls.create_generic_request()
         cls.kwargs = {}

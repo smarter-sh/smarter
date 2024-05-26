@@ -10,9 +10,9 @@ from smarter.apps.account.models import Account
 from smarter.apps.chat.manifest.models.chat_plugin_usage.const import MANIFEST_KIND
 from smarter.apps.chat.manifest.models.chat_plugin_usage.model import SAMChatPluginUsage
 from smarter.apps.chat.models import Chat, ChatPluginUsage
+from smarter.common.api import SmarterApiVersions
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.enum import (
-    SAMApiVersions,
     SAMKeys,
     SAMMetadataKeys,
     SCLIResponseGet,
@@ -59,8 +59,9 @@ class SAMChatPluginUsageBroker(AbstractBroker, AccountMixin):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
+        request: HttpRequest,
         account: Account,
-        api_version: str = SAMApiVersions.V1.value,
+        api_version: str = SmarterApiVersions.V1.value,
         name: str = None,
         kind: str = None,
         loader: SAMLoader = None,
@@ -77,6 +78,7 @@ class SAMChatPluginUsageBroker(AbstractBroker, AccountMixin):
         the required top-level keys.
         """
         super().__init__(
+            request=request,
             api_version=api_version,
             account=account,
             name=name,
@@ -181,6 +183,7 @@ class SAMChatPluginUsageBroker(AbstractBroker, AccountMixin):
     # Smarter manifest abstract method implementations
     ###########################################################################
     def example_manifest(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        command = self.example_manifest.__name__
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -191,10 +194,10 @@ class SAMChatPluginUsageBroker(AbstractBroker, AccountMixin):
             },
             SAMKeys.SPEC.value: None,
         }
-        return self.json_response_ok(operation=self.example_manifest.__name__, data=data)
+        return self.json_response_ok(command=command, data=data)
 
     def get(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
-
+        command = self.get.__name__
         self._session_key: str = kwargs.get("session_id", None)
         data = []
         if self.session_key:
@@ -213,7 +216,7 @@ class SAMChatPluginUsageBroker(AbstractBroker, AccountMixin):
                     raise SAMChatPluginUsageBrokerError(f"Model dump failed for {self.kind} {plugin_usage.id}")
                 data.append(model_dump)
             except Exception as e:
-                return self.json_response_err(self.get.__name__, e)
+                return self.json_response_err(command=command, e=e)
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -224,36 +227,42 @@ class SAMChatPluginUsageBroker(AbstractBroker, AccountMixin):
                 SCLIResponseGetData.ITEMS.value: data,
             },
         }
-        return self.json_response_ok(operation=self.get.__name__, data=data)
+        return self.json_response_ok(command=command, data=data)
 
     def apply(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
         """
         Chat is a read-only django table, populated by the LLM handlers
         """
-        return self.json_response_err_readonly()
+        command = self.apply.__name__
+        return self.json_response_err_readonly(command=command)
 
     def describe(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
+        command = self.describe.__name__
         self._session_key: str = kwargs.get("session_id", None)
         if self.chat_plugin_usage:
             try:
                 data = self.django_orm_to_manifest_dict()
-                return self.json_response_ok(operation=self.describe.__name__, data=data)
+                return self.json_response_ok(command=command, data=data)
             except Exception as e:
-                return self.json_response_err(self.describe.__name__, e)
-        return self.json_response_err_notready()
+                return self.json_response_err(command=command, e=e)
+        return self.json_response_err_notready(command=command)
 
     def delete(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
-        return self.json_response_err_readonly()
+        command = self.delete.__name__
+        return self.json_response_err_readonly(command=command)
 
     def deploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
-        return self.json_response_err_notimplemented()
+        command = self.deploy.__name__
+        return self.json_response_err_notimplemented(command=command)
 
     def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
-        return self.json_response_err_notimplemented()
+        command = self.undeploy.__name__
+        return self.json_response_err_notimplemented(command=command)
 
     def logs(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
+        command = self.logs.__name__
         self._session_key: str = kwargs.get("session_id", None)
         if self.chat_plugin_usage:
             data = {}
-            return self.json_response_ok(operation=self.logs.__name__, data=data)
-        return self.json_response_err_notready()
+            return self.json_response_ok(command=command, data=data)
+        return self.json_response_err_notready(command=command)

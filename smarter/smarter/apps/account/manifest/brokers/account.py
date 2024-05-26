@@ -12,9 +12,9 @@ from smarter.apps.account.manifest.models.account.const import MANIFEST_KIND
 from smarter.apps.account.manifest.models.account.model import SAMAccount
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account
+from smarter.common.api import SmarterApiVersions
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.enum import (
-    SAMApiVersions,
     SAMKeys,
     SAMMetadataKeys,
     SCLIResponseGet,
@@ -63,8 +63,9 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
+        request: HttpRequest,
         account: Account,
-        api_version: str = SAMApiVersions.V1.value,
+        api_version: str = SmarterApiVersions.V1.value,
         name: str = None,
         kind: str = None,
         loader: SAMLoader = None,
@@ -81,6 +82,7 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
         the required top-level keys.
         """
         super().__init__(
+            request=request,
             api_version=api_version,
             account=account,
             name=name,
@@ -174,6 +176,7 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
         return Account
 
     def example_manifest(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        command = self.example_manifest.__name__
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -199,10 +202,11 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
                 },
             },
         }
-        return self.json_response_ok(operation=self.example_manifest.__name__, data=data)
+        return self.json_response_ok(command=command, data=data)
 
     def get(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         # name: str = None, all_objects: bool = False, tags: str = None
+        command = self.get.__name__
         data = []
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
@@ -216,8 +220,8 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
                     raise SAMAccountBrokerError(f"Model dump failed for {self.kind} {account.name}")
                 data.append(model_dump)
             except Exception as e:
-                logger.error("Error in %s: %s", self.get.__name__, e)
-                return self.json_response_err(self.get.__name__, e)
+                logger.error("Error in %s: %s", command, e)
+                return self.json_response_err(command=command, e=e)
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -229,7 +233,7 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
                 SCLIResponseGetData.ITEMS.value: data,
             },
         }
-        return self.json_response_ok(operation=self.get.__name__, data=data)
+        return self.json_response_ok(command=command, data=data)
 
     def apply(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         """
@@ -239,9 +243,10 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
         Django ORM model.
         Note that there are fields included in the manifest that are not editable
         and are therefore removed from the Django ORM model dict prior to attempting
-        the save() operation. These fields are defined in the readonly_fields list.
+        the save() command. These fields are defined in the readonly_fields list.
         """
         super().apply(request, kwargs)
+        command = self.apply.__name__
         readonly_fields = ["id", "created_at", "updated_at", "account_number"]
         try:
             data = self.manifest_to_django_orm()
@@ -252,39 +257,44 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
             self.account.save()
         except Exception as e:
             return self.json_response_err(self.apply.__name__, e)
-        return self.json_response_ok(operation=self.apply.__name__, data={})
+        return self.json_response_ok(command=command, data={})
 
     def describe(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        command = command = self.deploy.__name__
         if self.account:
             try:
                 data = self.django_orm_to_manifest_dict()
-                return self.json_response_ok(operation=self.describe.__name__, data=data)
+                return self.json_response_ok(command=command, data=data)
             except Exception as e:
                 return self.json_response_err(self.describe.__name__, e)
-        return self.json_response_err_notready()
+        return self.json_response_err_notready(command=command)
 
     def delete(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        command = self.delete.__name__
         if self.account:
             try:
                 self.account.delete()
-                return self.json_response_ok(operation=self.delete.__name__, data={})
+                return self.json_response_ok(command=command, data={})
             except Exception as e:
                 return self.json_response_err(self.delete.__name__, e)
-        return self.json_response_err_notready()
+        return self.json_response_err_notready(command=command)
 
     def deploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        command = self.deploy.__name__
         if self.account:
             try:
                 self.account.deployed = True
                 self.account.save()
-                return self.json_response_ok(operation=self.deploy.__name__, data={})
+                return self.json_response_ok(command=command, data={})
             except Exception as e:
                 return self.json_response_err(self.deploy.__name__, e)
-        return self.json_response_err_notready()
+        return self.json_response_err_notready(command=command)
 
     def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
-        return self.json_response_err_notimplemented()
+        command = self.undeploy.__name__
+        return self.json_response_err_notimplemented(command=command)
 
     def logs(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+        command = self.logs.__name__
         data = {}
-        return self.json_response_ok(operation=self.logs.__name__, data=data)
+        return self.json_response_ok(command=command, data=data)

@@ -1,3 +1,6 @@
 """Smarter API Plugin Manifest Constants"""
 
-MANIFEST_KIND = "Plugin"
+from smarter.lib.journal.enum import SmarterJournalThings
+
+
+MANIFEST_KIND = SmarterJournalThings.PLUGIN.value
