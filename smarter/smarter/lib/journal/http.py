@@ -20,6 +20,15 @@ class SmarterJournaledJsonResponse(JsonResponse):
     An enhanced HTTP response class that adds Smarter api manifest structural
     information and metadata.
 
+    Smarter parameters:
+    ---------------------------
+    :request: The original Django request object.
+    :thing: a noun. whatever it is that we're journaliing.
+    :command: The command that was run on the thing.
+    :data: The Smarter api response data for the request.
+
+    Django inherited parameters:
+    ---------------------------
     :param data: Data to be dumped into json. By default only ``dict`` objects
       are allowed to be passed due to a security flaw before ECMAScript 5. See
       the ``safe`` parameter for more information.

@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 from http import HTTPStatus
 
 import inflect
-from django.http import HttpRequest, JsonResponse
+from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
 
 from smarter.common.api import SmarterApiVersions
@@ -173,42 +173,42 @@ class AbstractBroker(ABC):
     # Abstract Methods
     ###########################################################################
     @abstractmethod
-    def get(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """get information about specified resources."""
         raise NotImplementedError
 
-    def apply(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def apply(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """apply a manifest, which works like a upsert."""
         if self.manifest.status:
             raise SAMBrokerReadOnlyError("status is a read-only manifest field for")
 
     @abstractmethod
-    def describe(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """print the manifest."""
         raise NotImplementedError
 
     @abstractmethod
-    def delete(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """delete a resource."""
         raise NotImplementedError
 
     @abstractmethod
-    def deploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """deploy a resource."""
         raise NotImplementedError
 
     @abstractmethod
-    def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """undeploy a resource."""
         raise NotImplementedError
 
     @abstractmethod
-    def logs(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """get logs for a resource."""
         raise NotImplementedError
 
     @abstractmethod
-    def example_manifest(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """Returns an example yaml manifest document for the kind of resource."""
         raise NotImplementedError
 

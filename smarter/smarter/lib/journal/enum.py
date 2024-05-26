@@ -62,7 +62,7 @@ class SmarterJournalThings(SmarterJounalDjangoModelBase):
 
     _thing: str = None
 
-    def __init__(self, thing: str) -> None:
+    def __init__(self, thing: str = None) -> None:
         thing = str(thing).lower()
         if thing not in self.all_values():
             raise SmarterJournalEnumException(
@@ -97,9 +97,12 @@ class SmarterJournalCliCommands(SmarterJounalDjangoModelBase):
     JOURNAL = "journal"  # FIXNOTE: THIS IS AMBIGUOUS
     LOGS = "logs"  # FIXNOTE: THIS IS AMBIGUOUS
     MANIFEST_EXAMPLE = "example_manifest"
+    STATUS = "status"
+    VERSION = "version"
     UNDEPLOY = "undeploy"
+    WHOAMI = "whoami"
 
-    _kind: str = None
+    _command: str = None
 
     @classmethod
     def past_tense(cls) -> dict:
@@ -115,12 +118,12 @@ class SmarterJournalCliCommands(SmarterJounalDjangoModelBase):
             cls.UNDEPLOY: "undeployed",
         }
 
-    def __init__(self, kind: str) -> None:
+    def __init__(self, kind: str = None) -> None:
         if kind not in self.all_values():
             raise SmarterJournalEnumException(
                 f"Invalid Smarter Journal command: {kind}. Valid commands are: {self.all_values()}"
             )
-        self._kind = kind
+        self._command = kind
         super().__init__()
 
     @property
@@ -128,4 +131,4 @@ class SmarterJournalCliCommands(SmarterJounalDjangoModelBase):
         return self._thing
 
     def __str__(self) -> str:
-        return self._kind
+        return self._command
