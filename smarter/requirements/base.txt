@@ -16,7 +16,7 @@ inflect==7.2.1                          # Pluralization and singularization
 htmlmin==0.1.12                         # HTML minification, for browser performance optimization
 mailchimp-marketing==3.0.80             # Mailchimp API, for adding people to the mailing list
 mysqlclient==2.2.4                      # MySQL client
-requests==2.31.0                        # HTTP requests library
+requests==2.32.2                        # HTTP requests library
 requests-cache==1.2.0                   # HTTP requests caching
 retry-requests==2.0.0                   # HTTP requests retry
 tldextract==5.1.2                       # Extracts the top-level domain from a URL
