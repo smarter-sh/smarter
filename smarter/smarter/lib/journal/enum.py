@@ -21,12 +21,27 @@ class SmarterJournalApiResponseKeys:
     THING = "thing"
     METADATA = "metadata"
     DATA = "data"
+    ERROR = "error"
+    MESSAGE = "message"
+
+
+class SmarterJournalApiResponseErrorKeys:
+    """Smarter API cli response error keys."""
+
+    ERROR_CLASS = "errorClass"
+    STACK_TRACE = "stacktrace"
+    DESCRIPTION = "description"
+    STATUS = "status"
+    ARGS = "args"
+    CAUSE = "cause"
+    CONTEXT = "context"
 
 
 class SCLIResponseMetadata:
     """CLI get response metadata enumeration."""
 
     KEY = "key"
+    COMMAND = "command"
 
 
 class SmarterJounalDjangoModelBase:

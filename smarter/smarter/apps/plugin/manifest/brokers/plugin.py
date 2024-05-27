@@ -12,14 +12,18 @@ from smarter.apps.plugin.plugin.sql import PluginSql
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
-from smarter.lib.manifest.broker import AbstractBroker
+from smarter.lib.manifest.broker import (
+    AbstractBroker,
+    SAMBrokerError,
+    SAMBrokerErrorNotImplemented,
+    SAMBrokerErrorNotReady,
+)
 from smarter.lib.manifest.enum import (
     SAMKeys,
     SAMMetadataKeys,
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
 from ...models import PluginMeta
@@ -37,8 +41,12 @@ PluginMap: dict[str, PluginBase] = {
 }
 
 
-class SAMPluginBrokerError(SAMExceptionBase):
+class SAMPluginBrokerError(SAMBrokerError):
     """Base exception for Smarter API Plugin Broker handling."""
+
+    @property
+    def get_readable_name(self):
+        return "Smarter API Plugin Manifest Broker Error"
 
 
 class SAMPluginBroker(AbstractBroker, AccountMixin):
@@ -151,7 +159,9 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         try:
             Plugin = PluginMap[plugin_class]
         except KeyError as e:
-            raise SAMPluginBrokerError(f"Plugin class {plugin_class} not found") from e
+            raise SAMPluginBrokerError(
+                f"Plugin class {plugin_class} not found", thing=self.kind, command=command
+            ) from e
 
         data = Plugin.example_manifest(kwargs=kwargs)
         return self.json_response_ok(command=command, data=data)
@@ -191,10 +201,14 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
             try:
                 model_dump = controller.model_dump_json()
                 if not model_dump:
-                    raise SAMPluginBrokerError(f"Model dump failed for {self.kind} {plugin_meta.name}")
+                    raise SAMBrokerError(
+                        f"Plugin {plugin_meta.name} model dump failed", thing=self.kind, command=command
+                    )
                 data.append(model_dump)
             except Exception as e:
-                return self.json_response_err(command=command, e=e)
+                raise SAMBrokerError(
+                    f"Plugin {plugin_meta.name} model dump failed", thing=self.kind, command=command
+                ) from e
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -220,15 +234,19 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         try:
             self.plugin.create()
         except Exception as e:
-            return self.json_response_err("create", e)
+            raise SAMBrokerError(
+                f"Plugin {self.plugin_meta.name} create failed", thing=self.kind, command=command
+            ) from e
 
         if self.plugin.ready:
             try:
                 self.plugin.save()
             except Exception as e:
-                return self.json_response_err(command=command, e=e)
+                raise SAMBrokerError(
+                    f"Plugin {self.plugin_meta.name} save failed", thing=self.kind, command=command
+                ) from e
             return self.json_response_ok(command=command, data={})
-        return self.json_response_err_notready(command=command)
+        raise SAMBrokerErrorNotReady(f"Plugin {self.plugin_meta.name} not ready", thing=self.kind, command=command)
 
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
@@ -239,8 +257,10 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
                 data["metadata"].pop("author")
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
-                return self.json_response_err(command=command, e=e)
-        return self.json_response_err_notready(command=command)
+                raise SAMBrokerError(
+                    f"Plugin {self.plugin_meta.name} describe failed", thing=self.kind, command=command
+                ) from e
+        raise SAMBrokerErrorNotReady(f"Plugin {self.plugin_meta.name} not ready", thing=self.kind, command=command)
 
     def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
@@ -249,17 +269,25 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
                 self.plugin.delete()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
-                return self.json_response_err(command=command, e=e)
-        return self.json_response_err_notready(command=command)
+                raise SAMBrokerError(
+                    f"Plugin {self.plugin_meta.name} delete failed", thing=self.kind, command=command
+                ) from e
+        raise SAMBrokerErrorNotReady(f"Plugin {self.plugin_meta.name} not ready", thing=self.kind, command=command)
 
     def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
-        return self.json_response_err_notimplemented(command=command)
+        raise SAMBrokerErrorNotImplemented(
+            f"Plugin {self.plugin_meta.name} deploy not implemented", thing=self.kind, command=command
+        )
 
     def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
-        return self.json_response_err_notimplemented(command=command)
+        raise SAMBrokerErrorNotImplemented(
+            f"Plugin {self.plugin_meta.name} undeploy not implemented", thing=self.kind, command=command
+        )
 
     def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
-        return self.json_response_err_notimplemented(command=command)
+        raise SAMBrokerErrorNotImplemented(
+            f"Plugin {self.plugin_meta.name} logs not implemented", thing=self.kind, command=command
+        )

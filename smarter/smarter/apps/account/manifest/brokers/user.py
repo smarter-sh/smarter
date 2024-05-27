@@ -13,22 +13,30 @@ from smarter.common.api import SmarterApiVersions
 from smarter.lib.django.serializers import UserSerializer
 from smarter.lib.django.user import User, UserType
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
-from smarter.lib.manifest.broker import AbstractBroker
+from smarter.lib.manifest.broker import (
+    AbstractBroker,
+    SAMBrokerError,
+    SAMBrokerErrorNotImplemented,
+    SAMBrokerErrorNotReady,
+)
 from smarter.lib.manifest.enum import (
     SAMKeys,
     SAMMetadataKeys,
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
 
 MAX_RESULTS = 1000
 
 
-class SAMUserBrokerError(SAMExceptionBase):
+class SAMUserBrokerError(SAMBrokerError):
     """Base exception for Smarter API User Broker handling."""
+
+    @property
+    def get_readable_name(self):
+        return "Smarter API User Manifest Broker Error"
 
 
 class SAMUserBroker(AbstractBroker, AccountMixin):
@@ -185,10 +193,14 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
             try:
                 model_dump = UserSerializer(user).data
                 if not model_dump:
-                    raise SAMUserBrokerError(f"Model dump failed for {self.kind} {user.name}")
+                    raise SAMUserBrokerError(
+                        f"Model dump failed for {self.kind} {user.name}", thing=self.kind, command=command
+                    )
                 data.append(model_dump)
             except Exception as e:
-                return self.json_response_err(self.get.__name__, e)
+                raise SAMUserBrokerError(
+                    f"Model dump failed for {self.kind} {user.name}", thing=self.kind, command=command
+                ) from e
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -222,7 +234,9 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
                 setattr(self.user, key, value)
             self.user.save()
         except Exception as e:
-            return self.json_response_err(command=command, e=e)
+            raise SAMUserBrokerError(
+                f"Failed to apply {self.kind} {self.user.name}", thing=self.kind, command=command
+            ) from e
         return self.json_response_ok(command=command, data={})
 
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
@@ -232,8 +246,10 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
                 data = self.django_orm_to_manifest_dict()
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
-                return self.json_response_err(command=command, e=e)
-        return self.json_response_err_notready(command=command)
+                raise SAMUserBrokerError(
+                    f"Failed to describe {self.kind} {self.user.name}", thing=self.kind, command=command
+                ) from e
+        raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
     def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
@@ -242,8 +258,10 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
                 self.user.delete()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
-                return self.json_response_err(self.delete.__name__, e)
-        return self.json_response_err_notready(command=command)
+                raise SAMUserBrokerError(
+                    f"Failed to delete {self.kind} {self.user.name}", thing=self.kind, command=command
+                ) from e
+        raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
     def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
@@ -253,12 +271,14 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
                 self.user.save()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
-                return self.json_response_err(command=command, e=e)
-        return self.json_response_err_notready(command=command)
+                raise SAMUserBrokerError(
+                    f"Failed to deploy {self.kind} {self.user.name}", thing=self.kind, command=command
+                ) from e
+        raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
     def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
-        return self.json_response_err_notimplemented(command=command)
+        raise SAMBrokerErrorNotImplemented(f"{self.kind} not implemented", thing=self.kind, command=command)
 
     def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__

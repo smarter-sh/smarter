@@ -13,14 +13,18 @@ from smarter.apps.account.manifest.models.account.model import SAMAccount
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account
 from smarter.common.api import SmarterApiVersions
-from smarter.lib.manifest.broker import AbstractBroker
+from smarter.lib.manifest.broker import (
+    AbstractBroker,
+    SAMBrokerError,
+    SAMBrokerErrorNotImplemented,
+    SAMBrokerErrorNotReady,
+)
 from smarter.lib.manifest.enum import (
     SAMKeys,
     SAMMetadataKeys,
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
 
@@ -39,8 +43,12 @@ class AccountSerializer(ModelSerializer):
         fields = ["account_number", "company_name", "created_at", "updated_at"]
 
 
-class SAMAccountBrokerError(SAMExceptionBase):
+class SAMAccountBrokerError(SAMBrokerError):
     """Base exception for Smarter API Account Broker handling."""
+
+    @property
+    def get_readable_name(self):
+        return "Smarter API Account Manifest Broker Error"
 
 
 class SAMAccountBroker(AbstractBroker, AccountMixin):
@@ -217,7 +225,9 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
             try:
                 model_dump = AccountSerializer(account).data
                 if not model_dump:
-                    raise SAMAccountBrokerError(f"Model dump failed for {self.kind} {account.name}")
+                    raise SAMAccountBrokerError(
+                        f"Model dump failed for {self.kind} {account.name}", thing=self.kind, command=command
+                    )
                 data.append(model_dump)
             except Exception as e:
                 logger.error("Error in %s: %s", command, e)
@@ -256,7 +266,7 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
                 setattr(self.account, key, value)
             self.account.save()
         except Exception as e:
-            return self.json_response_err(self.apply.__name__, e)
+            raise SAMBrokerError(message=f"Error in {command}: {e}", thing=self.kind, command=command) from e
         return self.json_response_ok(command=command, data={})
 
     def describe(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
@@ -266,8 +276,8 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
                 data = self.django_orm_to_manifest_dict()
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
-                return self.json_response_err(self.describe.__name__, e)
-        return self.json_response_err_notready(command=command)
+                raise SAMBrokerError(message=f"Error in {command}: {e}", thing=self.kind, command=command) from e
+        raise SAMBrokerErrorNotReady(message="No account found", thing=self.kind, command=command)
 
     def delete(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         command = self.delete.__name__
@@ -276,8 +286,8 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
                 self.account.delete()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
-                return self.json_response_err(self.delete.__name__, e)
-        return self.json_response_err_notready(command=command)
+                raise SAMBrokerError(message=f"Error in {command}: {e}", thing=self.kind, command=command) from e
+        raise SAMBrokerErrorNotReady(message="No account found", thing=self.kind, command=command)
 
     def deploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         command = self.deploy.__name__
@@ -287,12 +297,12 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
                 self.account.save()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
-                return self.json_response_err(self.deploy.__name__, e)
-        return self.json_response_err_notready(command=command)
+                raise SAMBrokerError(message=f"Error in {command}: {e}", thing=self.kind, command=command) from e
+        raise SAMBrokerErrorNotReady(message="No account found", thing=self.kind, command=command)
 
     def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         command = self.undeploy.__name__
-        return self.json_response_err_notimplemented(command=command)
+        raise SAMBrokerErrorNotImplemented(message="Undeploy not implemented", thing=self.kind, command=command)
 
     def logs(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
         command = self.logs.__name__

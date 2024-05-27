@@ -4,6 +4,7 @@
 import logging
 import traceback
 
+import waffle
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpRequest, JsonResponse
 
@@ -11,6 +12,7 @@ from smarter.common.api import SmarterApiVersions
 
 from .enum import (
     SCLIResponseMetadata,
+    SmarterJournalApiResponseErrorKeys,
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,
     SmarterJournalThings,
@@ -56,20 +58,26 @@ class SmarterJournaledJsonResponse(JsonResponse):
         json_dumps_params=None,
         **kwargs,
     ):
+        status = kwargs.get("status", None)
         data[SmarterJournalApiResponseKeys.API] = SmarterApiVersions.V1.value
         data[SmarterJournalApiResponseKeys.THING] = thing.value
-
-        journal = SAMJournal.objects.create(
-            user=request.user,
-            thing=thing.value,
-            command=command.value,
-            request=request,
-            response=data,
-        )
-
         data[SmarterJournalApiResponseKeys.METADATA] = {
-            SCLIResponseMetadata.KEY.value: journal.key,
+            SCLIResponseMetadata.COMMAND.value: command.value,
         }
+
+        if waffle.switch_is_active("journal"):
+            journal = SAMJournal.objects.create(
+                user=request.user,
+                thing=thing.value,
+                command=command.value,
+                request=request,
+                response=data,
+                status_code=status,
+            )
+
+            data[SmarterJournalApiResponseKeys.METADATA] = {
+                SCLIResponseMetadata.KEY.value: journal.key,
+            }
 
         super().__init__(data=data, encoder=encoder, safe=safe, json_dumps_params=json_dumps_params, **kwargs)
 
@@ -109,16 +117,17 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
         json_dumps_params=None,
         **kwargs,
     ):
-        data = {
-            "errorClass": e.__class__.__name__,
-            "stacktrace": traceback.format_exc(),
-            "description": e.args[0] if e.args else "",  # get the error message from args
-            "status": e.status if hasattr(e, "status") else "",  # check if status attribute exists
-            "args": e.args,
-            "cause": str(e.__cause__),
-            "context": str(e.__context__),
+        data = {}
+        data[SmarterJournalApiResponseKeys.ERROR] = {
+            SmarterJournalApiResponseErrorKeys.ERROR_CLASS: e.__class__.__name__,
+            SmarterJournalApiResponseErrorKeys.STACK_TRACE: traceback.format_exc(),
+            SmarterJournalApiResponseErrorKeys.DESCRIPTION: e.args[0] if e.args else "",
+            SmarterJournalApiResponseErrorKeys.STATUS: e.status if hasattr(e, "status") else "",
+            SmarterJournalApiResponseErrorKeys.ARGS: e.args,
+            SmarterJournalApiResponseErrorKeys.CAUSE: str(e.__cause__),
+            SmarterJournalApiResponseErrorKeys.CONTEXT: str(e.__context__),
         }
-        logger.error(data)
+        logger.error(data[SmarterJournalApiResponseKeys.ERROR])
 
         super().__init__(
             request=request,
