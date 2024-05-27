@@ -52,7 +52,7 @@ class SmarterJounalDjangoModelBase:
     #   command = models.CharField(max_length=64, choices=SmarterJournalCliCommands.choices())
     @classmethod
     def choices(cls) -> list[str]:
-        return cls.all_values()
+        return [member.value for name, member in cls.__members__.items() if not name.startswith("_")]
 
 
 class SmarterJournalThings(SmarterJounalDjangoModelBase):

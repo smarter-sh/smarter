@@ -3,12 +3,25 @@
 from django.http import HttpRequest
 from rest_framework import serializers
 
-from smarter.lib.django.serializers import UserSerializer
+from smarter.lib.django.user import User
+from smarter.lib.django.validators import SmarterValidator
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """User serializer for django request object serialization."""
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = User
+        fields = [
+            "username",
+        ]
 
 
 class HttpRequestSerializer(serializers.Serializer):
     """Http request serializer for smarter api."""
 
+    url = serializers.SerializerMethodField()
     method = serializers.CharField(max_length=10)
     GET = serializers.DictField(child=serializers.CharField())
     POST = serializers.DictField(child=serializers.CharField())
@@ -22,6 +35,7 @@ class HttpRequestSerializer(serializers.Serializer):
     # pylint: disable=missing-class-docstring
     class Meta:
         fields = [
+            "url",
             "method",
             "GET",
             "POST",
@@ -30,7 +44,19 @@ class HttpRequestSerializer(serializers.Serializer):
             "path",
             "encoding",
             "content_type",
+            "user",
         ]
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret["user"] = ret["user"]["username"]
+        return ret
+
+    def get_url(self, obj):
+        if obj.request:
+            _url = obj.request.build_absolute_uri()
+            _url = SmarterValidator.urlify(_url)
+        return _url
 
     def create(self, validated_data):
         return HttpRequest(**validated_data)
