@@ -9,6 +9,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpRequest, JsonResponse
 
 from smarter.common.api import SmarterApiVersions
+from smarter.lib.django.http.serializers import HttpRequestSerializer
 
 from .enum import (
     SCLIResponseMetadata,
@@ -45,6 +46,14 @@ class SmarterJournaledJsonResponse(JsonResponse):
     :param safe: Controls if only ``dict`` objects may be serialized. Defaults
       to ``True``.
     :param json_dumps_params: A dictionary of kwargs passed to json.dumps().
+
+    data = {
+        "api": "v1",
+        "thing": "account",
+        "metadata": {
+            "command": "create"
+        },
+
     """
 
     def __init__(
@@ -70,7 +79,7 @@ class SmarterJournaledJsonResponse(JsonResponse):
                 user=request.user,
                 thing=thing.value,
                 command=command.value,
-                request=request,
+                request=HttpRequestSerializer(request).data,
                 response=data,
                 status_code=status,
             )
