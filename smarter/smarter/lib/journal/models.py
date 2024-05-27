@@ -20,6 +20,7 @@ class SAMJournal(TimestampedModel):
     command = models.CharField(max_length=64, choices=SmarterJournalCliCommands.choices())
     request = models.JSONField()
     response = models.JSONField()
+    status_code = models.PositiveSmallIntegerField(default=200)
 
     def save(self, *args, **kwargs):
         if not self.key:

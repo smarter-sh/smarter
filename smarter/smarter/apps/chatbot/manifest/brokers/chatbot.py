@@ -25,14 +25,18 @@ from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
-from smarter.lib.manifest.broker import AbstractBroker
+from smarter.lib.manifest.broker import (
+    AbstractBroker,
+    SAMBrokerError,
+    SAMBrokerErrorNotFound,
+    SAMBrokerErrorNotReady,
+)
 from smarter.lib.manifest.enum import (
     SAMKeys,
     SAMMetadataKeys,
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
 
@@ -40,8 +44,12 @@ logger = logging.getLogger(__name__)
 MAX_RESULTS = 1000
 
 
-class SAMChatbotBrokerError(SAMExceptionBase):
+class SAMChatbotBrokerError(SAMBrokerError):
     """Base exception for Smarter API Chatbot Broker handling."""
+
+    @property
+    def get_readable_name(self):
+        return "Smarter API ChatBot Manifest Broker Error"
 
 
 class ChatBotSerializer(ModelSerializer):
@@ -299,10 +307,14 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
             try:
                 model_dump = ChatBotSerializer(chatbot).data
                 if not model_dump:
-                    raise SAMChatbotBrokerError(f"Model dump failed for {self.kind} {chatbot.name}")
+                    raise SAMChatbotBrokerError(
+                        f"Model dump failed for {self.kind} {chatbot.name}", thing=self.kind, command=command
+                    )
                 data.append(model_dump)
             except Exception as e:
-                return self.json_response_err(self.get.__name__, e)
+                raise SAMChatbotBrokerError(
+                    f"Failed to serialize {self.kind} {chatbot.name}", thing=self.kind, command=command
+                ) from e
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -345,17 +357,19 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                     setattr(self.chatbot, key, value)
                 self.chatbot.save()
             except Exception as e:
-                return self.json_response_err(self.apply.__name__, e)
+                raise SAMChatbotBrokerError(
+                    f"Failed to apply {self.kind} {self.manifest.metadata.name}", thing=self.kind, command=command
+                ) from e
 
             # ChatBotAPIKey: create or update the API Key
             # -------------
             if self.manifest.spec.apiKey:
                 try:
                     api_key = SmarterAuthToken.objects.get(name=self.manifest.spec.apiKey, user=self.user)
-                except SmarterAuthToken.DoesNotExist:
-                    return self.json_response_err_notfound(
-                        command=command, message=f"SmarterAuthToken {self.manifest.spec.apiKey} not found"
-                    )
+                except SmarterAuthToken.DoesNotExist as e:
+                    raise SAMBrokerErrorNotFound(
+                        f"API Key {self.manifest.spec.apiKey} not found", thing=self.kind, command=command
+                    ) from e
                 for key in ChatBotAPIKey.objects.filter(chatbot=self.chatbot):
                     if key.api_key != api_key:
                         key.delete()
@@ -375,10 +389,10 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
             for plugin_name in self.manifest.spec.plugins:
                 try:
                     plugin = PluginMeta.objects.get(name=plugin_name, account=self.account)
-                except PluginMeta.DoesNotExist:
-                    return self.json_response_err_notfound(
-                        command=command, message=f"PluginMeta {plugin_name} not found"
-                    )
+                except PluginMeta.DoesNotExist as e:
+                    raise SAMBrokerErrorNotFound(
+                        f"Plugin {plugin_name} not found", thing=self.kind, command=command
+                    ) from e
                 _, created = ChatBotPlugin.objects.get_or_create(chatbot=self.chatbot, plugin_meta=plugin)
                 if created:
                     logger.info("Attached Plugin %s to ChatBot %s", plugin.name, self.chatbot.name)
@@ -409,8 +423,12 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 data = self.django_orm_to_manifest_dict()
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
-                return self.json_response_err(command=command, e=e)
-        return self.json_response_err_notready(command=command)
+                raise SAMChatbotBrokerError(
+                    f"Failed to describe {self.kind} {self.manifest.metadata.name}", thing=self.kind, command=command
+                ) from e
+        raise SAMBrokerErrorNotReady(
+            f"{self.kind} {self.manifest.metadata.name} not found", thing=self.kind, command=command
+        )
 
     def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
@@ -419,8 +437,12 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 self.chatbot.delete()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
-                return self.json_response_err(command=command, e=e)
-        return self.json_response_err_notready(command=command)
+                raise SAMChatbotBrokerError(
+                    f"Failed to delete {self.kind} {self.manifest.metadata.name}", thing=self.kind, command=command
+                ) from e
+        raise SAMBrokerErrorNotReady(
+            f"{self.kind} {self.manifest.metadata.name} not found", thing=self.kind, command=command
+        )
 
     def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
@@ -430,8 +452,12 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 self.chatbot.save()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
-                return self.json_response_err(command=command, e=e)
-        return self.json_response_err_notready(command=command)
+                raise SAMChatbotBrokerError(
+                    f"Failed to deploy {self.kind} {self.manifest.metadata.name}", thing=self.kind, command=command
+                ) from e
+        raise SAMBrokerErrorNotReady(
+            f"{self.kind} {self.manifest.metadata.name} not found", thing=self.kind, command=command
+        )
 
     def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
@@ -441,8 +467,12 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 self.chatbot.save()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
-                return self.json_response_err(command=command, e=e)
-        return self.json_response_err_notready(command=command)
+                raise SAMChatbotBrokerError(
+                    f"Failed to undeploy {self.kind} {self.manifest.metadata.name}", thing=self.kind, command=command
+                ) from e
+        raise SAMBrokerErrorNotReady(
+            f"{self.kind} {self.manifest.metadata.name} not found", thing=self.kind, command=command
+        )
 
     def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__

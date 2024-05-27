@@ -28,6 +28,7 @@ class Command(BaseCommand):
             "chatapp_view_logging",
             "reactapp_debug_mode",
             "manifest_logging",
+            "journal",
         ]
 
         for switch in switches:

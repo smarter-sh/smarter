@@ -14,6 +14,7 @@ from smarter.apps.plugin.manifest.brokers.sql_connection import (
     SAMPluginDataSqlConnectionBroker,
 )
 from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
+from smarter.lib.manifest.broker import SAMBrokerErrorNotImplemented
 
 # from smarter.common.utils import dict_is_contained_in
 from smarter.lib.manifest.loader import SAMLoader
@@ -119,9 +120,6 @@ class TestSAMPluginSql(unittest.TestCase):
     def test_plugin_broker_deploy(self):
         """Test that the Broker does not implement a deploy() method."""
 
-        retval = self.plugin_broker.deploy(request=self.request, kwargs=self.kwargs)
-        self.assertEqual(retval.status_code, HTTPStatus.NOT_IMPLEMENTED)
-        content = json.loads(retval.content.decode())
-        self.assertIsInstance(content, dict)
-        self.assertIn("message", content.keys())
-        self.assertEqual(content["message"], "operation not implemented for Plugin resources")
+        with self.assertRaises(SAMBrokerErrorNotImplemented) as e:
+            self.plugin_broker.deploy(request=self.request, kwargs=self.kwargs)
+        print(e.description)

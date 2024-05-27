@@ -12,22 +12,31 @@ from smarter.apps.chat.manifest.models.chat_history.model import SAMChatHistory
 from smarter.apps.chat.models import Chat, ChatHistory
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
-from smarter.lib.manifest.broker import AbstractBroker
+from smarter.lib.manifest.broker import (
+    AbstractBroker,
+    SAMBrokerError,
+    SAMBrokerErrorNotImplemented,
+    SAMBrokerErrorNotReady,
+    SAMBrokerReadOnlyError,
+)
 from smarter.lib.manifest.enum import (
     SAMKeys,
     SAMMetadataKeys,
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
 
 MAX_RESULTS = 1000
 
 
-class SAMChatHistoryBrokerError(SAMExceptionBase):
+class SAMChatHistoryBrokerError(SAMBrokerError):
     """Base exception for Smarter API Chat Broker handling."""
+
+    @property
+    def get_readable_name(self):
+        return "Smarter API ChatHistory Manifest Broker Error"
 
 
 class ChatHistorySerializer(ModelSerializer):
@@ -214,10 +223,14 @@ class SAMChatHistoryBroker(AbstractBroker, AccountMixin):
             try:
                 model_dump = ChatHistorySerializer(chat).data
                 if not model_dump:
-                    raise SAMChatHistoryBrokerError(f"Model dump failed for {self.kind} {chat.id}")
+                    raise SAMChatHistoryBrokerError(
+                        f"Model dump failed for {self.kind} {chat.id}", thing=self.kind, command=command
+                    )
                 data.append(model_dump)
             except Exception as e:
-                return self.json_response_err(self.get.__name__, e)
+                raise SAMChatHistoryBrokerError(
+                    f"Model dump failed for {self.kind} {chat.id}", thing=self.kind, command=command
+                ) from e
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -235,7 +248,7 @@ class SAMChatHistoryBroker(AbstractBroker, AccountMixin):
         Chat is a read-only django table, populated by the LLM handlers
         """
         command = self.apply.__name__
-        return self.json_response_err_readonly(command=command)
+        raise SAMBrokerReadOnlyError(f"Read-only {self.kind} {self.name}", thing=self.kind, command=command)
 
     def describe(self, request: HttpRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
@@ -245,20 +258,26 @@ class SAMChatHistoryBroker(AbstractBroker, AccountMixin):
                 data = self.django_orm_to_manifest_dict()
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
-                return self.json_response_err(command=command, e=e)
-        return self.json_response_err_notready(command=command)
+                raise SAMChatHistoryBrokerError(
+                    f"Failed to describe {self.kind} {self.name}", thing=self.kind, command=command
+                ) from e
+        raise SAMBrokerErrorNotReady(f"ChatHistory {self.name} not ready", thing=self.kind, command=command)
 
     def delete(self, request: HttpRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
-        return self.json_response_err_readonly(command=command)
+        raise SAMBrokerReadOnlyError(f"Read-only {self.kind} {self.name}", thing=self.kind, command=command)
 
     def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
-        return self.json_response_err_notimplemented(command=command)
+        raise SAMBrokerErrorNotImplemented(
+            f"Deploy not implemented for {self.kind} {self.name}", thing=self.kind, command=command
+        )
 
     def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
-        return self.json_response_err_notimplemented(command=command)
+        raise SAMBrokerErrorNotImplemented(
+            f"Undeploy not implemented for {self.kind} {self.name}", thing=self.kind, command=command
+        )
 
     def logs(self, request: HttpRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
@@ -266,4 +285,4 @@ class SAMChatHistoryBroker(AbstractBroker, AccountMixin):
         if self.chat_history:
             data = {}
             return self.json_response_ok(command=command, data=data)
-        return self.json_response_err_notready(command=command)
+        raise SAMBrokerErrorNotReady(f"ChatHistory {self.name} not ready", thing=self.kind, command=command)
