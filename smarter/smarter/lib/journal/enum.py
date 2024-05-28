@@ -45,19 +45,7 @@ class SCLIResponseMetadata:
     COMMAND = "command"
 
 
-class SmarterJounalDjangoModelBase(SmarterEnumAbstract):
-    """Base class for Smarter API cli enumerations that are used in Django models as choices."""
-
-    # vanity method added so that this class can be used in Django model choices
-    # without it appearing confusing. example:
-    #   command = models.CharField(max_length=64, choices=SmarterJournalCliCommands.choices())
-    @classmethod
-    def choices(cls) -> list[str]:
-        print("all value: ", cls.all_values())
-        return cls.all_values()
-
-
-class SmarterJournalThings(SmarterJounalDjangoModelBase):
+class SmarterJournalThings(SmarterEnumAbstract):
     """
     Smarter api cli things that can be added to the Journal. This descends
     from SmarterEnumAbstract which is generally implemented as a subclassed
@@ -79,7 +67,7 @@ class SmarterJournalThings(SmarterJounalDjangoModelBase):
     APICONNECTION = "apiconnection"
 
 
-class SmarterJournalCliCommands(SmarterJounalDjangoModelBase):
+class SmarterJournalCliCommands(SmarterEnumAbstract):
     """
     Enumerated commands for api/v1/cli requests. This descends
     from SmarterEnumAbstract which is generally implemented as a subclassed
