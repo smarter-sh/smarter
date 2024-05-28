@@ -46,7 +46,6 @@ class ApiV1CliVersionApiView(CliBaseApiView):
             return SmarterJournaledJsonResponse(
                 request=self.request,
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.VERSION),
-                thing=SmarterJournalThings(),
                 data=data,
                 status=HTTPStatus.OK,
             )

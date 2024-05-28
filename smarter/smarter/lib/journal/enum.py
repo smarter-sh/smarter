@@ -1,5 +1,6 @@
 """Smarter API Manifests Enumerations."""
 
+from smarter.common.enum import SmarterEnumAbstract
 from smarter.common.exceptions import SmarterExceptionBase
 
 
@@ -44,7 +45,7 @@ class SCLIResponseMetadata:
     COMMAND = "command"
 
 
-class SmarterJounalDjangoModelBase:
+class SmarterJounalDjangoModelBase(SmarterEnumAbstract):
     """Base class for Smarter API cli enumerations that are used in Django models as choices."""
 
     # vanity method added so that this class can be used in Django model choices
@@ -52,7 +53,8 @@ class SmarterJounalDjangoModelBase:
     #   command = models.CharField(max_length=64, choices=SmarterJournalCliCommands.choices())
     @classmethod
     def choices(cls) -> list[str]:
-        return [member.value for name, member in cls.__members__.items() if not name.startswith("_")]
+        print("all value: ", cls.all_values())
+        return cls.all_values()
 
 
 class SmarterJournalThings(SmarterJounalDjangoModelBase):
@@ -75,24 +77,6 @@ class SmarterJournalThings(SmarterJounalDjangoModelBase):
     CHATBOT = "chatbot"
     SQLCONNECTION = "sqlconnection"
     APICONNECTION = "apiconnection"
-
-    _thing: str = None
-
-    def __init__(self, thing: str = None) -> None:
-        thing = str(thing).lower()
-        if thing not in self.all_values():
-            raise SmarterJournalEnumException(
-                f"Invalid Smarter Journal thing: {thing}. Valid things are: {self.all_values()}"
-            )
-        self._thing = thing
-        super().__init__()
-
-    @property
-    def value(self) -> str:
-        return self._thing
-
-    def __str__(self) -> str:
-        return self._thing
 
 
 class SmarterJournalCliCommands(SmarterJounalDjangoModelBase):
@@ -117,38 +101,3 @@ class SmarterJournalCliCommands(SmarterJounalDjangoModelBase):
     VERSION = "version"
     UNDEPLOY = "undeploy"
     WHOAMI = "whoami"
-
-    _command: str = None
-
-    @classmethod
-    def past_tense(cls) -> dict:
-        return {
-            cls.APPLY: "applied",
-            cls.CHAT: "chatted",
-            cls.DELETE: "deleted",
-            cls.DEPLOY: "deployed",
-            cls.DESCRIBE: "described",
-            cls.GET: "got",
-            cls.JOURNAL: "journaled",
-            cls.LOGS: "retrieved logs",
-            cls.MANIFEST_EXAMPLE: "got example manifest",
-            cls.STATUS: "got status",
-            cls.VERSION: "got version",
-            cls.UNDEPLOY: "undeployed",
-            cls.WHOAMI: "user account identified",
-        }
-
-    def __init__(self, kind: str = None) -> None:
-        if kind not in self.all_values():
-            raise SmarterJournalEnumException(
-                f"Invalid Smarter Journal command: {kind}. Valid commands are: {self.all_values()}"
-            )
-        self._command = kind
-        super().__init__()
-
-    @property
-    def value(self) -> str:
-        return self._thing
-
-    def __str__(self) -> str:
-        return self._command

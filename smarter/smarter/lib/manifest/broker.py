@@ -106,6 +106,7 @@ class AbstractBroker(ABC):
     _name: str = None
     _kind: str = None
     _validated: bool = False
+    _thing: SmarterJournalThings = None
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -156,7 +157,9 @@ class AbstractBroker(ABC):
 
     @property
     def thing(self) -> SmarterJournalThings:
-        return SmarterJournalThings(self.kind)
+        if not self._thing:
+            self._thing = SmarterJournalThings(self.kind)
+        return self._thing
 
     @property
     def kind(self) -> str:
