@@ -59,11 +59,11 @@ class SmarterJournaledJsonResponse(JsonResponse):
     def __init__(
         self,
         request: HttpRequest,
-        thing: SmarterJournalThings,
-        command: SmarterJournalCliCommands,
         data,
         encoder=DjangoJSONEncoder,
         safe=True,
+        thing: SmarterJournalThings = None,
+        command: SmarterJournalCliCommands = None,
         json_dumps_params=None,
         **kwargs,
     ):
@@ -77,8 +77,8 @@ class SmarterJournaledJsonResponse(JsonResponse):
         if waffle.switch_is_active("journal"):
             journal = SAMJournal.objects.create(
                 user=request.user,
-                thing=thing.value,
-                command=command.value,
+                thing=str(thing),
+                command=str(command),
                 request=HttpRequestSerializer(request).data,
                 response=data,
                 status_code=status,
@@ -118,11 +118,11 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
     def __init__(
         self,
         request: HttpRequest,
-        thing: SmarterJournalThings,
-        command: SmarterJournalCliCommands,
         e: Exception,
         encoder=DjangoJSONEncoder,
         safe=True,
+        thing: SmarterJournalThings = None,
+        command: SmarterJournalCliCommands = None,
         json_dumps_params=None,
         **kwargs,
     ):

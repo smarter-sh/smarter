@@ -9,3 +9,6 @@ class SmarterEnumAbstract(Enum):
     @classmethod
     def all_values(cls) -> list[str]:
         return [member.value for name, member in cls.__members__.items() if not name.startswith("_")]
+
+    def __str__(self) -> str:
+        return self.value

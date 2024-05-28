@@ -25,7 +25,6 @@ class ApiV1CliWhoamiApiView(CliBaseApiView):
             return SmarterJournaledJsonResponse(
                 request=self.request,
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.WHOAMI),
-                thing=SmarterJournalThings(),
                 data=data,
                 status=HTTPStatus.OK,
             )

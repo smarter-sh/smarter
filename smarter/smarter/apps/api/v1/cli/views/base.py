@@ -252,6 +252,5 @@ class CliBaseApiView(APIView, AccountMixin):
                 thing=self.manifest_kind,
                 command=None,
                 e=e,
-                e=e,
                 status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
