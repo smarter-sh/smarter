@@ -22,8 +22,9 @@ class AccountMixin:
         user: UserType = None,
         account_number: str = None,
     ):
-        SmarterValidator.validate_account_number(account_number)
-        self._account = account or Account.objects.get(account_number=account_number)
+        if account_number:
+            SmarterValidator.validate_account_number(account_number)
+            self._account = account or Account.objects.get(account_number=account_number)
         self._user = user
 
         if self._user and self._account:
@@ -37,7 +38,7 @@ class AccountMixin:
             self._account = self.user_profile.account
         elif self._user:
             self._account = account_for_user(self._user)
-        self._account = self.user_profile.account
+        return self._account
 
     @property
     def user(self) -> UserType:

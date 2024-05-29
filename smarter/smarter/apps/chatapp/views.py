@@ -7,28 +7,42 @@ import hashlib
 import json
 import logging
 from datetime import datetime
+from http import HTTPStatus
 
 import waffle
-from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseNotFound, JsonResponse
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.permissions import IsAuthenticated
 
 from smarter.apps.chat.models import Chat, ChatHelper
 from smarter.apps.chatbot.models import ChatBot, ChatBotHelper, ChatBotPlugin
 from smarter.apps.chatbot.serializers import ChatBotPluginSerializer, ChatBotSerializer
+from smarter.common.exceptions import SmarterExceptionBase
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.request import SmarterRequestHelper
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
+from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
+from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
 
 
 MAX_RETURNED_PLUGINS = 10
 
 
 logger = logging.getLogger(__name__)
+
+
+class SmarterChatappViewError(SmarterExceptionBase):
+    """Base class for all SmarterChatapp errors."""
+
+    @property
+    def get_readable_name(self):
+        return "Smarter Chatapp error"
 
 
 class SmarterChatSession(SmarterRequestHelper):
@@ -81,7 +95,6 @@ class SmarterChatSession(SmarterRequestHelper):
 
 
 # pylint: disable=R0902
-@method_decorator(login_required, name="dispatch")
 @method_decorator(csrf_exempt, name="dispatch")
 class ChatConfigView(View):
     """
@@ -91,6 +104,9 @@ class ChatConfigView(View):
 
     example: https://sales.3141-5926-5359.alpha.api.smarter.sh/chatbot/config/
     """
+
+    authentication_classes = (SmarterTokenAuthentication, SessionAuthentication)
+    permission_classes = (IsAuthenticated,)
 
     _sandbox_mode: bool = True
     session: SmarterChatSession = None
@@ -102,6 +118,28 @@ class ChatConfigView(View):
         return formatted_text(self.__class__.__name__)
 
     def dispatch(self, request, *args, **kwargs):
+        # there will only be an auth attribute if the request was authenticated
+        # using session authentication.
+        if not hasattr(request, "auth"):
+            request.auth = SmarterTokenAuthentication()
+            try:
+                user, _ = request.auth.authenticate(request)
+                request.user = user
+            except AuthenticationFailed:
+                try:
+                    raise SmarterChatappViewError("Authentication failed.") from None
+                except SmarterChatappViewError as e:
+                    return SmarterJournaledJsonErrorResponse(
+                        request=request, thing=self.manifest_kind, command=None, e=e, status=HTTPStatus.FORBIDDEN
+                    )
+        if not request.user.is_authenticated:
+            try:
+                raise SmarterChatappViewError("Authentication failed.")
+            except SmarterChatappViewError as e:
+                return SmarterJournaledJsonErrorResponse(
+                    request=request, thing=self.manifest_kind, command=None, e=e, status=HTTPStatus.FORBIDDEN
+                )
+
         name = kwargs.pop("name", None)
         self._sandbox_mode = name is not None
 
