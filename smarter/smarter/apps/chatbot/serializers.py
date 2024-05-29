@@ -2,6 +2,8 @@
 """Chatbot serializers."""
 from rest_framework import serializers
 
+from smarter.apps.plugin.serializers import PluginMetaSerializer
+
 from .models import (
     ChatBot,
     ChatBotAPIKey,
@@ -33,6 +35,7 @@ class ChatBotCustomDomainSerializer(serializers.ModelSerializer):
 
 
 class ChatBotPluginSerializer(serializers.ModelSerializer):
+    plugin_meta = PluginMetaSerializer()
 
     class Meta:
         model = ChatBotPlugin
