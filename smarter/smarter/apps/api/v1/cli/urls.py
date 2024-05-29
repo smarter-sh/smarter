@@ -15,6 +15,7 @@ Smarter API command-line interface URL configuration.
 from django.urls import path
 
 from .views.apply import ApiV1CliApplyApiView
+from .views.chat import ApiV1CliChatApiView
 from .views.delete import ApiV1CliDeleteApiView
 from .views.deploy import ApiV1CliDeployApiView
 from .views.describe import ApiV1CliDescribeApiView
@@ -28,6 +29,7 @@ from .views.whoami import ApiV1CliWhoamiApiView
 
 urlpatterns = [
     path("apply/", ApiV1CliApplyApiView.as_view(), name="api_v1_cli_apply_view"),
+    path("chat/", ApiV1CliChatApiView.as_view(), name="api_v1_cli_chat_view"),
     path("delete/<str:kind>/", ApiV1CliDeleteApiView.as_view(), name="api_v1_cli_delete_view"),
     path("deploy/<str:kind>/", ApiV1CliDeployApiView.as_view(), name="api_v1_cli_deploy_view"),
     path("describe/<str:kind>/", ApiV1CliDescribeApiView.as_view(), name="api_v1_cli_describe_view"),

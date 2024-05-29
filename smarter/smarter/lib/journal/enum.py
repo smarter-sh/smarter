@@ -66,6 +66,23 @@ class SmarterJournalThings(SmarterEnumAbstract):
     SQLCONNECTION = "sqlconnection"
     APICONNECTION = "apiconnection"
 
+    @classmethod
+    def choices(cls) -> list[(str, str)]:
+        """Django model choices for SmarterJournalThings."""
+        return [
+            (cls.PLUGIN, cls.PLUGIN),
+            (cls.ACCOUNT, cls.ACCOUNT),
+            (cls.APIKEY, cls.APIKEY),
+            (cls.USER, cls.USER),
+            (cls.CHAT, cls.CHAT),
+            (cls.CHAT_HISTORY, cls.CHAT_HISTORY),
+            (cls.CHAT_PLUGIN_USAGE, cls.CHAT_PLUGIN_USAGE),
+            (cls.CHAT_TOOL_CALL, cls.CHAT_TOOL_CALL),
+            (cls.CHATBOT, cls.CHATBOT),
+            (cls.SQLCONNECTION, cls.SQLCONNECTION),
+            (cls.APICONNECTION, cls.APICONNECTION),
+        ]
+
 
 class SmarterJournalCliCommands(SmarterEnumAbstract):
     """
@@ -89,3 +106,41 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
     VERSION = "version"
     UNDEPLOY = "undeploy"
     WHOAMI = "whoami"
+
+    @classmethod
+    def choices(cls) -> list[(str, str)]:
+        """Django model choices for SmarterJournalCliCommands."""
+        return [
+            (cls.APPLY, cls.APPLY),
+            (cls.CHAT, cls.CHAT),
+            (cls.DELETE, cls.DELETE),
+            (cls.DEPLOY, cls.DEPLOY),
+            (cls.DESCRIBE, cls.DESCRIBE),
+            (cls.GET, cls.GET),
+            (cls.JOURNAL, cls.JOURNAL),
+            (cls.LOGS, cls.LOGS),
+            (cls.MANIFEST_EXAMPLE, cls.MANIFEST_EXAMPLE),
+            (cls.STATUS, cls.STATUS),
+            (cls.VERSION, cls.VERSION),
+            (cls.UNDEPLOY, cls.UNDEPLOY),
+            (cls.WHOAMI, cls.WHOAMI),
+        ]
+
+    @classmethod
+    def past_tense(cls) -> dict[str, str]:
+        """Return the past tense of the command."""
+        return {
+            cls.APPLY: "applied",
+            cls.CHAT: "chatted",
+            cls.DELETE: "deleted",
+            cls.DEPLOY: "deployed",
+            cls.DESCRIBE: "described",
+            cls.GET: "got",
+            cls.JOURNAL: "journaled",
+            cls.LOGS: "logged",
+            cls.MANIFEST_EXAMPLE: "example_manifested",
+            cls.STATUS: "statused",
+            cls.VERSION: "versioned",
+            cls.UNDEPLOY: "undeployed",
+            cls.WHOAMI: "whoamied",
+        }

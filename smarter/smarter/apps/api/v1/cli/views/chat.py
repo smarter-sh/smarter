@@ -8,5 +8,5 @@ class ApiV1CliChatApiView(CliBaseApiView):
     """Smarter API command-line interface 'chat' view"""
 
     def post(self, request, *args, **kwargs):
-        kwargs["prompt"] = self.prompt
+        print("ApiV1CliChatApiView.post kwargs:", kwargs)
         return self.broker.chat(request=request, kwargs=kwargs)
