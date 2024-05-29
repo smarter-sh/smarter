@@ -184,11 +184,6 @@ class CliBaseApiView(APIView, AccountMixin):
         # where DRF is not properly authenticating the request. This is a
         # temporary fix until we can properly configure the DRF authentication
         if not hasattr(request, "auth"):
-            logger.info("authentication_classes: %s", self.authentication_classes)
-            logger.info("permission_classes: %s", self.permission_classes)
-            logger.warning(
-                "No authentication scheme detected in the request object. forcing authentication via SmarterTokenAuthentication."
-            )
             request.auth = SmarterTokenAuthentication()
             try:
                 user, _ = request.auth.authenticate(request)
