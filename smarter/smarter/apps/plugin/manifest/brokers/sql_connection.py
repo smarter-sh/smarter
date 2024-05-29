@@ -230,6 +230,10 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
             raise SAMPluginDataSqlConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         return self.json_response_ok(command=command, data={})
 
+    def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        command = self.chat.__name__
+        raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
+
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """Return a JSON response with the manifest data."""
         command = self.describe.__name__

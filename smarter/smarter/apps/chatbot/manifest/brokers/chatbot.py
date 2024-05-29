@@ -29,6 +29,7 @@ from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
     SAMBrokerErrorNotFound,
+    SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
 )
 from smarter.lib.manifest.enum import (
@@ -415,6 +416,10 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
 
             # done! return the response. Django will take care of committing the transaction
             return self.json_response_ok(command=command, data={})
+
+    def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        command = self.chat.__name__
+        raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__

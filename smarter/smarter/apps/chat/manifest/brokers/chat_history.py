@@ -250,6 +250,10 @@ class SAMChatHistoryBroker(AbstractBroker, AccountMixin):
         command = self.apply.__name__
         raise SAMBrokerReadOnlyError(f"Read-only {self.kind} {self.name}", thing=self.kind, command=command)
 
+    def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        command = self.chat.__name__
+        raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
+
     def describe(self, request: HttpRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         self._session_key: str = kwargs.get("session_id", None)

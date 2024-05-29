@@ -276,6 +276,10 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
             ) from e
         return self.json_response_ok(command=command, data={})
 
+    def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        command = self.chat.__name__
+        raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
+
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         if self.smarter_auth_token:

@@ -104,7 +104,7 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
         )
 
     @property
-    def chat(self) -> Chat:
+    def chat_object(self) -> Chat:
         """
         The Chat object is a Django ORM model subclass from knox.AuthToken
         that represents a Chat api key. The Chat object is
@@ -134,7 +134,7 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
         Transform the Django ORM model into a Pydantic readable
         Smarter API SAMChat manifest dict.
         """
-        chat_dict = model_to_dict(self.chat)
+        chat_dict = model_to_dict(self.chat_object)
         chat_dict = self.snake_to_camel(chat_dict)
         chat_dict.pop("id")
 
@@ -142,14 +142,14 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: self.chat.name,
-                SAMMetadataKeys.DESCRIPTION.value: self.chat.description,
-                SAMMetadataKeys.VERSION.value: self.chat.version,
+                SAMMetadataKeys.NAME.value: self.chat_object.name,
+                SAMMetadataKeys.DESCRIPTION.value: self.chat_object.description,
+                SAMMetadataKeys.VERSION.value: self.chat_object.version,
             },
             SAMKeys.SPEC.value: None,
             SAMKeys.STATUS.value: {
-                "created": self.chat.created_at.isoformat(),
-                "modified": self.chat.updated_at.isoformat(),
+                "created": self.chat_object.created_at.isoformat(),
+                "modified": self.chat_object.updated_at.isoformat(),
             },
         }
         return data
@@ -241,9 +241,15 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
         command = self.apply.__name__
         raise SAMBrokerReadOnlyError(message="Chat is a read-only resource", thing=self.kind, command=command)
 
+    def chat(self, request: HttpRequest, kwargs: dict, prompt: str = None) -> SmarterJournaledJsonResponse:
+        command = self.chat.__name__
+        print(f"Chat prompt: {prompt}")
+        data = {}
+        return self.json_response_ok(command=command, data=data)
+
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
-        if self.chat:
+        if self.chat_object:
             try:
                 data = self.django_orm_to_manifest_dict()
                 return self.json_response_ok(command=command, data=data)
@@ -253,9 +259,9 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
 
     def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
-        if self.chat:
+        if self.chat_object:
             try:
-                self.chat.delete()
+                self.chat_object.delete()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 raise SAMChatBrokerError(f"Failed to delete {self.kind}", thing=self.kind, command=command) from e
@@ -271,7 +277,7 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
 
     def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
-        if self.chat:
+        if self.chat_object:
             data = {}
             return self.json_response_ok(command=command, data=data)
         raise SAMBrokerErrorNotReady(message="Chat not found", thing=self.kind, command=command)
