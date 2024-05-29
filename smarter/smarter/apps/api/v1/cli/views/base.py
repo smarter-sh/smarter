@@ -12,12 +12,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.utils import user_profile_for_user
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
 from smarter.common.exceptions import SmarterExceptionBase
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
+from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
 from smarter.lib.manifest.broker import AbstractBroker
 from smarter.lib.manifest.exceptions import SAMBadRequestError
@@ -58,6 +58,7 @@ class CliBaseApiView(APIView, AccountMixin):
     _manifest_load_failed: bool = False
     _BrokerClass: Type[AbstractBroker] = None
     _params: dict[str, any] = None
+    _prompt: str = None
 
     @property
     def loader(self) -> SAMLoader:
@@ -146,6 +147,21 @@ class CliBaseApiView(APIView, AccountMixin):
         # example: 'chatbot' vs 'ChatBot', 'plugin_data_sql_connection' vs 'PluginDataSqlConnection'
         return Brokers.get_broker_kind(self._manifest_kind)
 
+    @property
+    def command(self) -> SmarterJournalCliCommands:
+        """
+        Translate the request route into a SmarterJournalCliCommands enum
+        instance. For example, if the route is '/api/v1/cli/apply/', then
+        the command will be SmarterJournalCliCommands.APPLY.
+        """
+        route = self.request.resolver_match.route
+        route = str(route).rstrip("/")
+        return SmarterJournalCliCommands(route)
+
+    @property
+    def prompt(self) -> str:
+        return self._prompt
+
     # pylint: disable=too-many-return-statements,too-many-branches
     def dispatch(self, request, *args, **kwargs):
         """
@@ -156,7 +172,6 @@ class CliBaseApiView(APIView, AccountMixin):
         model will be passed to a AbstractBroker for the manifest 'kind', which
         implements the broker service pattern for the underlying object.
         """
-
         # Parse the query string parameters from the request into a dictionary.
         # This is used to pass additional parameters to the child view's post method.
         self._params = QueryDict(request.META.get("QUERY_STRING", ""))
@@ -190,6 +205,16 @@ class CliBaseApiView(APIView, AccountMixin):
                     request=request, thing=self.manifest_kind, command=None, e=e, status=HTTPStatus.FORBIDDEN
                 )
 
+        # set all of our identifying attributes from the request.
+        try:
+            self._user = user = request.user
+            if not self.user_profile:
+                raise APIV1CLIViewError("Could not find account for user.")
+        except SmarterExceptionBase as e:
+            return SmarterJournaledJsonErrorResponse(
+                request=request, thing=self.manifest_kind, command=None, e=e, status=HTTPStatus.FORBIDDEN
+            )
+
         user_agent = request.headers.get("User-Agent", "")
         if "Go-http-client" not in user_agent:
             logger.warning("The User-Agent is not a Go lang application: %s", user_agent)
@@ -214,7 +239,13 @@ class CliBaseApiView(APIView, AccountMixin):
         # decide if/when to actually parse the manifest and instantiate the broker.
         try:
             data = request.body.decode("utf-8")
-            self._manifest_data = json.loads(data)
+            # if the command is 'chat', then the raw prompt text
+            # or the encoded file attachment data will be in the request body.
+            # otherwise, the request body should contain manifest text.
+            if self.command == SmarterJournalCliCommands.CHAT:
+                self._prompt = data
+            else:
+                self._manifest_data = json.loads(data)
         except json.JSONDecodeError:
             try:
                 self._manifest_data = yaml.safe_load(data)
@@ -225,16 +256,6 @@ class CliBaseApiView(APIView, AccountMixin):
                     return SmarterJournaledJsonErrorResponse(
                         request=request, thing=self.manifest_kind, command=None, e=ex, status=HTTPStatus.BAD_REQUEST
                     )
-        try:
-            self._user_profile = user_profile_for_user(user=request.user)
-            self._account = self._user_profile.account
-            self._user = self._user_profile.user
-            if not self._user_profile:
-                raise APIV1CLIViewError("Could not find account for user.")
-        except SmarterExceptionBase as e:
-            return SmarterJournaledJsonErrorResponse(
-                request=request, thing=self.manifest_kind, command=None, e=e, status=HTTPStatus.FORBIDDEN
-            )
 
         # generic exception handler that simply ensures that in all cases
         # the response is a JsonResponse with a status code.

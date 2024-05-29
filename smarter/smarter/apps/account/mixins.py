@@ -1,7 +1,7 @@
 """Mixin class that provides the account and user properties."""
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.utils import account_admin_user
+from smarter.apps.account.utils import account_admin_user, account_for_user
 from smarter.lib.django.user import UserType
 from smarter.lib.django.validators import SmarterValidator
 
@@ -31,18 +31,33 @@ class AccountMixin:
 
     @property
     def account(self) -> Account:
-        return self._account
+        if self._account:
+            return self._account
+        if self._user_profile:
+            self._account = self.user_profile.account
+        elif self._user:
+            self._account = account_for_user(self._user)
+        self._account = self.user_profile.account
 
     @property
     def user(self) -> UserType:
         if self._user:
             return self._user
-        self._user = account_admin_user(self.account)
+        if self._user_profile:
+            self._user = self._user_profile.user
+        elif self._account:
+            self._user = account_admin_user(self.account)
         return self._user
 
     @property
     def user_profile(self) -> UserProfile:
         if self._user_profile:
             return self._user_profile
-        self._user_profile = UserProfile.objects.get(user=self.user, account=self.account)
+        if self._user and self._account:
+            self._user_profile = UserProfile.objects.get(user=self.user, account=self.account)
+        elif self._user:
+            self._user_profile = UserProfile.objects.get(user=self.user)
+        elif self._account:
+            user = account_admin_user(self.account)
+            self._user_profile = UserProfile.objects.get(user=user, account=self.account)
         return self._user_profile

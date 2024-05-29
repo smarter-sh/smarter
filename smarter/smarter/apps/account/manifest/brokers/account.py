@@ -4,7 +4,7 @@
 import logging
 
 from django.forms.models import model_to_dict
-from django.http import HttpRequest, JsonResponse
+from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.manifest.enum import SAMAccountSpecKeys
@@ -13,6 +13,7 @@ from smarter.apps.account.manifest.models.account.model import SAMAccount
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account
 from smarter.common.api import SmarterApiVersions
+from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
@@ -183,7 +184,7 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
     def model_class(self) -> Account:
         return Account
 
-    def example_manifest(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
@@ -212,7 +213,7 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def get(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         # name: str = None, all_objects: bool = False, tags: str = None
         command = self.get.__name__
         data = []
@@ -245,7 +246,7 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def apply(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """
         apply the manifest. copy the manifest data to the Django ORM model and
         save the model to the database. Call super().apply() to ensure that the
@@ -269,7 +270,11 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
             raise SAMBrokerError(message=f"Error in {command}: {e}", thing=self.kind, command=command) from e
         return self.json_response_ok(command=command, data={})
 
-    def describe(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        command = self.chat.__name__
+        raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
+
+    def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = command = self.deploy.__name__
         if self.account:
             try:
@@ -279,32 +284,19 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
                 raise SAMBrokerError(message=f"Error in {command}: {e}", thing=self.kind, command=command) from e
         raise SAMBrokerErrorNotReady(message="No account found", thing=self.kind, command=command)
 
-    def delete(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
-        if self.account:
-            try:
-                self.account.delete()
-                return self.json_response_ok(command=command, data={})
-            except Exception as e:
-                raise SAMBrokerError(message=f"Error in {command}: {e}", thing=self.kind, command=command) from e
-        raise SAMBrokerErrorNotReady(message="No account found", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotImplemented(message="Delete not implemented", thing=self.kind, command=command)
 
-    def deploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
-        if self.account:
-            try:
-                self.account.deployed = True
-                self.account.save()
-                return self.json_response_ok(command=command, data={})
-            except Exception as e:
-                raise SAMBrokerError(message=f"Error in {command}: {e}", thing=self.kind, command=command) from e
-        raise SAMBrokerErrorNotReady(message="No account found", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotImplemented(message="Deploy not implemented", thing=self.kind, command=command)
 
-    def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
         raise SAMBrokerErrorNotImplemented(message="Undeploy not implemented", thing=self.kind, command=command)
 
-    def logs(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
         data = {}
         return self.json_response_ok(command=command, data=data)

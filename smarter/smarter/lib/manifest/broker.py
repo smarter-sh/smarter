@@ -214,15 +214,16 @@ class AbstractBroker(ABC):
     ###########################################################################
     # Abstract Methods
     ###########################################################################
-    @abstractmethod
-    def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
-        """get information about specified resources."""
-        raise NotImplementedError
-
+    # mcdaniel: there's a reason why this is not an abstract method, but i forget why.
     def apply(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """apply a manifest, which works like a upsert."""
         if self.manifest.status:
             raise SAMBrokerReadOnlyError("status is a read-only manifest field for")
+
+    @abstractmethod
+    def chat(self, request: HttpRequest, kwargs: dict, prompt: str = None) -> SmarterJournaledJsonResponse:
+        """chat with the broker."""
+        raise SAMBrokerErrorNotImplemented("chat is not implemented for this broker")
 
     @abstractmethod
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
@@ -240,8 +241,13 @@ class AbstractBroker(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
-        """undeploy a resource."""
+    def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        """Returns an example yaml manifest document for the kind of resource."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        """get information about specified resources."""
         raise NotImplementedError
 
     @abstractmethod
@@ -250,16 +256,9 @@ class AbstractBroker(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
-        """Returns an example yaml manifest document for the kind of resource."""
+    def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        """undeploy a resource."""
         raise NotImplementedError
-
-    # pylint: disable=W0212
-    def get_model_titles(self, serializer: ModelSerializer) -> list[dict[str, str]]:
-        fields_and_types = [
-            {"name": field_name, "type": type(field).__name__} for field_name, field in serializer.fields.items()
-        ]
-        return fields_and_types
 
     ###########################################################################
     # http json response helpers
@@ -378,6 +377,17 @@ class AbstractBroker(ABC):
     ###########################################################################
     # data transformation helpers
     ###########################################################################
+    # pylint: disable=W0212
+    def get_model_titles(self, serializer: ModelSerializer) -> list[dict[str, str]]:
+        """
+        For tablular output from get() implementations. Returns a list of field names and types.
+        from the Django model serializer.
+        """
+        fields_and_types = [
+            {"name": field_name, "type": type(field).__name__} for field_name, field in serializer.fields.items()
+        ]
+        return fields_and_types
+
     def camel_to_snake(self, dictionary: dict) -> dict:
         """Converts camelCase dict keys to snake_case."""
 
