@@ -105,17 +105,12 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
 
     @property
     def chat_object(self) -> Chat:
-        """
-        The Chat object is a Django ORM model subclass from knox.AuthToken
-        that represents a Chat api key. The Chat object is
-        used to store the authentication hash and Smarter metadata for the Smarter API.
-        The Chat object is retrieved from the database, if it exists,
-        or created from the manifest if it does not.
-        """
         if self._chat:
             return self._chat
         try:
-            self._chat = Chat.objects.get(user=self.user, description=self.manifest.metadata.description)
+            # Fixnote: we should be searching on the session_key, not the description
+            if self.manifest:
+                self._chat = Chat.objects.get(user=self.user, description=self.manifest.metadata.description)
         except Chat.DoesNotExist:
             pass
 
@@ -125,15 +120,19 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
         """
         Transform the Smarter API SAMChat manifest into a Django ORM model.
         """
-        config_dump = self.manifest.spec.config.model_dump()
-        config_dump = self.camel_to_snake(config_dump)
-        return config_dump
+        if self.manifest:
+            config_dump = self.manifest.spec.config.model_dump()
+            config_dump = self.camel_to_snake(config_dump)
+            return config_dump
+        return None
 
     def django_orm_to_manifest_dict(self) -> dict:
         """
         Transform the Django ORM model into a Pydantic readable
         Smarter API SAMChat manifest dict.
         """
+        if not self.chat_object:
+            return None
         chat_dict = model_to_dict(self.chat_object)
         chat_dict = self.snake_to_camel(chat_dict)
         chat_dict.pop("id")
@@ -241,8 +240,9 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
         command = self.apply.__name__
         raise SAMBrokerReadOnlyError(message="Chat is a read-only resource", thing=self.kind, command=command)
 
-    def chat(self, request: HttpRequest, kwargs: dict, prompt: str = None) -> SmarterJournaledJsonResponse:
+    def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
+        prompt: str = kwargs.get("prompt", None)
         print(f"Chat prompt: {prompt}")
         data = {}
         return self.json_response_ok(command=command, data=data)
