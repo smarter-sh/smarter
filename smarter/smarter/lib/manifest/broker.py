@@ -221,7 +221,7 @@ class AbstractBroker(ABC):
             raise SAMBrokerReadOnlyError("status is a read-only manifest field for")
 
     @abstractmethod
-    def chat(self, request: HttpRequest, kwargs: dict, prompt: str = None) -> SmarterJournaledJsonResponse:
+    def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """chat with the broker."""
         raise SAMBrokerErrorNotImplemented("chat is not implemented for this broker")
 
