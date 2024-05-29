@@ -112,6 +112,7 @@ class CliBaseApiView(APIView, AccountMixin):
         if self.BrokerClass and not self._broker:
             BrokerClass = self.BrokerClass
             self._broker = BrokerClass(
+                request=self.request,
                 api_version=SMARTER_API_VERSION,
                 name=self.manifest_name,
                 kind=self.manifest_kind,
@@ -154,8 +155,10 @@ class CliBaseApiView(APIView, AccountMixin):
         instance. For example, if the route is '/api/v1/cli/apply/', then
         the command will be SmarterJournalCliCommands.APPLY.
         """
+        base_path = "api/v1/cli/"
         route = self.request.resolver_match.route
         route = str(route).rstrip("/")
+        route = str(route).replace(base_path, "")
         return SmarterJournalCliCommands(route)
 
     @property
@@ -244,6 +247,7 @@ class CliBaseApiView(APIView, AccountMixin):
             # otherwise, the request body should contain manifest text.
             if self.command == SmarterJournalCliCommands.CHAT:
                 self._prompt = data
+                self._manifest_kind = SAMKinds.CHAT.value
             else:
                 self._manifest_data = json.loads(data)
         except json.JSONDecodeError:
@@ -271,7 +275,7 @@ class CliBaseApiView(APIView, AccountMixin):
             return SmarterJournaledJsonErrorResponse(
                 request=request,
                 thing=self.manifest_kind,
-                command=None,
+                command=self.command,
                 e=e,
                 status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )

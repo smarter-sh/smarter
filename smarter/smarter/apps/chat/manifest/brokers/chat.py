@@ -244,7 +244,7 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
         command = self.chat.__name__
         prompt: str = kwargs.get("prompt", None)
         print(f"Chat prompt: {prompt}")
-        data = {}
+        data = {"response": "Hello, I am a chatbot!", "prompt": prompt, "chat_id": "1234567890"}
         return self.json_response_ok(command=command, data=data)
 
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:

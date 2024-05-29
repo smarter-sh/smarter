@@ -69,16 +69,16 @@ class SmarterJournaledJsonResponse(JsonResponse):
     ):
         status = kwargs.get("status", None)
         data[SmarterJournalApiResponseKeys.API] = SmarterApiVersions.V1.value
-        data[SmarterJournalApiResponseKeys.THING] = thing.value
+        data[SmarterJournalApiResponseKeys.THING] = str(thing)
         data[SmarterJournalApiResponseKeys.METADATA] = {
-            SCLIResponseMetadata.COMMAND.value: command.value,
+            SCLIResponseMetadata.COMMAND: str(command),
         }
 
         if waffle.switch_is_active("journal"):
             journal = SAMJournal.objects.create(
                 user=request.user,
-                thing=str(thing),
-                command=str(command),
+                thing=thing,
+                command=command,
                 request=HttpRequestSerializer(request).data,
                 response=data,
                 status_code=status,
