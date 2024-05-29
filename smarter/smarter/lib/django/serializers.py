@@ -20,3 +20,15 @@ class UserSerializer(serializers.ModelSerializer):
             "is_staff",
             "is_superuser",
         ]  # add more fields if needed
+
+
+class UserMiniSerializer(serializers.ModelSerializer):
+    """User serializer for smarter api."""
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = User
+        fields = [
+            "username",
+            "email",
+        ]  # add more fields if needed
