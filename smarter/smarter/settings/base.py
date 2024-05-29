@@ -93,6 +93,7 @@ INSTALLED_APPS = [
     # smarter apps
     # -------------------------------
     "smarter.lib.drf",
+    "smarter.lib.journal",
     "smarter.apps.account",
     "smarter.apps.plugin",
     "smarter.apps.chat",
