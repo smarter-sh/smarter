@@ -209,7 +209,7 @@ class ChatBot(TimestampedModel):
 
     @property
     def url_chatbot(self):
-        return urljoin(self.url, "chatbot/")
+        return urljoin(self.url, "api/v1/chatbot/smarter/")
 
     @property
     def url_chatapp(self):
