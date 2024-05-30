@@ -246,8 +246,9 @@ class CliBaseApiView(APIView, AccountMixin):
                 )
 
         # set all of our identifying attributes from the request.
+        self._user = request.user
+        logger.info("User: %s", self.user)
         try:
-            self._user = request.user
             if not self.user_profile:
                 raise APIV1CLIViewError("Could not find account for user.")
         except SmarterExceptionBase as e:
