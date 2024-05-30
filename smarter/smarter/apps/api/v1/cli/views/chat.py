@@ -15,14 +15,22 @@ CACHE_EXPIRATION = 24 * 60 * 60  # 24 hours
 SESSION_KEY = "session_key"
 
 
+class APIV1CLIChatViewError(APIV1CLIViewError):
+    """APIV1CLIChatViewError exception class"""
+
+    @property
+    def get_readable_name(self):
+        return "Smarter api v1 cli chat error"
+
+
 class ApiV1CliChatBaseApiView(CliBaseApiView):
     """Smarter API command-line interface 'chat' view"""
 
-    _session_key: str = None
-    _data: dict = None
     _cache_key: str = None
+    _data: dict = None
     _name: str = None
     _prompt: str = None
+    _session_key: str = None
 
     @property
     def prompt(self) -> str:
@@ -30,6 +38,11 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
 
     @property
     def new_session(self) -> bool:
+        if self.params.get("new_session", "false").lower() not in ["true", "false"]:
+            bad_value = self.params.get("new_session")
+            raise APIV1CLIChatViewError(
+                f"Invalid value '{bad_value}' provided for url param new_session. Must be 'true' or 'false'."
+            )
         return self.params.get("new_session", "false").lower() == "true"
 
     @property
@@ -102,6 +115,11 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
             self._session_key = self.data.get(SESSION_KEY)
         except json.JSONDecodeError:
             pass
+
+        if not self.uid:
+            raise APIV1CLIChatViewError(
+                "Internal error. UID is missing. This is intended to be a unique identifier for the client, passed as a url param named 'uid'."
+            )
 
         # if the new_session url parameter was passed and is set to True
         # then we will delete the cache_key and the session_key.
