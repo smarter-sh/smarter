@@ -7,7 +7,7 @@ from django.http import JsonResponse
 
 from smarter.apps.account.serializers import AccountSerializer
 from smarter.lib.django.serializers import UserSerializer
-from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
+from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 
 from .base import CliBaseApiView

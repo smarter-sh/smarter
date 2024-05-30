@@ -16,7 +16,7 @@ from rest_framework import __version__ as rest_framework_version
 
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.aws_helpers import aws_helper
-from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
+from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 
 from .base import CliBaseApiView

@@ -10,7 +10,7 @@ from django.http import JsonResponse
 from django_redis import get_redis_connection
 
 from smarter.common.helpers.aws_helpers import aws_helper
-from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
+from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 
 from .base import CliBaseApiView
