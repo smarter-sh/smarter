@@ -1,9 +1,11 @@
 """Smarter API command-line interface Base class API view"""
 
+import hashlib
 import json
 import logging
 from http import HTTPStatus
-from typing import Type
+from typing import Tuple, Type
+from urllib.parse import urlencode
 
 import yaml
 from django.http import QueryDict
@@ -51,6 +53,7 @@ class CliBaseApiView(APIView, AccountMixin):
     permission_classes = (IsAuthenticated,)
 
     _loader: SAMLoader = None
+    _cache_key: str = None
     _broker: AbstractBroker = None
     _manifest_data: json = None
     _manifest_kind: str = None
@@ -86,6 +89,8 @@ class CliBaseApiView(APIView, AccountMixin):
 
     @property
     def params(self) -> dict[str, any]:
+        if not self._params:
+            self._params = QueryDict(self.request.META.get("QUERY_STRING", "")) or {}
         return self._params
 
     @property
@@ -155,15 +160,53 @@ class CliBaseApiView(APIView, AccountMixin):
         instance. For example, if the route is '/api/v1/cli/apply/', then
         the command will be SmarterJournalCliCommands.APPLY.
         """
-        base_path = "api/v1/cli/"
-        route = self.request.resolver_match.route
-        route = str(route).rstrip("/")
-        route = str(route).replace(base_path, "")
-        return SmarterJournalCliCommands(route)
+
+        def get_slug(path):
+            parts = path.split("/")
+            try:
+                slug_index = parts.index("cli") + 1
+                return parts[slug_index]
+            except ValueError:
+                return None
+
+        this_command = get_slug(self.request.path)
+        logger.info("command: %s", this_command)
+        return SmarterJournalCliCommands(this_command)
 
     @property
     def prompt(self) -> str:
         return self._prompt
+
+    @property
+    def cache_key(self) -> str:
+        """For cached values, get the cache key for the chat config view."""
+        if not self._cache_key:
+            raise APIV1CLIViewError("Internal error. Cache key has not been set.")
+        return self._cache_key
+
+    @cache_key.setter
+    def cache_key(self, key_tuple: Tuple[str, str, str]) -> None:
+        """
+        Set a cache key based on a name string and a unique identifier 'uid'. This key is used to cache
+        the session_key for the chat. The key is a combination of the class name,
+        the chat name and the client UID. Currently used by the
+        ApiV1CliChatConfigApiView and ApiV1CliChatApiView as a means of sharing the session_key.
+
+        :param name: a generic object or resource name
+        :param uid: UID of the client, assumed to have been created from the
+         machine mac address and the hostname of the client
+        """
+        class_name, name, uid = key_tuple
+        raw_string = class_name + "_" + name + "_" + uid
+        hash_object = hashlib.sha256()
+        hash_object.update(raw_string.encode())
+        hash_string = hash_object.hexdigest()
+        self._cache_key = hash_string
+
+    @property
+    def url(self) -> str:
+        """Get the full url of the request. Reconstructs the exact url of the request."""
+        return self.request.build_absolute_uri()
 
     # pylint: disable=too-many-return-statements,too-many-branches
     def dispatch(self, request, *args, **kwargs):
@@ -177,7 +220,6 @@ class CliBaseApiView(APIView, AccountMixin):
         """
         # Parse the query string parameters from the request into a dictionary.
         # This is used to pass additional parameters to the child view's post method.
-        self._params = QueryDict(request.META.get("QUERY_STRING", ""))
         self._manifest_name = self.params.get("name", None)
 
         # TO DO: This is a temporary fix to mitigate a configuration issue
