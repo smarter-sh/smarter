@@ -61,6 +61,7 @@ export async function processApiRequest(
   };
   if (props.config.debug_mode) {
     console.log("processApiRequest() - apiURL:", apiURL);
+    console.log("processApiRequest() - body:", body);
     console.log("processApiRequest() - init:", init);
     console.log("processApiRequest() - props:", props);
   }

@@ -120,7 +120,7 @@ class ChatConfigView(View):
     def dispatch(self, request, *args, **kwargs):
         # there will only be an auth attribute if the request was authenticated
         # using session authentication.
-        if not hasattr(request, "auth"):
+        if not request.user.is_authenticated and not hasattr(request, "auth"):
             request.auth = SmarterTokenAuthentication()
             try:
                 user, _ = request.auth.authenticate(request)
@@ -176,25 +176,25 @@ class ChatConfigView(View):
         """
         Get the chatbot configuration.
         """
-        return JsonResponse(data=self.config())
+        return JsonResponse(data=self.config(request=request))
 
     # pylint: disable=unused-argument
     def get(self, request, *args, **kwargs):
         """
         Get the chatbot configuration.
         """
-        return JsonResponse(data=self.config())
+        return JsonResponse(data=self.config(request=request))
 
     @property
     def sandbox_mode(self):
         return self._sandbox_mode
 
-    def config(self) -> dict:
+    def config(self, request) -> dict:
         """
         React context for all templates that render
         a React app.
         """
-        chatbot_serializer = ChatBotSerializer(self.chatbot) if self.chatbot else None
+        chatbot_serializer = ChatBotSerializer(self.chatbot, context={"request": request}) if self.chatbot else None
 
         # plugins context. the main thing we need here is to constrain the number of plugins
         # returned to some reasonable number, since we'll probaably have cases where
