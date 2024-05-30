@@ -10,7 +10,7 @@ from datetime import datetime
 from http import HTTPStatus
 
 import waffle
-from django.http import HttpResponseNotFound, JsonResponse
+from django.http import HttpResponseNotFound
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -28,7 +28,11 @@ from smarter.lib.django.request import SmarterRequestHelper
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
-from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
+from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
+from smarter.lib.journal.http import (
+    SmarterJournaledJsonErrorResponse,
+    SmarterJournaledJsonResponse,
+)
 
 
 MAX_RETURNED_PLUGINS = 10
@@ -108,6 +112,8 @@ class ChatConfigView(View):
     authentication_classes = (SmarterTokenAuthentication, SessionAuthentication)
     permission_classes = (IsAuthenticated,)
 
+    thing: SmarterJournalThings = None
+    command: SmarterJournalCliCommands = None
     _sandbox_mode: bool = True
     session: SmarterChatSession = None
     chatbot_helper: ChatBotHelper = None
@@ -169,6 +175,8 @@ class ChatConfigView(View):
         if not self.chatbot:
             return HttpResponseNotFound()
 
+        self.thing = SmarterJournalThings(SmarterJournalThings.CHAT)
+        self.command = SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT)
         return super().dispatch(request, *args, **kwargs)
 
     # pylint: disable=unused-argument
@@ -176,14 +184,16 @@ class ChatConfigView(View):
         """
         Get the chatbot configuration.
         """
-        return JsonResponse(data=self.config(request=request))
+        data = self.config(request=request)
+        return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 
     # pylint: disable=unused-argument
     def get(self, request, *args, **kwargs):
         """
         Get the chatbot configuration.
         """
-        return JsonResponse(data=self.config(request=request))
+        data = self.config(request=request)
+        return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 
     @property
     def sandbox_mode(self):
