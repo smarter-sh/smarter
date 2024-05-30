@@ -1,14 +1,12 @@
 """Smarter API command-line interface Base class API view"""
 
-import hashlib
 import json
 import logging
 from http import HTTPStatus
-from typing import Tuple, Type
+from typing import Type
 
 import yaml
 from django.http import QueryDict
-from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
@@ -52,7 +50,6 @@ class CliBaseApiView(APIView, AccountMixin):
     permission_classes = (IsAuthenticated,)
 
     _loader: SAMLoader = None
-    _cache_key: str = None
     _broker: AbstractBroker = None
     _manifest_data: json = None
     _manifest_kind: str = None
@@ -60,7 +57,6 @@ class CliBaseApiView(APIView, AccountMixin):
     _manifest_load_failed: bool = False
     _BrokerClass: Type[AbstractBroker] = None
     _params: dict[str, any] = None
-    _prompt: str = None
 
     @property
     def loader(self) -> SAMLoader:
@@ -197,36 +193,6 @@ class CliBaseApiView(APIView, AccountMixin):
         return SmarterJournalCliCommands(this_command)
 
     @property
-    def prompt(self) -> str:
-        return self._prompt
-
-    @property
-    def cache_key(self) -> str:
-        """For cached values, get the cache key for the chat config view."""
-        if not self._cache_key:
-            raise APIV1CLIViewError("Internal error. Cache key has not been set.")
-        return self._cache_key
-
-    @cache_key.setter
-    def cache_key(self, key_tuple: Tuple[str, str, str]) -> None:
-        """
-        Set a cache key based on a name string and a unique identifier 'uid'. This key is used to cache
-        the session_key for the chat. The key is a combination of the class name,
-        the chat name and the client UID. Currently used by the
-        ApiV1CliChatConfigApiView and ApiV1CliChatApiView as a means of sharing the session_key.
-
-        :param name: a generic object or resource name
-        :param uid: UID of the client, assumed to have been created from the
-         machine mac address and the hostname of the client
-        """
-        class_name, name, uid = key_tuple
-        raw_string = class_name + "_" + name + "_" + uid
-        hash_object = hashlib.sha256()
-        hash_object.update(raw_string.encode())
-        hash_string = hash_object.hexdigest()
-        self._cache_key = hash_string
-
-    @property
     def url(self) -> str:
         """
         Get the full url of the request. Reconstructs the exact url of
@@ -266,14 +232,6 @@ class CliBaseApiView(APIView, AccountMixin):
         - broker: the broker is a class that implements the broker service pattern.
             It provides a service interface that 'brokers' the http request for the
             underlying object that provides the object-specific service (create, update, get, delete, etc).
-
-        - cache_key: the cache key is derived from unique identifiers send by the client
-          in the form of a url parameter named 'uid'. The cache key is used to cache
-          the session_key for Chat.
-
-        - prompt: the prompt is the raw text of the chat message that is sent to the
-            chatbot. The prompt is added to the payload of the request body and is
-            distinguished from the manifest text based on the url path.
         """
         # Parse the query string parameters from the request into a dictionary.
         # This is used to pass additional parameters to the child view's post method.
