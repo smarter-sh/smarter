@@ -194,7 +194,6 @@ class CliBaseApiView(APIView, AccountMixin):
                 return None
 
         this_command = get_slug(self.request.path)
-        logger.info("command: %s", this_command)
         return SmarterJournalCliCommands(this_command)
 
     @property
@@ -280,21 +279,6 @@ class CliBaseApiView(APIView, AccountMixin):
         # This is used to pass additional parameters to the child view's post method.
         self._manifest_name = self.params.get("name", None)
 
-        # TO DO: This is a temporary fix to mitigate a configuration issue
-        # where DRF is not properly authenticating the request. This is a
-        # temporary fix until we can properly configure the DRF authentication
-        if not hasattr(request, "auth"):
-            request.auth = SmarterTokenAuthentication()
-            try:
-                user, _ = request.auth.authenticate(request)
-                request.user = user
-            except AuthenticationFailed:
-                try:
-                    raise APIV1CLIViewError("Authentication failed.") from None
-                except APIV1CLIViewError as e:
-                    return SmarterJournaledJsonErrorResponse(
-                        request=request, thing=self.manifest_kind, command=None, e=e, status=HTTPStatus.FORBIDDEN
-                    )
         if not request.user.is_authenticated:
             try:
                 raise APIV1CLIViewError("Authentication failed.")

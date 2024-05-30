@@ -124,20 +124,6 @@ class ChatConfigView(View):
         return formatted_text(self.__class__.__name__)
 
     def dispatch(self, request, *args, **kwargs):
-        # there will only be an auth attribute if the request was authenticated
-        # using session authentication.
-        if not request.user.is_authenticated and not hasattr(request, "auth"):
-            request.auth = SmarterTokenAuthentication()
-            try:
-                user, _ = request.auth.authenticate(request)
-                request.user = user
-            except AuthenticationFailed:
-                try:
-                    raise SmarterChatappViewError("Authentication failed.") from None
-                except SmarterChatappViewError as e:
-                    return SmarterJournaledJsonErrorResponse(
-                        request=request, thing=self.manifest_kind, command=None, e=e, status=HTTPStatus.FORBIDDEN
-                    )
         if not request.user.is_authenticated:
             try:
                 raise SmarterChatappViewError("Authentication failed.")
