@@ -34,20 +34,35 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
 
     @property
     def prompt(self) -> str:
-        return self._prompt
+        """
+        The chat prompt from the request body. This is a single raw text input
+        from the user. This will need to be added to a message list and sent
+        to the chatbot.
+        """
+        return self.data.get("prompt", None)
 
     @property
     def new_session(self) -> bool:
+        """True if the new_session url parameter was passed and is set to 'true'"""
         if self.params.get("new_session", "false").lower() not in ["true", "false"]:
             bad_value = self.params.get("new_session")
             raise APIV1CLIChatViewError(
                 f"Invalid value '{bad_value}' provided for url param new_session. Must be 'true' or 'false'."
             )
-        return self.params.get("new_session", "false").lower() == "true"
+        return str(self.params.get("new_session", "false")).lower() == "true"
 
     @property
     def uid(self) -> str:
+        """
+        Unique identifier for the client. This is assumed to be a
+        combination of the machine mac address and the hostname.
+        """
         return self.params.get("uid", None)
+
+    @property
+    def name(self) -> str:
+        """The name of the ChatBot. This is passed as a url slug."""
+        return self._name
 
     @property
     def cache_key(self) -> str:
@@ -56,24 +71,20 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
             raise APIV1CLIViewError("Internal error. Cache key has not been set.")
         return self._cache_key
 
-    @property
-    def name(self) -> str:
-        return self._name
-
     @cache_key.setter
-    def cache_key(self, key_tuple: Tuple[str, str, str]) -> None:
+    def cache_key(self, key_tuple: Tuple[str, str, str, str]) -> None:
         """
         Set a cache key based on a name string and a unique identifier 'uid'. This key is used to cache
-        the session_key for the chat. The key is a combination of the class name,
-        the chat name and the client UID. Currently used by the
+        the session_key for the chat. The key is a combination of the class name, authenticated username,
+        the chat name, and the client UID. Currently used by the
         ApiV1CliChatConfigApiView and ApiV1CliChatApiView as a means of sharing the session_key.
 
         :param name: a generic object or resource name
         :param uid: UID of the client, assumed to have been created from the
          machine mac address and the hostname of the client
         """
-        class_name, name, uid = key_tuple
-        raw_string = class_name + "_" + name + "_" + uid
+        class_name, username, name, uid = key_tuple
+        raw_string = class_name + "_" + username + "_" + name + "_" + uid
         hash_object = hashlib.sha256()
         hash_object.update(raw_string.encode())
         hash_string = hash_object.hexdigest()
@@ -81,11 +92,17 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
 
     @property
     def session_key(self) -> str:
+        """
+        The session_key identifying a chat session for a user/chatbot.
+        This is used to persist the chat history of session, so that the
+        same chat session can be continued indefinitely.
+        """
         return self._session_key
 
     @property
     def data(self) -> dict:
-        return self._data
+        """The raw contents of the request body, assumed to be in json format."""
+        return self._data or {}
 
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
@@ -109,9 +126,12 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         self._name = kwargs.get("name")
 
         try:
-            # extract the session_key from the request body
+            # extract the body from the request body
             # if it exists.
             self._data = json.loads(request.body)
+
+            # try to extract the session_key from the request body
+            # if it exists.
             self._session_key = self.data.get(SESSION_KEY)
         except json.JSONDecodeError:
             pass
@@ -121,9 +141,10 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
                 "Internal error. UID is missing. This is intended to be a unique identifier for the client, passed as a url param named 'uid'."
             )
 
+        self.cache_key = (self.__class__.__name__, self.request.user.username, self.name, self.uid)
+
         # if the new_session url parameter was passed and is set to True
         # then we will delete the cache_key and the session_key.
-        self.cache_key = (self.__class__.__name__, self.name, self.uid)
         if self.new_session:
             self._session_key = None
             cache.delete(self.cache_key)
