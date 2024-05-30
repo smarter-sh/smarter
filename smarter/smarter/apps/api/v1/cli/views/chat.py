@@ -21,6 +21,7 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
     _session_key: str = None
     _data: dict = None
     _cache_key: str = None
+    _name: str = None
     _prompt: str = None
 
     @property
@@ -28,11 +29,23 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         return self._prompt
 
     @property
+    def new_session(self) -> bool:
+        return self.params.get("new_session", "false").lower() == "true"
+
+    @property
+    def uid(self) -> str:
+        return self.params.get("uid", None)
+
+    @property
     def cache_key(self) -> str:
         """For cached values, get the cache key for the chat config view."""
         if not self._cache_key:
             raise APIV1CLIViewError("Internal error. Cache key has not been set.")
         return self._cache_key
+
+    @property
+    def name(self) -> str:
+        return self._name
 
     @cache_key.setter
     def cache_key(self, key_tuple: Tuple[str, str, str]) -> None:
@@ -80,9 +93,8 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
             distinguished from the manifest text based on the url path.
 
         """
-        name = kwargs.get("name")
-        uid = self.params.get("uid")
-        self.cache_key = (self.__class__.__name__, name, uid)
+        self._name = kwargs.get("name")
+
         try:
             # extract the session_key from the request body
             # if it exists.
@@ -91,22 +103,27 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         except json.JSONDecodeError:
             pass
 
-        # if the session_key is not provided (our expected case),
-        # then attempt to retrieve it from the cache. if we get a hit
+        # if the new_session url parameter was passed and is set to True
+        # then we will delete the cache_key and the session_key.
+        self.cache_key = (self.__class__.__name__, self.name, self.uid)
+        if self.new_session:
+            self._session_key = None
+            cache.delete(self.cache_key)
+
+        # attempt to retrieve a session_key from the cache. if we get a hit
         # then we will update the request body with the session_key
         # and pass it along to the ChatConfigView.
-        if not self.session_key:
-            self._session_key = cache.get(self.cache_key)
-            if self.session_key:
-                if self.data:
-                    new_body = self.data.copy()
-                    new_body[SESSION_KEY] = self.session_key
-                    new_body = json.dumps(new_body)
-                else:
-                    new_body = json.dumps({SESSION_KEY: self.session_key})
+        self._session_key = cache.get(self.cache_key)
+        if self.session_key:
+            if self.data:
+                new_body = self.data.copy()
+                new_body[SESSION_KEY] = self.session_key
+                new_body = json.dumps(new_body)
+            else:
+                new_body = json.dumps({SESSION_KEY: self.session_key})
 
-                # pylint: disable=W0212
-                request._body = new_body.encode("utf-8")
+            # pylint: disable=W0212
+            request._body = new_body.encode("utf-8")
 
         return super().dispatch(request, *args, **kwargs)
 

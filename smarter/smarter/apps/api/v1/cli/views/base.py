@@ -49,13 +49,13 @@ class CliBaseApiView(APIView, AccountMixin):
     authentication_classes = (SmarterTokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
-    _loader: SAMLoader = None
+    _BrokerClass: Type[AbstractBroker] = None
     _broker: AbstractBroker = None
+    _loader: SAMLoader = None
     _manifest_data: json = None
     _manifest_kind: str = None
     _manifest_name: str = None
     _manifest_load_failed: bool = False
-    _BrokerClass: Type[AbstractBroker] = None
     _params: dict[str, any] = None
 
     @property
@@ -239,7 +239,7 @@ class CliBaseApiView(APIView, AccountMixin):
 
         if not request.user.is_authenticated:
             try:
-                raise APIV1CLIViewError("Authentication failed.")
+                raise APIV1CLIViewError("Unauthorized access attempted.")
             except APIV1CLIViewError as e:
                 return SmarterJournaledJsonErrorResponse(
                     request=request, thing=self.manifest_kind, command=None, e=e, status=HTTPStatus.FORBIDDEN
@@ -247,7 +247,7 @@ class CliBaseApiView(APIView, AccountMixin):
 
         # set all of our identifying attributes from the request.
         try:
-            self._user = user = request.user
+            self._user = request.user
             if not self.user_profile:
                 raise APIV1CLIViewError("Could not find account for user.")
         except SmarterExceptionBase as e:
