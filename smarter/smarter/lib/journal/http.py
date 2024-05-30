@@ -56,6 +56,7 @@ class SmarterJournaledJsonResponse(JsonResponse):
 
     """
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         request: HttpRequest,
@@ -115,6 +116,7 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
     :param json_dumps_params: A dictionary of kwargs passed to json.dumps().
     """
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         request: HttpRequest,

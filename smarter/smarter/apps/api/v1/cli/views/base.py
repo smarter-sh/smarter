@@ -5,7 +5,6 @@ import json
 import logging
 from http import HTTPStatus
 from typing import Tuple, Type
-from urllib.parse import urlencode
 
 import yaml
 from django.http import QueryDict
@@ -89,6 +88,12 @@ class CliBaseApiView(APIView, AccountMixin):
 
     @property
     def params(self) -> dict[str, any]:
+        """
+        The query string parameters from the Django request object. This extracts
+        the query string parameters from the request object and converts them to a
+        dictionary. This is used in child views to pass optional command-line
+        parameters to the broker.
+        """
         if not self._params:
             self._params = QueryDict(self.request.META.get("QUERY_STRING", "")) or {}
         return self._params
@@ -132,10 +137,24 @@ class CliBaseApiView(APIView, AccountMixin):
 
     @property
     def manifest_data(self) -> json:
+        """
+        The raw manifest data from the request body. The manifest data is a json object
+        which needs to be rendered into a Pydantic model. The Pydantic model is then
+        used to instantiate a broker for the manifest kind.
+        """
         return self._manifest_data
 
     @property
     def manifest_name(self) -> str:
+        """
+        The name of the manifest. The manifest name is used to identify the resource
+        within a Kind. For example, the manifest name for a ChatBot resource is the
+        name of the chatbot. The manifest name is used to identify the resource
+        within a Kind. The name can be passed from inside the raw manifest data, or
+        it can be passed as part of a url path.
+
+        Example url path with a name: /api/v1/cli/describe/chatbot/<str:name>/
+        """
         if not self._manifest_name and self.manifest_data:
             self._manifest_name = self.manifest_data.get("metadata", {}).get("name", None)
         if not self._manifest_kind and self.loader:
@@ -144,6 +163,11 @@ class CliBaseApiView(APIView, AccountMixin):
 
     @property
     def manifest_kind(self) -> str:
+        """
+        The kind of the manifest. The manifest kind is used to identify the type
+        of resource that the manifest is describing. The kind is used to identify
+        the broker that will be used to broker the http request for the resource.
+        """
         if not self._manifest_kind and self.manifest_data:
             self._manifest_kind = str(self.manifest_data.get("kind", None))
         if not self._manifest_kind and self.loader:
@@ -158,7 +182,7 @@ class CliBaseApiView(APIView, AccountMixin):
         """
         Translate the request route into a SmarterJournalCliCommands enum
         instance. For example, if the route is '/api/v1/cli/apply/', then
-        the command will be SmarterJournalCliCommands.APPLY.
+        the corresponding command will be SmarterJournalCliCommands.APPLY.
         """
 
         def get_slug(path):
@@ -205,18 +229,52 @@ class CliBaseApiView(APIView, AccountMixin):
 
     @property
     def url(self) -> str:
-        """Get the full url of the request. Reconstructs the exact url of the request."""
+        """
+        Get the full url of the request. Reconstructs the exact url of
+        the request. example url:
+
+        https://platform.smarter.sh/api/v1/cli/chat/config/example/?new_session=false&uid=Lawrences-Mac-Studio.local-c6%253A6b%253A2e%253A7a%253A3d%253A6c
+        """
         return self.request.build_absolute_uri()
 
     # pylint: disable=too-many-return-statements,too-many-branches
     def dispatch(self, request, *args, **kwargs):
         """
-        The http request body is expected to contain the manifest text
-        in yaml format. The manifest text is passed to the SAMLoader that will load,
-        and partially validate and parse the manifest. This is then used to
-        fully initialize a Pydantic manifest model. The Pydantic manifest
-        model will be passed to a AbstractBroker for the manifest 'kind', which
-        implements the broker service pattern for the underlying object.
+        Dispatch method for the CliBaseApiView. We want to take care of as
+        much housekeeping as possible in the base class. This includes
+        setting following attributes:
+
+        - manifest_name: the name identifier of the manifest could be passed
+            from insider the raw manifest data, or it could be passed as part of a url.
+
+        - manifest: the http request body might contain raw manifest text
+            in yaml or json format. The manifest text is passed to the SAMLoader that will load,
+            and partially validate and parse the manifest. This is then used to
+            fully initialize a Pydantic manifest model. The Pydantic manifest
+            model will be passed to a AbstractBroker for the manifest 'kind', which
+            implements the broker service pattern for the underlying object.
+
+        - kind: the kind of the manifest is used to identify the broker that will
+
+        - user/account: the user, account and user_profile are all derived from the
+            authenticated user in the Django request object.
+
+        - command: the command is derived from the request path. The command is
+            used to determine the type of operation that the view should perform.
+            For example, if the url path is '/api/v1/cli/apply/', then the command
+            will be SmarterJournalCliCommands.APPLY.
+
+        - broker: the broker is a class that implements the broker service pattern.
+            It provides a service interface that 'brokers' the http request for the
+            underlying object that provides the object-specific service (create, update, get, delete, etc).
+
+        - cache_key: the cache key is derived from unique identifiers send by the client
+          in the form of a url parameter named 'uid'. The cache key is used to cache
+          the session_key for Chat.
+
+        - prompt: the prompt is the raw text of the chat message that is sent to the
+            chatbot. The prompt is added to the payload of the request body and is
+            distinguished from the manifest text based on the url path.
         """
         # Parse the query string parameters from the request into a dictionary.
         # This is used to pass additional parameters to the child view's post method.
