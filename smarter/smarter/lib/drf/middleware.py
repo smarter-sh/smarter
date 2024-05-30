@@ -29,9 +29,11 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin):
     knox.auth TokenAuthentication tokens.
     """
 
+    authorization_header = None
+
     def is_token_auth(self, request) -> bool:
         """Check if the request is for knox token authentication."""
-        auth = get_authorization_header(request).split()
+        auth = self.authorization_header.split()
         prefix = knox_settings.AUTH_HEADER_PREFIX.encode()
 
         if not auth:
@@ -47,6 +49,7 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin):
 
     def __call__(self, request):
         """Try to authenticate the request using SmarterTokenAuthentication."""
+        self.authorization_header = get_authorization_header(request)
         if not self.is_token_auth(request):
             # we're not using token authentication, no need to do anything
             return self.get_response(request)
@@ -64,6 +67,11 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin):
             try:
                 raise SmarterTokenAuthenticationError("Authentication failed.") from None
             except SmarterTokenAuthenticationError as e:
+                auth = self.authorization_header.split()
+                auth_token = auth[1] if len(auth) > 1 else None
+                logger.warning(
+                    "%s() failed token authentication attempt using token %s", self.__class__.__name__, auth_token
+                )
                 return SmarterJournaledJsonErrorResponse(request=request, e=e, status=HTTPStatus.UNAUTHORIZED)
 
         return self.get_response(request)
