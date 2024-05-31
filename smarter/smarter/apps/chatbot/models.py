@@ -679,6 +679,9 @@ class ChatBotHelper:
             self._account_number = self.chatbot.account.account_number if self.chatbot else None
             return self._account_number
 
+        if not self._account_number:
+            self._account_number = from_url(self.url)
+
         if self._account_number:
             self._account = Account.objects.get(account_number=self._account_number)
             if waffle.switch_is_active("chatbothelper_logging"):
@@ -908,6 +911,22 @@ class ChatBotHelper:
                 return self._chatbot
             except ChatBot.DoesNotExist:
                 return None
+
+        if not self._chatbot:
+            # this scenario would most likely occur when running a chat session from the cli.
+            # The cli uses the url_chatbot property from chat_config to get the chatbot url, and this
+            # property does not evaluate the deployment state as part of its logic.
+            if self.account and self.api_subdomain:
+                try:
+                    self._chatbot = ChatBot.objects.get(account=self.account, name=self.api_subdomain)
+                except ChatBot.DoesNotExist:
+                    logger.warning(
+                        f"didn't find chatbot for account: {self.account} name: {self.api_subdomain} {self.url}"
+                    )
+                    return None
+                if not self._chatbot.deployed:
+                    logger.warning(f"Initializing with chatbot {self._chatbot}, which is not deployed.")
+                    return None
 
         if self._chatbot:
             logger.info(f"ChatBotHelper: initialized ChatBot: {self._chatbot}")
