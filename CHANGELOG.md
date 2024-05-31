@@ -1,27 +1,20 @@
-# [0.3.0](https://github.com/smarter-sh/smarter/compare/v0.2.2...v0.3.0) (2024-05-31)
-
-
-### Features
-
-* code ApiV1CliChatApiView and refactor chatapp to make it work with journaled json responses ([8e500a7](https://github.com/smarter-sh/smarter/commit/8e500a71b348e81306bf414fb410b6004759113b))
-* create a universal journal to log all api request/response pairs ([2d2fbaa](https://github.com/smarter-sh/smarter/commit/2d2fbaae18fba5c56e93c7c06fe0cb4c132fc6f2))
-* create SmarterJournaledJsonErrorResponse() ([bb1ab3b](https://github.com/smarter-sh/smarter/commit/bb1ab3b28c73722f33ca2cb98f82a94472e09695))
-* pass prompt to broker via kwargs ([e4efb09](https://github.com/smarter-sh/smarter/commit/e4efb092ede55fe9f1a7befea9ca8d31934cee4f))
-* scaffold ApiV1CliChatApiView() ([31cfd1d](https://github.com/smarter-sh/smarter/commit/31cfd1d32a82f76646b5740436b5ef4ff4a405b1))
-* scaffold chat verb ([6f127bb](https://github.com/smarter-sh/smarter/commit/6f127bbc53ae1ad2164ad89cba3852a442011ac8))
-
-## [0.2.2](https://github.com/smarter-sh/smarter/compare/v0.2.1...v0.2.2) (2024-05-24)
-
-
-### Bug Fixes
-
-* force a new release ([e11c8d3](https://github.com/smarter-sh/smarter/commit/e11c8d30fb9be81996e5369ecb3aad3b69d4947a))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+# [0.3.0](https://github.com/smarter-sh/smarter/compare/v0.2.2...v0.3.0) (2024-05-31)
+
+### Features
+
+- create a universal journal to log all api request/response pairs ([2d2fbaa](https://github.com/smarter-sh/smarter/commit/2d2fbaae18fba5c56e93c7c06fe0cb4c132fc6f2))
+- create SmarterJournaledJsonErrorResponse() ([bb1ab3b](https://github.com/smarter-sh/smarter/commit/bb1ab3b28c73722f33ca2cb98f82a94472e09695))
+- pass prompt to broker via kwargs ([e4efb09](https://github.com/smarter-sh/smarter/commit/e4efb092ede55fe9f1a7befea9ca8d31934cee4f))
+- code ApiV1CliChatApiView and refactor chatapp to make it work with journaled json responses ([8e500a7](https://github.com/smarter-sh/smarter/commit/8e500a71b348e81306bf414fb410b6004759113b))
+- scaffold ApiV1CliChatApiView() ([31cfd1d](https://github.com/smarter-sh/smarter/commit/31cfd1d32a82f76646b5740436b5ef4ff4a405b1))
+- scaffold ApiV1CliChatApiView() ([6f127bb](https://github.com/smarter-sh/smarter/commit/6f127bbc53ae1ad2164ad89cba3852a442011ac8))
+- create SmarterTokenAuthenticationMiddleware to automate api key authentication
 
 ## [0.2.1](https://github.com/QueriumCorp/smarter/compare/v0.2.0...v0.2.1) (2024-05-19)
 
