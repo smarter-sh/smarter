@@ -14,6 +14,7 @@ from smarter.apps.plugin.manifest.brokers.sql_connection import (
     SAMPluginDataSqlConnectionBroker,
 )
 from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
+from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
 from smarter.lib.manifest.broker import SAMBrokerErrorNotImplemented
 
 # from smarter.common.utils import dict_is_contained_in
@@ -59,13 +60,14 @@ class TestSAMPluginSql(unittest.TestCase):
 
     def test_plugin_broker_apply(self):
         """Test that the Broker can apply the manifest."""
+        thing = SmarterJournalThings(SmarterJournalThings.PLUGIN)
         retval = self.plugin_broker.apply(request=self.request, kwargs=self.kwargs)
         print(retval.content)
         self.assertEqual(retval.status_code, HTTPStatus.OK)
         content = json.loads(retval.content.decode())
         self.assertIsInstance(content, dict)
         self.assertIn("message", content.keys())
-        self.assertEqual(content["message"], "Plugin SqlTest applied successfully")
+        self.assertEqual(content["message"], f"{thing} SqlTest applied successfully")
 
     def test_plugin_broker_describe(self):
         """
@@ -107,6 +109,7 @@ class TestSAMPluginSql(unittest.TestCase):
 
     def test_plugin_broker_delete(self):
         """Test that the Broker can delete the object."""
+        thing = SmarterJournalThings(SmarterJournalThings.PLUGIN)
         retval = self.plugin_broker.apply(request=self.request, kwargs=self.kwargs)
         self.assertEqual(retval.status_code, HTTPStatus.OK)
 
@@ -115,11 +118,10 @@ class TestSAMPluginSql(unittest.TestCase):
         content = json.loads(retval.content.decode())
         self.assertIsInstance(content, dict)
         self.assertIn("message", content.keys())
-        self.assertEqual(content["message"], "Plugin SqlTest deleted successfully")
+        self.assertEqual(content["message"], f"{thing} SqlTest deleted successfully")
 
     def test_plugin_broker_deploy(self):
         """Test that the Broker does not implement a deploy() method."""
 
         with self.assertRaises(SAMBrokerErrorNotImplemented) as e:
             self.plugin_broker.deploy(request=self.request, kwargs=self.kwargs)
-        print(e.description)
