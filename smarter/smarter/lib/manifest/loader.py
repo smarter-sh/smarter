@@ -8,19 +8,15 @@ from typing import Any, Union
 import requests
 import yaml
 
-from .enum import (
-    SAMApiVersions,
-    SAMDataFormats,
-    SAMKeys,
-    SAMMetadataKeys,
-    SAMSpecificationKeyOptions,
-)
+from smarter.common.api import SmarterApiVersions
+
+from .enum import SAMDataFormats, SAMKeys, SAMMetadataKeys, SAMSpecificationKeyOptions
 from .exceptions import SAMExceptionBase
 
 
 logger = logging.getLogger(__name__)
 
-SUPPORTED_API_VERSIONS = [SAMApiVersions.V1.value]
+SUPPORTED_API_VERSIONS = [SmarterApiVersions.V1.value]
 
 
 class SAMLoaderError(SAMExceptionBase):
@@ -86,7 +82,7 @@ class SAMLoader:
     _dict_data: dict = None
     _data_format: SAMDataFormats = None
     _specification: dict = {
-        SAMKeys.APIVERSION: SAMApiVersions.V1.value,
+        SAMKeys.APIVERSION: SmarterApiVersions.V1.value,
         SAMKeys.KIND: "PLACEHOLDER",
         SAMKeys.METADATA: {
             SAMMetadataKeys.NAME: (str, [SAMSpecificationKeyOptions.REQUIRED]),
@@ -105,7 +101,7 @@ class SAMLoader:
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        api_version: str = SAMApiVersions.V1.value,
+        api_version: str = SmarterApiVersions.V1.value,
         kind: str = None,
         manifest: str = None,
         file_path: str = None,

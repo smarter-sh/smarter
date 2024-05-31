@@ -1,0 +1,151 @@
+"""Smarter API Manifests Enumerations."""
+
+from smarter.common.enum import SmarterEnumAbstract
+from smarter.common.exceptions import SmarterExceptionBase
+
+
+class SmarterJournalEnumException(SmarterExceptionBase):
+    """Base exception for Smarter API Manifest enumerations."""
+
+    @property
+    def get_readable_name(self):
+        return "Smarter API Manifest Enumeration Error"
+
+
+###############################################################################
+# Smarter API cli response Enumerations
+###############################################################################
+class SmarterJournalApiResponseKeys:
+    """Smarter API cli response keys."""
+
+    API = "api"
+    THING = "thing"
+    METADATA = "metadata"
+    DATA = "data"
+    ERROR = "error"
+    MESSAGE = "message"
+
+
+class SmarterJournalApiResponseErrorKeys:
+    """Smarter API cli response error keys."""
+
+    ERROR_CLASS = "errorClass"
+    STACK_TRACE = "stacktrace"
+    DESCRIPTION = "description"
+    STATUS = "status"
+    ARGS = "args"
+    CAUSE = "cause"
+    CONTEXT = "context"
+
+
+class SCLIResponseMetadata:
+    """CLI get response metadata enumeration."""
+
+    KEY = "key"
+    COMMAND = "command"
+
+
+class SmarterJournalThings(SmarterEnumAbstract):
+    """
+    Smarter api cli things that can be added to the Journal. This descends
+    from SmarterEnumAbstract which is generally implemented as a subclassed
+    Singleton. For the avoidance of any doubt, we're doing here as well, but
+    we're also allowing this to be instantiated with a string value, so that
+    a SmarterJournalThings value can passed as a strongly typed object.
+    """
+
+    PLUGIN = "Plugin"
+    ACCOUNT = "Account"
+    APIKEY = "apikey"
+    USER = "User"
+    CHAT = "Chat"
+    CHAT_CONFIG = "ChatConfig"
+    CHAT_HISTORY = "ChatHistory"
+    CHAT_PLUGIN_USAGE = "ChatPluginUsage"
+    CHAT_TOOL_CALL = "ChatToolCall"
+    CHATBOT = "Chatbot"
+    SQLCONNECTION = "SqlConnection"
+    APICONNECTION = "ApiConnection"
+
+    @classmethod
+    def choices(cls) -> list[(str, str)]:
+        """Django model choices for SmarterJournalThings."""
+        return [
+            (cls.PLUGIN, cls.PLUGIN),
+            (cls.ACCOUNT, cls.ACCOUNT),
+            (cls.APIKEY, cls.APIKEY),
+            (cls.USER, cls.USER),
+            (cls.CHAT, cls.CHAT),
+            (cls.CHAT_CONFIG, cls.CHAT_CONFIG),
+            (cls.CHAT_HISTORY, cls.CHAT_HISTORY),
+            (cls.CHAT_PLUGIN_USAGE, cls.CHAT_PLUGIN_USAGE),
+            (cls.CHAT_TOOL_CALL, cls.CHAT_TOOL_CALL),
+            (cls.CHATBOT, cls.CHATBOT),
+            (cls.SQLCONNECTION, cls.SQLCONNECTION),
+            (cls.APICONNECTION, cls.APICONNECTION),
+        ]
+
+
+class SmarterJournalCliCommands(SmarterEnumAbstract):
+    """
+    Enumerated commands for api/v1/cli requests. This descends
+    from SmarterEnumAbstract which is generally implemented as a subclassed
+    Singleton. For the avoidance of any doubt, we're doing here as well, but
+    we're also allowing this to be instantiated with a string value, so that
+    a SmarterJournalCliCommands value can passed as a strongly typed object.
+    """
+
+    APPLY = "apply"
+    CHAT = "chat"
+    CHAT_CONFIG = "chat_config"
+    DELETE = "delete"
+    DEPLOY = "deploy"
+    DESCRIBE = "describe"
+    GET = "get"
+    JOURNAL = "journal"  # FIXNOTE: THIS IS AMBIGUOUS
+    LOGS = "logs"  # FIXNOTE: THIS IS AMBIGUOUS
+    MANIFEST_EXAMPLE = "example_manifest"
+    STATUS = "status"
+    VERSION = "version"
+    UNDEPLOY = "undeploy"
+    WHOAMI = "whoami"
+
+    @classmethod
+    def choices(cls) -> list[(str, str)]:
+        """Django model choices for SmarterJournalCliCommands."""
+        return [
+            (cls.APPLY, cls.APPLY),
+            (cls.CHAT, cls.CHAT),
+            (cls.CHAT_CONFIG, cls.CHAT_CONFIG),
+            (cls.DELETE, cls.DELETE),
+            (cls.DEPLOY, cls.DEPLOY),
+            (cls.DESCRIBE, cls.DESCRIBE),
+            (cls.GET, cls.GET),
+            (cls.JOURNAL, cls.JOURNAL),
+            (cls.LOGS, cls.LOGS),
+            (cls.MANIFEST_EXAMPLE, cls.MANIFEST_EXAMPLE),
+            (cls.STATUS, cls.STATUS),
+            (cls.VERSION, cls.VERSION),
+            (cls.UNDEPLOY, cls.UNDEPLOY),
+            (cls.WHOAMI, cls.WHOAMI),
+        ]
+
+    @classmethod
+    def past_tense(cls) -> dict[str, str]:
+        """Return the past tense of the command."""
+        return {
+            cls.APPLY.value: "applied",
+            cls.CHAT.value: "prompted",
+            cls.CHAT_CONFIG.value: "fetched chat_config",
+            cls.DELETE.value: "deleted",
+            cls.DEPLOY.value: "deployed",
+            cls.DESCRIBE.value: "described",
+            cls.GET.value: "got",
+            cls.JOURNAL.value: "journaled",
+            cls.LOGS.value: "logged",
+            cls.MANIFEST_EXAMPLE.value: "fetched example manifest",
+            cls.STATUS.value: "fetched status",
+            cls.VERSION.value: "fetched version",
+            cls.UNDEPLOY.value: "undeployed",
+            cls.WHOAMI.value: "fetched identity",
+        }

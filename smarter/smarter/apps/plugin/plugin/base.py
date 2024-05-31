@@ -14,12 +14,13 @@ from rest_framework import serializers
 from smarter.apps.account.manifest.models.user_profile import UserProfileModel
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import smarter_admin_user_profile
+from smarter.common.api import SmarterApiVersions
 
 # FIX NOTE: these imports need to be parameterized by version.
 from smarter.common.exceptions import SmarterExceptionBase
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import UserType
-from smarter.lib.manifest.enum import SAMApiVersions
+from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -45,8 +46,9 @@ from ..signals import (
 
 logger = logging.getLogger(__name__)
 
-SMARTER_API_MANIFEST_COMPATIBILITY = [SAMApiVersions.V1.value]
-SMARTER_API_MANIFEST_DEFAULT_VERSION = SAMApiVersions.V1.value
+SMARTER_API_MANIFEST_COMPATIBILITY = [SmarterApiVersions.V1.value]
+SMARTER_API_MANIFEST_DEFAULT_VERSION = SmarterApiVersions.V1.value
+PLUGIN_KEY = "plugin"
 
 
 class SmarterPluginError(SmarterExceptionBase):
@@ -124,10 +126,10 @@ class PluginBase(ABC):
         if data:
             # we received a yaml or json string representation of a manifest.
             self.api_version = data.get("apiVersion", self.api_version)
-            if data.get("kind") != self.kind:
+            if data.get(SAMKeys.KIND.value) != self.kind:
                 raise SAMValidationError(f"Expected kind of {self.kind}, but got {data.get('kind')}.")
             loader = SAMLoader(
-                api_version=data["apiVersion"],
+                api_version=data[SAMKeys.APIVERSION.value],
                 kind=self.kind,
                 manifest=data,
             )
@@ -323,7 +325,7 @@ class PluginBase(ABC):
         if not self.manifest:
             return None
         return {
-            "plugin": self.plugin_meta,
+            PLUGIN_KEY: self.plugin_meta,
             "directive": self.manifest.spec.selector.directive,
             "search_terms": self.manifest.spec.selector.searchTerms,
         }
@@ -347,7 +349,7 @@ class PluginBase(ABC):
         if not self.manifest:
             return None
         return {
-            "plugin": self.plugin_meta,
+            PLUGIN_KEY: self.plugin_meta,
             "system_role": self.manifest.spec.prompt.systemRole,
             "model": self.manifest.spec.prompt.model,
             "temperature": self.manifest.spec.prompt.temperature,
@@ -577,9 +579,9 @@ class PluginBase(ABC):
         with transaction.atomic():
             plugin_meta = PluginMeta.objects.create(**meta_data)
 
-            selector["plugin"] = plugin_meta
-            prompt["plugin"] = plugin_meta
-            plugin_data["plugin"] = plugin_meta
+            selector[PLUGIN_KEY] = plugin_meta
+            prompt[PLUGIN_KEY] = plugin_meta
+            plugin_data[PLUGIN_KEY] = plugin_meta
 
             PluginSelector.objects.create(**selector)
             PluginPrompt.objects.create(**prompt)

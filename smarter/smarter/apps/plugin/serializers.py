@@ -3,7 +3,10 @@
 from rest_framework import serializers
 from taggit.models import Tag
 
-from smarter.apps.account.serializers import AccountSerializer, UserProfileSerializer
+from smarter.apps.account.serializers import (
+    AccountMiniSerializer,
+    UserProfileSerializer,
+)
 from smarter.apps.plugin.models import (
     PluginDataSql,
     PluginDataSqlConnection,
@@ -31,7 +34,7 @@ class PluginMetaSerializer(serializers.ModelSerializer):
 
     tags = TagListSerializerField()
     author = UserProfileSerializer(read_only=True)
-    account = AccountSerializer(read_only=True)
+    account = AccountMiniSerializer(read_only=True)
 
     # pylint: disable=missing-class-docstring
     class Meta:

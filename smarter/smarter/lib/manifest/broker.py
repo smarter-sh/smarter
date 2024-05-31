@@ -1,38 +1,57 @@
 # pylint: disable=W0613
 """Smarter API Manifest Abstract Broker class."""
 
+import logging
 import re
-import traceback
 import typing
 from abc import ABC, abstractmethod
 from http import HTTPStatus
 
 import inflect
-from django.http import HttpRequest, JsonResponse
+from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
 
-from smarter.lib.manifest.enum import SAMApiVersions
+from smarter.common.api import SmarterApiVersions
+from smarter.lib.journal.enum import (
+    SmarterJournalApiResponseErrorKeys,
+    SmarterJournalApiResponseKeys,
+    SmarterJournalCliCommands,
+    SmarterJournalThings,
+)
+from smarter.lib.journal.http import (
+    SmarterJournaledJsonErrorResponse,
+    SmarterJournaledJsonResponse,
+)
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 from smarter.lib.manifest.models import AbstractSAMBase
 
-from .enum import SAMApiVersions
 from .exceptions import SAMExceptionBase
 
 
 if typing.TYPE_CHECKING:
-    from smarter.apps.account.models import Account, UserProfile
+    from smarter.apps.account.models import Account
 
 inflect_engine = inflect.engine()
 
-SUPPORTED_API_VERSIONS = [SAMApiVersions.V1.value]
+SUPPORTED_API_VERSIONS = [SmarterApiVersions.V1.value]
+
+logger = logging.getLogger(__name__)
 
 
 class SAMBrokerError(SAMExceptionBase):
     """Base class for all SAMBroker errors."""
 
+    thing: SmarterJournalThings = None
+    command: SmarterJournalCliCommands = None
+
+    def __init__(self, message: str, thing: SmarterJournalThings = None, command: SmarterJournalCliCommands = None):
+        self.thing = thing
+        self.command = command
+        super().__init__(message)
+
     @property
     def get_readable_name(self):
-        return "Smarter API Manifest Broker Error"
+        return f"Smarter API {self.thing} manifest broker: {self.command}() unidentified error"
 
 
 class SAMBrokerReadOnlyError(SAMBrokerError):
@@ -40,10 +59,34 @@ class SAMBrokerReadOnlyError(SAMBrokerError):
 
     @property
     def get_readable_name(self):
-        return "Smarter API Manifest Broker Read-Only Error"
+        return f"Smarter API {self.thing} manifest broker: {self.command}() read-only error"
 
 
-# pylint: disable=too-many-public-methods
+class SAMBrokerErrorNotImplemented(SAMBrokerError):
+    """Base class for all SAMBroker errors."""
+
+    @property
+    def get_readable_name(self):
+        return f"Smarter API {self.thing} manifest broker: {self.command}() not implemented error"
+
+
+class SAMBrokerErrorNotReady(SAMBrokerError):
+    """Error for broker operations on resources that are not ready."""
+
+    @property
+    def get_readable_name(self):
+        return f"Smarter API {self.thing} manifest broker: {self.command}() not ready error"
+
+
+class SAMBrokerErrorNotFound(SAMBrokerError):
+    """Error for broker operations on resources that are not found."""
+
+    @property
+    def get_readable_name(self):
+        return f"Smarter API {self.thing} manifest broker: {self.command}() not found error"
+
+
+# pylint: disable=too-many-public-methods,too-many-instance-attributes
 class AbstractBroker(ABC):
     """
     Smarter API Manifest Broker abstract base class. This class is responsible
@@ -58,30 +101,7 @@ class AbstractBroker(ABC):
     for the manifest: get, post, put, delete, patch.
     """
 
-    class Operations:
-        """Common operations for the broker."""
-
-        GET = "get"
-        APPLY = "apply"
-        DESCRIBE = "describe"
-        DELETE = "delete"
-        DEPLOY = "deploy"
-        UNDEPLOY = "undeploy"
-        LOGS = "logs"
-        MANIFEST_EXAMPLE = "example_manifest"
-
-        @classmethod
-        def past_tense(cls) -> dict:
-            return {
-                cls.GET: "gotten",
-                cls.APPLY: "applied",
-                cls.DESCRIBE: "described",
-                cls.DELETE: "deleted",
-                cls.DEPLOY: "deployed",
-                cls.UNDEPLOY: "undeployed",
-                cls.LOGS: "got logs for",
-            }
-
+    _request: HttpRequest = None
     _api_version: str = None
     _account: "Account" = None
     _loader: SAMLoader = None
@@ -89,12 +109,14 @@ class AbstractBroker(ABC):
     _name: str = None
     _kind: str = None
     _validated: bool = False
+    _thing: SmarterJournalThings = None
 
     # pylint: disable=too-many-arguments
     def __init__(
         self,
+        request: HttpRequest,
         account: "Account",
-        api_version: str = SAMApiVersions.V1.value,
+        api_version: str = SmarterApiVersions.V1.value,
         name: str = None,
         kind: str = None,
         loader: SAMLoader = None,
@@ -102,6 +124,7 @@ class AbstractBroker(ABC):
         file_path: str = None,
         url: str = None,
     ):
+        self._request = request
         self._name = name
         self._account = account
         self._loader = loader
@@ -128,8 +151,18 @@ class AbstractBroker(ABC):
     # Class Instance Properties
     ###########################################################################
     @property
+    def request(self) -> HttpRequest:
+        return self._request
+
+    @property
     def is_valid(self) -> bool:
         return self._validated
+
+    @property
+    def thing(self) -> SmarterJournalThings:
+        if not self._thing:
+            self._thing = SmarterJournalThings(self.kind)
+        return self._thing
 
     @property
     def kind(self) -> str:
@@ -184,123 +217,182 @@ class AbstractBroker(ABC):
     ###########################################################################
     # Abstract Methods
     ###########################################################################
-    @abstractmethod
-    def get(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
-        """get information about specified resources."""
-        raise NotImplementedError
-
-    def apply(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    # mcdaniel: there's a reason why this is not an abstract method, but i forget why.
+    def apply(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """apply a manifest, which works like a upsert."""
         if self.manifest.status:
-            raise SAMBrokerReadOnlyError("status is a read-only manifest field for")
+            raise SAMBrokerReadOnlyError
 
     @abstractmethod
-    def describe(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        """chat with the broker."""
+        raise SAMBrokerErrorNotImplemented
+
+    @abstractmethod
+    def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """print the manifest."""
         raise NotImplementedError
 
     @abstractmethod
-    def delete(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """delete a resource."""
         raise NotImplementedError
 
     @abstractmethod
-    def deploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """deploy a resource."""
         raise NotImplementedError
 
     @abstractmethod
-    def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
-        """undeploy a resource."""
+    def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        """Returns an example yaml manifest document for the kind of resource."""
         raise NotImplementedError
 
     @abstractmethod
-    def logs(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        """get information about specified resources."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """get logs for a resource."""
         raise NotImplementedError
 
     @abstractmethod
-    def example_manifest(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
-        """Returns an example yaml manifest document for the kind of resource."""
+    def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        """undeploy a resource."""
         raise NotImplementedError
-
-    # pylint: disable=W0212
-    def get_model_titles(self, serializer: ModelSerializer) -> list[dict[str, str]]:
-        fields_and_types = [
-            {"name": field_name, "type": type(field).__name__} for field_name, field in serializer.fields.items()
-        ]
-        return fields_and_types
 
     ###########################################################################
     # http json response helpers
     ###########################################################################
-    def _retval(self, data: dict = None, message: str = None) -> dict:
-        return (
-            {"data": data, "message": message}
-            if data and message
-            else {"data": data} if data else {"message": message} if message else {}
-        )
+    def _retval(self, data: dict = None, error: dict = None, message: str = None) -> dict[str, typing.Any]:
+        retval = {}
+        if data:
+            retval[SmarterJournalApiResponseKeys.DATA] = data
+        if error:
+            retval[SmarterJournalApiResponseKeys.ERROR] = error
+        if message:
+            retval[SmarterJournalApiResponseKeys.MESSAGE] = message
 
-    def json_response_ok(
-        self,
-        operation: str,
-        data: dict = None,
-    ) -> JsonResponse:
+        return retval
+
+    def json_response_ok(self, command: SmarterJournalCliCommands, data: dict = None) -> SmarterJournaledJsonResponse:
         """Return a common success response."""
         data = data or {}
-        operated = self.Operations.past_tense().get(operation, operation)
-        if operation == self.Operations.GET:
+
+        operated = SmarterJournalCliCommands.past_tense().get(str(command), command)
+
+        if command == SmarterJournalCliCommands.GET:
             kind = inflect_engine.plural(self.kind)
             message = f"{kind} {operated} successfully"
-        elif operation == self.Operations.LOGS:
+        elif command == SmarterJournalCliCommands.LOGS:
             kind = self.kind
             message = f"{kind} {self.name} successfully retrieved logs"
-        elif operation == self.Operations.MANIFEST_EXAMPLE:
+        elif command == SmarterJournalCliCommands.MANIFEST_EXAMPLE:
             kind = self.kind
             message = f"{kind} example manifest successfully generated"
         else:
             kind = self.kind
             message = f"{kind} {self.name} {operated} successfully"
-        operation = self.Operations.past_tense().get(operation, operation)
         retval = self._retval(data=data, message=message)
-        return JsonResponse(data=retval, status=HTTPStatus.OK, safe=False)
+        return SmarterJournaledJsonResponse(
+            request=self.request, thing=self.thing, command=command, data=retval, status=HTTPStatus.OK, safe=False
+        )
 
-    def json_response_err_readonly(self, data: dict = None) -> JsonResponse:
+    def json_response_err_readonly(self, command: SmarterJournalCliCommands) -> SmarterJournaledJsonResponse:
         """Return a common read-only response."""
         message = f"{self.kind} {self.name} is read-only"
-        retval = self._retval(message=message)
-        return JsonResponse(data=retval, status=HTTPStatus.METHOD_NOT_ALLOWED)
+        error = {
+            SmarterJournalApiResponseErrorKeys.ERROR_CLASS: SAMBrokerReadOnlyError.__name__,
+            SmarterJournalApiResponseErrorKeys.STACK_TRACE: None,
+            SmarterJournalApiResponseErrorKeys.DESCRIPTION: message,
+            SmarterJournalApiResponseErrorKeys.STATUS: "",
+            SmarterJournalApiResponseErrorKeys.ARGS: None,
+            SmarterJournalApiResponseErrorKeys.CAUSE: None,
+            SmarterJournalApiResponseErrorKeys.CONTEXT: None,
+        }
+        retval = self._retval(error=error, message=message)
+        return SmarterJournaledJsonResponse(
+            request=self.request, thing=self.thing, command=command, data=retval, status=HTTPStatus.METHOD_NOT_ALLOWED
+        )
 
-    def json_response_err_notimplemented(self, data: dict = None) -> JsonResponse:
+    def json_response_err_notimplemented(self, command: SmarterJournalCliCommands) -> SmarterJournaledJsonResponse:
         """Return a common not implemented response."""
-        message = f"operation not implemented for {self.kind} resources"
-        retval = self._retval(message=message)
-        return JsonResponse(data=retval, status=HTTPStatus.NOT_IMPLEMENTED)
+        message = f"command not implemented for {self.kind} resources"
+        error = {
+            SmarterJournalApiResponseErrorKeys.ERROR_CLASS: SAMBrokerErrorNotImplemented.__name__,
+            SmarterJournalApiResponseErrorKeys.STACK_TRACE: None,
+            SmarterJournalApiResponseErrorKeys.DESCRIPTION: message,
+            SmarterJournalApiResponseErrorKeys.STATUS: "",
+            SmarterJournalApiResponseErrorKeys.ARGS: None,
+            SmarterJournalApiResponseErrorKeys.CAUSE: None,
+            SmarterJournalApiResponseErrorKeys.CONTEXT: None,
+        }
+        retval = self._retval(error=error, message=message)
+        return SmarterJournaledJsonResponse(
+            request=self.request, thing=self.thing, command=command, data=retval, status=HTTPStatus.NOT_IMPLEMENTED
+        )
 
-    def json_response_err_notready(self, data: dict = None) -> JsonResponse:
+    def json_response_err_notready(self, command: SmarterJournalCliCommands) -> SmarterJournaledJsonResponse:
         """Return a common not ready response."""
         message = f"{self.kind} {self.name} not ready"
-        retval = self._retval(message=message)
-        return JsonResponse(data=retval, status=HTTPStatus.BAD_REQUEST)
+        error = {
+            SmarterJournalApiResponseErrorKeys.ERROR_CLASS: SAMBrokerErrorNotReady.__name__,
+            SmarterJournalApiResponseErrorKeys.STACK_TRACE: None,
+            SmarterJournalApiResponseErrorKeys.DESCRIPTION: message,
+            SmarterJournalApiResponseErrorKeys.STATUS: "",
+            SmarterJournalApiResponseErrorKeys.ARGS: None,
+            SmarterJournalApiResponseErrorKeys.CAUSE: None,
+            SmarterJournalApiResponseErrorKeys.CONTEXT: None,
+        }
+        retval = self._retval(error=error, message=message)
+        return SmarterJournaledJsonResponse(
+            request=self.request, thing=self.thing, command=command, data=retval, status=HTTPStatus.BAD_REQUEST
+        )
 
-    def json_response_err(self, operation: str, e: Exception) -> JsonResponse:
+    def json_response_err_notfound(
+        self, command: SmarterJournalCliCommands, message: str = None
+    ) -> SmarterJournaledJsonResponse:
+        """Return a common not found response."""
+        message = message or f"{self.kind} {self.name} not found"
+        error = {
+            SmarterJournalApiResponseErrorKeys.ERROR_CLASS: SAMBrokerErrorNotFound.__name__,
+            SmarterJournalApiResponseErrorKeys.STACK_TRACE: None,
+            SmarterJournalApiResponseErrorKeys.DESCRIPTION: message,
+            SmarterJournalApiResponseErrorKeys.STATUS: "",
+            SmarterJournalApiResponseErrorKeys.ARGS: None,
+            SmarterJournalApiResponseErrorKeys.CAUSE: None,
+            SmarterJournalApiResponseErrorKeys.CONTEXT: None,
+        }
+        retval = self._retval(error=error, message=message)
+        return SmarterJournaledJsonResponse(
+            request=self.request, thing=self.thing, command=command, data=retval, status=HTTPStatus.NOT_FOUND
+        )
+
+    def json_response_err(self, command: SmarterJournalCliCommands, e: Exception) -> SmarterJournaledJsonResponse:
         """
         Return a structured error response that can be unpacked and rendered
         by the cli in a variety of formats.
         """
-        tb_str = "".join(traceback.format_tb(e.__traceback__))
-        data = {"message": f"could not {operation} {self.kind} {self.name}", "error": str(e), "stacktrace": tb_str}
-        return JsonResponse(data=data, status=HTTPStatus.INTERNAL_SERVER_ERROR)
-
-    def json_response_err_notfound(self, message: str = None) -> JsonResponse:
-        """Return a common not found response."""
-        message = message or f"{self.kind} {self.name} not found"
-        retval = self._retval(message=message)
-        return JsonResponse(data=retval, status=HTTPStatus.NOT_FOUND)
+        return SmarterJournaledJsonErrorResponse(
+            request=self.request, thing=self.thing, command=command, e=e, status=HTTPStatus.INTERNAL_SERVER_ERROR
+        )
 
     ###########################################################################
     # data transformation helpers
     ###########################################################################
+    # pylint: disable=W0212
+    def get_model_titles(self, serializer: ModelSerializer) -> list[dict[str, str]]:
+        """
+        For tablular output from get() implementations. Returns a list of field names and types.
+        from the Django model serializer.
+        """
+        fields_and_types = [
+            {"name": field_name, "type": type(field).__name__} for field_name, field in serializer.fields.items()
+        ]
+        return fields_and_types
+
     def camel_to_snake(self, dictionary: dict) -> dict:
         """Converts camelCase dict keys to snake_case."""
 

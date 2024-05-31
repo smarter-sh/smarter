@@ -3,7 +3,7 @@ updates:
   - package-ecosystem: "terraform"
     directory: "/aws/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     target-branch: "alpha"
     open-pull-requests-limit: 10
     labels:
@@ -16,7 +16,7 @@ updates:
   - package-ecosystem: "pip"
     directory: "/smarter"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     target-branch: "alpha"
     labels:
       - "dependencies"
@@ -33,7 +33,7 @@ updates:
       - "javascript"
       - "automated pr"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     target-branch: "alpha"
     assignees:
       - "lpm0073"
@@ -46,7 +46,7 @@ updates:
       - "javascript"
       - "automated pr"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     target-branch: "alpha"
     assignees:
       - "lpm0073"
@@ -58,7 +58,7 @@ updates:
       - "dependencies"
       - "automated pr"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     target-branch: "alpha"
     assignees:
       - "lpm0073"
