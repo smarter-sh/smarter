@@ -1,0 +1,40 @@
+{
+  "id": "chatcmpl-9UxPutZsDYaDTbAKawBeteMShpgKH",
+  "model": "gpt-3.5-turbo-0125",
+  "usage": {
+    "total_tokens": 928,
+    "prompt_tokens": 854,
+    "completion_tokens": 74
+  },
+  "object": "chat.completion",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "The current temperature in Montana is around 51°F. Montana's climate varies greatly depending on the region, but in general, summers can be warm with average high temperatures ranging from 70-90°F. Winters can be cold with average lows dipping below freezing. It's always a good idea to check the specific area you are moving to for more accurate weather information.",
+        "tool_calls": null,
+        "function_call": null
+      },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "created": 1717165266,
+  "metadata": {
+    "model": "gpt-3.5-turbo",
+    "input_text": "is it hot there?",
+    "max_tokens": 256,
+    "tool_calls": [
+      {
+        "function_args": {
+          "unit": "USCS",
+          "location": "Montana"
+        },
+        "function_name": "get_current_weather"
+      }
+    ],
+    "temperature": 0.5
+  },
+  "system_fingerprint": null
+}

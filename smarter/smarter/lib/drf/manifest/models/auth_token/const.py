@@ -1,3 +1,6 @@
 """Smarter API SmarterAuthToken Manifest Constants"""
 
-MANIFEST_KIND = "SmarterAuthToken"
+from smarter.lib.journal.enum import SmarterJournalThings
+
+
+MANIFEST_KIND = SmarterJournalThings.APIKEY.value

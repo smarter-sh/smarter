@@ -72,8 +72,17 @@ class Brokers:
         Case insensitive broker kind getter. Returns the original SAMKinds
         key string from cls._brokers for the given kind.
         """
+
+        # remove trailing 's' from kind if it exists
+        if kind.endswith("s"):
+            kind = kind[:-1]
+
+        # ensure kind is in camel case
         kind = cls.snake_to_camel(kind)
         lower_kind = kind.lower()
+
+        # perform a lower case search to find and return the original key
+        # in the cls._brokers dictionary
         for key in cls._brokers:
             if key.lower() == lower_kind:
                 return key

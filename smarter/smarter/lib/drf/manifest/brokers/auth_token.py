@@ -4,23 +4,29 @@
 import typing
 
 from django.forms.models import model_to_dict
-from django.http import HttpRequest, JsonResponse
+from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.mixins import AccountMixin
+from smarter.common.api import SmarterApiVersions
 from smarter.lib.drf.manifest.enum import SAMSmarterAuthTokenSpecKeys
 from smarter.lib.drf.manifest.models.auth_token.const import MANIFEST_KIND
 from smarter.lib.drf.manifest.models.auth_token.model import SAMSmarterAuthToken
 from smarter.lib.drf.models import SmarterAuthToken
-from smarter.lib.manifest.broker import AbstractBroker
+from smarter.lib.journal.enum import SmarterJournalCliCommands
+from smarter.lib.journal.http import SmarterJournaledJsonResponse
+from smarter.lib.manifest.broker import (
+    AbstractBroker,
+    SAMBrokerError,
+    SAMBrokerErrorNotImplemented,
+    SAMBrokerErrorNotReady,
+)
 from smarter.lib.manifest.enum import (
-    SAMApiVersions,
     SAMKeys,
     SAMMetadataKeys,
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
 
@@ -30,8 +36,12 @@ if typing.TYPE_CHECKING:
 MAX_RESULTS = 1000
 
 
-class SAMSmarterAuthTokenBrokerError(SAMExceptionBase):
+class SAMSmarterAuthTokenBrokerError(SAMBrokerError):
     """Base exception for Smarter API SmarterAuthToken Broker handling."""
+
+    @property
+    def get_readable_name(self):
+        return "Smarter API SmarterAuthToken Manifest Broker Error"
 
 
 class SmarterAuthTokenSerializer(ModelSerializer):
@@ -64,8 +74,9 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
+        request: HttpRequest,
         account: "Account",
-        api_version: str = SAMApiVersions.V1.value,
+        api_version: str = SmarterApiVersions.V1.value,
         name: str = None,
         kind: str = None,
         loader: SAMLoader = None,
@@ -82,6 +93,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         the required top-level keys.
         """
         super().__init__(
+            request=request,
             api_version=api_version,
             account=account,
             name=name,
@@ -190,7 +202,9 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
     def model_class(self) -> SAMSmarterAuthToken:
         return SAMSmarterAuthToken
 
-    def example_manifest(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        command = self.example_manifest.__name__
+        command = SmarterJournalCliCommands(command)
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -206,10 +220,11 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
                 },
             },
         }
-        return self.json_response_ok(operation=self.example_manifest.__name__, data=data)
+        return self.json_response_ok(command=command, data=data)
 
-    def get(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
-
+    def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        command = self.get.__name__
+        command = SmarterJournalCliCommands(command)
         data = []
         smarter_auth_tokens = SmarterAuthToken.objects.filter(user=self.user)
 
@@ -218,10 +233,14 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
             try:
                 model_dump = SmarterAuthTokenSerializer(smarter_auth_token).data
                 if not model_dump:
-                    raise SAMSmarterAuthTokenBrokerError(f"Model dump failed for {self.kind} {smarter_auth_token.name}")
+                    raise SAMSmarterAuthTokenBrokerError(
+                        f"Model dump failed for {self.kind} {smarter_auth_token.name}", thing=self.kind, command=command
+                    )
                 data.append(model_dump)
             except Exception as e:
-                return self.json_response_err(self.get.__name__, e)
+                raise SAMSmarterAuthTokenBrokerError(
+                    f"Model dump failed for {self.kind} {smarter_auth_token.name}", thing=self.kind, command=command
+                ) from e
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -232,9 +251,9 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
                 SCLIResponseGetData.ITEMS.value: data,
             },
         }
-        return self.json_response_ok(operation=self.get.__name__, data=data)
+        return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def apply(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """
         apply the manifest. copy the manifest data to the Django ORM model and
         save the model to the database. Call super().apply() to ensure that the
@@ -242,9 +261,11 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         Django ORM model.
         Note that there are fields included in the manifest that are not editable
         and are therefore removed from the Django ORM model dict prior to attempting
-        the save() operation. These fields are defined in the readonly_fields list.
+        the save() command. These fields are defined in the readonly_fields list.
         """
         super().apply(request, kwargs)
+        command = self.apply.__name__
+        command = SmarterJournalCliCommands(command)
         readonly_fields = ["id", "created_at", "updated_at", "last_used_at", "key_id", "user", "digest", "token_key"]
         try:
             data = self.manifest_to_django_orm()
@@ -254,35 +275,60 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
                 setattr(self.smarter_auth_token, key, value)
             self.smarter_auth_token.save()
         except Exception as e:
-            return self.json_response_err(self.apply.__name__, e)
-        return self.json_response_ok(operation=self.apply.__name__, data={})
+            raise SAMSmarterAuthTokenBrokerError(
+                f"Failed to apply {self.kind} {self.smarter_auth_token.name}", thing=self.kind, command=command
+            ) from e
+        return self.json_response_ok(command=command, data={})
 
-    def describe(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        command = self.chat.__name__
+        command = SmarterJournalCliCommands(command)
+        raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
+
+    def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        command = self.describe.__name__
+        command = SmarterJournalCliCommands(command)
         if self.smarter_auth_token:
             try:
                 data = self.django_orm_to_manifest_dict()
-                return self.json_response_ok(operation=self.describe.__name__, data=data)
+                return self.json_response_ok(command=command, data=data)
             except Exception as e:
-                return self.json_response_err(self.describe.__name__, e)
-        return self.json_response_err_notready()
+                raise SAMSmarterAuthTokenBrokerError(
+                    f"Failed to describe {self.kind} {self.smarter_auth_token.name}", thing=self.kind, command=command
+                ) from e
+        raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
 
-    def delete(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        command = self.delete.__name__
+        command = SmarterJournalCliCommands(command)
         if self.smarter_auth_token:
             try:
                 self.smarter_auth_token.delete()
-                return self.json_response_ok(operation=self.delete.__name__, data={})
+                return self.json_response_ok(command=command, data={})
             except Exception as e:
-                return self.json_response_err(self.delete.__name__, e)
-        return self.json_response_err_notready()
+                raise SAMSmarterAuthTokenBrokerError(
+                    f"Failed to delete {self.kind} {self.smarter_auth_token.name}", thing=self.kind, command=command
+                ) from e
+        raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
 
-    def deploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
-        return self.json_response_err_notimplemented()
+    def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        command = self.deploy.__name__
+        command = SmarterJournalCliCommands(command)
+        raise SAMBrokerErrorNotImplemented(
+            f"{self.kind} {self.name} deploy is not implemented", thing=self.kind, command=command
+        )
 
-    def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
-        return self.json_response_err_notimplemented()
+    def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        command = self.undeploy.__name__
+        command = SmarterJournalCliCommands(command)
+        raise SAMBrokerErrorNotImplemented(
+            f"{self.kind} {self.name} deploy is not implemented", thing=self.kind, command=command
+        )
 
-    def logs(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        command = self.delete.__name__
+        command = SmarterJournalCliCommands(command)
         if self.smarter_auth_token:
             data = {}
-            return self.json_response_ok(operation=self.logs.__name__, data=data)
-        return self.json_response_err_notready()
+            return self.json_response_ok(command=command, data=data)
+        raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)

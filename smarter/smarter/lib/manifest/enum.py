@@ -1,27 +1,21 @@
 """Smarter API Manifests Enumerations."""
 
-from enum import Enum
+from smarter.common.enum import SmarterEnumAbstract
+
+from .exceptions import SAMExceptionBase
 
 
-VERSION_PREFIX = "smarter.sh"
+class SAMEnumException(SAMExceptionBase):
+    """Base exception for Smarter API Manifest enumerations."""
 
-
-class SmarterEnumAbstract(Enum):
-    """Smarter enumeration helper class."""
-
-    @classmethod
-    def all_values(cls) -> list[str]:
-        return [member.value for _, member in cls.__members__.items()]
+    @property
+    def get_readable_name(self):
+        return "Smarter API Manifest Enumeration Error"
 
 
 ###############################################################################
 # Smarter API Manifest Enumerations
 ###############################################################################
-class SAMApiVersions(SmarterEnumAbstract):
-    """API Version enumeration."""
-
-    V0 = f"{VERSION_PREFIX}/v0"
-    V1 = f"{VERSION_PREFIX}/v1"
 
 
 class SAMDataFormats(SmarterEnumAbstract):
