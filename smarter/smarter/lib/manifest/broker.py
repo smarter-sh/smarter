@@ -51,7 +51,7 @@ class SAMBrokerError(SAMExceptionBase):
 
     @property
     def get_readable_name(self):
-        return "Smarter API Manifest Broker Error"
+        return f"Smarter API {self.thing} manifest broker: {self.command}() unidentified error"
 
 
 class SAMBrokerReadOnlyError(SAMBrokerError):
@@ -59,7 +59,7 @@ class SAMBrokerReadOnlyError(SAMBrokerError):
 
     @property
     def get_readable_name(self):
-        return "Smarter API Manifest Broker Read-Only Error"
+        return f"Smarter API {self.thing} manifest broker: {self.command}() read-only error"
 
 
 class SAMBrokerErrorNotImplemented(SAMBrokerError):
@@ -67,7 +67,7 @@ class SAMBrokerErrorNotImplemented(SAMBrokerError):
 
     @property
     def get_readable_name(self):
-        return "Smarter API Manifest Broker Not Implemented Error"
+        return f"Smarter API {self.thing} manifest broker: {self.command}() not implemented error"
 
 
 class SAMBrokerErrorNotReady(SAMBrokerError):
@@ -75,7 +75,7 @@ class SAMBrokerErrorNotReady(SAMBrokerError):
 
     @property
     def get_readable_name(self):
-        return "Smarter API Manifest Broker Not Ready Error"
+        return f"Smarter API {self.thing} manifest broker: {self.command}() not ready error"
 
 
 class SAMBrokerErrorNotFound(SAMBrokerError):
@@ -83,7 +83,7 @@ class SAMBrokerErrorNotFound(SAMBrokerError):
 
     @property
     def get_readable_name(self):
-        return "Smarter API Manifest Broker Not Found Error"
+        return f"Smarter API {self.thing} manifest broker: {self.command}() not found error"
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes
@@ -221,12 +221,12 @@ class AbstractBroker(ABC):
     def apply(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """apply a manifest, which works like a upsert."""
         if self.manifest.status:
-            raise SAMBrokerReadOnlyError("status is a read-only manifest field for")
+            raise SAMBrokerReadOnlyError
 
     @abstractmethod
     def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """chat with the broker."""
-        raise SAMBrokerErrorNotImplemented("chat is not implemented for this broker")
+        raise SAMBrokerErrorNotImplemented
 
     @abstractmethod
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:

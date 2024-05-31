@@ -39,7 +39,9 @@ class TestApiV1CliPlugin(ApiV1TestBase):
         path = f"{reverse('api_v1_cli_deploy_view', kwargs={'kind': 'plugin'})}?name={self.name}"
         response, status = self.get_response(path)
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
-        self.assertEqual(response["message"], "operation not implemented for Plugin resources")
+        self.assertEqual(
+            response["error"]["description"], "Smarter API Plugin manifest broker: deploy() not implemented error"
+        )
 
         path = f"{reverse('api_v1_cli_describe_view', kwargs={'kind': 'plugin'})}?name={self.name}"
         response, status = self.get_response(path)
@@ -55,7 +57,9 @@ class TestApiV1CliPlugin(ApiV1TestBase):
         path = f"{reverse('api_v1_cli_logs_kind_view', kwargs={'kind': 'plugin'})}?name={self.name}"
         response, status = self.get_response(path)
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
-        self.assertEqual(response["message"], "operation not implemented for Plugin resources")
+        self.assertEqual(
+            response["error"]["description"], "Smarter API Plugin manifest broker: logs() not implemented error"
+        )
 
         path = f"{reverse('api_v1_cli_get_view', kwargs={'kind': 'plugin'})}?name={self.name}"
         response, status = self.get_response(path)

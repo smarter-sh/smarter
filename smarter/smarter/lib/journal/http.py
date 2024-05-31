@@ -128,15 +128,26 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
         json_dumps_params=None,
         **kwargs,
     ):
+        description: str = ""
+        if e:
+            if isinstance(e, dict):
+                if hasattr(e, "args"):
+                    description = e.args[0]
+            elif isinstance(e, str):
+                description = e
         data = {}
         data[SmarterJournalApiResponseKeys.ERROR] = {
             SmarterJournalApiResponseErrorKeys.ERROR_CLASS: e.__class__.__name__,
             SmarterJournalApiResponseErrorKeys.STACK_TRACE: traceback.format_exc(),
-            SmarterJournalApiResponseErrorKeys.DESCRIPTION: e.args[0] if e.args else "",
+            SmarterJournalApiResponseErrorKeys.DESCRIPTION: description,
             SmarterJournalApiResponseErrorKeys.STATUS: e.status if hasattr(e, "status") else "",
-            SmarterJournalApiResponseErrorKeys.ARGS: e.args,
-            SmarterJournalApiResponseErrorKeys.CAUSE: str(e.__cause__),
-            SmarterJournalApiResponseErrorKeys.CONTEXT: str(e.__context__),
+            SmarterJournalApiResponseErrorKeys.ARGS: e.args if isinstance(e, dict) and hasattr(e, "args") else "",
+            SmarterJournalApiResponseErrorKeys.CAUSE: (
+                str(e.__cause__) if isinstance(e, dict) and hasattr(e, "__cause__") else ""
+            ),
+            SmarterJournalApiResponseErrorKeys.CONTEXT: (
+                str(e.__context__) if isinstance(e, dict) and hasattr(e, "__context__") else ""
+            ),
         }
         logger.error(data[SmarterJournalApiResponseKeys.ERROR])
 
