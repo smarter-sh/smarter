@@ -42,12 +42,12 @@ class TestSAMChatbotBroker(unittest.TestCase):
     def setUpClass(cls):
         """Set up test fixtures."""
         cls.user, cls.account, cls.user_profile = admin_user_factory()
+        cls.request = cls.create_generic_request()
 
         config_path = os.path.join(HERE, "data/chatbot.yaml")
         cls.manifest = get_readonly_yaml_file(config_path)
         cls.broker = SAMChatbotBroker(request=cls.request, account=cls.account, manifest=cls.manifest)
         cls.client = Client()
-        cls.request = cls.create_generic_request()
         cls.kwargs = {}
         add_example_plugins(user_profile=cls.user_profile)
 

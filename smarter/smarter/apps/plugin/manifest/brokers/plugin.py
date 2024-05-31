@@ -11,6 +11,7 @@ from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.plugin.sql import PluginSql
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.api import SmarterApiVersions
+from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
     AbstractBroker,
@@ -155,6 +156,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
+        command = SmarterJournalCliCommands(command)
         plugin_class: str = kwargs.get("plugin_class", SAMPluginMetadataClassValues.STATIC.value)
         try:
             Plugin = PluginMap[plugin_class]
@@ -163,7 +165,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
                 f"Plugin class {plugin_class} not found", thing=self.kind, command=command
             ) from e
 
-        data = Plugin.example_manifest(kwargs=kwargs)
+        data = Plugin.manifest(kwargs=kwargs)
         return self.json_response_ok(command=command, data=data)
 
     # pylint: disable=W0221
@@ -177,6 +179,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
 
     def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
+        command = SmarterJournalCliCommands(command)
         name: str = kwargs.get("name", None)
         all_objects: bool = kwargs.get("all_objects", False)
         tags: str = kwargs.get("tags", None)
@@ -231,6 +234,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         """
         super().apply(request, kwargs)
         command = self.apply.__name__
+        command = SmarterJournalCliCommands(command)
         try:
             self.plugin.create()
         except Exception as e:
@@ -250,6 +254,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
 
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
+        command = SmarterJournalCliCommands(command)
         if self.plugin.ready:
             try:
                 data = self.plugin.to_json()
@@ -264,10 +269,12 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
 
     def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
+        command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
     def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
+        command = SmarterJournalCliCommands(command)
         if self.plugin.ready:
             try:
                 self.plugin.delete()
@@ -280,12 +287,15 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
 
     def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
+        command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("deploy() not implemented", thing=self.kind, command=command)
 
     def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
+        command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("undeploy() not implemented", thing=self.kind, command=command)
 
     def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
+        command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("logs() not implemented", thing=self.kind, command=command)

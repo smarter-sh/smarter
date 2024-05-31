@@ -11,6 +11,7 @@ from smarter.apps.chat.manifest.models.chat_history.const import MANIFEST_KIND
 from smarter.apps.chat.manifest.models.chat_history.model import SAMChatHistory
 from smarter.apps.chat.models import Chat, ChatHistory
 from smarter.common.api import SmarterApiVersions
+from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
     AbstractBroker,
@@ -194,6 +195,7 @@ class SAMChatHistoryBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     def example_manifest(self, request: HttpRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
+        command = SmarterJournalCliCommands(command)
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -208,6 +210,7 @@ class SAMChatHistoryBroker(AbstractBroker, AccountMixin):
 
     def get(self, request: HttpRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
+        command = SmarterJournalCliCommands(command)
         self._session_key: str = kwargs.get("session_id", None)
         data = []
         if self.session_key:
@@ -248,14 +251,17 @@ class SAMChatHistoryBroker(AbstractBroker, AccountMixin):
         Chat is a read-only django table, populated by the LLM handlers
         """
         command = self.apply.__name__
+        command = SmarterJournalCliCommands(command)
         raise SAMBrokerReadOnlyError(f"Read-only {self.kind} {self.name}", thing=self.kind, command=command)
 
     def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
+        command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
     def describe(self, request: HttpRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
+        command = SmarterJournalCliCommands(command)
         self._session_key: str = kwargs.get("session_id", None)
         if self.chat_history:
             try:
@@ -269,22 +275,26 @@ class SAMChatHistoryBroker(AbstractBroker, AccountMixin):
 
     def delete(self, request: HttpRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
+        command = SmarterJournalCliCommands(command)
         raise SAMBrokerReadOnlyError(f"Read-only {self.kind} {self.name}", thing=self.kind, command=command)
 
     def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
+        command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(
             f"Deploy not implemented for {self.kind} {self.name}", thing=self.kind, command=command
         )
 
     def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
+        command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(
             f"Undeploy not implemented for {self.kind} {self.name}", thing=self.kind, command=command
         )
 
     def logs(self, request: HttpRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
+        command = SmarterJournalCliCommands(command)
         self._session_key: str = kwargs.get("session_id", None)
         if self.chat_history:
             data = {}

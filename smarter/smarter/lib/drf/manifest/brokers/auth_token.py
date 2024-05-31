@@ -13,6 +13,7 @@ from smarter.lib.drf.manifest.enum import SAMSmarterAuthTokenSpecKeys
 from smarter.lib.drf.manifest.models.auth_token.const import MANIFEST_KIND
 from smarter.lib.drf.manifest.models.auth_token.model import SAMSmarterAuthToken
 from smarter.lib.drf.models import SmarterAuthToken
+from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
     AbstractBroker,
@@ -203,6 +204,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
 
     def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
+        command = SmarterJournalCliCommands(command)
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -222,6 +224,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
 
     def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
+        command = SmarterJournalCliCommands(command)
         data = []
         smarter_auth_tokens = SmarterAuthToken.objects.filter(user=self.user)
 
@@ -262,6 +265,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         """
         super().apply(request, kwargs)
         command = self.apply.__name__
+        command = SmarterJournalCliCommands(command)
         readonly_fields = ["id", "created_at", "updated_at", "last_used_at", "key_id", "user", "digest", "token_key"]
         try:
             data = self.manifest_to_django_orm()
@@ -278,10 +282,12 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
 
     def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
+        command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
+        command = SmarterJournalCliCommands(command)
         if self.smarter_auth_token:
             try:
                 data = self.django_orm_to_manifest_dict()
@@ -294,6 +300,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
 
     def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
+        command = SmarterJournalCliCommands(command)
         if self.smarter_auth_token:
             try:
                 self.smarter_auth_token.delete()
@@ -306,18 +313,21 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
 
     def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
+        command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(
             f"{self.kind} {self.name} deploy is not implemented", thing=self.kind, command=command
         )
 
     def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
+        command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(
             f"{self.kind} {self.name} deploy is not implemented", thing=self.kind, command=command
         )
 
     def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
+        command = SmarterJournalCliCommands(command)
         if self.smarter_auth_token:
             data = {}
             return self.json_response_ok(command=command, data=data)
