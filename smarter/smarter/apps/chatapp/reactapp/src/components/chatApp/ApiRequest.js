@@ -69,7 +69,7 @@ export async function processApiRequest(
     const response = await fetch(apiURL, init);
     const status = await response.status;
     const response_json = await response.json(); // Convert the ReadableStream to a JSON object
-    const response_body = await response_json.body; // ditto
+    const response_body = await response_json.data.body; // ditto
 
     if (props.config.debug_mode) {
       console.log("processApiRequest(): response status: ", status);

@@ -14,7 +14,11 @@ from django.test import RequestFactory
 from smarter.apps.chat.models import Chat, ChatHistory
 from smarter.apps.chatapp.views import ChatConfigView
 from smarter.apps.chatbot.api.v1.views.smarter import SmarterChatBotApiView
-from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
+from smarter.lib.journal.enum import (
+    SmarterJournalApiResponseKeys,
+    SmarterJournalCliCommands,
+    SmarterJournalThings,
+)
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.enum import SCLIResponseGet
 
@@ -294,6 +298,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
 
         if hasattr(request, "session"):
             new_request.session = request.session
+        # pylint: disable=W0212
         if hasattr(request, "_messages"):
             new_request._messages = request._messages
 
@@ -318,10 +323,15 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         # create a Smarter chatbot request and prompt the chatbot
         chat_request = self.chat_request_factory(request=request, url=self.url_chatbot, body=request_body)
         chat_response = SmarterChatBotApiView.as_view()(request=chat_request)
-        logger.info(f"chat_response: {chat_response}")
         chat_response = json.loads(chat_response.content)
 
-        data = {SCLIResponseGet.DATA.value: {"request": request_body, "response": chat_response}}
+        # unescape the chat response body so that it looks
+        # normal from the cli command line.
+        body_string = chat_response["data"]["body"]
+        body_dict = json.loads(body_string)
+        chat_response[SmarterJournalApiResponseKeys.DATA]["body"] = body_dict
+
+        data = {SmarterJournalApiResponseKeys.DATA: {"request": request_body, "response": chat_response}}
         return SmarterJournaledJsonResponse(
             request=request,
             data=data,

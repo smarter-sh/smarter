@@ -8,7 +8,7 @@ from django.core.cache import cache
 from django.http import HttpRequest
 
 from smarter.apps.chatapp.views import ChatConfigView
-from smarter.lib.manifest.enum import SCLIResponseGet
+from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 
 from ..base import APIV1CLIViewError
 from .chat import CACHE_EXPIRATION, SESSION_KEY, ApiV1CliChatBaseApiView
@@ -52,7 +52,7 @@ class ApiV1CliChatConfigApiView(ApiV1CliChatBaseApiView):
 
         try:
             content = json.loads(response.content)
-            content = content.get(SCLIResponseGet.DATA.value)
+            content = content.get(SmarterJournalApiResponseKeys.DATA)
             session_key = content.get(SESSION_KEY)
             cache.set(key=self.cache_key, value=session_key, timeout=CACHE_EXPIRATION)
         except json.JSONDecodeError as e:
