@@ -7,28 +7,45 @@ import hashlib
 import json
 import logging
 from datetime import datetime
+from http import HTTPStatus
 
 import waffle
-from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseNotFound, JsonResponse
+from django.http import HttpResponseNotFound
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 from smarter.apps.chat.models import Chat, ChatHelper
 from smarter.apps.chatbot.models import ChatBot, ChatBotHelper, ChatBotPlugin
 from smarter.apps.chatbot.serializers import ChatBotPluginSerializer, ChatBotSerializer
+from smarter.common.exceptions import SmarterExceptionBase
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.request import SmarterRequestHelper
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
+from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
+from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
+from smarter.lib.journal.http import (
+    SmarterJournaledJsonErrorResponse,
+    SmarterJournaledJsonResponse,
+)
 
 
 MAX_RETURNED_PLUGINS = 10
 
 
 logger = logging.getLogger(__name__)
+
+
+class SmarterChatappViewError(SmarterExceptionBase):
+    """Base class for all SmarterChatapp errors."""
+
+    @property
+    def get_readable_name(self):
+        return "Smarter Chatapp error"
 
 
 class SmarterChatSession(SmarterRequestHelper):
@@ -81,7 +98,6 @@ class SmarterChatSession(SmarterRequestHelper):
 
 
 # pylint: disable=R0902
-@method_decorator(login_required, name="dispatch")
 @method_decorator(csrf_exempt, name="dispatch")
 class ChatConfigView(View):
     """
@@ -92,6 +108,11 @@ class ChatConfigView(View):
     example: https://sales.3141-5926-5359.alpha.api.smarter.sh/chatbot/config/
     """
 
+    authentication_classes = (SmarterTokenAuthentication, SessionAuthentication)
+    permission_classes = (IsAuthenticated,)
+
+    thing: SmarterJournalThings = None
+    command: SmarterJournalCliCommands = None
     _sandbox_mode: bool = True
     session: SmarterChatSession = None
     chatbot_helper: ChatBotHelper = None
@@ -102,6 +123,14 @@ class ChatConfigView(View):
         return formatted_text(self.__class__.__name__)
 
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            try:
+                raise SmarterChatappViewError("Authentication failed.")
+            except SmarterChatappViewError as e:
+                return SmarterJournaledJsonErrorResponse(
+                    request=request, thing=self.manifest_kind, command=None, e=e, status=HTTPStatus.FORBIDDEN
+                )
+
         name = kwargs.pop("name", None)
         self._sandbox_mode = name is not None
 
@@ -131,6 +160,8 @@ class ChatConfigView(View):
         if not self.chatbot:
             return HttpResponseNotFound()
 
+        self.thing = SmarterJournalThings(SmarterJournalThings.CHAT_CONFIG)
+        self.command = SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT_CONFIG)
         return super().dispatch(request, *args, **kwargs)
 
     # pylint: disable=unused-argument
@@ -138,25 +169,27 @@ class ChatConfigView(View):
         """
         Get the chatbot configuration.
         """
-        return JsonResponse(data=self.config())
+        data = self.config(request=request)
+        return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 
     # pylint: disable=unused-argument
     def get(self, request, *args, **kwargs):
         """
         Get the chatbot configuration.
         """
-        return JsonResponse(data=self.config())
+        data = self.config(request=request)
+        return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 
     @property
     def sandbox_mode(self):
         return self._sandbox_mode
 
-    def config(self) -> dict:
+    def config(self, request) -> dict:
         """
         React context for all templates that render
         a React app.
         """
-        chatbot_serializer = ChatBotSerializer(self.chatbot) if self.chatbot else None
+        chatbot_serializer = ChatBotSerializer(self.chatbot, context={"request": request}) if self.chatbot else None
 
         # plugins context. the main thing we need here is to constrain the number of plugins
         # returned to some reasonable number, since we'll probaably have cases where
@@ -166,19 +199,21 @@ class ChatConfigView(View):
         chatbot_plugin_serializer = ChatBotPluginSerializer(chatbot_plugins, many=True)
 
         retval = {
-            "session_key": self.session.session_key,
-            "sandbox_mode": self.sandbox_mode,
-            "debug_mode": waffle.switch_is_active("reactapp_debug_mode"),
-            "chatbot": chatbot_serializer.data,
-            "meta_data": self.chatbot_helper.to_json(),
-            "history": self.session.chat_helper.chat_history,
-            "tool_calls": [],
-            "plugins": {
-                "meta_data": {
-                    "total_plugins": chatbot_plugins_count,
-                    "plugins_returned": len(chatbot_plugins),
+            "data": {
+                "session_key": self.session.session_key,
+                "sandbox_mode": self.sandbox_mode,
+                "debug_mode": waffle.switch_is_active("reactapp_debug_mode"),
+                "chatbot": chatbot_serializer.data,
+                "meta_data": self.chatbot_helper.to_json(),
+                "history": self.session.chat_helper.chat_history,
+                "tool_calls": [],
+                "plugins": {
+                    "meta_data": {
+                        "total_plugins": chatbot_plugins_count,
+                        "plugins_returned": len(chatbot_plugins),
+                    },
+                    "plugins": chatbot_plugin_serializer.data,
                 },
-                "plugins": chatbot_plugin_serializer.data,
             },
         }
         return retval

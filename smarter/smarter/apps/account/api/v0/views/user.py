@@ -8,8 +8,8 @@ from django.http import Http404, HttpResponseRedirect, JsonResponse
 from rest_framework import status
 from rest_framework.response import Response
 
-from smarter.apps.account.api.v0.serializers import UserSerializer
 from smarter.apps.account.models import Account, UserProfile
+from smarter.lib.django.serializers import UserSerializer
 from smarter.lib.django.user import User, UserType
 
 from .base import AccountListViewBase, AccountViewBase

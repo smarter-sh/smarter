@@ -9,6 +9,8 @@ from smarter.apps.plugin.manifest.brokers.plugin import SAMPluginBroker
 from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
 from smarter.common.const import PYTHON_ROOT
 
+from .factories import create_generic_request
+
 
 class TestSAM(unittest.TestCase):
     """Test TestSAM"""
@@ -27,11 +29,12 @@ class TestSAM(unittest.TestCase):
             state="TX",
             postal_code="12345",
         )
+        self.request = create_generic_request()
 
     def test_valid_manifest(self):
         """Test valid file path and that we can instantiate with errors"""
 
-        handler = SAMPluginBroker(account=self.account, file_path=self.good_manifest_path)
+        handler = SAMPluginBroker(request=self.request, account=self.account, file_path=self.good_manifest_path)
         manifest = handler.manifest
         self.assertEqual(manifest.kind, MANIFEST_KIND)
         self.assertEqual(manifest.metadata.name, "ExampleConfiguration")

@@ -1,3 +1,6 @@
 """Smarter API PluginData Sql Connection Manifest Constants"""
 
-MANIFEST_KIND = "PluginDataSqlConnection"
+from smarter.lib.journal.enum import SmarterJournalThings
+
+
+MANIFEST_KIND = SmarterJournalThings.SQLCONNECTION.value

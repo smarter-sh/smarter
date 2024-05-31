@@ -7,11 +7,16 @@ import logging
 from http import HTTPStatus
 
 import waffle
-from django.http import JsonResponse
 
 from smarter.apps.chat.models import ChatHelper
 from smarter.apps.chat.providers.smarter import handler
 from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.journal.enum import (
+    SmarterJournalApiResponseKeys,
+    SmarterJournalCliCommands,
+    SmarterJournalThings,
+)
+from smarter.lib.journal.http import SmarterJournaledJsonResponse
 
 from .base import ChatBotApiBaseViewSet
 
@@ -100,7 +105,17 @@ class SmarterChatBotApiView(ChatBotApiBaseViewSet):
             default_temperature=self.chatbot.default_temperature,
             default_max_tokens=self.chatbot.default_max_tokens,
         )
-        response = JsonResponse(data=response, safe=False, status=HTTPStatus.OK)
+        response = {
+            SmarterJournalApiResponseKeys.DATA: response,
+        }
+        response = SmarterJournaledJsonResponse(
+            request=request,
+            data=response,
+            command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+            thing=SmarterJournalThings(SmarterJournalThings.CHATBOT),
+            status=HTTPStatus.OK,
+            safe=False,
+        )
         if waffle.switch_is_active("chatbot_api_view_logging"):
             logger.info("%s response=%s", self.formatted_class_name, response)
         return response
