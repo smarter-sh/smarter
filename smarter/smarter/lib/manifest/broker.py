@@ -1,6 +1,7 @@
 # pylint: disable=W0613
 """Smarter API Manifest Abstract Broker class."""
 
+import logging
 import re
 import typing
 from abc import ABC, abstractmethod
@@ -33,6 +34,8 @@ if typing.TYPE_CHECKING:
 inflect_engine = inflect.engine()
 
 SUPPORTED_API_VERSIONS = [SmarterApiVersions.V1.value]
+
+logger = logging.getLogger(__name__)
 
 
 class SAMBrokerError(SAMExceptionBase):
@@ -277,7 +280,10 @@ class AbstractBroker(ABC):
     def json_response_ok(self, command: SmarterJournalCliCommands, data: dict = None) -> SmarterJournaledJsonResponse:
         """Return a common success response."""
         data = data or {}
-        operated = SmarterJournalCliCommands.past_tense().get(command, command)
+
+        operated = SmarterJournalCliCommands.past_tense().get(str(command), command)
+        logger.info(f"{self.kind} {self.name} {operated} successfully")
+        logger.info("str(command): %s", str(command))
         if command == SmarterJournalCliCommands.GET:
             kind = inflect_engine.plural(self.kind)
             message = f"{kind} {operated} successfully"

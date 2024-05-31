@@ -280,18 +280,12 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
 
     def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
-        raise SAMBrokerErrorNotImplemented(
-            f"Plugin {self.plugin_meta.name} deploy not implemented", thing=self.kind, command=command
-        )
+        raise SAMBrokerErrorNotImplemented("deploy() not implemented", thing=self.kind, command=command)
 
     def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
-        raise SAMBrokerErrorNotImplemented(
-            f"Plugin {self.plugin_meta.name} undeploy not implemented", thing=self.kind, command=command
-        )
+        raise SAMBrokerErrorNotImplemented("undeploy() not implemented", thing=self.kind, command=command)
 
     def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
-        raise SAMBrokerErrorNotImplemented(
-            f"Plugin {self.plugin_meta.name} logs not implemented", thing=self.kind, command=command
-        )
+        raise SAMBrokerErrorNotImplemented("logs() not implemented", thing=self.kind, command=command)

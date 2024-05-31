@@ -16,6 +16,7 @@ from smarter.apps.plugin.manifest.models.sql_connection.model import (
     SAMPluginDataSqlConnection,
 )
 from smarter.common.utils import dict_is_contained_in
+from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.manifest.broker import SAMBrokerErrorNotImplemented
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.unittest.utils import get_readonly_yaml_file
@@ -56,7 +57,9 @@ class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
         content = json.loads(retval.content.decode())
         self.assertIsInstance(content, dict)
         self.assertIn("message", content.keys())
-        self.assertEqual(content["message"], "PluginDataSqlConnection testConnection applied successfully")
+        self.assertEqual(
+            content["message"], f"{SmarterJournalThings.SQLCONNECTION.value} testConnection applied successfully"
+        )
 
     def test_sqlconnection_broker_describe(self):
         """
@@ -105,7 +108,9 @@ class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
         content = json.loads(retval.content.decode())
         self.assertIsInstance(content, dict)
         self.assertIn("message", content.keys())
-        self.assertEqual(content["message"], "PluginDataSqlConnection testConnection deleted successfully")
+        self.assertEqual(
+            content["message"], f"{SmarterJournalThings.SQLCONNECTION.value} testConnection deleted successfully"
+        )
 
     def test_sqlconnection_broker_deploy(self):
         """Test that the Broker does not implement a deploy() method."""

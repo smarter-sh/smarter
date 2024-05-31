@@ -54,18 +54,18 @@ class SmarterJournalThings(SmarterEnumAbstract):
     a SmarterJournalThings value can passed as a strongly typed object.
     """
 
-    PLUGIN = "plugin"
-    ACCOUNT = "account"
+    PLUGIN = "Plugin"
+    ACCOUNT = "Account"
     APIKEY = "apikey"
-    USER = "user"
-    CHAT = "chat"
-    CHAT_CONFIG = "chat_config"
-    CHAT_HISTORY = "chat_history"
-    CHAT_PLUGIN_USAGE = "chat_plugin_usage"
-    CHAT_TOOL_CALL = "chat_tool_call"
-    CHATBOT = "chatbot"
-    SQLCONNECTION = "sqlconnection"
-    APICONNECTION = "apiconnection"
+    USER = "User"
+    CHAT = "Chat"
+    CHAT_CONFIG = "ChatConfig"
+    CHAT_HISTORY = "ChatHistory"
+    CHAT_PLUGIN_USAGE = "ChatPluginUsage"
+    CHAT_TOOL_CALL = "ChatToolCall"
+    CHATBOT = "ChatBot"
+    SQLCONNECTION = "SqlConnection"
+    APICONNECTION = "ApiConnection"
 
     @classmethod
     def choices(cls) -> list[(str, str)]:
@@ -134,18 +134,18 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
     def past_tense(cls) -> dict[str, str]:
         """Return the past tense of the command."""
         return {
-            cls.APPLY: "applied",
-            cls.CHAT: "prompted",
-            cls.CHAT_CONFIG: "fetched chat_config",
-            cls.DELETE: "deleted",
-            cls.DEPLOY: "deployed",
-            cls.DESCRIBE: "described",
-            cls.GET: "got",
-            cls.JOURNAL: "journaled",
-            cls.LOGS: "logged",
-            cls.MANIFEST_EXAMPLE: "fetched example manifested",
-            cls.STATUS: "fetched status",
-            cls.VERSION: "fetched version",
-            cls.UNDEPLOY: "undeployed",
-            cls.WHOAMI: "fetched identity",
+            cls.APPLY.value: "applied",
+            cls.CHAT.value: "prompted",
+            cls.CHAT_CONFIG.value: "fetched chat_config",
+            cls.DELETE.value: "deleted",
+            cls.DEPLOY.value: "deployed",
+            cls.DESCRIBE.value: "described",
+            cls.GET.value: "got",
+            cls.JOURNAL.value: "journaled",
+            cls.LOGS.value: "logged",
+            cls.MANIFEST_EXAMPLE.value: "fetched example manifested",
+            cls.STATUS.value: "fetched status",
+            cls.VERSION.value: "fetched version",
+            cls.UNDEPLOY.value: "undeployed",
+            cls.WHOAMI.value: "fetched identity",
         }
