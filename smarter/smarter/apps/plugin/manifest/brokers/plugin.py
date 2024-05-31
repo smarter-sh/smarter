@@ -165,7 +165,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
                 f"Plugin class {plugin_class} not found", thing=self.kind, command=command
             ) from e
 
-        data = Plugin.manifest(kwargs=kwargs)
+        data = Plugin.example_manifest(kwargs=kwargs)
         return self.json_response_ok(command=command, data=data)
 
     # pylint: disable=W0221
@@ -270,7 +270,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotImplemented(message="chat() not implemented", thing=self.kind, command=command)
 
     def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__

@@ -18,7 +18,14 @@ from smarter.common.exceptions import SmarterExceptionBase
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
-from smarter.lib.manifest.broker import AbstractBroker
+from smarter.lib.manifest.broker import (
+    AbstractBroker,
+    SAMBrokerError,
+    SAMBrokerErrorNotFound,
+    SAMBrokerErrorNotImplemented,
+    SAMBrokerErrorNotReady,
+    SAMBrokerReadOnlyError,
+)
 from smarter.lib.manifest.exceptions import SAMBadRequestError
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -57,6 +64,7 @@ class CliBaseApiView(APIView, AccountMixin):
     _manifest_name: str = None
     _manifest_load_failed: bool = False
     _params: dict[str, any] = None
+    _prompt: str = None
 
     @property
     def loader(self) -> SAMLoader:
@@ -308,6 +316,46 @@ class CliBaseApiView(APIView, AccountMixin):
         # to the child view's post method.
         try:
             return super().dispatch(request, *args, **{**self.params, **kwargs})
+        except SAMBrokerErrorNotImplemented as not_implemented_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=not_implemented_error.get_readable_name,
+                status=HTTPStatus.NOT_IMPLEMENTED,
+            )
+        except SAMBrokerErrorNotReady as not_ready_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=not_ready_error.get_readable_name,
+                status=HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        except SAMBrokerErrorNotFound as not_found_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=not_found_error.get_readable_name,
+                status=HTTPStatus.NOT_FOUND,
+            )
+        except SAMBrokerReadOnlyError as read_only_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=read_only_error.get_readable_name,
+                status=HTTPStatus.METHOD_NOT_ALLOWED,
+            )
+        except SAMBrokerError as broker_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=broker_error.get_readable_name,
+                status=HTTPStatus.BAD_REQUEST,
+            )
         # pylint: disable=broad-except
         except Exception as e:
             return SmarterJournaledJsonErrorResponse(
