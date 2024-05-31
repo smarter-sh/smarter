@@ -40,8 +40,9 @@ export async function fetchConfig() {
     const response = await fetch(configURL, init);
     const response_json = await response.json();    // Convert the ReadableStream to a JSON object
 
+    console.log('fetchConfig() - response_json: ', response_json);
     if (response.ok) {
-      return response_json;
+      return response_json.data;
     } else {
       console.error("getConfig() error", response);
     }

@@ -21,4 +21,4 @@ keywords:
   - smarter
   - plugins
 annotations:
-  "helm.sh/chart": "smarter-0.1.0"
+  "helm.sh/chart": "smarter-0.2.0"

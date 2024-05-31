@@ -14,7 +14,7 @@ from smarter.apps.plugin.manifest.models.sql_connection.model import (
     SAMPluginDataSqlConnection,
 )
 from smarter.apps.plugin.models import PluginDataSqlConnection
-from smarter.lib.manifest.enum import SAMApiVersions
+from smarter.common.api import SmarterApiVersions
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.unittest.utils import get_readonly_yaml_file
 
@@ -105,5 +105,5 @@ class TestPluginDataSql(unittest.TestCase):
 
     def test_plugin_loader(self):
         """Test that the Loader can load the manifest."""
-        self.assertEqual(self.plugin_loader.manifest_api_version, SAMApiVersions.V1.value)
+        self.assertEqual(self.plugin_loader.manifest_api_version, SmarterApiVersions.V1.value)
         self.assertEqual(self.plugin_loader.manifest_kind, MANIFEST_KIND)
