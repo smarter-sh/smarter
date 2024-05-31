@@ -10,8 +10,10 @@ from django.http import JsonResponse
 from django_redis import get_redis_connection
 
 from smarter.common.helpers.aws_helpers import aws_helper
+from smarter.lib.journal.enum import SmarterJournalCliCommands
+from smarter.lib.journal.http import SmarterJournaledJsonResponse
 
-from .base import CliBaseApiView
+from ..base import CliBaseApiView
 
 
 class ApiV1CliStatusApiView(CliBaseApiView):
@@ -60,7 +62,12 @@ class ApiV1CliStatusApiView(CliBaseApiView):
                     "version": platform.version(),
                 },
             }
-            return JsonResponse(data=data, status=HTTPStatus.OK)
+            return SmarterJournaledJsonResponse(
+                self.request,
+                command=SmarterJournalCliCommands(SmarterJournalCliCommands.STATUS),
+                data=data,
+                status=HTTPStatus.OK,
+            )
         # pylint: disable=W0718
         except Exception as e:
             return JsonResponse(data={"error": str(e)}, status=HTTPStatus.BAD_REQUEST)

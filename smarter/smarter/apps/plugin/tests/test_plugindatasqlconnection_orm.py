@@ -8,14 +8,11 @@ from django.db.backends.base.base import BaseDatabaseWrapper
 
 from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
 from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
-from smarter.apps.plugin.manifest.models.sql_connection.const import (
-    MANIFEST_KIND as SQL_CONNECTION_KIND,
-)
 from smarter.apps.plugin.manifest.models.sql_connection.model import (
     SAMPluginDataSqlConnection,
 )
 from smarter.apps.plugin.models import PluginDataSqlConnection, PluginMeta
-from smarter.lib.manifest.enum import SAMApiVersions
+from smarter.common.api import SmarterApiVersions
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.unittest.utils import get_readonly_yaml_file
 
@@ -70,16 +67,16 @@ class TestPluginDataSqlConnection(unittest.TestCase):
 
     def test_manifest(self):
         """Test that the Loader can load the manifest."""
-        self.assertEqual(self.loader.manifest_api_version, SAMApiVersions.V1.value)
-        self.assertEqual(self.loader.manifest_kind, SQL_CONNECTION_KIND)
+        self.assertEqual(self.loader.manifest_api_version, SmarterApiVersions.V1.value)
+        self.assertEqual(self.loader.manifest_kind, "PluginDataSqlConnection")
         self.assertIsNotNone(self.loader.manifest_metadata)
         self.assertIsNotNone(self.loader.manifest_spec)
 
     def test_model(self):
         """Test that the Pydantic model populates from the manifest."""
         self.assertIsNotNone(self.model)
-        self.assertEqual(self.model.apiVersion, SAMApiVersions.V1.value)
-        self.assertEqual(self.model.kind, SQL_CONNECTION_KIND)
+        self.assertEqual(self.model.apiVersion, SmarterApiVersions.V1.value)
+        self.assertEqual(self.model.kind, "PluginDataSqlConnection")
         self.assertIsNotNone(self.model.metadata)
         self.assertIsNotNone(self.model.spec)
 

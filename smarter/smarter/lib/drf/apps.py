@@ -3,7 +3,7 @@
 from django.apps import AppConfig
 
 
-class PluginConfig(AppConfig):
+class DrfConfig(AppConfig):
     """Django rest framework lib app configuration."""
 
     default_auto_field = "django.db.models.BigAutoField"

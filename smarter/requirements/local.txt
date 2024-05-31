@@ -12,7 +12,7 @@
 
 # tests
 # ------------
-pytest==8.2.0
+pytest==8.2.1
 pytest_mock==3.14.0
 
 
@@ -22,10 +22,10 @@ watchdog==4.0.0
 black==24.4.0
 flake8==7.0.0
 flake8-coding==1.3.2
-pre-commit==3.7.0
+pre-commit==3.7.1
 isort==5.13.2
 mypy==1.10.0
-pylint==3.1.0
+pylint==3.2.2
 pylint-django==2.5.5
 bandit==1.7.7
 pydocstringformatter==0.7.3

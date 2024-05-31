@@ -1,3 +1,6 @@
 """Smarter API Chatbot Manifest Constants"""
 
-MANIFEST_KIND = "Chatbot"
+from smarter.lib.journal.enum import SmarterJournalThings
+
+
+MANIFEST_KIND = SmarterJournalThings.CHATBOT.value

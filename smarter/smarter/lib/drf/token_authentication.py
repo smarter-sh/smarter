@@ -6,10 +6,20 @@ from django.utils import timezone
 from knox.auth import TokenAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
+from smarter.common.exceptions import SmarterExceptionBase
+
 from .models import SmarterAuthToken
 
 
 logger = logging.getLogger(__name__)
+
+
+class SmarterTokenAuthenticationError(SmarterExceptionBase):
+    """Base class for all SmarterTokenAuthentication errors."""
+
+    @property
+    def get_readable_name(self):
+        return "Smarter Token Authentication error"
 
 
 class SmarterTokenAuthentication(TokenAuthentication):
