@@ -31,6 +31,7 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin):
 
     authorization_header = None
 
+    # pylint: disable=unused-argument
     def is_token_auth(self, request) -> bool:
         """Check if the request is for knox token authentication."""
         auth = self.authorization_header.split()
