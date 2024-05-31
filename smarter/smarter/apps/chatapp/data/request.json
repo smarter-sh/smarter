@@ -1,0 +1,37 @@
+{
+  "method": "POST",
+  "credentials": "include",
+  "mode": "cors",
+  "headers": {
+    "Accept": "*/*",
+    "Content-Type": "application/json",
+    "X-CSRFToken": "XocDy1ORmrK4p1ipMAIpRIf8c1jRHYQ9",
+    "Origin": "http://localhost:8000",
+    "Cookie": "sessionid=null"
+  },
+  "body": {
+    "session_key": "92eb8b44cb9378093b861f8e4d5de6a6f34db55f9e3574cce712fecd53983807",
+    "messages": [
+      {
+        "role": "user",
+        "content": "hello"
+      },
+      {
+        "role": "assistant",
+        "content": "Hello! How can I assist you today?"
+      },
+      {
+        "role": "user",
+        "content": "i might be moving to montana soon."
+      },
+      {
+        "role": "assistant",
+        "content": "That's exciting! Montana is a beautiful state with a lot to offer. Is there anything specific you would like to know or discuss about moving to Montana?"
+      },
+      {
+        "role": "user",
+        "content": "is it hot there?"
+      }
+    ]
+  }
+}

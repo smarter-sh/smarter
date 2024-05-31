@@ -61,7 +61,6 @@ export async function processApiRequest(
   };
   if (props.config.debug_mode) {
     console.log("processApiRequest() - apiURL:", apiURL);
-    console.log("processApiRequest() - body:", body);
     console.log("processApiRequest() - init:", init);
     console.log("processApiRequest() - props:", props);
   }
@@ -72,8 +71,10 @@ export async function processApiRequest(
     const response_json = await response.json(); // Convert the ReadableStream to a JSON object
     const response_body = await response_json.body; // ditto
 
-    console.log("processApiRequest(): response status: ", status);
-    console.log("processApiRequest(): response: ", response_json);
+    if (props.config.debug_mode) {
+      console.log("processApiRequest(): response status: ", status);
+      console.log("processApiRequest(): response: ", response_json);
+    }
 
     if (response.ok) {
       return JSON.parse(response_body);
