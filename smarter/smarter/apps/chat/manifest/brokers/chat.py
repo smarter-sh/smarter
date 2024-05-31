@@ -11,6 +11,7 @@ from smarter.apps.chat.manifest.models.chat.const import MANIFEST_KIND
 from smarter.apps.chat.manifest.models.chat.model import SAMChat
 from smarter.apps.chat.models import Chat
 from smarter.common.api import SmarterApiVersions
+from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
     AbstractBroker,
@@ -192,6 +193,7 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
+        command = SmarterJournalCliCommands(command)
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -206,6 +208,7 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
 
     def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
+        command = SmarterJournalCliCommands(command)
         # session_key: str = kwargs.get("session_key", None)
         data = []
         chats = Chat.objects.filter(account=self.account)
@@ -238,10 +241,12 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
         Chat is a read-only django table, populated by the LLM handlers
         """
         command = self.apply.__name__
+        command = SmarterJournalCliCommands(command)
         raise SAMBrokerReadOnlyError(message="Chat is a read-only resource", thing=self.kind, command=command)
 
     def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
+        command = SmarterJournalCliCommands(command)
         prompt: str = kwargs.get("prompt", None)
         print(f"Chat prompt: {prompt}")
         data = {"response": "Hello, I am a chatbot!", "prompt": prompt, "chat_id": "1234567890"}
@@ -249,6 +254,7 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
 
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
+        command = SmarterJournalCliCommands(command)
         if self.chat_object:
             try:
                 data = self.django_orm_to_manifest_dict()
@@ -259,6 +265,7 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
 
     def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
+        command = SmarterJournalCliCommands(command)
         if self.chat_object:
             try:
                 self.chat_object.delete()
@@ -269,14 +276,17 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
 
     def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
+        command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Deploy not implemented", thing=self.kind, command=command)
 
     def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
+        command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Undeploy not implemented", thing=self.kind, command=command)
 
     def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
+        command = SmarterJournalCliCommands(command)
         if self.chat_object:
             data = {}
             return self.json_response_ok(command=command, data=data)

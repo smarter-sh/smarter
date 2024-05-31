@@ -13,6 +13,7 @@ from smarter.apps.account.manifest.models.account.model import SAMAccount
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account
 from smarter.common.api import SmarterApiVersions
+from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
     AbstractBroker,
@@ -186,6 +187,7 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
 
     def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
+        command = SmarterJournalCliCommands(command)
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -216,6 +218,7 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
     def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         # name: str = None, all_objects: bool = False, tags: str = None
         command = self.get.__name__
+        command = SmarterJournalCliCommands(command)
         data = []
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
@@ -258,6 +261,7 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
         """
         super().apply(request, kwargs)
         command = self.apply.__name__
+        command = SmarterJournalCliCommands(command)
         readonly_fields = ["id", "created_at", "updated_at", "account_number"]
         try:
             data = self.manifest_to_django_orm()
@@ -272,10 +276,12 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
 
     def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
+        command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = command = self.deploy.__name__
+        command = SmarterJournalCliCommands(command)
         if self.account:
             try:
                 data = self.django_orm_to_manifest_dict()
@@ -286,17 +292,21 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
 
     def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
+        command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Delete not implemented", thing=self.kind, command=command)
 
     def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
+        command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Deploy not implemented", thing=self.kind, command=command)
 
     def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
+        command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="Undeploy not implemented", thing=self.kind, command=command)
 
     def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
+        command = SmarterJournalCliCommands(command)
         data = {}
         return self.json_response_ok(command=command, data=data)

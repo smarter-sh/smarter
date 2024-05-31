@@ -282,8 +282,7 @@ class AbstractBroker(ABC):
         data = data or {}
 
         operated = SmarterJournalCliCommands.past_tense().get(str(command), command)
-        logger.info(f"{self.kind} {self.name} {operated} successfully")
-        logger.info("str(command): %s", str(command))
+
         if command == SmarterJournalCliCommands.GET:
             kind = inflect_engine.plural(self.kind)
             message = f"{kind} {operated} successfully"

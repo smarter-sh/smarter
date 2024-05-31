@@ -648,6 +648,8 @@ class ChatBotHelper:
             return self._account_number
 
         def from_url(url: str) -> str:
+            if not url:
+                return None
             pattern = r"\d{4}-\d{4}-\d{4}"
             match = re.search(pattern, url)
             retval = match.group(0) if match else None

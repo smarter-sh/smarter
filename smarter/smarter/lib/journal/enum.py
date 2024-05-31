@@ -63,7 +63,7 @@ class SmarterJournalThings(SmarterEnumAbstract):
     CHAT_HISTORY = "ChatHistory"
     CHAT_PLUGIN_USAGE = "ChatPluginUsage"
     CHAT_TOOL_CALL = "ChatToolCall"
-    CHATBOT = "ChatBot"
+    CHATBOT = "Chatbot"
     SQLCONNECTION = "SqlConnection"
     APICONNECTION = "ApiConnection"
 
@@ -143,7 +143,7 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
             cls.GET.value: "got",
             cls.JOURNAL.value: "journaled",
             cls.LOGS.value: "logged",
-            cls.MANIFEST_EXAMPLE.value: "fetched example manifested",
+            cls.MANIFEST_EXAMPLE.value: "fetched example manifest",
             cls.STATUS.value: "fetched status",
             cls.VERSION.value: "fetched version",
             cls.UNDEPLOY.value: "undeployed",
