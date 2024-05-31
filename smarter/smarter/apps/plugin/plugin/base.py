@@ -24,7 +24,6 @@ from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 
-from ..manifest.enum import SAMPluginSpecPromptKeys, SAMPluginSpecSelectorKeys
 from ..manifest.models.plugin.const import MANIFEST_KIND
 from ..manifest.models.plugin.model import SAMPlugin
 from ..models import PluginDataBase, PluginMeta, PluginPrompt, PluginSelector
