@@ -1,0 +1,55 @@
+{
+  "model": "gpt-3.5-turbo",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_current_weather",
+        "parameters": {
+          "type": "object",
+          "required": [
+            "location"
+          ],
+          "properties": {
+            "unit": {
+              "enum": [
+                "METRIC",
+                "USCS"
+              ],
+              "type": "string"
+            },
+            "location": {
+              "type": "string",
+              "description": "The city and state, e.g. San Francisco, CA"
+            }
+          }
+        },
+        "description": "Get the current weather in a given location"
+      }
+    }
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content": "hello"
+    },
+    {
+      "role": "assistant",
+      "content": "Hello! How can I assist you today?"
+    },
+    {
+      "role": "user",
+      "content": "i might be moving to montana soon."
+    },
+    {
+      "role": "assistant",
+      "content": "That's exciting! Montana is a beautiful state with a lot to offer. Is there anything specific you would like to know or discuss about moving to Montana?"
+    },
+    {
+      "role": "user",
+      "content": "is it hot there?"
+    }
+  ],
+  "max_tokens": 256,
+  "temperature": 0.5
+}
