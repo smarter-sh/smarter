@@ -6,10 +6,9 @@ from typing import List, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from smarter.common.api import SmarterApiVersions
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
-
-from .enum import SAMApiVersions
 
 
 class SmarterBaseModel(BaseModel):
@@ -120,8 +119,8 @@ class AbstractSAMBase(SmarterBaseModel, abc.ABC):
         """Validate apiVersion"""
         if v in [None, ""]:
             raise SAMValidationError("Missing required manifest key: apiVersion")
-        if v not in SAMApiVersions.all_values():
-            raise SAMValidationError(f"Invalid version. Must be one of {SAMApiVersions.all_values()} but got {v}")
+        if v not in SmarterApiVersions.all_values():
+            raise SAMValidationError(f"Invalid version. Must be one of {SmarterApiVersions.all_values()} but got {v}")
         return v
 
     @field_validator("metadata")

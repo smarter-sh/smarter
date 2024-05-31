@@ -1,0 +1,98 @@
+{
+  "api": "smarter.sh/v1",
+  "data": {
+      "chatbot": {
+          "account": {
+              "account_number": "3141-5926-5359"
+          },
+          "app_assistant": "Kent",
+          "app_background_image_url": null,
+          "app_example_prompts": [
+              "What is the weather in San Francisco?",
+              "What is an Everlasting Gobstopper?",
+              "example function calling configuration"
+          ],
+          "app_file_attachment": false,
+          "app_info_url": "https://smarter.sh",
+          "app_logo_url": "/static/querium/querium-logo-white-transparent.png",
+          "app_name": "Smarter Demo",
+          "app_placeholder": "Ask me anything...",
+          "app_welcome_message": "Welcome to the Smarter demo!",
+          "custom_domain": null,
+          "default_max_tokens": 256,
+          "default_model": "gpt-3.5-turbo",
+          "default_temperature": 0.5,
+          "deployed": true,
+          "description": null,
+          "dns_verification_status": "Verified",
+          "id": 1,
+          "name": "example",
+          "subdomain": null,
+          "url_chatbot": "http://example.3141-5926-5359.api.localhost:8000/api/v1/chatbot/smarter/",
+          "version": null
+      },
+      "debug_mode": true,
+      "history": [],
+      "meta_data": {
+          "account": "3141-5926-5359",
+          "account_number": "3141-5926-5359",
+          "api_host": "/api/v1/cli/chat/config/example/",
+          "api_subdomain": "localhost:8000",
+          "chatbot": "example",
+          "customer_api_domain": "api.localhost:8000",
+          "domain": "localhost:8000",
+          "environment": "local",
+          "is_authentication_required": false,
+          "is_custom_domain": false,
+          "is_default_domain": false,
+          "is_deployed": true,
+          "is_sandbox_domain": true,
+          "is_valid": true,
+          "path": "/api/v1/cli/chat/config/example/",
+          "root_domain": "localhost:8000",
+          "subdomain": "",
+          "url": "http://localhost:8000/api/v1/cli/chat/config/example/?new_session=false\u0026uid=Lawrences-Mac-Studio.local-c6%253A6b%253A2e%253A7a%253A3d%253A6c/",
+          "user": "admin"
+      },
+      "plugins": {
+          "meta_data": {
+              "plugins_returned": 1,
+              "total_plugins": 1
+          },
+          "plugins": [
+              {
+                  "chatbot": 1,
+                  "created_at": "2024-05-23T00:53:52.984475Z",
+                  "id": 2,
+                  "plugin_meta": {
+                      "account": {
+                          "account_number": "3141-5926-5359"
+                      },
+                      "author": {
+                          "account": {
+                              "account_number": "3141-5926-5359"
+                          },
+                          "user": {
+                              "email": "admin@smarter.sh",
+                              "username": "admin"
+                          }
+                      },
+                      "description": "A 'hello world' style plugin. This is an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.",
+                      "name": "ExampleConfiguration",
+                      "pluginClass": "static",
+                      "tags": [],
+                      "version": "0.2.0"
+                  },
+                  "updated_at": "2024-05-23T00:53:52.984488Z"
+              }
+          ]
+      },
+      "sandbox_mode": true,
+      "session_key": "fa99362d36a6b30daf1a7da2a181e8f90825f96dbbf684cc6937ddd4d82f07ba",
+      "tool_calls": []
+  },
+  "metadata": {
+      "command": "chat_config"
+  },
+  "thing": "chat_config"
+}

@@ -13,9 +13,10 @@ from smarter.apps.plugin.manifest.enum import (
 )
 from smarter.apps.plugin.models import PluginDataSql, PluginDataSqlConnection
 from smarter.apps.plugin.serializers import PluginDataSqlSerializer
+from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterConfigurationError
-from smarter.lib.manifest.enum import SAMApiVersions, SAMKeys, SAMMetadataKeys
+from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
 from ..manifest.models.plugin.const import MANIFEST_KIND
 from ..models import PluginDataSql
@@ -127,7 +128,7 @@ class PluginSql(PluginBase):
     @classmethod
     def example_manifest(cls, kwargs: dict = None) -> dict:
         return {
-            SAMKeys.APIVERSION.value: SAMApiVersions.V1.value,
+            SAMKeys.APIVERSION.value: SmarterApiVersions.V1.value,
             SAMKeys.KIND.value: MANIFEST_KIND,
             SAMKeys.METADATA.value: {
                 SAMMetadataKeys.name: "SqlExample",
