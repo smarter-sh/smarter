@@ -3,24 +3,7 @@
 from rest_framework import serializers
 
 from smarter.apps.account.models import Account, PaymentMethod, UserProfile
-from smarter.lib.django.user import User
-
-
-class UserSerializer(serializers.ModelSerializer):
-    """User serializer for smarter api."""
-
-    # pylint: disable=missing-class-docstring
-    class Meta:
-        model = User
-        fields = [
-            "id",
-            "username",
-            "first_name",
-            "last_name",
-            "email",
-            "is_staff",
-            "is_superuser",
-        ]  # add more fields if needed
+from smarter.lib.django.serializers import UserSerializer
 
 
 class AccountSerializer(serializers.ModelSerializer):

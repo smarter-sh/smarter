@@ -18,15 +18,17 @@ class TestAccount(unittest.TestCase):
         """Set up test fixtures."""
         username = "testuser_" + os.urandom(4).hex()
         self.user = User.objects.create(username=username, password="12345")
+        self.company_name = "Test Company"
 
     def tearDown(self):
         """Clean up test fixtures."""
         self.user.delete()
+        Account.objects.filter(company_name=self.company_name).delete()
 
     def test_create(self):
         """Test that we can create an account."""
         account = Account.objects.create(
-            company_name="Test Company",
+            company_name=self.company_name,
             phone_number="1234567890",
             address1="123 Test St",
             address2="Apt 1",
@@ -40,7 +42,7 @@ class TestAccount(unittest.TestCase):
     def test_update(self):
         """Test that we can update an account."""
         account = Account.objects.create(
-            company_name="Test Company",
+            company_name=self.company_name,
             phone_number="1234567890",
             address1="123 Test St",
             address2="Apt 1",
@@ -63,7 +65,7 @@ class TestAccount(unittest.TestCase):
     def test_account_with_profile(self):
         """Test that we can create an account and associate a user_profile."""
         account = Account.objects.create(
-            company_name="Test Company",
+            company_name=self.company_name,
             phone_number="1234567890",
             address1="123 Test St",
             address2="Apt 1",

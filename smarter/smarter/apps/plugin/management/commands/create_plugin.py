@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 from smarter.apps.account.models import Account
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
-from smarter.lib.manifest.enum import SAMApiVersions
+from smarter.common.api import SmarterApiVersions
 from smarter.lib.manifest.loader import SAMLoader
 
 
@@ -30,7 +30,7 @@ class Command(BaseCommand):
 
         account = Account.objects.get(account_number=account_number)
         loader = SAMLoader(
-            api_version=SAMApiVersions.V1.value,
+            api_version=SmarterApiVersions.V1.value,
             file_path=file_path,
         )
         manifest = SAMPlugin(**loader.pydantic_model_dump())

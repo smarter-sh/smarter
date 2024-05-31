@@ -2,7 +2,7 @@
 """Smarter API ChatToolCall Manifest handler"""
 
 from django.forms.models import model_to_dict
-from django.http import HttpRequest, JsonResponse
+from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.mixins import AccountMixin
@@ -10,23 +10,34 @@ from smarter.apps.account.models import Account
 from smarter.apps.chat.manifest.models.chat_tool_call.const import MANIFEST_KIND
 from smarter.apps.chat.manifest.models.chat_tool_call.model import SAMChatToolCall
 from smarter.apps.chat.models import Chat, ChatToolCall
-from smarter.lib.manifest.broker import AbstractBroker
+from smarter.common.api import SmarterApiVersions
+from smarter.lib.journal.enum import SmarterJournalCliCommands
+from smarter.lib.journal.http import SmarterJournaledJsonResponse
+from smarter.lib.manifest.broker import (
+    AbstractBroker,
+    SAMBrokerError,
+    SAMBrokerErrorNotImplemented,
+    SAMBrokerErrorNotReady,
+    SAMBrokerReadOnlyError,
+)
 from smarter.lib.manifest.enum import (
-    SAMApiVersions,
     SAMKeys,
     SAMMetadataKeys,
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.manifest.exceptions import SAMExceptionBase
 from smarter.lib.manifest.loader import SAMLoader
 
 
 MAX_RESULTS = 1000
 
 
-class SAMChatToolCallBrokerError(SAMExceptionBase):
+class SAMChatToolCallBrokerError(SAMBrokerError):
     """Base exception for Smarter API ChatToolCall Broker handling."""
+
+    @property
+    def get_readable_name(self):
+        return "Smarter API ChatToolCall Manifest Broker Error"
 
 
 class ChatToolCallSerializer(ModelSerializer):
@@ -59,8 +70,9 @@ class SAMChatToolCallBroker(AbstractBroker, AccountMixin):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
+        request: HttpRequest,
         account: Account,
-        api_version: str = SAMApiVersions.V1.value,
+        api_version: str = SmarterApiVersions.V1.value,
         name: str = None,
         kind: str = None,
         loader: SAMLoader = None,
@@ -77,6 +89,7 @@ class SAMChatToolCallBroker(AbstractBroker, AccountMixin):
         the required top-level keys.
         """
         super().__init__(
+            request=request,
             api_version=api_version,
             account=account,
             name=name,
@@ -180,7 +193,9 @@ class SAMChatToolCallBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def example_manifest(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
+    def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        command = self.example_manifest.__name__
+        command = SmarterJournalCliCommands(command)
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -191,10 +206,11 @@ class SAMChatToolCallBroker(AbstractBroker, AccountMixin):
             },
             SAMKeys.SPEC.value: None,
         }
-        return self.json_response_ok(operation=self.example_manifest.__name__, data=data)
+        return self.json_response_ok(command=command, data=data)
 
-    def get(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
-
+    def get(self, request: HttpRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
+        command = self.get.__name__
+        command = SmarterJournalCliCommands(command)
         self._session_key: str = kwargs.get("session_id", None)
         data = []
         if self.session_key:
@@ -210,10 +226,14 @@ class SAMChatToolCallBroker(AbstractBroker, AccountMixin):
             try:
                 model_dump = ChatToolCallSerializer(tool_call).data
                 if not model_dump:
-                    raise SAMChatToolCallBrokerError(f"Model dump failed for {self.kind} {tool_call.id}")
+                    raise SAMChatToolCallBrokerError(
+                        f"Model dump failed for {self.kind} {tool_call.id}", thing=self.kind, command=command
+                    )
                 data.append(model_dump)
             except Exception as e:
-                return self.json_response_err(self.get.__name__, e)
+                raise SAMChatToolCallBrokerError(
+                    f"Model dump failed for {self.kind} {tool_call.id}", thing=self.kind, command=command
+                ) from e
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -224,36 +244,59 @@ class SAMChatToolCallBroker(AbstractBroker, AccountMixin):
                 SCLIResponseGetData.ITEMS.value: data,
             },
         }
-        return self.json_response_ok(operation=self.get.__name__, data=data)
+        return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
+    def apply(self, request: HttpRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
         """
         Chat is a read-only django table, populated by the LLM handlers
         """
-        return self.json_response_err_readonly()
+        command = self.apply.__name__
+        command = SmarterJournalCliCommands(command)
+        raise SAMBrokerReadOnlyError("Chat is a read-only table", thing=self.kind, command=command)
 
-    def describe(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
+    def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        command = self.chat.__name__
+        command = SmarterJournalCliCommands(command)
+        raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
+
+    def describe(self, request: HttpRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
+        command = self.describe.__name__
+        command = SmarterJournalCliCommands(command)
         self._session_key: str = kwargs.get("session_id", None)
         if self.chat_tool_call:
             try:
                 data = self.django_orm_to_manifest_dict()
-                return self.json_response_ok(operation=self.describe.__name__, data=data)
+                return self.json_response_ok(command=command, data=data)
             except Exception as e:
                 return self.json_response_err(self.describe.__name__, e)
-        return self.json_response_err_notready()
+        raise SAMBrokerErrorNotReady(
+            f"ChatToolCall not found for session_key {self.session_key}", thing=self.kind, command=command
+        )
 
-    def delete(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
-        return self.json_response_err_readonly()
+    def delete(self, request: HttpRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
+        command = self.delete.__name__
+        command = SmarterJournalCliCommands(command)
+        raise SAMBrokerReadOnlyError("Chat is a read-only table", thing=self.kind, command=command)
 
-    def deploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
-        return self.json_response_err_notimplemented()
+    def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        command = self.deploy.__name__
+        command = SmarterJournalCliCommands(command)
+        raise SAMBrokerErrorNotImplemented(f"Deploy not implemented for {self.kind}", thing=self.kind, command=command)
 
-    def undeploy(self, request: HttpRequest, kwargs: dict) -> JsonResponse:
-        return self.json_response_err_notimplemented()
+    def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        command = self.undeploy.__name__
+        command = SmarterJournalCliCommands(command)
+        raise SAMBrokerErrorNotImplemented(
+            f"Undeploy not implemented for {self.kind}", thing=self.kind, command=command
+        )
 
-    def logs(self, request: HttpRequest, kwargs: dict = None) -> JsonResponse:
+    def logs(self, request: HttpRequest, kwargs: dict = None) -> SmarterJournaledJsonResponse:
+        command = self.logs.__name__
+        command = SmarterJournalCliCommands(command)
         self._session_key: str = kwargs.get("session_id", None)
         if self.chat_tool_call:
             data = {}
-            return self.json_response_ok(operation=self.logs.__name__, data=data)
-        return self.json_response_err_notready()
+            return self.json_response_ok(command=command, data=data)
+        raise SAMBrokerErrorNotReady(
+            f"ChatToolCall not found for session_key {self.session_key}", thing=self.kind, command=command
+        )

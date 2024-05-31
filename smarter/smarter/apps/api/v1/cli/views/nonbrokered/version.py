@@ -16,8 +16,10 @@ from rest_framework import __version__ as rest_framework_version
 
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.aws_helpers import aws_helper
+from smarter.lib.journal.enum import SmarterJournalCliCommands
+from smarter.lib.journal.http import SmarterJournaledJsonResponse
 
-from .base import CliBaseApiView
+from ..base import CliBaseApiView
 
 
 class ApiV1CliVersionApiView(CliBaseApiView):
@@ -41,7 +43,12 @@ class ApiV1CliVersionApiView(CliBaseApiView):
                 },
             }
 
-            return JsonResponse(data=data, status=HTTPStatus.OK)
+            return SmarterJournaledJsonResponse(
+                request=self.request,
+                command=SmarterJournalCliCommands(SmarterJournalCliCommands.VERSION),
+                data=data,
+                status=HTTPStatus.OK,
+            )
         # pylint: disable=W0718
         except Exception as e:
             return JsonResponse(data={"error": str(e)}, status=HTTPStatus.BAD_REQUEST)

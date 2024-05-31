@@ -1,3 +1,6 @@
 """Smarter API Chat Manifest Constants"""
 
-MANIFEST_KIND = "ChatHistory"
+from smarter.lib.journal.enum import SmarterJournalThings
+
+
+MANIFEST_KIND = SmarterJournalThings.CHAT_HISTORY.value

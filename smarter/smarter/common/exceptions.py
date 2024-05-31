@@ -2,7 +2,6 @@
 
 import logging
 import re
-import traceback
 
 
 logger = logging.getLogger(__name__)
@@ -42,23 +41,3 @@ class SmarterIlligalInvocationError(SmarterExceptionBase):
 
 class SmarterBusinessRuleViolation(SmarterExceptionBase):
     """Exception raised when policies are violated."""
-
-
-def error_response_factory(e: Exception) -> dict:
-    """Create a standard error response."""
-    if isinstance(e, SmarterExceptionBase):
-        error_class = "SmarterExceptionBase"
-    else:
-        error_class = "Exception"
-
-    retval = {
-        "errorClass": error_class,
-        "stacktrace": traceback.format_exc(),
-        "description": e.args[0] if e.args else "",  # get the error message from args
-        "status": e.status if hasattr(e, "status") else "",  # check if status attribute exists
-        "args": e.args,
-        "cause": str(e.__cause__),
-        "context": str(e.__context__),
-    }
-    logger.error(retval)
-    return retval
