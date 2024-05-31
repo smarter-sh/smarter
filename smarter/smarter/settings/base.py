@@ -93,6 +93,7 @@ INSTALLED_APPS = [
     # smarter apps
     # -------------------------------
     "smarter.lib.drf",
+    "smarter.lib.journal",
     "smarter.apps.account",
     "smarter.apps.plugin",
     "smarter.apps.chat",
@@ -121,6 +122,7 @@ MIDDLEWARE = [
     "smarter.lib.django.middleware.BlockSensitiveFilesMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware",
     "django.middleware.common.CommonMiddleware",
     # this replaces django.middleware.csrf.CsrfViewMiddleware
     # to add chatbot-specific CSRF handling

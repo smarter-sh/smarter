@@ -6,19 +6,26 @@ from http import HTTPStatus
 from typing import Type
 
 import yaml
-from django.http import JsonResponse, QueryDict
-from rest_framework.exceptions import AuthenticationFailed
+from django.http import QueryDict
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.utils import user_profile_for_user
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
-from smarter.common.exceptions import SmarterExceptionBase, error_response_factory
+from smarter.common.exceptions import SmarterExceptionBase
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
-from smarter.lib.manifest.broker import AbstractBroker
+from smarter.lib.journal.enum import SmarterJournalCliCommands
+from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
+from smarter.lib.manifest.broker import (
+    AbstractBroker,
+    SAMBrokerError,
+    SAMBrokerErrorNotFound,
+    SAMBrokerErrorNotImplemented,
+    SAMBrokerErrorNotReady,
+    SAMBrokerReadOnlyError,
+)
 from smarter.lib.manifest.exceptions import SAMBadRequestError
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -49,13 +56,15 @@ class CliBaseApiView(APIView, AccountMixin):
     authentication_classes = (SmarterTokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
-    _loader: SAMLoader = None
+    _BrokerClass: Type[AbstractBroker] = None
     _broker: AbstractBroker = None
+    _loader: SAMLoader = None
     _manifest_data: json = None
     _manifest_kind: str = None
     _manifest_name: str = None
     _manifest_load_failed: bool = False
-    _BrokerClass: Type[AbstractBroker] = None
+    _params: dict[str, any] = None
+    _prompt: str = None
 
     @property
     def loader(self) -> SAMLoader:
@@ -82,6 +91,18 @@ class CliBaseApiView(APIView, AccountMixin):
         return self._loader
 
     @property
+    def params(self) -> dict[str, any]:
+        """
+        The query string parameters from the Django request object. This extracts
+        the query string parameters from the request object and converts them to a
+        dictionary. This is used in child views to pass optional command-line
+        parameters to the broker.
+        """
+        if not self._params:
+            self._params = QueryDict(self.request.META.get("QUERY_STRING", "")) or {}
+        return self._params
+
+    @property
     def BrokerClass(self) -> Type[AbstractBroker]:
         """
         Get the broker class for the manifest kind. This is used to
@@ -105,6 +126,7 @@ class CliBaseApiView(APIView, AccountMixin):
         if self.BrokerClass and not self._broker:
             BrokerClass = self.BrokerClass
             self._broker = BrokerClass(
+                request=self.request,
                 api_version=SMARTER_API_VERSION,
                 name=self.manifest_name,
                 kind=self.manifest_kind,
@@ -119,10 +141,24 @@ class CliBaseApiView(APIView, AccountMixin):
 
     @property
     def manifest_data(self) -> json:
+        """
+        The raw manifest data from the request body. The manifest data is a json object
+        which needs to be rendered into a Pydantic model. The Pydantic model is then
+        used to instantiate a broker for the manifest kind.
+        """
         return self._manifest_data
 
     @property
     def manifest_name(self) -> str:
+        """
+        The name of the manifest. The manifest name is used to identify the resource
+        within a Kind. For example, the manifest name for a ChatBot resource is the
+        name of the chatbot. The manifest name is used to identify the resource
+        within a Kind. The name can be passed from inside the raw manifest data, or
+        it can be passed as part of a url path.
+
+        Example url path with a name: /api/v1/cli/describe/chatbot/<str:name>/
+        """
         if not self._manifest_name and self.manifest_data:
             self._manifest_name = self.manifest_data.get("metadata", {}).get("name", None)
         if not self._manifest_kind and self.loader:
@@ -131,6 +167,11 @@ class CliBaseApiView(APIView, AccountMixin):
 
     @property
     def manifest_kind(self) -> str:
+        """
+        The kind of the manifest. The manifest kind is used to identify the type
+        of resource that the manifest is describing. The kind is used to identify
+        the broker that will be used to broker the http request for the resource.
+        """
         if not self._manifest_kind and self.manifest_data:
             self._manifest_kind = str(self.manifest_data.get("kind", None))
         if not self._manifest_kind and self.loader:
@@ -140,63 +181,106 @@ class CliBaseApiView(APIView, AccountMixin):
         # example: 'chatbot' vs 'ChatBot', 'plugin_data_sql_connection' vs 'PluginDataSqlConnection'
         return Brokers.get_broker_kind(self._manifest_kind)
 
+    @property
+    def command(self) -> SmarterJournalCliCommands:
+        """
+        Translate the request route into a SmarterJournalCliCommands enum
+        instance. For example, if the route is '/api/v1/cli/apply/', then
+        the corresponding command will be SmarterJournalCliCommands.APPLY.
+        """
+
+        def get_slug(path):
+            parts = path.split("/")
+            try:
+                slug_index = parts.index("cli") + 1
+                return parts[slug_index]
+            except ValueError:
+                return None
+
+        this_command = get_slug(self.request.path)
+        return SmarterJournalCliCommands(this_command)
+
+    @property
+    def url(self) -> str:
+        """
+        Get the full url of the request. Reconstructs the exact url of
+        the request. example url:
+
+        https://platform.smarter.sh/api/v1/cli/chat/config/example/?new_session=false&uid=Lawrences-Mac-Studio.local-c6%253A6b%253A2e%253A7a%253A3d%253A6c
+        """
+        return self.request.build_absolute_uri()
+
     # pylint: disable=too-many-return-statements,too-many-branches
     def dispatch(self, request, *args, **kwargs):
         """
-        The http request body is expected to contain the manifest text
-        in yaml format. The manifest text is passed to the SAMLoader that will load,
-        and partially validate and parse the manifest. This is then used to
-        fully initialize a Pydantic manifest model. The Pydantic manifest
-        model will be passed to a AbstractBroker for the manifest 'kind', which
-        implements the broker service pattern for the underlying object.
+        Dispatch method for the CliBaseApiView. We want to take care of as
+        much housekeeping as possible in the base class. This includes
+        setting following attributes:
+
+        - manifest_name: the name identifier of the manifest could be passed
+            from insider the raw manifest data, or it could be passed as part of a url.
+
+        - manifest: the http request body might contain raw manifest text
+            in yaml or json format. The manifest text is passed to the SAMLoader that will load,
+            and partially validate and parse the manifest. This is then used to
+            fully initialize a Pydantic manifest model. The Pydantic manifest
+            model will be passed to a AbstractBroker for the manifest 'kind', which
+            implements the broker service pattern for the underlying object.
+
+        - kind: the kind of the manifest is used to identify the broker that will
+
+        - user/account: the user, account and user_profile are all derived from the
+            authenticated user in the Django request object.
+
+        - command: the command is derived from the request path. The command is
+            used to determine the type of operation that the view should perform.
+            For example, if the url path is '/api/v1/cli/apply/', then the command
+            will be SmarterJournalCliCommands.APPLY.
+
+        - broker: the broker is a class that implements the broker service pattern.
+            It provides a service interface that 'brokers' the http request for the
+            underlying object that provides the object-specific service (create, update, get, delete, etc).
         """
-        # TO DO: This is a temporary fix to mitigate a configuration issue
-        # where DRF is not properly authenticating the request. This is a
-        # temporary fix until we can properly configure the DRF authentication
-        if not hasattr(request, "auth"):
-            logger.info("authentication_classes: %s", self.authentication_classes)
-            logger.info("permission_classes: %s", self.permission_classes)
-            logger.warning(
-                "No authentication scheme detected in the request object. forcing authentication via SmarterTokenAuthentication."
-            )
-            request.auth = SmarterTokenAuthentication()
-            try:
-                user, _ = request.auth.authenticate(request)
-                request.user = user
-            except AuthenticationFailed:
-                try:
-                    raise APIV1CLIViewError("Authentication failed.") from None
-                except APIV1CLIViewError as e:
-                    return JsonResponse(error_response_factory(e=e), status=HTTPStatus.FORBIDDEN)
+        # Parse the query string parameters from the request into a dictionary.
+        # This is used to pass additional parameters to the child view's post method.
+        self._manifest_name = self.params.get("name", None)
+
         if not request.user.is_authenticated:
             try:
-                raise APIV1CLIViewError("Authentication failed.")
+                raise APIV1CLIViewError("Unauthorized access attempted.")
             except APIV1CLIViewError as e:
-                return JsonResponse(error_response_factory(e=e), status=HTTPStatus.FORBIDDEN)
+                return SmarterJournaledJsonErrorResponse(
+                    request=request, thing=self.manifest_kind, command=None, e=e, status=HTTPStatus.FORBIDDEN
+                )
+
+        # set all of our identifying attributes from the request.
+        self._user = request.user
+        logger.info("User: %s", self.user)
+        try:
+            if not self.user_profile:
+                raise APIV1CLIViewError("Could not find account for user.")
+        except SmarterExceptionBase as e:
+            return SmarterJournaledJsonErrorResponse(
+                request=request, thing=self.manifest_kind, command=None, e=e, status=HTTPStatus.FORBIDDEN
+            )
 
         user_agent = request.headers.get("User-Agent", "")
         if "Go-http-client" not in user_agent:
             logger.warning("The User-Agent is not a Go lang application: %s", user_agent)
 
-        query_string = request.META.get("QUERY_STRING", "")
-        query_dict = QueryDict(query_string)
-        self._manifest_name = query_dict.get("name", None)
         kind = kwargs.get("kind", None)
         if kind:
-            self._manifest_kind = kind
-            if self.manifest_kind.endswith("s"):
-                self._manifest_kind = self.manifest_kind[:-1]
-            if self.manifest_kind:
-                # Validate the manifest kind: plugin, plugins, user, users, chatbot, chatbots, etc.
-                if str(self.manifest_kind) not in SAMKinds.all_values():
-                    return JsonResponse(
-                        error_response_factory(
-                            e=SAMBadRequestError(
-                                f"Unsupported manifest kind: {self.manifest_kind}. should be one of {SAMKinds.all_values()}"
-                            )
-                        ),
-                        status=HTTPStatus.BAD_REQUEST,
-                    )
+            self._manifest_kind = Brokers.get_broker_kind(kind)
+            if not self.manifest_kind:
+                return SmarterJournaledJsonErrorResponse(
+                    request=request,
+                    thing=self.manifest_kind,
+                    command=None,
+                    e=SAMBadRequestError(
+                        f"Unsupported manifest kind: {self.manifest_kind}. should be one of {SAMKinds.all_values()}"
+                    ),
+                    status=HTTPStatus.BAD_REQUEST,
+                )
 
         # Manifest parsing and broker instantiation are lazy implementations.
         # So for now, we'll only set the private class variable _manifest_data
@@ -204,7 +288,14 @@ class CliBaseApiView(APIView, AccountMixin):
         # decide if/when to actually parse the manifest and instantiate the broker.
         try:
             data = request.body.decode("utf-8")
-            self._manifest_data = json.loads(data)
+            # if the command is 'chat', then the raw prompt text
+            # or the encoded file attachment data will be in the request body.
+            # otherwise, the request body should contain manifest text.
+            if self.command == SmarterJournalCliCommands.CHAT:
+                self._prompt = data
+                self._manifest_kind = SAMKinds.CHAT.value
+            else:
+                self._manifest_data = json.loads(data)
         except json.JSONDecodeError:
             try:
                 self._manifest_data = yaml.safe_load(data)
@@ -212,20 +303,65 @@ class CliBaseApiView(APIView, AccountMixin):
                 try:
                     raise APIV1CLIViewError("Could not parse manifest. Valid formats: yaml, json.") from e
                 except APIV1CLIViewError as ex:
-                    return JsonResponse(error_response_factory(e=ex), status=HTTPStatus.BAD_REQUEST)
-        try:
-            self._user_profile = user_profile_for_user(user=request.user)
-            self._account = self._user_profile.account
-            self._user = self._user_profile.user
-            if not self._user_profile:
-                raise APIV1CLIViewError("Could not find account for user.")
-        except SmarterExceptionBase as e:
-            return JsonResponse(error_response_factory(e=e), status=HTTPStatus.FORBIDDEN)
+                    return SmarterJournaledJsonErrorResponse(
+                        request=request, thing=self.manifest_kind, command=None, e=ex, status=HTTPStatus.BAD_REQUEST
+                    )
 
         # generic exception handler that simply ensures that in all cases
         # the response is a JsonResponse with a status code.
+        #
+        # note that we are combining the dictionary of parameters with the
+        # keyword arguments. This is because the keyword arguments are passed
+        # to the super class dispatch method, and the parameters are passed
+        # to the child view's post method.
         try:
-            return super().dispatch(request, *args, **{**request.GET.dict(), **kwargs})
+            return super().dispatch(request, *args, **{**self.params, **kwargs})
+        except SAMBrokerErrorNotImplemented as not_implemented_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=not_implemented_error.get_readable_name,
+                status=HTTPStatus.NOT_IMPLEMENTED,
+            )
+        except SAMBrokerErrorNotReady as not_ready_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=not_ready_error.get_readable_name,
+                status=HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+        except SAMBrokerErrorNotFound as not_found_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=not_found_error.get_readable_name,
+                status=HTTPStatus.NOT_FOUND,
+            )
+        except SAMBrokerReadOnlyError as read_only_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=read_only_error.get_readable_name,
+                status=HTTPStatus.METHOD_NOT_ALLOWED,
+            )
+        except SAMBrokerError as broker_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=broker_error.get_readable_name,
+                status=HTTPStatus.BAD_REQUEST,
+            )
         # pylint: disable=broad-except
         except Exception as e:
-            return JsonResponse(error_response_factory(e=e), status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=e,
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )

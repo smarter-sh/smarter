@@ -71,7 +71,7 @@ def handler(
     default_model: str = smarter_settings.openai_default_model,
     default_temperature: float = smarter_settings.openai_default_temperature,
     default_max_tokens: int = smarter_settings.openai_default_max_tokens,
-):
+) -> dict:
     """
     Chat prompt handler. Responsible for processing incoming requests and
     invoking the appropriate OpenAI API endpoint based on the contents of

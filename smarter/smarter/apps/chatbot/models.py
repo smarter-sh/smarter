@@ -209,7 +209,7 @@ class ChatBot(TimestampedModel):
 
     @property
     def url_chatbot(self):
-        return urljoin(self.url, "chatbot/")
+        return urljoin(self.url, "api/v1/chatbot/smarter/")
 
     @property
     def url_chatapp(self):
@@ -477,34 +477,38 @@ class ChatBotHelper:
         # cache the url so we don't have to parse it again
         cache.set(key=self.cache_key, value=self._chatbot, timeout=settings.SMARTER_CHATBOT_CACHE_EXPIRATION)
         if waffle.switch_is_active("chatbothelper_logging"):
-            logger.info("%s - %s", formatted_text("ChatBotHelper: cached url"), self.url)
+            logger.info("%s: cached url - %s", self.formatted_class_name, self.url)
         return None
 
     def __str__(self):
         return self.url
 
+    @property
+    def formatted_class_name(self):
+        return formatted_text(self.__class__.__name__)
+
     def log_dump(self):
-        logger.info("ChatBotHelper: %s", "-" * (80 - 15))
-        logger.info("ChatBotHelper: INITIALIZED.")
-        logger.info("ChatBotHelper: %s", "-" * (80 - 15))
-        logger.info(f"ChatBotHelper: chatbot={self.chatbot}")
-        logger.info(f"ChatBotHelper: account_number={self.account_number}")
-        logger.info(f"ChatBotHelper: user={self.user}, account={self.account}")
+        logger.info("%s: %s", "-" * (80 - 15), self.formatted_class_name)
+        logger.info("%s: INITIALIZED.", self.formatted_class_name)
+        logger.info("%s: %s", "-" * (80 - 15), self.formatted_class_name)
+        logger.info(f"%s: chatbot={self.chatbot}", self.formatted_class_name)
+        logger.info(f"%s: account_number={self.account_number}", self.formatted_class_name)
+        logger.info(f"%s: user={self.user}, account={self.account}", self.formatted_class_name)
 
-        logger.info(f"ChatBotHelper: url={self.url}, environment={self.environment}")
-        logger.info(f"ChatBotHelper: domain={self.domain}, path={self.path}")
-        logger.info(f"ChatBotHelper: subdomain={self.subdomain}")
-        logger.info(f"ChatBotHelper: root_domain={self.root_domain}")
-        logger.info(f"ChatBotHelper: api_subdomain={self.api_subdomain}, api_host={self.api_host}")
-        logger.info(f"ChatBotHelper: customer_api_domain={self.customer_api_domain}")
+        logger.info(f"%s: url={self.url}, environment={self.environment}", self.formatted_class_name)
+        logger.info(f"%s: domain={self.domain}, path={self.path}", self.formatted_class_name)
+        logger.info(f"%s: subdomain={self.subdomain}", self.formatted_class_name)
+        logger.info(f"%s: root_domain={self.root_domain}", self.formatted_class_name)
+        logger.info(f"%s: api_subdomain={self.api_subdomain}, api_host={self.api_host}", self.formatted_class_name)
+        logger.info(f"%s: customer_api_domain={self.customer_api_domain}", self.formatted_class_name)
 
-        logger.info(f"ChatBotHelper: is_sandbox_domain={self.is_sandbox_domain}")
-        logger.info(f"ChatBotHelper: is_default_domain={self.is_default_domain}")
-        logger.info(f"ChatBotHelper: is_custom_domain={self.is_custom_domain}")
-        logger.info(f"ChatBotHelper: is_deployed={self.is_deployed}")
-        logger.info(f"ChatBotHelper: is_valid={self.is_valid}")
-        logger.info(f"ChatBotHelper: is_authentication_required={self.is_authentication_required}")
-        logger.info("ChatBotHelper: %s", "-" * (80 - 15))
+        logger.info(f"%s: is_sandbox_domain={self.is_sandbox_domain}", self.formatted_class_name)
+        logger.info(f"%s: is_default_domain={self.is_default_domain}", self.formatted_class_name)
+        logger.info(f"%s: is_custom_domain={self.is_custom_domain}", self.formatted_class_name)
+        logger.info(f"%s: is_deployed={self.is_deployed}", self.formatted_class_name)
+        logger.info(f"%s: is_valid={self.is_valid}", self.formatted_class_name)
+        logger.info(f"%s: is_authentication_required={self.is_authentication_required}", self.formatted_class_name)
+        logger.info("%s: %s", "-" * (80 - 15), self.formatted_class_name)
 
     def to_json(self):
         return {
@@ -644,6 +648,8 @@ class ChatBotHelper:
             return self._account_number
 
         def from_url(url: str) -> str:
+            if not url:
+                return None
             pattern = r"\d{4}-\d{4}-\d{4}"
             match = re.search(pattern, url)
             retval = match.group(0) if match else None
@@ -674,6 +680,9 @@ class ChatBotHelper:
             logger.debug("account_number() - custom domain")
             self._account_number = self.chatbot.account.account_number if self.chatbot else None
             return self._account_number
+
+        if not self._account_number:
+            self._account_number = from_url(self.url)
 
         if self._account_number:
             self._account = Account.objects.get(account_number=self._account_number)
@@ -904,6 +913,22 @@ class ChatBotHelper:
                 return self._chatbot
             except ChatBot.DoesNotExist:
                 return None
+
+        if not self._chatbot:
+            # this scenario would most likely occur when running a chat session from the cli.
+            # The cli uses the url_chatbot property from chat_config to get the chatbot url, and this
+            # property does not evaluate the deployment state as part of its logic.
+            if self.account and self.api_subdomain:
+                try:
+                    self._chatbot = ChatBot.objects.get(account=self.account, name=self.api_subdomain)
+                except ChatBot.DoesNotExist:
+                    logger.warning(
+                        f"didn't find chatbot for account: {self.account} name: {self.api_subdomain} {self.url}"
+                    )
+                    return None
+                if not self._chatbot.deployed:
+                    logger.warning(f"Initializing with chatbot {self._chatbot}, which is not deployed.")
+                    return None
 
         if self._chatbot:
             logger.info(f"ChatBotHelper: initialized ChatBot: {self._chatbot}")
