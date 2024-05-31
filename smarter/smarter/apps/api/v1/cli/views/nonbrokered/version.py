@@ -19,7 +19,7 @@ from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 
-from .base import CliBaseApiView
+from ..base import CliBaseApiView
 
 
 class ApiV1CliVersionApiView(CliBaseApiView):

@@ -10,7 +10,7 @@ from smarter.lib.django.serializers import UserSerializer
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 
-from .base import CliBaseApiView
+from ..base import CliBaseApiView
 
 
 class ApiV1CliWhoamiApiView(CliBaseApiView):

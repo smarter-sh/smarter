@@ -15,17 +15,17 @@ Smarter API command-line interface URL configuration.
 from django.urls import path
 
 from .views.apply import ApiV1CliApplyApiView
-from .views.chat import ApiV1CliChatApiView
-from .views.chat_config import ApiV1CliChatConfigApiView
 from .views.delete import ApiV1CliDeleteApiView
 from .views.deploy import ApiV1CliDeployApiView
 from .views.describe import ApiV1CliDescribeApiView
 from .views.get import ApiV1CliGetApiView
 from .views.logs import ApiV1CliLogsApiView
 from .views.manifest import ApiV1CliManifestApiView
-from .views.status import ApiV1CliStatusApiView
-from .views.version import ApiV1CliVersionApiView
-from .views.whoami import ApiV1CliWhoamiApiView
+from .views.nonbrokered.chat import ApiV1CliChatApiView
+from .views.nonbrokered.chat_config import ApiV1CliChatConfigApiView
+from .views.nonbrokered.status import ApiV1CliStatusApiView
+from .views.nonbrokered.version import ApiV1CliVersionApiView
+from .views.nonbrokered.whoami import ApiV1CliWhoamiApiView
 
 
 urlpatterns = [
