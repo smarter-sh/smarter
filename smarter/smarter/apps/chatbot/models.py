@@ -209,7 +209,6 @@ class ChatBot(TimestampedModel):
 
     @property
     def url_chatbot(self):
-        logger.info("self.url: %s", self.url)
         return urljoin(self.url, "/api/v1/chatbot/smarter/")
 
     @property
