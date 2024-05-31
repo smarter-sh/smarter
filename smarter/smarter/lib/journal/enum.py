@@ -59,6 +59,7 @@ class SmarterJournalThings(SmarterEnumAbstract):
     APIKEY = "apikey"
     USER = "user"
     CHAT = "chat"
+    CHAT_CONFIG = "chat_config"
     CHAT_HISTORY = "chat_history"
     CHAT_PLUGIN_USAGE = "chat_plugin_usage"
     CHAT_TOOL_CALL = "chat_tool_call"
@@ -75,6 +76,7 @@ class SmarterJournalThings(SmarterEnumAbstract):
             (cls.APIKEY, cls.APIKEY),
             (cls.USER, cls.USER),
             (cls.CHAT, cls.CHAT),
+            (cls.CHAT_CONFIG, cls.CHAT_CONFIG),
             (cls.CHAT_HISTORY, cls.CHAT_HISTORY),
             (cls.CHAT_PLUGIN_USAGE, cls.CHAT_PLUGIN_USAGE),
             (cls.CHAT_TOOL_CALL, cls.CHAT_TOOL_CALL),
@@ -95,6 +97,7 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
 
     APPLY = "apply"
     CHAT = "chat"
+    CHAT_CONFIG = "chat_config"
     DELETE = "delete"
     DEPLOY = "deploy"
     DESCRIBE = "describe"
@@ -113,6 +116,7 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
         return [
             (cls.APPLY, cls.APPLY),
             (cls.CHAT, cls.CHAT),
+            (cls.CHAT_CONFIG, cls.CHAT_CONFIG),
             (cls.DELETE, cls.DELETE),
             (cls.DEPLOY, cls.DEPLOY),
             (cls.DESCRIBE, cls.DESCRIBE),
@@ -131,16 +135,17 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
         """Return the past tense of the command."""
         return {
             cls.APPLY: "applied",
-            cls.CHAT: "chatted",
+            cls.CHAT: "prompted",
+            cls.CHAT_CONFIG: "fetched chat_config",
             cls.DELETE: "deleted",
             cls.DEPLOY: "deployed",
             cls.DESCRIBE: "described",
             cls.GET: "got",
             cls.JOURNAL: "journaled",
             cls.LOGS: "logged",
-            cls.MANIFEST_EXAMPLE: "example_manifested",
-            cls.STATUS: "statused",
-            cls.VERSION: "versioned",
+            cls.MANIFEST_EXAMPLE: "fetched example manifested",
+            cls.STATUS: "fetched status",
+            cls.VERSION: "fetched version",
             cls.UNDEPLOY: "undeployed",
-            cls.WHOAMI: "whoamied",
+            cls.WHOAMI: "fetched identity",
         }

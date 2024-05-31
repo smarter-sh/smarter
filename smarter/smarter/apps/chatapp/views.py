@@ -16,7 +16,6 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import IsAuthenticated
 
 from smarter.apps.chat.models import Chat, ChatHelper
@@ -161,8 +160,8 @@ class ChatConfigView(View):
         if not self.chatbot:
             return HttpResponseNotFound()
 
-        self.thing = SmarterJournalThings(SmarterJournalThings.CHAT)
-        self.command = SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT)
+        self.thing = SmarterJournalThings(SmarterJournalThings.CHAT_CONFIG)
+        self.command = SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT_CONFIG)
         return super().dispatch(request, *args, **kwargs)
 
     # pylint: disable=unused-argument
@@ -200,19 +199,21 @@ class ChatConfigView(View):
         chatbot_plugin_serializer = ChatBotPluginSerializer(chatbot_plugins, many=True)
 
         retval = {
-            "session_key": self.session.session_key,
-            "sandbox_mode": self.sandbox_mode,
-            "debug_mode": waffle.switch_is_active("reactapp_debug_mode"),
-            "chatbot": chatbot_serializer.data,
-            "meta_data": self.chatbot_helper.to_json(),
-            "history": self.session.chat_helper.chat_history,
-            "tool_calls": [],
-            "plugins": {
-                "meta_data": {
-                    "total_plugins": chatbot_plugins_count,
-                    "plugins_returned": len(chatbot_plugins),
+            "data": {
+                "session_key": self.session.session_key,
+                "sandbox_mode": self.sandbox_mode,
+                "debug_mode": waffle.switch_is_active("reactapp_debug_mode"),
+                "chatbot": chatbot_serializer.data,
+                "meta_data": self.chatbot_helper.to_json(),
+                "history": self.session.chat_helper.chat_history,
+                "tool_calls": [],
+                "plugins": {
+                    "meta_data": {
+                        "total_plugins": chatbot_plugins_count,
+                        "plugins_returned": len(chatbot_plugins),
+                    },
+                    "plugins": chatbot_plugin_serializer.data,
                 },
-                "plugins": chatbot_plugin_serializer.data,
             },
         }
         return retval

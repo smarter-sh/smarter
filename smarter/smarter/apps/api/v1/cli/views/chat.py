@@ -3,16 +3,21 @@
 
 import hashlib
 import json
+import logging
 from typing import Tuple
 
 from django.core.cache import cache
-from django.http import HttpRequest
+from django.http import HttpRequest, JsonResponse
+
+from smarter.apps.chatapp.views import ChatConfigView
 
 from .base import APIV1CLIViewError, CliBaseApiView
 
 
 CACHE_EXPIRATION = 24 * 60 * 60  # 24 hours
 SESSION_KEY = "session_key"
+
+logger = logging.getLogger(__name__)
 
 
 class APIV1CLIChatViewError(APIV1CLIViewError):
@@ -184,8 +189,18 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
 
     The cache_key is a combination of the class name, the chat name and a client
     UID created from the machine mac address and its hostname.
+
+    Example kwargs:
+    kwargs: {'new_session': ['false'], 'uid': ['Lawrences-Mac-Studio.local-c6%3A6b%3A2e%3A7a%3A3d%3A6c']}
     """
 
-    def post(self, request, *args, **kwargs):
-        print("ApiV1CliChatApiView.post kwargs:", kwargs)
-        return self.broker.chat(request=request, kwargs=kwargs)
+    def chat_message_listfactory(self):
+        pass
+
+    def post(self, request, name, *args, **kwargs):
+        logger.info("ApiV1CliChatApiView.post kwargs: %s", kwargs)
+        chat_config = ChatConfigView.as_view()(request, name=name)
+        session_key = chat_config.data.get(SESSION_KEY)
+
+        return JsonResponse({"prompt": self.prompt})
+        # return self.broker.chat(request=request, kwargs=kwargs)

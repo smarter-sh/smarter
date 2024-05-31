@@ -30,7 +30,7 @@ from .views.whoami import ApiV1CliWhoamiApiView
 
 urlpatterns = [
     path("apply/", ApiV1CliApplyApiView.as_view(), name="api_v1_cli_apply_view"),
-    path("chat/", ApiV1CliChatApiView.as_view(), name="api_v1_cli_chat_view"),
+    path("chat/<str:name>/", ApiV1CliChatApiView.as_view(), name="api_v1_cli_chat_view"),
     path("chat/config/<str:name>/", ApiV1CliChatConfigApiView.as_view(), name="api_v1_cli_chatconfig_view"),
     path("delete/<str:kind>/", ApiV1CliDeleteApiView.as_view(), name="api_v1_cli_delete_view"),
     path("deploy/<str:kind>/", ApiV1CliDeployApiView.as_view(), name="api_v1_cli_deploy_view"),
