@@ -12,22 +12,14 @@ import waffle
 from django.http import HttpRequest, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from knox.auth import TokenAuthentication
 from rest_framework.response import Response
 
 from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.utils import account_admin_user
-from smarter.apps.chatbot.models import (
-    ChatBot,
-    ChatBotAPIKey,
-    ChatBotHelper,
-    ChatBotPlugin,
-)
+from smarter.apps.chatbot.models import ChatBot, ChatBotHelper, ChatBotPlugin
+from smarter.apps.chatbot.serializers import ChatBotSerializer
 from smarter.apps.chatbot.signals import chatbot_called
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
@@ -95,7 +87,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         self.request = request
         self._url = self.request.build_absolute_uri()
         self._url = SmarterValidator.urlify(self._url)
-        self._chatbot_helper = ChatBotHelper(url=self.url, name=self.name)
+        self._chatbot_helper = ChatBotHelper(url=self.url, name=self.name, user=self.request.user)
         self._account = self.chatbot_helper.account
         self._user = self.chatbot_helper.user
 
@@ -109,9 +101,9 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         if not self.chatbot_helper.is_valid:
             data = {
                 "message": "Not Found. Please provide a valid ChatBot URL.",
-                "account": self.account,
-                "chatbot": self.chatbot,
-                "user": self.user,
+                "account": self.account.account_number if self.account else None,
+                "chatbot": ChatBotSerializer(self.chatbot).data if self.chatbot else None,
+                "user": self.user.username if self.user else None,
                 "url": self.chatbot_helper.url,
             }
             self.chatbot_helper.log_dump()
@@ -141,7 +133,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         return response
 
     # pylint: disable=W0613
-    def get(self, request, *args, **kwargs):
+    def get(self, request, *args, name: str = None, **kwargs):
         if waffle.switch_is_active("chatbot_api_view_logging"):
             logger.info("%s.get(): url=%s", self.formatted_class_name, self.chatbot_helper.url)
             logger.info("%s.get(): headers=%s", self.formatted_class_name, request.META)

@@ -35,6 +35,7 @@ class SmarterChatBotApiView(ChatBotApiBaseViewSet):
     """
 
     def dispatch(self, request, *args, name: str = None, **kwargs):
+        logger.info("SmarterChatBotApiView.dispatch() - name=%s", name)
         kwargs.pop("chatbot_id", None)
         self._name = name
         try:
