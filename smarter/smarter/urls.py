@@ -24,7 +24,7 @@ admin.autodiscover()
 
 
 urlpatterns = [
-    path("chatbot/", include("smarter.apps.chatbot.urls")),
+    path("chatbot/", include("smarter.apps.chatbot.api.v1.urls")),
     path("chatapp/", include("smarter.apps.chatapp.urls")),
     path("", include("smarter.apps.dashboard.urls")),
     path("admin/", admin.site.urls),
