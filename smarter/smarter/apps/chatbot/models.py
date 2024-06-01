@@ -859,7 +859,7 @@ class ChatBotHelper:
                 )
             return self._account
         if self._user:
-            self._user_profile = UserProfile.objects.get(user=self.user)
+            self._user_profile = UserProfile.objects.get(user=self._user)
             self._account = self.user_profile.account
             if waffle.switch_is_active("chatbothelper_logging"):
                 logger.info(
