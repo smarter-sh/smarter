@@ -1,7 +1,5 @@
 # pylint: disable=W0611
-"""
-Smarter Customer API view.
-"""
+"""ChatBot api/v1/chatbot base view, for invoking a ChatBot."""
 import logging
 from http import HTTPStatus
 from typing import List
@@ -83,8 +81,9 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
             return True
         return False
 
-    def dispatch(self, request, *args, **kwargs):
+    def dispatch(self, request, *args, name: str = None, **kwargs):
         self.request = request
+        self._name = self._name or name
         self._url = self.request.build_absolute_uri()
         self._url = SmarterValidator.urlify(self._url)
         self._chatbot_helper = ChatBotHelper(url=self.url, name=self.name, user=self.request.user)
