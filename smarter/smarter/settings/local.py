@@ -33,7 +33,6 @@ INSTALLED_APPS += ["django_extensions"]
 if DEBUG and not "test" in sys.argv:
     INSTALLED_APPS += [
         "debug_toolbar",
-        "django_extensions",
     ]
 
     MIDDLEWARE += [
