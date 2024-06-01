@@ -11,6 +11,8 @@ from django.conf import settings
 from django.core.cache import cache
 from django.db import models
 
+from smarter.apps.account.mixins import AccountMixin
+
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.models import PluginMeta
@@ -353,7 +355,7 @@ class ChatBotRequests(TimestampedModel):
 
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
-class ChatBotHelper:
+class ChatBotHelper(AccountMixin):
     """Maps urls and attribute data to their respective ChatBot models.
     Abstracts url parsing logic so that we can use it in multiple
     places: inside this module, in middleware, in Views, etc.
@@ -372,9 +374,6 @@ class ChatBotHelper:
     _url: str = None
     _account_number: str = None
     _environment: str = None
-    _account: Account = None
-    _user: UserType = None
-    _user_profile: UserProfile = None
     _chatbot: ChatBot = None
     _chatbot_custom_domain: ChatBotCustomDomain = None
     _name: str = None
@@ -389,8 +388,7 @@ class ChatBotHelper:
         :param url: The URL to parse.
         :param environment: The environment to use for the URL. (for unit testing only)
         """
-        self._user = user
-        self._account = account
+        super().__init__(account=account, user=user, account_number=self.account_number)
         self._name = name
 
         if self.account:
@@ -669,6 +667,9 @@ class ChatBotHelper:
         """
         if self._account_number:
             return self._account_number
+        if self._account:
+            self._account_number = self.account.account_number
+            return self._account_number
 
         def from_url(url: str) -> str:
             if not url:
@@ -802,86 +803,6 @@ class ChatBotHelper:
         if ChatBotAPIKey.objects.filter(chatbot=self.chatbot, api_key__is_active=True).exists():
             return True
         return False
-
-    @property
-    def user_profile(self) -> UserProfile:
-        """
-        Returns the user profile for the ChatBot API url.
-        :return: The user profile or None if not found.
-        """
-        if self._user_profile:
-            return self._user_profile
-        if self._user and self._account:
-            try:
-                self._user_profile = UserProfile.objects.get(user=self.user, account=self.account)
-                if self._user_profile and waffle.switch_is_active("chatbothelper_logging"):
-                    logger.info(
-                        f"ChatBotHelper: initialized UserProfile: {self._user_profile} from self.user and self.account"
-                    )
-                return self._user_profile
-            except UserProfile.DoesNotExist:
-                return None
-        return None
-
-    @property
-    def user(self) -> UserType:
-        """
-        Returns the user for the ChatBot API url.
-        :return: The user or None if not found.
-        """
-        if isinstance(self._user, User):
-            return self._user
-        if self.account:
-            self._user = UserProfile.admin_for_account(self.account)
-        if self._user and waffle.switch_is_active("chatbothelper_logging"):
-            logger.info(
-                f"ChatBotHelper: initialized user {self._user} with admin for account {self.account.account_number}"
-            )
-        return self._user
-
-    @property
-    def account(self) -> Account:
-        """
-        Returns a lazy instance of the Account
-        """
-        if self._account:
-            return self._account
-        if self._chatbot:
-            self._account = self.chatbot.account
-            if waffle.switch_is_active("chatbothelper_logging"):
-                logger.info(f"ChatBotHelper: initialized account {self._account} from chatbot {self._chatbot}")
-            return self._account
-        if self._user_profile:
-            self._account = self.user_profile.account
-            if waffle.switch_is_active("chatbothelper_logging"):
-                logger.info(
-                    f"ChatBotHelper: initialized account {self._account} from user_profile {self._user_profile}"
-                )
-            return self._account
-        if self._user:
-            self._user_profile = UserProfile.objects.get(user=self._user)
-            self._account = self.user_profile.account
-            if waffle.switch_is_active("chatbothelper_logging"):
-                logger.info(
-                    f"ChatBotHelper: initialized account {self._account} from user {self.user} and user_profile {self.user_profile}"
-                )
-        if self.account_number:
-            try:
-                self._account = Account.objects.get(account_number=self.account_number)
-                if waffle.switch_is_active("chatbothelper_logging"):
-                    logger.info(
-                        f"ChatBotHelper: used account number {self.account_number} to initialize self.account={self.account}"
-                    )
-            except Account.DoesNotExist:
-                logger.warning(f"ChatBotHelper: account {self.account_number} not found")
-                if self._user_profile:
-                    logger.warning(
-                        f"ChatBotHelper: User Profile {self._user_profile} is linked to account {self._user_profile.account}"
-                    )
-                return None
-        if self._account:
-            logger.info(f"ChatBotHelper: initialized account: {self._account}")
-        return self._account
 
     @property
     def chatbot(self) -> ChatBot:
