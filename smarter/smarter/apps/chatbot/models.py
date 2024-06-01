@@ -209,7 +209,8 @@ class ChatBot(TimestampedModel):
 
     @property
     def url_chatbot(self):
-        return urljoin(self.url, "chatbot/smarter/")
+        base_url = smarter_settings.environment_domain
+        return urljoin(self.scheme + "://" + base_url, "/chatbot/smarter/" + self.name + "/")
 
     @property
     def url_chatapp(self):
@@ -376,6 +377,7 @@ class ChatBotHelper:
     _user_profile: UserProfile = None
     _chatbot: ChatBot = None
     _chatbot_custom_domain: ChatBotCustomDomain = None
+    _name: str = None
 
     # pylint: disable=W1203,R0913,R0915,R0912
     # mcdaniel apr-2024 TODO: refactor this class to reduce complexity, and memory usage.
@@ -387,6 +389,13 @@ class ChatBotHelper:
         :param url: The URL to parse.
         :param environment: The environment to use for the URL. (for unit testing only)
         """
+        self._user = user
+        self._account = account
+        self._name = name
+
+        if self.account:
+            self._account_number = self.account.account_number
+
         if url:
             SmarterValidator.validate_url(url)  # raises ValidationError if url is invalid
             url = SmarterValidator.urlify(
@@ -415,8 +424,17 @@ class ChatBotHelper:
         if waffle.switch_is_active("chatbothelper_logging"):
             logger.info("ChatBotHelper: __init__()")
 
-        # 2. take a wild swing at initializing the chatbot using the built-in property logic
-        self._chatbot = self.chatbot
+        # 2. try using account and nme
+        if self.account and self.name:
+            logger.info(f"ChatBotHelper: account={self.account}, name={self.name}")
+            self._chatbot = ChatBot.objects.get(account=self.account, name=self.name)
+            if waffle.switch_is_active("chatbothelper_logging"):
+                logger.info(f"ChatBotHelper: initialized self.chatbot={self.chatbot} from account and name")
+            if self._chatbot:
+                logger.info(f"ChatBotHelper: initialized self.chatbot={self.chatbot}")
+
+        if not self._chatbot:
+            self._chatbot = self.chatbot
 
         if environment:
             self._environment = environment
@@ -484,6 +502,10 @@ class ChatBotHelper:
         return self.url
 
     @property
+    def name(self):
+        return self._name
+
+    @property
     def formatted_class_name(self):
         return formatted_text(self.__class__.__name__)
 
@@ -494,6 +516,7 @@ class ChatBotHelper:
         logger.info(f"%s: chatbot={self.chatbot}", self.formatted_class_name)
         logger.info(f"%s: account_number={self.account_number}", self.formatted_class_name)
         logger.info(f"%s: user={self.user}, account={self.account}", self.formatted_class_name)
+        logger.info(f"%s: name={self.name}", self.formatted_class_name)
 
         logger.info(f"%s: url={self.url}, environment={self.environment}", self.formatted_class_name)
         logger.info(f"%s: domain={self.domain}, path={self.path}", self.formatted_class_name)
@@ -867,6 +890,18 @@ class ChatBotHelper:
         """
         if self._chatbot:
             return self._chatbot
+
+        if self.account and self.name:
+            try:
+                self._chatbot = ChatBot.objects.get(account=self.account, name=self.name)
+                if waffle.switch_is_active("chatbothelper_logging"):
+                    logger.info(
+                        f"ChatBotHelper: initialized chatbot {self._chatbot} from account {self.account} and name {self.name}"
+                    )
+                return self._chatbot
+            except ChatBot.DoesNotExist:
+                logger.warning(f"didn't find chatbot for account: {self.account} name: {self.name} {self.url}")
+                return None
 
         if self.is_sandbox_domain:
             # example: http://127.0.0.1:8000/api/v0/chatbots/1/chatbot/
