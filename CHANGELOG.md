@@ -1,3 +1,10 @@
+## [0.3.5](https://github.com/smarter-sh/smarter/compare/v0.3.4...v0.3.5) (2024-06-01)
+
+
+### Bug Fixes
+
+* RecursionError cause by self.user ([4362f84](https://github.com/smarter-sh/smarter/commit/4362f84068e4d828c1d8badc36424fcdb67b073a))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
