@@ -20,7 +20,7 @@ from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.model_helpers import TimestampedModel
-from smarter.lib.django.user import User, UserType
+from smarter.lib.django.user import UserType
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.drf.models import SmarterAuthToken
 
