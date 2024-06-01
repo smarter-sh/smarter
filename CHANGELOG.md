@@ -1,9 +1,16 @@
-## [0.3.5](https://github.com/smarter-sh/smarter/compare/v0.3.4...v0.3.5) (2024-06-01)
+## [0.3.6](https://github.com/smarter-sh/smarter/compare/v0.3.5...v0.3.6) (2024-06-01)
 
 
 ### Bug Fixes
 
-* RecursionError cause by self.user ([4362f84](https://github.com/smarter-sh/smarter/commit/4362f84068e4d828c1d8badc36424fcdb67b073a))
+* ensure that we fail gracefully ([3d4ab45](https://github.com/smarter-sh/smarter/commit/3d4ab4587a935575f5e32f8db66eb67e93cbcbef))
+* make the error response match api/v1/cli error format ([c7f9f72](https://github.com/smarter-sh/smarter/commit/c7f9f72ec6b3ef42d115e4a4125689c6fa21ac01))
+
+## [0.3.5](https://github.com/smarter-sh/smarter/compare/v0.3.4...v0.3.5) (2024-06-01)
+
+### Bug Fixes
+
+- RecursionError cause by self.user ([4362f84](https://github.com/smarter-sh/smarter/commit/4362f84068e4d828c1d8badc36424fcdb67b073a))
 
 # Change Log
 
