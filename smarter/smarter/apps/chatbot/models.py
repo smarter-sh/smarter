@@ -388,8 +388,8 @@ class ChatBotHelper(AccountMixin):
         :param url: The URL to parse.
         :param environment: The environment to use for the URL. (for unit testing only)
         """
-        super().__init__(account=account, user=user, account_number=self.account_number)
         self._name = name
+        super().__init__(account=account, user=user, account_number=self.account_number)
 
         if self.account:
             self._account_number = self.account.account_number
