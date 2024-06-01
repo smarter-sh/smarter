@@ -47,6 +47,6 @@ urlpatterns = [
         ChatBotPluginListView.as_view(),
         name="chatbot-api-function-plugins",
     ),
-    path("smarter/<str:name>", SmarterChatBotApiView.as_view(), name="chatbot-api-smarter"),
+    path("smarter/<str:name>/", SmarterChatBotApiView.as_view(), name="chatbot-api-smarter"),
     path("smarter/", SmarterChatBotApiView.as_view(), name="chatbot-api-smarter"),
 ]
