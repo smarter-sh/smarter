@@ -100,11 +100,16 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
 
         if not self.chatbot_helper.is_valid:
             data = {
-                "message": "Not Found. Please provide a valid ChatBot URL.",
-                "account": self.account.account_number if self.account else None,
-                "chatbot": ChatBotSerializer(self.chatbot).data if self.chatbot else None,
-                "user": self.user.username if self.user else None,
-                "url": self.chatbot_helper.url,
+                "data": {
+                    "error": {
+                        "message": "Could not initialize ChatBot object.",
+                        "account": self.account.account_number if self.account else None,
+                        "chatbot": ChatBotSerializer(self.chatbot).data if self.chatbot else None,
+                        "user": self.user.username if self.user else None,
+                        "name": self.chatbot_helper.name,
+                        "url": self.chatbot_helper.url,
+                    },
+                },
             }
             self.chatbot_helper.log_dump()
             return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
