@@ -1,3 +1,10 @@
+## [0.3.4](https://github.com/smarter-sh/smarter/compare/v0.3.3...v0.3.4) (2024-06-01)
+
+
+### Bug Fixes
+
+* add protocol to ChatBot.url_chatbot() ([4c146aa](https://github.com/smarter-sh/smarter/commit/4c146aa5f86dec432311b600015786111e4191a3))
+
 ## [0.3.3](https://github.com/smarter-sh/smarter/compare/v0.3.2...v0.3.3) (2024-06-01)
 
 
