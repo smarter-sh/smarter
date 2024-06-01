@@ -28,14 +28,18 @@ keen_source = glob.glob(os.path.join(django_apps_dir, "*", "keen_demo1"))
 STATICFILES_DIRS.extend(keen_source)
 STATICFILES_STORAGE = "whitenoise.storage.StaticFilesStorage"
 
-INSTALLED_APPS += [
-    "debug_toolbar",
-    "django_extensions",
-]
+INSTALLED_APPS += ["django_extensions"]
 
-MIDDLEWARE += [
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
-]
+if DEBUG and not "test" in sys.argv:
+    INSTALLED_APPS += [
+        "debug_toolbar",
+        "django_extensions",
+    ]
+
+    MIDDLEWARE += [
+        "debug_toolbar.middleware.DebugToolbarMiddleware",
+    ]
+
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",  # Django
     "http://127.0.0.1:3000",  # React
