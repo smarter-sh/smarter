@@ -9,12 +9,13 @@ from typing import List
 import waffle
 
 # from cachetools import TTLCache, cached
-from django.http import JsonResponse
+from django.http import HttpRequest, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from knox.auth import TokenAuthentication
 from rest_framework.response import Response
 
+from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import account_admin_user
 from smarter.apps.chatbot.models import (
@@ -40,7 +41,7 @@ logger.setLevel(logging.DEBUG)
 
 
 @method_decorator(csrf_exempt, name="dispatch")
-class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
+class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
     """
     Base viewset for all ChatBot APIs. Handles
     - api key authentication
@@ -49,14 +50,31 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
     """
 
     _url: str = None
-    request = None
-    http_method_names = ["get", "post", "options"]
-    chatbot_helper: ChatBotHelper = None
-    account: Account = None
-    user: UserType = None
-    chatbot: ChatBot = None
+    request: HttpRequest = None
+    http_method_names: list[str] = ["get", "post", "options"]
+    _chatbot_helper: ChatBotHelper = None
+    _chatbot: ChatBot = None
     plugins: List[PluginStatic] = None
-    session_key: str = None
+    _session_key: str = None
+    _name: str = None
+
+    @property
+    def session_key(self):
+        return self._session_key
+
+    @property
+    def chatbot_helper(self):
+        return self._chatbot_helper
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def chatbot(self):
+        if not self._chatbot:
+            self._chatbot = self.chatbot_helper.chatbot
+        return self._chatbot
 
     @property
     def formatted_class_name(self):
@@ -73,50 +91,13 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
             return True
         return False
 
-    def smarter_api_authenticate(self, request) -> bool:
-        """
-        Authenticate the request against any api keys associated with the ChatBot.
-        ChatBot is public if no API keys are associated with it. There are
-        four levels of authentication:
-        - if no API keys are associated with the ChatBot, then it is public.
-        - otherwise, the authentication token (understood to be , "API key" from a customer perspective)
-          must be valid as per knox authentication.
-        - and, the User associated with the authentication token must also be associated with the Account
-          to which the ChatBot belongs.
-        - and, API key must be associated with the ChatBot
-        """
-
-        # if there are no API keys associated with the ChatBot, then it is public
-        if not ChatBotAPIKey.objects.filter(chatbot=self.chatbot, api_key__is_active=True).exists():
-            self.user = request.user
-            return True
-
-        # returns a tuple of (user, api_key) if the request is authenticated
-        user, api_key = TokenAuthentication().authenticate(request)
-
-        # the user associated with the API key must have a UserProfile
-        # associated with the Account for the ChatBot.
-        if not UserProfile.objects.filter(user=user, account=self.account).exists():
-            url = request.build_absolute_uri()
-            msg = f"Received url {url} from User {user} who is not associated with Account {self.account}"
-            raise SmarterBusinessRuleViolation(message=msg)
-
-        # the api_key must be associated with the ChatBot
-        if not ChatBotAPIKey.objects.filter(api_key=api_key, chatbot=self.chatbot).exists():
-            user_profile = UserProfile.objects.get(user=user)
-            msg = f"Received api key {api_key.description} for User {user} of Account {user_profile.account.account_number} which is not associated with Chatbot {self.chatbot.name}"
-            raise SmarterBusinessRuleViolation(message=msg)
-
-        self.user = user
-        return api_key is not None
-
     def dispatch(self, request, *args, **kwargs):
         self.request = request
         self._url = self.request.build_absolute_uri()
         self._url = SmarterValidator.urlify(self._url)
-        self.chatbot_helper = ChatBotHelper(
-            url=self.url
-        )  # chatbot urls are intended to be public, so, no need to authenticate
+        self._chatbot_helper = ChatBotHelper(url=self.url, name=self.name)
+        self._account = self.chatbot_helper.account
+        self._user = self.chatbot_helper.user
 
         if waffle.switch_is_active("chatbot_api_view_logging"):
             logger.info("%s.dispatch() - url=%s", self.formatted_class_name, self.url)
@@ -128,20 +109,17 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView):
         if not self.chatbot_helper.is_valid:
             data = {
                 "message": "Not Found. Please provide a valid ChatBot URL.",
-                "account": self.chatbot_helper.account.account_number if self.chatbot_helper.account else None,
-                "chatbot": self.chatbot_helper.chatbot,
-                "user": self.chatbot_helper.user.username if self.chatbot_helper.user else None,
+                "account": self.account,
+                "chatbot": self.chatbot,
+                "user": self.user,
                 "url": self.chatbot_helper.url,
             }
             self.chatbot_helper.log_dump()
             return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
-        if self.chatbot_helper.is_authentication_required and not self.smarter_api_authenticate(request):
+        if self.chatbot_helper.is_authentication_required and not request.user.is_authenticated:
             data = {"message": "Forbidden. Please provide a valid API key."}
             return JsonResponse(data=data, status=HTTPStatus.FORBIDDEN)
 
-        self.account = self.chatbot_helper.account
-        self.user = account_admin_user(self.account)
-        self.chatbot = self.chatbot_helper.chatbot
         self.plugins = ChatBotPlugin().plugins(chatbot=self.chatbot)
 
         if waffle.switch_is_active("chatbot_api_view_logging"):
