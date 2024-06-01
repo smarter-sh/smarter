@@ -34,8 +34,9 @@ class SmarterChatBotApiView(ChatBotApiBaseViewSet):
     top-level viewset for customer-deployed Plugin-based Chat APIs.
     """
 
-    def dispatch(self, request, *args, **kwargs):
+    def dispatch(self, request, *args, name: str = None, **kwargs):
         kwargs.pop("chatbot_id", None)
+        self._name = name
         try:
             self.data = json.loads(request.body)
         except json.JSONDecodeError:
@@ -52,10 +53,10 @@ class SmarterChatBotApiView(ChatBotApiBaseViewSet):
         # json dict that includes, among other pertinent info, this session_key
         # which uniquely identifies the device and the individual chatbot session
         # for the device.
-        session_key = self.data.get("session_key")
-        if session_key:
-            SmarterValidator.validate_session_key(session_key)
-        self.chat_helper = ChatHelper(session_key=session_key, request=request)
+        self._session_key = self.data.get("session_key")
+        if self.session_key:
+            SmarterValidator.validate_session_key(self.session_key)
+        self.chat_helper = ChatHelper(session_key=self.session_key, request=request)
 
         if waffle.switch_is_active("chatbot_api_view_logging"):
             logger.info("%s initialized with chat object %s", self.formatted_class_name, self.chat_helper.chat)
@@ -63,7 +64,7 @@ class SmarterChatBotApiView(ChatBotApiBaseViewSet):
         return super().dispatch(request, *args, **kwargs)
 
     # pylint: disable=W0613
-    def post(self, request, *args, **kwargs):
+    def post(self, request, *args, name: str = None, **kwargs):
         """
         POST request handler for the Smarter Chat API. We need to parse the request host
         to determine which ChatBot instance to use. There are two possible hostname formats:
