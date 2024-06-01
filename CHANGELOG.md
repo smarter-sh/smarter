@@ -1,37 +1,33 @@
-## [0.3.4](https://github.com/smarter-sh/smarter/compare/v0.3.3...v0.3.4) (2024-06-01)
-
-
-### Bug Fixes
-
-* add protocol to ChatBot.url_chatbot() ([4c146aa](https://github.com/smarter-sh/smarter/commit/4c146aa5f86dec432311b600015786111e4191a3))
-
-## [0.3.3](https://github.com/smarter-sh/smarter/compare/v0.3.2...v0.3.3) (2024-06-01)
-
-
-### Bug Fixes
-
-* force a new release ([e66cbce](https://github.com/smarter-sh/smarter/commit/e66cbcef78f7af12c7d34e5ebcf9bc4d38715f9e))
-
-## [0.3.2](https://github.com/smarter-sh/smarter/compare/v0.3.1...v0.3.2) (2024-05-31)
-
-
-### Bug Fixes
-
-* set url_chatbot() to urljoin(self.url, /api/v1/chatbot/smarter/) ([ad8036b](https://github.com/smarter-sh/smarter/commit/ad8036b1b487fc0619a5523bec52ab894c205184))
-* set url_chatbot() to urljoin(self.url, /api/v1/chatbot/smarter/) ([7d2eb0c](https://github.com/smarter-sh/smarter/commit/7d2eb0c57d65e0d3d13a088490bd7ce3f6c411e4))
-
-## [0.3.1](https://github.com/smarter-sh/smarter/compare/v0.3.0...v0.3.1) (2024-05-31)
-
-
-### Bug Fixes
-
-* url_chatbot should be urljoin(self.hostname, /api/v1/chatbot/smarter/) ([a794fdf](https://github.com/smarter-sh/smarter/commit/a794fdf7e4ea6525797247d790303e62e099bfcb))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.3.4](https://github.com/smarter-sh/smarter/compare/v0.3.3...v0.3.4) (2024-06-01)
+
+### Bug Fixes
+
+- add protocol to ChatBot.url_chatbot() ([4c146aa](https://github.com/smarter-sh/smarter/commit/4c146aa5f86dec432311b600015786111e4191a3))
+
+## [0.3.3](https://github.com/smarter-sh/smarter/compare/v0.3.2...v0.3.3) (2024-06-01)
+
+### Bug Fixes
+
+- force a new release ([e66cbce](https://github.com/smarter-sh/smarter/commit/e66cbcef78f7af12c7d34e5ebcf9bc4d38715f9e))
+
+## [0.3.2](https://github.com/smarter-sh/smarter/compare/v0.3.1...v0.3.2) (2024-05-31)
+
+### Bug Fixes
+
+- set url_chatbot() to urljoin(self.url, /api/v1/chatbot/smarter/) ([ad8036b](https://github.com/smarter-sh/smarter/commit/ad8036b1b487fc0619a5523bec52ab894c205184))
+- set url_chatbot() to urljoin(self.url, /api/v1/chatbot/smarter/) ([7d2eb0c](https://github.com/smarter-sh/smarter/commit/7d2eb0c57d65e0d3d13a088490bd7ce3f6c411e4))
+
+## [0.3.1](https://github.com/smarter-sh/smarter/compare/v0.3.0...v0.3.1) (2024-05-31)
+
+### Bug Fixes
+
+- url_chatbot should be urljoin(self.hostname, /api/v1/chatbot/smarter/) ([a794fdf](https://github.com/smarter-sh/smarter/commit/a794fdf7e4ea6525797247d790303e62e099bfcb))
 
 # [0.3.0](https://github.com/smarter-sh/smarter/compare/v0.2.2...v0.3.0) (2024-05-31)
 
