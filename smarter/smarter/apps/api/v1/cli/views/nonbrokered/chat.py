@@ -285,8 +285,6 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
 
         parsed_url = urlparse(url)
         path = parsed_url.path
-
-        logger.info("chat_request_factory() url: %s", url)
         new_request = factory.post(path, data=body_str, content_type="application/json")
 
         new_request.META = request.META.copy()
@@ -302,7 +300,6 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         if hasattr(request, "_messages"):
             new_request._messages = request._messages
 
-        logger.info("chat_request_factory() new_request url: %s", new_request.build_absolute_uri())
         return new_request
 
     def post(self, request, name, *args, **kwargs):
