@@ -19,7 +19,10 @@ from smarter.lib.journal.enum import (
     SmarterJournalCliCommands,
     SmarterJournalThings,
 )
-from smarter.lib.journal.http import SmarterJournaledJsonResponse
+from smarter.lib.journal.http import (
+    SmarterJournaledJsonErrorResponse,
+    SmarterJournaledJsonResponse,
+)
 from smarter.lib.manifest.enum import SCLIResponseGet
 
 from ..base import APIV1CLIViewError, CliBaseApiView
@@ -319,13 +322,34 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
 
         # create a Smarter chatbot request and prompt the chatbot
         chat_request = self.chat_request_factory(request=request, url=self.url_chatbot, body=request_body)
-        chat_response = SmarterChatBotApiView.as_view()(request=chat_request)
+        chat_response = SmarterChatBotApiView.as_view()(request=chat_request, name=name)
         chat_response = json.loads(chat_response.content)
+
+        response_data = chat_response.get(SmarterJournalApiResponseKeys.DATA)
+        try:
+            if not response_data:
+                raise APIV1CLIChatViewError(f"Internal error. Chat response data key is missing: {chat_response}")
+
+            response_body = response_data.get("body")
+            if not response_body:
+                # an internal error might have occurred, so look for an error key
+                response_error = response_data.get("error")
+                if response_error:
+                    raise APIV1CLIChatViewError(f"Chat response error: {response_error}")
+                raise APIV1CLIChatViewError(
+                    f"Internal error. Chat response body and error keys are missing: {response_body}"
+                )
+        except APIV1CLIChatViewError as e:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                e=e,
+                thing=SmarterJournalThings(SmarterJournalThings.CHAT),
+                command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+            )
 
         # unescape the chat response body so that it looks
         # normal from the cli command line.
-        body_string = chat_response["data"]["body"]
-        body_dict = json.loads(body_string)
+        body_dict = json.loads(response_body)
         chat_response[SmarterJournalApiResponseKeys.DATA]["body"] = body_dict
 
         data = {SmarterJournalApiResponseKeys.DATA: {"request": request_body, "response": chat_response}}
