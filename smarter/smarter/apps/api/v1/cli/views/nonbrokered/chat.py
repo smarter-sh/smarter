@@ -305,6 +305,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
 
         return new_request
 
+    # pylint: disable=too-many-locals
     def post(self, request, name, *args, **kwargs):
         response = ChatConfigView.as_view()(request, name=name)
 
