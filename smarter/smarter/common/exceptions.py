@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class SmarterExceptionBase(Exception):
     """Exception raised for errors in the configuration."""
 
-    def __init__(self, message):
+    def __init__(self, message: str = ""):
         self.message = message
         super().__init__(self.message)
 

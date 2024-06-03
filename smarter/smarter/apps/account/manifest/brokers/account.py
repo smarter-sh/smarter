@@ -125,18 +125,14 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
         account_dict = model_to_dict(self.account)
         account_dict = self.snake_to_camel(account_dict)
         account_dict.pop("id")
-        account_dict.pop("account")
-        account_dict.pop("name")
-        account_dict.pop("description")
-        account_dict.pop("version")
 
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: self.account.name,
-                SAMMetadataKeys.DESCRIPTION.value: self.account.description,
-                SAMMetadataKeys.VERSION.value: self.account.version,
+                SAMMetadataKeys.NAME.value: self.account.account_number,
+                SAMMetadataKeys.DESCRIPTION.value: self.account.company_name,
+                SAMMetadataKeys.VERSION.value: "1.0.0",
             },
             SAMKeys.SPEC.value: {
                 SAMAccountSpecKeys.CONFIG.value: account_dict,
@@ -172,8 +168,13 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
             self._manifest = SAMAccount(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
-                metadata=self.loader.manifest_metadata,
-                spec=self.loader.manifest_spec,
+                metadata={
+                    **self.loader.manifest_metadata,
+                    "accountNumber": self.account.account_number,
+                },
+                spec={
+                    "config": self.loader.manifest_spec,
+                },
                 status=self.loader.manifest_status,
             )
         return self._manifest
@@ -230,7 +231,7 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
                 model_dump = AccountSerializer(account).data
                 if not model_dump:
                     raise SAMAccountBrokerError(
-                        f"Model dump failed for {self.kind} {account.name}", thing=self.kind, command=command
+                        message=f"Model dump failed for {self.kind} {account.name}", thing=self.kind, command=command
                     )
                 data.append(model_dump)
             except Exception as e:
@@ -280,14 +281,14 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
         raise SAMBrokerErrorNotImplemented(message="Chat not implemented", thing=self.kind, command=command)
 
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
-        command = command = self.deploy.__name__
+        command = command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
         if self.account:
             try:
                 data = self.django_orm_to_manifest_dict()
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
-                raise SAMBrokerError(message=f"Error in {command}: {e}", thing=self.kind, command=command) from e
+                raise SAMBrokerError(message=f"Error in {command}: {str(e)}", thing=self.kind, command=command) from e
         raise SAMBrokerErrorNotReady(message="No account found", thing=self.kind, command=command)
 
     def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
