@@ -30,6 +30,7 @@ logger.setLevel(logging.DEBUG)
 # cache = TTLCache(ttl=600, maxsize=1000)
 
 
+# pylint: disable=too-many-instance-attributes
 @method_decorator(csrf_exempt, name="dispatch")
 class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
     """
