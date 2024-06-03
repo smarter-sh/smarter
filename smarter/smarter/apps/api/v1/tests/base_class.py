@@ -2,7 +2,9 @@
 Test api/v1/ base class.
 
 We have somewhere in the neighborhood of 75 api endpoints to test, so we want
-ensure that our setUp and tearDown methods are as efficient as possible.
+ensure that:
+- our setUp and tearDown methods are as efficient as possible.
+- we are authenticating our http requests properly and consistently.
 """
 
 import json
@@ -26,28 +28,32 @@ class ApiV1TestBase(unittest.TestCase, AccountMixin):
     def setUpClass(cls) -> None:
         cls.name = "CliTestPlugin"
         cls._user, cls._account, cls._user_profile = admin_user_factory()
+
+        instance = cls()
+
         cls.token_record, cls.token_key = SmarterAuthToken.objects.create(
-            name=cls.user.get_username(),
-            user=cls.user,
-            description=cls.user.get_username(),
+            name=instance.user.username,
+            user=instance.user,
+            description=instance.user.username,
         )
 
     @classmethod
     def tearDownClass(cls) -> None:
+        instance = cls()
         try:
-            cls.user_profile.delete()
+            instance.user_profile.delete()
         except UserProfile.DoesNotExist:
             pass
         try:
-            cls.user.delete()
+            instance.user.delete()
         except User.DoesNotExist:
             pass
         try:
-            cls.account.delete()
+            instance.account.delete()
         except Account.DoesNotExist:
             pass
         try:
-            cls.token_record.delete()
+            instance.token_record.delete()
         except SmarterAuthToken.DoesNotExist:
             pass
 
@@ -57,6 +63,10 @@ class ApiV1TestBase(unittest.TestCase, AccountMixin):
         """
         client = Client()
         headers = {"HTTP_AUTHORIZATION": f"Token {self.token_key}"}
+
+        print(f"path: {path}")
+        print(f"headers: {headers}")
+
         response = client.post(path=path, data=manifest, content_type="application/json", **headers)
 
         response_content = response.content.decode("utf-8")
