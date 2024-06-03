@@ -19,9 +19,7 @@ class TestApiV1CliPlugin(ApiV1TestBase):
 
     def setUp(self):
         super().setUp()
-        self.path = os.path.join(
-            PYTHON_ROOT, "smarter", "apps", "api", "v1", "cli", "tests", SCLIResponseGet.DATA.value
-        )
+        self.path = os.path.join(PYTHON_ROOT, "smarter/apps/api/v1/cli/tests/data")
         self.good_manifest_path = os.path.join(self.path, "good-plugin-manifest.yaml")
         with open(self.good_manifest_path, encoding="utf-8") as file:
             self.good_manifest_text = file.read()
