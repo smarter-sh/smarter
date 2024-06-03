@@ -26,7 +26,6 @@ class ApiV1TestBase(unittest.TestCase, AccountMixin):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.name = "CliTestPlugin"
         cls._user, cls._account, cls._user_profile = admin_user_factory()
 
         instance = cls()
@@ -64,11 +63,7 @@ class ApiV1TestBase(unittest.TestCase, AccountMixin):
         client = Client()
         headers = {"HTTP_AUTHORIZATION": f"Token {self.token_key}"}
 
-        print(f"path: {path}")
-        print(f"headers: {headers}")
-
         response = client.post(path=path, data=manifest, content_type="application/json", **headers)
-
         response_content = response.content.decode("utf-8")
         response_json = json.loads(response_content)
         return response_json, response.status_code

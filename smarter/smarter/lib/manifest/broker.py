@@ -44,7 +44,9 @@ class SAMBrokerError(SAMExceptionBase):
     thing: SmarterJournalThings = None
     command: SmarterJournalCliCommands = None
 
-    def __init__(self, message: str, thing: SmarterJournalThings = None, command: SmarterJournalCliCommands = None):
+    def __init__(
+        self, message: str = None, thing: SmarterJournalThings = None, command: SmarterJournalCliCommands = None
+    ):
         self.thing = thing
         self.command = command
         super().__init__(message)
@@ -129,7 +131,10 @@ class AbstractBroker(ABC):
         self._account = account
         self._loader = loader
         if api_version not in SUPPORTED_API_VERSIONS:
-            raise SAMBrokerError(f"Unsupported apiVersion: {api_version}")
+            raise SAMBrokerError(
+                message=f"Unsupported apiVersion: {api_version}",
+                thing=SmarterJournalThings.ACCOUNT,
+            )
         self._api_version = api_version
 
         try:
@@ -192,7 +197,7 @@ class AbstractBroker(ABC):
     ###########################################################################
     @property
     def model_class(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @property
     def manifest(self) -> AbstractSAMBase:
@@ -221,47 +226,69 @@ class AbstractBroker(ABC):
     def apply(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """apply a manifest, which works like a upsert."""
         if self.manifest.status:
-            raise SAMBrokerReadOnlyError
+            raise SAMBrokerReadOnlyError(
+                message="status field is read-only",
+                thing=self.thing,
+                command=SmarterJournalCliCommands.APPLY,
+            )
 
     @abstractmethod
     def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """chat with the broker."""
-        raise SAMBrokerErrorNotImplemented
+        raise SAMBrokerErrorNotImplemented(
+            message="chat() not implemented", thing=self.thing, command=SmarterJournalCliCommands.CHAT
+        )
 
     @abstractmethod
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """print the manifest."""
-        raise NotImplementedError
+        raise SAMBrokerErrorNotImplemented(
+            message="describe() not implemented", thing=self.thing, command=SmarterJournalCliCommands.DESCRIBE
+        )
 
     @abstractmethod
     def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """delete a resource."""
-        raise NotImplementedError
+        raise SAMBrokerErrorNotImplemented(
+            message="delete() not implemented", thing=self.thing, command=SmarterJournalCliCommands.DELETE
+        )
 
     @abstractmethod
     def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """deploy a resource."""
-        raise NotImplementedError
+        raise SAMBrokerErrorNotImplemented(
+            message="deploy() not implemented", thing=self.thing, command=SmarterJournalCliCommands.DEPLOY
+        )
 
     @abstractmethod
     def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """Returns an example yaml manifest document for the kind of resource."""
-        raise NotImplementedError
+        raise SAMBrokerErrorNotImplemented(
+            message="example_manifest() not implemented",
+            thing=self.thing,
+            command=SmarterJournalCliCommands.MANIFEST_EXAMPLE,
+        )
 
     @abstractmethod
     def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """get information about specified resources."""
-        raise NotImplementedError
+        raise SAMBrokerErrorNotImplemented(
+            message="get() not implemented", thing=self.thing, command=SmarterJournalCliCommands.GET
+        )
 
     @abstractmethod
     def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """get logs for a resource."""
-        raise NotImplementedError
+        raise SAMBrokerErrorNotImplemented(
+            message="logs() not implemented", thing=self.thing, command=SmarterJournalCliCommands.LOGS
+        )
 
     @abstractmethod
     def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """undeploy a resource."""
-        raise NotImplementedError
+        raise SAMBrokerErrorNotImplemented(
+            message="undeploy() not implemented", thing=self.thing, command=SmarterJournalCliCommands.UNDEPLOY
+        )
 
     ###########################################################################
     # http json response helpers
