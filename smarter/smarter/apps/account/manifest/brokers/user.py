@@ -209,7 +209,7 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {"count": len(data)},
-            SCLIResponseGet.KWARGS.value: kwargs,
+            SCLIResponseGet.KWARGS.value: self.params,
             SCLIResponseGet.DATA.value: {
                 SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=UserSerializer()),
                 SCLIResponseGetData.ITEMS.value: data,
@@ -252,7 +252,7 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
-        username: str = kwargs.get("username", None)
+        username: str = self.params.get("username", None)
 
         try:
             self._user = User.objects.get(username=username)
