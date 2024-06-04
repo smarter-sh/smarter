@@ -35,7 +35,7 @@ class SAMPluginDataSqlConnectionBrokerError(SAMBrokerError):
     """Base exception for Smarter API Plugin Broker handling."""
 
     @property
-    def get_readable_name(self):
+    def get_formatted_err_message(self):
         return "Smarter API PluginDataSqlConnection Manifest Broker Error"
 
 

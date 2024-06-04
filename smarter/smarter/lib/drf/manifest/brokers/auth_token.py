@@ -18,6 +18,7 @@ from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
+    SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
 )
@@ -40,7 +41,7 @@ class SAMSmarterAuthTokenBrokerError(SAMBrokerError):
     """Base exception for Smarter API SmarterAuthToken Broker handling."""
 
     @property
-    def get_readable_name(self):
+    def get_formatted_err_message(self):
         return "Smarter API SmarterAuthToken Manifest Broker Error"
 
 
@@ -115,14 +116,18 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         """
         if self._smarter_auth_token:
             return self._smarter_auth_token
+
         try:
-            self._smarter_auth_token = SmarterAuthToken.objects.get(
-                user=self.user, description=self.manifest.metadata.description
-            )
-        except SmarterAuthToken.DoesNotExist:
-            self._smarter_auth_token, self._token_key = SmarterAuthToken.objects.create(
-                name=self.manifest.metadata.name, user=self.user, description=self.manifest.metadata.description
-            )
+            self._smarter_auth_token = SmarterAuthToken.objects.get(user=self.user, name=self.name)
+        except SmarterAuthToken.DoesNotExist as e:
+            if self.manifest:
+                self._smarter_auth_token, self._token_key = SmarterAuthToken.objects.create(
+                    name=self.manifest.metadata.name, user=self.user, description=self.manifest.metadata.description
+                )
+            else:
+                raise SAMBrokerErrorNotFound(
+                    f"Did not find {self.kind} {self.name}.", thing=self.kind, command=None
+                ) from e
 
         return self._smarter_auth_token
 
@@ -288,6 +293,13 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
+        self._name = kwargs.get("name", None)
+
+        if not self.name:
+            raise SAMBrokerErrorNotReady(
+                "Was expecting a 'name' key in the request body.", thing=self.kind, command=command
+            )
+
         if self.smarter_auth_token:
             try:
                 data = self.django_orm_to_manifest_dict()
