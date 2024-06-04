@@ -142,7 +142,7 @@ class AbstractBroker(ABC):
         url: str = None,
     ):
         self._request = request
-        self._name = name
+        self._name = self.params.get("name", None) or name
         self._account = account
         self._loader = loader
         if api_version not in SUPPORTED_API_VERSIONS:
@@ -217,9 +217,6 @@ class AbstractBroker(ABC):
         if not self._name and self.manifest and self.manifest.metadata and self.manifest.metadata.name:
             # assign from the manifest metadata, if we have it
             self._name = self.manifest.metadata.name
-        else:
-            # assign from the query string param, if we have it.
-            self._name = self.params.get("name", None)
         return self._name
 
     @property
@@ -455,7 +452,6 @@ class AbstractBroker(ABC):
         Set self.name from the 'name' query string param and then verify that it
         was actually passed.
         """
-        self._name = self.params.get("name", None)
         if not self.manifest and not self.name:
             raise SAMBrokerErrorNotReady(
                 f"If a manifest is not provided then the query param 'name' should be passed to identify the {self.kind}. Received {self.uri}",
@@ -470,7 +466,8 @@ class AbstractBroker(ABC):
         from the Django model serializer.
         """
         fields_and_types = [
-            {"name": field_name, "type": type(field).__name__} for field_name, field in serializer.fields.items()
+            self.snake_to_camel({"name": field_name, "type": type(field).__name__}, convert_values=True)
+            for field_name, field in serializer.fields.items()
         ]
         return fields_and_types
 
@@ -489,7 +486,7 @@ class AbstractBroker(ABC):
             retval[new_key] = value
         return retval
 
-    def snake_to_camel(self, dictionary: dict) -> dict:
+    def snake_to_camel(self, dictionary: dict, convert_values: bool = False) -> dict:
         """Converts snake_case dict keys to camelCase."""
 
         def convert(name: str):
@@ -499,9 +496,13 @@ class AbstractBroker(ABC):
         retval = {}
         for key, value in dictionary.items():
             if isinstance(value, dict):
-                value = self.snake_to_camel(value)
+                value = self.snake_to_camel(dictionary=value, convert_values=convert_values)
             new_key = convert(key)
-            retval[new_key] = value
+            if convert_values:
+                new_value = convert(value) if isinstance(value, str) else value
+            else:
+                new_value = value
+            retval[new_key] = new_value
         return retval
 
 
