@@ -49,7 +49,7 @@ class SAMAccountBrokerError(SAMBrokerError):
     """Base exception for Smarter API Account Broker handling."""
 
     @property
-    def get_readable_name(self):
+    def get_formatted_err_message(self):
         return "Smarter API Account Manifest Broker Error"
 
 

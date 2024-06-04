@@ -15,10 +15,10 @@ class SmarterExceptionBase(Exception):
         super().__init__(self.message)
 
     def __str__(self):
-        return self.get_readable_name + ": " + self.message
+        return self.get_formatted_err_message + ": " + self.message
 
     @property
-    def get_readable_name(self):
+    def get_formatted_err_message(self):
         words = re.findall("[A-Z][^A-Z]*", type(self).__name__)
         return " ".join(word for word in words)
 

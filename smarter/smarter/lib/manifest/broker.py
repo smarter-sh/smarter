@@ -52,40 +52,55 @@ class SAMBrokerError(SAMExceptionBase):
         super().__init__(message)
 
     @property
-    def get_readable_name(self):
-        return f"Smarter API {self.thing} manifest broker: {self.command}() unidentified error"
+    def get_formatted_err_message(self):
+        msg = f"Smarter API {self.thing} manifest broker: {self.command}() unidentified error."
+        if self.message:
+            msg += "  " + self.message
+        return msg
 
 
 class SAMBrokerReadOnlyError(SAMBrokerError):
     """Error for read-only broker operations."""
 
     @property
-    def get_readable_name(self):
-        return f"Smarter API {self.thing} manifest broker: {self.command}() read-only error"
+    def get_formatted_err_message(self):
+        msg = f"Smarter API {self.thing} manifest broker: {self.command}() read-only error."
+        if self.message:
+            msg += "  " + self.message
+        return msg
 
 
 class SAMBrokerErrorNotImplemented(SAMBrokerError):
     """Base class for all SAMBroker errors."""
 
     @property
-    def get_readable_name(self):
-        return f"Smarter API {self.thing} manifest broker: {self.command}() not implemented error"
+    def get_formatted_err_message(self):
+        msg = f"Smarter API {self.thing} manifest broker: {self.command}() not implemented error."
+        if self.message:
+            msg += "  " + self.message
+        return msg
 
 
 class SAMBrokerErrorNotReady(SAMBrokerError):
     """Error for broker operations on resources that are not ready."""
 
     @property
-    def get_readable_name(self):
-        return f"Smarter API {self.thing} manifest broker: {self.command}() not ready error"
+    def get_formatted_err_message(self):
+        msg = f"Smarter API {self.thing} manifest broker: {self.command}() not ready error."
+        if self.message:
+            msg += "  " + self.message
+        return msg
 
 
 class SAMBrokerErrorNotFound(SAMBrokerError):
     """Error for broker operations on resources that are not found."""
 
     @property
-    def get_readable_name(self):
-        return f"Smarter API {self.thing} manifest broker: {self.command}() not found error"
+    def get_formatted_err_message(self):
+        msg = f"Smarter API {self.thing} manifest broker: {self.command}() not found error."
+        if self.message:
+            msg += "  " + self.message
+        return msg
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes
