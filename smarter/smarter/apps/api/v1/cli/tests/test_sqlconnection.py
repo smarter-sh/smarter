@@ -1,4 +1,4 @@
-"""Test Api v1 CLI commands for ChatBot"""
+"""Test Api v1 CLI commands for SqlConnection"""
 
 from http import HTTPStatus
 from urllib.parse import urlencode
@@ -18,9 +18,9 @@ from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 KIND = SAMKinds.CHATBOT.value
 
 
-class TestApiCliV1ChatBot(ApiV1TestBase):
+class TestApiCliV1SqlConnection(ApiV1TestBase):
     """
-    Test Api v1 CLI commands for ChatBot
+    Test Api v1 CLI commands for SqlConnection
 
     This class is a subclass of ApiV1TestBase, which gives us access to the
     setUpClass and tearDownClass methods, which are used to uniformly

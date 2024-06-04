@@ -15,7 +15,7 @@ from smarter.lib.manifest.enum import SAMKeys
 KIND = SAMKinds.USER.value
 
 
-class TestApiCliV1User(ApiV1TestBase):
+class TestApiCliV1UserDelete(ApiV1TestBase):
     """
     Test Api v1 CLI commands for User
 
