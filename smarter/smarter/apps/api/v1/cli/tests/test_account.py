@@ -225,7 +225,10 @@ class TestApiCliV1Account(ApiV1TestBase):
 
         self.assertIn("description", error.keys())
         self.assertIn("errorClass", error.keys())
-        self.assertEqual(error["description"], "Smarter API Account manifest broker: deploy() not implemented error")
+        self.assertEqual(
+            error["description"],
+            "Smarter API Account manifest broker: deploy() not implemented error.  Deploy not implemented",
+        )
 
     def test_undeploy(self) -> None:
         """Test undeploy command"""
@@ -241,7 +244,10 @@ class TestApiCliV1Account(ApiV1TestBase):
 
         self.assertIn("description", error.keys())
         self.assertIn("errorClass", error.keys())
-        self.assertEqual(error["description"], "Smarter API Account manifest broker: undeploy() not implemented error")
+        self.assertEqual(
+            error["description"],
+            "Smarter API Account manifest broker: undeploy() not implemented error.  Undeploy not implemented",
+        )
 
     def test_logs(self) -> None:
         """Test logs command"""
@@ -267,4 +273,7 @@ class TestApiCliV1Account(ApiV1TestBase):
 
         self.assertIn("description", error.keys())
         self.assertIn("errorClass", error.keys())
-        self.assertEqual(error["description"], "Smarter API Account manifest broker: delete() not implemented error")
+        self.assertEqual(
+            error["description"],
+            "Smarter API Account manifest broker: delete() not implemented error.  Delete not implemented",
+        )

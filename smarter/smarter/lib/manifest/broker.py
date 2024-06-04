@@ -212,8 +212,14 @@ class AbstractBroker(ABC):
     @property
     def name(self) -> str:
         """The name of the manifest."""
+        if self._name:
+            return self._name
         if not self._name and self.manifest and self.manifest.metadata and self.manifest.metadata.name:
+            # assign from the manifest metadata, if we have it
             self._name = self.manifest.metadata.name
+        else:
+            # assign from the query string param, if we have it.
+            self._name = self.params.get("name", None)
         return self._name
 
     @property
@@ -449,11 +455,7 @@ class AbstractBroker(ABC):
         Set self.name from the 'name' query string param and then verify that it
         was actually passed.
         """
-        print("params", self.params)
-        print("name: ", self.params.get("name", None))
         self._name = self.params.get("name", None)
-        print("self.name: ", self.name)
-        print("manifest: ", self.manifest)
         if not self.manifest and not self.name:
             raise SAMBrokerErrorNotReady(
                 f"If a manifest is not provided then the query param 'name' should be passed to identify the {self.kind}. Received {self.uri}",

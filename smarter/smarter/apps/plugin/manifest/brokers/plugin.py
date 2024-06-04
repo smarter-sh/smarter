@@ -16,6 +16,7 @@ from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
+    SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
 )
@@ -157,7 +158,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
-        plugin_class: str = kwargs.get("plugin_class", SAMPluginMetadataClassValues.STATIC.value)
+        plugin_class: str = self.params.get("plugin_class", SAMPluginMetadataClassValues.STATIC.value)
         try:
             Plugin = PluginMap[plugin_class]
         except KeyError as e:
@@ -180,9 +181,9 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
-        name: str = kwargs.get("name", None)
-        all_objects: bool = kwargs.get("all_objects", False)
-        tags: str = kwargs.get("tags", None)
+        name: str = self.params.get("name", None)
+        all_objects: bool = self.params.get("all_objects", False)
+        tags: str = self.params.get("tags", None)
         data = []
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
@@ -202,6 +203,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         for plugin_meta in plugins:
             controller = PluginController(account=self.account, plugin_meta=plugin_meta)
             try:
+                model_titles = controller.get_model_titles()
                 model_dump = controller.model_dump_json()
                 if not model_dump:
                     raise SAMBrokerError(
@@ -217,9 +219,9 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
             SAMKeys.KIND.value: self.kind,
             SAMMetadataKeys.NAME.value: name,
             SAMKeys.METADATA.value: {"count": len(data)},
-            SCLIResponseGet.KWARGS.value: kwargs,
+            SCLIResponseGet.KWARGS.value: self.params,
             SCLIResponseGet.DATA.value: {
-                SCLIResponseGetData.TITLES.value: self.get_model_titles(),
+                SCLIResponseGetData.TITLES.value: model_titles,
                 SCLIResponseGetData.ITEMS.value: data,
             },
         }
@@ -255,6 +257,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
+        self.set_and_verify_name_param(command=command)
         if self.plugin.ready:
             try:
                 data = self.plugin.to_json()
@@ -275,6 +278,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
+        self.set_and_verify_name_param(command=command)
         if self.plugin.ready:
             try:
                 self.plugin.delete()
