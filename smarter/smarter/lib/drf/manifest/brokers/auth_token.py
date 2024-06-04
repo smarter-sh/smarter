@@ -241,7 +241,8 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
                     raise SAMSmarterAuthTokenBrokerError(
                         f"Model dump failed for {self.kind} {smarter_auth_token.name}", thing=self.kind, command=command
                     )
-                data.append(model_dump)
+                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                data.append(camel_cased_model_dump)
             except Exception as e:
                 raise SAMSmarterAuthTokenBrokerError(
                     f"Model dump failed for {self.kind} {smarter_auth_token.name}", thing=self.kind, command=command
