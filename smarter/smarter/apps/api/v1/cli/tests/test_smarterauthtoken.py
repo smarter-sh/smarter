@@ -1,6 +1,7 @@
 """Test Api v1 CLI commands for SmarterAuthToken"""
 
 from http import HTTPStatus
+from urllib.parse import urlencode
 
 import yaml
 from django.urls import reverse
@@ -70,8 +71,13 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
     def test_describe(self) -> None:
         """Test describe command"""
         kwargs = {"kind": KIND}
-        path = reverse(ApiV1CliReverseViews.describe, kwargs=kwargs)
-        response, status = self.get_response(path)
+        url = reverse(ApiV1CliReverseViews.describe, kwargs=kwargs)
+        query_params = urlencode({"name": self.token_record.name})
+        url_with_query_params = f"{url}?{query_params}"
+        response, status = self.get_response(url_with_query_params)
+
+        print(url_with_query_params)
+
         self.assertEqual(status, HTTPStatus.OK)
         self.validate_response(response)
 

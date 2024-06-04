@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 from http import HTTPStatus
 
 import inflect
-from django.http import HttpRequest
+from django.http import HttpRequest, QueryDict
 from rest_framework.serializers import ModelSerializer
 
 from smarter.common.api import SmarterApiVersions
@@ -173,6 +173,10 @@ class AbstractBroker(ABC):
     @property
     def request(self) -> HttpRequest:
         return self._request
+
+    @property
+    def params(self) -> QueryDict:
+        return self.request.GET if self.request else {}
 
     @property
     def is_valid(self) -> bool:
