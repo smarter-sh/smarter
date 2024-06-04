@@ -9,13 +9,14 @@ from django.urls import reverse
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
-from smarter.apps.chatbot.models import ChatBot
+from smarter.apps.plugin.manifest.models.sql_connection.enum import DbEngines
+from smarter.apps.plugin.models import PluginDataSqlConnection
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
 
-KIND = SAMKinds.CHATBOT.value
+KIND = SAMKinds.SQLCONNECTION.value
 
 
 class TestApiCliV1SqlConnection(ApiV1TestBase):
@@ -30,33 +31,32 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
     Account.
     """
 
-    chatbot: ChatBot = None
+    sqlconnection: PluginDataSqlConnection = None
 
     def setUp(self):
         super().setUp()
         self.kwargs = {SAMKeys.KIND.value: KIND}
-        self.name = "TestChatBot"
+        self.name = "TestSqlConnection"
         self.query_params = urlencode({"name": self.name})
 
     def tearDown(self):
         super().tearDown()
-        if self.chatbot:
-            self.chatbot.delete()
+        if self.sqlconnection:
+            self.sqlconnection.delete()
 
-    def chatbot_factory(self):
-        chatbot = ChatBot.objects.create(
+    def sqlconnection_factory(self):
+        sqlconnection = PluginDataSqlConnection.objects.create(
             name=self.name,
+            db_engine=DbEngines.MYSQL.value,
             account=self.account,
-            description="Test ChatBot",
             version="1.0.0",
-            subdomain=None,
-            custom_domain=None,
-            deployed=False,
-            app_name="Smarter",
-            app_assistant="Smarty Pants",
-            app_welcome_message="Welcome to Smarter!",
+            hostname="localhost",
+            port=5432,
+            database=self.name,
+            username="test",
+            password="test",
         )
-        return chatbot
+        return sqlconnection
 
     def validate_response(self, response: dict) -> None:
         # validate the response and status are both good
@@ -66,7 +66,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         self.assertIn(SmarterJournalApiResponseKeys.DATA, response.keys())
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1.value)
-        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.CHATBOT.value)
+        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.SQLCONNECTION.value)
 
         # validate the metadata
         self.assertIn(SmarterJournalApiResponseKeys.METADATA, data.keys())
@@ -78,27 +78,10 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
     def validate_spec(self, data: dict) -> None:
         self.assertIn(SAMKeys.SPEC.value, data.keys())
         spec = data[SAMKeys.SPEC.value]
-        config = spec["config"]
-        config_fields = [
-            "subdomain",
-            "customDomain",
-            "deployed",
-            "defaultModel",
-            "defaultTemperature",
-            "defaultMaxTokens",
-            "appName",
-            "appAssistant",
-            "appWelcomeMessage",
-            "appExamplePrompts",
-            "appPlaceholder",
-            "appInfoUrl",
-            "appBackgroundImageUrl",
-            "appLogoUrl",
-            "appFileAttachment",
-            "dnsVerificationStatus",
-        ]
+        connection = spec["connection"]
+        config_fields = ["db_engine", "hostname", "port", "username", "password", "database"]
         for field in config_fields:
-            assert field in config.keys(), f"{field} not found in config keys: {config.keys()}"
+            assert field in connection.keys(), f"{field} not found in config keys: {connection.keys()}"
 
     def test_example_manifest(self) -> None:
         """Test example-manifest command"""
@@ -112,7 +95,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
 
     def test_describe(self) -> None:
         """Test describe command"""
-        self.chatbot = self.chatbot_factory()
+        self.sqlconnection = self.sqlconnection_factory()
 
         path = reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
@@ -123,20 +106,17 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.validate_spec(data)
 
-        # verify the data matches the chatbot
-        self.assertEqual(data[SAMKeys.METADATA.value][SAMMetadataKeys.NAME.value], self.chatbot.name)
-        self.assertEqual(data[SAMKeys.METADATA.value][SAMMetadataKeys.DESCRIPTION.value], self.chatbot.description)
-        self.assertEqual(data[SAMKeys.METADATA.value][SAMMetadataKeys.VERSION.value], self.chatbot.version)
-
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["deployed"], self.chatbot.deployed)
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appName"], self.chatbot.app_name)
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appAssistant"], self.chatbot.app_assistant)
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appWelcomeMessage"], self.chatbot.app_welcome_message)
+        # verify the data matches the sqlconnection
+        self.assertEqual(data[SAMKeys.METADATA.value][SAMMetadataKeys.NAME.value], self.sqlconnection.name)
+        self.assertEqual(
+            data[SAMKeys.METADATA.value][SAMMetadataKeys.DESCRIPTION.value], self.sqlconnection.description
+        )
+        self.assertEqual(data[SAMKeys.METADATA.value][SAMMetadataKeys.VERSION.value], self.sqlconnection.version)
 
     def test_apply(self) -> None:
         """Test apply command"""
 
-        self.chatbot = self.chatbot_factory()
+        self.sqlconnection = self.sqlconnection_factory()
 
         # retrieve the current manifest by calling 'describe'
         path = reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)
@@ -150,20 +130,13 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         # muck up the manifest with some test data
         data = response[SmarterJournalApiResponseKeys.DATA]
         data[SAMKeys.SPEC.value] = {
-            "config": {
-                "deployed": True,
-                "defaultModel": "gpt-2",
-                "defaultTemperature": 1.0,
-                "defaultMaxTokens": 100,
-                "appName": "newName",
-                "appAssistant": "newAssistant",
-                "appWelcomeMessage": "newWelcomeMessage",
-                "appExamplePrompts": ["newExamplePrompts"],
-                "appPlaceholder": "newPlaceholder",
-                "appInfoUrl": "http://new.com",
-                "appBackgroundImageUrl": "http://new-background.com",
-                "appLogoUrl": "http://new-logo.com",
-                "appFileAttachment": False,
+            "connection": {
+                "db_engine": DbEngines.MYSQL.value,
+                "hostname": "newhost",
+                "port": 3307,
+                "username": "newUsername",
+                "password": "newPassword",
+                "database": "newDb",
             }
         }
         data[SAMKeys.METADATA.value]["description"] = "new description"
@@ -188,22 +161,18 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         # validate our changes
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.assertEqual(data[SAMKeys.METADATA.value]["description"], "new description")
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["deployed"], True)
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appName"], "newName")
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appAssistant"], "newAssistant")
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appWelcomeMessage"], "newWelcomeMessage")
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appExamplePrompts"], ["newExamplePrompts"])
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appPlaceholder"], "newPlaceholder")
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appInfoUrl"], "http://new.com")
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appBackgroundImageUrl"], "http://new-background.com")
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appLogoUrl"], "http://new-logo.com")
-        self.assertEqual(data[SAMKeys.SPEC.value]["config"]["appFileAttachment"], False)
+        self.assertEqual(data[SAMKeys.SPEC.value]["connection"]["db_engine"], DbEngines.MYSQL.value)
+        self.assertEqual(data[SAMKeys.SPEC.value]["connection"]["hostname"], "newhost")
+        self.assertEqual(data[SAMKeys.SPEC.value]["connection"]["port"], 3307)
+        self.assertEqual(data[SAMKeys.SPEC.value]["connection"]["username"], "newUsername")
+        self.assertEqual(data[SAMKeys.SPEC.value]["connection"]["password"], "newPassword")
+        self.assertEqual(data[SAMKeys.SPEC.value]["connection"]["database"], "newDb")
 
     def test_get(self) -> None:
         """Test get command"""
 
-        # create a chatbot so that we have something to get.
-        self.chatbot = self.chatbot_factory()
+        # create a sqlconnection so that we have something to get.
+        self.sqlconnection = self.sqlconnection_factory()
 
         def validate_titles(data):
             if "titles" not in data:
@@ -219,15 +188,19 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
 
         def validate_items(data):
             if "items" not in data or "titles" not in data:
-                return False
+                raise ValueError("items not found in data")
+
+            if "titles" not in data:
+                raise ValueError("titles not found in data")
 
             title_names = {title["name"] for title in data["titles"]}
 
             for item in data["items"]:
                 if not isinstance(item, dict):
-                    return False
+                    raise ValueError(f"item is not a dict: {item}")
                 if set(item.keys()) != title_names:
-                    return False
+                    difference = list(set(item.keys()).symmetric_difference(title_names))
+                    raise ValueError(f"item keys do not match titles: {difference}")
 
             return True
 
@@ -241,7 +214,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         self.assertIn(SmarterJournalApiResponseKeys.DATA, response.keys())
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1.value)
-        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.CHATBOT.value)
+        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.SQLCONNECTION.value)
 
         # validate the metadata
         self.assertIn(SmarterJournalApiResponseKeys.METADATA, data.keys())
@@ -263,47 +236,42 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
 
     def test_deploy(self) -> None:
         """Test deploy command"""
-        # create a chatbot so that we have something to deploy
-        self.chatbot = self.chatbot_factory()
+        # create a sqlconnection so that we have something to deploy
+        self.sqlconnection = self.sqlconnection_factory()
 
         path = reverse(ApiV1CliReverseViews.deploy, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         _, status = self.get_response(url_with_query_params)
 
         # validate the response and status are both good
-        self.assertEqual(status, HTTPStatus.OK)
-        self.chatbot.refresh_from_db()
-        self.assertTrue(self.chatbot.deployed)
+        self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
 
     def test_undeploy(self) -> None:
         """Test undeploy command"""
 
-        # create a chatbot so that we have something to undeploy
-        self.chatbot = self.chatbot_factory()
+        # create a sqlconnection so that we have something to undeploy
+        self.sqlconnection = self.sqlconnection_factory()
 
         path = reverse(ApiV1CliReverseViews.undeploy, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         _, status = self.get_response(url_with_query_params)
 
         # validate the response and status are both good
-        self.assertEqual(status, HTTPStatus.OK)
-        self.chatbot.refresh_from_db()
-        self.assertFalse(self.chatbot.deployed)
+        self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
 
     def test_logs(self) -> None:
         """Test logs command"""
         path = reverse(ApiV1CliReverseViews.logs, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
-        response, status = self.get_response(url_with_query_params)
+        _, status = self.get_response(url_with_query_params)
 
         # validate the response and status are both good
-        self.assertEqual(status, HTTPStatus.OK)
-        self.assertIsInstance(response, dict)
+        self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
 
     def test_delete(self) -> None:
         """Test delete command"""
-        # create a chatbot so that we have something to delete
-        self.chatbot = self.chatbot_factory()
+        # create a sqlconnection so that we have something to delete
+        self.sqlconnection = self.sqlconnection_factory()
 
         path = reverse(ApiV1CliReverseViews.delete, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
@@ -312,9 +280,9 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
 
-        # verify the chatbot was deleted
+        # verify the sqlconnection was deleted
         try:
-            ChatBot.objects.get(name=self.name)
-            self.fail("ChatBot was not deleted")
-        except ChatBot.DoesNotExist:
+            PluginDataSqlConnection.objects.get(name=self.name)
+            self.fail("PluginDataSqlConnection was not deleted")
+        except PluginDataSqlConnection.DoesNotExist:
             pass
