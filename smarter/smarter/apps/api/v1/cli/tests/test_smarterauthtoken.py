@@ -19,7 +19,7 @@ KIND = SAMKinds.APIKEY.value
 
 class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
     """
-    Test Api v1 CLI commands for account
+    Test Api v1 CLI commands for SmarterAuthToken
 
     This class is a subclass of ApiV1TestBase, which gives us access to the
     setUpClass and tearDownClass methods, which are used to uniformly
