@@ -17,6 +17,7 @@ from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
+    SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
 )
@@ -251,6 +252,24 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
+        username: str = kwargs.get("username", None)
+
+        try:
+            self._user = User.objects.get(username=username)
+        except User.DoesNotExist as e:
+            raise SAMBrokerErrorNotFound(
+                f"Failed to describe {self.kind} {username}. Not found", thing=self.kind, command=command
+            ) from e
+
+        try:
+            self._user_profile = UserProfile.objects.get(user=self._user, account=self.account)
+        except UserProfile.DoesNotExist as e:
+            raise SAMBrokerErrorNotFound(
+                f"Failed to describe {self.kind} {username}. User is not associated with your account",
+                thing=self.kind,
+                command=command,
+            ) from e
+
         if self.user:
             try:
                 data = self.django_orm_to_manifest_dict()
