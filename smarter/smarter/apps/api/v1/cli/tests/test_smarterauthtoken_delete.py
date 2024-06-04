@@ -3,7 +3,6 @@
 from http import HTTPStatus
 from urllib.parse import urlencode
 
-import yaml
 from django.urls import reverse
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
@@ -20,7 +19,7 @@ KIND = SAMKinds.APIKEY.value
 
 class TestApiCliV1SmarterAuthTokenDelete(ApiV1TestBase):
     """
-    Test Api v1 CLI commands for account
+    Test Api v1 CLI commands for SmarterAuthToken
 
     This class is a subclass of ApiV1TestBase, which gives us access to the
     setUpClass and tearDownClass methods, which are used to uniformly

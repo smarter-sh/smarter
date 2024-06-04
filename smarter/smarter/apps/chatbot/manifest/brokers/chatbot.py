@@ -80,6 +80,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
     _manifest: SAMChatbot = None
     _chatbot: ChatBot = None
     _chatbot_api_key: ChatBotAPIKey = None
+    _name: str = None
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -113,6 +114,19 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
             file_path=file_path,
             url=url,
         )
+        self._name = self.params.get("name", None)
+
+    @property
+    def name(self) -> str:
+        """
+        The name property is a string that represents the name of the ChatBot.
+        The name is used to uniquely identify the ChatBot in the database.
+        """
+        if self._name:
+            return self._name
+        if self.manifest:
+            self._name = self.manifest.metadata.name
+        return self._name
 
     @property
     def chatbot(self) -> ChatBot:
@@ -125,10 +139,11 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         if self._chatbot:
             return self._chatbot
         try:
-            self._chatbot = ChatBot.objects.get(account=self.account, name=self.manifest.metadata)
+            self._chatbot = ChatBot.objects.get(account=self.account, name=self.name)
         except ChatBot.DoesNotExist:
-            data = self.manifest_to_django_orm()
-            self._chatbot = ChatBot.objects.create(**data)
+            if self.manifest:
+                data = self.manifest_to_django_orm()
+                self._chatbot = ChatBot.objects.create(**data)
 
         return self._chatbot
 
@@ -285,6 +300,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                     "appFileAttachment": False,
                     "subdomain": "example-chatbot",
                     "customDomain": None,
+                    "dnsVerificationStatus": "Not Verified",
                 },
                 SAMChatbotSpecKeys.PLUGINS.value: get_plugin_examples_by_name(),
                 SAMChatbotSpecKeys.FUNCTIONS.value: ["weather"],
@@ -324,10 +340,10 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
             SAMKeys.KIND.value: self.kind,
             SAMMetadataKeys.NAME.value: name,
             SAMKeys.METADATA.value: {"count": len(data)},
-            SCLIResponseGet.KWARGS: kwargs,
-            SCLIResponseGet.DATA: {
-                SCLIResponseGetData.TITLES: self.get_model_titles(serializer=ChatBotSerializer()),
-                SCLIResponseGetData.ITEMS: data,
+            SCLIResponseGet.KWARGS.value: kwargs,
+            SCLIResponseGet.DATA.value: {
+                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=ChatBotSerializer()),
+                SCLIResponseGetData.ITEMS.value: data,
             },
         }
         return self.json_response_ok(command=command, data=data)
@@ -391,16 +407,17 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 if plugin.plugin_meta.name not in self.manifest.spec.plugins:
                     plugin.delete()
                     logger.info("Detached Plugin %s from ChatBot %s", plugin.plugin_meta.name, self.chatbot.name)
-            for plugin_name in self.manifest.spec.plugins:
-                try:
-                    plugin = PluginMeta.objects.get(name=plugin_name, account=self.account)
-                except PluginMeta.DoesNotExist as e:
-                    raise SAMBrokerErrorNotFound(
-                        f"Plugin {plugin_name} not found", thing=self.kind, command=command
-                    ) from e
-                _, created = ChatBotPlugin.objects.get_or_create(chatbot=self.chatbot, plugin_meta=plugin)
-                if created:
-                    logger.info("Attached Plugin %s to ChatBot %s", plugin.name, self.chatbot.name)
+            if self.manifest.spec.plugins:
+                for plugin_name in self.manifest.spec.plugins:
+                    try:
+                        plugin = PluginMeta.objects.get(name=plugin_name, account=self.account)
+                    except PluginMeta.DoesNotExist as e:
+                        raise SAMBrokerErrorNotFound(
+                            f"Plugin {plugin_name} not found", thing=self.kind, command=command
+                        ) from e
+                    _, created = ChatBotPlugin.objects.get_or_create(chatbot=self.chatbot, plugin_meta=plugin)
+                    if created:
+                        logger.info("Attached Plugin %s to ChatBot %s", plugin.name, self.chatbot.name)
 
             # ChatBotFunctions: add what's missing, remove what in the model but not in the manifest
             # -------------
@@ -408,15 +425,16 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 if function.name not in self.manifest.spec.functions:
                     function.delete()
                     logger.info("Detached Function %s from ChatBot %s", function.name, self.chatbot.name)
-            for function in self.manifest.spec.functions:
-                if function not in ChatBotFunctions.choices_list():
-                    return self.json_response_err_notfound(
-                        command=command,
-                        message=f"Function {function} not found. Valid functions are: {ChatBotFunctions.choices_list()}",
-                    )
-                _, created = ChatBotFunctions.objects.get_or_create(chatbot=self.chatbot, name=function)
-                if created:
-                    logger.info("Attached Function %s to ChatBot %s", function, self.chatbot.name)
+            if self.manifest.spec.functions:
+                for function in self.manifest.spec.functions:
+                    if function not in ChatBotFunctions.choices_list():
+                        return self.json_response_err_notfound(
+                            command=command,
+                            message=f"Function {function} not found. Valid functions are: {ChatBotFunctions.choices_list()}",
+                        )
+                    _, created = ChatBotFunctions.objects.get_or_create(chatbot=self.chatbot, name=function)
+                    if created:
+                        logger.info("Attached Function %s to ChatBot %s", function, self.chatbot.name)
 
             # done! return the response. Django will take care of committing the transaction
             return self.json_response_ok(command=command, data={})
@@ -466,11 +484,9 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 raise SAMChatbotBrokerError(
-                    f"Failed to deploy {self.kind} {self.manifest.metadata.name}", thing=self.kind, command=command
+                    f"Failed to deploy {self.kind} {self.name}", thing=self.kind, command=command
                 ) from e
-        raise SAMBrokerErrorNotReady(
-            f"{self.kind} {self.manifest.metadata.name} not found", thing=self.kind, command=command
-        )
+        raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
     def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
@@ -482,11 +498,9 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 raise SAMChatbotBrokerError(
-                    f"Failed to undeploy {self.kind} {self.manifest.metadata.name}", thing=self.kind, command=command
+                    f"Failed to undeploy {self.kind} {self.name}", thing=self.kind, command=command
                 ) from e
-        raise SAMBrokerErrorNotReady(
-            f"{self.kind} {self.manifest.metadata.name} not found", thing=self.kind, command=command
-        )
+        raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} not found", thing=self.kind, command=command)
 
     def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
