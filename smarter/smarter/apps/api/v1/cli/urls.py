@@ -26,6 +26,7 @@ from .views.nonbrokered.chat_config import ApiV1CliChatConfigApiView
 from .views.nonbrokered.status import ApiV1CliStatusApiView
 from .views.nonbrokered.version import ApiV1CliVersionApiView
 from .views.nonbrokered.whoami import ApiV1CliWhoamiApiView
+from .views.undeploy import ApiV1CliUndeployApiView
 
 
 class ApiV1CliReverseViews:
@@ -37,6 +38,7 @@ class ApiV1CliReverseViews:
     chat_config = "api_v1_cli_chatconfig_view"
     delete = "api_v1_cli_delete_view"
     deploy = "api_v1_cli_deploy_view"
+    undeploy = "api_v1_cli_undeploy_view"
     describe = "api_v1_cli_describe_view"
     get = "api_v1_cli_get_view"
     logs = "api_v1_cli_logs_kind_view"
@@ -52,6 +54,7 @@ urlpatterns = [
     path("chat/config/<str:name>/", ApiV1CliChatConfigApiView.as_view(), name=ApiV1CliReverseViews.chat_config),
     path("delete/<str:kind>/", ApiV1CliDeleteApiView.as_view(), name=ApiV1CliReverseViews.delete),
     path("deploy/<str:kind>/", ApiV1CliDeployApiView.as_view(), name=ApiV1CliReverseViews.deploy),
+    path("undeploy/<str:kind>/", ApiV1CliUndeployApiView.as_view(), name=ApiV1CliReverseViews.undeploy),
     path("describe/<str:kind>/", ApiV1CliDescribeApiView.as_view(), name=ApiV1CliReverseViews.describe),
     path("get/<str:kind>/", ApiV1CliGetApiView.as_view(), name=ApiV1CliReverseViews.get),
     path("logs/<str:kind>/", ApiV1CliLogsApiView.as_view(), name=ApiV1CliReverseViews.logs),
