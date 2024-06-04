@@ -296,14 +296,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
         self._smarter_auth_token = None
-        self._name = self.params.get("name")
-
-        if not self.manifest and not self.name:
-            raise SAMBrokerErrorNotReady(
-                f"If a manifest is not provided then the query param 'name' should be passed to identify the {self.kind}. Received {self.uri}",
-                thing=self.kind,
-                command=command,
-            )
+        self.set_and_verify_name_param(command=command)
 
         if self.smarter_auth_token:
             try:
@@ -331,16 +324,28 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
     def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(
-            f"{self.kind} {self.name} deploy is not implemented", thing=self.kind, command=command
-        )
+        self.set_and_verify_name_param(command=command)
+
+        if self.smarter_auth_token:
+            if not self.smarter_auth_token.is_active:
+                self.smarter_auth_token.is_active = True
+                self.smarter_auth_token.save()
+        else:
+            raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
+        return self.json_response_ok(command=command, data={})
 
     def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(
-            f"{self.kind} {self.name} deploy is not implemented", thing=self.kind, command=command
-        )
+        self.set_and_verify_name_param(command=command)
+
+        if self.smarter_auth_token:
+            if self.smarter_auth_token.is_active:
+                self.smarter_auth_token.is_active = False
+                self.smarter_auth_token.save()
+        else:
+            raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
+        return self.json_response_ok(command=command, data={})
 
     def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__

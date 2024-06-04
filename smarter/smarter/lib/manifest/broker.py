@@ -444,6 +444,23 @@ class AbstractBroker(ABC):
     ###########################################################################
     # data transformation helpers
     ###########################################################################
+    def set_and_verify_name_param(self, command: SmarterJournalCliCommands = None):
+        """
+        Set self.name from the 'name' query string param and then verify that it
+        was actually passed.
+        """
+        print("params", self.params)
+        print("name: ", self.params.get("name", None))
+        self._name = self.params.get("name", None)
+        print("self.name: ", self.name)
+        print("manifest: ", self.manifest)
+        if not self.manifest and not self.name:
+            raise SAMBrokerErrorNotReady(
+                f"If a manifest is not provided then the query param 'name' should be passed to identify the {self.kind}. Received {self.uri}",
+                thing=self.kind,
+                command=command,
+            )
+
     # pylint: disable=W0212
     def get_model_titles(self, serializer: ModelSerializer) -> list[dict[str, str]]:
         """

@@ -129,97 +129,95 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.assertEqual(data[SAMKeys.METADATA.value]["description"], "new description")
 
-    # def test_get(self) -> None:
-    #     """Test get command"""
+    def test_get(self) -> None:
+        """Test get command"""
 
-    #     def validate_titles(data):
-    #         if "titles" not in data:
-    #             return False
+        def validate_titles(data):
+            if "titles" not in data:
+                return False
 
-    #         for item in data["titles"]:
-    #             if not isinstance(item, dict):
-    #                 return False
-    #             if "name" not in item or "type" not in item:
-    #                 return False
+            for item in data["titles"]:
+                if not isinstance(item, dict):
+                    return False
+                if "name" not in item or "type" not in item:
+                    return False
 
-    #         return True
+            return True
 
-    #     def validate_items(data):
-    #         if "items" not in data or "titles" not in data:
-    #             return False
+        def validate_items(data):
+            if "items" not in data or "titles" not in data:
+                return False
 
-    #         title_names = {title["name"] for title in data["titles"]}
+            title_names = {title["name"] for title in data["titles"]}
 
-    #         for item in data["items"]:
-    #             if not isinstance(item, dict):
-    #                 return False
-    #             if set(item.keys()) != title_names:
-    #                 return False
+            for item in data["items"]:
+                if not isinstance(item, dict):
+                    return False
+                if set(item.keys()) != title_names:
+                    return False
 
-    #         return True
+            return True
 
-    #     kwargs = {"kind": KIND}
-    #     path = reverse(ApiV1CliReverseViews.get, kwargs=kwargs)
-    #     response, status = self.get_response(path)
+        kwargs = {"kind": KIND}
+        path = reverse(ApiV1CliReverseViews.get, kwargs=kwargs)
+        response, status = self.get_response(path)
 
-    #     # validate the response and status are both good
-    #     self.assertEqual(status, HTTPStatus.OK)
-    #     self.assertIsInstance(response, dict)
+        # validate the response and status are both good
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertIsInstance(response, dict)
 
-    #     self.assertIn(SmarterJournalApiResponseKeys.DATA, response.keys())
-    #     data = response[SmarterJournalApiResponseKeys.DATA]
-    #     self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1.value)
-    #     self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.APIKEY.value)
+        self.assertIn(SmarterJournalApiResponseKeys.DATA, response.keys())
+        data = response[SmarterJournalApiResponseKeys.DATA]
+        self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1.value)
+        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.APIKEY.value)
 
-    #     # validate the metadata
-    #     self.assertIn(SmarterJournalApiResponseKeys.METADATA, data.keys())
-    #     metadata = data[SAMKeys.METADATA.value]
-    #     self.assertIn("count", metadata.keys())
-    #     self.assertEqual(metadata["count"], 1)
+        # validate the metadata
+        self.assertIn(SmarterJournalApiResponseKeys.METADATA, data.keys())
+        metadata = data[SAMKeys.METADATA.value]
+        self.assertIn("count", metadata.keys())
+        self.assertEqual(metadata["count"], 1)
 
-    #     # validate the response data dict, that it has both titles and items
-    #     self.assertIn("data", data.keys())
-    #     data = data["data"]
-    #     self.assertIn("titles", data.keys())
-    #     self.assertIn("items", data.keys())
+        # validate the response data dict, that it has both titles and items
+        self.assertIn("data", data.keys())
+        data = data["data"]
+        self.assertIn("titles", data.keys())
+        self.assertIn("items", data.keys())
 
-    #     if not validate_titles(data):
-    #         self.fail(f"Titles are not valid: {data}")
+        if not validate_titles(data):
+            self.fail(f"Titles are not valid: {data}")
 
-    #     if not validate_items(data):
-    #         self.fail(f"Items are not valid: {data}")
+        if not validate_items(data):
+            self.fail(f"Items are not valid: {data}")
 
-    # def test_deploy(self) -> None:
-    #     """Test deploy command"""
-    #     kwargs = {"kind": KIND}
-    #     path = reverse(ApiV1CliReverseViews.deploy, kwargs=kwargs)
-    #     response, status = self.get_response(path)
+    def test_deploy(self) -> None:
+        """Test deploy command"""
+        kwargs = {"kind": KIND}
+        path = reverse(ApiV1CliReverseViews.deploy, kwargs=kwargs)
+        query_params = urlencode({"name": self.token_record.name})
+        url_with_query_params = f"{path}?{query_params}"
+        _, status = self.get_response(url_with_query_params)
 
-    #     # validate the response and status are both good
-    #     self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
-    #     self.assertIsInstance(response, dict)
+        # validate the response and status are both good
+        self.assertEqual(status, HTTPStatus.OK)
+        self.token_record.refresh_from_db()
+        self.assertTrue(self.token_record.is_active)
 
-    #     error = response["error"]
+    def test_undeploy(self) -> None:
+        """Test undeploy command"""
+        kwargs = {"kind": KIND}
+        path = reverse(ApiV1CliReverseViews.undeploy, kwargs=kwargs)
+        query_params = urlencode({"name": self.token_record.name})
+        url_with_query_params = f"{path}?{query_params}"
+        _, status = self.get_response(url_with_query_params)
 
-    #     self.assertIn("description", error.keys())
-    #     self.assertIn("errorClass", error.keys())
-    #     self.assertEqual(error["description"], "Smarter API Account manifest broker: deploy() not implemented error")
+        # validate the response and status are both good
+        self.assertEqual(status, HTTPStatus.OK)
+        self.token_record.refresh_from_db()
+        self.assertFalse(self.token_record.is_active)
 
-    # def test_undeploy(self) -> None:
-    #     """Test undeploy command"""
-    #     kwargs = {"kind": KIND}
-    #     path = reverse(ApiV1CliReverseViews.undeploy, kwargs=kwargs)
-    #     response, status = self.get_response(path)
-
-    #     # validate the response and status are both good
-    #     self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
-    #     self.assertIsInstance(response, dict)
-
-    #     error = response["error"]
-
-    #     self.assertIn("description", error.keys())
-    #     self.assertIn("errorClass", error.keys())
-    #     self.assertEqual(error["description"], "Smarter API Account manifest broker: undeploy() not implemented error")
+        # re-deploy the token so that it can be deleted
+        self.token_record.is_active = True
+        self.token_record.save()
 
     # def test_logs(self) -> None:
     #     """Test logs command"""
