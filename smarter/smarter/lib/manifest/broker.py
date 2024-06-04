@@ -179,6 +179,22 @@ class AbstractBroker(ABC):
         return self.request.GET if self.request else {}
 
     @property
+    def uri(self) -> str:
+        if not self.request:
+            return None
+
+        scheme = self.request.scheme
+        host = self.request.get_host()
+        path = self.request.path
+        params = self.request.GET.urlencode()
+
+        url = f"{scheme}://{host}{path}"
+        if params:
+            url += f"?{params}"
+
+        return url
+
+    @property
     def is_valid(self) -> bool:
         return self._validated
 

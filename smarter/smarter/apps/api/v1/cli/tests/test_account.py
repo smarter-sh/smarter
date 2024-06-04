@@ -220,7 +220,6 @@ class TestApiCliV1Account(ApiV1TestBase):
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
         self.assertIsInstance(response, dict)
-        print(response)
 
         error = response["error"]
 
@@ -237,7 +236,6 @@ class TestApiCliV1Account(ApiV1TestBase):
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
         self.assertIsInstance(response, dict)
-        print(response)
 
         error = response["error"]
 
@@ -264,7 +262,6 @@ class TestApiCliV1Account(ApiV1TestBase):
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
         self.assertIsInstance(response, dict)
-        print(response)
 
         error = response["error"]
 

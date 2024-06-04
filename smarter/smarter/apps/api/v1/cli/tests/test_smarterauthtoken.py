@@ -71,12 +71,10 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
     def test_describe(self) -> None:
         """Test describe command"""
         kwargs = {"kind": KIND}
-        url = reverse(ApiV1CliReverseViews.describe, kwargs=kwargs)
+        path = reverse(ApiV1CliReverseViews.describe, kwargs=kwargs)
         query_params = urlencode({"name": self.token_record.name})
-        url_with_query_params = f"{url}?{query_params}"
+        url_with_query_params = f"{path}?{query_params}"
         response, status = self.get_response(url_with_query_params)
-
-        print(url_with_query_params)
 
         self.assertEqual(status, HTTPStatus.OK)
         self.validate_response(response)
@@ -84,64 +82,52 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.validate_spec(data)
 
-    # def test_apply(self) -> None:
-    #     """Test apply command"""
+    def test_apply(self) -> None:
+        """Test apply command"""
 
-    #     # retrieve the current manifest by calling 'describe'
-    #     kwargs = {"kind": KIND}
-    #     path = reverse(ApiV1CliReverseViews.describe, kwargs=kwargs)
-    #     response, status = self.get_response(path)
+        # retrieve the current manifest by calling 'describe'
+        kwargs = {"kind": KIND}
+        path = reverse(ApiV1CliReverseViews.describe, kwargs=kwargs)
+        query_params = urlencode({"name": self.token_record.name})
+        url_with_query_params = f"{path}?{query_params}"
+        response, status = self.get_response(url_with_query_params)
 
-    #     # validate the response and status are both good
-    #     self.assertEqual(status, HTTPStatus.OK)
-    #     self.assertIsInstance(response, dict)
+        # validate the response and status are both good
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertIsInstance(response, dict)
 
-    #     # muck up the manifest with some test data
-    #     data = response[SmarterJournalApiResponseKeys.DATA]
-    #     data[SAMKeys.SPEC.value] = {
-    #         "companyName": "test data",
-    #         "phoneNumber": "+1 617 834 6172",
-    #         "address1": "Avenida Reforma 222",
-    #         "address2": "Piso 19",
-    #         "city": "CDMX",
-    #         "state": "CDMX",
-    #         "postalCode": "06600",
-    #         "country": "Mexico",
-    #         "language": "es-ES",
-    #         "timezone": "America/Mexico_City",
-    #         "currency": "MXN",
-    #     }
+        # muck up the manifest with some test data
+        data = response[SmarterJournalApiResponseKeys.DATA]
+        data[SAMKeys.SPEC.value] = {
+            "config": {
+                "username": self.user.username,
+                "isActive": True,
+            }
+        }
+        data[SAMKeys.METADATA.value]["description"] = "new description"
 
-    #     # pop the status bc its read-only
-    #     data.pop(SAMKeys.STATUS.value)
+        # pop the status bc its read-only
+        data.pop(SAMKeys.STATUS.value)
 
-    #     # convert the data back to yaml, since this is what the cli usually sends
-    #     manifest = yaml.dump(data)
-    #     path = reverse(ApiV1CliReverseViews.apply)
-    #     response, status = self.get_response(path, manifest=manifest)
-    #     self.assertEqual(status, HTTPStatus.OK)
-    #     self.assertIsInstance(response, dict)
+        # convert the data back to yaml, since this is what the cli usually sends
+        manifest = yaml.dump(data)
+        path = reverse(ApiV1CliReverseViews.apply)
+        response, status = self.get_response(path, manifest=manifest)
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertIsInstance(response, dict)
 
-    #     # requery and validate our changes
-    #     path = reverse(ApiV1CliReverseViews.describe, kwargs=kwargs)
-    #     response, status = self.get_response(path)
-    #     self.assertEqual(status, HTTPStatus.OK)
-    #     self.assertIsInstance(response, dict)
+        # requery and validate our changes
+        kwargs = {"kind": KIND}
+        path = reverse(ApiV1CliReverseViews.describe, kwargs=kwargs)
+        query_params = urlencode({"name": self.token_record.name})
+        url_with_query_params = f"{path}?{query_params}"
+        response, status = self.get_response(url_with_query_params)
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertIsInstance(response, dict)
 
-    #     # validate our changes
-    #     data = response[SmarterJournalApiResponseKeys.DATA]
-    #     config = data[SAMKeys.SPEC.value]["config"]
-    #     self.assertEqual(config["companyName"], "test data")
-    #     self.assertEqual(config["phoneNumber"], "+1 617 834 6172")
-    #     self.assertEqual(config["address1"], "Avenida Reforma 222")
-    #     self.assertEqual(config["address2"], "Piso 19")
-    #     self.assertEqual(config["city"], "CDMX")
-    #     self.assertEqual(config["state"], "CDMX")
-    #     self.assertEqual(config["postalCode"], "06600")
-    #     self.assertEqual(config["country"], "Mexico")
-    #     self.assertEqual(config["language"], "es-ES")
-    #     self.assertEqual(config["timezone"], "America/Mexico_City")
-    #     self.assertEqual(config["currency"], "MXN")
+        # validate our changes
+        data = response[SmarterJournalApiResponseKeys.DATA]
+        self.assertEqual(data[SAMKeys.METADATA.value]["description"], "new description")
 
     # def test_get(self) -> None:
     #     """Test get command"""
@@ -212,7 +198,6 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
     #     # validate the response and status are both good
     #     self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
     #     self.assertIsInstance(response, dict)
-    #     print(response)
 
     #     error = response["error"]
 
@@ -229,7 +214,6 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
     #     # validate the response and status are both good
     #     self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
     #     self.assertIsInstance(response, dict)
-    #     print(response)
 
     #     error = response["error"]
 
@@ -256,7 +240,6 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
     #     # validate the response and status are both good
     #     self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
     #     self.assertIsInstance(response, dict)
-    #     print(response)
 
     #     error = response["error"]
 
