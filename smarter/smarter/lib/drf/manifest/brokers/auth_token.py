@@ -137,6 +137,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         """
         config_dump = self.manifest.spec.config.model_dump()
         config_dump = self.camel_to_snake(config_dump)
+        config_dump["description"] = self.manifest.metadata.description
         return config_dump
 
     def django_orm_to_manifest_dict(self) -> dict:
@@ -271,6 +272,8 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
         readonly_fields = ["id", "created_at", "updated_at", "last_used_at", "key_id", "user", "digest", "token_key"]
+        self._smarter_auth_token = None
+        self._name = self.params.get("name")
         try:
             data = self.manifest_to_django_orm()
             for field in readonly_fields:
@@ -295,14 +298,14 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         self._smarter_auth_token = None
         self._name = self.params.get("name")
 
-        if not self.name:
+        if not self.manifest and not self.name:
             raise SAMBrokerErrorNotReady(
-                "Was expecting a 'name' key in the request body.", thing=self.kind, command=command
+                f"If a manifest is not provided then the query param 'name' should be passed to identify the {self.kind}. Received {self.uri}",
+                thing=self.kind,
+                command=command,
             )
 
         if self.smarter_auth_token:
-            data = self.django_orm_to_manifest_dict()
-            return self.json_response_ok(command=command, data=data)
             try:
                 data = self.django_orm_to_manifest_dict()
                 return self.json_response_ok(command=command, data=data)
