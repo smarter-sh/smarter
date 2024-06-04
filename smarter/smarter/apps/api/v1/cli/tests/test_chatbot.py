@@ -18,7 +18,7 @@ from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 KIND = SAMKinds.CHATBOT.value
 
 
-class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
+class TestApiCliV1ChatBot(ApiV1TestBase):
     """
     Test Api v1 CLI commands for ChatBot
 
