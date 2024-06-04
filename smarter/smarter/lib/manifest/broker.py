@@ -6,9 +6,11 @@ import re
 import typing
 from abc import ABC, abstractmethod
 from http import HTTPStatus
+from urllib.parse import parse_qs, urlparse
 
 import inflect
 from django.http import HttpRequest, QueryDict
+from requests import PreparedRequest
 from rest_framework.serializers import ModelSerializer
 
 from smarter.common.api import SmarterApiVersions
@@ -172,14 +174,29 @@ class AbstractBroker(ABC):
     ###########################################################################
     @property
     def request(self) -> HttpRequest:
+        """Return the request object."""
         return self._request
 
     @property
     def params(self) -> QueryDict:
+        """
+        Return the query parameters from the url of the request. there are two
+        scenarios to consider:
+        1. the request is a Django HttpRequest object (the expected case)
+        2. the request is a Python PreparedRequest object (the edge case)
+        """
+        if isinstance(self.request, PreparedRequest):
+            query = urlparse(self.request.url).query
+            if not query:
+                return {}
+            params = parse_qs(query)
+            flat_params = {k: v[0] for k, v in params.items()}
+            return QueryDict("", mutable=True).update(flat_params)
         return self.request.GET if self.request else {}
 
     @property
     def uri(self) -> str:
+        """Return the full uri of the request."""
         if not self.request:
             return None
 
