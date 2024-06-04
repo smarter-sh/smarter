@@ -13,6 +13,9 @@ from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
 
+KIND = SAMKinds.ACCOUNT.value
+
+
 class TestApiCliV1Account(ApiV1TestBase):
     """
     Test Api v1 CLI commands for account
@@ -65,7 +68,7 @@ class TestApiCliV1Account(ApiV1TestBase):
     def test_example_manifest(self) -> None:
         """Test example-manifest command"""
 
-        kwargs = {"kind": "account"}
+        kwargs = {"kind": KIND}
         path = reverse(ApiV1CliReverseViews.example_manifest, kwargs=kwargs)
         response, status = self.get_response(path)
         self.assertEqual(status, HTTPStatus.OK)
@@ -80,7 +83,7 @@ class TestApiCliV1Account(ApiV1TestBase):
 
     def test_describe(self) -> None:
         """Test describe command"""
-        kwargs = {"kind": "account"}
+        kwargs = {"kind": KIND}
         path = reverse(ApiV1CliReverseViews.describe, kwargs=kwargs)
         response, status = self.get_response(path)
         self.assertEqual(status, HTTPStatus.OK)
@@ -93,7 +96,7 @@ class TestApiCliV1Account(ApiV1TestBase):
         """Test apply command"""
 
         # retrieve the current manifest by calling 'describe'
-        kwargs = {"kind": "account"}
+        kwargs = {"kind": KIND}
         path = reverse(ApiV1CliReverseViews.describe, kwargs=kwargs)
         response, status = self.get_response(path)
 
@@ -177,7 +180,7 @@ class TestApiCliV1Account(ApiV1TestBase):
 
             return True
 
-        kwargs = {"kind": "account"}
+        kwargs = {"kind": KIND}
         path = reverse(ApiV1CliReverseViews.get, kwargs=kwargs)
         response, status = self.get_response(path)
 
@@ -210,7 +213,7 @@ class TestApiCliV1Account(ApiV1TestBase):
 
     def test_deploy(self) -> None:
         """Test deploy command"""
-        kwargs = {"kind": "account"}
+        kwargs = {"kind": KIND}
         path = reverse(ApiV1CliReverseViews.deploy, kwargs=kwargs)
         response, status = self.get_response(path)
 
@@ -227,7 +230,7 @@ class TestApiCliV1Account(ApiV1TestBase):
 
     def test_undeploy(self) -> None:
         """Test undeploy command"""
-        kwargs = {"kind": "account"}
+        kwargs = {"kind": KIND}
         path = reverse(ApiV1CliReverseViews.undeploy, kwargs=kwargs)
         response, status = self.get_response(path)
 
@@ -244,7 +247,7 @@ class TestApiCliV1Account(ApiV1TestBase):
 
     def test_logs(self) -> None:
         """Test logs command"""
-        kwargs = {"kind": "account"}
+        kwargs = {"kind": KIND}
         path = reverse(ApiV1CliReverseViews.logs, kwargs=kwargs)
         response, status = self.get_response(path)
 
@@ -254,7 +257,7 @@ class TestApiCliV1Account(ApiV1TestBase):
 
     def test_delete(self) -> None:
         """Test delete command"""
-        kwargs = {"kind": "account"}
+        kwargs = {"kind": KIND}
         path = reverse(ApiV1CliReverseViews.delete, kwargs=kwargs)
         response, status = self.get_response(path)
 
