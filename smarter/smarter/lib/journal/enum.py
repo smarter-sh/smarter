@@ -56,7 +56,7 @@ class SmarterJournalThings(SmarterEnumAbstract):
 
     PLUGIN = "Plugin"
     ACCOUNT = "Account"
-    APIKEY = "apikey"
+    APIKEY = "SmarterAuthToken"
     USER = "User"
     CHAT = "Chat"
     CHAT_CONFIG = "ChatConfig"
