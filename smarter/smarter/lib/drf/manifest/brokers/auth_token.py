@@ -311,6 +311,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
     def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
+        self.set_and_verify_name_param(command=command)
         if self.smarter_auth_token:
             try:
                 self.smarter_auth_token.delete()
@@ -350,6 +351,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
     def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
+        self.set_and_verify_name_param(command=command)
         if self.smarter_auth_token:
             data = {}
             return self.json_response_ok(command=command, data=data)

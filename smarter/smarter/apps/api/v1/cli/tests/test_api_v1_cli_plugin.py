@@ -3,15 +3,20 @@
 
 import os
 from http import HTTPStatus
+from urllib.parse import urlencode
 
 from django.urls import reverse
 
+from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.api import SmarterApiVersions
 from smarter.common.const import PYTHON_ROOT
 from smarter.lib.manifest.enum import SAMKeys, SCLIResponseGet, SCLIResponseGetData
+
+
+KIND = SAMKinds.PLUGIN.value
 
 
 class TestApiV1CliPlugin(ApiV1TestBase):
@@ -23,26 +28,56 @@ class TestApiV1CliPlugin(ApiV1TestBase):
         self.good_manifest_path = os.path.join(self.path, "good-plugin-manifest.yaml")
         with open(self.good_manifest_path, encoding="utf-8") as file:
             self.good_manifest_text = file.read()
+        self.kwargs = {SAMKeys.KIND.value: KIND}
+        self.name = "CliTestPlugin"
+        self.query_params = urlencode({"name": self.name})
+
+    def test_deploy(self):
+
+        path = f"{reverse(ApiV1CliReverseViews.deploy, kwargs=self.kwargs)}"
+        url_with_query_params = f"{path}?{self.query_params}"
+        response, status = self.get_response(url_with_query_params)
+        self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
+        self.assertEqual(
+            response["error"]["description"],
+            "Smarter API Plugin manifest broker: deploy() not implemented error.  deploy() not implemented",
+        )
+
+    def test_logs(self):
+        path = f"{reverse(ApiV1CliReverseViews.logs, kwargs=self.kwargs)}"
+        url_with_query_params = f"{path}?{self.query_params}"
+        response, status = self.get_response(url_with_query_params)
+        self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
+        self.assertEqual(
+            response["error"]["description"],
+            "Smarter API Plugin manifest broker: logs() not implemented error.  logs() not implemented",
+        )
+
+    def test_example_manifest(self):
+        path = reverse(ApiV1CliReverseViews.manifest, kwargs=self.kwargs)
+        response, status = self.get_response(path)
+        data = response[SCLIResponseGet.DATA.value]
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertIsInstance(response, dict)
+        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.PLUGIN.value)
+        self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1.value)
 
     def test_valid_manifest(self):
         """Test that we get OK response when passing a valid manifest"""
 
-        path = reverse("api_v1_cli_apply_view", kwargs={})
+        # create a Plugin from a valid manifest
+        path = reverse(ApiV1CliReverseViews.apply, kwargs=None)
+        print("manifest:\n", self.good_manifest_text)
         response, status = self.get_response(path, manifest=self.good_manifest_text)
 
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
         self.assertEqual(response["message"], "Plugin CliTestPlugin applied successfully")
 
-        path = f"{reverse('api_v1_cli_deploy_view', kwargs={'kind': 'plugin'})}?name={self.name}"
-        response, status = self.get_response(path)
-        self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
-        self.assertEqual(
-            response["error"]["description"], "Smarter API Plugin manifest broker: deploy() not implemented error"
-        )
-
-        path = f"{reverse('api_v1_cli_describe_view', kwargs={'kind': 'plugin'})}?name={self.name}"
-        response, status = self.get_response(path)
+        # invoke the describe endpoint to verify that the Plugin was created
+        path = f"{reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)}"
+        url_with_query_params = f"{path}?{self.query_params}"
+        response, status = self.get_response(url_with_query_params)
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
 
@@ -52,31 +87,20 @@ class TestApiV1CliPlugin(ApiV1TestBase):
         self.assertIsInstance(data.get(SAMKeys.METADATA.value, None), dict)
         self.assertEqual(data.get(SAMKeys.METADATA.value, {}).get("name", None), self.name)
 
-        path = f"{reverse('api_v1_cli_logs_kind_view', kwargs={'kind': 'plugin'})}?name={self.name}"
+        # we should also be able to get the Plugin by name
+        path = f"{reverse(ApiV1CliReverseViews.get, kwargs=self.kwargs)}"
+        url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path)
-        self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
-        self.assertEqual(
-            response["error"]["description"], "Smarter API Plugin manifest broker: logs() not implemented error"
-        )
-
-        path = f"{reverse('api_v1_cli_get_view', kwargs={'kind': 'plugin'})}?name={self.name}"
-        response, status = self.get_response(path)
+        print("response:\n", response)
         response = response["data"]
         self.assertIsInstance(response[SCLIResponseGet.DATA.value][SCLIResponseGetData.TITLES.value], list)
         self.assertIsInstance(response[SCLIResponseGet.DATA.value][SCLIResponseGetData.ITEMS.value], list)
         self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.PLUGIN.value)
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1.value)
 
-        path = reverse("api_v1_cli_manifest_view", kwargs={SAMKeys.KIND.value: "plugin"})
-        response, status = self.get_response(path)
-        data = response[SCLIResponseGet.DATA.value]
-        self.assertEqual(status, HTTPStatus.OK)
-        self.assertIsInstance(response, dict)
-        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.PLUGIN.value)
-        self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1.value)
-
-        path = f"{reverse('api_v1_cli_delete_view', kwargs={'kind': 'plugin'})}?name={self.name}"
-        response, status = self.get_response(path)
+        path = f"{reverse(ApiV1CliReverseViews.delete, kwargs=self.kwargs)}"
+        url_with_query_params = f"{path}?{self.query_params}"
+        response, status = self.get_response(url_with_query_params)
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
         self.assertEqual(response["message"], "Plugin CliTestPlugin deleted successfully")

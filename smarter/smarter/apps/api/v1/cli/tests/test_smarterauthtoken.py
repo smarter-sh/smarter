@@ -219,28 +219,14 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         self.token_record.is_active = True
         self.token_record.save()
 
-    # def test_logs(self) -> None:
-    #     """Test logs command"""
-    #     kwargs = {"kind": KIND}
-    #     path = reverse(ApiV1CliReverseViews.logs, kwargs=kwargs)
-    #     response, status = self.get_response(path)
+    def test_logs(self) -> None:
+        """Test logs command"""
+        kwargs = {"kind": KIND}
+        path = reverse(ApiV1CliReverseViews.logs, kwargs=kwargs)
+        query_params = urlencode({"name": self.token_record.name})
+        url_with_query_params = f"{path}?{query_params}"
+        response, status = self.get_response(url_with_query_params)
 
-    #     # validate the response and status are both good
-    #     self.assertEqual(status, HTTPStatus.OK)
-    #     self.assertIsInstance(response, dict)
-
-    # def test_delete(self) -> None:
-    #     """Test delete command"""
-    #     kwargs = {"kind": KIND}
-    #     path = reverse(ApiV1CliReverseViews.delete, kwargs=kwargs)
-    #     response, status = self.get_response(path)
-
-    #     # validate the response and status are both good
-    #     self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
-    #     self.assertIsInstance(response, dict)
-
-    #     error = response["error"]
-
-    #     self.assertIn("description", error.keys())
-    #     self.assertIn("errorClass", error.keys())
-    #     self.assertEqual(error["description"], "Smarter API Account manifest broker: delete() not implemented error")
+        # validate the response and status are both good
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertIsInstance(response, dict)
