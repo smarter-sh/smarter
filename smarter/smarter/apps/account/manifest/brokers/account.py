@@ -233,7 +233,8 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
                     raise SAMAccountBrokerError(
                         message=f"Model dump failed for {self.kind} {account.name}", thing=self.kind, command=command
                     )
-                data.append(model_dump)
+                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                data.append(camel_cased_model_dump)
             except Exception as e:
                 logger.error("Error in %s: %s", command, e)
                 return self.json_response_err(command=command, e=e)
