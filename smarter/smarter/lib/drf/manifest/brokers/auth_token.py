@@ -146,7 +146,6 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         """
         smarter_auth_token_dict = model_to_dict(self.smarter_auth_token)
         smarter_auth_token_dict = self.snake_to_camel(smarter_auth_token_dict)
-        smarter_auth_token_dict.pop("id")
 
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
@@ -154,7 +153,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
             SAMKeys.METADATA.value: {
                 SAMMetadataKeys.NAME.value: self.smarter_auth_token.name,
                 SAMMetadataKeys.DESCRIPTION.value: self.smarter_auth_token.description,
-                SAMMetadataKeys.VERSION.value: self.smarter_auth_token.version,
+                SAMMetadataKeys.VERSION.value: "1.0.0",
             },
             SAMKeys.SPEC.value: {
                 SAMSmarterAuthTokenSpecKeys.CONFIG.value: {
@@ -293,7 +292,8 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
-        self._name = kwargs.get("name", None)
+        self._smarter_auth_token = None
+        self._name = self.params.get("name")
 
         if not self.name:
             raise SAMBrokerErrorNotReady(
@@ -301,12 +301,14 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
             )
 
         if self.smarter_auth_token:
+            data = self.django_orm_to_manifest_dict()
+            return self.json_response_ok(command=command, data=data)
             try:
                 data = self.django_orm_to_manifest_dict()
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
                 raise SAMSmarterAuthTokenBrokerError(
-                    f"Failed to describe {self.kind} {self.smarter_auth_token.name}", thing=self.kind, command=command
+                    f"{self.kind} {self.smarter_auth_token.name} error: {str(e)}", thing=self.kind, command=command
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
 
