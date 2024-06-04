@@ -57,6 +57,7 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
     # override the base abstract manifest model with the User model
     _manifest: SAMUser = None
     _user: UserType = None
+    _username: str = None
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -90,6 +91,21 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
             file_path=file_path,
             url=url,
         )
+        self._username: str = self.params.get("username", None)
+        if self._username:
+            try:
+                self._user = None
+                self._user_profile = UserProfile.objects.get(user=self.user, account=self.account)
+            except UserProfile.DoesNotExist as e:
+                raise SAMBrokerErrorNotFound(
+                    message=f"{self.kind} {self._username} not found in your account.",
+                    thing=self.kind,
+                    command=SmarterJournalCliCommands.GET,
+                ) from e
+
+    @property
+    def username(self) -> str:
+        return self._username
 
     def manifest_to_django_orm(self) -> dict:
         """
@@ -113,8 +129,9 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {
                 SAMMetadataKeys.NAME.value: self.user.username,
-                SAMMetadataKeys.DESCRIPTION.value: self.user.get_full_name(),
+                SAMMetadataKeys.DESCRIPTION.value: self.user.username,
                 SAMMetadataKeys.VERSION.value: "1.0.0",
+                "username": self.user.username,
             },
             SAMKeys.SPEC.value: {
                 SAMUserSpecKeys.CONFIG.value: user_dict,
@@ -172,6 +189,7 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
                 SAMMetadataKeys.NAME.value: "ExampleUser",
                 SAMMetadataKeys.DESCRIPTION.value: "an example user manifest for the Smarter API User",
                 SAMMetadataKeys.VERSION.value: "1.0.0",
+                "username": "ExampleUser",
             },
             SAMKeys.SPEC.value: {
                 SAMUserSpecKeys.CONFIG.value: {
@@ -252,20 +270,19 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
-        username: str = self.params.get("username", None)
 
         try:
-            self._user = User.objects.get(username=username)
+            self._user = User.objects.get(username=self.username)
         except User.DoesNotExist as e:
             raise SAMBrokerErrorNotFound(
-                f"Failed to describe {self.kind} {username}. Not found", thing=self.kind, command=command
+                f"Failed to describe {self.kind} {self.username}. Not found", thing=self.kind, command=command
             ) from e
 
         try:
             self._user_profile = UserProfile.objects.get(user=self._user, account=self.account)
         except UserProfile.DoesNotExist as e:
             raise SAMBrokerErrorNotFound(
-                f"Failed to describe {self.kind} {username}. User is not associated with your account",
+                f"Failed to describe {self.kind} {self.username}. User is not associated with your account",
                 thing=self.kind,
                 command=command,
             ) from e
@@ -298,8 +315,9 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
         command = SmarterJournalCliCommands(command)
         if self.user:
             try:
-                self.user.deployed = True
-                self.user.save()
+                if not self.user.is_active:
+                    self.user.is_active = True
+                    self.user.save()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 raise SAMUserBrokerError(
@@ -310,7 +328,17 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
     def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(f"{self.kind} not implemented", thing=self.kind, command=command)
+        if self.user:
+            try:
+                if self.user.is_active:
+                    self.user.is_active = False
+                    self.user.save()
+                return self.json_response_ok(command=command, data={})
+            except Exception as e:
+                raise SAMUserBrokerError(
+                    f"Failed to deploy {self.kind} {self.user.name}", thing=self.kind, command=command
+                ) from e
+        raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
     def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
