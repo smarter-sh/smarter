@@ -36,7 +36,7 @@ class SAMChatPluginUsageBrokerError(SAMBrokerError):
     """Base exception for Smarter API ChatPluginUsage Broker handling."""
 
     @property
-    def get_readable_name(self):
+    def get_formatted_err_message(self):
         return "Smarter API ChatPluginUsage Manifest Broker Error"
 
 

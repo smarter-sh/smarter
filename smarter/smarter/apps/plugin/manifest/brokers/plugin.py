@@ -6,7 +6,11 @@ from taggit.models import Tag
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account
+from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
+from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
+from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
+from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.plugin.sql import PluginSql
 from smarter.apps.plugin.plugin.static import PluginStatic
@@ -27,12 +31,6 @@ from smarter.lib.manifest.enum import (
 )
 from smarter.lib.manifest.loader import SAMLoader
 
-from ...models import PluginMeta
-from ...plugin.base import PluginBase
-from ..controller import PluginController
-from ..models.plugin.const import MANIFEST_KIND
-from ..models.plugin.model import SAMPlugin
-
 
 MAX_RESULTS = 1000
 
@@ -46,7 +44,7 @@ class SAMPluginBrokerError(SAMBrokerError):
     """Base exception for Smarter API Plugin Broker handling."""
 
     @property
-    def get_readable_name(self):
+    def get_formatted_err_message(self):
         return "Smarter API Plugin Manifest Broker Error"
 
 
@@ -157,7 +155,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
-        plugin_class: str = kwargs.get("plugin_class", SAMPluginMetadataClassValues.STATIC.value)
+        plugin_class: str = self.params.get("plugin_class", SAMPluginMetadataClassValues.STATIC.value)
         try:
             Plugin = PluginMap[plugin_class]
         except KeyError as e:
@@ -180,9 +178,9 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
-        name: str = kwargs.get("name", None)
-        all_objects: bool = kwargs.get("all_objects", False)
-        tags: str = kwargs.get("tags", None)
+        name: str = self.params.get("name", None)
+        all_objects: bool = self.params.get("all_objects", False)
+        tags: str = self.params.get("tags", None)
         data = []
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
@@ -202,6 +200,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         for plugin_meta in plugins:
             controller = PluginController(account=self.account, plugin_meta=plugin_meta)
             try:
+                model_titles = controller.get_model_titles()
                 model_dump = controller.model_dump_json()
                 if not model_dump:
                     raise SAMBrokerError(
@@ -217,9 +216,9 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
             SAMKeys.KIND.value: self.kind,
             SAMMetadataKeys.NAME.value: name,
             SAMKeys.METADATA.value: {"count": len(data)},
-            SCLIResponseGet.KWARGS.value: kwargs,
+            SCLIResponseGet.KWARGS.value: self.params,
             SCLIResponseGet.DATA.value: {
-                SCLIResponseGetData.TITLES.value: self.get_model_titles(),
+                SCLIResponseGetData.TITLES.value: model_titles,
                 SCLIResponseGetData.ITEMS.value: data,
             },
         }
@@ -255,6 +254,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
+        self.set_and_verify_name_param(command=command)
         if self.plugin.ready:
             try:
                 data = self.plugin.to_json()
@@ -275,6 +275,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
+        self.set_and_verify_name_param(command=command)
         if self.plugin.ready:
             try:
                 self.plugin.delete()

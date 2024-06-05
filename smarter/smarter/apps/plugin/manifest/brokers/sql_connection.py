@@ -5,6 +5,7 @@ from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
 from smarter.apps.account.mixins import Account, AccountMixin
+from smarter.apps.plugin.manifest.models.sql_connection.enum import DbEngines
 from smarter.apps.plugin.models import PluginDataSqlConnection
 from smarter.apps.plugin.serializers import PluginDataSqlConnectionSerializer
 from smarter.common.api import SmarterApiVersions
@@ -35,7 +36,7 @@ class SAMPluginDataSqlConnectionBrokerError(SAMBrokerError):
     """Base exception for Smarter API Plugin Broker handling."""
 
     @property
-    def get_readable_name(self):
+    def get_formatted_err_message(self):
         return "Smarter API PluginDataSqlConnection Manifest Broker Error"
 
 
@@ -126,16 +127,20 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
         """
         config_dump = self.manifest.spec.connection.model_dump()
         config_dump = self.camel_to_snake(config_dump)
+        config_dump["name"] = self.manifest.metadata.name
+        config_dump["description"] = self.manifest.metadata.description
+        config_dump["version"] = self.manifest.metadata.version
         return config_dump
 
     @property
     def sql_connection(self) -> PluginDataSqlConnection:
-        if not self._sql_connection:
-            try:
-                self._sql_connection = PluginDataSqlConnection.objects.get(
-                    account=self.account, name=self.manifest.metadata.name
-                )
-            except PluginDataSqlConnection.DoesNotExist:
+        if self._sql_connection:
+            return self._sql_connection
+
+        try:
+            self._sql_connection = PluginDataSqlConnection.objects.get(account=self.account, name=self.name)
+        except PluginDataSqlConnection.DoesNotExist:
+            if self.manifest:
                 model_dump = self.manifest.spec.connection.model_dump()
                 model_dump["account"] = self.account
                 model_dump["name"] = self.manifest.metadata.name
@@ -154,12 +159,12 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
             "kind": self.kind,
             "metadata": {
                 "name": "exampleConnection",
-                "description": "points to the Django mysql database",
+                "description": f"points to the Django mysql database. db_engine choices: {DbEngines.all_values()}",
                 "version": "0.1.0",
             },
             "spec": {
                 "connection": {
-                    "db_engine": "django.db.backends.mysql",
+                    "db_engine": DbEngines.MYSQL.value,
                     "hostname": "smarter-mysql",
                     "port": 3306,
                     "username": "smarter",

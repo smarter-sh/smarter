@@ -23,6 +23,6 @@ from .views import CustomAPIView
 urlpatterns = [
     path("", CustomAPIView.as_view(), name="custom_api_root_v1"),
     path("cli/", include("smarter.apps.api.v1.cli.urls")),
-    path("chatbot/", include("smarter.apps.chatbot.api.v1.urls")),
-    path("plugins/", include("smarter.apps.plugin.api.v1.urls")),
+    path("chatbot/", include("smarter.apps.chatbot.api.urls")),
+    path("plugins/", include("smarter.apps.plugin.api.urls")),
 ]

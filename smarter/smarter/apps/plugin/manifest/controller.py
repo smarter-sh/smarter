@@ -103,3 +103,8 @@ class PluginController(AbstractController):
         if self.plugin:
             return self.plugin.manifest.model_dump_json()
         return None
+
+    def get_model_titles(self) -> list[dict[str, str]]:
+        if self.plugin and self.plugin.manifest:
+            return [{"name": f, "type": str(t)} for f, t in self.plugin.manifest.__annotations__.items()]
+        return []
