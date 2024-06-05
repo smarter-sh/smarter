@@ -1,7 +1,4 @@
-"""
-URL configuration for smarter project.
-hello world -- video 2 almost done!!!!
-"""
+"""URL configuration for Smarter Api and web console."""
 
 from django.conf import settings
 from django.conf.urls.static import static
@@ -24,10 +21,6 @@ admin.autodiscover()
 
 
 urlpatterns = [
-    path(
-        "chatbot/", include("smarter.apps.chatbot.api.v1.urls")
-    ),  # see smarter.apps.chatbot.models.Chatbot.url_chatbot()
-    # example: http://custom-c815af995ddb1e5a.smarter.querium.com/chatbot/smarter/sales-support/
     path("chatapp/", include("smarter.apps.chatapp.urls")),
     path("", include("smarter.apps.dashboard.urls")),
     path("admin/", admin.site.urls),

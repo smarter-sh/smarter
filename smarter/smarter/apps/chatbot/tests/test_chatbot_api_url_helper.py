@@ -105,7 +105,7 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
 
     def test_custom_domain(self):
         """Test a custom domain."""
-        url = urljoin(self.custom_chatbot.url, "/chatbot/smarter/" + self.chatbot.name + "/")
+        url = urljoin(self.custom_chatbot.url, "/api/v1/chatbot/smarter/" + self.chatbot.name + "/")
         helper = ChatBotHelper(url=url, account=self.account, user=self.user)
 
         self.assertTrue(helper.is_valid)
