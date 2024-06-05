@@ -64,9 +64,9 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin):
             user, _ = request.auth.authenticate(request)
             login(request, user)
             logger.info("%s() authenticated user %s", self.__class__.__name__, user)
-        except AuthenticationFailed:
+        except AuthenticationFailed as auth_failed:
             try:
-                raise SmarterTokenAuthenticationError("Authentication failed.") from None
+                raise SmarterTokenAuthenticationError("Authentication failed.") from auth_failed
             except SmarterTokenAuthenticationError as e:
                 auth = self.authorization_header.split()
                 auth_token = auth[1] if len(auth) > 1 else None
