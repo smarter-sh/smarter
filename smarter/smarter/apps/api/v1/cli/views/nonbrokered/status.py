@@ -10,7 +10,10 @@ from django.http import JsonResponse
 from django_redis import get_redis_connection
 
 from smarter.common.helpers.aws_helpers import aws_helper
-from smarter.lib.journal.enum import SmarterJournalCliCommands
+from smarter.lib.journal.enum import (
+    SmarterJournalApiResponseKeys,
+    SmarterJournalCliCommands,
+)
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 
 from ..base import CliBaseApiView
@@ -48,18 +51,20 @@ class ApiV1CliStatusApiView(CliBaseApiView):
     def status(self):
         try:
             data = {
-                "infrastructures": {
-                    "kubernetes": aws_helper.eks.get_kubernetes_info(),
-                    "mysql": aws_helper.rds.get_mysql_info(),
-                    "redis": self.get_redis_info(),
-                },
-                "compute": {
-                    "machine": platform.machine(),
-                    "release": platform.release(),
-                    "platform": platform.platform(aliased=True),
-                    "processor": platform.processor(),
-                    "system": platform.system(),
-                    "version": platform.version(),
+                SmarterJournalApiResponseKeys.DATA: {
+                    "infrastructures": {
+                        "kubernetes": aws_helper.eks.get_kubernetes_info(),
+                        "mysql": aws_helper.rds.get_mysql_info(),
+                        "redis": self.get_redis_info(),
+                    },
+                    "compute": {
+                        "machine": platform.machine(),
+                        "release": platform.release(),
+                        "platform": platform.platform(aliased=True),
+                        "processor": platform.processor(),
+                        "system": platform.system(),
+                        "version": platform.version(),
+                    },
                 },
             }
             return SmarterJournaledJsonResponse(

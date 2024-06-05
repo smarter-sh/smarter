@@ -62,7 +62,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
 
         kwargs = {"kind": KIND}
         path = reverse(ApiV1CliReverseViews.example_manifest, kwargs=kwargs)
-        response, status = self.get_response(path)
+        response, status = self.get_response(path=path)
         self.assertEqual(status, HTTPStatus.OK)
         self.validate_response(response)
         data = response[SmarterJournalApiResponseKeys.DATA]
@@ -74,7 +74,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         path = reverse(ApiV1CliReverseViews.describe, kwargs=kwargs)
         query_params = urlencode({"name": self.token_record.name})
         url_with_query_params = f"{path}?{query_params}"
-        response, status = self.get_response(url_with_query_params)
+        response, status = self.get_response(path=url_with_query_params)
 
         self.assertEqual(status, HTTPStatus.OK)
         self.validate_response(response)
@@ -90,7 +90,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         path = reverse(ApiV1CliReverseViews.describe, kwargs=kwargs)
         query_params = urlencode({"name": self.token_record.name})
         url_with_query_params = f"{path}?{query_params}"
-        response, status = self.get_response(url_with_query_params)
+        response, status = self.get_response(path=url_with_query_params)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
@@ -112,7 +112,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         # convert the data back to yaml, since this is what the cli usually sends
         manifest = yaml.dump(data)
         path = reverse(ApiV1CliReverseViews.apply)
-        response, status = self.get_response(path, manifest=manifest)
+        response, status = self.get_response(path=path, manifest=manifest)
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
 
@@ -121,7 +121,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         path = reverse(ApiV1CliReverseViews.describe, kwargs=kwargs)
         query_params = urlencode({"name": self.token_record.name})
         url_with_query_params = f"{path}?{query_params}"
-        response, status = self.get_response(url_with_query_params)
+        response, status = self.get_response(path=url_with_query_params)
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
 
@@ -160,7 +160,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
 
         kwargs = {"kind": KIND}
         path = reverse(ApiV1CliReverseViews.get, kwargs=kwargs)
-        response, status = self.get_response(path)
+        response, status = self.get_response(path=path)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
@@ -195,7 +195,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         path = reverse(ApiV1CliReverseViews.deploy, kwargs=kwargs)
         query_params = urlencode({"name": self.token_record.name})
         url_with_query_params = f"{path}?{query_params}"
-        _, status = self.get_response(url_with_query_params)
+        _, status = self.get_response(path=url_with_query_params)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
@@ -208,7 +208,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         path = reverse(ApiV1CliReverseViews.undeploy, kwargs=kwargs)
         query_params = urlencode({"name": self.token_record.name})
         url_with_query_params = f"{path}?{query_params}"
-        _, status = self.get_response(url_with_query_params)
+        _, status = self.get_response(path=url_with_query_params)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
@@ -225,7 +225,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         path = reverse(ApiV1CliReverseViews.logs, kwargs=kwargs)
         query_params = urlencode({"name": self.token_record.name})
         url_with_query_params = f"{path}?{query_params}"
-        response, status = self.get_response(url_with_query_params)
+        response, status = self.get_response(path=url_with_query_params)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)

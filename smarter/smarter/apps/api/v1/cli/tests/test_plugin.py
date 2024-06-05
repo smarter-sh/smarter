@@ -36,7 +36,7 @@ class TestApiV1CliPlugin(ApiV1TestBase):
 
         path = f"{reverse(ApiV1CliReverseViews.deploy, kwargs=self.kwargs)}"
         url_with_query_params = f"{path}?{self.query_params}"
-        response, status = self.get_response(url_with_query_params)
+        response, status = self.get_response(path=url_with_query_params)
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
         self.assertEqual(
             response["error"]["description"],
@@ -46,7 +46,7 @@ class TestApiV1CliPlugin(ApiV1TestBase):
     def test_logs(self):
         path = f"{reverse(ApiV1CliReverseViews.logs, kwargs=self.kwargs)}"
         url_with_query_params = f"{path}?{self.query_params}"
-        response, status = self.get_response(url_with_query_params)
+        response, status = self.get_response(path=url_with_query_params)
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
         self.assertEqual(
             response["error"]["description"],
@@ -55,7 +55,7 @@ class TestApiV1CliPlugin(ApiV1TestBase):
 
     def test_example_manifest(self):
         path = reverse(ApiV1CliReverseViews.manifest, kwargs=self.kwargs)
-        response, status = self.get_response(path)
+        response, status = self.get_response(path=path)
         data = response[SCLIResponseGet.DATA.value]
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
@@ -77,7 +77,7 @@ class TestApiV1CliPlugin(ApiV1TestBase):
         # invoke the describe endpoint to verify that the Plugin was created
         path = f"{reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)}"
         url_with_query_params = f"{path}?{self.query_params}"
-        response, status = self.get_response(url_with_query_params)
+        response, status = self.get_response(path=url_with_query_params)
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
 
@@ -90,7 +90,7 @@ class TestApiV1CliPlugin(ApiV1TestBase):
         # we should also be able to get the Plugin by name
         path = f"{reverse(ApiV1CliReverseViews.get, kwargs=self.kwargs)}"
         url_with_query_params = f"{path}?{self.query_params}"
-        response, status = self.get_response(path)
+        response, status = self.get_response(path=path)
         print("response:\n", response)
         response = response["data"]
         self.assertIsInstance(response[SCLIResponseGet.DATA.value][SCLIResponseGetData.TITLES.value], list)
@@ -100,7 +100,7 @@ class TestApiV1CliPlugin(ApiV1TestBase):
 
         path = f"{reverse(ApiV1CliReverseViews.delete, kwargs=self.kwargs)}"
         url_with_query_params = f"{path}?{self.query_params}"
-        response, status = self.get_response(url_with_query_params)
+        response, status = self.get_response(path=url_with_query_params)
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
         self.assertEqual(response["message"], "Plugin CliTestPlugin deleted successfully")
