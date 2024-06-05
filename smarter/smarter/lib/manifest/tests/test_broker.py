@@ -320,5 +320,5 @@ class TestAbstractBrokerClass(unittest.TestCase, AccountMixin):
         # 531,
         try:
             BrokerNotImplemented()
-        except SAMBrokerErrorNotImplemented as e:
+        except SAMBrokerErrorNotImplemented:
             pass
