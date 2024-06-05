@@ -1,70 +1,74 @@
-"""Test api/v1/ base class."""
+"""
+Test api/v1/ base class.
 
-import hashlib
+We have somewhere in the neighborhood of 75 api endpoints to test, so we want
+ensure that:
+- our setUp and tearDown methods are as efficient as possible.
+- we are authenticating our http requests properly and consistently.
+"""
+
 import json
-import random
 import unittest
 
 from django.test import Client
 
+from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.tests.factories import admin_user_factory
 from smarter.lib.django.user import User
 from smarter.lib.drf.models import SmarterAuthToken
 
 
-class ApiV1TestBase(unittest.TestCase):
+class ApiV1TestBase(unittest.TestCase, AccountMixin):
     """Test api/v1/ base class."""
 
-    def setUp(self):
-        self.name = "CliTestPlugin"
-        hash_suffix = "_" + hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()
+    name: str = None
 
-        self.account = Account.objects.create(
-            company_name="TestCompany" + hash_suffix,
-            phone_number="1234567890",
-            address1="123 Test St",
-            address2="Apt 1",
-            city="Test City",
-            state="TX",
-            postal_code="12345",
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls._user, cls._account, cls._user_profile = admin_user_factory()
+
+        instance = cls()
+
+        cls.token_record, cls.token_key = SmarterAuthToken.objects.create(
+            name=instance.user.username,
+            user=instance.user,
+            description=instance.user.username,
         )
 
-        username = "testuser" + hash_suffix
-        self.user = User.objects.create_user(username=username, password="12345", is_staff=True, is_superuser=True)
-        self.user_profile = UserProfile.objects.create(user=self.user, account=self.account)
-
-        self.token_record, self.token_key = SmarterAuthToken.objects.create(
-            name="testToken" + hash_suffix,
-            user=self.user,
-            description="testToken" + hash_suffix,
-        )
-
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(cls) -> None:
+        instance = cls()
         try:
-            self.user_profile.delete()
+            instance.user_profile.delete()
         except UserProfile.DoesNotExist:
             pass
         try:
-            self.user.delete()
+            instance.user.delete()
         except User.DoesNotExist:
             pass
         try:
-            self.account.delete()
+            instance.account.delete()
         except Account.DoesNotExist:
             pass
         try:
-            self.token_record.delete()
+            instance.token_record.delete()
         except SmarterAuthToken.DoesNotExist:
             pass
 
-    def get_response(self, path, manifest: str = None):
+    def get_response(self, path, manifest: str = None, data: dict = None) -> tuple[dict[str, any], int]:
         """
-        Prepare and get a response from an api/v1/cli endpoint.
+        Prepare and get a response from an api/v1/ endpoint.
         """
         client = Client()
         headers = {"HTTP_AUTHORIZATION": f"Token {self.token_key}"}
-        response = client.post(path=path, data=manifest, content_type="application/json", **headers)
 
+        if manifest:
+            response = client.post(path=path, data=manifest, content_type="application/json", **headers)
+        elif data:
+            response = client.post(path=path, data=data, content_type="application/json", **headers)
+        else:
+            response = client.post(path=path, content_type="application/json", data=None, **headers)
         response_content = response.content.decode("utf-8")
         response_json = json.loads(response_content)
         return response_json, response.status_code

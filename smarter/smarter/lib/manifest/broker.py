@@ -6,9 +6,11 @@ import re
 import typing
 from abc import ABC, abstractmethod
 from http import HTTPStatus
+from urllib.parse import parse_qs, urlparse
 
 import inflect
-from django.http import HttpRequest
+from django.http import HttpRequest, QueryDict
+from requests import PreparedRequest
 from rest_framework.serializers import ModelSerializer
 
 from smarter.common.api import SmarterApiVersions
@@ -44,46 +46,63 @@ class SAMBrokerError(SAMExceptionBase):
     thing: SmarterJournalThings = None
     command: SmarterJournalCliCommands = None
 
-    def __init__(self, message: str, thing: SmarterJournalThings = None, command: SmarterJournalCliCommands = None):
+    def __init__(
+        self, message: str = None, thing: SmarterJournalThings = None, command: SmarterJournalCliCommands = None
+    ):
         self.thing = thing
         self.command = command
         super().__init__(message)
 
     @property
-    def get_readable_name(self):
-        return f"Smarter API {self.thing} manifest broker: {self.command}() unidentified error"
+    def get_formatted_err_message(self):
+        msg = f"Smarter API {self.thing} manifest broker: {self.command}() unidentified error."
+        if self.message:
+            msg += "  " + self.message
+        return msg
 
 
 class SAMBrokerReadOnlyError(SAMBrokerError):
     """Error for read-only broker operations."""
 
     @property
-    def get_readable_name(self):
-        return f"Smarter API {self.thing} manifest broker: {self.command}() read-only error"
+    def get_formatted_err_message(self):
+        msg = f"Smarter API {self.thing} manifest broker: {self.command}() read-only error."
+        if self.message:
+            msg += "  " + self.message
+        return msg
 
 
 class SAMBrokerErrorNotImplemented(SAMBrokerError):
     """Base class for all SAMBroker errors."""
 
     @property
-    def get_readable_name(self):
-        return f"Smarter API {self.thing} manifest broker: {self.command}() not implemented error"
+    def get_formatted_err_message(self):
+        msg = f"Smarter API {self.thing} manifest broker: {self.command}() not implemented error."
+        if self.message:
+            msg += "  " + self.message
+        return msg
 
 
 class SAMBrokerErrorNotReady(SAMBrokerError):
     """Error for broker operations on resources that are not ready."""
 
     @property
-    def get_readable_name(self):
-        return f"Smarter API {self.thing} manifest broker: {self.command}() not ready error"
+    def get_formatted_err_message(self):
+        msg = f"Smarter API {self.thing} manifest broker: {self.command}() not ready error."
+        if self.message:
+            msg += "  " + self.message
+        return msg
 
 
 class SAMBrokerErrorNotFound(SAMBrokerError):
     """Error for broker operations on resources that are not found."""
 
     @property
-    def get_readable_name(self):
-        return f"Smarter API {self.thing} manifest broker: {self.command}() not found error"
+    def get_formatted_err_message(self):
+        msg = f"Smarter API {self.thing} manifest broker: {self.command}() not found error."
+        if self.message:
+            msg += "  " + self.message
+        return msg
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes
@@ -125,11 +144,14 @@ class AbstractBroker(ABC):
         url: str = None,
     ):
         self._request = request
-        self._name = name
+        self._name = self.params.get("name", None) or name
         self._account = account
         self._loader = loader
         if api_version not in SUPPORTED_API_VERSIONS:
-            raise SAMBrokerError(f"Unsupported apiVersion: {api_version}")
+            raise SAMBrokerError(
+                message=f"Unsupported apiVersion: {api_version}",
+                thing=SmarterJournalThings.ACCOUNT,
+            )
         self._api_version = api_version
 
         try:
@@ -152,7 +174,42 @@ class AbstractBroker(ABC):
     ###########################################################################
     @property
     def request(self) -> HttpRequest:
+        """Return the request object."""
         return self._request
+
+    @property
+    def params(self) -> QueryDict:
+        """
+        Return the query parameters from the url of the request. there are two
+        scenarios to consider:
+        1. the request is a Django HttpRequest object (the expected case)
+        2. the request is a Python PreparedRequest object (the edge case)
+        """
+        if isinstance(self.request, PreparedRequest):
+            query = urlparse(self.request.url).query
+            if not query:
+                return {}
+            params = parse_qs(query)
+            flat_params = {k: v[0] for k, v in params.items()}
+            return QueryDict("", mutable=True).update(flat_params)
+        return self.request.GET if self.request else {}
+
+    @property
+    def uri(self) -> str:
+        """Return the full uri of the request."""
+        if not self.request:
+            return None
+
+        scheme = self.request.scheme
+        host = self.request.get_host()
+        path = self.request.path
+        params = self.request.GET.urlencode()
+
+        url = f"{scheme}://{host}{path}"
+        if params:
+            url += f"?{params}"
+
+        return url
 
     @property
     def is_valid(self) -> bool:
@@ -172,7 +229,10 @@ class AbstractBroker(ABC):
     @property
     def name(self) -> str:
         """The name of the manifest."""
+        if self._name:
+            return self._name
         if not self._name and self.manifest and self.manifest.metadata and self.manifest.metadata.name:
+            # assign from the manifest metadata, if we have it
             self._name = self.manifest.metadata.name
         return self._name
 
@@ -192,7 +252,7 @@ class AbstractBroker(ABC):
     ###########################################################################
     @property
     def model_class(self):
-        raise NotImplementedError
+        raise SAMBrokerErrorNotImplemented(message="", thing=self.thing, command=None)
 
     @property
     def manifest(self) -> AbstractSAMBase:
@@ -221,47 +281,69 @@ class AbstractBroker(ABC):
     def apply(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """apply a manifest, which works like a upsert."""
         if self.manifest.status:
-            raise SAMBrokerReadOnlyError
+            raise SAMBrokerReadOnlyError(
+                message="status field is read-only",
+                thing=self.thing,
+                command=SmarterJournalCliCommands.APPLY,
+            )
 
     @abstractmethod
     def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """chat with the broker."""
-        raise SAMBrokerErrorNotImplemented
+        raise SAMBrokerErrorNotImplemented(
+            message="chat() not implemented", thing=self.thing, command=SmarterJournalCliCommands.CHAT
+        )
 
     @abstractmethod
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """print the manifest."""
-        raise NotImplementedError
+        raise SAMBrokerErrorNotImplemented(
+            message="describe() not implemented", thing=self.thing, command=SmarterJournalCliCommands.DESCRIBE
+        )
 
     @abstractmethod
     def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """delete a resource."""
-        raise NotImplementedError
+        raise SAMBrokerErrorNotImplemented(
+            message="delete() not implemented", thing=self.thing, command=SmarterJournalCliCommands.DELETE
+        )
 
     @abstractmethod
     def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """deploy a resource."""
-        raise NotImplementedError
+        raise SAMBrokerErrorNotImplemented(
+            message="deploy() not implemented", thing=self.thing, command=SmarterJournalCliCommands.DEPLOY
+        )
 
     @abstractmethod
     def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """Returns an example yaml manifest document for the kind of resource."""
-        raise NotImplementedError
+        raise SAMBrokerErrorNotImplemented(
+            message="example_manifest() not implemented",
+            thing=self.thing,
+            command=SmarterJournalCliCommands.MANIFEST_EXAMPLE,
+        )
 
     @abstractmethod
     def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """get information about specified resources."""
-        raise NotImplementedError
+        raise SAMBrokerErrorNotImplemented(
+            message="get() not implemented", thing=self.thing, command=SmarterJournalCliCommands.GET
+        )
 
     @abstractmethod
     def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """get logs for a resource."""
-        raise NotImplementedError
+        raise SAMBrokerErrorNotImplemented(
+            message="logs() not implemented", thing=self.thing, command=SmarterJournalCliCommands.LOGS
+        )
 
     @abstractmethod
     def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """undeploy a resource."""
-        raise NotImplementedError
+        raise SAMBrokerErrorNotImplemented(
+            message="undeploy() not implemented", thing=self.thing, command=SmarterJournalCliCommands.UNDEPLOY
+        )
 
     ###########################################################################
     # http json response helpers
@@ -382,6 +464,18 @@ class AbstractBroker(ABC):
     ###########################################################################
     # data transformation helpers
     ###########################################################################
+    def set_and_verify_name_param(self, command: SmarterJournalCliCommands = None):
+        """
+        Set self.name from the 'name' query string param and then verify that it
+        was actually passed.
+        """
+        if not self.manifest and not self.name:
+            raise SAMBrokerErrorNotReady(
+                f"If a manifest is not provided then the query param 'name' should be passed to identify the {self.kind}. Received {self.uri}",
+                thing=self.kind,
+                command=command,
+            )
+
     # pylint: disable=W0212
     def get_model_titles(self, serializer: ModelSerializer) -> list[dict[str, str]]:
         """
@@ -389,7 +483,8 @@ class AbstractBroker(ABC):
         from the Django model serializer.
         """
         fields_and_types = [
-            {"name": field_name, "type": type(field).__name__} for field_name, field in serializer.fields.items()
+            self.snake_to_camel({"name": field_name, "type": type(field).__name__}, convert_values=True)
+            for field_name, field in serializer.fields.items()
         ]
         return fields_and_types
 
@@ -408,7 +503,7 @@ class AbstractBroker(ABC):
             retval[new_key] = value
         return retval
 
-    def snake_to_camel(self, dictionary: dict) -> dict:
+    def snake_to_camel(self, dictionary: dict, convert_values: bool = False) -> dict:
         """Converts snake_case dict keys to camelCase."""
 
         def convert(name: str):
@@ -418,15 +513,48 @@ class AbstractBroker(ABC):
         retval = {}
         for key, value in dictionary.items():
             if isinstance(value, dict):
-                value = self.snake_to_camel(value)
+                value = self.snake_to_camel(dictionary=value, convert_values=convert_values)
             new_key = convert(key)
-            retval[new_key] = value
+            if convert_values:
+                new_value = convert(value) if isinstance(value, str) else value
+            else:
+                new_value = value
+            retval[new_key] = new_value
         return retval
 
 
+# pylint: disable=W0246
 class BrokerNotImplemented(AbstractBroker):
     """An error class to proxy for a broker class that has not been implemented."""
 
     # pylint: disable=W0231
     def __init__(self):
-        raise NotImplementedError("No broker class has been implemented for this kind of manifest.")
+        raise SAMBrokerErrorNotImplemented(
+            message="No broker class has been implemented for this kind of manifest.",
+            thing=None,
+            command=None,
+        )
+
+    def chat(self, request, kwargs):
+        super().chat(request, kwargs)
+
+    def delete(self, request, kwargs):
+        super().delete(request, kwargs)
+
+    def deploy(self, request, kwargs):
+        super().deploy(request, kwargs)
+
+    def describe(self, request, kwargs):
+        super().describe(request, kwargs)
+
+    def example_manifest(self, request, kwargs):
+        super().example_manifest(request, kwargs)
+
+    def get(self, request, kwargs):
+        super().get(request, kwargs)
+
+    def logs(self, request, kwargs):
+        super().logs(request, kwargs)
+
+    def undeploy(self, request, kwargs):
+        super().undeploy(request, kwargs)

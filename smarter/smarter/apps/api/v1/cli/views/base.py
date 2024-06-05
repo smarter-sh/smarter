@@ -37,7 +37,7 @@ class APIV1CLIViewError(SmarterExceptionBase):
     """Base class for all APIV1CLIView errors."""
 
     @property
-    def get_readable_name(self):
+    def get_formatted_err_message(self):
         return "Smarter api v1 command-line interface error"
 
 
@@ -255,7 +255,6 @@ class CliBaseApiView(APIView, AccountMixin):
 
         # set all of our identifying attributes from the request.
         self._user = request.user
-        logger.info("User: %s", self.user)
         try:
             if not self.user_profile:
                 raise APIV1CLIViewError("Could not find account for user.")
@@ -321,7 +320,7 @@ class CliBaseApiView(APIView, AccountMixin):
                 request=request,
                 thing=self.manifest_kind,
                 command=self.command,
-                e=not_implemented_error.get_readable_name,
+                e=not_implemented_error.get_formatted_err_message,
                 status=HTTPStatus.NOT_IMPLEMENTED,
             )
         except SAMBrokerErrorNotReady as not_ready_error:
@@ -329,7 +328,7 @@ class CliBaseApiView(APIView, AccountMixin):
                 request=request,
                 thing=self.manifest_kind,
                 command=self.command,
-                e=not_ready_error.get_readable_name,
+                e=not_ready_error.get_formatted_err_message,
                 status=HTTPStatus.SERVICE_UNAVAILABLE,
             )
         except SAMBrokerErrorNotFound as not_found_error:
@@ -337,7 +336,7 @@ class CliBaseApiView(APIView, AccountMixin):
                 request=request,
                 thing=self.manifest_kind,
                 command=self.command,
-                e=not_found_error.get_readable_name,
+                e=not_found_error.get_formatted_err_message,
                 status=HTTPStatus.NOT_FOUND,
             )
         except SAMBrokerReadOnlyError as read_only_error:
@@ -345,7 +344,7 @@ class CliBaseApiView(APIView, AccountMixin):
                 request=request,
                 thing=self.manifest_kind,
                 command=self.command,
-                e=read_only_error.get_readable_name,
+                e=read_only_error.get_formatted_err_message,
                 status=HTTPStatus.METHOD_NOT_ALLOWED,
             )
         except SAMBrokerError as broker_error:
@@ -353,7 +352,7 @@ class CliBaseApiView(APIView, AccountMixin):
                 request=request,
                 thing=self.manifest_kind,
                 command=self.command,
-                e=broker_error.get_readable_name,
+                e=broker_error.get_formatted_err_message,
                 status=HTTPStatus.BAD_REQUEST,
             )
         # pylint: disable=broad-except
