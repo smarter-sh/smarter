@@ -252,7 +252,7 @@ class AbstractBroker(ABC):
     ###########################################################################
     @property
     def model_class(self):
-        raise NotImplementedError()
+        raise SAMBrokerErrorNotImplemented(message="", thing=self.thing, command=None)
 
     @property
     def manifest(self) -> AbstractSAMBase:
@@ -523,9 +523,38 @@ class AbstractBroker(ABC):
         return retval
 
 
+# pylint: disable=W0246
 class BrokerNotImplemented(AbstractBroker):
     """An error class to proxy for a broker class that has not been implemented."""
 
     # pylint: disable=W0231
     def __init__(self):
-        raise NotImplementedError("No broker class has been implemented for this kind of manifest.")
+        raise SAMBrokerErrorNotImplemented(
+            message="No broker class has been implemented for this kind of manifest.",
+            thing=None,
+            command=None,
+        )
+
+    def chat(self, request, kwargs):
+        super().chat(request, kwargs)
+
+    def delete(self, request, kwargs):
+        super().delete(request, kwargs)
+
+    def deploy(self, request, kwargs):
+        super().deploy(request, kwargs)
+
+    def describe(self, request, kwargs):
+        super().describe(request, kwargs)
+
+    def example_manifest(self, request, kwargs):
+        super().example_manifest(request, kwargs)
+
+    def get(self, request, kwargs):
+        super().get(request, kwargs)
+
+    def logs(self, request, kwargs):
+        super().logs(request, kwargs)
+
+    def undeploy(self, request, kwargs):
+        super().undeploy(request, kwargs)

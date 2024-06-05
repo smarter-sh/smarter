@@ -6,10 +6,8 @@ import unittest
 import yaml
 
 from smarter.common.const import PYTHON_ROOT
-from smarter.lib.manifest.enum import SAMKeys
-
-from ..enum import SAMDataFormats, SAMKeys, SAMMetadataKeys
-from ..loader import SAMLoader, SAMLoaderError
+from smarter.lib.manifest.enum import SAMDataFormats, SAMKeys, SAMMetadataKeys
+from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 
 
 class TestManifestLoader(unittest.TestCase):
