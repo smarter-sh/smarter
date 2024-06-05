@@ -149,7 +149,7 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
                 str(e.__context__) if isinstance(e, dict) and hasattr(e, "__context__") else ""
             ),
         }
-        logger.error(data[SmarterJournalApiResponseKeys.ERROR])
+        # logger.error(data[SmarterJournalApiResponseKeys.ERROR])
 
         super().__init__(
             request=request,
