@@ -56,14 +56,19 @@ class ApiV1TestBase(unittest.TestCase, AccountMixin):
         except SmarterAuthToken.DoesNotExist:
             pass
 
-    def get_response(self, path, manifest: str = None) -> tuple[dict[str, any], int]:
+    def get_response(self, path, manifest: str = None, data: dict = None) -> tuple[dict[str, any], int]:
         """
         Prepare and get a response from an api/v1/ endpoint.
         """
         client = Client()
         headers = {"HTTP_AUTHORIZATION": f"Token {self.token_key}"}
 
-        response = client.post(path=path, data=manifest, content_type="application/json", **headers)
+        if manifest:
+            response = client.post(path=path, data=manifest, content_type="application/json", **headers)
+        elif data:
+            response = client.post(path=path, data=data, content_type="application/json", **headers)
+        else:
+            response = client.post(path=path, content_type="application/json", data=None, **headers)
         response_content = response.content.decode("utf-8")
         response_json = json.loads(response_content)
         return response_json, response.status_code

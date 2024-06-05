@@ -63,7 +63,7 @@ class TestApiCliV1SmarterAuthTokenDelete(ApiV1TestBase):
         path = reverse(ApiV1CliReverseViews.delete, kwargs=kwargs)
         query_params = urlencode({"name": self.token_record.name})
         url_with_query_params = f"{path}?{query_params}"
-        response, status = self.get_response(url_with_query_params)
+        response, status = self.get_response(path=url_with_query_params)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)

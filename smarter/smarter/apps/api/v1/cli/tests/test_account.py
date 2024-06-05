@@ -70,7 +70,7 @@ class TestApiCliV1Account(ApiV1TestBase):
 
         kwargs = {"kind": KIND}
         path = reverse(ApiV1CliReverseViews.example_manifest, kwargs=kwargs)
-        response, status = self.get_response(path)
+        response, status = self.get_response(path=path)
         self.assertEqual(status, HTTPStatus.OK)
         self.validate_response(response)
 
@@ -85,7 +85,7 @@ class TestApiCliV1Account(ApiV1TestBase):
         """Test describe command"""
         kwargs = {"kind": KIND}
         path = reverse(ApiV1CliReverseViews.describe, kwargs=kwargs)
-        response, status = self.get_response(path)
+        response, status = self.get_response(path=path)
         self.assertEqual(status, HTTPStatus.OK)
         self.validate_response(response)
 
@@ -98,7 +98,7 @@ class TestApiCliV1Account(ApiV1TestBase):
         # retrieve the current manifest by calling 'describe'
         kwargs = {"kind": KIND}
         path = reverse(ApiV1CliReverseViews.describe, kwargs=kwargs)
-        response, status = self.get_response(path)
+        response, status = self.get_response(path=path)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
@@ -126,13 +126,13 @@ class TestApiCliV1Account(ApiV1TestBase):
         # convert the data back to yaml, since this is what the cli usually sends
         manifest = yaml.dump(data)
         path = reverse(ApiV1CliReverseViews.apply)
-        response, status = self.get_response(path, manifest=manifest)
+        response, status = self.get_response(path=path, manifest=manifest)
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
 
         # requery and validate our changes
         path = reverse(ApiV1CliReverseViews.describe, kwargs=kwargs)
-        response, status = self.get_response(path)
+        response, status = self.get_response(path=path)
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
 
@@ -182,7 +182,7 @@ class TestApiCliV1Account(ApiV1TestBase):
 
         kwargs = {"kind": KIND}
         path = reverse(ApiV1CliReverseViews.get, kwargs=kwargs)
-        response, status = self.get_response(path)
+        response, status = self.get_response(path=path)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
@@ -215,7 +215,7 @@ class TestApiCliV1Account(ApiV1TestBase):
         """Test deploy command"""
         kwargs = {"kind": KIND}
         path = reverse(ApiV1CliReverseViews.deploy, kwargs=kwargs)
-        response, status = self.get_response(path)
+        response, status = self.get_response(path=path)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
@@ -234,7 +234,7 @@ class TestApiCliV1Account(ApiV1TestBase):
         """Test undeploy command"""
         kwargs = {"kind": KIND}
         path = reverse(ApiV1CliReverseViews.undeploy, kwargs=kwargs)
-        response, status = self.get_response(path)
+        response, status = self.get_response(path=path)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
@@ -253,7 +253,7 @@ class TestApiCliV1Account(ApiV1TestBase):
         """Test logs command"""
         kwargs = {"kind": KIND}
         path = reverse(ApiV1CliReverseViews.logs, kwargs=kwargs)
-        response, status = self.get_response(path)
+        response, status = self.get_response(path=path)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
@@ -263,7 +263,7 @@ class TestApiCliV1Account(ApiV1TestBase):
         """Test delete command"""
         kwargs = {"kind": KIND}
         path = reverse(ApiV1CliReverseViews.delete, kwargs=kwargs)
-        response, status = self.get_response(path)
+        response, status = self.get_response(path=path)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)

@@ -104,7 +104,7 @@ class TestApiCliV1ChatBot(ApiV1TestBase):
         """Test example-manifest command"""
 
         path = reverse(ApiV1CliReverseViews.example_manifest, kwargs=self.kwargs)
-        response, status = self.get_response(path)
+        response, status = self.get_response(path=path)
         self.assertEqual(status, HTTPStatus.OK)
         self.validate_response(response)
         data = response[SmarterJournalApiResponseKeys.DATA]
@@ -116,7 +116,7 @@ class TestApiCliV1ChatBot(ApiV1TestBase):
 
         path = reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
-        response, status = self.get_response(url_with_query_params)
+        response, status = self.get_response(path=url_with_query_params)
         self.assertEqual(status, HTTPStatus.OK)
         self.validate_response(response)
 
@@ -141,7 +141,7 @@ class TestApiCliV1ChatBot(ApiV1TestBase):
         # retrieve the current manifest by calling 'describe'
         path = reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
-        response, status = self.get_response(url_with_query_params)
+        response, status = self.get_response(path=url_with_query_params)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
@@ -174,14 +174,14 @@ class TestApiCliV1ChatBot(ApiV1TestBase):
         # convert the data back to yaml, since this is what the cli usually sends
         manifest = yaml.dump(data)
         path = reverse(ApiV1CliReverseViews.apply)
-        response, status = self.get_response(path, manifest=manifest)
+        response, status = self.get_response(path=path, manifest=manifest)
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
 
         # requery and validate our changes
         path = reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
-        response, status = self.get_response(url_with_query_params)
+        response, status = self.get_response(path=url_with_query_params)
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
 
@@ -232,7 +232,7 @@ class TestApiCliV1ChatBot(ApiV1TestBase):
             return True
 
         path = reverse(ApiV1CliReverseViews.get, kwargs=self.kwargs)
-        response, status = self.get_response(path)
+        response, status = self.get_response(path=path)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
@@ -268,7 +268,7 @@ class TestApiCliV1ChatBot(ApiV1TestBase):
 
         path = reverse(ApiV1CliReverseViews.deploy, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
-        _, status = self.get_response(url_with_query_params)
+        _, status = self.get_response(path=url_with_query_params)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
@@ -283,7 +283,7 @@ class TestApiCliV1ChatBot(ApiV1TestBase):
 
         path = reverse(ApiV1CliReverseViews.undeploy, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
-        _, status = self.get_response(url_with_query_params)
+        _, status = self.get_response(path=url_with_query_params)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
@@ -294,7 +294,7 @@ class TestApiCliV1ChatBot(ApiV1TestBase):
         """Test logs command"""
         path = reverse(ApiV1CliReverseViews.logs, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
-        response, status = self.get_response(url_with_query_params)
+        response, status = self.get_response(path=url_with_query_params)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
@@ -307,7 +307,7 @@ class TestApiCliV1ChatBot(ApiV1TestBase):
 
         path = reverse(ApiV1CliReverseViews.delete, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
-        _, status = self.get_response(url_with_query_params)
+        _, status = self.get_response(path=url_with_query_params)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)

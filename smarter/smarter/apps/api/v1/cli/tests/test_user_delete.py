@@ -37,7 +37,7 @@ class TestApiCliV1UserDelete(ApiV1TestBase):
         username = self.user.username
         path = reverse(ApiV1CliReverseViews.delete, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
-        response, status = self.get_response(url_with_query_params)
+        response, status = self.get_response(path=url_with_query_params)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
