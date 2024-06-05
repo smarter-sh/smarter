@@ -18,7 +18,7 @@ class SmarterTokenAuthenticationError(SmarterExceptionBase):
     """Base class for all SmarterTokenAuthentication errors."""
 
     @property
-    def get_readable_name(self):
+    def get_formatted_err_message(self):
         return "Smarter Token Authentication error"
 
 

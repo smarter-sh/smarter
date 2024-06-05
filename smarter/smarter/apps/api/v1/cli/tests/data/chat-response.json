@@ -1,0 +1,68 @@
+{
+  "data": {
+    "request": {
+      "session_key": "453b71fcd1bca64e56d10bd2d9c831c78afb336e38fbcf8bcf4db724dddcf07b",
+      "messages": [
+        {
+          "role": "assistant",
+          "content": "Welcome to Smarter!. Following are some example prompts:\n\n    - example prompt 1\n    - example prompt 2\n    - example prompt 3\n\nI'm Smarty Pants, how can I assist you today?"
+        },
+        {
+          "role": "user",
+          "content": "Hello, World!"
+        }
+      ]
+    },
+    "response": {
+      "data": {
+        "isBase64Encoded": false,
+        "statusCode": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "id": "chatcmpl-9WktI3vkTkfb7eeHoVoie59mGXvqg",
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "logprobs": null,
+              "message": {
+                "content": "Hello! How can I assist you today?",
+                "role": "assistant",
+                "function_call": null,
+                "tool_calls": null
+              }
+            }
+          ],
+          "created": 1717593772,
+          "model": "gpt-3.5-turbo-0125",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "usage": {
+            "completion_tokens": 10,
+            "prompt_tokens": 126,
+            "total_tokens": 136
+          },
+          "metadata": {
+            "tool_calls": null,
+            "model": "gpt-3.5-turbo",
+            "temperature": 0.5,
+            "max_tokens": 256,
+            "input_text": "Hello, World!"
+          }
+        }
+      },
+      "api": "smarter.sh/v1",
+      "thing": "Chatbot",
+      "metadata": {
+        "command": "chat"
+      }
+    }
+  },
+  "api": "smarter.sh/v1",
+  "thing": "Chat",
+  "metadata": {
+    "command": "chat"
+  }
+}

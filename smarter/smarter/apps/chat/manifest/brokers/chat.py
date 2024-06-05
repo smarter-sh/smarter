@@ -36,7 +36,7 @@ class SAMChatBrokerError(SAMBrokerError):
     """Base exception for Smarter API Chat Broker handling."""
 
     @property
-    def get_readable_name(self):
+    def get_formatted_err_message(self):
         return "Smarter API Chat Manifest Broker Error"
 
 
