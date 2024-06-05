@@ -8,7 +8,7 @@ class SmarterJournalEnumException(SmarterExceptionBase):
     """Base exception for Smarter API Manifest enumerations."""
 
     @property
-    def get_readable_name(self):
+    def get_formatted_err_message(self):
         return "Smarter API Manifest Enumeration Error"
 
 
@@ -56,7 +56,7 @@ class SmarterJournalThings(SmarterEnumAbstract):
 
     PLUGIN = "Plugin"
     ACCOUNT = "Account"
-    APIKEY = "apikey"
+    APIKEY = "SmarterAuthToken"
     USER = "User"
     CHAT = "Chat"
     CHAT_CONFIG = "ChatConfig"

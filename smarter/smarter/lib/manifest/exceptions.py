@@ -9,7 +9,7 @@ class SAMExceptionBase(SmarterExceptionBase):
     """Base exception for Smarter API Manifest handling."""
 
     @property
-    def get_readable_name(self):
+    def get_formatted_err_message(self):
         name = self.__class__.__name__
         name = name.replace("SAM", "Smarter API Manifest ")
         words = re.findall("[A-Z][^A-Z]*", name)

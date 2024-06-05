@@ -16,7 +16,10 @@ from rest_framework import __version__ as rest_framework_version
 
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.aws_helpers import aws_helper
-from smarter.lib.journal.enum import SmarterJournalCliCommands
+from smarter.lib.journal.enum import (
+    SmarterJournalApiResponseKeys,
+    SmarterJournalCliCommands,
+)
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 
 from ..base import CliBaseApiView
@@ -28,19 +31,21 @@ class ApiV1CliVersionApiView(CliBaseApiView):
     def info(self):
         try:
             data = {
-                "api": smarter_settings.version,
-                "python": {
-                    "botocore": aws_helper.aws.version,
-                    "celery": celery_version,
-                    "django": get_django_version(),
-                    "langchain": langchain_version,
-                    "levenshtein": levenshtein_version,
-                    "openai": openai_version,
-                    "pandas": pandas_version(),
-                    "pydantic": pydantic_version,
-                    "python": platform.python_version(),
-                    "rest_framework": rest_framework_version,
-                },
+                SmarterJournalApiResponseKeys.DATA: {
+                    "api": smarter_settings.version,
+                    "python": {
+                        "botocore": aws_helper.aws.version,
+                        "celery": celery_version,
+                        "django": get_django_version(),
+                        "langchain": langchain_version,
+                        "levenshtein": levenshtein_version,
+                        "openai": openai_version,
+                        "pandas": pandas_version(),
+                        "pydantic": pydantic_version,
+                        "python": platform.python_version(),
+                        "rest_framework": rest_framework_version,
+                    },
+                }
             }
 
             return SmarterJournaledJsonResponse(
