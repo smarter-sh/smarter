@@ -1,3 +1,10 @@
+## [0.3.8](https://github.com/smarter-sh/smarter/compare/v0.3.7...v0.3.8) (2024-06-05)
+
+
+### Bug Fixes
+
+* force a new release ([37ee46f](https://github.com/smarter-sh/smarter/commit/37ee46f0a4ce4c557eda5ba30ffd8c6574bb7efd))
+
 ## [0.3.7](https://github.com/smarter-sh/smarter/compare/v0.3.6...v0.3.7) (2024-06-01)
 
 ### Bug Fixes
