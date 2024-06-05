@@ -62,11 +62,18 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin):
         request.auth = SmarterTokenAuthentication()
         try:
             user, _ = request.auth.authenticate(request)
-            login(request, user)
+            if user:
+                login(request, user)
+            else:
+                raise AuthenticationFailed(
+                    "SmarterTokenAuthentication.authenticate() did not return"
+                    " a user object. This can happen if the Authorization header"
+                    " is malformed or is for another backend."
+                )
             logger.info("%s() authenticated user %s", self.__class__.__name__, user)
-        except AuthenticationFailed:
+        except AuthenticationFailed as auth_failed:
             try:
-                raise SmarterTokenAuthenticationError("Authentication failed.") from None
+                raise SmarterTokenAuthenticationError("Authentication failed.") from auth_failed
             except SmarterTokenAuthenticationError as e:
                 auth = self.authorization_header.split()
                 auth_token = auth[1] if len(auth) > 1 else None

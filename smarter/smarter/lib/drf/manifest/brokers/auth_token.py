@@ -18,6 +18,7 @@ from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
+    SAMBrokerErrorNotFound,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
 )
@@ -40,7 +41,7 @@ class SAMSmarterAuthTokenBrokerError(SAMBrokerError):
     """Base exception for Smarter API SmarterAuthToken Broker handling."""
 
     @property
-    def get_readable_name(self):
+    def get_formatted_err_message(self):
         return "Smarter API SmarterAuthToken Manifest Broker Error"
 
 
@@ -115,14 +116,18 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         """
         if self._smarter_auth_token:
             return self._smarter_auth_token
+
         try:
-            self._smarter_auth_token = SmarterAuthToken.objects.get(
-                user=self.user, description=self.manifest.metadata.description
-            )
-        except SmarterAuthToken.DoesNotExist:
-            self._smarter_auth_token, self._token_key = SmarterAuthToken.objects.create(
-                name=self.manifest.metadata.name, user=self.user, description=self.manifest.metadata.description
-            )
+            self._smarter_auth_token = SmarterAuthToken.objects.get(user=self.user, name=self.name)
+        except SmarterAuthToken.DoesNotExist as e:
+            if self.manifest:
+                self._smarter_auth_token, self._token_key = SmarterAuthToken.objects.create(
+                    name=self.manifest.metadata.name, user=self.user, description=self.manifest.metadata.description
+                )
+            else:
+                raise SAMBrokerErrorNotFound(
+                    f"Did not find {self.kind} {self.name}.", thing=self.kind, command=None
+                ) from e
 
         return self._smarter_auth_token
 
@@ -132,6 +137,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         """
         config_dump = self.manifest.spec.config.model_dump()
         config_dump = self.camel_to_snake(config_dump)
+        config_dump["description"] = self.manifest.metadata.description
         return config_dump
 
     def django_orm_to_manifest_dict(self) -> dict:
@@ -141,7 +147,6 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         """
         smarter_auth_token_dict = model_to_dict(self.smarter_auth_token)
         smarter_auth_token_dict = self.snake_to_camel(smarter_auth_token_dict)
-        smarter_auth_token_dict.pop("id")
 
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
@@ -149,7 +154,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
             SAMKeys.METADATA.value: {
                 SAMMetadataKeys.NAME.value: self.smarter_auth_token.name,
                 SAMMetadataKeys.DESCRIPTION.value: self.smarter_auth_token.description,
-                SAMMetadataKeys.VERSION.value: self.smarter_auth_token.version,
+                SAMMetadataKeys.VERSION.value: "1.0.0",
             },
             SAMKeys.SPEC.value: {
                 SAMSmarterAuthTokenSpecKeys.CONFIG.value: {
@@ -236,7 +241,8 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
                     raise SAMSmarterAuthTokenBrokerError(
                         f"Model dump failed for {self.kind} {smarter_auth_token.name}", thing=self.kind, command=command
                     )
-                data.append(model_dump)
+                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                data.append(camel_cased_model_dump)
             except Exception as e:
                 raise SAMSmarterAuthTokenBrokerError(
                     f"Model dump failed for {self.kind} {smarter_auth_token.name}", thing=self.kind, command=command
@@ -267,6 +273,8 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
         readonly_fields = ["id", "created_at", "updated_at", "last_used_at", "key_id", "user", "digest", "token_key"]
+        self._smarter_auth_token = None
+        self._name = self.params.get("name")
         try:
             data = self.manifest_to_django_orm()
             for field in readonly_fields:
@@ -288,19 +296,23 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
+        self._smarter_auth_token = None
+        self.set_and_verify_name_param(command=command)
+
         if self.smarter_auth_token:
             try:
                 data = self.django_orm_to_manifest_dict()
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
                 raise SAMSmarterAuthTokenBrokerError(
-                    f"Failed to describe {self.kind} {self.smarter_auth_token.name}", thing=self.kind, command=command
+                    f"{self.kind} {self.smarter_auth_token.name} error: {str(e)}", thing=self.kind, command=command
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
 
     def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
+        self.set_and_verify_name_param(command=command)
         if self.smarter_auth_token:
             try:
                 self.smarter_auth_token.delete()
@@ -314,20 +326,33 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
     def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(
-            f"{self.kind} {self.name} deploy is not implemented", thing=self.kind, command=command
-        )
+        self.set_and_verify_name_param(command=command)
+
+        if self.smarter_auth_token:
+            if not self.smarter_auth_token.is_active:
+                self.smarter_auth_token.is_active = True
+                self.smarter_auth_token.save()
+        else:
+            raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
+        return self.json_response_ok(command=command, data={})
 
     def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(
-            f"{self.kind} {self.name} deploy is not implemented", thing=self.kind, command=command
-        )
+        self.set_and_verify_name_param(command=command)
+
+        if self.smarter_auth_token:
+            if self.smarter_auth_token.is_active:
+                self.smarter_auth_token.is_active = False
+                self.smarter_auth_token.save()
+        else:
+            raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
+        return self.json_response_ok(command=command, data={})
 
     def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
+        self.set_and_verify_name_param(command=command)
         if self.smarter_auth_token:
             data = {}
             return self.json_response_ok(command=command, data=data)

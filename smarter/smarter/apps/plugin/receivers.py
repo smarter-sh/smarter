@@ -36,8 +36,14 @@ logger = logging.getLogger(__name__)
 def handle_plugin_created(sender, **kwargs):
     """Handle plugin created signal."""
 
-    plugin = kwargs.get("plugin")
-    logger.info("%s - %s", formatted_text("plugin_created"), plugin.name)
+    plugin: PluginStatic = kwargs.get("plugin")
+    logger.info(
+        "%s - account: %s - user: %s - name: %s",
+        formatted_text("plugin_created"),
+        plugin.user_profile.account,
+        plugin.user_profile.user,
+        plugin.name,
+    )
 
 
 @receiver(plugin_cloned, dispatch_uid="plugin_cloned")

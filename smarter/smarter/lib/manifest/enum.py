@@ -9,7 +9,7 @@ class SAMEnumException(SAMExceptionBase):
     """Base exception for Smarter API Manifest enumerations."""
 
     @property
-    def get_readable_name(self):
+    def get_formatted_err_message(self):
         return "Smarter API Manifest Enumeration Error"
 
 

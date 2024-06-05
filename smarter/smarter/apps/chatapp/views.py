@@ -44,7 +44,7 @@ class SmarterChatappViewError(SmarterExceptionBase):
     """Base class for all SmarterChatapp errors."""
 
     @property
-    def get_readable_name(self):
+    def get_formatted_err_message(self):
         return "Smarter Chatapp error"
 
 

@@ -7,7 +7,10 @@ from django.http import JsonResponse
 
 from smarter.apps.account.serializers import AccountSerializer
 from smarter.lib.django.serializers import UserSerializer
-from smarter.lib.journal.enum import SmarterJournalCliCommands
+from smarter.lib.journal.enum import (
+    SmarterJournalApiResponseKeys,
+    SmarterJournalCliCommands,
+)
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 
 from ..base import CliBaseApiView
@@ -19,8 +22,10 @@ class ApiV1CliWhoamiApiView(CliBaseApiView):
     def whoami(self):
         try:
             data = {
-                "user": UserSerializer(self.user_profile.user).data,
-                "account": AccountSerializer(self.user_profile.account).data,
+                SmarterJournalApiResponseKeys.DATA: {
+                    "user": UserSerializer(self.user_profile.user).data,
+                    "account": AccountSerializer(self.user_profile.account).data,
+                }
             }
             return SmarterJournaledJsonResponse(
                 request=self.request,
