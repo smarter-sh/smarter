@@ -55,7 +55,7 @@ jobs:
         id: current_version
         run: |
           cd ${{ env.PACKAGE_PATH }}
-          CURRENT_VERSION=$(python -c 'from __version__ import __version__; print(__version__)')
+          CURRENT_VERSION=$(python -c 'from smarter.__version__ import __version__; print(__version__)')
           echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
 
       - name: Sync __version__.py with latest GitHub release
@@ -72,6 +72,8 @@ jobs:
             git commit -m "chore: [gh] Sync __version__.py with latest GitHub release ${{ env.LATEST_RELEASE }} [skip ci]"
             git push https://${{ secrets.PAT }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
           fi
+        env:
+          VERSION_FILE: ${{ env.PACKAGE_PATH }}${{ env.VERSION_FILE }}
 
       - name: Get current version and calculate next version
         id: version
