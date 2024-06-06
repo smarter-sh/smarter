@@ -1,14 +1,13 @@
 # pylint: disable=W0212
 """Django admin configuration for the chat app."""
 
-from django.contrib import admin
-
 from smarter.apps.account.models import UserProfile
+from smarter.lib.django.admin import RestrictedModelAdmin
 
-from .models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
+from .models import Chat, ChatPluginUsage, ChatToolCall
 
 
-class ChatAdmin(admin.ModelAdmin):
+class ChatAdmin(RestrictedModelAdmin):
     """chat history model admin."""
 
     readonly_fields = (
@@ -28,7 +27,7 @@ class ChatAdmin(admin.ModelAdmin):
             return qs.none()
 
 
-class ChatHistoryAdmin(admin.ModelAdmin):
+class ChatHistoryAdmin(RestrictedModelAdmin):
     """chat history model admin."""
 
     readonly_fields = (
@@ -48,7 +47,7 @@ class ChatHistoryAdmin(admin.ModelAdmin):
             return qs.none()
 
 
-class PluginSelectionHistoryAdmin(admin.ModelAdmin):
+class PluginSelectionHistoryAdmin(RestrictedModelAdmin):
     """plugin selection history model admin."""
 
     readonly_fields = (
@@ -68,7 +67,7 @@ class PluginSelectionHistoryAdmin(admin.ModelAdmin):
             return qs.none()
 
 
-class ChatToolCallHistoryAdmin(admin.ModelAdmin):
+class ChatToolCallHistoryAdmin(RestrictedModelAdmin):
     """chat tool call history model admin."""
 
     readonly_fields = (
@@ -86,9 +85,3 @@ class ChatToolCallHistoryAdmin(admin.ModelAdmin):
             return qs.filter(chat__account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
-
-
-admin.site.register(Chat, ChatAdmin)
-admin.site.register(ChatHistory, ChatHistoryAdmin)
-admin.site.register(ChatPluginUsage, PluginSelectionHistoryAdmin)
-admin.site.register(ChatToolCall, ChatToolCallHistoryAdmin)
