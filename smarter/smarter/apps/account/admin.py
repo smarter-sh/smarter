@@ -2,12 +2,13 @@
 
 from django.contrib import admin
 
+from smarter.lib.django.admin import RestrictedModelAdmin
 from smarter.lib.django.user import User
 
 from .models import Account, AccountContact, Charge, PaymentMethod, UserProfile
 
 
-class UserAdmin(admin.ModelAdmin):
+class UserAdmin(RestrictedModelAdmin):
     """User model admin."""
 
     readonly_fields = ("date_joined",)
@@ -26,7 +27,7 @@ class UserAdmin(admin.ModelAdmin):
 
 
 # Register your models here.
-class AccountAdmin(admin.ModelAdmin):
+class AccountAdmin(RestrictedModelAdmin):
     """Account model admin."""
 
     readonly_fields = (
@@ -46,7 +47,7 @@ class AccountAdmin(admin.ModelAdmin):
             return qs.none()
 
 
-class AccountContactAdmin(admin.ModelAdmin):
+class AccountContactAdmin(RestrictedModelAdmin):
     """AccountContact model admin."""
 
     readonly_fields = (
@@ -66,7 +67,7 @@ class AccountContactAdmin(admin.ModelAdmin):
             return qs.none()
 
 
-class ChargeAdmin(admin.ModelAdmin):
+class ChargeAdmin(RestrictedModelAdmin):
     """Charge model admin."""
 
     readonly_fields = (
@@ -86,7 +87,7 @@ class ChargeAdmin(admin.ModelAdmin):
             return qs.none()
 
 
-class PaymentMethodModelAdmin(admin.ModelAdmin):
+class PaymentMethodModelAdmin(RestrictedModelAdmin):
     """Payment method model admin."""
 
     readonly_fields = (

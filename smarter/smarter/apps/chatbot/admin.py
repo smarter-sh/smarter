@@ -1,9 +1,8 @@
 # pylint: disable=W0212
 """Admin configuration for the chatbot app."""
 
-from django.contrib import admin
-
 from smarter.apps.account.models import UserProfile
+from smarter.lib.django.admin import RestrictedModelAdmin
 
 from .models import (
     ChatBot,
@@ -11,11 +10,10 @@ from .models import (
     ChatBotCustomDomain,
     ChatBotCustomDomainDNS,
     ChatBotFunctions,
-    ChatBotPlugin,
 )
 
 
-class ChatBotAdmin(admin.ModelAdmin):
+class ChatBotAdmin(RestrictedModelAdmin):
     """ChatBot model admin."""
 
     readonly_fields = (
@@ -35,7 +33,7 @@ class ChatBotAdmin(admin.ModelAdmin):
             return qs.none()
 
 
-class ChatBotCustomDomainAdmin(admin.ModelAdmin):
+class ChatBotCustomDomainAdmin(RestrictedModelAdmin):
     """ChatBotCustomDomain model admin."""
 
     readonly_fields = (
@@ -55,7 +53,7 @@ class ChatBotCustomDomainAdmin(admin.ModelAdmin):
             return qs.none()
 
 
-class ChatBotCustomDomainDNSAdmin(admin.ModelAdmin):
+class ChatBotCustomDomainDNSAdmin(RestrictedModelAdmin):
     """ChatBotCustomDomainDNS model admin."""
 
     readonly_fields = (
@@ -75,7 +73,7 @@ class ChatBotCustomDomainDNSAdmin(admin.ModelAdmin):
             return qs.none()
 
 
-class ChatBotAPIKeyAdmin(admin.ModelAdmin):
+class ChatBotAPIKeyAdmin(RestrictedModelAdmin):
     """ChatBotAPIKey model admin."""
 
     readonly_fields = (
@@ -95,7 +93,7 @@ class ChatBotAPIKeyAdmin(admin.ModelAdmin):
             return qs.none()
 
 
-class ChatBotPluginAdmin(admin.ModelAdmin):
+class ChatBotPluginAdmin(RestrictedModelAdmin):
     """ChatBotPlugin model admin."""
 
     readonly_fields = (
@@ -114,7 +112,7 @@ class ChatBotPluginAdmin(admin.ModelAdmin):
             return qs.none()
 
 
-class ChatBotFunctionsAdmin(admin.ModelAdmin):
+class ChatBotFunctionsAdmin(RestrictedModelAdmin):
     """ChatBotFunctions model admin."""
 
     readonly_fields = (
@@ -132,11 +130,3 @@ class ChatBotFunctionsAdmin(admin.ModelAdmin):
             return qs.filter(chatbot__account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
-
-
-admin.site.register(ChatBot, ChatBotAdmin)
-admin.site.register(ChatBotCustomDomain, ChatBotCustomDomainAdmin)
-admin.site.register(ChatBotCustomDomainDNS, ChatBotCustomDomainDNSAdmin)
-admin.site.register(ChatBotAPIKey, ChatBotAPIKeyAdmin)
-admin.site.register(ChatBotPlugin, ChatBotPluginAdmin)
-admin.site.register(ChatBotFunctions, ChatBotFunctionsAdmin)

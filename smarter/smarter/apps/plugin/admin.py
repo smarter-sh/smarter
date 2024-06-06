@@ -5,6 +5,7 @@ import re
 from django.contrib import admin
 
 from smarter.apps.account.models import UserProfile
+from smarter.lib.django.admin import RestrictedModelAdmin
 
 from .models import (
     PluginDataSqlConnection,
@@ -53,7 +54,7 @@ class PluginDataInline(admin.StackedInline):
         return [f.name for f in self.model._meta.fields]
 
 
-class PluginAdmin(admin.ModelAdmin):
+class PluginAdmin(RestrictedModelAdmin):
     """Plugin model admin."""
 
     def plugin_name(self, obj):
@@ -80,7 +81,7 @@ class PluginAdmin(admin.ModelAdmin):
             return qs.none()
 
 
-class PluginDataSqlConnectionAdmin(admin.ModelAdmin):
+class PluginDataSqlConnectionAdmin(RestrictedModelAdmin):
     """Plugin Data SQL Connection model admin."""
 
     readonly_fields = (
@@ -108,7 +109,3 @@ class PluginDataSqlConnectionAdmin(admin.ModelAdmin):
             return qs.filter(account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
-
-
-admin.site.register(PluginMeta, PluginAdmin)
-admin.site.register(PluginDataSqlConnection, PluginDataSqlConnectionAdmin)
