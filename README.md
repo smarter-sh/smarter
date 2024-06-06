@@ -31,7 +31,7 @@ Smarter is cost effective when running at scale. It is extensible and architecte
 - Go lang
 - GitHub Actions
 
-## Designed by for prompt engineers
+## Designed by and for prompt engineers
 
 Smarter provides design teams with a web console, and a convenient yaml manifest-based command-line interface for Windows, macOS, and Linux.
 
