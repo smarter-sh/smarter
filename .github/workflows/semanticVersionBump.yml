@@ -48,7 +48,7 @@ jobs:
       - name: Fetch latest GitHub release version
         id: latest_release
         run: |
-          LATEST_RELEASE=$(curl --silent "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r .tag_name)
+          LATEST_RELEASE=$(curl -H "Authorization: token ${{ secrets.PAT }}" --silent "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r .tag_name)
           echo "LATEST_RELEASE=$LATEST_RELEASE" >> $GITHUB_ENV
 
       - name: Get current version
