@@ -22,6 +22,19 @@ class RestrictedModelAdmin(admin.ModelAdmin):
         return request.user.is_superuser
 
 
+class UserAdmin(admin.ModelAdmin):
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        try:
+            user_profile = UserProfile.objects.get(user=request.user)
+            return qs.filter(account=user_profile.account)
+        except UserProfile.DoesNotExist:
+            return qs.none()
+
+
 class EmailContactListAdmin(RestrictedModelAdmin):
     list_display = ["email", "created_at", "updated_at"]
     ordering = ("-created_at",)
@@ -44,7 +57,7 @@ class RestrictedAPIKeyAdmin(RestrictedModelAdmin):
 
 restricted_site = RestrictedAdminSite(name="restricted_admin_site")
 
-restricted_site.register(User, RestrictedModelAdmin)
+# restricted_site.register(User, UserAdmin)
 restricted_site.register(Group, RestrictedModelAdmin)
 restricted_site.register(Permission, RestrictedModelAdmin)
 restricted_site.register(Account, RestrictedModelAdmin)
