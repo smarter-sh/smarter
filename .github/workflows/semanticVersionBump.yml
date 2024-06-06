@@ -32,14 +32,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Cache NPM dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node
-
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
@@ -52,6 +44,36 @@ jobs:
 
       - name: Install npm dependencies
         run: npm install
+
+      - name: Fetch latest GitHub release version
+        id: latest_release
+        run: |
+          LATEST_RELEASE=$(curl -H "Authorization: token ${{ secrets.PAT }}" --silent "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r .tag_name)
+          echo "LATEST_RELEASE=$LATEST_RELEASE" >> $GITHUB_ENV
+
+      - name: Get current version
+        id: current_version
+        run: |
+          cd ${{ env.PACKAGE_PATH }}
+          CURRENT_VERSION=$(python -c 'from __version__ import __version__; print(__version__)')
+          echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
+
+      - name: Sync __version__.py with latest GitHub release
+        if: env.CURRENT_VERSION != env.LATEST_RELEASE
+        run: |
+          if python -c 'import sys; sys.exit(0 if "${{ env.CURRENT_VERSION }}" < "${{ env.LATEST_RELEASE }}" else 1)'; then
+            echo "# -*- coding: utf-8 -*-" > ${{ env.VERSION_FILE }}
+            echo "# DO NOT EDIT." >> ${{ env.VERSION_FILE }}
+            echo "# Managed via automated CI/CD in .github/workflows/semanticVersionBump.yml." >> ${{ env.VERSION_FILE }}
+            echo "__version__ = \"${{ env.LATEST_RELEASE }}\"" >>  ${{ env.VERSION_FILE }}
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git add ${{ env.VERSION_FILE }}
+            git commit -m "chore: [gh] Sync __version__.py with latest GitHub release ${{ env.LATEST_RELEASE }} [skip ci]"
+            git push https://${{ secrets.PAT }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
+          fi
+        env:
+          VERSION_FILE: ${{ env.PACKAGE_PATH }}${{ env.VERSION_FILE }}
 
       - name: Get current version and calculate next version
         id: version
