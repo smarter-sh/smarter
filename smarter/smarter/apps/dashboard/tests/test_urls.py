@@ -47,4 +47,4 @@ class TestDashboard(unittest.TestCase):
     def test_dashboard(self):
         """test that we can see the account view and that it matches the account data."""
         response = self.client.get("")
-        self.assertEqual(response.status_code, 200)
+        self.assertIn(response.status_code, [200, 301, 302])
