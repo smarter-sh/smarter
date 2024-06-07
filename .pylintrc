@@ -7,4 +7,4 @@ init-hook='import sys; sys.path.append("./smarter/smarter/common/aws")'
 max-line-length=120
 
 [MESSAGES CONTROL]
-disable=too-few-public-methods,invalid-name,line-too-long,no-self-argument,missing-function-docstring,too-many-ancestors,no-member,R0801
+disable=W0511,too-few-public-methods,invalid-name,line-too-long,no-self-argument,missing-function-docstring,too-many-ancestors,no-member,R0801
