@@ -54,7 +54,7 @@ class SAMTestBroker(AbstractBroker, AccountMixin):
         self,
         request: HttpRequest,
         account: Account,
-        api_version: str = SmarterApiVersions.V1.value,
+        api_version: str = SmarterApiVersions.V1,
         name: str = None,
         kind: str = None,
         loader: SAMLoader = None,

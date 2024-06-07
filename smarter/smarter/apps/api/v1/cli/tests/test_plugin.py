@@ -60,7 +60,7 @@ class TestApiV1CliPlugin(ApiV1TestBase):
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
         self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.PLUGIN.value)
-        self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1.value)
+        self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
 
     def test_valid_manifest(self):
         """Test that we get OK response when passing a valid manifest"""
@@ -82,7 +82,7 @@ class TestApiV1CliPlugin(ApiV1TestBase):
         self.assertIsInstance(response, dict)
 
         data = response[SCLIResponseGet.DATA.value]
-        self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1.value)
+        self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
         self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.PLUGIN.value)
         self.assertIsInstance(data.get(SAMKeys.METADATA.value, None), dict)
         self.assertEqual(data.get(SAMKeys.METADATA.value, {}).get("name", None), self.name)
@@ -96,7 +96,7 @@ class TestApiV1CliPlugin(ApiV1TestBase):
         self.assertIsInstance(response[SCLIResponseGet.DATA.value][SCLIResponseGetData.TITLES.value], list)
         self.assertIsInstance(response[SCLIResponseGet.DATA.value][SCLIResponseGetData.ITEMS.value], list)
         self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.PLUGIN.value)
-        self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1.value)
+        self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
 
         path = f"{reverse(ApiV1CliReverseViews.delete, kwargs=self.kwargs)}"
         url_with_query_params = f"{path}?{self.query_params}"
