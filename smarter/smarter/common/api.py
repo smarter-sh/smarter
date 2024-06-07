@@ -1,12 +1,9 @@
 """Smarter API enumerations."""
 
-from .enum import SmarterEnumAbstract
-
-
 VERSION_PREFIX = "smarter.sh"
 
 
-class SmarterApiVersions(SmarterEnumAbstract):
+class SmarterApiVersions:
     """API Version enumeration."""
 
     V0 = f"{VERSION_PREFIX}/v0"
