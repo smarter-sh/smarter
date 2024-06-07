@@ -4,6 +4,7 @@
 import platform
 from http import HTTPStatus
 
+import requests
 from celery import __version__ as celery_version
 from django import get_version as get_django_version
 from django.http import JsonResponse
@@ -14,6 +15,7 @@ from pandas.util._print_versions import show_versions as pandas_version
 from pydantic import VERSION as pydantic_version
 from rest_framework import __version__ as rest_framework_version
 
+from smarter.apps.api.v1.cli.views.base import APIV1CLIViewError, CliBaseApiView
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.lib.journal.enum import (
@@ -22,28 +24,45 @@ from smarter.lib.journal.enum import (
 )
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 
-from ..base import CliBaseApiView
-
 
 class ApiV1CliVersionApiView(CliBaseApiView):
     """Smarter API command-line interface 'version' view"""
+
+    def cli_version(self):
+        """
+        retrieve the version of the smarter-cli by reading the version file
+        from the smarter-cli package
+        """
+        url = "https://raw.githubusercontent.com/smarter-sh/smarter-cli/main/VERSION"
+        response = requests.get(url, timeout=5)
+
+        if response.status_code == 200:
+            version = response.text.strip()
+            return version
+        else:
+            raise APIV1CLIViewError(f"Failed to get version from {url}. HTTP status code: {response.status_code}")
 
     def info(self):
         try:
             data = {
                 SmarterJournalApiResponseKeys.DATA: {
-                    "api": smarter_settings.version,
-                    "python": {
-                        "botocore": aws_helper.aws.version,
-                        "celery": celery_version,
-                        "django": get_django_version(),
-                        "langchain": langchain_version,
-                        "levenshtein": levenshtein_version,
-                        "openai": openai_version,
-                        "pandas": pandas_version(),
-                        "pydantic": pydantic_version,
-                        "python": platform.python_version(),
-                        "rest_framework": rest_framework_version,
+                    "api": {
+                        "version": smarter_settings.version,
+                        "python": {
+                            "botocore": aws_helper.aws.version,
+                            "celery": celery_version,
+                            "django": get_django_version(),
+                            "langchain": langchain_version,
+                            "levenshtein": levenshtein_version,
+                            "openai": openai_version,
+                            "pandas": pandas_version(),
+                            "pydantic": pydantic_version,
+                            "python": platform.python_version(),
+                            "rest_framework": rest_framework_version,
+                        },
+                    },
+                    "cli": {
+                        "version": self.cli_version(),
                     },
                 }
             }
