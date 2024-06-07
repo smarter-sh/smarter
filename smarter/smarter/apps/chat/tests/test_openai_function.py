@@ -127,7 +127,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
             pass
 
     def check_response(self, response):
-        """Check response structure from api.v0.views.chat handler()"""
+        """Check response structure from api.v1.views.chat handler()"""
         if response["statusCode"] != 200:
             print(f"response: {response}")
 
@@ -200,7 +200,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         true_assertion("everlasting gobstopper")
 
     def test_handler_gobstoppers(self):
-        """Test api.v0.views.chat handler() - Gobstoppers."""
+        """Test api.v1.views.chat handler() - Gobstoppers."""
 
         # setup receivers for all signals to check if they are called
         plugin_selected.connect(self.plugin_selected_signal_handler)
@@ -243,16 +243,16 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         self.assertIsNotNone(chat_histories)
 
         # test url api endpoint for chat history
-        response = self.client.get("/api/v0/chat/history/chats/")
+        response = self.client.get("/api/v1/chat/history/chats/")
         self.assertEqual(response.status_code, 200)
-        print("/api/v0/chat/history/chats/ response:", response.json())
+        print("/api/v1/chat/history/chats/ response:", response.json())
 
         # assert that ChatPluginUsage has one or more records for self.user
         plugin_selection_histories = ChatPluginUsage.objects.first()
         self.assertIsNotNone(plugin_selection_histories)
 
     def test_handler_weather(self):
-        """Test api.v0.views.chat handler() - weather."""
+        """Test api.v1.views.chat handler() - weather."""
         response = None
         event_about_weather = get_test_file("json/prompt_about_weather.json")
 
@@ -271,7 +271,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         self.check_response(response)
 
     def test_handler_recipes(self):
-        """Test api.v0.views.chat handler() - recipes."""
+        """Test api.v1.views.chat handler() - recipes."""
         response = None
         event_about_recipes = get_test_file("json/prompt_about_recipes.json")
 

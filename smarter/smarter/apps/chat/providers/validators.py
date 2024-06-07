@@ -83,12 +83,12 @@ def validate_messages(request_body):
             raise SmarterValueError(f"dict key 'content' not found in message {json.dumps(message, indent=4)}")
 
 
-def validate_completion_request(request_body, version: str = "v0") -> None:
+def validate_completion_request(request_body, version: str = "v1") -> None:
     """See openai.chat.completion.request.json"""
     validate_request_body(request_body=request_body)
     validate_messages(request_body=request_body)
 
-    if version == "v0":
+    if version == "v1":
         if "model" not in request_body:
             raise SmarterValueError("dict key 'model' not found in request body object")
         if "temperature" not in request_body:
