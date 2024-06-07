@@ -10,23 +10,15 @@ from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
 from smarter.common.api import SmarterApiVersions
-from smarter.lib.django.serializers import UserSerializer
-from smarter.lib.django.user import User, UserType
+from smarter.lib.django.user import UserType
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
     SAMBrokerErrorNotFound,
-    SAMBrokerErrorNotImplemented,
-    SAMBrokerErrorNotReady,
 )
-from smarter.lib.manifest.enum import (
-    SAMKeys,
-    SAMMetadataKeys,
-    SCLIResponseGet,
-    SCLIResponseGetData,
-)
+from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader
 
 

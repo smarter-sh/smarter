@@ -25,6 +25,7 @@ from smarter.lib.manifest.models import AbstractSAMBase
 from .abstractbroker_test_class import SAMTestBroker
 
 
+# pylint: disable=too-many-public-methods
 class TestAbstractBrokerClass(unittest.TestCase, AccountMixin):
     """
     Test abstract Broker class coverage gaps.
