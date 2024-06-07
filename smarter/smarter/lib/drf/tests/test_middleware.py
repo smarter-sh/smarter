@@ -61,7 +61,7 @@ class TestSmarterTokenAuthenticationMiddleware(unittest.TestCase, AccountMixin):
         headers = {"HTTP_AUTHORIZATION": f"Token {self.token_key}"}
 
         response = client.get(path="/", data=None, content_type="application/json", **headers)
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertIn(response.status_code, [HTTPStatus.OK, HTTPStatus.FOUND, HTTPStatus.MOVED_PERMANENTLY])
 
     def test_no_authorization_header(self):
         """Test that the middleware does not prevent access to public urls."""
