@@ -42,7 +42,7 @@ class TestApiCliV1Version(ApiV1TestBase):
         self.validate_response(response)
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.assertIn("api", data.keys())
-        self.assertIn("python", data.keys())
+        self.assertIn("cli", data.keys())
 
         metadata = response[SmarterJournalApiResponseKeys.METADATA]
         metadata[SCLIResponseMetadata.COMMAND] = SmarterJournalCliCommands.VERSION.value
