@@ -6,15 +6,13 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
-from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
-
 from .views import GettingStartedView
 
 
 schema_view = get_schema_view(
     openapi.Info(
         title=settings.SMARTER_API_NAME,
-        default_version=SMARTER_API_VERSION,
+        default_version="v1",
         description=settings.SMARTER_API_DESCRIPTION,
         terms_of_service="https:/smarter.sh/tos/",
         contact=openapi.Contact(email="contact@smarter.sh"),

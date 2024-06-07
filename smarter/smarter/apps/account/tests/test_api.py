@@ -58,7 +58,7 @@ class TestUrls(unittest.TestCase):
 
     def test_account_view(self):
         """test that we can see the account view and that it matches the account data."""
-        response = self.client.get("/api/v0/accounts/")
+        response = self.client.get("/api/v1/accounts/")
 
         self.assertEqual(response.status_code, 200)
         json_data = response.json()
@@ -69,7 +69,7 @@ class TestUrls(unittest.TestCase):
 
     def test_accounts_view(self):
         """test that we can see the accounts view and that it matches the account data."""
-        response = self.client.get("/api/v0/accounts/")
+        response = self.client.get("/api/v1/accounts/")
 
         self.assertEqual(response.status_code, 200)
         json_data = response.json()
@@ -92,7 +92,7 @@ class TestUrls(unittest.TestCase):
 
     def test_accounts_index_view(self):
         """test that we can see an account from inside the list view and that it matches the account data."""
-        response = self.client.get("/api/v0/accounts/" + str(self.account.id) + "/")
+        response = self.client.get("/api/v1/accounts/" + str(self.account.id) + "/")
         self.assertEqual(response.status_code, 200)
         json_data = response.json()
         self.assertIsInstance(json_data, dict)
@@ -101,7 +101,7 @@ class TestUrls(unittest.TestCase):
 
     def test_account_users_view(self):
         """test that we can see users associated with an account and that one of these matches the account data."""
-        response = self.client.get("/api/v0/accounts/users/")
+        response = self.client.get("/api/v1/accounts/users/")
 
         self.assertEqual(response.status_code, 200)
         json_data = response.json()
@@ -113,7 +113,7 @@ class TestUrls(unittest.TestCase):
 
     def test_account_users_index_view(self):
         """test that we can see an account from inside the list view and that it matches the account data."""
-        response = self.client.get("/api/v0/accounts/users/" + str(self.user.id) + "/")
+        response = self.client.get("/api/v1/accounts/users/" + str(self.user.id) + "/")
 
         self.assertEqual(response.status_code, 200)
         json_data = response.json()
@@ -123,7 +123,7 @@ class TestUrls(unittest.TestCase):
 
     def test_account_payment_methods(self):
         """test that we can see the payment methods associated with an account."""
-        response = self.client.get("/api/v0/accounts/payment-methods/")
+        response = self.client.get("/api/v1/accounts/payment-methods/")
 
         self.assertEqual(response.status_code, 200)
         json_data = response.json()
@@ -136,7 +136,7 @@ class TestUrls(unittest.TestCase):
 
     def test_account_payment_methods_index(self):
         """test that we can see the payment methods associated with an account."""
-        response = self.client.get("/api/v0/accounts/payment-methods/" + str(self.payment_method.id) + "/")
+        response = self.client.get("/api/v1/accounts/payment-methods/" + str(self.payment_method.id) + "/")
 
         self.assertEqual(response.status_code, 200)
         json_data = response.json()
