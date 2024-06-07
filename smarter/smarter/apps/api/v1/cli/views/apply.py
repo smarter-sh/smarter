@@ -37,7 +37,7 @@ The response from this endpoint is a JSON object.
         Parameters:
         request (Request): The request object containing a YAML manifest in the smarter.sh/v1 format.
         *args: Variable length argument list.
-        **kwargs: Arbitrary keyword arguments.
+        **kwargs: expected to be an empty dictionary
 
         Returns:
         Response: A JSON object representing the result of the 'apply' operation.
