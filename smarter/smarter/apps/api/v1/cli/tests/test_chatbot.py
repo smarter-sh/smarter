@@ -314,7 +314,7 @@ class TestApiCliV1ChatBot(ApiV1TestBase):
 
         # verify the chatbot was deleted
         try:
-            ChatBot.objects.get(name=self.name)
+            ChatBot.objects.get(name=self.name, account=self.account)
             self.fail("ChatBot was not deleted")
         except ChatBot.DoesNotExist:
             pass
