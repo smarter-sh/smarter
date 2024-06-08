@@ -1,4 +1,4 @@
-"""Smarter API V0 Manifests Enumerations."""
+"""Smarter API V1 Manifests Enumerations."""
 
 from smarter.apps.account.manifest.models.account.const import (
     MANIFEST_KIND as ACCOUNT_MANIFEST_KIND,

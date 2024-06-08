@@ -117,4 +117,3 @@ class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
 
         with self.assertRaises(SAMBrokerErrorNotImplemented) as e:
             self.broker.deploy(request=self.request, kwargs=self.kwargs)
-        print(e.exception)

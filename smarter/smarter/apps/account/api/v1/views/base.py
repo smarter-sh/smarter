@@ -4,8 +4,8 @@ import logging
 
 from django.shortcuts import get_object_or_404
 
-from smarter.apps.account.api.v0.serializers import AccountSerializer
 from smarter.apps.account.models import UserProfile
+from smarter.apps.account.serializers import AccountSerializer
 from smarter.lib.django.user import User
 from smarter.lib.drf.views.token_authentication_helpers import (
     SmarterAdminAPIView,
