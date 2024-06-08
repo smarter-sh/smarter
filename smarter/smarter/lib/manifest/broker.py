@@ -35,7 +35,7 @@ if typing.TYPE_CHECKING:
 
 inflect_engine = inflect.engine()
 
-SUPPORTED_API_VERSIONS = [SmarterApiVersions.V1.value]
+SUPPORTED_API_VERSIONS = [SmarterApiVersions.V1]
 
 logger = logging.getLogger(__name__)
 
@@ -135,7 +135,7 @@ class AbstractBroker(ABC):
         self,
         request: HttpRequest,
         account: "Account",
-        api_version: str = SmarterApiVersions.V1.value,
+        api_version: str = SmarterApiVersions.V1,
         name: str = None,
         kind: str = None,
         loader: SAMLoader = None,

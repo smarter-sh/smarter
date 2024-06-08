@@ -16,13 +16,15 @@ Including another URLconf
 """
 
 from django.urls import include, path
-
-from .views import CustomAPIView
+from django.views.generic import RedirectView
 
 
 urlpatterns = [
-    path("", CustomAPIView.as_view(), name="custom_api_root_v1"),
+    path("", RedirectView.as_view(url="docs/")),
+    path("account/", include("smarter.apps.account.api.v1.urls")),
+    path("chatbot/", include("smarter.apps.chatbot.api.v1.urls")),
+    path("chat/", include("smarter.apps.chat.api.v1.urls")),
     path("cli/", include("smarter.apps.api.v1.cli.urls")),
-    path("chatbot/", include("smarter.apps.chatbot.api.urls")),
-    path("plugins/", include("smarter.apps.plugin.api.urls")),
+    path("docs/", RedirectView.as_view(url="docs/")),
+    path("plugins/", include("smarter.apps.plugin.api.v1.urls")),
 ]

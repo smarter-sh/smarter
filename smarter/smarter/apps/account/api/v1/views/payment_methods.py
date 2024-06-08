@@ -9,8 +9,8 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
-from smarter.apps.account.api.v0.serializers import PaymentMethodSerializer
 from smarter.apps.account.models import Account, PaymentMethod, UserProfile
+from smarter.apps.account.serializers import PaymentMethodSerializer
 from smarter.lib.django.user import User, UserType
 
 from .base import AccountListViewBase, AccountViewBase
