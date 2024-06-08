@@ -10,6 +10,7 @@
             --bs-app-sidebar-gap-end: 0px;
             --bs-app-sidebar-gap-top: 0px;
             --bs-app-sidebar-gap-bottom: 0px;
+            --bs-bullet-bg-color: #f1f1f1;
         }
 
         .code-sample-body {
@@ -17,12 +18,15 @@
             background-color: #333333;
             border-radius: 10px;
         }
+        .code-sample-body pre {
+          display: inline-block;
+          text-align: left;
+        }
 
         .code-sample-copy {
             position: absolute;
             top: 10px;
             right: 10px;
-            /* Additional styles for the copy button */
         }
         .code-snippet {
             --bs-code-color: #f1f1f1; /* Text color */
@@ -127,7 +131,7 @@
 										<div class="card bg-body align-self-start mb-9 mb-xl-0 me-lg-9">
 											<div class="card-body">
 												<!--begin::Heading-->
-												<div class="mb-15">
+												<div class="mb-10">
 													<!--begin::Title-->
 													<h1 class="fs-2x text-gray-900 mb-6">Smarter API</h1>
 													<!--end::Title-->
@@ -143,48 +147,48 @@
                               including for example Python, Javascript and Golang. The API
                               returns all responses in JSON format, following the <code>smarter.sh/v1</code>
                                API schema. For example:
-                              <div class="code-sample-body">
-                                <pre class="code-snippet prettyprint">
-                                    <code>
-                                      {
-                                        "api": "smarter.sh/v1",
-                                        "data": {
-                                            "account": {
-                                                "account_number": "3141-5926-5359",
-                                                "address1": "1700 South Lamar Blvd",
-                                                "address2": "Suite 338",
-                                                "city": "Austin",
-                                                "company_name": "Smarter",
-                                                "country": "USA",
-                                                "created_at": "2024-05-24T21:22:52.712547Z",
-                                                "currency": "USD",
-                                                "id": 1,
-                                                "language": "",
-                                                "phone_number": "+1 (512) 833-6955",
-                                                "postal_code": "78704",
-                                                "state": "TX",
-                                                "timezone": "America/Chicago",
-                                                "updated_at": "2024-06-07T00:51:27.369962Z"
-                                            },
-                                            "user": {
-                                                "email": "admin@smarter.sh",
-                                                "first_name": "",
-                                                "id": 1,
-                                                "is_staff": true,
-                                                "is_superuser": true,
-                                                "last_name": "",
-                                                "username": "admin"
-                                            }
-                                        },
-                                        "metadata": {
-                                            "command": "whoami"
-                                        },
-                                        "thing": "None"
-                                    }
-                                    </code>
-                                </pre>
-                            </div>
                             </p>
+                            <div class="code-sample-body">
+                              <pre class="code-snippet prettyprint">
+                                <code>
+                                  {
+                                    "api": "smarter.sh/v1",
+                                    "data": {
+                                        "account": {
+                                            "account_number": "3141-5926-5359",
+                                            "address1": "1700 South Lamar Blvd",
+                                            "address2": "Suite 338",
+                                            "city": "Austin",
+                                            "company_name": "Smarter",
+                                            "country": "USA",
+                                            "created_at": "2024-05-24T21:22:52.712547Z",
+                                            "currency": "USD",
+                                            "id": 1,
+                                            "language": "",
+                                            "phone_number": "+1 (512) 833-6955",
+                                            "postal_code": "78704",
+                                            "state": "TX",
+                                            "timezone": "America/Chicago",
+                                            "updated_at": "2024-06-07T00:51:27.369962Z"
+                                        },
+                                        "user": {
+                                            "email": "admin@smarter.sh",
+                                            "first_name": "",
+                                            "id": 1,
+                                            "is_staff": true,
+                                            "is_superuser": true,
+                                            "last_name": "",
+                                            "username": "admin"
+                                        }
+                                    },
+                                    "metadata": {
+                                        "command": "whoami"
+                                    },
+                                    "thing": "None"
+                                }
+                                </code>
+                              </pre>
+                            </div>
                           </div>
 													<!--begin::Authentication-->
                           <div id="authentication">
@@ -197,7 +201,7 @@
                                Api keys are formatted as a 64-character sha256 hash, such as
                                <code>548de94hc4f1762c64732d268a2ee2635b2d36e9f7e3be91f1662d5456ae110d</code>.
                             </p>
-                            <p>All API requests should include your API key in an `Authorization` HTTP header as follows:</p>
+                            <p>All API requests should include your API key in an <code>Authorization</code> HTTP header as follows:</p>
                             <div class="code-sample-body">
                                 <button type="button" class="btn btn-sm btn-neutral code-sample-copy" aria-label="Copy">
                                     <!-- SVG for copy icon goes here -->
