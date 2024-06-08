@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------
 # Public Access Views
 # ------------------------------------------------------------------------------
-class GettingStartedView(SmarterWebView):
+class Sitemap(SmarterWebView):
     """Top level legal view"""
 
-    template_path = "api/v1/docs/getting-started.html"
+    template_path = "api/docs/sitemap.html"
