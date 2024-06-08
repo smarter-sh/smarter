@@ -65,7 +65,7 @@ services:
     container_name: smarter-app
     user: smarter_user
     image: smarter
-    command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- gunicorn smarter.wsgi:application -b 0.0.0.0:8000
+    command: watchmedo auto-restart --directory=./smarter/smarter/ --pattern=*.py --recursive -- gunicorn smarter.wsgi:application -b 0.0.0.0:8000
     volumes:
       - ./smarter:/smarter
     ports:
