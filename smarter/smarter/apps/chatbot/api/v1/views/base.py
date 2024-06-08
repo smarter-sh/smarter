@@ -64,7 +64,6 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
     @property
     def chatbot(self):
         if not self._chatbot:
-            print(f"ChatBotApiBaseViewSet.chatbot: name={self.name}, account={self.account}")
             self._chatbot = ChatBot.objects.get(name=self.name, account=self.account)
         return self._chatbot
 

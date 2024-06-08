@@ -348,9 +348,6 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
 
         # create a Smarter chatbot request and prompt the chatbot
         chat_request = self.chat_request_factory(request=request, url=self.url_chatbot, body=request_body)
-
-        print("ApiV1CliChatApiView.post() - chat_request", chat_request.body)
-
         chat_response = SmarterChatBotApiView.as_view()(request=chat_request, name=name)
         chat_response = json.loads(chat_response.content)
 

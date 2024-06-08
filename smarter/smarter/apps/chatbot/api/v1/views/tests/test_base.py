@@ -59,8 +59,6 @@ class TestChatBotApiBaseViewSet(unittest.TestCase):
         cls.broker.delete(request=cls.request, kwargs=cls.kwargs)
 
     def test_base_class_properties(self):
-        print("request url: ", self.request.build_absolute_uri())
-        print("SmarterValidator.urlify(): ", SmarterValidator.urlify(self.request.build_absolute_uri()))
         base_class = ChatBotApiBaseViewSet()
         base_class.request = self.request
 

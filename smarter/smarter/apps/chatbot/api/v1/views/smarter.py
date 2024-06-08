@@ -123,10 +123,6 @@ class SmarterChatBotApiView(ChatBotApiBaseViewSet):
             logger.info("%s.post() - chatbot: %s", self.formatted_class_name, self.chatbot)
             logger.info("%s.post() - plugins: %s", self.formatted_class_name, self.plugins)
 
-        print(f"SmarterChatBotApiView.post(): chatbot: {self.chat_helper.chatbot}")
-        print(f"SmarterChatBotApiView.post(): chat.chatbot: {self.chat_helper.chat.chatbot}")
-        print(f"SmarterChatBotApiView.post(): chat: {self.chat_helper.chat}")
-
         response = handler(
             chat=self.chat_helper.chat,
             data=self.data,
