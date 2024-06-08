@@ -54,7 +54,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         return self._session_key
 
     @property
-    def chatbot_helper(self):
+    def chatbot_helper(self) -> ChatBotHelper:
         return self._chatbot_helper
 
     @property
@@ -64,7 +64,8 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
     @property
     def chatbot(self):
         if not self._chatbot:
-            self._chatbot = self.chatbot_helper.chatbot
+            print(f"ChatBotApiBaseViewSet.chatbot: name={self.name}, account={self.account}")
+            self._chatbot = ChatBot.objects.get(name=self.name, account=self.account)
         return self._chatbot
 
     @property
@@ -83,13 +84,14 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         return False
 
     def dispatch(self, request, *args, name: str = None, **kwargs):
-        self.request = request
+        self.request = self.request or request
+        self._user = self._user or request.user
         self._name = self._name or name
         self._url = self.request.build_absolute_uri()
         self._url = SmarterValidator.urlify(self._url)
         self._chatbot_helper = ChatBotHelper(url=self.url, name=self.name, user=self.request.user)
-        self._account = self.chatbot_helper.account
-        self._user = self.chatbot_helper.user
+
+        print(f"ChatBotApiBaseViewSet.dispatch(): chatbot: {self.chatbot_helper.chatbot}")
 
         if waffle.switch_is_active("chatbot_api_view_logging"):
             logger.info("%s.dispatch() - url=%s", self.formatted_class_name, self.url)
