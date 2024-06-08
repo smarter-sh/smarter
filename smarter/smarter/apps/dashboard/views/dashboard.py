@@ -1,3 +1,4 @@
+# pylint: disable=W0613
 """Django views"""
 
 import html
@@ -76,12 +77,6 @@ class EmailAdded(SmarterWebView):
     def post(self, request):
         context = json.loads(request.body.decode("utf-8"))
         return self.clean_http_response(request, template_path=self.template_path, context=context)
-
-
-class DocumentationView(SmarterWebView):
-    """Documentation view"""
-
-    template_path = "dashboard/documentation.html"
 
 
 class PlatformHelpView(SmarterWebView):

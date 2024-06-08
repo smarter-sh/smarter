@@ -89,7 +89,7 @@ class PluginStatic(PluginBase):
     @classmethod
     def example_manifest(cls, kwargs: dict = None) -> dict:
         return {
-            SAMKeys.APIVERSION.value: SmarterApiVersions.V1.value,
+            SAMKeys.APIVERSION.value: SmarterApiVersions.V1,
             SAMKeys.KIND.value: MANIFEST_KIND,
             SAMKeys.METADATA.value: {
                 SAMMetadataKeys.NAME.value: "EverlastingGobstopper",

@@ -46,8 +46,8 @@ from ..signals import (
 
 logger = logging.getLogger(__name__)
 
-SMARTER_API_MANIFEST_COMPATIBILITY = [SmarterApiVersions.V1.value]
-SMARTER_API_MANIFEST_DEFAULT_VERSION = SmarterApiVersions.V1.value
+SMARTER_API_MANIFEST_COMPATIBILITY = [SmarterApiVersions.V1]
+SMARTER_API_MANIFEST_DEFAULT_VERSION = SmarterApiVersions.V1
 PLUGIN_KEY = "plugin"
 
 
