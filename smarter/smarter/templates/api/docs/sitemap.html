@@ -3,20 +3,19 @@
 
       {% block root %}
       <style>
-        .code-snippet {
-            --bs-code-color: #f1f1f1; /* Text color */
-            --bs-code-border-color: transparent; /* Border color */
-            --bs-code-bg: #333333; /* Background color */
-            --bs-code-shadow: 0px 3px 9px rgba(0, 0, 0, 0.08); /* Box shadow */
-            white-space: pre;
-            text-align: left !important;
+        :root {
+            --bs-app-sidebar-width: 0px;
+            --bs-app-sidebar-width-actual: 0px;
+            --bs-app-sidebar-gap-start: 0px;
+            --bs-app-sidebar-gap-end: 0px;
+            --bs-app-sidebar-gap-top: 0px;
+            --bs-app-sidebar-gap-bottom: 0px;
         }
+
         .code-sample-body {
             position: relative;
-            padding: 15px;
             background-color: #333333;
             border-radius: 10px;
-            text-align: left;
         }
 
         .code-sample-copy {
@@ -25,18 +24,24 @@
             right: 10px;
             /* Additional styles for the copy button */
         }
-
-        .language-bash {
-            /* Styles for syntax highlighting */
+        .code-snippet {
+            --bs-code-color: #f1f1f1; /* Text color */
+            --bs-code-border-color: transparent; /* Border color */
+            --bs-code-bg: #333333; /* Background color */
+            --bs-code-shadow: 0px 3px 9px rgba(0, 0, 0, 0.08); /* Box shadow */
         }
+
         .querium-bg {
-          background-color: #ff5733 !important;
+          background-color: rgba(255, 87, 51, 0.75) !important; /* 50% opacity */
           border-radius: var(--bs-card-inner-border-radius) var(--bs-card-inner-border-radius) 0 0;
+          --bs-heading-color: #f1f1f1;
+          --bs-card-color: #f1f1f1;
+          --bs-scrollbar-color: #f1f1f1;
+          --bs-link-color-rgb: 241, 241, 241;
         }
         .parent-class > * {
-          filter: invert(100%) grayscale(100%)  brightness(200%);
+          color: #f1f1f1;
         }
-
 
 
       </style>
@@ -59,8 +64,8 @@
 						<!--begin::Mobile logo-->
 						<div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0">
 							<a href="index.html" class="d-lg-none">
-								<img alt="Logo" src="{% static 'assets/media/logos/default-small.svg' %}" class="theme-light-show h-30px" />
-								<img alt="Logo" src="{% static 'assets/media/logos/default-small-dark.svg' %}" class="theme-dark-show h-30px" />
+								<img alt="Logo" src="https://smarter.sh/wp-content/uploads/2024/04/Smarter_crop.png" class="theme-light-show h-30px" />
+								<img alt="Logo" src="https://smarter.sh/wp-content/uploads/2024/04/Smarter_crop.png" class="theme-dark-show h-30px" />
 							</a>
 						</div>
 						<!--end::Mobile logo-->
@@ -68,6 +73,11 @@
 						<div class="d-flex align-items-stretch justify-content-between flex-lg-grow-1" id="kt_app_header_wrapper">
 							<!--begin::Navbar-->
 							<div class="app-navbar flex-shrink-0">
+                <div id="logobox">
+                  <a href="/" class="d-none d-lg-block">
+                    <img alt="Logo" src="https://smarter.sh/wp-content/uploads/2024/04/Smarter_crop.png" class="h-70px" />
+                  </a>
+                </div>
 								<!--begin::Header menu toggle-->
 								<div class="app-navbar-item d-lg-none ms-2 me-n2" title="Show header menu">
 									<div class="btn btn-flex btn-icon btn-active-color-primary w-30px h-30px" id="kt_app_header_menu_toggle">
@@ -99,7 +109,7 @@
 									<!--begin::Page title-->
 									<div class="page-title d-flex flex-column justify-content-center flex-wrap me-3">
 										<!--begin::Title-->
-										<h1 class="page-heading d-flex text-gray-900 fw-bold fs-3 flex-column justify-content-center my-0">Smarter API</h1>
+										<h1 class="page-heading d-flex text-gray-900 fw-bold fs-3 flex-column justify-content-center my-0">Documentation</h1>
 										<!--end::Title-->
 									</div>
 									<!--end::Page title-->
@@ -119,7 +129,7 @@
 												<!--begin::Heading-->
 												<div class="mb-15">
 													<!--begin::Title-->
-													<h1 class="fs-2x text-gray-900 mb-6">Documentation</h1>
+													<h1 class="fs-2x text-gray-900 mb-6">Smarter API</h1>
 													<!--end::Title-->
 												</div>
 												<!--end::Heading-->
@@ -135,7 +145,7 @@
                                API schema. For example:
                               <div class="code-sample-body">
                                 <pre class="code-snippet prettyprint">
-                                    <code class="json">
+                                    <code>
                                       {
                                         "api": "smarter.sh/v1",
                                         "data": {
@@ -192,8 +202,8 @@
                                 <button type="button" class="btn btn-sm btn-neutral code-sample-copy" aria-label="Copy">
                                     <!-- SVG for copy icon goes here -->
                                 </button>
-                                <pre class="code-snippet">
-                                    <code class="language-bash">Authorization: Token $SMARTER_API_KEY</code>
+                                <pre class="code-snippet pt-6">
+                                    <code>Authorization: Token $SMARTER_API_KEY</code>
                                 </pre>
                             </div>
                             <!--end::Text-->
@@ -211,8 +221,8 @@
                               <button type="button" class="btn btn-sm btn-neutral code-sample-copy" aria-label="Copy">
                                   <!-- SVG for copy icon goes here -->
                               </button>
-                              <pre class="code-snippet">
-                                <code class="language-bash">
+                              <pre class="code-snippet pt-6">
+                                <code>
                                   curl https://platform.smarter.sh/api/v1/cli/whoami/ \
                                   -H "Authorization: Token $SMARTER_API_KEY" \
                                   </code>
@@ -223,8 +233,8 @@
                               <button type="button" class="btn btn-sm btn-neutral code-sample-copy" aria-label="Copy">
                                   <!-- SVG for copy icon goes here -->
                               </button>
-                              <pre class="code-snippet">
-                                <code class="language-bash">
+                              <pre class="code-snippet pt-6">
+                                <code>
                                   curl https://platform.smarter.sh/api/v1/cli/apply/ \
                                   -H "Content-Type: application/json" \
                                   -H "Authorization: Token $SMARTER_API_KEY" \
@@ -257,10 +267,10 @@
 													<!--begin::Top-->
 													<div class="mb-7">
 														<!--begin::Title-->
-														<h2 class="fs-1 text-gray-800 w-bolder mb-6">We're Hiring!</h2>
+														<h2 class="fs-1 w-bolder mb-6">We're Hiring!</h2>
 														<!--end::Title-->
 														<!--begin::Text-->
-														<p class="fw-semibold fs-6 text-gray-600">Let's do something amazing, together! We're currently hiring for Full Stack and React developers, devops, and prompt engineering positions.</p>
+														<p class="fw-semibold fs-6">Let's do something amazing, together! We're currently hiring for Full Stack and React developers, devops, and prompt engineering positions.</p>
 														<!--end::Text-->
 													</div>
 													<!--end::Top-->
@@ -269,7 +279,7 @@
 														<!--begin::Item-->
 														<div class="mb-8">
 															<!--begin::Title-->
-															<h4 class="text-gray-700 w-bolder mb-0">Requirements</h4>
+															<h4 class="w-bolder mb-0">Requirements</h4>
 															<!--end::Title-->
 															<!--begin::Section-->
 															<div class="my-2">
@@ -279,7 +289,7 @@
 																	<span class="bullet me-3"></span>
 																	<!--end::Bullet-->
 																	<!--begin::Label-->
-																	<div class="text-gray-600 fw-semibold fs-6">A moral compass</div>
+																	<div class="fw-semibold fs-6">A moral compass</div>
 																	<!--end::Label-->
 																</div>
 																<!--end::Row-->
@@ -289,7 +299,7 @@
 																	<span class="bullet me-3"></span>
 																	<!--end::Bullet-->
 																	<!--begin::Label-->
-																	<div class="text-gray-600 fw-semibold fs-6">Communication and time-management skills</div>
+																	<div class="fw-semibold fs-6">Communication and time-management skills</div>
 																	<!--end::Label-->
 																</div>
 																<!--end::Row-->
@@ -299,7 +309,7 @@
 																	<span class="bullet me-3"></span>
 																	<!--end::Bullet-->
 																	<!--begin::Label-->
-																	<div class="text-gray-600 fw-semibold fs-6">A passion for learning</div>
+																	<div class="fw-semibold fs-6">A passion for learning</div>
 																	<!--end::Label-->
 																</div>
 																<!--end::Row-->
@@ -309,7 +319,7 @@
 																	<span class="bullet me-3"></span>
 																	<!--end::Bullet-->
 																	<!--begin::Label-->
-																	<div class="text-gray-600 fw-semibold fs-6">Online skills assessment(s)</div>
+																	<div class="fw-semibold fs-6">Online skills assessment(s)</div>
 																	<!--end::Label-->
 																</div>
 																<!--end::Row-->
@@ -320,7 +330,7 @@
 														<!--begin::Item-->
 														<div class="mb-8">
 															<!--begin::Title-->
-															<h4 class="text-gray-700 w-bolder mb-0">Our Achievements</h4>
+															<h4 class="w-bolder mb-0">Our Achievements</h4>
 															<!--end::Title-->
 															<!--begin::Section-->
 															<div class="my-2">
@@ -330,7 +340,7 @@
 																	<span class="bullet me-3"></span>
 																	<!--end::Bullet-->
 																	<!--begin::Label-->
-																	<div class="text-gray-600 fw-semibold fs-6">Patented technology</div>
+																	<div class="fw-semibold fs-6">Patented technology</div>
 																	<!--end::Label-->
 																</div>
 																<!--end::Row-->
@@ -340,7 +350,7 @@
 																	<span class="bullet me-3"></span>
 																	<!--end::Bullet-->
 																	<!--begin::Label-->
-																	<div class="text-gray-600 fw-semibold fs-6">Something else</div>
+																	<div class="fw-semibold fs-6">Something else</div>
 																	<!--end::Label-->
 																</div>
 																<!--end::Row-->
@@ -350,7 +360,7 @@
 																	<span class="bullet me-3"></span>
 																	<!--end::Bullet-->
 																	<!--begin::Label-->
-																	<div class="text-gray-600 fw-semibold fs-6">And, something else!</div>
+																	<div class="fw-semibold fs-6">And, something else!</div>
 																	<!--end::Label-->
 																</div>
 																<!--end::Row-->
@@ -361,7 +371,7 @@
 													</div>
 													<!--end::Items-->
 													<!--begin::Link-->
-													<a href="https://smarter.sh/" class="link-primary fs-6 fw-semibold">Explore More</a>
+													<a href="https://smarter.sh/" class="fs-6 fw-semibold">Explore More</a>
 													<!--end::Link-->
 												</div>
 												<!--end::Body-->
@@ -380,7 +390,7 @@
 													<div class="mb-6">
 														<!--begin::Link-->
 														<a href="https://www.linkedin.com/company/querium-corporation/" class="mb-6">
-															<img src="{% static 'assets/media/svg/brand-logos/linkedin-3.svg' %}" class="h-20px me-2" alt="" />
+															<img src="{% static 'assets/media/svg/brand-logos/linkedin-2.svg' %}" class="h-20px me-2" alt="" />
 															<span class="text-gray-700 text-hover-primary fs-5 mb-6">LinkedIn</span>
 														</a>
 														<!--end::Link-->
