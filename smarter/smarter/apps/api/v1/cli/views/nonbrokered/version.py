@@ -39,8 +39,7 @@ class ApiV1CliVersionApiView(CliBaseApiView):
         if response.status_code == 200:
             version = response.text.strip()
             return version
-        else:
-            raise APIV1CLIViewError(f"Failed to get version from {url}. HTTP status code: {response.status_code}")
+        raise APIV1CLIViewError(f"Failed to get version from {url}. HTTP status code: {response.status_code}")
 
     def info(self):
         try:

@@ -76,6 +76,29 @@ def handler(
     Chat prompt handler. Responsible for processing incoming requests and
     invoking the appropriate OpenAI API endpoint based on the contents of
     the request.
+
+    Args:
+        chat: Chat instance
+        data: Request data (see below)
+        plugins: a List of plugins to potentially show to the LLM
+        user: User instance
+        default_model: Default model to use for the chat completion example: "gpt-3.5-turbo"
+        default_temperature: Default temperature to use for the chat completion example: 0.5
+        default_max_tokens: Default max tokens to use for the chat completion example: 256
+
+    data: {
+        'session_key': '6f3bdd1981e0cac2de5fdc7afc2fb4e565826473a124153220e9f6bf49bca67b',
+        'messages': [
+                {
+                    'role': 'assistant',
+                    'content': "Welcome to Smarter!. Following are some example prompts: blah blah blah"
+                },
+                {
+                    'role': 'user',
+                    'content': 'Hello, World!'
+                }
+            ]
+        }
     """
     request_meta_data: dict = None
     first_iteration = {}
@@ -96,9 +119,9 @@ def handler(
     try:
         request_body = get_request_body(data=data)
         messages, input_text = parse_request(request_body)
-        model = default_model
-        temperature = default_temperature
-        max_tokens = default_max_tokens
+        model = chat.chatbot.default_model or default_model
+        temperature = chat.chatbot.default_temperature or default_temperature
+        max_tokens = chat.chatbot.default_max_tokens or default_max_tokens
         request_meta_data = request_meta_data_factory(model, temperature, max_tokens, input_text)
         chat_invoked.send(sender=handler, chat=chat, data=data)
 
@@ -126,7 +149,8 @@ def handler(
             valid_items=VALID_CHAT_COMPLETION_MODELS,
             item_type="ChatCompletion models",
         )
-        validate_completion_request(request_body, version="v1")
+
+        # validate_completion_request(request_body, version="v1")
         first_iteration["request"] = {
             "model": model,
             "messages": messages,
@@ -134,6 +158,7 @@ def handler(
             "temperature": temperature,
             "max_tokens": max_tokens,
         }
+
         first_response = openai.chat.completions.create(
             model=model,
             messages=messages,

@@ -12,12 +12,12 @@ from time import sleep
 
 from django.test import Client
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
+from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
 from smarter.common.conf import settings as smarter_settings
-from smarter.lib.django.user import User
 from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 from ..models import Chat, ChatPluginUsage
@@ -90,10 +90,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        username = "testuser_" + os.urandom(4).hex()
-        self.user = User.objects.create(username=username, password="12345")
-        self.account = Account.objects.create(company_name="Test Account")
-        self.user_profile = UserProfile.objects.create(user=self.user, account=self.account, is_test=True)
+        self.user, self.account, self.user_profile = admin_user_factory()
 
         config_path = get_test_file_path("plugins/everlasting-gobstopper.yaml")
         plugin_data = get_readonly_yaml_file(config_path)
@@ -101,11 +98,14 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         self.plugin = PluginStatic(user_profile=self.user_profile, data=plugin_data)
         self.plugins = [self.plugin]
 
+        self.chatbot = self.chatbot_factory()
+
         self.client = Client()
         self.client.force_login(self.user)
 
         self.chat = Chat.objects.create(
             session_key=secrets.token_hex(32),
+            chatbot=self.chatbot,
             ip_address="192.1.1.1",
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
             url="https://www.test.com",
@@ -113,21 +113,31 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
 
     def tearDown(self):
         """Tear down test fixtures."""
-        try:
-            self.user_profile.delete()
-        except UserProfile.DoesNotExist:
-            pass
-        try:
-            self.user.delete()
-        except User.DoesNotExist:
-            pass
-        try:
-            self.account.delete()
-        except Account.DoesNotExist:
-            pass
+        admin_user_teardown(user=self.user, account=self.account, user_profile=self.user_profile)
+        self.chat.delete()
+        self.chatbot.delete()
+
+    def chatbot_factory(self):
+        chatbot = ChatBot.objects.create(
+            name="TestChatBot",
+            account=self.account,
+            description="Test ChatBot",
+            version="1.0.0",
+            subdomain=None,
+            custom_domain=None,
+            deployed=False,
+            app_name="Smarter",
+            app_assistant="Smarty Pants",
+            app_welcome_message="Welcome to Smarter!",
+        )
+        ChatBotPlugin.objects.create(
+            chatbot=chatbot,
+            plugin_meta=self.plugin.plugin_meta,
+        )
+        return chatbot
 
     def check_response(self, response):
-        """Check response structure from api.v0.views.chat handler()"""
+        """Check response structure from api.v1.views.chat handler()"""
         if response["statusCode"] != 200:
             print(f"response: {response}")
 
@@ -200,7 +210,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         true_assertion("everlasting gobstopper")
 
     def test_handler_gobstoppers(self):
-        """Test api.v0.views.chat handler() - Gobstoppers."""
+        """Test api.v1.views.chat handler() - Gobstoppers."""
 
         # setup receivers for all signals to check if they are called
         plugin_selected.connect(self.plugin_selected_signal_handler)
@@ -243,16 +253,16 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         self.assertIsNotNone(chat_histories)
 
         # test url api endpoint for chat history
-        response = self.client.get("/api/v0/chat/history/chats/")
+        response = self.client.get("/api/v1/chat/history/chats/")
         self.assertEqual(response.status_code, 200)
-        print("/api/v0/chat/history/chats/ response:", response.json())
+        print("/api/v1/chat/history/chats/ response:", response.json())
 
         # assert that ChatPluginUsage has one or more records for self.user
         plugin_selection_histories = ChatPluginUsage.objects.first()
         self.assertIsNotNone(plugin_selection_histories)
 
     def test_handler_weather(self):
-        """Test api.v0.views.chat handler() - weather."""
+        """Test api.v1.views.chat handler() - weather."""
         response = None
         event_about_weather = get_test_file("json/prompt_about_weather.json")
 
@@ -271,7 +281,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         self.check_response(response)
 
     def test_handler_recipes(self):
-        """Test api.v0.views.chat handler() - recipes."""
+        """Test api.v1.views.chat handler() - recipes."""
         response = None
         event_about_recipes = get_test_file("json/prompt_about_recipes.json")
 

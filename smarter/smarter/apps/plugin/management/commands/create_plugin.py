@@ -30,7 +30,7 @@ class Command(BaseCommand):
 
         account = Account.objects.get(account_number=account_number)
         loader = SAMLoader(
-            api_version=SmarterApiVersions.V1.value,
+            api_version=SmarterApiVersions.V1,
             file_path=file_path,
         )
         manifest = SAMPlugin(**loader.pydantic_model_dump())

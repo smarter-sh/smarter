@@ -67,7 +67,7 @@ class TestPluginDataSqlConnection(unittest.TestCase):
 
     def test_manifest(self):
         """Test that the Loader can load the manifest."""
-        self.assertEqual(self.loader.manifest_api_version, SmarterApiVersions.V1.value)
+        self.assertEqual(self.loader.manifest_api_version, SmarterApiVersions.V1)
         self.assertEqual(self.loader.manifest_kind, "PluginDataSqlConnection")
         self.assertIsNotNone(self.loader.manifest_metadata)
         self.assertIsNotNone(self.loader.manifest_spec)
@@ -75,7 +75,7 @@ class TestPluginDataSqlConnection(unittest.TestCase):
     def test_model(self):
         """Test that the Pydantic model populates from the manifest."""
         self.assertIsNotNone(self.model)
-        self.assertEqual(self.model.apiVersion, SmarterApiVersions.V1.value)
+        self.assertEqual(self.model.apiVersion, SmarterApiVersions.V1)
         self.assertEqual(self.model.kind, "PluginDataSqlConnection")
         self.assertIsNotNone(self.model.metadata)
         self.assertIsNotNone(self.model.spec)

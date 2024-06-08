@@ -1,5 +1,6 @@
 # pylint: disable=missing-class-docstring,missing-function-docstring
 """Rebuild the admin site to restrict access to certain apps and models."""
+
 from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
@@ -42,18 +43,26 @@ from .models import EmailContactList
 
 
 class RestrictedAdminSite(admin.AdminSite):
+    """
+    Custom admin site that restricts access to certain apps and models
+    and modifies the admin console header title.
+    """
+
     # FIX NOTE: WIRE THESE INTO THE APP CONSTRAINTS
     blocked_apps = ["djstripe", "knox", "rest_framework", "smarter.apps.account"]
     site_header = "Smarter Admin Console v" + __version__
 
 
 class CustomPasswordWidget(forms.Widget):
+    """Custom widget for the password field in the UserChangeForm."""
 
     def render(self, name, value, attrs=None, renderer=None):
         return mark_safe('<a href="password/" style="color: blue;">CHANGE PASSWORD</a>')  # nosec
 
 
 class UserChangeForm(forms.ModelForm):
+    """Custom form for the User model that includes a link to change the password."""
+
     password = forms.CharField(widget=CustomPasswordWidget(), label=_("Password"))
 
     class Meta:
@@ -62,6 +71,8 @@ class UserChangeForm(forms.ModelForm):
 
 
 class RestrictedUserAdmin(UserAdmin):
+    """Custom User admin that restricts access to users based on their account."""
+
     form = UserChangeForm
     readonly_fields = (
         "username",
@@ -88,25 +99,13 @@ class RestrictedUserAdmin(UserAdmin):
 
 
 class EmailContactListAdmin(RestrictedModelAdmin):
+    """Custom admin for the EmailContactList model."""
+
     list_display = ["email", "created_at", "updated_at"]
     ordering = ("-created_at",)
 
 
-class RestrictedAPIKeyAdmin(RestrictedModelAdmin):
-
-    list_display = [
-        "created",
-        "is_active",
-        "last_used_at",
-        "expiry",
-        "token_key",
-        "description",
-        "user",
-    ]
-    readonly_fields = ("created", "token_key", "last_used_at", "digest", "user")
-    ordering = ("-created",)
-
-
+# Register the custom admin site
 restricted_site = RestrictedAdminSite(name="restricted_admin_site")
 
 # Account Models
@@ -124,7 +123,6 @@ restricted_site.register(ChatPluginUsage, PluginSelectionHistoryAdmin)
 restricted_site.register(ChatToolCall, ChatToolCallHistoryAdmin)
 
 # ChatBot
-
 restricted_site.register(ChatBot, ChatBotAdmin)
 restricted_site.register(ChatBotCustomDomain, ChatBotCustomDomainAdmin)
 restricted_site.register(ChatBotCustomDomainDNS, ChatBotCustomDomainDNSAdmin)

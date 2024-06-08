@@ -180,16 +180,16 @@ class ChatBot(TimestampedModel):
     @property
     def sandbox_host(self):
         """
-        return 'alpha.api.smarter.sh/api/v0/chatbots/1/'
+        return 'alpha.api.smarter.sh/api/v1/chatbots/1/'
         """
-        domain = f"{smarter_settings.environment_domain}/api/v0/chatbots/{self.id}/"
+        domain = f"{smarter_settings.environment_domain}/api/v1/chatbots/{self.id}/"
         SmarterValidator.validate_domain(domain)
         return domain
 
     @property
     def sandbox_url(self):
         """
-        return 'https://alpha.api.smarter.sh/api/v0/chatbots/1/'
+        return 'https://alpha.api.smarter.sh/api/v1/chatbots/1/'
         """
         return SmarterValidator.urlify(self.sandbox_host, scheme=self.scheme)
 
@@ -583,7 +583,7 @@ class ChatBotHelper(AccountMixin):
         :return: The URL to parse.
 
         examples:
-        - https://alpha.platform.smarter.sh/api/v0/chatbots/1/chatbot/
+        - https://alpha.platform.smarter.sh/api/v1/chatbots/1/chatbot/
         - http://example.com/contact/
         - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
         - https://hr.smarter.querium.com/chatbot/
@@ -762,7 +762,7 @@ class ChatBotHelper(AccountMixin):
         if not self.url:
             return False
         # best way to match: using a regular expression against the url pattern
-        match = re.search(r"/api/v0/chatbots/(\d+)", self.url)
+        match = re.search(r"/api/v1/chatbots/(\d+)", self.url)
         if match:
             return True
         # an alternative way to match: looking for the environment domain name in the domain name
@@ -825,8 +825,8 @@ class ChatBotHelper(AccountMixin):
                 return None
 
         if self.is_sandbox_domain:
-            # example: http://127.0.0.1:8000/api/v0/chatbots/1/chatbot/
-            match = re.search(r"/api/v0/chatbots/(\d+)", self.url)
+            # example: http://127.0.0.1:8000/api/v1/chatbots/1/chatbot/
+            match = re.search(r"/api/v1/chatbots/(\d+)", self.url)
             if match:
                 chatbot_id = int(match.group(1))
                 if waffle.switch_is_active("chatbothelper_logging"):
