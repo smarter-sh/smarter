@@ -6,6 +6,7 @@ import os
 import unittest
 
 from django.test import Client
+from django.urls import reverse
 
 # our stuff
 from smarter.lib.django.user import User, UserType
@@ -58,7 +59,7 @@ class TestUrls(unittest.TestCase):
 
     def test_account_view(self):
         """test that we can see the account view and that it matches the account data."""
-        response = self.client.get("/api/v1/accounts/")
+        response = self.client.get(reverse("account_list_view"))
 
         self.assertEqual(response.status_code, 200)
         json_data = response.json()
@@ -67,32 +68,9 @@ class TestUrls(unittest.TestCase):
         self.assertEqual(json_data.get("company_name"), self.account.company_name)
         self.assertEqual(json_data.get("account_number"), self.account.account_number)
 
-    def test_accounts_view(self):
-        """test that we can see the accounts view and that it matches the account data."""
-        response = self.client.get("/api/v1/accounts/")
-
-        self.assertEqual(response.status_code, 200)
-        json_data = response.json()
-        self.assertIn(type(json_data), (list, dict))
-
-        # there should be at least one account
-        self.assertGreaterEqual(len(json_data), 1)
-
-        if isinstance(json_data, dict):
-            self.assertEqual(json_data.get("account_number"), self.account.account_number)
-
-        # iterate the list and try to match a dict to the company_name and account_number
-        if isinstance(json_data, list):
-            for account in json_data:
-                if account.get("account_number") == self.account.account_number:
-                    self.assertEqual(account.get("company_name"), self.account.company_name)
-                    break
-            else:
-                self.fail("account not found in list")
-
     def test_accounts_index_view(self):
         """test that we can see an account from inside the list view and that it matches the account data."""
-        response = self.client.get("/api/v1/accounts/" + str(self.account.id) + "/")
+        response = self.client.get(reverse("account_view", args=[str(self.account.id)]))
         self.assertEqual(response.status_code, 200)
         json_data = response.json()
         self.assertIsInstance(json_data, dict)
@@ -101,7 +79,7 @@ class TestUrls(unittest.TestCase):
 
     def test_account_users_view(self):
         """test that we can see users associated with an account and that one of these matches the account data."""
-        response = self.client.get("/api/v1/accounts/users/")
+        response = self.client.get(reverse("account_users_list_view"))
 
         self.assertEqual(response.status_code, 200)
         json_data = response.json()
@@ -113,7 +91,7 @@ class TestUrls(unittest.TestCase):
 
     def test_account_users_index_view(self):
         """test that we can see an account from inside the list view and that it matches the account data."""
-        response = self.client.get("/api/v1/accounts/users/" + str(self.user.id) + "/")
+        response = self.client.get(reverse("account_user_view", args=[str(self.user.id)]))
 
         self.assertEqual(response.status_code, 200)
         json_data = response.json()
@@ -123,7 +101,7 @@ class TestUrls(unittest.TestCase):
 
     def test_account_payment_methods(self):
         """test that we can see the payment methods associated with an account."""
-        response = self.client.get("/api/v1/accounts/payment-methods/")
+        response = self.client.get(reverse("account_payment_methods_list_view"))
 
         self.assertEqual(response.status_code, 200)
         json_data = response.json()
@@ -136,7 +114,7 @@ class TestUrls(unittest.TestCase):
 
     def test_account_payment_methods_index(self):
         """test that we can see the payment methods associated with an account."""
-        response = self.client.get("/api/v1/accounts/payment-methods/" + str(self.payment_method.id) + "/")
+        response = self.client.get(reverse("account_payment_method_view", args=[str(self.payment_method.id)]))
 
         self.assertEqual(response.status_code, 200)
         json_data = response.json()
