@@ -68,9 +68,6 @@ class SmarterChatSession(SmarterRequestHelper):
         else:
             self._session_key = self.generate_key()
         self._chatbot = chatbot
-
-        print("SmarterChatSession.__init__ - ChatHelper")
-
         self._chat_helper = ChatHelper(session_key=self.session_key, request=request, chatbot=self.chatbot)
         self._chat = self._chat_helper.chat
 

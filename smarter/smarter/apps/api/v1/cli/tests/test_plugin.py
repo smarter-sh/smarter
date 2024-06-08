@@ -67,7 +67,6 @@ class TestApiV1CliPlugin(ApiV1TestBase):
 
         # create a Plugin from a valid manifest
         path = reverse(ApiV1CliReverseViews.apply, kwargs=None)
-        print("manifest:\n", self.good_manifest_text)
         response, status = self.get_response(path, manifest=self.good_manifest_text)
 
         self.assertEqual(status, HTTPStatus.OK)
@@ -91,7 +90,6 @@ class TestApiV1CliPlugin(ApiV1TestBase):
         path = f"{reverse(ApiV1CliReverseViews.get, kwargs=self.kwargs)}"
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=path)
-        print("response:\n", response)
         response = response["data"]
         self.assertIsInstance(response[SCLIResponseGet.DATA.value][SCLIResponseGetData.TITLES.value], list)
         self.assertIsInstance(response[SCLIResponseGet.DATA.value][SCLIResponseGetData.ITEMS.value], list)

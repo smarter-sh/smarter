@@ -84,10 +84,8 @@ def validate_messages(request_body):
 
 
 def validate_completion_request(request_body, version: str = "v1") -> None:
-
-    print("validate_completion_request() - request_body", request_body)
-
     """See openai.chat.completion.request.json"""
+
     validate_request_body(request_body=request_body)
     validate_messages(request_body=request_body)
 

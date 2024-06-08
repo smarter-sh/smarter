@@ -116,9 +116,6 @@ def handler(
         "get_current_weather": get_current_weather,
     }
 
-    print("handler() - chat: ", chat)
-    print("handler() - chat.chabot: ", chat.chatbot)
-
     try:
         request_body = get_request_body(data=data)
         messages, input_text = parse_request(request_body)
@@ -153,8 +150,6 @@ def handler(
             item_type="ChatCompletion models",
         )
 
-        print("request body: ", request_body)
-
         # validate_completion_request(request_body, version="v1")
         first_iteration["request"] = {
             "model": model,
@@ -163,8 +158,6 @@ def handler(
             "temperature": temperature,
             "max_tokens": max_tokens,
         }
-
-        print("handler() - first_iteration['request']", first_iteration["request"])
 
         first_response = openai.chat.completions.create(
             model=model,
