@@ -114,6 +114,8 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
     def tearDown(self):
         """Tear down test fixtures."""
         admin_user_teardown(user=self.user, account=self.account, user_profile=self.user_profile)
+        self.chat.delete()
+        self.chatbot.delete()
 
     def chatbot_factory(self):
         chatbot = ChatBot.objects.create(
