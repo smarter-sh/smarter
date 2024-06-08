@@ -1,9 +1,10 @@
 """Django URL patterns for the Chat"""
 
 from django.urls import include, path
+from django.views.generic import RedirectView
 
 
 urlpatterns = [
-    path("", include("smarter.apps.chatbot.api.v1.urls")),
+    path("", RedirectView.as_view(url="v1/")),
     path("v1", include("smarter.apps.chatbot.api.v1.urls")),
 ]

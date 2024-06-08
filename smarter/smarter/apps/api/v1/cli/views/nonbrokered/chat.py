@@ -307,11 +307,36 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
 
     # pylint: disable=too-many-locals
     def post(self, request, name, *args, **kwargs):
-        response = ChatConfigView.as_view()(request, name=name)
+        """
+        Smarter API command-line interface 'chat' view. This is a non-brokered view
+        that sends facilitates chat sessions to a ChatBot by creating a http post request
+        to the ChatBot's published url. The chatbot is expected to be a Smarter chatbot
+        that is capable of receiving a list of messages and returning a response in the
+        smarter.sh/v1 protocol.
+
+        Chats are based on sticky sessions that are identified by a cached session_key. The session_key is
+        generated ....
+
+        Args:
+        - request: an authenticated Django HttpRequest object
+        - name: str. the name of a ChatBot associated with the Account to which the authenticated user belongs.
+
+        request body:
+        - session_key: str. optional. the session_key for the chat session. if not provided then a new session_key will be generated.
+        - prompt: str. the raw text of the prompt to send to the chatbot. This will be appended to the message list, if this is not a new session.
+
+        url params:
+        - new_session: str. optional flag. if present then the cache_key and session_key will be deleted.
+        - uid: str. required. a unique identifier for the client. this is assumed to be a combination of the machine mac address and the hostname.
+
+        """
+
+        # get the chat configuration for the ChatBot (name)
+        chat_config = ChatConfigView.as_view()(request, name=name)
 
         try:
             # bootstrap our chat session configuration
-            chat_config: dict = json.loads(response.content)
+            chat_config: dict = json.loads(chat_config.content)
             self._chat_config = chat_config.get(SCLIResponseGet.DATA.value)
             self._session_key = self.chat_config.get(SESSION_KEY)
             cache.set(key=self.cache_key, value=self.session_key, timeout=CACHE_EXPIRATION)
@@ -323,6 +348,9 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
 
         # create a Smarter chatbot request and prompt the chatbot
         chat_request = self.chat_request_factory(request=request, url=self.url_chatbot, body=request_body)
+
+        print("ApiV1CliChatApiView.post() - chat_request", chat_request.body)
+
         chat_response = SmarterChatBotApiView.as_view()(request=chat_request, name=name)
         chat_response = json.loads(chat_response.content)
 

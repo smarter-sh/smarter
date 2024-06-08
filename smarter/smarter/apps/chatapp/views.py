@@ -18,6 +18,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 
+from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.chat.models import Chat, ChatHelper
 from smarter.apps.chatbot.models import ChatBot, ChatBotHelper, ChatBotPlugin
 from smarter.apps.chatbot.serializers import ChatBotPluginSerializer, ChatBotSerializer
@@ -55,9 +56,10 @@ class SmarterChatSession(SmarterRequestHelper):
 
     _session_key: str = None
     _chat: Chat = None
+    _chatbot: ChatBot = None
     _chat_helper: ChatHelper = None
 
-    def __init__(self, request, session_key: str = None):
+    def __init__(self, request, session_key: str = None, chatbot: ChatBot = None):
         super().__init__(request)
 
         if session_key:
@@ -65,12 +67,19 @@ class SmarterChatSession(SmarterRequestHelper):
             self._session_key = session_key
         else:
             self._session_key = self.generate_key()
+        self._chatbot = chatbot
 
-        self._chat_helper = ChatHelper(session_key=self.session_key, request=request)
+        print("SmarterChatSession.__init__ - ChatHelper")
+
+        self._chat_helper = ChatHelper(session_key=self.session_key, request=request, chatbot=self.chatbot)
         self._chat = self._chat_helper.chat
 
         if waffle.switch_is_active("chatapp_view_logging"):
             logger.info("%s - session established: %s", self.formatted_class_name, self.data)
+
+    @property
+    def chatbot(self):
+        return self._chatbot
 
     @property
     def session_key(self):
@@ -99,7 +108,7 @@ class SmarterChatSession(SmarterRequestHelper):
 
 # pylint: disable=R0902
 @method_decorator(csrf_exempt, name="dispatch")
-class ChatConfigView(View):
+class ChatConfigView(View, AccountMixin):
     """
     Chat config view for smarter web. This view is protected and requires the user
     to be authenticated. It works with any ChatBots but is aimed at chatbots running
@@ -116,7 +125,11 @@ class ChatConfigView(View):
     _sandbox_mode: bool = True
     session: SmarterChatSession = None
     chatbot_helper: ChatBotHelper = None
-    chatbot: ChatBot = None
+    _chatbot: ChatBot = None
+
+    @property
+    def chatbot(self):
+        return self._chatbot
 
     @property
     def formatted_class_name(self):
@@ -131,9 +144,11 @@ class ChatConfigView(View):
                     request=request, thing=self.manifest_kind, command=None, e=e, status=HTTPStatus.FORBIDDEN
                 )
 
+        self._user = request.user
         name = kwargs.pop("name", None)
         self._sandbox_mode = name is not None
 
+        self._chatbot = ChatBot.objects.get(name=name, account=self.account)
         try:
             data = json.loads(request.body)
         except json.JSONDecodeError:
@@ -151,11 +166,11 @@ class ChatConfigView(View):
         # which uniquely identifies the device and the individual chatbot session
         # for the device.
 
-        self.session = SmarterChatSession(request, session_key=data.get("session_key"))
+        self.session = SmarterChatSession(request, session_key=data.get("session_key"), chatbot=self.chatbot)
         self.chatbot_helper = ChatBotHelper(
             url=self.session.url, user=self.session.user_profile.user, account=self.session.account, name=name
         )
-        self.chatbot = self.chatbot_helper.chatbot
+        self._chatbot = self.chatbot_helper.chatbot
 
         if not self.chatbot:
             return HttpResponseNotFound()
