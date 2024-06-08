@@ -8,12 +8,11 @@ import yaml
 
 from smarter.apps.account.models import Account
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
 from smarter.common.api import SmarterApiVersions
 from smarter.common.const import PYTHON_ROOT
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
-
-from ..version import SMARTER_API_VERSION
 
 
 class TestSAMLoader(unittest.TestCase):
@@ -74,9 +73,7 @@ class TestSAMLoader(unittest.TestCase):
         self.assertTrue(isinstance(sam.formatted_data, str), f"sam.formatted_data is {type(sam.formatted_data)}")
 
         apiVersion = sam.get_key(key=SAMKeys.APIVERSION.value)
-        self.assertEqual(
-            apiVersion, SmarterApiVersions.V1.value, f"sam.get_key(key=SAMKeys.APIVERSION) is {apiVersion}"
-        )
+        self.assertEqual(apiVersion, SmarterApiVersions.V1, f"sam.get_key(key=SAMKeys.APIVERSION) is {apiVersion}")
         self.assertEqual(sam.data_format.value, "yaml", f"sam.data_format.value is {sam.data_format.value}")
         self.assertEqual(
             sam.manifest_metadata_keys,
@@ -99,7 +96,7 @@ class TestSAMLoader(unittest.TestCase):
             file_path=self.good_manifest_path,
         )
         sam = loader
-        self.assertEqual(sam.get_key("apiVersion"), SmarterApiVersions.V1.value)
+        self.assertEqual(sam.get_key("apiVersion"), SmarterApiVersions.V1)
         self.assertEqual(sam.get_key("kind"), SAMKinds.PLUGIN.value)
         self.assertEqual(sam.get_key("metadata"), sam.manifest_metadata)
 

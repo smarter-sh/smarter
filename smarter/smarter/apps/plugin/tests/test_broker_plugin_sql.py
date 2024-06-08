@@ -62,7 +62,6 @@ class TestSAMPluginSql(unittest.TestCase):
         """Test that the Broker can apply the manifest."""
         thing = SmarterJournalThings(SmarterJournalThings.PLUGIN)
         retval = self.plugin_broker.apply(request=self.request, kwargs=self.kwargs)
-        print(retval.content)
         self.assertEqual(retval.status_code, HTTPStatus.OK)
         content = json.loads(retval.content.decode())
         self.assertIsInstance(content, dict)

@@ -1,0 +1,500 @@
+{% extends 'base.html' %}
+{% load static %}
+
+      {% block root %}
+      <style>
+        :root {
+            --bs-app-sidebar-width: 0px;
+            --bs-app-sidebar-width-actual: 0px;
+            --bs-app-sidebar-gap-start: 0px;
+            --bs-app-sidebar-gap-end: 0px;
+            --bs-app-sidebar-gap-top: 0px;
+            --bs-app-sidebar-gap-bottom: 0px;
+            --bs-bullet-bg-color: #f1f1f1;
+        }
+
+        .code-sample-body {
+            position: relative;
+            background-color: #333333;
+            border-radius: 10px;
+        }
+        .code-sample-body pre {
+          display: inline-block;
+          text-align: left;
+        }
+
+        .code-sample-copy {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .code-snippet {
+            --bs-code-color: #f1f1f1; /* Text color */
+            --bs-code-border-color: transparent; /* Border color */
+            --bs-code-bg: #333333; /* Background color */
+            --bs-code-shadow: 0px 3px 9px rgba(0, 0, 0, 0.08); /* Box shadow */
+        }
+
+        .querium-bg {
+          background-color: rgba(255, 87, 51, 0.75) !important; /* 50% opacity */
+          border-radius: var(--bs-card-inner-border-radius) var(--bs-card-inner-border-radius) 0 0;
+          --bs-heading-color: #f1f1f1;
+          --bs-card-color: #f1f1f1;
+          --bs-scrollbar-color: #f1f1f1;
+          --bs-link-color-rgb: 241, 241, 241;
+        }
+        .parent-class > * {
+          color: #f1f1f1;
+        }
+
+
+      </style>
+			<!--begin::Page-->
+			<div class="app-page flex-column flex-column-fluid" id="kt_app_page">
+				<!--begin::Header-->
+				<div id="kt_app_header" class="app-header">
+					<!--begin::Header container-->
+					<div class="app-container container-fluid d-flex align-items-stretch justify-content-between" id="kt_app_header_container">
+						<!--begin::sidebar mobile toggle-->
+						<div class="d-flex align-items-center d-lg-none ms-n3 me-2" title="Show sidebar menu">
+							<div class="btn btn-icon btn-active-color-primary w-35px h-35px" id="kt_app_sidebar_mobile_toggle">
+								<i class="ki-duotone ki-abstract-14 fs-1">
+									<span class="path1"></span>
+									<span class="path2"></span>
+								</i>
+							</div>
+						</div>
+						<!--end::sidebar mobile toggle-->
+						<!--begin::Mobile logo-->
+						<div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0">
+							<a href="index.html" class="d-lg-none">
+								<img alt="Logo" src="https://smarter.sh/wp-content/uploads/2024/04/Smarter_crop.png" class="theme-light-show h-30px" />
+								<img alt="Logo" src="https://smarter.sh/wp-content/uploads/2024/04/Smarter_crop.png" class="theme-dark-show h-30px" />
+							</a>
+						</div>
+						<!--end::Mobile logo-->
+						<!--begin::Header wrapper-->
+						<div class="d-flex align-items-stretch justify-content-between flex-lg-grow-1" id="kt_app_header_wrapper">
+							<!--begin::Navbar-->
+							<div class="app-navbar flex-shrink-0">
+                <div id="logobox">
+                  <a href="/" class="d-none d-lg-block">
+                    <img alt="Logo" src="https://smarter.sh/wp-content/uploads/2024/04/Smarter_crop.png" class="h-70px" />
+                  </a>
+                </div>
+								<!--begin::Header menu toggle-->
+								<div class="app-navbar-item d-lg-none ms-2 me-n2" title="Show header menu">
+									<div class="btn btn-flex btn-icon btn-active-color-primary w-30px h-30px" id="kt_app_header_menu_toggle">
+										<i class="ki-duotone ki-element-4 fs-1">
+											<span class="path1"></span>
+											<span class="path2"></span>
+										</i>
+									</div>
+								</div>
+								<!--end::Header menu toggle-->
+							</div>
+							<!--end::Navbar-->
+						</div>
+						<!--end::Header wrapper-->
+					</div>
+					<!--end::Header container-->
+				</div>
+				<!--end::Header-->
+				<!--begin::Wrapper-->
+				<div class="app-wrapper flex-column flex-row-fluid" id="kt_app_wrapper">
+					<!--begin::Main-->
+					<div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+						<!--begin::Content wrapper-->
+						<div class="d-flex flex-column flex-column-fluid">
+							<!--begin::Toolbar-->
+							<div id="kt_app_toolbar" class="app-toolbar py-3 py-lg-6">
+								<!--begin::Toolbar container-->
+								<div id="kt_app_toolbar_container" class="app-container container-xxl d-flex flex-stack">
+									<!--begin::Page title-->
+									<div class="page-title d-flex flex-column justify-content-center flex-wrap me-3">
+										<!--begin::Title-->
+										<h1 class="page-heading d-flex text-gray-900 fw-bold fs-3 flex-column justify-content-center my-0">Documentation</h1>
+										<!--end::Title-->
+									</div>
+									<!--end::Page title-->
+								</div>
+								<!--end::Toolbar container-->
+							</div>
+							<!--end::Toolbar-->
+							<!--begin::Content-->
+							<div id="kt_app_content" class="app-content flex-column-fluid">
+								<!--begin::Content container-->
+								<div id="kt_app_content_container" class="app-container container-xxl">
+									<!--begin::Documentation main-->
+									<div class="d-flex flex-column flex-xl-row">
+										<!--begin::Content-->
+										<div class="card bg-body align-self-start mb-9 mb-xl-0 me-lg-9">
+											<div class="card-body">
+												<!--begin::Heading-->
+												<div class="mb-10">
+													<!--begin::Title-->
+													<h1 class="fs-2x text-gray-900 mb-6">Smarter API</h1>
+													<!--end::Title-->
+												</div>
+												<!--end::Heading-->
+												<!--begin::Row-->
+												<div class="row g-10 mb-15">
+                          <div id="Introduction">
+                            <h2 class="mt-6 mb-6">Introduction</h2>
+                            <p>
+                              You can interact with the Smarter API through any language
+                              that supports the http and REST API protocols,
+                              including for example Python, Javascript and Golang. The API
+                              returns all responses in JSON format, following the <code>smarter.sh/v1</code>
+                               API schema. For example:
+                            </p>
+                            <div class="code-sample-body">
+                              <pre class="code-snippet prettyprint">
+                                <code>
+                                  {
+                                    "api": "smarter.sh/v1",
+                                    "data": {
+                                        "account": {
+                                            "account_number": "3141-5926-5359",
+                                            "address1": "1700 South Lamar Blvd",
+                                            "address2": "Suite 338",
+                                            "city": "Austin",
+                                            "company_name": "Smarter",
+                                            "country": "USA",
+                                            "created_at": "2024-05-24T21:22:52.712547Z",
+                                            "currency": "USD",
+                                            "id": 1,
+                                            "language": "",
+                                            "phone_number": "+1 (512) 833-6955",
+                                            "postal_code": "78704",
+                                            "state": "TX",
+                                            "timezone": "America/Chicago",
+                                            "updated_at": "2024-06-07T00:51:27.369962Z"
+                                        },
+                                        "user": {
+                                            "email": "admin@smarter.sh",
+                                            "first_name": "",
+                                            "id": 1,
+                                            "is_staff": true,
+                                            "is_superuser": true,
+                                            "last_name": "",
+                                            "username": "admin"
+                                        }
+                                    },
+                                    "metadata": {
+                                        "command": "whoami"
+                                    },
+                                    "thing": "None"
+                                }
+                                </code>
+                              </pre>
+                            </div>
+                          </div>
+													<!--begin::Authentication-->
+                          <div id="authentication">
+                            <h3 class="mt-6 mb-6">Authentication</h3>
+                            <!--begin::Text-->
+                            <p>The Smarter API uses API keys for authentication.
+                              You can create API keys from the <a href="{% url 'admin:index' %}">admin console<a/>.
+                               These can be created at the Account or User level. Account key should
+                               be used to provision access for production systems.
+                               Api keys are formatted as a 64-character sha256 hash, such as
+                               <code>548de94hc4f1762c64732d268a2ee2635b2d36e9f7e3be91f1662d5456ae110d</code>.
+                            </p>
+                            <p>All API requests should include your API key in an <code>Authorization</code> HTTP header as follows:</p>
+                            <div class="code-sample-body">
+                                <button type="button" class="btn btn-sm btn-neutral code-sample-copy" aria-label="Copy">
+                                    <!-- SVG for copy icon goes here -->
+                                </button>
+                                <pre class="code-snippet pt-6">
+                                    <code>Authorization: Token $SMARTER_API_KEY</code>
+                                </pre>
+                            </div>
+                            <!--end::Text-->
+                          </div>
+													<!--end::Authentication-->
+													<!--begin::Requests-->
+                          <div id="requests">
+                            <h3 class="mt-6 mb-6">Making Requests</h3>
+                            <p>
+                              You can paste the command below into your terminal to run your first API request.
+                              Make sure to replace $SMARTER_API_KEY with your secret API key.
+                            </p>
+                            <p>Hello world:</p>
+                            <div class="code-sample-body">
+                              <button type="button" class="btn btn-sm btn-neutral code-sample-copy" aria-label="Copy">
+                                  <!-- SVG for copy icon goes here -->
+                              </button>
+                              <pre class="code-snippet pt-6">
+                                <code>
+                                  curl https://platform.smarter.sh/api/v1/cli/whoami/ \
+                                  -H "Authorization: Token $SMARTER_API_KEY" \
+                                  </code>
+                              </pre>
+                            </div>
+                            <p>Apply a manifest:</p>
+                            <div class="code-sample-body">
+                              <button type="button" class="btn btn-sm btn-neutral code-sample-copy" aria-label="Copy">
+                                  <!-- SVG for copy icon goes here -->
+                              </button>
+                              <pre class="code-snippet pt-6">
+                                <code>
+                                  curl https://platform.smarter.sh/api/v1/cli/apply/ \
+                                  -H "Content-Type: application/json" \
+                                  -H "Authorization: Token $SMARTER_API_KEY" \
+                                  -d 'MANIFEST DATA HERE'
+                                </code>
+                              </pre>
+                            </div>
+                          </div>
+													<!--end::Requests-->
+													<!--begin::Apireference-->
+                          <div id="api-reference">
+                            <h3 class="mt-6 mb-6">API Reference</h3>
+                            <ul>
+                              <li><a href="{% url 'schema-swagger-ui' %}">Swagger</a></li>
+                              <li><a href="{% url 'schema-redoc-ui' %}">Redoc</a></li>
+                            </ul>
+                          </div>
+													<!--end::Apireference-->
+												</div>
+												<!--end::Row-->
+											</div>
+										</div>
+										<!--end::Content-->
+										<!--begin::Sidebar-->
+										<div class="flex-column flex-lg-row-auto w-100 w-xl-350px">
+											<!--begin::Careers about-->
+											<div class="card card-flush bg-body mb-9">
+												<!--begin::Body-->
+												<div class="card-body querium-bg">
+													<!--begin::Top-->
+													<div class="mb-7">
+														<!--begin::Title-->
+														<h2 class="fs-1 w-bolder mb-6">We're Hiring!</h2>
+														<!--end::Title-->
+														<!--begin::Text-->
+														<p class="fw-semibold fs-6">Let's do something amazing, together! We're currently hiring for Full Stack and React developers, devops, and prompt engineering positions.</p>
+														<!--end::Text-->
+													</div>
+													<!--end::Top-->
+													<!--begin::Items-->
+													<div class="mb-0">
+														<!--begin::Item-->
+														<div class="mb-8">
+															<!--begin::Title-->
+															<h4 class="w-bolder mb-0">Requirements</h4>
+															<!--end::Title-->
+															<!--begin::Section-->
+															<div class="my-2">
+																<!--begin::Row-->
+																<div class="d-flex align-items-center mb-3">
+																	<!--begin::Bullet-->
+																	<span class="bullet me-3"></span>
+																	<!--end::Bullet-->
+																	<!--begin::Label-->
+																	<div class="fw-semibold fs-6">A moral compass</div>
+																	<!--end::Label-->
+																</div>
+																<!--end::Row-->
+																<!--begin::Row-->
+																<div class="d-flex align-items-center mb-3">
+																	<!--begin::Bullet-->
+																	<span class="bullet me-3"></span>
+																	<!--end::Bullet-->
+																	<!--begin::Label-->
+																	<div class="fw-semibold fs-6">Communication and time-management skills</div>
+																	<!--end::Label-->
+																</div>
+																<!--end::Row-->
+																<!--begin::Row-->
+																<div class="d-flex align-items-center mb-3">
+																	<!--begin::Bullet-->
+																	<span class="bullet me-3"></span>
+																	<!--end::Bullet-->
+																	<!--begin::Label-->
+																	<div class="fw-semibold fs-6">A passion for learning</div>
+																	<!--end::Label-->
+																</div>
+																<!--end::Row-->
+																<!--begin::Row-->
+																<div class="d-flex align-items-center">
+																	<!--begin::Bullet-->
+																	<span class="bullet me-3"></span>
+																	<!--end::Bullet-->
+																	<!--begin::Label-->
+																	<div class="fw-semibold fs-6">Online skills assessment(s)</div>
+																	<!--end::Label-->
+																</div>
+																<!--end::Row-->
+															</div>
+															<!--end::Section-->
+														</div>
+														<!--end::Item-->
+														<!--begin::Item-->
+														<div class="mb-8">
+															<!--begin::Title-->
+															<h4 class="w-bolder mb-0">Our Achievements</h4>
+															<!--end::Title-->
+															<!--begin::Section-->
+															<div class="my-2">
+																<!--begin::Row-->
+																<div class="d-flex align-items-center mb-3">
+																	<!--begin::Bullet-->
+																	<span class="bullet me-3"></span>
+																	<!--end::Bullet-->
+																	<!--begin::Label-->
+																	<div class="fw-semibold fs-6">Patented technology</div>
+																	<!--end::Label-->
+																</div>
+																<!--end::Row-->
+																<!--begin::Row-->
+																<div class="d-flex align-items-center mb-3">
+																	<!--begin::Bullet-->
+																	<span class="bullet me-3"></span>
+																	<!--end::Bullet-->
+																	<!--begin::Label-->
+																	<div class="fw-semibold fs-6">Something else</div>
+																	<!--end::Label-->
+																</div>
+																<!--end::Row-->
+																<!--begin::Row-->
+																<div class="d-flex align-items-center">
+																	<!--begin::Bullet-->
+																	<span class="bullet me-3"></span>
+																	<!--end::Bullet-->
+																	<!--begin::Label-->
+																	<div class="fw-semibold fs-6">And, something else!</div>
+																	<!--end::Label-->
+																</div>
+																<!--end::Row-->
+															</div>
+															<!--end::Section-->
+														</div>
+														<!--end::Item-->
+													</div>
+													<!--end::Items-->
+													<!--begin::Link-->
+													<a href="https://smarter.sh/" class="fs-6 fw-semibold">Explore More</a>
+													<!--end::Link-->
+												</div>
+												<!--end::Body-->
+											</div>
+											<!--end::Careers about-->
+											<!--begin::Connected-->
+											<div class="card card-flush bg-body">
+												<!--begin::Card header-->
+												<div class="card-header">
+													<h4 class="card-title fw-bold text-text-gray-800 fs-2">Stay Connected</h4>
+												</div>
+												<!--end::Card header-->
+												<!--begin::Card body-->
+												<div class="card-body pt-2">
+													<!--begin::Items LinkedIn-->
+													<div class="mb-6">
+														<!--begin::Link-->
+														<a href="https://www.linkedin.com/company/querium-corporation/" class="mb-6">
+															<img src="{% static 'assets/media/svg/brand-logos/linkedin-2.svg' %}" class="h-20px me-2" alt="" />
+															<span class="text-gray-700 text-hover-primary fs-5 mb-6">LinkedIn</span>
+														</a>
+														<!--end::Link-->
+													</div>
+													<!--end::Items LinkedIn-->
+													<!--begin::Items Github-->
+													<div class="mb-6">
+														<!--begin::Link-->
+														<a href="https://github.com/smarter-sh/" class="mb-6">
+															<img src="{% static 'assets/media/svg/brand-logos/github.svg' %}" class="h-20px me-2" alt="" />
+															<span class="text-gray-700 text-hover-primary fs-5 mb-6">Github</span>
+														</a>
+														<!--end::Link-->
+													</div>
+													<!--end::Items Github-->
+													<!--begin::Items Youtube-->
+													<div class="mb-6">
+														<!--begin::Link-->
+														<a href="https://www.youtube.com/channel/UCISnn7z74he5X-BR2iZo9uA" class="mb-6">
+															<img src="{% static 'assets/media/svg/brand-logos/youtube-3.svg' %}" class="h-20px me-2" alt="" />
+															<span class="text-gray-700 text-hover-primary fs-5 mb-6">YouTube</span>
+														</a>
+														<!--end::Link-->
+													</div>
+													<!--end::Items Youtube-->
+													<!--begin::Items facebook-->
+													<div class="mb-6">
+														<!--begin::Link-->
+														<a href="https://www.facebook.com/Querium" class="mb-6">
+															<img src="{% static 'assets/media/svg/brand-logos/facebook-4.svg' %}" class="h-20px me-2" alt="" />
+															<span class="text-gray-700 text-hover-primary fs-5 mb-6">Facebook</span>
+														</a>
+														<!--end::Link-->
+													</div>
+													<!--end::Items facebook-->
+													<!--begin::Items Twitter-->
+													<div class="mb-6">
+														<!--begin::Link-->
+														<a href="https://twitter.com/QueriumCorp" class="mb-6">
+															<img src="{% static 'assets/media/svg/brand-logos/twitter.svg' %}" class="h-20px me-2" alt="" />
+															<span class="text-gray-700 text-hover-primary fs-5 mb-6">Twitter</span>
+														</a>
+														<!--end::Link-->
+													</div>
+													<!--end::Items Twitter-->
+													<!--begin::Items Instagram-->
+													<div class="">
+														<!--begin::Link-->
+														<a href="#" class="mb-6">
+															<img src="{% static 'assets/media/svg/brand-logos/instagram-2016.svg' %}" class="h-20px me-2" alt="" />
+															<span class="text-gray-700 text-hover-primary fs-5 mb-6">Instagram</span>
+														</a>
+														<!--end::Link-->
+													</div>
+													<!--end::Items Instagram-->
+												</div>
+												<!--end::Card body-->
+											</div>
+											<!--end::Connected-->
+										</div>
+										<!--end::Sidebar-->
+									</div>
+									<!--end::Documentation main-->
+								</div>
+								<!--end::Content container-->
+							</div>
+							<!--end::Content-->
+						</div>
+						<!--end::Content wrapper-->
+						<!--begin::Footer-->
+						<div id="kt_app_footer" class="app-footer">
+							<!--begin::Footer container-->
+							<div class="app-container container-fluid d-flex flex-column flex-md-row flex-center flex-md-stack py-3">
+								<!--begin::Copyright-->
+								<div class="text-gray-900 order-2 order-md-1">
+									<span class="text-muted fw-semibold me-1"><script>document.write(new Date().getFullYear())</script>&copy;</span>
+									<a href="https://www.querium.com/" target="_blank" class="text-gray-800 text-hover-primary">Querium Corp.</a>
+								</div>
+								<!--end::Copyright-->
+								<!--begin::Menu-->
+								<ul class="menu menu-gray-600 menu-hover-primary fw-semibold order-1">
+									<li class="menu-item">
+										<a href="https://smarter.sh/" target="_blank" class="menu-link px-2">About</a>
+									</li>
+									<li class="menu-item">
+										<a href="https://smarter.sh/contact/" target="_blank" class="menu-link px-2">Support</a>
+									</li>
+									<li class="menu-item">
+										<a href="https://smarter.sh/contact/" target="_blank" class="menu-link px-2">Sales</a>
+									</li>
+								</ul>
+								<!--end::Menu-->
+							</div>
+							<!--end::Footer container-->
+						</div>
+						<!--end::Footer-->
+					</div>
+					<!--end:::Main-->
+				</div>
+				<!--end::Wrapper-->
+			</div>
+			<!--end::Page-->
+      {% endblock %}

@@ -35,8 +35,33 @@ class SmarterChatBotApiView(ChatBotApiBaseViewSet):
     """
 
     def dispatch(self, request, *args, name: str = None, **kwargs):
+        """
+        Smarter API ChatBot dispatch method.
+
+        Args:
+            request: HttpRequest
+            args: tuple
+            name: str
+            kwargs: dict
+
+        request: {
+            "session_key": "dde3dde5e3b97134f5bce5edf26ec05134da71d8485a86dfc9231149aaf0b0af",
+            "messages": [
+                {
+                    "role": "assistant",
+                    "content": "Welcome to Smarter!.  how can I assist you today?"
+                },
+                {
+                    "role": "user",
+                    "content": "Hello, World!"
+                }
+            ]
+        }
+        """
         logger.info("SmarterChatBotApiView.dispatch() - name=%s", name)
         kwargs.pop("chatbot_id", None)
+        self.request = request
+        self._user = request.user
         self._name = name
         try:
             self.data = json.loads(request.body)
@@ -57,7 +82,7 @@ class SmarterChatBotApiView(ChatBotApiBaseViewSet):
         self._session_key = self.data.get("session_key")
         if self.session_key:
             SmarterValidator.validate_session_key(self.session_key)
-        self.chat_helper = ChatHelper(session_key=self.session_key, request=request)
+        self.chat_helper = ChatHelper(session_key=self.session_key, request=request, chatbot=self.chatbot)
 
         if waffle.switch_is_active("chatbot_api_view_logging"):
             logger.info("%s initialized with chat object %s", self.formatted_class_name, self.chat_helper.chat)

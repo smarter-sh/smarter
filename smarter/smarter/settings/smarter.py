@@ -13,7 +13,6 @@ SMARTER_API_SCHEMA = "http"
 
 SMARTER_API_NAME = "Smarter API"
 SMARTER_API_DESCRIPTION = "An enterprise class plugin-based AI chatbot platform"
-SMARTER_API_VERSION = "v0"
 
 SMARTER_BRANDING_CORPORATE_NAME = "Querium, Corporation"
 SMARTER_BRANDING_SUPPORT_PHONE_NUMBER = "+1 (512) 833-6955"
