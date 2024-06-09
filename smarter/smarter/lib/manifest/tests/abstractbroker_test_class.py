@@ -1,6 +1,8 @@
 # pylint: disable=W0718
 """Smarter API User Manifest handler"""
 
+import typing
+
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
@@ -38,6 +40,7 @@ class SAMTestBroker(AbstractBroker, AccountMixin):
 
     # override the base abstract manifest model with the User model
     _manifest: SAMPlugin = None
+    _pydantic_model: typing.Type[SAMPlugin] = SAMPlugin
     _user: UserType = None
     _username: str = None
 

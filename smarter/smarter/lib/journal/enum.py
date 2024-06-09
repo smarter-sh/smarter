@@ -106,6 +106,7 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
     LOGS = "logs"  # FIXNOTE: THIS IS AMBIGUOUS
     MANIFEST_EXAMPLE = "example_manifest"
     STATUS = "status"
+    SCHEMA = "schema"
     VERSION = "version"
     UNDEPLOY = "undeploy"
     WHOAMI = "whoami"
@@ -125,6 +126,7 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
             (cls.LOGS, cls.LOGS),
             (cls.MANIFEST_EXAMPLE, cls.MANIFEST_EXAMPLE),
             (cls.STATUS, cls.STATUS),
+            (cls.SCHEMA, cls.SCHEMA),
             (cls.VERSION, cls.VERSION),
             (cls.UNDEPLOY, cls.UNDEPLOY),
             (cls.WHOAMI, cls.WHOAMI),
@@ -145,6 +147,7 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
             cls.LOGS.value: "logged",
             cls.MANIFEST_EXAMPLE.value: "fetched example manifest",
             cls.STATUS.value: "fetched status",
+            cls.SCHEMA.value: "fetched schema",
             cls.VERSION.value: "fetched version",
             cls.UNDEPLOY.value: "undeployed",
             cls.WHOAMI.value: "fetched identity",
