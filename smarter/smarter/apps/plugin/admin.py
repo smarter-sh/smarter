@@ -4,13 +4,10 @@ import re
 
 from django.contrib import admin
 
-from .models import (
-    PluginDataSqlConnection,
-    PluginDataStatic,
-    PluginMeta,
-    PluginPrompt,
-    PluginSelector,
-)
+from smarter.apps.account.models import UserProfile
+from smarter.lib.django.admin import RestrictedModelAdmin
+
+from .models import PluginDataStatic, PluginPrompt, PluginSelector
 
 
 # Register your models here.
@@ -20,12 +17,20 @@ class PluginSelectorInline(admin.StackedInline):
     model = PluginSelector
     extra = 0  # This will not show extra empty forms
 
+    # pylint: disable=W0212
+    def get_readonly_fields(self, request, obj=None):
+        return [f.name for f in self.model._meta.fields]
+
 
 class PluginPromptInline(admin.StackedInline):
     """Inline form for Plugin"""
 
     model = PluginPrompt
     extra = 0  # This will not show extra empty forms
+
+    # pylint: disable=W0212
+    def get_readonly_fields(self, request, obj=None):
+        return [f.name for f in self.model._meta.fields]
 
 
 class PluginDataInline(admin.StackedInline):
@@ -38,48 +43,63 @@ class PluginDataInline(admin.StackedInline):
         verbose_name = "Plugin Data"
         verbose_name_plural = "Plugin Data"
 
+    # pylint: disable=W0212
+    def get_readonly_fields(self, request, obj=None):
+        return [f.name for f in self.model._meta.fields]
 
-class PluginAdmin(admin.ModelAdmin):
+
+class PluginAdmin(RestrictedModelAdmin):
     """Plugin model admin."""
-
-    def author_company_name(self, obj):
-        return obj.author
 
     def plugin_name(self, obj):
         name = obj.name
         formatted_name = re.sub(r"(?<!^)(?=[A-Z])", " ", name)
         return formatted_name
 
-    author_company_name.short_description = "Account-User"
-
     inlines = [PluginSelectorInline, PluginPromptInline, PluginDataInline]
 
-    readonly_fields = (
-        "created_at",
-        "updated_at",
-    )
-    list_display = ("id", "author_company_name", "plugin_name", "version", "created_at", "updated_at")
+    # pylint: disable=W0212
+    def get_readonly_fields(self, request, obj=None):
+        return [f.name for f in self.model._meta.fields]
+
+    list_display = ("id", "author", "plugin_name", "version", "created_at", "updated_at")
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        try:
+            user_profile = UserProfile.objects.get(user=request.user)
+            return qs.filter(account=user_profile.account)
+        except UserProfile.DoesNotExist:
+            return qs.none()
 
 
-class PluginDataSqlConnectionAdmin(admin.ModelAdmin):
+class PluginDataSqlConnectionAdmin(RestrictedModelAdmin):
     """Plugin Data SQL Connection model admin."""
 
     readonly_fields = (
         "created_at",
         "updated_at",
     )
+
     list_display = (
-        "id",
+        "created_at",
         "account",
         "name",
         "db_engine",
         "hostname",
         "database",
         "username",
-        "created_at",
         "updated_at",
     )
 
-
-admin.site.register(PluginMeta, PluginAdmin)
-admin.site.register(PluginDataSqlConnection, PluginDataSqlConnectionAdmin)
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        try:
+            user_profile = UserProfile.objects.get(user=request.user)
+            return qs.filter(account=user_profile.account)
+        except UserProfile.DoesNotExist:
+            return qs.none()

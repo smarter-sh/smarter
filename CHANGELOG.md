@@ -1,21 +1,22 @@
-## [0.3.8](https://github.com/smarter-sh/smarter/compare/v0.3.7...v0.3.8) (2024-06-05)
-
-
-### Bug Fixes
-
-* force a new release ([37ee46f](https://github.com/smarter-sh/smarter/commit/37ee46f0a4ce4c557eda5ba30ffd8c6574bb7efd))
-
-## [0.3.7](https://github.com/smarter-sh/smarter/compare/v0.3.6...v0.3.7) (2024-06-01)
-
-### Bug Fixes
-
-- force a new release ([71cf331](https://github.com/smarter-sh/smarter/commit/71cf3315f75190e0e909609da93a22e552fa6abe))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.3.8](https://github.com/smarter-sh/smarter/compare/v0.3.7...v0.3.8) (2024-06-05)
+
+### Features
+
+- added a complete suite of unit tests for /smarter/apps/api/v1/cli
+- added unit tests for smarter/lib/manifest/broker/
+
+## [0.3.7](https://github.com/smarter-sh/smarter/compare/v0.3.6...v0.3.7) (2024-06-01)
+
+### Bug Fixes
+
+- misc patches related to 0.3.x release
+- add unit tests
 
 ## [0.3.2](https://github.com/smarter-sh/smarter/compare/v0.3.1...v0.3.2) (2024-05-31)
 

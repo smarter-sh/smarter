@@ -1,3 +1,4 @@
+# pylint: disable=W0613
 """Django views"""
 
 import html
@@ -6,6 +7,7 @@ import logging
 
 from django import forms
 from django.http import JsonResponse
+from django.shortcuts import redirect
 
 from smarter.common.helpers.mailchimp_helpers import MailchimpHelper
 from smarter.lib.django.view_helpers import SmarterAuthenticatedWebView, SmarterWebView
@@ -31,8 +33,12 @@ class ComingSoon(SmarterWebView):
 
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            self.template_path = "dashboard/authenticated.html"
-            return super().get(request, *args, **kwargs)
+            # TODO: redeploy the Bootstrap dashboard
+            # -----------------------------------------------------------------
+            # self.template_path = "dashboard/authenticated.html"
+            # return super().get(request, *args, **kwargs)
+            # -----------------------------------------------------------------
+            return redirect("/admin/")
         form = ComingSoon.EmailForm()
         context = {"form": form}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
@@ -71,12 +77,6 @@ class EmailAdded(SmarterWebView):
     def post(self, request):
         context = json.loads(request.body.decode("utf-8"))
         return self.clean_http_response(request, template_path=self.template_path, context=context)
-
-
-class DocumentationView(SmarterWebView):
-    """Documentation view"""
-
-    template_path = "dashboard/documentation.html"
 
 
 class PlatformHelpView(SmarterWebView):

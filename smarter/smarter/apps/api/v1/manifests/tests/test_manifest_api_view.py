@@ -16,5 +16,4 @@ class TestManifestApiView(ApiV1TestBase):
 
         path = reverse("api_v1_cli_manifest_view", kwargs={"kind": "plugin"})
         response, status = self.get_response(path=path)
-        print(response, status)
         self.assertEqual(status, HTTPStatus.OK)

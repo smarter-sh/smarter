@@ -64,7 +64,7 @@ class TestApiCliV1Chat(ApiV1TestBase):
 
     def validate_response(self, response: dict) -> None:
         self.assertIsInstance(response, dict)
-        self.assertEqual(response[SmarterJournalApiResponseKeys.API], SmarterApiVersions.V1.value)
+        self.assertEqual(response[SmarterJournalApiResponseKeys.API], SmarterApiVersions.V1)
         self.assertEqual(response[SmarterJournalApiResponseKeys.THING], SmarterJournalThings.CHAT.value)
         self.assertIsInstance(response[SmarterJournalApiResponseKeys.DATA], dict)
         self.assertIsInstance(response[SmarterJournalApiResponseKeys.METADATA], dict)
@@ -84,7 +84,6 @@ class TestApiCliV1Chat(ApiV1TestBase):
         path = reverse(ApiV1CliReverseViews.chat, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params, data=data)
-        print(response)
         self.assertEqual(status, HTTPStatus.OK)
         self.validate_response(response)
         data = response[SmarterJournalApiResponseKeys.DATA]

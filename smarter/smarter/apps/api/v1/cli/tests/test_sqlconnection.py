@@ -65,7 +65,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         # validate the structure of the response
         self.assertIn(SmarterJournalApiResponseKeys.DATA, response.keys())
         data = response[SmarterJournalApiResponseKeys.DATA]
-        self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1.value)
+        self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
         self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.SQLCONNECTION.value)
 
         # validate the metadata
@@ -213,7 +213,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
 
         self.assertIn(SmarterJournalApiResponseKeys.DATA, response.keys())
         data = response[SmarterJournalApiResponseKeys.DATA]
-        self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1.value)
+        self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
         self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.SQLCONNECTION.value)
 
         # validate the metadata
