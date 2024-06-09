@@ -65,7 +65,7 @@ class TestApiCliV1ChatBot(ApiV1TestBase):
         # validate the structure of the response
         self.assertIn(SmarterJournalApiResponseKeys.DATA, response.keys())
         data = response[SmarterJournalApiResponseKeys.DATA]
-        self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1.value)
+        self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
         self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.CHATBOT.value)
 
         # validate the metadata
@@ -240,7 +240,7 @@ class TestApiCliV1ChatBot(ApiV1TestBase):
 
         self.assertIn(SmarterJournalApiResponseKeys.DATA, response.keys())
         data = response[SmarterJournalApiResponseKeys.DATA]
-        self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1.value)
+        self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
         self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.CHATBOT.value)
 
         # validate the metadata
@@ -314,7 +314,7 @@ class TestApiCliV1ChatBot(ApiV1TestBase):
 
         # verify the chatbot was deleted
         try:
-            ChatBot.objects.get(name=self.name)
+            ChatBot.objects.get(name=self.name, account=self.account)
             self.fail("ChatBot was not deleted")
         except ChatBot.DoesNotExist:
             pass

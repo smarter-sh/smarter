@@ -7,13 +7,7 @@ from django.contrib import admin
 from smarter.apps.account.models import UserProfile
 from smarter.lib.django.admin import RestrictedModelAdmin
 
-from .models import (
-    PluginDataSqlConnection,
-    PluginDataStatic,
-    PluginMeta,
-    PluginPrompt,
-    PluginSelector,
-)
+from .models import PluginDataStatic, PluginPrompt, PluginSelector
 
 
 # Register your models here.
