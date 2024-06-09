@@ -69,7 +69,7 @@ class SmarterJournaledJsonResponse(JsonResponse):
         **kwargs,
     ):
         status = kwargs.get("status", None)
-        data[SmarterJournalApiResponseKeys.API] = SmarterApiVersions.V1.value
+        data[SmarterJournalApiResponseKeys.API] = SmarterApiVersions.V1
         data[SmarterJournalApiResponseKeys.THING] = str(thing)
         data[SmarterJournalApiResponseKeys.METADATA] = {
             SCLIResponseMetadata.COMMAND: str(command),

@@ -3,4 +3,4 @@
 from smarter.common.api import SmarterApiVersions
 
 
-SMARTER_API_VERSION = SmarterApiVersions.V1.value
+SMARTER_API_VERSION = SmarterApiVersions.V1
