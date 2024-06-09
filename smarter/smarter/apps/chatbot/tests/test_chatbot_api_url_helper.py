@@ -54,12 +54,7 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
 
     def test_valid_url(self):
         """Test a url for the chatbot we created."""
-        print(
-            f"test_valid_url - creating helper with chatbot: {self.chatbot} account: {self.chatbot.account} {self.chatbot.account.account_number} {self.chatbot.url}"
-        )
         helper = ChatBotHelper(url=self.chatbot.url, environment=smarter_settings.environment)
-        print(f"test_valid_url - got helper with {helper.chatbot} {helper.account} {helper.url} ")
-        # helper = ChatBotHelper(url=self.chatbot.url)
 
         self.assertTrue(helper.is_valid)
         self.assertTrue(helper.account == self.account)

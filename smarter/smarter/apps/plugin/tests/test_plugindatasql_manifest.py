@@ -105,5 +105,5 @@ class TestPluginDataSql(unittest.TestCase):
 
     def test_plugin_loader(self):
         """Test that the Loader can load the manifest."""
-        self.assertEqual(self.plugin_loader.manifest_api_version, SmarterApiVersions.V1.value)
+        self.assertEqual(self.plugin_loader.manifest_api_version, SmarterApiVersions.V1)
         self.assertEqual(self.plugin_loader.manifest_kind, MANIFEST_KIND)

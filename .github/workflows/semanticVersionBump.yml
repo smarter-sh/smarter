@@ -49,6 +49,7 @@ jobs:
         id: latest_release
         run: |
           LATEST_RELEASE=$(curl -H "Authorization: token ${{ secrets.PAT }}" --silent "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r .tag_name)
+          LATEST_RELEASE=${LATEST_RELEASE#v}  # Remove 'v' from the beginning of the version
           echo "LATEST_RELEASE=$LATEST_RELEASE" >> $GITHUB_ENV
 
       - name: Get current version
@@ -72,6 +73,8 @@ jobs:
             git commit -m "chore: [gh] Sync __version__.py with latest GitHub release ${{ env.LATEST_RELEASE }} [skip ci]"
             git push https://${{ secrets.PAT }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
           fi
+        env:
+          VERSION_FILE: ${{ env.PACKAGE_PATH }}${{ env.VERSION_FILE }}
 
       - name: Get current version and calculate next version
         id: version

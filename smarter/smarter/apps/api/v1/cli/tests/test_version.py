@@ -28,7 +28,7 @@ class TestApiCliV1Version(ApiV1TestBase):
 
     def validate_response(self, response: dict) -> None:
         self.assertIsInstance(response, dict)
-        self.assertEqual(response[SmarterJournalApiResponseKeys.API], SmarterApiVersions.V1.value)
+        self.assertEqual(response[SmarterJournalApiResponseKeys.API], SmarterApiVersions.V1)
         self.assertEqual(response[SmarterJournalApiResponseKeys.THING], "None")
         self.assertIsInstance(response[SmarterJournalApiResponseKeys.DATA], dict)
         self.assertIsInstance(response[SmarterJournalApiResponseKeys.METADATA], dict)
@@ -42,7 +42,7 @@ class TestApiCliV1Version(ApiV1TestBase):
         self.validate_response(response)
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.assertIn("api", data.keys())
-        self.assertIn("python", data.keys())
+        self.assertIn("cli", data.keys())
 
         metadata = response[SmarterJournalApiResponseKeys.METADATA]
         metadata[SCLIResponseMetadata.COMMAND] = SmarterJournalCliCommands.VERSION.value

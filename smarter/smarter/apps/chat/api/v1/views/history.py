@@ -3,7 +3,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 
-from smarter.apps.chat.api.v0.serializers import (
+from smarter.apps.chat.api.v1.serializers import (
     ChatPluginUsageSerializer,
     ChatSerializer,
     ChatToolCallSerializer,

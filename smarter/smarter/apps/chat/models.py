@@ -106,10 +106,12 @@ class ChatHelper(SmarterRequestHelper):
 
     _session_key: str = None
     _chat: Chat = None
+    _chatbot: ChatBot = None
 
-    def __init__(self, session_key: str, request) -> None:
+    def __init__(self, session_key: str, request, chatbot: ChatBot = None) -> None:
         super().__init__(request)
         self._session_key = session_key
+        self._chatbot = chatbot
         self._chat = self.get_cached_chat()
         if waffle.switch_is_active("chat_logging"):
             logger.info("%s - initialized chat %s", self.formatted_class_name, self.chat)
@@ -121,6 +123,10 @@ class ChatHelper(SmarterRequestHelper):
     @property
     def session_key(self):
         return self._session_key
+
+    @property
+    def chatbot(self):
+        return self._chatbot
 
     @property
     def formatted_class_name(self):
@@ -145,7 +151,11 @@ class ChatHelper(SmarterRequestHelper):
                 chat.url = self.url
                 chat.ip_address = self.ip_address
                 chat.user_agent = self.user_agent
+                chat.chatbot = self.chatbot
                 chat.save()
+            if not chat.chatbot:
+                raise ValueError("ChatBot instance is required for Chat object.")
+
             cache.set(key=self.session_key, value=chat, timeout=settings.SMARTER_CHAT_CACHE_EXPIRATION)
             if waffle.switch_is_active("chat_logging"):
                 logger.info("%s - cached chat object %s", self.formatted_class_name, chat)
