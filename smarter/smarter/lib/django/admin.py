@@ -3,6 +3,7 @@
 from django.contrib import admin
 
 
+# pylint: disable=W0613
 class RestrictedModelAdmin(admin.ModelAdmin):
     """
     Customized Django Admin console model class that restricts access to the
