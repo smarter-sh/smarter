@@ -42,6 +42,7 @@ django-waffle==4.1.0                    # Feature flagging
 
 # for working with data
 # ------------
+docutils==0.21.2                        # required by Django for django.contrib.admindocs
 markdown==3.6                           # Markdown reader/parser
 pandas==2.2.2                           # Data manipulation for data science stuff
 python-dotenv==1.0.1                    # for reading environment variables from .env files
