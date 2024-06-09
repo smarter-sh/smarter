@@ -10,4 +10,11 @@
 {% endif %}
 {% endblock %}
 
-{% block nav-global %}{% endblock %}
+{% block nav-global %}
+{{ block.super }}
+{% endblock %}
+
+{% block content %}
+<div class="querium-bg intro-hero-box">hello</div>
+{{ block.super }}
+{% endblock %}

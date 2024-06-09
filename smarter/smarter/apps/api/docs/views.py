@@ -1,5 +1,11 @@
 # pylint: disable=W0613
-"""Django REST framework views for the API admin app."""
+"""
+Django REST framework views for the API admin app.
+
+To-do:
+ - import markdown, and render the markdown files in the /docs folder.
+
+"""
 import logging
 
 from smarter.lib.django.view_helpers import SmarterWebView
