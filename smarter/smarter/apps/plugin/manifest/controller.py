@@ -31,6 +31,7 @@ class PluginController(AbstractController):
     """Helper class to map to/from Pydantic manifest model, Plugin and Django ORM models."""
 
     _manifest: SAMPlugin = None
+    _pydantic_model: Type[SAMPlugin] = SAMPlugin
     _plugin: PluginBase = None
     _plugin_meta: PluginMeta = None
 

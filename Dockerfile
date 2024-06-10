@@ -84,6 +84,7 @@ RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r requirements/local.txt
 # we want this to be the last step so that we can take advantage of Docker's
 # caching mechanism.
 COPY ./smarter .
+COPY ./doc /data/doc
 
 # Build the React app and collect static files
 RUN cd smarter/apps/chatapp/reactapp/ && npm install && npm run build && cd ../../../../
