@@ -26,6 +26,7 @@ from .views.nonbrokered.chat_config import ApiV1CliChatConfigApiView
 from .views.nonbrokered.status import ApiV1CliStatusApiView
 from .views.nonbrokered.version import ApiV1CliVersionApiView
 from .views.nonbrokered.whoami import ApiV1CliWhoamiApiView
+from .views.schema import ApiV1CliSchemaApiView
 from .views.undeploy import ApiV1CliUndeployApiView
 
 
@@ -44,6 +45,7 @@ class ApiV1CliReverseViews:
     logs = "api_v1_cli_logs_kind_view"
     example_manifest = "api_v1_cli_manifest_view"
     status = "api_v1_cli_status_view"
+    schema = "api_v1_cli_schema_view"
     version = "api_v1_cli_version_view"
     whoami = "api_v1_cli_whoami_view"
 
@@ -59,6 +61,7 @@ urlpatterns = [
     path("get/<str:kind>/", ApiV1CliGetApiView.as_view(), name=ApiV1CliReverseViews.get),
     path("logs/<str:kind>/", ApiV1CliLogsApiView.as_view(), name=ApiV1CliReverseViews.logs),
     path("example_manifest/<str:kind>/", ApiV1CliManifestApiView.as_view(), name=ApiV1CliReverseViews.example_manifest),
+    path("schema/<str:kind>/", ApiV1CliSchemaApiView.as_view(), name=ApiV1CliReverseViews.schema),
     path("status/", ApiV1CliStatusApiView.as_view(), name=ApiV1CliReverseViews.status),
     path("version/", ApiV1CliVersionApiView.as_view(), name=ApiV1CliReverseViews.version),
     path("whoami/", ApiV1CliWhoamiApiView.as_view(), name=ApiV1CliReverseViews.whoami),

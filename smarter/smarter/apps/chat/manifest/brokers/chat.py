@@ -1,6 +1,8 @@
 # pylint: disable=W0718
 """Smarter API Chat Manifest handler"""
 
+import typing
+
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
@@ -69,6 +71,7 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
 
     # override the base abstract manifest model with the SAMChat model
     _manifest: SAMChat = None
+    _pydantic_model: typing.Type[SAMChat] = SAMChat
     _chat: Chat = None
 
     # pylint: disable=too-many-arguments

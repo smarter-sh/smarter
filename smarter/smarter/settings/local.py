@@ -66,6 +66,9 @@ DJSTRIPE_WEBHOOK_SECRET = (
 DJSTRIPE_USE_NATIVE_JSONFIELD = True  # We recommend setting to True for new installations
 DJSTRIPE_FOREIGN_KEY_TO_FIELD = "id"
 
+# Disable Django template caching in development environment.
+TEMPLATES[0]["OPTIONS"]["debug"] = True
+
 SMTP_SENDER = smarter_settings.smtp_sender or ENVIRONMENT_DOMAIN
 SMTP_FROM_EMAIL = smarter_settings.smtp_from_email or "no-reply@" + SMTP_SENDER
 SESSION_COOKIE_DOMAIN = ENVIRONMENT_DOMAIN.split(":")[0]

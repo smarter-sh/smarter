@@ -1,6 +1,8 @@
 # pylint: disable=W0718,W0613
 """Smarter API ChatToolCall Manifest handler"""
 
+import typing
+
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
@@ -64,6 +66,7 @@ class SAMChatToolCallBroker(AbstractBroker, AccountMixin):
 
     # override the base abstract manifest model with the SAMChatToolCall model
     _manifest: SAMChatToolCall = None
+    _pydantic_model: typing.Type[SAMChatToolCall] = SAMChatToolCall
     _chat_history: ChatToolCall = None
     _session_key: str = None
 
