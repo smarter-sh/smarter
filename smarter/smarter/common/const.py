@@ -24,7 +24,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))  # smarter/smarter/common
 PROJECT_ROOT = str(Path(HERE).parent)  # smarter/smarter
 PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)  # smarter
 TERRAFORM_ROOT = str(Path(PROJECT_ROOT).parent.parent)  # ./
-REPO_ROOT = str(Path(TERRAFORM_ROOT).parent.parent)  # ./
+REPO_ROOT = str(Path(PYTHON_ROOT).parent.parent)  # ./
 
 TERRAFORM_TFVARS = os.path.join(TERRAFORM_ROOT, "terraform.tfvars")
 if not os.path.exists(TERRAFORM_TFVARS):

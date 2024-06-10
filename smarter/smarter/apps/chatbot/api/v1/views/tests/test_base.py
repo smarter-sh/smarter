@@ -11,7 +11,6 @@ from django.test import Client
 from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
 from smarter.apps.plugin.utils import add_example_plugins
-from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 from ..base import ChatBotApiBaseViewSet
