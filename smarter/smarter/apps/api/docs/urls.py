@@ -106,14 +106,14 @@ urlpatterns = [
     path(
         "manifest/chat-plugin-usage/",
         DocsExampleManifestChatPluginUsageView.as_view(),
-        name="api_docs_manifest_chat-plugin-usage",
+        name="api_docs_manifest_chat_plugin_usage",
     ),
     path(
         "manifest/chat-tool-call/",
         DocsExampleManifestChatToolCallView.as_view(),
         name="api_docs_manifest_chat_tool_call",
     ),
-    path("manifest/chat-bot/", DocsExampleManifestChatBotView.as_view(), name="api_docs_manifest_chat_bot"),
+    path("manifest/chatbot/", DocsExampleManifestChatBotView.as_view(), name="api_docs_manifest_chatbot"),
     path("manifest/plugin/", DocsExampleManifestPluginView.as_view(), name="api_docs_manifest_plugin"),
     path(
         "manifest/sql-connection/",
