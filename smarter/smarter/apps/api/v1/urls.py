@@ -25,6 +25,6 @@ urlpatterns = [
     path("chatbot/", include("smarter.apps.chatbot.api.v1.urls")),
     path("chat/", include("smarter.apps.chat.api.v1.urls")),
     path("cli/", include("smarter.apps.api.v1.cli.urls")),
-    path("docs/", RedirectView.as_view(url="docs/")),
+    path("docs/", RedirectView.as_view(url="/api/docs/")),
     path("plugins/", include("smarter.apps.plugin.api.v1.urls")),
 ]

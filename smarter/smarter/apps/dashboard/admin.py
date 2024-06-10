@@ -2,6 +2,7 @@
 """Rebuild the admin site to restrict access to certain apps and models."""
 
 from django import forms
+from django.apps import apps
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.safestring import mark_safe
@@ -34,7 +35,7 @@ from smarter.apps.chatbot.models import (
 )
 from smarter.apps.plugin.admin import PluginAdmin, PluginDataSqlConnectionAdmin
 from smarter.apps.plugin.models import PluginDataSqlConnection, PluginMeta
-from smarter.lib.django.admin import RestrictedModelAdmin
+from smarter.lib.django.admin import RestrictedModelAdmin, SuperUserOnlyModelAdmin
 from smarter.lib.django.user import User
 from smarter.lib.drf.admin import SmarterAuthTokenAdmin
 from smarter.lib.drf.models import SmarterAuthToken
@@ -50,7 +51,18 @@ class RestrictedAdminSite(admin.AdminSite):
 
     # FIX NOTE: WIRE THESE INTO THE APP CONSTRAINTS
     blocked_apps = ["djstripe", "knox", "rest_framework", "smarter.apps.account"]
-    site_header = "Smarter Admin Console v" + __version__
+    role: str = "customer"
+    site_header = "Smarter Admin Console v" + __version__ + " (" + role + ")"
+
+    def each_context(self, request):
+        if request.user.is_superuser:
+            role = "superuser"
+        elif request.user.is_staff:
+            role = "account admin"
+        self.site_header = "Smarter Admin Console v" + __version__ + " (" + role + ")"
+
+        context = super().each_context(request)
+        return context
 
 
 class CustomPasswordWidget(forms.Widget):
@@ -135,13 +147,12 @@ restricted_site.register(PluginMeta, PluginAdmin)
 restricted_site.register(PluginDataSqlConnection, PluginDataSqlConnectionAdmin)
 
 
-# from django.apps import apps
-# models = apps.get_models()
+# All remaining models are registered with the SuperUserOnlyModelAdmin
+# to restrict access to superusers only
+models = apps.get_models()
 
-# # Register all remaining models with the custom admin site,
-# # but using the regular ModelAdmin class
-# for model in models:
-#     try:
-#         restricted_site.register(model, admin.ModelAdmin)
-#     except admin.sites.AlreadyRegistered:
-#         pass
+for model in models:
+    try:
+        restricted_site.register(model, SuperUserOnlyModelAdmin)
+    except admin.sites.AlreadyRegistered:
+        pass

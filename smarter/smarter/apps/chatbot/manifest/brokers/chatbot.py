@@ -2,6 +2,7 @@
 """Smarter API Chatbot Manifest handler"""
 
 import logging
+import typing
 
 from django.db import transaction
 from django.forms.models import model_to_dict
@@ -78,6 +79,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
 
     # override the base abstract manifest model with the Chatbot model
     _manifest: SAMChatbot = None
+    _pydantic_model: typing.Type[SAMChatbot] = SAMChatbot
     _chatbot: ChatBot = None
     _chatbot_api_key: ChatBotAPIKey = None
     _name: str = None
