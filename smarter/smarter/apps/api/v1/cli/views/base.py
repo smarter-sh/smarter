@@ -245,13 +245,14 @@ class CliBaseApiView(APIView, AccountMixin):
         # This is used to pass additional parameters to the child view's post method.
         self._manifest_name = self.params.get("name", None)
 
-        if not request.user.is_authenticated:
-            try:
-                raise APIV1CLIViewError("Unauthorized access attempted.")
-            except APIV1CLIViewError as e:
-                return SmarterJournaledJsonErrorResponse(
-                    request=request, thing=self.manifest_kind, command=None, e=e, status=HTTPStatus.FORBIDDEN
-                )
+        if self.authentication_classes and self.permission_classes:
+            if not request.user.is_authenticated:
+                try:
+                    raise APIV1CLIViewError("Unauthorized access attempted.")
+                except APIV1CLIViewError as e:
+                    return SmarterJournaledJsonErrorResponse(
+                        request=request, thing=self.manifest_kind, command=None, e=e, status=HTTPStatus.FORBIDDEN
+                    )
 
         # set all of our identifying attributes from the request.
         self._user = request.user

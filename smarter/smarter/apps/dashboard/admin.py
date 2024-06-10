@@ -56,10 +56,10 @@ class RestrictedAdminSite(admin.AdminSite):
 
     def each_context(self, request):
         if request.user.is_superuser:
-            role = "superuser"
+            self.role = "superuser"
         elif request.user.is_staff:
-            role = "account admin"
-        self.site_header = "Smarter Admin Console v" + __version__ + " (" + role + ")"
+            self.role = "account admin"
+        self.site_header = "Smarter Admin Console v" + __version__ + " (" + self.role + ")"
 
         context = super().each_context(request)
         return context
