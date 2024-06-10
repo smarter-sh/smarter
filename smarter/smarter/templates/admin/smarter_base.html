@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block extrahead %}
-<link rel="shortcut icon" href="{% static 'images/querium-favicon-1-1-192x192.png' %}" />
+<link rel="shortcut icon" href="{% static 'querium/querium-favicon-192x192.png' %}" />
 {{ block.super }}
 <style>
     /* Add your custom CSS here */
@@ -10,8 +10,16 @@
       color: #f1f1f1;
     }
     #header,
-    .module h2, .module caption, .inline-group h2 {
+    .module h2,
+    .module caption,
+    .inline-group h2 {
         background-color: rgba(255, 87, 51, 0.75);
+    }
+
+    .intro-hero-box {
+      background-color: rgba(255, 87, 51, 0.25);
+      width: 100%;
+      height: 200px;
     }
 
     a:link, a:visited {
