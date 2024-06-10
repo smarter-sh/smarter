@@ -75,80 +75,238 @@
 						<!--end::Mobile logo-->
 						<!--begin::Header wrapper-->
 						<div class="d-flex align-items-stretch justify-content-between flex-lg-grow-1" id="kt_app_header_wrapper">
-							<!--begin::Menu wrapper-->
-							<div class="app-header-menu app-header-mobile-drawer align-items-stretch" data-kt-drawer="true" data-kt-drawer-name="app-header-menu" data-kt-drawer-activate="{default: true, lg: false}" data-kt-drawer-overlay="true" data-kt-drawer-width="225px" data-kt-drawer-direction="end" data-kt-drawer-toggle="#kt_app_header_menu_toggle" data-kt-swapper="true" data-kt-swapper-mode="{default: 'append', lg: 'prepend'}" data-kt-swapper-parent="{default: '#kt_app_body', lg: '#kt_app_header_wrapper'}">
-								<!--begin::Menu-->
-								<div class="menu menu-rounded menu-column menu-lg-row my-5 my-lg-0 align-items-stretch fw-semibold px-2 px-lg-0" id="kt_app_header_menu" data-kt-menu="true">
+              <!--begin::Menu wrapper-->
+              <div class="app-header-menu app-header-mobile-drawer align-items-stretch" data-kt-drawer="true"
+                data-kt-drawer-name="app-header-menu" data-kt-drawer-activate="{default: true, lg: false}"
+                data-kt-drawer-overlay="true" data-kt-drawer-width="225px" data-kt-drawer-direction="end"
+                data-kt-drawer-toggle="#kt_app_header_menu_toggle" data-kt-swapper="true"
+                data-kt-swapper-mode="{default: 'append', lg: 'prepend'}"
+                data-kt-swapper-parent="{default: '#kt_app_body', lg: '#kt_app_header_wrapper'}">
+                <!--begin::Menu-->
+                <div class="menu menu-rounded menu-column menu-lg-row my-5 my-lg-0 align-items-stretch fw-semibold px-2 px-lg-0"
+                  id="kt_app_header_menu" data-kt-menu="true">
+                  <!--begin:Menu item Swagger-->
+                  <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
+                    class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
+                    <!--begin:Menu link Swagger-->
+                    <a href="{% url 'schema-swagger-ui' %}" class="menu-link">
+                      <span class="menu-link">
+                        <span class="menu-title">Swagger</span>
+                        <span class="menu-arrow d-lg-none"></span>
+                      </span>
+                    </a>
+                    <!--end:Menu link Swagger-->
+                  </div>
+                  <!--end:Menu item Swagger-->
+                  <!--begin:Menu item Redoc-->
+                  <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
+                    class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
+                    <!--begin:Menu link Redoc-->
+                    <a href="{% url 'schema-redoc-ui' %}" class="menu-link">
+                      <span class="menu-link">
+                        <span class="menu-title">Redoc</span>
+                        <span class="menu-arrow d-lg-none"></span>
+                      </span>
+                    </a>
+                    <!--end:Menu link Redoc-->
+                  </div>
+                  <!--end:Menu item Redoc-->
+                  <!--begin:Menu item JSON Schemas-->
+                  <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
+                    class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
+                    <!--begin:Menu link JSON Schemas-->
+                    <span class="menu-link">
+                      <span class="menu-title">JSON Schemas</span>
+                      <span class="menu-arrow d-lg-none"></span>
+                    </span>
+                    <!--end:Menu link JSON Schemas-->
+                    <!--begin:Menu sub JSON Schemas-->
+                    <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-200px">
+                      <!--begin:Menu item Account -->
+                      <div class="menu-item">
+                        <!--begin:Menu link Account -->
+                        <a class="menu-link" href="{% url 'api_v1_cli_schema_view' 'account' %}" target="_blank"
+                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                          <span class="menu-icon">
+                            <i class="ki-duotone ki-rocket fs-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                            </i>
+                          </span>
+                          <span class="menu-title">Account</span>
+                        </a>
+                        <!--end:Menu link Account -->
+                      </div>
+                      <!--end:Menu item Account -->
+
+                      <!--begin:Menu item User -->
+                      <div class="menu-item">
+                        <!--begin:Menu link User -->
+                        <a class="menu-link" href="{% url 'api_v1_cli_schema_view' 'user' %}" target="_blank"
+                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                          <span class="menu-icon">
+                            <i class="ki-duotone ki-rocket fs-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                            </i>
+                          </span>
+                          <span class="menu-title">User</span>
+                        </a>
+                        <!--end:Menu link User -->
+                      </div>
+                      <!--end:Menu item User -->
+
+                    </div>
+                    <!--end:Menu sub JSON Schemas-->
+                  </div>
+                  <!--end:Menu item JSON Schemas-->
+                  <!--begin:Menu item Manifests-->
+                  <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
+                    class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
+                    <!--begin:Menu link Manifests-->
+                    <span class="menu-link">
+                      <span class="menu-title">Manifests</span>
+                      <span class="menu-arrow d-lg-none"></span>
+                    </span>
+                    <!--end:Menu link Manifests-->
+                    <!--begin:Menu sub Manifests-->
+                    <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-200px">
+                      <!--begin:Menu item-->
+                      <div class="menu-item">
+                        <!--begin:Menu link-->
+                        <a class="menu-link" href="https://preview.keenthemes.com/html/keen/docs/base/utilities" target="_blank"
+                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                          <span class="menu-icon">
+                            <i class="ki-duotone ki-rocket fs-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                            </i>
+                          </span>
+                          <span class="menu-title">Components</span>
+                        </a>
+                        <!--end:Menu link-->
+                      </div>
+                      <!--end:Menu item-->
 
 
+                      <!--begin:Menu item-->
+                      <div class="menu-item">
+                        <!--begin:Menu link-->
+                        <a class="menu-link" href="https://preview.keenthemes.com/html/keen/docs" target="_blank"
+                          title="Check out the complete documentation" data-bs-toggle="tooltip" data-bs-trigger="hover"
+                          data-bs-dismiss="click" data-bs-placement="right">
+                          <span class="menu-icon">
+                            <i class="ki-duotone ki-abstract-26 fs-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                            </i>
+                          </span>
+                          <span class="menu-title">Documentation</span>
+                        </a>
+                        <!--end:Menu link-->
+                      </div>
+                      <!--end:Menu item-->
 
 
-									<!--begin:Menu item Help-->
-									<div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start" class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
-										<!--begin:Menu link Help-->
-										<span class="menu-link">
-											<span class="menu-title">Help</span>
-											<span class="menu-arrow d-lg-none"></span>
-										</span>
-										<!--end:Menu link Help-->
-										<!--begin:Menu sub Help-->
-										<div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-200px">
-											<!--begin:Menu item-->
-											<div class="menu-item">
-												<!--begin:Menu link-->
-												<a class="menu-link" href="https://preview.keenthemes.com/html/keen/docs/base/utilities" target="_blank" title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-													<span class="menu-icon">
-														<i class="ki-duotone ki-rocket fs-2">
-															<span class="path1"></span>
-															<span class="path2"></span>
-														</i>
-													</span>
-													<span class="menu-title">Components</span>
-												</a>
-												<!--end:Menu link-->
-											</div>
-											<!--end:Menu item-->
-											<!--begin:Menu item-->
-											<div class="menu-item">
-												<!--begin:Menu link-->
-												<a class="menu-link" href="https://preview.keenthemes.com/html/keen/docs" target="_blank" title="Check out the complete documentation" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-													<span class="menu-icon">
-														<i class="ki-duotone ki-abstract-26 fs-2">
-															<span class="path1"></span>
-															<span class="path2"></span>
-														</i>
-													</span>
-													<span class="menu-title">Documentation</span>
-												</a>
-												<!--end:Menu link-->
-											</div>
-											<!--end:Menu item-->
-											<!--begin:Menu item-->
-											<div class="menu-item">
-												<!--begin:Menu link-->
-												<a class="menu-link" href="https://preview.keenthemes.com/html/keen/docs/getting-started/changelog" target="_blank">
-													<span class="menu-icon">
-														<i class="ki-duotone ki-code fs-2">
-															<span class="path1"></span>
-															<span class="path2"></span>
-															<span class="path3"></span>
-															<span class="path4"></span>
-														</i>
-													</span>
-													<span class="menu-title">Changelog v3.0.6</span>
-												</a>
-												<!--end:Menu link-->
-											</div>
-											<!--end:Menu item-->
-										</div>
-										<!--end:Menu sub Help-->
-									</div>
-									<!--end:Menu item Help-->
-								</div>
-								<!--end::Menu-->
-							</div>
-							<!--end::Menu wrapper-->
+                      <!--begin:Menu item-->
+                      <div class="menu-item">
+                        <!--begin:Menu link-->
+                        <a class="menu-link" href="https://preview.keenthemes.com/html/keen/docs/getting-started/changelog"
+                          target="_blank">
+                          <span class="menu-icon">
+                            <i class="ki-duotone ki-code fs-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                              <span class="path3"></span>
+                              <span class="path4"></span>
+                            </i>
+                          </span>
+                          <span class="menu-title">Changelog v3.0.6</span>
+                        </a>
+                        <!--end:Menu link-->
+                      </div>
+                      <!--end:Menu item-->
 
+
+                    </div>
+                    <!--end:Menu sub Manifests-->
+                  </div>
+                  <!--end:Menu item Manifests-->
+
+                  <!--begin:Menu item Developers-->
+                  <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
+                    class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
+                    <!--begin:Menu link Developers-->
+                    <span class="menu-link">
+                      <span class="menu-title">Developers</span>
+                      <span class="menu-arrow d-lg-none"></span>
+                    </span>
+                    <!--end:Menu link Developers-->
+                    <!--begin:Menu sub Developers-->
+                    <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-200px">
+                      <!--begin:Menu item-->
+                      <div class="menu-item">
+                        <!--begin:Menu link-->
+                        <a class="menu-link" href="https://preview.keenthemes.com/html/keen/docs/base/utilities" target="_blank"
+                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                          <span class="menu-icon">
+                            <i class="ki-duotone ki-rocket fs-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                            </i>
+                          </span>
+                          <span class="menu-title">Components</span>
+                        </a>
+                        <!--end:Menu link-->
+                      </div>
+                      <!--end:Menu item-->
+                      <!--begin:Menu item-->
+                      <div class="menu-item">
+                        <!--begin:Menu link-->
+                        <a class="menu-link" href="https://preview.keenthemes.com/html/keen/docs" target="_blank"
+                          title="Check out the complete documentation" data-bs-toggle="tooltip" data-bs-trigger="hover"
+                          data-bs-dismiss="click" data-bs-placement="right">
+                          <span class="menu-icon">
+                            <i class="ki-duotone ki-abstract-26 fs-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                            </i>
+                          </span>
+                          <span class="menu-title">Documentation</span>
+                        </a>
+                        <!--end:Menu link-->
+                      </div>
+                      <!--end:Menu item-->
+                      <!--begin:Menu item-->
+                      <div class="menu-item">
+                        <!--begin:Menu link-->
+                        <a class="menu-link" href="https://preview.keenthemes.com/html/keen/docs/getting-started/changelog"
+                          target="_blank">
+                          <span class="menu-icon">
+                            <i class="ki-duotone ki-code fs-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                              <span class="path3"></span>
+                              <span class="path4"></span>
+                            </i>
+                          </span>
+                          <span class="menu-title">Changelog v3.0.6</span>
+                        </a>
+                        <!--end:Menu link-->
+                      </div>
+                      <!--end:Menu item-->
+                    </div>
+                    <!--end:Menu sub Developers-->
+                  </div>
+                  <!--end:Menu item Developers-->
+                </div>
+                <!--end::Menu-->
+              </div>
+              <!--end::Menu wrapper-->
 							<!--begin::Navbar-->
 							<div class="app-navbar flex-shrink-0">
                 <div id="logobox">
@@ -328,15 +486,6 @@
                             </div>
                           </div>
 													<!--end::Requests-->
-													<!--begin::Apireference-->
-                          <div id="api-reference">
-                            <h3 class="mt-6 mb-6">API Reference</h3>
-                            <ul>
-                              <li><a href="{% url 'schema-swagger-ui' %}">Swagger</a></li>
-                              <li><a href="{% url 'schema-redoc-ui' %}">Redoc</a></li>
-                            </ul>
-                          </div>
-													<!--end::Apireference-->
 												</div>
 												<!--end::Row-->
 											</div>
