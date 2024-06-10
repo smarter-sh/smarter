@@ -74,6 +74,6 @@ class TestApiCliV1BaseClass(ApiV1TestBase):
         self.assertIn(SmarterJournalApiResponseKeys.ERROR, response.keys())
 
     def test_authentication_with_session(self):
-        # verify that session authentication is insufficient to access the endpoint
+        # verify that session authentication also works api requests.
         _, status = self.authentication_scenarios(path=self.path, session_authentication=True)
-        self.assertEqual(status, HTTPStatus.UNAUTHORIZED)
+        self.assertEqual(status, HTTPStatus.OK)

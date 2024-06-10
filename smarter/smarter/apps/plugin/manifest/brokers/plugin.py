@@ -1,6 +1,8 @@
 # pylint: disable=W0718
 """Smarter API Plugin Manifest handler"""
 
+from typing import Type
+
 from django.http import HttpRequest
 from taggit.models import Tag
 
@@ -60,6 +62,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
 
     # override the base abstract manifest model with the Plugin model
     _manifest: SAMPlugin = None
+    _pydantic_model: Type[SAMPlugin] = SAMPlugin
     _plugin: PluginBase = None
     _plugin_meta: PluginMeta = None
 

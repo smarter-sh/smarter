@@ -115,5 +115,5 @@ class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
     def test_sqlconnection_broker_deploy(self):
         """Test that the Broker does not implement a deploy() method."""
 
-        with self.assertRaises(SAMBrokerErrorNotImplemented) as e:
+        with self.assertRaises(SAMBrokerErrorNotImplemented):
             self.broker.deploy(request=self.request, kwargs=self.kwargs)

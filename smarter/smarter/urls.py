@@ -21,10 +21,11 @@ admin.autodiscover()
 
 
 urlpatterns = [
-    path("chatapp/", include("smarter.apps.chatapp.urls")),
     path("", include("smarter.apps.dashboard.urls")),
-    path("admin/", admin.site.urls),
+    path("admin/docs/", include("django.contrib.admindocs.urls")),
+    path("admin/", admin.site.urls, name="django_admin"),
     path("api/", include("smarter.apps.api.urls")),
+    path("chatapp/", include("smarter.apps.chatapp.urls")),
     # shortcuts for authentication views
     # -----------------------------------
     path("login/", LoginView.as_view(), name="login_view"),
