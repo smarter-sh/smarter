@@ -6,7 +6,7 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
-from .views import (
+from .views.developer import (
     DeveloperDocsArchitectureView,
     DeveloperDocsChatBotApiView,
     DeveloperDocsCliView,
@@ -15,9 +15,21 @@ from .views import (
     DeveloperDocsOpenAIGettingStartedView,
     DeveloperDocsSemanticVersioningView,
     DeveloperDocsTwelveFactorView,
-    DocsView,
-    SiteMapView,
 )
+from .views.json_schemas import (
+    DocsJsonSchemaAccountView,
+    DocsJsonSchemaApiConnectionView,
+    DocsJsonSchemaApiKeyView,
+    DocsJsonSchemaChatBotView,
+    DocsJsonSchemaChatHistoryView,
+    DocsJsonSchemaChatPluginUsageView,
+    DocsJsonSchemaChatToolCallView,
+    DocsJsonSchemaChatView,
+    DocsJsonSchemaPluginView,
+    DocsJsonSchemaSqlConnectionView,
+    DocsJsonSchemaUserView,
+)
+from .views.views import DocsView, SiteMapView
 
 
 schema_view = get_schema_view(
@@ -40,6 +52,21 @@ urlpatterns = [
     re_path(r"^swagger(?P<format>\.json|\.yaml)$", schema_view.without_ui(cache_timeout=0), name="schema-json"),
     re_path(r"^swagger/$", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
     re_path(r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc-ui"),
+    path("json-schema/account/", DocsJsonSchemaAccountView.as_view(), name="json-schema-account"),
+    path("json-schema/api-connection/", DocsJsonSchemaApiConnectionView.as_view(), name="json-schema-api-connection"),
+    path("json-schema/api-key/", DocsJsonSchemaApiKeyView.as_view(), name="json-schema-api-key"),
+    path("json-schema/chat/", DocsJsonSchemaChatView.as_view(), name="json-schema-chat"),
+    path("json-schema/chat-history/", DocsJsonSchemaChatHistoryView.as_view(), name="json-schema-chat-history"),
+    path(
+        "json-schema/chat-plugin-usage/",
+        DocsJsonSchemaChatPluginUsageView.as_view(),
+        name="json-schema-chat-plugin-usage",
+    ),
+    path("json-schema/chat-tool-call/", DocsJsonSchemaChatToolCallView.as_view(), name="json-schema-chat-tool-call"),
+    path("json-schema/chat-bot/", DocsJsonSchemaChatBotView.as_view(), name="json-schema-chat-bot"),
+    path("json-schema/plugin/", DocsJsonSchemaPluginView.as_view(), name="json-schema-plugin"),
+    path("json-schema/sql-connection/", DocsJsonSchemaSqlConnectionView.as_view(), name="json-schema-sql-connection"),
+    path("json-schema/user/", DocsJsonSchemaUserView.as_view(), name="json-schema-user"),
     path("developer/12-factor/", DeveloperDocsTwelveFactorView.as_view(), name="developer-12-factor"),
     path("developer/architecture/", DeveloperDocsArchitectureView.as_view(), name="developer-architecture"),
     path("developer/chatbot-api/", DeveloperDocsChatBotApiView.as_view(), name="developer-chatbot-api"),

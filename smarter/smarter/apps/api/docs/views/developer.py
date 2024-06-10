@@ -6,37 +6,21 @@ To-do:
  - import markdown, and render the markdown files in the /docs folder.
 
 """
-import logging
 import os
 
 import markdown
 from django.shortcuts import render
 
-from smarter.lib.django.view_helpers import SmarterNeverCachedWebView, SmarterWebView
+from smarter.lib.django.view_helpers import SmarterWebView
 
 
-logger = logging.getLogger(__name__)
-
+# note: this is the path from the Docker container, not the GitHub repo.
 DOCS_PATH = "/data/doc/"
 
 
 # ------------------------------------------------------------------------------
 # Public Access Views
 # ------------------------------------------------------------------------------
-
-
-class DocsView(SmarterWebView):
-    """/api/docs/ landing page view"""
-
-    template_path = "api/docs/index.html"
-
-
-class SiteMapView(SmarterNeverCachedWebView):
-    """/api/docs/sitemap/ Keen sample page view"""
-
-    template_path = "api/docs/sitemap.html"
-
-
 class MarkdownBaseView(SmarterWebView):
     """Markdown base view"""
 
