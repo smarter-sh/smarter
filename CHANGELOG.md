@@ -1,3 +1,10 @@
+# [0.4.0](https://github.com/smarter-sh/smarter/compare/v0.3.9...v0.4.0) (2024-06-10)
+
+
+### Features
+
+* add /api/v1/cli/schema/<str:kind>/ ([fd583b6](https://github.com/smarter-sh/smarter/commit/fd583b61c575c65402ed0ee5021f303304a07a39))
+
 ## [0.3.9](https://github.com/smarter-sh/smarter/compare/v0.3.8...v0.3.9) (2024-06-09)
 
 
