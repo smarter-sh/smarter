@@ -7,7 +7,6 @@ To-do:
 
 """
 import json
-import logging
 from urllib.parse import urlparse
 
 from django.shortcuts import render
@@ -20,9 +19,6 @@ from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.lib.django.view_helpers import SmarterWebView
-
-
-logger = logging.getLogger(__name__)
 
 
 # ------------------------------------------------------------------------------

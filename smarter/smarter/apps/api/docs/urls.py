@@ -29,6 +29,19 @@ from .views.json_schemas import (
     DocsJsonSchemaSqlConnectionView,
     DocsJsonSchemaUserView,
 )
+from .views.manifests import (
+    DocsExampleManifestAccountView,
+    DocsExampleManifestApiConnectionView,
+    DocsExampleManifestApiKeyView,
+    DocsExampleManifestChatBotView,
+    DocsExampleManifestChatHistoryView,
+    DocsExampleManifestChatPluginUsageView,
+    DocsExampleManifestChatToolCallView,
+    DocsExampleManifestChatView,
+    DocsExampleManifestPluginView,
+    DocsExampleManifestSqlConnectionView,
+    DocsExampleManifestUserView,
+)
 from .views.views import DocsView, SiteMapView
 
 
@@ -67,6 +80,21 @@ urlpatterns = [
     path("json-schema/plugin/", DocsJsonSchemaPluginView.as_view(), name="json-schema-plugin"),
     path("json-schema/sql-connection/", DocsJsonSchemaSqlConnectionView.as_view(), name="json-schema-sql-connection"),
     path("json-schema/user/", DocsJsonSchemaUserView.as_view(), name="json-schema-user"),
+    path("manifest/account/", DocsExampleManifestAccountView.as_view(), name="manifest-account"),
+    path("manifest/api-connection/", DocsExampleManifestApiConnectionView.as_view(), name="manifest-api-connection"),
+    path("manifest/api-key/", DocsExampleManifestApiKeyView.as_view(), name="manifest-api-key"),
+    path("manifest/chat/", DocsExampleManifestChatView.as_view(), name="manifest-chat"),
+    path("manifest/chat-history/", DocsExampleManifestChatHistoryView.as_view(), name="manifest-chat-history"),
+    path(
+        "manifest/chat-plugin-usage/",
+        DocsExampleManifestChatPluginUsageView.as_view(),
+        name="manifest-chat-plugin-usage",
+    ),
+    path("manifest/chat-tool-call/", DocsExampleManifestChatToolCallView.as_view(), name="manifest-chat-tool-call"),
+    path("manifest/chat-bot/", DocsExampleManifestChatBotView.as_view(), name="manifest-chat-bot"),
+    path("manifest/plugin/", DocsExampleManifestPluginView.as_view(), name="manifest-plugin"),
+    path("manifest/sql-connection/", DocsExampleManifestSqlConnectionView.as_view(), name="manifest-sql-connection"),
+    path("manifest/user/", DocsExampleManifestUserView.as_view(), name="manifest-user"),
     path("developer/12-factor/", DeveloperDocsTwelveFactorView.as_view(), name="developer-12-factor"),
     path("developer/architecture/", DeveloperDocsArchitectureView.as_view(), name="developer-architecture"),
     path("developer/chatbot-api/", DeveloperDocsChatBotApiView.as_view(), name="developer-chatbot-api"),
