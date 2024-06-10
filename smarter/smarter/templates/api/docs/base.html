@@ -550,10 +550,10 @@
                     <!--end:Menu link Developers-->
                     <!--begin:Menu sub Developers-->
                     <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-200px">
-                      <!--begin:Menu item-->
+                      <!--begin:Menu item 12-Factor-->
                       <div class="menu-item">
-                        <!--begin:Menu link-->
-                        <a class="menu-link" href="https://preview.keenthemes.com/html/keen/docs/base/utilities" target="_blank"
+                        <!--begin:Menu link 12-Factor-->
+                        <a class="menu-link" href="{% url 'developer-12-factor' %}" target="_blank"
                           title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
                           data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
                           <span class="menu-icon">
@@ -562,46 +562,138 @@
                               <span class="path2"></span>
                             </i>
                           </span>
-                          <span class="menu-title">Components</span>
+                          <span class="menu-title">12-Factor</span>
                         </a>
-                        <!--end:Menu link-->
+                        <!--end:Menu link 12-Factor-->
                       </div>
-                      <!--end:Menu item-->
-                      <!--begin:Menu item-->
+                      <!--end:Menu item 12-Factor-->
+
+                      <!--begin:Menu item Architecture-->
                       <div class="menu-item">
-                        <!--begin:Menu link-->
-                        <a class="menu-link" href="https://preview.keenthemes.com/html/keen/docs" target="_blank"
-                          title="Check out the complete documentation" data-bs-toggle="tooltip" data-bs-trigger="hover"
-                          data-bs-dismiss="click" data-bs-placement="right">
+                        <!--begin:Menu link Architecture-->
+                        <a class="menu-link" href="{% url 'developer-architecture' %}" target="_blank"
+                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
                           <span class="menu-icon">
-                            <i class="ki-duotone ki-abstract-26 fs-2">
+                            <i class="ki-duotone ki-rocket fs-2">
                               <span class="path1"></span>
                               <span class="path2"></span>
                             </i>
                           </span>
-                          <span class="menu-title">Documentation</span>
+                          <span class="menu-title">Architecture</span>
                         </a>
-                        <!--end:Menu link-->
+                        <!--end:Menu link Architecture-->
                       </div>
-                      <!--end:Menu item-->
-                      <!--begin:Menu item-->
+                      <!--end:Menu item Architecture-->
+
+                      <!--begin:Menu item chatbot-api-->
                       <div class="menu-item">
-                        <!--begin:Menu link-->
-                        <a class="menu-link" href="https://preview.keenthemes.com/html/keen/docs/getting-started/changelog"
-                          target="_blank">
+                        <!--begin:Menu link chatbot-api-->
+                        <a class="menu-link" href="{% url 'developer-chatbot-api' %}" target="_blank"
+                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
                           <span class="menu-icon">
-                            <i class="ki-duotone ki-code fs-2">
+                            <i class="ki-duotone ki-rocket fs-2">
                               <span class="path1"></span>
                               <span class="path2"></span>
-                              <span class="path3"></span>
-                              <span class="path4"></span>
                             </i>
                           </span>
-                          <span class="menu-title">Changelog v3.0.6</span>
+                          <span class="menu-title">ChatBot API</span>
                         </a>
-                        <!--end:Menu link-->
+                        <!--end:Menu link chatbot-api-->
                       </div>
-                      <!--end:Menu item-->
+                      <!--end:Menu item chatbot-api-->
+
+                      <!--begin:Menu item cli-->
+                      <div class="menu-item">
+                        <!--begin:Menu link cli-->
+                        <a class="menu-link" href="{% url 'developer-cli' %}" target="_blank"
+                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                          <span class="menu-icon">
+                            <i class="ki-duotone ki-rocket fs-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                            </i>
+                          </span>
+                          <span class="menu-title">CLI</span>
+                        </a>
+                        <!--end:Menu link cli-->
+                      </div>
+                      <!--end:Menu item cli-->
+
+                      <!--begin:Menu item django-react-->
+                      <div class="menu-item">
+                        <!--begin:Menu link django-react-->
+                        <a class="menu-link" href="{% url 'developer-django-react' %}" target="_blank"
+                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                          <span class="menu-icon">
+                            <i class="ki-duotone ki-rocket fs-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                            </i>
+                          </span>
+                          <span class="menu-title">Django-React Integration</span>
+                        </a>
+                        <!--end:Menu django-react-->
+                      </div>
+                      <!--end:Menu django-react-->
+
+                      <!--begin:Menu item good-coding-practice-->
+                      <div class="menu-item">
+                        <!--begin:Menu link good-coding-practice-->
+                        <a class="menu-link" href="{% url 'developer-good-coding-practice' %}" target="_blank"
+                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                          <span class="menu-icon">
+                            <i class="ki-duotone ki-rocket fs-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                            </i>
+                          </span>
+                          <span class="menu-title">Good Coding Practice</span>
+                        </a>
+                        <!--end:Menu good-coding-practice-->
+                      </div>
+                      <!--end:Menu good-coding-practice-->
+
+                      <!--begin:Menu item openai-getting-started-->
+                      <div class="menu-item">
+                        <!--begin:Menu link openai-getting-started-->
+                        <a class="menu-link" href="{% url 'developer-openai-getting-started' %}" target="_blank"
+                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                          <span class="menu-icon">
+                            <i class="ki-duotone ki-rocket fs-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                            </i>
+                          </span>
+                          <span class="menu-title">OpenAI API Intro</span>
+                        </a>
+                        <!--end:Menu openai-getting-started-->
+                      </div>
+                      <!--end:Menu openai-getting-started-->
+
+                      <!--begin:Menu item semantic-versioning-->
+                      <div class="menu-item">
+                        <!--begin:Menu link semantic-versioning-->
+                        <a class="menu-link" href="{% url 'developer-semantic-versioning' %}" target="_blank"
+                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                          <span class="menu-icon">
+                            <i class="ki-duotone ki-rocket fs-2">
+                              <span class="path1"></span>
+                              <span class="path2"></span>
+                            </i>
+                          </span>
+                          <span class="menu-title">Semantic Versioning</span>
+                        </a>
+                        <!--end:Menu semantic-versioning-->
+                      </div>
+                      <!--end:Menu semantic-versioning-->
+
                     </div>
                     <!--end:Menu sub Developers-->
                   </div>
