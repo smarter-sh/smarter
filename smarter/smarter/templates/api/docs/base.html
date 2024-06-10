@@ -75,640 +75,654 @@
 						<!--end::Mobile logo-->
 						<!--begin::Header wrapper-->
 						<div class="d-flex align-items-stretch justify-content-between flex-lg-grow-1" id="kt_app_header_wrapper">
-              <!--begin::Menu wrapper-->
-              <div class="app-header-menu app-header-mobile-drawer align-items-stretch" data-kt-drawer="true"
-                data-kt-drawer-name="app-header-menu" data-kt-drawer-activate="{default: true, lg: false}"
-                data-kt-drawer-overlay="true" data-kt-drawer-width="225px" data-kt-drawer-direction="end"
-                data-kt-drawer-toggle="#kt_app_header_menu_toggle" data-kt-swapper="true"
-                data-kt-swapper-mode="{default: 'append', lg: 'prepend'}"
-                data-kt-swapper-parent="{default: '#kt_app_body', lg: '#kt_app_header_wrapper'}">
-                <!--begin::Menu-->
-                <div class="menu menu-rounded menu-column menu-lg-row my-5 my-lg-0 align-items-stretch fw-semibold px-2 px-lg-0"
-                  id="kt_app_header_menu" data-kt-menu="true">
-                  <!--begin:Menu item Swagger-->
-                  <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
-                    class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
-                    <!--begin:Menu link Swagger-->
-                    <a href="{% url 'schema-swagger-ui' %}" class="menu-link">
-                      <span class="menu-link">
-                        <span class="menu-title">Swagger</span>
-                        <span class="menu-arrow d-lg-none"></span>
-                      </span>
-                    </a>
-                    <!--end:Menu link Swagger-->
-                  </div>
-                  <!--end:Menu item Swagger-->
-                  <!--begin:Menu item Redoc-->
-                  <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
-                    class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
-                    <!--begin:Menu link Redoc-->
-                    <a href="{% url 'schema-redoc-ui' %}" class="menu-link">
-                      <span class="menu-link">
-                        <span class="menu-title">Redoc</span>
-                        <span class="menu-arrow d-lg-none"></span>
-                      </span>
-                    </a>
-                    <!--end:Menu link Redoc-->
-                  </div>
-                  <!--end:Menu item Redoc-->
-                  <!--begin:Menu item JSON Schemas-->
-                  <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
-                    class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
-                    <!--begin:Menu link JSON Schemas-->
-                    <span class="menu-link">
-                      <span class="menu-title">JSON Schemas</span>
-                      <span class="menu-arrow d-lg-none"></span>
-                    </span>
-                    <!--end:Menu link JSON Schemas-->
-                    <!--begin:Menu sub JSON Schemas-->
-                    <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-200px">
-                      <!--begin:Menu item Account -->
-                      <div class="menu-item">
-                        <!--begin:Menu link Account -->
-                        <a class="menu-link" href="{% url 'api_v1_cli_schema_view' 'account' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">Account</span>
-                        </a>
-                        <!--end:Menu link Account -->
-                      </div>
-                      <!--end:Menu item Account -->
-
-                      <!--begin:Menu item User -->
-                      <div class="menu-item">
-                        <!--begin:Menu link User -->
-                        <a class="menu-link" href="{% url 'api_v1_cli_schema_view' 'user' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">User</span>
-                        </a>
-                        <!--end:Menu link User -->
-                      </div>
-                      <!--end:Menu item User -->
-
-                      <!--begin:Menu item Api Key -->
-                      <div class="menu-item">
-                        <!--begin:Menu link Api Key -->
-                        <a class="menu-link" href="{% url 'api_v1_cli_schema_view' 'smarterauthtoken' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">Api Key</span>
-                        </a>
-                        <!--end:Menu link Api Key -->
-                      </div>
-                      <!--end:Menu item Api Key -->
-
-                      <!--begin:Menu item SqlConnection -->
-                      <div class="menu-item">
-                        <!--begin:Menu link SqlConnection -->
-                        <a class="menu-link" href="{% url 'api_v1_cli_schema_view' 'sqlconnection' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">SqlConnection</span>
-                        </a>
-                        <!--end:Menu link SqlConnection -->
-                      </div>
-                      <!--end:Menu item SqlConnection -->
-
-                      <!--begin:Menu item Plugin -->
-                      <div class="menu-item">
-                        <!--begin:Menu link Plugin -->
-                        <a class="menu-link" href="{% url 'api_v1_cli_schema_view' 'plugin' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">Plugin</span>
-                        </a>
-                        <!--end:Menu link Plugin -->
-                      </div>
-                      <!--end:Menu item Plugin -->
-
-                      <!--begin:Menu item PluginDataApiConnection -->
-                      <div class="menu-item">
-                        <!--begin:Menu link PluginDataApiConnection -->
-                        <a class="menu-link" href="{% url 'api_v1_cli_schema_view' 'plugindataapiconnection' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">PluginDataApiConnection</span>
-                        </a>
-                        <!--end:Menu link PluginDataApiConnection -->
-                      </div>
-                      <!--end:Menu item PluginDataApiConnection -->
-
-                      <!--begin:Menu item ChatBot -->
-                      <div class="menu-item">
-                        <!--begin:Menu link ChatBot -->
-                        <a class="menu-link" href="{% url 'api_v1_cli_schema_view' 'chatbot' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">ChatBot</span>
-                        </a>
-                        <!--end:Menu link ChatBot -->
-                      </div>
-                      <!--end:Menu item ChatBot -->
-
-                      <!--begin:Menu item Chat -->
-                      <div class="menu-item">
-                        <!--begin:Menu link Chat -->
-                        <a class="menu-link" href="{% url 'api_v1_cli_schema_view' 'chat' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">Chat</span>
-                        </a>
-                        <!--end:Menu link Chat -->
-                      </div>
-                      <!--end:Menu item Chat -->
-
-                      <!--begin:Menu item ChatHistory -->
-                      <div class="menu-item">
-                        <!--begin:Menu link ChatHistory -->
-                        <a class="menu-link" href="{% url 'api_v1_cli_schema_view' 'chathistory' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">ChatHistory</span>
-                        </a>
-                        <!--end:Menu link ChatHistory -->
-                      </div>
-                      <!--end:Menu item ChatHistory -->
-
-                      <!--begin:Menu item ChatPluginUsage -->
-                      <div class="menu-item">
-                        <!--begin:Menu link ChatPluginUsage -->
-                        <a class="menu-link" href="{% url 'api_v1_cli_schema_view' 'chatpluginusage' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">ChatPluginUsage</span>
-                        </a>
-                        <!--end:Menu link ChatPluginUsage -->
-                      </div>
-                      <!--end:Menu item ChatPluginUsage -->
-
-                      <!--begin:Menu item ChatToolCall -->
-                      <div class="menu-item">
-                        <!--begin:Menu link ChatToolCall -->
-                        <a class="menu-link" href="{% url 'api_v1_cli_schema_view' 'chattoolcall' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">ChatToolCall</span>
-                        </a>
-                        <!--end:Menu link ChatToolCall -->
-                      </div>
-                      <!--end:Menu item ChatToolCall -->
-
-                    </div>
-                    <!--end:Menu sub JSON Schemas-->
-                  </div>
-                  <!--end:Menu item JSON Schemas-->
-
-                  <!--begin:Menu item Manifests-->
-                  <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
-                    class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
-                    <!--begin:Menu link Manifests-->
-                    <span class="menu-link">
-                      <span class="menu-title">Manifests</span>
-                      <span class="menu-arrow d-lg-none"></span>
-                    </span>
-                    <!--end:Menu link Manifests-->
-                    <!--begin:Menu sub Manifests-->
-                    <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-200px">
-                      <!--begin:Menu item Account -->
-                      <div class="menu-item">
-                        <!--begin:Menu link Account -->
-                        <a class="menu-link" href="{% url 'api_v1_cli_manifest_view' 'account' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">Account</span>
-                        </a>
-                        <!--end:Menu link Account -->
-                      </div>
-                      <!--end:Menu item Account -->
-
-                      <!--begin:Menu item User -->
-                      <div class="menu-item">
-                        <!--begin:Menu link User -->
-                        <a class="menu-link" href="{% url 'api_v1_cli_manifest_view' 'user' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">User</span>
-                        </a>
-                        <!--end:Menu link User -->
-                      </div>
-                      <!--end:Menu item User -->
-
-                      <!--begin:Menu item Api Key -->
-                      <div class="menu-item">
-                        <!--begin:Menu link Api Key -->
-                        <a class="menu-link" href="{% url 'api_v1_cli_manifest_view' 'smarterauthtoken' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">Api Key</span>
-                        </a>
-                        <!--end:Menu link Api Key -->
-                      </div>
-                      <!--end:Menu item Api Key -->
-
-                      <!--begin:Menu item SqlConnection -->
-                      <div class="menu-item">
-                        <!--begin:Menu link SqlConnection -->
-                        <a class="menu-link" href="{% url 'api_v1_cli_manifest_view' 'sqlconnection' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">SqlConnection</span>
-                        </a>
-                        <!--end:Menu link SqlConnection -->
-                      </div>
-                      <!--end:Menu item SqlConnection -->
-
-                      <!--begin:Menu item Plugin -->
-                      <div class="menu-item">
-                        <!--begin:Menu link Plugin -->
-                        <a class="menu-link" href="{% url 'api_v1_cli_manifest_view' 'plugin' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">Plugin</span>
-                        </a>
-                        <!--end:Menu link Plugin -->
-                      </div>
-                      <!--end:Menu item Plugin -->
-
-                      <!--begin:Menu item PluginDataApiConnection -->
-                      <div class="menu-item">
-                        <!--begin:Menu link PluginDataApiConnection -->
-                        <a class="menu-link" href="{% url 'api_v1_cli_manifest_view' 'plugindataapiconnection' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">PluginDataApiConnection</span>
-                        </a>
-                        <!--end:Menu link PluginDataApiConnection -->
-                      </div>
-                      <!--end:Menu item PluginDataApiConnection -->
-
-                      <!--begin:Menu item ChatBot -->
-                      <div class="menu-item">
-                        <!--begin:Menu link ChatBot -->
-                        <a class="menu-link" href="{% url 'api_v1_cli_manifest_view' 'chatbot' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">ChatBot</span>
-                        </a>
-                        <!--end:Menu link ChatBot -->
-                      </div>
-                      <!--end:Menu item ChatBot -->
-
-                      <!--begin:Menu item Chat -->
-                      <div class="menu-item">
-                        <!--begin:Menu link Chat -->
-                        <a class="menu-link" href="{% url 'api_v1_cli_manifest_view' 'chat' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">Chat</span>
-                        </a>
-                        <!--end:Menu link Chat -->
-                      </div>
-                      <!--end:Menu item Chat -->
-
-                      <!--begin:Menu item ChatHistory -->
-                      <div class="menu-item">
-                        <!--begin:Menu link ChatHistory -->
-                        <a class="menu-link" href="{% url 'api_v1_cli_manifest_view' 'chathistory' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">ChatHistory</span>
-                        </a>
-                        <!--end:Menu link ChatHistory -->
-                      </div>
-                      <!--end:Menu item ChatHistory -->
-
-                      <!--begin:Menu item ChatPluginUsage -->
-                      <div class="menu-item">
-                        <!--begin:Menu link ChatPluginUsage -->
-                        <a class="menu-link" href="{% url 'api_v1_cli_manifest_view' 'chatpluginusage' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">ChatPluginUsage</span>
-                        </a>
-                        <!--end:Menu link ChatPluginUsage -->
-                      </div>
-                      <!--end:Menu item ChatPluginUsage -->
-
-                      <!--begin:Menu item ChatToolCall -->
-                      <div class="menu-item">
-                        <!--begin:Menu link ChatToolCall -->
-                        <a class="menu-link" href="{% url 'api_v1_cli_manifest_view' 'chattoolcall' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">ChatToolCall</span>
-                        </a>
-                        <!--end:Menu link ChatToolCall -->
-                      </div>
-                      <!--end:Menu item ChatToolCall -->
-
-                    </div>
-                    <!--end:Menu sub Manifests-->
-                  </div>
-                  <!--end:Menu item Manifests-->
-
-                  <!--begin:Menu item Developers-->
-                  <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
-                    class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
-                    <!--begin:Menu link Developers-->
-                    <span class="menu-link">
-                      <span class="menu-title">Developers</span>
-                      <span class="menu-arrow d-lg-none"></span>
-                    </span>
-                    <!--end:Menu link Developers-->
-                    <!--begin:Menu sub Developers-->
-                    <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-200px">
-                      <!--begin:Menu item 12-Factor-->
-                      <div class="menu-item">
-                        <!--begin:Menu link 12-Factor-->
-                        <a class="menu-link" href="{% url 'developer-12-factor' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">12-Factor</span>
-                        </a>
-                        <!--end:Menu link 12-Factor-->
-                      </div>
-                      <!--end:Menu item 12-Factor-->
-
-                      <!--begin:Menu item Architecture-->
-                      <div class="menu-item">
-                        <!--begin:Menu link Architecture-->
-                        <a class="menu-link" href="{% url 'developer-architecture' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">Architecture</span>
-                        </a>
-                        <!--end:Menu link Architecture-->
-                      </div>
-                      <!--end:Menu item Architecture-->
-
-                      <!--begin:Menu item chatbot-api-->
-                      <div class="menu-item">
-                        <!--begin:Menu link chatbot-api-->
-                        <a class="menu-link" href="{% url 'developer-chatbot-api' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">ChatBot API</span>
-                        </a>
-                        <!--end:Menu link chatbot-api-->
-                      </div>
-                      <!--end:Menu item chatbot-api-->
-
-                      <!--begin:Menu item cli-->
-                      <div class="menu-item">
-                        <!--begin:Menu link cli-->
-                        <a class="menu-link" href="{% url 'developer-cli' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">CLI</span>
-                        </a>
-                        <!--end:Menu link cli-->
-                      </div>
-                      <!--end:Menu item cli-->
-
-                      <!--begin:Menu item django-react-->
-                      <div class="menu-item">
-                        <!--begin:Menu link django-react-->
-                        <a class="menu-link" href="{% url 'developer-django-react' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">Django-React Integration</span>
-                        </a>
-                        <!--end:Menu django-react-->
-                      </div>
-                      <!--end:Menu django-react-->
-
-                      <!--begin:Menu item good-coding-practice-->
-                      <div class="menu-item">
-                        <!--begin:Menu link good-coding-practice-->
-                        <a class="menu-link" href="{% url 'developer-good-coding-practice' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">Good Coding Practice</span>
-                        </a>
-                        <!--end:Menu good-coding-practice-->
-                      </div>
-                      <!--end:Menu good-coding-practice-->
-
-                      <!--begin:Menu item openai-getting-started-->
-                      <div class="menu-item">
-                        <!--begin:Menu link openai-getting-started-->
-                        <a class="menu-link" href="{% url 'developer-openai-getting-started' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">OpenAI API Intro</span>
-                        </a>
-                        <!--end:Menu openai-getting-started-->
-                      </div>
-                      <!--end:Menu openai-getting-started-->
-
-                      <!--begin:Menu item semantic-versioning-->
-                      <div class="menu-item">
-                        <!--begin:Menu link semantic-versioning-->
-                        <a class="menu-link" href="{% url 'developer-semantic-versioning' %}" target="_blank"
-                          title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
-                          data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
-                          <span class="menu-icon">
-                            <i class="ki-duotone ki-rocket fs-2">
-                              <span class="path1"></span>
-                              <span class="path2"></span>
-                            </i>
-                          </span>
-                          <span class="menu-title">Semantic Versioning</span>
-                        </a>
-                        <!--end:Menu semantic-versioning-->
-                      </div>
-                      <!--end:Menu semantic-versioning-->
-
-                    </div>
-                    <!--end:Menu sub Developers-->
-                  </div>
-                  <!--end:Menu item Developers-->
-                </div>
-                <!--end::Menu-->
-              </div>
-              <!--end::Menu wrapper-->
 							<!--begin::Navbar-->
 							<div class="app-navbar flex-shrink-0">
+                <!--begin::Querium logobox -->
                 <div id="logobox">
                   <a href="/" class="d-none d-lg-block">
                     <img alt="Logo" src="https://smarter.sh/wp-content/uploads/2024/04/Smarter_crop.png" class="h-70px" />
                   </a>
                 </div>
+                <!--end::Querium logobox -->
+                <!--begin::Menu wrapper-->
+                <div class="app-header-menu app-header-mobile-drawer align-items-stretch" data-kt-drawer="true"
+                  data-kt-drawer-name="app-header-menu" data-kt-drawer-activate="{default: true, lg: false}"
+                  data-kt-drawer-overlay="true" data-kt-drawer-width="225px" data-kt-drawer-direction="end"
+                  data-kt-drawer-toggle="#kt_app_header_menu_toggle" data-kt-swapper="true"
+                  data-kt-swapper-mode="{default: 'append', lg: 'prepend'}"
+                  data-kt-swapper-parent="{default: '#kt_app_body', lg: '#kt_app_header_wrapper'}">
+                  <!--begin::Menu-->
+                  <div class="menu menu-rounded menu-column menu-lg-row my-5 my-lg-0 align-items-stretch fw-semibold px-2 px-lg-0"
+                    id="kt_app_header_menu" data-kt-menu="true">
+                    <!--begin:Menu item Swagger-->
+                    <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
+                      class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
+                      <!--begin:Menu link Swagger-->
+                      <a href="{% url 'schema-swagger-ui' %}" class="menu-link">
+                        <span class="menu-link">
+                          <span class="menu-title">Swagger</span>
+                          <span class="menu-arrow d-lg-none"></span>
+                        </span>
+                      </a>
+                      <!--end:Menu link Swagger-->
+                    </div>
+                    <!--end:Menu item Swagger-->
+                    <!--begin:Menu item Redoc-->
+                    <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
+                      class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
+                      <!--begin:Menu link Redoc-->
+                      <a href="{% url 'schema-redoc-ui' %}" class="menu-link">
+                        <span class="menu-link">
+                          <span class="menu-title">Redoc</span>
+                          <span class="menu-arrow d-lg-none"></span>
+                        </span>
+                      </a>
+                      <!--end:Menu link Redoc-->
+                    </div>
+                    <!--end:Menu item Redoc-->
+                    <!--begin:Menu item CLI-->
+                    <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
+                      class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
+                      <!--begin:Menu link CLI-->
+                      <span class="menu-link">
+                        <span class="menu-title">CLI</span>
+                        <span class="menu-arrow d-lg-none"></span>
+                      </span>
+                      <!--end:Menu link CLI-->
+                    </div>
+                    <!--end:Menu item CLI-->
+
+                    <!--begin:Menu item JSON Schemas-->
+                    <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
+                      class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
+                      <!--begin:Menu link JSON Schemas-->
+                      <span class="menu-link">
+                        <span class="menu-title">JSON Schemas</span>
+                        <span class="menu-arrow d-lg-none"></span>
+                      </span>
+                      <!--end:Menu link JSON Schemas-->
+                      <!--begin:Menu sub JSON Schemas-->
+                      <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-200px">
+                        <!--begin:Menu item Account -->
+                        <div class="menu-item">
+                          <!--begin:Menu link Account -->
+                          <a class="menu-link" href="{% url 'api_docs_json_schema_account' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">Account</span>
+                          </a>
+                          <!--end:Menu link Account -->
+                        </div>
+                        <!--end:Menu item Account -->
+
+                        <!--begin:Menu item User -->
+                        <div class="menu-item">
+                          <!--begin:Menu link User -->
+                          <a class="menu-link" href="{% url 'api_docs_json_schema_user' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">User</span>
+                          </a>
+                          <!--end:Menu link User -->
+                        </div>
+                        <!--end:Menu item User -->
+
+                        <!--begin:Menu item Api Key -->
+                        <div class="menu-item">
+                          <!--begin:Menu link Api Key -->
+                          <a class="menu-link" href="{% url 'api_docs_json_schema_api_key' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">Api Key</span>
+                          </a>
+                          <!--end:Menu link Api Key -->
+                        </div>
+                        <!--end:Menu item Api Key -->
+
+                        <!--begin:Menu item SqlConnection -->
+                        <div class="menu-item">
+                          <!--begin:Menu link SqlConnection -->
+                          <a class="menu-link" href="{% url 'api_docs_json_schema_sql_connection' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">SqlConnection</span>
+                          </a>
+                          <!--end:Menu link SqlConnection -->
+                        </div>
+                        <!--end:Menu item SqlConnection -->
+
+                        <!--begin:Menu item Plugin -->
+                        <div class="menu-item">
+                          <!--begin:Menu link Plugin -->
+                          <a class="menu-link" href="{% url 'api_docs_json_schema_plugin' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">Plugin</span>
+                          </a>
+                          <!--end:Menu link Plugin -->
+                        </div>
+                        <!--end:Menu item Plugin -->
+
+                        <!--begin:Menu item PluginDataApiConnection -->
+                        <div class="menu-item">
+                          <!--begin:Menu link PluginDataApiConnection -->
+                          <a class="menu-link" href="{% url 'api_docs_json_schema_api_connection' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">PluginDataApiConnection</span>
+                          </a>
+                          <!--end:Menu link PluginDataApiConnection -->
+                        </div>
+                        <!--end:Menu item PluginDataApiConnection -->
+
+                        <!--begin:Menu item ChatBot -->
+                        <div class="menu-item">
+                          <!--begin:Menu link ChatBot -->
+                          <a class="menu-link" href="{% url 'api_docs_json_schema_chatbot' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">ChatBot</span>
+                          </a>
+                          <!--end:Menu link ChatBot -->
+                        </div>
+                        <!--end:Menu item ChatBot -->
+
+                        <!--begin:Menu item Chat -->
+                        <div class="menu-item">
+                          <!--begin:Menu link Chat -->
+                          <a class="menu-link" href="{% url 'api_docs_json_schema_chat' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">Chat</span>
+                          </a>
+                          <!--end:Menu link Chat -->
+                        </div>
+                        <!--end:Menu item Chat -->
+
+                        <!--begin:Menu item ChatHistory -->
+                        <div class="menu-item">
+                          <!--begin:Menu link ChatHistory -->
+                          <a class="menu-link" href="{% url 'api_docs_json_schema_chat_history' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">ChatHistory</span>
+                          </a>
+                          <!--end:Menu link ChatHistory -->
+                        </div>
+                        <!--end:Menu item ChatHistory -->
+
+                        <!--begin:Menu item ChatPluginUsage -->
+                        <div class="menu-item">
+                          <!--begin:Menu link ChatPluginUsage -->
+                          <a class="menu-link" href="{% url 'api_docs_json_schema_chat_plugin_usage' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">ChatPluginUsage</span>
+                          </a>
+                          <!--end:Menu link ChatPluginUsage -->
+                        </div>
+                        <!--end:Menu item ChatPluginUsage -->
+
+                        <!--begin:Menu item ChatToolCall -->
+                        <div class="menu-item">
+                          <!--begin:Menu link ChatToolCall -->
+                          <a class="menu-link" href="{% url 'api_docs_json_schema_chat_tool_call' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">ChatToolCall</span>
+                          </a>
+                          <!--end:Menu link ChatToolCall -->
+                        </div>
+                        <!--end:Menu item ChatToolCall -->
+
+                      </div>
+                      <!--end:Menu sub JSON Schemas-->
+                    </div>
+                    <!--end:Menu item JSON Schemas-->
+
+                    <!--begin:Menu item Manifests-->
+                    <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
+                      class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
+                      <!--begin:Menu link Manifests-->
+                      <span class="menu-link">
+                        <span class="menu-title">Manifests</span>
+                        <span class="menu-arrow d-lg-none"></span>
+                      </span>
+                      <!--end:Menu link Manifests-->
+                      <!--begin:Menu sub Manifests-->
+                      <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-200px">
+                        <!--begin:Menu item Account -->
+                        <div class="menu-item">
+                          <!--begin:Menu link Account -->
+                          <a class="menu-link" href="{% url 'api_v1_cli_manifest_view' 'account' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">Account</span>
+                          </a>
+                          <!--end:Menu link Account -->
+                        </div>
+                        <!--end:Menu item Account -->
+
+                        <!--begin:Menu item User -->
+                        <div class="menu-item">
+                          <!--begin:Menu link User -->
+                          <a class="menu-link" href="{% url 'api_v1_cli_manifest_view' 'user' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">User</span>
+                          </a>
+                          <!--end:Menu link User -->
+                        </div>
+                        <!--end:Menu item User -->
+
+                        <!--begin:Menu item Api Key -->
+                        <div class="menu-item">
+                          <!--begin:Menu link Api Key -->
+                          <a class="menu-link" href="{% url 'api_v1_cli_manifest_view' 'smarterauthtoken' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">Api Key</span>
+                          </a>
+                          <!--end:Menu link Api Key -->
+                        </div>
+                        <!--end:Menu item Api Key -->
+
+                        <!--begin:Menu item SqlConnection -->
+                        <div class="menu-item">
+                          <!--begin:Menu link SqlConnection -->
+                          <a class="menu-link" href="{% url 'api_v1_cli_manifest_view' 'sqlconnection' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">SqlConnection</span>
+                          </a>
+                          <!--end:Menu link SqlConnection -->
+                        </div>
+                        <!--end:Menu item SqlConnection -->
+
+                        <!--begin:Menu item Plugin -->
+                        <div class="menu-item">
+                          <!--begin:Menu link Plugin -->
+                          <a class="menu-link" href="{% url 'api_v1_cli_manifest_view' 'plugin' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">Plugin</span>
+                          </a>
+                          <!--end:Menu link Plugin -->
+                        </div>
+                        <!--end:Menu item Plugin -->
+
+                        <!--begin:Menu item PluginDataApiConnection -->
+                        <div class="menu-item">
+                          <!--begin:Menu link PluginDataApiConnection -->
+                          <a class="menu-link" href="{% url 'api_v1_cli_manifest_view' 'plugindataapiconnection' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">PluginDataApiConnection</span>
+                          </a>
+                          <!--end:Menu link PluginDataApiConnection -->
+                        </div>
+                        <!--end:Menu item PluginDataApiConnection -->
+
+                        <!--begin:Menu item ChatBot -->
+                        <div class="menu-item">
+                          <!--begin:Menu link ChatBot -->
+                          <a class="menu-link" href="{% url 'api_v1_cli_manifest_view' 'chatbot' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">ChatBot</span>
+                          </a>
+                          <!--end:Menu link ChatBot -->
+                        </div>
+                        <!--end:Menu item ChatBot -->
+
+                        <!--begin:Menu item Chat -->
+                        <div class="menu-item">
+                          <!--begin:Menu link Chat -->
+                          <a class="menu-link" href="{% url 'api_v1_cli_manifest_view' 'chat' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">Chat</span>
+                          </a>
+                          <!--end:Menu link Chat -->
+                        </div>
+                        <!--end:Menu item Chat -->
+
+                        <!--begin:Menu item ChatHistory -->
+                        <div class="menu-item">
+                          <!--begin:Menu link ChatHistory -->
+                          <a class="menu-link" href="{% url 'api_v1_cli_manifest_view' 'chathistory' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">ChatHistory</span>
+                          </a>
+                          <!--end:Menu link ChatHistory -->
+                        </div>
+                        <!--end:Menu item ChatHistory -->
+
+                        <!--begin:Menu item ChatPluginUsage -->
+                        <div class="menu-item">
+                          <!--begin:Menu link ChatPluginUsage -->
+                          <a class="menu-link" href="{% url 'api_v1_cli_manifest_view' 'chatpluginusage' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">ChatPluginUsage</span>
+                          </a>
+                          <!--end:Menu link ChatPluginUsage -->
+                        </div>
+                        <!--end:Menu item ChatPluginUsage -->
+
+                        <!--begin:Menu item ChatToolCall -->
+                        <div class="menu-item">
+                          <!--begin:Menu link ChatToolCall -->
+                          <a class="menu-link" href="{% url 'api_v1_cli_manifest_view' 'chattoolcall' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">ChatToolCall</span>
+                          </a>
+                          <!--end:Menu link ChatToolCall -->
+                        </div>
+                        <!--end:Menu item ChatToolCall -->
+
+                      </div>
+                      <!--end:Menu sub Manifests-->
+                    </div>
+                    <!--end:Menu item Manifests-->
+
+                    <!--begin:Menu item Developers-->
+                    <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
+                      class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
+                      <!--begin:Menu link Developers-->
+                      <span class="menu-link">
+                        <span class="menu-title">Developers</span>
+                        <span class="menu-arrow d-lg-none"></span>
+                      </span>
+                      <!--end:Menu link Developers-->
+                      <!--begin:Menu sub Developers-->
+                      <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-200px">
+                        <!--begin:Menu item 12-Factor-->
+                        <div class="menu-item">
+                          <!--begin:Menu link 12-Factor-->
+                          <a class="menu-link" href="{% url 'developer-12-factor' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">12-Factor</span>
+                          </a>
+                          <!--end:Menu link 12-Factor-->
+                        </div>
+                        <!--end:Menu item 12-Factor-->
+
+                        <!--begin:Menu item Architecture-->
+                        <div class="menu-item">
+                          <!--begin:Menu link Architecture-->
+                          <a class="menu-link" href="{% url 'developer-architecture' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">Architecture</span>
+                          </a>
+                          <!--end:Menu link Architecture-->
+                        </div>
+                        <!--end:Menu item Architecture-->
+
+                        <!--begin:Menu item chatbot-api-->
+                        <div class="menu-item">
+                          <!--begin:Menu link chatbot-api-->
+                          <a class="menu-link" href="{% url 'developer-chatbot-api' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">ChatBot API</span>
+                          </a>
+                          <!--end:Menu link chatbot-api-->
+                        </div>
+                        <!--end:Menu item chatbot-api-->
+
+                        <!--begin:Menu item cli-->
+                        <div class="menu-item">
+                          <!--begin:Menu link cli-->
+                          <a class="menu-link" href="{% url 'developer-cli' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">CLI</span>
+                          </a>
+                          <!--end:Menu link cli-->
+                        </div>
+                        <!--end:Menu item cli-->
+
+                        <!--begin:Menu item django-react-->
+                        <div class="menu-item">
+                          <!--begin:Menu link django-react-->
+                          <a class="menu-link" href="{% url 'developer-django-react' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">Django-React Integration</span>
+                          </a>
+                          <!--end:Menu django-react-->
+                        </div>
+                        <!--end:Menu django-react-->
+
+                        <!--begin:Menu item good-coding-practice-->
+                        <div class="menu-item">
+                          <!--begin:Menu link good-coding-practice-->
+                          <a class="menu-link" href="{% url 'developer-good-coding-practice' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">Good Coding Practice</span>
+                          </a>
+                          <!--end:Menu good-coding-practice-->
+                        </div>
+                        <!--end:Menu good-coding-practice-->
+
+                        <!--begin:Menu item openai-getting-started-->
+                        <div class="menu-item">
+                          <!--begin:Menu link openai-getting-started-->
+                          <a class="menu-link" href="{% url 'developer-openai-getting-started' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">OpenAI API Intro</span>
+                          </a>
+                          <!--end:Menu openai-getting-started-->
+                        </div>
+                        <!--end:Menu openai-getting-started-->
+
+                        <!--begin:Menu item semantic-versioning-->
+                        <div class="menu-item">
+                          <!--begin:Menu link semantic-versioning-->
+                          <a class="menu-link" href="{% url 'developer-semantic-versioning' %}" target="_self"
+                            title="Check out over 200 in-house components, plugins and ready for use solutions" data-bs-toggle="tooltip"
+                            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+                            <span class="menu-icon">
+                              <i class="ki-duotone ki-rocket fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                              </i>
+                            </span>
+                            <span class="menu-title">Semantic Versioning</span>
+                          </a>
+                          <!--end:Menu semantic-versioning-->
+                        </div>
+                        <!--end:Menu semantic-versioning-->
+
+                      </div>
+                      <!--end:Menu sub Developers-->
+                    </div>
+                    <!--end:Menu item Developers-->
+                  </div>
+                  <!--end::Menu-->
+                </div>
+                <!--end::Menu wrapper-->
 								<!--begin::Header menu toggle-->
 								<div class="app-navbar-item d-lg-none ms-2 me-n2" title="Show header menu">
 									<div class="btn btn-flex btn-icon btn-active-color-primary w-30px h-30px" id="kt_app_header_menu_toggle">
@@ -974,19 +988,19 @@
 								<!--begin::Copyright-->
 								<div class="text-gray-900 order-2 order-md-1">
 									<span class="text-muted fw-semibold me-1"><script>document.write(new Date().getFullYear())</script>&copy;</span>
-									<a href="https://www.querium.com/" target="_blank" class="text-gray-800 text-hover-primary">Querium Corp.</a>
+									<a href="https://www.querium.com/" target="_self" class="text-gray-800 text-hover-primary">Querium Corp.</a>
 								</div>
 								<!--end::Copyright-->
 								<!--begin::Menu-->
 								<ul class="menu menu-gray-600 menu-hover-primary fw-semibold order-1">
 									<li class="menu-item">
-										<a href="https://smarter.sh/" target="_blank" class="menu-link px-2">About</a>
+										<a href="https://smarter.sh/" target="_self" class="menu-link px-2">About</a>
 									</li>
 									<li class="menu-item">
-										<a href="https://smarter.sh/contact/" target="_blank" class="menu-link px-2">Support</a>
+										<a href="https://smarter.sh/contact/" target="_self" class="menu-link px-2">Support</a>
 									</li>
 									<li class="menu-item">
-										<a href="https://smarter.sh/contact/" target="_blank" class="menu-link px-2">Sales</a>
+										<a href="https://smarter.sh/contact/" target="_self" class="menu-link px-2">Sales</a>
 									</li>
 								</ul>
 								<!--end::Menu-->
