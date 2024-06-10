@@ -2,6 +2,7 @@
 """Smarter API Account Manifest handler"""
 
 import logging
+import typing
 
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
@@ -68,6 +69,7 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
 
     # override the base abstract manifest model with the Account model
     _manifest: SAMAccount = None
+    _pydantic_model: typing.Type[SAMAccount] = SAMAccount
     _account: Account = None
 
     # pylint: disable=too-many-arguments
