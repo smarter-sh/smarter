@@ -69,6 +69,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
 
     # override the base abstract manifest model with the SAMSmarterAuthToken model
     _manifest: SAMSmarterAuthToken = None
+    _pydantic_model: typing.Type[SAMSmarterAuthToken] = SAMSmarterAuthToken
     _smarter_auth_token: SmarterAuthToken = None
     _token_key: str = None
 

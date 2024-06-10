@@ -14,6 +14,7 @@ from requests import PreparedRequest
 from rest_framework.serializers import ModelSerializer
 
 from smarter.common.api import SmarterApiVersions
+from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseErrorKeys,
     SmarterJournalApiResponseKeys,
@@ -125,6 +126,7 @@ class AbstractBroker(ABC):
     _account: "Account" = None
     _loader: SAMLoader = None
     _manifest: AbstractSAMBase = None
+    _pydantic_model: typing.Type[AbstractSAMBase] = AbstractSAMBase
     _name: str = None
     _kind: str = None
     _validated: bool = False
@@ -251,8 +253,14 @@ class AbstractBroker(ABC):
     # Abstract Properties
     ###########################################################################
     @property
-    def model_class(self):
+    def model_class(self) -> typing.Type[TimestampedModel]:
+        """Return the Django ORM model class for the broker."""
         raise SAMBrokerErrorNotImplemented(message="", thing=self.thing, command=None)
+
+    @property
+    def pydantic_model(self) -> typing.Type[AbstractSAMBase]:
+        """Return the Pydantic model for the broker."""
+        return self._pydantic_model
 
     @property
     def manifest(self) -> AbstractSAMBase:
@@ -344,6 +352,16 @@ class AbstractBroker(ABC):
         raise SAMBrokerErrorNotImplemented(
             message="undeploy() not implemented", thing=self.thing, command=SmarterJournalCliCommands.UNDEPLOY
         )
+
+    def schema(self, request: HttpRequest, kwargs: dict) -> typing.Dict[str, typing.Any]:
+        """Return the published JSON schema for the Pydantic model."""
+        command = self.example_manifest.__name__
+        command = SmarterJournalCliCommands(command)
+
+        model = self.pydantic_model
+        data = model.model_json_schema()
+
+        return self.json_response_ok(command=command, data=data)
 
     ###########################################################################
     # http json response helpers

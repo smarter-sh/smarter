@@ -1,0 +1,7 @@
+{% extends 'api/docs/base.html' %}
+{% load static %}
+
+
+{% block doc_content %}
+  {{ markdown_html | safe }}
+{% endblock %}

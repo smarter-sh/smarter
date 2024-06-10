@@ -1,6 +1,8 @@
 # pylint: disable=W0718
 """Smarter API Plugin Manifest handler"""
 
+from typing import Type
+
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
@@ -52,6 +54,7 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
 
     # override the base abstract manifest model with the Plugin model
     _manifest: SAMPluginDataSqlConnection = None
+    _pydantic_model: Type[SAMPluginDataSqlConnection] = SAMPluginDataSqlConnection
     _sql_connection: PluginDataSqlConnection = None
 
     # pylint: disable=too-many-arguments
