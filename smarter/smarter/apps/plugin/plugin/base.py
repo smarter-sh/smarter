@@ -5,7 +5,7 @@ import json
 import logging
 import re
 from abc import ABC, abstractmethod
-from typing import Any, Union
+from typing import Any, Type, Union
 
 import yaml
 from django.db import transaction
@@ -62,6 +62,7 @@ class PluginBase(ABC):
     _api_version: str = SMARTER_API_MANIFEST_DEFAULT_VERSION
     _metadata_class: str = None
     _manifest: SAMPlugin = None
+    _pydantic_model: Type[SAMPlugin] = SAMPlugin
 
     _plugin_meta: PluginMeta = None
     _plugin_selector: PluginSelector = None

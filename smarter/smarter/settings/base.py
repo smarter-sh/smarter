@@ -110,6 +110,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_yasg",
     "django_celery_beat",
+    "django.contrib.admindocs",
     "waffle",
 ]
 
