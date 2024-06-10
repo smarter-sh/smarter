@@ -42,7 +42,7 @@ from .utils import (
     parse_request,
     request_meta_data_factory,
 )
-from .validators import validate_completion_request, validate_item
+from .validators import validate_item
 
 
 logger = logging.getLogger(__name__)

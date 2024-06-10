@@ -1,6 +1,8 @@
 # pylint: disable=W0718,W0613
 """Smarter API Chat Manifest handler"""
 
+import typing
+
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 from rest_framework.serializers import ModelSerializer
@@ -64,6 +66,7 @@ class SAMChatHistoryBroker(AbstractBroker, AccountMixin):
 
     # override the base abstract manifest model with the SAMChatHistory model
     _manifest: SAMChatHistory = None
+    _pydantic_model: typing.Type[SAMChatHistory] = SAMChatHistory
     _chat_history: ChatHistory = None
     _session_key: str = None
 
