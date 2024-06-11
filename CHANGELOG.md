@@ -1,3 +1,10 @@
+## [0.4.1](https://github.com/smarter-sh/smarter/compare/v0.4.0...v0.4.1) (2024-06-11)
+
+
+### Bug Fixes
+
+* fix code element styling in docs django templates ([7d3763d](https://github.com/smarter-sh/smarter/commit/7d3763dbc39d0f83be6eaa3e97b091e6edb4b243))
+
 # [0.4.0](https://github.com/smarter-sh/smarter/compare/v0.3.9...v0.4.0) (2024-06-10)
 
 
