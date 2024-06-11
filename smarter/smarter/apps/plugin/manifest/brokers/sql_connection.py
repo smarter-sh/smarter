@@ -157,12 +157,14 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
     def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
+        choices = ", ".join(DbEngines.all_values())
+
         data = {
             "apiVersion": self.api_version,
             "kind": self.kind,
             "metadata": {
                 "name": "exampleConnection",
-                "description": f"points to the Django mysql database. db_engine choices: {DbEngines.all_values()}",
+                "description": f"points to the Django mysql database. db_engine choices: {choices}",
                 "version": "0.1.0",
             },
             "spec": {

@@ -20,6 +20,7 @@ from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.lib.django.view_helpers import SmarterWebView
+from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 
 
 # ------------------------------------------------------------------------------
@@ -43,8 +44,12 @@ class DocsExampleManifestBaseView(SmarterWebView):
         view = ApiV1CliManifestApiView.as_view()
         response = view(request=cli_request, kind=self.manifest_kind.value, *args, **kwargs)
         json_response = json.loads(response.content.decode("utf-8"))
-        yaml_response = yaml.dump(json_response, default_flow_style=False)
 
+        if SmarterJournalApiResponseKeys.DATA in json_response:
+            # unpack the smarter.sh/api response payload
+            json_response = json_response[SmarterJournalApiResponseKeys.DATA]
+
+        yaml_response = yaml.dump(json_response, default_flow_style=False)
         return render(request, self.template_path, {"manifest": yaml_response})
 
 
