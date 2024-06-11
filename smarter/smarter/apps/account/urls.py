@@ -29,7 +29,7 @@ urlpatterns = [
     path("activate/<uidb64>/<token>/", AccountActivateView.as_view(), name="account_activate"),
     path("deactivate/", AccountDeactivateView.as_view(), name="account_deactivate"),
     # password management
-    path("password-reset-request/", PasswordResetRequestView.as_view(), name="password_reset_request"),
-    path("password-confirm/", PasswordConfirmView.as_view(), name="password_confirm"),
+    path("password-reset-request/", PasswordResetRequestView.as_view(), name="account_password_reset_request"),
+    path("password-confirm/", PasswordConfirmView.as_view(), name="account_password_confirm"),
     path("password-reset-link/<uidb64>/<token>/", PasswordResetView.as_view(), name="password_reset_link"),
 ]
