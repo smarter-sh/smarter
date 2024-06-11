@@ -31,7 +31,8 @@ class TestApiCliV1BaseClass(ApiV1TestBase):
         super().setUp()
         self.kwargs = {SAMKeys.KIND.value: SAMKinds.ACCOUNT.value}
         self.query_params = urlencode({"username": self.user.username})
-        self.path = reverse(ApiV1CliReverseViews.example_manifest, kwargs=self.kwargs)
+        self.public_path = reverse(ApiV1CliReverseViews.example_manifest, kwargs=self.kwargs)
+        self.private_path = reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)
 
     def authentication_scenarios(
         self, path, wrong_key: bool = False, missing_key: bool = False, session_authentication: bool = False
@@ -57,23 +58,29 @@ class TestApiCliV1BaseClass(ApiV1TestBase):
 
     def test_baseauthentication_with_apikey(self):
         # control test to ensure that the actual expected cases really works.
-        response, status = self.get_response(path=self.path)
+        response, status = self.get_response(path=self.public_path)
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIn(SmarterJournalApiResponseKeys.DATA, response.keys())
 
     def test_authentication_with_bad_apikey(self):
         # verify that wrong key authentication is insufficient to access the endpoint
-        response, status = self.authentication_scenarios(path=self.path, wrong_key=True)
+        response, status = self.authentication_scenarios(path=self.public_path, wrong_key=True)
         self.assertEqual(status, HTTPStatus.UNAUTHORIZED)
         self.assertIn(SmarterJournalApiResponseKeys.ERROR, response.keys())
 
-    def test_authentication_with_no_apikey(self):
+    def test_authentication_with_no_apikey_public(self):
         # verify that missing key authentication is insufficient to access the endpoint
-        response, status = self.authentication_scenarios(path=self.path, missing_key=True)
+        response, status = self.authentication_scenarios(path=self.public_path, missing_key=True)
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertIn(SmarterJournalApiResponseKeys.DATA, response.keys())
+
+    def test_authentication_with_no_apikey_private(self):
+        # verify that missing key authentication is insufficient to access the endpoint
+        response, status = self.authentication_scenarios(path=self.private_path, missing_key=True)
         self.assertEqual(status, HTTPStatus.FORBIDDEN)
         self.assertIn(SmarterJournalApiResponseKeys.ERROR, response.keys())
 
     def test_authentication_with_session(self):
         # verify that session authentication also works api requests.
-        _, status = self.authentication_scenarios(path=self.path, session_authentication=True)
+        _, status = self.authentication_scenarios(path=self.public_path, session_authentication=True)
         self.assertEqual(status, HTTPStatus.OK)
