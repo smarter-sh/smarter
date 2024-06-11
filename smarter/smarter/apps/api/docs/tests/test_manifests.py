@@ -34,20 +34,50 @@ class TestApiDocsManifests(unittest.TestCase):
         admin_user_teardown(cls.user, cls.account, cls.user_profile)
 
     def test_get_unauthenitcated_manifests(self):
-        """Test get_manifests"""
+        """
+        Test all api/docs/manifests/ endpoints with an unauthenticated user
+        to ensure that we get a 200 response
+        """
 
         for kind in ALL_KINDS:
-            # response = self.client.get(f"/api/docs/manifests/{kind}")
-            reverse_name = f"api_docs_manifest_{kind}"
+            reverse_name = f"api_docs_manifest_{kind}".lower()
             url = reverse(reverse_name)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
 
     def test_get_authenitcated_manifests(self):
-        """Test get_manifests"""
+        """
+        Test all api/docs/manifests/ endpoints with an authenticated user
+        to ensure that we get a 200 response
+        """
         self.client.force_login(self.user)
         for kind in ALL_KINDS:
-            reverse_name = f"api_docs_manifest_{kind}"
+            reverse_name = f"api_docs_manifest_{kind}".lower()
+            url = reverse(reverse_name)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+        self.client.logout()
+
+    def test_get_unauthenitcated_json_schemas(self):
+        """
+        Test all api/docs/json-schema/ endpoints with an unauthenticated user
+        to ensure that we get a 200 response
+        """
+
+        for kind in ALL_KINDS:
+            reverse_name = f"api_docs_json_schema_{kind}".lower()
+            url = reverse(reverse_name)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+
+    def test_get_authenitcated_json_schemas(self):
+        """
+        Test all api/docs/json-schema/ endpoints with an authenticated user
+        to ensure that we get a 200 response
+        """
+        self.client.force_login(self.user)
+        for kind in ALL_KINDS:
+            reverse_name = f"api_docs_json_schema_{kind}".lower()
             url = reverse(reverse_name)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
