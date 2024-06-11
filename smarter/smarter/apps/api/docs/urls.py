@@ -6,6 +6,8 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
+from smarter.apps.api.v1.manifests.enum import SAMKinds
+
 from .views.developer import (
     DeveloperDocsArchitectureView,
     DeveloperDocsChatBotApiView,
@@ -59,6 +61,14 @@ schema_view = get_schema_view(
 )
 
 
+def manifest_path(kind: str) -> str:
+    return f"manifest/{kind}/".lower()
+
+
+def manifest_name(kind: str) -> str:
+    return f"api_docs_manifest_{kind}".lower()
+
+
 urlpatterns = [
     path("", DocsView.as_view(), name="api_docs_home"),
     path("sitemap", SiteMapView.as_view(), name="sitemap"),
@@ -94,33 +104,41 @@ urlpatterns = [
         name="api_docs_json_schema_sql_connection",
     ),
     path("json-schema/user/", DocsJsonSchemaUserView.as_view(), name="api_docs_json_schema_user"),
-    path("manifest/account/", DocsExampleManifestAccountView.as_view(), name="api_docs_manifest_account"),
     path(
-        "manifest/api-connection/",
+        manifest_path(SAMKinds.ACCOUNT), DocsExampleManifestAccountView.as_view(), name=manifest_name(SAMKinds.ACCOUNT)
+    ),
+    path(
+        manifest_path(SAMKinds.APICONNECTION),
         DocsExampleManifestApiConnectionView.as_view(),
-        name="api_docs_manifest_api_connection",
+        name=manifest_name(SAMKinds.APICONNECTION),
     ),
-    path("manifest/api-key/", DocsExampleManifestApiKeyView.as_view(), name="api_docs_manifest_api_key"),
-    path("manifest/chat/", DocsExampleManifestChatView.as_view(), name="api_docs_manifest_chat"),
-    path("manifest/chat-history/", DocsExampleManifestChatHistoryView.as_view(), name="api_docs_manifest_chat_history"),
+    path(manifest_path(SAMKinds.APIKEY), DocsExampleManifestApiKeyView.as_view(), name=manifest_name(SAMKinds.APIKEY)),
+    path(manifest_path(SAMKinds.CHAT), DocsExampleManifestChatView.as_view(), name=manifest_name(SAMKinds.CHAT)),
     path(
-        "manifest/chat-plugin-usage/",
+        manifest_path(SAMKinds.CHAT_HISTORY),
+        DocsExampleManifestChatHistoryView.as_view(),
+        name=manifest_name(SAMKinds.CHAT_HISTORY),
+    ),
+    path(
+        manifest_path(SAMKinds.CHAT_PLUGIN_USAGE),
         DocsExampleManifestChatPluginUsageView.as_view(),
-        name="api_docs_manifest_chat_plugin_usage",
+        name=manifest_name(SAMKinds.CHAT_PLUGIN_USAGE),
     ),
     path(
-        "manifest/chat-tool-call/",
+        manifest_path(SAMKinds.CHAT_TOOL_CALL),
         DocsExampleManifestChatToolCallView.as_view(),
-        name="api_docs_manifest_chat_tool_call",
+        name=manifest_name(SAMKinds.CHAT_TOOL_CALL),
     ),
-    path("manifest/chatbot/", DocsExampleManifestChatBotView.as_view(), name="api_docs_manifest_chatbot"),
-    path("manifest/plugin/", DocsExampleManifestPluginView.as_view(), name="api_docs_manifest_plugin"),
     path(
-        "manifest/sql-connection/",
-        DocsExampleManifestSqlConnectionView.as_view(),
-        name="api_docs_manifest_sql_connection",
+        manifest_path(SAMKinds.CHATBOT), DocsExampleManifestChatBotView.as_view(), name=manifest_name(SAMKinds.CHATBOT)
     ),
-    path("manifest/user/", DocsExampleManifestUserView.as_view(), name="api_docs_manifest_user"),
+    path(manifest_path(SAMKinds.PLUGIN), DocsExampleManifestPluginView.as_view(), name=manifest_name(SAMKinds.PLUGIN)),
+    path(
+        manifest_path(SAMKinds.SQLCONNECTION),
+        DocsExampleManifestSqlConnectionView.as_view(),
+        name=manifest_name(SAMKinds.SQLCONNECTION),
+    ),
+    path(manifest_path(SAMKinds.USER), DocsExampleManifestUserView.as_view(), name=manifest_name(SAMKinds.USER)),
     path("developer/12-factor/", DeveloperDocsTwelveFactorView.as_view(), name="developer-12-factor"),
     path("developer/architecture/", DeveloperDocsArchitectureView.as_view(), name="developer-architecture"),
     path("developer/chatbot-api/", DeveloperDocsChatBotApiView.as_view(), name="developer-chatbot-api"),
