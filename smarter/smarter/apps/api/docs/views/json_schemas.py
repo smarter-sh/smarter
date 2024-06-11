@@ -7,107 +7,92 @@ To-do:
 
 """
 import json
-from urllib.parse import urlparse
 
 from django.shortcuts import render
-from django.test import RequestFactory
-from django.urls import reverse
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
-from smarter.apps.api.v1.cli.views.schema import ApiV1CliSchemaApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SmarterEnvironments
-from smarter.lib.django.view_helpers import SmarterWebView
+
+from .base import DocsBaseView
 
 
 # ------------------------------------------------------------------------------
 # Public Access Views
 # ------------------------------------------------------------------------------
-class DocsJsonSchemaBaseView(SmarterWebView):
+class DocsJsonSchemaBaseView(DocsBaseView):
     """JSON Schema base view"""
 
     template_path = "api/docs/json-schema.html"
-    schema_kind: SAMKinds = None
+    kind: SAMKinds = None
 
     def get(self, request, *args, **kwargs):
-        scheme = "http" if smarter_settings.environment == SmarterEnvironments.LOCAL else "https"
-        parsed_url = urlparse(smarter_settings.environment_url)
+        json_response = self.get_brokered_json_response(ApiV1CliReverseViews.schema, request, *args, **kwargs)
+        json_response = json.dumps(json_response, indent=4)
 
-        factory = RequestFactory(SERVER_NAME=parsed_url.netloc, wsgi_url_scheme=scheme)
-        path = reverse(ApiV1CliReverseViews.schema, kwargs={"kind": self.schema_kind})
-        cli_request = factory.get(path)
-        cli_request.user = request.user
-
-        view = ApiV1CliSchemaApiView.as_view()
-        response = view(request=cli_request, kind=self.schema_kind.value, *args, **kwargs)
-        json_response = json.loads(response.content.decode("utf-8"))
-        json_schema = json.dumps(json_response, indent=4)
-
-        return render(request, self.template_path, {"json_schema": json_schema})
+        return render(request, self.template_path, {"json_schema": json_response})
 
 
 class DocsJsonSchemaAccountView(DocsJsonSchemaBaseView):
     """Account JSON Schema view"""
 
-    schema_kind = SAMKinds(SAMKinds.ACCOUNT)
+    kind = SAMKinds(SAMKinds.ACCOUNT)
 
 
 class DocsJsonSchemaApiConnectionView(DocsJsonSchemaBaseView):
     """ApiConnection JSON Schema view"""
 
-    schema_kind = SAMKinds(SAMKinds.APICONNECTION)
+    kind = SAMKinds(SAMKinds.APICONNECTION)
 
 
 class DocsJsonSchemaApiKeyView(DocsJsonSchemaBaseView):
     """ApiKey JSON Schema view"""
 
-    schema_kind = SAMKinds(SAMKinds.APIKEY)
+    kind = SAMKinds(SAMKinds.APIKEY)
 
 
 class DocsJsonSchemaChatView(DocsJsonSchemaBaseView):
     """Chat JSON Schema view"""
 
-    schema_kind = SAMKinds(SAMKinds.CHAT)
+    kind = SAMKinds(SAMKinds.CHAT)
 
 
 class DocsJsonSchemaChatHistoryView(DocsJsonSchemaBaseView):
     """ChatHistory JSON Schema view"""
 
-    schema_kind = SAMKinds(SAMKinds.CHAT_HISTORY)
+    kind = SAMKinds(SAMKinds.CHAT_HISTORY)
 
 
 class DocsJsonSchemaChatPluginUsageView(DocsJsonSchemaBaseView):
     """ChatPluginUsage JSON Schema view"""
 
-    schema_kind = SAMKinds(SAMKinds.CHAT_PLUGIN_USAGE)
+    kind = SAMKinds(SAMKinds.CHAT_PLUGIN_USAGE)
 
 
 class DocsJsonSchemaChatToolCallView(DocsJsonSchemaBaseView):
     """ChatToolCall JSON Schema view"""
 
-    schema_kind = SAMKinds(SAMKinds.CHAT_TOOL_CALL)
+    kind = SAMKinds(SAMKinds.CHAT_TOOL_CALL)
 
 
 class DocsJsonSchemaChatBotView(DocsJsonSchemaBaseView):
     """ChatBot JSON Schema view"""
 
-    schema_kind = SAMKinds(SAMKinds.CHATBOT)
+    kind = SAMKinds(SAMKinds.CHATBOT)
 
 
 class DocsJsonSchemaPluginView(DocsJsonSchemaBaseView):
     """Plugin JSON Schema view"""
 
-    schema_kind = SAMKinds(SAMKinds.PLUGIN)
+    kind = SAMKinds(SAMKinds.PLUGIN)
 
 
 class DocsJsonSchemaSqlConnectionView(DocsJsonSchemaBaseView):
     """SqlConnection JSON Schema view"""
 
-    schema_kind = SAMKinds(SAMKinds.SQLCONNECTION)
+    kind = SAMKinds(SAMKinds.SQLCONNECTION)
 
 
 class DocsJsonSchemaUserView(DocsJsonSchemaBaseView):
     """User JSON Schema view"""
 
-    schema_kind = SAMKinds(SAMKinds.USER)
+    kind = SAMKinds(SAMKinds.USER)

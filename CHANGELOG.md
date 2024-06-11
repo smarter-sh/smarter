@@ -1,3 +1,28 @@
+## [0.4.1](https://github.com/smarter-sh/smarter/compare/v0.4.0...v0.4.1) (2024-06-11)
+
+
+### Bug Fixes
+
+* fix code element styling in docs django templates ([7d3763d](https://github.com/smarter-sh/smarter/commit/7d3763dbc39d0f83be6eaa3e97b091e6edb4b243))
+
+# [0.4.0](https://github.com/smarter-sh/smarter/compare/v0.3.9...v0.4.0) (2024-06-10)
+
+
+### Features
+
+* add /api/v1/cli/schema/<str:kind>/ ([fd583b6](https://github.com/smarter-sh/smarter/commit/fd583b61c575c65402ed0ee5021f303304a07a39))
+
+## [0.3.9](https://github.com/smarter-sh/smarter/compare/v0.3.8...v0.3.9) (2024-06-09)
+
+
+### Bug Fixes
+
+* create and assign a ChatBot to the test Chat session ([005491a](https://github.com/smarter-sh/smarter/commit/005491a45330d344ff72a16e7ea39cc825be3952))
+* create and assign a ChatBot to the test Chat session ([0cddf38](https://github.com/smarter-sh/smarter/commit/0cddf38271343e7b020eecbe41b839c3b5b64b73))
+* ensure that ChatBot flows to smarter handler() via the chat_helper ([85288dc](https://github.com/smarter-sh/smarter/commit/85288dc646435945d4c688f611f20b3aa1eb79b9))
+* force a new release ([ab96126](https://github.com/smarter-sh/smarter/commit/ab96126cb3381c1339db03df82a977707513fa4e))
+* whatchmedo directory ([df5971d](https://github.com/smarter-sh/smarter/commit/df5971df8abcfe0267a734e5f1b4596357f32d18))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.

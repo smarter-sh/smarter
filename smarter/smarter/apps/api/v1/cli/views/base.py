@@ -130,7 +130,7 @@ class CliBaseApiView(APIView, AccountMixin):
                 api_version=SMARTER_API_VERSION,
                 name=self.manifest_name,
                 kind=self.manifest_kind,
-                account=self.user_profile.account,
+                account=self.user_profile.account if self.user_profile else None,
                 loader=self.loader,
                 manifest=self.loader.yaml_data if self.loader else None,
             )
@@ -257,7 +257,7 @@ class CliBaseApiView(APIView, AccountMixin):
         # set all of our identifying attributes from the request.
         self._user = request.user
         try:
-            if not self.user_profile:
+            if self.user.is_authenticated and not self.user_profile:
                 raise APIV1CLIViewError("Could not find account for user.")
         except SmarterExceptionBase as e:
             return SmarterJournaledJsonErrorResponse(
