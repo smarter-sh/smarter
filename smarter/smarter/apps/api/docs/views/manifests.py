@@ -44,10 +44,12 @@ class DocsExampleManifestBaseView(SmarterWebView):
         view = ApiV1CliManifestApiView.as_view()
         response = view(request=cli_request, kind=self.manifest_kind.value, *args, **kwargs)
         json_response = json.loads(response.content.decode("utf-8"))
-
         if SmarterJournalApiResponseKeys.DATA in json_response:
             # unpack the smarter.sh/api response payload
             json_response = json_response[SmarterJournalApiResponseKeys.DATA]
+        elif SmarterJournalApiResponseKeys.ERROR in json_response:
+            # unpack the smarter.sh/api error response payload
+            json_response = json_response[SmarterJournalApiResponseKeys.ERROR]
 
         yaml_response = yaml.dump(json_response, default_flow_style=False)
         return render(request, self.template_path, {"manifest": yaml_response})
