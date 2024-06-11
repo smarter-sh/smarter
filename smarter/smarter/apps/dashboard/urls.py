@@ -4,7 +4,7 @@ from django.urls import include, path
 
 from .views.dashboard import (
     ChangeLogView,
-    ComingSoon,
+    DashboardView,
     EmailAdded,
     NotificationsView,
     PlatformHelpView,
@@ -12,7 +12,7 @@ from .views.dashboard import (
 
 
 urlpatterns = [
-    path("", ComingSoon.as_view(), name="dashboard"),
+    path("", DashboardView.as_view(), name="dashboard"),
     path("account/", include("smarter.apps.account.urls")),
     path("plugins/", include("smarter.apps.plugin.urls")),
     path("legal/", include("smarter.apps.dashboard.urls_legal")),
