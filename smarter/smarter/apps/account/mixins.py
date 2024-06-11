@@ -2,7 +2,7 @@
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import account_admin_user, account_for_user
-from smarter.lib.django.user import UserType
+from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
 
 
@@ -57,7 +57,13 @@ class AccountMixin:
         if self._user and self._account:
             self._user_profile = UserProfile.objects.get(user=self.user, account=self.account)
         elif self._user:
-            self._user_profile = UserProfile.objects.get(user=self.user)
+            # note: we'll only get a UserType if the user is authenticated.
+            # Other self._user will be a SimpleLazyObject. The exception that we're trying to avoid is
+            # when AccountMixin is used with public views that don't require authentication, in which case
+            # self._user will be a SimpleLazyObject and we can't call UserProfile.objects.get(user=self.user)
+            #
+            # TypeError: Field 'id' expected a number but got <SimpleLazyObject: <django.contrib.auth.models.AnonymousUser object at 0x7fd7f18a78d0>>.
+            self._user_profile = UserProfile.objects.get(user=self.user) if isinstance(self._user, User) else None
         elif self._account:
             user = account_admin_user(self.account)
             self._user_profile = UserProfile.objects.get(user=user, account=self.account)
