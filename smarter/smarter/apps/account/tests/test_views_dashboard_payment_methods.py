@@ -8,6 +8,7 @@ import unittest
 
 from django.contrib.auth import authenticate
 from django.test import Client
+from django.urls import reverse
 
 # our stuff
 from smarter.lib.django.user import User
@@ -21,7 +22,7 @@ class TestPaymentMethods(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        self.base_url = "/account/dashboard/billing/payment-methods/"
+        self.base_url = reverse("account_billing_payment_methods")
 
         self.username = "testuser_" + os.urandom(4).hex()
         self.password = "12345"
