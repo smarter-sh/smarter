@@ -546,7 +546,18 @@ class BrokerNotImplemented(AbstractBroker):
     """An error class to proxy for a broker class that has not been implemented."""
 
     # pylint: disable=W0231
-    def __init__(self):
+    def __init__(
+        self,
+        request=None,
+        api_version=None,
+        account=None,
+        name=None,
+        kind=None,
+        loader=None,
+        manifest=None,
+        file_path=None,
+        url=None,
+    ):
         raise SAMBrokerErrorNotImplemented(
             message="No broker class has been implemented for this kind of manifest.",
             thing=None,
