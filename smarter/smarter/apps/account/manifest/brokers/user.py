@@ -196,11 +196,11 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
             },
             SAMKeys.SPEC.value: {
                 SAMUserSpecKeys.CONFIG.value: {
-                    "firstName": self.user.first_name or "John",
-                    "lastName": self.user.last_name or "Doe",
-                    "email": self.user.email or "joe@mail.com",
-                    "isStaff": self.user.is_staff or False,
-                    "isActive": self.user.is_active or True,
+                    "firstName": self.user.first_name if self.user else None or "John",
+                    "lastName": self.user.last_name if self.user else None or "Doe",
+                    "email": self.user.email if self.user else None or "joe@mail.com",
+                    "isStaff": self.user.is_staff if self.user else None or False,
+                    "isActive": self.user.is_active if self.user else None or True,
                 },
             },
         }

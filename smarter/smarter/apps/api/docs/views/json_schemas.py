@@ -19,6 +19,7 @@ from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.lib.django.view_helpers import SmarterWebView
+from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 
 
 # ------------------------------------------------------------------------------
@@ -42,7 +43,12 @@ class DocsJsonSchemaBaseView(SmarterWebView):
         view = ApiV1CliSchemaApiView.as_view()
         response = view(request=cli_request, kind=self.schema_kind.value, *args, **kwargs)
         json_response = json.loads(response.content.decode("utf-8"))
-        json_schema = json.dumps(json_response, indent=4)
+
+        if SmarterJournalApiResponseKeys.DATA in json_response:
+            # unpack the smarter.sh/api response payload
+            json_schema = json.dumps(json_response[SmarterJournalApiResponseKeys.DATA], indent=4)
+        else:
+            json_schema = json.dumps(json_response, indent=4)
 
         return render(request, self.template_path, {"json_schema": json_schema})
 
