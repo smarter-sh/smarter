@@ -1,16 +1,11 @@
 # pylint: disable=W0613
-"""
-Django REST framework views for the API admin app.
-
-To-do:
- - import markdown, and render the markdown files in the /docs folder.
-
-"""
+"""Django REST framework views for the API admin app."""
 
 import yaml
 from django.shortcuts import render
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
+from smarter.apps.api.v1.cli.views.manifest import ApiV1CliManifestApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 
 from .base import DocsBaseView
@@ -26,7 +21,8 @@ class DocsExampleManifestBaseView(DocsBaseView):
     kind: SAMKinds = None
 
     def get(self, request, *args, **kwargs):
-        json_response = self.get_brokered_json_response(ApiV1CliReverseViews.manifest, request, *args, **kwargs)
+        view = ApiV1CliManifestApiView.as_view()
+        json_response = self.get_brokered_json_response(ApiV1CliReverseViews.manifest, view, request, *args, **kwargs)
 
         yaml_response = yaml.dump(json_response, default_flow_style=False)
         return render(request, self.template_path, {"manifest": yaml_response})
