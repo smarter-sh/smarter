@@ -545,7 +545,7 @@ class AbstractBroker(ABC):
 class BrokerNotImplemented(AbstractBroker):
     """An error class to proxy for a broker class that has not been implemented."""
 
-    # pylint: disable=W0231
+    # pylint: disable=W0231,R0913
     def __init__(
         self,
         request=None,

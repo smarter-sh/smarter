@@ -32,13 +32,6 @@ class ComingSoon(SmarterWebView):
     template_path = "coming-soon.html"
 
     def get(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            # TODO: redeploy the Bootstrap dashboard
-            # -----------------------------------------------------------------
-            # self.template_path = "dashboard/authenticated.html"
-            # return super().get(request, *args, **kwargs)
-            # -----------------------------------------------------------------
-            return redirect("/admin/")
         form = ComingSoon.EmailForm()
         context = {"form": form}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
@@ -98,3 +91,14 @@ class NotificationsView(SmarterAuthenticatedWebView):
     """Notifications view"""
 
     template_path = "dashboard/notifications.html"
+
+
+class DashboardView(SmarterWebView):
+    """Public Access Dashboard view"""
+
+    template_path = "dashboard/authenticated.html"
+
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return super().get(request, *args, **kwargs)
+        return redirect("/")

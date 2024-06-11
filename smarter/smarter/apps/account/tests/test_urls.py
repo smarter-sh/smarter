@@ -6,6 +6,7 @@ import os
 import unittest
 
 from django.test import Client
+from django.urls import reverse
 
 # our stuff
 from smarter.lib.django.user import User, UserType
@@ -50,15 +51,17 @@ class TestUrls(unittest.TestCase):
         """test that we can see the account view and that it matches the account data."""
         self.client = Client()
 
-        def verify_response(url, status_code):
+        def verify_response(reverse_name: str, status_code):
+            url = reverse(reverse_name)
+            print(f"Testing URL: {url}")
             response = self.client.get(url)
             self.assertEqual(response.status_code, status_code)
 
-        verify_response("/login/", 200)
-        verify_response("/logout/", 302)
-        verify_response("/register/", 200)
-        verify_response("/account/password-reset-request/", 200)
-        verify_response("/account/password-confirm/", 200)
+        verify_response("account_login", 200)
+        verify_response("account_logout", 302)
+        verify_response("account_register", 200)
+        verify_response("account_password_reset_request", 200)
+        verify_response("account_password_confirm", 200)
 
         self.client.force_login(self.user)
-        verify_response("/account/deactivate/", 200)
+        verify_response("account_deactivate", 200)
