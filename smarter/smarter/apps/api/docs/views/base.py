@@ -1,21 +1,14 @@
 # pylint: disable=W0613
 """
-Django REST framework views for the API admin app.
-
-To-do:
- - import markdown, and render the markdown files in the /docs folder.
-
+Django REST framework base views for api/docs brokered viewsets,
+manifest and schema.
 """
 import json
 from urllib.parse import urlparse
 
-import yaml
-from django.shortcuts import render
 from django.test import RequestFactory
 from django.urls import reverse
 
-from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
-from smarter.apps.api.v1.cli.views.manifest import ApiV1CliManifestApiView
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterEnvironments
@@ -41,7 +34,7 @@ class DocsBaseView(SmarterWebView):
     template_path: str = None
     kind: SAMKinds = None
 
-    def get_brokered_json_response(self, reverse_name: str, request, *args, **kwargs):
+    def get_brokered_json_response(self, reverse_name: str, view, request, *args, **kwargs):
         """Get the JSON response from the brokered smarter.sh/api endpoint."""
         if not self.template_path:
             raise DocsError("self.template_path not set.")
@@ -56,7 +49,6 @@ class DocsBaseView(SmarterWebView):
         cli_request = factory.get(path)
         cli_request.user = request.user
 
-        view = ApiV1CliManifestApiView.as_view()
         response = view(request=cli_request, kind=self.kind.value, *args, **kwargs)
         json_response = json.loads(response.content.decode("utf-8"))
 
