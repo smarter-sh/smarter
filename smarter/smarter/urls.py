@@ -4,6 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
+from django.views.generic import RedirectView
 
 from smarter.apps.account.views.authentication import (
     AccountRegisterView,
@@ -22,7 +23,7 @@ admin.autodiscover()
 
 
 urlpatterns = [
-    path("", include("smarter.apps.docs.urls")),
+    path("", RedirectView.as_view(url="docs/")),
     path("admin/docs/", include("django.contrib.admindocs.urls")),
     path("admin/", admin.site.urls, name="django_admin"),
     path("api/", include("smarter.apps.api.urls")),

@@ -1,11 +1,6 @@
 # pylint: disable=W0613
-"""
-Django REST framework views for the API admin app.
+"""Django REST framework views for the API admin app."""
 
-To-do:
- - import markdown, and render the markdown files in the /docs folder.
-
-"""
 from smarter.lib.django.view_helpers import SmarterNeverCachedWebView, SmarterWebView
 
 
@@ -13,9 +8,15 @@ from smarter.lib.django.view_helpers import SmarterNeverCachedWebView, SmarterWe
 # Public Access Views
 # ------------------------------------------------------------------------------
 class DocsView(SmarterWebView):
-    """/api/docs/ landing page view"""
+    """/docs/ landing page view"""
 
     template_path = "docs/index.html"
+
+
+class DocsApiView(SmarterWebView):
+    """/docs/api/ landing page view"""
+
+    template_path = "docs/api.html"
 
 
 class SiteMapView(SmarterNeverCachedWebView):

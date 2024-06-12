@@ -112,38 +112,63 @@
               id="kt_app_header_menu" data-kt-menu="true">
               <!--begin::Querium logobox -->
               <div id="logobox">
-                <a href="{% url 'api_docs_home' %}" class="d-none d-lg-block">
+                <a href="{% url 'docs_home' %}" class="d-none d-lg-block">
                   <img alt="Logo" src="https://smarter.sh/wp-content/uploads/2024/04/Smarter_crop.png" class="h-70px" />
                 </a>
               </div>
               <!--end::Querium logobox -->
 
-              <!--begin:Menu item Swagger-->
+              <!--begin:Menu item API-->
               <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
                 class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
-                <!--begin:Menu link Swagger-->
-                <a href="{% url 'schema-swagger-ui' %}" class="menu-link">
+                <!--begin:Menu link API-->
+                <a href="{% url 'docs_api' %}" class="menu-link">
                   <span class="menu-link">
-                    <span class="menu-title">Swagger</span>
+                    <span class="menu-title">API</span>
                     <span class="menu-arrow d-lg-none"></span>
                   </span>
                 </a>
-                <!--end:Menu link Swagger-->
+                <!--end:Menu link API-->
+                <!--begin:Menu sub API-->
+                <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-200px">
+                  <!--begin:Menu item Swagger-->
+                  <div class="menu-item">
+                    <!--begin:Menu link Swagger-->
+                    <a class="menu-link" href="{% url 'schema-swagger-ui' %}" target="_self" data-bs-trigger="hover"
+                      data-bs-dismiss="click" data-bs-placement="right">
+                      <span class="menu-icon">
+                        <i class="ki-duotone ki-rocket fs-2">
+                          <span class="path1"></span>
+                          <span class="path2"></span>
+                        </i>
+                      </span>
+                      <span class="menu-title">Swagger</span>
+                    </a>
+                    <!--end:Menu link Swagger-->
+                  </div>
+                  <!--end:Menu item Swagger-->
+                  <!--begin:Menu item Redoc-->
+                  <div class="menu-item">
+                    <!--begin:Menu link Redoc-->
+                    <a class="menu-link" href="{% url 'schema-redoc-ui' %}" target="_self" data-bs-trigger="hover"
+                      data-bs-dismiss="click" data-bs-placement="right">
+                      <span class="menu-icon">
+                        <i class="ki-duotone ki-rocket fs-2">
+                          <span class="path1"></span>
+                          <span class="path2"></span>
+                        </i>
+                      </span>
+                      <span class="menu-title">Redoc</span>
+                    </a>
+                    <!--end:Menu link Redoc-->
+                  </div>
+                  <!--end:Menu item Redoc-->
+
+                </div>
+                <!--end:Menu sub API-->
               </div>
-              <!--end:Menu item Swagger-->
-              <!--begin:Menu item Redoc-->
-              <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
-                class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
-                <!--begin:Menu link Redoc-->
-                <a href="{% url 'schema-redoc-ui' %}" class="menu-link">
-                  <span class="menu-link">
-                    <span class="menu-title">Redoc</span>
-                    <span class="menu-arrow d-lg-none"></span>
-                  </span>
-                </a>
-                <!--end:Menu link Redoc-->
-              </div>
-              <!--end:Menu item Redoc-->
+              <!--end:Menu item API-->
+
               <!--begin:Menu item CLI-->
               <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
                 class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
@@ -561,7 +586,6 @@
                   </div>
                   <!--end:Menu item Manifests-->
                 </div>
-
               </div>
               <!--end:Menu item CLI-->
               <!--begin:Menu item Developers-->
