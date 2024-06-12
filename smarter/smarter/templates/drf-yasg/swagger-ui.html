@@ -54,39 +54,12 @@
 
 {% block extra_body %}
     {# -- Add any header/body markup here (rendered BEFORE the swagger-ui/redoc element) -- #}
+    {% include 'docs/base/header.html' %}
 {% endblock %}
 
 {% block footer %}
     {# -- Add any footer markup here (rendered AFTER the swagger-ui/redoc element) -- #}
-      <!--begin::Footer-->
-      <div id="kt_app_footer" class="app-footer">
-        <!--begin::Footer container-->
-        <div class="app-container container-fluid d-flex flex-column flex-md-row flex-center flex-md-stack py-3">
-          <!--begin::Copyright-->
-          <div class="text-gray-900 order-2 order-md-1">
-            <span class="text-muted fw-semibold me-1">
-              <script>document.write(new Date().getFullYear())</script>&copy;
-            </span>
-            <a href="https://www.querium.com/" target="_self" class="text-gray-800 text-hover-primary">Querium Corp.</a>
-          </div>
-          <!--end::Copyright-->
-          <!--begin::Menu-->
-          <ul class="menu menu-gray-600 menu-hover-primary fw-semibold order-1">
-            <li class="menu-item">
-              <a href="https://smarter.sh/" target="_self" class="menu-link px-2">About</a>
-            </li>
-            <li class="menu-item">
-              <a href="https://smarter.sh/contact/" target="_self" class="menu-link px-2">Support</a>
-            </li>
-            <li class="menu-item">
-              <a href="https://smarter.sh/contact/" target="_self" class="menu-link px-2">Sales</a>
-            </li>
-          </ul>
-          <!--end::Menu-->
-        </div>
-        <!--end::Footer container-->
-      </div>
-      <!--end::Footer-->
+    {% include 'docs/base/footer.html' %}
 {% endblock %}
 
 {% block extra_scripts %}
