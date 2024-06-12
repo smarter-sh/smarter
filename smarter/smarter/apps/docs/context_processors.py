@@ -12,6 +12,6 @@ logger = logging.getLogger(__name__)
 def base(request):
     """Base context processor for templates that inherit from docs/base.html"""
     docs_context = {
-        "version": "v" + __version__,
+        "smarter_version": "v" + __version__,
     }
     return docs_context
