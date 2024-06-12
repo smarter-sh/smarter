@@ -95,12 +95,13 @@ INSTALLED_APPS = [
     "smarter.lib.drf",
     "smarter.lib.journal",
     "smarter.apps.account",
-    "smarter.apps.plugin",
+    "smarter.apps.api",
     "smarter.apps.chat",
+    "smarter.apps.chatbot",
     "smarter.apps.chatapp",
     "smarter.apps.dashboard",
-    "smarter.apps.api",
-    "smarter.apps.chatbot",
+    "smarter.apps.docs",
+    "smarter.apps.plugin",
     # 3rd party apps
     # -------------------------------
     "djstripe",

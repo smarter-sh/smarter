@@ -15,10 +15,10 @@ from smarter.lib.django.view_helpers import SmarterNeverCachedWebView, SmarterWe
 class DocsView(SmarterWebView):
     """/api/docs/ landing page view"""
 
-    template_path = "api/docs/index.html"
+    template_path = "docs/index.html"
 
 
 class SiteMapView(SmarterNeverCachedWebView):
-    """/api/docs/sitemap/ Keen sample page view"""
+    """/docs/sitemap/ Keen sample page view"""
 
-    template_path = "api/docs/sitemap.html"
+    template_path = "docs/sitemap.html"
