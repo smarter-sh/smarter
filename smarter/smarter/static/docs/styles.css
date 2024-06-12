@@ -1,0 +1,69 @@
+:root {
+  --bs-app-sidebar-width: 0px;
+  --bs-app-sidebar-width-actual: 0px;
+  --bs-app-sidebar-gap-start: 0px;
+  --bs-app-sidebar-gap-end: 0px;
+  --bs-app-sidebar-gap-top: 0px;
+  --bs-app-sidebar-gap-bottom: 0px;
+  --bs-bullet-bg-color: #f1f1f1;
+}
+
+.code-sample-body {
+  position: relative;
+  background-color: #333333;
+  border-radius: 10px;
+}
+
+.code-sample-body pre {
+  display: inline-block;
+  text-align: left;
+}
+
+.code-sample-copy {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.code-snippet {
+  --bs-code-color: #f1f1f1;
+  /* Text color */
+  --bs-code-border-color: transparent;
+  /* Border color */
+  --bs-code-bg: #333333;
+  /* Background color */
+  --bs-code-shadow: 0px 3px 9px rgba(0, 0, 0, 0.08);
+  /* Box shadow */
+}
+
+code {
+  white-space: pre-wrap;
+  /* CSS 2.1 */
+  white-space: -moz-pre-wrap;
+  /* Mozilla, since 1999 */
+  white-space: -pre-wrap;
+  /* Opera 4-6 */
+  white-space: -o-pre-wrap;
+  /* Opera 7 */
+  word-wrap: break-word;
+  /* Internet Explorer 5.5+ */
+}
+
+.querium-bg {
+  background-color: rgba(255, 87, 51, 0.75) !important;
+  /* 50% opacity */
+  border-radius: var(--bs-card-inner-border-radius) var(--bs-card-inner-border-radius) 0 0;
+  --bs-heading-color: #f1f1f1;
+  --bs-card-color: #f1f1f1;
+  --bs-scrollbar-color: #f1f1f1;
+  --bs-link-color-rgb: 241, 241, 241;
+}
+
+.smarter-version {
+  font-family: 'Courier New', Courier, monospace;
+  color: #333333;
+}
+
+.parent-class>* {
+  color: #f1f1f1;
+}
