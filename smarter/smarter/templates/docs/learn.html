@@ -1,0 +1,107 @@
+{% extends 'docs/base.html' %}
+{% load static %}
+
+
+{% block head_extra %}
+  {{ block.super }}
+  <style>
+
+    .bg-card {
+      background-color: rgb(246, 247, 249);
+    }
+    #learn > ul {
+      color: black;
+    }
+    #title > p {
+      font-size: 16px;
+      font-weight: bolder;
+    }
+  </style>
+{% endblock %}
+
+{% block doc_content %}
+<div class="card-body">
+  <!--begin::Heading-->
+  <div class="mb-10">
+    <!--begin::Title-->
+    <div id="title">
+      <h1 class="fs-2x text-gray-900 mb-6">Quick Start</h1>
+      <p class="mt-6 mb-6">Welcome to Smarter documentation! This page will give you an introduction to the 80% of Smarter
+        concepts that you will use on a daily basis.</p>
+    </div>
+    <!--end::Title-->
+    <div id="learn"
+      class="p-6 xl:p-8 pb-4 xl:pb-6 bg-card dark:bg-card-dark rounded-2xl shadow-inner-border dark:shadow-inner-border-dark text-base text-secondary dark:text-secondary-dark my-8">
+      <h3
+        class="mdx-heading text-primary dark:text-primary-dark mt-0 mb-3 leading-tight text-2xl font-display leading-9 text-primary dark:text-primary-dark font-bold my-6">
+        You will learn</h3>
+      <ul class="ms-6 my-3 list-disc">
+        <li class="mb-1">How to install the Smarter command-line interface</li>
+        <li class="mb-1">What are manifests?</li>
+        <li class="mb-1">How to create a chatbot</li>
+        <li class="mb-1">How to deploy chatbot</li>
+        <li class="mb-1">How to train a chatbot</li>
+        <li class="mb-1">How to test a chatbot</li>
+        <li class="mb-1">How to measure the quality of your chatbot's responses</li>
+      </ul>
+    </div>
+  </div>
+  <!--end::Heading-->
+  <!--begin::Row-->
+  <div class="row g-10mb-15">
+    <!--begin::InstallCLI-->
+    <div id="install-cli">
+      <h3 class="mt-6 mb-6">Install the CLI</h3>
+      <p>install, install, install ...</p>
+    </div>
+    <!--end::InstallCLI-->
+    <!--begin::AboutManifests-->
+    <div id="what-are-manifests">
+      <h2 class="mt-6 mb-6">What are manifests</h2>
+      <p>What are manifests...</p>
+    </div>
+    <!--end::AboutManifests-->
+    <!--begin::CreateChatbot-->
+    <div id="create-chatbot">
+      <h3 class="mt-6 mb-6">Create a chatbot</h3>
+      <!--begin::Text-->
+      <p>create a chatbot...</p>
+      <!--end::Text-->
+    </div>
+    <!--end::CreateChatbot-->
+    <!--begin::DeployChatbot-->
+    <div id="deploy-chatbot">
+      <h3 class="mt-6 mb-6">Deploy a chatbot</h3>
+      <!--begin::Text-->
+      <p>deploy a chatbot...</p>
+      <!--end::Text-->
+    </div>
+    <!--end::DeployChatbot-->
+    <!--begin::TrainChatbot-->
+    <div id="deploy-chatbot">
+      <h3 class="mt-6 mb-6">Train a chatbot</h3>
+      <!--begin::Text-->
+      <p>train a chatbot...</p>
+      <!--end::Text-->
+    </div>
+    <!--end::TrainChatbot-->
+    <!--begin::TestChatbot-->
+    <div id="deploy-chatbot">
+      <h3 class="mt-6 mb-6">Test a chatbot</h3>
+      <!--begin::Text-->
+      <p>test a chatbot...</p>
+      <!--end::Text-->
+    </div>
+    <!--end::TestChatbot-->
+    <!--begin::MeasureChatbot-->
+    <div id="deploy-chatbot">
+      <h3 class="mt-6 mb-6">Measure results quality</h3>
+      <!--begin::Text-->
+      <p>Measure a chatbot's response quality...</p>
+      <!--end::Text-->
+    </div>
+    <!--end::MeasureChatbot-->
+  </div>
+  <!--end::Row-->
+</div>
+{% endblock %}

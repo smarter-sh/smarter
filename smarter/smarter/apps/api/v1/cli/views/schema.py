@@ -13,7 +13,7 @@ class ApiV1CliSchemaApiView(CliBaseApiView):
     The 'schema' command is a Smarter Brokered and Journaled operation that is used with all Smarter resources.
 
     The client making the HTTP request to this endpoint is expected to be either the Smarter CLI,
-    written in Golang and available on Windows, macOS, and Linux, or the Smarter web console /api/docs/
+    written in Golang and available on Windows, macOS, and Linux, or the Smarter web console /docs/
 
     The response from this endpoint is a JSON object containing the published JSON schema.
 
@@ -32,7 +32,7 @@ This is the API endpoint for the 'schema' command in the Smarter command-line in
 command is a Smarter Brokered and Journaled operation that is used with all Smarter resources.
 
 The client making the HTTP request to this endpoint is expected to be the Smarter CLI, written in
-Golang and available on Windows, macOS, and Linux, or the Smarter web console /api/docs/
+Golang and available on Windows, macOS, and Linux, or the Smarter web console /docs/
 
 The response from this endpoint is a JSON object containing the published JSON schema.
 """

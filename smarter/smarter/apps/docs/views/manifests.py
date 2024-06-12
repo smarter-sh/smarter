@@ -17,7 +17,7 @@ from .base import DocsBaseView
 class DocsExampleManifestBaseView(DocsBaseView):
     """JSON Schema base view"""
 
-    template_path = "api/docs/manifest.html"
+    template_path = "docs/manifest.html"
     kind: SAMKinds = None
 
     def get(self, request, *args, **kwargs):
