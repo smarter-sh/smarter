@@ -1,0 +1,110 @@
+{% extends "drf-yasg/swagger-ui.html" %}
+{% load static %}
+
+    {% block extra_head %}
+        {# -- Add any extra HTML heads tags here - except scripts and styles -- #}
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content="A plugin-based chat solution." />
+        <meta name="keywords" content="Querium, Smarter, chatGPT" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta property="og:locale" content="en_US" />
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content="Querium Smarter" />
+        <meta property="og:url" content="https://smarter.sh" />
+        <meta property="og:site_name" content="Querium Smarter" />
+
+    {% endblock %}
+
+    {% block favicon %}
+        <link rel="icon" href="{% static 'rest_framework/images/querium-favicon-1-1-192x192.png' %}" type="image/png">
+    {% endblock %}
+
+    {% block main_styles %}
+        <style>
+          #swagger-ui > section > div.topbar {
+            background-color: rgba(255, 87, 51, 0.75);
+          }
+          #swagger-ui > section > div.topbar > div > div > form > button {
+            background: black;
+          }
+          .swagger-ui .btn.authorize {
+            color: rgba(255, 87, 51, 0.75);
+          }
+        </style>
+        <link rel="stylesheet" type="text/css" href="{% static 'drf-yasg/style.css' %}"/>
+        <link rel="stylesheet" type="text/css" href="{% static 'drf-yasg/swagger-ui-dist/swagger-ui.css' %}">
+
+        <!--begin::Fonts(mandatory for all pages)-->
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
+        <!--end::Fonts-->
+        <!--begin::Vendor Stylesheets(used for this page only)-->
+        <link href="{% static 'assets/plugins/custom/fullcalendar/fullcalendar.bundle.css' %}" rel="stylesheet" type="text/css" />
+        <link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}" rel="stylesheet" type="text/css" />
+        <!--end::Vendor Stylesheets-->
+        <!--begin::Global Stylesheets Bundle(mandatory for all pages)-->
+        <link href="{% static 'assets/plugins/global/plugins.bundle.css' %}" rel="stylesheet" type="text/css" />
+        <link href="{% static 'assets/css/style.bundle.css' %}" rel="stylesheet" type="text/css" />
+        <!--end::Global Stylesheets Bundle-->
+
+        {% endblock %}
+    {% block extra_styles %}
+        {# -- Add any additional CSS scripts here -- #}
+    {% endblock %}
+
+{% block extra_body %}
+    {# -- Add any header/body markup here (rendered BEFORE the swagger-ui/redoc element) -- #}
+{% endblock %}
+
+{% block footer %}
+    {# -- Add any footer markup here (rendered AFTER the swagger-ui/redoc element) -- #}
+      <!--begin::Footer-->
+      <div id="kt_app_footer" class="app-footer">
+        <!--begin::Footer container-->
+        <div class="app-container container-fluid d-flex flex-column flex-md-row flex-center flex-md-stack py-3">
+          <!--begin::Copyright-->
+          <div class="text-gray-900 order-2 order-md-1">
+            <span class="text-muted fw-semibold me-1">
+              <script>document.write(new Date().getFullYear())</script>&copy;
+            </span>
+            <a href="https://www.querium.com/" target="_self" class="text-gray-800 text-hover-primary">Querium Corp.</a>
+          </div>
+          <!--end::Copyright-->
+          <!--begin::Menu-->
+          <ul class="menu menu-gray-600 menu-hover-primary fw-semibold order-1">
+            <li class="menu-item">
+              <a href="https://smarter.sh/" target="_self" class="menu-link px-2">About</a>
+            </li>
+            <li class="menu-item">
+              <a href="https://smarter.sh/contact/" target="_self" class="menu-link px-2">Support</a>
+            </li>
+            <li class="menu-item">
+              <a href="https://smarter.sh/contact/" target="_self" class="menu-link px-2">Sales</a>
+            </li>
+          </ul>
+          <!--end::Menu-->
+        </div>
+        <!--end::Footer container-->
+      </div>
+      <!--end::Footer-->
+{% endblock %}
+
+{% block extra_scripts %}
+    {# -- Add any additional scripts here -- #}
+		<!--begin::Javascript-->
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-SK81M5HQYS"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-SK81M5HQYS');
+    </script>
+
+		<!--begin::Global Javascript Bundle(mandatory for all pages)-->
+		<script src="{% static 'assets/plugins/global/plugins.bundle.js' %}"></script>
+		<script src="{% static 'assets/js/scripts.bundle.js' %}"></script>
+		<!--end::Global Javascript Bundle-->
+		<!--end::Javascript-->
+
+{% endblock %}

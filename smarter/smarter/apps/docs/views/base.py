@@ -1,6 +1,6 @@
 # pylint: disable=W0613
 """
-Django REST framework base views for api/docs brokered viewsets,
+Django REST framework base views for /docs/ brokered viewsets,
 manifest and schema.
 """
 import json
@@ -18,7 +18,7 @@ from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 
 
 class DocsError(SmarterExceptionBase):
-    """Base class for all /api/docs/ errors."""
+    """Base class for all /docs/ errors."""
 
     @property
     def get_formatted_err_message(self):
