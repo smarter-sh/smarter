@@ -37,6 +37,18 @@ class DocsLearnView(SmarterWebView):
     template_path = "docs/learn.html"
 
 
+class DocsJsonSchemasView(SmarterWebView):
+    """/docs/json-schemas/ landing page view"""
+
+    template_path = "docs/json-schemas.html"
+
+
+class DocsManifestsView(SmarterWebView):
+    """/docs/manifests/ landing page view"""
+
+    template_path = "docs/manifests.html"
+
+
 class SiteMapView(SmarterNeverCachedWebView):
     """/docs/sitemap/ Keen sample page view"""
 
