@@ -35,7 +35,7 @@ class TestApiDocsJsonSchemas(unittest.TestCase):
 
     def test_get_unauthenitcated_json_schemas(self):
         """
-        Test all api/docs/json-schema/ endpoints with an unauthenticated user
+        Test all docs//json-schema/ endpoints with an unauthenticated user
         to ensure that we get a 200 response
         """
 
@@ -47,7 +47,7 @@ class TestApiDocsJsonSchemas(unittest.TestCase):
 
     def test_get_authenitcated_json_schemas(self):
         """
-        Test all api/docs/json-schema/ endpoints with an authenticated user
+        Test all docs//json-schema/ endpoints with an authenticated user
         to ensure that we get a 200 response
         """
         self.client.force_login(self.user)

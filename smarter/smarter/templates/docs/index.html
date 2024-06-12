@@ -7,127 +7,32 @@
     <!--begin::Heading-->
     <div class="mb-10">
       <!--begin::Title-->
-      <h1 class="fs-2x text-gray-900 mb-6">Smarter API</h1>
+      <h1 class="fs-2x text-gray-900 mb-6">Platform</h1>
       <!--end::Title-->
     </div>
     <!--end::Heading-->
     <!--begin::Row-->
     <div class="row g-10 mb-15">
-      <div id="Introduction">
-        <h2 class="mt-6 mb-6">Introduction</h2>
-        <p>
-          You can interact with the Smarter API through any language
-          that supports the http and REST API protocols,
-          including for example Python, Javascript and Golang. The API
-          returns all responses in JSON format, following the <code>smarter.sh/v1</code>
-          API schema. For example:
-        </p>
-        <div class="code-sample-body">
-          <pre class="code-snippet prettyprint">
-            <code>
-              {
-                "api": "smarter.sh/v1",
-                "data": {
-                    "account": {
-                        "account_number": "3141-5926-5359",
-                        "address1": "1700 South Lamar Blvd",
-                        "address2": "Suite 338",
-                        "city": "Austin",
-                        "company_name": "Smarter",
-                        "country": "USA",
-                        "created_at": "2024-05-24T21:22:52.712547Z",
-                        "currency": "USD",
-                        "id": 1,
-                        "language": "",
-                        "phone_number": "+1 (512) 833-6955",
-                        "postal_code": "78704",
-                        "state": "TX",
-                        "timezone": "America/Chicago",
-                        "updated_at": "2024-06-07T00:51:27.369962Z"
-                    },
-                    "user": {
-                        "email": "admin@smarter.sh",
-                        "first_name": "",
-                        "id": 1,
-                        "is_staff": true,
-                        "is_superuser": true,
-                        "last_name": "",
-                        "username": "admin"
-                    }
-                },
-                "metadata": {
-                    "command": "whoami"
-                },
-                "thing": "None"
-            }
-            </code>
-          </pre>
-        </div>
+      <!--begin::GetStarted-->
+      <div id="get-started">
+        <h3 class="mt-6 mb-6">Get Started</h3>
+        <p>Be bop a loo bop.</p>
       </div>
-      <!--begin::Authentication-->
-      <div id="authentication">
-        <h3 class="mt-6 mb-6">Authentication</h3>
+      <!--end::GetStarted-->
+      <!--begin::HowItWorks-->
+      <div id="how-it-works">
+        <h2 class="mt-6 mb-6">How it works</h2>
+        <p>Smarter is so smart.</p>
+      </div>
+      <!--end::HowItWorks-->
+      <!--begin::Architecture-->
+      <div id="architecture">
+        <h3 class="mt-6 mb-6">Architecture</h3>
         <!--begin::Text-->
-        <p>The Smarter API uses API keys for authentication.
-          You can create API keys from the <a href="{% url 'admin:index' %}">admin console<a/>.
-          These can be created at the Account or User level. Account key should
-          be used to provision access for production systems.
-          Api keys are formatted as a 64-character sha256 hash, such as
-          <code>548de94hc4f1762c64732d268a2ee2635b2d36e9f7e3be91f1662d5456ae110d</code>.
-        </p>
-        <p>
-          <strong>Remember that your API key is a secret!</strong> Do not share it with others or expose it
-          in any client-side code (browsers, apps). Production requests must be routed
-          through your own backend server where your API key can be securely loaded from
-          an environment variable or key management service.
-        </p>
-        <p>All API requests should include your API key in an <code>Authorization</code> HTTP header as follows:</p>
-        <div class="code-sample-body">
-            <button type="button" class="btn btn-sm btn-neutral code-sample-copy" aria-label="Copy">
-                <!-- SVG for copy icon goes here -->
-            </button>
-            <pre class="code-snippet pt-6">
-                <code>Authorization: Token $SMARTER_API_KEY</code>
-            </pre>
-        </div>
+        <p>Shoo be do be do.</p>
         <!--end::Text-->
       </div>
-      <!--end::Authentication-->
-      <!--begin::Requests-->
-      <div id="requests">
-        <h3 class="mt-6 mb-6">Making Requests</h3>
-        <p>
-          You can paste the command below into your terminal to run your first API request.
-          Make sure to replace $SMARTER_API_KEY with your secret API key.
-        </p>
-        <p>Hello world:</p>
-        <div class="code-sample-body">
-          <button type="button" class="btn btn-sm btn-neutral code-sample-copy" aria-label="Copy">
-              <!-- SVG for copy icon goes here -->
-          </button>
-          <pre class="code-snippet pt-6">
-            <code>
-              curl https://platform.smarter.sh/api/v1/cli/whoami/ \
-              -H "Authorization: Token $SMARTER_API_KEY" \
-              </code>
-          </pre>
-        </div>
-        <p>Apply a manifest:</p>
-        <div class="code-sample-body">
-          <button type="button" class="btn btn-sm btn-neutral code-sample-copy" aria-label="Copy">
-              <!-- SVG for copy icon goes here -->
-          </button>
-          <pre class="code-snippet pt-6">
-            <code>
-              curl https://platform.smarter.sh/api/v1/cli/apply/ \
-              -H "Content-Type: application/json" \
-              -H "Authorization: Token $SMARTER_API_KEY" \
-              -d 'MANIFEST DATA HERE'
-            </code>
-          </pre>
-        </div>
-      </div>
-      <!--end::Requests-->
+      <!--end::Architecture-->
     </div>
     <!--end::Row-->
 </div>
