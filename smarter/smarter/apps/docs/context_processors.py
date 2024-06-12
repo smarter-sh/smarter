@@ -1,0 +1,17 @@
+"""Django context processors for docs/base.html"""
+
+import logging
+
+from smarter.__version__ import __version__
+
+
+logger = logging.getLogger(__name__)
+
+
+# pylint: disable=W0613
+def base(request):
+    """Base context processor for templates that inherit from docs/base.html"""
+    docs_context = {
+        "version": "v" + __version__,
+    }
+    return docs_context
