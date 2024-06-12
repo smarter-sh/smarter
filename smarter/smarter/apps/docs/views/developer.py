@@ -24,7 +24,7 @@ DOCS_PATH = "/data/doc/"
 class MarkdownBaseView(SmarterWebView):
     """Markdown base view"""
 
-    template_path = "api/docs/markdown.html"
+    template_path = "docs/markdown.html"
     markdown_file: str = None
 
     def get(self, request, *args, **kwargs):

@@ -17,7 +17,7 @@ from .base import DocsBaseView
 class DocsJsonSchemaBaseView(DocsBaseView):
     """JSON Schema base view"""
 
-    template_path = "api/docs/json-schema.html"
+    template_path = "docs/json-schema.html"
     kind: SAMKinds = None
 
     def get(self, request, *args, **kwargs):
