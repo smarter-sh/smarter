@@ -44,7 +44,14 @@ from .views.manifests import (
     DocsExampleManifestSqlConnectionView,
     DocsExampleManifestUserView,
 )
-from .views.views import DocsApiView, DocsLearnView, DocsView, SiteMapView
+from .views.views import (
+    DocsApiView,
+    DocsCliView,
+    DocsDevelopersView,
+    DocsLearnView,
+    DocsView,
+    SiteMapView,
+)
 
 
 schema_view = get_schema_view(
@@ -83,6 +90,8 @@ urlpatterns = [
     # -------------------------------------------------------------------------
     path("", DocsView.as_view(), name="docs_home"),
     path("api/", DocsApiView.as_view(), name="docs_api"),
+    path("cli/", DocsCliView.as_view(), name="docs_cli"),
+    path("developers/", DocsDevelopersView.as_view(), name="docs_developers"),
     path("learn/", DocsLearnView.as_view(), name="docs_learn"),
     path("sitemap", SiteMapView.as_view(), name="sitemap"),
     # -------------------------------------------------------------------------
