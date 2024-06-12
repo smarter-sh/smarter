@@ -211,6 +211,7 @@ def handler(
                 serialized_tool_call["function_name"] = function_name
                 serialized_tool_call["function_args"] = function_args
 
+                function_response = None
                 if function_name == "get_current_weather":
                     function_response = function_to_call(
                         location=function_args.get("location"),

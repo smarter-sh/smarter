@@ -44,7 +44,16 @@ from .views.manifests import (
     DocsExampleManifestSqlConnectionView,
     DocsExampleManifestUserView,
 )
-from .views.views import DocsView, SiteMapView
+from .views.views import (
+    DocsApiView,
+    DocsCliView,
+    DocsDevelopersView,
+    DocsJsonSchemasView,
+    DocsLearnView,
+    DocsManifestsView,
+    DocsView,
+    SiteMapView,
+)
 
 
 schema_view = get_schema_view(
@@ -78,8 +87,43 @@ def json_schema_name(kind: str) -> str:
 
 
 urlpatterns = [
-    path("", DocsView.as_view(), name="api_docs_home"),
+    # -------------------------------------------------------------------------
+    # Static pages
+    # -------------------------------------------------------------------------
+    path("", DocsView.as_view(), name="docs_home"),
+    path("api/", DocsApiView.as_view(), name="docs_api"),
+    path("cli/", DocsCliView.as_view(), name="docs_cli"),
+    path("developers/", DocsDevelopersView.as_view(), name="docs_developers"),
+    path("learn/", DocsLearnView.as_view(), name="docs_learn"),
+    path("json-schemas/", DocsJsonSchemasView.as_view(), name="docs_json_schemas"),
+    path("manifests/", DocsManifestsView.as_view(), name="docs_manifests"),
     path("sitemap", SiteMapView.as_view(), name="sitemap"),
+    # -------------------------------------------------------------------------
+    # Developers docs rendered from markdown in /data/doc/ in the Dockeer container
+    # -------------------------------------------------------------------------
+    path("developer/12-factor/", DeveloperDocsTwelveFactorView.as_view(), name="developer-12-factor"),
+    path("developer/architecture/", DeveloperDocsArchitectureView.as_view(), name="developer-architecture"),
+    path("developer/chatbot-api/", DeveloperDocsChatBotApiView.as_view(), name="developer-chatbot-api"),
+    path("developer/cli/", DeveloperDocsCliView.as_view(), name="developer-cli"),
+    path("developer/django-react/", DeveloperDocsDjangoReactView.as_view(), name="developer-django-react"),
+    path(
+        "developer/good-coding-practice/",
+        DeveloperDocsGoodCodoingPracticeView.as_view(),
+        name="developer-good-coding-practice",
+    ),
+    path(
+        "developer/openai-getting-started/",
+        DeveloperDocsOpenAIGettingStartedView.as_view(),
+        name="developer-openai-getting-started",
+    ),
+    path(
+        "developer/semantic-versioning/",
+        DeveloperDocsSemanticVersioningView.as_view(),
+        name="developer-semantic-versioning",
+    ),
+    # -------------------------------------------------------------------------
+    # Documentation generators
+    # -------------------------------------------------------------------------
     re_path(r"^swagger(?P<format>\.json|\.yaml)$", schema_view.without_ui(cache_timeout=0), name="schema-json"),
     re_path(r"^swagger/$", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
     re_path(r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc-ui"),
@@ -122,7 +166,7 @@ urlpatterns = [
     ),
     path(json_schema_path(SAMKinds.USER), DocsJsonSchemaUserView.as_view(), name=json_schema_name(SAMKinds.USER)),
     # -------------------------------------------------------------------------
-    # maifests
+    # example manifests
     # -------------------------------------------------------------------------
     path(
         manifest_path(SAMKinds.ACCOUNT), DocsExampleManifestAccountView.as_view(), name=manifest_name(SAMKinds.ACCOUNT)
@@ -159,27 +203,4 @@ urlpatterns = [
         name=manifest_name(SAMKinds.SQLCONNECTION),
     ),
     path(manifest_path(SAMKinds.USER), DocsExampleManifestUserView.as_view(), name=manifest_name(SAMKinds.USER)),
-    # -------------------------------------------------------------------------
-    # Developers docs rendered from markdown in /data/doc/ in the Dockeer container
-    # -------------------------------------------------------------------------
-    path("developer/12-factor/", DeveloperDocsTwelveFactorView.as_view(), name="developer-12-factor"),
-    path("developer/architecture/", DeveloperDocsArchitectureView.as_view(), name="developer-architecture"),
-    path("developer/chatbot-api/", DeveloperDocsChatBotApiView.as_view(), name="developer-chatbot-api"),
-    path("developer/cli/", DeveloperDocsCliView.as_view(), name="developer-cli"),
-    path("developer/django-react/", DeveloperDocsDjangoReactView.as_view(), name="developer-django-react"),
-    path(
-        "developer/good-coding-practice/",
-        DeveloperDocsGoodCodoingPracticeView.as_view(),
-        name="developer-good-coding-practice",
-    ),
-    path(
-        "developer/openai-getting-started/",
-        DeveloperDocsOpenAIGettingStartedView.as_view(),
-        name="developer-openai-getting-started",
-    ),
-    path(
-        "developer/semantic-versioning/",
-        DeveloperDocsSemanticVersioningView.as_view(),
-        name="developer-semantic-versioning",
-    ),
 ]
