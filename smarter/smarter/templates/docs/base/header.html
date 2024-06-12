@@ -39,18 +39,7 @@
           <div
             class="menu menu-rounded menu-column menu-lg-row my-5 my-lg-0 align-items-stretch fw-semibold px-2 px-lg-0"
             id="kt_app_header_menu" data-kt-menu="true">
-            <!--begin::Querium logobox -->
-            <div id="logobox">
-              <a href="{% url 'docs_home' %}" class="d-none d-lg-block">
-                <img alt="Logo" src="https://smarter.sh/wp-content/uploads/2024/04/Smarter_crop.png" class="h-70px" />
-              </a>
-            </div>
-            <!--end::Querium logobox -->
-            <!--begin::Version -->
-            <div class="smarter-version">
-              {{ smarter_version }}
-            </div>
-            <!--end::Version -->
+            {% include 'docs/base/menu/branding.html' %}
             {% include 'docs/base/menu/api.html' %}
             {% include 'docs/base/menu/cli.html' %}
             {% include 'docs/base/menu/developers.html' %}
