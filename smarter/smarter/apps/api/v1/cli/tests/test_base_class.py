@@ -44,6 +44,7 @@ class TestApiCliV1BaseClass(ApiV1TestBase):
         headers_wrong_key = {"HTTP_AUTHORIZATION": "Token WRONG_KEY"}
         headers_missing_key = {}
 
+        response = None
         if wrong_key:
             response = client.post(path=path, data=None, content_type="application/json", **headers_wrong_key)
         elif missing_key:
@@ -51,6 +52,9 @@ class TestApiCliV1BaseClass(ApiV1TestBase):
         elif session_authentication:
             client.force_login(user=self.user)
             response = client.post(path=path, data=None, content_type="application/json")
+
+        if response is None:
+            raise ValueError("No response was generated.")
 
         response_content = response.content.decode("utf-8")
         response_json = json.loads(response_content)

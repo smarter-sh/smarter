@@ -1,12 +1,13 @@
-{% extends 'api/docs/base.html' %}
+{% extends 'docs/base.html' %}
 {% load static %}
 {% load custom_filters %}
+
 
 {% block doc_content %}
 <div class="code-sample-body">
   <pre class="code-snippet prettyprint">
     <code>
-      {{ manifest|unescape_unicode }}
+      {{ json_schema|unescape_unicode }}
     </code>
   </pre>
 </div>

@@ -18,7 +18,7 @@ from smarter.apps.api.v1.manifests.enum import SAMKinds
 ALL_KINDS = SAMKinds.singular_slugs()
 
 
-class TestApiDocsManifests(unittest.TestCase):
+class TestApiDocsJsonSchemas(unittest.TestCase):
     """Test Account model"""
 
     @classmethod
@@ -33,26 +33,26 @@ class TestApiDocsManifests(unittest.TestCase):
         """Tear down test fixtures."""
         admin_user_teardown(cls.user, cls.account, cls.user_profile)
 
-    def test_get_unauthenitcated_manifests(self):
+    def test_get_unauthenitcated_json_schemas(self):
         """
-        Test all api/docs/manifests/ endpoints with an unauthenticated user
+        Test all docs//json-schema/ endpoints with an unauthenticated user
         to ensure that we get a 200 response
         """
 
         for kind in ALL_KINDS:
-            reverse_name = f"api_docs_manifest_{kind}".lower()
+            reverse_name = f"api_docs_json_schema_{kind}".lower()
             url = reverse(reverse_name)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
 
-    def test_get_authenitcated_manifests(self):
+    def test_get_authenitcated_json_schemas(self):
         """
-        Test all api/docs/manifests/ endpoints with an authenticated user
+        Test all docs//json-schema/ endpoints with an authenticated user
         to ensure that we get a 200 response
         """
         self.client.force_login(self.user)
         for kind in ALL_KINDS:
-            reverse_name = f"api_docs_manifest_{kind}".lower()
+            reverse_name = f"api_docs_json_schema_{kind}".lower()
             url = reverse(reverse_name)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
