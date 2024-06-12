@@ -216,6 +216,7 @@ class SAMChatToolCallBroker(AbstractBroker, AccountMixin):
         command = SmarterJournalCliCommands(command)
         self._session_key: str = kwargs.get("session_id", None)
         data = []
+        tool_calls = []
         if self.session_key:
             chat: Chat = None
             try:
