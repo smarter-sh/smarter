@@ -153,6 +153,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "smarter.apps.account.context_processors.base",
+                "smarter.apps.docs.context_processors.base",
                 "smarter.apps.dashboard.context_processors.branding",
                 "smarter.apps.dashboard.context_processors.base",
             ],

@@ -19,6 +19,12 @@ class DocsApiView(SmarterWebView):
     template_path = "docs/api.html"
 
 
+class DocsLearnView(SmarterWebView):
+    """/docs/api/ landing page view"""
+
+    template_path = "docs/learn.html"
+
+
 class SiteMapView(SmarterNeverCachedWebView):
     """/docs/sitemap/ Keen sample page view"""
 

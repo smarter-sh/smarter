@@ -44,7 +44,7 @@ from .views.manifests import (
     DocsExampleManifestSqlConnectionView,
     DocsExampleManifestUserView,
 )
-from .views.views import DocsApiView, DocsView, SiteMapView
+from .views.views import DocsApiView, DocsLearnView, DocsView, SiteMapView
 
 
 schema_view = get_schema_view(
@@ -83,6 +83,7 @@ urlpatterns = [
     # -------------------------------------------------------------------------
     path("", DocsView.as_view(), name="docs_home"),
     path("api/", DocsApiView.as_view(), name="docs_api"),
+    path("learn/", DocsLearnView.as_view(), name="docs_learn"),
     path("sitemap", SiteMapView.as_view(), name="sitemap"),
     # -------------------------------------------------------------------------
     # Developers docs rendered from markdown in /data/doc/ in the Dockeer container
