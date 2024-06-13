@@ -49,6 +49,12 @@ class DocsManifestsView(SmarterWebView):
     template_path = "docs/manifests.html"
 
 
+class DocsPluginsView(SmarterWebView):
+    """/docs/plugins/ landing page view"""
+
+    template_path = "docs/plugins.html"
+
+
 class SiteMapView(SmarterNeverCachedWebView):
     """/docs/sitemap/ Keen sample page view"""
 

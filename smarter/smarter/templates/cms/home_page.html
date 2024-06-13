@@ -1,0 +1,9 @@
+{% extends 'docs/base.html' %}
+{% load static wagtailcore_tags wagtailuserbar html_filters %}
+
+{% block body_class %}template-homepage{% endblock %}
+
+<!-- replace everything below with: -->
+{% block content %}
+  {{ page.body|decode_html_entities|safe }}
+{% endblock %}
