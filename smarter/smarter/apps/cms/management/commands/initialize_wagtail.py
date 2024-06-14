@@ -12,8 +12,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        root_page_title = "Docs"
-        root_page_slug = "docs"
+        root_page_title = "Root"
+        root_page_slug = "root"
         root_page, created = DocsPage.objects.get_or_create(
             title=root_page_title, slug=root_page_slug, defaults={"depth": 1, "path": "0001", "numchild": 0}
         )

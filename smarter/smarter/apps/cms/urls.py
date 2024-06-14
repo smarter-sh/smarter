@@ -8,6 +8,6 @@ from wagtail.admin import urls as wagtailadmin_urls
 urlpatterns = [
     # wagail urls
     # -----------------------------------
-    path("admin/", include(wagtailadmin_urls)),
+    path("cms/admin/", include(wagtailadmin_urls)),
     re_path(r"", include(wagtail_urls)),
 ]
