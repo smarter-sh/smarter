@@ -5,6 +5,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import RedirectView
+from wagtail.documents import urls as wagtaildocs_urls
 
 from smarter.apps.account.views.authentication import (
     AccountRegisterView,
@@ -23,24 +24,31 @@ admin.autodiscover()
 
 
 urlpatterns = [
+    # wagail urls
+    # -----------------------------------
     path("", RedirectView.as_view(url="docs/")),
+    path("docs/", include("smarter.apps.cms.urls")),
+    path("documents/", include(wagtaildocs_urls)),
+    # django admin
+    # -----------------------------------
     path("admin/docs/", include("django.contrib.admindocs.urls")),
     path("admin/", admin.site.urls, name="django_admin"),
+    # smarter platform
+    # -----------------------------------
     path("api/", include("smarter.apps.api.urls")),
     path("chatapp/", include("smarter.apps.chatapp.urls")),
     path("dashboard/", include("smarter.apps.dashboard.urls")),
-    path("docs/", include("smarter.apps.docs.urls")),
+    path("docs2/", include("smarter.apps.docs.urls")),
     # shortcuts for authentication views
     # -----------------------------------
     path("login/", LoginView.as_view(), name="login_view"),
     path("logout/", LogoutView.as_view(), name="logout_view"),
     path("register/", AccountRegisterView.as_view(), name="register_view"),
     # -----------------------------------
-    # -----------------------------------
+    # stripe urls
     # see: https://dj-stripe.dev/dj-stripe/
     path("stripe/", include("djstripe.urls", namespace="djstripe")),
     path("waitlist/", ComingSoon.as_view(), name="waitlist"),
-    # -----------------------------------
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 if settings.DEBUG:
     import debug_toolbar

@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static wagtailcore_tags wagtailuserbar html_filters %}
+
+{% block body_class %}docs-home{% endblock %}
+
+{% block head_extra %}
+  {{ block.super }}
+<link href="{% static 'docs/styles.css' %}" rel="stylesheet" type="text/css" />
+{% endblock %}
+
+
+{% block root %}
+<!--begin::Page-->
+<div class="app-page flex-column flex-column-fluid" id="kt_app_page">
+  {% include 'docs/base/header.html' %}
+  <!--end::Header-->
+  <!--begin::Wrapper-->
+  <div class="app-wrapper flex-column flex-row-fluid" id="kt_app_wrapper">
+    <!--begin::Main-->
+    <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+      <!--begin::Content wrapper-->
+      <div class="d-flex flex-column flex-column-fluid">
+        <!--begin::Toolbar-->
+        <div id="kt_app_toolbar" class="app-toolbar py-3 py-lg-6">
+          <!--begin::Toolbar container-->
+          <div id="kt_app_toolbar_container" class="app-container container-xxl d-flex flex-stack">
+            <!--begin::Page title-->
+            <div class="page-title d-flex flex-column justify-content-center flex-wrap me-3">
+              <!--begin::Title-->
+              <h1 class="page-heading d-flex text-gray-900 fw-bold fs-3 flex-column justify-content-center my-0">
+                Documentation</h1>
+              <!--end::Title-->
+            </div>
+            <!--end::Page title-->
+          </div>
+          <!--end::Toolbar container-->
+        </div>
+        <!--end::Toolbar-->
+        <!--begin::Content-->
+        <div id="kt_app_content" class="app-content flex-column-fluid">
+          <!--begin::Content container-->
+          <div id="kt_app_content_container" class="app-container container-xxl">
+            <!--begin::Documentation main-->
+            <div class="d-flex flex-column flex-xl-row">
+              <!--begin::Content-->
+              <div class="card bg-body align-self-start mb-9 mb-xl-0 me-lg-9">
+
+                <!-- begin::Wagtail block tag -->
+                {% block content %}
+                  {{ page.body|decode_html_entities|safe }}
+                {% endblock %}
+                <!-- end::Wagtail block tag -->
+
+              </div>
+              <!--end::Content-->
+              {% include 'docs/base/sidebar.html' %}
+            </div>
+            <!--end::Documentation main-->
+          </div>
+          <!--end::Content container-->
+        </div>
+        <!--end::Content-->
+      </div>
+      <!--end::Content wrapper-->
+      {% include 'docs/base/footer.html' %}
+    </div>
+    <!--end:::Main-->
+  </div>
+  <!--end::Wrapper-->
+</div>
+<!--end::Page-->
+{% endblock %}
