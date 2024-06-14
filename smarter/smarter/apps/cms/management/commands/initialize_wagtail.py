@@ -12,8 +12,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        root_page_title = "Home"
-        root_page_slug = "home"
+        root_page_title = "Docs"
+        root_page_slug = "docs"
         root_page, created = DocsPage.objects.get_or_create(
             title=root_page_title, slug=root_page_slug, defaults={"depth": 1, "path": "0001", "numchild": 0}
         )
@@ -23,10 +23,15 @@ class Command(BaseCommand):
             self.stdout.write("Root DocsPage already exists.")
 
         # Set up the default site with the new root page
-        _, site_created = Site.objects.update_or_create(
+        site, site_created = Site.objects.update_or_create(
             is_default_site=True, defaults={"hostname": "localhost", "root_page": root_page}
         )
         if site_created:
             self.stdout.write(self.style.SUCCESS("Successfully created the default site."))
         else:
             self.stdout.write("Default site already exists and is updated.")
+
+        if site.root_page != root_page:
+            self.stdout.write("Updating the default site root page.")
+            site.root_page = root_page
+            site.save()
