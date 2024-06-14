@@ -3,7 +3,8 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
+from wagtail import urls as wagtail_urls
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.documents import urls as wagtaildocs_urls
 
@@ -24,11 +25,6 @@ admin.autodiscover()
 
 
 urlpatterns = [
-    # wagtail urls
-    # -----------------------------------
-    path("", include("smarter.apps.cms.urls")),
-    path("cms/admin/", include(wagtailadmin_urls)),
-    path("documents/", include(wagtaildocs_urls)),
     # django admin
     # -----------------------------------
     path("admin/docs/", include("django.contrib.admindocs.urls")),
@@ -49,11 +45,17 @@ urlpatterns = [
     # see: https://dj-stripe.dev/dj-stripe/
     path("stripe/", include("djstripe.urls", namespace="djstripe")),
     path("waitlist/", ComingSoon.as_view(), name="waitlist"),
+    # wagtail urls
+    # -----------------------------------
+    path("cms/admin/", include(wagtailadmin_urls)),
+    path("documents/", include(wagtaildocs_urls)),
+    # wagtail root page -- this should be the last url
+    re_path(r"", include(wagtail_urls)),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.DEBUG:
     import debug_toolbar
 
-    urlpatterns += [
-        path("__debug__/", include(debug_toolbar.urls, namespace="djdt")),
-    ]
+    # urlpatterns += [
+    #     path("__debug__/", include(debug_toolbar.urls)),
+    # ]
