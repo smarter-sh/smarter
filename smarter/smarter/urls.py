@@ -24,7 +24,7 @@ admin.autodiscover()
 
 
 urlpatterns = [
-    # wagail urls
+    # wagtail urls
     # -----------------------------------
     path("", include("smarter.apps.cms.urls")),
     path("cms/admin/", include(wagtailadmin_urls)),
@@ -50,9 +50,10 @@ urlpatterns = [
     path("stripe/", include("djstripe.urls", namespace="djstripe")),
     path("waitlist/", ComingSoon.as_view(), name="waitlist"),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
 if settings.DEBUG:
     import debug_toolbar
 
     urlpatterns += [
-        path("__debug__/", include(debug_toolbar.urls, namespace="djdt")),  # add this line
+        path("__debug__/", include(debug_toolbar.urls, namespace="djdt")),
     ]
