@@ -1,13 +1,11 @@
 """URL configuration for Smarter Api and web console."""
 
 from django.urls import include, path, re_path
+from django.views.generic import RedirectView
 from wagtail import urls as wagtail_urls
-from wagtail.admin import urls as wagtailadmin_urls
 
 
 urlpatterns = [
-    # wagail urls
-    # -----------------------------------
-    path("cms/admin/", include(wagtailadmin_urls)),
+    path("", RedirectView.as_view(url="/docs/")),
     re_path(r"", include(wagtail_urls)),
 ]
