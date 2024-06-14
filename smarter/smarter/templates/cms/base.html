@@ -3,9 +3,14 @@
 
 {% block body_class %}docs-home{% endblock %}
 
+{% block head %}
+  {{ block.super }}
+  <meta name="generator" content="Wagtail" />
+{% endblock %}
+
 {% block head_extra %}
   {{ block.super }}
-<link href="{% static 'docs/styles.css' %}" rel="stylesheet" type="text/css" />
+  <link href="{% static 'docs/styles.css' %}" rel="stylesheet" type="text/css" />
 {% endblock %}
 
 
