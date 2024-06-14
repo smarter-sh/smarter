@@ -4,7 +4,6 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
-from django.views.generic import RedirectView
 from wagtail.documents import urls as wagtaildocs_urls
 
 from smarter.apps.account.views.authentication import (
@@ -26,8 +25,7 @@ admin.autodiscover()
 urlpatterns = [
     # wagail urls
     # -----------------------------------
-    path("", RedirectView.as_view(url="docs/")),
-    path("docs/", include("smarter.apps.cms.urls")),
+    path("", include("smarter.apps.cms.urls")),
     path("documents/", include(wagtaildocs_urls)),
     # django admin
     # -----------------------------------
