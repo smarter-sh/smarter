@@ -14,7 +14,17 @@ class CustomHTMLBlock(blocks.RichTextBlock):
 
 
 class DocsPage(Page):
-    """Home page model."""
+    """Home page model.
+    path("api/", DocsApiView.as_view(), name="docs_api"),
+    path("cli/", DocsCliView.as_view(), name="docs_cli"),
+    path("developers/", DocsDevelopersView.as_view(), name="docs_developers"),
+    path("learn/", DocsLearnView.as_view(), name="docs_learn"),
+    path("json-schemas/", DocsJsonSchemasView.as_view(), name="docs_json_schemas"),
+    path("manifests/", DocsManifestsView.as_view(), name="docs_manifests"),
+    path("plugins/", DocsPluginsView.as_view(), name="docs_plugins"),
+    path("sitemap", SiteMapView.as_view(), name="sitemap"),
+    path("developer/", DeveloperDocsTwelveFactorView.as_view(), name="developer-12-factor"),
+    """
 
     body = StreamField(
         [
@@ -28,4 +38,4 @@ class DocsPage(Page):
         FieldPanel("body"),
     ]
 
-    template = "cms/home_page.html"
+    template = "cms/base.html"
