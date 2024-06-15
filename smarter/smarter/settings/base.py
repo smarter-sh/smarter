@@ -12,9 +12,11 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 import glob
+import hashlib
 import logging
 import logging.config
 import os
+import secrets
 import sys
 from pathlib import Path
 
@@ -62,7 +64,14 @@ LOGIN_REDIRECT_URL = "/"
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
+print("SECRET_KEY: ", smarter_settings.secret_key)
 SECRET_KEY = smarter_settings.secret_key
+if not SECRET_KEY:
+    random_string = secrets.token_urlsafe(64)
+    random_bytes = random_string.encode("utf-8")
+    hash_object = hashlib.sha256(random_bytes)
+    SECRET_KEY = hash_object.hexdigest()
+    logger.warning("SECRET_KEY not set. Using randomized value: %s", SECRET_KEY)
 DEBUG = smarter_settings.debug_mode
 
 CACHES = {
@@ -100,6 +109,7 @@ INSTALLED_APPS = [
     "smarter.apps.chatbot",
     "smarter.apps.chatapp",
     "smarter.apps.dashboard",
+    "smarter.apps.cms",
     "smarter.apps.docs",
     "smarter.apps.plugin",
     # 3rd party apps
@@ -113,6 +123,20 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "django.contrib.admindocs",
     "waffle",
+    # Wagtail
+    # -------------------------------
+    # see https://docs.wagtail.org/en/stable/advanced_topics/add_to_django_project.html
+    "wagtail.contrib.forms",
+    "wagtail.contrib.redirects",
+    "wagtail.embeds",
+    "wagtail.sites",
+    "wagtail.users",
+    "wagtail.snippets",
+    "wagtail.documents",
+    "wagtail.images",
+    "wagtail.search",
+    "wagtail.admin",
+    "wagtail",
 ]
 
 MIDDLEWARE = [
@@ -121,20 +145,33 @@ MIDDLEWARE = [
     # this replaces django.middleware.security.SecurityMiddleware
     # simple middleware to block requests for common sensitive files
     # like .env, private key files, etc.
+    # -------------------------------
     "smarter.lib.django.middleware.BlockSensitiveFilesMiddleware",
+    #
+    # -------------------------------
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware",
     "django.middleware.common.CommonMiddleware",
     # this replaces django.middleware.csrf.CsrfViewMiddleware
     # to add chatbot-specific CSRF handling
+    # -------------------------------
     "smarter.apps.chatbot.middleware.csrf.CsrfViewMiddleware",
+    #
+    # -------------------------------
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     # to manage ALLOWED_HOSTS
+    # -------------------------------
     "smarter.apps.chatbot.middleware.security.SecurityMiddleware",
+    #
+    # -------------------------------
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "waffle.middleware.WaffleMiddleware",
+    # wagtail middleware
+    # -------------------------------
+    "wagtail.contrib.redirects.middleware.RedirectMiddleware",
+    #
 ]
 
 ROOT_URLCONF = "smarter.urls"
@@ -153,6 +190,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "smarter.apps.account.context_processors.base",
+                "smarter.apps.cms.context_processors.base",
                 "smarter.apps.docs.context_processors.base",
                 "smarter.apps.dashboard.context_processors.branding",
                 "smarter.apps.dashboard.context_processors.base",
@@ -299,3 +337,34 @@ SMTP_PORT = smarter_settings.smtp_port
 SMTP_USE_SSL = smarter_settings.smtp_use_ssl
 SMTP_USE_TLS = smarter_settings.smtp_use_tls
 SMTP_USERNAME = smarter_settings.smtp_username
+
+
+# Wagtail settings
+# This is the human-readable name of your Wagtail install
+# which welcomes users upon login to the Wagtail admin.
+WAGTAIL_SITE_NAME = "Smarter"
+
+# Replace the search backend
+# WAGTAILSEARCH_BACKENDS = {
+#  'default': {
+#    'BACKEND': 'wagtail.search.backends.elasticsearch8',
+#    'INDEX': 'myapp'
+#  }
+# }
+
+# Wagtail email notifications from address
+WAGTAILADMIN_NOTIFICATION_FROM_EMAIL = SMTP_FROM_EMAIL
+
+# Wagtail email notification format
+WAGTAILADMIN_NOTIFICATION_USE_HTML = True
+
+# Allowed file extensions for documents in the document library.
+# This can be omitted to allow all files, but note that this may present a security risk
+# if untrusted users are allowed to upload files -
+# see https://docs.wagtail.org/en/stable/advanced_topics/deploying.html#user-uploaded-files
+WAGTAILDOCS_EXTENSIONS = ["csv", "docx", "key", "odt", "pdf", "pptx", "rtf", "txt", "xlsx", "zip"]
+
+# Reverse the default case-sensitive handling of tags
+TAGGIT_CASE_INSENSITIVE = True
+
+WAGTAILADMIN_BASE_URL = "/cms/"
