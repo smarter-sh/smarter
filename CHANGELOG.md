@@ -1,3 +1,11 @@
+# [0.5.0](https://github.com/smarter-sh/smarter/compare/v0.4.1...v0.5.0) (2024-06-15)
+
+
+### Features
+
+* add sidebar to wagtail ([77cd476](https://github.com/smarter-sh/smarter/commit/77cd476d5bd7a43b1d2fb223a1eb67b55cb10217))
+* add Wagtail ([8670288](https://github.com/smarter-sh/smarter/commit/8670288dc6498de4fcd1327c53b354d7696b500c))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
