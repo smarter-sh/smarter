@@ -1,0 +1,426 @@
+{% load static %}
+<!--begin:Menu item CLI-->
+<div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
+  class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
+  <!--begin:Menu link CLI-->
+  <a href="{% url 'docs_cli' %}" class="menu-link">
+    <span class="menu-link">
+      <span class="menu-title">CLI</span>
+      <span class="menu-arrow d-lg-none"></span>
+    </span>
+  </a>
+  <!--end:Menu link CLI-->
+  <!--begin:Menu sub JSON Schemas-->
+  <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-200px">
+    <!--begin:Menu item JSON Schemas-->
+    <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
+      class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
+      <!--begin:Menu link JSON Schemas-->
+      <a href="{% url 'docs_json_schemas' %}" class="menu-link">
+        <span class="menu-link">
+          <span class="menu-title">JSON Schemas</span>
+          <span class="menu-arrow d-lg-none"></span>
+        </span>
+      </a>
+      <!--end:Menu link JSON Schemas-->
+      <!--begin:Menu sub JSON Schemas-->
+      <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-200px">
+        <!--begin:Menu item Account -->
+        <div class="menu-item">
+          <!--begin:Menu link Account -->
+          <a class="menu-link" href="{% url 'api_docs_json_schema_account' %}" target="_self" data-bs-trigger="hover"
+            data-bs-dismiss="click" data-bs-placement="right">
+            <span class="menu-icon">
+              <i class="ki-duotone ki-rocket fs-2">
+                <span class="path1"></span>
+                <span class="path2"></span>
+              </i>
+            </span>
+            <span class="menu-title">Account</span>
+          </a>
+          <!--end:Menu link Account -->
+        </div>
+        <!--end:Menu item Account -->
+
+        <!--begin:Menu item User -->
+        <div class="menu-item">
+          <!--begin:Menu link User -->
+          <a class="menu-link" href="{% url 'api_docs_json_schema_user' %}" target="_self" data-bs-trigger="hover"
+            data-bs-dismiss="click" data-bs-placement="right">
+            <span class="menu-icon">
+              <i class="ki-duotone ki-rocket fs-2">
+                <span class="path1"></span>
+                <span class="path2"></span>
+              </i>
+            </span>
+            <span class="menu-title">User</span>
+          </a>
+          <!--end:Menu link User -->
+        </div>
+        <!--end:Menu item User -->
+
+        <!--begin:Menu item Api Key -->
+        <div class="menu-item">
+          <!--begin:Menu link Api Key -->
+          <a class="menu-link" href="{% url 'api_docs_json_schema_smarterauthtoken' %}" target="_self"
+            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+            <span class="menu-icon">
+              <i class="ki-duotone ki-rocket fs-2">
+                <span class="path1"></span>
+                <span class="path2"></span>
+              </i>
+            </span>
+            <span class="menu-title">Api Key</span>
+          </a>
+          <!--end:Menu link Api Key -->
+        </div>
+        <!--end:Menu item Api Key -->
+
+        <!--begin:Menu item SqlConnection -->
+        <div class="menu-item">
+          <!--begin:Menu link SqlConnection -->
+          <a class="menu-link" href="{% url 'api_docs_json_schema_sqlconnection' %}" target="_self"
+            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+            <span class="menu-icon">
+              <i class="ki-duotone ki-rocket fs-2">
+                <span class="path1"></span>
+                <span class="path2"></span>
+              </i>
+            </span>
+            <span class="menu-title">SqlConnection</span>
+          </a>
+          <!--end:Menu link SqlConnection -->
+        </div>
+        <!--end:Menu item SqlConnection -->
+
+        <!--begin:Menu item Plugin -->
+        <div class="menu-item">
+          <!--begin:Menu link Plugin -->
+          <a class="menu-link" href="{% url 'api_docs_json_schema_plugin' %}" target="_self" data-bs-trigger="hover"
+            data-bs-dismiss="click" data-bs-placement="right">
+            <span class="menu-icon">
+              <i class="ki-duotone ki-rocket fs-2">
+                <span class="path1"></span>
+                <span class="path2"></span>
+              </i>
+            </span>
+            <span class="menu-title">Plugin</span>
+          </a>
+          <!--end:Menu link Plugin -->
+        </div>
+        <!--end:Menu item Plugin -->
+
+        <!--begin:Menu item PluginDataApiConnection -->
+        <div class="menu-item">
+          <!--begin:Menu link PluginDataApiConnection -->
+          <a class="menu-link" href="{% url 'api_docs_json_schema_plugindataapiconnection' %}" target="_self"
+            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+            <span class="menu-icon">
+              <i class="ki-duotone ki-rocket fs-2">
+                <span class="path1"></span>
+                <span class="path2"></span>
+              </i>
+            </span>
+            <span class="menu-title">Api Connection</span>
+          </a>
+          <!--end:Menu link PluginDataApiConnection -->
+        </div>
+        <!--end:Menu item PluginDataApiConnection -->
+
+        <!--begin:Menu item ChatBot -->
+        <div class="menu-item">
+          <!--begin:Menu link ChatBot -->
+          <a class="menu-link" href="{% url 'api_docs_json_schema_chatbot' %}" target="_self" data-bs-trigger="hover"
+            data-bs-dismiss="click" data-bs-placement="right">
+            <span class="menu-icon">
+              <i class="ki-duotone ki-rocket fs-2">
+                <span class="path1"></span>
+                <span class="path2"></span>
+              </i>
+            </span>
+            <span class="menu-title">ChatBot</span>
+          </a>
+          <!--end:Menu link ChatBot -->
+        </div>
+        <!--end:Menu item ChatBot -->
+
+        <!--begin:Menu item Chat -->
+        <div class="menu-item">
+          <!--begin:Menu link Chat -->
+          <a class="menu-link" href="{% url 'api_docs_json_schema_chat' %}" target="_self" data-bs-trigger="hover"
+            data-bs-dismiss="click" data-bs-placement="right">
+            <span class="menu-icon">
+              <i class="ki-duotone ki-rocket fs-2">
+                <span class="path1"></span>
+                <span class="path2"></span>
+              </i>
+            </span>
+            <span class="menu-title">Chat</span>
+          </a>
+          <!--end:Menu link Chat -->
+        </div>
+        <!--end:Menu item Chat -->
+
+        <!--begin:Menu item ChatHistory -->
+        <div class="menu-item">
+          <!--begin:Menu link ChatHistory -->
+          <a class="menu-link" href="{% url 'api_docs_json_schema_chathistory' %}" target="_self"
+            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+            <span class="menu-icon">
+              <i class="ki-duotone ki-rocket fs-2">
+                <span class="path1"></span>
+                <span class="path2"></span>
+              </i>
+            </span>
+            <span class="menu-title">Chat History</span>
+          </a>
+          <!--end:Menu link ChatHistory -->
+        </div>
+        <!--end:Menu item ChatHistory -->
+
+        <!--begin:Menu item ChatPluginUsage -->
+        <div class="menu-item">
+          <!--begin:Menu link ChatPluginUsage -->
+          <a class="menu-link" href="{% url 'api_docs_json_schema_chatpluginusage' %}" target="_self"
+            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+            <span class="menu-icon">
+              <i class="ki-duotone ki-rocket fs-2">
+                <span class="path1"></span>
+                <span class="path2"></span>
+              </i>
+            </span>
+            <span class="menu-title">Chat Plugin Usage</span>
+          </a>
+          <!--end:Menu link ChatPluginUsage -->
+        </div>
+        <!--end:Menu item ChatPluginUsage -->
+
+        <!--begin:Menu item ChatToolCall -->
+        <div class="menu-item">
+          <!--begin:Menu link ChatToolCall -->
+          <a class="menu-link" href="{% url 'api_docs_json_schema_chattoolcall' %}" target="_self"
+            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+            <span class="menu-icon">
+              <i class="ki-duotone ki-rocket fs-2">
+                <span class="path1"></span>
+                <span class="path2"></span>
+              </i>
+            </span>
+            <span class="menu-title">Chat Tool Call</span>
+          </a>
+          <!--end:Menu link ChatToolCall -->
+        </div>
+        <!--end:Menu item ChatToolCall -->
+
+      </div>
+      <!--end:Menu sub JSON Schemas-->
+    </div>
+    <!--end:Menu item JSON Schemas-->
+
+    <!--begin:Menu item Manifests-->
+    <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
+      class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
+      <!--begin:Menu link Manifests-->
+      <a href="{% url 'docs_manifests' %}" class="menu-link">
+        <span class="menu-link">
+          <span class="menu-title">Manifests</span>
+          <span class="menu-arrow d-lg-none"></span>
+        </span>
+      </a>
+      <!--end:Menu link Manifests-->
+      <!--begin:Menu sub Manifests-->
+      <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-200px">
+        <!--begin:Menu item Account -->
+        <div class="menu-item">
+          <!--begin:Menu link Account -->
+          <a class="menu-link" href="{% url 'api_docs_manifest_account' %}" target="_self" data-bs-trigger="hover"
+            data-bs-dismiss="click" data-bs-placement="right">
+            <span class="menu-icon">
+              <i class="ki-duotone ki-rocket fs-2">
+                <span class="path1"></span>
+                <span class="path2"></span>
+              </i>
+            </span>
+            <span class="menu-title">Account</span>
+          </a>
+          <!--end:Menu link Account -->
+        </div>
+        <!--end:Menu item Account -->
+
+        <!--begin:Menu item User -->
+        <div class="menu-item">
+          <!--begin:Menu link User -->
+          <a class="menu-link" href="{% url 'api_docs_manifest_user' %}" target="_self" data-bs-trigger="hover"
+            data-bs-dismiss="click" data-bs-placement="right">
+            <span class="menu-icon">
+              <i class="ki-duotone ki-rocket fs-2">
+                <span class="path1"></span>
+                <span class="path2"></span>
+              </i>
+            </span>
+            <span class="menu-title">User</span>
+          </a>
+          <!--end:Menu link User -->
+        </div>
+        <!--end:Menu item User -->
+
+        <!--begin:Menu item Api Key -->
+        <div class="menu-item">
+          <!--begin:Menu link Api Key -->
+          <a class="menu-link" href="{% url 'api_docs_manifest_smarterauthtoken' %}" target="_self"
+            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+            <span class="menu-icon">
+              <i class="ki-duotone ki-rocket fs-2">
+                <span class="path1"></span>
+                <span class="path2"></span>
+              </i>
+            </span>
+            <span class="menu-title">Api Key</span>
+          </a>
+          <!--end:Menu link Api Key -->
+        </div>
+        <!--end:Menu item Api Key -->
+
+        <!--begin:Menu item SqlConnection -->
+        <div class="menu-item">
+          <!--begin:Menu link SqlConnection -->
+          <a class="menu-link" href="{% url 'api_docs_manifest_sqlconnection' %}" target="_self" data-bs-trigger="hover"
+            data-bs-dismiss="click" data-bs-placement="right">
+            <span class="menu-icon">
+              <i class="ki-duotone ki-rocket fs-2">
+                <span class="path1"></span>
+                <span class="path2"></span>
+              </i>
+            </span>
+            <span class="menu-title">Sql Connection</span>
+          </a>
+          <!--end:Menu link SqlConnection -->
+        </div>
+        <!--end:Menu item SqlConnection -->
+
+        <!--begin:Menu item Plugin -->
+        <div class="menu-item">
+          <!--begin:Menu link Plugin -->
+          <a class="menu-link" href="{% url 'api_docs_manifest_plugin' %}" target="_self" data-bs-trigger="hover"
+            data-bs-dismiss="click" data-bs-placement="right">
+            <span class="menu-icon">
+              <i class="ki-duotone ki-rocket fs-2">
+                <span class="path1"></span>
+                <span class="path2"></span>
+              </i>
+            </span>
+            <span class="menu-title">Plugin</span>
+          </a>
+          <!--end:Menu link Plugin -->
+        </div>
+        <!--end:Menu item Plugin -->
+
+        <!--begin:Menu item PluginDataApiConnection -->
+        <div class="menu-item">
+          <!--begin:Menu link PluginDataApiConnection -->
+          <a class="menu-link" href="{% url 'api_docs_manifest_plugindataapiconnection' %}" target="_self"
+            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+            <span class="menu-icon">
+              <i class="ki-duotone ki-rocket fs-2">
+                <span class="path1"></span>
+                <span class="path2"></span>
+              </i>
+            </span>
+            <span class="menu-title">Api Connection</span>
+          </a>
+          <!--end:Menu link PluginDataApiConnection -->
+        </div>
+        <!--end:Menu item PluginDataApiConnection -->
+
+        <!--begin:Menu item ChatBot -->
+        <div class="menu-item">
+          <!--begin:Menu link ChatBot -->
+          <a class="menu-link" href="{% url 'api_docs_manifest_chatbot' %}" target="_self" data-bs-trigger="hover"
+            data-bs-dismiss="click" data-bs-placement="right">
+            <span class="menu-icon">
+              <i class="ki-duotone ki-rocket fs-2">
+                <span class="path1"></span>
+                <span class="path2"></span>
+              </i>
+            </span>
+            <span class="menu-title">ChatBot</span>
+          </a>
+          <!--end:Menu link ChatBot -->
+        </div>
+        <!--end:Menu item ChatBot -->
+
+        <!--begin:Menu item Chat -->
+        <div class="menu-item">
+          <!--begin:Menu link Chat -->
+          <a class="menu-link" href="{% url 'api_docs_manifest_chat' %}" target="_self" data-bs-trigger="hover"
+            data-bs-dismiss="click" data-bs-placement="right">
+            <span class="menu-icon">
+              <i class="ki-duotone ki-rocket fs-2">
+                <span class="path1"></span>
+                <span class="path2"></span>
+              </i>
+            </span>
+            <span class="menu-title">Chat</span>
+          </a>
+          <!--end:Menu link Chat -->
+        </div>
+        <!--end:Menu item Chat -->
+
+        <!--begin:Menu item ChatHistory -->
+        <div class="menu-item">
+          <!--begin:Menu link ChatHistory -->
+          <a class="menu-link" href="{% url 'api_docs_manifest_chathistory' %}" target="_self" data-bs-trigger="hover"
+            data-bs-dismiss="click" data-bs-placement="right">
+            <span class="menu-icon">
+              <i class="ki-duotone ki-rocket fs-2">
+                <span class="path1"></span>
+                <span class="path2"></span>
+              </i>
+            </span>
+            <span class="menu-title">Chat History</span>
+          </a>
+          <!--end:Menu link ChatHistory -->
+        </div>
+        <!--end:Menu item ChatHistory -->
+
+        <!--begin:Menu item ChatPluginUsage -->
+        <div class="menu-item">
+          <!--begin:Menu link ChatPluginUsage -->
+          <a class="menu-link" href="{% url 'api_docs_manifest_chatpluginusage' %}" target="_self"
+            data-bs-trigger="hover" data-bs-dismiss="click" data-bs-placement="right">
+            <span class="menu-icon">
+              <i class="ki-duotone ki-rocket fs-2">
+                <span class="path1"></span>
+                <span class="path2"></span>
+              </i>
+            </span>
+            <span class="menu-title">Chat Plugin Usage</span>
+          </a>
+          <!--end:Menu link ChatPluginUsage -->
+        </div>
+        <!--end:Menu item ChatPluginUsage -->
+
+        <!--begin:Menu item ChatToolCall -->
+        <div class="menu-item">
+          <!--begin:Menu link ChatToolCall -->
+          <a class="menu-link" href="{% url 'api_docs_manifest_chattoolcall' %}" target="_self" data-bs-trigger="hover"
+            data-bs-dismiss="click" data-bs-placement="right">
+            <span class="menu-icon">
+              <i class="ki-duotone ki-rocket fs-2">
+                <span class="path1"></span>
+                <span class="path2"></span>
+              </i>
+            </span>
+            <span class="menu-title">Chat Tool Call</span>
+          </a>
+          <!--end:Menu link ChatToolCall -->
+        </div>
+        <!--end:Menu item ChatToolCall -->
+
+      </div>
+      <!--end:Menu sub Manifests-->
+    </div>
+    <!--end:Menu item Manifests-->
+  </div>
+</div>
+<!--end:Menu item CLI-->

@@ -40,6 +40,10 @@ django-cors-headers==4.3.1              # Cross-origin resource sharing
 drf-yasg==1.21.7                        # Swagger API documentation
 django-waffle==4.1.0                    # Feature flagging
 
+# Wagtail
+# ------------
+wagtail==6.1.2                          # Wagail CMS, for building static pages
+
 # for working with data
 # ------------
 docutils==0.21.2                        # required by Django for django.contrib.admindocs

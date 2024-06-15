@@ -203,6 +203,8 @@ class SettingsDefaults:
     MAILCHIMP_API_KEY = os.environ.get("MAILCHIMP_API_KEY", None)
     MAILCHIMP_LIST_ID = os.environ.get("MAILCHIMP_LIST_ID", None)
 
+    MARKETING_SITE_URL = "https://smarter.sh"
+
     OPENAI_API_ORGANIZATION: str = os.environ.get("OPENAI_API_ORGANIZATION", None)
     OPENAI_API_KEY = SecretStr(os.environ.get("TF_VAR_OPENAI_API_KEY", None))
     OPENAI_ENDPOINT_IMAGE_N = 4
@@ -358,6 +360,7 @@ class Settings(BaseSettings):
     langchain_memory_key: Optional[str] = Field(SettingsDefaults.LANGCHAIN_MEMORY_KEY, env="LANGCHAIN_MEMORY_KEY")
     mailchimp_api_key: Optional[str] = Field(SettingsDefaults.MAILCHIMP_API_KEY, env="MAILCHIMP_API_KEY")
     mailchimp_list_id: Optional[str] = Field(SettingsDefaults.MAILCHIMP_LIST_ID, env="MAILCHIMP_LIST_ID")
+    marketing_site_url: Optional[str] = Field(SettingsDefaults.MARKETING_SITE_URL, env="MARKETING_SITE_URL")
     openai_api_organization: Optional[str] = Field(
         SettingsDefaults.OPENAI_API_ORGANIZATION, env="OPENAI_API_ORGANIZATION"
     )
@@ -698,6 +701,14 @@ class Settings(BaseSettings):
         """Check mailchimp_list_id"""
         if v in [None, ""]:
             return SettingsDefaults.MAILCHIMP_LIST_ID
+        return v
+
+    @field_validator("marketing_site_url")
+    def check_marketing_site_url(cls, v) -> str:
+        """Check marketing_site_url"""
+        if v in [None, ""]:
+            return SettingsDefaults.MARKETING_SITE_URL
+        SmarterValidator.validate_url(v)
         return v
 
     @field_validator("openai_api_organization")
