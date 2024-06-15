@@ -51,6 +51,7 @@ from .views.views import (
     DocsJsonSchemasView,
     DocsLearnView,
     DocsManifestsView,
+    DocsPluginsView,
     DocsView,
     SiteMapView,
 )
@@ -97,6 +98,7 @@ urlpatterns = [
     path("learn/", DocsLearnView.as_view(), name="docs_learn"),
     path("json-schemas/", DocsJsonSchemasView.as_view(), name="docs_json_schemas"),
     path("manifests/", DocsManifestsView.as_view(), name="docs_manifests"),
+    path("plugins/", DocsPluginsView.as_view(), name="docs_plugins"),
     path("sitemap", SiteMapView.as_view(), name="sitemap"),
     # -------------------------------------------------------------------------
     # Developers docs rendered from markdown in /data/doc/ in the Dockeer container
