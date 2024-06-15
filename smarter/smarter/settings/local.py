@@ -30,14 +30,14 @@ STATICFILES_STORAGE = "whitenoise.storage.StaticFilesStorage"
 
 INSTALLED_APPS += ["django_extensions"]
 
-if DEBUG and not "test" in sys.argv:
-    INSTALLED_APPS += [
-        "debug_toolbar",
-    ]
+# if DEBUG and not "test" in sys.argv:
+#     INSTALLED_APPS += [
+#         "debug_toolbar",
+#     ]
 
-    MIDDLEWARE += [
-        "debug_toolbar.middleware.DebugToolbarMiddleware",
-    ]
+#     MIDDLEWARE += [
+#         "debug_toolbar.middleware.DebugToolbarMiddleware",
+#     ]
 
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",  # Django
