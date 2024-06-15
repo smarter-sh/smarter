@@ -10,8 +10,9 @@ from smarter.apps.cms.models import RawHtmlPage
 class Command(BaseCommand):
     """Django manage.py initialize_wagtail command. This module is used to initialize the Wagtail CMS. It is used to create the root page and the home page."""
 
+    help = "Initializes the Wagtail site with a default root page and site settings."
+
     def handle(self, *args, **options):
-        help = "Initializes the Wagtail site with a default root page and site settings."
 
         root_page_title = "Root"
         root_page_slug = "root"

@@ -32,6 +32,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR("You must provide an account number or a username"))
             return
 
+        account = None
         if account_number:
             account = Account.objects.get(account_number=account_number)
         if username:
