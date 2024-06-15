@@ -1,3 +1,4 @@
+<!--begin::CardBody-->
 <div class="card-body">
   <!--begin::Heading-->
   <div class="mb-10">
@@ -5,76 +6,242 @@
     <h1 class="fs-2x text-gray-900 mb-6">The Smarter Platform</h1>
     <h2 class="mt-6 mb-6">Built for the evolving needs of generative AI prompt engineers.</h2>
     <!--end::Title-->
-      <!--begin::Text-->
-      <p>Shoo be doo be doo</p>
-      <!--end::Text-->
+    <!--begin::Text-->
+    <p>
+      Smarter is a no-code platform for managing AI resources in the cloud, at scale.
+      It's the smarter way to design, train, test, deploy and monitor generative AI models.
+      Smarter's plugin architecture allows you to easily train models with proprietary data,
+      while keeping your data private. Smarter's manifest approach to resource management
+      simplifies the process of working with AI resources
+      in the cloud. Smarter's CLI allows you to easily interact with the platform from the
+      command line, as well as from a growing ecosystem of OEM tools.
+    </p>
+    <!--end::Text-->
   </div>
   <!--end::Heading-->
   <!--begin::Row-->
   <div class="row g-10 mb-15">
-    <!--begin::GetStarted-->
-    <div id="learn">
-      <h3 class="mt-6 mb-6">Get Started</h3>
-      <p>Learn learn learn </p>
-      <div class="mb-3 d-flex justify-content-center">
-        <a href="{% slugurl 'learn' %}" class="btn btn-color-white bg-white bg-opacity-25 bg-hover-opacity-50 fw-semibold">Learn</a>
+    <!--begin::Column-->
+    <div class="col">
+      <!--begin::GetStarted-->
+      <div id="learn">
+        <h3 class="mt-6 mb-6">Getting Started</h3>
+        <p>
+          The best way to learn about Smarter is to dive in and start using it. Most new users are able to
+          complete the Smarter tutorial in less than an hour. The tutorial will walk you through the process
+          of creating and deploying a new Chatbot that's been trained on a fictitious consumer product.
+        </p>
+        <div class="mb-3 d-flex justify-content-center">
+          <a href="{% slugurl 'learn' %}" style="color: white; background-color: orange;" class="btn">Learn</a>
+        </div>
       </div>
+      <!--end::GetStarted-->
     </div>
-    <!--end::GetStarted-->
-
-    <!--begin::Manifests-->
-    <div id="manifests">
-      <h3 class="mt-6 mb-6">Manifests</h3>
-      <!--begin::Text-->
-      <p>No-Code approach to working with AI resources in the cloud.</p>
-      <!--end::Text-->
+    <!--end::Column-->
+    <!--begin::Column-->
+    <div class="col">
+      <!--begin::Plugins-->
+      <div id="plugins">
+        <h3 class="mt-6 mb-6">Plugins</h3>
+        <!--begin::Text-->
+        <p>
+          Smarter plugins require no coding whatsoever nor data science experience, and they are
+          astonishingly powerful. Turn an ordinary large language model into a domain expert
+          in any subject in a matter of minutes. Plugins are the secret sauce that makes
+          Smarter so powerful. Add as many as you like to your Chatbot, and tune them in real-time.
+          Your private data stays private, and your plugins are yours to keep.
+        </p>
+        <!--end::Text-->
+        <!-- begin::CTA -->
+        <div class="mb-3 d-flex justify-content-center">
+          <a href="{% slugurl 'plugins' %}" style="color: white; background-color: orange;" class="btn">More About
+            Plugins</a>
+        </div>
+        <!-- begin::CTA -->
+      </div>
+      <!--end::Plugins-->
     </div>
-    <!--end::Manifests-->
-
-    <!--begin::Plugins-->
-    <div id="plugins">
-      <h3 class="mt-6 mb-6">Plugins</h3>
-      <!--begin::Text-->
-      <p>The smarter way to train an AI. Extremely powerful, intuitive, fast, easy to maintain.</p>
-      <!--end::Text-->
-    </div>
-    <!--end::Plugins-->
-
-
-    <!--begin::CLI-->
-    <div id="cli">
-      <h3 class="mt-6 mb-6">Command-Line Interface</h3>
-      <!--begin::Text-->
-      <p>Shoo be do be do.</p>
-      <!--end::Text-->
-    </div>
-    <!--end::CLI-->
-
-
-    <!--begin::SmarterAPI-->
-    <div id="smarter-api">
-      <h2 class="mt-6 mb-6">Smarter API</h2>
-      <p>Smarter is so smart.</p>
-    </div>
-    <!--end::SmarterAPI-->
-
-    <!--begin::Developers-->
-    <div id="developers">
-      <h3 class="mt-6 mb-6">OEM's and Developers</h3>
-      <!--begin::Text-->
-      <p>A variety of developer strategies. extensible platform, a large market to sell into, strong ecosystem. Build on top of our API and our CLI</p>
-      <!--end::Text-->
-    </div>
-    <!--end::Developers-->
+    <!--end::Column-->
   </div>
   <!--end::Row-->
-  <!--begin::Administration-->
-  <div id="administration">
-    <h3 class="mt-6 mb-6">Administration</h3>
-    <!--begin::Text-->
-    <p>System management, installation options, stuff that matters: security, privacy, audit capability, cost & budget
-      controls.</p>
-    <!--end::Text-->
+
+
+  <!--begin::Row-->
+  <div class="row g-10 mb-15">
+    <!--begin::Column-->
+    <div class="col">
+      <!--begin::Manifests-->
+      <div id="manifests">
+        <h3 class="mt-6 mb-6">Manifests</h3>
+        <!--begin::Text-->
+        <p>
+          Smarter's manifest approach to resource management simplifies the process of working with AI resources in the
+          cloud.
+          A manifest is a human readable form written in YAML that describes your resources. It's a simple way to manage
+          users, models, plugins, chatbots, and more. Manifests are versioned, and can be shared across your team. They
+          can
+          be
+          used to create, update, and delete resources in the cloud.
+        </p>
+        <!--end::Text-->
+        <!-- begin::CTA -->
+        <div class="mb-3 d-flex justify-content-center">
+          <a href="{% slugurl 'manifests' %}" style="color: white; background-color: orange;" class="btn">More About
+            Manifests</a>
+        </div>
+        <!-- begin::CTA -->
+      </div>
+      <!--end::Manifests-->
+    </div>
+    <!--end::Column-->
+    <!--begin::Column-->
+    <div class="col">
+      <!--begin::Simple-->
+      <div id="simple">
+        <h2 class="mt-6 mb-6">Simple</h2>
+        <p>
+          Smarter building blocks -- chatbots, plugins, and keys -- are powerful yet easy to understand.
+          You can work from anywhere, collaboratively, and store your work anywhere you like.
+        </p>
+        <!-- begin::CTA -->
+        <div class="mb-3 d-flex justify-content-center">
+          <a href="{% slugurl 'learn' %}" style="color: white; background-color: orange;" class="btn">Learn</a>
+        </div>
+        <!-- begin::CTA -->
+      </div>
+      <!--end::Simple-->
+    </div>
+    <!--end::Column-->
   </div>
-  <!--end::Administration-->
+  <!--end::Row-->
+
+
+  <!--begin::Row-->
+  <div class="row g-10 mb-15">
+    <!--begin::Column-->
+    <div class="col">
+      <!--begin::Private-->
+      <div id="safe">
+        <h2 class="mt-6 mb-6">Safe</h2>
+        <p>
+          We take privacy seriously. Your data belongs to you. We don't look at it.
+          We don't share it with anyone. We don't sell it, and we don't use it to train models; not ours nor anyone
+          elses.
+          Moreover, you remain in complete control of your AI resources and your data at all times.
+        </p>
+        <!-- begin::CTA -->
+        <div class="mb-3 d-flex justify-content-center">
+          <a href="{% slugurl 'privacy' %}" style="color: white; background-color: orange;" class="btn">Privacy</a>
+        </div>
+        <!-- begin::CTA -->
+      </div>
+      <!--end::Private-->
+    </div>
+    <!--end::Column-->
+    <!--begin::Column-->
+    <div class="col">
+      <!--begin::Secure-->
+      <div id="secure">
+        <h3 class="mt-6 mb-6">Secure</h3>
+        <!--begin::Text-->
+        <p>
+          We take security seriously as well. We're experts at managing enterprise data for large
+          corporate, government and educational organizations. We follow cloud computing best
+          practices, and we're happy to share and discuss these with you.
+        </p>
+        <!--end::Text-->
+        <!-- begin::CTA -->
+        <div class="mb-3 d-flex justify-content-center">
+          <a href="{% slugurl 'security' %}" style="color: white; background-color: orange;" class="btn">Security</a>
+        </div>
+        <!-- begin::CTA -->
+      </div>
+      <!--end::Secure-->
+    </div>
+    <!--end::Column-->
+  </div>
+  <!--end::Row-->
+
+
+  <!--begin::Row-->
+  <div class="row g-10 mb-15">
+    <!--begin::Column-->
+    <div class="col">
+      <!--begin::Developers-->
+      <div id="developers">
+        <h3 class="mt-6 mb-6">Developers</h3>
+        <!--begin::Text-->
+        <p>
+          Smarter is an extensible platform that is designed to be accessible, and easy to build on top of.
+          We've published complete documentation for our API, our JSON schemas, our manifests,
+          and our CLI, which is open sourced. Smarter offers developers and OEMs a
+          large market to sell into, and a welcoming ecosystem to help you get started. Take
+          a look at our developer documentation to learn more.
+        </p>
+        <!--end::Text-->
+        <!-- begin::CTA -->
+        <div class="mb-3 d-flex justify-content-center">
+          <a href="{% slugurl 'developers' %}" style="color: white; background-color: orange;" class="btn">Developer
+            Documentation</a>
+        </div>
+        <!-- begin::CTA -->
+      </div>
+      <!--end::Developers-->
+    </div>
+    <!--end::Column-->
+    <!--begin::Column-->
+    <div class="col">
+      <!--begin::GetCertified-->
+      <div id="learn">
+        <h3 class="mt-6 mb-6">Get Certified</h3>
+        <p>
+          Take your career to the next level by earning your certificate at Smarter University. With certification
+          tracks in
+          prompt engineering and
+          Smarter platform system administration you can become a Smarter expert in only three months, studying
+          part-time.
+        </p>
+        <!-- begin::CTA -->
+        <div class="mb-3 d-flex justify-content-center">
+          <a href="{% slugurl 'get-certified' %}" style="color: white; background-color: orange;" class="btn">Smarter
+            University</a>
+        </div>
+        <!-- begin::CTA -->
+      </div>
+      <!--end::GetCertified-->
+    </div>
+    <!--end::Column-->
+  </div>
+  <!--end::Row-->
+
+
+  <!--begin::Row-->
+  <div class="row g-10 mb-15">
+    <!--begin::Administration-->
+    <div id="administration">
+      <h3 class="mt-6 mb-6">Administration</h3>
+      <!--begin::Text-->
+      <p>
+        Think of Smarter as the RedHat Linux of generative AI resource management.
+        It's designed for large organizations. Use it as a SaaS platform,
+        or install it on premise on your own servers. Either way, we're happy to
+        remain as hands-on or hands-off as you like. We offer customizable data retention policies,
+        cost & budget controls, and audit capabilities. We're happy to discuss your needs and
+        help you get started.
+      </p>
+      <!--end::Text-->
+      <!-- begin::CTA -->
+      <div class="mb-3 d-flex justify-content-center">
+        <a href="{% slugurl 'administration' %}" style="color: white; background-color: orange;"
+          class="btn">Administration</a>
+      </div>
+      <!-- begin::CTA -->
+    </div>
+    <!--end::Administration-->
+
+  </div>
+  <!--end::Row-->
+
+
 </div>
+<!--end::CardBody-->
