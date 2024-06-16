@@ -171,6 +171,7 @@ MIDDLEWARE = [
     # wagtail middleware
     # -------------------------------
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
+    "smarter.apps.cms.middleware.HTMLMinifyMiddleware",
     #
 ]
 
@@ -367,4 +368,4 @@ WAGTAILDOCS_EXTENSIONS = ["csv", "docx", "key", "odt", "pdf", "pptx", "rtf", "tx
 # Reverse the default case-sensitive handling of tags
 TAGGIT_CASE_INSENSITIVE = True
 
-WAGTAILADMIN_BASE_URL = "/cms/"
+WAGTAILADMIN_BASE_URL = "/cms/admin/"
