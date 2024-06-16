@@ -4,7 +4,9 @@
 {% block head %}
   {{ block.super }}
   <meta property="og:url" content="{% fullpageurl page %}" />
-  <meta name="generator" content="Wagtail" />
+{% endblock %}
+{% block canonical %}
+  <link rel="canonical" href="{% pageurl page %}" />
 {% endblock %}
 
 {% block head_extra %}
