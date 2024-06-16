@@ -23,20 +23,6 @@
   <div class="row g-10">
     <!--begin::Column-->
     <div class="col">
-      <!--begin::GetStarted-->
-      <div id="learn">
-        <h3 class="mt-6 mb-6">Getting Started</h3>
-        <p>
-          The best way to learn about Smarter is to dive in and start using it. Most new users are able to
-          complete the Smarter tutorial in less than an hour. The tutorial will walk you through the process
-          of creating and deploying a new Chatbot that's been trained on a fictitious consumer product.
-        </p>
-      </div>
-      <!--end::GetStarted-->
-    </div>
-    <!--end::Column-->
-    <!--begin::Column-->
-    <div class="col">
       <!--begin::Plugins-->
       <div id="plugins">
         <h3 class="mt-6 mb-6">Plugins</h3>
@@ -53,29 +39,6 @@
       <!--end::Plugins-->
     </div>
     <!--end::Column-->
-  </div>
-  <!--end::Row-->
-  <!--begin::Row-->
-  <div class="row g-10 mb-15">
-    <div class="col">
-      <div class="mb-3 d-flex justify-content-center">
-        <a href="{% slugurl 'learn' %}" style="color: white; background-color: orange;" class="btn">Learn</a>
-      </div>
-    </div>
-    <div class="col">
-        <!-- begin::CTA -->
-        <div class="mb-3 d-flex justify-content-center">
-          <a href="{% slugurl 'plugins' %}" style="color: white; background-color: orange;" class="btn">More About
-            Plugins</a>
-        </div>
-        <!-- begin::CTA -->
-    </div>
-  </div>
-  <!--end::Row-->
-
-
-  <!--begin::Row-->
-  <div class="row g-10">
     <!--begin::Column-->
     <div class="col">
       <!--begin::Manifests-->
@@ -96,45 +59,47 @@
       <!--end::Manifests-->
     </div>
     <!--end::Column-->
-    <!--begin::Column-->
-    <div class="col">
-      <!--begin::Simple-->
-      <div id="simple">
-        <h2 class="mt-6 mb-6">Simple</h2>
-        <p>
-          Smarter building blocks -- chatbots, plugins, and keys -- are powerful yet easy to understand.
-          You can work from anywhere, collaboratively, and store your work anywhere you like.
-        </p>
-      </div>
-      <!--end::Simple-->
-    </div>
-    <!--end::Column-->
   </div>
   <!--end::Row-->
   <!--begin::Row-->
   <div class="row g-10 mb-15">
-    <!--begin::Column-->
     <div class="col">
-        <!-- begin::CTA -->
-        <div class="mb-3 d-flex justify-content-center">
-          <a href="{% slugurl 'manifests' %}" style="color: white; background-color: orange;" class="btn">More About
-            Manifests</a>
-        </div>
-        <!-- end::CTA -->
+      <!-- begin::CTA -->
+      <div class="mb-3 d-flex justify-content-center">
+        <a href="{% slugurl 'manifests' %}" style="color: white; background-color: orange;" class="btn">More About
+          Manifests</a>
+      </div>
+      <!-- end::CTA -->
     </div>
-    <!--end::Column-->
-    <!--begin::Column-->
     <div class="col">
-        <!-- begin::CTA -->
-        <div class="mb-3 d-flex justify-content-center">
-          <a href="{% slugurl 'learn' %}" style="color: white; background-color: orange;" class="btn">Learn</a>
-        </div>
-        <!-- end::CTA -->
+      <!-- begin::CTA -->
+      <div class="mb-3 d-flex justify-content-center">
+        <a href="{% slugurl 'plugins' %}" style="color: white; background-color: orange;" class="btn">More About
+          Plugins</a>
+      </div>
+      <!-- begin::CTA -->
     </div>
-    <!--end::Column-->
-
   </div>
   <!--end::Row-->
+
+  <!--begin::Row -- learn -->
+  <div class="row g-10">
+    <!--begin::GetStarted-->
+    <div id="learn">
+      <h3 class="mt-6 mb-6">Getting Started</h3>
+      <p>
+        The best way to learn about Smarter is to dive in and start using it. Most new users are able to
+        complete the Smarter tutorial in less than an hour. The tutorial will walk you through the process
+        of creating and deploying a new Chatbot that's been trained on a fictitious consumer product.
+      </p>
+    </div>
+    <!--end::GetStarted-->
+    <div class="mb-3 d-flex justify-content-center">
+      <a href="{% slugurl 'learn' %}" style="color: white; background-color: orange;" class="btn">Learn</a>
+    </div>
+  </div>
+  <!--begin::Row-->
+
 
 
   <!--begin::Row-->
@@ -156,18 +121,15 @@
     <!--end::Column-->
     <!--begin::Column-->
     <div class="col">
-      <!--begin::Secure-->
-      <div id="secure">
-        <h3 class="mt-6 mb-6">Secure</h3>
-        <!--begin::Text-->
+      <!--begin::Simple-->
+      <div id="simple">
+        <h2 class="mt-6 mb-6">Simple</h2>
         <p>
-          We take security seriously as well. We're experts at managing enterprise data for large
-          corporate, government and educational organizations. We follow cloud computing best
-          practices, and we're happy to share and discuss these with you.
+          Smarter building blocks -- chatbots, plugins, and keys -- are powerful yet easy to understand.
+          You can work from anywhere, collaboratively, and store your work anywhere you like.
         </p>
-        <!--end::Text-->
       </div>
-      <!--end::Secure-->
+      <!--end::Simple-->
     </div>
     <!--end::Column-->
   </div>
@@ -176,22 +138,46 @@
   <div class="row g-10 mb-15">
     <!--begin::Column-->
     <div class="col">
-        <!-- begin::CTA -->
-        <div class="mb-3 d-flex justify-content-center">
-          <a href="{% slugurl 'privacy' %}" style="color: white; background-color: orange;" class="btn">Privacy</a>
-        </div>
-        <!-- end::CTA -->
+      <!-- begin::CTA -->
+      <div class="mb-3 d-flex justify-content-center">
+        <a href="{% slugurl 'privacy' %}" style="color: white; background-color: orange;" class="btn">Privacy</a>
+      </div>
+      <!-- end::CTA -->
     </div>
     <!--end::Column-->
     <!--begin::Column-->
     <div class="col">
-        <!-- begin::CTA -->
-        <div class="mb-3 d-flex justify-content-center">
-          <a href="{% slugurl 'security' %}" style="color: white; background-color: orange;" class="btn">Security</a>
-        </div>
-        <!-- end::CTA -->
+      <!-- begin::CTA -->
+      <div class="mb-3 d-flex justify-content-center">
+        <a href="{% slugurl 'learn' %}" style="color: white; background-color: orange;" class="btn">Learn</a>
+      </div>
+      <!-- end::CTA -->
     </div>
     <!--end::Column-->
+
+  </div>
+  <!--end::Row-->
+
+
+  <!--begin::Row-->
+  <div class="row g-10">
+    <!--begin::Secure-->
+    <div id="secure">
+      <h3 class="mt-6 mb-6">Secure</h3>
+      <!--begin::Text-->
+      <p>
+        We take security seriously as well. We're experts at managing enterprise data for large
+        corporate, government and educational organizations. We follow cloud computing best
+        practices, and we're happy to share and discuss these with you.
+      </p>
+      <!--end::Text-->
+    </div>
+    <!-- begin::CTA -->
+    <div class="mb-3 d-flex justify-content-center">
+      <a href="{% slugurl 'security' %}" style="color: white; background-color: orange;" class="btn">Security</a>
+    </div>
+    <!-- end::CTA -->
+    <!--end::Secure-->
   </div>
   <!--end::Row-->
 
@@ -237,20 +223,20 @@
   <!--begin::Row-->
   <div class="row g-10 mb-15">
     <div class="col">
-        <!-- begin::CTA -->
-        <div class="mb-3 d-flex justify-content-center">
-          <a href="{% slugurl 'developers' %}" style="color: white; background-color: orange;" class="btn">Developer
-            Documentation</a>
-        </div>
-        <!-- end::CTA -->
+      <!-- begin::CTA -->
+      <div class="mb-3 d-flex justify-content-center">
+        <a href="{% slugurl 'developers' %}" style="color: white; background-color: orange;" class="btn">Developer
+          Documentation</a>
+      </div>
+      <!-- end::CTA -->
     </div>
     <div class="col">
-        <!-- begin::CTA -->
-        <div class="mb-3 d-flex justify-content-center">
-          <a href="{% slugurl 'get-certified' %}" style="color: white; background-color: orange;" class="btn">Smarter
-            University</a>
-        </div>
-        <!-- end::CTA -->
+      <!-- begin::CTA -->
+      <div class="mb-3 d-flex justify-content-center">
+        <a href="{% slugurl 'get-certified' %}" style="color: white; background-color: orange;" class="btn">Smarter
+          University</a>
+      </div>
+      <!-- end::CTA -->
     </div>
   </div>
   <!--end::Row-->
