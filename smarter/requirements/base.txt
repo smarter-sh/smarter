@@ -43,6 +43,8 @@ django-waffle==4.1.0                    # Feature flagging
 # Wagtail
 # ------------
 wagtail==6.1.2                          # Wagail CMS, for building static pages
+beautifulsoup4==4.12.3                  # HTML parser for Wagtail page compression
+lxml==5.2.2                             # parser for Wagtail page compression
 
 # for working with data
 # ------------
