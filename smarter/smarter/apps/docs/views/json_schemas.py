@@ -24,8 +24,8 @@ class DocsJsonSchemaBaseView(DocsBaseView):
         view = ApiV1CliSchemaApiView.as_view()
         json_response = self.get_brokered_json_response(ApiV1CliReverseViews.schema, view, request, *args, **kwargs)
         json_response = json.dumps(json_response, indent=4)
-
-        return render(request, self.template_path, {"json_schema": json_response})
+        self.context["json_schema"] = json_response
+        return render(request, self.template_path, context=self.context)
 
 
 class DocsJsonSchemaAccountView(DocsJsonSchemaBaseView):
