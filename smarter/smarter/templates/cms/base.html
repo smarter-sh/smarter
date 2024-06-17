@@ -13,7 +13,9 @@
 {% block root %}
 <!--begin::Page-->
 <div class="app-page flex-column flex-column-fluid" id="kt_app_page">
-  {% include 'cms/base/header.html' %}
+  <div class="smarter-static-header">
+    {% include 'cms/base/header.html' %}
+  </div>
   <!--end::Header-->
   <!--begin::Wrapper-->
   <div class="app-wrapper flex-column flex-row-fluid" id="kt_app_wrapper">
@@ -48,27 +50,33 @@
 
                 <!-- begin::Wagtail block tag -->
                 {% block content %}
-                  {{ page.body|decode_html_entities|safe }}
+                  <div class="smarter-wagtail-page-block">
+                    {{ page.body|decode_html_entities|safe }}
+                  </div>
                 {% endblock %}
                 <!-- end::Wagtail block tag -->
                 <!-- begin::docs app static content -->
-                {% block docs_content %}
-                {% endblock %}
+                <div class="smarter-static-page-block">
+                  {% block docs_content %}
+                  {% endblock %}
+                </div>
                 <!-- end::docs app static content -->
-
               </div>
               <!--end::Content-->
               <!--begin::Sidebar-->
               <div class="flex-column flex-lg-row-auto w-100 w-xl-350px">
-                {% for block in page.sidebar %}
-                  {% if block.block_type == 'html_block' %}
-                      <div class="sidebar-item">{{ block.value|safe|render_as_template:request }}</div>
-                  {% endif %}
-                {# Add other conditions for different snippet types as needed #}
-                {% endfor %}
-                {% block docs_sidebar %}
-                {% endblock %}
-
+                <div class="smarter-wagtail-sidebar">
+                  {% for block in page.sidebar %}
+                    {% if block.block_type == 'html_block' %}
+                        <div class="sidebar-item">{{ block.value|safe|render_as_template:request }}</div>
+                    {% endif %}
+                    {# Add other conditions for different snippet types as needed #}
+                  {% endfor %}
+                </div>
+                <div class="smarter-static-sidebar">
+                  {% block docs_sidebar %}
+                  {% endblock %}
+                </div>
               </div>
               <!--end::Sidebar-->
 
@@ -80,7 +88,9 @@
         <!--end::Content-->
       </div>
       <!--end::Content wrapper-->
-      {% include 'cms/base/footer.html' %}
+      <div class="smarter-static-footer">
+        {% include 'cms/base/footer.html' %}
+      </div>
     </div>
     <!--end:::Main-->
   </div>
