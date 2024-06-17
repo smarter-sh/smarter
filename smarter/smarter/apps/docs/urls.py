@@ -8,6 +8,7 @@ from rest_framework import permissions
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 
+from .utils import json_schema_name, json_schema_path, manifest_name, manifest_path
 from .views.developer import (
     DeveloperDocsArchitectureView,
     DeveloperDocsChatBotApiView,
@@ -18,7 +19,7 @@ from .views.developer import (
     DeveloperDocsSemanticVersioningView,
     DeveloperDocsTwelveFactorView,
 )
-from .views.json_schemas import (
+from .views.json_schema import (
     DocsJsonSchemaAccountView,
     DocsJsonSchemaApiConnectionView,
     DocsJsonSchemaApiKeyView,
@@ -31,7 +32,7 @@ from .views.json_schemas import (
     DocsJsonSchemaSqlConnectionView,
     DocsJsonSchemaUserView,
 )
-from .views.manifests import (
+from .views.manifest import (
     DocsExampleManifestAccountView,
     DocsExampleManifestApiConnectionView,
     DocsExampleManifestApiKeyView,
@@ -44,6 +45,7 @@ from .views.manifests import (
     DocsExampleManifestSqlConnectionView,
     DocsExampleManifestUserView,
 )
+from .views.views import JsonSchemasView, ManifestsView
 
 
 schema_view = get_schema_view(
@@ -58,22 +60,6 @@ schema_view = get_schema_view(
     public=True,
     permission_classes=(permissions.AllowAny,),
 )
-
-
-def manifest_path(kind: str) -> str:
-    return f"manifest/{kind}/".lower()
-
-
-def manifest_name(kind: str) -> str:
-    return f"api_docs_manifest_{kind}".lower()
-
-
-def json_schema_path(kind: str) -> str:
-    return f"json-schema/{kind}/".lower()
-
-
-def json_schema_name(kind: str) -> str:
-    return f"api_docs_json_schema_{kind}".lower()
 
 
 urlpatterns = [
@@ -182,4 +168,12 @@ urlpatterns = [
         name=manifest_name(SAMKinds.SQLCONNECTION),
     ),
     path(manifest_path(SAMKinds.USER), DocsExampleManifestUserView.as_view(), name=manifest_name(SAMKinds.USER)),
+    # -------------------------------------------------------------------------
+    # manifests landing page
+    # -------------------------------------------------------------------------
+    path("manifests/", ManifestsView.as_view(), name="docs_manifests"),
+    # -------------------------------------------------------------------------
+    # json schemas landing page
+    # -------------------------------------------------------------------------
+    path("json-schemas/", JsonSchemasView.as_view(), name="docs_json_schemas"),
 ]
