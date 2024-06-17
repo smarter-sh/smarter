@@ -25,11 +25,30 @@ redis:
         cpu: "1"
     affinity:
       podAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                  - key: "app"
+                    operator: In
+                    values:
+                      - smarter-redis
+              topologyKey: "kubernetes.io/hostname"
+      podAntiAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
           - labelSelector:
               matchExpressions:
-                - key: "app"
-                  operator: In
-                  values:
-                    - smarter-redis
+                - key: "lawrencemcdaniel.com/wordpress-only"
+                  operator: Exists
             topologyKey: "kubernetes.io/hostname"
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                  - key: "node-affinity"
+                    operator: In
+                    values:
+                      - "compatible"
+              topologyKey: "kubernetes.io/hostname"
