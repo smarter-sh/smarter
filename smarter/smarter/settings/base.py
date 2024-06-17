@@ -108,8 +108,9 @@ INSTALLED_APPS = [
     "smarter.apps.chat",
     "smarter.apps.chatbot",
     "smarter.apps.chatapp",
-    "smarter.apps.dashboard",
     "smarter.apps.cms",
+    "smarter.apps.dashboard",
+    "smarter.apps.docs",
     "smarter.apps.plugin",
     # 3rd party apps
     # -------------------------------

@@ -6,6 +6,8 @@ manifest and schema.
 import json
 from urllib.parse import urlparse
 
+from django.http import HttpRequest
+from django.http.response import HttpResponse
 from django.test import RequestFactory
 from django.urls import reverse
 
@@ -33,6 +35,7 @@ class DocsBaseView(SmarterWebView):
 
     template_path: str = None
     kind: SAMKinds = None
+    context: dict = {}
 
     def get_brokered_json_response(self, reverse_name: str, view, request, *args, **kwargs):
         """Get the JSON response from the brokered smarter.sh/api endpoint."""
@@ -60,3 +63,11 @@ class DocsBaseView(SmarterWebView):
             json_response = json_response[SmarterJournalApiResponseKeys.ERROR]
 
         return json_response
+
+    def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        self.context = {
+            "og_url": request.build_absolute_uri(),
+            "canonical": request.path,
+        }
+
+        return super().dispatch(request, *args, **kwargs)

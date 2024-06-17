@@ -25,7 +25,8 @@ class DocsExampleManifestBaseView(DocsBaseView):
         json_response = self.get_brokered_json_response(ApiV1CliReverseViews.manifest, view, request, *args, **kwargs)
 
         yaml_response = yaml.dump(json_response, default_flow_style=False)
-        return render(request, self.template_path, {"manifest": yaml_response})
+        self.context["manifest"] = yaml_response
+        return render(request, self.template_path, context=self.context)
 
 
 class DocsExampleManifestAccountView(DocsExampleManifestBaseView):
