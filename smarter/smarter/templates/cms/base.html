@@ -1,12 +1,7 @@
 {% extends 'base.html' %}
-{% load static wagtailcore_tags wagtailuserbar html_filters %}
+{% load static html_filters %}
 
-{% block head %}
-  {{ block.super }}
-  <meta property="og:url" content="{% fullpageurl page %}" />
-{% endblock %}
 {% block canonical %}
-  <link rel="canonical" href="{% pageurl page %}" />
 {% endblock %}
 
 {% block head_extra %}
@@ -56,6 +51,10 @@
                   {{ page.body|decode_html_entities|safe }}
                 {% endblock %}
                 <!-- end::Wagtail block tag -->
+                <!-- begin::docs app static content -->
+                {% block docs_content %}
+                {% endblock %}
+                <!-- end::docs app static content -->
 
               </div>
               <!--end::Content-->
@@ -67,6 +66,9 @@
                   {% endif %}
                 {# Add other conditions for different snippet types as needed #}
                 {% endfor %}
+                {% block docs_sidebar %}
+                {% endblock %}
+
               </div>
               <!--end::Sidebar-->
 

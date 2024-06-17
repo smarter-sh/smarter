@@ -38,7 +38,7 @@ urlpatterns = [
     #
     # documentation pages that are not part of the wagtail site
     # -----------------------------------
-    path("docs/", include("smarter.apps.cms.urls")),
+    path("docs/", include("smarter.apps.docs.urls")),
     # -----------------------------------
     #
     # shortcuts for authentication views
