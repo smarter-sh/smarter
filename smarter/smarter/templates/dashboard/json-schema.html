@@ -1,0 +1,13 @@
+{% extends 'docs/base.html' %}
+{% load static custom_filters %}
+
+
+{% block docs_content %}
+<div class="code-sample-body">
+  <pre class="code-snippet prettyprint">
+    <code>
+      {{ json_schema|unescape_unicode }}
+    </code>
+  </pre>
+</div>
+{% endblock %}
