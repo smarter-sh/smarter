@@ -1,0 +1,49 @@
+{% extends 'docs/base.html' %}
+{% load static custom_filters %}
+
+
+{% block docs_content %}
+<div class="card-body">
+    <!--begin::Heading-->
+    <div class="mb-10">
+      <!--begin::Title-->
+      <h1 class="fs-2x text-gray-900 mb-6">Example Manifests</h1>
+      <!--end::Title-->
+    </div>
+    <!--end::Heading-->
+    <!--begin::Row-->
+    <div class="row g-10 mb-15">
+      <!--begin::heading-1-->
+      <div id="heading-1">
+        <h3 class="mt-6 mb-6">Heading 1</h3>
+        <p>Design, train, test and deploy your specialized chatbot in </p>
+      </div>
+      <!--end::heading-1-->
+      <!--begin::heading-2-->
+      <div id="heading-2">
+        <h2 class="mt-6 mb-6">Heading 2</h2>
+        <p>Smarter is so smart.</p>
+      </div>
+      <!--end::heading-2-->
+      <!--begin::heading-3-->
+      <div id="heading-3" class="row">
+        <h3 class="mt-6 mb-6">Smarter Manifests</h3>
+          <!--begin::Manifests-->
+          <div class="row">
+            {% for manifest in manifests %}
+            <div class="col-4">
+                <!--begin::Manifest-->
+                <div class="card-body m-1 p-1 bg-secondary text-dark text-center d-flex align-items-center justify-content-center" style="min-height: 50px;">
+                    <strong class="fs-4"><a href="{{ manifest.path }}" class="fs-4">{{ manifest.name }}</a></strong>
+                </div>
+                <!--end::Manifest-->
+            </div>
+            {% endfor %}
+          </div>
+          <!--end::Manifests-->
+      </div>
+      <!--end::heading-3-->
+    </div>
+    <!--end::Row-->
+</div>
+{% endblock %}
