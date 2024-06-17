@@ -1,0 +1,20 @@
+{% extends 'cms/base.html' %}
+{% load static html_filters %}
+
+{% block head %}
+  {{ block.super }}
+  <meta property="og:url" content="{{ og_url }}" />
+{% endblock %}
+{% block canonical %}
+  <link rel="canonical" href="{{ canonical }}" />
+{% endblock %}
+
+
+{% block docs_content %}
+{% endblock %}
+
+{% block docs_sidebar %}
+  {% include 'docs/base/sidebar/waitlist.html' %}
+  {% include 'docs/base/sidebar/careers.html' %}
+  {% include 'docs/base/sidebar/stay-connected.html' %}
+{% endblock %}

@@ -203,8 +203,10 @@ class SettingsDefaults:
     MAILCHIMP_API_KEY = os.environ.get("MAILCHIMP_API_KEY", None)
     MAILCHIMP_LIST_ID = os.environ.get("MAILCHIMP_LIST_ID", None)
 
-    MARKETING_SITE_URL = "https://smarter.sh"
-    LOGO = "https://smarter.sh/wp-content/uploads/2024/04/Smarter_crop.png"
+    MARKETING_SITE_URL: str = os.environ.get("OPENAI_API_ORGANIZATION", "https://smarter.sh")
+    LOGO: str = os.environ.get(
+        "OPENAI_API_ORGANIZATION", "https://smarter.sh/wp-content/uploads/2024/04/Smarter_crop.png"
+    )
 
     OPENAI_API_ORGANIZATION: str = os.environ.get("OPENAI_API_ORGANIZATION", None)
     OPENAI_API_KEY = SecretStr(os.environ.get("TF_VAR_OPENAI_API_KEY", None))
