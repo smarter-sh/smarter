@@ -57,12 +57,18 @@
 		<!--begin::App-->
     <!--begin::Root-->
 		<div class="d-flex flex-column flex-root app-root" id="kt_app_root">
-      {% block root %}
-        {% block content %}
-        {% endblock %}
-        {% block docs_content %}
-        {% endblock %}
+      <div class="smarter-root-page-content">
+        {% block root %}
+          <div class="smarter-wagtail-page-content">
+            {% block content %}
+            {% endblock %}
+          </div>
+          <div class="smarter-static-page-content">
+            {% block docs_content %}
+            {% endblock %}
+          </div>
       {% endblock %}
+      </div>
 		</div>
     <!--end::Root-->
     <!--end::App-->
