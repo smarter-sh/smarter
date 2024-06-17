@@ -44,17 +44,6 @@ from .views.manifests import (
     DocsExampleManifestSqlConnectionView,
     DocsExampleManifestUserView,
 )
-from .views.views import (
-    DocsApiView,
-    DocsCliView,
-    DocsDevelopersView,
-    DocsJsonSchemasView,
-    DocsLearnView,
-    DocsManifestsView,
-    DocsPluginsView,
-    DocsView,
-    SiteMapView,
-)
 
 
 schema_view = get_schema_view(
@@ -88,18 +77,6 @@ def json_schema_name(kind: str) -> str:
 
 
 urlpatterns = [
-    # -------------------------------------------------------------------------
-    # Static pages
-    # -------------------------------------------------------------------------
-    path("", DocsView.as_view(), name="docs_home"),
-    path("api/", DocsApiView.as_view(), name="docs_api"),
-    path("cli/", DocsCliView.as_view(), name="docs_cli"),
-    path("developers/", DocsDevelopersView.as_view(), name="docs_developers"),
-    path("learn/", DocsLearnView.as_view(), name="docs_learn"),
-    path("json-schemas/", DocsJsonSchemasView.as_view(), name="docs_json_schemas"),
-    path("manifests/", DocsManifestsView.as_view(), name="docs_manifests"),
-    path("plugins/", DocsPluginsView.as_view(), name="docs_plugins"),
-    path("sitemap", SiteMapView.as_view(), name="sitemap"),
     # -------------------------------------------------------------------------
     # Developers docs rendered from markdown in /data/doc/ in the Dockeer container
     # -------------------------------------------------------------------------
