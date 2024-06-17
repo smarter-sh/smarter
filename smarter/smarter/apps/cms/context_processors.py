@@ -15,5 +15,6 @@ def base(request):
     docs_context = {
         "smarter_version": "v" + __version__,
         "smarter_marketing_site_url": smarter_settings.marketing_site_url,
+        "smarter_logo": smarter_settings.logo,
     }
     return docs_context
