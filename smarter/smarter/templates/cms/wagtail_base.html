@@ -11,6 +11,8 @@
 
 <!-- begin::Wagtail block tag -->
 {% block content %}
-  {{ page.body|decode_html_entities|safe }}
+  <div class="smarter-wagtail-content-block">
+    {{ page.body|decode_html_entities|safe }}
+  </div>
 {% endblock %}
 <!-- end::Wagtail block tag -->
