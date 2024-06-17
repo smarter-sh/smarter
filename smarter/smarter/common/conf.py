@@ -204,6 +204,7 @@ class SettingsDefaults:
     MAILCHIMP_LIST_ID = os.environ.get("MAILCHIMP_LIST_ID", None)
 
     MARKETING_SITE_URL = "https://smarter.sh"
+    LOGO = "https://smarter.sh/wp-content/uploads/2024/04/Smarter_crop.png"
 
     OPENAI_API_ORGANIZATION: str = os.environ.get("OPENAI_API_ORGANIZATION", None)
     OPENAI_API_KEY = SecretStr(os.environ.get("TF_VAR_OPENAI_API_KEY", None))
@@ -358,6 +359,7 @@ class Settings(BaseSettings):
         env=["GOOGLE_MAPS_API_KEY", "TF_VAR_GOOGLE_MAPS_API_KEY"],
     )
     langchain_memory_key: Optional[str] = Field(SettingsDefaults.LANGCHAIN_MEMORY_KEY, env="LANGCHAIN_MEMORY_KEY")
+    logo: Optional[str] = Field(SettingsDefaults.LOGO, env="LOGO")
     mailchimp_api_key: Optional[str] = Field(SettingsDefaults.MAILCHIMP_API_KEY, env="MAILCHIMP_API_KEY")
     mailchimp_list_id: Optional[str] = Field(SettingsDefaults.MAILCHIMP_LIST_ID, env="MAILCHIMP_LIST_ID")
     marketing_site_url: Optional[str] = Field(SettingsDefaults.MARKETING_SITE_URL, env="MARKETING_SITE_URL")
@@ -687,6 +689,13 @@ class Settings(BaseSettings):
             return v
         if v in [None, ""]:
             return SettingsDefaults.LANGCHAIN_MEMORY_KEY
+        return v
+
+    @field_validator("logo")
+    def check_logo(cls, v) -> str:
+        """Check logo"""
+        if v in [None, ""]:
+            return SettingsDefaults.LOGO
         return v
 
     @field_validator("mailchimp_api_key")
