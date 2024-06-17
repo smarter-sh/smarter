@@ -1,25 +1,15 @@
-{% extends 'docs/base.html' %}
-{% load static %}
-
-
-{% block head_extra %}
-  {{ block.super }}
-  <style>
-
-    .bg-card {
-      background-color: rgb(246, 247, 249);
-    }
-    #learn > ul {
-      color: black;
-    }
-    #title > p {
-      font-size: 16px;
-      font-weight: bolder;
-    }
-  </style>
-{% endblock %}
-
-{% block doc_content %}
+<style>
+  .bg-card {
+    background-color: rgb(246, 247, 249);
+  }
+  #learn > ul {
+    color: black;
+  }
+  #title > p {
+    font-size: 16px;
+    font-weight: bolder;
+  }
+</style>
 <div class="card-body">
   <!--begin::Heading-->
   <div class="mb-10">
@@ -104,4 +94,3 @@
   </div>
   <!--end::Row-->
 </div>
-{% endblock %}

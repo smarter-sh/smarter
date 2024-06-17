@@ -66,18 +66,18 @@
     <div class="col">
       <!-- begin::CTA -->
       <div class="mb-3 d-flex justify-content-center">
-        <a href="{% slugurl 'manifests' %}" style="color: white; background-color: orange;" class="btn">More About
-          Manifests</a>
-      </div>
-      <!-- end::CTA -->
-    </div>
-    <div class="col">
-      <!-- begin::CTA -->
-      <div class="mb-3 d-flex justify-content-center">
         <a href="{% slugurl 'plugins' %}" style="color: white; background-color: orange;" class="btn">More About
           Plugins</a>
       </div>
       <!-- begin::CTA -->
+    </div>
+    <div class="col">
+      <!-- begin::CTA -->
+      <div class="mb-3 d-flex justify-content-center">
+        <a href="{% slugurl 'manifests' %}" style="color: white; background-color: orange;" class="btn">More About
+          Manifests</a>
+      </div>
+      <!-- end::CTA -->
     </div>
   </div>
   <!--end::Row-->
@@ -85,18 +85,18 @@
   <!--begin::Row -- learn -->
   <div class="row g-10">
     <!--begin::GetStarted-->
-    <div id="learn">
+    <div id="learn" style="background-color: lightgray; border-radius: 5px;">
       <h3 class="mt-6 mb-6">Getting Started</h3>
       <p>
         The best way to learn about Smarter is to dive in and start using it. Most new users are able to
         complete the Smarter tutorial in less than an hour. The tutorial will walk you through the process
         of creating and deploying a new Chatbot that's been trained on a fictitious consumer product.
       </p>
-    </div>
+      <div class="mb-3 d-flex justify-content-center">
+        <a href="{% slugurl 'learn' %}" style="color: white; background-color: orange;" class="btn">Learn</a>
+      </div>
+      </div>
     <!--end::GetStarted-->
-    <div class="mb-3 d-flex justify-content-center">
-      <a href="{% slugurl 'learn' %}" style="color: white; background-color: orange;" class="btn">Learn</a>
-    </div>
   </div>
   <!--begin::Row-->
 
@@ -162,7 +162,7 @@
   <!--begin::Row-->
   <div class="row g-10">
     <!--begin::Secure-->
-    <div id="secure">
+    <div id="secure"  style="background-color:lightgray; border-radius: 5px;">
       <h3 class="mt-6 mb-6">Secure</h3>
       <!--begin::Text-->
       <p>
@@ -171,12 +171,12 @@
         practices, and we're happy to share and discuss these with you.
       </p>
       <!--end::Text-->
-    </div>
-    <!-- begin::CTA -->
-    <div class="mb-3 d-flex justify-content-center">
-      <a href="{% slugurl 'security' %}" style="color: white; background-color: orange;" class="btn">Security</a>
-    </div>
-    <!-- end::CTA -->
+      <!-- begin::CTA -->
+      <div class="mb-3 d-flex justify-content-center">
+        <a href="{% slugurl 'security' %}" style="color: white; background-color: orange;" class="btn">Security</a>
+      </div>
+      <!-- end::CTA -->
+      </div>
     <!--end::Secure-->
   </div>
   <!--end::Row-->

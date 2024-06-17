@@ -35,7 +35,12 @@ urlpatterns = [
     path("api/", include("smarter.apps.api.urls")),
     path("chatapp/", include("smarter.apps.chatapp.urls")),
     path("dashboard/", include("smarter.apps.dashboard.urls")),
-    path("docs2/", include("smarter.apps.docs.urls")),
+    #
+    # documentation pages that are not part of the wagtail site
+    # -----------------------------------
+    path("docs/", include("smarter.apps.cms.urls")),
+    # -----------------------------------
+    #
     # shortcuts for authentication views
     # -----------------------------------
     path("login/", LoginView.as_view(), name="login_view"),
