@@ -47,4 +47,4 @@ class RawHtmlPage(Page):
         FieldPanel("sidebar"),
     ]
 
-    template = "cms/base.html"
+    template = "cms/wagtail_base.html"
