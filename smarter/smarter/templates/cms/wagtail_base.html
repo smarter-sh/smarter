@@ -1,0 +1,16 @@
+{% extends 'cms/base.html' %}
+{% load static wagtailcore_tags wagtailuserbar html_filters %}
+
+{% block head %}
+  {{ block.super }}
+  <meta property="og:url" content="{% fullpageurl page %}" />
+{% endblock %}
+{% block canonical %}
+  <link rel="canonical" href="{% pageurl page %}" />
+{% endblock %}
+
+<!-- begin::Wagtail block tag -->
+{% block content %}
+  {{ page.body|decode_html_entities|safe }}
+{% endblock %}
+<!-- end::Wagtail block tag -->
