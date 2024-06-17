@@ -110,7 +110,6 @@ INSTALLED_APPS = [
     "smarter.apps.chatapp",
     "smarter.apps.dashboard",
     "smarter.apps.cms",
-    "smarter.apps.docs",
     "smarter.apps.plugin",
     # 3rd party apps
     # -------------------------------
@@ -192,7 +191,6 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "smarter.apps.account.context_processors.base",
                 "smarter.apps.cms.context_processors.base",
-                "smarter.apps.docs.context_processors.base",
                 "smarter.apps.dashboard.context_processors.branding",
                 "smarter.apps.dashboard.context_processors.base",
             ],
