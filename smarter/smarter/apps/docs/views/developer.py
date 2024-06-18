@@ -19,12 +19,33 @@ DOCS_PATH = "/data/doc/"
 
 
 # ------------------------------------------------------------------------------
-# Public Access Views
+# Public Access Base Views
 # ------------------------------------------------------------------------------
+class TxtBaseView(SmarterWebView):
+    """Text base view"""
+
+    template_path = "docs/txt_file.html"
+    text_file: str = None
+    title: str = None
+    leader: str = None
+
+    def get(self, request, *args, **kwargs):
+        file_path = self.text_file
+        with open(file_path, encoding="utf-8") as text_file:
+            text_content = text_file.read()
+
+        context = {
+            "requirements_html": text_content,
+            "title": self.title,
+            "leader": self.leader,
+        }
+        return render(request, self.template_path, context=context)
+
+
 class MarkdownBaseView(SmarterWebView):
     """Markdown base view"""
 
-    template_path = "cms/markdown.html"
+    template_path = "docs/markdown.html"
     markdown_file: str = None
 
     def get(self, request, *args, **kwargs):
@@ -33,10 +54,66 @@ class MarkdownBaseView(SmarterWebView):
             md_text = markdown_file.read()
 
         html = markdown.markdown(md_text)
+        context = {
+            "markdown_html": html,
+        }
 
-        return render(request, self.template_path, {"markdown_html": html})
+        return render(request, self.template_path, context=context)
 
 
+# ------------------------------------------------------------------------------
+# Public Access text file Views
+# ------------------------------------------------------------------------------
+class DeveloperDocsRequirementsView(TxtBaseView):
+    """Developer docs base requirements view"""
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.text_file = "/smarter/requirements/base.txt"
+        self.title = "Python Package Dependencies"
+        self.leader = """
+        Smarter Platform is a Python-Django micro-service application. Below is a list of the requirements and version
+        pins for packages included in this environment.
+        Note that we bump version pins on a monthly basis on the first of each month to our alpha branch. Version bumps
+        follow the normal CI-CD workflow to arrive into
+        the production environment, and that this takes an indertiminate amount of time before these ultimately arrive
+        into the production environment.
+        If you are developing your solution in Python then you can use this list to ensure that your development
+        environment is in sync with the Smarter Platform.
+        """
+
+
+class DeveloperDocsDockerfileView(TxtBaseView):
+    """Developer docs Dockerfile view"""
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.text_file = "/data/Dockerfile"
+        self.title = "Dockerfile"
+        self.leader = """
+        Smarter Platform is a Docker-based Python-Django micro-service application that runs in Kubernetes. Below is
+        the basic Dockerfile that is used to build the Smarter Platform Docker images for the application, the workers,
+        and the celery-beat pods.
+        """
+
+
+class DeveloperDocsDockerComposeView(TxtBaseView):
+    """Developer docs docker-compose.yml view"""
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.text_file = "/data/docker-compose.yml"
+        self.title = "docker-compose.yml"
+        self.leader = """
+        Smarter Platform is a Docker-based Python-Django micro-service application that runs in Kubernetes. Below is
+        a docker-compose.yml that strongly resembles the Kubernetes run-time configuration. You can use this file to
+        synch your local development environment with the Smarter Platform.
+        """
+
+
+# ------------------------------------------------------------------------------
+# Public Access Markdown Views
+# ------------------------------------------------------------------------------
 class DeveloperDocsTwelveFactorView(MarkdownBaseView):
     """Developer docs 12-factor view"""
 
