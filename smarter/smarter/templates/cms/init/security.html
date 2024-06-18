@@ -4,19 +4,170 @@
     <!--begin::Title-->
     <div id="title">
       <h1 class="fs-2x text-gray-900 mb-6">Security</h1>
-      <p class="mt-6 mb-6">yadda yadda yada.</p>
+      <p class="mt-6 mb-6">
+        We've been working with and amongst IT services for a really long time.
+        We've all learned the importance of holding our black hat adversaries in
+        the highest regard. They are, to say the least, highly adept at what they do.
+        And while none of us consider ourselves to be security experts, in the strictest
+        sense of the term, we <strong>do</strong> know a thing or two about how to protect
+        our systems from bad actors.
+      </p>
+      <p>
+        Mind you, and lest it go unsaid, the best way for you to protect your Smarter
+        AI resources from bad guys is manage your Api Keys responsibly. But with
+        that said, we've taken a few steps of our own to help keep a tight lid on things.
+      </p>
     </div>
     <!--end::Title-->
   </div>
   <!--end::Heading-->
   <!--begin::Row-->
   <div class="row g-10mb-15">
-    <!--begin::InstallCLI-->
-    <div id="install-cli">
-      <h3 class="mt-6 mb-6">Install the CLI</h3>
-      <p>install, install, install ...</p>
+
+    <!--begin::AttackSurface-->
+    <div id="security-attack-surface">
+      <h3 class="mt-6 mb-6">Smarter Has a Small Attack Surface</h3>
+      <p>
+        The best way to keep lock pickers at bay is to simply not have doors unless you absolutely, positively must.
+        In the case of Smarter, by 'doors' we mean ports. Our entire infrastructure platform is limited to port 443,
+        plus an IP-restricted port 22 for extremely limited SSH access. That's it. No other ports are open to the
+        public.
+      </p>
     </div>
-    <!--end::InstallCLI-->
+    <!--end::AttackSurface-->
+
+    <!--begin::Proxy-->
+    <div id="security-proxy">
+      <h3 class="mt-6 mb-6">All Smarter Services Run Behind a Proxy</h3>
+      <p>
+        All of our services run behind a proxy. This means that the only way to access our services is through the
+        proxy. The proxy is responsible for routing requests to the appropriate service, and it
+        also handles SSL termination. This means that all traffic to and from our services is encrypted,
+        and where applicable, we're able to apply specialize middlewares as countermeasures to
+        common intrusion strategies.
+      </p>
+    </div>
+    <!--end::Proxy-->
+
+    <!--begin::ServiceAccounts-->
+    <div id="security-service-accont">
+      <h3 class="mt-6 mb-6">All Infrastructure Uses Service Accounts</h3>
+      <p>
+        All of our infrastructure services run as service accounts. This means that the services themselves do not have
+        direct access to the underlying infrastructure. Instead, they must authenticate using a service account, on each
+        request.
+        This is a best practice for securing infrastructure, as it limits the potential damage that can be done by a
+        compromised service.
+      </p>
+    </div>
+    <!--end::ServiceAccounts-->
+
+    <!--begin::KeyRotation-->
+    <div id="security-rotation">
+      <h3 class="mt-6 mb-6">We Enforce a Credential Rotation Policy</h3>
+      <p>
+        We enforce a credential rotation policy for all of our services. This means that all of our services are
+        required to
+        rotate their credentials on a prescheduled periodic basis. This is a best practice for securing infrastructure,
+        as it limits the potential
+        damage that can be done by a compromised credential. We also enforce a policy of least privilege, meaning that
+        services
+        are only given the permissions that they need to do their job, and nothing more.
+      </p>
+    </div>
+    <!--end::KeyRotation-->
+
+    <!--begin::LowHumanCount-->
+    <div id="security-low-headcount">
+      <h3 class="mt-6 mb-6">Few Humans Have Access</h3>
+      <p>
+        Few humans have access to our infrastructure. This is a best practice for securing infrastructure, as it limits
+        the potential
+        damage that can be done by a compromised human. We also enforce a policy of least privilege, meaning that humans
+        are only given
+        the permissions that they need to do their job, and nothing more. As odd as it sounds, the lead engineer of the
+        Smarter platform
+        doesn't even have root access to the production environment. In fact, no human does.
+      </p>
+    </div>
+    <!--end::LowHumanCount-->
+
+    <!--begin::CommonSense-->
+    <div id="security-middlewares">
+      <h3 class="mt-6 mb-6">Common Sense Countermeasures</h3>
+      <p>
+        We've implemented a number of common sense countermeasures to help protect our infrastructure from bad actors.
+        These include rate limiting, IP blacklisting, and other measures. We also monitor our infrastructure for unusual
+        activity, and we have a response plan in place in case of a security incident. We take security very seriously,
+        and we're constantly working to improve our security posture. Other measures include:
+      </p>
+      <ul>
+        <li>Rate limiting</li>
+        <li>IP blacklisting</li>
+        <li>Monitoring for unusual activity</li>
+        <li>CORS Policy</li>
+        <li>CSRF Protection</li>
+        <li>SQL Injection Protection</li>
+        <li>XSS Protection</li>
+        <li>Clickjacking Protection</li>
+        <li>Content Security Policy</li>
+        <li>HTTP Strict Transport Security</li>
+        <li>Referrer Policy</li>
+      </ul>
+      <p>
+        While we'd love to take credit for some, or all of these, the truth is that most of these are built into the
+        Django framework that we use to build our services. But we're happy to take credit for having done the hard work
+        of building everything else!
+      </p>
+    </div>
+    <!--end::CommonSense-->
+
+    <!--begin::BackingServices-->
+    <div id="security-backing-services">
+      <h3 class="mt-6 mb-6">Our Persistence Services Are Begin VERY Thick Service Layers</h3>
+      <p>
+        The nature of Django's ORM is such that it's overwhelmingly challenging to write raw SQL queries via any
+        strategy, let alone via a tiny tunnel like what SQL injection affords. This is good, because it
+        means that we're not likely to be affected by SQL injection attacks, in the highly
+        unlikely event that we were to be targeted by one, and it miraculously succeeded.
+        But we're not taking any chances. We've also implemented a number of other common sense
+        countermeasures. For example, we use different logical databases for different services,
+        each with its own credentials and permissions.
+      </p>
+    </div>
+    <!--end::BackingServices-->
+
+    <!--begin::DDos-->
+    <div id="security-ddos-attacks">
+      <h3 class="mt-6 mb-6">We're Reasonably Well Protected From DDoS Attacks</h3>
+      <p>
+        Not so much because of anything we ourselves did, but simply because of our infrastructure choices. Our port 443
+        listens from a large cloud-based load balancer, which is designed to absorb DDoS attacks. Additionally, our raw
+        traffic routes to a cloud-based WAF, which is also designed to absorb DDoS attacks. We also have a number of
+        other countermeasures in place, such as rate limiting, IP blacklisting, and other measures.
+        Lastly, our Kubernetes ingress controller is configured both a.) scale itself to meet demand,
+        and b.) to automatically block IP addresses that are sending too many requests.
+      </p>
+      <p>
+        Again, we're definitely not trying to blow our own horn. All of this is made possible by our technology vendor
+        partners more so than anything we ourselves did.
+      </p>
+    </div>
+    <!--end::DDos-->
+
+    <!--begin::ZeroTrust-->
+    <div id="security-zero-trust">
+      <h3 class="mt-6 mb-6">We're 'Pretty Close' To Zero Trust</h3>
+      <p>
+        We still have room to improve on this, but, from the onset we've strived to implement a zero trust security
+        model in our core infrastructure. We've implemented dedicated VPN subnets and security
+        groups for each service, and we've implemented a number of other common sense countermeasures.
+        The point to this is to, as much as possible, make every intrusion
+        pathway a dead end for the would-be intruder.
+      </p>
+    </div>
+    <!--end::ZeroTrust-->
+
   </div>
   <!--end::Row-->
 </div>
