@@ -6,7 +6,7 @@
 
 # General back end
 # ------------
-boto3==1.34.117                          # AWS CLI SDK
+boto3==1.34.117                         # AWS CLI SDK
 botocore                                # AWS CLI SDK
 cachetools==5.3.3                       # Python object caching library
 celery==5.4.0                           # asynchronous task queue. works with redis.
@@ -36,24 +36,14 @@ django-taggit==5.0.1                    # Smarter Plugin tagging
 django-rest-knox==4.2.0                 # Token authentication for REST APIs
 dj-stripe==2.8.4                        # Stripe card processing integration
 django-cors-headers==4.3.1              # Cross-origin resource sharing
-drf-yasg==1.21.7                        # Swagger API documentation
 django-waffle==4.1.0                    # Feature flagging
-
-# Wagtail
-# ------------
-wagtail==6.1.2                          # Wagail CMS, for building static pages
-beautifulsoup4==4.12.3                  # HTML parser for Wagtail page compression
-lxml==5.2.2                             # parser for Wagtail page compression
 
 # for working with data
 # ------------
-docutils==0.21.2                        # required by Django for django.contrib.admindocs
-markdown==3.6                           # Markdown reader/parser
 pandas==2.2.2                           # Data manipulation for data science stuff
 python-dotenv==1.0.1                    # for reading environment variables from .env files
 pydantic==2.7.2                         # best data validation library ever!
 pydantic-settings==2.2.1                # settings management
-python-hcl2==4.3.3                      # Terraform hcl parser for reading Terraform tfvars files
 
 # Natural language and LLM support
 # ------------
@@ -73,3 +63,13 @@ openmeteo-requests==1.2.0               # OpenMeteo API for weather data
 # for working with email
 # ------------
 mailchimp-marketing==3.0.80             # Mailchimp API, for adding people to the mailing list
+
+# for platform documentation in /docs/
+# ------------
+beautifulsoup4==4.12.3                  # HTML parser for Wagtail page compression
+docutils==0.21.2                        # required by Django for django.contrib.admindocs
+drf-yasg==1.21.7                        # Swagger API documentation
+lxml==5.2.2                             # parser for Wagtail page compression
+markdown==3.6                           # Markdown reader/parser
+python-hcl2==4.3.3                      # Terraform hcl parser for reading Terraform tfvars files
+wagtail==6.1.2                          # Wagail CMS, for building static pages
