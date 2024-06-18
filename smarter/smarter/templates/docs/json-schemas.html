@@ -3,31 +3,74 @@
 
 
 {% block docs_content %}
+<style>
+  .schema-virtue {
+    height: 200px;
+  }
+</style>
 <div class="card-body">
     <!--begin::Heading-->
     <div class="mb-10">
       <!--begin::Title-->
-      <h1 class="fs-2x text-gray-900 mb-6">JSON Schemas</h1>
+      <h1 class="fs-2x text-gray-900 mb-6">Smarter JSON Schemas</h1>
       <!--end::Title-->
+      <h2>A rock solid foundation for your OEM product</h2>
+      <p>We've already obsessed over the details. Why should you? Leverage our JSON Schemas to turn your OEM product into your customers' Rock of Gibralter. Smarter takes care of the details for you. The only thing you have to do is to take advantage of our own attention to detail.</p>
     </div>
     <!--end::Heading-->
     <!--begin::Row-->
     <div class="row g-10 mb-15">
-      <!--begin::heading-1-->
-      <div id="heading-1">
-        <h3 class="mt-6 mb-6">Heading 1</h3>
-        <p>Design, train, test and deploy your specialized chatbot in </p>
+      <!--begin::Row-->
+      <div class="row">
+        <!--begin::heading-1-->
+        <div id="validations" class="col-md-6">
+          <div class="card-body m-1 p-1 bg-secondary text-dark schema-virtue">
+            <h3 class="mt-6 mb-6">Validation</h3>
+            <p>Leverage our JSON Schemas to validate your inbound requests against our data models. There's no better way to maximize your product's resiliency than by building on top of the JSON Schemas that we publish for all of our models.</p>
+          </div>
+        </div>
+        <!--end::heading-1-->
+        <!--begin::heading-2-->
+        <div id="data-modeling" class="col-md-6">
+          <div class="card-body m-1 p-1 bg-secondary text-dark schema-virtue">
+            <h3 class="mt-6 mb-6">Data Modeling</h3>
+            <p>Our JSON Schemas act as a blueprint for your application's data models, ensuring consistency and correctness across different parts of your customers' systems.</p>
+          </div>
+        </div>
+        <!--end::heading-2-->
       </div>
-      <!--end::heading-1-->
-      <!--begin::heading-2-->
-      <div id="heading-2">
-        <h2 class="mt-6 mb-6">Heading 2</h2>
-        <p>Smarter is so smart.</p>
+      <!--end::Row-->
+      <!--begin::Row-->
+      <div class="row">
+        <!--begin::heading-3-->
+        <div id="code-generation" class="col-md-6">
+          <div class="card-body m-1 p-1 bg-secondary text-dark schema-virtue">
+            <h3 class="mt-6 mb-6">Code Generation</h3>
+            <p>Confidently and dynamically generate code for your data bindings, reducing the need to manually code data validations, and most importantly of all, reducing the potential for human error.</p>
+          </div>
+        </div>
+        <!--end::heading-3-->
+        <!--begin::heading-4-->
+        <div id="heading-4" class="col-md-6">
+          <div class="card-body m-1 p-1 bg-secondary text-dark schema-virtue">
+            <h3 class="mt-6 mb-6">Documentation</h3>
+            <p>Providing a clear specification of the JSON data format, which helps in understanding the structure and purpose of the data.</p>
+          </div>
+        </div>
+        <!--end::heading-4-->
       </div>
-      <!--end::heading-2-->
-      <!--begin::heading-3-->
+      <!--end::Row-->
+      <!--begin::heading-4-->
+      <div id="heading-5" class="col-md-6">
+        <div class="card-body m-1 p-1 bg-secondary text-dark schema-virtue">
+          <h3 class="mt-6 mb-6">IDE Extension Development</h3>
+          <p>Smarter JSON Schemas speed the development of IDE add-ons and extensions, like for VS Code for example. Use our JSON Schemas to create in-editor Smarter extensions for syntax auto-completion, tooltips, and error highlighting.</p>
+        </div>
+      </div>
+      <!--end::heading-5-->
+      <!--begin::heading-6-->
       <div id="heading-3" class="row">
-        <h3 class="mt-6 mb-6">Smarter Json Schemas</h3>
+        <h3 class="mt-6 mb-6">Smarter JSON Schemas</h3>
           <!--begin::Manifests-->
           <div class="row">
             {% for schema in schemas %}
@@ -42,7 +85,7 @@
           </div>
           <!--end::Manifests-->
       </div>
-      <!--end::heading-3-->
+      <!--end::heading-6-->
     </div>
     <!--end::Row-->
 </div>
