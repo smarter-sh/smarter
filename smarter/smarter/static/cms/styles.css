@@ -8,6 +8,32 @@
   --bs-bullet-bg-color: #f1f1f1;
 }
 
+/*-----------------------------
+ Header
+ ----------------------------- */
+ .querium-bg {
+  background-color: rgba(255, 87, 51, 0.75) !important;
+  /* 50% opacity */
+  border-radius: var(--bs-card-inner-border-radius) var(--bs-card-inner-border-radius) 0 0;
+  --bs-heading-color: #f1f1f1;
+  --bs-card-color: #f1f1f1;
+  --bs-scrollbar-color: #f1f1f1;
+  --bs-link-color-rgb: 241, 241, 241;
+}
+
+.smarter-version {
+  font-family: 'Courier New', Courier, monospace;
+  color: #333333;
+}
+
+.parent-class>* {
+  color: #f1f1f1;
+}
+
+
+/*-----------------------------
+ page: /docs/api/
+ ----------------------------- */
 .code-sample-body {
   position: relative;
   background-color: #333333;
@@ -38,34 +64,23 @@
   overflow-x: auto; /* Adds a horizontal scrollbar if the content is too wide */
 }
 
-code {
-  white-space: pre-wrap;
-  /* CSS 2.1 */
-  white-space: -moz-pre-wrap;
-  /* Mozilla, since 1999 */
-  white-space: -pre-wrap;
-  /* Opera 4-6 */
-  white-space: -o-pre-wrap;
-  /* Opera 7 */
-  word-wrap: break-word;
-  /* Internet Explorer 5.5+ */
-}
+/*
+ FIX NOTE: was attempting to use this across the entire
+ docs site to format inline code snippets, but it was
+ causing adding weird line breaks.
+*/
+code {}
 
-.querium-bg {
-  background-color: rgba(255, 87, 51, 0.75) !important;
-  /* 50% opacity */
-  border-radius: var(--bs-card-inner-border-radius) var(--bs-card-inner-border-radius) 0 0;
-  --bs-heading-color: #f1f1f1;
-  --bs-card-color: #f1f1f1;
-  --bs-scrollbar-color: #f1f1f1;
-  --bs-link-color-rgb: 241, 241, 241;
-}
-
-.smarter-version {
-  font-family: 'Courier New', Courier, monospace;
-  color: #333333;
-}
-
-.parent-class>* {
-  color: #f1f1f1;
+/*-----------------------------
+ page: /docs/cli/
+ ----------------------------- */
+.terminal-emulation {
+  white-space: pre; /* Keeps the text in the same format as it was entered */
+  font-family: 'Courier New', Courier, monospace; /* Monospace font */
+  overflow-x: auto; /* Adds horizontal scrollbar if needed */
+  background-color: #333333; /* Terminal-like background */
+  color: #f1f1f1; /* Light text color for contrast */
+  padding: 10px; /* Padding inside the terminal window */
+  border: 1px solid #555; /* Optional: adds a border */
+  box-shadow: var(--bs-code-shadow); /* Reuse the box-shadow variable for consistency */
 }
