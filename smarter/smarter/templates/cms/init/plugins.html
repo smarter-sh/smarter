@@ -1,4 +1,4 @@
-<div class="card-body">
+<div class="card-body" id="plugins">
   <!--begin::Heading-->
   <div class="mb-10">
     <!--begin::Title-->
@@ -10,12 +10,97 @@
   <!--end::Heading-->
   <!--begin::Row-->
   <div class="row g-10mb-15">
-    <!--begin::Heading 1-->
-    <div id="install-cli">
-      <h3 class="mt-6 mb-6">Heading 1</h3>
-      <p>yadd yadd yadda ...</p>
+    <div>
+      <h3 class="mt-6 mb-6">So Simple. So Powerful</h3>
     </div>
-    <!--end::Heading 1-->
+    <p>Smarter plugins are built on a Large Language Model (LLM) API edge feature generally referred to as, "Function
+      Calling", that a growing population of LLM's include in their APIs. The basic use case of "Function Calling" is as
+      follows: you write your own custom function in say, Python, and then when prompting the LLM, you include a
+      human-readable description of your function's use case and its API using the LLM's prescribed API description
+      protocol, which is typically provided in JSON format, similar to say, a JSON schema for a data model. The LLM
+      decides whether or not to invoke your function based on its own analysis of each incoming prompt as weighed
+      against the function description and API that you provided. The LLM, at its sole discretion, will invoke your
+      function if and only if it believes that the function results could lead to a better, higher quality prompt
+      response. Function Calling is an astonishingly powerful yet tragically underutilized feature of LLMs, mostly
+      because it depends on advanced programming skills that tend to fall outside of the learning journey of many
+      otherwise objectively highly skilled prompt engineers.</p>
+    <p>The OpenAI API documentation for "Function Calling" includes a great example use case called "Current Weather".
+      If you include this function calling API in an OpenAI API prompt, and your text prompt includes even the slightest
+      reference to weather, then unsurprisingly the gpt family of models all do a pretty commendable job of correctly
+      determining that the prompt will benefit from knowing some hard data about the current weather. Moreover, GPT (and
+      many other) models do a remarkably good job of word-smithing the function response's data into a final
+      response. Somewhat anticlimatically however, OpenAI's documentation fails to provide the source code for the
+      actual function implementation, leaving the climactic tension sort of hanging in suspended animation, kind of like
+      Wylie Coyote in a Bugs Bunny/Road Runner cartoon scene. But not to worry, we did that for you! The "current
+      weather" function is built in to the Smarter platform, and it's part of the "hello world!" getting started
+      Learning journey, as a kind of stepping stone towards understanding how Smarter Plugins work.</p>
+    <p>Back to the problem at hand. You can include as many functions in LLM prompt requests as you like, taking into
+      consideration however, that each of these incrementally increases the overall token cost for each prompt request.
+      And therein lies the conundrum. Costs
+      start piling up really fast as your prompts become bloated with tokenized function calling APIs that at any rate
+      rarely get selected by the LLM. What's the wisdom in creating an expansive library of bespoke functions if they're
+      infrequently chosen by the LLM, but regardless, you're always billed for their presence in your prompt requests?
+      Answer to follow, in just a moment.</p>
+    <p>Smarter plugins generalize the LLM "Function Calling" API, by essentially providing a parameterized user-defined
+      API on top of the LLM API. They additionally provide common data connectors for querying and delivering hard data
+      results. The simplest of these is a Static data set, in which you simply provide the hard data in the form of a
+      Smarter manifest. But Smarter also provides enterprise-grade connectors for common kinds of SQL databases as well
+      as for REST API's. Creating an ad hoc SQL connector is as simple as the following example SqlConnector manifest
+    </p>
+    <div class="row justify-content-center mt-6 mb-6">
+      <div class="col-10">
+        <div class="code-sample-body">
+          <pre class="code-snippet prettyprint">
+            <code>
+    apiVersion: smarter.sh/v1
+    kind: SqlConnection
+    metadata:
+      description: points to the Django mysql database. db_engine choices: django.db.backends.postgresql,
+      django.db.backends.mysql, django.db.backends.oracle, django.db.backends.sqlite3,
+      django.db.backends.mssql, django.db.backends.sybase
+      name: exampleConnection
+      version: 0.1.0
+    spec:
+      connection:
+        database: smarter
+        db_engine: django.db.backends.mysql
+        hostname: smarter-mysql
+        password: smarter
+        port: 3306
+        username: smarter
+            </code>
+          </pre>
+        </div>
+      </div>
+    </div>
+
+
+    <p>And so, spoiler alert: You can create a Smarter Plugin that does exactly what the
+      "current weather" custom Python function does; the big difference being that you can get the same result without
+      needing to know how to program in Python, plus, it becomes a drop-in addition to all of your Smarter Chatbot(s).
+      And for the avoidance of any doubt, that is a big deal because Smarter ChatBots run at scale, without you having
+      to do anything.
+    </p>
+    <div class="row">
+      <h4>Smarter Plugin Selectors give you the ability to include any plugin that MIGHT be useful, but you
+        only pay when it's exceedingly likely that the plugin will be chosen and invoked by the LLM. Pretty cool!</h4>
+    </div>
+    <p>And now, the answer to the "Function Calling" costing conundrum: Smarter Plugin Selectors. </p>
+    <p>Case Study: Let's suppose that you work in Hospitality, and that you've been tasked with creating a "Concierge"
+      chatbot for the famous Mandarin Oriental resort in Bangkok, Thailand. Obviously, you chose to design, test and
+      implement your chatbot solution with Smarter. Great choice!!! Now, lets further suppose that you created say, 75
+      Smarter Plugins that are designed to provide accurate, granular responses to a variety of different kinds of guest
+      inquiries ranging from spa services, to room requests, to exotic day trip excursions. Your plugins use SQL and
+      REST API connectors to wire your plugins directly to the resort's internal information systems, so that results
+      are always timely and accurate. Remember that the one thing that LLMs are especially good at is connecting dots.
+      Your guest inquires about "X", and you inform the LLM that you have a function that returns information about "X",
+      and the LLM takes care of the rest. And it tends to be REALLY GOOD at this. But obviously, you don't want to pass
+      all 50 functions for Every. Single. Prompt. Smarter Selectors are the solution to this conundrum. Plugin Selectors
+      provide a common-sense mechanism for analyzing each incoming prompt, and then determining, on-the-fly, which of
+      these (if any) make sense to include in the prompt. You can build a Smarter Plugin Selector with a variety of
+      selection directives ranging from something as simple as a keyword search to something much more sophisticated
+      such as a natural language processing query; or even some combination of these. You're constrained only by your
+      own creative genius.</p>
   </div>
   <!--end::Row-->
 </div>
