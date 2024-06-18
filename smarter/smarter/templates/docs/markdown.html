@@ -3,5 +3,7 @@
 
 
 {% block docs_content %}
-  {{ markdown_html | safe }}
+  <div class="terminal-emulation">
+    {{ markdown_html | safe }}
+  </div>
 {% endblock %}
