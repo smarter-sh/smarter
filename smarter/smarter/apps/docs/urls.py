@@ -14,8 +14,11 @@ from .views.developer import (
     DeveloperDocsChatBotApiView,
     DeveloperDocsCliView,
     DeveloperDocsDjangoReactView,
+    DeveloperDocsDockerComposeView,
+    DeveloperDocsDockerfileView,
     DeveloperDocsGoodCodoingPracticeView,
     DeveloperDocsOpenAIGettingStartedView,
+    DeveloperDocsRequirementsView,
     DeveloperDocsSemanticVersioningView,
     DeveloperDocsTwelveFactorView,
 )
@@ -66,6 +69,9 @@ urlpatterns = [
     # -------------------------------------------------------------------------
     # Developers docs rendered from markdown in /data/doc/ in the Dockeer container
     # -------------------------------------------------------------------------
+    path("developer/requirements/", DeveloperDocsRequirementsView.as_view(), name="developer-requirements"),
+    path("developer/dockerfile/", DeveloperDocsDockerfileView.as_view(), name="developer-dockerfile"),
+    path("developer/docker-compose/", DeveloperDocsDockerComposeView.as_view(), name="developer-docker-compose"),
     path("developer/12-factor/", DeveloperDocsTwelveFactorView.as_view(), name="developer-12-factor"),
     path("developer/architecture/", DeveloperDocsArchitectureView.as_view(), name="developer-architecture"),
     path("developer/chatbot-api/", DeveloperDocsChatBotApiView.as_view(), name="developer-chatbot-api"),
