@@ -1,33 +1,624 @@
+<style>
+  .terminal-emulation {
+    white-space: pre;
+    /* Keeps the text in the same format as it was entered */
+    font-family: 'Courier New', Courier, monospace;
+    /* Monospace font */
+    overflow-x: auto;
+    /* Adds horizontal scrollbar if needed */
+    background-color: #333333;
+    /* Terminal-like background */
+    color: #f1f1f1;
+    /* Light text color for contrast */
+    padding: 10px;
+    /* Padding inside the terminal window */
+    border: 1px solid #555;
+    /* Optional: adds a border */
+    box-shadow: var(--bs-code-shadow);
+    /* Reuse the box-shadow variable for consistency */
+  }
+</style>
 <div class="card-body">
-    <!--begin::Heading-->
-    <div class="mb-10">
-      <!--begin::Title-->
-      <h1 class="fs-2x text-gray-900 mb-6">Command-Line Interface</h1>
-      <!--end::Title-->
+  <!--begin::Heading-->
+  <div class="mb-10">
+    <!--begin::Title-->
+    <h1 class="fs-2x text-gray-900 mb-6">Command-Line Interface Quick Reference</h1>
+    <p>
+      The Smarter CLI is an <a href="https://github.com/smarter-sh/smarter-cli">open source</a> Golang project
+      that provides a terminal-based, command-line interface for working with Smarter cloud resources.
+      The CLI is available for Windows, MacOS, and Linux operating systems. The CLI is a powerful tool
+      for prompt engineers and developers that simplifies manfiest-based management of Smarter resources.
+    </p>
+    <p>
+      The Smarter CLI interacts with <code>smarter.sh/v1</code> API resources, including ChatBots, Plugins, SqlConnections,
+      Users, ApiKeys, and others. See the <a href="/docs/swagger/">API Technical Reference</a> for
+      additional information. It requires a Smarter API key to authenticate with the Smarter API. The
+      initial key is proportioned by the Smarter platform when your account is activated and can
+      be configured using the <code>smarter configure</code> command. You can use the cli to generate
+      and manage additional API keys for your account as needed.
+    </p>
+    <!--end::Title-->
+  </div>
+  <!--end::Heading-->
+  <!--begin::Row-->
+  <div class="row g-10 mb-15">
+    <!--begin::heading-1-->
+    <div id="heading-1">
+      <h3 class="mt-6 mb-6">Commands At A Glance</h3>
+      <p></p>
+      <div class="row justify-content-center mt-6 mb-6">
+        <div class="col-12">
+          <pre class="terminal-emulation">
+A command-line interface for working with Smarter resources.
+Using the smarter cli, you can create Smarter plugins, add these to a ChatBot,
+and deploy the ChatBot to a custom URL. You can interact with the ChatBot
+on the command line, view chat log data, and manage your Smarter account.
+Support: https://smarter.sh and support@smarter.sh.
+
+Usage:
+  smarter [command]
+
+Available Commands:
+  apply       Apply a Smarter manifest
+  chat        Chat with a deployed ChatBot
+  completion  Generate the autocompletion script for the specified shell
+  configure   Configure the smarter command-line interface
+  delete      Permanently delete a Smarter resource
+  deploy      Deploy a resource
+  describe    Return a manifest for the resource kind
+  get         Generate a list of Smarter resources
+  help        Help about any command
+  logs        Returns the logs for a resource
+  manifest    Generate an example manifest for the resource kind
+  status      Retrieve real-time status of the Smarter Platform
+  undeploy    Undo a Smarter resource deployment.
+  version     Retrieve version information
+  whoami      Retrieve information about the api_key owner
+
+Flags:
+      --api_key string         Smarter API key to use
+      --config string          config file (default is $HOME/.smarter/config.yaml)
+      --environment string     environment to use: local, alpha, beta, next, prod. Default is prod
+  -h, --help                   help for smarter
+  -o, --output_format string   output format: json, yaml
+  -v, --verbose                verbose output
+
+Use "smarter [command] --help" for more information about a command.
+          </pre>
+        </div>
+      </div>
     </div>
-    <!--end::Heading-->
-    <!--begin::Row-->
-    <div class="row g-10 mb-15">
-      <!--begin::heading-1-->
-      <div id="heading-1">
-        <h3 class="mt-6 mb-6">Heading 1</h3>
-        <p>Design, train, test and deploy your specialized chatbot in </p>
+    <!--end::heading-1-->
+
+    <!--begin::heading-2-->
+    <div id="heading-2">
+      <h3 class="mt-6 mb-6">Apply</h3>
+      <p></p>
+      <div class="row justify-content-center mt-6 mb-6">
+        <div class="col-12">
+          <pre class="terminal-emulation">
+Apply a Smarter manifest:
+
+smarter apply -f <manifest.yaml> --dry-run
+
+The Smarter API will apply the manifest to the Smarter account,
+migrating the resource to the new state. The --json and --yaml
+flags will output the manifest in the specified format. The
+--dry-run flag will simulate the apply without making any changes.
+
+Usage:
+  smarter apply -f <manifest.yaml> --dry-run [flags]
+
+Flags:
+  -f, --filename string   Path and filename of the manifest to apply
+  -h, --help              help for apply
+
+Global Flags:
+      --api_key string         Smarter API key to use
+      --config string          config file (default is $HOME/.smarter/config.yaml)
+      --environment string     environment to use: local, alpha, beta, next, prod. Default is prod
+  -o, --output_format string   output format: json, yaml
+  -v, --verbose                verbose output
+          </pre>
+        </div>
       </div>
-      <!--end::heading-1-->
-      <!--begin::heading-2-->
-      <div id="heading-2">
-        <h2 class="mt-6 mb-6">Heading 2</h2>
-        <p>Smarter is so smart.</p>
-      </div>
-      <!--end::heading-2-->
-      <!--begin::heading-3-->
-      <div id="heading-3">
-        <h3 class="mt-6 mb-6">Heading 3</h3>
-        <!--begin::Text-->
-        <p>Shoo be do be do.</p>
-        <!--end::Text-->
-      </div>
-      <!--end::heading-3-->
     </div>
-    <!--end::Row-->
+    <!--end::heading-2-->
+
+    <!--begin::heading-3-->
+    <div id="heading-3">
+      <h3 class="mt-6 mb-6">Chat</h3>
+      <p></p>
+      <div class="row justify-content-center mt-6 mb-6">
+        <div class="col-12">
+          <pre class="terminal-emulation">
+Chat with a deployed ChatBot:
+
+smarter chat <command> [flags]
+
+The Smarter API will send the prompt to a deployed ChatBot and
+then echo its response to the console.
+
+Usage:
+  smarter chat [command]
+
+Available Commands:
+  config      Retrieve the ReactJS app configuration for a ChatBot
+  prompt      Prompt a ChatBot and echo its response to the console
+
+Flags:
+  -c, --chatbot string   the name of a deployed ChatBot
+  -h, --help             help for chat
+  -n, --new_session      start a new session
+
+Global Flags:
+      --api_key string         Smarter API key to use
+      --config string          config file (default is $HOME/.smarter/config.yaml)
+      --environment string     environment to use: local, alpha, beta, next, prod. Default is prod
+  -o, --output_format string   output format: json, yaml
+  -v, --verbose                verbose output
+
+Use "smarter chat [command] --help" for more information about a command.
+          </pre>
+        </div>
+      </div>
+    </div>
+    <!--end::heading-3-->
+
+    <!--begin::heading-4-->
+    <div id="heading-4">
+      <h3 class="mt-6 mb-6">Completion</h3>
+      <p></p>
+      <div class="row justify-content-center mt-6 mb-6">
+        <div class="col-12">
+          <pre class="terminal-emulation">
+Generate the autocompletion script for smarter for the specified shell.
+See each sub-command's help for details on how to use the generated script.
+
+Usage:
+  smarter completion [command]
+
+Available Commands:
+  bash        Generate the autocompletion script for bash
+  fish        Generate the autocompletion script for fish
+  powershell  Generate the autocompletion script for powershell
+  zsh         Generate the autocompletion script for zsh
+
+Flags:
+  -h, --help   help for completion
+
+Global Flags:
+      --api_key string         Smarter API key to use
+      --config string          config file (default is $HOME/.smarter/config.yaml)
+      --environment string     environment to use: local, alpha, beta, next, prod. Default is prod
+  -o, --output_format string   output format: json, yaml
+  -v, --verbose                verbose output
+
+Use "smarter completion [command] --help" for more information about a command.
+
+          </pre>
+        </div>
+      </div>
+    </div>
+    <!--end::heading-4-->
+
+    <!--begin::heading-5-->
+    <div id="heading-5">
+      <h3 class="mt-6 mb-6">Configure</h3>
+      <p></p>
+      <div class="row justify-content-center mt-6 mb-6">
+        <div class="col-12">
+          <pre class="terminal-emulation">
+Configure the smarter command-line interface:
+
+smarter configure
+
+Set your account_number, username, api_key and application options.
+
+Usage:
+  smarter configure [flags]
+
+Flags:
+  -a, --account_number string   Smarter account number
+  -k, --api_key string          Smarter cli secret key (64-character hash)
+  -h, --help                    help for configure
+  -o, --output_format string    Output format (json, yaml)
+  -u, --username string         username (how you login to the Smarter web console)
+
+Global Flags:
+      --config string        config file (default is $HOME/.smarter/config.yaml)
+      --environment string   environment to use: local, alpha, beta, next, prod. Default is prod
+  -v, --verbose              verbose output
+          </pre>
+        </div>
+      </div>
+    </div>
+    <!--end::heading-5-->
+
+    <!--begin::heading-6-->
+    <div id="heading-6">
+      <h3 class="mt-6 mb-6">Delete</h3>
+      <p></p>
+      <div class="row justify-content-center mt-6 mb-6">
+        <div class="col-12">
+          <pre class="terminal-emulation">
+Permanently delete a Smarter resource:
+
+smarter delete <kind> <name> --dry-run
+
+The Smarter API will permanently delete the resource.
+
+Usage:
+  smarter delete [command]
+
+Available Commands:
+  apiconnection Delete a PluginDataApiConnection
+  apikey        Delete a SmarterAuthToken
+  chat          Delete a chat history
+  chatbot       Delete a ChatBot
+  plugin        Delete a Plugin
+  sqlconnection Delete a PluginDataSqlConnection
+  user          Delete a user from your account
+
+Flags:
+  -h, --help   help for delete
+
+Global Flags:
+      --api_key string         Smarter API key to use
+      --config string          config file (default is $HOME/.smarter/config.yaml)
+      --environment string     environment to use: local, alpha, beta, next, prod. Default is prod
+  -o, --output_format string   output format: json, yaml
+  -v, --verbose                verbose output
+
+Use "smarter delete [command] --help" for more information about a command.
+          </pre>
+        </div>
+      </div>
+    </div>
+    <!--end::heading-6-->
+
+    <!--begin::heading-7-->
+    <div id="heading-7">
+      <h3 class="mt-6 mb-6">Deploy</h3>
+      <p></p>
+      <div class="row justify-content-center mt-6 mb-6">
+        <div class="col-12">
+          <pre class="terminal-emulation">
+Deploys a resource:
+
+smarter deploy <kind> <name> [flags]
+
+The Smarter API will deploy the resource.
+
+Usage:
+  smarter deploy [command]
+
+Available Commands:
+  chatbot     Deploy a ChatBot
+
+Flags:
+  -h, --help   help for deploy
+
+Global Flags:
+      --api_key string         Smarter API key to use
+      --config string          config file (default is $HOME/.smarter/config.yaml)
+      --environment string     environment to use: local, alpha, beta, next, prod. Default is prod
+  -o, --output_format string   output format: json, yaml
+  -v, --verbose                verbose output
+
+Use "smarter deploy [command] --help" for more information about a command.
+          </pre>
+        </div>
+      </div>
+    </div>
+    <!--end::heading-7-->
+
+    <!--begin::heading-8-->
+    <div id="heading-8">
+      <h3 class="mt-6 mb-6">Describe</h3>
+      <p></p>
+      <div class="row justify-content-center mt-6 mb-6">
+        <div class="col-12">
+          <pre class="terminal-emulation">
+Returns a manifest for the resource kind. For example:
+
+  smarter describe <kind> <name> > my-plugin.yaml
+
+This will generate a manifest for the specified kind of resource and write it to my-plugin.yaml in the current working directory.
+
+Usage:
+  smarter describe [command]
+
+Available Commands:
+  account       Retrieve your Account manifest
+  apiconnection Retrieve a PluginDataApiConnection manifest by name
+  apikey        Retrieve a SmarterAuthToken manifest by name
+  chatbot       Retrieve a ChatBot manifest by name
+  plugin        Retrieve a manifest for a Plugin
+  sqlconnection Retrieve a PluginDataSqlConnections manifest by name
+  user          Retrieve a manifest for a User
+
+Flags:
+  -h, --help   help for describe
+
+Global Flags:
+      --api_key string         Smarter API key to use
+      --config string          config file (default is $HOME/.smarter/config.yaml)
+      --environment string     environment to use: local, alpha, beta, next, prod. Default is prod
+  -o, --output_format string   output format: json, yaml
+  -v, --verbose                verbose output
+
+Use "smarter describe [command] --help" for more information about a command.
+
+          </pre>
+        </div>
+      </div>
+    </div>
+    <!--end::heading-8-->
+
+    <!--begin::heading-9-->
+    <div id="heading-9">
+      <h3 class="mt-6 mb-6">Get</h3>
+      <p></p>
+      <div class="row justify-content-center mt-6 mb-6">
+        <div class="col-12">
+          <pre class="terminal-emulation">
+smarter get [kind] [flags]
+
+The Smarter API will return a list of resources in the specified format,
+or a manifest for a specific resource.
+
+Usage:
+  smarter get [command]
+
+Available Commands:
+  account           Retrieve your Account manifest
+  apiconnections    Retrieve a list of PluginDataApiConnections
+  apikeys           Retrieve a list of SmarterAuthTokens
+  chat-history      Retrieve the chat history for a session_id
+  chat-plugin-usage Retrieve the chat plugin usage for a session_id
+  chat-tool-calls   Retrieve the chat tool calls for a session_id
+  chatbots          Retrieve a list of ChatBots
+  chats             Retrieve a list of Chats
+  plugins           Retrieve a list of Plugins
+  sqlconnections    Retrieve a list of PluginDataSqlConnections
+  users             Retrieve a list of Users
+
+Flags:
+      --asc     Sort results in ascending order
+      --desc    Sort results in descending order
+  -h, --help    help for get
+      --i int   Number of resources to retrieve (default 10)
+
+Global Flags:
+      --api_key string         Smarter API key to use
+      --config string          config file (default is $HOME/.smarter/config.yaml)
+      --environment string     environment to use: local, alpha, beta, next, prod. Default is prod
+  -o, --output_format string   output format: json, yaml
+  -v, --verbose                verbose output
+
+Use "smarter get [command] --help" for more information about a command.
+
+          </pre>
+        </div>
+      </div>
+    </div>
+    <!--end::heading-9-->
+
+    <!--begin::heading-10-->
+    <div id="heading-10">
+      <h3 class="mt-6 mb-6">Help</h3>
+      <p></p>
+      <div class="row justify-content-center mt-6 mb-6">
+        <div class="col-12">
+          <pre class="terminal-emulation">
+Returns the logs for a resource:
+
+smarter logs <kind> <name>
+
+Returns the logs for the resource <kind> <name>.
+
+Usage:
+  smarter logs [command]
+
+Available Commands:
+  chat         Returns the logs for a Chat session_id
+  chat-history Returns the logs for a ChatHistory session_id
+  chatbot      Returns the logs for a ChatBot
+
+Flags:
+  -h, --help   help for logs
+
+Global Flags:
+      --api_key string         Smarter API key to use
+      --config string          config file (default is $HOME/.smarter/config.yaml)
+      --environment string     environment to use: local, alpha, beta, next, prod. Default is prod
+  -o, --output_format string   output format: json, yaml
+  -v, --verbose                verbose output
+
+Use "smarter logs [command] --help" for more information about a command.
+          </pre>
+        </div>
+      </div>
+    </div>
+    <!--end::heading-10-->
+
+    <!--begin::heading-11-->
+    <div id="heading-11">
+      <h3 class="mt-6 mb-6">Manifest</h3>
+      <p></p>
+      <div class="row justify-content-center mt-6 mb-6">
+        <div class="col-12">
+          <pre class="terminal-emulation">
+Generate an example manifest for the resource kind. For example:
+
+  smarter manifest <kind> [flags] > my-plugin.yaml
+
+This will generate an example manifest for the specified kind of resource and write it to my-plugin.yaml in the current working directory.
+
+Usage:
+  smarter manifest [command]
+
+Available Commands:
+  account       Retrieve your Account manifest
+  apiconnection Generate an example manifest for a PluginDataApiConnection.
+  apikey        Generate an example manifest for a SmarterAuthToken.
+  chat          Generate an example manifest for a chat session.
+  chatbot       Generate an example manifest for a ChatBot
+  plugin        Generate an example manifest for a plugin.
+  sqlconnection Generate an example manifest for a PluginDataSqlConnection.
+  user          Generate an example manifest for a user.
+
+Flags:
+  -h, --help   help for manifest
+
+Global Flags:
+      --api_key string         Smarter API key to use
+      --config string          config file (default is $HOME/.smarter/config.yaml)
+      --environment string     environment to use: local, alpha, beta, next, prod. Default is prod
+  -o, --output_format string   output format: json, yaml
+  -v, --verbose                verbose output
+
+Use "smarter manifest [command] --help" for more information about a command.
+
+          </pre>
+        </div>
+      </div>
+    </div>
+    <!--end::heading-11-->
+
+    <!--begin::heading-12-->
+    <div id="heading-12">
+      <h3 class="mt-6 mb-6">Status</h3>
+      <p></p>
+      <div class="row justify-content-center mt-6 mb-6">
+        <div class="col-12">
+          <pre class="terminal-emulation">
+Retrieve real-time status of the Smarter Platform:
+
+smarter status [flags]
+
+The Smarter API will return the current status of the Smarter Platform,
+including the status of all services and resources by region.
+
+Usage:
+  smarter status [flags]
+
+Flags:
+  -h, --help   help for status
+
+Global Flags:
+      --api_key string         Smarter API key to use
+      --config string          config file (default is $HOME/.smarter/config.yaml)
+      --environment string     environment to use: local, alpha, beta, next, prod. Default is prod
+  -o, --output_format string   output format: json, yaml
+  -v, --verbose                verbose output
+          </pre>
+        </div>
+      </div>
+    </div>
+    <!--end::heading-12-->
+
+    <!--begin::heading-13-->
+    <div id="heading-13">
+      <h3 class="mt-6 mb-6">Undeploy</h3>
+      <p></p>
+      <div class="row justify-content-center mt-6 mb-6">
+        <div class="col-12">
+          <pre class="terminal-emulation">
+Undo a Smarter resource deployment. For example:
+
+smarter undeploy <kind> <name>
+
+The Smarter API will undo the deployment of the resource.
+
+Usage:
+  smarter undeploy [command]
+
+Available Commands:
+  chatbot     Undo a ChatBot deployment.
+
+Flags:
+  -h, --help   help for undeploy
+
+Global Flags:
+      --api_key string         Smarter API key to use
+      --config string          config file (default is $HOME/.smarter/config.yaml)
+      --environment string     environment to use: local, alpha, beta, next, prod. Default is prod
+  -o, --output_format string   output format: json, yaml
+  -v, --verbose                verbose output
+
+Use "smarter undeploy [command] --help" for more information about a command.
+
+          </pre>
+        </div>
+      </div>
+    </div>
+    <!--end::heading-13-->
+
+    <!--begin::heading-14-->
+    <div id="heading-14">
+      <h3 class="mt-6 mb-6">Version</h3>
+      <p></p>
+      <div class="row justify-content-center mt-6 mb-6">
+        <div class="col-12">
+          <pre class="terminal-emulation">
+Retrieve version information:
+
+smarter version
+
+Returns version information about this software.
+
+Usage:
+  smarter version [flags]
+
+Flags:
+  -h, --help   help for version
+
+Global Flags:
+      --api_key string         Smarter API key to use
+      --config string          config file (default is $HOME/.smarter/config.yaml)
+      --environment string     environment to use: local, alpha, beta, next, prod. Default is prod
+  -o, --output_format string   output format: json, yaml
+  -v, --verbose                verbose output
+          </pre>
+        </div>
+      </div>
+    </div>
+    <!--end::heading-14-->
+
+    <!--begin::heading-15-->
+    <div id="heading-15">
+      <h3 class="mt-6 mb-6">Whoami</h3>
+      <p></p>
+      <div class="row justify-content-center mt-6 mb-6">
+        <div class="col-12">
+          <pre class="terminal-emulation">
+Retrieve information about the api_key owner:
+
+smarter whoami [flags]
+
+Returns informtation about the Smarter user account that owns the
+configured api_key.
+
+Usage:
+  smarter whoami [flags]
+
+Flags:
+  -h, --help   help for whoami
+
+Global Flags:
+      --api_key string         Smarter API key to use
+      --config string          config file (default is $HOME/.smarter/config.yaml)
+      --environment string     environment to use: local, alpha, beta, next, prod. Default is prod
+  -o, --output_format string   output format: json, yaml
+  -v, --verbose                verbose output
+          </pre>
+        </div>
+      </div>
+    </div>
+    <!--end::heading-15-->
+
+  </div>
+  <!--end::Row-->
 </div>
