@@ -34,6 +34,8 @@
   /* Background color */
   --bs-code-shadow: 0px 3px 9px rgba(0, 0, 0, 0.08);
   /* Box shadow */
+  white-space: pre; /* This is usually the default for <pre>, but it's good to ensure it's not being overridden */
+  overflow-x: auto; /* Adds a horizontal scrollbar if the content is too wide */
 }
 
 code {
