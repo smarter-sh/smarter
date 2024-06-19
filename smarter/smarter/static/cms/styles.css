@@ -84,3 +84,553 @@ code {}
   border: 1px solid #555; /* Optional: adds a border */
   box-shadow: var(--bs-code-shadow); /* Reuse the box-shadow variable for consistency */
 }
+
+/*---------------------
+     Start my code
+-----------------------*/
+#kt_app_content_container>div>div.card.bg-body.align-self-start.mb-9.mb-xl-0.me-lg-9>div.smarter-wagtail-content-block {
+  border-style: none;
+  background-color: #F9F9F9;
+  box-shadow: none !important;
+}
+.wrap {
+  display: flex !important;
+  flex-direction: row !important;
+}
+
+/*----------------------
+           1ts Block
+ -----------------------*/
+
+#smarter-landing-page {
+  font-family: Inter;
+  background: white;
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/techdots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  border-style: solid;
+  border-color: #F1F1F4;
+  border-width: 1px;
+  margin: 10px;
+  padding: 35px;
+  border-radius: 10px;
+}
+
+#smarter-landing-page > h1 {
+  color: #0F2385 !important;
+}
+
+#smarter-landing-page > h2 {
+  color: #4B5675 !important;
+}
+
+#smarter-landing-page > p {
+  color: #4B5675 !important;
+  font-size: 13px !important;
+}
+
+/*--------------------------------
+                2nd Block
+---------------------------------- */
+
+#kt_app_content_container>div>div.card.bg-body.align-self-start.mb-9.mb-xl-0.me-lg-9>div.smarter-wagtail-content-block>div>div:nth-child(2) {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  width: auto;
+}
+
+#plugins {
+  justify-content: space-between !important;
+  align-items: center !important;
+  row-gap: 20px !important;
+  column-gap: 20px;
+  background-color: #ffffff;
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  margin: 10px;
+  padding: 35px;
+  border-radius: 10px;
+  border-style: solid;
+  border-color: #F1F1F4;
+  border-width: 1px;
+}
+
+#plugins > h3 {
+  display: inline;
+  font-family: Inter;
+  color: #4B5675;
+  line-height: 10px;
+  vertical-align: middle;
+  text-align: left;
+  padding-left: 15px;
+}
+
+#plugins > p {
+  font-family: Inter;
+  font-size: 13px;
+  line-height: normal;
+  word-spacing: normal;
+  color: #4B5675;
+  text-align: left;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+
+#plugins > a {
+  background-color: #F6821B;
+  font-family: Inter;
+  font-size: 11px;
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px 10px 20px;
+  border-radius: 10px;
+  text-align: left !important;
+  display: left;
+}
+
+#manifests {
+  justify-content: space-between !important;
+  align-items: center !important;
+  row-gap: 20px !important;
+  column-gap: 20px !important;
+  background-color: #ffffff;
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  margin: 10px;
+  padding: 35px;
+  border-radius: 10px;
+  border-style: solid;
+  border-color: #F1F1F4;
+  border-width: 1px;
+}
+
+#manifests>h3 {
+  display: inline;
+  font-family: Inter;
+  color: #4B5675;
+  vertical-align: middle;
+  text-align: left;
+  padding-left: 15px;
+}
+
+#manifests>p {
+  font-family: Inter;
+  font-size: 13px;
+  line-height: normal;
+  word-spacing: normal;
+  color: #4B5675;
+  text-align: left;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+#manifests> a {
+  background-color: #F6821B;
+  font-family: Inter;
+  font-size: 11px;
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px 10px 20px;
+  border-radius: 10px;
+  align-self: left;
+}
+
+/* ------------------------
+           3rd  Block 
+  --------------------------*/
+#learn {
+  background: linear-gradient(90deg,
+      #0f2385,
+      #000000);
+  border-style: solid;
+  border-color: #F1F1F4;
+  border-width: 1px;
+  margin: 10px;
+  padding: 35px;
+  border-radius: 10px;
+  justify-content: left !important;
+}
+
+#learn>h3 {
+  display: inline;
+  font-family: Inter;
+  color: white;
+  vertical-align: middle;
+  text-align: left;
+  padding-left: 15px;
+}
+
+#learn>div {
+  gap: 15px;
+  display: flex;
+  justify-items: center;
+  align-items: center;
+  flex-wrap: nowrap;
+  background-color: transparent;
+  margin: 0px;
+  padding: 0px;
+}
+
+#learn > div > p {
+  display: inline;
+  font-family: Inter;
+  font-size: 13px;
+  line-height: normal;
+  word-spacing: normal;
+  color: white;
+  text-align: left;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+#learn>div>img {
+  vertical-align: middle;
+  width: 150px;
+
+}
+
+#learn> a {
+  background-color: #F6821B;
+  font-family: Inter;
+  font-size: 11px;
+  color: white;
+  text-decoration: none;
+  padding: 10px 25px 10px 25px;
+  border-radius: 10px;
+}
+
+/* ---------------
+       4th Block 
+  -----------------*/
+#kt_app_content_container>div>div.card.bg-body.align-self-start.mb-9.mb-xl-0.me-lg-9>div.smarter-wagtail-content-block>div>div:nth-child(4) {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  width: auto;
+}
+
+#safe {
+  justify-content: space-between !important;
+  align-items: center !important;
+  row-gap: 20px !important;
+  column-gap: 20px;
+  background-color: #ffffff;
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  margin: 10px;
+  padding: 35px;
+  border-radius: 10px;
+  border-style: solid;
+  border-color: #F1F1F4;
+  border-width: 1px;
+}
+
+#safe>h3 {
+  display: inline;
+  font-family: Inter;
+  color: #4B5675;
+  line-height: 10px;
+  vertical-align: middle;
+  text-align: left;
+  padding-left: 15px;
+}
+
+#safe>p {
+  font-family: Inter;
+  font-size: 13px;
+  line-height: normal;
+  word-spacing: normal;
+  color: #4B5675;
+  text-align: left;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+#safe> a {
+  background-color: #F6821B;
+  font-family: Inter;
+  font-size: 11px;
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px 10px 20px;
+  border-radius: 10px;
+}
+
+#simple {
+  justify-content: space-between !important;
+  align-items: center !important;
+  row-gap: 20px !important;
+  column-gap: 20px;
+  background-color: #ffffff;
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  margin: 10px;
+  padding: 35px;
+  border-radius: 10px;
+  border-style: solid;
+  border-color: #F1F1F4;
+  border-width: 1px;
+}
+
+#simple>h3 {
+  display: inline;
+  font-family: Inter;
+  color: #4B5675;
+  line-height: 10px;
+  vertical-align: middle;
+  text-align: left;
+  padding-left: 15px;
+}
+
+#simple>p {
+  font-family: Inter;
+  font-size: 13px;
+  line-height: normal;
+  word-spacing: normal;
+  color: #4B5675;
+  text-align: left;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+#simple> a {
+  background-color: #F6821B;
+  font-family: Inter;
+  font-size: 11px;
+  color: white;
+  text-decoration: none;
+  padding: 10px 25px 10px 25px;
+  border-radius: 10px;
+}
+
+/*------------------------
+            5th Block
+   -------------------------*/
+
+#secure {
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  border-style: solid;
+  border-color: #F1F1F4;
+  border-width: 1px;
+  margin: 10px;
+  padding: 35px;
+  border-radius: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+#secure>h3 {
+  display: inline;
+  font-family: Inter;
+  color: #4B5675;
+  line-height: 10px;
+  vertical-align: middle;
+  text-align: left;
+  padding-left: 15px;
+}
+
+#secure>p {
+  font-family: Inter;
+  font-size: 13px;
+  line-height: normal;
+  word-spacing: normal;
+  color: #4B5675;
+  text-align: left;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+#secure>a {
+  background-color: #F6821B;
+  font-family: Inter;
+  font-size: 11px;
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px 10px 20px;
+  border-radius: 10px;
+}
+
+/*-----------------------------
+                6th Block 
+   ------------------------------*/
+
+#kt_app_content_container>div>div.card.bg-body.align-self-start.mb-9.mb-xl-0.me-lg-9>div.smarter-wagtail-content-block>div>div:nth-child(6) {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  width: auto;
+}
+
+#developers {
+  justify-content: space-between !important;
+  align-items: center !important;
+  row-gap: 20px !important;
+  column-gap: 20px;
+  background-color: #ffffff;
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  margin: 10px;
+  padding: 35px;
+  border-radius: 10px;
+  border-style: solid;
+  border-color: #F1F1F4;
+  border-width: 1px;
+}
+
+#developers>h3 {
+  display: inline;
+  font-family: Inter;
+  color: #4B5675;
+  line-height: 10px;
+  vertical-align: middle;
+  text-align: left;
+  padding-left: 15px;
+}
+
+#developers>p {
+  font-family: Inter;
+  font-size: 13px;
+  line-height: normal;
+  word-spacing: normal;
+  color: #4B5675;
+  text-align: left;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+#developers>a {
+  background-color: #F6821B;
+  font-family: Inter;
+  font-size: 11px;
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px 10px 20px;
+  border-radius: 10px;
+}
+
+#certified {
+  justify-content: space-between !important;
+  align-items: center !important;
+  row-gap: 20px !important;
+  column-gap: 20px;
+  background-color: #ffffff;
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  margin: 10px;
+  padding: 35px;
+  border-radius: 10px;
+  border-style: solid;
+  border-color: #F1F1F4;
+  border-width: 1px;
+}
+
+#certified>h3 {
+  display: inline;
+  font-family: Inter;
+  color: #4B5675;
+  line-height: 10px;
+  vertical-align: middle;
+  text-align: left;
+  padding-left: 15px;
+}
+
+#certified>p {
+  font-family: Inter;
+  font-size: 13px;
+  line-height: normal;
+  word-spacing: normal;
+  color: #4B5675;
+  text-align: left;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+#certified>a {
+  background-color: #F6821B;
+  font-family: Inter;
+  font-size: 11px;
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px 10px 20px;
+  border-radius: 10px;
+}
+
+/*----------------------
+ 7th Block 
+ -----------------------*/
+
+#administration {
+  justify-content: center;
+  align-self: center;
+
+  background: white;
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  border-style: solid;
+  border-color: #F1F1F4;
+  border-width: 1px;
+  margin: 10px;
+  padding: 35px;
+  border-radius: 10px;
+  gap: none;
+}
+
+#administration>h3 {
+  display: inline;
+  font-family: Inter;
+  color: #4B5675;
+  line-height: 10px;
+  vertical-align: middle;
+  text-align: left;
+  padding-left: 15px;
+}
+
+#administration>p {
+  font-family: Inter;
+  font-size: 13px;
+  line-height: normal;
+  word-spacing: normal;
+  color: #4B5675;
+  text-align: left;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+#administration>a {
+  background-color: #F6821B;
+  font-family: Inter;
+  font-size: 11px;
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px 10px 20px;
+  border-radius: 10px;
+}
