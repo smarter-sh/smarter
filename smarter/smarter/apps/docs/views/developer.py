@@ -107,21 +107,15 @@ class DeveloperDocsWeatherFunctionView(TxtBaseView):
         self.leader = """
         This is Smarter's implementation of the Python function 'get_current_weather()' referenced in
         OpenAI API 'Function Calling' documentation: https://platform.openai.com/docs/guides/function-calling which
-        oddly, they neglected to implement.
+        oddly, they neglected to implement. It uses the Google Maps API for geocoding
+        and the Open-Meteo API for weather data.
 
         Smarter's documentation refers to this function repeatedly. It returns the current weather in a
         given location as a 24-hour forecast. The function is called by the OpenAI API 'function calling' feature
         and returns a JSON object.
 
         This example is foundational to how the Smarter platform implements its Plugin feature, which is an
-        abstraction layer enabling non-programmers to achieve the same functionality as the Python function above,
-        albeit with the functionality of their choice, and with the dynamically 'select' the Plugin to be presented
-        to the LLM as a potential function to be called for a given prompt.
-
-        This function uses the Google Maps API for geocoding and the Open-Meteo API for weather data.
-        The Open-Meteo API is used to get the weather data. The API is rate-limited to 1 request per second. It is called with the
-        openmeteo_requests Python package, which is a wrapper for the requests package. It is used to cache the API responses
-        to avoid repeated API calls, and to retry failed API calls.
+        abstraction layer enabling non-programmers to achieve the same kind of results.
         """
 
 

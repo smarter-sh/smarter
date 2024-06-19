@@ -116,20 +116,103 @@
       <p>
         Straight from our codebase to yours. Here are some resources to help you get started building on top of the Smarter platform.
       </p>
-      <ul>
-        <li><a href="/docs/developer/weather-function/">weather-function.py</a> This is Smarter's implementation of the get_current_weather() function referenced in the <a href="https://platform.openai.com/docs/guides/function-calling">OpenAI API Function Calling documentation</a>.</li>
-        <li><a href="/docs/developer/requirements/">Smarter Python Requirements</a> for app server, workers, celery-beat</li>
-        <li><a href="/docs/developer/dockerfile/">Smarter Dockerfile</a> for app server, workers, celery-beat</li>
-        <li><a href="/docs/developer/docker-compose/">Smarter docker-compose.yml</a> for local development</li>
-        <li><a href="/docs/developer/architecture/">Application Architecture Diagram</a></li>
-        <li><a href="/docs/developer/chatbot-api/">Chatbot API</a></li>
-        <li><a href="/docs/developer/cli/">CLI Technical Documentation</a></li>
-        <li><a href="/docs/developer/django-react/">Django-ReactJS Integration</a></li>
-        <li><a href="/docs/developer/openai-getting-started/">OpenAI API Getting Started Guide</a></li>
-        <li><a href="/docs/developer/good-coding-practice/">Smarter Good Coding Practice</a></li>
-        <li><a href="/docs/developer/semantic-versioning/">Smarter Semantic Versioning Guide</a></li>
-        <li><a href="/docs/developer/12-factor/">Smarter 12-Factor Development Practices</a></li>
-      </ul>
+      <div class="container">
+        <table class="table table-bordered">
+          <tbody>
+            <tr>
+              <td><a href="/docs/developer/weather-function/">weather-function.py</a></td>
+              <td>
+                This is Smarter's implementation of the get_current_weather() function referenced in
+                the <a href="https://platform.openai.com/docs/guides/function-calling">OpenAI API
+                  Function Calling documentation</a>.
+              </td>
+            </tr>
+            <tr>
+              <td><a href="/docs/developer/requirements/">Python Requirements</a></td>
+              <td>
+                This is the complete set of open source PyPi packages that the Smarter platform uses.
+                This file is being read real-time from the running Docker container, meaning
+                the version pins presented are what is currently running. Note that Version pins are
+                updated monthly on the 1st of each month.
+              </td>
+            </tr>
+            <tr>
+              <td><a href="/docs/developer/dockerfile/">Smarter Dockerfile</a></td>
+              <td>
+                This is the build procedure for the Smarter app server Docker container. This
+                file is being read real-time from the running Docker container, meaning the
+                build procedure that you see here is what is currently running on the platform.
+              </td>
+            </tr>
+            <tr>
+              <td><a href="/docs/developer/docker-compose/">Smarter docker-compose.yml</a></td>
+              <td>
+                This is the docker-compose.yaml file that Smarter developers use for local development.
+                It very closely approximates the production environment. If for any reason you need to
+                replicate the Smarter production environment locally, this is the file your should use.
+              </td>
+            </tr>
+            <tr>
+              <td><a href="/docs/developer/architecture/">Application Architecture Diagram</a></td>
+              <td>
+                This is a high level diagram of the Smarter application architecture. It is a
+                high-level overview of the Smarter platform, and is intended to be used as an
+                onboarding tool for developers who are new to the Smarter platform.
+              </td>
+            </tr>
+            <tr>
+              <td><a href="/docs/developer/chatbot-api/">Chatbot API</a></td>
+              <td>
+                This is a technical reference for the Smarter Chatbot API that
+                backs the Smarter Chat web app.
+              </td>
+            </tr>
+            <tr>
+              <td><a href="/docs/developer/cli/">CLI Technical Documentation</a></td>
+              <td>
+                This is a technical reference document for the Smarter CLI.
+              </td>
+            </tr>
+            <tr>
+              <td><a href="/docs/developer/django-react/">Django-ReactJS Integration</a></td>
+              <td>
+                This is a technical reference document for the Smarter Django-ReactJS integration
+                strategy.
+              </td>
+            </tr>
+            <tr>
+              <td><a href="/docs/developer/openai-getting-started/">OpenAI API Getting Started Guide</a></td>
+              <td>
+                This is an internal training document that we use for anyone who is new to the OpenAI API.
+              </td>
+            </tr>
+            <tr>
+              <td><a href="/docs/developer/good-coding-practice/">Smarter Good Coding Practice</a></td>
+              <td>
+                This is an internal training document that we use for onboarding new developers. It
+                covers the basics of what we consider to be good coding practices, and is intended
+                to be used as a reference.
+              </td>
+            </tr>
+            <tr>
+              <td><a href="/docs/developer/semantic-versioning/">Smarter Semantic Versioning Guide</a></td>
+              <td>
+                This is an internal training document that we use for onboarding new developers. It
+                covers how we use git comment prefixes for automated semantic versioning. It is intended
+                to be used as a reference.
+              </td>
+            </tr>
+            <tr>
+              <td><a href="/docs/developer/12-factor/">Smarter 12-Factor Development Practices</a></td>
+              <td>
+                This document outlines and formalizes how we approach the 12-factor development methodology in
+                the Smarter platform. It is intended to be used as a reference.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
     </div>
     <!--end::heading-4-->
 
