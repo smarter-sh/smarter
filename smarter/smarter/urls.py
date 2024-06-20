@@ -6,9 +6,7 @@ from django.contrib import admin
 from django.urls import include, path, re_path
 from django.views.generic import RedirectView
 from wagtail import urls as wagtail_urls
-from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.documents import urls as wagtaildocs_urls
-from wagtail_transfer import urls as wagtailtransfer_urls
 
 from smarter.apps.account.views.authentication import (
     AccountRegisterView,
@@ -49,13 +47,6 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(), name="logout_view"),
     path("register/", AccountRegisterView.as_view(), name="register_view"),
     # -----------------------------------
-    # wagtail urls
-    # -----------------------------------
-    path("documents/", include(wagtaildocs_urls)),
-    path("cms/admin/wagtail-transfer/", include(wagtailtransfer_urls)),
-    path("cms/admin/", include(wagtailadmin_urls)),
-    re_path(r"", include(wagtail_urls)),
-    # -----------------------------------
     # stripe urls
     # see: https://dj-stripe.dev/dj-stripe/
     # -----------------------------------
@@ -64,6 +55,12 @@ urlpatterns = [
     # Smarter waitlist signup
     # -----------------------------------
     path("waitlist/", ComingSoon.as_view(), name="waitlist"),
+    # -----------------------------------
+    # wagtail urls
+    # -----------------------------------
+    path("documents/", include(wagtaildocs_urls)),
+    path("cms/", include("smarter.apps.cms.urls")),
+    re_path(r"", include(wagtail_urls)),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 # if settings.DEBUG:
