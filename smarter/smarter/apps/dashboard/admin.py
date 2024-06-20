@@ -93,7 +93,7 @@ class RestrictedUserAdmin(UserAdmin):
         "is_superuser",
         "is_active",
         "groups",
-        "permissions",
+        "display_permissions",
         "user_permissions",
     )
 
