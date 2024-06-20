@@ -93,6 +93,7 @@ class RestrictedUserAdmin(UserAdmin):
         "is_superuser",
         "is_active",
         "groups",
+        "permissions",
         "user_permissions",
     )
 
@@ -108,6 +109,11 @@ class RestrictedUserAdmin(UserAdmin):
             return qs.filter(account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
+
+    def get_readonly_fields(self, request, obj=None):
+        if request.user.is_superuser:
+            return tuple(field for field in self.readonly_fields if field not in ["groups", "permissions"])
+        return self.readonly_fields
 
 
 class EmailContactListAdmin(RestrictedModelAdmin):
