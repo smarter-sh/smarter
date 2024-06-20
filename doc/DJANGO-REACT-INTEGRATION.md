@@ -251,7 +251,7 @@ in turn, the template will render a DOM element like the following. Thus, **BE A
 <script id="react-config" type="application/json">
   {
     "BASE_URL": "http://127.0.0.1:8000",
-    "API_URL": "http://127.0.0.1:8000/api/v0",
+    "API_URL": "http://127.0.0.1:8000/api/v1",
     "CHAT_ID": "SET-ME-PLEASE"
   }
 </script>
