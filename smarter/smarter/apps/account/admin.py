@@ -3,27 +3,8 @@
 from django.contrib import admin
 
 from smarter.lib.django.admin import RestrictedModelAdmin
-from smarter.lib.django.user import User
 
 from .models import Account, AccountContact, Charge, PaymentMethod, UserProfile
-
-
-class UserAdmin(RestrictedModelAdmin):
-    """User model admin."""
-
-    readonly_fields = ("date_joined",)
-    list_display = ("email", "first_name", "last_name", "is_active", "is_staff", "is_superuser")
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        try:
-            user_profile = UserProfile.objects.get(user=request.user)
-            same_account_users = UserProfile.objects.filter(account=user_profile.account)
-            return qs.filter(id__in=[user.user_id for user in same_account_users])
-        except UserProfile.DoesNotExist:
-            return qs.none()
 
 
 # Register your models here.
@@ -107,10 +88,6 @@ class PaymentMethodModelAdmin(RestrictedModelAdmin):
             return qs.none()
 
 
-# Unregister default Django User, Group, and Permission models
-admin.site.unregister(User)
-
-admin.site.register(User, UserAdmin)
 admin.site.register(Account, AccountAdmin)
 admin.site.register(AccountContact, AccountContactAdmin)
 admin.site.register(PaymentMethod, PaymentMethodModelAdmin)
