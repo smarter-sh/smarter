@@ -4,47 +4,72 @@
 
 {% block docs_content %}
 <div class="card-body">
-    <!--begin::Heading-->
-    <div class="mb-10">
-      <!--begin::Title-->
-      <h1 class="fs-2x text-gray-900 mb-6">Smarter Manifests</h1>
-      <!--end::Title-->
+  <!--begin::Heading-->
+  <div class="mb-10">
+    <!--begin::Title-->
+    <h1 class="fs-2x text-gray-900 mb-6">Smarter Manifests</h1>
+    <!--end::Title-->
+  </div>
+  <!--end::Heading-->
+  <!--begin::Row-->
+  <div class="row g-10 mb-15">
+    <!--begin::heading-1-->
+    <div id="heading-1">
+      <h3 class="mt-6 mb-6">A Human-to-Cloud Interface</h3>
+      <p>In a word, cloud is <strong>COMPLICATED</strong>. Add data science, artificial intelligence and your customer's
+        demands to that and, well, things get messy. Introduce Smarter Manifests: a better, simpler, cleaner way to
+        manage your AI resources in the cloud. Smarter Manifests are very much inspired by Kubernetes manifests. In
+        fact, we did everything in our power to make ours resemble theirs theirs in every way possible. Because, why
+        mess with perfection?</p>
     </div>
-    <!--end::Heading-->
-    <!--begin::Row-->
-    <div class="row g-10 mb-15">
-      <!--begin::heading-1-->
-      <div id="heading-1">
-        <h3 class="mt-6 mb-6">A Human-to-Cloud Interface</h3>
-        <p>In a word, cloud is <strong>COMPLICATED</strong>. Add data science, artificial intelligence and your customer's demands to that and, well, things get messy. Introduce Smarter Manifests: a better, simpler, cleaner way to manage your AI resources in the cloud. Smarter Manifests are very much inspired by Kubernetes manifests. In fact, we did everything in our power to make ours resemble theirs theirs in every way possible. Because, why mess with perfection?</p>
-      </div>
-      <!--end::heading-1-->
-      <!--begin::heading-2-->
-      <div id="heading-2">
-        <h2 class="mt-6 mb-6">Design, Train, Test, Deploy</h2>
-        <p>A Smarter Manifest describes, in a human-readle format, the resources that makeup your Chatbot solution. You use manifests to creates, manage, deploy, and destroy your AI resources. Manifests are simple text files in YAML format. Start with an example manifest, here or from the Smarter CLI. Tweak it to suit your needs. Then use the Smarter CLI to apply it. That's it! It doesn't get any simpler.</p>
-      </div>
-      <!--end::heading-2-->
-      <!--begin::heading-3-->
-      <div id="heading-3" class="row">
-        <h3 class="mt-6 mb-6">Easy</h3>
-        <p>There are around a dozen kinds of Smarter resources. Explore these examples.</p>
-          <!--begin::Manifests-->
-          <div class="row">
-            {% for manifest in manifests %}
-            <div class="col-4">
-                <!--begin::Manifest-->
-                <div class="card-body m-1 p-1 bg-secondary text-dark text-center d-flex align-items-center justify-content-center" style="min-height: 50px;">
-                    <strong class="fs-4"><a href="{{ manifest.path }}" class="fs-4">{{ manifest.name }}</a></strong>
-                </div>
-                <!--end::Manifest-->
-            </div>
-            {% endfor %}
+    <!--end::heading-1-->
+    <!--begin::heading-2-->
+    <div id="heading-2">
+      <h2 class="mt-6 mb-6">Design, Train, Test, Deploy</h2>
+      <p>A Smarter Manifest describes, in a human-readle format, the resources that makeup your Chatbot solution. You
+        use manifests to creates, manage, deploy, and destroy your AI resources. Manifests are simple text files in YAML
+        format. Start with an example manifest, here or from the Smarter CLI. Tweak it to suit your needs. Then use the
+        Smarter CLI to apply it. That's it! It doesn't get any simpler.</p>
+    </div>
+    <!--end::heading-2-->
+    <!--begin::heading-3-->
+    <div id="heading-3" class="row">
+      <h3 class="mt-6 mb-6">Easy</h3>
+      <p>There are around a dozen kinds of Smarter resources. Explore these examples.</p>
+      <!--begin::Manifests-->
+      <div class="row">
+        {% for manifest in manifests %}
+        <div class="col-4">
+          <!--begin::Manifest-->
+          <div
+            class="card-body m-1 p-1 bg-secondary text-dark text-center d-flex align-items-center justify-content-center"
+            style="min-height: 50px;">
+            <strong class="fs-4"><a href="{{ manifest.path }}" class="fs-4">{{ manifest.name }}</a></strong>
           </div>
-          <!--end::Manifests-->
+          <!--end::Manifest-->
+        </div>
+        {% endfor %}
       </div>
-      <!--end::heading-3-->
+      <!--end::Manifests-->
     </div>
-    <!--end::Row-->
+    <!--end::heading-3-->
+    <!--begin::heading-4-->
+    <div id="heading-2">
+      <h2 class="mt-6 mb-6">smarter.sh/v1 Specification</h2>
+      <p>
+        We published technical specifications for all of our manifests, so that other platforms can adopt
+        these, making your AI resources cross-platform compatible. Additionally, this opens up the potential
+        for a marketplace of AI resources, where you can share your manifests with others, and where
+        third party developers can create exciting new value-added services for the Smarter platform.
+      </p>
+      <div class="mb-3 d-flex justify-content-center">
+        <a class="btn" href="/docs/json-schemas/" style="color: white; background-color: orange;">
+          Learn More
+        </a>
+      </div>
+    </div>
+    <!--end::heading-4-->
+  </div>
+  <!--end::Row-->
 </div>
 {% endblock %}
