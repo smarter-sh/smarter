@@ -17,6 +17,7 @@ from .views.developer import (
     DeveloperDocsDockerComposeView,
     DeveloperDocsDockerfileView,
     DeveloperDocsGoodCodoingPracticeView,
+    DeveloperDocsMakefileView,
     DeveloperDocsOpenAIGettingStartedView,
     DeveloperDocsRequirementsView,
     DeveloperDocsSemanticVersioningView,
@@ -70,6 +71,7 @@ urlpatterns = [
     # -------------------------------------------------------------------------
     # Developers docs rendered from markdown in /data/doc/ in the Dockeer container
     # -------------------------------------------------------------------------
+    path("developer/makefile/", DeveloperDocsMakefileView.as_view(), name="developer-makefile"),
     path("developer/weather-function/", DeveloperDocsWeatherFunctionView.as_view(), name="developer-weather-function"),
     path("developer/requirements/", DeveloperDocsRequirementsView.as_view(), name="developer-requirements"),
     path("developer/dockerfile/", DeveloperDocsDockerfileView.as_view(), name="developer-dockerfile"),
