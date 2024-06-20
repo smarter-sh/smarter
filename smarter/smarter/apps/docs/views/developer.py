@@ -35,7 +35,7 @@ class TxtBaseView(SmarterWebView):
             text_content = text_file.read()
 
         context = {
-            "requirements_html": text_content,
+            "filecontents_html": text_content,
             "title": self.title,
             "leader": self.leader,
         }
@@ -94,6 +94,20 @@ class DeveloperDocsDockerfileView(TxtBaseView):
         Smarter Platform is a Docker-based Python-Django micro-service application that runs in Kubernetes. Below is
         the basic Dockerfile that is used to build the Smarter Platform Docker images for the application, the workers,
         and the celery-beat pods.
+        """
+
+
+class DeveloperDocsMakefileView(TxtBaseView):
+    """Developer docs Makefile view"""
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.text_file = "/data/Makefile"
+        self.title = "Makefile"
+        self.leader = """
+        This is the Makefile for https://github.com/smarter-sh/smarter which you can use as a reference
+        to for how what version of Python we are using, and how we
+        initialize our local development environments.
         """
 
 

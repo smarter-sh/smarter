@@ -86,6 +86,7 @@ RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r requirements/local.txt
 COPY ./smarter .
 COPY ./doc /data/doc
 COPY ./Dockerfile /data/Dockerfile
+COPY ./Makefile /data/Makefile
 COPY ./docker-compose.yml /data/docker-compose.yml
 
 # Build the React app and collect static files
