@@ -51,13 +51,18 @@ urlpatterns = [
     # -----------------------------------
     # wagtail urls
     # -----------------------------------
-    path("cms/admin/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),
-    path("wagtail-transfer/", include(wagtailtransfer_urls)),
+    path("cms/admin/wagtail-transfer/", include(wagtailtransfer_urls)),
+    path("cms/admin/", include(wagtailadmin_urls)),
     re_path(r"", include(wagtail_urls)),
+    # -----------------------------------
     # stripe urls
     # see: https://dj-stripe.dev/dj-stripe/
+    # -----------------------------------
     path("stripe/", include("djstripe.urls", namespace="djstripe")),
+    # -----------------------------------
+    # Smarter waitlist signup
+    # -----------------------------------
     path("waitlist/", ComingSoon.as_view(), name="waitlist"),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
