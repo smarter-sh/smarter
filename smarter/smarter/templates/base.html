@@ -101,10 +101,6 @@
     {% block javascript_extra %}
     {% endblock %}
 		<script src="{% static 'js/smarter-base.js' %}"></script>
-    {% block react_javascript %}
-      {{ block.super }}
-      {{ react_config|json_script:'react-config' }}
-    {% endblock %}
 	</body>
 	<!--end::Body-->
 </html>
