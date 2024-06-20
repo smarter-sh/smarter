@@ -15,6 +15,27 @@ import os
 from .base import *
 
 
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "level": "DEBUG",
+        "handlers": ["console"],
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+    },
+}
+logging.config.dictConfig(LOGGING)
+
 logger.info("Loading smarter.settings.local")
 
 ENVIRONMENT_DOMAIN = smarter_settings.environment_domain
