@@ -18,15 +18,11 @@ services:
       MYSQL_PASSWORD: smarter
     volumes:
       - ./mysql-data:/var/lib/mysql
-    mem_limit: 500m
-    cpus: "0.50"
 
   smarter-redis:
     container_name: smarter-redis
     image: redis:latest
     command: redis-server --requirepass smarter
-    mem_limit: 250m
-    cpus: "0.25"
 
   smarter-worker:
     container_name: smarter-worker
@@ -45,8 +41,17 @@ services:
       - smarter-redis
     env_file:
       - ./.env
-    mem_limit: 500m
-    cpus: "0.50"
+    volumes:
+      - type: bind
+        source: ./smarter
+        target: /smarter
+        consistency: cached
+    healthcheck:
+      test:
+        ["CMD", "celery", "-A", "smarter.smarter_celery.app", "inspect", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   smarter-beat:
     container_name: smarter-beat
@@ -58,8 +63,24 @@ services:
       - smarter-redis
     env_file:
       - ./.env
-    mem_limit: 500m
-    cpus: "0.50"
+    volumes:
+      - type: bind
+        source: ./smarter
+        target: /smarter
+        consistency: cached
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "celery",
+          "-A",
+          "smarter.smarter_celerybeat.app",
+          "inspect",
+          "ping",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   smarter-app:
     container_name: smarter-app
@@ -67,7 +88,10 @@ services:
     image: smarter
     command: watchmedo auto-restart --directory=./smarter --pattern=*.py --recursive -- gunicorn smarter.wsgi:application -b 0.0.0.0:8000
     volumes:
-      - ./smarter:/smarter
+      - type: bind
+        source: ./smarter
+        target: /smarter
+        consistency: cached
     ports:
       - 8000:8000
     depends_on:
@@ -77,5 +101,3 @@ services:
       - smarter-beat
     env_file:
       - ./.env
-    mem_limit: 500m
-    cpus: "0.50"
