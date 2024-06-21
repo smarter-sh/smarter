@@ -195,6 +195,11 @@ code {}
   display: left;
 }
 
+#plugins > a:hover {
+  background-color: #faa313;
+  transition: 300ms;
+}
+
 #manifests {
   justify-content: space-between !important;
   align-items: center !important;
@@ -242,6 +247,11 @@ code {}
   padding: 10px 20px 10px 20px;
   border-radius: 10px;
   align-self: left;
+}
+
+#manifests > a:hover {
+  background-color: #faa313;
+  transition: 300ms;
 }
 
 /* ------------------------
@@ -308,6 +318,11 @@ code {}
   border-radius: 10px;
 }
 
+#learn > a:hover {
+  background-color: #faa313;
+  transition: 300ms;
+}
+
 /* ---------------
        4th Block 
   -----------------*/
@@ -369,6 +384,11 @@ code {}
   border-radius: 10px;
 }
 
+#safe > a:hover {
+  background-color: #faa313;
+  transition: 300ms;
+}
+
 #simple {
   justify-content: space-between !important;
   align-items: center !important;
@@ -416,6 +436,11 @@ code {}
   text-decoration: none;
   padding: 10px 25px 10px 25px;
   border-radius: 10px;
+}
+
+#simple > a:hover {
+  background-color: #faa313;
+  transition: 300ms;
 }
 
 /*------------------------
@@ -469,6 +494,11 @@ code {}
   text-decoration: none;
   padding: 10px 20px 10px 20px;
   border-radius: 10px;
+}
+
+#secure > a:hover {
+  background-color: #faa313;
+  transition: 300ms;
 }
 
 /*-----------------------------
@@ -533,6 +563,11 @@ code {}
   border-radius: 10px;
 }
 
+#developers > a:hover {
+  background-color: #faa313;
+  transition: 300ms;
+}
+
 #certified {
   justify-content: space-between !important;
   align-items: center !important;
@@ -582,6 +617,11 @@ code {}
   border-radius: 10px;
 }
 
+#certified > a:hover {
+  background-color: #faa313;
+  transition: 300ms;
+}
+
 /*----------------------
  7th Block 
  -----------------------*/
@@ -589,7 +629,6 @@ code {}
 #administration {
   justify-content: center;
   align-self: center;
-
   background: white;
   background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
   background-size: contain;
@@ -633,4 +672,257 @@ code {}
   text-decoration: none;
   padding: 10px 20px 10px 20px;
   border-radius: 10px;
+}
+
+#administration > a:hover {
+  background-color: #faa313;
+  transition: 300ms;
+}
+
+/*--------------------------------
+Side Bar
+--------------------------------*/
+
+
+/*-------- Wait List Signup -----------*/
+#wait-list {
+  background: linear-gradient(90deg,
+      #0f2385,
+      #000000) !important;
+  border-style: solid;
+  border-color: #4B5675;
+  border-width: 1px;
+  border-radius: 10px;
+}
+
+#wait-list > div {
+  background-image: url('https://alpha.platform.smarter.sh/static/assets/media/illustrations/sigma-1/17.png');
+  background-size: contain !important;
+  background-position: right !important;
+  background-repeat: no-repeat;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 35px !important;
+}
+
+#smarter-waitlist-btn {
+  background-color: #F6821B;
+  font-family: Inter;
+  font-size: 11px;
+  color: white !important;
+  text-decoration: none;
+  padding: 10px 20px 10px 20px;
+  border-radius: 10px;
+  display: block;
+  text-align: center;
+}
+
+#smarter-contact-btn {
+  background-color: #F6821B !important;
+  font-family: Inter;
+  font-size: 11px;
+  color: white !important;
+  text-decoration: none;
+  padding: 10px 20px 10px 20px;
+  border-radius: 10px;
+  display: block !important;
+  width: 100%;
+  text-align: center;
+}
+
+/*-------- Developer Program -----------*/
+#developer-program {
+  background: linear-gradient(90deg,
+      #0f2385,
+      #000000) !important;
+  border-style: solid;
+  border-color: #4B5675;
+  border-width: 1px;
+  border-radius: 10px;
+}
+
+#developer-program > div {
+  background-image: url('https://alpha.platform.smarter.sh/static/assets/media/illustrations/sigma-1/9.png');
+  background-size: contain !important;
+  background-position: right !important;
+  background-repeat: no-repeat;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 35px !important;
+}
+
+#smarter-developer-btn {
+  background-color: #F6821B;
+  font-family: Inter;
+  font-size: 11px;
+  color: white !important;
+  text-decoration: none;
+  padding: 10px 20px 10px 20px;
+  border-radius: 10px;
+  display: block;
+  text-align: center;
+}
+
+#smarter-contact-btn {
+  background-color: #F6821B !important;
+  font-family: Inter;
+  font-size: 11px;
+  color: white !important;
+  text-decoration: none;
+  padding: 10px 20px 10px 20px;
+  border-radius: 10px;
+  display: block !important;
+  width: 100%;
+  text-align: center;
+}
+
+/*-------- Careers -----------*/
+
+#careers > div {
+  background: linear-gradient(135deg,
+  #FDC20E,
+  #F6821B) !important;
+  border-style: solid;
+  border-color: #FDC20E;
+  border-width: 1px;
+  border-radius: 10px;
+  padding: 35px;
+}
+
+#careers > div > div.mb-7 > h2 {
+  display: inline;
+  font-family: Inter;
+  font-size: 25px !important;
+  font-weight: bold;
+  color: #0F2385;
+  vertical-align: middle;
+  text-align: left;
+  padding-left: 15px;
+  text-shadow: #9e9e9e 1px 2px;
+  line-height: 20px;
+}
+
+#careers > div > div.mb-7 > h2:nth-child(4) {
+  font-family: Inter;
+  font-size: 25px;
+  font-weight: bold;
+  color: #0F2385;
+  vertical-align: middle;
+  text-align: left;
+  padding-left: 65px;
+  text-shadow: #9e9e9e 1px 2px;
+  line-height: 20px;
+}
+
+#careers > div > div.mb-7 > p {
+  margin-top: 2rem !important;
+}
+
+#careers > div > div.mb-0 > div:nth-child(1) > h4 {
+  display: inline;
+  font-family: Inter;
+  font-weight: bold;
+  color: #0F2385;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#careers > div > div.mb-0 > div:nth-child(1) > div {
+  margin-top: 2rem !important;
+}
+
+#careers > div > div.mb-0 > div:nth-child(2) > h4 {
+  display: inline;
+  font-family: Inter;
+  font-weight: bold;
+  color: #0F2385;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#careers > div > div.mb-0 > div:nth-child(2) > div {
+  margin-top: 2rem !important;
+}
+
+#careers > div > a {
+  background-color: #F6821B;
+  font-family: Inter;
+  font-size: 13px;
+  color: white;
+  text-decoration: none;
+  margin-top: 1rem;
+  padding: 10px 20px 10px 20px;
+  border-radius: 10px;
+}
+
+#careers > div > a:hover {
+  background-color: #faa313;
+  transition: 300ms;
+}
+
+/*-------- Connected -----------*/
+
+#connected {
+  display: flex;
+  background: #ffffff;
+  border-style: solid;
+  border-color: #F1F1F4;
+  border-width: 1px;
+  border-radius: 10px;
+  padding: 35px;
+}
+
+#connected > h4 {
+  display: inline;
+  font-family: Inter;
+  font-size: 25px !important;
+  font-weight: bold;
+  color: #4B5675;
+  vertical-align: middle;
+  text-align: left;
+  margin-bottom: 2rem;
+}
+
+#linkedin {
+  color:#F6821B;
+  vertical-align: center;
+  text-align: center;
+  margin-right: 10px;
+}
+
+#connected > div > a.github {
+  color:#F6821B;
+  vertical-align: center;
+  text-align: center;
+  margin-right: 10px;
+}
+
+#youtube {
+  color:#F6821B;
+  vertical-align: center;
+  text-align: center;
+  margin-right: 10px;
+}
+
+#facebook {
+  color:#F6821B;
+  vertical-align: center;
+  text-align: center;
+  margin-right: 10px;
+}
+
+#x {
+  color:#F6821B;
+  vertical-align: center;
+  text-align: center;
+  margin-right: 10px;
+}
+
+#instagram {
+  color:#F6821B;
+  vertical-align: center;
+  text-align: center;
+  margin-right: 10px;
 }
