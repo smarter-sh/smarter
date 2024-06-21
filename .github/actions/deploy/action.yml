@@ -242,6 +242,7 @@ runs:
       shell: bash
       run: |-
         helm upgrade --install --force smarter ./helm/charts/smarter/ --namespace ${{ env.NAMESPACE }} \
+        --timeout 900s \
         --set deployTimestamp="$(date +%s)" \
         --set env.DJANGO_SETTINGS_MODULE=${{ env.DJANGO_SETTINGS_MODULE }} \
         --set env.ENVIRONMENT=${{ inputs.environment }} \
