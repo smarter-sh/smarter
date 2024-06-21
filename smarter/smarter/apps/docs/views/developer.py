@@ -35,7 +35,7 @@ class TxtBaseView(SmarterWebView):
             text_content = text_file.read()
 
         context = {
-            "requirements_html": text_content,
+            "filecontents_html": text_content,
             "title": self.title,
             "leader": self.leader,
         }
@@ -94,6 +94,42 @@ class DeveloperDocsDockerfileView(TxtBaseView):
         Smarter Platform is a Docker-based Python-Django micro-service application that runs in Kubernetes. Below is
         the basic Dockerfile that is used to build the Smarter Platform Docker images for the application, the workers,
         and the celery-beat pods.
+        """
+
+
+class DeveloperDocsMakefileView(TxtBaseView):
+    """Developer docs Makefile view"""
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.text_file = "/data/Makefile"
+        self.title = "Makefile"
+        self.leader = """
+        This is the Makefile for https://github.com/smarter-sh/smarter which you can use as a reference
+        to for how what version of Python we are using, and how we
+        initialize our local development environments.
+        """
+
+
+class DeveloperDocsWeatherFunctionView(TxtBaseView):
+    """Developer docs Weather function calling view"""
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.text_file = "/smarter/smarter/apps/chat/functions/function_weather.py"
+        self.title = "function_weather.py"
+        self.leader = """
+        This is Smarter's implementation of the Python function 'get_current_weather()' referenced in
+        OpenAI API 'Function Calling' documentation: https://platform.openai.com/docs/guides/function-calling which
+        oddly, they neglected to implement. It uses the Google Maps API for geocoding
+        and the Open-Meteo API for weather data.
+
+        Smarter's documentation refers to this function repeatedly. It returns the current weather in a
+        given location as a 24-hour forecast. The function is called by the OpenAI API 'function calling' feature
+        and returns a JSON object.
+
+        This example is foundational to how the Smarter platform implements its Plugin feature, which is an
+        abstraction layer enabling non-programmers to achieve the same kind of results.
         """
 
 

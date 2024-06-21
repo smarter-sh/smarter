@@ -255,7 +255,7 @@ code {}
 }
 
 /* ------------------------
-           3rd  Block 
+           3rd  Block
   --------------------------*/
 #learn {
   background: linear-gradient(90deg,
@@ -324,7 +324,7 @@ code {}
 }
 
 /* ---------------
-       4th Block 
+       4th Block
   -----------------*/
 #kt_app_content_container>div>div.card.bg-body.align-self-start.mb-9.mb-xl-0.me-lg-9>div.smarter-wagtail-content-block>div>div:nth-child(4) {
   display: flex !important;
@@ -502,7 +502,7 @@ code {}
 }
 
 /*-----------------------------
-                6th Block 
+                6th Block
    ------------------------------*/
 
 #kt_app_content_container>div>div.card.bg-body.align-self-start.mb-9.mb-xl-0.me-lg-9>div.smarter-wagtail-content-block>div>div:nth-child(6) {
@@ -623,7 +623,7 @@ code {}
 }
 
 /*----------------------
- 7th Block 
+ 7th Block
  -----------------------*/
 
 #administration {
