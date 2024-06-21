@@ -114,7 +114,6 @@ INSTALLED_APPS = [
     "smarter.apps.plugin",
     # 3rd party apps
     # -------------------------------
-    "djstripe",
     "rest_framework",
     "knox",
     "taggit",
@@ -137,6 +136,10 @@ INSTALLED_APPS = [
     "wagtail.search",
     "wagtail.admin",
     "wagtail",
+    "wagtail_transfer",
+    # Stripe
+    # -------------------------------
+    "djstripe",
 ]
 
 MIDDLEWARE = [
@@ -194,6 +197,7 @@ TEMPLATES = [
                 "smarter.apps.cms.context_processors.base",
                 "smarter.apps.dashboard.context_processors.branding",
                 "smarter.apps.dashboard.context_processors.base",
+                "wagtail.contrib.settings.context_processors.settings",
             ],
         },
     },
@@ -368,3 +372,28 @@ WAGTAILDOCS_EXTENSIONS = ["csv", "docx", "key", "odt", "pdf", "pptx", "rtf", "tx
 TAGGIT_CASE_INSENSITIVE = True
 
 WAGTAILADMIN_BASE_URL = "/cms/admin/"
+
+WAGTAILTRANSFER_SOURCES = {
+    "localhost": {
+        "BASE_URL": "http://localhost:8000/wagtail-transfer/",
+        "SECRET_KEY": "qr4hlujl144ye5hwn0k3f0no462ms81z",
+    },
+    "alpha": {
+        "BASE_URL": "https://alpha.platform.smarter.sh/wagtail-transfer/",
+        "SECRET_KEY": "1tv70boz9norbi2puxirls697j6v4x75",
+    },
+    "beta": {
+        "BASE_URL": "https://beta.platform.smarter.sh/wagtail-transfer/",
+        "SECRET_KEY": "rle5zr18w3igmsauc3pvu4uu9eo54egg",
+    },
+    "next": {
+        "BASE_URL": "https://next.platform.smarter.sh/wagtail-transfer/",
+        "SECRET_KEY": "3uy59hvdewlihhmee4duc5ytw277f34b",
+    },
+    "production": {
+        "BASE_URL": "https://platform.smarter.sh/wagtail-transfer/",
+        "SECRET_KEY": "q6ea0u8vt1u8eoprtxq5d9p5wae83fje",
+    },
+}
+
+WAGTAILTRANSFER_SECRET_KEY = "8egf3jj8ib64j00gomz270wgzqwrfyed"

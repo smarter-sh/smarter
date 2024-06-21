@@ -5,6 +5,28 @@ import os
 from .base_aws import *
 
 
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "level": "DEBUG",
+        "handlers": ["console"],
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+    },
+}
+logging.config.dictConfig(LOGGING)
+
+
 environment_name = os.path.basename(__file__).replace(".py", "")
 print(f"Loading smarter.settings.{environment_name}")
 

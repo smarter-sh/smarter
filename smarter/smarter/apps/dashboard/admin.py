@@ -86,15 +86,6 @@ class RestrictedUserAdmin(UserAdmin):
     """Custom User admin that restricts access to users based on their account."""
 
     form = UserChangeForm
-    readonly_fields = (
-        "username",
-        "last_login",
-        "date_joined",
-        "is_superuser",
-        "is_active",
-        "groups",
-        "user_permissions",
-    )
 
     def has_add_permission(self, request):
         return False
@@ -108,6 +99,11 @@ class RestrictedUserAdmin(UserAdmin):
             return qs.filter(account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
+
+    def get_readonly_fields(self, request, obj=None):
+        if request.user.is_superuser:
+            return ("username", "last_login", "date_joined")
+        return super().get_readonly_fields(request, obj)
 
 
 class EmailContactListAdmin(RestrictedModelAdmin):

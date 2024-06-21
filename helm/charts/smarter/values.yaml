@@ -25,16 +25,14 @@ redis:
         cpu: "1"
     affinity:
       podAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 1
-            podAffinityTerm:
-              labelSelector:
-                matchExpressions:
-                  - key: "app"
-                    operator: In
-                    values:
-                      - smarter-redis
-              topologyKey: "kubernetes.io/hostname"
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                    - redis
+            topologyKey: "kubernetes.io/hostname"
       podAntiAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
           - labelSelector:

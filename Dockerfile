@@ -8,7 +8,7 @@
 #------------------------------------------------------------------------------
 
 # Use the official Python image as a parent image
-FROM --platform=linux/amd64 python:3.11-buster
+FROM --platform=linux/amd64 python:3.11-bookworm
 
 LABEL maintainer="Lawrence McDaniel <lawrence@querium.com>"
 
@@ -57,7 +57,7 @@ RUN apt-get install -y ca-certificates curl gnupg && \
 
 RUN apt-get update
 
-RUN apt-get install default-mysql-client build-essential libssl-dev libffi-dev python3-dev python-dev -y
+RUN apt-get install default-mysql-client build-essential libssl-dev libffi-dev python3-dev python-dev-is-python3 -y
 
 RUN rm -rf /var/lib/apt/lists/*
 
@@ -86,10 +86,15 @@ RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r requirements/local.txt
 COPY ./smarter .
 COPY ./doc /data/doc
 COPY ./Dockerfile /data/Dockerfile
+COPY ./Makefile /data/Makefile
 COPY ./docker-compose.yml /data/docker-compose.yml
 
 # Build the React app and collect static files
-RUN cd smarter/apps/chatapp/reactapp/ && npm install && npm run build && cd ../../../../
+WORKDIR /smarter/smarter/apps/chatapp/reactapp
+RUN npm install
+RUN npm run build
+
+WORKDIR /smarter
 RUN python manage.py collectstatic --noinput
 
 # Add a non-root user and switch to it
