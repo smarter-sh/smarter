@@ -11,7 +11,7 @@
 /*-----------------------------
  Header
  ----------------------------- */
- .querium-bg {
+.querium-bg {
   background-color: rgba(255, 87, 51, 0.75) !important;
   /* 50% opacity */
   border-radius: var(--bs-card-inner-border-radius) var(--bs-card-inner-border-radius) 0 0;
@@ -60,8 +60,10 @@
   /* Background color */
   --bs-code-shadow: 0px 3px 9px rgba(0, 0, 0, 0.08);
   /* Box shadow */
-  white-space: pre; /* This is usually the default for <pre>, but it's good to ensure it's not being overridden */
-  overflow-x: auto; /* Adds a horizontal scrollbar if the content is too wide */
+  white-space: pre;
+  /* This is usually the default for <pre>, but it's good to ensure it's not being overridden */
+  overflow-x: auto;
+  /* Adds a horizontal scrollbar if the content is too wide */
 }
 
 /*
@@ -75,14 +77,22 @@ code {}
  page: /docs/cli/
  ----------------------------- */
 .terminal-emulation {
-  white-space: pre; /* Keeps the text in the same format as it was entered */
-  font-family: 'Courier New', Courier, monospace; /* Monospace font */
-  overflow-x: auto; /* Adds horizontal scrollbar if needed */
-  background-color: #333333; /* Terminal-like background */
-  color: #f1f1f1; /* Light text color for contrast */
-  padding: 10px; /* Padding inside the terminal window */
-  border: 1px solid #555; /* Optional: adds a border */
-  box-shadow: var(--bs-code-shadow); /* Reuse the box-shadow variable for consistency */
+  white-space: pre;
+  /* Keeps the text in the same format as it was entered */
+  font-family: 'Courier New', Courier, monospace;
+  /* Monospace font */
+  overflow-x: auto;
+  /* Adds horizontal scrollbar if needed */
+  background-color: #333333;
+  /* Terminal-like background */
+  color: #f1f1f1;
+  /* Light text color for contrast */
+  padding: 10px;
+  /* Padding inside the terminal window */
+  border: 1px solid #555;
+  /* Optional: adds a border */
+  box-shadow: var(--bs-code-shadow);
+  /* Reuse the box-shadow variable for consistency */
 }
 
 /*---------------------
@@ -93,6 +103,7 @@ code {}
   background-color: #F9F9F9;
   box-shadow: none !important;
 }
+
 .wrap {
   display: flex !important;
   flex-direction: row !important;
@@ -117,15 +128,15 @@ code {}
   border-radius: 10px;
 }
 
-#smarter-landing-page > h1 {
+#smarter-landing-page>h1 {
   color: #0F2385 !important;
 }
 
-#smarter-landing-page > h2 {
+#smarter-landing-page>h2 {
   color: #4B5675 !important;
 }
 
-#smarter-landing-page > p {
+#smarter-landing-page>p {
   color: #4B5675 !important;
   font-size: 13px !important;
 }
@@ -161,7 +172,7 @@ code {}
   border-width: 1px;
 }
 
-#plugins > h3 {
+#plugins>h3 {
   display: inline;
   font-family: Inter;
   color: #4B5675;
@@ -171,7 +182,7 @@ code {}
   padding-left: 15px;
 }
 
-#plugins > p {
+#plugins>p {
   font-family: Inter;
   font-size: 13px;
   line-height: normal;
@@ -183,7 +194,7 @@ code {}
 }
 
 
-#plugins > a {
+#plugins>a {
   background-color: #F6821B;
   font-family: Inter;
   font-size: 11px;
@@ -195,7 +206,7 @@ code {}
   display: left;
 }
 
-#plugins > a:hover {
+#plugins>a:hover {
   background-color: #faa313;
   transition: 300ms;
 }
@@ -238,7 +249,7 @@ code {}
   margin-bottom: 20px;
 }
 
-#manifests> a {
+#manifests>a {
   background-color: #F6821B;
   font-family: Inter;
   font-size: 11px;
@@ -249,7 +260,7 @@ code {}
   align-self: left;
 }
 
-#manifests > a:hover {
+#manifests>a:hover {
   background-color: #faa313;
   transition: 300ms;
 }
@@ -290,7 +301,7 @@ code {}
   padding: 0px;
 }
 
-#learn > div > p {
+#learn>div>p {
   display: inline;
   font-family: Inter;
   font-size: 13px;
@@ -308,7 +319,7 @@ code {}
 
 }
 
-#learn> a {
+#learn>a {
   background-color: #F6821B;
   font-family: Inter;
   font-size: 11px;
@@ -318,7 +329,7 @@ code {}
   border-radius: 10px;
 }
 
-#learn > a:hover {
+#learn>a:hover {
   background-color: #faa313;
   transition: 300ms;
 }
@@ -374,7 +385,7 @@ code {}
   margin-bottom: 20px;
 }
 
-#safe> a {
+#safe>a {
   background-color: #F6821B;
   font-family: Inter;
   font-size: 11px;
@@ -384,7 +395,7 @@ code {}
   border-radius: 10px;
 }
 
-#safe > a:hover {
+#safe>a:hover {
   background-color: #faa313;
   transition: 300ms;
 }
@@ -428,7 +439,7 @@ code {}
   margin-bottom: 20px;
 }
 
-#simple> a {
+#simple>a {
   background-color: #F6821B;
   font-family: Inter;
   font-size: 11px;
@@ -438,7 +449,7 @@ code {}
   border-radius: 10px;
 }
 
-#simple > a:hover {
+#simple>a:hover {
   background-color: #faa313;
   transition: 300ms;
 }
@@ -496,7 +507,7 @@ code {}
   border-radius: 10px;
 }
 
-#secure > a:hover {
+#secure>a:hover {
   background-color: #faa313;
   transition: 300ms;
 }
@@ -563,7 +574,7 @@ code {}
   border-radius: 10px;
 }
 
-#developers > a:hover {
+#developers>a:hover {
   background-color: #faa313;
   transition: 300ms;
 }
@@ -617,7 +628,7 @@ code {}
   border-radius: 10px;
 }
 
-#certified > a:hover {
+#certified>a:hover {
   background-color: #faa313;
   transition: 300ms;
 }
@@ -674,7 +685,7 @@ code {}
   border-radius: 10px;
 }
 
-#administration > a:hover {
+#administration>a:hover {
   background-color: #faa313;
   transition: 300ms;
 }
@@ -695,7 +706,7 @@ Side Bar
   border-radius: 10px;
 }
 
-#wait-list > div {
+#wait-list>div {
   background-image: url('https://alpha.platform.smarter.sh/static/assets/media/illustrations/sigma-1/17.png');
   background-size: contain !important;
   background-position: right !important;
@@ -742,7 +753,7 @@ Side Bar
   border-radius: 10px;
 }
 
-#developer-program > div {
+#developer-program>div {
   background-image: url('https://alpha.platform.smarter.sh/static/assets/media/illustrations/sigma-1/9.png');
   background-size: contain !important;
   background-position: right !important;
@@ -780,10 +791,10 @@ Side Bar
 
 /*-------- Careers -----------*/
 
-#careers > div {
+#careers>div {
   background: linear-gradient(135deg,
-  #FDC20E,
-  #F6821B) !important;
+      #FDC20E,
+      #F6821B) !important;
   border-style: solid;
   border-color: #FDC20E;
   border-width: 1px;
@@ -791,7 +802,7 @@ Side Bar
   padding: 35px;
 }
 
-#careers > div > div.mb-7 > h2 {
+#careers>div>div.mb-7>h2 {
   display: inline;
   font-family: Inter;
   font-size: 25px !important;
@@ -804,7 +815,7 @@ Side Bar
   line-height: 20px;
 }
 
-#careers > div > div.mb-7 > h2:nth-child(4) {
+#careers>div>div.mb-7>h2:nth-child(4) {
   font-family: Inter;
   font-size: 25px;
   font-weight: bold;
@@ -816,11 +827,11 @@ Side Bar
   line-height: 20px;
 }
 
-#careers > div > div.mb-7 > p {
+#careers>div>div.mb-7>p {
   margin-top: 2rem !important;
 }
 
-#careers > div > div.mb-0 > div:nth-child(1) > h4 {
+#careers>div>div.mb-0>div:nth-child(1)>h4 {
   display: inline;
   font-family: Inter;
   font-weight: bold;
@@ -829,11 +840,11 @@ Side Bar
   text-align: left;
 }
 
-#careers > div > div.mb-0 > div:nth-child(1) > div {
+#careers>div>div.mb-0>div:nth-child(1)>div {
   margin-top: 2rem !important;
 }
 
-#careers > div > div.mb-0 > div:nth-child(2) > h4 {
+#careers>div>div.mb-0>div:nth-child(2)>h4 {
   display: inline;
   font-family: Inter;
   font-weight: bold;
@@ -842,11 +853,11 @@ Side Bar
   text-align: left;
 }
 
-#careers > div > div.mb-0 > div:nth-child(2) > div {
+#careers>div>div.mb-0>div:nth-child(2)>div {
   margin-top: 2rem !important;
 }
 
-#careers > div > a {
+#careers>div>a {
   background-color: #F6821B;
   font-family: Inter;
   font-size: 13px;
@@ -857,7 +868,7 @@ Side Bar
   border-radius: 10px;
 }
 
-#careers > div > a:hover {
+#careers>div>a:hover {
   background-color: #faa313;
   transition: 300ms;
 }
@@ -874,7 +885,7 @@ Side Bar
   padding: 35px;
 }
 
-#connected > h4 {
+#connected>h4 {
   display: inline;
   font-family: Inter;
   font-size: 25px !important;
@@ -886,42 +897,42 @@ Side Bar
 }
 
 #linkedin {
-  color:#F6821B;
+  color: #F6821B;
   vertical-align: center;
   text-align: center;
   margin-right: 10px;
 }
 
-#connected > div > a.github {
-  color:#F6821B;
+#connected>div>a.github {
+  color: #F6821B;
   vertical-align: center;
   text-align: center;
   margin-right: 10px;
 }
 
 #youtube {
-  color:#F6821B;
+  color: #F6821B;
   vertical-align: center;
   text-align: center;
   margin-right: 10px;
 }
 
 #facebook {
-  color:#F6821B;
+  color: #F6821B;
   vertical-align: center;
   text-align: center;
   margin-right: 10px;
 }
 
 #x {
-  color:#F6821B;
+  color: #F6821B;
   vertical-align: center;
   text-align: center;
   margin-right: 10px;
 }
 
 #instagram {
-  color:#F6821B;
+  color: #F6821B;
   vertical-align: center;
   text-align: center;
   margin-right: 10px;
