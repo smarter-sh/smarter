@@ -58,9 +58,6 @@ BASE_DIR = Path(os.path.join(PROJECT_ROOT, "smarter")).resolve()
 print("PROJECT_ROOT: ", PROJECT_ROOT)
 print("BASE_DIR: ", BASE_DIR)
 
-LOGIN_URL = "/login/"
-LOGIN_REDIRECT_URL = "/"
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
@@ -240,6 +237,26 @@ DATABASES = {
         "PORT": "3306",
     }
 }
+
+AUTHENTICATION_BACKENDS = (
+    "social_core.backends.google.GoogleOAuth2",
+    "social_core.backends.github.GithubOAuth2",
+    "social_core.backends.linkedin.LinkedinOAuth2",
+    "django.contrib.auth.backends.ModelBackend",
+)
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = "<Your-Google-Client-ID>"
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = "<Your-Google-Client-Secret>"
+
+SOCIAL_AUTH_GITHUB_KEY = "<Your-GitHub-Client-ID>"
+SOCIAL_AUTH_GITHUB_SECRET = "<Your-GitHub-Client-Secret>"
+
+SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = "<Your-LinkedIn-Client-ID>"
+SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = "<Your-LinkedIn-Client-Secret>"
+
+LOGIN_URL = "/login/"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
 
 
 # Password validation
