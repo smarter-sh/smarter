@@ -222,6 +222,6 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
         )
 
     def test_verify_api_infrastructure(self):
-        """Test verify_api_infrastructure command."""
+        """Test verify_dns_configuration command."""
 
-        call_command("verify_api_infrastructure")
+        call_command("verify_dns_configuration")
