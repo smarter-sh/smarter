@@ -161,25 +161,33 @@ class AWSRoute53(AWSBase):
         example return value:
         [
             {
-                "Value": "ns-2048.awsdns-64.com"
+                "Name": "example.com.",
+                "Type": "NS",
+                "TTL": 600,
+                "ResourceRecords": [
+                    {
+                        "Value": "ns-2048.awsdns-64.com"
+                    },
+                    {
+                        "Value": "ns-2049.awsdns-65.net"
+                    },
+                    {
+                        "Value": "ns-2050.awsdns-66.org"
+                    },
+                    {
+                        "Value": "ns-2051.awsdns-67.co.uk"
+                    }
+                ]
             },
-            {
-                "Value": "ns-2049.awsdns-65.net"
-            },
-            {
-                "Value": "ns-2050.awsdns-66.org"
-            },
-            {
-                "Value": "ns-2051.awsdns-67.co.uk"
-            }
         ]
         """
         logger.info("get_ns_records() hosted_zone_id: %s", hosted_zone_id)
         response = self.client.list_resource_record_sets(HostedZoneId=hosted_zone_id)
+        retval = []
         for record in response["ResourceRecordSets"]:
             if record["Type"] == "NS":
-                return record["ResourceRecords"]
-        return None
+                retval.append(record)
+        return retval
 
     # pylint: disable=too-many-arguments,too-many-locals
     def get_or_create_dns_record(
