@@ -487,23 +487,35 @@ def destroy_domain_A_record(hostname: str, api_host_domain: str):
 )
 def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     """Create a customer API default domain A record for a chatbot."""
+
+    # set these to true if we *DO NOT* place a wildcard A record in the customer API domain
+    # requiring that every chatbot have its own A record. This is the default behavior.
+    CREATE_DNS_RECORD = True
+
+    # set this to true if we intend to create an ingress manifest for the customer API domain
+    # so that we can issue a certificate for it.
+    CREATE_INGRESS_MANIFEST = True
     fn_name = "deploy_default_api()"
 
     logger.info("%s - chatbot %s", fn_name, chatbot_id)
     chatbot: ChatBot = None
+    activate = True
 
     try:
         chatbot = ChatBot.objects.get(id=chatbot_id)
     except ChatBot.DoesNotExist as e:
         raise ChatBotTaskError(f"Chatbot {chatbot_id} not found.") from e
 
+    # Prerequisites.
     # ensure that the customer API domain has an A record that we can use to create the chatbot's A record
+    # our expected case is that the record already exists and that this step is benign.
     create_domain_A_record(hostname=smarter_settings.customer_api_domain, api_host_domain=smarter_settings.root_domain)
-    domain_name = chatbot.default_host
-    create_domain_A_record(hostname=domain_name, api_host_domain=smarter_settings.customer_api_domain)
 
-    activate = True
-    if with_domain_verification:
+    domain_name = chatbot.default_host
+    if CREATE_DNS_RECORD:
+        create_domain_A_record(hostname=domain_name, api_host_domain=smarter_settings.customer_api_domain)
+
+    if CREATE_DNS_RECORD and with_domain_verification:
         chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.VERIFYING
         chatbot.save()
         activate = verify_domain(domain_name, record_type="A", chatbot=chatbot, activate_chatbot=True)
@@ -527,7 +539,7 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
 
     # if we're running in Kubernetes then we should create an ingress manifest
     # for the customer API domain so that we can issue a certificate for it.
-    if smarter_settings.environment != SmarterEnvironments.LOCAL:
+    if CREATE_INGRESS_MANIFEST and smarter_settings.environment != SmarterEnvironments.LOCAL:
         logger.info("%s creating ingress manifest for %s", fn_name, domain_name)
         ingress_values = {
             "cluster_issuer": smarter_settings.customer_api_domain,
