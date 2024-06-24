@@ -206,6 +206,23 @@ class SettingsDefaults:
         TFVARS.get("social_auth_google_oauth2_secret", None)
         or os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", None),
     )
+    SOCIAL_AUTH_GITHUB_KEY = os.environ.get(
+        "SOCIAL_AUTH_GITHUB_KEY",
+        TFVARS.get("social_auth_github_key", None) or os.environ.get("SOCIAL_AUTH_GITHUB_KEY", None),
+    )
+    SOCIAL_AUTH_GITHUB_SECRET = os.environ.get(
+        "SOCIAL_AUTH_GITHUB_SECRET",
+        TFVARS.get("social_auth_github_secret", None) or os.environ.get("SOCIAL_AUTH_GITHUB_SECRET", None),
+    )
+    SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = os.environ.get(
+        "SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY",
+        TFVARS.get("social_auth_linkedin_oauth2_key", None) or os.environ.get("SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY", None),
+    )
+    SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = os.environ.get(
+        "SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET",
+        TFVARS.get("social_auth_linkedin_oauth2_secret", None)
+        or os.environ.get("SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET", None),
+    )
 
     LANGCHAIN_MEMORY_KEY = os.environ.get("LANGCHAIN_MEMORY_KEY", "chat_history")
 
@@ -376,6 +393,22 @@ class Settings(BaseSettings):
     social_auth_google_oauth2_secret: Optional[str] = Field(
         SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET,
         env=["SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", "TF_VAR_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET"],
+    )
+    social_auth_github_key: Optional[str] = Field(
+        SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY,
+        env=["SOCIAL_AUTH_GITHUB_KEY", "TF_VAR_SOCIAL_AUTH_GITHUB_KEY"],
+    )
+    social_auth_github_secret: Optional[str] = Field(
+        SettingsDefaults.SOCIAL_AUTH_GITHUB_SECRET,
+        env=["SOCIAL_AUTH_GITHUB_SECRET", "TF_VAR_SOCIAL_AUTH_GITHUB_SECRET"],
+    )
+    social_auth_linkedin_oauth2_key: Optional[str] = Field(
+        SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY,
+        env=["SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY", "TF_VAR_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY"],
+    )
+    social_auth_linkedin_oauth2_secret: Optional[str] = Field(
+        SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET,
+        env=["SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET", "TF_VAR_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET"],
     )
     langchain_memory_key: Optional[str] = Field(SettingsDefaults.LANGCHAIN_MEMORY_KEY, env="LANGCHAIN_MEMORY_KEY")
     logo: Optional[str] = Field(SettingsDefaults.LOGO, env="LOGO")
@@ -723,6 +756,34 @@ class Settings(BaseSettings):
         """Check social_auth_google_oauth2_secret"""
         if v in [None, ""]:
             return SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
+        return v
+
+    @field_validator("social_auth_github_key")
+    def check_social_auth_github_key(cls, v) -> str:
+        """Check social_auth_github_key"""
+        if v in [None, ""]:
+            return SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY
+        return v
+
+    @field_validator("social_auth_github_secret")
+    def check_social_auth_github_secret(cls, v) -> str:
+        """Check social_auth_github_secret"""
+        if v in [None, ""]:
+            return SettingsDefaults.SOCIAL_AUTH_GITHUB_SECRET
+        return v
+
+    @field_validator("social_auth_linkedin_oauth2_key")
+    def check_social_auth_linkedin_oauth2_key(cls, v) -> str:
+        """Check social_auth_linkedin_oauth2_key"""
+        if v in [None, ""]:
+            return SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY
+        return v
+
+    @field_validator("social_auth_linkedin_oauth2_secret")
+    def check_social_auth_linkedin_oauth2_secret(cls, v) -> str:
+        """Check social_auth_linkedin_oauth2_secret"""
+        if v in [None, ""]:
+            return SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET
         return v
 
     @field_validator("langchain_memory_key")

@@ -270,14 +270,13 @@ SOCIAL_AUTH_PIPELINE = (
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = smarter_settings.social_auth_google_oauth2_key
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = smarter_settings.social_auth_google_oauth2_secret
 
+SOCIAL_AUTH_GITHUB_KEY = smarter_settings.social_auth_github_key
+SOCIAL_AUTH_GITHUB_SECRET = smarter_settings.social_auth_github_secret
 
-SOCIAL_AUTH_GITHUB_KEY = "<Your-GitHub-Client-ID>"
-SOCIAL_AUTH_GITHUB_SECRET = "<Your-GitHub-Client-Secret>"
+SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = smarter_settings.social_auth_linkedin_oauth2_key
+SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = smarter_settings.social_auth_linkedin_oauth2_secret
 
-SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = "<Your-LinkedIn-Client-ID>"
-SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = "<Your-LinkedIn-Client-Secret>"
 SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = ["username", "first_name", "email"]
-
 LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
