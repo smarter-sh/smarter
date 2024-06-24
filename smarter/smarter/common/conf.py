@@ -197,6 +197,15 @@ class SettingsDefaults:
         "GOOGLE_MAPS_API_KEY",
         TFVARS.get("google_maps_api_key", None) or os.environ.get("TF_VAR_GOOGLE_MAPS_API_KEY", None),
     )
+    SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get(
+        "SOCIAL_AUTH_GOOGLE_OAUTH2_KEY",
+        TFVARS.get("social_auth_google_oauth2_key", None) or os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", None),
+    )
+    SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get(
+        "SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET",
+        TFVARS.get("social_auth_google_oauth2_secret", None)
+        or os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", None),
+    )
 
     LANGCHAIN_MEMORY_KEY = os.environ.get("LANGCHAIN_MEMORY_KEY", "chat_history")
 
@@ -359,6 +368,14 @@ class Settings(BaseSettings):
     google_maps_api_key: Optional[str] = Field(
         SettingsDefaults.GOOGLE_MAPS_API_KEY,
         env=["GOOGLE_MAPS_API_KEY", "TF_VAR_GOOGLE_MAPS_API_KEY"],
+    )
+    social_auth_google_oauth2_key: Optional[str] = Field(
+        SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
+        env=["SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", "TF_VAR_SOCIAL_AUTH_GOOGLE_OAUTH2_KEY"],
+    )
+    social_auth_google_oauth2_secret: Optional[str] = Field(
+        SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET,
+        env=["SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", "TF_VAR_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET"],
     )
     langchain_memory_key: Optional[str] = Field(SettingsDefaults.LANGCHAIN_MEMORY_KEY, env="LANGCHAIN_MEMORY_KEY")
     logo: Optional[str] = Field(SettingsDefaults.LOGO, env="LOGO")
@@ -692,6 +709,20 @@ class Settings(BaseSettings):
         """Check google_maps_api_key"""
         if v in [None, ""]:
             return SettingsDefaults.GOOGLE_MAPS_API_KEY
+        return v
+
+    @field_validator("social_auth_google_oauth2_key")
+    def check_social_auth_google_oauth2_key(cls, v) -> str:
+        """Check social_auth_google_oauth2_key"""
+        if v in [None, ""]:
+            return SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
+        return v
+
+    @field_validator("social_auth_google_oauth2_secret")
+    def check_social_auth_google_oauth2_secret(cls, v) -> str:
+        """Check social_auth_google_oauth2_secret"""
+        if v in [None, ""]:
+            return SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
         return v
 
     @field_validator("langchain_memory_key")

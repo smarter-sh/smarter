@@ -194,6 +194,8 @@ TEMPLATES = [
                 "smarter.apps.cms.context_processors.base",
                 "smarter.apps.dashboard.context_processors.branding",
                 "smarter.apps.dashboard.context_processors.base",
+                "social_django.context_processors.backends",
+                "social_django.context_processors.login_redirect",
                 "wagtail.contrib.settings.context_processors.settings",
             ],
         },
@@ -238,6 +240,9 @@ DATABASES = {
     }
 }
 
+# https://python-social-auth.readthedocs.io/en/latest/configuration/django.html
+# https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
+
 AUTHENTICATION_BACKENDS = (
     "social_core.backends.google.GoogleOAuth2",
     "social_core.backends.github.GithubOAuth2",
@@ -245,14 +250,33 @@ AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
 )
 
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = "<Your-Google-Client-ID>"
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = "<Your-Google-Client-Secret>"
+SOCIAL_AUTH_PIPELINE = (
+    "social_core.pipeline.social_auth.social_details",
+    "social_core.pipeline.social_auth.social_uid",
+    "social_core.pipeline.social_auth.auth_allowed",
+    "social_core.tests.pipeline.ask_for_password",
+    "social_core.tests.pipeline.ask_for_slug",
+    "social_core.pipeline.social_auth.social_user",
+    "social_core.pipeline.user.get_username",
+    "social_core.pipeline.social_auth.associate_by_email",
+    "social_core.pipeline.user.create_user",
+    "social_core.pipeline.social_auth.associate_user",
+    "social_core.pipeline.social_auth.load_extra_data",
+    "social_core.tests.pipeline.set_password",
+    "social_core.tests.pipeline.set_slug",
+    "social_core.pipeline.user.user_details",
+)
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = smarter_settings.social_auth_google_oauth2_key
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = smarter_settings.social_auth_google_oauth2_secret
+
 
 SOCIAL_AUTH_GITHUB_KEY = "<Your-GitHub-Client-ID>"
 SOCIAL_AUTH_GITHUB_SECRET = "<Your-GitHub-Client-Secret>"
 
 SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = "<Your-LinkedIn-Client-ID>"
 SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = "<Your-LinkedIn-Client-Secret>"
+SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = ["username", "first_name", "email"]
 
 LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/"
@@ -260,8 +284,6 @@ LOGOUT_REDIRECT_URL = "/"
 
 
 # Password validation
-# https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
