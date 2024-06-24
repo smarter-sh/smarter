@@ -457,6 +457,16 @@ class Settings(BaseSettings):
         return f"{self.platform_name}-{SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN}-{settings.environment}"
 
     @property
+    def platform_domain(self) -> str:
+        """Return the platform domain name. ie platform.smarter.sh"""
+        return f"{SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
+
+    @property
+    def api_domain(self) -> str:
+        """Return the API domain name. ie api.smarter.sh"""
+        return f"{SMARTER_CUSTOMER_API_SUBDOMAIN}.{self.root_domain}"
+
+    @property
     def customer_api_domain(self) -> str:
         """Return the customer API domain name."""
         if self.environment == SmarterEnvironments.PROD:
