@@ -1,0 +1,53 @@
+name: Send Mail
+branding:
+  icon: "play-circle"
+  color: "green"
+inputs:
+  environment:
+    description: "The environment to deploy"
+    required: true
+  aws-access-key-id:
+    description: "The AWS access key ID"
+    required: true
+  aws-secret-access-key:
+    description: "The AWS secret access key"
+    required: true
+  aws-region:
+    description: "The AWS region to deploy to"
+    required: true
+  subject:
+    description: "The subject of the email"
+    required: true
+  body:
+    description: "The body of the email"
+    required: true
+
+runs:
+  using:
+    "composite"
+    # -------------------------------------------------------------------------
+    # This action is designed to be run on an ephemeral Ubuntu Linux runner.
+    # We start with a clean environment and install and configure all the
+    # tools we need for this job.
+    #
+    # The runner is destroyed after the job completes, so we don't need to
+    # worry about cleaning up after ourselves.
+    # -------------------------------------------------------------------------
+  steps:
+    # authenticate AWS CLI
+    - name: Configure AWS credentials
+      id: aws-credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-region: ${{ inputs.aws-region }}
+
+    - name: Send Email
+      shell: bash
+      run: |
+        aws ses send-email \
+          --from "no-reply@${{ inputs.environment }}.platform.smarter.sh" \
+          --destination "ToAddresses=lpm0073@gmail.com,shalimhoms_12@hotmail.com,kent@querium.com" \
+          --message "Subject={Data=${{ inputs.subject }},Charset=utf8},Body={Text={Data=${{ inputs.body }},Charset=utf8}}" \
+          --reply-to-addresses "no-reply@${{ inputs.environment }}.platform.smarter.sh"
