@@ -43,10 +43,10 @@ runs:
         aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
         aws-region: ${{ inputs.aws-region }}
 
-      - name: Send Email
-        run: |
-          aws ses send-email \
-            --from "no-reply@${{ inputs.environment }}.platform.smarter.sh" \
-            --destination "ToAddresses=lpm0073@gmail.com" \
-            --message "Subject={Data=${{ inputs.subject }},Charset=utf8},Body={Text={Data=${{ inputs.body }},Charset=utf8}}" \
-            --reply-to-addresses "no-reply@${{ inputs.environment }}.platform.smarter.sh"
+    - name: Send Email
+      run: |
+        aws ses send-email \
+          --from "no-reply@${{ inputs.environment }}.platform.smarter.sh" \
+          --destination "ToAddresses=lpm0073@gmail.com" \
+          --message "Subject={Data=${{ inputs.subject }},Charset=utf8},Body={Text={Data=${{ inputs.body }},Charset=utf8}}" \
+          --reply-to-addresses "no-reply@${{ inputs.environment }}.platform.smarter.sh"
