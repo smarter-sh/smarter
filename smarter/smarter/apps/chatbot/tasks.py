@@ -12,6 +12,7 @@ from string import Template
 
 import botocore
 import dns.resolver
+from django.conf import settings
 
 from smarter.apps.account.models import Account, AccountContact
 from smarter.common.conf import settings as smarter_settings
@@ -37,10 +38,6 @@ from .models import (
 logger = logging.getLogger(__name__)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-DEFAULT_TTL = 600
-CELERY_MAX_RETRIES = 3
-CELERY_RETRY_BACKOFF = True
-CELERY_TASK_QUEUE = "default_celery_task_queue"
 
 
 class ChatBotCustomDomainNotFound(SmarterChatBotException):
@@ -64,9 +61,9 @@ def aggregate_chatbot_history():
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=CELERY_RETRY_BACKOFF,
-    max_retries=CELERY_MAX_RETRIES,
-    queue=CELERY_TASK_QUEUE,
+    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
+    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
+    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
 )
 def verify_certificate(certificate_arn: str):
     """Verify an AWS ACM certificate."""
@@ -75,9 +72,9 @@ def verify_certificate(certificate_arn: str):
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=CELERY_RETRY_BACKOFF,
-    max_retries=CELERY_MAX_RETRIES,
-    queue=CELERY_TASK_QUEUE,
+    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
+    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
+    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
 )
 def create_chatbot_request(chatbot_id: int, request_data: dict):
     """Create a ChatBot request record."""
@@ -87,9 +84,9 @@ def create_chatbot_request(chatbot_id: int, request_data: dict):
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=CELERY_RETRY_BACKOFF,
-    max_retries=CELERY_MAX_RETRIES,
-    queue=CELERY_TASK_QUEUE,
+    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
+    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
+    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
 )
 def register_custom_domain(account_id: int, domain_name: str):
     """
@@ -152,9 +149,9 @@ def register_custom_domain(account_id: int, domain_name: str):
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=CELERY_RETRY_BACKOFF,
-    max_retries=CELERY_MAX_RETRIES,
-    queue=CELERY_TASK_QUEUE,
+    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
+    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
+    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
 )
 def create_custom_domain_dns_record(
     chatbot_custom_domain_id: int, record_name: str, record_type: str, record_value: str, record_ttl: int = 600
@@ -199,9 +196,9 @@ def create_custom_domain_dns_record(
 # pylint: disable=too-many-locals,too-many-branches,too-many-statements
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=CELERY_RETRY_BACKOFF,
-    max_retries=CELERY_MAX_RETRIES,
-    queue=CELERY_TASK_QUEUE,
+    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
+    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
+    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
 )
 def verify_custom_domain(
     hosted_zone_id: int,
@@ -305,9 +302,9 @@ def verify_custom_domain(
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=CELERY_RETRY_BACKOFF,
-    max_retries=CELERY_MAX_RETRIES,
-    queue=CELERY_TASK_QUEUE,
+    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
+    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
+    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
 )
 def verify_domain(
     domain_name: str,
@@ -377,9 +374,9 @@ def verify_domain(
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=CELERY_RETRY_BACKOFF,
-    max_retries=CELERY_MAX_RETRIES,
-    queue=CELERY_TASK_QUEUE,
+    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
+    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
+    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
 )
 def create_domain_A_record(hostname: str, api_host_domain: str) -> dict:
     """Create an A record for the API domain."""
@@ -416,7 +413,7 @@ def create_domain_A_record(hostname: str, api_host_domain: str) -> dict:
             record_type="A",
             record_alias_target=a_record["AliasTarget"] if "AliasTarget" in a_record else None,
             record_value=a_record["ResourceRecords"] if "ResourceRecords" in a_record else None,
-            record_ttl=DEFAULT_TTL,
+            record_ttl=settings.SMARTER_CHATBOT_TASKS_DEFAULT_TTL,
         )
         verb = "Created" if created else "Verified"
         logger.info(
@@ -466,7 +463,7 @@ def destroy_domain_A_record(hostname: str, api_host_domain: str):
 
     print(f"{fn_name} a_record: ", a_record)
     record_type = a_record.get("Type", "A")
-    record_ttl = a_record.get("TTL", DEFAULT_TTL)
+    record_ttl = a_record.get("TTL", settings.SMARTER_CHATBOT_TASKS_DEFAULT_TTL)
     alias_target = a_record.get("AliasTarget")
     record_resource_records = a_record.get("ResourceRecords")
     aws_helper.route53.destroy_dns_record(
@@ -481,22 +478,14 @@ def destroy_domain_A_record(hostname: str, api_host_domain: str):
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=CELERY_RETRY_BACKOFF,
-    max_retries=CELERY_MAX_RETRIES,
-    queue=CELERY_TASK_QUEUE,
+    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
+    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
+    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
 )
 def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     """Create a customer API default domain A record for a chatbot."""
 
-    # set these to true if we *DO NOT* place a wildcard A record in the customer API domain
-    # requiring that every chatbot have its own A record. This is the default behavior.
-    CREATE_DNS_RECORD = True
-
-    # set this to true if we intend to create an ingress manifest for the customer API domain
-    # so that we can issue a certificate for it.
-    CREATE_INGRESS_MANIFEST = True
     fn_name = "deploy_default_api()"
-
     logger.info("%s - chatbot %s", fn_name, chatbot_id)
     chatbot: ChatBot = None
     activate = True
@@ -512,10 +501,10 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     create_domain_A_record(hostname=smarter_settings.customer_api_domain, api_host_domain=smarter_settings.root_domain)
 
     domain_name = chatbot.default_host
-    if CREATE_DNS_RECORD:
+    if settings.SMARTER_CHATBOT_TASKS_CREATE_DNS_RECORD:
         create_domain_A_record(hostname=domain_name, api_host_domain=smarter_settings.customer_api_domain)
 
-    if CREATE_DNS_RECORD and with_domain_verification:
+    if settings.SMARTER_CHATBOT_TASKS_CREATE_DNS_RECORD and with_domain_verification:
         chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.VERIFYING
         chatbot.save()
         activate = verify_domain(domain_name, record_type="A", chatbot=chatbot, activate_chatbot=True)
@@ -539,7 +528,10 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
 
     # if we're running in Kubernetes then we should create an ingress manifest
     # for the customer API domain so that we can issue a certificate for it.
-    if CREATE_INGRESS_MANIFEST and smarter_settings.environment != SmarterEnvironments.LOCAL:
+    if (
+        settings.SMARTER_CHATBOT_TASKS_CREATE_INGRESS_MANIFEST
+        and smarter_settings.environment != SmarterEnvironments.LOCAL
+    ):
         logger.info("%s creating ingress manifest for %s", fn_name, domain_name)
         ingress_values = {
             "cluster_issuer": smarter_settings.customer_api_domain,
@@ -560,9 +552,9 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=CELERY_RETRY_BACKOFF,
-    max_retries=CELERY_MAX_RETRIES,
-    queue=CELERY_TASK_QUEUE,
+    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
+    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
+    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
 )
 def undeploy_default_api(chatbot_id: int):
     """Reverse a Chatbot deployment by destroying the customer API default domain A record for a chatbot."""
@@ -582,9 +574,9 @@ def undeploy_default_api(chatbot_id: int):
 
 @app.task(
     autoretry_for=(Exception,),
-    retry_backoff=CELERY_RETRY_BACKOFF,
-    max_retries=CELERY_MAX_RETRIES,
-    queue=CELERY_TASK_QUEUE,
+    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
+    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
+    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
 )
 def deploy_custom_api(chatbot_id: int):
 
