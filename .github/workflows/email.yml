@@ -26,7 +26,7 @@ jobs:
       - name: Send Email
         run: |
           aws ses send-email \
-            --from "no-reply@platform.beta.smarter.sh" \
+            --from "no-reply@beta.platform.smarter.sh" \
             --destination "ToAddresses=lpm0073@gmail.com" \
             --message "Subject={Data=Deployment succeeded,Charset=utf8},Body={Text={Data=The deployment has completed successfully.,Charset=utf8}}" \
-            --reply-to-addresses "no-reply@platform.beta.smarter.sh"
+            --reply-to-addresses "no-reply@beta.platform.smarter.sh"
