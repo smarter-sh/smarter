@@ -27,4 +27,4 @@ jobs:
           subject: Deployment to succeeded
           body: The deployment has completed successfully.
           to: lpm0073@gmail.com
-          from: noreply@smarter.sh
+          from: no-reply@platform.smarter.sh
