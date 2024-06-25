@@ -118,6 +118,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "django_celery_beat",
     "django.contrib.admindocs",
+    "social_django",
     "waffle",
     # Wagtail
     # -------------------------------
