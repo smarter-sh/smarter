@@ -16,26 +16,6 @@ jobs:
   email:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        id: checkout_code
-        uses: actions/checkout@v4
-
-      - name: Set environment variable
-        id: setenv
-        run: |
-          if [[ "${{ github.ref }}" == "refs/heads/alpha" ]]; then
-            echo "ENVIRONMENT=alpha" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == "refs/heads/beta" ]]; then
-            echo "ENVIRONMENT=beta" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == "refs/heads/next" ]]; then
-            echo "ENVIRONMENT=next" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "ENVIRONMENT=prod" >> $GITHUB_ENV
-          else
-            echo "This workflow can only run on alpha, beta, next, or main branches"
-            exit 1
-          fi
-
       - name: Send email notification
         if: success() # This ensures the email is only sent if the workflow succeeds
         uses: dawidd6/action-send-mail@v3
@@ -44,7 +24,7 @@ jobs:
           server_port: 25
           username: ${{ secrets.SMTP_USERNAME }}
           password: ${{ secrets.SMTP_PASSWORD }}
-          subject: Deployment to ${{ env.ENVIRONMENT }} succeeded
+          subject: Deployment to succeeded
           body: The deployment has completed successfully.
           to: lpm0073@gmail.com
           from: noreply@smarter.sh
