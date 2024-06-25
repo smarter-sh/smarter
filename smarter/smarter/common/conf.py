@@ -1,4 +1,4 @@
-# pylint: disable=no-member,no-self-argument,unused-argument,R0801
+# pylint: disable=no-member,no-self-argument,unused-argument,R0801,too-many-lines
 """
 Configuration for Lambda functions.
 
@@ -24,7 +24,7 @@ configuration values. This is useful for debugging and logging.
 # python stuff
 import logging
 import os  # library for interacting with the operating system
-import platform  # library to view information about the server host this Lambda runs on
+import platform  # library to view information about the server host this module runs on
 import re
 from typing import Any, List, Optional, Tuple, Union
 
