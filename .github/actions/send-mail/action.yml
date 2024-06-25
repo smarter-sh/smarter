@@ -21,6 +21,8 @@ inputs:
   body:
     description: "The body of the email"
     required: true
+env:
+  MAIL_LIST: "lpm0073@gmail.com,shalimhoms_12@hotmail.com,kent@querium.com,vrracing@winning.com"
 
 runs:
   using:
@@ -48,6 +50,6 @@ runs:
       run: |
         aws ses send-email \
           --from "no-reply@${{ inputs.environment }}.platform.smarter.sh" \
-          --destination "ToAddresses=lpm0073@gmail.com,shalimhoms_12@hotmail.com,kent@querium.com" \
+          --destination "ToAddresses=${{ env.MAIL_LIST }}" \
           --message "Subject={Data=${{ inputs.subject }},Charset=utf8},Body={Text={Data=${{ inputs.body }},Charset=utf8}}" \
           --reply-to-addresses "no-reply@${{ inputs.environment }}.platform.smarter.sh"
