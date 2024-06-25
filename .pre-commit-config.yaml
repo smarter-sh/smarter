@@ -65,7 +65,7 @@ repos:
       - id: check-xml
         exclude: "smarter/smarter/static/"
       - id: check-yaml
-        exclude: "^helm/"
+        exclude: "^helm/|^.github/actions/send-mail/action\\.yml$"
       - id: destroyed-symlinks
       - id: detect-aws-credentials
         args: ["--allow-missing-credentials"]
