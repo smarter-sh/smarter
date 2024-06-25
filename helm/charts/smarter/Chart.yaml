@@ -2,7 +2,7 @@ apiVersion: v2
 name: smarter
 description: A Helm chart for deploying Querium smarter api
 type: application
-version: 0.3.0
+version: 0.5.0
 home: https://smarter.sh
 sources:
   - https://github.com/QueriumCorp/smarter
@@ -21,4 +21,4 @@ keywords:
   - smarter
   - plugins
 annotations:
-  "helm.sh/chart": "smarter-0.3.0"
+  "helm.sh/chart": "smarter-0.5.0"
