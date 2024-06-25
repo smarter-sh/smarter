@@ -16,6 +16,11 @@ jobs:
   email:
     runs-on: ubuntu-latest
     steps:
+      # Checkout all code referenced by this action
+      - name: Checkout code
+        id: checkout_code
+        uses: actions/checkout@v4
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
