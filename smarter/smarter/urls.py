@@ -47,6 +47,7 @@ urlpatterns = [
     path("login/", LoginView.as_view(), name="login_view"),
     path("logout/", LogoutView.as_view(), name="logout_view"),
     path("register/", AccountRegisterView.as_view(), name="register_view"),
+    path("social-auth/", include("social_django.urls", namespace="social")),
     # -----------------------------------
     # stripe urls
     # see: https://dj-stripe.dev/dj-stripe/
