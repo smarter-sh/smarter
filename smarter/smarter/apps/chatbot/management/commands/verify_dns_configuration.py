@@ -34,12 +34,6 @@ class Command(BaseCommand):
     - api.smarter.sh, alpha.api.smarter.sh, beta.api.smarter.sh, etc.
     - platform.smarter.sh, alpha.platform.smarter.sh, beta.platform.smarter.sh, etc.
 
-    verify the following:
-
-    2. Verify the AWS Route53 hosted zone for 'domain'.
-        - hosted zone for 'domain' should exist. if not, create it.
-        - hosted zone should contain A record alias to the AWS Classic Load Balancer.
-        - hosted zone should contain CNAME record for _acme-challenge pointing to 'domain'.
     """
 
     log_prefix = "manage.py verify_dns_configuration()"
@@ -123,6 +117,21 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.NOTICE(f"{log_prefix} (1) root domain DNS verification: {smarter_settings.root_domain}")
         )
+        self.stdout.write(
+            self.style.NOTICE(
+                f"{log_prefix} verify that a hosted zone exists for the root domain: {smarter_settings.root_domain}"
+            )
+        )
+        if not aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=smarter_settings.root_domain):
+            raise ImproperlyConfigured(
+                f"{self.log_prefix} AWS Route53 hosted zone for root domain: {smarter_settings.root_domain} does not exist. Cannot proceed."
+            )
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"{self.log_prefix}: verified AWS Route53 hosted zone for the root domain: {smarter_settings.root_domain}."
+            )
+        )
+
         self.stdout.write(
             self.style.NOTICE(
                 f"{log_prefix} verify that an A record exists in hosted zone for {smarter_settings.root_domain}"
@@ -463,16 +472,6 @@ class Command(BaseCommand):
         print("*" * 80)
         print(f"{self.log_prefix}")
         print("*" * 80)
-
-        if not aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=smarter_settings.root_domain):
-            raise ImproperlyConfigured(
-                f"{self.log_prefix} AWS Route53 hosted zone for root domain: {smarter_settings.root_domain} does not exist. Cannot proceed."
-            )
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"{self.log_prefix}: verified AWS Route53 hosted zone for the root domain: {smarter_settings.root_domain}."
-            )
-        )
 
         self.verify_base_dns_config()
 
