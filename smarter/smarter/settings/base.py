@@ -58,9 +58,6 @@ BASE_DIR = Path(os.path.join(PROJECT_ROOT, "smarter")).resolve()
 print("PROJECT_ROOT: ", PROJECT_ROOT)
 print("BASE_DIR: ", BASE_DIR)
 
-LOGIN_URL = "/login/"
-LOGIN_REDIRECT_URL = "/"
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
@@ -121,6 +118,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "django_celery_beat",
     "django.contrib.admindocs",
+    "social_django",
     "waffle",
     # Wagtail
     # -------------------------------
@@ -197,6 +195,8 @@ TEMPLATES = [
                 "smarter.apps.cms.context_processors.base",
                 "smarter.apps.dashboard.context_processors.branding",
                 "smarter.apps.dashboard.context_processors.base",
+                "social_django.context_processors.backends",
+                "social_django.context_processors.login_redirect",
                 "wagtail.contrib.settings.context_processors.settings",
             ],
         },
@@ -241,10 +241,66 @@ DATABASES = {
     }
 }
 
-
-# Password validation
+# https://python-social-auth.readthedocs.io/en/latest/configuration/django.html
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
+AUTHENTICATION_BACKENDS = (
+    "social_core.backends.google.GoogleOAuth2",
+    "social_core.backends.github.GithubOAuth2",
+    "social_core.backends.linkedin.LinkedinOAuth2",
+    "django.contrib.auth.backends.ModelBackend",
+)
+
+SOCIAL_AUTH_PIPELINE = (
+    # Get the information we can about the user and return it in a simple
+    # format to create the user instance later. On some cases the details are
+    # already part of the auth response from the provider, but sometimes this
+    # could hit a provider API.
+    "social_core.pipeline.social_auth.social_details",
+    # Get the social uid from whichever service we're authing thru. The uid is
+    # the unique identifier of the given user in the provider.
+    "social_core.pipeline.social_auth.social_uid",
+    # Verifies that the current auth process is valid within the current
+    # project, this is where emails and domains whitelists are applied (if
+    # defined).
+    "social_core.pipeline.social_auth.auth_allowed",
+    # Checks if the current social-account is already associated in the site.
+    "social_core.pipeline.social_auth.social_user",
+    # Make up a username for this person, appends a random string at the end if
+    # there's any collision.
+    "social_core.pipeline.user.get_username",
+    # Send a validation email to the user to verify its email address.
+    # 'social_core.pipeline.mail.mail_validation',
+    # Associates the current social details with another user account with
+    # a similar email address.
+    "social_core.pipeline.social_auth.associate_by_email",
+    # Create a user account if we haven't found one yet.
+    "social_core.pipeline.user.create_user",
+    # Create the record that associated the social account with this user.
+    "social_core.pipeline.social_auth.associate_user",
+    # Populate the extra_data field in the social record with the values
+    # specified by settings (and the default ones like access_token, etc).
+    "social_core.pipeline.social_auth.load_extra_data",
+    # Update the user record with any changed info from the auth service.
+    "social_core.pipeline.user.user_details",
+)
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = smarter_settings.social_auth_google_oauth2_key
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = smarter_settings.social_auth_google_oauth2_secret
+
+SOCIAL_AUTH_GITHUB_KEY = smarter_settings.social_auth_github_key
+SOCIAL_AUTH_GITHUB_SECRET = smarter_settings.social_auth_github_secret
+
+SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = smarter_settings.social_auth_linkedin_oauth2_key
+SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = smarter_settings.social_auth_linkedin_oauth2_secret
+
+SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = ["username", "first_name", "email"]
+LOGIN_URL = "/login/"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
+
+
+# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
