@@ -16,15 +16,17 @@ jobs:
   email:
     runs-on: ubuntu-latest
     steps:
-      - name: Send email notification
-        if: success() # This ensures the email is only sent if the workflow succeeds
-        uses: dawidd6/action-send-mail@v3
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          server_address: email-smtp.us-east-2.amazonaws.com
-          server_port: 25
-          username: ${{ secrets.SMTP_USERNAME }}
-          password: ${{ secrets.SMTP_PASSWORD }}
-          subject: Deployment to succeeded
-          body: The deployment has completed successfully.
-          to: lpm0073@gmail.com
-          from: no-reply@platform.smarter.sh
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: env.AWS_REGION
+
+      - name: Send Email
+        run: |
+          aws ses send-email \
+            --from "no-reply@platform.beta.smarter.sh" \
+            --destination "ToAddresses=lpm0073@gmail.com" \
+            --message "Subject={Data=Deployment succeeded,Charset=utf8},Body={Text={Data=The deployment has completed successfully.,Charset=utf8}}" \
+            --reply-to-addresses "no-reply@platform.beta.smarter.sh"
