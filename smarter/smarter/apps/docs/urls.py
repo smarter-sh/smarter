@@ -1,7 +1,6 @@
 """URL configuration for dashboard legal pages."""
 
-from django.urls import include, path, re_path
-from wagtail import urls as wagtail_urls
+from django.urls import path, re_path
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 
@@ -170,5 +169,4 @@ urlpatterns = [
     # json schemas landing page
     # -------------------------------------------------------------------------
     path("json-schemas/", JsonSchemasView.as_view(), name="docs_json_schemas"),
-    re_path(r"", include(wagtail_urls)),
 ]
