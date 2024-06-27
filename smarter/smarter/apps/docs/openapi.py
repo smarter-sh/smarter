@@ -13,8 +13,15 @@ api_info = openapi.Info(
     default_version="v1",
     description=settings.SMARTER_API_DESCRIPTION,
     terms_of_service="https:/smarter.sh/tos/",
-    contact=openapi.Contact(email="contact@smarter.sh"),
-    license=openapi.License(name="AGPL-3.0 License"),
+    contact=openapi.Contact(
+        name="Querium Corporation",
+        email="lawrence@querium.com",
+        url="https://smarter.sh/contact/",
+    ),
+    license=openapi.License(
+        name="AGPL-3.0 License",
+        url="https://www.gnu.org/licenses/agpl-3.0.html",
+    ),
 )
 
 schema_view = get_schema_view(
