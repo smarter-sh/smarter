@@ -1,3 +1,10 @@
+## [0.5.1](https://github.com/smarter-sh/smarter/compare/v0.5.0...v0.5.1) (2024-06-27)
+
+
+### Bug Fixes
+
+* limit openapi documentation generation to /api/ ([94d35cd](https://github.com/smarter-sh/smarter/commit/94d35cddc7ea2f1d6591dffda93b32c21b943d5f))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
