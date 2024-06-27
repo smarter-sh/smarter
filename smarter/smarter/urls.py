@@ -5,7 +5,6 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path, re_path
 from django.views.generic import RedirectView
-from wagtail import urls as wagtail_urls
 from wagtail.documents import urls as wagtaildocs_urls
 from wagtail_transfer import urls as wagtailtransfer_urls
 
@@ -27,15 +26,15 @@ admin.autodiscover()
 
 urlpatterns = [
     path("", RedirectView.as_view(url="/docs/")),
-    # django admin
-    # -----------------------------------
-    path("admin/docs/", include("django.contrib.admindocs.urls")),
-    path("admin/", admin.site.urls, name="django_admin"),
-    # smarter platform
+    # production smarter platform
     # -----------------------------------
     path("api/", include("smarter.apps.api.urls")),
     path("chatapp/", include("smarter.apps.chatapp.urls")),
     path("dashboard/", include("smarter.apps.dashboard.urls")),
+    # django admin
+    # -----------------------------------
+    path("admin/docs/", include("django.contrib.admindocs.urls")),
+    path("admin/", admin.site.urls, name="django_admin"),
     #
     # documentation pages that are not part of the wagtail site
     # -----------------------------------
@@ -63,7 +62,6 @@ urlpatterns = [
     path("documents/", include(wagtaildocs_urls)),
     path("cms/", include("smarter.apps.cms.urls")),
     re_path(r"^wagtail-transfer/", include(wagtailtransfer_urls)),
-    re_path(r"", include(wagtail_urls)),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 # if settings.DEBUG:
