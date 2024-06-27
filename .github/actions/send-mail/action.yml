@@ -21,9 +21,6 @@ inputs:
   body:
     description: "The body of the email"
     required: true
-env:
-  MAIL_LIST: "lpm0073@gmail.com,shalimhoms_12@hotmail.com,kent@querium.com,vrracing@winning.com"
-
 runs:
   using:
     "composite"
@@ -47,6 +44,8 @@ runs:
 
     - name: Send Email
       shell: bash
+      env:
+        MAIL_LIST: "lpm0073@gmail.com,shalimhoms_12@hotmail.com,kent@querium.com,vrracing@winning.com"
       run: |
         aws ses send-email \
           --from "no-reply@${{ inputs.environment }}.platform.smarter.sh" \
