@@ -1,13 +1,11 @@
 """URL configuration for dashboard legal pages."""
 
-from django.conf import settings
-from django.urls import path, re_path
-from drf_yasg import openapi
-from drf_yasg.views import get_schema_view
-from rest_framework import permissions
+from django.urls import include, path, re_path
+from wagtail import urls as wagtail_urls
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 
+from .openapi import schema_view
 from .utils import json_schema_name, json_schema_path, manifest_name, manifest_path
 from .views.developer import (
     DeveloperDocsArchitectureView,
@@ -51,20 +49,6 @@ from .views.manifest import (
     DocsExampleManifestUserView,
 )
 from .views.views import JsonSchemasView, ManifestsView
-
-
-schema_view = get_schema_view(
-    openapi.Info(
-        title=settings.SMARTER_API_NAME,
-        default_version="v1",
-        description=settings.SMARTER_API_DESCRIPTION,
-        terms_of_service="https:/smarter.sh/tos/",
-        contact=openapi.Contact(email="contact@smarter.sh"),
-        license=openapi.License(name="AGPL-3.0 License"),
-    ),
-    public=True,
-    permission_classes=(permissions.AllowAny,),
-)
 
 
 urlpatterns = [
@@ -186,4 +170,5 @@ urlpatterns = [
     # json schemas landing page
     # -------------------------------------------------------------------------
     path("json-schemas/", JsonSchemasView.as_view(), name="docs_json_schemas"),
+    re_path(r"", include(wagtail_urls)),
 ]
