@@ -1,25 +1,23 @@
-## [0.5.2](https://github.com/smarter-sh/smarter/compare/v0.5.1...v0.5.2) (2024-07-01)
-
-
-### Bug Fixes
-
-* add authentication backend to login(). now required bc of social_core ([b8daf55](https://github.com/smarter-sh/smarter/commit/b8daf558733c743d876618f4267f8bcb45995f52))
-* fix indentation of 1st line ([f4e2a73](https://github.com/smarter-sh/smarter/commit/f4e2a7397bd709e619dbc0d2f338afc3c68d1bb4))
-* fix path assets/media/illustrations/sigma-1/17-dark.png ([201c72f](https://github.com/smarter-sh/smarter/commit/201c72f361925f82e795713ff245b854fd17c211))
-* remove wagtail userbar tag ([1407756](https://github.com/smarter-sh/smarter/commit/14077564abe0f25a2869b5462848fe06ebc70321))
-
-## [0.5.1](https://github.com/smarter-sh/smarter/compare/v0.5.0...v0.5.1) (2024-06-27)
-
-
-### Bug Fixes
-
-* limit openapi documentation generation to /api/ ([94d35cd](https://github.com/smarter-sh/smarter/commit/94d35cddc7ea2f1d6591dffda93b32c21b943d5f))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.5.2](https://github.com/smarter-sh/smarter/compare/v0.5.1...v0.5.2) (2024-07-01)
+
+### Bug Fixes
+
+- add authentication backend to login(). now required bc of social_core ([b8daf55](https://github.com/smarter-sh/smarter/commit/b8daf558733c743d876618f4267f8bcb45995f52))
+- fix indentation of 1st line ([f4e2a73](https://github.com/smarter-sh/smarter/commit/f4e2a7397bd709e619dbc0d2f338afc3c68d1bb4))
+- fix path assets/media/illustrations/sigma-1/17-dark.png ([201c72f](https://github.com/smarter-sh/smarter/commit/201c72f361925f82e795713ff245b854fd17c211))
+- remove wagtail userbar tag ([1407756](https://github.com/smarter-sh/smarter/commit/14077564abe0f25a2869b5462848fe06ebc70321))
+
+## [0.5.1](https://github.com/smarter-sh/smarter/compare/v0.5.0...v0.5.1) (2024-06-27)
+
+### Bug Fixes
+
+- limit openapi documentation generation to /api/ ([94d35cd](https://github.com/smarter-sh/smarter/commit/94d35cddc7ea2f1d6591dffda93b32c21b943d5f))
 
 ## [0.5.0](https://github.com/smarter-sh/smarter/compare/v0.4.1...v0.5.0) (2024-06-15)
 
