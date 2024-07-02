@@ -1,23 +1,34 @@
 <style>
+  .underline {
+    text-decoration: underline;
+  }
+
+  .orange {
+    color: orange;
+  }
+
   .bg-card {
     background-color: rgb(246, 247, 249);
   }
-  #learn > ul {
+
+  #learn>ul {
     color: black;
   }
-  #title > p {
+
+  #title>p {
     font-size: 16px;
     font-weight: bolder;
   }
 </style>
+
 <div class="card-body">
   <!--begin::Heading-->
   <div class="mb-10">
     <!--begin::Title-->
     <div id="title">
       <h1 class="fs-2x text-gray-900 mb-6">Quick Start</h1>
-      <p class="mt-6 mb-6">Welcome to Smarter documentation! This page will give you an introduction to the 80% of Smarter
-        concepts that you will use on a daily basis.</p>
+      <p class="mt-6 mb-6">Welcome to Smarter documentation! This page will give you an introduction to the 80% of
+        Smarter concepts that you will use on a daily basis.</p>
     </div>
     <!--end::Title-->
     <div id="learn"
@@ -41,56 +52,149 @@
   <div class="row g-10mb-15">
     <!--begin::InstallCLI-->
     <div id="install-cli">
-      <h3 class="mt-6 mb-6">Install the CLI</h3>
-      <p>install, install, install ...</p>
+      <h3 class="mt-6 mb-6"><span class="orange">Step I of IV:</span> Install & Configure the CLI</h3>
+
+
+      <h6>learning objective: install the cli, add our Api key, and confirm that it works. The Smarter command-line
+        interface is a terminal application that you install on your desktop/laptop computer.</h6>
+
+      <div class="row mt-6 mb-6">
+        <div class="col-3"></div>
+        <div class="col-6 position-relative fs-2x z-index-2 fw-bold text-white pb-3">
+          <a class="opacity-75-hover" href="https://smarter.sh/cli/" id="smarter-developer-btn">Get the Cli</a>
+        </div>
+        <div class="col-3"></div>
+      </div>
+
+      <p>Configure the cli with your smarter Api key, and then use it to create and manage your cloud resources on the
+        Smarter platform.</p>
     </div>
     <!--end::InstallCLI-->
-    <!--begin::AboutManifests-->
-    <div id="what-are-manifests">
-      <h2 class="mt-6 mb-6">What are manifests</h2>
-      <p>What are manifests...</p>
-    </div>
-    <!--end::AboutManifests-->
+
     <!--begin::CreateChatbot-->
     <div id="create-chatbot">
-      <h3 class="mt-6 mb-6">Create a chatbot</h3>
+      <h3 class="mt-6 mb-6"><span class="orange">Step II of IV:</span> Create a ChatBot Manifest</h3>
       <!--begin::Text-->
-      <p>create a chatbot...</p>
+      <h6>learning objective: download an example Chatbot manifest, customize it to taste, and then save it as a text
+        file.
+      </h6>
+
+      <p>You describe smarter cloud resources like ChatBots and Plugins using a smarter Manifest. Manifests are
+        formatted ASCII text files that look
+        like a form. Describe a resource with a Manifest, and smarter will create it for you. Modify you Manifest and
+        re-apply, and smarter will update
+        your resource to match your Manifest. It's a profoundly simple yet powerful concept that gives you the ability
+        to achieve exactly the
+        same caliber of result as a Python-programming data scientist, without actually having to write any code.
+      </p>
+
+      <h5>** Let's look at an example **</h5>
+
+      <p>All Manifests, regardless of the kind of smarter resource they describe, have sections for 'metadata', 'spec'
+        and 'status'. Manifests use YAML formatting which
+        has the distinct claim to fame of being both human and machine readable. YAML can be converted to/from JSON,
+        which is a common text serialization format for
+        working with cloud platforms like smarter. Lets take a look at smarter's example `Chatbot` manifest, available
+        both from the cli `smarter manifest chatbot -o yaml`, and from the Smarter docs site,
+        https://beta.platform.smarter.sh/docs/manifest/chatbot/. Both sources are identical. Using any plain text
+        editor, copy-paste the manifest output to a new text file and save it to your local computer's hard drive as,
+        'my-chatbot.yml'.
+      </p>
+
+      <p>The easiest, best way to create a new smarter resource, be it a Chatbot or any other kind of resource, is to
+        obtain and then modify one of smarter's example manifests. At a glance you can see that much of the Chatbot
+        configuration dwells on its look and feel. You can enhance your bot's knowledge using any combination of
+        functions and plugins, which we'll cover the next tutorial. Lets quickly summarize the contents of a Chatbot
+        manifest:
+      </p>
+      <ul>
+        <li><span class="underline">apiVersion</span>: this is required, and identifies the layout of the Manifest for
+          the smarter Api backend.</li>
+        <li><span class="underline">kind</span>: this is required, and identifies what kind of manifest this is</li>
+        <li><span class="underline">metadata</span>: all of these fields are required, though none of them have any
+          affect on the look & feel nor the behavior of your chatbot</li>
+        <li><span class="underline">spec</span>: this section contains all of the "specification", which we'll cover
+          item by item
+          <ul>
+            <li>apiKey: you can optional restrict access to your chatBot by creating and attaching a smarter Api key.
+              we'll ignore this for now, so our Chatbot will be public access</li>
+            <li>field names that begin with 'app' describe the Look & Feel of your chatbot.</li>
+            <li>field names that begin with 'default' regard the macro settings of the LLM that backs your Chatbot. One
+              of smarter most powerful features is the ability to attach any of a broad range of LLMs from retutable
+              providers like OpenAI, Good, and HuggingFace.</li>
+            <li>subdomain: you can optionally attach a custom vanity domain name to your Chatbot. We'll skip this for
+              now.</li>
+            <li>functions. It is important to recognize that Large language models like ChatGPT are only able to
+              response to inquiries within the context of their training data, and hence, no LLM is capable of providing
+              accurate real-time information for things like weather, sports scores and securities prices. Functions are
+              one of a couple of ways that you can enhance the knowledge of your Chatbot. The example Chatbot loads a
+              special built-in "Get Current Weather" function that provides real-time 7 day weather forecasts for most
+              locations around the world. Smarter provides function results to the LLM as an interim step, so that the
+              LLM can incorporate the data set into its final response to the end user. Note that functions are included
+              in every prompt request, increasing the token count of the requests and thus, the overall cost of the LLM
+              backing service for your Chatbot solution. The LLM, in its sole discretion will decide whether or not to
+              actually use functions that you include in requests. Moreover, the LLM also have complete discretion over
+              whether to incorporate the function results into its final response to the end user. Lastly, an editorial
+              comment. Take note of the appExamplePrompts field, as these are how you convey your Chatbot's special
+              knowledge or capabilities to the end user.</li>
+            <li>plugins: Plugins are a more advanced, more configurable variation of smarter functions. You're really
+              going to love these, but, for the sake of brevity we'll defer to a later tutorial. For now, just delete
+              the entire section.</li>
+          </ul>
+        </li>
+      </ul>
       <!--end::Text-->
     </div>
     <!--end::CreateChatbot-->
     <!--begin::DeployChatbot-->
     <div id="deploy-chatbot">
-      <h3 class="mt-6 mb-6">Deploy a chatbot</h3>
+      <h3 class="mt-6 mb-6"><span class="orange">Step III of IV:</span> Deploy your Chatbot</h3>
       <!--begin::Text-->
-      <p>deploy a chatbot...</p>
+      <h6>learning objective: create and verify your new Chatbot</h6>
+
+      <p>We'll use the cli 'apply' command to create our resource. 'Apply' performs a comparison of the details in your
+        manifest to the sources in your user account. If the resource does not presently exist, then smarter will create
+        it.
+        If on the other hand it does exist, then smarter will perform a detailed comparison of the fields in the 'spec'
+        and if these do not exactly match then smarter will make all changes necessary to get these to match one
+        another.
+      </p>
+      <p>to deploy: `smarter apply -f my-chatbot.yml`</p>
+      <p>Your Chatbot is now fully deployed. It is available to the general public, and it will run at scale. All
+        Operations surrounding your Chatbot will be journaled, and you can inspect these by ....</p>
+      <p>Technically speaking, we've actually combined a couple of steps. We created the Chatbot, but we also set its
+        state to 'deployed', in a single operation. To see a list of your chatbots, you can run the following command:
+        `smarter get chatbots`. And
+        to view the details of your Chatbot, you can run: `smarter describe chatbot EverlastingGobstopper`.
+      </p>
       <!--end::Text-->
     </div>
     <!--end::DeployChatbot-->
-    <!--begin::TrainChatbot-->
-    <div id="deploy-chatbot">
-      <h3 class="mt-6 mb-6">Train a chatbot</h3>
+
+    <!--begin::TryIt-->
+    <div id="try-chatbot">
+      <h3 class="mt-6 mb-6"><span class="orange">Step IV of IV:</span> Try It Out in the Sandbox</h3>
       <!--begin::Text-->
-      <p>train a chatbot...</p>
+      <h6>learning objective: get hands on with the smarter web console Sandbox.</h6>
+
+      <p>Time to get our hands dirty. Lets send some prompts and see what happens. Navigate to the web console sandbox
+        -- ???? --- and, as the prompt text perhaps still reads, "ask me anything". The key difference between the
+        smarter web console Sandbox
+        and a more typical run-time web UX is from inside the Sandbox you can inspect detailed log output of each of the
+        interim steps of a prompt conversation. That is:
+      </p>
+      <ul>
+        <li>natural language pre-processing of the prompt messagec
+        <li>smarter Plugin 'selector' analysis</li>
+        <li>full preparation of the prompt</li>
+        <li>interim steps (if any) whereby the LLM makes requests to smarter functions and Plugins</li>
+        <li>receipt of the raw LLM response</li>
+        <li>delivery of the final response to the end user</li>
+      </ul>
+      <p>Complete visibility into these details is immensely helpful during develop of your text prompting solution.</p>
       <!--end::Text-->
     </div>
-    <!--end::TrainChatbot-->
-    <!--begin::TestChatbot-->
-    <div id="deploy-chatbot">
-      <h3 class="mt-6 mb-6">Test a chatbot</h3>
-      <!--begin::Text-->
-      <p>test a chatbot...</p>
-      <!--end::Text-->
-    </div>
-    <!--end::TestChatbot-->
-    <!--begin::MeasureChatbot-->
-    <div id="deploy-chatbot">
-      <h3 class="mt-6 mb-6">Measure results quality</h3>
-      <!--begin::Text-->
-      <p>Measure a chatbot's response quality...</p>
-      <!--end::Text-->
-    </div>
-    <!--end::MeasureChatbot-->
+    <!--end::TryIt-->
   </div>
   <!--end::Row-->
 </div>
