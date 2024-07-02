@@ -20,7 +20,7 @@ requests-cache==1.2.0                   # HTTP requests caching
 retry-requests==2.0.0                   # HTTP requests retry
 social-auth-app-django==5.4.1           # Social authentication for Django
 tldextract==5.1.2                       # Extracts the top-level domain from a URL
-validators==0.28.3                      # Data validation library
+validators==0.29.0                      # Data validation library
 whitenoise==6.6.0                       # static file serving
 
 
@@ -31,7 +31,7 @@ django-extensions==3.2.3
 django-debug-toolbar==4.4.2
 django-redis==5.4.0                     # object caching
 django-celery-beat==2.6.0               # scheduled asynchronous tasks
-djangorestframework==3.15.1             # for creating REST APIs on top of Django
+djangorestframework==3.15.2             # for creating REST APIs on top of Django
 django-filter==24.1                     # REST API filtering
 django-taggit==5.0.1                    # Smarter Plugin tagging
 django-rest-knox==4.2.0                 # Token authentication for REST APIs
@@ -43,15 +43,15 @@ django-waffle==4.1.0                    # Feature flagging
 # ------------
 pandas==2.2.2                           # Data manipulation for data science stuff
 python-dotenv==1.0.1                    # for reading environment variables from .env files
-pydantic==2.7.2                         # best data validation library ever!
+pydantic==2.8.0                         # best data validation library ever!
 pydantic-settings==2.2.1                # settings management
 
 # Natural language and LLM support
 # ------------
-openai==1.30.5                          # OpenAI API
+openai==1.35.8                          # OpenAI API
 pyyaml==6.0.1                           # YAML parser
 langchain==0.2.1                        # LLM abstractions library for building complex workflows
-langchain-openai==0.1.8                 # OpenAI plugin for Langchain
+langchain-openai==0.1.13                # OpenAI plugin for Langchain
 python-Levenshtein==0.25.1              # Levenshtein distance calculation for LLMs
 nltk==3.8.1                             # Natural Language Toolkit
 textblob==0.18.0.post0                  # Text processing library
