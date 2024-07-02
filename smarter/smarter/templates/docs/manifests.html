@@ -20,9 +20,58 @@
         demands to that and, well, things get messy. Introduce Smarter Manifests: a better, simpler, cleaner way to
         manage your AI resources in the cloud. Smarter Manifests are very much inspired by Kubernetes manifests. In
         fact, we did everything in our power to make ours resemble theirs theirs in every way possible. Because, why
-        mess with perfection?</p>
+        mess with perfection?
+      </p>
+
+      <!--begin::Anatomy-->
+      <h4 class="mt-6 mb-6">Anatomy of a Manifest Document</h4>
+      <p>
+        A Smarter Manifest is a <a href="https://en.wikipedia.org/wiki/YAML">YAML</a> document that describes a resource that makes up your AI solution. It has
+        four main parts: <code>apiVersion</code>, <code>kind</code>, <code>spec</code> and <code>status</code>.
+        Each of these section plays a specific role in the lifecycle of your AI resources. The <code>apiVersion</code>
+        identifies the Manifest document to the Smarter API. The <code>kind</code> identifies the type of resource
+        being described. The <code>spec</code> section contains the configuration of the resource. And lastly, the <code>status</code>
+        section contains read-only data about the state of resource. Here is the layout of a generic Manifest:
+      </p>
+      <!--begin::example-->
+      <div class="smarter-static-page-block">
+        <div class="code-sample-body">
+          <pre class="code-snippet prettyprint">
+            <code>
+apiVersion: smarter.sh/v1
+kind: Chatbot
+metadata:
+  # Metadata about your resource goes here. These required fields are used for identifying
+  # and managing your resource inside of Smarter.
+  description: A human readable description of this resource. Keep it brief.
+  name: MyChatbot
+  version: 1.0.0
+spec:
+  # your specification goes here. Each kind of resource has its own spec layout
+  # which you can scaffold using the Smarter CLI command `smarter manifest <kind> -o yaml`.
+  # For example: `smarter manifest chatbot -o yaml`
+status:
+  # read-only status about your AI resource goes here.
+            </code>
+          </pre>
+        </div>
+      </div>
+      <!--end::example-->
+      <p>
+        You use the Smarter CLI to apply your Manifests. The Smarter CLI reads your Manifests, and then creates and
+        executes a work plan to create, update, or delete your AI resources, to synchronize the state of the resources
+        in your account with those of your Manifest(s). It's a simple and powerful way to manage your AI cloud resources.
+      </p>
+      <!--end::Anatomy-->
+      <!--begin::Usage-->
+      <h4 class="mt-6 mb-6">Usage</h4>
+      <p>
+        Here's an example of how you would apply a Manifest using the Smarter CLI: <code>smarter apply -f my-manifest.yaml</code>
+      </p>
+      <!--end::Usage-->
     </div>
     <!--end::heading-1-->
+
     <!--begin::heading-2-->
     <div id="heading-2">
       <h2 class="mt-6 mb-6">Design, Train, Test, Deploy</h2>
