@@ -11,7 +11,7 @@
 /*-----------------------------
  Header
  ----------------------------- */
- .querium-bg {
+.querium-bg {
   background-color: rgba(255, 87, 51, 0.75) !important;
   /* 50% opacity */
   border-radius: var(--bs-card-inner-border-radius) var(--bs-card-inner-border-radius) 0 0;
@@ -52,7 +52,7 @@
 }
 
 .code-sample-copy {
-  position: relative ;
+  position: relative;
   top: 10px;
   right: 10px;
 }
@@ -66,8 +66,10 @@
   /* Background color */
   --bs-code-shadow: 0px 3px 9px rgba(0, 0, 0, 0.08);
   /* Box shadow */
-  white-space: pre; /* This is usually the default for <pre>, but it's good to ensure it's not being overridden */
-  overflow-x: auto; /* Adds a horizontal scrollbar if the content is too wide */
+  white-space: pre;
+  /* This is usually the default for <pre>, but it's good to ensure it's not being overridden */
+  overflow-x: auto;
+  /* Adds a horizontal scrollbar if the content is too wide */
 }
 
 /*
@@ -81,14 +83,25 @@ code {}
  page: /docs/cli/
  ----------------------------- */
 .terminal-emulation {
-  white-space: pre; /* Keeps the text in the same format as it was entered */
-  font-family: 'Courier New', Courier, monospace; /* Monospace font */
-  overflow-x: auto; /* Adds horizontal scrollbar if needed */
-  background-color: #333333; /* Terminal-like background */
-  color: #f1f1f1; /* Light text color for contrast */
-  padding: 10px; /* Padding inside the terminal window */
-  border: 1px solid #555; /* Optional: adds a border */
-  box-shadow: var(--bs-code-shadow); /* Reuse the box-shadow variable for consistency */
+  font-family: 'Courier New', Courier, monospace;
+  /* Monospace font */
+  overflow-x: auto;
+  /* Adds horizontal scrollbar if needed */
+  background-color: #333333;
+  /* Terminal-like background */
+  color: #f1f1f1;
+  /* Light text color for contrast */
+  border: 1px solid #555;
+  /* Optional: adds a border */
+  box-shadow: var(--bs-code-shadow);
+  /* Reuse the box-shadow variable for consistency */
+  border-radius: 10px;
+  word-wrap: break-word !important;
+  /*Has the same effect as overflow-wrap: anywhere combined with word-break: normal, regardless of the actual value of the overflow-wrap property.*/
+  white-space: pre-wrap;
+  /* Sequences of white space are preserved. Lines are broken at newline characters, at <br>, and as necessary to fill line boxes.*/
+  padding: 10px;
+  /* Padding inside the terminal window */
 }
 
 /*---------------------
@@ -99,6 +112,7 @@ code {}
   background-color: #F9F9F9;
   box-shadow: none !important;
 }
+
 .wrap {
   display: flex !important;
   flex-direction: row !important;
@@ -123,15 +137,15 @@ code {}
   border-radius: 10px;
 }
 
-#smarter-landing-page > h1 {
+#smarter-landing-page>h1 {
   color: #0F2385 !important;
 }
 
-#smarter-landing-page > h2 {
+#smarter-landing-page>h2 {
   color: #4B5675 !important;
 }
 
-#smarter-landing-page > p {
+#smarter-landing-page>p {
   color: #4B5675 !important;
   font-size: 13px !important;
 }
@@ -167,7 +181,7 @@ code {}
   border-width: 1px;
 }
 
-#plugins > h3 {
+#plugins>h3 {
   display: inline;
   font-family: Inter;
   color: #4B5675;
@@ -177,7 +191,7 @@ code {}
   padding-left: 15px;
 }
 
-#plugins > p {
+#plugins>p {
   font-family: Inter;
   font-size: 13px;
   line-height: normal;
@@ -189,7 +203,7 @@ code {}
 }
 
 
-#plugins > a {
+#plugins>a {
   background-color: #F6821B;
   font-family: Inter;
   font-size: 11px;
@@ -201,7 +215,7 @@ code {}
   display: left;
 }
 
-#plugins > a:hover {
+#plugins>a:hover {
   background-color: #faa313;
   transition: 300ms;
 }
@@ -244,7 +258,7 @@ code {}
   margin-bottom: 20px;
 }
 
-#manifests> a {
+#manifests>a {
   background-color: #F6821B;
   font-family: Inter;
   font-size: 11px;
@@ -255,7 +269,7 @@ code {}
   align-self: left;
 }
 
-#manifests > a:hover {
+#manifests>a:hover {
   background-color: #faa313;
   transition: 300ms;
 }
@@ -296,7 +310,7 @@ code {}
   padding: 0px;
 }
 
-#learn > div > p {
+#learn>div>p {
   display: inline;
   font-family: Inter;
   font-size: 13px;
@@ -314,7 +328,7 @@ code {}
 
 }
 
-#learn> a {
+#learn>a {
   background-color: #F6821B;
   font-family: Inter;
   font-size: 11px;
@@ -324,7 +338,7 @@ code {}
   border-radius: 10px;
 }
 
-#learn > a:hover {
+#learn>a:hover {
   background-color: #faa313;
   transition: 300ms;
 }
@@ -380,7 +394,7 @@ code {}
   margin-bottom: 20px;
 }
 
-#safe> a {
+#safe>a {
   background-color: #F6821B;
   font-family: Inter;
   font-size: 11px;
@@ -390,7 +404,7 @@ code {}
   border-radius: 10px;
 }
 
-#safe > a:hover {
+#safe>a:hover {
   background-color: #faa313;
   transition: 300ms;
 }
@@ -434,7 +448,7 @@ code {}
   margin-bottom: 20px;
 }
 
-#simple> a {
+#simple>a {
   background-color: #F6821B;
   font-family: Inter;
   font-size: 11px;
@@ -444,7 +458,7 @@ code {}
   border-radius: 10px;
 }
 
-#simple > a:hover {
+#simple>a:hover {
   background-color: #faa313;
   transition: 300ms;
 }
@@ -502,7 +516,7 @@ code {}
   border-radius: 10px;
 }
 
-#secure > a:hover {
+#secure>a:hover {
   background-color: #faa313;
   transition: 300ms;
 }
@@ -569,7 +583,7 @@ code {}
   border-radius: 10px;
 }
 
-#developers > a:hover {
+#developers>a:hover {
   background-color: #faa313;
   transition: 300ms;
 }
@@ -623,7 +637,7 @@ code {}
   border-radius: 10px;
 }
 
-#certified > a:hover {
+#certified>a:hover {
   background-color: #faa313;
   transition: 300ms;
 }
@@ -680,7 +694,7 @@ code {}
   border-radius: 10px;
 }
 
-#administration > a:hover {
+#administration>a:hover {
   background-color: #faa313;
   transition: 300ms;
 }
@@ -701,7 +715,7 @@ Side Bar
   border-radius: 10px;
 }
 
-#wait-list > div {
+#wait-list>div {
   background-image: url('https://alpha.platform.smarter.sh/static/assets/media/illustrations/sigma-1/17.png');
   background-size: contain !important;
   background-position: right !important;
@@ -748,7 +762,7 @@ Side Bar
   border-radius: 10px;
 }
 
-#developer-program > div {
+#developer-program>div {
   background-image: url('https://alpha.platform.smarter.sh/static/assets/media/illustrations/sigma-1/9.png');
   background-size: contain !important;
   background-position: right !important;
@@ -786,10 +800,10 @@ Side Bar
 
 /*-------- Careers -----------*/
 
-#careers > div {
+#careers>div {
   background: linear-gradient(135deg,
-  #FDC20E,
-  #F6821B) !important;
+      #FDC20E,
+      #F6821B) !important;
   border-style: solid;
   border-color: #FDC20E;
   border-width: 1px;
@@ -797,7 +811,7 @@ Side Bar
   padding: 35px;
 }
 
-#careers > div > div.mb-7 > h2 {
+#careers>div>div.mb-7>h2 {
   display: inline;
   font-family: Inter;
   font-size: 25px !important;
@@ -810,7 +824,7 @@ Side Bar
   line-height: 20px;
 }
 
-#careers > div > div.mb-7 > h2:nth-child(4) {
+#careers>div>div.mb-7>h2:nth-child(4) {
   font-family: Inter;
   font-size: 25px;
   font-weight: bold;
@@ -822,11 +836,11 @@ Side Bar
   line-height: 20px;
 }
 
-#careers > div > div.mb-7 > p {
+#careers>div>div.mb-7>p {
   margin-top: 2rem !important;
 }
 
-#careers > div > div.mb-0 > div:nth-child(1) > h4 {
+#careers>div>div.mb-0>div:nth-child(1)>h4 {
   display: inline;
   font-family: Inter;
   font-weight: bold;
@@ -835,11 +849,11 @@ Side Bar
   text-align: left;
 }
 
-#careers > div > div.mb-0 > div:nth-child(1) > div {
+#careers>div>div.mb-0>div:nth-child(1)>div {
   margin-top: 2rem !important;
 }
 
-#careers > div > div.mb-0 > div:nth-child(2) > h4 {
+#careers>div>div.mb-0>div:nth-child(2)>h4 {
   display: inline;
   font-family: Inter;
   font-weight: bold;
@@ -848,11 +862,11 @@ Side Bar
   text-align: left;
 }
 
-#careers > div > div.mb-0 > div:nth-child(2) > div {
+#careers>div>div.mb-0>div:nth-child(2)>div {
   margin-top: 2rem !important;
 }
 
-#careers > div > a {
+#careers>div>a {
   background-color: #F6821B;
   font-family: Inter;
   font-size: 13px;
@@ -863,7 +877,7 @@ Side Bar
   border-radius: 10px;
 }
 
-#careers > div > a:hover {
+#careers>div>a:hover {
   background-color: #faa313;
   transition: 300ms;
 }
@@ -880,7 +894,7 @@ Side Bar
   padding: 35px;
 }
 
-#connected > h4 {
+#connected>h4 {
   display: inline;
   font-family: Inter;
   font-size: 25px !important;
@@ -892,42 +906,42 @@ Side Bar
 }
 
 #linkedin {
-  color:#F6821B;
+  color: #F6821B;
   vertical-align: center;
   text-align: center;
   margin-right: 10px;
 }
 
-#connected > div > a.github {
-  color:#F6821B;
+#connected>div>a.github {
+  color: #F6821B;
   vertical-align: center;
   text-align: center;
   margin-right: 10px;
 }
 
 #youtube {
-  color:#F6821B;
+  color: #F6821B;
   vertical-align: center;
   text-align: center;
   margin-right: 10px;
 }
 
 #facebook {
-  color:#F6821B;
+  color: #F6821B;
   vertical-align: center;
   text-align: center;
   margin-right: 10px;
 }
 
 #x {
-  color:#F6821B;
+  color: #F6821B;
   vertical-align: center;
   text-align: center;
   margin-right: 10px;
 }
 
 #instagram {
-  color:#F6821B;
+  color: #F6821B;
   vertical-align: center;
   text-align: center;
   margin-right: 10px;
@@ -968,17 +982,17 @@ Plugins Page
   font-size: 13px;
 }
 
-#text-presentation > h1 {
+#text-presentation>h1 {
   display: inline;
   vertical-align: middle;
   text-align: left;
   padding-left: 15px;
-  color:#0F2385 !important;
+  color: #0F2385 !important;
   font-family: Inter;
   font-size: 26px;
 }
 
-#text-presentation > h3 {
+#text-presentation>h3 {
   color: #4B5675;
   font-family: Inter;
   font-size: 20px;
@@ -986,12 +1000,11 @@ Plugins Page
   margin-top: 30px;
 }
 
-#plugins-page > div.code-sample-body {
+#plugins-page>div.code-sample-body {
   margin: 10px;
 }
 
 #code {
-
   display: flex !important;
   flex-direction: column !important;
   justify-content: space-between;
@@ -1022,8 +1035,861 @@ Plugins Page
   font-size: 13px;
 }
 
-#third-row > h4 {
-  color:#0F2385 !important;
+#third-row>h4 {
+  color: #0F2385 !important;
   font-family: Inter;
   margin-bottom: 30px;
+}
+
+/*--------------------------------
+Manifests Page
+--------------------------------*/
+
+#manifests-page {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  width: auto;
+  background-color: #F9F9F9;
+  margin: 0px;
+  padding: 0px;
+}
+
+#manifest-row {
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-color: #FFFFFF;
+  padding: 35px;
+  border-radius: 10px;
+  margin: 10px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  justify-content: space-between;
+  width: auto;
+  font-family: Inter;
+  color: #4B5675;
+  font-size: 13px;
+}
+
+#manifest-row>h1 {
+  display: inline;
+  vertical-align: middle;
+  text-align: left;
+  padding-left: 15px;
+  color: #0F2385 !important;
+  font-family: Inter;
+  font-size: 26px;
+}
+
+#manifest-row>h3 {
+  color: #4B5675;
+  font-family: Inter;
+  font-size: 20px;
+  margin-bottom: 20px;
+  margin-top: 30px;
+}
+
+#heading-2 {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between;
+  flex-wrap: nowrap !important;
+  width: auto;
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-color: #FFFFFF;
+  padding: 35px;
+  border-radius: 10px;
+  margin: 10px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  font-family: Inter;
+  color: #4B5675;
+  font-size: 13px;
+}
+
+#heading-2>h2 {
+  color: #4B5675;
+  font-family: Inter;
+  font-size: 20px;
+  margin-bottom: 20px;
+  margin-top: 30px;
+}
+
+#heading-3 {
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-color: #FFFFFF;
+  padding: 35px;
+  border-radius: 10px;
+  margin: 10px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  justify-content: center;
+  font-family: Inter;
+  color: #4B5675;
+  font-size: 13px;
+  width: auto;
+}
+
+#heading-3>h3 {
+  color: #4B5675;
+  font-family: Inter;
+  font-size: 20px;
+  margin-bottom: 20px;
+  margin-top: 30px;
+}
+
+#heading-3>p {
+  margin: 0px;
+}
+
+/* First row */
+
+#heading-3>div.d-flex.flex-column.flex-xl-row>a:nth-child(1) {
+  background-color: #F9F9F9;
+  font-family: Inter;
+  font-size: 16px;
+  text-align: center;
+  font-weight: 700;
+  color: #ff5733;
+  text-decoration: none;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  margin: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  display: block !important;
+  width: 100%;
+  text-align: center;
+}
+
+#heading-3>div.d-flex.flex-column.flex-xl-row>a:nth-child(1):hover {
+  background-color: #ffffff;
+  transition: 300ms;
+  color: #faa313;
+  border-style: none;
+}
+
+#heading-3>div.d-flex.flex-column.flex-xl-row>a:nth-child(2) {
+  background-color: #F9F9F9;
+  font-family: Inter;
+  font-size: 16px;
+  text-align: center;
+  font-weight: 700;
+  color: #ff5733;
+  text-decoration: none;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  margin: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  display: block;
+  width: 100%;
+}
+
+#heading-3>div.d-flex.flex-column.flex-xl-row>a:nth-child(2):hover {
+  background-color: #ffffff;
+  transition: 300ms;
+  color: #faa313;
+  border-style: none;
+}
+
+#heading-3>div.d-flex.flex-column.flex-xl-row>a:nth-child(3) {
+  background-color: #F9F9F9;
+  font-family: Inter;
+  font-size: 16px;
+  text-align: center;
+  font-weight: 700;
+  color: #ff5733;
+  text-decoration: none;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  margin: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  display: block;
+  width: 100%;
+}
+
+#heading-3>div.d-flex.flex-column.flex-xl-row>a:nth-child(3):hover {
+  background-color: #ffffff;
+  transition: 300ms;
+  color: #faa313;
+  border-style: none;
+}
+
+/* Row 2 */
+
+#heading-3>div:nth-child(4)>div>a:nth-child(1) {
+  background-color: #F9F9F9;
+  font-family: Inter;
+  font-size: 16px;
+  text-align: center;
+  font-weight: 700;
+  color: #ff5733;
+  text-decoration: none;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  margin: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  display: block;
+  width: 100%;
+}
+
+#heading-3>div:nth-child(4)>div>a:nth-child(1):hover {
+  background-color: #ffffff;
+  transition: 300ms;
+  color: #faa313;
+  border-style: none;
+}
+
+#heading-3>div:nth-child(4)>div>a:nth-child(2) {
+  background-color: #F9F9F9;
+  font-family: Inter;
+  font-size: 16px;
+  text-align: center;
+  font-weight: 700;
+  color: #ff5733;
+  text-decoration: none;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  margin: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  display: block;
+  width: 100%;
+}
+
+#heading-3>div:nth-child(4)>div>a:nth-child(2):hover {
+  background-color: #ffffff;
+  transition: 300ms;
+  color: #faa313;
+  border-style: none;
+}
+
+#heading-3>div:nth-child(4)>div>a:nth-child(3) {
+  background-color: #F9F9F9;
+  font-family: Inter;
+  font-size: 16px;
+  text-align: center;
+  font-weight: 700;
+  color: #ff5733;
+  text-decoration: none;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  margin: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  display: block;
+  width: 100%;
+}
+
+#heading-3>div:nth-child(4)>div>a:nth-child(3):hover {
+  background-color: #ffffff;
+  transition: 300ms;
+  color: #faa313;
+  border-style: none;
+}
+
+/* Row 3*/
+
+#heading-3>div>div:nth-child(7)>div>a {
+  background-color: #F9F9F9;
+  font-family: Inter;
+  font-size: 16px;
+  text-align: center;
+  font-weight: 700;
+  color: #ff5733;
+  text-decoration: none;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  display: block;
+}
+
+#heading-3>div>div:nth-child(7)>div>a:hover {
+  background-color: #ffffff;
+  transition: 300ms;
+  color: #faa313;
+  border-style: none;
+}
+
+#heading-3>div>div:nth-child(8)>div>a {
+  background-color: #F9F9F9;
+  font-family: Inter;
+  font-size: 16px;
+  text-align: center;
+  font-weight: 700;
+  color: #ff5733;
+  text-decoration: none;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  display: block;
+}
+
+#heading-3>div>div:nth-child(8)>div>a:hover {
+  background-color: #ffffff;
+  transition: 300ms;
+  color: #faa313;
+  border-style: none;
+}
+
+#heading-3>div>div:nth-child(9)>div>a {
+  background-color: #F9F9F9;
+  font-family: Inter;
+  font-size: 16px;
+  text-align: center;
+  font-weight: 700;
+  color: #ff5733;
+  text-decoration: none;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  display: block;
+}
+
+#heading-3>div>div:nth-child(9)>div>a:hover {
+  background-color: #ffffff;
+  transition: 300ms;
+  color: #faa313;
+  border-style: none;
+}
+
+/* Row 4 */
+
+#heading-3>div:nth-child(6)>a:nth-child(1) {
+  background-color: #F9F9F9;
+  font-family: Inter;
+  font-size: 16px;
+  text-align: center;
+  font-weight: 700;
+  color: #ff5733;
+  text-decoration: none;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  display: block;
+}
+
+#heading-3>div:nth-child(6)>a:nth-child(1):hover {
+  background-color: #ffffff;
+  transition: 300ms;
+  color: #faa313;
+  border-style: none;
+}
+
+#heading-3>div:nth-child(6)>a:nth-child(2) {
+  background-color: #F9F9F9;
+  font-family: Inter;
+  font-size: 16px;
+  text-align: center;
+  font-weight: 700;
+  color: #ff5733;
+  text-decoration: none;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  display: block;
+}
+
+#heading-3>div:nth-child(6)>a:nth-child(2):hover {
+  background-color: #ffffff;
+  transition: 300ms;
+  color: #faa313;
+  border-style: none;
+}
+
+#heading-4 {
+  flex-direction: column !important;
+  justify-content: space-between;
+  flex-wrap: nowrap !important;
+  width: auto;
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-color: #FFFFFF;
+  padding: 35px;
+  border-radius: 10px;
+  margin: 10px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  font-family: Inter;
+  color: #4B5675;
+  font-size: 13px;
+}
+
+#heading-4>h2 {
+  color: #4B5675;
+  font-family: Inter;
+  font-size: 20px;
+  margin-bottom: 20px;
+  margin-top: 30px;
+}
+
+#heading-4>a {
+  background-color: #F6821B;
+  font-family: Inter;
+  font-size: 11px;
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px 10px 20px;
+  border-radius: 10px;
+}
+
+#heading-4>a:hover {
+  background-color: #faa313;
+  transition: 300ms;
+}
+
+/*--------------------------------
+  CLI Page
+  --------------------------------*/
+
+#cli-page {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  width: auto;
+  background-color: transparent;
+  padding: 0px;
+  margin: 0px;
+}
+
+#heading {
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-color: #FFFFFF;
+  padding: 35px;
+  border-radius: 10px;
+  margin: 10px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  justify-content: space-between;
+  width: auto;
+  font-family: Inter;
+  color: #4B5675;
+  font-size: 13px;
+}
+
+#heading>h1 {
+  display: inline;
+  vertical-align: middle;
+  text-align: left;
+  padding-left: 15px;
+  color: #0F2385 !important;
+  font-family: Inter;
+  font-size: 26px;
+}
+
+#heading>p:nth-child(3) {
+  margin-top: 30px !important;
+}
+
+#cli-configuration {
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-color: #FFFFFF;
+  padding: 35px;
+  border-radius: 10px;
+  margin: 10px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  width: auto;
+  font-family: Inter;
+  color: #4B5675;
+  font-size: 13px;
+}
+
+#cli-configuration>h3 {
+  color: #4B5675;
+}
+
+#cli-commands {
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-color: #FFFFFF;
+  padding: 35px;
+  border-radius: 10px;
+  margin: 10px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  width: auto;
+  font-family: Inter;
+  color: #4B5675;
+  font-size: 13px;
+}
+
+#cli-commands>h3 {
+  color: #4B5675;
+}
+
+#cli-apply {
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-color: #FFFFFF;
+  padding: 35px;
+  border-radius: 10px;
+  margin: 10px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  width: auto;
+  font-family: Inter;
+  color: #4B5675;
+  font-size: 13px;
+}
+
+#cli-apply>h3 {
+  color: #4B5675;
+}
+
+#cli-chat {
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-color: #FFFFFF;
+  padding: 35px;
+  border-radius: 10px;
+  margin: 10px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  width: auto;
+  font-family: Inter;
+  color: #4B5675;
+  font-size: 13px;
+}
+
+#cli-chat>h3 {
+  color: #4B5675;
+}
+
+#cli-completion {
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-color: #FFFFFF;
+  padding: 35px;
+  border-radius: 10px;
+  margin: 10px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  width: auto;
+  font-family: Inter;
+  color: #4B5675;
+  font-size: 13px;
+}
+
+#cli-completion>h3 {
+  color: #4B5675;
+}
+
+#cli-configure {
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-color: #FFFFFF;
+  padding: 35px;
+  border-radius: 10px;
+  margin: 10px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  justify-content: space-between;
+  width: auto;
+  font-family: Inter;
+  color: #4B5675;
+  font-size: 13px;
+}
+
+#cli-configure>h3 {
+  color: #4B5675;
+}
+
+#cli-delete {
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-color: #FFFFFF;
+  padding: 35px;
+  border-radius: 10px;
+  margin: 10px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  justify-content: space-between;
+  width: auto;
+  font-family: Inter;
+  color: #4B5675;
+  font-size: 13px;
+}
+
+#cli-delete>h3 {
+  color: #4B5675;
+}
+
+#cli-deploy {
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-color: #FFFFFF;
+  padding: 35px;
+  border-radius: 10px;
+  margin: 10px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  justify-content: space-between;
+  width: auto;
+  font-family: Inter;
+  color: #4B5675;
+  font-size: 13px;
+}
+
+#cli-deploy>h3 {
+  color: #4B5675;
+}
+
+#cli-describe {
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-color: #FFFFFF;
+  padding: 35px;
+  border-radius: 10px;
+  margin: 10px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  justify-content: space-between;
+  width: auto;
+  font-family: Inter;
+  color: #4B5675;
+  font-size: 13px;
+}
+
+#cli-describe>h3 {
+  color: #4B5675;
+}
+
+#cli-get {
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-color: #FFFFFF;
+  padding: 35px;
+  border-radius: 10px;
+  margin: 10px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  justify-content: space-between;
+  width: auto;
+  font-family: Inter;
+  color: #4B5675;
+  font-size: 13px;
+}
+
+#cli-get>h3 {
+  color: #4B5675;
+}
+
+#cli-help {
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-color: #FFFFFF;
+  padding: 35px;
+  border-radius: 10px;
+  margin: 10px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  justify-content: space-between;
+  width: auto;
+  font-family: Inter;
+  color: #4B5675;
+  font-size: 13px;
+}
+
+#cli-help>h3 {
+  color: #4B5675;
+}
+
+#cli-manifest {
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-color: #FFFFFF;
+  padding: 35px;
+  border-radius: 10px;
+  margin: 10px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  justify-content: space-between;
+  width: auto;
+  font-family: Inter;
+  color: #4B5675;
+  font-size: 13px;
+}
+
+#cli-manifest>h3 {
+  color: #4B5675;
+}
+
+#cli-status {
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-color: #FFFFFF;
+  padding: 35px;
+  border-radius: 10px;
+  margin: 10px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  justify-content: space-between;
+  width: auto;
+  font-family: Inter;
+  color: #4B5675;
+  font-size: 13px;
+}
+
+#cli-status>h3 {
+  color: #4B5675;
+}
+
+#cli-undeploy {
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-color: #FFFFFF;
+  padding: 35px;
+  border-radius: 10px;
+  margin: 10px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  justify-content: space-between;
+  width: auto;
+  font-family: Inter;
+  color: #4B5675;
+  font-size: 13px;
+}
+
+#cli-undeploy>h3 {
+  color: #4B5675;
+}
+
+#cli-version {
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-color: #FFFFFF;
+  padding: 35px;
+  border-radius: 10px;
+  margin: 10px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  justify-content: space-between;
+  width: auto;
+  font-family: Inter;
+  color: #4B5675;
+  font-size: 13px;
+}
+
+#cli-version>h3 {
+  color: #4B5675;
+}
+
+#cli-whoami {
+  background-image: url('https://cdn.platform.smarter.sh/cms/img/graydots.png');
+  background-size: contain;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+  background-color: #FFFFFF;
+  padding: 35px;
+  border-radius: 10px;
+  margin: 10px;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #F1F1F4;
+  width: auto;
+  font-family: Inter;
+  color: #4B5675;
+  font-size: 13px;
+}
+
+#cli-whoami>h3 {
+  color: #4B5675;
 }
