@@ -115,7 +115,6 @@ def handler(
     available_functions = {
         "get_current_weather": get_current_weather,
     }
-
     try:
         request_body = get_request_body(data=data)
         messages, input_text = parse_request(request_body)
