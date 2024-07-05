@@ -1,15 +1,14 @@
-## [0.5.3](https://github.com/smarter-sh/smarter/compare/v0.5.2...v0.5.3) (2024-07-05)
-
-
-### Bug Fixes
-
-* assign chat.chatbot ([b6d294a](https://github.com/smarter-sh/smarter/commit/b6d294aca0b0a492a39524af289d94a908a5001b))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.5.3](https://github.com/smarter-sh/smarter/compare/v0.5.2...v0.5.3) (2024-07-05)
+
+### Bug Fixes
+
+- assign chat.chatbot ([b6d294a](https://github.com/smarter-sh/smarter/commit/b6d294aca0b0a492a39524af289d94a908a5001b))
 
 ## [0.5.2](https://github.com/smarter-sh/smarter/compare/v0.5.1...v0.5.2) (2024-07-01)
 
