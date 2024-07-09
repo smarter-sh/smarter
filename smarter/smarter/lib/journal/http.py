@@ -129,13 +129,12 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
         **kwargs,
     ):
         description: str = ""
-        if e:
-            if isinstance(e, Exception) and hasattr(e, "message"):
-                description = e.message
-            elif isinstance(e, dict) and hasattr(e, "args"):
-                description = e.args[0]
-            elif isinstance(e, str):
-                description = e
+        if isinstance(e, Exception) and hasattr(e, "message"):
+            description = e.message
+        elif isinstance(e, dict) and hasattr(e, "args"):
+            description = e.args[0]
+        elif isinstance(e, str):
+            description = e
         data = {}
         data[SmarterJournalApiResponseKeys.ERROR] = {
             SmarterJournalApiResponseErrorKeys.ERROR_CLASS: e.__class__.__name__,
@@ -150,7 +149,7 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
                 str(e.__context__) if isinstance(e, dict) and hasattr(e, "__context__") else ""
             ),
         }
-        # logger.error(data[SmarterJournalApiResponseKeys.ERROR])
+        logger.error(data[SmarterJournalApiResponseKeys.ERROR])
 
         super().__init__(
             request=request,
