@@ -14,6 +14,7 @@ from django.test import RequestFactory
 from smarter.apps.chat.models import Chat, ChatHistory
 from smarter.apps.chatapp.views import ChatConfigView
 from smarter.apps.chatbot.api.v1.views.smarter import SmarterChatBotApiView
+from smarter.apps.chatbot.models import ChatBot
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,
@@ -392,6 +393,19 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         - uid: str. required. a unique identifier for the client. this is assumed to be a combination of the machine mac address and the hostname.
 
         """
+
+        # validate the chatbot name, as this is the most likely point of failure
+        try:
+            ChatBot.objects.get(name=name, account=self.account)
+        except ChatBot.DoesNotExist:
+            logger.error("Chatbot %s not found.", name)
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                e=APIV1CLIChatViewError(f"Chatbot {name} not found."),
+                thing=SmarterJournalThings(SmarterJournalThings.CHAT),
+                command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+            )
+
         # pylint: disable=W0718
         try:
             return self.handler(request, name, *args, **kwargs)
