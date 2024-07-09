@@ -130,9 +130,10 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
     ):
         description: str = ""
         if e:
-            if isinstance(e, dict):
-                if hasattr(e, "args"):
-                    description = e.args[0]
+            if isinstance(e, Exception) and hasattr(e, "message"):
+                description = e.message
+            elif isinstance(e, dict) and hasattr(e, "args"):
+                description = e.args[0]
             elif isinstance(e, str):
                 description = e
         data = {}
