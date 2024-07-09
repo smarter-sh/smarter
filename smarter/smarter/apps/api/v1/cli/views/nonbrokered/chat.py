@@ -398,7 +398,6 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         try:
             ChatBot.objects.get(name=name, account=self.account)
         except ChatBot.DoesNotExist:
-            logger.error("Chatbot %s not found.", name)
             return SmarterJournaledJsonErrorResponse(
                 request=request,
                 e=APIV1CLIChatViewError(f"Chatbot {name} not found."),
