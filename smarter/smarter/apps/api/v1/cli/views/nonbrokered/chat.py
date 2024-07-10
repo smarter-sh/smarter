@@ -8,12 +8,13 @@ from typing import Tuple
 from urllib.parse import urlparse
 
 from django.core.cache import cache
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponse
 from django.test import RequestFactory
 
 from smarter.apps.chat.models import Chat, ChatHistory
 from smarter.apps.chatapp.views import ChatConfigView
 from smarter.apps.chatbot.api.v1.views.smarter import SmarterChatBotApiView
+from smarter.apps.chatbot.models import ChatBot
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,
@@ -305,34 +306,13 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
 
         return new_request
 
-    # pylint: disable=too-many-locals
-    def post(self, request, name, *args, **kwargs):
-        """
-        Smarter API command-line interface 'chat' view. This is a non-brokered view
-        that sends facilitates chat sessions to a ChatBot by creating a http post request
-        to the ChatBot's published url. The chatbot is expected to be a Smarter chatbot
-        that is capable of receiving a list of messages and returning a response in the
-        smarter.sh/v1 protocol.
-
-        Chats are based on sticky sessions that are identified by a cached session_key. The session_key is
-        generated ....
-
-        Args:
-        - request: an authenticated Django HttpRequest object
-        - name: str. the name of a ChatBot associated with the Account to which the authenticated user belongs.
-
-        request body:
-        - session_key: str. optional. the session_key for the chat session. if not provided then a new session_key will be generated.
-        - prompt: str. the raw text of the prompt to send to the chatbot. This will be appended to the message list, if this is not a new session.
-
-        url params:
-        - new_session: str. optional flag. if present then the cache_key and session_key will be deleted.
-        - uid: str. required. a unique identifier for the client. this is assumed to be a combination of the machine mac address and the hostname.
-
-        """
-
+    def handler(self, request, name, *args, **kwargs):
         # get the chat configuration for the ChatBot (name)
-        chat_config = ChatConfigView.as_view()(request, name=name)
+        chat_config: HttpResponse = ChatConfigView.as_view()(request, name=name)
+        if chat_config.status_code != 200:
+            raise APIV1CLIChatViewError(
+                f"Internal error. Failed to get chat config for chatbot: {name} {chat_config.content}"
+            )
 
         try:
             # bootstrap our chat session configuration
@@ -341,7 +321,9 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             self._session_key = self.chat_config.get(SESSION_KEY)
             cache.set(key=self.cache_key, value=self.session_key, timeout=CACHE_EXPIRATION)
         except json.JSONDecodeError as e:
-            raise APIV1CLIViewError("Misconfigured. Failed to cache session key for chat config view.") from e
+            raise APIV1CLIViewError(
+                f"Misconfigured. Failed to cache session key for chat config: {chat_config.content}"
+            ) from e
 
         # create a Smarter chatbot request body
         request_body = self.chat_request_body_factory(messages=self.messages)
@@ -385,3 +367,51 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             thing=SmarterJournalThings(SmarterJournalThings.CHAT),
             command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
         )
+
+    # pylint: disable=too-many-locals
+    def post(self, request, name, *args, **kwargs):
+        """
+        Smarter API command-line interface 'chat' view. This is a non-brokered view
+        that sends facilitates chat sessions to a ChatBot by creating a http post request
+        to the ChatBot's published url. The chatbot is expected to be a Smarter chatbot
+        that is capable of receiving a list of messages and returning a response in the
+        smarter.sh/v1 protocol.
+
+        Chats are based on sticky sessions that are identified by a cached session_key. The session_key is
+        generated ....
+
+        Args:
+        - request: an authenticated Django HttpRequest object
+        - name: str. the name of a ChatBot associated with the Account to which the authenticated user belongs.
+
+        request body:
+        - session_key: str. optional. the session_key for the chat session. if not provided then a new session_key will be generated.
+        - prompt: str. the raw text of the prompt to send to the chatbot. This will be appended to the message list, if this is not a new session.
+
+        url params:
+        - new_session: str. optional flag. if present then the cache_key and session_key will be deleted.
+        - uid: str. required. a unique identifier for the client. this is assumed to be a combination of the machine mac address and the hostname.
+
+        """
+
+        # validate the chatbot name, as this is the most likely point of failure
+        try:
+            ChatBot.objects.get(name=name, account=self.account)
+        except ChatBot.DoesNotExist:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                e=APIV1CLIChatViewError(f"Chatbot {name} not found."),
+                thing=SmarterJournalThings(SmarterJournalThings.CHAT),
+                command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+            )
+
+        # pylint: disable=W0718
+        try:
+            return self.handler(request, name, *args, **kwargs)
+        except Exception as e:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                e=APIV1CLIChatViewError(f"Internal error. {e}"),
+                thing=SmarterJournalThings(SmarterJournalThings.CHAT),
+                command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+            )
