@@ -359,19 +359,26 @@ REST_FRAMEWORK = {
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "formatters": {
+        "timestamped": {
+            "format": "%(asctime)s - %(levelname)s - %(message)s",
+            "datefmt": "[%Y-%m-%d %H:%M:%S %z]",
+        },
+    },
     "handlers": {
-        "console": {
+        "default": {
             "level": "INFO",
             "class": "logging.StreamHandler",
+            "formatter": "timestamped",
         },
     },
     "root": {
-        "handlers": ["console"],
+        "handlers": ["default"],
         "level": "INFO",
     },
     "loggers": {
         "django.security.DisallowedHost": {
-            "handlers": ["console"],
+            "handlers": ["default"],
             "level": "ERROR",
             "propagate": False,
         },
