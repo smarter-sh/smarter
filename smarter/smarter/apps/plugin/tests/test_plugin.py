@@ -43,6 +43,7 @@ from smarter.apps.plugin.signals import (
 )
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 from smarter.apps.plugin.utils import add_example_plugins
+from smarter.common.const import OpenAIMessageKeys
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.loader import SAMLoaderError
 from smarter.lib.unittest.utils import get_readonly_yaml_file
@@ -452,8 +453,14 @@ class TestPlugin(unittest.TestCase):
         )
 
         messages = [
-            {"role": "system", "content": "you are a helpful chatbot."},
-            {"role": "user", "content": "have you ever heard of everlasting gobstoppers?"},
+            {
+                OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_SYSTEM_MESSAGE_KEY,
+                OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: "you are a helpful chatbot.",
+            },
+            {
+                OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_USER_MESSAGE_KEY,
+                OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: "have you ever heard of everlasting gobstoppers?",
+            },
         ]
 
         plugin = PluginStatic(data=self.data)
@@ -464,7 +471,13 @@ class TestPlugin(unittest.TestCase):
 
         self._plugin_selected = False
         messages = [
-            {"role": "system", "content": "you are a helpful chatbot."},
-            {"role": "user", "content": "this should return false."},
+            {
+                OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_SYSTEM_MESSAGE_KEY,
+                OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: "you are a helpful chatbot.",
+            },
+            {
+                OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_USER_MESSAGE_KEY,
+                OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: "this should return false.",
+            },
         ]
         self.assertFalse(self.signals["plugin_selected"])

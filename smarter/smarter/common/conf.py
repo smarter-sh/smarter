@@ -162,6 +162,14 @@ class SettingsDefaults:
     """
 
     OPENAI_DEFAULT_MODEL = "gpt-3.5-turbo"
+    OPENAI_DEFAULT_SYSTEM_ROLE = (
+        "You are a helpful chatbot. When given the opportunity to utilize "
+        "function calling, you should always do so. This will allow you to "
+        "provide the best possible responses to the user. If you are unable to "
+        "provide a response, you should prompt the user for more information. If "
+        "you are still unable to provide a response, you should inform the user "
+        "that you are unable to help them at this time."
+    )
     OPENAI_DEFAULT_TEMPERATURE = 0.5
     OPENAI_DEFAULT_MAX_TOKENS = 256
 
@@ -426,6 +434,9 @@ class Settings(BaseSettings):
         SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE, env="OPENAI_ENDPOINT_IMAGE_SIZE"
     )
     openai_default_model: Optional[str] = Field(SettingsDefaults.OPENAI_DEFAULT_MODEL, env="OPENAI_DEFAULT_MODEL")
+    openai_default_system_role: Optional[str] = Field(
+        SettingsDefaults.OPENAI_DEFAULT_SYSTEM_ROLE, env="OPENAI_DEFAULT_SYSTEM_ROLE"
+    )
     openai_default_temperature: Optional[float] = Field(
         SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE, env="OPENAI_DEFAULT_TEMPERATURE"
     )
@@ -859,6 +870,13 @@ class Settings(BaseSettings):
         """Check openai_default_model"""
         if v in [None, ""]:
             return SettingsDefaults.OPENAI_DEFAULT_MODEL
+        return v
+
+    @field_validator("openai_default_system_role")
+    def check_openai_default_system_prompt(cls, v) -> str:
+        """Check openai_default_system_role"""
+        if v in [None, ""]:
+            return SettingsDefaults.OPENAI_DEFAULT_SYSTEM_ROLE
         return v
 
     @field_validator("openai_default_temperature")
