@@ -15,6 +15,8 @@ from smarter.apps.chat.models import Chat, ChatHistory
 from smarter.apps.chatapp.views import ChatConfigView
 from smarter.apps.chatbot.api.v1.views.smarter import SmarterChatBotApiView
 from smarter.apps.chatbot.models import ChatBot
+from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import OpenAIMessageKeys
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,
@@ -266,6 +268,11 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         return self._messages
 
     def new_message_list_factory(self) -> list[dict[str, str]]:
+
+        system_role: str = self.chatbot_config.get(
+            "default_system_role",
+            self.chat_config.get("default_system_role", smarter_settings.openai_default_system_role),
+        )
         welcome_message: str = self.chatbot_config.get("app_welcome_message", "[MISSING WELCOME MESSAGE]")
         app_assistant: str = self.chatbot_config.get("app_assistant", "[MISSING ASSISTANT NAME]")
         example_prompts: list[str] = self.chatbot_config.get(
@@ -275,8 +282,18 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         bullet_points = "Following are some example prompts:\n\n" + bullet_points + "\n\n"
         intro = f"I'm {app_assistant}, how can I assist you today?"
         return [
-            {"role": "assistant", "content": f"{welcome_message}. {bullet_points}{intro}"},
-            {"role": "user", "content": self.prompt},
+            {
+                OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_SYSTEM_MESSAGE_KEY,
+                OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: system_role,
+            },
+            {
+                OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_ASSISTANT_MESSAGE_KEY,
+                OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: f"{welcome_message}. {bullet_points}{intro}",
+            },
+            {
+                OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_USER_MESSAGE_KEY,
+                OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: self.prompt,
+            },
         ]
 
     def chat_request_body_factory(self, messages: list) -> dict[str, any]:

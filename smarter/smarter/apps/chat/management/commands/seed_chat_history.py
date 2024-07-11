@@ -86,6 +86,7 @@ class Command(BaseCommand):
                     user=user_profile.user,
                     data=data,
                     default_model=smarter_settings.openai_default_model,
+                    default_system_role=smarter_settings.openai_default_system_role,
                     default_temperature=smarter_settings.openai_default_temperature,
                     default_max_tokens=smarter_settings.openai_default_max_tokens,
                 )

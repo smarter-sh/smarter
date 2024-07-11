@@ -129,6 +129,7 @@ class SmarterChatBotApiView(ChatBotApiBaseViewSet):
             plugins=self.plugins,
             user=self.user,
             default_model=self.chatbot.default_model,
+            default_system_role=self.chatbot.default_system_role,
             default_temperature=self.chatbot.default_temperature,
             default_max_tokens=self.chatbot.default_max_tokens,
         )
