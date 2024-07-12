@@ -1,3 +1,14 @@
+## [0.5.4](https://github.com/smarter-sh/smarter/compare/v0.5.3...v0.5.4) (2024-07-12)
+
+
+### Bug Fixes
+
+* add ChatBot.default_system_role migration ([5246cc4](https://github.com/smarter-sh/smarter/commit/5246cc446418f446ca210cb054454c58f7380ac5))
+* add default_system_role to the chat and chatbot models ([266d873](https://github.com/smarter-sh/smarter/commit/266d873e583200750b38045e9f359242555f0a2b))
+* add sensible defaults for all error response attributes ([ecd9d2d](https://github.com/smarter-sh/smarter/commit/ecd9d2dfb5e727674c4e442d47222e87de970b28))
+* ensure internal error stack traces flow back to cli output ([dafd736](https://github.com/smarter-sh/smarter/commit/dafd7368abd8875551e03d26e9b0acff710bbb96))
+* ensure that the error description at the bottom of the stack trace echos to cli console output ([c60a7ae](https://github.com/smarter-sh/smarter/commit/c60a7ae95af3927eabe1349babbd0339107f1f7f))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
