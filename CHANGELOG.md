@@ -1,19 +1,18 @@
-## [0.5.4](https://github.com/smarter-sh/smarter/compare/v0.5.3...v0.5.4) (2024-07-12)
-
-
-### Bug Fixes
-
-* add ChatBot.default_system_role migration ([5246cc4](https://github.com/smarter-sh/smarter/commit/5246cc446418f446ca210cb054454c58f7380ac5))
-* add default_system_role to the chat and chatbot models ([266d873](https://github.com/smarter-sh/smarter/commit/266d873e583200750b38045e9f359242555f0a2b))
-* add sensible defaults for all error response attributes ([ecd9d2d](https://github.com/smarter-sh/smarter/commit/ecd9d2dfb5e727674c4e442d47222e87de970b28))
-* ensure internal error stack traces flow back to cli output ([dafd736](https://github.com/smarter-sh/smarter/commit/dafd7368abd8875551e03d26e9b0acff710bbb96))
-* ensure that the error description at the bottom of the stack trace echos to cli console output ([c60a7ae](https://github.com/smarter-sh/smarter/commit/c60a7ae95af3927eabe1349babbd0339107f1f7f))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.5.4](https://github.com/smarter-sh/smarter/compare/v0.5.3...v0.5.4) (2024-07-12)
+
+### Bug Fixes
+
+- add ChatBot.default_system_role migration ([5246cc4](https://github.com/smarter-sh/smarter/commit/5246cc446418f446ca210cb054454c58f7380ac5))
+- add default_system_role to the chat and chatbot models ([266d873](https://github.com/smarter-sh/smarter/commit/266d873e583200750b38045e9f359242555f0a2b))
+- add sensible defaults for all error response attributes ([ecd9d2d](https://github.com/smarter-sh/smarter/commit/ecd9d2dfb5e727674c4e442d47222e87de970b28))
+- ensure internal error stack traces flow back to cli output ([dafd736](https://github.com/smarter-sh/smarter/commit/dafd7368abd8875551e03d26e9b0acff710bbb96))
+- ensure that the error description at the bottom of the stack trace echos to cli console output ([c60a7ae](https://github.com/smarter-sh/smarter/commit/c60a7ae95af3927eabe1349babbd0339107f1f7f))
 
 ## [0.5.3](https://github.com/smarter-sh/smarter/compare/v0.5.2...v0.5.3) (2024-07-05)
 
@@ -22,8 +21,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 - assign chat.chatbot ([b6d294a](https://github.com/smarter-sh/smarter/commit/b6d294aca0b0a492a39524af289d94a908a5001b))
 
 ## [0.5.2](https://github.com/smarter-sh/smarter/compare/v0.5.1...v0.5.2) (2024-07-01)
-
-### Bug Fixes
 
 - add authentication backend to login(). now required bc of social_core ([b8daf55](https://github.com/smarter-sh/smarter/commit/b8daf558733c743d876618f4267f8bcb45995f52))
 - fix indentation of 1st line ([f4e2a73](https://github.com/smarter-sh/smarter/commit/f4e2a7397bd709e619dbc0d2f338afc3c68d1bb4))
