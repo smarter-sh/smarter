@@ -121,7 +121,7 @@ class ChatBot(TimestampedModel):
     default_model = models.CharField(
         default=smarter_settings.openai_default_model, max_length=255, blank=True, null=True
     )
-    default_system_role = models.TextField(default=smarter_settings.default_system_role, blank=True, null=True)
+    default_system_role = models.TextField(default=smarter_settings.openai_default_system_role, blank=True, null=True)
     default_temperature = models.FloatField(default=smarter_settings.openai_default_temperature, blank=True, null=True)
     default_max_tokens = models.IntegerField(default=smarter_settings.openai_default_max_tokens, blank=True, null=True)
 
