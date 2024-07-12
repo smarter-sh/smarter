@@ -36,6 +36,7 @@ from smarter.common.exceptions import (
 from smarter.lib.django.user import UserType
 
 from .utils import (
+    ensure_system_role_present,
     exception_response_factory,
     get_request_body,
     http_response_factory,
@@ -69,6 +70,7 @@ def handler(
     plugins: List[PluginStatic] = None,
     user: UserType = None,
     default_model: str = smarter_settings.openai_default_model,
+    default_system_role: str = smarter_settings.openai_default_system_role,
     default_temperature: float = smarter_settings.openai_default_temperature,
     default_max_tokens: int = smarter_settings.openai_default_max_tokens,
 ) -> dict:
@@ -89,6 +91,10 @@ def handler(
     data: {
         'session_key': '6f3bdd1981e0cac2de5fdc7afc2fb4e565826473a124153220e9f6bf49bca67b',
         'messages': [
+                {
+                    'role': 'system',
+                    'content': "You are a helpful assistant."
+                },
                 {
                     'role': 'assistant',
                     'content': "Welcome to Smarter!. Following are some example prompts: blah blah blah"
@@ -116,9 +122,13 @@ def handler(
         "get_current_weather": get_current_weather,
     }
     try:
+        model = chat.chatbot.default_model or default_model
+        default_system_role = chat.chatbot.default_system_role or default_system_role
+
         request_body = get_request_body(data=data)
         messages, input_text = parse_request(request_body)
-        model = chat.chatbot.default_model or default_model
+        messages = ensure_system_role_present(messages=messages, default_system_role=default_system_role)
+
         temperature = chat.chatbot.default_temperature or default_temperature
         max_tokens = chat.chatbot.default_max_tokens or default_max_tokens
         request_meta_data = request_meta_data_factory(model, temperature, max_tokens, input_text)
