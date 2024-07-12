@@ -116,7 +116,7 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
     :param json_dumps_params: A dictionary of kwargs passed to json.dumps().
     """
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-locals
     def __init__(
         self,
         request: HttpRequest,
@@ -128,28 +128,36 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
         json_dumps_params=None,
         **kwargs,
     ):
+        error_class = e.__class__.__name__ if e else "Unknown Exception"
         description: str = ""
-        if e:
-            if isinstance(e, dict):
-                if hasattr(e, "args"):
-                    description = e.args[0]
-            elif isinstance(e, str):
-                description = e
+        if isinstance(e, Exception) and hasattr(e, "message"):
+            description = e.message
+        elif isinstance(e, dict) and hasattr(e, "args"):
+            description = e.args[0]
+        elif isinstance(e, str):
+            description = e
+
+        url = request.get_full_path() if request else "Unknown URL"
+        status = e.status if hasattr(e, "status") else "500"
+        args = e.args if isinstance(e, dict) and hasattr(e, "args") else "url=" + url
+        cause = str(e.__cause__) if isinstance(e, dict) and hasattr(e, "__cause__") else "Python Exception"
+        context = (
+            str(e.__context__)
+            if isinstance(e, dict) and hasattr(e, "__context__")
+            else "thing=" + str(thing) + ", command=" + str(command)
+        )
+
         data = {}
         data[SmarterJournalApiResponseKeys.ERROR] = {
-            SmarterJournalApiResponseErrorKeys.ERROR_CLASS: e.__class__.__name__,
+            SmarterJournalApiResponseErrorKeys.ERROR_CLASS: error_class,
             SmarterJournalApiResponseErrorKeys.STACK_TRACE: traceback.format_exc(),
             SmarterJournalApiResponseErrorKeys.DESCRIPTION: description,
-            SmarterJournalApiResponseErrorKeys.STATUS: e.status if hasattr(e, "status") else "",
-            SmarterJournalApiResponseErrorKeys.ARGS: e.args if isinstance(e, dict) and hasattr(e, "args") else "",
-            SmarterJournalApiResponseErrorKeys.CAUSE: (
-                str(e.__cause__) if isinstance(e, dict) and hasattr(e, "__cause__") else ""
-            ),
-            SmarterJournalApiResponseErrorKeys.CONTEXT: (
-                str(e.__context__) if isinstance(e, dict) and hasattr(e, "__context__") else ""
-            ),
+            SmarterJournalApiResponseErrorKeys.STATUS: status,
+            SmarterJournalApiResponseErrorKeys.ARGS: args,
+            SmarterJournalApiResponseErrorKeys.CAUSE: cause,
+            SmarterJournalApiResponseErrorKeys.CONTEXT: context,
         }
-        # logger.error(data[SmarterJournalApiResponseKeys.ERROR])
+        logger.error(data[SmarterJournalApiResponseKeys.ERROR])
 
         super().__init__(
             request=request,

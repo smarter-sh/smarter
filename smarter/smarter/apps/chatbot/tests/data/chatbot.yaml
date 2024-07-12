@@ -11,6 +11,10 @@ spec:
     defaultModel: gpt-3.5-turbo
     defaultTemperature: 0.5
     defaultMaxTokens: 512
+    defaultSystemRole: >
+      You are a helpful assistant. When given the opportunity to utilize
+      function calling, you should always do so. This will allow you to
+      provide the best possible responses to the user.
     appName: Test Chatbot
     appAssistant: Tatiana
     appWelcomeMessage: Welcome to Test Chatbot! How can I help you today?

@@ -31,6 +31,15 @@ class Command(BaseCommand):
         chatbot, _ = ChatBot.objects.get_or_create(account=account, name=SMARTER_EXAMPLE_CHATBOT_NAME)
 
         chatbot.default_model = SettingsDefaults.OPENAI_DEFAULT_MODEL
+        chatbot.default_system_role = (
+            "You are a helpful chatbot. When given the opportunity to utilize "
+            "function calling, you should always do so. This will allow you to "
+            "provide the best possible responses to the user. If you are unable to "
+            "provide a response, you should prompt the user for more information. If "
+            "you are still unable to provide a response, you should inform the user "
+            "that you are unable to help them at this time."
+        )
+
         chatbot.default_temperature = 0.5
         chatbot.default_max_tokens = 256
 
