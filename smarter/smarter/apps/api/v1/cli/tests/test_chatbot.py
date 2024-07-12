@@ -84,6 +84,7 @@ class TestApiCliV1ChatBot(ApiV1TestBase):
             "customDomain",
             "deployed",
             "defaultModel",
+            "defaultSystemRole",
             "defaultTemperature",
             "defaultMaxTokens",
             "appName",
@@ -153,6 +154,7 @@ class TestApiCliV1ChatBot(ApiV1TestBase):
             "config": {
                 "deployed": True,
                 "defaultModel": "gpt-2",
+                "defaultSystemRole": "You are a helpful assistant.",
                 "defaultTemperature": 1.0,
                 "defaultMaxTokens": 100,
                 "appName": "newName",

@@ -18,6 +18,7 @@ from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import OpenAIMessageKeys
 from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 from ..models import Chat, ChatPluginUsage
@@ -181,10 +182,22 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
 
         def list_factory(content: str) -> list:
             return [
-                {"role": "system", "content": "You are a helpful chatbot."},
-                {"role": "user", "content": "what is web development?"},
-                {"role": "system", "content": "blah blah answer answer."},
-                {"role": "user", "content": content},
+                {
+                    OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_SYSTEM_MESSAGE_KEY,
+                    OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: "You are a helpful chatbot.",
+                },
+                {
+                    OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_USER_MESSAGE_KEY,
+                    OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: "what is web development?",
+                },
+                {
+                    OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_ASSISTANT_MESSAGE_KEY,
+                    OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: "blah blah answer answer.",
+                },
+                {
+                    OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_USER_MESSAGE_KEY,
+                    OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: content,
+                },
             ]
 
         def false_assertion(content: str):
@@ -231,6 +244,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
                 plugins=self.plugins,
                 user=self.user,
                 default_model=smarter_settings.openai_default_model,
+                default_system_role=smarter_settings.openai_default_system_role,
                 default_max_tokens=smarter_settings.openai_default_max_tokens,
                 default_temperature=smarter_settings.openai_default_temperature,
             )
@@ -273,6 +287,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
                 user=self.user,
                 data=event_about_weather,
                 default_model=smarter_settings.openai_default_model,
+                default_system_role=smarter_settings.openai_default_system_role,
                 default_max_tokens=smarter_settings.openai_default_max_tokens,
                 default_temperature=smarter_settings.openai_default_temperature,
             )
@@ -292,6 +307,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
                 user=self.user,
                 data=event_about_recipes,
                 default_model=smarter_settings.openai_default_model,
+                default_system_role=smarter_settings.openai_default_system_role,
                 default_max_tokens=smarter_settings.openai_default_max_tokens,
                 default_temperature=smarter_settings.openai_default_temperature,
             )
