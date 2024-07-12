@@ -7,7 +7,7 @@ export const getSmarterSandbox = (config) => {
     api_key: null,
     app_name: config.chatbot.app_name,
     assistant_name: config.chatbot.app_assistant,
-    system_role: "You are a helpful assistant.",
+    system_role: config.chatbot.default_system_role,
     welcome_message: config.chatbot.app_welcome_message,
     example_prompts: config.chatbot.app_example_prompts,
     placeholder_text: config.chatbot.app_placeholder,
