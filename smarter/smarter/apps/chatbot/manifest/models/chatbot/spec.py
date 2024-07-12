@@ -49,6 +49,12 @@ class SAMChatbotSpecConfig(AbstractSAMSpecBase):
         None,
         description=(f"{class_identifier}.default_model[str]. Optional. The default model to use for the chatbot."),
     )
+    defaultSystemRole: Optional[str] = Field(
+        None,
+        description=(
+            f"{class_identifier}.default_system_role[str]. Optional. The default system prompt to use for the chatbot."
+        ),
+    )
     defaultTemperature: Optional[float] = Field(
         None,
         description=(

@@ -102,6 +102,8 @@ class OpenAIEndPoint:
 class OpenAIMessageKeys:
     """A class representing the keys for a message in the OpenAI API."""
 
+    OPENAI_MESSAGE_ROLE_KEY = "role"
+    OPENAI_MESSAGE_CONTENT_KEY = "content"
     OPENAI_USER_MESSAGE_KEY = "user"
     OPENAI_ASSISTANT_MESSAGE_KEY = "assistant"
     OPENAI_SYSTEM_MESSAGE_KEY = "system"
