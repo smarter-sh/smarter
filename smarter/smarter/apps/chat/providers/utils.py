@@ -7,7 +7,8 @@ import logging
 import sys  # libraries for error management
 import traceback  # libraries for error management
 
-from smarter.common.const import LANGCHAIN_MESSAGE_HISTORY_ROLES
+from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import LANGCHAIN_MESSAGE_HISTORY_ROLES, OpenAIMessageKeys
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import DateTimeEncoder
 
@@ -175,3 +176,22 @@ def request_meta_data_factory(model, temperature, max_tokens, input_text):
         "max_tokens": max_tokens,
         "input_text": input_text,
     }
+
+
+def ensure_system_role_present(
+    messages: list[dict], default_system_role: str = smarter_settings.openai_default_system_role
+) -> list:
+    """
+    Ensure that a system role is present in the messages list
+    """
+    if not any(
+        d[OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY] == OpenAIMessageKeys.OPENAI_SYSTEM_MESSAGE_KEY for d in messages
+    ):
+        messages.insert(
+            index=0,
+            object={
+                OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_SYSTEM_MESSAGE_KEY,
+                OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: default_system_role,
+            },
+        )
+    return messages

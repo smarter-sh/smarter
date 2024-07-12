@@ -145,7 +145,11 @@ class ChatConfigView(View, AccountMixin):
         name = kwargs.pop("name", None)
         self._sandbox_mode = name is not None
 
-        self._chatbot = ChatBot.objects.get(name=name, account=self.account)
+        try:
+            self._chatbot = ChatBot.objects.get(name=name, account=self.account)
+        except ChatBot.DoesNotExist:
+            return HttpResponseNotFound(f"Chatbot not found: {name}")
+
         try:
             data = json.loads(request.body)
         except json.JSONDecodeError:

@@ -24,6 +24,7 @@
     "custom_domain": null,
     "deployed": true,
     "default_model": "gpt-3.5-turbo",
+    "default_system_role": "You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com).\n",
     "default_temperature": 0.5,
     "default_max_tokens": 256,
     "app_name": "Smarter Demo",
