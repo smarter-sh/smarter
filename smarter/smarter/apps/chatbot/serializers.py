@@ -30,6 +30,7 @@ class ChatBotSerializer(serializers.ModelSerializer):
             "custom_domain",
             "deployed",
             "default_model",
+            "default_system_role",
             "default_temperature",
             "default_max_tokens",
             "app_name",
