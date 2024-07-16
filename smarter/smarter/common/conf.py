@@ -205,6 +205,12 @@ class SettingsDefaults:
         "GOOGLE_MAPS_API_KEY",
         TFVARS.get("google_maps_api_key", None) or os.environ.get("TF_VAR_GOOGLE_MAPS_API_KEY", None),
     )
+    GOOGLE_AI_STUDIO_KEY = SecretStr(
+        os.environ.get(
+            "GOOGLE_AI_STUDIO_KEY",
+            TFVARS.get("google_ai_studio_key", None) or os.environ.get("TF_VAR_GOOGLE_AI_STUDIO_KEY", None),
+        )
+    )
     SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get(
         "SOCIAL_AUTH_GOOGLE_OAUTH2_KEY",
         TFVARS.get("social_auth_google_oauth2_key", None) or os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", None),
@@ -393,6 +399,10 @@ class Settings(BaseSettings):
     google_maps_api_key: Optional[str] = Field(
         SettingsDefaults.GOOGLE_MAPS_API_KEY,
         env=["GOOGLE_MAPS_API_KEY", "TF_VAR_GOOGLE_MAPS_API_KEY"],
+    )
+    google_ai_studio_key: Optional[SecretStr] = Field(
+        SettingsDefaults.GOOGLE_AI_STUDIO_KEY,
+        env=["GOOGLE_AI_STUDIO_KEY", "TF_VAR_GOOGLE_AI_STUDIO_KEY"],
     )
     social_auth_google_oauth2_key: Optional[str] = Field(
         SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
@@ -753,6 +763,13 @@ class Settings(BaseSettings):
         """Check google_maps_api_key"""
         if v in [None, ""]:
             return SettingsDefaults.GOOGLE_MAPS_API_KEY
+        return v
+
+    @field_validator("google_ai_studio_key")
+    def check_google_ai_studio_key(cls, v) -> SecretStr:
+        """Check google_ai_studio_key"""
+        if v in [None, ""]:
+            return SettingsDefaults.GOOGLE_AI_STUDIO_KEY
         return v
 
     @field_validator("social_auth_google_oauth2_key")

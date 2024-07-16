@@ -48,6 +48,7 @@ pydantic-settings==2.2.1                # settings management
 
 # Natural language and LLM support
 # ------------
+google-generativeai==0.7.2              # Google AI Studio API
 openai==1.35.8                          # OpenAI API
 pyyaml==6.0.1                           # YAML parser
 langchain==0.2.1                        # LLM abstractions library for building complex workflows
