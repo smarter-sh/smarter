@@ -45,17 +45,27 @@ pandas==2.2.2                           # Data manipulation for data science stu
 python-dotenv==1.0.1                    # for reading environment variables from .env files
 pydantic==2.8.0                         # best data validation library ever!
 pydantic-settings==2.2.1                # settings management
+pyyaml==6.0.1                           # YAML parser
+textblob==0.18.0.post0                  # Text processing library
 
-# Natural language and LLM support
+# native LLM support
 # ------------
 google-generativeai==0.7.2              # Google AI Studio API
-openai==1.35.8                          # OpenAI API
-pyyaml==6.0.1                           # YAML parser
-langchain==0.2.1                        # LLM abstractions library for building complex workflows
-langchain-openai==0.1.13                # OpenAI plugin for Langchain
+openai==1.35.14                         # OpenAI API
+
+# Langchain LLM support
+# ------------
+langchain==0.2.8                        # LLM abstractions library for building complex workflows
+langchain-anthropic==0.1.20             # An integration package connecting AnthropicMessages and LangChain
+langchain-cohere==0.1.9                 # An integration package connecting Cohere and LangChain
+langchain-google-genai==1.0.7           # An integration package connecting Google's genai package and LangChain
+langchain-mistralai==0.1.10             # An integration package connecting MistralAI and LangChain
+langchain-openai==0.1.16                # An integration package connecting OpenAI and LangChain
+
+# Natural language support
+# ------------
 python-Levenshtein==0.25.1              # Levenshtein distance calculation for LLMs
 nltk==3.8.1                             # Natural Language Toolkit
-textblob==0.18.0.post0                  # Text processing library
 
 # weather function calling feature
 # ------------
