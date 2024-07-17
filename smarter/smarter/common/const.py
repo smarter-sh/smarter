@@ -3,6 +3,7 @@
 import importlib.util
 import logging
 import os
+import re
 from abc import ABC
 from pathlib import Path
 from typing import Dict, List
@@ -135,6 +136,10 @@ class LLM(ABC):
             raise NotImplementedError("all_models must be set in the subclass.")
         if not self.default_model:
             raise NotImplementedError("default_model must be set in the subclass.")
+
+    @property
+    def presentation_name(self) -> str:
+        return self.name.replace("LLM", "") if self.name else "MISSING NAME"
 
     def __str__(self) -> str:
         return self.name
