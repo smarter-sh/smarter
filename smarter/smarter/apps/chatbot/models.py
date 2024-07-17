@@ -20,12 +20,12 @@ from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import (
     LLMAll,
-    LLMAnthropic,
-    LLMCohere,
     LLMDefault,
-    LLMGoogleAIStudio,
-    LLMMistral,
-    LLMOpenAI,
+    LLMVendorAnthropic,
+    LLMVendorCohere,
+    LLMVendorGoogleAIStudio,
+    LLMVendorMistral,
+    LLMVendorOpenAI,
 )
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.model_helpers import TimestampedModel
@@ -121,11 +121,11 @@ class ChatBot(TimestampedModel):
         FAILED = "Failed", "Failed"
 
     class LLMVendors(models.TextChoices):
-        Anthropic = LLMAnthropic().name, LLMAnthropic().presentation_name
-        Cohere = LLMCohere().name, LLMCohere().presentation_name
-        GoogleAIStudio = LLMGoogleAIStudio().name, LLMGoogleAIStudio().presentation_name
-        Mistral = LLMMistral().name, LLMMistral().presentation_name
-        OpenAI = LLMOpenAI().name, LLMOpenAI().presentation_name
+        Anthropic = LLMVendorAnthropic().name, LLMVendorAnthropic().presentation_name
+        Cohere = LLMVendorCohere().name, LLMVendorCohere().presentation_name
+        GoogleAIStudio = LLMVendorGoogleAIStudio().name, LLMVendorGoogleAIStudio().presentation_name
+        Mistral = LLMVendorMistral().name, LLMVendorMistral().presentation_name
+        OpenAI = LLMVendorOpenAI().name, LLMVendorOpenAI().presentation_name
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)

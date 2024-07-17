@@ -118,7 +118,7 @@ class OpenAIMessageKeys:
 LANGCHAIN_MESSAGE_HISTORY_ROLES = ["user", "assistant"]
 
 
-class LLM(ABC):
+class LLMVendor(ABC):
     """Base class for Large Language Model classes."""
 
     name = None
@@ -138,13 +138,13 @@ class LLM(ABC):
 
     @property
     def presentation_name(self) -> str:
-        return self.name.replace("LLM", "") if self.name else "MISSING NAME"
+        return self.name.replace("LLMVendor", "") if self.name else "MISSING NAME"
 
     def __str__(self) -> str:
         return self.name
 
 
-class LLMAnthropic(LLM):
+class LLMVendorAnthropic(LLMVendor):
     """
     Anthropic Large Language Model class.
     https://docs.anthropic.com/en/docs/about-claude/models
@@ -165,7 +165,7 @@ class LLMAnthropic(LLM):
     smarter_plugin_support = True
 
 
-class LLMCohere(LLM):
+class LLMVendorCohere(LLMVendor):
     """
     Cohere Large Language Model class.
     https://docs.cohere.com/docs/models
@@ -190,7 +190,7 @@ class LLMCohere(LLM):
     smarter_plugin_support = True
 
 
-class LLMGoogleAIStudio(LLM):
+class LLMVendorGoogleAIStudio(LLMVendor):
     """
     Google AI Studio Large Language Model class.
     https://ai.google.dev/gemini-api/docs/models/gemini
@@ -215,7 +215,7 @@ class LLMGoogleAIStudio(LLM):
     smarter_plugin_support = True
 
 
-class LLMMistral(LLM):
+class LLMVendorMistral(LLMVendor):
     """
     Mistral Large Language Model class.
     https://docs.mistral.ai/getting-started/models/
@@ -244,7 +244,7 @@ class LLMMistral(LLM):
     smarter_plugin_support = True
 
 
-class LLMOpenAI(LLM):
+class LLMVendorOpenAI(LLMVendor):
     """OpenAI Large Language Model class."""
 
     GPT3 = "gpt-3.5-turbo"
@@ -279,10 +279,10 @@ class LLMOpenAI(LLM):
     smarter_plugin_support = True
 
 
-class LLMDefault(LLM):
+class LLMDefault(LLMVendor):
     """Default Large Language Model class."""
 
-    llm = LLMOpenAI()
+    llm = LLMVendorOpenAI()
 
     all_models = llm.all_models
     name = llm.name
@@ -294,14 +294,14 @@ class LLMDefault(LLM):
 class LLMAll:
     """All Large Language Model classes."""
 
-    llm_anthropic = LLMAnthropic()
-    llm_cohere = LLMCohere()
-    llm_google_ai_studio = LLMGoogleAIStudio()
-    llm_mistral = LLMMistral()
-    llm_openai = LLMOpenAI()
+    llm_anthropic = LLMVendorAnthropic()
+    llm_cohere = LLMVendorCohere()
+    llm_google_ai_studio = LLMVendorGoogleAIStudio()
+    llm_mistral = LLMVendorMistral()
+    llm_openai = LLMVendorOpenAI()
     llm_default = LLMDefault()
 
-    all: List[LLM] = [
+    all: List[LLMVendor] = [
         llm_anthropic,
         llm_cohere,
         llm_google_ai_studio,
@@ -322,28 +322,28 @@ class LLMAll:
     all_llm_vendors = [llm.name for llm in all]
 
     @classmethod
-    def get_llm_by_name(cls, llm_name: str) -> LLM:
-        """Get an LLM object by name."""
+    def get_llm_by_name(cls, llm_name: str) -> LLMVendor:
+        """Get an LLMVendor object by name."""
         for llm in cls.all:
             if llm.name == llm_name:
                 return llm
-        raise ValueError(f"Unknown LLM name: {llm_name}")
+        raise ValueError(f"Unknown LLMVendor name: {llm_name}")
 
     @classmethod
-    def get_llm_by_model_name(cls, model_name: str) -> LLM:
-        """Get an LLM object by model name."""
+    def get_llm_by_model_name(cls, model_name: str) -> LLMVendor:
+        """Get an LLMVendor object by model name."""
         for llm in cls.all:
             if model_name in llm.all_models:
                 return llm
         raise ValueError(f"Unknown model name: {model_name}")
 
     @classmethod
-    def get_default_llm(cls) -> LLM:
-        """Get the default LLM object."""
+    def get_default_llm(cls) -> LLMVendor:
+        """Get the default LLMVendor object."""
         for llm in cls.all:
             if llm.is_default:
                 return llm
-        raise ValueError("No default LLM found.")
+        raise ValueError("No default LLMVendor found.")
 
 
 VALID_CHAT_COMPLETION_MODELS = LLMAll.all_models
