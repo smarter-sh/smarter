@@ -29,6 +29,7 @@ class ChatBotSerializer(serializers.ModelSerializer):
             "subdomain",
             "custom_domain",
             "deployed",
+            "llm_vendor",
             "default_model",
             "default_system_role",
             "default_temperature",

@@ -6,6 +6,7 @@ from typing import ClassVar, List, Optional
 from pydantic import Field
 
 from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
+from smarter.common.const import LLMAll
 from smarter.lib.manifest.models import AbstractSAMSpecBase
 
 
@@ -44,6 +45,12 @@ class SAMChatbotSpecConfig(AbstractSAMSpecBase):
     )
     deployed: bool = (
         Field(..., description=(f"{class_identifier}.deployed[bool]. Required. Whether the chatbot is deployed.")),
+    )
+    llmVendor: Optional[str] = Field(
+        None,
+        description=(
+            f"{class_identifier}.llm_vendor[str]. Optional. The LLM vendor to use for the chatbot. Case sensitive. Choose one of: {LLMAll.all_llm_vendors}"
+        ),
     )
     defaultModel: Optional[str] = Field(
         None,
