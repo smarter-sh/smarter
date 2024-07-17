@@ -6,7 +6,7 @@ from typing import ClassVar, List, Optional
 from pydantic import Field, ValidationInfo, field_validator
 
 from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
-from smarter.common.const import LLMAll
+from smarter.common.const import LLMVendorsAll
 from smarter.lib.manifest.models import AbstractSAMSpecBase
 
 
@@ -49,7 +49,7 @@ class SAMChatbotSpecConfig(AbstractSAMSpecBase):
     llmVendor: Optional[str] = Field(
         None,
         description=(
-            f"{class_identifier}.llm_vendor[str]. Optional. The LLM vendor to use for the chatbot. Case sensitive. Choose one of: {LLMAll.all_llm_vendors}"
+            f"{class_identifier}.llm_vendor[str]. Optional. The LLM vendor to use for the chatbot. Case sensitive. Choose one of: {LLMVendorsAll.all_llm_vendors}"
         ),
     )
     defaultModel: Optional[str] = Field(
@@ -118,18 +118,18 @@ class SAMChatbotSpecConfig(AbstractSAMSpecBase):
 
     @field_validator("llmVendor")
     def validate_llmVendor(cls, value) -> str:
-        if value is not None and value not in LLMAll.all_llm_vendors:
+        if value is not None and value not in LLMVendorsAll.all_llm_vendors:
             raise ValueError(
-                f"{cls.class_identifier}.llmVendor[str]. Optional. The LLM vendor to use for the chatbot. Case sensitive. Choose one of: {LLMAll.all_llm_vendors}"
+                f"{cls.class_identifier}.llmVendor[str]. Optional. The LLM vendor to use for the chatbot. Case sensitive. Choose one of: {LLMVendorsAll.all_llm_vendors}"
             )
 
     @field_validator("defaultModel")
     def validate_defaultModel(cls, value: str, info: ValidationInfo) -> str:
         if "llmVendor" in info.data:
-            llm_vendor = LLMAll.get_llm_by_name(info.data["llmVendor"])
+            llm_vendor = LLMVendorsAll.get_llm_vendor_by_name(info.data["llmVendor"])
             if value is not None and value not in llm_vendor.all_models:
                 raise ValueError(
-                    f"{cls.class_identifier}.default_model[str]. Optional. The default model to use for the chatbot. Choose one of: {LLMAll.all_llm_models}"
+                    f"{cls.class_identifier}.default_model[str]. Optional. The default model to use for the chatbot. Choose one of: {llm_vendor.all_models}"
                 )
 
 

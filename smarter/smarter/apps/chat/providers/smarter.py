@@ -29,9 +29,9 @@ from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import (
     VALID_CHAT_COMPLETION_MODELS,
-    LLMAll,
     LLMDefault,
     LLMVendor,
+    LLMVendorsAll,
 )
 from smarter.common.exceptions import (
     SmarterConfigurationError,
@@ -113,7 +113,7 @@ def handler(
         }
     """
     if isinstance(llm_vendor, str):
-        llm_vendor = LLMAll.get_llm_by_name(llm_vendor)
+        llm_vendor = LLMVendorsAll.get_llm_vendor_by_name(llm_vendor)
     request_meta_data: dict = None
     first_iteration = {}
     first_response = {}
