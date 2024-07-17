@@ -291,7 +291,7 @@ class LLMDefault(LLMVendor):
     smarter_plugin_support = llm.smarter_plugin_support
 
 
-class LLMAll:
+class LLMVendorsAll:
     """All Large Language Model classes."""
 
     llm_anthropic = LLMVendorAnthropic()
@@ -322,7 +322,7 @@ class LLMAll:
     all_llm_vendors = [llm.name for llm in all]
 
     @classmethod
-    def get_llm_by_name(cls, llm_name: str) -> LLMVendor:
+    def get_llm_vendor_by_name(cls, llm_name: str) -> LLMVendor:
         """Get an LLMVendor object by name."""
         for llm in cls.all:
             if llm.name == llm_name:
@@ -346,7 +346,7 @@ class LLMAll:
         raise ValueError("No default LLMVendor found.")
 
 
-VALID_CHAT_COMPLETION_MODELS = LLMAll.all_models
+VALID_CHAT_COMPLETION_MODELS = LLMVendorsAll.all_models
 
 
 VALID_EMBEDDING_MODELS = [
