@@ -27,7 +27,7 @@ from smarter.apps.chat.signals import (
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
+from smarter.common.const import VALID_CHAT_COMPLETION_MODELS, LLMDefault
 from smarter.common.exceptions import (
     SmarterConfigurationError,
     SmarterIlligalInvocationError,
@@ -63,13 +63,14 @@ EXCEPTION_MAP = {
 }
 
 
-# pylint: disable=too-many-locals,too-many-statements,too-many-arguments
+# pylint: disable=W0613,too-many-locals,too-many-statements,too-many-arguments
 def handler(
     chat: Chat,
     data: dict,
     plugins: List[PluginStatic] = None,
     user: UserType = None,
-    default_model: str = smarter_settings.openai_default_model,
+    default_llm_vendor: str = LLMDefault.name,
+    default_model: str = LLMDefault.default_model,
     default_system_role: str = smarter_settings.openai_default_system_role,
     default_temperature: float = smarter_settings.openai_default_temperature,
     default_max_tokens: int = smarter_settings.openai_default_max_tokens,

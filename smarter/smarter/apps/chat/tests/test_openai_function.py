@@ -18,7 +18,7 @@ from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import OpenAIMessageKeys
+from smarter.common.const import LLMDefault, OpenAIMessageKeys
 from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 from ..models import Chat, ChatPluginUsage
@@ -243,8 +243,9 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
                 data=event_about_gobstoppers,
                 plugins=self.plugins,
                 user=self.user,
+                default_llm_vendor=LLMDefault.name,
                 default_model=smarter_settings.openai_default_model,
-                default_system_role=smarter_settings.openai_default_system_role,
+                default_system_role=LLMDefault.default_model,
                 default_max_tokens=smarter_settings.openai_default_max_tokens,
                 default_temperature=smarter_settings.openai_default_temperature,
             )
@@ -286,8 +287,9 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
                 plugins=self.plugins,
                 user=self.user,
                 data=event_about_weather,
+                default_llm_vendor=LLMDefault.name,
                 default_model=smarter_settings.openai_default_model,
-                default_system_role=smarter_settings.openai_default_system_role,
+                default_system_role=LLMDefault.default_model,
                 default_max_tokens=smarter_settings.openai_default_max_tokens,
                 default_temperature=smarter_settings.openai_default_temperature,
             )
@@ -306,7 +308,8 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
                 plugins=self.plugins,
                 user=self.user,
                 data=event_about_recipes,
-                default_model=smarter_settings.openai_default_model,
+                default_llm_vendor=LLMDefault.name,
+                default_model=LLMDefault.default_model,
                 default_system_role=smarter_settings.openai_default_system_role,
                 default_max_tokens=smarter_settings.openai_default_max_tokens,
                 default_temperature=smarter_settings.openai_default_temperature,

@@ -24,6 +24,7 @@ from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.utils import get_plugin_examples_by_name
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
+from smarter.common.const import LLMDefault
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
@@ -283,7 +284,8 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
             SAMKeys.SPEC.value: {
                 SAMChatbotSpecKeys.CONFIG.value: {
                     "deployed": True,
-                    "defaultModel": SettingsDefaults.OPENAI_DEFAULT_MODEL,
+                    "llmVendor": LLMDefault.name,
+                    "defaultModel": LLMDefault.default_model,
                     "defaultSystemRole": (
                         "You are a helpful chatbot. When given the opportunity to utilize "
                         "function calling, you should always do so. This will allow you to "

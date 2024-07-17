@@ -3,7 +3,6 @@
 import importlib.util
 import logging
 import os
-import re
 from abc import ABC
 from pathlib import Path
 from typing import Dict, List
@@ -318,6 +317,9 @@ class LLMAll:
         + llm_mistral.all_models
         + llm_openai.all_models
     )
+
+    # pylint: disable=E1133
+    all_llm_vendors = [llm.name for llm in all]
 
     @classmethod
     def get_llm_by_name(cls, llm_name: str) -> LLM:
