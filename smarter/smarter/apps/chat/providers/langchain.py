@@ -1,21 +1,67 @@
-# pylint: disable=R0801
+# pylint: disable=R0801,W0611
 """
-All Django views for the Google AI Studio Function Calling API app.
+Django views for LanchChain Function Calling API. Supported LLM models: Anthropic, Cohere, Google, Mistral, OpenAI
 
+see:
+ - https://python.langchain.com/v0.1/docs/modules/model_io/chat/function_calling/
+ - https://python.langchain.com/v0.1/docs/modules/tools/custom_tools/
+
+Api keys:
+------------------------
+ - https://aistudio.google.com/app/apikey
+ - https://docs.anthropic.com/en/api/getting-started
+ - https://dashboard.cohere.com/api-keys
+ - https://console.mistral.ai/api-keys/
+ - https://platform.openai.com/api-keys
+
+Google AI Studio native
+------------------------
 example:
-
     curl \
     -H 'Content-Type: application/json' \
     -d '{"contents":[{"parts":[{"text":"Explain how AI works"}]}]}' \
     -X POST 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=YOUR_API_KEY'
 
+Supported models:
+    gemini-1.0-pro
+    gemini-1.0-pro-001
+    gemini-1.5-flash-latest
+    gemini-1.5-pro-latest
+
+
+Google AI Studio function calling api:
+calculator = {
+    'function_declarations': [
+        {
+            'name': 'multiply',
+            'description': 'Returns the product of two numbers.',
+            'parameters': {
+                'type_': 'OBJECT',
+                'properties': {
+                    'a': {'type_': 'NUMBER'},
+                    'b': {'type_': 'NUMBER'}
+                },
+                'required': ['a', 'b']
+            }
+        }
+    ]
+}
 """
 import json
 import logging
 from http import HTTPStatus
 from typing import List
 
+import google.generativeai as genai
 import openai
+
+# LLM Library integrations
+# FIX NOTE: remove pylint disable - W0611
+from langchain_anthropic import ChatAnthropic as langchain_anthropic
+from langchain_cohere import ChatCohere as langchain_cohere
+from langchain_google_genai import GoogleGenerativeAI as langchain_google_genai
+from langchain_mistralai import ChatMistralAI as langchain_mistral
+from langchain_openai import OpenAI as langchain_openai
 
 from smarter.apps.account.tasks import (
     create_plugin_charge,
@@ -57,8 +103,28 @@ from .validators import validate_item
 
 
 logger = logging.getLogger(__name__)
+
+# Google AI Studio API
+# - https://aistudio.google.com/app/apikey
+# -----------------------------------------------------------------------------
+genai.configure(api_key=smarter_settings.google_ai_studio_key.get_secret_value())
+genai_model = genai.GenerativeModel(smarter_settings.google_ai_studio_default_model)
+
+# Anthropic API
+# - https://docs.anthropic.com/en/api/getting-started
+
+# Cohere API
+# - https://dashboard.cohere.com/api-keys
+
+# Mistral API
+# - https://console.mistral.ai/api-keys/
+
+# OpenAI API
+# - https://platform.openai.com/api-keys
+# -----------------------------------------------------------------------------
 openai.organization = smarter_settings.openai_api_organization
 openai.api_key = smarter_settings.openai_api_key.get_secret_value()
+
 
 EXCEPTION_MAP = {
     SmarterValueError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
