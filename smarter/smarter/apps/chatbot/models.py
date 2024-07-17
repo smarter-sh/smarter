@@ -121,11 +121,11 @@ class ChatBot(TimestampedModel):
         FAILED = "Failed", "Failed"
 
     class LLMVendors(models.TextChoices):
-        Anthropic = LLMAnthropic.name, LLMAnthropic.name
-        Cohere = LLMCohere.name, LLMCohere.name
-        GoogleAIStudio = LLMGoogleAIStudio.name, LLMGoogleAIStudio.name
-        Mistral = LLMMistral.name, LLMMistral.name
-        OpenAI = LLMOpenAI.name, LLMOpenAI.name
+        Anthropic = LLMAnthropic().name, LLMAnthropic().name
+        Cohere = LLMCohere().name, LLMCohere().name
+        GoogleAIStudio = LLMGoogleAIStudio().name, LLMGoogleAIStudio().name
+        Mistral = LLMMistral().name, LLMMistral().name
+        OpenAI = LLMOpenAI().name, LLMOpenAI().name
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
