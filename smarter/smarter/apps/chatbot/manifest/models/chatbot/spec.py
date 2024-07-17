@@ -3,7 +3,7 @@
 import os
 from typing import ClassVar, List, Optional
 
-from pydantic import Field
+from pydantic import Field, ValidationInfo, field_validator
 
 from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
 from smarter.common.const import LLMAll
@@ -115,6 +115,22 @@ class SAMChatbotSpecConfig(AbstractSAMSpecBase):
             f"{class_identifier}.app_file_attachment[bool]. Optional. Whether the chatbot supports file attachment."
         ),
     )
+
+    @field_validator("llmVendor")
+    def validate_llmVendor(cls, value) -> str:
+        if value is not None and value not in LLMAll.all_llm_vendors:
+            raise ValueError(
+                f"{cls.class_identifier}.llmVendor[str]. Optional. The LLM vendor to use for the chatbot. Case sensitive. Choose one of: {LLMAll.all_llm_vendors}"
+            )
+
+    @field_validator("defaultModel")
+    def validate_defaultModel(cls, value: str, info: ValidationInfo) -> str:
+        if "llmVendor" in info.data:
+            llm_vendor = LLMAll.get_llm_by_name(info.data["llmVendor"])
+            if value is not None and value not in llm_vendor.all_models:
+                raise ValueError(
+                    f"{cls.class_identifier}.default_model[str]. Optional. The default model to use for the chatbot. Choose one of: {LLMAll.all_llm_models}"
+                )
 
 
 class SAMChatbotSpec(AbstractSAMSpecBase):
