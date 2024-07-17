@@ -161,18 +161,6 @@ class SettingsDefaults:
       3. defaults.
     """
 
-    OPENAI_DEFAULT_MODEL = "gpt-3.5-turbo"
-    OPENAI_DEFAULT_SYSTEM_ROLE = (
-        "You are a helpful chatbot. When given the opportunity to utilize "
-        "function calling, you should always do so. This will allow you to "
-        "provide the best possible responses to the user. If you are unable to "
-        "provide a response, you should prompt the user for more information. If "
-        "you are still unable to provide a response, you should inform the user "
-        "that you are unable to help them at this time."
-    )
-    OPENAI_DEFAULT_TEMPERATURE = 0.5
-    OPENAI_DEFAULT_MAX_TOKENS = 256
-
     # defaults for this Python package
     ENVIRONMENT = os.environ.get("ENVIRONMENT", TFVARS.get("environment", SmarterEnvironments.LOCAL))
     ROOT_DOMAIN = os.environ.get("ROOT_DOMAIN", TFVARS.get("root_domain", "example.com"))
@@ -182,12 +170,25 @@ class SettingsDefaults:
     DEBUG_MODE: bool = os.environ.get("DEBUG_MODE", bool(TFVARS.get("debug_mode", True)))
     DUMP_DEFAULTS: bool = os.environ.get("DUMP_DEFAULTS", bool(TFVARS.get("dump_defaults", True)))
 
+    # Api Keys
+    # - https://aistudio.google.com/app/apikey
+    # - https://docs.anthropic.com/en/api/getting-started
+    # - https://dashboard.cohere.com/api-keys
+    # - https://console.mistral.ai/api-keys/
+    # - https://platform.openai.com/api-keys
+    ANTHROPIC_API_KEY = SecretStr(os.environ.get("ANTHROPIC_API_KEY", None))
+    COHERE_API_KEY = SecretStr(os.environ.get("COHERE_API_KEY", None))
+    GOOGLE_AI_STUDIO_KEY = SecretStr(os.environ.get("GOOGLE_AI_STUDIO_KEY", None))
+    MISTRAL_API_KEY = SecretStr(os.environ.get("MISTRAL_API_KEY", None))
+    OPENAI_API_KEY = SecretStr(os.environ.get("OPENAI_API_KEY", None))
+
+    # Google Maps API Key - for get_current_weather()
+    GOOGLE_MAPS_API_KEY: str = os.environ.get("GOOGLE_MAPS_API_KEY", None)
+
     # aws auth
     AWS_PROFILE = os.environ.get("AWS_PROFILE", TFVARS.get("aws_profile", None))
-    AWS_ACCESS_KEY_ID = SecretStr(os.environ.get("AWS_ACCESS_KEY_ID", TFVARS.get("aws_access_key_id", None)))
-    AWS_SECRET_ACCESS_KEY = SecretStr(
-        os.environ.get("AWS_SECRET_ACCESS_KEY", TFVARS.get("aws_secret_access_key", None))
-    )
+    AWS_ACCESS_KEY_ID = SecretStr(os.environ.get("AWS_ACCESS_KEY_ID", None))
+    AWS_SECRET_ACCESS_KEY = SecretStr(os.environ.get("AWS_SECRET_ACCESS_KEY", None))
     AWS_REGION = os.environ.get("AWS_REGION", TFVARS.get("aws_region", "us-east-1"))
 
     # aws api gateway defaults
@@ -201,16 +202,35 @@ class SettingsDefaults:
     )
     AWS_RDS_DB_INSTANCE_IDENTIFIER = os.environ.get("AWS_RDS_DB_INSTANCE_IDENTIFIER", "apps-hosting-service")
 
-    GOOGLE_MAPS_API_KEY: str = os.environ.get(
-        "GOOGLE_MAPS_API_KEY",
-        TFVARS.get("google_maps_api_key", None) or os.environ.get("TF_VAR_GOOGLE_MAPS_API_KEY", None),
+    GOOGLE_AI_STUDIO_DEFAULT_MODEL = "gemini-1.5-flash"
+
+    LANGCHAIN_MEMORY_KEY = os.environ.get("LANGCHAIN_MEMORY_KEY", "chat_history")
+
+    MAILCHIMP_API_KEY = os.environ.get("MAILCHIMP_API_KEY", None)
+    MAILCHIMP_LIST_ID = os.environ.get("MAILCHIMP_LIST_ID", None)
+
+    MARKETING_SITE_URL: str = os.environ.get("OPENAI_API_ORGANIZATION", "https://smarter.sh")
+    LOGO: str = os.environ.get(
+        "OPENAI_API_ORGANIZATION", "https://smarter.sh/wp-content/uploads/2024/04/Smarter_crop.png"
     )
-    GOOGLE_AI_STUDIO_KEY = SecretStr(
-        os.environ.get(
-            "GOOGLE_AI_STUDIO_KEY",
-            TFVARS.get("google_ai_studio_key", None) or os.environ.get("TF_VAR_GOOGLE_AI_STUDIO_KEY", None),
-        )
+
+    OPENAI_API_ORGANIZATION: str = os.environ.get("OPENAI_API_ORGANIZATION", None)
+    OPENAI_ENDPOINT_IMAGE_N = 4
+    OPENAI_ENDPOINT_IMAGE_SIZE = "1024x768"
+    PINECONE_API_KEY = SecretStr(None)
+
+    OPENAI_DEFAULT_MODEL = "gpt-3.5-turbo"
+    OPENAI_DEFAULT_SYSTEM_ROLE = (
+        "You are a helpful chatbot. When given the opportunity to utilize "
+        "function calling, you should always do so. This will allow you to "
+        "provide the best possible responses to the user. If you are unable to "
+        "provide a response, you should prompt the user for more information. If "
+        "you are still unable to provide a response, you should inform the user "
+        "that you are unable to help them at this time."
     )
+    OPENAI_DEFAULT_TEMPERATURE = 0.5
+    OPENAI_DEFAULT_MAX_TOKENS = 256
+
     SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get(
         "SOCIAL_AUTH_GOOGLE_OAUTH2_KEY",
         TFVARS.get("social_auth_google_oauth2_key", None) or os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", None),
@@ -237,22 +257,6 @@ class SettingsDefaults:
         TFVARS.get("social_auth_linkedin_oauth2_secret", None)
         or os.environ.get("SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET", None),
     )
-
-    LANGCHAIN_MEMORY_KEY = os.environ.get("LANGCHAIN_MEMORY_KEY", "chat_history")
-
-    MAILCHIMP_API_KEY = os.environ.get("MAILCHIMP_API_KEY", None)
-    MAILCHIMP_LIST_ID = os.environ.get("MAILCHIMP_LIST_ID", None)
-
-    MARKETING_SITE_URL: str = os.environ.get("OPENAI_API_ORGANIZATION", "https://smarter.sh")
-    LOGO: str = os.environ.get(
-        "OPENAI_API_ORGANIZATION", "https://smarter.sh/wp-content/uploads/2024/04/Smarter_crop.png"
-    )
-
-    OPENAI_API_ORGANIZATION: str = os.environ.get("OPENAI_API_ORGANIZATION", None)
-    OPENAI_API_KEY = SecretStr(os.environ.get("TF_VAR_OPENAI_API_KEY", None))
-    OPENAI_ENDPOINT_IMAGE_N = 4
-    OPENAI_ENDPOINT_IMAGE_SIZE = "1024x768"
-    PINECONE_API_KEY = SecretStr(None)
 
     SECRET_KEY = os.getenv("SECRET_KEY")
 
@@ -349,6 +353,10 @@ class Settings(BaseSettings):
         pre=True,
         getter=lambda v: empty_str_to_bool_default(v, SettingsDefaults.DUMP_DEFAULTS),
     )
+    anthropic_api_key: Optional[SecretStr] = Field(
+        SettingsDefaults.ANTHROPIC_API_KEY,
+        env="ANTHROPIC_API_KEY",
+    )
     aws_profile: Optional[str] = Field(
         SettingsDefaults.AWS_PROFILE,
         env="AWS_PROFILE",
@@ -380,6 +388,10 @@ class Settings(BaseSettings):
         SettingsDefaults.AWS_RDS_DB_INSTANCE_IDENTIFIER,
         env="AWS_RDS_DB_INSTANCE_IDENTIFIER",
     )
+    cohere_api_key: Optional[SecretStr] = Field(
+        SettingsDefaults.COHERE_API_KEY,
+        env="COHERE_API_KEY",
+    )
     environment: Optional[str] = Field(
         SettingsDefaults.ENVIRONMENT,
         env="ENVIRONMENT",
@@ -403,6 +415,14 @@ class Settings(BaseSettings):
     google_ai_studio_key: Optional[SecretStr] = Field(
         SettingsDefaults.GOOGLE_AI_STUDIO_KEY,
         env=["GOOGLE_AI_STUDIO_KEY", "TF_VAR_GOOGLE_AI_STUDIO_KEY"],
+    )
+    google_ai_studio_default_model: Optional[str] = Field(
+        SettingsDefaults.GOOGLE_AI_STUDIO_DEFAULT_MODEL,
+        env="GOOGLE_AI_STUDIO_DEFAULT_MODEL",
+    )
+    mistral_api_key: Optional[SecretStr] = Field(
+        SettingsDefaults.MISTRAL_API_KEY,
+        env="MISTRAL_API_KEY",
     )
     social_auth_google_oauth2_key: Optional[str] = Field(
         SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
@@ -653,6 +673,13 @@ class Settings(BaseSettings):
             return SettingsDefaults.SHARED_RESOURCE_IDENTIFIER
         return v
 
+    @field_validator("anthropic_api_key")
+    def validate_anthropic_api_key(cls, v) -> SecretStr:
+        """Validate anthropic_api_key"""
+        if v in [None, ""]:
+            return SettingsDefaults.ANTHROPIC_API_KEY
+        return v
+
     @field_validator("aws_profile")
     def validate_aws_profile(cls, v) -> str:
         """Validate aws_profile"""
@@ -740,6 +767,13 @@ class Settings(BaseSettings):
             return SettingsDefaults.AWS_RDS_DB_INSTANCE_IDENTIFIER
         return v
 
+    @field_validator("cohere_api_key")
+    def validate_cohere_api_key(cls, v) -> SecretStr:
+        """Validate cohere_api_key"""
+        if v in [None, ""]:
+            return SettingsDefaults.COHERE_API_KEY
+        return v
+
     @field_validator("debug_mode")
     def parse_debug_mode(cls, v) -> bool:
         """Parse debug_mode"""
@@ -770,6 +804,20 @@ class Settings(BaseSettings):
         """Check google_ai_studio_key"""
         if v in [None, ""]:
             return SettingsDefaults.GOOGLE_AI_STUDIO_KEY
+        return v
+
+    @field_validator("google_ai_studio_default_model")
+    def check_google_ai_studio_default_model(cls, v) -> str:
+        """Check google_ai_studio_default_model"""
+        if v in [None, ""]:
+            return SettingsDefaults.GOOGLE_AI_STUDIO_DEFAULT_MODEL
+        return v
+
+    @field_validator("mistral_api_key")
+    def check_mistral_api_key(cls, v) -> SecretStr:
+        """Check mistral_api_key"""
+        if v in [None, ""]:
+            return SettingsDefaults.MISTRAL_API_KEY
         return v
 
     @field_validator("social_auth_google_oauth2_key")

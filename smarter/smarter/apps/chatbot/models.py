@@ -18,6 +18,15 @@ from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import (
+    LLMAll,
+    LLMAnthropic,
+    LLMCohere,
+    LLMDefault,
+    LLMGoogleAIStudio,
+    LLMMistral,
+    LLMOpenAI,
+)
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import UserType
@@ -111,6 +120,13 @@ class ChatBot(TimestampedModel):
         VERIFIED = "Verified", "Verified"
         FAILED = "Failed", "Failed"
 
+    class LLMVendors(models.TextChoices):
+        Anthropic = LLMAnthropic.name, LLMAnthropic.name
+        Cohere = LLMCohere.name, LLMCohere.name
+        GoogleAIStudio = LLMGoogleAIStudio.name, LLMGoogleAIStudio.name
+        Mistral = LLMMistral.name, LLMMistral.name
+        OpenAI = LLMOpenAI.name, LLMOpenAI.name
+
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
@@ -118,9 +134,10 @@ class ChatBot(TimestampedModel):
     subdomain = models.ForeignKey(ChatBotCustomDomainDNS, on_delete=models.CASCADE, blank=True, null=True)
     custom_domain = models.ForeignKey(ChatBotCustomDomain, on_delete=models.CASCADE, blank=True, null=True)
     deployed = models.BooleanField(default=False, blank=True, null=True)
-    default_model = models.CharField(
-        default=smarter_settings.openai_default_model, max_length=255, blank=True, null=True
+    llm_vendor = models.CharField(
+        default=LLMDefault().name, max_length=255, blank=True, null=True, choices=LLMVendors.choices
     )
+    default_model = models.CharField(max_length=255, blank=True, null=True)
     default_system_role = models.TextField(default=smarter_settings.openai_default_system_role, blank=True, null=True)
     default_temperature = models.FloatField(default=smarter_settings.openai_default_temperature, blank=True, null=True)
     default_max_tokens = models.IntegerField(default=smarter_settings.openai_default_max_tokens, blank=True, null=True)
@@ -258,6 +275,11 @@ class ChatBot(TimestampedModel):
 
     def save(self, *args, **kwargs):
         SmarterValidator.validate_domain(self.hostname)
+        llm = LLMAll.get_llm_by_name(llm_name=self.llm_vendor)
+        if not self.default_model:
+            self.default_model = llm.default_model
+        if self.default_model not in llm.all_models:
+            raise ValueError(f"model name: {self.default_model} is not associated with llm: {llm.name}")
         orig = ChatBot.objects.get(pk=self.pk) if self.pk is not None else self
         super().save(*args, **kwargs)
         if self.pk is not None:
