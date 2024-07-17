@@ -161,7 +161,7 @@ class LLMAnthropic(LLM):
     smarter_plugin_support = True
 
 
-class LLMCohere(ABC):
+class LLMCohere(LLM):
     """
     Cohere Large Language Model class.
     https://docs.cohere.com/docs/models
