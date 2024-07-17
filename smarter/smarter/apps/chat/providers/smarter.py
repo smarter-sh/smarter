@@ -3,7 +3,7 @@
 import json
 import logging
 from http import HTTPStatus
-from typing import List
+from typing import List, Union
 
 import openai
 
@@ -27,7 +27,12 @@ from smarter.apps.chat.signals import (
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import VALID_CHAT_COMPLETION_MODELS, LLMDefault
+from smarter.common.const import (
+    VALID_CHAT_COMPLETION_MODELS,
+    LLMAll,
+    LLMDefault,
+    LLMVendor,
+)
 from smarter.common.exceptions import (
     SmarterConfigurationError,
     SmarterIlligalInvocationError,
@@ -63,13 +68,13 @@ EXCEPTION_MAP = {
 }
 
 
-# pylint: disable=W0613,too-many-locals,too-many-statements,too-many-arguments
+# pylint: disable=too-many-locals,too-many-statements,too-many-arguments
 def handler(
     chat: Chat,
     data: dict,
     plugins: List[PluginStatic] = None,
     user: UserType = None,
-    default_llm_vendor: str = LLMDefault.name,
+    llm_vendor: Union[LLMVendor, str] = LLMDefault(),
     default_model: str = LLMDefault.default_model,
     default_system_role: str = smarter_settings.openai_default_system_role,
     default_temperature: float = smarter_settings.openai_default_temperature,
@@ -107,6 +112,8 @@ def handler(
             ]
         }
     """
+    if isinstance(llm_vendor, str):
+        llm_vendor = LLMAll.get_llm_by_name(llm_vendor)
     request_meta_data: dict = None
     first_iteration = {}
     first_response = {}
