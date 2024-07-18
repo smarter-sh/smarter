@@ -22,7 +22,7 @@ from smarter.lib.unittest.utils import get_readonly_yaml_file
 from smarter.services.llm.vendors import LLMDefault, OpenAIMessageKeys
 
 from ..models import Chat, ChatPluginUsage
-from ..providers.smarter import handler
+from ..providers.langchain import handler
 from ..signals import (
     chat_completion_called,
     chat_completion_plugin_selected,
@@ -244,7 +244,6 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
                 plugins=self.plugins,
                 user=self.user,
                 llm_vendor=LLMDefault.name,
-                default_model=smarter_settings.openai_default_model,
                 default_system_role=LLMDefault.default_model,
                 default_max_tokens=smarter_settings.openai_default_max_tokens,
                 default_temperature=smarter_settings.openai_default_temperature,
@@ -288,7 +287,6 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
                 user=self.user,
                 data=event_about_weather,
                 llm_vendor=LLMDefault.name,
-                default_model=smarter_settings.openai_default_model,
                 default_system_role=LLMDefault.default_model,
                 default_max_tokens=smarter_settings.openai_default_max_tokens,
                 default_temperature=smarter_settings.openai_default_temperature,
@@ -309,7 +307,6 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
                 user=self.user,
                 data=event_about_recipes,
                 llm_vendor=LLMDefault.name,
-                default_model=LLMDefault.default_model,
                 default_system_role=smarter_settings.openai_default_system_role,
                 default_max_tokens=smarter_settings.openai_default_max_tokens,
                 default_temperature=smarter_settings.openai_default_temperature,

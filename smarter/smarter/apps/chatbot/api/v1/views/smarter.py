@@ -9,7 +9,7 @@ from http import HTTPStatus
 import waffle
 
 from smarter.apps.chat.models import ChatHelper
-from smarter.apps.chat.providers.smarter import handler
+from smarter.apps.chat.providers.langchain import handler
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
@@ -128,7 +128,7 @@ class SmarterChatBotApiView(ChatBotApiBaseViewSet):
             data=self.data,
             plugins=self.plugins,
             user=self.user,
-            default_model=self.chatbot.default_model,
+            llm_vendor=self.chatbot.llm_vendor,
             default_system_role=self.chatbot.default_system_role,
             default_temperature=self.chatbot.default_temperature,
             default_max_tokens=self.chatbot.default_max_tokens,

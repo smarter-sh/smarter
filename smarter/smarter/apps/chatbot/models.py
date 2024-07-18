@@ -30,7 +30,7 @@ from smarter.services.llm.vendors import (
     LLMVendorGoogleAIStudio,
     LLMVendorMistral,
     LLMVendorOpenAI,
-    LLMVendors,
+    llm_vendors,
 )
 
 from .signals import (
@@ -275,11 +275,11 @@ class ChatBot(TimestampedModel):
 
     def save(self, *args, **kwargs):
         SmarterValidator.validate_domain(self.hostname)
-        llm = LLMVendors.get_by_name(llm_name=self.llm_vendor)
+        vendor = llm_vendors.get_by_name(name=self.llm_vendor)
         if not self.default_model:
-            self.default_model = llm.default_model
-        if self.default_model not in llm.all_models:
-            raise ValueError(f"model name: {self.default_model} is not associated with llm: {llm.name}")
+            self.default_model = vendor.default_model
+        if self.default_model not in vendor.all_models:
+            raise ValueError(f"model name: {self.default_model} is not associated with llm: {vendor.name}")
         orig = ChatBot.objects.get(pk=self.pk) if self.pk is not None else self
         super().save(*args, **kwargs)
         if self.pk is not None:

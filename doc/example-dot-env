@@ -26,14 +26,18 @@ SMTP_USERNAME=SET-ME-PLEASE
 # - https://aistudio.google.com/app/apikey
 # - https://docs.anthropic.com/en/api/getting-started
 # - https://dashboard.cohere.com/api-keys
+# - https://fireworks.ai/api-keys/
 # - https://console.mistral.ai/api-keys/
 # - https://platform.openai.com/api-keys
+# - https://api.together.ai/settings/api-keys
 # ----------------------------------------------------------
 GOOGLE_AI_STUDIO_KEY=SET-ME-PLEASE
 ANTHROPIC_API_KEY=SET-ME-PLEASE
 COHERE_API_KEY=SET-ME-PLEASE
+FIREWORKS_API_KEY=SET-ME-PLEASE
 MISTRAL_API_KEY=SET-ME-PLEASE
 OPENAI_API_KEY=SET-ME-PLEASE
+TOGETHERAI_API_KEY=SET-ME-PLEASE
 
 GOOGLE_MAPS_API_KEY=SET-ME-PLEASE
 

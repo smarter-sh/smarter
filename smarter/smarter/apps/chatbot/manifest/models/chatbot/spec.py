@@ -6,8 +6,8 @@ from typing import ClassVar, List, Optional
 from pydantic import Field, ValidationInfo, field_validator
 
 from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
-from smarter.common.const import LLMVendors
 from smarter.lib.manifest.models import AbstractSAMSpecBase
+from smarter.services.llm.vendors import llm_vendors
 
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
@@ -49,7 +49,7 @@ class SAMChatbotSpecConfig(AbstractSAMSpecBase):
     llmVendor: Optional[str] = Field(
         None,
         description=(
-            f"{class_identifier}.llm_vendor[str]. Optional. The LLM vendor to use for the chatbot. Case sensitive. Choose one of: {LLMVendors.all_llm_vendors}"
+            f"{class_identifier}.llm_vendor[str]. Optional. The LLM vendor to use for the chatbot. Case sensitive. Choose one of: {llm_vendors.all_llm_vendors}"
         ),
     )
     defaultModel: Optional[str] = Field(
@@ -118,18 +118,19 @@ class SAMChatbotSpecConfig(AbstractSAMSpecBase):
 
     @field_validator("llmVendor")
     def validate_llmVendor(cls, value) -> str:
-        if value is not None and value not in LLMVendors.all_llm_vendors:
+        if value is not None and value not in llm_vendors.all_llm_vendors:
             raise ValueError(
-                f"{cls.class_identifier}.llmVendor[str]. Optional. The LLM vendor to use for the chatbot. Case sensitive. Choose one of: {LLMVendors.all_llm_vendors}"
+                f"{cls.class_identifier}.llmVendor[str]. Optional. The LLM vendor to use for the chatbot. Case sensitive. Choose one of: {llm_vendors.all_llm_vendors}"
             )
 
     @field_validator("defaultModel")
     def validate_defaultModel(cls, value: str, info: ValidationInfo) -> str:
         if "llmVendor" in info.data:
-            llm_vendor = LLMVendors.get_by_name(info.data["llmVendor"])
-            if value is not None and value not in llm_vendor.all_models:
+            vendor_name = info.data["llmVendor"]
+            vendor = llm_vendors.get_by_name(name=vendor_name)
+            if value is not None and value not in vendor.all_models:
                 raise ValueError(
-                    f"{cls.class_identifier}.default_model[str]. Optional. The default model to use for the chatbot. Choose one of: {llm_vendor.all_models}"
+                    f"{cls.class_identifier}.default_model[str]. Optional. The default model to use for the chatbot. Choose one of: {vendor.all_models}"
                 )
 
 
