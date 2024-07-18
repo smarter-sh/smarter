@@ -1,11 +1,20 @@
 # pylint: disable=R0801
-"""All Django views for the OpenAI Function Calling API app."""
+"""
+Django view for LanchChain Function Calling API. Supported LLM models: Anthropic, Cohere, Google, Mistral, OpenAI
+
+see:
+ - https://python.langchain.com/v0.1/docs/modules/model_io/chat/function_calling/
+ - https://python.langchain.com/v0.1/docs/modules/tools/custom_tools/
+
+"""
 import json
 import logging
 from http import HTTPStatus
 from typing import List, Union
 
+# FIX NOTE: DELETE ME!
 import openai
+from langchain_core import exceptions as langchain_exceptions
 
 from smarter.apps.account.tasks import (
     create_plugin_charge,
@@ -16,6 +25,15 @@ from smarter.apps.chat.functions.function_weather import (
     weather_tool_factory,
 )
 from smarter.apps.chat.models import Chat
+from smarter.apps.chat.providers.utils import (
+    ensure_system_role_present,
+    exception_response_factory,
+    get_request_body,
+    http_response_factory,
+    parse_request,
+    request_meta_data_factory,
+)
+from smarter.apps.chat.providers.validators import validate_item
 from smarter.apps.chat.signals import (
     chat_completion_called,
     chat_completion_plugin_selected,
@@ -33,37 +51,25 @@ from smarter.common.exceptions import (
     SmarterValueError,
 )
 from smarter.lib.django.user import UserType
-from smarter.services.llm.vendors import (
-    VALID_CHAT_COMPLETION_MODELS,
-    LLMDefault,
-    LLMVendor,
-    LLMVendors,
-)
-
-from .utils import (
-    ensure_system_role_present,
-    exception_response_factory,
-    get_request_body,
-    http_response_factory,
-    parse_request,
-    request_meta_data_factory,
-)
-from .validators import validate_item
+from smarter.services.llm.vendors import LLMVendor, llm_vendors
 
 
 logger = logging.getLogger(__name__)
-openai.organization = smarter_settings.openai_api_organization
-openai.api_key = smarter_settings.openai_api_key.get_secret_value()
+
+# FIX NOTE: DELETE ME!
+# openai.organization = smarter_settings.openai_api_organization
+# openai.api_key = smarter_settings.openai_api_key.get_secret_value()
 
 EXCEPTION_MAP = {
+    langchain_exceptions.LangChainException: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
+    langchain_exceptions.TracerException: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
+    langchain_exceptions.OutputParserException: (HTTPStatus.BAD_REQUEST, "BadRequest"),
     SmarterValueError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
     SmarterConfigurationError: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
     SmarterIlligalInvocationError: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
-    openai.APIError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
     ValueError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
     TypeError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
     NotImplementedError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
-    openai.OpenAIError: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
     Exception: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
 }
 
@@ -74,8 +80,7 @@ def handler(
     data: dict,
     plugins: List[PluginStatic] = None,
     user: UserType = None,
-    llm_vendor: Union[LLMVendor, str] = LLMDefault(),
-    default_model: str = LLMDefault.default_model,
+    llm_vendor: Union[LLMVendor, str] = llm_vendors.get_default_llm(),
     default_system_role: str = smarter_settings.openai_default_system_role,
     default_temperature: float = smarter_settings.openai_default_temperature,
     default_max_tokens: int = smarter_settings.openai_default_max_tokens,
@@ -90,6 +95,7 @@ def handler(
         data: Request data (see below)
         plugins: a List of plugins to potentially show to the LLM
         user: User instance
+        llm_vendor: LLMVendor instance: OpenAI, Anthropic, Cohere, Google, Mistral, etc.
         default_model: Default model to use for the chat completion example: "gpt-3.5-turbo"
         default_temperature: Default temperature to use for the chat completion example: 0.5
         default_max_tokens: Default max tokens to use for the chat completion example: 256
@@ -113,7 +119,7 @@ def handler(
         }
     """
     if isinstance(llm_vendor, str):
-        llm_vendor = LLMVendors.get_by_name(llm_vendor)
+        llm_vendor = llm_vendors.get_by_name(name=llm_vendor)
     request_meta_data: dict = None
     first_iteration = {}
     first_response = {}
@@ -130,7 +136,7 @@ def handler(
         "get_current_weather": get_current_weather,
     }
     try:
-        model = chat.chatbot.default_model or default_model
+        model = chat.chatbot.default_model or llm_vendor.default_model
         default_system_role = chat.chatbot.default_system_role or default_system_role
 
         request_body = get_request_body(data=data)
@@ -145,7 +151,7 @@ def handler(
         # does the prompt have anything to do with any of the search terms defined in a plugin?
         # FIX NOTE: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_tokens
         logger.warning(
-            "smarter.apps.chat.providers.smarter.handler(): plugins selector needs to be refactored to use Django model."
+            "smarter.apps.chat.providers.langchain.handler(): plugins selector needs to be refactored to use Django model."
         )
         for plugin in plugins:
             if plugin.selected(user=user, input_text=input_text):
@@ -163,7 +169,7 @@ def handler(
         # https://platform.openai.com/docs/guides/gpt/chat-completions-api
         validate_item(
             item=model,
-            valid_items=VALID_CHAT_COMPLETION_MODELS,
+            valid_items=llm_vendor.all_models,
             item_type="ChatCompletion models",
         )
 

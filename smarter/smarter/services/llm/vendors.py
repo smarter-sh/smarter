@@ -8,9 +8,12 @@ import openai
 from langchain_anthropic.llms import AnthropicLLM
 from langchain_cohere.llms import Cohere
 from langchain_core.language_models.llms import BaseLLM
+from langchain_fireworks import Fireworks
 from langchain_google_genai import GoogleGenerativeAI
 from langchain_mistralai.chat_models import ChatMistralAI
 from langchain_openai import OpenAI
+from langchain_together import ChatTogether
+from pydantic import SecretStr
 
 from smarter.common.conf import settings as smarter_settings
 
@@ -18,7 +21,7 @@ from smarter.common.conf import settings as smarter_settings
 class LLMVendor(ABC):
     """Base class for Large Language Model classes."""
 
-    _api_key: str = None
+    _api_key: SecretStr = None
     _name: str = None
     _environment_variable_name: str = None
     _chat_llm_cls: Optional[Type[BaseLLM]] = None
@@ -45,7 +48,7 @@ class LLMVendor(ABC):
 
     def configure_environment_variable(self):
         if self.environment_variable_name and self.api_key:
-            os.environ[self.environment_variable_name] = self.api_key
+            os.environ[self.environment_variable_name] = self.api_key.get_secret_value()
 
     @property
     def name(self) -> str:
@@ -60,7 +63,7 @@ class LLMVendor(ABC):
         return self.name.replace("LLMVendor", "") if self.name else "MISSING NAME"
 
     @property
-    def api_key(self) -> str:
+    def api_key(self) -> SecretStr:
         return self._api_key
 
     @property
@@ -96,7 +99,7 @@ class LLMVendorAnthropic(LLMVendor):
     An Anthropic API key is required to use this class.
 
     Usage:
-    vendor = LLMVendors.get_by_name(llm_name="LLMVendorAnthropic")
+    vendor = LLMVendors.get_by_name(name="LLMVendorAnthropic")
     vendor.configure(model_name=LLMVendorAnthropic.CLAUDE_3_5_SONNET)
     response = vendor.chat_llm.generate("Hello, world!")
     """
@@ -124,7 +127,9 @@ class LLMVendorAnthropic(LLMVendor):
     @property
     def chat_llm(self) -> AnthropicLLM:
         if not self._chat_llm:
-            self._chat_llm = self._chat_llm_cls(anthropic_api_key=self.api_key, model_name=self.model_name)
+            self._chat_llm = self._chat_llm_cls(
+                anthropic_api_key=self.api_key.get_secret_value(), model_name=self.model_name
+            )
         return self._chat_llm
 
     def configure(self, model_name: str = None, **kwargs) -> None:
@@ -150,7 +155,7 @@ class LLMVendorCohere(LLMVendor):
     A Cohere API key is required to use this class.
 
     usage:
-        vendor = LLMVendors.get_by_name(llm_name="LLMVendorCohere")
+        vendor = LLMVendors.get_by_name(name="LLMVendorCohere")
         vendor.configure(model_name=LLMVendorCohere.COMMAND_R_PLUS)
         response = vendor.chat_llm.generate("Hello, world!")
     """
@@ -182,13 +187,53 @@ class LLMVendorCohere(LLMVendor):
     @property
     def chat_llm(self) -> Cohere:
         if not self._chat_llm:
-            self._chat_llm = self._chat_llm_cls(cohere_api_key=self.api_key, model=self.model_name)
+            self._chat_llm = self._chat_llm_cls(cohere_api_key=self.api_key.get_secret_value(), model=self.model_name)
         return self._chat_llm
 
     def configure(self, model_name: str = None, **kwargs) -> None:
         self.model_name = model_name
         # - https://dashboard.cohere.com/api-keys
         self._api_key = smarter_settings.cohere_api_key
+        self.configure_environment_variable()
+
+
+class LLMFireworks(LLMVendor):
+    """
+    Fireworks Large Language Model class.
+    https://fireworks.ai/
+
+    This is a private class. Do not import this class directly.
+    Instead, you should use LLMVendors() to create an instance.
+
+    A Fireworks API key is required to use this class.
+
+    usage:
+        vendor = LLMVendors.get_by_name(name="LLMFireworks")
+        vendor.configure(model_name=LLMFireworks.FIRE_FUNCTION_V2)
+        response = vendor.chat_llm.generate("Hello, world!")
+    """
+
+    FIRE_FUNCTION_V2 = "firefunction-v2"
+    all_models = [FIRE_FUNCTION_V2]
+    default_model = FIRE_FUNCTION_V2
+    smarter_plugin_support = True
+
+    def __init__(self) -> None:
+        super().__init__()
+        # https://python.langchain.com/v0.2/docs/integrations/providers/fireworks/
+        self._chat_llm_cls = Fireworks
+        self._environment_variable_name = "FIREWORKS_API_KEY"
+
+    @property
+    def chat_llm(self) -> Fireworks:
+        if not self._chat_llm:
+            self._chat_llm = self._chat_llm_cls(api_key=self.api_key.get_secret_value(), model=self.model_name)
+        return self._chat_llm
+
+    def configure(self, model_name: str = None, **kwargs) -> None:
+        self.model_name = model_name
+        # - https://fireworks.ai/api-keys
+        self._api_key = smarter_settings.fireworks_api_key
         self.configure_environment_variable()
 
 
@@ -203,7 +248,7 @@ class LLMVendorGoogleAIStudio(LLMVendor):
     A Google AI Studio API key is required to use this class.
 
     usage:
-        vendor = LLMVendors.get_by_name(llm_name="LLMVendorGoogleAIStudio")
+        vendor = LLMVendors.get_by_name(name="LLMVendorGoogleAIStudio")
         vendor.configure(model_name=LLMVendorGoogleAIStudio.GEMINI_1_5_PRO)
         response = vendor.chat_llm.generate("Hello, world!")
     """
@@ -235,7 +280,7 @@ class LLMVendorGoogleAIStudio(LLMVendor):
     @property
     def chat_llm(self) -> GoogleGenerativeAI:
         if not self._chat_llm:
-            self._chat_llm = self._chat_llm_cls(google_api_key=self.api_key, model=self.model_name)
+            self._chat_llm = self._chat_llm_cls(google_api_key=self.api_key.get_secret_value(), model=self.model_name)
         return self._chat_llm
 
     def configure(self, model_name: str = None, **kwargs) -> None:
@@ -255,7 +300,7 @@ class LLMVendorMistral(LLMVendor):
     A MistralAI API key is required to use this class.
 
     usage:
-        vendor = LLMVendors.get_by_name(llm_name="LLMVendorMistral")
+        vendor = LLMVendors.get_by_name(name="LLMVendorMistral")
         vendor.configure(model_name=LLMVendorMistral.MISTRAL_7B)
         response = vendor.chat_llm.generate("Hello, world!")
     """
@@ -292,7 +337,7 @@ class LLMVendorMistral(LLMVendor):
     @property
     def chat_llm(self) -> ChatMistralAI:
         if not self._chat_llm:
-            self._chat_llm = self._chat_llm_cls(api_key=self.api_key, model_name=self.model_name)
+            self._chat_llm = self._chat_llm_cls(api_key=self.api_key.get_secret_value(), model_name=self.model_name)
         return self._chat_llm
 
     def configure(self, model_name: str = None, **kwargs) -> None:
@@ -312,7 +357,7 @@ class LLMVendorOpenAI(LLMVendor):
     An OpenAI API key is required to use this class.
 
     usage:
-        vendor = LLMVendors.get_by_name(llm_name="LLMVendorOpenAI")
+        vendor = LLMVendors.get_by_name(name="LLMVendorOpenAI")
         vendor.configure(model_name=LLMVendorOpenAI.GPT3)
         response = vendor.chat_llm.generate("Hello, world!")
     """
@@ -354,7 +399,8 @@ class LLMVendorOpenAI(LLMVendor):
     @property
     def chat_llm(self) -> OpenAI:
         if not self._chat_llm:
-            self._chat_llm = self._chat_llm_cls(api_key=self.api_key, model=self.model_name)
+            self._chat_llm = self._chat_llm_cls(api_key=self.api_key.get_secret_value(), model=self.model_name)
+
         return self._chat_llm
 
     def __init__(self) -> None:
@@ -370,6 +416,41 @@ class LLMVendorOpenAI(LLMVendor):
         self.configure_environment_variable()
 
 
+class LLMTogether(LLMVendor):
+    """
+    TogetherAI Large Language Model class.
+
+    This is a private class. Do not import this class directly.
+    Instead, you should use LLMVendors() to create an instance.
+
+    An Together API key is required to use this class.
+
+    usage:
+        vendor = LLMVendors.get_by_name(name="LLMTogether")
+        vendor.configure(model_name=LLMTogether.GPT3)
+        response = vendor.chat_llm.generate("Hello, world!")
+    """
+
+    LLAMA_3 = "meta-llama/Llama-3-70b-chat-hf"
+
+    all_models = [LLAMA_3]
+    default_model = LLAMA_3
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._chat_llm_cls = ChatTogether
+
+    @property
+    def chat_llm(self) -> ChatTogether:
+        if not self._chat_llm:
+            self._chat_llm = self._chat_llm_cls(api_key=self.api_key.get_secret_value(), model=self.model_name)
+        return self._chat_llm
+
+    def configure(self, model_name: str = None, **kwargs) -> None:
+        self.model_name = model_name
+        self._api_key = smarter_settings.togetherai_api_key
+
+
 class LLMDefault(LLMVendor):
     """
     Default Large Language Model class.
@@ -380,7 +461,7 @@ class LLMDefault(LLMVendor):
     An API key for the default vendor is required to use this class.
 
     usage:
-        vendor = LLMVendors.get_by_name(llm_name="LLMDefault")
+        vendor = LLMVendors.get_by_name(name="LLMDefault")
         response = vendor.chat_llm.generate("Hello, world!")
     """
 
@@ -412,6 +493,7 @@ class LLMVendors:
 
     llm_anthropic = LLMVendorAnthropic()
     llm_cohere = LLMVendorCohere()
+    llm_fireworks = LLMFireworks()
     llm_google_ai_studio = LLMVendorGoogleAIStudio()
     llm_mistral = LLMVendorMistral()
     llm_openai = LLMVendorOpenAI()
@@ -420,6 +502,7 @@ class LLMVendors:
     all: List[LLMVendor] = [
         llm_anthropic,
         llm_cohere,
+        llm_fireworks,
         llm_google_ai_studio,
         llm_mistral,
         llm_openai,
@@ -429,6 +512,7 @@ class LLMVendors:
     all_models = (
         llm_anthropic.all_models
         + llm_cohere.all_models
+        + llm_fireworks.all_models
         + llm_google_ai_studio.all_models
         + llm_mistral.all_models
         + llm_openai.all_models
@@ -438,12 +522,12 @@ class LLMVendors:
     all_llm_vendors = [llm.name for llm in all]
 
     @classmethod
-    def get_by_name(cls, llm_name: str) -> LLMVendor:
+    def get_by_name(cls, name: str) -> LLMVendor:
         """Get an LLMVendor object by name."""
         for llm in cls.all:
-            if llm.name == llm_name:
+            if llm.name == name:
                 return llm
-        raise ValueError(f"Unknown LLMVendor name: {llm_name}")
+        raise ValueError(f"Unknown LLMVendor name: {name}")
 
     @classmethod
     def get_llm_by_model_name(cls, model_name: str) -> LLMVendor:
@@ -461,6 +545,9 @@ class LLMVendors:
                 return llm
         raise ValueError("No default LLMVendor found.")
 
+
+# singleton instance
+llm_vendors = LLMVendors()
 
 VALID_CHAT_COMPLETION_MODELS = LLMVendors.all_models
 

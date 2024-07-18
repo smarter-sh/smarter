@@ -11,7 +11,7 @@ from django.core.management.base import BaseCommand
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import account_admin_user
 from smarter.apps.chat.models import Chat
-from smarter.apps.chat.providers.smarter import handler
+from smarter.apps.chat.providers.langchain import handler
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
@@ -85,7 +85,7 @@ class Command(BaseCommand):
                     plugins=plugins,
                     user=user_profile.user,
                     data=data,
-                    default_model=smarter_settings.openai_default_model,
+                    llm_vendor=chatbot.llm_vendor,
                     default_system_role=smarter_settings.openai_default_system_role,
                     default_temperature=smarter_settings.openai_default_temperature,
                     default_max_tokens=smarter_settings.openai_default_max_tokens,

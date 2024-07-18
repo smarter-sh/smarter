@@ -1,67 +1,11 @@
-# pylint: disable=R0801,W0611
-"""
-Django views for LanchChain Function Calling API. Supported LLM models: Anthropic, Cohere, Google, Mistral, OpenAI
-
-see:
- - https://python.langchain.com/v0.1/docs/modules/model_io/chat/function_calling/
- - https://python.langchain.com/v0.1/docs/modules/tools/custom_tools/
-
-Api keys:
-------------------------
- - https://aistudio.google.com/app/apikey
- - https://docs.anthropic.com/en/api/getting-started
- - https://dashboard.cohere.com/api-keys
- - https://console.mistral.ai/api-keys/
- - https://platform.openai.com/api-keys
-
-Google AI Studio native
-------------------------
-example:
-    curl \
-    -H 'Content-Type: application/json' \
-    -d '{"contents":[{"parts":[{"text":"Explain how AI works"}]}]}' \
-    -X POST 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=YOUR_API_KEY'
-
-Supported models:
-    gemini-1.0-pro
-    gemini-1.0-pro-001
-    gemini-1.5-flash-latest
-    gemini-1.5-pro-latest
-
-
-Google AI Studio function calling api:
-calculator = {
-    'function_declarations': [
-        {
-            'name': 'multiply',
-            'description': 'Returns the product of two numbers.',
-            'parameters': {
-                'type_': 'OBJECT',
-                'properties': {
-                    'a': {'type_': 'NUMBER'},
-                    'b': {'type_': 'NUMBER'}
-                },
-                'required': ['a', 'b']
-            }
-        }
-    ]
-}
-"""
+# pylint: disable=R0801
+"""All Django views for the OpenAI Function Calling API app."""
 import json
 import logging
 from http import HTTPStatus
-from typing import List
+from typing import List, Union
 
-import google.generativeai as genai
 import openai
-
-# LLM Library integrations
-# FIX NOTE: remove pylint disable - W0611
-from langchain_anthropic import ChatAnthropic as langchain_anthropic
-from langchain_cohere import ChatCohere as langchain_cohere
-from langchain_google_genai import GoogleGenerativeAI as langchain_google_genai
-from langchain_mistralai import ChatMistralAI as langchain_mistral
-from langchain_openai import OpenAI as langchain_openai
 
 from smarter.apps.account.tasks import (
     create_plugin_charge,
@@ -72,15 +16,6 @@ from smarter.apps.chat.functions.function_weather import (
     weather_tool_factory,
 )
 from smarter.apps.chat.models import Chat
-from smarter.apps.chat.providers.utils import (
-    ensure_system_role_present,
-    exception_response_factory,
-    get_request_body,
-    http_response_factory,
-    parse_request,
-    request_meta_data_factory,
-)
-from smarter.apps.chat.providers.validators import validate_item
 from smarter.apps.chat.signals import (
     chat_completion_called,
     chat_completion_plugin_selected,
@@ -98,33 +33,22 @@ from smarter.common.exceptions import (
     SmarterValueError,
 )
 from smarter.lib.django.user import UserType
-from smarter.services.llm.vendors import VALID_CHAT_COMPLETION_MODELS, LLMVendors
+from smarter.services.llm.vendors import LLMVendor, LLMVendorOpenAI
+
+from .utils import (
+    ensure_system_role_present,
+    exception_response_factory,
+    get_request_body,
+    http_response_factory,
+    parse_request,
+    request_meta_data_factory,
+)
+from .validators import validate_item
 
 
 logger = logging.getLogger(__name__)
-
-# Google AI Studio API
-# - https://aistudio.google.com/app/apikey
-# -----------------------------------------------------------------------------
-genai.configure(api_key=smarter_settings.google_ai_studio_api_key.get_secret_value())
-genai_model = genai.GenerativeModel(smarter_settings.google_ai_studio_default_model)
-
-# Anthropic API
-# - https://docs.anthropic.com/en/api/getting-started
-
-# Cohere API
-# - https://dashboard.cohere.com/api-keys
-
-# Mistral API
-# - https://console.mistral.ai/api-keys/
-
-# OpenAI API
-# - https://platform.openai.com/api-keys
-# -----------------------------------------------------------------------------
 openai.organization = smarter_settings.openai_api_organization
 openai.api_key = smarter_settings.openai_api_key.get_secret_value()
-
-llm_vendors = LLMVendors()
 
 EXCEPTION_MAP = {
     SmarterValueError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
@@ -145,7 +69,7 @@ def handler(
     data: dict,
     plugins: List[PluginStatic] = None,
     user: UserType = None,
-    default_model: str = smarter_settings.openai_default_model,
+    llm_vendor: Union[LLMVendor, str] = LLMVendorOpenAI(),
     default_system_role: str = smarter_settings.openai_default_system_role,
     default_temperature: float = smarter_settings.openai_default_temperature,
     default_max_tokens: int = smarter_settings.openai_default_max_tokens,
@@ -182,6 +106,8 @@ def handler(
             ]
         }
     """
+    # override the input since this module runs on openai native api.
+    llm_vendor = LLMVendorOpenAI()
     request_meta_data: dict = None
     first_iteration = {}
     first_response = {}
@@ -198,7 +124,7 @@ def handler(
         "get_current_weather": get_current_weather,
     }
     try:
-        model = chat.chatbot.default_model or default_model
+        model = chat.chatbot.default_model or llm_vendor.default_model
         default_system_role = chat.chatbot.default_system_role or default_system_role
 
         request_body = get_request_body(data=data)
@@ -213,7 +139,7 @@ def handler(
         # does the prompt have anything to do with any of the search terms defined in a plugin?
         # FIX NOTE: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_tokens
         logger.warning(
-            "smarter.apps.chat.providers.smarter.handler(): plugins selector needs to be refactored to use Django model."
+            "smarter.apps.chat.providers.openai.handler(): plugins selector needs to be refactored to use Django model."
         )
         for plugin in plugins:
             if plugin.selected(user=user, input_text=input_text):
@@ -231,7 +157,7 @@ def handler(
         # https://platform.openai.com/docs/guides/gpt/chat-completions-api
         validate_item(
             item=model,
-            valid_items=VALID_CHAT_COMPLETION_MODELS,
+            valid_items=llm_vendor.all_models,
             item_type="ChatCompletion models",
         )
 

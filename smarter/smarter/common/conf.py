@@ -174,13 +174,17 @@ class SettingsDefaults:
     # - https://aistudio.google.com/app/apikey
     # - https://docs.anthropic.com/en/api/getting-started
     # - https://dashboard.cohere.com/api-keys
+    # - https://fireworks.ai/api-keys/
     # - https://console.mistral.ai/api-keys/
     # - https://platform.openai.com/api-keys
+    # - https://api.together.ai/settings/api-keys
     ANTHROPIC_API_KEY = SecretStr(os.environ.get("ANTHROPIC_API_KEY", None))
     COHERE_API_KEY = SecretStr(os.environ.get("COHERE_API_KEY", None))
+    FIREWORKS_API_KEY = SecretStr(os.environ.get("FIREWORKS_API_KEY", None))
     GOOGLE_AI_STUDIO_KEY = SecretStr(os.environ.get("GOOGLE_AI_STUDIO_KEY", None))
     MISTRAL_API_KEY = SecretStr(os.environ.get("MISTRAL_API_KEY", None))
     OPENAI_API_KEY = SecretStr(os.environ.get("OPENAI_API_KEY", None))
+    TOGETHERAI_API_KEY = SecretStr(os.environ.get("TOGETHERAI_API_KEY", None))
 
     # Google Maps API Key - for get_current_weather()
     GOOGLE_MAPS_API_KEY: str = os.environ.get("GOOGLE_MAPS_API_KEY", None)
@@ -408,6 +412,10 @@ class Settings(BaseSettings):
         None,
         env="INIT_INFO",
     )
+    fireworks_api_key: Optional[SecretStr] = Field(
+        SettingsDefaults.FIREWORKS_API_KEY,
+        env="FIREWORKS_API_KEY",
+    )
     google_maps_api_key: Optional[str] = Field(
         SettingsDefaults.GOOGLE_MAPS_API_KEY,
         env=["GOOGLE_MAPS_API_KEY", "TF_VAR_GOOGLE_MAPS_API_KEY"],
@@ -490,6 +498,7 @@ class Settings(BaseSettings):
 
     stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY, env="STRIPE_LIVE_SECRET_KEY")
     stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY, env="STRIPE_TEST_SECRET_KEY")
+    togetherai_api_key: Optional[SecretStr] = Field(SettingsDefaults.TOGETHERAI_API_KEY, env="TOGETHERAI_API_KEY")
 
     @property
     def data_directory(self) -> str:
@@ -643,9 +652,6 @@ class Settings(BaseSettings):
                 "python_build": platform.python_build(),
                 "python_installed_packages": packages_dict,
             },
-            "google": {
-                "google_maps_api_key": self.google_maps_api_key,
-            },
             "openai_passthrough": {
                 "aws_s3_bucket_name": self.aws_s3_bucket_name,
                 "langchain_memory_key": self.langchain_memory_key,
@@ -791,6 +797,13 @@ class Settings(BaseSettings):
         if v in [None, ""]:
             return SettingsDefaults.DUMP_DEFAULTS
         return v.lower() in ["true", "1", "t", "y", "yes"]
+
+    @field_validator("fireworks_api_key")
+    def validate_fireworks_api_key(cls, v) -> SecretStr:
+        """Validate fireworks_api_key"""
+        if v in [None, ""]:
+            return SettingsDefaults.FIREWORKS_API_KEY
+        return v
 
     @field_validator("google_maps_api_key")
     def check_google_maps_api_key(cls, v) -> str:
@@ -1050,6 +1063,13 @@ class Settings(BaseSettings):
         """Check smtp_username"""
         if v in [None, ""]:
             return SettingsDefaults.SMTP_USERNAME
+        return v
+
+    @field_validator("togetherai_api_key")
+    def check_togetherai_api_key(cls, v) -> SecretStr:
+        """Check togetherai_api_key"""
+        if v in [None, ""]:
+            return SettingsDefaults.TOGETHERAI_API_KEY
         return v
 
 
