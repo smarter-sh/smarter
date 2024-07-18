@@ -18,20 +18,20 @@ from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import (
+from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib.django.model_helpers import TimestampedModel
+from smarter.lib.django.user import UserType
+from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.drf.models import SmarterAuthToken
+from smarter.services.llm.vendors import (
     LLMDefault,
     LLMVendorAnthropic,
     LLMVendorCohere,
     LLMVendorGoogleAIStudio,
     LLMVendorMistral,
     LLMVendorOpenAI,
-    LLMVendorsAll,
+    LLMVendors,
 )
-from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib.django.model_helpers import TimestampedModel
-from smarter.lib.django.user import UserType
-from smarter.lib.django.validators import SmarterValidator
-from smarter.lib.drf.models import SmarterAuthToken
 
 from .signals import (
     chatbot_dns_failed,
@@ -275,7 +275,7 @@ class ChatBot(TimestampedModel):
 
     def save(self, *args, **kwargs):
         SmarterValidator.validate_domain(self.hostname)
-        llm = LLMVendorsAll.get_llm_vendor_by_name(llm_name=self.llm_vendor)
+        llm = LLMVendors.get_by_name(llm_name=self.llm_vendor)
         if not self.default_model:
             self.default_model = llm.default_model
         if self.default_model not in llm.all_models:

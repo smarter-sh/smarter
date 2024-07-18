@@ -24,7 +24,6 @@ from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.utils import get_plugin_examples_by_name
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
-from smarter.common.const import LLMDefault
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
@@ -42,6 +41,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGetData,
 )
 from smarter.lib.manifest.loader import SAMLoader
+from smarter.services.llm.vendors import LLMDefault
 
 
 logger = logging.getLogger(__name__)

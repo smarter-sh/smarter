@@ -72,6 +72,15 @@ from smarter.apps.chat.functions.function_weather import (
     weather_tool_factory,
 )
 from smarter.apps.chat.models import Chat
+from smarter.apps.chat.providers.utils import (
+    ensure_system_role_present,
+    exception_response_factory,
+    get_request_body,
+    http_response_factory,
+    parse_request,
+    request_meta_data_factory,
+)
+from smarter.apps.chat.providers.validators import validate_item
 from smarter.apps.chat.signals import (
     chat_completion_called,
     chat_completion_plugin_selected,
@@ -83,23 +92,13 @@ from smarter.apps.chat.signals import (
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
 from smarter.common.exceptions import (
     SmarterConfigurationError,
     SmarterIlligalInvocationError,
     SmarterValueError,
 )
 from smarter.lib.django.user import UserType
-
-from .utils import (
-    ensure_system_role_present,
-    exception_response_factory,
-    get_request_body,
-    http_response_factory,
-    parse_request,
-    request_meta_data_factory,
-)
-from .validators import validate_item
+from smarter.services.llm.vendors import VALID_CHAT_COMPLETION_MODELS, LLMVendors
 
 
 logger = logging.getLogger(__name__)
@@ -107,7 +106,7 @@ logger = logging.getLogger(__name__)
 # Google AI Studio API
 # - https://aistudio.google.com/app/apikey
 # -----------------------------------------------------------------------------
-genai.configure(api_key=smarter_settings.google_ai_studio_key.get_secret_value())
+genai.configure(api_key=smarter_settings.google_ai_studio_api_key.get_secret_value())
 genai_model = genai.GenerativeModel(smarter_settings.google_ai_studio_default_model)
 
 # Anthropic API
@@ -125,6 +124,7 @@ genai_model = genai.GenerativeModel(smarter_settings.google_ai_studio_default_mo
 openai.organization = smarter_settings.openai_api_organization
 openai.api_key = smarter_settings.openai_api_key.get_secret_value()
 
+llm_vendors = LLMVendors()
 
 EXCEPTION_MAP = {
     SmarterValueError: (HTTPStatus.BAD_REQUEST, "BadRequest"),

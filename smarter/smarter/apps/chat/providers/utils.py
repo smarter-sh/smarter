@@ -8,9 +8,12 @@ import sys  # libraries for error management
 import traceback  # libraries for error management
 
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import LANGCHAIN_MESSAGE_HISTORY_ROLES, OpenAIMessageKeys
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import DateTimeEncoder
+from smarter.services.llm.vendors import (
+    LANGCHAIN_MESSAGE_HISTORY_ROLES,
+    OpenAIMessageKeys,
+)
 
 from .validators import (
     validate_endpoint,

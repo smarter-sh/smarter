@@ -7,11 +7,8 @@ from smarter.apps.account.utils import account_admin_user
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.models import PluginMeta
-from smarter.common.const import (
-    SMARTER_ACCOUNT_NUMBER,
-    SMARTER_EXAMPLE_CHATBOT_NAME,
-    LLMDefault,
-)
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
+from smarter.services.llm.vendors import LLMDefault
 
 
 # pylint: disable=E1101

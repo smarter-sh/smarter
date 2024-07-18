@@ -19,10 +19,10 @@ from smarter.apps.plugin.manifest.enum import (
 from smarter.apps.plugin.manifest.models.http_request.model import HttpRequest
 from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
 from smarter.common.conf import SettingsDefaults
-from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMSpecBase
+from smarter.services.llm.vendors import VALID_CHAT_COMPLETION_MODELS
 
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
