@@ -43,10 +43,10 @@ from smarter.apps.plugin.signals import (
 )
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 from smarter.apps.plugin.utils import add_example_plugins
-from smarter.common.const import OpenAIMessageKeys
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.loader import SAMLoaderError
 from smarter.lib.unittest.utils import get_readonly_yaml_file
+from smarter.services.llm.vendors import OpenAIMessageKeys
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes

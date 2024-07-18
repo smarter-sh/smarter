@@ -25,7 +25,7 @@ from smarter.apps.chat.providers.utils import (  # noqa: E402
     http_response_factory,
     parse_request,
 )
-from smarter.common.const import OpenAIMessageKeys  # noqa: E402
+from smarter.services.llm.vendors import OpenAIMessageKeys  # noqa: E402
 
 from ..tests.test_setup import get_test_file  # noqa: E402
 

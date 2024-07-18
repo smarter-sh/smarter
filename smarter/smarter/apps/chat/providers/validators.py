@@ -2,8 +2,12 @@
 
 import json
 
-from smarter.common.const import OpenAIEndPoint, OpenAIMessageKeys, OpenAIObjectTypes
 from smarter.common.exceptions import SmarterValueError
+from smarter.services.llm.vendors import (
+    OpenAIEndPoint,
+    OpenAIMessageKeys,
+    OpenAIObjectTypes,
+)
 
 
 ####################################################################################################

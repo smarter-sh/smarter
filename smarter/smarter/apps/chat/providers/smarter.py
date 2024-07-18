@@ -27,18 +27,18 @@ from smarter.apps.chat.signals import (
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import (
-    VALID_CHAT_COMPLETION_MODELS,
-    LLMDefault,
-    LLMVendor,
-    LLMVendorsAll,
-)
 from smarter.common.exceptions import (
     SmarterConfigurationError,
     SmarterIlligalInvocationError,
     SmarterValueError,
 )
 from smarter.lib.django.user import UserType
+from smarter.services.llm.vendors import (
+    VALID_CHAT_COMPLETION_MODELS,
+    LLMDefault,
+    LLMVendor,
+    LLMVendors,
+)
 
 from .utils import (
     ensure_system_role_present,
@@ -113,7 +113,7 @@ def handler(
         }
     """
     if isinstance(llm_vendor, str):
-        llm_vendor = LLMVendorsAll.get_llm_vendor_by_name(llm_vendor)
+        llm_vendor = LLMVendors.get_by_name(llm_vendor)
     request_meta_data: dict = None
     first_iteration = {}
     first_response = {}

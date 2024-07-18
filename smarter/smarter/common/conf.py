@@ -412,7 +412,7 @@ class Settings(BaseSettings):
         SettingsDefaults.GOOGLE_MAPS_API_KEY,
         env=["GOOGLE_MAPS_API_KEY", "TF_VAR_GOOGLE_MAPS_API_KEY"],
     )
-    google_ai_studio_key: Optional[SecretStr] = Field(
+    google_ai_studio_api_key: Optional[SecretStr] = Field(
         SettingsDefaults.GOOGLE_AI_STUDIO_KEY,
         env=["GOOGLE_AI_STUDIO_KEY", "TF_VAR_GOOGLE_AI_STUDIO_KEY"],
     )
@@ -799,9 +799,9 @@ class Settings(BaseSettings):
             return SettingsDefaults.GOOGLE_MAPS_API_KEY
         return v
 
-    @field_validator("google_ai_studio_key")
+    @field_validator("google_ai_studio_api_key")
     def check_google_ai_studio_key(cls, v) -> SecretStr:
-        """Check google_ai_studio_key"""
+        """Check google_ai_studio_api_key"""
         if v in [None, ""]:
             return SettingsDefaults.GOOGLE_AI_STUDIO_KEY
         return v

@@ -16,7 +16,6 @@ from smarter.apps.chatapp.views import ChatConfigView
 from smarter.apps.chatbot.api.v1.views.smarter import SmarterChatBotApiView
 from smarter.apps.chatbot.models import ChatBot
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import OpenAIMessageKeys
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,
@@ -27,6 +26,7 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonResponse,
 )
 from smarter.lib.manifest.enum import SCLIResponseGet
+from smarter.services.llm.vendors import OpenAIMessageKeys
 
 from ..base import APIV1CLIViewError, CliBaseApiView
 

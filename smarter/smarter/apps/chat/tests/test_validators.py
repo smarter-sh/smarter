@@ -20,10 +20,10 @@ from smarter.apps.chat.providers.validators import (
     validate_request_body,
     validate_temperature,
 )
-from smarter.common.const import OpenAIEndPoint, OpenAIObjectTypes
 
 # our stuff
 from smarter.common.exceptions import SmarterValueError
+from smarter.services.llm.vendors import OpenAIEndPoint, OpenAIObjectTypes
 
 from ..tests.test_setup import get_test_file  # noqa: E402
 

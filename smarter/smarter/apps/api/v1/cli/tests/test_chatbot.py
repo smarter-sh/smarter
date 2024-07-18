@@ -11,9 +11,9 @@ from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.apps.chatbot.models import ChatBot
 from smarter.common.api import SmarterApiVersions
-from smarter.common.const import LLMDefault
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
+from smarter.services.llm.vendors import LLMDefault
 
 
 KIND = SAMKinds.CHATBOT.value
