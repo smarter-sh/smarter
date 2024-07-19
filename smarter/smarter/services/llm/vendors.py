@@ -630,6 +630,8 @@ class LLMVendorOpenAI(LLMVendor):
         response = vendor.chat_llm.generate("Hello, world!")
     """
 
+    GPT4_OMNI = "gpt-4o"
+    GPT4_OMNI_MINI = "gpt-4o-mini"
     GPT4_TURBO = "gpt-4-turbo"
     GPT4_32K = "gpt-4-32k"
     GPT4_1106_PREVIEW = "gpt-4-1106-preview"
@@ -644,11 +646,11 @@ class LLMVendorOpenAI(LLMVendor):
 
     # shorthand
     GPT3 = GPT3_5_TURBO
-    GPT4 = GPT4_TURBO
+    GPT4 = GPT4_OMNI_MINI
 
     all_models = [
-        GPT3,
-        GPT4,
+        GPT4_OMNI,
+        GPT4_OMNI_MINI,
         GPT4_TURBO,
         GPT4_32K,
         GPT4_1106_PREVIEW,
@@ -661,7 +663,7 @@ class LLMVendorOpenAI(LLMVendor):
         GPT3_5_TURBO_1106,
         GPT3_5_TURBO_INSTRUCT,
     ]
-    default_model = GPT3
+    default_model = GPT4_OMNI_MINI
 
     def __init__(self) -> None:
         """
