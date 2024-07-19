@@ -52,6 +52,16 @@ def load_version() -> Dict[str, str]:
 VERSION = load_version()
 
 
+class SmarterLLMDefaults:
+    """A class representing the default LLM configuration values"""
+
+    TEMPERATURE = 0.5
+    MAX_TOKENS = 2048
+    MAX_MAX_TOKENS = 4096 * 4
+    TIMEOUT = 15
+    MAX_RETRIES = 2
+
+
 # pylint: disable=too-few-public-methods
 class SmarterEnvironments:
     """A class representing the fixed set environments for the Smarter API."""

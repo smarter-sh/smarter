@@ -1,37 +1,47 @@
+# pylint: disable=W0221
 """A module containing constants for the OpenAI API."""
 
 import os
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import List, Optional, Type
 
 import openai
-from langchain_anthropic.llms import AnthropicLLM
-from langchain_cohere.llms import Cohere
-from langchain_core.language_models.llms import BaseLLM
-from langchain_fireworks import Fireworks
-from langchain_google_genai import GoogleGenerativeAI
+from langchain_anthropic import ChatAnthropic
+from langchain_cohere import ChatCohere
+from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_fireworks import ChatFireworks
+from langchain_google_vertexai import ChatVertexAI
 from langchain_mistralai.chat_models import ChatMistralAI
-from langchain_openai import OpenAI
+from langchain_openai import ChatOpenAI
 from langchain_together import ChatTogether
 from pydantic import SecretStr
 
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SmarterLLMDefaults
 
 
 class LLMVendor(ABC):
     """Base class for Large Language Model classes."""
 
+    # read-only
     _api_key: SecretStr = None
     _name: str = None
     _environment_variable_name: str = None
-    _chat_llm_cls: Optional[Type[BaseLLM]] = None
-    _chat_llm: Optional[BaseLLM] = None
-    _model_name: str = None
+    _chat_llm_cls: Optional[Type[BaseChatModel]] = None
+    _chat_llm: Optional[BaseChatModel] = None
+
+    # writable (set in subclass)
     all_models: List[str] = None
     default_model: str = None
-    default_max_tokens = 2048
     is_default = False
     smarter_plugin_support = False
+
+    # llm configuration
+    _model_name: str = None
+    _temperature = SmarterLLMDefaults.TEMPERATURE
+    _max_tokens = SmarterLLMDefaults.MAX_TOKENS
+    _timeout = SmarterLLMDefaults.TIMEOUT
+    _max_retries = SmarterLLMDefaults.MAX_RETRIES
 
     def __init__(self) -> None:
         super().__init__()
@@ -40,15 +50,6 @@ class LLMVendor(ABC):
             raise NotImplementedError("all_models must be set in the subclass.")
         if not self.default_model:
             raise NotImplementedError("default_model must be set in the subclass.")
-
-    @abstractmethod
-    def configure(self, model_name: str = None, **kwargs) -> None:
-        """Configure the Large Language Model."""
-        raise NotImplementedError()
-
-    def configure_environment_variable(self):
-        if self.environment_variable_name and self.api_key:
-            os.environ[self.environment_variable_name] = self.api_key.get_secret_value()
 
     @property
     def name(self) -> str:
@@ -67,11 +68,11 @@ class LLMVendor(ABC):
         return self._api_key
 
     @property
-    def chat_llm_cls(self) -> Type[BaseLLM]:
+    def chat_llm_cls(self) -> Type[BaseChatModel]:
         return self._chat_llm_cls
 
     @property
-    def chat_llm(self) -> BaseLLM:
+    def chat_llm(self) -> BaseChatModel:
         raise NotImplementedError("chat_llm must be implemented in the subclass.")
 
     @property
@@ -84,8 +85,85 @@ class LLMVendor(ABC):
             raise ValueError(f"Invalid model_name: {value}. Must be one of: {self.all_models}")
         self._model_name = value
 
+    @property
+    def temperature(self) -> float:
+        return self._temperature
+
+    @temperature.setter
+    def temperature(self, value: float):
+        if value < 0 or value > 1:
+            raise ValueError(f"Invalid temperature: {value}. Must be between 0 and 1.")
+        self._temperature = value
+
+    @property
+    def max_tokens(self) -> int:
+        return self._max_tokens
+
+    @max_tokens.setter
+    def max_tokens(self, value: int):
+        if value < 1 or value > SmarterLLMDefaults.MAX_MAX_TOKENS:
+            raise ValueError(f"Invalid max_tokens: {value}. Must be between 1 and {SmarterLLMDefaults.MAX_MAX_TOKENS}.")
+        self._max_tokens = value
+
+    @property
+    def timeout(self) -> int:
+        return self._timeout
+
+    @timeout.setter
+    def timeout(self, value: int):
+        if value < 1:
+            raise ValueError(f"Invalid timeout: {value}. Must be greater than 0.")
+        self._timeout = value
+
+    @property
+    def max_retries(self) -> int:
+        return self._max_retries
+
+    @max_retries.setter
+    def max_retries(self, value: int):
+        if value < 0:
+            raise ValueError(f"Invalid max_retries: {value}. Must be greater than or equal to 0.")
+        self._max_retries = value
+
+    def configure(
+        self,
+        api_key: SecretStr,
+        model_name: str,
+        temperature: float = None,
+        max_tokens: int = None,
+        timeout: int = None,
+        max_retries: int = None,
+        **kwargs,
+    ) -> None:
+        """
+        Configure the Large Language Model.
+
+        args:
+            model_name (str): The name of the model to use.
+            temperature (float): The temperature to use for the model.
+            max_tokens (int): The maximum number of tokens for requests.
+            timeout (int): The timeout in seconds for the request.
+            max_retries (int): The maximum number of retries for the request.
+        """
+
+        # credentials configuration
+        self._api_key = api_key
+        if self.environment_variable_name and self.api_key:
+            os.environ[self.environment_variable_name] = self.api_key.get_secret_value()
+
+        # llm configuration
+        self.model_name = model_name
+        self.temperature = temperature or self.temperature
+        self.max_tokens = max_tokens or self.max_tokens
+        self.timeout = timeout or self.timeout
+        self.max_retries = max_retries or self.max_retries
+
+        # destroy any existing chat_llm instance so that lazy loading will re-create it
+        # with the new configuration.
+        self._chat_llm = None
+
     def __str__(self) -> str:
-        return self.name
+        return self.name + " - " + self.model_name + " - " + str(self.api_key.get_secret_value()).left(4)
 
 
 class LLMVendorAnthropic(LLMVendor):
@@ -120,39 +198,64 @@ class LLMVendorAnthropic(LLMVendor):
 
     def __init__(self) -> None:
         super().__init__()
-        self._chat_llm_cls = AnthropicLLM
+        self._chat_llm_cls = ChatAnthropic
         # https://python.langchain.com/v0.2/docs/integrations/platforms/anthropic/
         self._environment_variable_name = "ANTHROPIC_API_KEY"
 
     @property
-    def chat_llm(self) -> AnthropicLLM:
+    def chat_llm(self) -> ChatAnthropic:
         if not self._chat_llm:
             self._chat_llm = self._chat_llm_cls(
-                anthropic_api_key=self.api_key.get_secret_value(), model_name=self.model_name
+                api_key=self.api_key.get_secret_value(),
+                model=self.model_name,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+                timeout=self.timeout,
+                max_retries=self.max_retries,
             )
+
         return self._chat_llm
 
-    def configure(self, model_name: str = None, **kwargs) -> None:
+    def configure(
+        self,
+        model_name: str = None,
+        temperature: float = None,
+        max_tokens: int = None,
+        timeout: int = None,
+        max_retries: int = None,
+        **kwargs,
+    ) -> None:
         """
         Configure the Anthropic Large Language Model.
+        see: https://docs.anthropic.com/en/api/getting-started
+
         args:
             model_name (str): The name of the model to use.
+            temperature (float): The temperature to use for the model.
+            max_tokens (int): The maximum number of tokens for requests.
+            timeout (int): The timeout in seconds for the request.
+            max_retries (int): The maximum number of retries for the request.
         """
-        self.model_name = model_name
-        # - https://docs.anthropic.com/en/api/getting-started
-        self._api_key = smarter_settings.anthropic_api_key
-        self.configure_environment_variable()
+        super().configure(
+            api_key=smarter_settings.anthropic_api_key,
+            model_name=model_name,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            timeout=timeout,
+            max_retries=max_retries,
+            **kwargs,
+        )
 
 
 class LLMVendorCohere(LLMVendor):
     """
-    Cohere Large Language Model class.
+    ChatCohere Large Language Model class.
     https://docs.cohere.com/docs/models
 
     This is a private class. Do not import this class directly.
     Instead, you should use LLMVendors() to create an instance.
 
-    A Cohere API key is required to use this class.
+    A ChatCohere API key is required to use this class.
 
     usage:
         vendor = LLMVendors.get_by_name(name="LLMVendorCohere")
@@ -180,32 +283,64 @@ class LLMVendorCohere(LLMVendor):
 
     def __init__(self) -> None:
         super().__init__()
-        self._chat_llm_cls = Cohere
+        self._chat_llm_cls = ChatCohere
         # https://python.langchain.com/v0.1/docs/integrations/providers/cohere/
         self._environment_variable_name = "COHERE_API_KEY"
 
     @property
-    def chat_llm(self) -> Cohere:
+    def chat_llm(self) -> ChatCohere:
         if not self._chat_llm:
-            self._chat_llm = self._chat_llm_cls(cohere_api_key=self.api_key.get_secret_value(), model=self.model_name)
+            self._chat_llm = self._chat_llm_cls(
+                api_key=self.api_key.get_secret_value(),
+                model=self.model_name,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+                timeout=self.timeout,
+                max_retries=self.max_retries,
+            )
+
         return self._chat_llm
 
-    def configure(self, model_name: str = None, **kwargs) -> None:
-        self.model_name = model_name
-        # - https://dashboard.cohere.com/api-keys
-        self._api_key = smarter_settings.cohere_api_key
-        self.configure_environment_variable()
+    def configure(
+        self,
+        model_name: str = None,
+        temperature: float = None,
+        max_tokens: int = None,
+        timeout: int = None,
+        max_retries: int = None,
+        **kwargs,
+    ) -> None:
+        """
+        Configure the Cohere Large Language Model.
+        see: https://dashboard.cohere.com/api-keys
+
+        args:
+            model_name (str): The name of the model to use.
+            temperature (float): The temperature to use for the model.
+            max_tokens (int): The maximum number of tokens for requests.
+            timeout (int): The timeout in seconds for the request.
+            max_retries (int): The maximum number of retries for the request.
+        """
+        super().configure(
+            api_key=smarter_settings.cohere_api_key,
+            model_name=model_name,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            timeout=timeout,
+            max_retries=max_retries,
+            **kwargs,
+        )
 
 
 class LLMFireworks(LLMVendor):
     """
-    Fireworks Large Language Model class.
+    ChatFireworks Large Language Model class.
     https://fireworks.ai/
 
     This is a private class. Do not import this class directly.
     Instead, you should use LLMVendors() to create an instance.
 
-    A Fireworks API key is required to use this class.
+    A ChatFireworks API key is required to use this class.
 
     usage:
         vendor = LLMVendors.get_by_name(name="LLMFireworks")
@@ -221,23 +356,55 @@ class LLMFireworks(LLMVendor):
     def __init__(self) -> None:
         super().__init__()
         # https://python.langchain.com/v0.2/docs/integrations/providers/fireworks/
-        self._chat_llm_cls = Fireworks
+        self._chat_llm_cls = ChatFireworks
         self._environment_variable_name = "FIREWORKS_API_KEY"
 
     @property
-    def chat_llm(self) -> Fireworks:
+    def chat_llm(self) -> ChatFireworks:
         if not self._chat_llm:
-            self._chat_llm = self._chat_llm_cls(api_key=self.api_key.get_secret_value(), model=self.model_name)
+            self._chat_llm = self._chat_llm_cls(
+                api_key=self.api_key.get_secret_value(),
+                model=self.model_name,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+                timeout=self.timeout,
+                max_retries=self.max_retries,
+            )
+
         return self._chat_llm
 
-    def configure(self, model_name: str = None, **kwargs) -> None:
-        self.model_name = model_name
-        # - https://fireworks.ai/api-keys
-        self._api_key = smarter_settings.fireworks_api_key
-        self.configure_environment_variable()
+    def configure(
+        self,
+        model_name: str = None,
+        temperature: float = None,
+        max_tokens: int = None,
+        timeout: int = None,
+        max_retries: int = None,
+        **kwargs,
+    ) -> None:
+        """
+        Configure the Fireworks Large Language Model.
+        see: https://fireworks.ai/api-keys
+
+        args:
+            model_name (str): The name of the model to use.
+            temperature (float): The temperature to use for the model.
+            max_tokens (int): The maximum number of tokens for requests.
+            timeout (int): The timeout in seconds for the request.
+            max_retries (int): The maximum number of retries for the request.
+        """
+        super().configure(
+            api_key=smarter_settings.fireworks_api_key,
+            model_name=model_name,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            timeout=timeout,
+            max_retries=max_retries,
+            **kwargs,
+        )
 
 
-class LLMVendorGoogleAIStudio(LLMVendor):
+class LLMVendorGoogleVertex(LLMVendor):
     """
     Google AI Studio Large Language Model class.
     https://ai.google.dev/gemini-api/docs/models/gemini
@@ -248,8 +415,8 @@ class LLMVendorGoogleAIStudio(LLMVendor):
     A Google AI Studio API key is required to use this class.
 
     usage:
-        vendor = LLMVendors.get_by_name(name="LLMVendorGoogleAIStudio")
-        vendor.configure(model_name=LLMVendorGoogleAIStudio.GEMINI_1_5_PRO)
+        vendor = LLMVendors.get_by_name(name="LLMVendorGoogleVertex")
+        vendor.configure(model_name=LLMVendorGoogleVertex.GEMINI_1_5_PRO)
         response = vendor.chat_llm.generate("Hello, world!")
     """
 
@@ -275,18 +442,51 @@ class LLMVendorGoogleAIStudio(LLMVendor):
         super().__init__()
 
         # https://python.langchain.com/v0.2/docs/integrations/llms/google_ai/
-        self._chat_llm_cls = GoogleGenerativeAI
+        self._chat_llm_cls = ChatVertexAI
 
     @property
-    def chat_llm(self) -> GoogleGenerativeAI:
+    def chat_llm(self) -> ChatVertexAI:
         if not self._chat_llm:
-            self._chat_llm = self._chat_llm_cls(google_api_key=self.api_key.get_secret_value(), model=self.model_name)
+            self._chat_llm = self._chat_llm_cls(
+                api_key=self.api_key.get_secret_value(),
+                model=self.model_name,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+                timeout=self.timeout,
+                max_retries=self.max_retries,
+            )
+
         return self._chat_llm
 
-    def configure(self, model_name: str = None, **kwargs) -> None:
-        self.model_name = model_name
-        # - https://aistudio.google.com/app/apikey
-        self._api_key = smarter_settings.google_ai_studio_api_key
+    def configure(
+        self,
+        model_name: str = None,
+        temperature: float = None,
+        max_tokens: int = None,
+        timeout: int = None,
+        max_retries: int = None,
+        **kwargs,
+    ) -> None:
+        """
+        Configure the Google VertexAI Large Language Model.
+        see: https://aistudio.google.com/app/apikey
+
+        args:
+            model_name (str): The name of the model to use.
+            temperature (float): The temperature to use for the model.
+            max_tokens (int): The maximum number of tokens for requests.
+            timeout (int): The timeout in seconds for the request.
+            max_retries (int): The maximum number of retries for the request.
+        """
+        super().configure(
+            api_key=smarter_settings.google_ai_studio_api_key,
+            model_name=model_name,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            timeout=timeout,
+            max_retries=max_retries,
+            **kwargs,
+        )
 
 
 class LLMVendorMistral(LLMVendor):
@@ -337,14 +537,46 @@ class LLMVendorMistral(LLMVendor):
     @property
     def chat_llm(self) -> ChatMistralAI:
         if not self._chat_llm:
-            self._chat_llm = self._chat_llm_cls(api_key=self.api_key.get_secret_value(), model_name=self.model_name)
+            self._chat_llm = self._chat_llm_cls(
+                api_key=self.api_key.get_secret_value(),
+                model=self.model_name,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+                timeout=self.timeout,
+                max_retries=self.max_retries,
+            )
+
         return self._chat_llm
 
-    def configure(self, model_name: str = None, **kwargs) -> None:
-        self.model_name = model_name
-        # - https://console.mistral.ai/api-keys/
-        self._api_key = smarter_settings.mistral_api_key
-        self.configure_environment_variable()
+    def configure(
+        self,
+        model_name: str = None,
+        temperature: float = None,
+        max_tokens: int = None,
+        timeout: int = None,
+        max_retries: int = None,
+        **kwargs,
+    ) -> None:
+        """
+        Configure the Mistral Large Language Model.
+        see: https://console.mistral.ai/api-keys/
+
+        args:
+            model_name (str): The name of the model to use.
+            temperature (float): The temperature to use for the model.
+            max_tokens (int): The maximum number of tokens for requests.
+            timeout (int): The timeout in seconds for the request.
+            max_retries (int): The maximum number of retries for the request.
+        """
+        super().configure(
+            api_key=smarter_settings.mistral_api_key,
+            model_name=model_name,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            timeout=timeout,
+            max_retries=max_retries,
+            **kwargs,
+        )
 
 
 class LLMVendorOpenAI(LLMVendor):
@@ -397,23 +629,54 @@ class LLMVendorOpenAI(LLMVendor):
     smarter_plugin_support = True
 
     @property
-    def chat_llm(self) -> OpenAI:
+    def chat_llm(self) -> ChatOpenAI:
         if not self._chat_llm:
-            self._chat_llm = self._chat_llm_cls(api_key=self.api_key.get_secret_value(), model=self.model_name)
+            self._chat_llm = self._chat_llm_cls(
+                api_key=self.api_key.get_secret_value(),
+                model=self.model_name,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+                timeout=self.timeout,
+                max_retries=self.max_retries,
+            )
 
         return self._chat_llm
 
     def __init__(self) -> None:
         super().__init__()
         # https://python.langchain.com/v0.2/docs/integrations/chat/mistralai/
-        self._chat_llm_cls = OpenAI
+        self._chat_llm_cls = ChatOpenAI
         self._environment_variable_name = "OPENAI_API_KEY"
 
-    def configure(self, model_name: str = None, **kwargs) -> None:
-        self.model_name = model_name
-        # - https://platform.openai.com/api-keys
-        self._api_key = smarter_settings.openai_api_key
-        self.configure_environment_variable()
+    def configure(
+        self,
+        model_name: str = None,
+        temperature: float = None,
+        max_tokens: int = None,
+        timeout: int = None,
+        max_retries: int = None,
+        **kwargs,
+    ) -> None:
+        """
+        Configure the OpenAI Large Language Model.
+        see: https://platform.openai.com/api-keys
+
+        args:
+            model_name (str): The name of the model to use.
+            temperature (float): The temperature to use for the model.
+            max_tokens (int): The maximum number of tokens for requests.
+            timeout (int): The timeout in seconds for the request.
+            max_retries (int): The maximum number of retries for the request.
+        """
+        super().configure(
+            api_key=smarter_settings.openai_api_key,
+            model_name=model_name,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            timeout=timeout,
+            max_retries=max_retries,
+            **kwargs,
+        )
 
 
 class LLMTogether(LLMVendor):
@@ -443,12 +706,45 @@ class LLMTogether(LLMVendor):
     @property
     def chat_llm(self) -> ChatTogether:
         if not self._chat_llm:
-            self._chat_llm = self._chat_llm_cls(api_key=self.api_key.get_secret_value(), model=self.model_name)
+            self._chat_llm = self._chat_llm_cls(
+                api_key=self.api_key.get_secret_value(),
+                model=self.model_name,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+                timeout=self.timeout,
+                max_retries=self.max_retries,
+            )
+
         return self._chat_llm
 
-    def configure(self, model_name: str = None, **kwargs) -> None:
-        self.model_name = model_name
-        self._api_key = smarter_settings.togetherai_api_key
+    def configure(
+        self,
+        model_name: str = None,
+        temperature: float = None,
+        max_tokens: int = None,
+        timeout: int = None,
+        max_retries: int = None,
+        **kwargs,
+    ) -> None:
+        """
+        Configure the Together Large Language Model.
+
+        args:
+            model_name (str): The name of the model to use.
+            temperature (float): The temperature to use for the model.
+            max_tokens (int): The maximum number of tokens for requests.
+            timeout (int): The timeout in seconds for the request.
+            max_retries (int): The maximum number of retries for the request.
+        """
+        super().configure(
+            api_key=smarter_settings.togetherai_api_key,
+            model_name=model_name,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            timeout=timeout,
+            max_retries=max_retries,
+            **kwargs,
+        )
 
 
 class LLMDefault(LLMVendor):
@@ -473,12 +769,6 @@ class LLMDefault(LLMVendor):
     default_model = llm.default_model
     smarter_plugin_support = llm.smarter_plugin_support
 
-    def configure(self, model_name: str = None, **kwargs) -> None:
-        """
-        this is a no-op since the configuration is done by the actual LLMVendor
-        instance that is being used as the default.
-        """
-
 
 class LLMVendors:
     """
@@ -494,7 +784,7 @@ class LLMVendors:
     llm_anthropic = LLMVendorAnthropic()
     llm_cohere = LLMVendorCohere()
     llm_fireworks = LLMFireworks()
-    llm_google_ai_studio = LLMVendorGoogleAIStudio()
+    llm_google_ai_studio = LLMVendorGoogleVertex()
     llm_mistral = LLMVendorMistral()
     llm_openai = LLMVendorOpenAI()
     llm_default = LLMDefault()
@@ -549,15 +839,10 @@ class LLMVendors:
 # singleton instance
 llm_vendors = LLMVendors()
 
+###############################################################################
+# Legacy Constants. All of these are deprecated and should not be used.
+###############################################################################
 VALID_CHAT_COMPLETION_MODELS = LLMVendors.all_models
-
-
-VALID_EMBEDDING_MODELS = [
-    "text-embedding-ada-002",
-    "text-similarity-*-001",
-    "text-search-*-*-001",
-    "code-search-*-*-001",
-]
 
 
 # pylint: disable=too-few-public-methods

@@ -27,7 +27,7 @@ from smarter.services.llm.vendors import (
     LLMDefault,
     LLMVendorAnthropic,
     LLMVendorCohere,
-    LLMVendorGoogleAIStudio,
+    LLMVendorGoogleVertex,
     LLMVendorMistral,
     LLMVendorOpenAI,
     llm_vendors,
@@ -123,7 +123,7 @@ class ChatBot(TimestampedModel):
     class LLMVendors(models.TextChoices):
         Anthropic = LLMVendorAnthropic().name, LLMVendorAnthropic().presentation_name
         Cohere = LLMVendorCohere().name, LLMVendorCohere().presentation_name
-        GoogleAIStudio = LLMVendorGoogleAIStudio().name, LLMVendorGoogleAIStudio().presentation_name
+        GoogleAIStudio = LLMVendorGoogleVertex().name, LLMVendorGoogleVertex().presentation_name
         Mistral = LLMVendorMistral().name, LLMVendorMistral().presentation_name
         OpenAI = LLMVendorOpenAI().name, LLMVendorOpenAI().presentation_name
 

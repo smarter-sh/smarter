@@ -59,7 +59,7 @@ langchain==0.2.8                        # LLM abstractions library for building 
 langchain-anthropic==0.1.20             # An integration package connecting AnthropicMessages and LangChain
 langchain-cohere==0.1.9                 # An integration package connecting Cohere and LangChain
 langchain-fireworks==0.1.5              # An integration package connecting Fireworks and LangChain
-langchain-google-genai==1.0.7           # An integration package connecting Google's genai package and LangChain
+langchain-google-vertexai==1.0.6        # An integration package connecting Google's VertexAI and LangChain
 langchain-mistralai==0.1.10             # An integration package connecting MistralAI and LangChain
 langchain-openai==0.1.16                # An integration package connecting OpenAI and LangChain
 langchain-together==0.1.4               # An integration package connecting TogetherAI and LangChain
