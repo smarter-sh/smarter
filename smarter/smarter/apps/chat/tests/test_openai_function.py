@@ -18,8 +18,11 @@ from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SmarterLLMDefaults
 from smarter.lib.unittest.utils import get_readonly_yaml_file
-from smarter.services.llm.vendors import LLMDefault, OpenAIMessageKeys
+from smarter.services.llm import llm_vendors
+from smarter.services.llm.const import OpenAIMessageKeys
+from smarter.services.llm.vendors import LLMVendorDefault
 
 from ..models import Chat, ChatPluginUsage
 from ..providers.langchain import handler
@@ -243,10 +246,9 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
                 data=event_about_gobstoppers,
                 plugins=self.plugins,
                 user=self.user,
-                llm_vendor=LLMDefault.name,
-                default_system_role=LLMDefault.default_model,
-                default_max_tokens=smarter_settings.openai_default_max_tokens,
-                default_temperature=smarter_settings.openai_default_temperature,
+                default_system_role=SmarterLLMDefaults.SYSTEM_ROLE,
+                default_max_tokens=SmarterLLMDefaults.MAX_TOKENS,
+                default_temperature=SmarterLLMDefaults.TEMPERATURE,
             )
             sleep(1)
         except Exception as error:
@@ -286,10 +288,9 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
                 plugins=self.plugins,
                 user=self.user,
                 data=event_about_weather,
-                llm_vendor=LLMDefault.name,
-                default_system_role=LLMDefault.default_model,
-                default_max_tokens=smarter_settings.openai_default_max_tokens,
-                default_temperature=smarter_settings.openai_default_temperature,
+                default_system_role=SmarterLLMDefaults.SYSTEM_ROLE,
+                default_max_tokens=SmarterLLMDefaults.MAX_TOKENS,
+                default_temperature=SmarterLLMDefaults.TEMPERATURE,
             )
         except Exception as error:
             self.fail(f"handler() raised {error}")
@@ -306,10 +307,9 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
                 plugins=self.plugins,
                 user=self.user,
                 data=event_about_recipes,
-                llm_vendor=LLMDefault.name,
-                default_system_role=smarter_settings.openai_default_system_role,
-                default_max_tokens=smarter_settings.openai_default_max_tokens,
-                default_temperature=smarter_settings.openai_default_temperature,
+                default_system_role=SmarterLLMDefaults.SYSTEM_ROLE,
+                default_max_tokens=SmarterLLMDefaults.MAX_TOKENS,
+                default_temperature=SmarterLLMDefaults.TEMPERATURE,
             )
         except Exception as error:
             self.fail(f"handler() raised {error}")

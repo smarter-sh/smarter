@@ -18,20 +18,13 @@ from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SmarterLLMDefaults
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import UserType
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.drf.models import SmarterAuthToken
-from smarter.services.llm.vendors import (
-    LLMDefault,
-    LLMVendorAnthropic,
-    LLMVendorCohere,
-    LLMVendorGoogleVertex,
-    LLMVendorMistral,
-    LLMVendorOpenAI,
-    llm_vendors,
-)
+from smarter.services.llm import llm_vendors
 
 from .signals import (
     chatbot_dns_failed,
@@ -120,12 +113,15 @@ class ChatBot(TimestampedModel):
         VERIFIED = "Verified", "Verified"
         FAILED = "Failed", "Failed"
 
-    class LLMVendors(models.TextChoices):
-        Anthropic = LLMVendorAnthropic().name, LLMVendorAnthropic().presentation_name
-        Cohere = LLMVendorCohere().name, LLMVendorCohere().presentation_name
-        GoogleAIStudio = LLMVendorGoogleVertex().name, LLMVendorGoogleVertex().presentation_name
-        Mistral = LLMVendorMistral().name, LLMVendorMistral().presentation_name
-        OpenAI = LLMVendorOpenAI().name, LLMVendorOpenAI().presentation_name
+    class LLMVendorChoices(models.TextChoices):
+        Default = llm_vendors.llm_default.name, llm_vendors.llm_default.presentation_name
+        Anthropic = llm_vendors.llm_anthropic.name, llm_vendors.llm_anthropic.presentation_name
+        Cohere = llm_vendors.llm_cohere.name, llm_vendors.llm_cohere.presentation_name
+        Fireworks = llm_vendors.llm_fireworks.name, llm_vendors.llm_fireworks.presentation_name
+        GoogleVortex = llm_vendors.llm_google_ai_studio.name, llm_vendors.llm_google_ai_studio.presentation_name
+        Mistral = llm_vendors.llm_mistral.name, llm_vendors.llm_mistral.presentation_name
+        OpenAI = llm_vendors.llm_openai.name, llm_vendors.llm_openai.presentation_name
+        TogetherAI = llm_vendors.llm_togetherai.name, llm_vendors.llm_togetherai.presentation_name
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
@@ -135,12 +131,12 @@ class ChatBot(TimestampedModel):
     custom_domain = models.ForeignKey(ChatBotCustomDomain, on_delete=models.CASCADE, blank=True, null=True)
     deployed = models.BooleanField(default=False, blank=True, null=True)
     llm_vendor = models.CharField(
-        default=LLMDefault().name, max_length=255, blank=True, null=True, choices=LLMVendors.choices
+        default=llm_vendors.llm_default.name, max_length=255, blank=True, null=True, choices=LLMVendorChoices.choices
     )
     default_model = models.CharField(max_length=255, blank=True, null=True)
-    default_system_role = models.TextField(default=smarter_settings.openai_default_system_role, blank=True, null=True)
-    default_temperature = models.FloatField(default=smarter_settings.openai_default_temperature, blank=True, null=True)
-    default_max_tokens = models.IntegerField(default=smarter_settings.openai_default_max_tokens, blank=True, null=True)
+    default_system_role = models.TextField(default=SmarterLLMDefaults.SYSTEM_ROLE, blank=True, null=True)
+    default_temperature = models.FloatField(default=SmarterLLMDefaults.TEMPERATURE, blank=True, null=True)
+    default_max_tokens = models.IntegerField(default=SmarterLLMDefaults.MAX_TOKENS, blank=True, null=True)
 
     app_name = models.CharField(default="chatbot", max_length=255, blank=True, null=True)
     app_assistant = models.CharField(default="Smarter", max_length=255, blank=True, null=True)

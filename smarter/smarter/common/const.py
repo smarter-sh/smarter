@@ -60,6 +60,14 @@ class SmarterLLMDefaults:
     MAX_MAX_TOKENS = 4096 * 4
     TIMEOUT = 15
     MAX_RETRIES = 2
+    SYSTEM_ROLE = (
+        "You are a helpful chatbot. When given the opportunity to utilize "
+        "function calling, you should always do so. This will allow you to "
+        "provide the best possible responses to the user. If you are unable to "
+        "provide a response, you should prompt the user for more information. If "
+        "you are still unable to provide a response, you should inform the user "
+        "that you are unable to help them at this time."
+    )
 
 
 # pylint: disable=too-few-public-methods

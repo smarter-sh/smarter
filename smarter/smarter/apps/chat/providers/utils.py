@@ -7,10 +7,10 @@ import logging
 import sys  # libraries for error management
 import traceback  # libraries for error management
 
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SmarterLLMDefaults
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import DateTimeEncoder
-from smarter.services.llm.vendors import (
+from smarter.services.llm.const import (
     LANGCHAIN_MESSAGE_HISTORY_ROLES,
     OpenAIMessageKeys,
 )
@@ -181,9 +181,7 @@ def request_meta_data_factory(model, temperature, max_tokens, input_text):
     }
 
 
-def ensure_system_role_present(
-    messages: list[dict], default_system_role: str = smarter_settings.openai_default_system_role
-) -> list:
+def ensure_system_role_present(messages: list[dict], default_system_role: str = SmarterLLMDefaults.SYSTEM_ROLE) -> list:
     """
     Ensure that a system role is present in the messages list
     """

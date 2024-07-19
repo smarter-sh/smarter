@@ -41,7 +41,7 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGetData,
 )
 from smarter.lib.manifest.loader import SAMLoader
-from smarter.services.llm.vendors import LLMDefault
+from smarter.services.llm.vendors import LLMVendorDefault
 
 
 logger = logging.getLogger(__name__)
@@ -284,8 +284,8 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
             SAMKeys.SPEC.value: {
                 SAMChatbotSpecKeys.CONFIG.value: {
                     "deployed": True,
-                    "llmVendor": LLMDefault.name,
-                    "defaultModel": LLMDefault.default_model,
+                    "llmVendor": LLMVendorDefault.name,
+                    "defaultModel": LLMVendorDefault.default_model,
                     "defaultSystemRole": (
                         "You are a helpful chatbot. When given the opportunity to utilize "
                         "function calling, you should always do so. This will allow you to "

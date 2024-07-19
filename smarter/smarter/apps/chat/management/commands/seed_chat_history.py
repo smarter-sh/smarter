@@ -13,8 +13,11 @@ from smarter.apps.account.utils import account_admin_user
 from smarter.apps.chat.models import Chat
 from smarter.apps.chat.providers.langchain import handler
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
-from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
+from smarter.common.const import (
+    SMARTER_ACCOUNT_NUMBER,
+    SMARTER_EXAMPLE_CHATBOT_NAME,
+    SmarterLLMDefaults,
+)
 
 
 HERE = Path(__file__).resolve().parent
@@ -85,8 +88,7 @@ class Command(BaseCommand):
                     plugins=plugins,
                     user=user_profile.user,
                     data=data,
-                    llm_vendor=chatbot.llm_vendor,
-                    default_system_role=smarter_settings.openai_default_system_role,
-                    default_temperature=smarter_settings.openai_default_temperature,
-                    default_max_tokens=smarter_settings.openai_default_max_tokens,
+                    default_system_role=SmarterLLMDefaults.SYSTEM_ROLE,
+                    default_temperature=SmarterLLMDefaults.TEMPERATURE,
+                    default_max_tokens=SmarterLLMDefaults.MAX_TOKENS,
                 )
