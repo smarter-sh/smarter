@@ -10,7 +10,7 @@ see:
 import json
 import logging
 from http import HTTPStatus
-from typing import List, Union
+from typing import List
 
 # FIX NOTE: DELETE ME!
 import openai
@@ -45,13 +45,14 @@ from smarter.apps.chat.signals import (
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SmarterLLMDefaults
 from smarter.common.exceptions import (
     SmarterConfigurationError,
     SmarterIlligalInvocationError,
     SmarterValueError,
 )
 from smarter.lib.django.user import UserType
-from smarter.services.llm.vendors import LLMVendor, llm_vendors
+from smarter.services.llm import llm_vendors
 
 
 logger = logging.getLogger(__name__)
@@ -80,10 +81,9 @@ def handler(
     data: dict,
     plugins: List[PluginStatic] = None,
     user: UserType = None,
-    llm_vendor: Union[LLMVendor, str] = llm_vendors.get_default_llm(),
-    default_system_role: str = smarter_settings.openai_default_system_role,
-    default_temperature: float = smarter_settings.openai_default_temperature,
-    default_max_tokens: int = smarter_settings.openai_default_max_tokens,
+    default_system_role: str = SmarterLLMDefaults.SYSTEM_ROLE,
+    default_temperature: float = SmarterLLMDefaults.TEMPERATURE,
+    default_max_tokens: int = SmarterLLMDefaults.MAX_TOKENS,
 ) -> dict:
     """
     Chat prompt handler. Responsible for processing incoming requests and
@@ -118,8 +118,7 @@ def handler(
             ]
         }
     """
-    if isinstance(llm_vendor, str):
-        llm_vendor = llm_vendors.get_by_name(name=llm_vendor)
+    llm_vendor = chat.chatbot.llm_vendor or llm_vendors.get_default_llm_vendor()
     request_meta_data: dict = None
     first_iteration = {}
     first_response = {}

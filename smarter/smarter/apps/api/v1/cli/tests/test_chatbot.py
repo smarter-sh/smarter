@@ -13,7 +13,7 @@ from smarter.apps.chatbot.models import ChatBot
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
-from smarter.services.llm.vendors import LLMDefault
+from smarter.services.llm.vendors import LLMVendorDefault
 
 
 KIND = SAMKinds.CHATBOT.value
@@ -154,8 +154,8 @@ class TestApiCliV1ChatBot(ApiV1TestBase):
         data[SAMKeys.SPEC.value] = {
             "config": {
                 "deployed": True,
-                "llmVendor": LLMDefault.name,
-                "defaultModel": LLMDefault.default_model,
+                "llmVendor": LLMVendorDefault.name,
+                "defaultModel": LLMVendorDefault.default_model,
                 "defaultSystemRole": "You are a helpful assistant.",
                 "defaultTemperature": 1.0,
                 "defaultMaxTokens": 100,

@@ -8,7 +8,7 @@ from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
-from smarter.services.llm.vendors import LLMDefault
+from smarter.services.llm.vendors import LLMVendorDefault
 
 
 # pylint: disable=E1101
@@ -30,8 +30,8 @@ class Command(BaseCommand):
         user_profile, _ = UserProfile.objects.get_or_create(user=user, account=account)
         chatbot, _ = ChatBot.objects.get_or_create(account=account, name=SMARTER_EXAMPLE_CHATBOT_NAME)
 
-        chatbot.llm_vendor = LLMDefault.name
-        chatbot.default_model = LLMDefault.default_model
+        chatbot.llm_vendor = LLMVendorDefault.name
+        chatbot.default_model = LLMVendorDefault.default_model
         chatbot.default_system_role = (
             "You are a helpful chatbot. When given the opportunity to utilize "
             "function calling, you should always do so. This will allow you to "

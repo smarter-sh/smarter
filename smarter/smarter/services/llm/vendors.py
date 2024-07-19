@@ -360,7 +360,7 @@ class LLMVendorCohere(LLMVendor):
         )
 
 
-class LLMFireworks(LLMVendor):
+class LLMVendorFireworks(LLMVendor):
     """
     ChatFireworks Large Language Model class.
     https://fireworks.ai/
@@ -371,8 +371,8 @@ class LLMFireworks(LLMVendor):
     A ChatFireworks API key is required to use this class.
 
     usage:
-        vendor = LLMVendors.get_by_name(name="LLMFireworks")
-        vendor.configure(model_name=LLMFireworks.FIRE_FUNCTION_V2)
+        vendor = LLMVendors.get_by_name(name="LLMVendorFireworks")
+        vendor.configure(model_name=LLMVendorFireworks.FIRE_FUNCTION_V2)
         response = vendor.chat_llm.generate("Hello, world!")
     """
 
@@ -718,7 +718,7 @@ class LLMVendorOpenAI(LLMVendor):
         )
 
 
-class LLMTogether(LLMVendor):
+class LLMVendorTogether(LLMVendor):
     """
     TogetherAI Large Language Model class.
     https://www.together.ai/
@@ -729,8 +729,8 @@ class LLMTogether(LLMVendor):
     A together.ai API key is required to use this class.
 
     usage:
-        vendor = LLMVendors.get_by_name(name="LLMTogether")
-        vendor.configure(model_name=LLMTogether.GPT3)
+        vendor = LLMVendors.get_by_name(name="LLMVendorTogether")
+        vendor.configure(model_name=LLMVendorTogether.GPT3)
         response = vendor.chat_llm.generate("Hello, world!")
     """
 
@@ -792,7 +792,7 @@ class LLMTogether(LLMVendor):
         )
 
 
-class LLMDefault(LLMVendor):
+class LLMVendorDefault(LLMVendor):
     """
     Default Large Language Model class.
 
@@ -802,7 +802,7 @@ class LLMDefault(LLMVendor):
     An API key for the default vendor is required to use this class.
 
     usage:
-        vendor = LLMVendors.get_by_name(name="LLMDefault")
+        vendor = LLMVendors.get_by_name(name="LLMVendorDefault")
         response = vendor.chat_llm.generate("Hello, world!")
     """
 
@@ -824,17 +824,18 @@ class LLMVendors:
     by name or by model name.
 
     usage:
-        llm = LLMVendors.get_default_llm()
-        response = llm.chat_llm.generate("Hello, world!")
+        vendor = LLMVendors.get_default_llm_vendor()
+        response = vendor.chat_llm.generate("Hello, world!")
     """
 
     llm_anthropic = LLMVendorAnthropic()
     llm_cohere = LLMVendorCohere()
-    llm_fireworks = LLMFireworks()
+    llm_fireworks = LLMVendorFireworks()
     llm_google_ai_studio = LLMVendorGoogleVertex()
     llm_mistral = LLMVendorMistral()
     llm_openai = LLMVendorOpenAI()
-    llm_default = LLMDefault()
+    llm_together = LLMVendorTogether()
+    llm_default = LLMVendorDefault()
 
     all: List[LLMVendor] = [
         llm_anthropic,
@@ -843,6 +844,7 @@ class LLMVendors:
         llm_google_ai_studio,
         llm_mistral,
         llm_openai,
+        llm_together,
         llm_default,
     ]
 
@@ -875,16 +877,13 @@ class LLMVendors:
         raise ValueError(f"Unknown model name: {model_name}")
 
     @classmethod
-    def get_default_llm(cls) -> LLMVendor:
+    def get_default_llm_vendor(cls) -> LLMVendor:
         """Get the default LLMVendor object."""
         for llm in cls.all:
             if llm.is_default:
                 return llm
         raise ValueError("No default LLMVendor found.")
 
-
-# singleton instance
-llm_vendors = LLMVendors()
 
 ###############################################################################
 # Legacy Constants. All of these are deprecated and should not be used.

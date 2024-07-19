@@ -7,7 +7,7 @@ from pydantic import Field, ValidationInfo, field_validator
 
 from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
 from smarter.lib.manifest.models import AbstractSAMSpecBase
-from smarter.services.llm.vendors import llm_vendors
+from smarter.services.llm import llm_vendors
 
 
 filename = os.path.splitext(os.path.basename(__file__))[0]

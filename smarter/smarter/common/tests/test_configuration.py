@@ -57,13 +57,9 @@ class TestConfiguration(unittest.TestCase):
         mock_settings = Settings(init_info="test_conf_defaults()")
 
         self.assertEqual(mock_settings.aws_region, SettingsDefaults.AWS_REGION)
-        self.assertEqual(mock_settings.openai_endpoint_image_n, SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N)
-        self.assertEqual(mock_settings.openai_endpoint_image_size, SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE)
 
         self.assertEqual(mock_settings.debug_mode, SettingsDefaults.DEBUG_MODE)
         self.assertEqual(mock_settings.langchain_memory_key, SettingsDefaults.LANGCHAIN_MEMORY_KEY)
-        self.assertEqual(mock_settings.openai_endpoint_image_n, SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N)
-        self.assertEqual(mock_settings.openai_endpoint_image_size, SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE)
         # pylint: disable=no-member
         self.assertEqual(
             mock_settings.openai_api_key.get_secret_value(), SettingsDefaults.OPENAI_API_KEY.get_secret_value()
@@ -99,8 +95,6 @@ class TestConfiguration(unittest.TestCase):
 
         self.assertEqual(mock_settings.aws_region, SettingsDefaults.AWS_REGION)
         self.assertEqual(mock_settings.langchain_memory_key, SettingsDefaults.LANGCHAIN_MEMORY_KEY)
-        self.assertEqual(mock_settings.openai_endpoint_image_n, SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N)
-        self.assertEqual(mock_settings.openai_endpoint_image_size, SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE)
 
     def test_env_illegal_nulls(self):
         """Test that settings handles missing .env values."""
@@ -124,8 +118,6 @@ class TestConfiguration(unittest.TestCase):
         self.assertEqual(mock_settings.aws_region, "us-west-1")
         self.assertEqual(mock_settings.debug_mode, True)
         self.assertEqual(mock_settings.langchain_memory_key, "TEST_langchain_memory_key")
-        self.assertEqual(mock_settings.openai_endpoint_image_n, 100)
-        self.assertEqual(mock_settings.openai_endpoint_image_size, "TEST_image_size")
 
     def test_configure_with_class_constructor(self):
         """test that we can set values with the class constructor"""
@@ -186,8 +178,6 @@ class TestConfiguration(unittest.TestCase):
             langchain_memory_key="TEST_langchain_memory_key",
             openai_api_organization="TEST_openai_api_organization",
             openai_api_key="TEST_openai_api_key",
-            openai_endpoint_image_n=100,
-            openai_endpoint_image_size="TEST_image_size",
             pinecone_api_key="TEST_pinecone_api_key",
             shared_resource_identifier="TEST_shared_resource_identifier",
             init_info="test_initialize_with_values()",
@@ -202,8 +192,6 @@ class TestConfiguration(unittest.TestCase):
         self.assertEqual(mock_settings.openai_api_organization, "TEST_openai_api_organization")
         # pylint: disable=no-member
         self.assertEqual(mock_settings.openai_api_key.get_secret_value(), "TEST_openai_api_key")
-        self.assertEqual(mock_settings.openai_endpoint_image_n, 100)
-        self.assertEqual(mock_settings.openai_endpoint_image_size, "TEST_image_size")
         # pylint: disable=no-member
         self.assertEqual(mock_settings.pinecone_api_key.get_secret_value(), "TEST_pinecone_api_key")
         self.assertEqual(mock_settings.shared_resource_identifier, "TEST_shared_resource_identifier")

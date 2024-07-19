@@ -15,7 +15,7 @@ from smarter.apps.chat.models import Chat, ChatHistory
 from smarter.apps.chatapp.views import ChatConfigView
 from smarter.apps.chatbot.api.v1.views.smarter import SmarterChatBotApiView
 from smarter.apps.chatbot.models import ChatBot
-from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SmarterLLMDefaults
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,
@@ -26,7 +26,7 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonResponse,
 )
 from smarter.lib.manifest.enum import SCLIResponseGet
-from smarter.services.llm.vendors import OpenAIMessageKeys
+from smarter.services.llm.const import OpenAIMessageKeys
 
 from ..base import APIV1CLIViewError, CliBaseApiView
 
@@ -271,7 +271,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
 
         system_role: str = self.chatbot_config.get(
             "default_system_role",
-            self.chat_config.get("default_system_role", smarter_settings.openai_default_system_role),
+            self.chat_config.get("default_system_role", SmarterLLMDefaults.SYSTEM_ROLE),
         )
         welcome_message: str = self.chatbot_config.get("app_welcome_message", "[MISSING WELCOME MESSAGE]")
         app_assistant: str = self.chatbot_config.get("app_assistant", "[MISSING ASSISTANT NAME]")

@@ -184,6 +184,7 @@ class SettingsDefaults:
     GOOGLE_AI_STUDIO_KEY = SecretStr(os.environ.get("GOOGLE_AI_STUDIO_KEY", None))
     MISTRAL_API_KEY = SecretStr(os.environ.get("MISTRAL_API_KEY", None))
     OPENAI_API_KEY = SecretStr(os.environ.get("OPENAI_API_KEY", None))
+    OPENAI_API_ORGANIZATION: str = os.environ.get("OPENAI_API_ORGANIZATION", None)
     TOGETHERAI_API_KEY = SecretStr(os.environ.get("TOGETHERAI_API_KEY", None))
 
     # Google Maps API Key - for get_current_weather()
@@ -218,22 +219,7 @@ class SettingsDefaults:
         "OPENAI_API_ORGANIZATION", "https://smarter.sh/wp-content/uploads/2024/04/Smarter_crop.png"
     )
 
-    OPENAI_API_ORGANIZATION: str = os.environ.get("OPENAI_API_ORGANIZATION", None)
-    OPENAI_ENDPOINT_IMAGE_N = 4
-    OPENAI_ENDPOINT_IMAGE_SIZE = "1024x768"
     PINECONE_API_KEY = SecretStr(None)
-
-    OPENAI_DEFAULT_MODEL = "gpt-3.5-turbo"
-    OPENAI_DEFAULT_SYSTEM_ROLE = (
-        "You are a helpful chatbot. When given the opportunity to utilize "
-        "function calling, you should always do so. This will allow you to "
-        "provide the best possible responses to the user. If you are unable to "
-        "provide a response, you should prompt the user for more information. If "
-        "you are still unable to provide a response, you should inform the user "
-        "that you are unable to help them at this time."
-    )
-    OPENAI_DEFAULT_TEMPERATURE = 0.5
-    OPENAI_DEFAULT_MAX_TOKENS = 256
 
     SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get(
         "SOCIAL_AUTH_GOOGLE_OAUTH2_KEY",
@@ -465,22 +451,6 @@ class Settings(BaseSettings):
         SettingsDefaults.OPENAI_API_ORGANIZATION, env="OPENAI_API_ORGANIZATION"
     )
     openai_api_key: Optional[SecretStr] = Field(SettingsDefaults.OPENAI_API_KEY, env="OPENAI_API_KEY")
-    openai_endpoint_image_n: Optional[int] = Field(
-        SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N, env="OPENAI_ENDPOINT_IMAGE_N"
-    )
-    openai_endpoint_image_size: Optional[str] = Field(
-        SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE, env="OPENAI_ENDPOINT_IMAGE_SIZE"
-    )
-    openai_default_model: Optional[str] = Field(SettingsDefaults.OPENAI_DEFAULT_MODEL, env="OPENAI_DEFAULT_MODEL")
-    openai_default_system_role: Optional[str] = Field(
-        SettingsDefaults.OPENAI_DEFAULT_SYSTEM_ROLE, env="OPENAI_DEFAULT_SYSTEM_ROLE"
-    )
-    openai_default_temperature: Optional[float] = Field(
-        SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE, env="OPENAI_DEFAULT_TEMPERATURE"
-    )
-    openai_default_max_tokens: Optional[int] = Field(
-        SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS, env="OPENAI_DEFAULT_MAX_TOKENS"
-    )
     pinecone_api_key: Optional[SecretStr] = Field(SettingsDefaults.PINECONE_API_KEY, env="PINECONE_API_KEY")
     stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY, env="STRIPE_LIVE_SECRET_KEY")
     stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY, env="STRIPE_TEST_SECRET_KEY")
@@ -655,8 +625,6 @@ class Settings(BaseSettings):
             "openai_passthrough": {
                 "aws_s3_bucket_name": self.aws_s3_bucket_name,
                 "langchain_memory_key": self.langchain_memory_key,
-                "openai_endpoint_image_n": self.openai_endpoint_image_n,
-                "openai_endpoint_image_size": self.openai_endpoint_image_size,
             },
         }
         if self.dump_defaults:
@@ -926,54 +894,6 @@ class Settings(BaseSettings):
         if v in [None, ""]:
             return SettingsDefaults.OPENAI_API_KEY
         return v
-
-    @field_validator("openai_endpoint_image_n")
-    def check_openai_endpoint_image_n(cls, v) -> int:
-        """Check openai_endpoint_image_n"""
-        if isinstance(v, int):
-            return v
-        if v in [None, ""]:
-            return SettingsDefaults.OPENAI_ENDPOINT_IMAGE_N
-        return int(v)
-
-    @field_validator("openai_endpoint_image_size")
-    def check_openai_endpoint_image_size(cls, v) -> str:
-        """Check openai_endpoint_image_size"""
-        if v in [None, ""]:
-            return SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE
-        return v
-
-    @field_validator("openai_default_model")
-    def check_openai_default_model(cls, v) -> str:
-        """Check openai_default_model"""
-        if v in [None, ""]:
-            return SettingsDefaults.OPENAI_DEFAULT_MODEL
-        return v
-
-    @field_validator("openai_default_system_role")
-    def check_openai_default_system_prompt(cls, v) -> str:
-        """Check openai_default_system_role"""
-        if v in [None, ""]:
-            return SettingsDefaults.OPENAI_DEFAULT_SYSTEM_ROLE
-        return v
-
-    @field_validator("openai_default_temperature")
-    def check_openai_default_temperature(cls, v) -> float:
-        """Check openai_default_temperature"""
-        if isinstance(v, float):
-            return v
-        if v in [None, ""]:
-            return SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE
-        return float(v)
-
-    @field_validator("openai_default_max_tokens")
-    def check_openai_default_max_tokens(cls, v) -> int:
-        """Check openai_default_max_tokens"""
-        if isinstance(v, int):
-            return v
-        if v in [None, ""]:
-            return SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS
-        return int(v)
 
     @field_validator("pinecone_api_key")
     def check_pinecone_api_key(cls, v) -> SecretStr:
