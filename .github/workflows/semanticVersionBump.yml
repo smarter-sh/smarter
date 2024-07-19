@@ -65,7 +65,7 @@ jobs:
         if: env.CURRENT_VERSION != env.LATEST_RELEASE
         run: |
           if python -c 'import sys; sys.exit(0 if "${{ env.CURRENT_VERSION }}" < "${{ env.LATEST_RELEASE }}" else 1)'; then
-            echo "# DO NOT EDIT." >> ${{ env.VERSION_FILE }}
+            echo "# DO NOT EDIT." > ${{ env.VERSION_FILE }}
             echo "# Managed via automated CI/CD in .github/workflows/semanticVersionBump.yml." >> ${{ env.VERSION_FILE }}
             echo "__version__ = \"${{ env.LATEST_RELEASE }}\"" >>  ${{ env.VERSION_FILE }}
             git config --local user.email "action@github.com"
