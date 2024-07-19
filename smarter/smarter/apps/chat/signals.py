@@ -16,3 +16,6 @@ chat_completion_called = Signal()
 
 # chat completion tools signals
 chat_completion_tool_call_created = Signal()
+
+# chat completion invalid tool calls signal
+chat_completion_invalid_tool_call = Signal()
