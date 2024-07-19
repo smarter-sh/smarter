@@ -148,6 +148,15 @@ def handler(
         request_meta_data = request_meta_data_factory(model, temperature, max_tokens, input_text)
         chat_invoked.send(sender=handler, chat=chat, data=data)
 
+        # vendor configuration settings. The model is validated against the vendor's available models
+        # as defined in the subclass of LLMVendor. Temperature and max_tokens behave commonly
+        # across all vendors.
+        llm_vendor.configure(
+            model_name=llm_vendor.default_model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+
         # does the prompt have anything to do with any of the search terms defined in a plugin?
         # FIX NOTE: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_tokens
         logger.warning(
@@ -181,6 +190,12 @@ def handler(
             "temperature": temperature,
             "max_tokens": max_tokens,
         }
+
+        # LangChain methodology for binding tools to the model.
+        # according to the LangChain documentation, there are a few
+        # ways to bind tools to the model. We're sticking with the
+        # original native OpenAI API method.
+        llm_vendor.chat_llm.bind_tools(tools=tools)
 
         first_response = openai.chat.completions.create(
             model=model,
