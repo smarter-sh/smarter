@@ -632,10 +632,15 @@ class LLMVendorOpenAI(LLMVendor):
 
     GPT4_OMNI = "gpt-4o"
     GPT4_OMNI_MINI = "gpt-4o-mini"
+
     GPT4_TURBO = "gpt-4-turbo"
+    GPT4_TURBO_VISION = "gpt-4-turbo-2024-04-09"
+    GPT4_TURBO_PREVIEW = "gpt-4-turbo-preview"
     GPT4_32K = "gpt-4-32k"
+    GPT4_0125_PREVIEW = "gpt-4-0125-preview"
     GPT4_1106_PREVIEW = "gpt-4-1106-preview"
     GPT4_0613 = "gpt-4-0613"
+    GPT4_0314 = "gpt-4-0314"
     GPT4_32K_0613 = "gpt-4-32k-0613"
     GPT3_5_TURBO = "gpt-3.5-turbo"
     GPT3_5_TURBO_0613 = "gpt-3.5-turbo-0613"
@@ -653,10 +658,14 @@ class LLMVendorOpenAI(LLMVendor):
         GPT4_OMNI_MINI,
         GPT4_TURBO,
         GPT4_32K,
+        GPT4_0125_PREVIEW,
         GPT4_1106_PREVIEW,
         GPT4_0613,
+        GPT4_0314,
         GPT4_32K_0613,
         GPT3_5_TURBO,
+        GPT4_TURBO_VISION,
+        GPT4_TURBO_PREVIEW,
         GPT3_5_TURBO_0613,
         GPT3_5_TURBO_16K,
         GPT3_5_TURBO_16K_0613,
