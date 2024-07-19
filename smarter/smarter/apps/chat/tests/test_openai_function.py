@@ -17,12 +17,9 @@ from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterLLMDefaults
 from smarter.lib.unittest.utils import get_readonly_yaml_file
-from smarter.services.llm import llm_vendors
 from smarter.services.llm.const import OpenAIMessageKeys
-from smarter.services.llm.vendors import LLMVendorDefault
 
 from ..models import Chat, ChatPluginUsage
 from ..providers.langchain import handler
