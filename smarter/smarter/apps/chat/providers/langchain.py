@@ -281,11 +281,8 @@ def handler(
                 "messages": serialized_messages,
             }
             chat_completion_called.send(sender=handler, chat=chat, iteration=2, request=second_iteration["request"])
-            second_response = openai.chat.completions.create(
-                model=model,
-                messages=modified_messages,
-            )  # get a new response from the model where it can see the function response
-            second_response_dict = json.loads(second_response.model_dump_json())
+            second_response: AIMessage = llm_vendor.chat_llm.invoke(messages=modified_messages)
+            second_response_dict = second_response.to_json()
             second_iteration["response"] = second_response_dict
             second_iteration["request"]["messages"] = serialized_messages
             chat_completion_tool_call_created.send(
@@ -295,14 +292,15 @@ def handler(
                 request=second_iteration["request"],
                 response=second_iteration["response"],
             )
+            usage_metadata: Optional[UsageMetadata] = second_response.usage_metadata
             create_plugin_charge(
-                handler.__name__,
-                user.id,
-                model,
-                second_response.usage.completion_tokens,
-                second_response.usage.prompt_tokens,
-                second_response.usage.total_tokens,
-                second_response.system_fingerprint,
+                reference=handler.__name__,
+                user_id=user.id,
+                model=model,
+                completion_tokens=usage_metadata.output_tokens,
+                prompt_tokens=usage_metadata.input_tokens,
+                total_tokens=usage_metadata.total_tokens,
+                fingerprint=first_response.id,
             )
 
     # handle anything that went wrong
