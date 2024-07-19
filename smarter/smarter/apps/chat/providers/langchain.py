@@ -10,11 +10,13 @@ see:
 import json
 import logging
 from http import HTTPStatus
-from typing import List
+from typing import Any, Dict, List, Optional
 
 # FIX NOTE: DELETE ME!
 import openai
 from langchain_core import exceptions as langchain_exceptions
+from langchain_core.messages.ai import AIMessage, UsageMetadata
+from langchain_core.messages.tool import InvalidToolCall, ToolCall
 
 from smarter.apps.account.tasks import (
     create_plugin_charge,
@@ -44,7 +46,6 @@ from smarter.apps.chat.signals import (
 )
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.serializers import PluginMetaSerializer
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterLLMDefaults
 from smarter.common.exceptions import (
     SmarterConfigurationError,
@@ -56,10 +57,6 @@ from smarter.services.llm import llm_vendors
 
 
 logger = logging.getLogger(__name__)
-
-# FIX NOTE: DELETE ME!
-# openai.organization = smarter_settings.openai_api_organization
-# openai.api_key = smarter_settings.openai_api_key.get_secret_value()
 
 EXCEPTION_MAP = {
     langchain_exceptions.LangChainException: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
@@ -118,16 +115,15 @@ def handler(
             ]
         }
     """
-    llm_vendor = chat.chatbot.llm_vendor or llm_vendors.get_default_llm_vendor()
     request_meta_data: dict = None
     first_iteration = {}
     first_response = {}
     second_iteration = {}
-    first_response_dict: dict = None
-    second_response_dict: dict = None
-    serialized_tool_calls: list[dict] = None
-    messages: list[dict] = None
-    input_text: str = None
+    first_response_dict: Optional[dict] = None
+    second_response_dict: Optional[dict] = None
+    serialized_tool_calls: Optional[List[Dict]] = None
+    messages: List[Dict] = []
+    input_text: Optional[str] = None
 
     weather_tool = weather_tool_factory()
     tools = [weather_tool]
@@ -135,6 +131,10 @@ def handler(
         "get_current_weather": get_current_weather,
     }
     try:
+        # initializations. we're mainly concerned with ensuring consistent application
+        # of default values in cases where chat.chatbot or chat.chatbot.llm_vendor is None,
+        # or the specific chatbot attribute is not set.
+        llm_vendor = chat.chatbot.llm_vendor or llm_vendors.get_default_llm_vendor()
         model = chat.chatbot.default_model or llm_vendor.default_model
         default_system_role = chat.chatbot.default_system_role or default_system_role
 
@@ -151,7 +151,7 @@ def handler(
         # as defined in the subclass of LLMVendor. Temperature and max_tokens behave commonly
         # across all vendors.
         llm_vendor.configure(
-            model_name=llm_vendor.default_model,
+            model_name=model,
             temperature=temperature,
             max_tokens=max_tokens,
         )
@@ -195,15 +195,9 @@ def handler(
         # ways to bind tools to the model. We're sticking with the
         # original native OpenAI API method.
         llm_vendor.chat_llm.bind_tools(tools=tools)
+        first_response: AIMessage = llm_vendor.chat_llm.invoke(messages=messages)
 
-        first_response = openai.chat.completions.create(
-            model=model,
-            messages=messages,
-            tools=tools,
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
-        first_response_dict = json.loads(first_response.model_dump_json())
+        first_response_dict = first_response.to_json()
         first_iteration["response"] = first_response_dict
         chat_completion_called.send(
             sender=handler,
@@ -212,25 +206,25 @@ def handler(
             request=first_iteration["request"],
             response=first_iteration["response"],
         )
+        usage_metadata: Optional[UsageMetadata] = first_response.usage_metadata
         create_prompt_completion_charge(
-            handler.__name__,
-            user.id,
-            model,
-            first_response.usage.completion_tokens,
-            first_response.usage.prompt_tokens,
-            first_response.usage.total_tokens,
-            first_response.system_fingerprint,
+            reference=handler.__name__,
+            user_id=user.id,
+            model=model,
+            completion_tokens=usage_metadata.output_tokens,
+            prompt_tokens=usage_metadata.input_tokens,
+            total_tokens=usage_metadata.total_tokens,
+            fingerprint=first_response.id,
         )
-        response_message = first_response.choices[0].message
-        tool_calls = response_message.tool_calls
+        response_message = first_response.content
+        tool_calls: List[ToolCall] = first_response.tool_calls
         if tool_calls:
             modified_messages = messages.copy()
             # this is intended to force a json serialization exception
             # in the event that we've neglected to properly serialize all
             # responses from openai api.
-            response_message_dict = response_message.model_dump_json()
             serialized_messages: list = json.loads(json.dumps(modified_messages))
-            serialized_messages.append(response_message_dict)
+            serialized_messages.append(response_message)
             serialized_tool_calls = []
 
             # Step 3: call the function
@@ -242,9 +236,10 @@ def handler(
             for tool_call in tool_calls:
                 serialized_tool_call = {}
                 plugin: PluginStatic = None
-                function_name = tool_call.function.name
-                function_to_call = available_functions[function_name]
-                function_args = json.loads(tool_call.function.arguments)
+                function_name: str = tool_call.name
+                function_to_call: str = available_functions[function_name]
+                function_args: Dict[str, Any] = tool_call.args
+                function_id: Optional[str] = tool_call.id
                 serialized_tool_call["function_name"] = function_name
                 serialized_tool_call["function_args"] = function_args
 
@@ -264,7 +259,7 @@ def handler(
                     function_response = plugin.function_calling_plugin(inquiry_type=function_args.get("inquiry_type"))
                     serialized_tool_call["smarter_plugin"] = PluginMetaSerializer(plugin.plugin_meta).data
                 tool_call_message = {
-                    "tool_call_id": tool_call.id,
+                    "tool_call_id": function_id,
                     "role": "tool",
                     "name": function_name,
                     "content": function_response,
