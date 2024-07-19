@@ -12,8 +12,6 @@ import logging
 from http import HTTPStatus
 from typing import Any, Dict, List, Optional
 
-# FIX NOTE: DELETE ME!
-import openai
 from langchain_core import exceptions as langchain_exceptions
 from langchain_core.messages.ai import AIMessage, UsageMetadata
 from langchain_core.messages.tool import InvalidToolCall, ToolCall
@@ -93,7 +91,6 @@ def handler(
         data: Request data (see below)
         plugins: a List of plugins to potentially show to the LLM
         user: User instance
-        llm_vendor: LLMVendor instance: OpenAI, Anthropic, Cohere, Google, Mistral, etc.
         default_model: Default model to use for the chat completion example: "gpt-3.5-turbo"
         default_temperature: Default temperature to use for the chat completion example: 0.5
         default_max_tokens: Default max tokens to use for the chat completion example: 256
@@ -195,7 +192,8 @@ def handler(
         # according to the LangChain documentation, there are a few
         # ways to bind tools to the model. We're sticking with the
         # original native OpenAI API method.
-        llm_vendor.chat_llm.bind_tools(tools=tools)
+        if len(tools) > 0:
+            llm_vendor.chat_llm.bind_tools(tools=tools)
         first_response: AIMessage = llm_vendor.chat_llm.invoke(messages=messages)
 
         first_response_dict = first_response.to_json()
@@ -219,14 +217,14 @@ def handler(
         )
         response_message = first_response.content
         invalid_tool_calls: List[InvalidToolCall] = first_response.invalid_tool_calls
-        if invalid_tool_calls:
+        if invalid_tool_calls and len(invalid_tool_calls) > 0:
             chat_completion_invalid_tool_call.send(
                 sender=handler, chat=chat, invalid_tool_calls=invalid_tool_calls, request=first_iteration
             )
             raise SmarterIlligalInvocationError("Invalid tool call detected in the response.")
 
         tool_calls: List[ToolCall] = first_response.tool_calls
-        if tool_calls:
+        if tool_calls and len(tool_calls) > 0:
             modified_messages = messages.copy()
             # this is intended to force a json serialization exception
             # in the event that we've neglected to properly serialize all
