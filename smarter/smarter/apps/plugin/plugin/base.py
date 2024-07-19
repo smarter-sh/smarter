@@ -23,7 +23,7 @@ from smarter.lib.django.user import UserType
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
-from smarter.services.llm.vendors import OpenAIMessageKeys
+from smarter.services.llm.const import OpenAIMessageKeys
 
 from ..manifest.models.plugin.const import MANIFEST_KIND
 from ..manifest.models.plugin.model import SAMPlugin

@@ -14,7 +14,7 @@ from smarter.apps.plugin.manifest.enum import (
 from smarter.apps.plugin.models import PluginDataStatic
 from smarter.apps.plugin.serializers import PluginDataStaticSerializer
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import SettingsDefaults
+from smarter.common.const import SmarterLLMDefaults
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
 from ..manifest.models.plugin.const import MANIFEST_KIND
@@ -109,10 +109,11 @@ class PluginStatic(PluginBase):
                     ],
                 },
                 SAMPluginSpecKeys.PROMPT.value: {
-                    SAMPluginSpecPromptKeys.SYSTEMROLE.value: "You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com).\n",
-                    SAMPluginSpecPromptKeys.MODEL.value: SettingsDefaults.OPENAI_DEFAULT_MODEL,
-                    SAMPluginSpecPromptKeys.TEMPERATURE.value: SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE,
-                    SAMPluginSpecPromptKeys.MAXTOKENS.value: SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS,
+                    SAMPluginSpecPromptKeys.LLM_VENDOR.value: SmarterLLMDefaults.LLM_VENDOR,
+                    SAMPluginSpecPromptKeys.SYSTEMROLE.value: SmarterLLMDefaults.SYSTEM_ROLE,
+                    SAMPluginSpecPromptKeys.MODEL.value: SmarterLLMDefaults.MODEL,
+                    SAMPluginSpecPromptKeys.TEMPERATURE.value: SmarterLLMDefaults.TEMPERATURE,
+                    SAMPluginSpecPromptKeys.MAXTOKENS.value: SmarterLLMDefaults.MAX_TOKENS,
                 },
                 SAMPluginSpecKeys.DATA.value: {
                     SmartApiPluginSpecDataKeys.DESCRIPTION.value: "Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",

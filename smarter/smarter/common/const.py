@@ -55,6 +55,8 @@ VERSION = load_version()
 class SmarterLLMDefaults:
     """A class representing the default LLM configuration values"""
 
+    LLM_VENDOR = "LLMVendorOpenAI"
+    MODEL = "gpt-4o-mini"
     TEMPERATURE = 0.5
     MAX_TOKENS = 2048
     MAX_MAX_TOKENS = 4096 * 4

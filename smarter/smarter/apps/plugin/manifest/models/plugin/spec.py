@@ -18,7 +18,7 @@ from smarter.apps.plugin.manifest.enum import (
 )
 from smarter.apps.plugin.manifest.models.http_request.model import HttpRequest
 from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
-from smarter.common.conf import SettingsDefaults
+from smarter.common.const import SmarterLLMDefaults
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMSpecBase
@@ -98,9 +98,10 @@ class SAMPluginSpecPrompt(BaseModel):
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".prompt"
 
-    DEFAULT_MODEL: ClassVar[str] = SettingsDefaults.OPENAI_DEFAULT_MODEL
-    DEFAULT_TEMPERATURE: ClassVar[float] = SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE
-    DEFAULT_MAXTOKENS: ClassVar[int] = SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS
+    DEFAULT_LLM_VENDOR: ClassVar[str] = SmarterLLMDefaults.LLM_VENDOR
+    DEFAULT_MODEL: ClassVar[str] = SmarterLLMDefaults.MODEL
+    DEFAULT_TEMPERATURE: ClassVar[float] = SmarterLLMDefaults.TEMPERATURE
+    DEFAULT_MAXTOKENS: ClassVar[int] = SmarterLLMDefaults.MAX_TOKENS
 
     systemRole: str = Field(
         ...,

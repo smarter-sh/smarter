@@ -70,6 +70,7 @@ class SAMPluginSpecSelectorKeys(SmarterEnumAbstract):
 class SAMPluginSpecPromptKeys(SmarterEnumAbstract):
     """Smarter API Plugin Spec Prompt keys enumeration."""
 
+    LLM_VENDOR = "llmVendor"
     SYSTEMROLE = "systemRole"
     MODEL = "model"
     TEMPERATURE = "temperature"
