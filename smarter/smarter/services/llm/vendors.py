@@ -1,11 +1,9 @@
-# pylint: disable=W0221
-"""A module containing constants for the OpenAI API."""
+"""Multi-vendor support for Large Language Model (LLM) backing services."""
 
 import os
 from abc import ABC
 from typing import List, Optional, Type
 
-import openai
 from langchain_anthropic import ChatAnthropic
 from langchain_cohere import ChatCohere
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -29,12 +27,8 @@ class LLMVendor(ABC):
     _environment_variable_name: str = None
     _chat_llm_cls: Optional[Type[BaseChatModel]] = None
     _chat_llm: Optional[BaseChatModel] = None
-
-    # writable (set in subclass)
-    all_models: List[str] = None
-    default_model: str = None
-    is_default = False
-    smarter_plugin_support = False
+    _is_default = False
+    _smarter_plugin_support = False
 
     # llm configuration
     _model_name: str = None
@@ -43,6 +37,10 @@ class LLMVendor(ABC):
     _timeout = SmarterLLMDefaults.TIMEOUT
     _max_retries = SmarterLLMDefaults.MAX_RETRIES
 
+    # writable (set in subclass)
+    all_models: List[str] = None
+    default_model: str = None
+
     def __init__(self) -> None:
         super().__init__()
         self._name = self.__class__.__name__
@@ -50,6 +48,14 @@ class LLMVendor(ABC):
             raise NotImplementedError("all_models must be set in the subclass.")
         if not self.default_model:
             raise NotImplementedError("default_model must be set in the subclass.")
+
+    @property
+    def is_default(self) -> bool:
+        return self._is_default
+
+    @property
+    def smarter_plugin_support(self) -> bool:
+        return self._smarter_plugin_support
 
     @property
     def name(self) -> str:
@@ -66,6 +72,12 @@ class LLMVendor(ABC):
     @property
     def api_key(self) -> SecretStr:
         return self._api_key
+
+    @property
+    def api_key_hint(self) -> str:
+        if not self.api_key:
+            return "MISSING API KEY"
+        return str(self.api_key.get_secret_value())[:4] + "***"
 
     @property
     def chat_llm_cls(self) -> Type[BaseChatModel]:
@@ -127,7 +139,6 @@ class LLMVendor(ABC):
 
     def configure(
         self,
-        api_key: SecretStr,
         model_name: str,
         temperature: float = None,
         max_tokens: int = None,
@@ -147,7 +158,6 @@ class LLMVendor(ABC):
         """
 
         # credentials configuration
-        self._api_key = api_key
         if self.environment_variable_name and self.api_key:
             os.environ[self.environment_variable_name] = self.api_key.get_secret_value()
 
@@ -162,8 +172,20 @@ class LLMVendor(ABC):
         # with the new configuration.
         self._chat_llm = None
 
+    def dump(self) -> dict:
+        """Dump the configuration to a dictionary."""
+        return {
+            "name": self.name,
+            "api_key": self.api_key_hint,
+            "model_name": self.model_name,
+            "temperature": self.temperature,
+            "max_tokens": self.max_tokens,
+            "timeout": self.timeout,
+            "max_retries": self.max_retries,
+        }
+
     def __str__(self) -> str:
-        return self.name + " - " + self.model_name + " - " + str(self.api_key.get_secret_value()).left(4)
+        return self.name + " - " + self.model_name + " - " + self.api_key_hint
 
 
 class LLMVendorAnthropic(LLMVendor):
@@ -194,13 +216,17 @@ class LLMVendorAnthropic(LLMVendor):
         CLAUDE_3_HAIKU,
     ]
     default_model = CLAUDE_3_5_SONNET
-    smarter_plugin_support = True
 
     def __init__(self) -> None:
+        """
+        Initialize the Anthropic Large Language Model class.
+        see: https://python.langchain.com/v0.2/docs/integrations/platforms/anthropic/
+        """
         super().__init__()
         self._chat_llm_cls = ChatAnthropic
-        # https://python.langchain.com/v0.2/docs/integrations/platforms/anthropic/
         self._environment_variable_name = "ANTHROPIC_API_KEY"
+        self._api_key = (smarter_settings.anthropic_api_key,)
+        self._smarter_plugin_support = True
 
     @property
     def chat_llm(self) -> ChatAnthropic:
@@ -237,7 +263,6 @@ class LLMVendorAnthropic(LLMVendor):
             max_retries (int): The maximum number of retries for the request.
         """
         super().configure(
-            api_key=smarter_settings.anthropic_api_key,
             model_name=model_name,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -279,13 +304,17 @@ class LLMVendorCohere(LLMVendor):
         COMMAND_LIGHT_NIGHTLY,
     ]
     default_model = COMMAND_R_PLUS
-    smarter_plugin_support = True
 
     def __init__(self) -> None:
+        """
+        Initialize the Cohere Large Language Model class.
+        see: https://python.langchain.com/v0.1/docs/integrations/providers/cohere/
+        """
         super().__init__()
         self._chat_llm_cls = ChatCohere
-        # https://python.langchain.com/v0.1/docs/integrations/providers/cohere/
         self._environment_variable_name = "COHERE_API_KEY"
+        self._api_key = (smarter_settings.cohere_api_key,)
+        self._smarter_plugin_support = True
 
     @property
     def chat_llm(self) -> ChatCohere:
@@ -322,7 +351,6 @@ class LLMVendorCohere(LLMVendor):
             max_retries (int): The maximum number of retries for the request.
         """
         super().configure(
-            api_key=smarter_settings.cohere_api_key,
             model_name=model_name,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -351,13 +379,17 @@ class LLMFireworks(LLMVendor):
     FIRE_FUNCTION_V2 = "firefunction-v2"
     all_models = [FIRE_FUNCTION_V2]
     default_model = FIRE_FUNCTION_V2
-    smarter_plugin_support = True
 
     def __init__(self) -> None:
+        """
+        Initialize the Fireworks Large Language Model class.
+        see: https://python.langchain.com/v0.2/docs/integrations/providers/fireworks/
+        """
         super().__init__()
-        # https://python.langchain.com/v0.2/docs/integrations/providers/fireworks/
         self._chat_llm_cls = ChatFireworks
         self._environment_variable_name = "FIREWORKS_API_KEY"
+        self._api_key = (smarter_settings.fireworks_api_key,)
+        self._smarter_plugin_support = True
 
     @property
     def chat_llm(self) -> ChatFireworks:
@@ -394,7 +426,6 @@ class LLMFireworks(LLMVendor):
             max_retries (int): The maximum number of retries for the request.
         """
         super().configure(
-            api_key=smarter_settings.fireworks_api_key,
             model_name=model_name,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -436,13 +467,16 @@ class LLMVendorGoogleVertex(LLMVendor):
         AQA,
     ]
     default_model = GEMINI_1_5_PRO
-    smarter_plugin_support = True
 
     def __init__(self) -> None:
+        """
+        Initialize the Google VertexAI Large Language Model class.
+        see: https://python.langchain.com/v0.2/docs/integrations/llms/google_ai
+        """
         super().__init__()
-
-        # https://python.langchain.com/v0.2/docs/integrations/llms/google_ai/
         self._chat_llm_cls = ChatVertexAI
+        self._api_key = (smarter_settings.google_ai_studio_api_key,)
+        self._smarter_plugin_support = True
 
     @property
     def chat_llm(self) -> ChatVertexAI:
@@ -479,7 +513,6 @@ class LLMVendorGoogleVertex(LLMVendor):
             max_retries (int): The maximum number of retries for the request.
         """
         super().configure(
-            api_key=smarter_settings.google_ai_studio_api_key,
             model_name=model_name,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -525,14 +558,17 @@ class LLMVendorMistral(LLMVendor):
         CODESTRAL_MAMBA,
     ]
     default_model = MISTRAL_7B
-    smarter_plugin_support = True
 
     def __init__(self) -> None:
+        """
+        Initialize the Mistral Large Language Model class.
+        see: https://python.langchain.com/v0.2/docs/integrations/chat/mistralai/
+        """
         super().__init__()
-        # https://python.langchain.com/v0.2/docs/integrations/chat/mistralai/
         self._chat_llm_cls = ChatMistralAI
-
         self._environment_variable_name = "MISTRAL_API_KEY"
+        self._api_key = (smarter_settings.mistral_api_key,)
+        self._smarter_plugin_support = True
 
     @property
     def chat_llm(self) -> ChatMistralAI:
@@ -569,7 +605,6 @@ class LLMVendorMistral(LLMVendor):
             max_retries (int): The maximum number of retries for the request.
         """
         super().configure(
-            api_key=smarter_settings.mistral_api_key,
             model_name=model_name,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -582,6 +617,7 @@ class LLMVendorMistral(LLMVendor):
 class LLMVendorOpenAI(LLMVendor):
     """
     OpenAI Large Language Model class.
+    https://platform.openai.com/docs/overview
 
     This is a private class. Do not import this class directly.
     Instead, you should use LLMVendors() to create an instance.
@@ -626,7 +662,17 @@ class LLMVendorOpenAI(LLMVendor):
         GPT3_5_TURBO_INSTRUCT,
     ]
     default_model = GPT3
-    smarter_plugin_support = True
+
+    def __init__(self) -> None:
+        """
+        Initialize the OpenAI Large Language Model class.
+        see: https://python.langchain.com/v0.2/docs/integrations/chat/openai/
+        """
+        super().__init__()
+        self._chat_llm_cls = ChatOpenAI
+        self._environment_variable_name = "OPENAI_API_KEY"
+        self._api_key = (smarter_settings.openai_api_key,)
+        self._smarter_plugin_support = True
 
     @property
     def chat_llm(self) -> ChatOpenAI:
@@ -641,12 +687,6 @@ class LLMVendorOpenAI(LLMVendor):
             )
 
         return self._chat_llm
-
-    def __init__(self) -> None:
-        super().__init__()
-        # https://python.langchain.com/v0.2/docs/integrations/chat/mistralai/
-        self._chat_llm_cls = ChatOpenAI
-        self._environment_variable_name = "OPENAI_API_KEY"
 
     def configure(
         self,
@@ -669,7 +709,6 @@ class LLMVendorOpenAI(LLMVendor):
             max_retries (int): The maximum number of retries for the request.
         """
         super().configure(
-            api_key=smarter_settings.openai_api_key,
             model_name=model_name,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -682,11 +721,12 @@ class LLMVendorOpenAI(LLMVendor):
 class LLMTogether(LLMVendor):
     """
     TogetherAI Large Language Model class.
+    https://www.together.ai/
 
     This is a private class. Do not import this class directly.
     Instead, you should use LLMVendors() to create an instance.
 
-    An Together API key is required to use this class.
+    A together.ai API key is required to use this class.
 
     usage:
         vendor = LLMVendors.get_by_name(name="LLMTogether")
@@ -700,8 +740,14 @@ class LLMTogether(LLMVendor):
     default_model = LLAMA_3
 
     def __init__(self) -> None:
+        """
+        Initialize the Together Large Language Model class.
+        see: https://python.langchain.com/v0.2/docs/integrations/chat/togetherai/
+        """
         super().__init__()
         self._chat_llm_cls = ChatTogether
+        self._api_key = (smarter_settings.togetherai_api_key,)
+        self._smarter_plugin_support = True
 
     @property
     def chat_llm(self) -> ChatTogether:
@@ -737,7 +783,6 @@ class LLMTogether(LLMVendor):
             max_retries (int): The maximum number of retries for the request.
         """
         super().configure(
-            api_key=smarter_settings.togetherai_api_key,
             model_name=model_name,
             temperature=temperature,
             max_tokens=max_tokens,
@@ -761,13 +806,15 @@ class LLMDefault(LLMVendor):
         response = vendor.chat_llm.generate("Hello, world!")
     """
 
-    llm = LLMVendorOpenAI()
+    def __init__(self) -> None:
+        super().__init__()
+        llm = LLMVendorOpenAI()
 
-    all_models = llm.all_models
-    name = llm.name
-    is_default = True
-    default_model = llm.default_model
-    smarter_plugin_support = llm.smarter_plugin_support
+        self.all_models = llm.all_models
+        self.name = llm.name
+        self.default_model = llm.default_model
+        self.smarter_plugin_support = llm.smarter_plugin_support
+        self._is_default = True
 
 
 class LLMVendors:
@@ -843,54 +890,3 @@ llm_vendors = LLMVendors()
 # Legacy Constants. All of these are deprecated and should not be used.
 ###############################################################################
 VALID_CHAT_COMPLETION_MODELS = LLMVendors.all_models
-
-
-# pylint: disable=too-few-public-methods
-class OpenAIObjectTypes:
-    """V1 API Object Types (replace OpeanAIEndPoint)"""
-
-    Embedding = "embedding"
-    ChatCompletion = "chat.completion"
-    Moderation = "moderation"
-    Image = "image"
-    Audio = "audio"
-    Models = "models"
-    all_object_types = [Embedding, ChatCompletion, Moderation, Image, Audio, Models]
-
-
-# pylint: disable=too-few-public-methods
-class OpenAIEndPoint:
-    """
-    A class representing an endpoint for the OpenAI API.
-
-    Attributes:
-        api_key (str): The API key to use for authentication.
-        endpoint (str): The URL of the OpenAI API endpoint.
-    """
-
-    Embedding = openai.Embedding.__name__
-    ChatCompletion = "chat/completions"
-    Moderation = openai.Moderation.__name__
-    Image = openai.Image.__name__
-    Audio = openai.Audio.__name__
-    Models = openai.Model.__name__
-    all_endpoints = [Embedding, ChatCompletion, Moderation, Image, Audio, Models]
-
-
-# pylint: disable=too-few-public-methods
-class OpenAIMessageKeys:
-    """A class representing the keys for a message in the OpenAI API."""
-
-    OPENAI_MESSAGE_ROLE_KEY = "role"
-    OPENAI_MESSAGE_CONTENT_KEY = "content"
-    OPENAI_USER_MESSAGE_KEY = "user"
-    OPENAI_ASSISTANT_MESSAGE_KEY = "assistant"
-    OPENAI_SYSTEM_MESSAGE_KEY = "system"
-    all = [
-        OPENAI_SYSTEM_MESSAGE_KEY,
-        OPENAI_USER_MESSAGE_KEY,
-        OPENAI_ASSISTANT_MESSAGE_KEY,
-    ]
-
-
-LANGCHAIN_MESSAGE_HISTORY_ROLES = ["user", "assistant"]

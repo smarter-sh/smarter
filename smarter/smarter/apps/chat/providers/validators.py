@@ -3,7 +3,7 @@
 import json
 
 from smarter.common.exceptions import SmarterValueError
-from smarter.services.llm.vendors import (
+from smarter.services.llm.const import (
     OpenAIEndPoint,
     OpenAIMessageKeys,
     OpenAIObjectTypes,
