@@ -23,7 +23,7 @@ from smarter.apps.chatbot.models import (
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.utils import get_plugin_examples_by_name
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import SettingsDefaults
+from smarter.common.const import SmarterLLMDefaults
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
@@ -294,8 +294,8 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                         "you are still unable to provide a response, you should inform the user "
                         "that you are unable to help them at this time."
                     ),
-                    "defaultTemperature": SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE,
-                    "defaultMaxTokens": SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS,
+                    "defaultTemperature": SmarterLLMDefaults.TEMPERATURE,
+                    "defaultMaxTokens": SmarterLLMDefaults.MAX_TOKENS,
                     "appName": "Example Chatbot",
                     "appAssistant": "Elle",
                     "appWelcomeMessage": "Welcome to the Example Chatbot! How can I help you today?",

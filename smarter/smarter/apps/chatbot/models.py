@@ -114,14 +114,13 @@ class ChatBot(TimestampedModel):
         FAILED = "Failed", "Failed"
 
     class LLMVendorChoices(models.TextChoices):
-        Default = llm_vendors.llm_default.name, llm_vendors.llm_default.presentation_name
         Anthropic = llm_vendors.llm_anthropic.name, llm_vendors.llm_anthropic.presentation_name
         Cohere = llm_vendors.llm_cohere.name, llm_vendors.llm_cohere.presentation_name
         Fireworks = llm_vendors.llm_fireworks.name, llm_vendors.llm_fireworks.presentation_name
         GoogleVortex = llm_vendors.llm_google_ai_studio.name, llm_vendors.llm_google_ai_studio.presentation_name
         Mistral = llm_vendors.llm_mistral.name, llm_vendors.llm_mistral.presentation_name
         OpenAI = llm_vendors.llm_openai.name, llm_vendors.llm_openai.presentation_name
-        TogetherAI = llm_vendors.llm_togetherai.name, llm_vendors.llm_togetherai.presentation_name
+        TogetherAI = llm_vendors.llm_together.name, llm_vendors.llm_together.presentation_name
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)

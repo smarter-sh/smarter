@@ -14,7 +14,7 @@ from smarter.apps.plugin.manifest.enum import (
 from smarter.apps.plugin.models import PluginDataSql, PluginDataSqlConnection
 from smarter.apps.plugin.serializers import PluginDataSqlSerializer
 from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import SettingsDefaults
+from smarter.common.const import SmarterLLMDefaults
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
@@ -143,10 +143,11 @@ class PluginSql(PluginBase):
                     SAMPluginSpecSelectorKeys.SEARCHTERMS.value: ["admin", "Smarter platform", "admin account"],
                 },
                 SAMPluginSpecKeys.PROMPT.value: {
-                    SAMPluginSpecPromptKeys.SYSTEMROLE.value: "You are a helpful assistant for Smarter platform. You can provide information about the admin account of the Smarter platform.\n",
-                    SAMPluginSpecPromptKeys.MODEL.value: SettingsDefaults.OPENAI_DEFAULT_MODEL,
-                    SAMPluginSpecPromptKeys.TEMPERATURE.value: SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE,
-                    SAMPluginSpecPromptKeys.MAXTOKENS.value: SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS,
+                    SAMPluginSpecPromptKeys.LLM_VENDOR.value: SmarterLLMDefaults.LLM_VENDOR,
+                    SAMPluginSpecPromptKeys.SYSTEMROLE.value: SmarterLLMDefaults.SYSTEM_ROLE,
+                    SAMPluginSpecPromptKeys.MODEL.value: SmarterLLMDefaults.MODEL,
+                    SAMPluginSpecPromptKeys.TEMPERATURE.value: SmarterLLMDefaults.TEMPERATURE,
+                    SAMPluginSpecPromptKeys.MAXTOKENS.value: SmarterLLMDefaults.MAX_TOKENS,
                 },
                 SAMPluginSpecKeys.DATA.value: {
                     "description": "Query the Django User model to retrieve detailed account information about the admin account for the Smarter platform .",

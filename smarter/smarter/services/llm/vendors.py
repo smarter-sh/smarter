@@ -363,7 +363,9 @@ class LLMVendorCohere(LLMVendor):
 class LLMVendorFireworks(LLMVendor):
     """
     ChatFireworks Large Language Model class.
-    https://fireworks.ai/
+    see:
+    - https://fireworks.ai/
+    - https://docs.fireworks.ai/guides/function-calling
 
     This is a private class. Do not import this class directly.
     Instead, you should use LLMVendors() to create an instance.
@@ -376,8 +378,10 @@ class LLMVendorFireworks(LLMVendor):
         response = vendor.chat_llm.generate("Hello, world!")
     """
 
-    FIRE_FUNCTION_V2 = "firefunction-v2"
-    all_models = [FIRE_FUNCTION_V2]
+    FIRE_FUNCTION_V2 = "accounts/fireworks/models/firefunction-v2"
+    FIRE_FUNCTION_V1 = "accounts/fireworks/models/firefunction-v1"
+
+    all_models = [FIRE_FUNCTION_V1, FIRE_FUNCTION_V2]
     default_model = FIRE_FUNCTION_V2
 
     def __init__(self) -> None:
@@ -745,10 +749,12 @@ class LLMVendorTogether(LLMVendor):
         response = vendor.chat_llm.generate("Hello, world!")
     """
 
-    LLAMA_3 = "meta-llama/Llama-3-70b-chat-hf"
+    MISTRAL_8X7B = "mistralai/Mixtral-8x7B-Instruct-v0.1"
+    MISTRAL_7B = "mistralai/Mistral-7B-Instruct-v0.1"
+    CODE_LLAMA = "togethercomputer/CodeLlama-34b-Instruct"
 
-    all_models = [LLAMA_3]
-    default_model = LLAMA_3
+    all_models = [MISTRAL_8X7B, MISTRAL_7B, CODE_LLAMA]
+    default_model = MISTRAL_8X7B
 
     def __init__(self) -> None:
         """
@@ -817,15 +823,13 @@ class LLMVendorDefault(LLMVendor):
         response = vendor.chat_llm.generate("Hello, world!")
     """
 
-    def __init__(self) -> None:
-        super().__init__()
-        llm = LLMVendorOpenAI()
+    llm = LLMVendorOpenAI()
 
-        self.all_models = llm.all_models
-        self.name = llm.name
-        self.default_model = llm.default_model
-        self.smarter_plugin_support = llm.smarter_plugin_support
-        self._is_default = True
+    all_models = llm.all_models
+    name = llm.name
+    default_model = llm.default_model
+    smarter_plugin_support = llm.smarter_plugin_support
+    _is_default = True
 
 
 class LLMVendors:
