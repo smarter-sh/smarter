@@ -2,15 +2,18 @@
 
 # pylint: disable=W0613,C0115
 import logging
+from typing import List, Optional
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from langchain_core.messages.tool import InvalidToolCall
 
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 
 from .models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall, PluginMeta
 from .signals import (
     chat_completion_called,
+    chat_completion_invalid_tool_call,
     chat_completion_plugin_selected,
     chat_completion_tool_call_created,
     chat_invoked,
@@ -87,6 +90,30 @@ def handle_chat_completion_tool_call(sender, **kwargs):
             request=request,
             response=response,
         ).save()
+
+
+@receiver(chat_completion_invalid_tool_call, dispatch_uid="chat_completion_invalid_tool_call")
+def handle_chat_completion_invalid_tool_call(sender, **kwargs):
+    """
+    Handle chat completion invalid tool call signal.
+
+    sender=handler,
+    chat=chat,
+    invalid_tool_calls=invalid_tool_calls,
+    request=first_iteration
+
+    """
+    chat: Chat = kwargs.get("chat")
+    invalid_tool_calls: Optional[List[InvalidToolCall]] = kwargs.get("invalid_tool_calls")
+    request: dict = kwargs.get("request")
+
+    logger.warning(
+        "%s for chat %s, invalid tools: %s, request: %s",
+        formatted_text("chat_completion_invalid_tool_call"),
+        chat,
+        invalid_tool_calls,
+        request,
+    )
 
 
 @receiver(chat_completion_plugin_selected, dispatch_uid="chat_completion_plugin_selected")

@@ -38,6 +38,7 @@ from smarter.apps.chat.providers.utils import (
 from smarter.apps.chat.providers.validators import validate_item
 from smarter.apps.chat.signals import (
     chat_completion_called,
+    chat_completion_invalid_tool_call,
     chat_completion_plugin_selected,
     chat_completion_tool_call_created,
     chat_invoked,
@@ -217,6 +218,13 @@ def handler(
             fingerprint=first_response.id,
         )
         response_message = first_response.content
+        invalid_tool_calls: List[InvalidToolCall] = first_response.invalid_tool_calls
+        if invalid_tool_calls:
+            chat_completion_invalid_tool_call.send(
+                sender=handler, chat=chat, invalid_tool_calls=invalid_tool_calls, request=first_iteration
+            )
+            raise SmarterIlligalInvocationError("Invalid tool call detected in the response.")
+
         tool_calls: List[ToolCall] = first_response.tool_calls
         if tool_calls:
             modified_messages = messages.copy()
