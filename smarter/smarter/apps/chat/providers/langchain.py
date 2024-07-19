@@ -43,8 +43,9 @@ from smarter.apps.chat.signals import (
     chat_response_failure,
     chat_response_success,
 )
-from smarter.apps.plugin.plugin.static import PluginStatic
+from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.serializers import PluginMetaSerializer
+from smarter.apps.plugin.utils import get_plugin_by_id
 from smarter.common.const import SmarterLLMDefaults
 from smarter.common.exceptions import (
     SmarterConfigurationError,
@@ -75,7 +76,7 @@ EXCEPTION_MAP = {
 def handler(
     chat: Chat,
     data: dict,
-    plugins: List[PluginStatic] = None,
+    plugins: Optional[List[PluginBase]] = None,
     user: UserType = None,
     default_system_role: str = SmarterLLMDefaults.SYSTEM_ROLE,
     default_temperature: float = SmarterLLMDefaults.TEMPERATURE,
@@ -129,20 +130,28 @@ def handler(
         "get_current_weather": get_current_weather,
     }
     try:
-        # initializations. we're mainly concerned with ensuring consistent application
-        # of default values in cases where chat.chatbot or chat.chatbot.llm_vendor is None,
-        # or the specific chatbot attribute is not set.
-        llm_vendor = chat.chatbot.llm_vendor or llm_vendors.get_default_llm_vendor()
-        model = chat.chatbot.default_model or llm_vendor.default_model
-        default_system_role = chat.chatbot.default_system_role or default_system_role
-
         request_body = get_request_body(data=data)
         messages, input_text = parse_request(request_body)
-        messages = ensure_system_role_present(messages=messages, default_system_role=default_system_role)
 
+        # hereon we're mainly concerned with ensuring consistent application
+        # of default values in cases where chat.chatbot or chat.chatbot.llm_vendor is None,
+        # or the specific chatbot attribute is not set.
+        if chat.chatbot.llm_vendor and chat.chatbot.default_model:
+            llm_vendor = chat.chatbot.llm_vendor or llm_vendors.get_default_llm_vendor()
+            model = chat.chatbot.default_model
+        else:
+            llm_vendor = llm_vendors.get_default_llm_vendor()
+            model = llm_vendor.default_model
+            logger.warning(
+                "smarter.apps.chat.providers.langchain.handler(): default model "
+                "not set in chatbot. Reverted to default llm_vendor and model."
+            )
+        default_system_role = chat.chatbot.default_system_role or default_system_role
+        messages = ensure_system_role_present(messages=messages, default_system_role=default_system_role)
         temperature = chat.chatbot.default_temperature or default_temperature
         max_tokens = chat.chatbot.default_max_tokens or default_max_tokens
         request_meta_data = request_meta_data_factory(model, temperature, max_tokens, input_text)
+
         chat_invoked.send(sender=handler, chat=chat, data=data)
 
         # vendor configuration settings. The model is validated against the vendor's available models
@@ -241,7 +250,7 @@ def handler(
 
             for tool_call in tool_calls:
                 serialized_tool_call = {}
-                plugin: PluginStatic = None
+                plugin: Optional[PluginBase] = None
                 function_name: str = tool_call.name
                 function_to_call: str = available_functions[function_name]
                 function_args: Dict[str, Any] = tool_call.args
@@ -260,7 +269,9 @@ def handler(
                     # function_to_call, assigned above. but just to play it safe,
                     # we're directly invoking the plugin's function_calling_plugin() method.
                     plugin_id = int(function_name[-4:])
-                    plugin = PluginStatic(plugin_id=plugin_id)
+
+                    # This will correctly instantiate the plugin: PluginStatic, PluginSql, PluginApi
+                    plugin = get_plugin_by_id(plugin_id)
                     plugin.params = function_args
                     function_response = plugin.function_calling_plugin(inquiry_type=function_args.get("inquiry_type"))
                     serialized_tool_call["smarter_plugin"] = PluginMetaSerializer(plugin.plugin_meta).data
