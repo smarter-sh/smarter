@@ -18,7 +18,7 @@ mysqlclient==2.2.4                      # MySQL client
 requests==2.32.3                        # HTTP requests library
 requests-cache==1.2.0                   # HTTP requests caching
 retry-requests==2.0.0                   # HTTP requests retry
-social-auth-app-django==5.4.1           # Social authentication for Django
+social-auth-app-django==5.4.2           # Social authentication for Django
 tldextract==5.1.2                       # Extracts the top-level domain from a URL
 validators==0.29.0                      # Data validation library
 whitenoise==6.6.0                       # static file serving
