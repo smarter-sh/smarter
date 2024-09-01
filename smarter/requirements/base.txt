@@ -12,7 +12,7 @@ cachetools==5.3.3                       # Python object caching library
 celery==5.4.0                           # asynchronous task queue. works with redis.
 celery-redbeat==2.2.0                   # scheduled asynchronous tasks
 dnspython==2.6.1                        # DNS toolkit for Python
-inflect==7.2.1                          # Pluralization and singularization
+inflect==7.3.1                          # Pluralization and singularization
 htmlmin==0.1.12                         # HTML minification, for browser performance optimization
 mysqlclient==2.2.4                      # MySQL client
 requests==2.32.3                        # HTTP requests library
