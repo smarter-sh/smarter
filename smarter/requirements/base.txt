@@ -43,7 +43,7 @@ django-waffle==4.1.0                    # Feature flagging
 # ------------
 pandas==2.2.2                           # Data manipulation for data science stuff
 python-dotenv==1.0.1                    # for reading environment variables from .env files
-pydantic==2.8.0                         # best data validation library ever!
+pydantic==2.9.2                         # best data validation library ever!
 pydantic-settings==2.2.1                # settings management
 
 # Natural language and LLM support
