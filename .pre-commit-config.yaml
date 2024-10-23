@@ -3,7 +3,7 @@ default_language_version:
   python: python3.11
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.18.0
+    rev: v3.19.0
     hooks:
       - id: pyupgrade
   - repo: https://github.com/codespell-project/codespell
@@ -77,7 +77,7 @@ repos:
       - id: check-merge-conflict
       - id: debug-statements
   - repo: https://github.com/gruntwork-io/pre-commit
-    rev: v0.1.23 # Get the latest from: https://github.com/gruntwork-io/pre-commit/releases
+    rev: v0.1.24 # Get the latest from: https://github.com/gruntwork-io/pre-commit/releases
     hooks:
       - id: terraform-fmt
       - id: terraform-validate
