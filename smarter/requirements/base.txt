@@ -21,12 +21,12 @@ retry-requests==2.0.0                   # HTTP requests retry
 social-auth-app-django==5.4.2           # Social authentication for Django
 tldextract==5.1.2                       # Extracts the top-level domain from a URL
 validators==0.29.0                      # Data validation library
-whitenoise==6.6.0                       # static file serving
+whitenoise==6.8.2                       # static file serving
 
 
 # Django
 # ------------
-Django==5.0.6
+Django==5.1.2
 django-extensions==3.2.3
 django-debug-toolbar==4.4.6
 django-redis==5.4.0                     # object caching
@@ -49,8 +49,8 @@ pydantic-settings==2.2.1                # settings management
 # Natural language and LLM support
 # ------------
 openai==1.35.8                          # OpenAI API
-pyyaml==6.0.1                           # YAML parser
-langchain==0.2.14                        # LLM abstractions library for building complex workflows
+pyyaml==6.0.2                           # YAML parser
+langchain==0.3.6                        # LLM abstractions library for building complex workflows
 langchain-openai==0.1.20                # OpenAI plugin for Langchain
 python-Levenshtein==0.25.1              # Levenshtein distance calculation for LLMs
 nltk==3.8.1                             # Natural Language Toolkit
