@@ -6,12 +6,12 @@
 
 # General back end
 # ------------
-boto3==1.34.117                         # AWS CLI SDK
+boto3==1.35.54                         # AWS CLI SDK
 botocore                                # AWS CLI SDK
 cachetools==5.5.0                       # Python object caching library
 celery==5.4.0                           # asynchronous task queue. works with redis.
 celery-redbeat==2.2.0                   # scheduled asynchronous tasks
-dnspython==2.6.1                        # DNS toolkit for Python
+dnspython==2.7.0                        # DNS toolkit for Python
 inflect==7.4.0                          # Pluralization and singularization
 htmlmin==0.1.12                         # HTML minification, for browser performance optimization
 mysqlclient==2.2.6                      # MySQL client
@@ -19,8 +19,8 @@ requests==2.32.3                        # HTTP requests library
 requests-cache==1.2.1                   # HTTP requests caching
 retry-requests==2.0.0                   # HTTP requests retry
 social-auth-app-django==5.4.2           # Social authentication for Django
-tldextract==5.1.2                       # Extracts the top-level domain from a URL
-validators==0.29.0                      # Data validation library
+tldextract==5.1.3                       # Extracts the top-level domain from a URL
+validators==0.34.0                      # Data validation library
 whitenoise==6.8.2                       # static file serving
 
 
@@ -34,14 +34,14 @@ django-celery-beat==2.7.0               # scheduled asynchronous tasks
 djangorestframework==3.15.2             # for creating REST APIs on top of Django
 django-filter==24.1                     # REST API filtering
 django-taggit==5.0.1                    # Smarter Plugin tagging
-django-rest-knox==4.2.0                 # Token authentication for REST APIs
+django-rest-knox==5.0.2                 # Token authentication for REST APIs
 dj-stripe==2.8.4                        # Stripe card processing integration
-django-cors-headers==4.3.1              # Cross-origin resource sharing
-django-waffle==4.1.0                    # Feature flagging
+django-cors-headers==4.6.0              # Cross-origin resource sharing
+django-waffle==4.2.0                    # Feature flagging
 
 # for working with data
 # ------------
-pandas==2.2.2                           # Data manipulation for data science stuff
+pandas==2.2.3                           # Data manipulation for data science stuff
 python-dotenv==1.0.1                    # for reading environment variables from .env files
 pydantic==2.9.2                         # best data validation library ever!
 pydantic-settings==2.2.1                # settings management
@@ -73,5 +73,5 @@ drf-yasg==1.21.7                        # Swagger API documentation
 lxml==5.2.2                             # parser for Wagtail page compression
 markdown==3.6                           # Markdown reader/parser
 python-hcl2==4.3.3                      # Terraform hcl parser for reading Terraform tfvars files
-wagtail==6.1.2                          # Wagail CMS, for building static pages
+wagtail==6.3.1                          # Wagail CMS, for building static pages
 wagtail-transfer==0.9.4                 # https://github.com/wagtail/wagtail-transfer
