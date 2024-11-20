@@ -16,7 +16,7 @@ inflect==7.4.0                          # Pluralization and singularization
 htmlmin==0.1.12                         # HTML minification, for browser performance optimization
 mysqlclient==2.2.6                      # MySQL client
 requests==2.32.3                        # HTTP requests library
-requests-cache==1.2.0                   # HTTP requests caching
+requests-cache==1.2.1                   # HTTP requests caching
 retry-requests==2.0.0                   # HTTP requests retry
 social-auth-app-django==5.4.2           # Social authentication for Django
 tldextract==5.1.2                       # Extracts the top-level domain from a URL
