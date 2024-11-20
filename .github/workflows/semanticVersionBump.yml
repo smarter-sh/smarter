@@ -81,8 +81,8 @@ jobs:
         id: version
         run: |
           ORIGINAL_DIR=$(pwd)
-          cd ${{ env.PACKAGE_PATH }}
           CURRENT_VERSION=$(python -c 'from __version__ import __version__; print(__version__)')
+          cd ${{ env.PACKAGE_PATH }}
           NEXT_VERSION=$(npx semantic-release --dry-run --no-ci  | awk '/The next release version is/{print $NF}')
           NEXT_VERSION=${NEXT_VERSION:-$CURRENT_VERSION}
           VERSION_CHANGED=$([ "$CURRENT_VERSION" != "$NEXT_VERSION" ] && echo "true" || echo "false")
