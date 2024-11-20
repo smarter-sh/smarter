@@ -91,7 +91,7 @@ COPY ./docker-compose.yml /data/docker-compose.yml
 
 # Build the React app and collect static files
 WORKDIR /smarter/smarter/apps/chatapp/reactapp
-RUN npm install --omit=dev
+RUN npm install
 RUN npm run build
 
 WORKDIR /smarter
