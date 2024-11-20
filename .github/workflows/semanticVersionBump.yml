@@ -80,6 +80,7 @@ jobs:
       - name: Get current version and calculate next version
         id: version
         run: |
+          cd ${{ env.PACKAGE_PATH }}
           CURRENT_VERSION=$(python -c 'from __version__ import __version__; print(__version__)')
           cd ${{ github.workspace }}/
           NEXT_VERSION=$(npx semantic-release --dry-run --no-ci  | awk '/The next release version is/{print $NF}')
@@ -88,7 +89,6 @@ jobs:
           echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
           echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
           echo "VERSION_CHANGED=$VERSION_CHANGED" >> $GITHUB_ENV
-          cd ${{ env.PACKAGE_PATH }}
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
 
@@ -96,6 +96,7 @@ jobs:
         if: env.VERSION_CHANGED == 'true'
         id: update_version
         run: |
+          cd ${{ env.PACKAGE_PATH }}
           echo "# DO NOT EDIT." > ${{ env.VERSION_FILE }}
           echo "# Managed via automated CI/CD in .github/workflows/semanticVersionBump.yml." >> ${{ env.VERSION_FILE }}
           echo "__version__ = \"${{ env.NEXT_VERSION }}\"" >>  ${{ env.VERSION_FILE }}
