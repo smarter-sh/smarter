@@ -111,7 +111,7 @@ docker-init:
 		python manage.py verify_dns_configuration && \
 		python manage.py deploy_demo_api && \
 		python manage.py seed_chat_history && \
-		python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/QueriumCorp/smarter-demo" && \
+		python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/QueriumCorp/smarter-demo && \
 		python manage.py initialize_wagtail && \
 	echo "Docker and Smarter are initialized." && \
 	docker ps
