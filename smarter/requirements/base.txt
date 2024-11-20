@@ -30,7 +30,7 @@ Django==5.1.2
 django-extensions==3.2.3
 django-debug-toolbar==4.4.6
 django-redis==5.4.0                     # object caching
-django-celery-beat==2.6.0               # scheduled asynchronous tasks
+django-celery-beat==2.7.0               # scheduled asynchronous tasks
 djangorestframework==3.15.2             # for creating REST APIs on top of Django
 django-filter==24.1                     # REST API filtering
 django-taggit==5.0.1                    # Smarter Plugin tagging
@@ -50,7 +50,7 @@ pydantic-settings==2.2.1                # settings management
 # ------------
 openai==1.35.8                          # OpenAI API
 pyyaml==6.0.2                           # YAML parser
-langchain==0.3.6                        # LLM abstractions library for building complex workflows
+langchain==0.2.17                        # LLM abstractions library for building complex workflows
 langchain-openai==0.1.20                # OpenAI plugin for Langchain
 python-Levenshtein==0.25.1              # Levenshtein distance calculation for LLMs
 nltk==3.8.1                             # Natural Language Toolkit
