@@ -1,5 +1,6 @@
 SHELL := /bin/bash
 include .env
+export PATH := /usr/local/bin:$(PATH)
 export
 
 ifeq ($(OS),Windows_NT)
@@ -94,10 +95,9 @@ docker-shell:
 	docker exec -it smarter-app /bin/bash
 
 docker-compose-install:
-	sudo apt-get update && sudo apt-get install -y jq && \
-	TAG_NAME=$$(curl -s https://api.github.com/repos/docker/compose/releases/latest | jq -r .tag_name) && \
-	curl -L "https://github.com/docker/compose/releases/download/$${TAG_NAME}/docker-compose-$(uname -s)-$(uname -m)" -o /tmp/docker-compose && \
-	sudo mv -f /tmp/docker-compose /usr/local/bin/docker-compose && \
+	export PATH="/usr/local/bin:$$PATH" && \
+	if [ -f /usr/local/bin/docker-compose ]; then sudo rm /usr/local/bin/docker-compose; fi && \
+	sudo curl -L "https://github.com/docker/compose/releases/download/v2.30.3/docker-compose-darwin-aarch64" -o /usr/local/bin/docker-compose && \
 	sudo chmod +x /usr/local/bin/docker-compose && \
 	docker-compose --version
 
