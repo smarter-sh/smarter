@@ -59,7 +59,7 @@ class Migration(migrations.Migration):
                 ("deployed", models.BooleanField(blank=True, default=False, null=True)),
                 (
                     "default_model",
-                    models.CharField(blank=True, default="gpt-3.5-turbo", max_length=255, null=True),
+                    models.CharField(blank=True, default="gpt-4-turbo", max_length=255, null=True),
                 ),
                 (
                     "default_temperature",

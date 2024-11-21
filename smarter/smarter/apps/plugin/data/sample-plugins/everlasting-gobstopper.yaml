@@ -24,7 +24,7 @@ spec:
   prompt:
     systemRole: >
       You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com).
-    model: gpt-3.5-turbo-1106
+    model: gpt-4-turbo
     temperature: 1.0
     maxTokens: 256
   data:
