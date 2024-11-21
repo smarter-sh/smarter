@@ -16,7 +16,7 @@ else
     $(shell cp ./doc/example-dot-env .env)
 endif
 
-.PHONY: init activate build run clean tear-down lint analyze coverage release pre-commit-init pre-commit-run python-init python-activate python-lint python-clean python-test react-init react-lint react-update react-run react-build docker-init docker-build docker-run docker-collectstatic docker-test python-init python-lint python-clean keen-init keen-build keen-server react-clean react-init react-lint react-update react-run react-build help
+.PHONY: init activate build run clean tear-down lint analyze coverage release pre-commit-init pre-commit-run python-init python-activate python-lint python-clean python-test react-init react-lint react-update react-run react-build docker-compose-install docker-init docker-build docker-run docker-collectstatic docker-test python-init python-lint python-clean keen-init keen-build keen-server react-clean react-init react-lint react-update react-run react-build help
 
 # Default target executed when no arguments are given to make.
 all: help
@@ -93,10 +93,18 @@ docker-shell:
 	make docker-check && \
 	docker exec -it smarter-app /bin/bash
 
+docker-compose-install:
+	TAG_NAME=$$(curl -s https://api.github.com/repos/docker/compose/releases/latest | jq -r .tag_name) && \
+	curl -L "https://github.com/docker/compose/releases/download/$${TAG_NAME}/docker-compose-$(uname -s)-$(uname -m)" -o /tmp/docker-compose && \
+	sudo mv -f /tmp/docker-compose /usr/local/bin/docker-compose && \
+	sudo chmod +x /usr/local/bin/docker-compose && \
+	docker-compose --version
+
 docker-init:
 	make docker-check && \
 	make docker-prune && \
 	echo "Building Docker images..." && \
+	make docker-compose-install && \
 	docker-compose up -d && \
 	echo "Initializing Docker..." && \
 	docker exec smarter-mysql bash -c "sleep 20; until echo '\q' | mysql -u smarter -psmarter; do sleep 10; done" && \
@@ -257,6 +265,7 @@ help:
 	@echo 'docker-init            - Initialize MySQL and create the smarter database'
 	@echo 'docker-build           - Build all Docker containers using docker-compose'
 	@echo 'docker-run             - Start all Docker containers using docker-compose'
+	@echo 'docker-compose-install - Install Docker Compose'
 	@echo 'docker-collectstatic   - Run Django collectstatic in Docker'
 	@echo 'docker-test            - Run Python-Django unit tests in Docker'
 	@echo '<************************** Keen **************************>'
