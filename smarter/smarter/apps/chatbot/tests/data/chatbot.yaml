@@ -8,7 +8,7 @@ metadata:
 spec:
   config:
     deployed: true
-    defaultModel: gpt-3.5-turbo
+    defaultModel: gpt-4-turbo
     defaultTemperature: 0.5
     defaultMaxTokens: 512
     defaultSystemRole: >

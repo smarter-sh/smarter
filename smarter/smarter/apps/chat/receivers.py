@@ -55,6 +55,30 @@ def handle_chat_completion_called(sender, **kwargs):
         formatted_json(response),
     )
 
+    # mcdaniel: add the most recent response to the messages list
+    # so that the chatbot can display the most recent response
+    # to the user.
+    if response:
+        message: dict = None
+        response_choices = response.get("choices")
+        if response_choices and isinstance(response_choices, list):
+            for choice in response_choices:
+                finish_reason = choice.get("finish_reason", "")
+                message = choice.get("message", {})
+                if finish_reason == "tool_calls":
+                    logger.info("Tool calls detected in response.")
+                    tool_calls = message.get("tool_calls")
+                    for tool_call in tool_calls:
+                        function = tool_call.get("function")
+                        function_name = function.get("name")
+                        function_args = function.get("arguments", "")
+                        tool_called = {
+                            "role": "assistant",
+                            "content": f"Tool call: {function_name}({function_args})",
+                        }
+                        request["messages"].append(tool_called)
+                        logger.info("Added tool call to messages: %s", tool_called)
+
     chat_history = ChatHistory(
         chat=chat,
         request=request,
@@ -121,6 +145,28 @@ def handle_chat_completion_returned(sender, **kwargs):
     chat: Chat = kwargs.get("chat")
     request: dict = kwargs.get("request")
     response: dict = kwargs.get("response")
+
+    # mcdaniel: add the most recent response to the messages list
+    # so that the chatbot can display the most recent response
+    # to the user.
+    if response:
+        content: str = None
+        message: dict = None
+        response_choices = response.get("choices")
+        if response_choices and isinstance(response_choices, list):
+            for choice in response_choices:
+                finish_reason = choice.get("finish_reason", "")
+                message = choice.get("message", {})
+                if finish_reason == "stop":
+                    logger.info("Stop detected in response.")
+                    content = message.get("content")
+                    role = message.get("role")
+                    assistant_message = {
+                        "role": role,
+                        "content": content,
+                    }
+                    request["messages"].append(assistant_message)
+                    logger.info("Added assistant response to messages.")
 
     ChatHistory(
         chat=chat,

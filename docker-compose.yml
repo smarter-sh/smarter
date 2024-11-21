@@ -8,7 +8,7 @@
 services:
   smarter-mysql:
     container_name: smarter-mysql
-    image: mysql:latest
+    image: mysql:8
     command: ["mysqld", "--mysql-native-password=ON"]
     restart: always
     environment:

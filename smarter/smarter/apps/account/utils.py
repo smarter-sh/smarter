@@ -1,5 +1,7 @@
 """Account utilities."""
 
+from django.contrib.auth.models import AnonymousUser
+
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.lib.django.user import UserType
 
@@ -10,6 +12,8 @@ def account_for_user(user) -> Account:
     """
     Locates the account for a given user, or None if no account exists.
     """
+    if isinstance(user, AnonymousUser):
+        return None
     try:
         user_profile = UserProfile.objects.get(user=user)
     except UserProfile.DoesNotExist:

@@ -84,7 +84,7 @@ def handler(
         data: Request data (see below)
         plugins: a List of plugins to potentially show to the LLM
         user: User instance
-        default_model: Default model to use for the chat completion example: "gpt-3.5-turbo"
+        default_model: Default model to use for the chat completion example: "gpt-4-turbo"
         default_temperature: Default temperature to use for the chat completion example: 0.5
         default_max_tokens: Default max tokens to use for the chat completion example: 256
 
