@@ -94,18 +94,11 @@ docker-shell:
 	make docker-check && \
 	docker exec -it smarter-app /bin/bash
 
-docker-compose-install:
-	export PATH="/usr/local/bin:$$PATH" && \
-	if [ -f /usr/local/bin/docker-compose ]; then sudo rm /usr/local/bin/docker-compose; fi && \
-	sudo curl -L "https://github.com/docker/compose/releases/download/v2.30.3/docker-compose-darwin-aarch64" -o /usr/local/bin/docker-compose && \
-	sudo chmod +x /usr/local/bin/docker-compose && \
-	docker-compose --version
 
 docker-init:
 	make docker-check && \
 	make docker-prune && \
 	echo "Building Docker images..." && \
-	make docker-compose-install && \
 	docker-compose up -d && \
 	echo "Initializing Docker..." && \
 	docker exec smarter-mysql bash -c "sleep 20; until echo '\q' | mysql -u smarter -psmarter; do sleep 10; done" && \

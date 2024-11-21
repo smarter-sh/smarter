@@ -129,10 +129,10 @@ export function chat_init(welcome_message, system_role, example_prompts, chat_id
    */
 
   let messages = [];
-  if (chat_id === 'undefined') {
+  messages = chat_restore_from_backend(chat_history, last_response)
+
+  if (messages.length === 0) {
     messages = chat_intro(welcome_message, system_role, example_prompts);
-  } else {
-    messages = chat_restore_from_backend(chat_history, last_response)
   }
 
   return messages;
