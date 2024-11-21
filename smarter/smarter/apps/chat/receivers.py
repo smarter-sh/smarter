@@ -4,6 +4,7 @@
 import logging
 
 from django.db.models.signals import post_save
+from django.db.utils import Error as DjangoDbError
 from django.dispatch import receiver
 
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
@@ -84,7 +85,10 @@ def handle_chat_completion_called(sender, **kwargs):
         request=request,
         response=response,
     )
-    chat_history.save()
+    try:
+        chat_history.save()
+    except DjangoDbError as exc:
+        logger.error("Error saving chat history: %s", exc)
 
 
 # pylint: disable=W0612
@@ -103,14 +107,18 @@ def handle_chat_completion_tool_call(sender, **kwargs):
         plugin_meta: PluginMeta = tool_call.get("plugin_meta")
         function_name: str = tool_call.get("function_name")
         function_args: str = tool_call.get("function_args")
-        ChatToolCall(
-            chat=chat,
-            plugin=plugin_meta,
-            function_name=function_name,
-            function_args=function_args,
-            request=request,
-            response=response,
-        ).save()
+
+        try:
+            ChatToolCall(
+                chat=chat,
+                plugin=plugin_meta,
+                function_name=function_name,
+                function_args=function_args,
+                request=request,
+                response=response,
+            ).save()
+        except DjangoDbError as exc:
+            logger.error("Error saving chat tool call: %s", exc)
 
 
 @receiver(chat_completion_plugin_selected, dispatch_uid="chat_completion_plugin_selected")
@@ -134,7 +142,11 @@ def handle_chat_completion_plugin_selected(sender, **kwargs):
         chat=chat,
         input_text=input_text,
     )
-    plugin_selection_history.save()
+
+    try:
+        plugin_selection_history.save()
+    except DjangoDbError as exc:
+        logger.error("Error saving plugin usage: %s", exc)
 
 
 # pylint: disable=W0612
@@ -168,11 +180,14 @@ def handle_chat_completion_returned(sender, **kwargs):
                     request["messages"].append(assistant_message)
                     logger.info("Added assistant response to messages.")
 
-    ChatHistory(
-        chat=chat,
-        request=request,
-        response=response,
-    ).save()
+    try:
+        ChatHistory(
+            chat=chat,
+            request=request,
+            response=response,
+        ).save()
+    except DjangoDbError as exc:
+        logger.error("Error saving chat history: %s", exc)
 
     logger.info(
         "%s for chat %s, \nrequest: %s, \nresponse: %s",
