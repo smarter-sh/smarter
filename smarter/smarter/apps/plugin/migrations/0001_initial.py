@@ -254,7 +254,7 @@ class Migration(migrations.Migration):
                 (
                     "model",
                     models.CharField(
-                        default="gpt-3.5-turbo",
+                        default="gpt-4-turbo",
                         help_text="The model to use for the completion.",
                         max_length=255,
                     ),

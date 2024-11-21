@@ -20,7 +20,7 @@ spec:
   prompt:
     systemRole: >
       You are a helpful assistant for Smarter platform. You can provide information about the admin account of the Smarter platform.
-    model: gpt-3.5-turbo-1106
+    model: gpt-4-turbo
     temperature: 0.0
     maxTokens: 256
   data:
