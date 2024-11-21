@@ -324,7 +324,17 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         command = SmarterJournalCliCommands(command)
         # name: str = None, all_objects: bool = False, tags: str = None
         data = []
-        name: str = kwargs.get("name", None)
+        name = kwargs.get("name", None)
+        if not isinstance(name, str):
+            logger.warning("Chatbot get() name: %s. Expected str but got type: %s", name, type(name))
+
+        if isinstance(name, list):
+            name = name[0]
+            logger.warning("Chatbot get() set name to first element of list: %s", name)
+
+        if name and len(name) == 0:
+            logger.warning("Chatbot get() name is empty string, setting to None")
+            name = None
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
         if name:
