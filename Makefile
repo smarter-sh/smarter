@@ -106,18 +106,18 @@ docker-init:
 		python manage.py initialize_waffle && \
 		python manage.py create_smarter_admin --username admin --email admin@smarter.sh --password smarter && \
 		python manage.py create_user --account_number 3141-5926-5359 --username staff_user --email staff@smarter.sh --password smarter --admin && \
-		python manage.py create_user --account_number 3141-5926-5359 --username customer_user --email customer@smarter.sh --password smarter && \
+		python manage.py create_user --account_number 3141-5926-5359 --u1ºsername customer_user --email customer@smarter.sh --password smarter && \
 		python manage.py add_plugin_examples admin && \
 		python manage.py verify_dns_configuration && \
 		python manage.py deploy_demo_api && \
 		python manage.py seed_chat_history && \
 		python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/QueriumCorp/smarter-demo && \
-		python manage.py initialize_wagtail \"
+		python manage.py initialize_wagtail"
 	echo "Docker and Smarter are initialized." && \
 	docker ps
 
 docker-build:
-	make docker-check && \
+	make docker-check &&
 	docker-compose build
 
 docker-run:
