@@ -11,6 +11,9 @@ function Main() {
     fetchConfig().then(config => setConfigState(setConfig(config)));
   }, []);
 
+  if (config === null) {
+    return <div>Loading...</div>;
+  }
   return <App config={config} />;
 
 }
