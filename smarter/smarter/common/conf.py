@@ -161,7 +161,7 @@ class SettingsDefaults:
       3. defaults.
     """
 
-    OPENAI_DEFAULT_MODEL = "gpt-3.5-turbo"
+    OPENAI_DEFAULT_MODEL = "gpt-4-turbo"
     OPENAI_DEFAULT_SYSTEM_ROLE = (
         "You are a helpful chatbot. When given the opportunity to utilize "
         "function calling, you should always do so. This will allow you to "
