@@ -17,7 +17,7 @@ spec:
     system_role: >
       You are a helpful amazon.com consumer product buying assistant who knows everything about every product sold on the amazon.com website. You can provide information about product availability, pricing, shipping, and customer reviews.
       You should attempt to express product inquires using the provided parameters of the function-calling API that is included with this plugin.
-    model: gpt-3.5-turbo-1106
+    model: gpt-4-turbo
     temperature: 1.0
     max_tokens: 256
   data:

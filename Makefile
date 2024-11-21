@@ -1,12 +1,13 @@
 SHELL := /bin/bash
 include .env
+export PATH := /usr/local/bin:$(PATH)
 export
 
 ifeq ($(OS),Windows_NT)
     PYTHON := python.exe
     ACTIVATE_VENV := venv\Scripts\activate
 else
-    PYTHON := python3.11
+    PYTHON := python3.12
     ACTIVATE_VENV := source venv/bin/activate
 endif
 PIP := $(PYTHON) -m pip
@@ -16,7 +17,7 @@ else
     $(shell cp ./doc/example-dot-env .env)
 endif
 
-.PHONY: init activate build run clean tear-down lint analyze coverage release pre-commit-init pre-commit-run python-init python-activate python-lint python-clean python-test react-init react-lint react-update react-run react-build docker-init docker-build docker-run docker-collectstatic docker-test python-init python-lint python-clean keen-init keen-build keen-server react-clean react-init react-lint react-update react-run react-build help
+.PHONY: init activate build run clean tear-down lint analyze coverage release pre-commit-init pre-commit-run python-init python-activate python-lint python-clean python-test react-init react-lint react-update react-run react-build docker-compose-install docker-init docker-build docker-run docker-collectstatic docker-test python-init python-lint python-clean keen-init keen-build keen-server react-clean react-init react-lint react-update react-run react-build help
 
 # Default target executed when no arguments are given to make.
 all: help
@@ -93,15 +94,24 @@ docker-shell:
 	make docker-check && \
 	docker exec -it smarter-app /bin/bash
 
+docker-compose-install:
+	export PATH="/usr/local/bin:$$PATH" && \
+	if [ -f /usr/local/bin/docker-compose ]; then sudo rm /usr/local/bin/docker-compose; fi && \
+	sudo curl -L "https://github.com/docker/compose/releases/download/v2.30.3/docker-compose-darwin-aarch64" -o /usr/local/bin/docker-compose && \
+	sudo chmod +x /usr/local/bin/docker-compose && \
+	docker-compose --version
+
 docker-init:
 	make docker-check && \
+	make docker-prune && \
 	echo "Building Docker images..." && \
+	make docker-compose-install && \
 	docker-compose up -d && \
 	echo "Initializing Docker..." && \
 	docker exec smarter-mysql bash -c "sleep 20; until echo '\q' | mysql -u smarter -psmarter; do sleep 10; done" && \
 	docker exec smarter-mysql mysql -u smarter -psmarter -e 'DROP DATABASE IF EXISTS smarter; CREATE DATABASE smarter;' && \
-	docker exec smarter-app bash -c \
-		"python manage.py makemigrations && python manage.py migrate && \
+	docker exec smarter-app bash -c "\
+		python manage.py makemigrations && python manage.py migrate && \
 		python manage.py initialize_waffle && \
 		python manage.py create_smarter_admin --username admin --email admin@smarter.sh --password smarter && \
 		python manage.py create_user --account_number 3141-5926-5359 --username staff_user --email staff@smarter.sh --password smarter --admin && \
@@ -110,13 +120,13 @@ docker-init:
 		python manage.py verify_dns_configuration && \
 		python manage.py deploy_demo_api && \
 		python manage.py seed_chat_history && \
-		python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/QueriumCorp/smarter-demo" && \
-		python manage.py initialize_wagtail && \
+		python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/QueriumCorp/smarter-demo && \
+		python manage.py initialize_wagtail" && \
 	echo "Docker and Smarter are initialized." && \
 	docker ps
 
 docker-build:
-	make docker-check && \
+	make docker-check &&
 	docker-compose build
 
 docker-run:
@@ -136,10 +146,14 @@ docker-test:
 
 docker-prune:
 	make docker-check && \
+	docker-compose down && \
+	rm -rf ./mysql-data && \
 	find ./ -name celerybeat-schedule -type f -exec rm -f {} + && \
 	docker system prune -a --volumes && \
 	docker volume prune -f && \
-	docker builder prune -a -f
+	docker builder prune -a -f && \
+	docker network prune -f && \
+	images=$$(docker images -q) && [ -n "$$images" ] && docker rmi $$images -f || echo "No images to remove"
 
 # ---------------------------------------------------------
 # Python
@@ -252,6 +266,7 @@ help:
 	@echo 'docker-init            - Initialize MySQL and create the smarter database'
 	@echo 'docker-build           - Build all Docker containers using docker-compose'
 	@echo 'docker-run             - Start all Docker containers using docker-compose'
+	@echo 'docker-compose-install - Install Docker Compose'
 	@echo 'docker-collectstatic   - Run Django collectstatic in Docker'
 	@echo 'docker-test            - Run Python-Django unit tests in Docker'
 	@echo '<************************** Keen **************************>'

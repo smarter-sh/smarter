@@ -8,7 +8,7 @@ metadata:
 spec:
   config:
     deployed: true
-    defaultModel: gpt-3.5-turbo
+    defaultModel: gpt-4-turbo
     defaultSystemRole: >
       You are a helpful assistant. When given the opportunity to utilize
       function calling, you should always do so. This will allow you to

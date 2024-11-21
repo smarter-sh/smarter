@@ -1,9 +1,14 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'get' view"""
 
+import logging
+
 from drf_yasg.utils import swagger_auto_schema
 
 from .base import CliBaseApiView
+
+
+logger = logging.getLogger(__name__)
 
 
 class ApiV1CliGetApiView(CliBaseApiView):
@@ -42,4 +47,5 @@ The response from this endpoint is a JSON object.
         Returns:
         Response: A JSON object representing the result of the 'get' operation.
         """
+        logger.info("APIv1CliGetApiView.post() %s", kwargs)
         return self.broker.get(request=request, kwargs=kwargs)
