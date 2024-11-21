@@ -276,7 +276,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         welcome_message: str = self.chatbot_config.get("app_welcome_message", "[MISSING WELCOME MESSAGE]")
         app_assistant: str = self.chatbot_config.get("app_assistant", "[MISSING ASSISTANT NAME]")
         example_prompts: list[str] = self.chatbot_config.get(
-            "example_prompts", ["example prompt 1", "example prompt 2", "example prompt 3"]
+            "app_example_prompts", ["example prompt 1", "example prompt 2", "example prompt 3"]
         )
         bullet_points = "\n".join(f"    - {prompt}" for prompt in example_prompts)
         bullet_points = "Following are some example prompts:\n\n" + bullet_points + "\n\n"
