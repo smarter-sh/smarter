@@ -48,7 +48,7 @@ pydantic-settings==2.2.1                # settings management
 
 # Natural language and LLM support
 # ------------
-openai==1.54.5                          # OpenAI API
+openai==1.55.3                          # OpenAI API
 pyyaml==6.0.2                           # YAML parser
 langchain==0.3.7                        # LLM abstractions library for building complex workflows
 langchain-openai==0.2.9                # OpenAI plugin for Langchain
