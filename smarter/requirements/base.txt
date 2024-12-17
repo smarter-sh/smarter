@@ -48,10 +48,10 @@ pydantic-settings==2.2.1                # settings management
 
 # Natural language and LLM support
 # ------------
-openai==1.54.5                          # OpenAI API
+openai==1.58.1                          # OpenAI API
 pyyaml==6.0.2                           # YAML parser
-langchain==0.3.7                        # LLM abstractions library for building complex workflows
-langchain-openai==0.2.9                # OpenAI plugin for Langchain
+langchain==0.3.12                        # LLM abstractions library for building complex workflows
+langchain-openai==0.2.12                # OpenAI plugin for Langchain
 python-Levenshtein==0.26.1              # Levenshtein distance calculation for LLMs
 nltk==3.8.1                             # Natural Language Toolkit
 textblob==0.18.0.post0                  # Text processing library
