@@ -119,7 +119,7 @@ docker-init:
 	docker ps
 
 docker-build:
-	make docker-check &&
+	make docker-check && \
 	docker-compose build
 
 docker-run:
