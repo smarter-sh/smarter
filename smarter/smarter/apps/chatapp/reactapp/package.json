@@ -30,13 +30,13 @@
     "@vitejs/plugin-react-swc": "^3.6.0",
     "eslint": "^8.56.0",
     "eslint-config-standard": "^17.0.0",
-    "eslint-plugin-n": "^16.6.2",
+    "eslint-plugin-n": "^17.14.0",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-promise": "^6.6.0",
     "eslint-plugin-react": "^7.34.1",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.6",
     "typescript": "^5.4.5",
-    "vite": "^5.2.10"
+    "vite": "^6.0.1"
   }
 }

@@ -6,7 +6,7 @@
 
 # General back end
 # ------------
-boto3==1.35.54                         # AWS CLI SDK
+boto3==1.35.71                         # AWS CLI SDK
 botocore                                # AWS CLI SDK
 cachetools==5.5.0                       # Python object caching library
 celery==5.4.0                           # asynchronous task queue. works with redis.
@@ -44,7 +44,7 @@ django-waffle==4.2.0                    # Feature flagging
 pandas==2.2.3                           # Data manipulation for data science stuff
 python-dotenv==1.0.1                    # for reading environment variables from .env files
 pydantic==2.9.2                         # best data validation library ever!
-pydantic-settings==2.2.1                # settings management
+pydantic-settings==2.6.1                # settings management
 
 # Natural language and LLM support
 # ------------
@@ -72,6 +72,6 @@ docutils==0.21.2                        # required by Django for django.contrib.
 drf-yasg==1.21.7                        # Swagger API documentation
 lxml==5.2.2                             # parser for Wagtail page compression
 markdown==3.6                           # Markdown reader/parser
-python-hcl2==4.3.3                      # Terraform hcl parser for reading Terraform tfvars files
+python-hcl2==5.1.1                      # Terraform hcl parser for reading Terraform tfvars files
 wagtail==6.3.1                          # Wagail CMS, for building static pages
 wagtail-transfer==0.9.4                 # https://github.com/wagtail/wagtail-transfer
