@@ -205,6 +205,9 @@ class SettingsDefaults:
         "GOOGLE_MAPS_API_KEY",
         TFVARS.get("google_maps_api_key", None) or os.environ.get("TF_VAR_GOOGLE_MAPS_API_KEY", None),
     )
+    # -------------------------------------------------------------------------
+    # see: https://console.cloud.google.com/apis/credentials/oauthclient/231536848926-egabg8jas321iga0nmleac21ccgbg6tq.apps.googleusercontent.com?project=smarter-sh
+    # -------------------------------------------------------------------------
     SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get(
         "SOCIAL_AUTH_GOOGLE_OAUTH2_KEY",
         TFVARS.get("social_auth_google_oauth2_key", None) or os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", None),
@@ -214,6 +217,9 @@ class SettingsDefaults:
         TFVARS.get("social_auth_google_oauth2_secret", None)
         or os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", None),
     )
+    # -------------------------------------------------------------------------
+    # see: https://github.com/settings/applications/2620957
+    # -------------------------------------------------------------------------
     SOCIAL_AUTH_GITHUB_KEY = os.environ.get(
         "SOCIAL_AUTH_GITHUB_KEY",
         TFVARS.get("social_auth_github_key", None) or os.environ.get("SOCIAL_AUTH_GITHUB_KEY", None),
@@ -222,6 +228,10 @@ class SettingsDefaults:
         "SOCIAL_AUTH_GITHUB_SECRET",
         TFVARS.get("social_auth_github_secret", None) or os.environ.get("SOCIAL_AUTH_GITHUB_SECRET", None),
     )
+    # -------------------------------------------------------------------------
+    # see: https://www.linkedin.com/developers/apps/221422881/products?refreshKey=1734980684455
+    # verification url: https://www.linkedin.com/developers/apps/verification/3ac34414-09a4-433b-983a-0d529fa486f1
+    # -------------------------------------------------------------------------
     SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = os.environ.get(
         "SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY",
         TFVARS.get("social_auth_linkedin_oauth2_key", None) or os.environ.get("SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY", None),
