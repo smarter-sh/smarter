@@ -27,6 +27,18 @@ inputs:
   google-maps-api-key:
     description: "The Google Maps API key"
     required: true
+  social-auth-google-oauth2-key:
+    description: "The Google OAuth2 key"
+    required: true
+  social-auth-google-oauth2-secret:
+    description: "The Google OAuth2 secret"
+    required: true
+  social-auth-github-key:
+    description: "The GitHub OAuth2 key"
+    required: true
+  social-auth-github-secret:
+    description: "The GitHub OAuth2 secret"
+    required: true
   mailchimp-api-key:
     description: "The Mailchimp API key"
     required: true
@@ -260,6 +272,10 @@ runs:
         --set env.PINECONE_API_KEY=${{ inputs.pinecone-api-key }} \
         --set env.PINECONE_ENVIRONMENT=${{ inputs.pinecone-environment }} \
         --set env.GOOGLE_MAPS_API_KEY=${{ inputs.google-maps-api-key }} \
+        --set env.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY=${{ inputs.social-auth-google-oauth2-key }} \
+        --set env.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET=${{ inputs.social-auth-google-oauth2-secret }} \
+        --set env.SOCIAL_AUTH_GITHUB_KEY=${{ inputs.social-auth-github-key }} \
+        --set env.SOCIAL_AUTH_GITHUB_SECRET=${{ inputs.social-auth-github-secret }} \
         --set env.MYSQL_HOST=${{ env.MYSQL_HOST }} \
         --set env.MYSQL_PORT=${{ env.MYSQL_PORT }} \
         --set env.MYSQL_DATABASE=${{ env.SMARTER_MYSQL_DATABASE }} \
