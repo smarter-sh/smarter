@@ -39,6 +39,12 @@ inputs:
   social-auth-github-secret:
     description: "The GitHub OAuth2 secret"
     required: true
+  social-auth-linkedin-oauth2-key:
+    description: "The LinkedIn OAuth2 key"
+    required: true
+  social-auth-linkedin-oauth2-secret:
+    description: "The LinkedIn OAuth2 secret"
+    required: true
   mailchimp-api-key:
     description: "The Mailchimp API key"
     required: true
@@ -276,6 +282,8 @@ runs:
         --set env.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET=${{ inputs.social-auth-google-oauth2-secret }} \
         --set env.SOCIAL_AUTH_GITHUB_KEY=${{ inputs.social-auth-github-key }} \
         --set env.SOCIAL_AUTH_GITHUB_SECRET=${{ inputs.social-auth-github-secret }} \
+        --set env.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY=${{ inputs.social-auth-linkedin-oauth2-key }} \
+        --set env.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET=${{ inputs.social-auth-linkedin-oauth2-secret }} \
         --set env.MYSQL_HOST=${{ env.MYSQL_HOST }} \
         --set env.MYSQL_PORT=${{ env.MYSQL_PORT }} \
         --set env.MYSQL_DATABASE=${{ env.SMARTER_MYSQL_DATABASE }} \
