@@ -51,6 +51,8 @@ jobs:
           social-auth-google-oauth2-secret: ${{ secrets.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET }}
           social-auth-github-key: ${{ secrets.SOCIAL_AUTH_GITHUB_KEY }}
           social-auth-github-secret: ${{ secrets.SOCIAL_AUTH_GITHUB_SECRET }}
+          social-auth-linkedin-oauth2-key: ${{ secrets.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY }}
+          social-auth-linkedin-oauth2-secret: ${{ secrets.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET }}
           mailchimp-api-key: ${{ secrets.MAILCHIMP_API_KEY }}
           mailchimp-list-id: ${{ secrets.MAILCHIMP_LIST_ID }}
 
