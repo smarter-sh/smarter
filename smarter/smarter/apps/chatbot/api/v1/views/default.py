@@ -22,7 +22,6 @@ from .base import ChatBotApiBaseViewSet
 
 
 chat_providers = ChatProviders()
-default_handler = chat_providers.default_handler
 logger = logging.getLogger(__name__)
 
 
@@ -125,7 +124,8 @@ class DefaultChatBotApiView(ChatBotApiBaseViewSet):
             logger.info("%s.post() - chatbot: %s", self.formatted_class_name, self.chatbot)
             logger.info("%s.post() - plugins: %s", self.formatted_class_name, self.plugins)
 
-        response = default_handler(chat=self.chat_helper.chat, data=self.data, plugins=self.plugins, user=self.user)
+        handler = chat_providers.get_handler(name=self.chatbot.provider)
+        response = handler(chat=self.chat_helper.chat, data=self.data, plugins=self.plugins, user=self.user)
         response = {
             SmarterJournalApiResponseKeys.DATA: response,
         }
