@@ -118,12 +118,11 @@ class ChatBot(TimestampedModel):
     subdomain = models.ForeignKey(ChatBotCustomDomainDNS, on_delete=models.CASCADE, blank=True, null=True)
     custom_domain = models.ForeignKey(ChatBotCustomDomain, on_delete=models.CASCADE, blank=True, null=True)
     deployed = models.BooleanField(default=False, blank=True, null=True)
-    default_model = models.CharField(
-        default=smarter_settings.openai_default_model, max_length=255, blank=True, null=True
-    )
-    default_system_role = models.TextField(default=smarter_settings.openai_default_system_role, blank=True, null=True)
-    default_temperature = models.FloatField(default=smarter_settings.openai_default_temperature, blank=True, null=True)
-    default_max_tokens = models.IntegerField(default=smarter_settings.openai_default_max_tokens, blank=True, null=True)
+    provider = models.CharField(default=smarter_settings.llm_default_provider, max_length=255, blank=True, null=True)
+    default_model = models.CharField(max_length=255, blank=True, null=True)
+    default_system_role = models.TextField(default=smarter_settings.llm_default_system_role, blank=True, null=True)
+    default_temperature = models.FloatField(default=smarter_settings.llm_default_temperature, blank=True, null=True)
+    default_max_tokens = models.IntegerField(default=smarter_settings.llm_default_max_tokens, blank=True, null=True)
 
     app_name = models.CharField(default="chatbot", max_length=255, blank=True, null=True)
     app_assistant = models.CharField(default="Smarter", max_length=255, blank=True, null=True)

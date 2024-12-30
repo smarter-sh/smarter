@@ -9,7 +9,7 @@ from http import HTTPStatus
 import waffle
 
 from smarter.apps.chat.models import ChatHelper
-from smarter.apps.chat.providers.smarter import handler
+from smarter.apps.chat.providers.providers import ChatProviders
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
@@ -21,10 +21,12 @@ from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from .base import ChatBotApiBaseViewSet
 
 
+chat_providers = ChatProviders()
+default_handler = chat_providers.default_handler
 logger = logging.getLogger(__name__)
 
 
-class SmarterChatBotApiView(ChatBotApiBaseViewSet):
+class DefaultChatBotApiView(ChatBotApiBaseViewSet):
     """Main view for Smarter ChatBot API."""
 
     data: dict = {}
@@ -58,7 +60,7 @@ class SmarterChatBotApiView(ChatBotApiBaseViewSet):
             ]
         }
         """
-        logger.info("SmarterChatBotApiView.dispatch() - name=%s", name)
+        logger.info("DefaultChatBotApiView.dispatch() - name=%s", name)
         kwargs.pop("chatbot_id", None)
         self.request = request
         self._user = request.user
@@ -123,16 +125,7 @@ class SmarterChatBotApiView(ChatBotApiBaseViewSet):
             logger.info("%s.post() - chatbot: %s", self.formatted_class_name, self.chatbot)
             logger.info("%s.post() - plugins: %s", self.formatted_class_name, self.plugins)
 
-        response = handler(
-            chat=self.chat_helper.chat,
-            data=self.data,
-            plugins=self.plugins,
-            user=self.user,
-            default_model=self.chatbot.default_model,
-            default_system_role=self.chatbot.default_system_role,
-            default_temperature=self.chatbot.default_temperature,
-            default_max_tokens=self.chatbot.default_max_tokens,
-        )
+        response = default_handler(chat=self.chat_helper.chat, data=self.data, plugins=self.plugins, user=self.user)
         response = {
             SmarterJournalApiResponseKeys.DATA: response,
         }

@@ -145,6 +145,10 @@ class TestPlugin(unittest.TestCase):
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][SAMPluginSpecSelectorKeys.DIRECTIVE.value],
         )
         self.assertEqual(
+            plugin.plugin_prompt.provider,
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.PROVIDER.value],
+        )
+        self.assertEqual(
             plugin.plugin_prompt.system_role,
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.SYSTEMROLE.value],
         )
@@ -187,6 +191,12 @@ class TestPlugin(unittest.TestCase):
             ].strip(),
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
                 SAMPluginSpecSelectorKeys.DIRECTIVE.value
+            ].strip(),
+        )
+        self.assertEqual(
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.PROVIDER.value].strip(),
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginSpecPromptKeys.PROVIDER.value
             ].strip(),
         )
         self.assertEqual(
@@ -293,6 +303,11 @@ class TestPlugin(unittest.TestCase):
 
         bad_data = self.data.copy()
         bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value].pop(SAMPluginSpecSelectorKeys.DIRECTIVE.value)
+        with self.assertRaises(PydanticValidationError):
+            PluginStatic(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginSpecPromptKeys.PROVIDER.value)
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
@@ -414,6 +429,12 @@ class TestPlugin(unittest.TestCase):
             ].strip(),
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
                 SAMPluginSpecSelectorKeys.DIRECTIVE.value
+            ].strip(),
+        )
+        self.assertEqual(
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.PROVIDER.value].strip(),
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginSpecPromptKeys.PROVIDER.value
             ].strip(),
         )
         self.assertEqual(

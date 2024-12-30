@@ -161,8 +161,9 @@ class SettingsDefaults:
       3. defaults.
     """
 
-    OPENAI_DEFAULT_MODEL = "gpt-4-turbo"
-    OPENAI_DEFAULT_SYSTEM_ROLE = (
+    LLM_DEFAULT_PROVIDER = "OPENAI"
+    LLM_DEFAULT_MODEL = "gpt-4-turbo"
+    LLM_DEFAULT_SYSTEM_ROLE = (
         "You are a helpful chatbot. When given the opportunity to utilize "
         "function calling, you should always do so. This will allow you to "
         "provide the best possible responses to the user. If you are unable to "
@@ -170,8 +171,8 @@ class SettingsDefaults:
         "you are still unable to provide a response, you should inform the user "
         "that you are unable to help them at this time."
     )
-    OPENAI_DEFAULT_TEMPERATURE = 0.5
-    OPENAI_DEFAULT_MAX_TOKENS = 256
+    LLM_DEFAULT_TEMPERATURE = 0.5
+    LLM_DEFAULT_MAX_TOKENS = 256
 
     # defaults for this Python package
     ENVIRONMENT = os.environ.get("ENVIRONMENT", TFVARS.get("environment", SmarterEnvironments.LOCAL))
@@ -229,7 +230,8 @@ class SettingsDefaults:
         TFVARS.get("social_auth_github_secret", None) or os.environ.get("SOCIAL_AUTH_GITHUB_SECRET", None),
     )
     # -------------------------------------------------------------------------
-    # see: https://www.linkedin.com/developers/apps/221422881/products?refreshKey=1734980684455
+    # see:  https://www.linkedin.com/developers/apps/221422881/settings
+    #       https://www.linkedin.com/developers/apps/221422881/products?refreshKey=1734980684455
     # verification url: https://www.linkedin.com/developers/apps/verification/3ac34414-09a4-433b-983a-0d529fa486f1
     # -------------------------------------------------------------------------
     SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = os.environ.get(
@@ -443,16 +445,15 @@ class Settings(BaseSettings):
     openai_endpoint_image_size: Optional[str] = Field(
         SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE, env="OPENAI_ENDPOINT_IMAGE_SIZE"
     )
-    openai_default_model: Optional[str] = Field(SettingsDefaults.OPENAI_DEFAULT_MODEL, env="OPENAI_DEFAULT_MODEL")
-    openai_default_system_role: Optional[str] = Field(
-        SettingsDefaults.OPENAI_DEFAULT_SYSTEM_ROLE, env="OPENAI_DEFAULT_SYSTEM_ROLE"
+    llm_default_provider: Optional[str] = Field(SettingsDefaults.LLM_DEFAULT_PROVIDER, env="LLM_DEFAULT_PROVIDER")
+    llm_default_model: Optional[str] = Field(SettingsDefaults.LLM_DEFAULT_MODEL, env="LLM_DEFAULT_MODEL")
+    llm_default_system_role: Optional[str] = Field(
+        SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE, env="LLM_DEFAULT_SYSTEM_ROLE"
     )
-    openai_default_temperature: Optional[float] = Field(
-        SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE, env="OPENAI_DEFAULT_TEMPERATURE"
+    llm_default_temperature: Optional[float] = Field(
+        SettingsDefaults.LLM_DEFAULT_TEMPERATURE, env="LLM_DEFAULT_TEMPERATURE"
     )
-    openai_default_max_tokens: Optional[int] = Field(
-        SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS, env="OPENAI_DEFAULT_MAX_TOKENS"
-    )
+    llm_default_max_tokens: Optional[int] = Field(SettingsDefaults.LLM_DEFAULT_MAX_TOKENS, env="LLM_DEFAULT_MAX_TOKENS")
     pinecone_api_key: Optional[SecretStr] = Field(SettingsDefaults.PINECONE_API_KEY, env="PINECONE_API_KEY")
     stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY, env="STRIPE_LIVE_SECRET_KEY")
     stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY, env="STRIPE_TEST_SECRET_KEY")
@@ -875,36 +876,43 @@ class Settings(BaseSettings):
             return SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE
         return v
 
-    @field_validator("openai_default_model")
+    @field_validator("llm_default_model")
     def check_openai_default_model(cls, v) -> str:
-        """Check openai_default_model"""
+        """Check llm_default_model"""
         if v in [None, ""]:
-            return SettingsDefaults.OPENAI_DEFAULT_MODEL
+            return SettingsDefaults.LLM_DEFAULT_MODEL
         return v
 
-    @field_validator("openai_default_system_role")
+    @field_validator("llm_default_provider")
+    def check_openai_default_provider(cls, v) -> str:
+        """Check llm_default_provider"""
+        if v in [None, ""]:
+            return SettingsDefaults.LLM_DEFAULT_PROVIDER
+        return v
+
+    @field_validator("llm_default_system_role")
     def check_openai_default_system_prompt(cls, v) -> str:
-        """Check openai_default_system_role"""
+        """Check llm_default_system_role"""
         if v in [None, ""]:
-            return SettingsDefaults.OPENAI_DEFAULT_SYSTEM_ROLE
+            return SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE
         return v
 
-    @field_validator("openai_default_temperature")
+    @field_validator("llm_default_temperature")
     def check_openai_default_temperature(cls, v) -> float:
-        """Check openai_default_temperature"""
+        """Check llm_default_temperature"""
         if isinstance(v, float):
             return v
         if v in [None, ""]:
-            return SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE
+            return SettingsDefaults.LLM_DEFAULT_TEMPERATURE
         return float(v)
 
-    @field_validator("openai_default_max_tokens")
+    @field_validator("llm_default_max_tokens")
     def check_openai_default_max_tokens(cls, v) -> int:
-        """Check openai_default_max_tokens"""
+        """Check llm_default_max_tokens"""
         if isinstance(v, int):
             return v
         if v in [None, ""]:
-            return SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS
+            return SettingsDefaults.LLM_DEFAULT_MAX_TOKENS
         return int(v)
 
     @field_validator("pinecone_api_key")

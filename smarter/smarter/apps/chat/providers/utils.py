@@ -179,7 +179,7 @@ def request_meta_data_factory(model, temperature, max_tokens, input_text):
 
 
 def ensure_system_role_present(
-    messages: list[dict], default_system_role: str = smarter_settings.openai_default_system_role
+    messages: list[dict], default_system_role: str = smarter_settings.llm_default_system_role
 ) -> list:
     """
     Ensure that a system role is present in the messages list

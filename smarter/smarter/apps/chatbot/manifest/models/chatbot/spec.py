@@ -45,6 +45,12 @@ class SAMChatbotSpecConfig(AbstractSAMSpecBase):
     deployed: bool = (
         Field(..., description=(f"{class_identifier}.deployed[bool]. Required. Whether the chatbot is deployed.")),
     )
+    provider: Optional[str] = Field(
+        None,
+        description=(
+            f"{class_identifier}.provider[str]. Optional. The provider to use for the chatbot. Default: OPENAI."
+        ),
+    )
     defaultModel: Optional[str] = Field(
         None,
         description=(f"{class_identifier}.default_model[str]. Optional. The default model to use for the chatbot."),

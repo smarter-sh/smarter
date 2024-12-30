@@ -1,0 +1,87 @@
+"""
+Base class for chat providers.
+"""
+
+from abc import ABC, abstractmethod
+from http import HTTPStatus
+from typing import List, Optional, Type
+
+from pydantic import BaseModel
+
+from smarter.apps.chat.functions.function_weather import (
+    get_current_weather,
+    weather_tool_factory,
+)
+from smarter.apps.chat.models import Chat
+from smarter.apps.plugin.plugin.static import PluginStatic
+from smarter.common.exceptions import (
+    SmarterConfigurationError,
+    SmarterIlligalInvocationError,
+    SmarterValueError,
+)
+from smarter.lib.django.user import UserType
+
+
+# Base exception map for chat providers. This maps internally raised exceptions to HTTP status codes.
+BASE_EXCEPTION_MAP = {
+    SmarterValueError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
+    SmarterConfigurationError: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
+    SmarterIlligalInvocationError: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
+    ValueError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
+    TypeError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
+    NotImplementedError: (HTTPStatus.BAD_REQUEST, "BadRequest"),
+    Exception: (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError"),
+}
+
+
+class HandlerInputBase(BaseModel, ABC):
+    """
+    Input protocol for chat provider handlers. Using OpenAI defaults.
+    Providers should subclass this and override the defaults.
+    """
+
+    chat: Chat
+    data: dict
+    plugins: Optional[List[PluginStatic]] = None
+    user: Optional[UserType] = None
+
+    # OpenAI defaults. Subclassed providers should override these.
+    default_model: str
+    default_system_role: str
+    default_temperature: float
+    default_max_tokens: int
+
+
+class ChatProviderBase(ABC):
+    """
+    Base class for chat providers.
+    """
+
+    @abstractmethod
+    def __init__(self, name: str, default_model: str, exception_map: dict = None):
+        self.name = name
+        self.default_model = default_model
+        self.exception_map = exception_map or BASE_EXCEPTION_MAP
+
+    # built-in tools that we make available to all providers
+    weather_tool = weather_tool_factory()
+    tools = [weather_tool]
+    available_functions = {
+        "get_current_weather": get_current_weather,
+    }
+
+    @abstractmethod
+    def handler(self, handler_inputs: Type[HandlerInputBase]) -> dict:
+        """
+        Handle the chat request.
+
+        :param handler_input: The input protocol for chat provider handlers.
+            chat = handler_input.chat
+            data = handler_input.data
+            plugins = handler_input.plugins
+            user = handler_input.user
+            default_model = handler_input.default_model
+            default_system_role = handler_input.default_system_role
+            default_temperature = handler_input.default_temperature
+            default_max_tokens = handler_input.default_max_tokens
+        """
