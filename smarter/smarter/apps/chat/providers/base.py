@@ -4,7 +4,7 @@ Base class for chat providers.
 
 from abc import ABC, abstractmethod
 from http import HTTPStatus
-from typing import List, Optional, Type
+from typing import Any, List, Optional, Type
 
 from pydantic import BaseModel
 
@@ -19,7 +19,6 @@ from smarter.common.exceptions import (
     SmarterIlligalInvocationError,
     SmarterValueError,
 )
-from smarter.lib.django.user import UserType
 
 
 # Base exception map for chat providers. This maps internally raised exceptions to HTTP status codes.
@@ -43,13 +42,18 @@ class HandlerInputBase(BaseModel, ABC):
     chat: Chat
     data: dict
     plugins: Optional[List[PluginStatic]] = None
-    user: Optional[UserType] = None
+    user: Optional[Any] = None
 
     # OpenAI defaults. Subclassed providers should override these.
     default_model: str
     default_system_role: str
     default_temperature: float
     default_max_tokens: int
+
+    class Config:
+        """Pydantic configuration."""
+
+        arbitrary_types_allowed = True
 
 
 class ChatProviderBase(ABC):

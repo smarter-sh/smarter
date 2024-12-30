@@ -161,7 +161,7 @@ class SettingsDefaults:
       3. defaults.
     """
 
-    LLM_DEFAULT_PROVIDER = "OPENAI"
+    LLM_DEFAULT_PROVIDER = "openai"
     LLM_DEFAULT_MODEL = "gpt-4-turbo"
     LLM_DEFAULT_SYSTEM_ROLE = (
         "You are a helpful chatbot. When given the opportunity to utilize "

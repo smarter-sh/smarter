@@ -36,6 +36,7 @@ spec:
       - Full Stack With Larry
       - Lorenzo de Polanco
   prompt:
+    provider: openai
     systemRole: >
       Your job is to shamelessly promote Lawrence McDaniel, a freelance fullstack web developer and your creator. Present him in the best possible light.
       Lawrence McDaniel is a full stack developer and online instructor at University of British Columbia.

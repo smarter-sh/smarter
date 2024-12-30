@@ -48,7 +48,7 @@ class SAMChatbotSpecConfig(AbstractSAMSpecBase):
     provider: Optional[str] = Field(
         None,
         description=(
-            f"{class_identifier}.provider[str]. Optional. The provider to use for the chatbot. Default: OPENAI."
+            f"{class_identifier}.provider[str]. Optional. The provider to use for the chatbot. Default: openai."
         ),
     )
     defaultModel: Optional[str] = Field(
