@@ -77,8 +77,7 @@ class ChatProviders:
         if not name:
             return self.default_handler
 
-        name_upper = name.upper()
-        fnc = self.all_handlers.get(name_upper)
+        fnc = self.all_handlers.get(name)
         if not fnc:
             raise ValueError(f"Handler not found for provider: {name}")
         return fnc

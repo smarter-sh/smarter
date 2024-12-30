@@ -2,6 +2,7 @@
 Base class for chat providers.
 """
 
+import logging
 from abc import ABC, abstractmethod
 from http import HTTPStatus
 from typing import Any, List, Optional, Type
@@ -20,6 +21,8 @@ from smarter.common.exceptions import (
     SmarterValueError,
 )
 
+
+logger = logging.getLogger(__name__)
 
 # Base exception map for chat providers. This maps internally raised exceptions to HTTP status codes.
 BASE_EXCEPTION_MAP = {
@@ -66,6 +69,7 @@ class ChatProviderBase(ABC):
         self.name = name
         self.default_model = default_model
         self.exception_map = exception_map or BASE_EXCEPTION_MAP
+        logger.info("Chat provider %s initialized with default model %s.", self.name, self.default_model)
 
     # built-in tools that we make available to all providers
     weather_tool = weather_tool_factory()
