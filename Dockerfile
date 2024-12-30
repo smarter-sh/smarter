@@ -72,6 +72,13 @@ RUN curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o 
     unzip awscliv2.zip && \
     ./aws/install
 
+# Create and activate a virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Switch to non-root user
+USER smarter_user
+
 # Add all Python package dependencies
 RUN pip install --upgrade pip
 RUN pip install -r requirements/docker.txt
@@ -97,10 +104,5 @@ RUN npm run build
 WORKDIR /smarter
 RUN python manage.py collectstatic --noinput
 
-# Add a non-root user and switch to it
-# setup the run-time environment
-#
-# TO DO: add auto download of AWS S3 bucket with settings.
-USER smarter_user
 CMD ["gunicorn", "smarter.wsgi:application", "-b", "0.0.0.0:8000"]
 EXPOSE 8000
