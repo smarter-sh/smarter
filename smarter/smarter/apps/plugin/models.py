@@ -156,6 +156,12 @@ class PluginPrompt(TimestampedModel):  # pragma: no cover
     """PluginPrompt model."""
 
     plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_prompt")
+    provider = models.TextField(
+        help_text="The name of the LLM provider for the plugin. Example: 'OPENAI'.",
+        null=True,
+        blank=True,
+        default=SettingsDefaults.LLM_DEFAULT_PROVIDER,
+    )
     system_role = models.TextField(
         help_text="The role of the system in the conversation.",
         null=True,
@@ -163,16 +169,16 @@ class PluginPrompt(TimestampedModel):  # pragma: no cover
         default="You are a helful assistant.",
     )
     model = models.CharField(
-        help_text="The model to use for the completion.", max_length=255, default=SettingsDefaults.OPENAI_DEFAULT_MODEL
+        help_text="The model to use for the completion.", max_length=255, default=SettingsDefaults.LLM_DEFAULT_MODEL
     )
     temperature = models.FloatField(
         help_text="The higher the temperature, the more creative the result.",
-        default=SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE,
+        default=SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
         validators=[MinValueValidator(0.0), MaxValueValidator(1.0)],
     )
     max_tokens = models.IntegerField(
         help_text="The maximum number of tokens for both input and output.",
-        default=SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS,
+        default=SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
         validators=[MinValueValidator(0), MaxValueValidator(4096)],
     )
 

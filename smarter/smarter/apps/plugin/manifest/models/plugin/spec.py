@@ -98,10 +98,18 @@ class SAMPluginSpecPrompt(BaseModel):
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".prompt"
 
-    DEFAULT_MODEL: ClassVar[str] = SettingsDefaults.OPENAI_DEFAULT_MODEL
-    DEFAULT_TEMPERATURE: ClassVar[float] = SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE
-    DEFAULT_MAXTOKENS: ClassVar[int] = SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS
+    DEFAULT_PROVIDER: ClassVar[str] = SettingsDefaults.LLM_DEFAULT_PROVIDER
+    DEFAULT_MODEL: ClassVar[str] = SettingsDefaults.LLM_DEFAULT_MODEL
+    DEFAULT_TEMPERATURE: ClassVar[float] = SettingsDefaults.LLM_DEFAULT_TEMPERATURE
+    DEFAULT_MAXTOKENS: ClassVar[int] = SettingsDefaults.LLM_DEFAULT_MAX_TOKENS
 
+    provider: str = Field(
+        DEFAULT_PROVIDER,
+        description=(
+            f"{class_identifier}.provider[str]. Optional. The provider of the LLM. Defaults to {DEFAULT_PROVIDER}. "
+            "The provider is the vendor name for the LLM service that will be used to generate the prompt response."
+        ),
+    )
     systemRole: str = Field(
         ...,
         description=(
@@ -138,6 +146,20 @@ class SAMPluginSpecPrompt(BaseModel):
             "The maximum number of tokens the LLM should generate in the prompt response. "
         ),
     )
+
+    @field_validator("provider")
+    def validate_provider(cls, v) -> str:
+
+        # FIX NOTE: This is a placeholder for the actual valid providers
+        VALID_PROVIDERS = [SettingsDefaults.LLM_DEFAULT_PROVIDER]
+        if v not in VALID_PROVIDERS:
+            err_desc_me_name = SAMPluginSpecPromptKeys.PROVIDER.value
+
+            raise SAMValidationError(
+                f"{cls.class_identifier}.{err_desc_me_name} not found in list of valid providers {VALID_PROVIDERS}"
+            )
+
+        return v
 
     @field_validator("systemRole")
     def validate_systemrole(cls, v) -> str:

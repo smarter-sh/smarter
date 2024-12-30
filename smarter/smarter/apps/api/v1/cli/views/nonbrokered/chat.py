@@ -13,7 +13,7 @@ from django.test import RequestFactory
 
 from smarter.apps.chat.models import Chat, ChatHistory
 from smarter.apps.chatapp.views import ChatConfigView
-from smarter.apps.chatbot.api.v1.views.smarter import SmarterChatBotApiView
+from smarter.apps.chatbot.api.v1.views.default import DefaultChatBotApiView
 from smarter.apps.chatbot.models import ChatBot
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import OpenAIMessageKeys
@@ -271,7 +271,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
 
         system_role: str = self.chatbot_config.get(
             "default_system_role",
-            self.chat_config.get("default_system_role", smarter_settings.openai_default_system_role),
+            self.chat_config.get("default_system_role", smarter_settings.llm_default_system_role),
         )
         welcome_message: str = self.chatbot_config.get("app_welcome_message", "[MISSING WELCOME MESSAGE]")
         app_assistant: str = self.chatbot_config.get("app_assistant", "[MISSING ASSISTANT NAME]")
@@ -347,7 +347,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
 
         # create a Smarter chatbot request and prompt the chatbot
         chat_request = self.chat_request_factory(request=request, url=self.url_chatbot, body=request_body)
-        chat_response = SmarterChatBotApiView.as_view()(request=chat_request, name=name)
+        chat_response = DefaultChatBotApiView.as_view()(request=chat_request, name=name)
         chat_response = json.loads(chat_response.content)
 
         response_data = chat_response.get(SmarterJournalApiResponseKeys.DATA)
