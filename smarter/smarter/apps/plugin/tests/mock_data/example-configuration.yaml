@@ -18,6 +18,7 @@ spec:
       - Example configuration
       - example function calling
   prompt:
+    provider: openai
     systemRole: >
       Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response:
       "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:"

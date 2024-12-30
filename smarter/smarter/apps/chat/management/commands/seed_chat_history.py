@@ -17,8 +17,7 @@ from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT
 
 
 HERE = Path(__file__).resolve().parent
-chat_providers = ChatProviders()
-default_handler = chat_providers.default_handler
+default_handler = ChatProviders().default_handler
 
 
 # pylint: disable=E1101

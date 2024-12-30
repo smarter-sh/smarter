@@ -58,7 +58,7 @@ EXCEPTION_MAP = BASE_EXCEPTION_MAP.copy()
 EXCEPTION_MAP[openai.APIError] = (HTTPStatus.BAD_REQUEST, "BadRequest")
 EXCEPTION_MAP[openai.OpenAIError] = (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError")
 
-PROVIDER_NAME = "OPENAI"
+PROVIDER_NAME = "openai"
 DEFAULT_MODEL = "gpt-4-turbo"
 
 

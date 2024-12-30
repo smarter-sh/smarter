@@ -8,13 +8,14 @@ There are a few objectives of this class:
 3. To provide a default provider and handler.
 """
 
-from typing import List, Optional, Type
+from typing import Callable, Dict, List, Optional, Type
 
 from smarter.apps.chat.models import Chat
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.lib.django.user import UserType
 
 from .base import ChatProviderBase
+from .openai import PROVIDER_NAME as OPENAI_PROVIDER_NAME
 from .openai import OpenAIChatProvider, OpenAIHandlerInput
 
 
@@ -46,20 +47,41 @@ class ChatProviders:
     # -------------------------------------------------------------------------
     def openai_handler(
         self, chat: Chat, data: dict, plugins: Optional[List[PluginStatic]] = None, user: Optional[UserType] = None
-    ):
+    ) -> dict:
         """Expose the handler method of the default provider"""
-        handler_inputs = OpenAIHandlerInput()
-        handler_inputs.chat = chat
-        handler_inputs.data = data
-        handler_inputs.plugins = plugins
-        handler_inputs.user = user
+        handler_inputs = OpenAIHandlerInput(
+            chat=chat,
+            data=data,
+            plugins=plugins,
+            user=user,
+        )
         return self.default.handler(handler_inputs=handler_inputs)
 
     def default_handler(
         self, chat: Chat, data: dict, plugins: Optional[List[PluginStatic]] = None, user: Optional[UserType] = None
-    ):
+    ) -> dict:
         """Expose the handler method of the default provider"""
         return self.openai_handler(chat=chat, data=data, plugins=plugins, user=user)
+
+    @property
+    def all_handlers(self) -> Dict[str, Callable]:
+        """
+        A dictionary of all the handler callables
+        """
+        return {OPENAI_PROVIDER_NAME: self.openai_handler, "DEFAULT": self.default_handler}
+
+    def get_handler(self, name: str = None) -> Callable:
+        """
+        A convenience method to get a handler by name.
+        """
+        if not name:
+            return self.default_handler
+
+        name_upper = name.upper()
+        fnc = self.all_handlers.get(name_upper)
+        if not fnc:
+            raise ValueError(f"Handler not found for provider: {name}")
+        return fnc
 
     @property
     def all(self):

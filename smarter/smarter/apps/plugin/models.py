@@ -157,7 +157,7 @@ class PluginPrompt(TimestampedModel):  # pragma: no cover
 
     plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_prompt")
     provider = models.TextField(
-        help_text="The name of the LLM provider for the plugin. Example: 'OPENAI'.",
+        help_text="The name of the LLM provider for the plugin. Example: 'openai'.",
         null=True,
         blank=True,
         default=SettingsDefaults.LLM_DEFAULT_PROVIDER,
