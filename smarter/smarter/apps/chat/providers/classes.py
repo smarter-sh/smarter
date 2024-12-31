@@ -15,6 +15,7 @@ from smarter.apps.chat.functions.function_weather import (
 )
 from smarter.apps.chat.models import Chat
 from smarter.apps.plugin.plugin.static import PluginStatic
+from smarter.common.classes import Singleton
 from smarter.common.exceptions import (
     SmarterConfigurationError,
     SmarterIlligalInvocationError,
@@ -59,7 +60,13 @@ class HandlerInputBase(BaseModel, ABC):
         arbitrary_types_allowed = True
 
 
-class ChatProviderBase(ABC):
+class CombinedMeta(type(ABC), Singleton):
+    """
+    Metaclass for combining ABC and Singleton.
+    """
+
+
+class ChatProviderBase(ABC, metaclass=CombinedMeta):
     """
     Base class for chat providers.
     """
