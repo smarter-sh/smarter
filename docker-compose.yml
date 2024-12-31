@@ -27,6 +27,13 @@ services:
   smarter-app:
     container_name: smarter-app
     user: smarter_user
+    x-build:
+      type: docker
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        ENVIRONMENT: ${ENVIRONMENT}
     image: smarter
     command: watchmedo auto-restart --directory=./smarter --pattern=*.py --recursive -- gunicorn smarter.wsgi:application -b 0.0.0.0:8000
     volumes:
@@ -75,6 +82,13 @@ services:
   smarter-beat:
     container_name: smarter-beat
     user: smarter_user
+    x-build:
+      type: docker
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        ENVIRONMENT: ${ENVIRONMENT}
     image: smarter
     command: celery -A smarter.smarter_celerybeat.app beat --loglevel=info
     depends_on:
