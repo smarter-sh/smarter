@@ -1,25 +1,31 @@
-# [0.6.0](https://github.com/smarter-sh/smarter/compare/v0.5.4...v0.6.0) (2024-11-21)
-
+# [0.6.2](https://github.com/smarter-sh/smarter/compare/v0.5.4...v0.6.0) (2024-12-30)
 
 ### Bug Fixes
 
-* account_for_user() should ensure that user is not AnonymousUser ([35f08f7](https://github.com/smarter-sh/smarter/commit/35f08f76816412a95c064df0554ab6f4b1b8be3d))
-* add ampersands ([be04891](https://github.com/smarter-sh/smarter/commit/be04891dbe32aef604b6e07cd212d3361b1dfb62))
-* add ampersands ([39a8c0c](https://github.com/smarter-sh/smarter/commit/39a8c0c8ebd8150aec32bf3add7fff851ddd7c73))
-* add assistant response and tool calls to message list history ([793cb8b](https://github.com/smarter-sh/smarter/commit/793cb8be8b7451dca3a456228166d1918d193bbc))
-* docker-compose-install ([2522bf8](https://github.com/smarter-sh/smarter/commit/2522bf827b5badb6af1807ce9a0c9bb2e995bcab))
-* dumbass mistake ([9d3513d](https://github.com/smarter-sh/smarter/commit/9d3513dff9b2b4b14f5ab4fb42b0f2e779c58ed6))
-* dumbass mistake ([9308977](https://github.com/smarter-sh/smarter/commit/93089772255bb432d37524371200a4ebbe22c62c))
-* dumbass mistake ([e2c0311](https://github.com/smarter-sh/smarter/commit/e2c03113d9ac852db7861389c55e9b8b37422860))
-* evaluate data type of kwargs['name'] and warn if not str ([3957fb1](https://github.com/smarter-sh/smarter/commit/3957fb1c9035f1fe48788c381979ecae0f0f19bd))
-* make syntax errors ([7afa0c5](https://github.com/smarter-sh/smarter/commit/7afa0c525eb7bf75302c11640a9d5d126689cc22))
-* make syntax errors ([f9432b5](https://github.com/smarter-sh/smarter/commit/f9432b5370e3ca16e4156c934b8d64f1d744abf8))
-* rewrite file instead of append ([9ec807b](https://github.com/smarter-sh/smarter/commit/9ec807bb2f987324c21af36270711a4866d8eb88))
+- refactor to make choice of llm provider data-driven based on Chatbot/Plugin manifest spec setting
+- refactor Dockerfile and docker-compose.yml to build and run as non-root user
+- refactor build/deploy workflows
 
+# [0.6.0](https://github.com/smarter-sh/smarter/compare/v0.5.4...v0.6.0) (2024-11-21)
+
+### Bug Fixes
+
+- account_for_user() should ensure that user is not AnonymousUser ([35f08f7](https://github.com/smarter-sh/smarter/commit/35f08f76816412a95c064df0554ab6f4b1b8be3d))
+- add ampersands ([be04891](https://github.com/smarter-sh/smarter/commit/be04891dbe32aef604b6e07cd212d3361b1dfb62))
+- add ampersands ([39a8c0c](https://github.com/smarter-sh/smarter/commit/39a8c0c8ebd8150aec32bf3add7fff851ddd7c73))
+- add assistant response and tool calls to message list history ([793cb8b](https://github.com/smarter-sh/smarter/commit/793cb8be8b7451dca3a456228166d1918d193bbc))
+- docker-compose-install ([2522bf8](https://github.com/smarter-sh/smarter/commit/2522bf827b5badb6af1807ce9a0c9bb2e995bcab))
+- dumbass mistake ([9d3513d](https://github.com/smarter-sh/smarter/commit/9d3513dff9b2b4b14f5ab4fb42b0f2e779c58ed6))
+- dumbass mistake ([9308977](https://github.com/smarter-sh/smarter/commit/93089772255bb432d37524371200a4ebbe22c62c))
+- dumbass mistake ([e2c0311](https://github.com/smarter-sh/smarter/commit/e2c03113d9ac852db7861389c55e9b8b37422860))
+- evaluate data type of kwargs['name'] and warn if not str ([3957fb1](https://github.com/smarter-sh/smarter/commit/3957fb1c9035f1fe48788c381979ecae0f0f19bd))
+- make syntax errors ([7afa0c5](https://github.com/smarter-sh/smarter/commit/7afa0c525eb7bf75302c11640a9d5d126689cc22))
+- make syntax errors ([f9432b5](https://github.com/smarter-sh/smarter/commit/f9432b5370e3ca16e4156c934b8d64f1d744abf8))
+- rewrite file instead of append ([9ec807b](https://github.com/smarter-sh/smarter/commit/9ec807bb2f987324c21af36270711a4866d8eb88))
 
 ### Features
 
-* version bump all requirements and upgrade default model to gpt-4-turbo ([fa6def4](https://github.com/smarter-sh/smarter/commit/fa6def47316291d5848c11c0ecfbbb26b4effff5))
+- version bump all requirements and upgrade default model to gpt-4-turbo ([fa6def4](https://github.com/smarter-sh/smarter/commit/fa6def47316291d5848c11c0ecfbbb26b4effff5))
 
 # Change Log
 
