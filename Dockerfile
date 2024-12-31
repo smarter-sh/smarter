@@ -75,9 +75,9 @@ RUN curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o 
 # Switch to non-root user
 USER smarter_user
 
-# Create and activate a virtual environment
-RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
+# Create and activate a virtual environment in the user's home directory
+RUN python -m venv /home/smarter_user/venv
+ENV PATH="/home/smarter_user/venv/bin:$PATH"
 
 # Add all Python package dependencies
 RUN pip install --upgrade pip
