@@ -21,7 +21,7 @@ from smarter.apps.plugin.signals import plugin_called, plugin_selected
 from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 from ..models import Chat, ChatPluginUsage
-from ..providers.providers import ChatProviders
+from ..providers.providers import chat_providers
 from ..signals import (
     chat_completion_called,
     chat_completion_plugin_selected,
@@ -38,7 +38,6 @@ PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
 if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 
-chat_providers = ChatProviders()
 handler = chat_providers.openai_handler
 
 

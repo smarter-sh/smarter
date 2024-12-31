@@ -11,13 +11,13 @@ from django.core.management.base import BaseCommand
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import account_admin_user
 from smarter.apps.chat.models import Chat
-from smarter.apps.chat.providers.providers import ChatProviders
+from smarter.apps.chat.providers.providers import chat_providers
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
 
 
 HERE = Path(__file__).resolve().parent
-default_handler = ChatProviders().default_handler
+default_handler = chat_providers.default_handler
 
 
 # pylint: disable=E1101

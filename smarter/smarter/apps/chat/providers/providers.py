@@ -12,6 +12,7 @@ from typing import Callable, Dict, List, Optional, Type
 
 from smarter.apps.chat.models import Chat
 from smarter.apps.plugin.plugin.static import PluginStatic
+from smarter.common.classes import Singleton
 from smarter.lib.django.user import UserType
 
 from .base import ChatProviderBase
@@ -19,7 +20,7 @@ from .openai.provider import PROVIDER_NAME as OPENAI_PROVIDER_NAME
 from .openai.provider import OpenAIChatProvider, OpenAIHandlerInput
 
 
-class ChatProviders:
+class ChatProviders(metaclass=Singleton):
     """
     Collection of all the chat providers.
     """
@@ -85,3 +86,6 @@ class ChatProviders:
     @property
     def all(self):
         return list({self.openai.name, self.default.name})
+
+
+chat_providers = ChatProviders()
