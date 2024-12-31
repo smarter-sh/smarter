@@ -15,9 +15,9 @@ from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.classes import Singleton
 from smarter.lib.django.user import UserType
 
-from .base import ChatProviderBase
-from .openai.provider import PROVIDER_NAME as OPENAI_PROVIDER_NAME
-from .openai.provider import OpenAIChatProvider, OpenAIHandlerInput
+from .classes import ChatProviderBase
+from .openai.classes import PROVIDER_NAME as OPENAI_PROVIDER_NAME
+from .openai.classes import OpenAIChatProvider, OpenAIHandlerInput
 
 
 class ChatProviders(metaclass=Singleton):

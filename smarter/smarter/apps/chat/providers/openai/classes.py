@@ -24,7 +24,7 @@ from smarter.apps.account.tasks import (
 from smarter.apps.chat.models import Chat
 
 # smarter chat provider stuff
-from smarter.apps.chat.providers.base import (
+from smarter.apps.chat.providers.classes import (
     BASE_EXCEPTION_MAP,
     ChatProviderBase,
     HandlerInputBase,
