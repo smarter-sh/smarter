@@ -72,6 +72,9 @@ RUN curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o 
     unzip awscliv2.zip && \
     ./aws/install
 
+# Set permissions for the non-root user
+RUN chown -R smarter_user:smarter_user /smarter
+
 # Switch to non-root user
 USER smarter_user
 
