@@ -154,7 +154,7 @@ class ChatBot(TimestampedModel):
 
     @property
     def default_url(self):
-        return SmarterValidator.urlify(self.default_host, scheme=self.scheme)
+        return SmarterValidator.urlify(self.default_host)
 
     @property
     def custom_host(self):
@@ -174,7 +174,7 @@ class ChatBot(TimestampedModel):
         return 'https://example.example.com'
         """
         if self.custom_host:
-            return SmarterValidator.urlify(self.custom_host, scheme=self.scheme)
+            return SmarterValidator.urlify(self.custom_host)
         return None
 
     @property
@@ -191,7 +191,7 @@ class ChatBot(TimestampedModel):
         """
         return 'https://alpha.api.smarter.sh/api/v1/chatbots/1/'
         """
-        return SmarterValidator.urlify(self.sandbox_host, scheme=self.scheme)
+        return SmarterValidator.urlify(self.sandbox_host)
 
     @property
     def hostname(self):
