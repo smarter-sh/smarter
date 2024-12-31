@@ -48,6 +48,7 @@ from smarter.apps.chat.signals import (
 )
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.serializers import PluginMetaSerializer
+from smarter.common.classes import Singleton
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django.user import UserType
 
@@ -82,7 +83,7 @@ DEFAULT_MODEL = "gpt-4o-mini"
 
 
 # 2.) OpenAIHandlerInput: Input protocol for OpenAI chat provider handler.
-class OpenAIHandlerInput(HandlerInputBase):
+class OpenAIHandlerInput(HandlerInputBase, metaclass=Singleton):
     """
     Input protocol for OpenAI chat provider handler.
     """
@@ -340,6 +341,9 @@ class OpenAIChatProvider(ChatProviderBase):
         return http_response_factory(status_code=HTTPStatus.OK, body=response)
 
 
+openai_chat_provider = OpenAIChatProvider()
+
+
 def handler(
     chat: Chat, data: dict, plugins: Optional[List[PluginStatic]] = None, user: Optional[UserType] = None
 ) -> dict:
@@ -354,5 +358,5 @@ def handler(
     handler_inputs.plugins = plugins
     handler_inputs.user = user
 
-    openai_handler = OpenAIChatProvider().handler
+    openai_handler = openai_chat_provider.handler
     return openai_handler(handler_inputs=handler_inputs)

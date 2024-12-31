@@ -17,7 +17,7 @@ from smarter.lib.django.user import UserType
 
 from .classes import ChatProviderBase
 from .openai.classes import PROVIDER_NAME as OPENAI_PROVIDER_NAME
-from .openai.classes import OpenAIChatProvider, OpenAIHandlerInput
+from .openai.classes import OpenAIChatProvider, OpenAIHandlerInput, openai_chat_provider
 
 
 class ChatProviders(metaclass=Singleton):
@@ -34,13 +34,13 @@ class ChatProviders(metaclass=Singleton):
     @property
     def openai(self) -> OpenAIChatProvider:
         if self._openai is None:
-            self._openai = OpenAIChatProvider()
+            self._openai = openai_chat_provider
         return self._openai
 
     @property
     def default(self) -> Type[ChatProviderBase]:
         if self._default is None:
-            self._default = OpenAIChatProvider()
+            self._default = openai_chat_provider
         return self._default
 
     # -------------------------------------------------------------------------
