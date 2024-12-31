@@ -17,8 +17,6 @@ ARG ENVIRONMENT
 ENV ENVIRONMENT=$ENVIRONMENT
 RUN echo "ENVIRONMENT: $ENVIRONMENT"
 
-ENV PYTHONPATH="${PYTHONPATH}:/smarter"
-
 # Create a non-root user to run the application
 RUN adduser --disabled-password --gecos '' smarter_user
 
