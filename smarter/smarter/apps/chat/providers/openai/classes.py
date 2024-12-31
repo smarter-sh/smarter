@@ -83,7 +83,7 @@ DEFAULT_MODEL = "gpt-4o-mini"
 
 
 # 2.) OpenAIHandlerInput: Input protocol for OpenAI chat provider handler.
-class OpenAIHandlerInput(HandlerInputBase, metaclass=Singleton):
+class OpenAIHandlerInput(HandlerInputBase):
     """
     Input protocol for OpenAI chat provider handler.
     """
@@ -95,7 +95,7 @@ class OpenAIHandlerInput(HandlerInputBase, metaclass=Singleton):
 
 
 # 3.) OpenAIChatProvider: OpenAI chat provider.
-class OpenAIChatProvider(ChatProviderBase):
+class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
     """
     OpenAI chat provider.
     """
