@@ -10,9 +10,6 @@ import json
 import logging
 from http import HTTPStatus
 
-# python stuff
-from typing import List, Optional
-
 # 3rd party stuff
 import openai
 
@@ -21,7 +18,6 @@ from smarter.apps.account.tasks import (
     create_plugin_charge,
     create_prompt_completion_charge,
 )
-from smarter.apps.chat.models import Chat
 
 # smarter chat provider stuff
 from smarter.apps.chat.providers.classes import (
@@ -50,7 +46,6 @@ from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.common.classes import Singleton
 from smarter.common.conf import settings as smarter_settings
-from smarter.lib.django.user import UserType
 
 from .const import VALID_CHAT_COMPLETION_MODELS
 
@@ -341,22 +336,5 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
         return http_response_factory(status_code=HTTPStatus.OK, body=response)
 
 
+# create an instance of the OpenAI chat provider singleton
 openai_chat_provider = OpenAIChatProvider()
-
-
-def handler(
-    chat: Chat, data: dict, plugins: Optional[List[PluginStatic]] = None, user: Optional[UserType] = None
-) -> dict:
-    """
-    Provider API implementation. Handle the prompt using the OpenAI api.
-    """
-    handler_inputs = OpenAIHandlerInput()
-
-    # Prompt inputs
-    handler_inputs.chat = chat
-    handler_inputs.data = data
-    handler_inputs.plugins = plugins
-    handler_inputs.user = user
-
-    openai_handler = openai_chat_provider.handler
-    return openai_handler(handler_inputs=handler_inputs)
