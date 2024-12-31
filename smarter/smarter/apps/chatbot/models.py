@@ -589,9 +589,9 @@ class ChatBotHelper(AccountMixin):
         - https://hr.smarter.querium.com/chatbot/
         """
         if self._url:
-            return self._url
+            return SmarterValidator.urlify(self._url)
         if self._chatbot:
-            self._url = self.chatbot.url
+            self._url = SmarterValidator.urlify(self.chatbot.url)
         return self._url
 
     @property
