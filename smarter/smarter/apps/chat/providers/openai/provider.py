@@ -22,6 +22,22 @@ from smarter.apps.account.tasks import (
     create_prompt_completion_charge,
 )
 from smarter.apps.chat.models import Chat
+
+# smarter chat provider stuff
+from smarter.apps.chat.providers.base import (
+    BASE_EXCEPTION_MAP,
+    ChatProviderBase,
+    HandlerInputBase,
+)
+from smarter.apps.chat.providers.utils import (
+    ensure_system_role_present,
+    exception_response_factory,
+    get_request_body,
+    http_response_factory,
+    parse_request,
+    request_meta_data_factory,
+)
+from smarter.apps.chat.providers.validators import validate_item
 from smarter.apps.chat.signals import (
     chat_completion_called,
     chat_completion_plugin_selected,
@@ -33,20 +49,9 @@ from smarter.apps.chat.signals import (
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import VALID_CHAT_COMPLETION_MODELS
 from smarter.lib.django.user import UserType
 
-# smarter chat provider stuff
-from .base import BASE_EXCEPTION_MAP, ChatProviderBase, HandlerInputBase
-from .utils import (
-    ensure_system_role_present,
-    exception_response_factory,
-    get_request_body,
-    http_response_factory,
-    parse_request,
-    request_meta_data_factory,
-)
-from .validators import validate_item
+from .const import VALID_CHAT_COMPLETION_MODELS
 
 
 logger = logging.getLogger(__name__)
@@ -55,11 +60,25 @@ openai.api_key = smarter_settings.openai_api_key.get_secret_value()
 
 # 1.) EXCEPTION_MAP: A dictionary that maps exceptions to HTTP status codes and error types.
 EXCEPTION_MAP = BASE_EXCEPTION_MAP.copy()
-EXCEPTION_MAP[openai.APIError] = (HTTPStatus.BAD_REQUEST, "BadRequest")
+EXCEPTION_MAP[openai.APIError] = (HTTPStatus.BAD_REQUEST, "BadRequestError")
 EXCEPTION_MAP[openai.OpenAIError] = (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError")
+EXCEPTION_MAP[openai.ConflictError] = (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError")
+EXCEPTION_MAP[openai.NotFoundError] = (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError")
+EXCEPTION_MAP[openai.APIStatusError] = (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError")
+EXCEPTION_MAP[openai.RateLimitError] = (HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "InternalServerError")
+EXCEPTION_MAP[openai.APITimeoutError] = (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError")
+EXCEPTION_MAP[openai.BadRequestError] = (HTTPStatus.BAD_REQUEST, "BadRequestError")
+EXCEPTION_MAP[openai.APIConnectionError] = (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError")
+EXCEPTION_MAP[openai.AuthenticationError] = (HTTPStatus.UNAUTHORIZED, "UnauthorizedError")
+EXCEPTION_MAP[openai.InternalServerError] = (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError")
+EXCEPTION_MAP[openai.PermissionDeniedError] = (HTTPStatus.UNAUTHORIZED, "UnauthorizedError")
+EXCEPTION_MAP[openai.LengthFinishReasonError] = (HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "RequestEntityTooLargeError")
+EXCEPTION_MAP[openai.UnprocessableEntityError] = (HTTPStatus.BAD_REQUEST, "BadRequestError")
+EXCEPTION_MAP[openai.APIResponseValidationError] = (HTTPStatus.BAD_REQUEST, "BadRequestError")
+EXCEPTION_MAP[openai.ContentFilterFinishReasonError] = (HTTPStatus.BAD_REQUEST, "BadRequestError")
 
 PROVIDER_NAME = "openai"
-DEFAULT_MODEL = "gpt-4-turbo"
+DEFAULT_MODEL = "gpt-4o-mini"
 
 
 # 2.) OpenAIHandlerInput: Input protocol for OpenAI chat provider handler.

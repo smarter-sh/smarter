@@ -13,11 +13,11 @@ from time import sleep
 from django.test import Client
 
 from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
+from smarter.apps.chat.providers.openai.const import OpenAIMessageKeys
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
-from smarter.common.const import OpenAIMessageKeys
 from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 from ..models import Chat, ChatPluginUsage

@@ -15,6 +15,8 @@ PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
 if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 
+from smarter.apps.chat.providers.openai.const import OpenAIMessageKeys  # noqa: E402
+
 # our stuff
 from smarter.apps.chat.providers.utils import (  # noqa: E402
     exception_response_factory,
@@ -25,7 +27,6 @@ from smarter.apps.chat.providers.utils import (  # noqa: E402
     http_response_factory,
     parse_request,
 )
-from smarter.common.const import OpenAIMessageKeys  # noqa: E402
 
 from ..tests.test_setup import get_test_file  # noqa: E402
 
