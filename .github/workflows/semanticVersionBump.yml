@@ -34,7 +34,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.11
+      - name: Set up Python
         uses: actions/setup-python@v5
 
       - name: Setup Node.js environment
