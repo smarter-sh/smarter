@@ -9,7 +9,7 @@ from http import HTTPStatus
 import waffle
 
 from smarter.apps.chat.models import ChatHelper
-from smarter.apps.chat.providers.providers import ChatProviders
+from smarter.apps.chat.providers.providers import chat_providers
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
@@ -21,7 +21,6 @@ from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from .base import ChatBotApiBaseViewSet
 
 
-chat_providers = ChatProviders()
 logger = logging.getLogger(__name__)
 
 
