@@ -72,12 +72,12 @@ RUN curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o 
     unzip awscliv2.zip && \
     ./aws/install
 
+# Switch to non-root user
+USER smarter_user
+
 # Create and activate a virtual environment
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
-
-# Switch to non-root user
-USER smarter_user
 
 # Add all Python package dependencies
 RUN pip install --upgrade pip
