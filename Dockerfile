@@ -93,18 +93,20 @@ RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r requirements/local.txt
 # Add our source code and make the 'smarter' directory the working directory
 # we want this to be the last step so that we can take advantage of Docker's
 # caching mechanism.
-COPY ./smarter .
-COPY ./doc /data/doc
-COPY ./Dockerfile /data/Dockerfile
-COPY ./Makefile /data/Makefile
-COPY ./docker-compose.yml /data/docker-compose.yml
+WORKDIR /home/smarter_user/
+
+COPY --chown=smarter_user:smarter_user ./smarter ./smarter
+COPY --chown=smarter_user:smarter_user ./doc ./data/doc
+COPY --chown=smarter_user:smarter_user ./Dockerfile ./data/Dockerfile
+COPY --chown=smarter_user:smarter_user ./Makefile ./data/Makefile
+COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compose.yml
 
 # Build the React app and collect static files
-WORKDIR /smarter/smarter/apps/chatapp/reactapp
+WORKDIR /home/smarter_user/smarter/smarter/apps/chatapp/reactapp
 RUN npm install --legacy-peer-deps
 RUN npm run build
 
-WORKDIR /smarter
+WORKDIR /home/smarter_user/smarter
 RUN python manage.py collectstatic --noinput
 
 CMD ["gunicorn", "smarter.wsgi:application", "-b", "0.0.0.0:8000"]
