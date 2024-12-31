@@ -15,8 +15,8 @@ from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.lib.django.user import UserType
 
 from .base import ChatProviderBase
-from .openai import PROVIDER_NAME as OPENAI_PROVIDER_NAME
-from .openai import OpenAIChatProvider, OpenAIHandlerInput
+from .openai.provider import PROVIDER_NAME as OPENAI_PROVIDER_NAME
+from .openai.provider import OpenAIChatProvider, OpenAIHandlerInput
 
 
 class ChatProviders:

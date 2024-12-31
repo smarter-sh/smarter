@@ -14,8 +14,8 @@ from rest_framework import serializers
 from smarter.apps.account.manifest.models.user_profile import UserProfileModel
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import smarter_admin_user_profile
+from smarter.apps.chat.providers.openai.const import OpenAIMessageKeys
 from smarter.common.api import SmarterApiVersions
-from smarter.common.const import OpenAIMessageKeys
 
 # FIX NOTE: these imports need to be parameterized by version.
 from smarter.common.exceptions import SmarterExceptionBase

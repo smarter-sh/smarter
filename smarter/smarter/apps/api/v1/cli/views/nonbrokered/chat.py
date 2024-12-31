@@ -12,11 +12,11 @@ from django.http import HttpRequest, HttpResponse
 from django.test import RequestFactory
 
 from smarter.apps.chat.models import Chat, ChatHistory
+from smarter.apps.chat.providers.openai.const import OpenAIMessageKeys
 from smarter.apps.chatapp.views import ChatConfigView
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatBotApiView
 from smarter.apps.chatbot.models import ChatBot
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import OpenAIMessageKeys
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,
