@@ -63,7 +63,7 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 ]
 # settings that affect whether the browser saves cookies
 CSRF_COOKIE_DOMAIN = None
-CSRF_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_SAMESITE = "Lax"
 
 SESSION_COOKIE_SECURE = True
