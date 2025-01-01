@@ -50,7 +50,7 @@ pydantic-settings==2.6.1                # settings management
 # ------------
 openai==1.58.1                          # OpenAI API
 pyyaml==6.0.2                           # YAML parser
-langchain==0.3.12                        # LLM abstractions library for building complex workflows
+langchain==0.3.13                        # LLM abstractions library for building complex workflows
 langchain-openai==0.2.12                # OpenAI plugin for Langchain
 python-Levenshtein==0.26.1              # Levenshtein distance calculation for LLMs
 nltk==3.8.1                             # Natural Language Toolkit
