@@ -62,6 +62,12 @@ spec:
               value: "{{ .Values.env.PINECONE_ENVIRONMENT }}"
             - name: GOOGLE_MAPS_API_KEY
               value: "{{ .Values.env.GOOGLE_MAPS_API_KEY }}"
+            - name: GEMINI_API_KEY
+              value: "{{ .Values.env.GEMINI_API_KEY }}"
+            - name: LLAMA_API_KEY
+              value: "{{ .Values.env.LLAMA_API_KEY }}"
+            - name: MAILCHIMP_API_KEY
+              value: "{{ .Values.env.MAILCHIMP_API_KEY }}"
             - name: SECRET_KEY
               value: "{{ .Values.env.SECRET_KEY }}"
             - name: SMTP_HOST
