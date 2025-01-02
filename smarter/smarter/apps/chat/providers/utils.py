@@ -185,15 +185,13 @@ def ensure_system_role_present(
     """
     Ensure that a system role is present in the messages list
     """
-    if not any(
-        d[OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY] == OpenAIMessageKeys.OPENAI_SYSTEM_MESSAGE_KEY for d in messages
-    ):
+    if not any(d[OpenAIMessageKeys.MESSAGE_ROLE_KEY] == OpenAIMessageKeys.SYSTEM_MESSAGE_KEY for d in messages):
         logger.warning("No system role found in messages list, adding default system role")
         messages.insert(
             0,
             {
-                OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_SYSTEM_MESSAGE_KEY,
-                OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: default_system_role,
+                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: default_system_role,
             },
         )
     return messages

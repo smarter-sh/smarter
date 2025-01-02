@@ -22,6 +22,8 @@ from .googleai.classes import (
     googleai_chat_provider,
 )
 from .googleai.const import PROVIDER_NAME as GOOGLEAI_PROVIDER_NAME
+from .metaai.classes import MetaAIChatProvider, MetaAIHandlerInput, metaai_chat_provider
+from .metaai.const import PROVIDER_NAME as METAAI_PROVIDER_NAME
 from .openai.classes import OpenAIChatProvider, OpenAIHandlerInput, openai_chat_provider
 from .openai.const import PROVIDER_NAME as OPENAI_PROVIDER_NAME
 
@@ -31,24 +33,31 @@ class ChatProviders(metaclass=Singleton):
     Collection of all the chat providers.
     """
 
-    _openai = None
-    _googleai = None
     _default = None
+    _googleai = None
+    _metaai = None
+    _openai = None
 
     # -------------------------------------------------------------------------
     # all providers
     # -------------------------------------------------------------------------
     @property
-    def openai(self) -> OpenAIChatProvider:
-        if self._openai is None:
-            self._openai = openai_chat_provider
-        return self._openai
-
-    @property
     def googleai(self) -> GoogleAIChatProvider:
         if self._googleai is None:
             self._googleai = googleai_chat_provider
         return self._googleai
+
+    @property
+    def metaai(self) -> MetaAIChatProvider:
+        if self._metaai is None:
+            self._metaai = metaai_chat_provider
+        return self._metaai
+
+    @property
+    def openai(self) -> OpenAIChatProvider:
+        if self._openai is None:
+            self._openai = openai_chat_provider
+        return self._openai
 
     @property
     def default(self) -> Type[ChatProviderBase]:
@@ -83,6 +92,18 @@ class ChatProviders(metaclass=Singleton):
         )
         return self.default.handler(handler_inputs=handler_inputs)
 
+    def metaai_handler(
+        self, chat: Chat, data: dict, plugins: Optional[List[PluginStatic]] = None, user: Optional[UserType] = None
+    ) -> dict:
+        """Expose the handler method of the metaai provider"""
+        handler_inputs = MetaAIHandlerInput(
+            chat=chat,
+            data=data,
+            plugins=plugins,
+            user=user,
+        )
+        return self.default.handler(handler_inputs=handler_inputs)
+
     def default_handler(
         self, chat: Chat, data: dict, plugins: Optional[List[PluginStatic]] = None, user: Optional[UserType] = None
     ) -> dict:
@@ -95,8 +116,9 @@ class ChatProviders(metaclass=Singleton):
         A dictionary of all the handler callables
         """
         return {
-            OPENAI_PROVIDER_NAME: self.openai_handler,
             GOOGLEAI_PROVIDER_NAME: self.googleai_handler,
+            METAAI_PROVIDER_NAME: self.metaai_handler,
+            OPENAI_PROVIDER_NAME: self.openai_handler,
             "DEFAULT": self.default_handler,
         }
 
@@ -114,7 +136,7 @@ class ChatProviders(metaclass=Singleton):
 
     @property
     def all(self):
-        return list({self.openai.name, self.default.name})
+        return list({self.googleai.name, self.metaai.name, self.openai.name, self.default.name})
 
 
 chat_providers = ChatProviders()

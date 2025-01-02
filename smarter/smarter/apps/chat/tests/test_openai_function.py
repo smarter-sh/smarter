@@ -184,20 +184,20 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         def list_factory(content: str) -> list:
             return [
                 {
-                    OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_SYSTEM_MESSAGE_KEY,
-                    OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: "You are a helpful chatbot.",
+                    OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
+                    OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "You are a helpful chatbot.",
                 },
                 {
-                    OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_USER_MESSAGE_KEY,
-                    OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: "what is web development?",
+                    OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,
+                    OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "what is web development?",
                 },
                 {
-                    OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_ASSISTANT_MESSAGE_KEY,
-                    OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: "blah blah answer answer.",
+                    OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY,
+                    OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "blah blah answer answer.",
                 },
                 {
-                    OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_USER_MESSAGE_KEY,
-                    OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: content,
+                    OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,
+                    OpenAIMessageKeys.MESSAGE_CONTENT_KEY: content,
                 },
             ]
 

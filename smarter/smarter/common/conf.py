@@ -209,6 +209,7 @@ class SettingsDefaults:
         TFVARS.get("google_maps_api_key", None) or os.environ.get("TF_VAR_GOOGLE_MAPS_API_KEY", None),
     )
     GEMINI_API_KEY: str = os.environ.get("GEMINI_API_KEY", None)
+    LLAMA_API_KEY: str = os.environ.get("LLAMA_API_KEY", None)
 
     # -------------------------------------------------------------------------
     # see: https://console.cloud.google.com/apis/credentials/oauthclient/231536848926-egabg8jas321iga0nmleac21ccgbg6tq.apps.googleusercontent.com?project=smarter-sh
@@ -417,6 +418,10 @@ class Settings(BaseSettings):
     gemini_api_key: Optional[str] = Field(
         SettingsDefaults.GEMINI_API_KEY,
         env="GEMINI_API_KEY",
+    )
+    llama_api_key: Optional[str] = Field(
+        SettingsDefaults.LLAMA_API_KEY,
+        env="LLAMA_API_KEY",
     )
     social_auth_google_oauth2_key: Optional[str] = Field(
         SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
@@ -641,7 +646,10 @@ class Settings(BaseSettings):
             },
             "google": {
                 "google_maps_api_key": self.google_maps_api_key,
-                "gemini_api_key": self.GEMINI_API_KEY,
+                "gemini_api_key": self.gemini_api_key,
+            },
+            "metaai": {
+                "llama_api_key": self.llama_api_key,
             },
             "opeanai": {
                 "openai_api_organization": self.openai_api_organization,
@@ -798,6 +806,13 @@ class Settings(BaseSettings):
         """Check gemini_api_key"""
         if v in [None, ""]:
             return SettingsDefaults.GEMINI_API_KEY
+        return v
+
+    @field_validator("llama_api_key")
+    def check_llama_api_key(cls, v) -> str:
+        """Check llama_api_key"""
+        if v in [None, ""]:
+            return SettingsDefaults.LLAMA_API_KEY
         return v
 
     @field_validator("social_auth_google_oauth2_key")

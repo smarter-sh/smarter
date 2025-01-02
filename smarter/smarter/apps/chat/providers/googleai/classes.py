@@ -21,11 +21,8 @@ from smarter.apps.account.tasks import (
 )
 
 # smarter chat provider stuff
-from smarter.apps.chat.providers.classes import (
-    BASE_EXCEPTION_MAP,
-    ChatProviderBase,
-    HandlerInputBase,
-)
+from smarter.apps.chat.providers.classes import ChatProviderBase, HandlerInputBase
+from smarter.apps.chat.providers.openai.classes import EXCEPTION_MAP
 from smarter.apps.chat.providers.utils import (
     ensure_system_role_present,
     exception_response_factory,
@@ -54,9 +51,6 @@ from .const import BASE_URL, DEFAULT_MODEL, PROVIDER_NAME, VALID_CHAT_COMPLETION
 logger = logging.getLogger(__name__)
 openai.api_key = smarter_settings.gemini_api_key.get_secret_value()
 openai.base_url = BASE_URL
-
-# 1.) EXCEPTION_MAP: A dictionary that maps exceptions to HTTP status codes and error types.
-EXCEPTION_MAP = BASE_EXCEPTION_MAP.copy()
 
 
 # 2.) GoogleAIHandlerInput: Input protocol for GoogleAI chat provider handler.
@@ -92,7 +86,6 @@ class GoogleAIChatProvider(ChatProviderBase, metaclass=Singleton):
     def valid_models(self) -> list[str]:
         return VALID_CHAT_COMPLETION_MODELS
 
-    # pylint: disable=too-many-locals,too-many-statements,too-many-arguments
     # pylint: disable=too-many-locals,too-many-statements,too-many-arguments
     def handler(
         self,
@@ -135,7 +128,6 @@ class GoogleAIChatProvider(ChatProviderBase, metaclass=Singleton):
         data = handler_inputs.data
         plugins = handler_inputs.plugins
         user = handler_inputs.user
-        default_model = handler_inputs.default_model
         default_system_role = handler_inputs.default_system_role
         default_temperature = handler_inputs.default_temperature
         default_max_tokens = handler_inputs.default_max_tokens
@@ -210,6 +202,7 @@ class GoogleAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 model=model,
                 messages=messages,
                 tools=self.tools,
+                tool_choice="auto",
                 temperature=temperature,
                 max_tokens=max_tokens,
                 n=1,
