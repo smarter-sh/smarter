@@ -1,10 +1,13 @@
-# [0.6.2](https://github.com/smarter-sh/smarter/compare/v0.5.4...v0.6.0) (2024-12-30)
+# [0.7.0](https://github.com/smarter-sh/smarter/compare/v0.5.4...v0.6.0) (2024-12-30)
 
 ### Bug Fixes
 
-- refactor to make choice of llm provider data-driven based on Chatbot/Plugin manifest spec setting
+- add chat llm providers for MetaAI and GoogleAI
+- refactor: create a ChatProviderBase abstract base class and a default…
 - refactor Dockerfile and docker-compose.yml to build and run as non-root user
 - refactor build/deploy workflows
+- add LinkedIn oauth configuration
+- monthly Dependabot version bumps
 
 # [0.6.0](https://github.com/smarter-sh/smarter/compare/v0.5.4...v0.6.0) (2024-11-21)
 
