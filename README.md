@@ -35,6 +35,14 @@ Smarter is cost effective when running at scale. It is extensible and architecte
 
 Smarter provides design teams with a web console, and a convenient yaml manifest-based command-line interface for Windows, macOS, and Linux.
 
+### LLM Providers
+
+Smarter is currently compatible with the following LLM providers:
+
+- Google AI: Gemini, Aqa
+- Meta AI: Llama, Gema, Mistral, Qwen, nous-hermes
+- OpenAI: o1, chatGPT
+
 ### Plugin Architecture
 
 Smarter features a unique Plugin architecture for extending the knowledge domain of any LLM aimed at generative AI text completions. Smarter Plugins are uncharacteristically accurate, highly cost effective, and have been designed around the needs of enterprise customers. Its unique 'selector' feature gives prompt engineers a sosphisticated strategy for managing when and how LLM's can make use of Smarter Plugin's powerful data integrations, which include the following:
