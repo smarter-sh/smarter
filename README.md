@@ -40,8 +40,8 @@ Smarter provides design teams with a web console, and a convenient yaml manifest
 Smarter is currently compatible with the following LLM providers:
 
 - Google AI: Gemini, Aqa
-- Meta AI: Llama, Gema, Mistral, Qwen, nous-hermes
-- OpenAI: o1, chatGPT
+- Meta AI: Llama, Phi 3, Gema, Mistral, Qwen, nous-hermes
+- OpenAI: chatGPT, o1
 
 ### Plugin Architecture
 
