@@ -176,6 +176,8 @@ runs:
         echo "OPENAI_API_KEY=${{ inputs.openai-api-key }}" >> .env
         echo "PINECONE_API_KEY=${{ inputs.pinecone-api-key }}" >> .env
         echo "PINECONE_ENVIRONMENT=${{ inputs.pinecone-environment }}" >> .env
+        echo "GEMINI_API_KEY=${{ inputs.gemini-api-key }}" >> .
+        echo "LLAMA_API_KEY=${{ inputs.llama-api-key }}" >> .
         echo "GOOGLE_MAPS_API_KEY=${{ inputs.google-maps-api-key }}" >> .env
 
         # Mailchimp
