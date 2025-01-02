@@ -5,7 +5,7 @@ Base class for chat providers.
 import logging
 from abc import ABC, abstractmethod
 from http import HTTPStatus
-from typing import Any, List, Optional, Type
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 from pydantic import BaseModel
 
@@ -73,9 +73,9 @@ class ChatProviderBase(ABC, metaclass=CombinedMeta):
 
     @abstractmethod
     def __init__(self, name: str, default_model: str, exception_map: dict = None):
-        self.name = name
-        self.default_model = default_model
-        self.exception_map = exception_map or BASE_EXCEPTION_MAP
+        self._name = name
+        self._default_model = default_model
+        self._exception_map = exception_map or BASE_EXCEPTION_MAP
         logger.info("Chat provider %s initialized with default model %s.", self.name, self.default_model)
 
     # built-in tools that we make available to all providers
@@ -84,6 +84,18 @@ class ChatProviderBase(ABC, metaclass=CombinedMeta):
     available_functions = {
         "get_current_weather": get_current_weather,
     }
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def default_model(self) -> str:
+        return self._default_model
+
+    @property
+    def exception_map(self) -> Dict[Type[Exception], Tuple[HTTPStatus, str]]:
+        return self._exception_map
 
     @property
     @abstractmethod
