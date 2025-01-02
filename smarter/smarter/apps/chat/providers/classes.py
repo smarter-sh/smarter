@@ -87,11 +87,6 @@ class ChatProviderBase(ABC, metaclass=CombinedMeta):
 
     @property
     @abstractmethod
-    def default_model(self) -> str:
-        pass
-
-    @property
-    @abstractmethod
     def valid_models(self) -> list[str]:
         pass
 
@@ -110,3 +105,9 @@ class ChatProviderBase(ABC, metaclass=CombinedMeta):
             default_temperature = handler_input.default_temperature
             default_max_tokens = handler_input.default_max_tokens
         """
+
+    def _validate_default_model(self, model: str) -> None:
+        if model not in self.valid_models:
+            raise ValueError(
+                f"Internal error. Invalid default model: {model} not found in list of valid {self.name} models {self.valid_models}."
+            )

@@ -73,14 +73,7 @@ class MetaAIChatProvider(ChatProviderBase, metaclass=Singleton):
 
     def __init__(self):
         super().__init__(name=PROVIDER_NAME, default_model=DEFAULT_MODEL, exception_map=EXCEPTION_MAP)
-
-    @property
-    def default_model(self) -> str:
-        if DEFAULT_MODEL not in VALID_CHAT_COMPLETION_MODELS:
-            raise ValueError(
-                f"Internal error. Invalid default model: {DEFAULT_MODEL} not found in list of valid MetaAI models {VALID_CHAT_COMPLETION_MODELS}"
-            )
-        return DEFAULT_MODEL
+        self._validate_default_model(model=DEFAULT_MODEL)
 
     @property
     def valid_models(self) -> list[str]:

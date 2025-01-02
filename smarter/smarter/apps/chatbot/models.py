@@ -154,7 +154,7 @@ class ChatBot(TimestampedModel):
 
     @property
     def default_url(self):
-        return SmarterValidator.urlify(self.default_host)
+        return SmarterValidator.urlify(self.default_host, environment=smarter_settings.environment)
 
     @property
     def custom_host(self):
@@ -174,7 +174,7 @@ class ChatBot(TimestampedModel):
         return 'https://example.example.com'
         """
         if self.custom_host:
-            return SmarterValidator.urlify(self.custom_host)
+            return SmarterValidator.urlify(self.custom_host, environment=smarter_settings.environment)
         return None
 
     @property
@@ -191,7 +191,7 @@ class ChatBot(TimestampedModel):
         """
         return 'https://alpha.api.smarter.sh/api/v1/chatbots/1/'
         """
-        return SmarterValidator.urlify(self.sandbox_host)
+        return SmarterValidator.urlify(self.sandbox_host, environment=smarter_settings.environment)
 
     @property
     def hostname(self):
@@ -221,7 +221,7 @@ class ChatBot(TimestampedModel):
     @staticmethod
     def get_by_request(request):
         host = request.get_host()
-        url = SmarterValidator.urlify(host)
+        url = SmarterValidator.urlify(host, environment=smarter_settings.environment)
         parsed_host = urlparse(url)
         host = parsed_host.hostname
         return ChatBot.get_by_url(url)
@@ -230,7 +230,7 @@ class ChatBot(TimestampedModel):
     # @cache_results(timeout=600)
     def get_by_url(url: str):
         logger.debug("ChatBot() get_by_url: %s", url)
-        url = SmarterValidator.urlify(url)
+        url = SmarterValidator.urlify(url, environment=smarter_settings.environment)
         retval = ChatBotHelper(url).chatbot
         return retval
 
@@ -239,10 +239,10 @@ class ChatBot(TimestampedModel):
         if not url:
             return self.Modes.UNKNOWN
         SmarterValidator.validate_url(url)
-        url = SmarterValidator.urlify(url)
-        custom_url = SmarterValidator.urlify(self.custom_host)
-        default_url = SmarterValidator.urlify(self.default_host)
-        sandbox_url = SmarterValidator.urlify(self.sandbox_host)
+        url = SmarterValidator.urlify(url, environment=smarter_settings.environment)
+        custom_url = SmarterValidator.urlify(self.custom_host, environment=smarter_settings.environment)
+        default_url = SmarterValidator.urlify(self.default_host, environment=smarter_settings.environment)
+        sandbox_url = SmarterValidator.urlify(self.sandbox_host, environment=smarter_settings.environment)
         if custom_url and custom_url in url:
             return self.Modes.CUSTOM
         if default_url and default_url in url:
@@ -397,7 +397,7 @@ class ChatBotHelper(AccountMixin):
         if url:
             SmarterValidator.validate_url(url)  # raises ValidationError if url is invalid
             url = SmarterValidator.urlify(
-                url
+                url, environment=smarter_settings.environment
             )  # normalizes the url so that we dont find ourselves working with variations of the same url
             self._url = url
 
@@ -589,9 +589,9 @@ class ChatBotHelper(AccountMixin):
         - https://hr.smarter.querium.com/chatbot/
         """
         if self._url:
-            return SmarterValidator.urlify(self._url)
+            return SmarterValidator.urlify(self._url, environment=smarter_settings.environment)
         if self._chatbot:
-            self._url = SmarterValidator.urlify(self.chatbot.url)
+            self._url = SmarterValidator.urlify(self.chatbot.url, environment=smarter_settings.environment)
         return self._url
 
     @property
@@ -636,7 +636,7 @@ class ChatBotHelper(AccountMixin):
         """
         if not self.url:
             return None
-        url = SmarterValidator.urlify(self.domain) or ""
+        url = SmarterValidator.urlify(self.domain, environment=smarter_settings.environment) or ""
         subdomain = self.subdomain or ""
         return url.replace(f"{subdomain}.", "").replace("http://", "").replace("https://", "").replace("/", "")
 

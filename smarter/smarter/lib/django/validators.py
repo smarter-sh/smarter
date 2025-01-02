@@ -16,7 +16,6 @@ import validators
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator, validate_email, validate_ipv4_address
 
-from smarter.common.conf import settings
 from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterValueError
 
@@ -290,7 +289,6 @@ class SmarterValidator:
     def base_url(url: str) -> str:
         if not url:
             return None
-        url = SmarterValidator.urlify(url)
         SmarterValidator.validate_url(url)
         parsed_url = urlparse(url)
         unparsed_url = urlunparse((parsed_url.scheme, parsed_url.netloc, "", "", "", ""))
@@ -303,7 +301,7 @@ class SmarterValidator:
         return url if url.endswith("/") else url + "/"
 
     @staticmethod
-    def urlify(url: str, scheme: str = None) -> str:
+    def urlify(url: str, scheme: str = None, environment: str = SmarterEnvironments.LOCAL) -> str:
         """ensure that URL starts with http:// or https://"""
         logger.debug("urlify %s, %s", url, scheme)
         if not url:
@@ -312,7 +310,7 @@ class SmarterValidator:
             warnings.warn("scheme is deprecated and will be removed in a future release.", DeprecationWarning)
         if scheme and scheme not in ["http", "https"]:
             SmarterValidator.raise_error(f"Invalid scheme {scheme}. Should be one of ['http', 'https']")
-        scheme = "http" if settings.environment == SmarterEnvironments.LOCAL else "https"
+        scheme = "http" if environment == SmarterEnvironments.LOCAL else "https"
         if not "://" in url:
             url = f"{scheme}://{url}"
         parsed_url = urlparse(url)
