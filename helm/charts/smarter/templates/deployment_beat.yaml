@@ -89,6 +89,18 @@ spec:
               value: "{{ .Values.env.CELERY_BROKER_URL }}"
             - name: CELERY_RESULT_BACKEND
               value: "{{ .Values.env.CELERY_RESULT_BACKEND }}"
+            - name: SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
+              value: "{{ .Values.env.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY }}"
+            - name: SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
+              value: "{{ .Values.env.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET }}"
+            - name: SOCIAL_AUTH_GITHUB_KEY
+              value: "{{ .Values.env.SOCIAL_AUTH_GITHUB_KEY }}"
+            - name: SOCIAL_AUTH_GITHUB_SECRET
+              value: "{{ .Values.env.SOCIAL_AUTH_GITHUB_SECRET }}"
+            - name: SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY
+              value: "{{ .Values.env.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY }}"
+            - name: SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET
+              value: "{{ .Values.env.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET }}"
 
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
           command: ["celery", "-A", "smarter.smarter_celerybeat.app", "beat", "--loglevel=info"]
