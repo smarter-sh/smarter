@@ -70,7 +70,7 @@ class ChatProviders(metaclass=Singleton):
     # -------------------------------------------------------------------------
     def openai_handler(
         self, chat: Chat, data: dict, plugins: Optional[List[PluginStatic]] = None, user: Optional[UserType] = None
-    ) -> dict:
+    ) -> Callable:
         """Expose the handler method of the default provider"""
         handler_inputs = OpenAIHandlerInput(
             chat=chat,
@@ -82,7 +82,7 @@ class ChatProviders(metaclass=Singleton):
 
     def googleai_handler(
         self, chat: Chat, data: dict, plugins: Optional[List[PluginStatic]] = None, user: Optional[UserType] = None
-    ) -> dict:
+    ) -> Callable:
         """Expose the handler method of the googleai provider"""
         handler_inputs = GoogleAIHandlerInput(
             chat=chat,
@@ -90,11 +90,11 @@ class ChatProviders(metaclass=Singleton):
             plugins=plugins,
             user=user,
         )
-        return self.default.handler(handler_inputs=handler_inputs)
+        return self.googleai.handler(handler_inputs=handler_inputs)
 
     def metaai_handler(
         self, chat: Chat, data: dict, plugins: Optional[List[PluginStatic]] = None, user: Optional[UserType] = None
-    ) -> dict:
+    ) -> Callable:
         """Expose the handler method of the metaai provider"""
         handler_inputs = MetaAIHandlerInput(
             chat=chat,
@@ -102,11 +102,11 @@ class ChatProviders(metaclass=Singleton):
             plugins=plugins,
             user=user,
         )
-        return self.default.handler(handler_inputs=handler_inputs)
+        return self.metaai.handler(handler_inputs=handler_inputs)
 
     def default_handler(
         self, chat: Chat, data: dict, plugins: Optional[List[PluginStatic]] = None, user: Optional[UserType] = None
-    ) -> dict:
+    ) -> Callable:
         """Expose the handler method of the default provider"""
         return self.openai_handler(chat=chat, data=data, plugins=plugins, user=user)
 
@@ -129,13 +129,13 @@ class ChatProviders(metaclass=Singleton):
         if not name:
             return self.default_handler
 
-        fnc = self.all_handlers.get(name)
-        if not fnc:
+        handler = self.all_handlers.get(name)
+        if not handler:
             raise ValueError(f"Handler not found for provider: {name}")
-        return fnc
+        return handler
 
     @property
-    def all(self):
+    def all(self) -> list[str]:
         return list({self.googleai.name, self.metaai.name, self.openai.name, self.default.name})
 
 
