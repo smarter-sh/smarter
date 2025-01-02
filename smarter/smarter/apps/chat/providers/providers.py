@@ -16,8 +16,14 @@ from smarter.common.classes import Singleton
 from smarter.lib.django.user import UserType
 
 from .classes import ChatProviderBase
-from .openai.classes import PROVIDER_NAME as OPENAI_PROVIDER_NAME
+from .googleai.classes import (
+    GoogleAIChatProvider,
+    GoogleAIHandlerInput,
+    googleai_chat_provider,
+)
+from .googleai.const import PROVIDER_NAME as GOOGLEAI_PROVIDER_NAME
 from .openai.classes import OpenAIChatProvider, OpenAIHandlerInput, openai_chat_provider
+from .openai.const import PROVIDER_NAME as OPENAI_PROVIDER_NAME
 
 
 class ChatProviders(metaclass=Singleton):
@@ -26,6 +32,7 @@ class ChatProviders(metaclass=Singleton):
     """
 
     _openai = None
+    _googleai = None
     _default = None
 
     # -------------------------------------------------------------------------
@@ -36,6 +43,12 @@ class ChatProviders(metaclass=Singleton):
         if self._openai is None:
             self._openai = openai_chat_provider
         return self._openai
+
+    @property
+    def googleai(self) -> GoogleAIChatProvider:
+        if self._googleai is None:
+            self._googleai = googleai_chat_provider
+        return self._googleai
 
     @property
     def default(self) -> Type[ChatProviderBase]:
@@ -58,6 +71,18 @@ class ChatProviders(metaclass=Singleton):
         )
         return self.default.handler(handler_inputs=handler_inputs)
 
+    def googleai_handler(
+        self, chat: Chat, data: dict, plugins: Optional[List[PluginStatic]] = None, user: Optional[UserType] = None
+    ) -> dict:
+        """Expose the handler method of the googleai provider"""
+        handler_inputs = GoogleAIHandlerInput(
+            chat=chat,
+            data=data,
+            plugins=plugins,
+            user=user,
+        )
+        return self.default.handler(handler_inputs=handler_inputs)
+
     def default_handler(
         self, chat: Chat, data: dict, plugins: Optional[List[PluginStatic]] = None, user: Optional[UserType] = None
     ) -> dict:
@@ -69,7 +94,11 @@ class ChatProviders(metaclass=Singleton):
         """
         A dictionary of all the handler callables
         """
-        return {OPENAI_PROVIDER_NAME: self.openai_handler, "DEFAULT": self.default_handler}
+        return {
+            OPENAI_PROVIDER_NAME: self.openai_handler,
+            GOOGLEAI_PROVIDER_NAME: self.googleai_handler,
+            "DEFAULT": self.default_handler,
+        }
 
     def get_handler(self, name: str = None) -> Callable:
         """

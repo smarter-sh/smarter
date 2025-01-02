@@ -47,7 +47,7 @@ from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.common.classes import Singleton
 from smarter.common.conf import settings as smarter_settings
 
-from .const import VALID_CHAT_COMPLETION_MODELS
+from .const import DEFAULT_MODEL, PROVIDER_NAME, VALID_CHAT_COMPLETION_MODELS
 
 
 logger = logging.getLogger(__name__)
@@ -73,9 +73,6 @@ EXCEPTION_MAP[openai.UnprocessableEntityError] = (HTTPStatus.BAD_REQUEST, "BadRe
 EXCEPTION_MAP[openai.APIResponseValidationError] = (HTTPStatus.BAD_REQUEST, "BadRequestError")
 EXCEPTION_MAP[openai.ContentFilterFinishReasonError] = (HTTPStatus.BAD_REQUEST, "BadRequestError")
 
-PROVIDER_NAME = "openai"
-DEFAULT_MODEL = "gpt-4o-mini"
-
 
 # 2.) OpenAIHandlerInput: Input protocol for OpenAI chat provider handler.
 class OpenAIHandlerInput(HandlerInputBase):
@@ -83,7 +80,7 @@ class OpenAIHandlerInput(HandlerInputBase):
     Input protocol for OpenAI chat provider handler.
     """
 
-    default_model: str = "gpt-4-turbo"
+    default_model: str = DEFAULT_MODEL
     default_system_role: str = smarter_settings.llm_default_system_role
     default_temperature: float = smarter_settings.llm_default_temperature
     default_max_tokens: int = smarter_settings.llm_default_max_tokens
@@ -97,6 +94,18 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
 
     def __init__(self):
         super().__init__(name=PROVIDER_NAME, default_model=DEFAULT_MODEL, exception_map=EXCEPTION_MAP)
+
+    @property
+    def default_model(self) -> str:
+        if DEFAULT_MODEL not in VALID_CHAT_COMPLETION_MODELS:
+            raise ValueError(
+                f"Invalid default model: {DEFAULT_MODEL} not found in list of valid OpenAI models {VALID_CHAT_COMPLETION_MODELS}"
+            )
+        return DEFAULT_MODEL
+
+    @property
+    def valid_models(self) -> list[str]:
+        return VALID_CHAT_COMPLETION_MODELS
 
     # pylint: disable=too-many-locals,too-many-statements,too-many-arguments
     def handler(
