@@ -116,6 +116,7 @@ class DefaultChatBotApiView(ChatBotApiBaseViewSet):
         """
 
         if waffle.switch_is_active("chatbot_api_view_logging"):
+            logger.info("%s.post() - provider=%s", self.formatted_class_name, self.chatbot.provider)
             logger.info("%s.post() - data=%s", self.formatted_class_name, self.data)
             logger.info("%s.post() - account: %s", self.formatted_class_name, self.account)
             logger.info("%s.post() - user: %s", self.formatted_class_name, self.user)
