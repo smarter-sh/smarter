@@ -2,7 +2,7 @@ apiVersion: v2
 name: smarter
 description: A Helm chart for deploying Querium Smarter API and web console
 type: application
-version: 0.6.0
+version: 0.6.1
 home: https://smarter.sh
 sources:
   - https://github.com/QueriumCorp/smarter
@@ -13,7 +13,7 @@ maintainers:
     email: kent@querium.com
 dependencies:
   - name: redis
-    version: 19.0.0
+    version: 20.6.1
     repository: https://charts.bitnami.com/bitnami
 icon: https://www.querium.com/wp-content/uploads/2022/04/Querium-logo_white_transparency.png
 keywords:
@@ -21,4 +21,4 @@ keywords:
   - smarter
   - plugins
 annotations:
-  "helm.sh/chart": "smarter-0.6.0"
+  "helm.sh/chart": "smarter-0.6.1"
