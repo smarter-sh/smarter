@@ -5,7 +5,7 @@ Base class for chat providers.
 import logging
 from abc import ABC, abstractmethod
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional, Tuple, Type
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
 from pydantic import BaseModel
 
@@ -103,7 +103,7 @@ class ChatProviderBase(ABC, metaclass=CombinedMeta):
         pass
 
     @abstractmethod
-    def handler(self, handler_inputs: Type[HandlerInputBase]) -> dict:
+    def handler(self, handler_inputs: Type[HandlerInputBase]) -> Callable:
         """
         Handle the chat request.
 
