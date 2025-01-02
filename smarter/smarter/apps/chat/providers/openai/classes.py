@@ -216,6 +216,7 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 model=model,
                 messages=messages,
                 tools=self.tools,
+                tool_choice="auto",
                 temperature=temperature,
                 max_tokens=max_tokens,
             )

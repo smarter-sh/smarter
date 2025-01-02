@@ -475,12 +475,12 @@ class TestPlugin(unittest.TestCase):
 
         messages = [
             {
-                OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_SYSTEM_MESSAGE_KEY,
-                OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: "you are a helpful chatbot.",
+                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "you are a helpful chatbot.",
             },
             {
-                OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_USER_MESSAGE_KEY,
-                OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: "have you ever heard of everlasting gobstoppers?",
+                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "have you ever heard of everlasting gobstoppers?",
             },
         ]
 
@@ -493,12 +493,12 @@ class TestPlugin(unittest.TestCase):
         self._plugin_selected = False
         messages = [
             {
-                OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_SYSTEM_MESSAGE_KEY,
-                OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: "you are a helpful chatbot.",
+                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "you are a helpful chatbot.",
             },
             {
-                OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_USER_MESSAGE_KEY,
-                OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: "this should return false.",
+                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "this should return false.",
             },
         ]
         self.assertFalse(self.signals["plugin_selected"])

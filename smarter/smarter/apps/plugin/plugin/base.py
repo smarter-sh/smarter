@@ -505,11 +505,11 @@ class PluginBase(ABC):
             raise SmarterPluginError("Plugin is not ready.")
 
         for i, message in enumerate(messages):
-            if message.get(OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY) == OpenAIMessageKeys.OPENAI_SYSTEM_MESSAGE_KEY:
-                system_role = message.get(OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY)
+            if message.get(OpenAIMessageKeys.MESSAGE_ROLE_KEY) == OpenAIMessageKeys.SYSTEM_MESSAGE_KEY:
+                system_role = message.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY)
                 custom_prompt = {
-                    OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_SYSTEM_MESSAGE_KEY,
-                    OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: system_role
+                    OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
+                    OpenAIMessageKeys.MESSAGE_CONTENT_KEY: system_role
                     + "\n\n and also "
                     + self.plugin_prompt.system_role,
                 }

@@ -283,16 +283,16 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         intro = f"I'm {app_assistant}, how can I assist you today?"
         return [
             {
-                OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_SYSTEM_MESSAGE_KEY,
-                OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: system_role,
+                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: system_role,
             },
             {
-                OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_ASSISTANT_MESSAGE_KEY,
-                OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: f"{welcome_message}. {bullet_points}{intro}",
+                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY,
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: f"{welcome_message}. {bullet_points}{intro}",
             },
             {
-                OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_USER_MESSAGE_KEY,
-                OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: self.prompt,
+                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: self.prompt,
             },
         ]
 

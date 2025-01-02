@@ -1,11 +1,11 @@
 # pylint: disable=R0801
 """
-GoogleAI chat provider. Implements the following three things:
-Compatibility with GoogleAI chat provider: https://ai.google.dev/gemini-api/docs/openai
+MetaAI chat provider. Implements the following three things:
+Compatibility with MetaAI chat provider: https://docs.llama-api.com/essentials/chat#using-the-openai-client
 
 1. EXCEPTION_MAP: A dictionary that maps exceptions to HTTP status codes and error types.
-2. GoogleAIHandlerInput: Input protocol for GoogleAI chat provider handler.
-3. GoogleAIChatProvider: GoogleAI chat provider.
+2. MetaAIHandlerInput: Input protocol for MetaAI chat provider handler.
+3. MetaAIChatProvider: MetaAI chat provider.
 """
 import json
 import logging
@@ -49,14 +49,14 @@ from .const import BASE_URL, DEFAULT_MODEL, PROVIDER_NAME, VALID_CHAT_COMPLETION
 
 
 logger = logging.getLogger(__name__)
-openai.api_key = smarter_settings.gemini_api_key.get_secret_value()
+openai.api_key = smarter_settings.llama_api_key.get_secret_value()
 openai.base_url = BASE_URL
 
 
-# 2.) GoogleAIHandlerInput: Input protocol for GoogleAI chat provider handler.
-class GoogleAIHandlerInput(HandlerInputBase):
+# 2.) MetaAIHandlerInput: Input protocol for MetaAI chat provider handler.
+class MetaAIHandlerInput(HandlerInputBase):
     """
-    Input protocol for GoogleAI chat provider handler.
+    Input protocol for MetaAI chat provider handler.
     """
 
     default_model: str = DEFAULT_MODEL
@@ -65,10 +65,10 @@ class GoogleAIHandlerInput(HandlerInputBase):
     default_max_tokens: int = smarter_settings.llm_default_max_tokens
 
 
-# 3.) GoogleAIChatProvider: GoogleAI chat provider.
-class GoogleAIChatProvider(ChatProviderBase, metaclass=Singleton):
+# 3.) MetaAIChatProvider: MetaAI chat provider.
+class MetaAIChatProvider(ChatProviderBase, metaclass=Singleton):
     """
-    GoogleAI chat provider.
+    MetaAI chat provider.
     """
 
     def __init__(self):
@@ -78,7 +78,7 @@ class GoogleAIChatProvider(ChatProviderBase, metaclass=Singleton):
     def default_model(self) -> str:
         if DEFAULT_MODEL not in VALID_CHAT_COMPLETION_MODELS:
             raise ValueError(
-                f"Internal error. Invalid default model: {DEFAULT_MODEL} not found in list of valid GoogleAI models {VALID_CHAT_COMPLETION_MODELS}"
+                f"Internal error. Invalid default model: {DEFAULT_MODEL} not found in list of valid MetaAI models {VALID_CHAT_COMPLETION_MODELS}"
             )
         return DEFAULT_MODEL
 
@@ -89,7 +89,7 @@ class GoogleAIChatProvider(ChatProviderBase, metaclass=Singleton):
     # pylint: disable=too-many-locals,too-many-statements,too-many-arguments
     def handler(
         self,
-        handler_inputs: GoogleAIHandlerInput,
+        handler_inputs: MetaAIHandlerInput,
     ) -> dict:
         """
         Chat prompt handler. Responsible for processing incoming requests and
@@ -158,7 +158,7 @@ class GoogleAIChatProvider(ChatProviderBase, metaclass=Singleton):
             temperature = chat.chatbot.default_temperature or default_temperature
             max_tokens = chat.chatbot.default_max_tokens or default_max_tokens
             request_meta_data = request_meta_data_factory(model, temperature, max_tokens, input_text)
-            chat_invoked.send(sender=GoogleAIChatProvider.handler, chat=chat, data=data)
+            chat_invoked.send(sender=MetaAIChatProvider.handler, chat=chat, data=data)
 
             # does the prompt have anything to do with any of the search terms defined in a plugin?
             # FIX NOTE: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_tokens
@@ -179,7 +179,7 @@ class GoogleAIChatProvider(ChatProviderBase, metaclass=Singleton):
                     self.tools.append(custom_tool)
                     self.available_functions[plugin.function_calling_identifier] = plugin.function_calling_plugin
                     chat_completion_plugin_selected.send(
-                        sender=GoogleAIChatProvider.handler, chat=chat, plugin=plugin.plugin_meta, input_text=input_text
+                        sender=MetaAIChatProvider.handler, chat=chat, plugin=plugin.plugin_meta, input_text=input_text
                     )
 
             # https://platform.openai.com/docs/guides/gpt/chat-completions-api
@@ -210,14 +210,14 @@ class GoogleAIChatProvider(ChatProviderBase, metaclass=Singleton):
             first_response_dict = json.loads(first_response.model_dump_json())
             first_iteration["response"] = first_response_dict
             chat_completion_called.send(
-                sender=GoogleAIChatProvider.handler,
+                sender=MetaAIChatProvider.handler,
                 chat=chat,
                 iteration=1,
                 request=first_iteration["request"],
                 response=first_iteration["response"],
             )
             create_prompt_completion_charge(
-                GoogleAIChatProvider.handler.__name__,
+                MetaAIChatProvider.handler.__name__,
                 user.id,
                 model,
                 first_response.usage.completion_tokens,
@@ -284,7 +284,7 @@ class GoogleAIChatProvider(ChatProviderBase, metaclass=Singleton):
                     "messages": serialized_messages,
                 }
                 chat_completion_called.send(
-                    sender=GoogleAIChatProvider.handler, chat=chat, iteration=2, request=second_iteration["request"]
+                    sender=MetaAIChatProvider.handler, chat=chat, iteration=2, request=second_iteration["request"]
                 )
                 second_response = openai.chat.completions.create(
                     model=model,
@@ -294,14 +294,14 @@ class GoogleAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 second_iteration["response"] = second_response_dict
                 second_iteration["request"]["messages"] = serialized_messages
                 chat_completion_tool_call_created.send(
-                    sender=GoogleAIChatProvider.handler,
+                    sender=MetaAIChatProvider.handler,
                     chat=chat,
                     tool_calls=serialized_tool_calls,
                     request=second_iteration["request"],
                     response=second_iteration["response"],
                 )
                 create_plugin_charge(
-                    GoogleAIChatProvider.handler.__name__,
+                    MetaAIChatProvider.handler.__name__,
                     user.id,
                     model,
                     second_response.usage.completion_tokens,
@@ -314,7 +314,7 @@ class GoogleAIChatProvider(ChatProviderBase, metaclass=Singleton):
         # pylint: disable=broad-exception-caught
         except Exception as e:
             chat_response_failure.send(
-                sender=GoogleAIChatProvider.handler, chat=chat, request_meta_data=request_meta_data, exception=e
+                sender=MetaAIChatProvider.handler, chat=chat, request_meta_data=request_meta_data, exception=e
             )
             status_code, _message = self.exception_map.get(
                 type(e), (HTTPStatus.INTERNAL_SERVER_ERROR, "Internal server error")
@@ -328,10 +328,10 @@ class GoogleAIChatProvider(ChatProviderBase, metaclass=Singleton):
         response = second_iteration.get("response") or first_iteration.get("response")
         response["metadata"] = {"tool_calls": serialized_tool_calls, **request_meta_data}
         chat_response_success.send(
-            sender=GoogleAIChatProvider.handler, chat=chat, request=first_iteration.get("request"), response=response
+            sender=MetaAIChatProvider.handler, chat=chat, request=first_iteration.get("request"), response=response
         )
         return http_response_factory(status_code=HTTPStatus.OK, body=response)
 
 
-# create an instance of the GoogleAI chat provider singleton
-googleai_chat_provider = GoogleAIChatProvider()
+# create an instance of the MetaAI chat provider singleton
+metaai_chat_provider = MetaAIChatProvider()

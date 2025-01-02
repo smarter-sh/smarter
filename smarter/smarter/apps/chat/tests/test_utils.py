@@ -76,8 +76,8 @@ class TestUtils(unittest.TestCase):
         """Test get_content_for_role"""
         request_body = get_request_body(self.request)
         messages, _ = parse_request(request_body)
-        system_message = get_content_for_role(messages, OpenAIMessageKeys.OPENAI_SYSTEM_MESSAGE_KEY)
-        user_message = get_content_for_role(messages, OpenAIMessageKeys.OPENAI_USER_MESSAGE_KEY)
+        system_message = get_content_for_role(messages, OpenAIMessageKeys.SYSTEM_MESSAGE_KEY)
+        user_message = get_content_for_role(messages, OpenAIMessageKeys.USER_MESSAGE_KEY)
         self.assertEqual(system_message, "you always return the integer value 42.")
         self.assertEqual(user_message, "return the integer value 42.")
 
@@ -97,6 +97,6 @@ class TestUtils(unittest.TestCase):
         messages, _ = parse_request(request_body)
         message_history = get_message_history(messages)
         self.assertIsInstance(message_history, list)
-        user_messages = get_messages_for_role(message_history, OpenAIMessageKeys.OPENAI_USER_MESSAGE_KEY)
+        user_messages = get_messages_for_role(message_history, OpenAIMessageKeys.USER_MESSAGE_KEY)
         self.assertEqual(len(user_messages), 1)
         self.assertEqual(user_messages[0], "return the integer value 42.")
