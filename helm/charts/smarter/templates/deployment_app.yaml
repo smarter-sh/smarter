@@ -4,6 +4,7 @@ metadata:
   annotations:
     meta.helm.sh/release-name: {{ .Values.appName }}
     meta.helm.sh/release-namespace: {{ .Values.namespace }}
+    version: {{ .Values.version }}
   labels:
     App: {{ .Values.appName }}
   name: {{ .Values.appName }}
