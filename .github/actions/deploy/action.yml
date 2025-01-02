@@ -27,6 +27,12 @@ inputs:
   google-maps-api-key:
     description: "The Google Maps API key"
     required: true
+  gemini-api-key:
+    description: "The Gemini API key"
+    required: true
+  llama-api-key:
+    description: "The MetaAI Llama API key"
+    required: true
   social-auth-google-oauth2-key:
     description: "The Google OAuth2 key"
     required: true
@@ -278,6 +284,8 @@ runs:
         --set env.PINECONE_API_KEY=${{ inputs.pinecone-api-key }} \
         --set env.PINECONE_ENVIRONMENT=${{ inputs.pinecone-environment }} \
         --set env.GOOGLE_MAPS_API_KEY=${{ inputs.google-maps-api-key }} \
+        --set env.GEMINI_API_KEY=${{ inputs.gemini-api-key }} \
+        --set env.LLAMA_API_KEY=${{ inputs.llama-api-key }} \
         --set env.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY=${{ inputs.social-auth-google-oauth2-key }} \
         --set env.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET=${{ inputs.social-auth-google-oauth2-secret }} \
         --set env.SOCIAL_AUTH_GITHUB_KEY=${{ inputs.social-auth-github-key }} \
