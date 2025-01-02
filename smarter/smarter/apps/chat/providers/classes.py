@@ -85,6 +85,16 @@ class ChatProviderBase(ABC, metaclass=CombinedMeta):
         "get_current_weather": get_current_weather,
     }
 
+    @property
+    @abstractmethod
+    def default_model(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
+    def valid_models(self) -> list[str]:
+        pass
+
     @abstractmethod
     def handler(self, handler_inputs: Type[HandlerInputBase]) -> dict:
         """

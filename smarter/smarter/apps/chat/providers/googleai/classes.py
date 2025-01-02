@@ -1,10 +1,11 @@
 # pylint: disable=R0801
 """
-OpenAI chat provider. Implements the following three things:
+GoogleAI chat provider. Implements the following three things:
+Compatibility with GoogleAI chat provider: https://ai.google.dev/gemini-api/docs/openai
 
 1. EXCEPTION_MAP: A dictionary that maps exceptions to HTTP status codes and error types.
-2. OpenAIHandlerInput: Input protocol for OpenAI chat provider handler.
-3. OpenAIChatProvider: OpenAI chat provider.
+2. GoogleAIHandlerInput: Input protocol for GoogleAI chat provider handler.
+3. GoogleAIChatProvider: GoogleAI chat provider.
 """
 import json
 import logging
@@ -47,37 +48,21 @@ from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.common.classes import Singleton
 from smarter.common.conf import settings as smarter_settings
 
-from .const import DEFAULT_MODEL, PROVIDER_NAME, VALID_CHAT_COMPLETION_MODELS
+from .const import BASE_URL, DEFAULT_MODEL, PROVIDER_NAME, VALID_CHAT_COMPLETION_MODELS
 
 
 logger = logging.getLogger(__name__)
-openai.organization = smarter_settings.openai_api_organization
-openai.api_key = smarter_settings.openai_api_key.get_secret_value()
+openai.api_key = smarter_settings.gemini_api_key.get_secret_value()
+openai.base_url = BASE_URL
 
 # 1.) EXCEPTION_MAP: A dictionary that maps exceptions to HTTP status codes and error types.
 EXCEPTION_MAP = BASE_EXCEPTION_MAP.copy()
-EXCEPTION_MAP[openai.APIError] = (HTTPStatus.BAD_REQUEST, "BadRequestError")
-EXCEPTION_MAP[openai.OpenAIError] = (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError")
-EXCEPTION_MAP[openai.ConflictError] = (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError")
-EXCEPTION_MAP[openai.NotFoundError] = (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError")
-EXCEPTION_MAP[openai.APIStatusError] = (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError")
-EXCEPTION_MAP[openai.RateLimitError] = (HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "InternalServerError")
-EXCEPTION_MAP[openai.APITimeoutError] = (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError")
-EXCEPTION_MAP[openai.BadRequestError] = (HTTPStatus.BAD_REQUEST, "BadRequestError")
-EXCEPTION_MAP[openai.APIConnectionError] = (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError")
-EXCEPTION_MAP[openai.AuthenticationError] = (HTTPStatus.UNAUTHORIZED, "UnauthorizedError")
-EXCEPTION_MAP[openai.InternalServerError] = (HTTPStatus.INTERNAL_SERVER_ERROR, "InternalServerError")
-EXCEPTION_MAP[openai.PermissionDeniedError] = (HTTPStatus.UNAUTHORIZED, "UnauthorizedError")
-EXCEPTION_MAP[openai.LengthFinishReasonError] = (HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "RequestEntityTooLargeError")
-EXCEPTION_MAP[openai.UnprocessableEntityError] = (HTTPStatus.BAD_REQUEST, "BadRequestError")
-EXCEPTION_MAP[openai.APIResponseValidationError] = (HTTPStatus.BAD_REQUEST, "BadRequestError")
-EXCEPTION_MAP[openai.ContentFilterFinishReasonError] = (HTTPStatus.BAD_REQUEST, "BadRequestError")
 
 
-# 2.) OpenAIHandlerInput: Input protocol for OpenAI chat provider handler.
-class OpenAIHandlerInput(HandlerInputBase):
+# 2.) GoogleAIHandlerInput: Input protocol for GoogleAI chat provider handler.
+class GoogleAIHandlerInput(HandlerInputBase):
     """
-    Input protocol for OpenAI chat provider handler.
+    Input protocol for GoogleAI chat provider handler.
     """
 
     default_model: str = DEFAULT_MODEL
@@ -86,10 +71,10 @@ class OpenAIHandlerInput(HandlerInputBase):
     default_max_tokens: int = smarter_settings.llm_default_max_tokens
 
 
-# 3.) OpenAIChatProvider: OpenAI chat provider.
-class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
+# 3.) GoogleAIChatProvider: GoogleAI chat provider.
+class GoogleAIChatProvider(ChatProviderBase, metaclass=Singleton):
     """
-    OpenAI chat provider.
+    GoogleAI chat provider.
     """
 
     def __init__(self):
@@ -99,7 +84,7 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
     def default_model(self) -> str:
         if DEFAULT_MODEL not in VALID_CHAT_COMPLETION_MODELS:
             raise ValueError(
-                f"Invalid default model: {DEFAULT_MODEL} not found in list of valid OpenAI models {VALID_CHAT_COMPLETION_MODELS}"
+                f"Internal error. Invalid default model: {DEFAULT_MODEL} not found in list of valid GoogleAI models {VALID_CHAT_COMPLETION_MODELS}"
             )
         return DEFAULT_MODEL
 
@@ -108,9 +93,10 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
         return VALID_CHAT_COMPLETION_MODELS
 
     # pylint: disable=too-many-locals,too-many-statements,too-many-arguments
+    # pylint: disable=too-many-locals,too-many-statements,too-many-arguments
     def handler(
         self,
-        handler_inputs: OpenAIHandlerInput,
+        handler_inputs: GoogleAIHandlerInput,
     ) -> dict:
         """
         Chat prompt handler. Responsible for processing incoming requests and
@@ -166,7 +152,11 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
         input_text: str = None
 
         try:
-            model = chat.chatbot.default_model or default_model
+            model = (
+                chat.chatbot.default_model
+                if chat.chatbot.default_model in VALID_CHAT_COMPLETION_MODELS
+                else self.default_model
+            )
             default_system_role = chat.chatbot.default_system_role or default_system_role
 
             request_body = get_request_body(data=data)
@@ -176,7 +166,7 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
             temperature = chat.chatbot.default_temperature or default_temperature
             max_tokens = chat.chatbot.default_max_tokens or default_max_tokens
             request_meta_data = request_meta_data_factory(model, temperature, max_tokens, input_text)
-            chat_invoked.send(sender=OpenAIChatProvider.handler, chat=chat, data=data)
+            chat_invoked.send(sender=GoogleAIChatProvider.handler, chat=chat, data=data)
 
             # does the prompt have anything to do with any of the search terms defined in a plugin?
             # FIX NOTE: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_tokens
@@ -185,7 +175,11 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
             )
             for plugin in plugins:
                 if plugin.selected(user=user, input_text=input_text):
-                    model = plugin.plugin_prompt.model
+                    model = (
+                        plugin.plugin_prompt.model
+                        if plugin.plugin_prompt.model in VALID_CHAT_COMPLETION_MODELS
+                        else model
+                    )
                     temperature = plugin.plugin_prompt.temperature
                     max_tokens = plugin.plugin_prompt.max_tokens
                     messages = plugin.customize_prompt(messages)
@@ -193,7 +187,7 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                     self.tools.append(custom_tool)
                     self.available_functions[plugin.function_calling_identifier] = plugin.function_calling_plugin
                     chat_completion_plugin_selected.send(
-                        sender=OpenAIChatProvider.handler, chat=chat, plugin=plugin.plugin_meta, input_text=input_text
+                        sender=GoogleAIChatProvider.handler, chat=chat, plugin=plugin.plugin_meta, input_text=input_text
                     )
 
             # https://platform.openai.com/docs/guides/gpt/chat-completions-api
@@ -218,18 +212,19 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 tools=self.tools,
                 temperature=temperature,
                 max_tokens=max_tokens,
+                n=1,
             )
             first_response_dict = json.loads(first_response.model_dump_json())
             first_iteration["response"] = first_response_dict
             chat_completion_called.send(
-                sender=OpenAIChatProvider.handler,
+                sender=GoogleAIChatProvider.handler,
                 chat=chat,
                 iteration=1,
                 request=first_iteration["request"],
                 response=first_iteration["response"],
             )
             create_prompt_completion_charge(
-                OpenAIChatProvider.handler.__name__,
+                GoogleAIChatProvider.handler.__name__,
                 user.id,
                 model,
                 first_response.usage.completion_tokens,
@@ -296,7 +291,7 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                     "messages": serialized_messages,
                 }
                 chat_completion_called.send(
-                    sender=OpenAIChatProvider.handler, chat=chat, iteration=2, request=second_iteration["request"]
+                    sender=GoogleAIChatProvider.handler, chat=chat, iteration=2, request=second_iteration["request"]
                 )
                 second_response = openai.chat.completions.create(
                     model=model,
@@ -306,14 +301,14 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 second_iteration["response"] = second_response_dict
                 second_iteration["request"]["messages"] = serialized_messages
                 chat_completion_tool_call_created.send(
-                    sender=OpenAIChatProvider.handler,
+                    sender=GoogleAIChatProvider.handler,
                     chat=chat,
                     tool_calls=serialized_tool_calls,
                     request=second_iteration["request"],
                     response=second_iteration["response"],
                 )
                 create_plugin_charge(
-                    OpenAIChatProvider.handler.__name__,
+                    GoogleAIChatProvider.handler.__name__,
                     user.id,
                     model,
                     second_response.usage.completion_tokens,
@@ -326,7 +321,7 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
         # pylint: disable=broad-exception-caught
         except Exception as e:
             chat_response_failure.send(
-                sender=OpenAIChatProvider.handler, chat=chat, request_meta_data=request_meta_data, exception=e
+                sender=GoogleAIChatProvider.handler, chat=chat, request_meta_data=request_meta_data, exception=e
             )
             status_code, _message = self.exception_map.get(
                 type(e), (HTTPStatus.INTERNAL_SERVER_ERROR, "Internal server error")
@@ -340,10 +335,10 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
         response = second_iteration.get("response") or first_iteration.get("response")
         response["metadata"] = {"tool_calls": serialized_tool_calls, **request_meta_data}
         chat_response_success.send(
-            sender=OpenAIChatProvider.handler, chat=chat, request=first_iteration.get("request"), response=response
+            sender=GoogleAIChatProvider.handler, chat=chat, request=first_iteration.get("request"), response=response
         )
         return http_response_factory(status_code=HTTPStatus.OK, body=response)
 
 
-# create an instance of the OpenAI chat provider singleton
-openai_chat_provider = OpenAIChatProvider()
+# create an instance of the GoogleAI chat provider singleton
+googleai_chat_provider = GoogleAIChatProvider()

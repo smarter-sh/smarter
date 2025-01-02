@@ -161,6 +161,8 @@ class SettingsDefaults:
       3. defaults.
     """
 
+    ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", None)
+
     LLM_DEFAULT_PROVIDER = "openai"
     LLM_DEFAULT_MODEL = "gpt-4-turbo"
     LLM_DEFAULT_SYSTEM_ROLE = (
@@ -206,6 +208,8 @@ class SettingsDefaults:
         "GOOGLE_MAPS_API_KEY",
         TFVARS.get("google_maps_api_key", None) or os.environ.get("TF_VAR_GOOGLE_MAPS_API_KEY", None),
     )
+    GEMINI_API_KEY: str = os.environ.get("GEMINI_API_KEY", None)
+
     # -------------------------------------------------------------------------
     # see: https://console.cloud.google.com/apis/credentials/oauthclient/231536848926-egabg8jas321iga0nmleac21ccgbg6tq.apps.googleusercontent.com?project=smarter-sh
     # -------------------------------------------------------------------------
@@ -386,6 +390,10 @@ class Settings(BaseSettings):
         SettingsDefaults.AWS_RDS_DB_INSTANCE_IDENTIFIER,
         env="AWS_RDS_DB_INSTANCE_IDENTIFIER",
     )
+    anthropic_api_key: Optional[str] = Field(
+        SettingsDefaults.ANTHROPIC_API_KEY,
+        env="ANTHROPIC_API_KEY",
+    )
     environment: Optional[str] = Field(
         SettingsDefaults.ENVIRONMENT,
         env="ENVIRONMENT",
@@ -405,6 +413,10 @@ class Settings(BaseSettings):
     google_maps_api_key: Optional[str] = Field(
         SettingsDefaults.GOOGLE_MAPS_API_KEY,
         env=["GOOGLE_MAPS_API_KEY", "TF_VAR_GOOGLE_MAPS_API_KEY"],
+    )
+    gemini_api_key: Optional[str] = Field(
+        SettingsDefaults.GEMINI_API_KEY,
+        env="GEMINI_API_KEY",
     )
     social_auth_google_oauth2_key: Optional[str] = Field(
         SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
@@ -624,8 +636,16 @@ class Settings(BaseSettings):
                 "python_build": platform.python_build(),
                 "python_installed_packages": packages_dict,
             },
+            "anthropic": {
+                "anthropic_api_key": self.anthropic_api_key,
+            },
             "google": {
                 "google_maps_api_key": self.google_maps_api_key,
+                "gemini_api_key": self.GEMINI_API_KEY,
+            },
+            "opeanai": {
+                "openai_api_organization": self.openai_api_organization,
+                "openai_api_key": self.openai_api_key,
             },
             "openai_passthrough": {
                 "aws_s3_bucket_name": self.aws_s3_bucket_name,
@@ -741,6 +761,13 @@ class Settings(BaseSettings):
             return SettingsDefaults.AWS_RDS_DB_INSTANCE_IDENTIFIER
         return v
 
+    @field_validator("anthropic_api_key")
+    def validate_anthropic_api_key(cls, v) -> str:
+        """Validate anthropic_api_key"""
+        if v in [None, ""]:
+            return SettingsDefaults.ANTHROPIC_API_KEY
+        return v
+
     @field_validator("debug_mode")
     def parse_debug_mode(cls, v) -> bool:
         """Parse debug_mode"""
@@ -764,6 +791,13 @@ class Settings(BaseSettings):
         """Check google_maps_api_key"""
         if v in [None, ""]:
             return SettingsDefaults.GOOGLE_MAPS_API_KEY
+        return v
+
+    @field_validator("gemini_api_key")
+    def check_gemini_api_key(cls, v) -> str:
+        """Check gemini_api_key"""
+        if v in [None, ""]:
+            return SettingsDefaults.GEMINI_API_KEY
         return v
 
     @field_validator("social_auth_google_oauth2_key")

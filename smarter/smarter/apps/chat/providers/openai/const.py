@@ -1,6 +1,10 @@
 import openai
 
 
+PROVIDER_NAME = "openai"
+DEFAULT_MODEL = "gpt-4o-mini"
+
+
 # pylint: disable=too-few-public-methods
 class OpenAIObjectTypes:
     """V1 API Object Types (replace OpeanAIEndPoint)"""
