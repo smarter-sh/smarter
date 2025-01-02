@@ -1,3 +1,7 @@
+"""
+Constants for the OpenAI provider.
+"""
+
 import openai
 
 

@@ -411,15 +411,15 @@ class Settings(BaseSettings):
         None,
         env="INIT_INFO",
     )
-    google_maps_api_key: Optional[str] = Field(
+    google_maps_api_key: Optional[SecretStr] = Field(
         SettingsDefaults.GOOGLE_MAPS_API_KEY,
         env=["GOOGLE_MAPS_API_KEY", "TF_VAR_GOOGLE_MAPS_API_KEY"],
     )
-    gemini_api_key: Optional[str] = Field(
+    gemini_api_key: Optional[SecretStr] = Field(
         SettingsDefaults.GEMINI_API_KEY,
         env="GEMINI_API_KEY",
     )
-    llama_api_key: Optional[str] = Field(
+    llama_api_key: Optional[SecretStr] = Field(
         SettingsDefaults.LLAMA_API_KEY,
         env="LLAMA_API_KEY",
     )
@@ -449,7 +449,7 @@ class Settings(BaseSettings):
     )
     langchain_memory_key: Optional[str] = Field(SettingsDefaults.LANGCHAIN_MEMORY_KEY, env="LANGCHAIN_MEMORY_KEY")
     logo: Optional[str] = Field(SettingsDefaults.LOGO, env="LOGO")
-    mailchimp_api_key: Optional[str] = Field(SettingsDefaults.MAILCHIMP_API_KEY, env="MAILCHIMP_API_KEY")
+    mailchimp_api_key: Optional[SecretStr] = Field(SettingsDefaults.MAILCHIMP_API_KEY, env="MAILCHIMP_API_KEY")
     mailchimp_list_id: Optional[str] = Field(SettingsDefaults.MAILCHIMP_LIST_ID, env="MAILCHIMP_LIST_ID")
     marketing_site_url: Optional[str] = Field(SettingsDefaults.MARKETING_SITE_URL, env="MARKETING_SITE_URL")
     openai_api_organization: Optional[str] = Field(
@@ -532,8 +532,8 @@ class Settings(BaseSettings):
     @property
     def environment_url(self) -> str:
         if self.environment == SmarterEnvironments.LOCAL:
-            return SmarterValidator.urlify(self.environment_domain)
-        return SmarterValidator.urlify(self.environment_domain)
+            return SmarterValidator.urlify(self.environment_domain, environment=self.environment)
+        return SmarterValidator.urlify(self.environment_domain, environment=self.environment)
 
     @property
     def platform_name(self) -> str:
@@ -572,8 +572,8 @@ class Settings(BaseSettings):
     @property
     def customer_api_url(self) -> str:
         if self.environment == SmarterEnvironments.LOCAL:
-            return SmarterValidator.urlify(self.customer_api_domain)
-        return SmarterValidator.urlify(self.customer_api_domain)
+            return SmarterValidator.urlify(self.customer_api_domain, environment=self.environment)
+        return SmarterValidator.urlify(self.customer_api_domain, environment=self.environment)
 
     @property
     def aws_s3_bucket_name(self) -> str:
