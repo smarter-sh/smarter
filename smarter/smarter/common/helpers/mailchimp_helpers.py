@@ -17,7 +17,7 @@ class MailchimpHelper:
     """Mailchimp API helper functions"""
 
     client = MailchimpMarketing.Client()
-    client.set_config({"api_key": smarter_settings.mailchimp_api_key, "server": MAILCHIMP_SERVER})
+    client.set_config({"api_key": smarter_settings.mailchimp_api_key.get_secret_value(), "server": MAILCHIMP_SERVER})
 
     def ping(self) -> bool:
         try:
@@ -68,7 +68,7 @@ class MailchimpHelper:
             )
             logger.error(
                 "API key: %s, List ID: %s, Intended email addition: %s, MailChimp server: %s",
-                smarter_settings.mailchimp_api_key,
+                smarter_settings.mailchimp_api_key.get_secret_value(),
                 smarter_settings.mailchimp_list_id,
                 email_address,
                 MAILCHIMP_SERVER,

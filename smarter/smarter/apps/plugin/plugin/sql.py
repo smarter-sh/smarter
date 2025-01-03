@@ -143,10 +143,11 @@ class PluginSql(PluginBase):
                     SAMPluginSpecSelectorKeys.SEARCHTERMS.value: ["admin", "Smarter platform", "admin account"],
                 },
                 SAMPluginSpecKeys.PROMPT.value: {
+                    SAMPluginSpecPromptKeys.PROVIDER.value: SettingsDefaults.LLM_DEFAULT_PROVIDER,
                     SAMPluginSpecPromptKeys.SYSTEMROLE.value: "You are a helpful assistant for Smarter platform. You can provide information about the admin account of the Smarter platform.\n",
-                    SAMPluginSpecPromptKeys.MODEL.value: SettingsDefaults.OPENAI_DEFAULT_MODEL,
-                    SAMPluginSpecPromptKeys.TEMPERATURE.value: SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE,
-                    SAMPluginSpecPromptKeys.MAXTOKENS.value: SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS,
+                    SAMPluginSpecPromptKeys.MODEL.value: SettingsDefaults.LLM_DEFAULT_MODEL,
+                    SAMPluginSpecPromptKeys.TEMPERATURE.value: SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
+                    SAMPluginSpecPromptKeys.MAXTOKENS.value: SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
                 },
                 SAMPluginSpecKeys.DATA.value: {
                     "description": "Query the Django User model to retrieve detailed account information about the admin account for the Smarter platform .",

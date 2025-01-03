@@ -4,7 +4,6 @@ from django.http import HttpRequest
 from rest_framework import serializers
 
 from smarter.lib.django.user import User
-from smarter.lib.django.validators import SmarterValidator
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -55,8 +54,8 @@ class HttpRequestSerializer(serializers.Serializer):
     def get_url(self, obj):
         if obj.request:
             _url = obj.request.build_absolute_uri()
-            _url = SmarterValidator.urlify(_url)
-        return _url
+            return _url
+        return None
 
     def create(self, validated_data):
         return HttpRequest(**validated_data)

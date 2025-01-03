@@ -7,6 +7,7 @@ from django.conf import settings
 from django.http import HttpResponseBadRequest
 from django.middleware.security import SecurityMiddleware as DjangoSecurityMiddleware
 
+from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django.validators import SmarterValidator
 
 from ..models import ChatBotHelper
@@ -38,7 +39,7 @@ class SecurityMiddleware(DjangoSecurityMiddleware):
         if host in SmarterValidator.LOCAL_HOSTS:
             return None
 
-        url = SmarterValidator.urlify(host)
+        url = SmarterValidator.urlify(host, environment=smarter_settings.environment)
         parsed_host = urlparse(url)
         host = parsed_host.hostname
 

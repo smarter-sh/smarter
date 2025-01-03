@@ -46,12 +46,17 @@ python-dotenv==1.0.1                    # for reading environment variables from
 pydantic==2.9.2                         # best data validation library ever!
 pydantic-settings==2.6.1                # settings management
 
-# Natural language and LLM support
+# LLM support
 # ------------
 openai==1.58.1                          # OpenAI API
-pyyaml==6.0.2                           # YAML parser
-langchain==0.3.12                        # LLM abstractions library for building complex workflows
+google-generativeai==0.8.3              # Google Generative AI API
+llamaai==0.1.27                         # Llama AI API
+langchain==0.3.12                       # LLM abstractions library for building complex workflows
 langchain-openai==0.2.12                # OpenAI plugin for Langchain
+
+# Natural language processing
+# ------------
+pyyaml==6.0.2                           # YAML parser
 python-Levenshtein==0.26.1              # Levenshtein distance calculation for LLMs
 nltk==3.8.1                             # Natural Language Toolkit
 textblob==0.18.0.post0                  # Text processing library
@@ -69,7 +74,7 @@ mailchimp-marketing==3.0.80             # Mailchimp API, for adding people to th
 # ------------
 beautifulsoup4==4.12.3                  # HTML parser for Wagtail page compression
 docutils==0.21.2                        # required by Django for django.contrib.admindocs
-drf-yasg==1.21.7                        # Swagger API documentation
+drf-yasg==1.21.8                        # Swagger API documentation
 lxml==5.2.2                             # parser for Wagtail page compression
 markdown==3.6                           # Markdown reader/parser
 python-hcl2==5.1.1                      # Terraform hcl parser for reading Terraform tfvars files

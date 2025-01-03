@@ -63,7 +63,10 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
         )
         self.assertTrue(helper.account_number == self.account.account_number)
         self.assertTrue(helper.is_custom_domain is False, f"this is not a default domain {helper.url}")
-        self.assertTrue(SmarterValidator.urlify(helper.url) == SmarterValidator.urlify(self.chatbot.url))
+        self.assertTrue(
+            SmarterValidator.urlify(helper.url, environment=smarter_settings.environment)
+            == SmarterValidator.urlify(self.chatbot.url, environment=smarter_settings.environment)
+        )
         self.assertTrue(helper.is_deployed is True)
         self.assertTrue(
             helper.api_host == smarter_settings.customer_api_domain,
@@ -82,7 +85,7 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
     def test_non_api_url(self):
         """Test a non-api url."""
         helper = ChatBotHelper(url="https://www.google.com")
-        reschemed_url = SmarterValidator.urlify(helper.url, scheme="http")
+        reschemed_url = SmarterValidator.urlify(helper.url, environment=smarter_settings.environment)
 
         self.assertTrue(helper.account is None)
         self.assertTrue(helper.chatbot is None)
@@ -114,8 +117,8 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
         )
         self.assertTrue(helper.is_custom_domain is True, f"Expected True, but got {helper.is_custom_domain}")
         self.assertIn(
-            SmarterValidator.urlify(self.custom_chatbot.url),
-            SmarterValidator.urlify(helper.url),
+            SmarterValidator.urlify(self.custom_chatbot.url, environment=smarter_settings.environment),
+            SmarterValidator.urlify(helper.url, environment=smarter_settings.environment),
             f"Expected {self.custom_chatbot.url}, but got {helper.url}",
         )
         self.assertTrue(helper.is_deployed is True, f"Expected True, but got {helper.is_deployed}")

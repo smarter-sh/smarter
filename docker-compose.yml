@@ -24,6 +24,31 @@ services:
     image: redis:latest
     command: redis-server --requirepass smarter
 
+  smarter-app:
+    container_name: smarter-app
+    user: smarter_user
+    x-build:
+      type: docker
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        ENVIRONMENT: ${ENVIRONMENT}
+    image: smarter
+    command: watchmedo auto-restart --directory=./smarter --pattern=*.py --recursive -- gunicorn smarter.wsgi:application -b 0.0.0.0:8000
+    volumes:
+      - type: bind
+        source: ./smarter
+        target: /smarter
+        consistency: cached
+    ports:
+      - 8000:8000
+    depends_on:
+      - smarter-mysql
+      - smarter-redis
+    env_file:
+      - ./.env
+
   smarter-worker:
     container_name: smarter-worker
     user: smarter_user
@@ -39,6 +64,7 @@ services:
     depends_on:
       - smarter-mysql
       - smarter-redis
+      - smarter-app
     env_file:
       - ./.env
     volumes:
@@ -56,11 +82,19 @@ services:
   smarter-beat:
     container_name: smarter-beat
     user: smarter_user
+    x-build:
+      type: docker
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        ENVIRONMENT: ${ENVIRONMENT}
     image: smarter
     command: celery -A smarter.smarter_celerybeat.app beat --loglevel=info
     depends_on:
       - smarter-mysql
       - smarter-redis
+      - smarter-app
     env_file:
       - ./.env
     volumes:
@@ -81,23 +115,3 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-
-  smarter-app:
-    container_name: smarter-app
-    user: smarter_user
-    image: smarter
-    command: watchmedo auto-restart --directory=./smarter --pattern=*.py --recursive -- gunicorn smarter.wsgi:application -b 0.0.0.0:8000
-    volumes:
-      - type: bind
-        source: ./smarter
-        target: /smarter
-        consistency: cached
-    ports:
-      - 8000:8000
-    depends_on:
-      - smarter-mysql
-      - smarter-redis
-      - smarter-worker
-      - smarter-beat
-    env_file:
-      - ./.env

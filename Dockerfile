@@ -17,8 +17,6 @@ ARG ENVIRONMENT
 ENV ENVIRONMENT=$ENVIRONMENT
 RUN echo "ENVIRONMENT: $ENVIRONMENT"
 
-ENV PYTHONPATH="${PYTHONPATH}:/smarter"
-
 # Create a non-root user to run the application
 RUN adduser --disabled-password --gecos '' smarter_user
 
@@ -72,6 +70,16 @@ RUN curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o 
     unzip awscliv2.zip && \
     ./aws/install
 
+# Set permissions for the non-root user
+RUN chown -R smarter_user:smarter_user /smarter
+
+# Switch to non-root user
+USER smarter_user
+
+# Create and activate a virtual environment in the user's home directory
+RUN python -m venv /home/smarter_user/venv
+ENV PATH="/home/smarter_user/venv/bin:$PATH"
+
 # Add all Python package dependencies
 RUN pip install --upgrade pip
 RUN pip install -r requirements/docker.txt
@@ -83,24 +91,21 @@ RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r requirements/local.txt
 # Add our source code and make the 'smarter' directory the working directory
 # we want this to be the last step so that we can take advantage of Docker's
 # caching mechanism.
-COPY ./smarter .
-COPY ./doc /data/doc
-COPY ./Dockerfile /data/Dockerfile
-COPY ./Makefile /data/Makefile
-COPY ./docker-compose.yml /data/docker-compose.yml
+WORKDIR /home/smarter_user/
+
+COPY --chown=smarter_user:smarter_user ./smarter ./smarter
+COPY --chown=smarter_user:smarter_user ./doc ./data/doc
+COPY --chown=smarter_user:smarter_user ./Dockerfile ./data/Dockerfile
+COPY --chown=smarter_user:smarter_user ./Makefile ./data/Makefile
+COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compose.yml
 
 # Build the React app and collect static files
-WORKDIR /smarter/smarter/apps/chatapp/reactapp
-RUN npm install
+WORKDIR /home/smarter_user/smarter/smarter/apps/chatapp/reactapp
+RUN npm install --legacy-peer-deps
 RUN npm run build
 
-WORKDIR /smarter
+WORKDIR /home/smarter_user/smarter
 RUN python manage.py collectstatic --noinput
 
-# Add a non-root user and switch to it
-# setup the run-time environment
-#
-# TO DO: add auto download of AWS S3 bucket with settings.
-USER smarter_user
 CMD ["gunicorn", "smarter.wsgi:application", "-b", "0.0.0.0:8000"]
 EXPOSE 8000

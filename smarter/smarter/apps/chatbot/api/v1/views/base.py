@@ -87,7 +87,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         self._user = self._user or request.user
         self._name = self._name or name
         self._url = self.request.build_absolute_uri()
-        self._url = SmarterValidator.urlify(self._url)
+        self._url = SmarterValidator.urlify(self._url, environment=smarter_settings.environment)
         self._chatbot_helper = ChatBotHelper(url=self.url, name=self.name, user=self.request.user)
 
         print(f"ChatBotApiBaseViewSet.dispatch(): chatbot: {self.chatbot_helper.chatbot}")

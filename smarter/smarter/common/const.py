@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Dict
 
 import hcl2
-import openai
 
 
 logger = logging.getLogger(__name__)
@@ -65,80 +64,5 @@ class SmarterEnvironments:
     all = [LOCAL, ALPHA, BETA, NEXT, PROD]
     aws_environments = [ALPHA, BETA, NEXT, PROD]
 
-
-# pylint: disable=too-few-public-methods
-class OpenAIObjectTypes:
-    """V1 API Object Types (replace OpeanAIEndPoint)"""
-
-    Embedding = "embedding"
-    ChatCompletion = "chat.completion"
-    Moderation = "moderation"
-    Image = "image"
-    Audio = "audio"
-    Models = "models"
-    all_object_types = [Embedding, ChatCompletion, Moderation, Image, Audio, Models]
-
-
-# pylint: disable=too-few-public-methods
-class OpenAIEndPoint:
-    """
-    A class representing an endpoint for the OpenAI API.
-
-    Attributes:
-        api_key (str): The API key to use for authentication.
-        endpoint (str): The URL of the OpenAI API endpoint.
-    """
-
-    Embedding = openai.Embedding.__name__
-    ChatCompletion = "chat/completions"
-    Moderation = openai.Moderation.__name__
-    Image = openai.Image.__name__
-    Audio = openai.Audio.__name__
-    Models = openai.Model.__name__
-    all_endpoints = [Embedding, ChatCompletion, Moderation, Image, Audio, Models]
-
-
-# pylint: disable=too-few-public-methods
-class OpenAIMessageKeys:
-    """A class representing the keys for a message in the OpenAI API."""
-
-    OPENAI_MESSAGE_ROLE_KEY = "role"
-    OPENAI_MESSAGE_CONTENT_KEY = "content"
-    OPENAI_USER_MESSAGE_KEY = "user"
-    OPENAI_ASSISTANT_MESSAGE_KEY = "assistant"
-    OPENAI_SYSTEM_MESSAGE_KEY = "system"
-    all = [
-        OPENAI_SYSTEM_MESSAGE_KEY,
-        OPENAI_USER_MESSAGE_KEY,
-        OPENAI_ASSISTANT_MESSAGE_KEY,
-    ]
-
-
-VALID_CHAT_COMPLETION_MODELS = [
-    "gpt-4",
-    "gpt-4-turbo",
-    "gpt-4-32k",
-    "gpt-4-32k-0613",
-    "gpt-4-1106-preview",
-    "gpt-4-0613",
-    "gpt-4-turbo-2024-04-09",
-    "gpt-4-turbo-preview",
-    "gpt-4-0125-preview",
-    "gpt-4-0314",
-    "gpt-3.5-turbo",
-    "gpt-3.5-turbo-0613",
-    "gpt-3.5-turbo-16k",
-    "gpt-3.5-turbo-16k-0613",
-    "gpt-3.5-turbo-1106",
-    "gpt-3.5-turbo-instruct",
-    "o1-preview",
-    "o1-mini",
-]
-VALID_EMBEDDING_MODELS = [
-    "text-embedding-ada-002",
-    "text-similarity-*-001",
-    "text-search-*-*-001",
-    "code-search-*-*-001",
-]
 
 LANGCHAIN_MESSAGE_HISTORY_ROLES = ["user", "assistant"]

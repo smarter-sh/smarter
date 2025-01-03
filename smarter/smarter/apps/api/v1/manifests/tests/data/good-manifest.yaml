@@ -34,6 +34,7 @@ spec:
     # if this module is able to locate any of the search terms in the user prompt
     # then this system prompt text will will be added.
     #------------------------------------------------------------
+    provider: openai
     systemRole: >
       Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response:
       "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:"

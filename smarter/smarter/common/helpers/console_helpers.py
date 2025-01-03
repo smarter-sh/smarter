@@ -21,3 +21,9 @@ def formatted_text(text: str) -> str:
 
     # bold and dark red
     return f"\033[1;31m{text}\033[0m"
+
+
+def formatted_text_green(text: str) -> str:
+
+    # bright green
+    return f"\033[92m{text}\033[0m"
