@@ -3,7 +3,6 @@
 import logging
 
 from smarter.apps.account.mixins import AccountMixin
-from smarter.lib.django.validators import SmarterValidator
 
 
 logger = logging.getLogger(__name__)
@@ -45,5 +44,4 @@ class SmarterRequestHelper(AccountMixin):
     def url(self):
         if self.request:
             self._url = self.request.build_absolute_uri()
-            self._url = SmarterValidator.urlify(self._url)
         return self._url

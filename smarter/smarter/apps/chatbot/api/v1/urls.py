@@ -2,7 +2,7 @@
 
 from django.urls import path
 
-from .views.smarter import SmarterChatBotApiView
+from .views.default import DefaultChatBotApiView
 from .views.views import (
     ChatBotAPIKeyListView,
     ChatBotAPIKeyView,
@@ -21,7 +21,7 @@ urlpatterns = [
     # TO DO: add paths for langchain, openai and other chatbot providers
     path("", ChatBotListView.as_view(), name="chatbot-api"),
     path("<int:chatbot_id>/", ChatBotView.as_view(), name="chatbot-api"),
-    path("<int:chatbot_id>/chatbot/", SmarterChatBotApiView.as_view(), name="chatbot-api-chatbot"),
+    path("<int:chatbot_id>/chatbot/", DefaultChatBotApiView.as_view(), name="chatbot-api-chatbot"),
     path("<int:chatbot_id>/plugins/", ChatBotPluginListView.as_view(), name="chatbot-api-plugins"),
     path("<int:chatbot_id>/plugins/<int:plugin_id>/", ChatBotPluginView.as_view(), name="chatbot-api-plugin"),
     path("<int:chatbot_id>/apikeys/", ChatBotAPIKeyListView.as_view(), name="chatbot-api-apikeys"),
@@ -48,6 +48,6 @@ urlpatterns = [
         name="chatbot-api-function-plugins",
     ),
     # see smarter.apps.chatbot.models.Chatbot.url_chatbot()
-    path("smarter/<str:name>/", SmarterChatBotApiView.as_view(), name="chatbot-api-smarter-by-name"),
-    path("smarter/", SmarterChatBotApiView.as_view(), name="chatbot-api-smarter"),
+    path("smarter/<str:name>/", DefaultChatBotApiView.as_view(), name="chatbot-api-smarter-by-name"),
+    path("smarter/", DefaultChatBotApiView.as_view(), name="chatbot-api-smarter"),
 ]

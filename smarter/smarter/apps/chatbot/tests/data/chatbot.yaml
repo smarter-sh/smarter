@@ -8,6 +8,7 @@ metadata:
 spec:
   config:
     deployed: true
+    provider: openai
     defaultModel: gpt-4-turbo
     defaultTemperature: 0.5
     defaultMaxTokens: 512

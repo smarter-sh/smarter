@@ -43,10 +43,18 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
+          google-maps-api-key: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+          llama-api-key: ${{ secrets.LLAMA_API_KEY }}
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           pinecone-api-key: ${{ secrets.PINECONE_API_KEY }}
           pinecone-environment: ${{ secrets.PINECONE_ENVIRONMENT }}
-          google-maps-api-key: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          social-auth-google-oauth2-key: ${{ secrets.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY }}
+          social-auth-google-oauth2-secret: ${{ secrets.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET }}
+          social-auth-github-key: ${{ secrets.SOCIAL_AUTH_GITHUB_KEY }}
+          social-auth-github-secret: ${{ secrets.SOCIAL_AUTH_GITHUB_SECRET }}
+          social-auth-linkedin-oauth2-key: ${{ secrets.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY }}
+          social-auth-linkedin-oauth2-secret: ${{ secrets.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET }}
           mailchimp-api-key: ${{ secrets.MAILCHIMP_API_KEY }}
           mailchimp-list-id: ${{ secrets.MAILCHIMP_LIST_ID }}
 

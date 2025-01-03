@@ -15,6 +15,8 @@ PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
 if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 
+from smarter.apps.chat.providers.openai.const import OpenAIMessageKeys  # noqa: E402
+
 # our stuff
 from smarter.apps.chat.providers.utils import (  # noqa: E402
     exception_response_factory,
@@ -25,7 +27,6 @@ from smarter.apps.chat.providers.utils import (  # noqa: E402
     http_response_factory,
     parse_request,
 )
-from smarter.common.const import OpenAIMessageKeys  # noqa: E402
 
 from ..tests.test_setup import get_test_file  # noqa: E402
 
@@ -75,8 +76,8 @@ class TestUtils(unittest.TestCase):
         """Test get_content_for_role"""
         request_body = get_request_body(self.request)
         messages, _ = parse_request(request_body)
-        system_message = get_content_for_role(messages, OpenAIMessageKeys.OPENAI_SYSTEM_MESSAGE_KEY)
-        user_message = get_content_for_role(messages, OpenAIMessageKeys.OPENAI_USER_MESSAGE_KEY)
+        system_message = get_content_for_role(messages, OpenAIMessageKeys.SYSTEM_MESSAGE_KEY)
+        user_message = get_content_for_role(messages, OpenAIMessageKeys.USER_MESSAGE_KEY)
         self.assertEqual(system_message, "you always return the integer value 42.")
         self.assertEqual(user_message, "return the integer value 42.")
 
@@ -96,6 +97,6 @@ class TestUtils(unittest.TestCase):
         messages, _ = parse_request(request_body)
         message_history = get_message_history(messages)
         self.assertIsInstance(message_history, list)
-        user_messages = get_messages_for_role(message_history, OpenAIMessageKeys.OPENAI_USER_MESSAGE_KEY)
+        user_messages = get_messages_for_role(message_history, OpenAIMessageKeys.USER_MESSAGE_KEY)
         self.assertEqual(len(user_messages), 1)
         self.assertEqual(user_messages[0], "return the integer value 42.")

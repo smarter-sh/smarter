@@ -9,12 +9,14 @@ TODO: add `import validators` and study this library to see what can be removed 
 
 import logging
 import re
+import warnings
 from urllib.parse import urlparse, urlunparse
 
 import validators
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator, validate_email, validate_ipv4_address
 
+from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterValueError
 
 
@@ -287,7 +289,6 @@ class SmarterValidator:
     def base_url(url: str) -> str:
         if not url:
             return None
-        url = SmarterValidator.urlify(url)
         SmarterValidator.validate_url(url)
         parsed_url = urlparse(url)
         unparsed_url = urlunparse((parsed_url.scheme, parsed_url.netloc, "", "", "", ""))
@@ -300,22 +301,19 @@ class SmarterValidator:
         return url if url.endswith("/") else url + "/"
 
     @staticmethod
-    def urlify(url: str, scheme: str = None) -> str:
+    def urlify(url: str, scheme: str = None, environment: str = SmarterEnvironments.LOCAL) -> str:
         """ensure that URL starts with http:// or https://"""
         logger.debug("urlify %s, %s", url, scheme)
         if not url:
             return None
-        if not "://" in url:
-            url = f"http://{url}"
-        if not scheme and SmarterValidator.is_valid_url(url):
-            retval = SmarterValidator.trailing_slash(url)
-            logger.debug("urlify returning %s, %s", retval, scheme)
-            return retval
+        if scheme:
+            warnings.warn("scheme is deprecated and will be removed in a future release.", DeprecationWarning)
         if scheme and scheme not in ["http", "https"]:
             SmarterValidator.raise_error(f"Invalid scheme {scheme}. Should be one of ['http', 'https']")
-
+        scheme = "http" if environment == SmarterEnvironments.LOCAL else "https"
+        if not "://" in url:
+            url = f"{scheme}://{url}"
         parsed_url = urlparse(url)
-        scheme = scheme or parsed_url.scheme or "http"
         url = urlunparse((scheme, parsed_url.netloc, parsed_url.path, "", "", ""))
         url = SmarterValidator.trailing_slash(url)
         SmarterValidator.validate_url(url)

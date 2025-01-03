@@ -73,7 +73,7 @@ class PluginPromptSerializer(serializers.ModelSerializer):
     # pylint: disable=missing-class-docstring
     class Meta:
         model = PluginPrompt
-        fields = ["system_role", "model", "temperature", "max_tokens"]
+        fields = ["provider", "system_role", "model", "temperature", "max_tokens"]
 
     def to_representation(self, instance):
         """Convert `username` to `userName`."""

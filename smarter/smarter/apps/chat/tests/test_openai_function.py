@@ -13,16 +13,15 @@ from time import sleep
 from django.test import Client
 
 from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
+from smarter.apps.chat.providers.openai.const import OpenAIMessageKeys
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
-from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import OpenAIMessageKeys
 from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 from ..models import Chat, ChatPluginUsage
-from ..providers.smarter import handler
+from ..providers.providers import chat_providers
 from ..signals import (
     chat_completion_called,
     chat_completion_plugin_selected,
@@ -38,6 +37,8 @@ PROJECT_ROOT = str(Path(HERE).parent.parent)
 PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
 if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
+
+handler = chat_providers.openai_handler
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes
@@ -183,20 +184,20 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         def list_factory(content: str) -> list:
             return [
                 {
-                    OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_SYSTEM_MESSAGE_KEY,
-                    OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: "You are a helpful chatbot.",
+                    OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
+                    OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "You are a helpful chatbot.",
                 },
                 {
-                    OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_USER_MESSAGE_KEY,
-                    OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: "what is web development?",
+                    OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,
+                    OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "what is web development?",
                 },
                 {
-                    OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_ASSISTANT_MESSAGE_KEY,
-                    OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: "blah blah answer answer.",
+                    OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY,
+                    OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "blah blah answer answer.",
                 },
                 {
-                    OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_USER_MESSAGE_KEY,
-                    OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: content,
+                    OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,
+                    OpenAIMessageKeys.MESSAGE_CONTENT_KEY: content,
                 },
             ]
 
@@ -238,16 +239,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         event_about_gobstoppers = get_test_file("json/prompt_about_everlasting_gobstoppers.json")
 
         try:
-            response = handler(
-                chat=self.chat,
-                data=event_about_gobstoppers,
-                plugins=self.plugins,
-                user=self.user,
-                default_model=smarter_settings.openai_default_model,
-                default_system_role=smarter_settings.openai_default_system_role,
-                default_max_tokens=smarter_settings.openai_default_max_tokens,
-                default_temperature=smarter_settings.openai_default_temperature,
-            )
+            response = handler(chat=self.chat, data=event_about_gobstoppers, plugins=self.plugins, user=self.user)
             sleep(1)
         except Exception as error:
             self.fail(f"handler() raised {error}")
@@ -281,16 +273,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         event_about_weather = get_test_file("json/prompt_about_weather.json")
 
         try:
-            response = handler(
-                chat=self.chat,
-                plugins=self.plugins,
-                user=self.user,
-                data=event_about_weather,
-                default_model=smarter_settings.openai_default_model,
-                default_system_role=smarter_settings.openai_default_system_role,
-                default_max_tokens=smarter_settings.openai_default_max_tokens,
-                default_temperature=smarter_settings.openai_default_temperature,
-            )
+            response = handler(chat=self.chat, plugins=self.plugins, user=self.user, data=event_about_weather)
         except Exception as error:
             self.fail(f"handler() raised {error}")
         self.check_response(response)
@@ -301,16 +284,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         event_about_recipes = get_test_file("json/prompt_about_recipes.json")
 
         try:
-            response = handler(
-                chat=self.chat,
-                plugins=self.plugins,
-                user=self.user,
-                data=event_about_recipes,
-                default_model=smarter_settings.openai_default_model,
-                default_system_role=smarter_settings.openai_default_system_role,
-                default_max_tokens=smarter_settings.openai_default_max_tokens,
-                default_temperature=smarter_settings.openai_default_temperature,
-            )
+            response = handler(chat=self.chat, plugins=self.plugins, user=self.user, data=event_about_recipes)
         except Exception as error:
             self.fail(f"handler() raised {error}")
         self.check_response(response)
