@@ -205,7 +205,7 @@ class GoogleAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 tool_choice="auto",
                 temperature=temperature,
                 max_tokens=max_tokens,
-                n=1,
+                # n=1,
             )
             first_response_dict = json.loads(first_response.model_dump_json())
             first_iteration["response"] = first_response_dict
@@ -217,7 +217,7 @@ class GoogleAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 response=first_iteration["response"],
             )
             create_prompt_completion_charge(
-                GoogleAIChatProvider.handler.__name__,
+                GoogleAIChatProvider.__class__.__name__,
                 user.id,
                 model,
                 first_response.usage.completion_tokens,
@@ -289,6 +289,8 @@ class GoogleAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 second_response = openai.chat.completions.create(
                     model=model,
                     messages=modified_messages,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
                 )  # get a new response from the model where it can see the function response
                 second_response_dict = json.loads(second_response.model_dump_json())
                 second_iteration["response"] = second_response_dict

@@ -7,13 +7,18 @@ from django.db.models.signals import post_save
 from django.db.utils import Error as DjangoDbError
 from django.dispatch import receiver
 
-from smarter.common.helpers.console_helpers import formatted_json, formatted_text
+from smarter.common.helpers.console_helpers import (
+    formatted_json,
+    formatted_text,
+    formatted_text_green,
+)
 
 from .models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall, PluginMeta
 from .signals import (
     chat_completion_called,
     chat_completion_plugin_selected,
     chat_completion_tool_call_created,
+    chat_handler_console_output,
     chat_invoked,
     chat_provider_initialized,
     chat_response_failure,
@@ -68,7 +73,7 @@ def handle_chat_completion_called(sender, **kwargs):
                 finish_reason = choice.get("finish_reason", "")
                 message = choice.get("message", {})
                 if finish_reason == "tool_calls":
-                    logger.info("Tool calls detected in response.")
+                    logger.info(formatted_text_green("Tool calls detected in response."))
                     tool_calls = message.get("tool_calls")
                     for tool_call in tool_calls:
                         function = tool_call.get("function")
@@ -244,6 +249,21 @@ def handle_chat_provider_initialized(sender, **kwargs):
         formatted_text(f"{sender.__class__.__name__}() initialized"),
         sender.name,
         sender.base_url,
+    )
+
+
+@receiver(chat_handler_console_output, dispatch_uid="chat_handler_console_output")
+def handle_chat_handler_console_output(sender, **kwargs):
+    """Handle chat handler() console output signal."""
+
+    message = kwargs.get("message")
+    json_obj = kwargs.get("json_obj")
+
+    logger.info(
+        "%s: %s\n%s",
+        formatted_text(f"{sender.__class__.__name__}().handler() console output"),
+        message,
+        formatted_json(json_obj),
     )
 
 

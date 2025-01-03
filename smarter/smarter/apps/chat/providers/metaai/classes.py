@@ -36,6 +36,7 @@ from smarter.apps.chat.signals import (
     chat_completion_called,
     chat_completion_plugin_selected,
     chat_completion_tool_call_created,
+    chat_handler_console_output,
     chat_invoked,
     chat_response_failure,
     chat_response_success,
@@ -205,7 +206,7 @@ class MetaAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 tool_choice="auto",
                 temperature=temperature,
                 max_tokens=max_tokens,
-                n=1,
+                # n=1,
             )
             first_response_dict = json.loads(first_response.model_dump_json())
             first_iteration["response"] = first_response_dict
@@ -217,7 +218,7 @@ class MetaAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 response=first_iteration["response"],
             )
             create_prompt_completion_charge(
-                MetaAIChatProvider.handler.__name__,
+                MetaAIChatProvider.__class__.__name__,
                 user.id,
                 model,
                 first_response.usage.completion_tokens,
@@ -229,17 +230,19 @@ class MetaAIChatProvider(ChatProviderBase, metaclass=Singleton):
             tool_calls = response_message.tool_calls
             if tool_calls:
                 modified_messages = messages.copy()
+                chat_handler_console_output.send(
+                    sender=self, message="processing tool calls. original messages list:", json_obj=modified_messages
+                )
                 # this is intended to force a json serialization exception
                 # in the event that we've neglected to properly serialize all
                 # responses from openai api.
-                response_message_dict = response_message.model_dump_json()
                 serialized_messages: list = json.loads(json.dumps(modified_messages))
-                serialized_messages.append(response_message_dict)
                 serialized_tool_calls = []
 
-                # Step 3: call the function
-                # Note: the JSON response may not always be valid; be sure to handle errors
-                modified_messages.append(response_message)  # extend conversation with assistant's reply
+                # Step 3: call the function (Omitting this for now as it breaks Llama)
+                chat_handler_console_output.send(
+                    sender=self, message="serialized_messages:", json_obj=serialized_messages
+                )
 
                 # Step 4: send the info for each function call and function response to the model
 
@@ -289,6 +292,8 @@ class MetaAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 second_response = openai.chat.completions.create(
                     model=model,
                     messages=modified_messages,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
                 )  # get a new response from the model where it can see the function response
                 second_response_dict = json.loads(second_response.model_dump_json())
                 second_iteration["response"] = second_response_dict
