@@ -234,6 +234,7 @@
             "id": 1
           },
           "prompt": {
+            "provider": "openai",
             "system_role": "You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com).\n",
             "model": "gpt-4-turbo",
             "temperature": 1.0,

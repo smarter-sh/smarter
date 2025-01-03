@@ -12,11 +12,11 @@ from django.http import HttpRequest, HttpResponse
 from django.test import RequestFactory
 
 from smarter.apps.chat.models import Chat, ChatHistory
+from smarter.apps.chat.providers.openai.const import OpenAIMessageKeys
 from smarter.apps.chatapp.views import ChatConfigView
-from smarter.apps.chatbot.api.v1.views.smarter import SmarterChatBotApiView
+from smarter.apps.chatbot.api.v1.views.default import DefaultChatBotApiView
 from smarter.apps.chatbot.models import ChatBot
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import OpenAIMessageKeys
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,
@@ -271,7 +271,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
 
         system_role: str = self.chatbot_config.get(
             "default_system_role",
-            self.chat_config.get("default_system_role", smarter_settings.openai_default_system_role),
+            self.chat_config.get("default_system_role", smarter_settings.llm_default_system_role),
         )
         welcome_message: str = self.chatbot_config.get("app_welcome_message", "[MISSING WELCOME MESSAGE]")
         app_assistant: str = self.chatbot_config.get("app_assistant", "[MISSING ASSISTANT NAME]")
@@ -283,16 +283,16 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         intro = f"I'm {app_assistant}, how can I assist you today?"
         return [
             {
-                OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_SYSTEM_MESSAGE_KEY,
-                OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: system_role,
+                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: system_role,
             },
             {
-                OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_ASSISTANT_MESSAGE_KEY,
-                OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: f"{welcome_message}. {bullet_points}{intro}",
+                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY,
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: f"{welcome_message}. {bullet_points}{intro}",
             },
             {
-                OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_USER_MESSAGE_KEY,
-                OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: self.prompt,
+                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: self.prompt,
             },
         ]
 
@@ -347,7 +347,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
 
         # create a Smarter chatbot request and prompt the chatbot
         chat_request = self.chat_request_factory(request=request, url=self.url_chatbot, body=request_body)
-        chat_response = SmarterChatBotApiView.as_view()(request=chat_request, name=name)
+        chat_response = DefaultChatBotApiView.as_view()(request=chat_request, name=name)
         chat_response = json.loads(chat_response.content)
 
         response_data = chat_response.get(SmarterJournalApiResponseKeys.DATA)

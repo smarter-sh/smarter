@@ -11,6 +11,7 @@ from pydantic_core import ValidationError as PydanticValidationError
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
+from smarter.apps.chat.providers.openai.const import OpenAIMessageKeys
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginSpecKeys,
     SAMPluginSpecPromptKeys,
@@ -43,7 +44,6 @@ from smarter.apps.plugin.signals import (
 )
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 from smarter.apps.plugin.utils import add_example_plugins
-from smarter.common.const import OpenAIMessageKeys
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.loader import SAMLoaderError
 from smarter.lib.unittest.utils import get_readonly_yaml_file
@@ -145,6 +145,10 @@ class TestPlugin(unittest.TestCase):
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][SAMPluginSpecSelectorKeys.DIRECTIVE.value],
         )
         self.assertEqual(
+            plugin.plugin_prompt.provider,
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.PROVIDER.value],
+        )
+        self.assertEqual(
             plugin.plugin_prompt.system_role,
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.SYSTEMROLE.value],
         )
@@ -187,6 +191,12 @@ class TestPlugin(unittest.TestCase):
             ].strip(),
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
                 SAMPluginSpecSelectorKeys.DIRECTIVE.value
+            ].strip(),
+        )
+        self.assertEqual(
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.PROVIDER.value].strip(),
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginSpecPromptKeys.PROVIDER.value
             ].strip(),
         )
         self.assertEqual(
@@ -293,6 +303,11 @@ class TestPlugin(unittest.TestCase):
 
         bad_data = self.data.copy()
         bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value].pop(SAMPluginSpecSelectorKeys.DIRECTIVE.value)
+        with self.assertRaises(PydanticValidationError):
+            PluginStatic(data=bad_data)
+
+        bad_data = self.data.copy()
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginSpecPromptKeys.PROVIDER.value)
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
@@ -417,6 +432,12 @@ class TestPlugin(unittest.TestCase):
             ].strip(),
         )
         self.assertEqual(
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.PROVIDER.value].strip(),
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginSpecPromptKeys.PROVIDER.value
+            ].strip(),
+        )
+        self.assertEqual(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
                 SAMPluginSpecPromptKeys.SYSTEMROLE.value
             ].strip(),
@@ -454,12 +475,12 @@ class TestPlugin(unittest.TestCase):
 
         messages = [
             {
-                OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_SYSTEM_MESSAGE_KEY,
-                OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: "you are a helpful chatbot.",
+                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "you are a helpful chatbot.",
             },
             {
-                OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_USER_MESSAGE_KEY,
-                OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: "have you ever heard of everlasting gobstoppers?",
+                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "have you ever heard of everlasting gobstoppers?",
             },
         ]
 
@@ -472,12 +493,12 @@ class TestPlugin(unittest.TestCase):
         self._plugin_selected = False
         messages = [
             {
-                OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_SYSTEM_MESSAGE_KEY,
-                OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: "you are a helpful chatbot.",
+                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "you are a helpful chatbot.",
             },
             {
-                OpenAIMessageKeys.OPENAI_MESSAGE_ROLE_KEY: OpenAIMessageKeys.OPENAI_USER_MESSAGE_KEY,
-                OpenAIMessageKeys.OPENAI_MESSAGE_CONTENT_KEY: "this should return false.",
+                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: "this should return false.",
             },
         ]
         self.assertFalse(self.signals["plugin_selected"])

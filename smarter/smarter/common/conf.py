@@ -161,8 +161,11 @@ class SettingsDefaults:
       3. defaults.
     """
 
-    OPENAI_DEFAULT_MODEL = "gpt-4-turbo"
-    OPENAI_DEFAULT_SYSTEM_ROLE = (
+    ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", None)
+
+    LLM_DEFAULT_PROVIDER = "openai"
+    LLM_DEFAULT_MODEL = "gpt-4-turbo"
+    LLM_DEFAULT_SYSTEM_ROLE = (
         "You are a helpful chatbot. When given the opportunity to utilize "
         "function calling, you should always do so. This will allow you to "
         "provide the best possible responses to the user. If you are unable to "
@@ -170,8 +173,8 @@ class SettingsDefaults:
         "you are still unable to provide a response, you should inform the user "
         "that you are unable to help them at this time."
     )
-    OPENAI_DEFAULT_TEMPERATURE = 0.5
-    OPENAI_DEFAULT_MAX_TOKENS = 256
+    LLM_DEFAULT_TEMPERATURE = 0.5
+    LLM_DEFAULT_MAX_TOKENS = 256
 
     # defaults for this Python package
     ENVIRONMENT = os.environ.get("ENVIRONMENT", TFVARS.get("environment", SmarterEnvironments.LOCAL))
@@ -205,6 +208,12 @@ class SettingsDefaults:
         "GOOGLE_MAPS_API_KEY",
         TFVARS.get("google_maps_api_key", None) or os.environ.get("TF_VAR_GOOGLE_MAPS_API_KEY", None),
     )
+    GEMINI_API_KEY: str = os.environ.get("GEMINI_API_KEY", None)
+    LLAMA_API_KEY: str = os.environ.get("LLAMA_API_KEY", None)
+
+    # -------------------------------------------------------------------------
+    # see: https://console.cloud.google.com/apis/credentials/oauthclient/231536848926-egabg8jas321iga0nmleac21ccgbg6tq.apps.googleusercontent.com?project=smarter-sh
+    # -------------------------------------------------------------------------
     SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get(
         "SOCIAL_AUTH_GOOGLE_OAUTH2_KEY",
         TFVARS.get("social_auth_google_oauth2_key", None) or os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", None),
@@ -214,6 +223,9 @@ class SettingsDefaults:
         TFVARS.get("social_auth_google_oauth2_secret", None)
         or os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", None),
     )
+    # -------------------------------------------------------------------------
+    # see: https://github.com/settings/applications/2620957
+    # -------------------------------------------------------------------------
     SOCIAL_AUTH_GITHUB_KEY = os.environ.get(
         "SOCIAL_AUTH_GITHUB_KEY",
         TFVARS.get("social_auth_github_key", None) or os.environ.get("SOCIAL_AUTH_GITHUB_KEY", None),
@@ -222,6 +234,11 @@ class SettingsDefaults:
         "SOCIAL_AUTH_GITHUB_SECRET",
         TFVARS.get("social_auth_github_secret", None) or os.environ.get("SOCIAL_AUTH_GITHUB_SECRET", None),
     )
+    # -------------------------------------------------------------------------
+    # see:  https://www.linkedin.com/developers/apps/221422881/settings
+    #       https://www.linkedin.com/developers/apps/221422881/products?refreshKey=1734980684455
+    # verification url: https://www.linkedin.com/developers/apps/verification/3ac34414-09a4-433b-983a-0d529fa486f1
+    # -------------------------------------------------------------------------
     SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = os.environ.get(
         "SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY",
         TFVARS.get("social_auth_linkedin_oauth2_key", None) or os.environ.get("SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY", None),
@@ -374,6 +391,10 @@ class Settings(BaseSettings):
         SettingsDefaults.AWS_RDS_DB_INSTANCE_IDENTIFIER,
         env="AWS_RDS_DB_INSTANCE_IDENTIFIER",
     )
+    anthropic_api_key: Optional[str] = Field(
+        SettingsDefaults.ANTHROPIC_API_KEY,
+        env="ANTHROPIC_API_KEY",
+    )
     environment: Optional[str] = Field(
         SettingsDefaults.ENVIRONMENT,
         env="ENVIRONMENT",
@@ -390,9 +411,17 @@ class Settings(BaseSettings):
         None,
         env="INIT_INFO",
     )
-    google_maps_api_key: Optional[str] = Field(
+    google_maps_api_key: Optional[SecretStr] = Field(
         SettingsDefaults.GOOGLE_MAPS_API_KEY,
         env=["GOOGLE_MAPS_API_KEY", "TF_VAR_GOOGLE_MAPS_API_KEY"],
+    )
+    gemini_api_key: Optional[SecretStr] = Field(
+        SettingsDefaults.GEMINI_API_KEY,
+        env="GEMINI_API_KEY",
+    )
+    llama_api_key: Optional[SecretStr] = Field(
+        SettingsDefaults.LLAMA_API_KEY,
+        env="LLAMA_API_KEY",
     )
     social_auth_google_oauth2_key: Optional[str] = Field(
         SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
@@ -420,7 +449,7 @@ class Settings(BaseSettings):
     )
     langchain_memory_key: Optional[str] = Field(SettingsDefaults.LANGCHAIN_MEMORY_KEY, env="LANGCHAIN_MEMORY_KEY")
     logo: Optional[str] = Field(SettingsDefaults.LOGO, env="LOGO")
-    mailchimp_api_key: Optional[str] = Field(SettingsDefaults.MAILCHIMP_API_KEY, env="MAILCHIMP_API_KEY")
+    mailchimp_api_key: Optional[SecretStr] = Field(SettingsDefaults.MAILCHIMP_API_KEY, env="MAILCHIMP_API_KEY")
     mailchimp_list_id: Optional[str] = Field(SettingsDefaults.MAILCHIMP_LIST_ID, env="MAILCHIMP_LIST_ID")
     marketing_site_url: Optional[str] = Field(SettingsDefaults.MARKETING_SITE_URL, env="MARKETING_SITE_URL")
     openai_api_organization: Optional[str] = Field(
@@ -433,16 +462,15 @@ class Settings(BaseSettings):
     openai_endpoint_image_size: Optional[str] = Field(
         SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE, env="OPENAI_ENDPOINT_IMAGE_SIZE"
     )
-    openai_default_model: Optional[str] = Field(SettingsDefaults.OPENAI_DEFAULT_MODEL, env="OPENAI_DEFAULT_MODEL")
-    openai_default_system_role: Optional[str] = Field(
-        SettingsDefaults.OPENAI_DEFAULT_SYSTEM_ROLE, env="OPENAI_DEFAULT_SYSTEM_ROLE"
+    llm_default_provider: Optional[str] = Field(SettingsDefaults.LLM_DEFAULT_PROVIDER, env="LLM_DEFAULT_PROVIDER")
+    llm_default_model: Optional[str] = Field(SettingsDefaults.LLM_DEFAULT_MODEL, env="LLM_DEFAULT_MODEL")
+    llm_default_system_role: Optional[str] = Field(
+        SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE, env="LLM_DEFAULT_SYSTEM_ROLE"
     )
-    openai_default_temperature: Optional[float] = Field(
-        SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE, env="OPENAI_DEFAULT_TEMPERATURE"
+    llm_default_temperature: Optional[float] = Field(
+        SettingsDefaults.LLM_DEFAULT_TEMPERATURE, env="LLM_DEFAULT_TEMPERATURE"
     )
-    openai_default_max_tokens: Optional[int] = Field(
-        SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS, env="OPENAI_DEFAULT_MAX_TOKENS"
-    )
+    llm_default_max_tokens: Optional[int] = Field(SettingsDefaults.LLM_DEFAULT_MAX_TOKENS, env="LLM_DEFAULT_MAX_TOKENS")
     pinecone_api_key: Optional[SecretStr] = Field(SettingsDefaults.PINECONE_API_KEY, env="PINECONE_API_KEY")
     stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY, env="STRIPE_LIVE_SECRET_KEY")
     stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY, env="STRIPE_TEST_SECRET_KEY")
@@ -504,8 +532,8 @@ class Settings(BaseSettings):
     @property
     def environment_url(self) -> str:
         if self.environment == SmarterEnvironments.LOCAL:
-            return SmarterValidator.urlify(self.environment_domain)
-        return SmarterValidator.urlify(self.environment_domain)
+            return SmarterValidator.urlify(self.environment_domain, environment=self.environment)
+        return SmarterValidator.urlify(self.environment_domain, environment=self.environment)
 
     @property
     def platform_name(self) -> str:
@@ -544,8 +572,8 @@ class Settings(BaseSettings):
     @property
     def customer_api_url(self) -> str:
         if self.environment == SmarterEnvironments.LOCAL:
-            return SmarterValidator.urlify(self.customer_api_domain)
-        return SmarterValidator.urlify(self.customer_api_domain)
+            return SmarterValidator.urlify(self.customer_api_domain, environment=self.environment)
+        return SmarterValidator.urlify(self.customer_api_domain, environment=self.environment)
 
     @property
     def aws_s3_bucket_name(self) -> str:
@@ -613,8 +641,19 @@ class Settings(BaseSettings):
                 "python_build": platform.python_build(),
                 "python_installed_packages": packages_dict,
             },
+            "anthropic": {
+                "anthropic_api_key": self.anthropic_api_key,
+            },
             "google": {
                 "google_maps_api_key": self.google_maps_api_key,
+                "gemini_api_key": self.gemini_api_key,
+            },
+            "metaai": {
+                "llama_api_key": self.llama_api_key,
+            },
+            "opeanai": {
+                "openai_api_organization": self.openai_api_organization,
+                "openai_api_key": self.openai_api_key,
             },
             "openai_passthrough": {
                 "aws_s3_bucket_name": self.aws_s3_bucket_name,
@@ -730,6 +769,13 @@ class Settings(BaseSettings):
             return SettingsDefaults.AWS_RDS_DB_INSTANCE_IDENTIFIER
         return v
 
+    @field_validator("anthropic_api_key")
+    def validate_anthropic_api_key(cls, v) -> str:
+        """Validate anthropic_api_key"""
+        if v in [None, ""]:
+            return SettingsDefaults.ANTHROPIC_API_KEY
+        return v
+
     @field_validator("debug_mode")
     def parse_debug_mode(cls, v) -> bool:
         """Parse debug_mode"""
@@ -753,6 +799,20 @@ class Settings(BaseSettings):
         """Check google_maps_api_key"""
         if v in [None, ""]:
             return SettingsDefaults.GOOGLE_MAPS_API_KEY
+        return v
+
+    @field_validator("gemini_api_key")
+    def check_gemini_api_key(cls, v) -> str:
+        """Check gemini_api_key"""
+        if v in [None, ""]:
+            return SettingsDefaults.GEMINI_API_KEY
+        return v
+
+    @field_validator("llama_api_key")
+    def check_llama_api_key(cls, v) -> str:
+        """Check llama_api_key"""
+        if v in [None, ""]:
+            return SettingsDefaults.LLAMA_API_KEY
         return v
 
     @field_validator("social_auth_google_oauth2_key")
@@ -865,36 +925,43 @@ class Settings(BaseSettings):
             return SettingsDefaults.OPENAI_ENDPOINT_IMAGE_SIZE
         return v
 
-    @field_validator("openai_default_model")
+    @field_validator("llm_default_model")
     def check_openai_default_model(cls, v) -> str:
-        """Check openai_default_model"""
+        """Check llm_default_model"""
         if v in [None, ""]:
-            return SettingsDefaults.OPENAI_DEFAULT_MODEL
+            return SettingsDefaults.LLM_DEFAULT_MODEL
         return v
 
-    @field_validator("openai_default_system_role")
+    @field_validator("llm_default_provider")
+    def check_openai_default_provider(cls, v) -> str:
+        """Check llm_default_provider"""
+        if v in [None, ""]:
+            return SettingsDefaults.LLM_DEFAULT_PROVIDER
+        return v
+
+    @field_validator("llm_default_system_role")
     def check_openai_default_system_prompt(cls, v) -> str:
-        """Check openai_default_system_role"""
+        """Check llm_default_system_role"""
         if v in [None, ""]:
-            return SettingsDefaults.OPENAI_DEFAULT_SYSTEM_ROLE
+            return SettingsDefaults.LLM_DEFAULT_SYSTEM_ROLE
         return v
 
-    @field_validator("openai_default_temperature")
+    @field_validator("llm_default_temperature")
     def check_openai_default_temperature(cls, v) -> float:
-        """Check openai_default_temperature"""
+        """Check llm_default_temperature"""
         if isinstance(v, float):
             return v
         if v in [None, ""]:
-            return SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE
+            return SettingsDefaults.LLM_DEFAULT_TEMPERATURE
         return float(v)
 
-    @field_validator("openai_default_max_tokens")
+    @field_validator("llm_default_max_tokens")
     def check_openai_default_max_tokens(cls, v) -> int:
-        """Check openai_default_max_tokens"""
+        """Check llm_default_max_tokens"""
         if isinstance(v, int):
             return v
         if v in [None, ""]:
-            return SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS
+            return SettingsDefaults.LLM_DEFAULT_MAX_TOKENS
         return int(v)
 
     @field_validator("pinecone_api_key")

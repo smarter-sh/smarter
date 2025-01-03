@@ -7,14 +7,20 @@ from django.db.models.signals import post_save
 from django.db.utils import Error as DjangoDbError
 from django.dispatch import receiver
 
-from smarter.common.helpers.console_helpers import formatted_json, formatted_text
+from smarter.common.helpers.console_helpers import (
+    formatted_json,
+    formatted_text,
+    formatted_text_green,
+)
 
 from .models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall, PluginMeta
 from .signals import (
     chat_completion_called,
     chat_completion_plugin_selected,
     chat_completion_tool_call_created,
+    chat_handler_console_output,
     chat_invoked,
+    chat_provider_initialized,
     chat_response_failure,
     chat_response_success,
 )
@@ -67,7 +73,7 @@ def handle_chat_completion_called(sender, **kwargs):
                 finish_reason = choice.get("finish_reason", "")
                 message = choice.get("message", {})
                 if finish_reason == "tool_calls":
-                    logger.info("Tool calls detected in response.")
+                    logger.info(formatted_text_green("Tool calls detected in response."))
                     tool_calls = message.get("tool_calls")
                     for tool_call in tool_calls:
                         function = tool_call.get("function")
@@ -205,6 +211,8 @@ def handle_chat_response_failed(sender, **kwargs):
     exception = kwargs.get("exception")
     chat: Chat = kwargs.get("chat")
     request_meta_data = kwargs.get("request_meta_data")
+    first_response = kwargs.get("first_response")
+    second_response = kwargs.get("second_response")
 
     logger.info(
         "%s for chat: %s, request_meta_data: %s, exception: %s",
@@ -212,6 +220,50 @@ def handle_chat_response_failed(sender, **kwargs):
         chat if chat else None,
         formatted_json(request_meta_data),
         exception,
+    )
+    if first_response:
+        logger.info(
+            "%s for chat: %s, first_response: %s",
+            formatted_text("chat_response_dump"),
+            chat if chat else None,
+            formatted_json(first_response),
+        )
+    if second_response:
+        logger.info(
+            "%s for chat: %s, second_response: %s",
+            formatted_text("chat_response_dump"),
+            chat if chat else None,
+            formatted_json(second_response),
+        )
+
+
+# ------------------------------------------------------------------------------
+# chat provider receivers.
+# ------------------------------------------------------------------------------
+@receiver(chat_provider_initialized, dispatch_uid="chat_provider_initialized")
+def handle_chat_provider_initialized(sender, **kwargs):
+    """Handle chat provider initialized signal."""
+
+    logger.info(
+        "%s with name: %s, base_url: %s",
+        formatted_text(f"{sender.__class__.__name__}() initialized"),
+        sender.name,
+        sender.base_url,
+    )
+
+
+@receiver(chat_handler_console_output, dispatch_uid="chat_handler_console_output")
+def handle_chat_handler_console_output(sender, **kwargs):
+    """Handle chat handler() console output signal."""
+
+    message = kwargs.get("message")
+    json_obj = kwargs.get("json_obj")
+
+    logger.info(
+        "%s: %s\n%s",
+        formatted_text(f"{sender.__class__.__name__}().handler() console output"),
+        message,
+        formatted_json(json_obj),
     )
 
 

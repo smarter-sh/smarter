@@ -71,6 +71,12 @@ spec:
               value: "{{ .Values.env.PINECONE_ENVIRONMENT }}"
             - name: GOOGLE_MAPS_API_KEY
               value: "{{ .Values.env.GOOGLE_MAPS_API_KEY }}"
+            - name: GEMINI_API_KEY
+              value: "{{ .Values.env.GEMINI_API_KEY }}"
+            - name: LLAMA_API_KEY
+              value: "{{ .Values.env.LLAMA_API_KEY }}"
+            - name: MAILCHIMP_API_KEY
+              value: "{{ .Values.env.MAILCHIMP_API_KEY }}"
             - name: SECRET_KEY
               value: "{{ .Values.env.SECRET_KEY }}"
             - name: CACHES_LOCATION
@@ -79,6 +85,19 @@ spec:
               value: "{{ .Values.env.CELERY_BROKER_URL }}"
             - name: CELERY_RESULT_BACKEND
               value: "{{ .Values.env.CELERY_RESULT_BACKEND }}"
+            - name: SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
+              value: "{{ .Values.env.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY }}"
+            - name: SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
+              value: "{{ .Values.env.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET }}"
+            - name: SOCIAL_AUTH_GITHUB_KEY
+              value: "{{ .Values.env.SOCIAL_AUTH_GITHUB_KEY }}"
+            - name: SOCIAL_AUTH_GITHUB_SECRET
+              value: "{{ .Values.env.SOCIAL_AUTH_GITHUB_SECRET }}"
+            - name: SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY
+              value: "{{ .Values.env.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY }}"
+            - name: SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET
+              value: "{{ .Values.env.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET }}"
+
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
           imagePullPolicy: Always
           name: "{{ .Values.appJobName }}"
