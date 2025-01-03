@@ -9,12 +9,14 @@ import tldextract
 import waffle
 from django.conf import settings
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from smarter.apps.account.mixins import AccountMixin
 
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.chat.providers.providers import chat_providers
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
@@ -111,6 +113,14 @@ class ChatBot(TimestampedModel):
         VERIFIED = "Verified", "Verified"
         FAILED = "Failed", "Failed"
 
+    @classmethod
+    def validate_provider(cls, value):
+        if not value in chat_providers.all:
+            raise ValidationError(
+                "%(value)s is not a valid provider. Valid providers are: %(providers)s",
+                params={"value": value, "providers": str(chat_providers.all)},
+            )
+
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
@@ -118,7 +128,13 @@ class ChatBot(TimestampedModel):
     subdomain = models.ForeignKey(ChatBotCustomDomainDNS, on_delete=models.CASCADE, blank=True, null=True)
     custom_domain = models.ForeignKey(ChatBotCustomDomain, on_delete=models.CASCADE, blank=True, null=True)
     deployed = models.BooleanField(default=False, blank=True, null=True)
-    provider = models.CharField(default=smarter_settings.llm_default_provider, max_length=255, blank=True, null=True)
+    provider = models.CharField(
+        default=smarter_settings.llm_default_provider,
+        max_length=255,
+        blank=True,
+        null=True,
+        validators=[validate_provider],
+    )
     default_model = models.CharField(max_length=255, blank=True, null=True)
     default_system_role = models.TextField(default=smarter_settings.llm_default_system_role, blank=True, null=True)
     default_temperature = models.FloatField(default=smarter_settings.llm_default_temperature, blank=True, null=True)
