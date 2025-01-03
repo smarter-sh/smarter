@@ -1,3 +1,16 @@
+# [0.7.0](https://github.com/smarter-sh/smarter/compare/v0.6.1...v0.7.0) (2025-01-03)
+
+
+### Bug Fixes
+
+* force a new release ([d42f023](https://github.com/smarter-sh/smarter/commit/d42f0233d906c8a59fb88825af9eba8ddd441cb3))
+
+
+### Features
+
+* add Google Gemini provider ([dcd3235](https://github.com/smarter-sh/smarter/commit/dcd3235e97bf092fe78ae854631d0dfa3a6cdae5))
+* add MetaAI provider ([37f80c6](https://github.com/smarter-sh/smarter/commit/37f80c6cb9d162f4cd733b4772935d557484fa78))
+
 # [0.7.0](https://github.com/smarter-sh/smarter/compare/v0.5.4...v0.6.0) (2024-12-30)
 
 ### Bug Fixes
