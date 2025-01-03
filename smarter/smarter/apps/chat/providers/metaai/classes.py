@@ -266,6 +266,9 @@ class MetaAIChatProvider(ChatProviderBase, metaclass=Singleton):
                         # function_to_call, assigned above. but just to play it safe,
                         # we're directly invoking the plugin's function_calling_plugin() method.
                         plugin_id = int(function_name[-4:])
+                        chat_handler_console_output.send(
+                            sender=self, message=f"invoking Smarter Plugin {function_name} with id {plugin_id}"
+                        )
                         plugin = PluginStatic(plugin_id=plugin_id)
                         plugin.params = function_args
                         function_response = plugin.function_calling_plugin(

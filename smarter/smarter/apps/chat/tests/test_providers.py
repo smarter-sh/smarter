@@ -65,31 +65,25 @@ class TestChatProviders(unittest.TestCase):
         self.assertIn(METAAI_PROVIDER_NAME, chat_providers.all)
 
 
-class TestProviderOpenai(ProviderBaseClass):
-    """Test chat provider OpenAI."""
-
-    def setUp(self):
-        return self.internal_setup(provider=chat_providers.openai.name)
-
-    def tearDown(self):
-        return super().internal_teardown()
-
-
 class TestProviderGoogleai(ProviderBaseClass):
     """Test chat provider Google AI."""
 
-    def setUp(self):
-        return self.internal_setup(provider=chat_providers.googleai.name)
-
-    def tearDown(self):
-        return super().internal_teardown()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.provider = chat_providers.googleai.name
 
 
 class TestProviderMetaai(ProviderBaseClass):
     """Test chat provider Meta AI."""
 
-    def setUp(self):
-        return self.internal_setup(provider=chat_providers.metaai.name)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.provider = chat_providers.metaai.name
 
-    def tearDown(self):
-        return super().internal_teardown()
+
+class TestProviderOpenai(ProviderBaseClass):
+    """Test chat provider OpenAI."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.provider = chat_providers.openai.name
