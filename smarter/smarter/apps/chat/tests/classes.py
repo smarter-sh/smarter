@@ -44,16 +44,16 @@ if PYTHON_ROOT not in sys.path:
 class ProviderBaseClass(unittest.TestCase):
     """Test Index Lambda function."""
 
-    provider: str
+    _provider: str = None
     handler: Callable
     user: Any
     account: Any
     user_profile: Any
-    plugin: Any
-    plugins: Any
-    chatbot: Any
-    client: Any
-    chat: Any
+    plugin: PluginStatic
+    plugins: list[PluginStatic]
+    chatbot: ChatBot
+    client: Client
+    chat: Chat
 
     _plugin_called = False
     _plugin_selected = False
@@ -63,6 +63,39 @@ class ProviderBaseClass(unittest.TestCase):
     _chat_completion_returned = False
     _chat_completion_failed = False
     _chat_completion_tool_call_received = False
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.init()
+
+    def init(self):
+        self._provider = None
+        self.handler = None
+        self.user = None
+        self.account = None
+        self.user_profile = None
+        self.plugin = None
+        self.plugins = None
+        self.chatbot = None
+        self.client = None
+        self.chat = None
+
+        self._plugin_called = False
+        self._plugin_selected = False
+        self._chat_invoked = False
+        self._chat_completion_plugin_selected = False
+        self._chat_completion_called = False
+        self._chat_completion_returned = False
+        self._chat_completion_failed = False
+        self._chat_completion_tool_call_received = False
+
+    @property
+    def provider(self):
+        return self._provider
+
+    @provider.setter
+    def provider(self, value):
+        self._provider = value
 
     def plugin_called_signal_handler(self, *args, **kwargs):
         self._plugin_called = True
@@ -100,10 +133,9 @@ class ProviderBaseClass(unittest.TestCase):
             "chat_response_failure": self._chat_completion_failed,
         }
 
-    def internal_setup(self, provider: str):
+    def setUp(self):
         """Internal test fixture setup, called from child class setUp()"""
-        if not provider:
-            raise ValueError("provider must be set")
+        self.init()
 
         print("Setting up user, account, and user_profile")
         self.user, self.account, self.user_profile = admin_user_factory()
@@ -113,16 +145,16 @@ class ProviderBaseClass(unittest.TestCase):
         plugin_data = get_readonly_yaml_file(config_path)
 
         print("Setting up plugin")
-        self.plugin = PluginStatic(user_profile=self.user_profile, data=plugin_data)
-        self.plugins = [self.plugin]
+        if not self.plugin:
+            self.plugin = PluginStatic(user_profile=self.user_profile, data=plugin_data)
+            self.plugins = [self.plugin]
         print(f"plugin: {self.plugin}")
 
         # create a chatbot that uses the provider
-        print("Setting up provider")
-        self.provider = provider
+        print(f"Setting up provider {self.provider}")
         self.chatbot = self.chatbot_factory(provider=self.provider)
         self.handler = chat_providers.get_handler(name=self.provider)
-        print(f"provider: {self.provider}")
+        print(f"provider {self.provider} is setup")
 
         self.client = Client()
         self.client.force_login(self.user)
@@ -135,11 +167,17 @@ class ProviderBaseClass(unittest.TestCase):
             url="https://www.test.com",
         )
 
-    def internal_teardown(self):
+    def tearDown(self):
         """Tear down test fixtures."""
+        if self.chat:
+            self.chat.delete()
+        if self.chatbot:
+            self.chatbot.delete()
+        if self.plugin:
+            self.plugin.delete()
+        self.plugins = None
+        self.handler = None
         admin_user_teardown(user=self.user, account=self.account, user_profile=self.user_profile)
-        self.chat.delete()
-        self.chatbot.delete()
 
     def chatbot_factory(self, provider: str = "openai"):
         chatbot = ChatBot.objects.create(
