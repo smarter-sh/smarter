@@ -8,6 +8,7 @@ metadata:
 spec:
   config:
     deployed: true
+    provider: openai
     defaultModel: gpt-4-turbo
     defaultSystemRole: >
       You are a helpful assistant. When given the opportunity to utilize

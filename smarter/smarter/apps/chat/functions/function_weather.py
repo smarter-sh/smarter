@@ -33,7 +33,7 @@ from smarter.common.conf import settings
 # Google Maps API key
 gmaps = None
 try:
-    gmaps = googlemaps.Client(key=settings.google_maps_api_key)
+    gmaps = googlemaps.Client(key=settings.google_maps_api_key.get_secret_value())
 # pylint: disable=broad-exception-caught
 except ValueError as value_error:
     print(

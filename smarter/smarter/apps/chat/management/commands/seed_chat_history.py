@@ -11,13 +11,13 @@ from django.core.management.base import BaseCommand
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import account_admin_user
 from smarter.apps.chat.models import Chat
-from smarter.apps.chat.providers.smarter import handler
+from smarter.apps.chat.providers.providers import chat_providers
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT_NAME
 
 
 HERE = Path(__file__).resolve().parent
+default_handler = chat_providers.default_handler
 
 
 # pylint: disable=E1101
@@ -79,14 +79,6 @@ class Command(BaseCommand):
                         "one or more plugins. Please check the ChatBotPlugin model."
                     )
 
-                # send this text prompt to the Smarter chatbot provider
-                handler(
-                    chat=chat,
-                    plugins=plugins,
-                    user=user_profile.user,
-                    data=data,
-                    default_model=smarter_settings.openai_default_model,
-                    default_system_role=smarter_settings.openai_default_system_role,
-                    default_temperature=smarter_settings.openai_default_temperature,
-                    default_max_tokens=smarter_settings.openai_default_max_tokens,
-                )
+                default_handler(chat=chat, plugins=plugins, user=user_profile.user, data=data)
+                print("Chat history seeded.")
+        print("Chat history seeding complete.")

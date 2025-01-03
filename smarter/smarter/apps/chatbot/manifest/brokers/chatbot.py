@@ -283,7 +283,8 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
             SAMKeys.SPEC.value: {
                 SAMChatbotSpecKeys.CONFIG.value: {
                     "deployed": True,
-                    "defaultModel": SettingsDefaults.OPENAI_DEFAULT_MODEL,
+                    "provider": SettingsDefaults.LLM_DEFAULT_PROVIDER,
+                    "defaultModel": SettingsDefaults.LLM_DEFAULT_MODEL,
                     "defaultSystemRole": (
                         "You are a helpful chatbot. When given the opportunity to utilize "
                         "function calling, you should always do so. This will allow you to "
@@ -292,8 +293,8 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                         "you are still unable to provide a response, you should inform the user "
                         "that you are unable to help them at this time."
                     ),
-                    "defaultTemperature": SettingsDefaults.OPENAI_DEFAULT_TEMPERATURE,
-                    "defaultMaxTokens": SettingsDefaults.OPENAI_DEFAULT_MAX_TOKENS,
+                    "defaultTemperature": SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
+                    "defaultMaxTokens": SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
                     "appName": "Example Chatbot",
                     "appAssistant": "Elle",
                     "appWelcomeMessage": "Welcome to the Example Chatbot! How can I help you today?",

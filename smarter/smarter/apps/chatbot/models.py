@@ -9,6 +9,7 @@ import tldextract
 import waffle
 from django.conf import settings
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from smarter.apps.account.mixins import AccountMixin
@@ -85,6 +86,17 @@ class ChatBotCustomDomainDNS(TimestampedModel):
     record_ttl = models.IntegerField(default=600, blank=True, null=True)
 
 
+def validate_provider(value):
+    # pylint: disable=C0415
+    from smarter.apps.chat.providers.providers import chat_providers
+
+    if not value in chat_providers.all:
+        raise ValidationError(
+            "%(value)s is not a valid provider. Valid providers are: %(providers)s",
+            params={"value": value, "providers": str(chat_providers.all)},
+        )
+
+
 class ChatBot(TimestampedModel):
     """A ChatBot API for a customer account."""
 
@@ -118,12 +130,17 @@ class ChatBot(TimestampedModel):
     subdomain = models.ForeignKey(ChatBotCustomDomainDNS, on_delete=models.CASCADE, blank=True, null=True)
     custom_domain = models.ForeignKey(ChatBotCustomDomain, on_delete=models.CASCADE, blank=True, null=True)
     deployed = models.BooleanField(default=False, blank=True, null=True)
-    default_model = models.CharField(
-        default=smarter_settings.openai_default_model, max_length=255, blank=True, null=True
+    provider = models.CharField(
+        default=smarter_settings.llm_default_provider,
+        max_length=255,
+        blank=True,
+        null=True,
+        validators=[validate_provider],
     )
-    default_system_role = models.TextField(default=smarter_settings.openai_default_system_role, blank=True, null=True)
-    default_temperature = models.FloatField(default=smarter_settings.openai_default_temperature, blank=True, null=True)
-    default_max_tokens = models.IntegerField(default=smarter_settings.openai_default_max_tokens, blank=True, null=True)
+    default_model = models.CharField(max_length=255, blank=True, null=True)
+    default_system_role = models.TextField(default=smarter_settings.llm_default_system_role, blank=True, null=True)
+    default_temperature = models.FloatField(default=smarter_settings.llm_default_temperature, blank=True, null=True)
+    default_max_tokens = models.IntegerField(default=smarter_settings.llm_default_max_tokens, blank=True, null=True)
 
     app_name = models.CharField(default="chatbot", max_length=255, blank=True, null=True)
     app_assistant = models.CharField(default="Smarter", max_length=255, blank=True, null=True)
@@ -155,7 +172,7 @@ class ChatBot(TimestampedModel):
 
     @property
     def default_url(self):
-        return SmarterValidator.urlify(self.default_host, scheme=self.scheme)
+        return SmarterValidator.urlify(self.default_host, environment=smarter_settings.environment)
 
     @property
     def custom_host(self):
@@ -175,7 +192,7 @@ class ChatBot(TimestampedModel):
         return 'https://example.example.com'
         """
         if self.custom_host:
-            return SmarterValidator.urlify(self.custom_host, scheme=self.scheme)
+            return SmarterValidator.urlify(self.custom_host, environment=smarter_settings.environment)
         return None
 
     @property
@@ -192,7 +209,7 @@ class ChatBot(TimestampedModel):
         """
         return 'https://alpha.api.smarter.sh/api/v1/chatbots/1/'
         """
-        return SmarterValidator.urlify(self.sandbox_host, scheme=self.scheme)
+        return SmarterValidator.urlify(self.sandbox_host, environment=smarter_settings.environment)
 
     @property
     def hostname(self):
@@ -222,7 +239,7 @@ class ChatBot(TimestampedModel):
     @staticmethod
     def get_by_request(request):
         host = request.get_host()
-        url = SmarterValidator.urlify(host)
+        url = SmarterValidator.urlify(host, environment=smarter_settings.environment)
         parsed_host = urlparse(url)
         host = parsed_host.hostname
         return ChatBot.get_by_url(url)
@@ -231,7 +248,7 @@ class ChatBot(TimestampedModel):
     # @cache_results(timeout=600)
     def get_by_url(url: str):
         logger.debug("ChatBot() get_by_url: %s", url)
-        url = SmarterValidator.urlify(url)
+        url = SmarterValidator.urlify(url, environment=smarter_settings.environment)
         retval = ChatBotHelper(url).chatbot
         return retval
 
@@ -240,10 +257,10 @@ class ChatBot(TimestampedModel):
         if not url:
             return self.Modes.UNKNOWN
         SmarterValidator.validate_url(url)
-        url = SmarterValidator.urlify(url)
-        custom_url = SmarterValidator.urlify(self.custom_host)
-        default_url = SmarterValidator.urlify(self.default_host)
-        sandbox_url = SmarterValidator.urlify(self.sandbox_host)
+        url = SmarterValidator.urlify(url, environment=smarter_settings.environment)
+        custom_url = SmarterValidator.urlify(self.custom_host, environment=smarter_settings.environment)
+        default_url = SmarterValidator.urlify(self.default_host, environment=smarter_settings.environment)
+        sandbox_url = SmarterValidator.urlify(self.sandbox_host, environment=smarter_settings.environment)
         if custom_url and custom_url in url:
             return self.Modes.CUSTOM
         if default_url and default_url in url:
@@ -398,7 +415,7 @@ class ChatBotHelper(AccountMixin):
         if url:
             SmarterValidator.validate_url(url)  # raises ValidationError if url is invalid
             url = SmarterValidator.urlify(
-                url
+                url, environment=smarter_settings.environment
             )  # normalizes the url so that we dont find ourselves working with variations of the same url
             self._url = url
 
@@ -590,9 +607,9 @@ class ChatBotHelper(AccountMixin):
         - https://hr.smarter.querium.com/chatbot/
         """
         if self._url:
-            return self._url
+            return SmarterValidator.urlify(self._url, environment=smarter_settings.environment)
         if self._chatbot:
-            self._url = self.chatbot.url
+            self._url = SmarterValidator.urlify(self.chatbot.url, environment=smarter_settings.environment)
         return self._url
 
     @property
@@ -637,7 +654,7 @@ class ChatBotHelper(AccountMixin):
         """
         if not self.url:
             return None
-        url = SmarterValidator.urlify(self.domain) or ""
+        url = SmarterValidator.urlify(self.domain, environment=smarter_settings.environment) or ""
         subdomain = self.subdomain or ""
         return url.replace(f"{subdomain}.", "").replace("http://", "").replace("https://", "").replace("/", "")
 
