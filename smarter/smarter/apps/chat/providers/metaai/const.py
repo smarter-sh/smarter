@@ -2,7 +2,7 @@
 This module contains constants for the GoogleAI Gemini provider.
 """
 
-BASE_URL = "https://api.llama-api.com"
+BASE_URL = "https://api.llama-api.com/"  # don't forget the trailing slash
 PROVIDER_NAME = "metaai"
 DEFAULT_MODEL = "llama3.1-70b"
 

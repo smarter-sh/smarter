@@ -15,6 +15,7 @@ from .signals import (
     chat_completion_plugin_selected,
     chat_completion_tool_call_created,
     chat_invoked,
+    chat_provider_initialized,
     chat_response_failure,
     chat_response_success,
 )
@@ -205,6 +206,8 @@ def handle_chat_response_failed(sender, **kwargs):
     exception = kwargs.get("exception")
     chat: Chat = kwargs.get("chat")
     request_meta_data = kwargs.get("request_meta_data")
+    first_response = kwargs.get("first_response")
+    second_response = kwargs.get("second_response")
 
     logger.info(
         "%s for chat: %s, request_meta_data: %s, exception: %s",
@@ -212,6 +215,35 @@ def handle_chat_response_failed(sender, **kwargs):
         chat if chat else None,
         formatted_json(request_meta_data),
         exception,
+    )
+    if first_response:
+        logger.info(
+            "%s for chat: %s, first_response: %s",
+            formatted_text("chat_response_dump"),
+            chat if chat else None,
+            formatted_json(first_response),
+        )
+    if second_response:
+        logger.info(
+            "%s for chat: %s, second_response: %s",
+            formatted_text("chat_response_dump"),
+            chat if chat else None,
+            formatted_json(second_response),
+        )
+
+
+# ------------------------------------------------------------------------------
+# chat provider receivers.
+# ------------------------------------------------------------------------------
+@receiver(chat_provider_initialized, dispatch_uid="chat_provider_initialized")
+def handle_chat_provider_initialized(sender, **kwargs):
+    """Handle chat provider initialized signal."""
+
+    logger.info(
+        "%s with name: %s, base_url: %s",
+        formatted_text(f"{sender.__class__.__name__}() initialized"),
+        sender.name,
+        sender.base_url,
     )
 
 

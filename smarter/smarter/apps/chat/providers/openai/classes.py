@@ -47,12 +47,10 @@ from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.common.classes import Singleton
 from smarter.common.conf import settings as smarter_settings
 
-from .const import DEFAULT_MODEL, PROVIDER_NAME, VALID_CHAT_COMPLETION_MODELS
+from .const import BASE_URL, DEFAULT_MODEL, PROVIDER_NAME, VALID_CHAT_COMPLETION_MODELS
 
 
 logger = logging.getLogger(__name__)
-openai.organization = smarter_settings.openai_api_organization
-openai.api_key = smarter_settings.openai_api_key.get_secret_value()
 
 # 1.) EXCEPTION_MAP: A dictionary that maps exceptions to HTTP status codes and error types.
 EXCEPTION_MAP = BASE_EXCEPTION_MAP.copy()
@@ -93,7 +91,13 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
     """
 
     def __init__(self):
-        super().__init__(name=PROVIDER_NAME, default_model=DEFAULT_MODEL, exception_map=EXCEPTION_MAP)
+        super().__init__(
+            name=PROVIDER_NAME,
+            default_model=DEFAULT_MODEL,
+            exception_map=EXCEPTION_MAP,
+            base_url=BASE_URL,
+            api_key=smarter_settings.openai_api_key.get_secret_value(),
+        )
         self._validate_default_model(model=DEFAULT_MODEL)
 
     @property
@@ -137,6 +141,9 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 ]
             }
         """
+        openai.api_key = self.api_key
+        openai.base_url = self.base_url
+
         # populate the handler inputs from the Pydantic input protocol
         chat = handler_inputs.chat
         data = handler_inputs.data
@@ -213,6 +220,9 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 temperature=temperature,
                 max_tokens=max_tokens,
             )
+
+            print(f"OpenAIChatProvider.handler(): first_response: {first_response}")
+
             first_response_dict = json.loads(first_response.model_dump_json())
             first_iteration["response"] = first_response_dict
             chat_completion_called.send(
@@ -320,7 +330,12 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
         # pylint: disable=broad-exception-caught
         except Exception as e:
             chat_response_failure.send(
-                sender=OpenAIChatProvider.handler, chat=chat, request_meta_data=request_meta_data, exception=e
+                sender=OpenAIChatProvider.handler,
+                chat=chat,
+                request_meta_data=request_meta_data,
+                exception=e,
+                first_response=first_response,
+                second_response=second_response,
             )
             status_code, _message = self.exception_map.get(
                 type(e), (HTTPStatus.INTERNAL_SERVER_ERROR, "Internal server error")

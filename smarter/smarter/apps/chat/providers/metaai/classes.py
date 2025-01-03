@@ -49,8 +49,6 @@ from .const import BASE_URL, DEFAULT_MODEL, PROVIDER_NAME, VALID_CHAT_COMPLETION
 
 
 logger = logging.getLogger(__name__)
-openai.api_key = smarter_settings.llama_api_key.get_secret_value()
-openai.base_url = BASE_URL
 
 
 # 2.) MetaAIHandlerInput: Input protocol for MetaAI chat provider handler.
@@ -72,7 +70,13 @@ class MetaAIChatProvider(ChatProviderBase, metaclass=Singleton):
     """
 
     def __init__(self):
-        super().__init__(name=PROVIDER_NAME, default_model=DEFAULT_MODEL, exception_map=EXCEPTION_MAP)
+        super().__init__(
+            name=PROVIDER_NAME,
+            default_model=DEFAULT_MODEL,
+            exception_map=EXCEPTION_MAP,
+            base_url=BASE_URL,
+            api_key=smarter_settings.llama_api_key.get_secret_value(),
+        )
         self._validate_default_model(model=DEFAULT_MODEL)
 
     @property
@@ -116,6 +120,9 @@ class MetaAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 ]
             }
         """
+        openai.api_key = self.api_key
+        openai.base_url = self.base_url
+
         # populate the handler inputs from the Pydantic input protocol
         chat = handler_inputs.chat
         data = handler_inputs.data
