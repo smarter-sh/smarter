@@ -14,6 +14,7 @@ from smarter.apps.chat.functions.function_weather import (
     weather_tool_factory,
 )
 from smarter.apps.chat.models import Chat
+from smarter.apps.chat.signals import chat_provider_initialized
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.classes import Singleton
 from smarter.common.exceptions import (
@@ -72,11 +73,15 @@ class ChatProviderBase(ABC, metaclass=CombinedMeta):
     """
 
     @abstractmethod
-    def __init__(self, name: str, default_model: str, exception_map: dict = None):
+    def __init__(
+        self, name: str, default_model: str, exception_map: dict = None, base_url: str = None, api_key: str = None
+    ):
         self._name = name
+        self.base_url = base_url
+        self.api_key = api_key
         self._default_model = default_model
         self._exception_map = exception_map or BASE_EXCEPTION_MAP
-        logger.info("Chat provider %s initialized with default model %s.", self.name, self.default_model)
+        chat_provider_initialized.send(sender=self)
 
     # built-in tools that we make available to all providers
     weather_tool = weather_tool_factory()

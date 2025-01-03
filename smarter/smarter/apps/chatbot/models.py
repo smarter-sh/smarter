@@ -16,7 +16,6 @@ from smarter.apps.account.mixins import AccountMixin
 
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.chat.providers.providers import chat_providers
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
@@ -87,6 +86,17 @@ class ChatBotCustomDomainDNS(TimestampedModel):
     record_ttl = models.IntegerField(default=600, blank=True, null=True)
 
 
+def validate_provider(value):
+    # pylint: disable=C0415
+    from smarter.apps.chat.providers.providers import chat_providers
+
+    if not value in chat_providers.all:
+        raise ValidationError(
+            "%(value)s is not a valid provider. Valid providers are: %(providers)s",
+            params={"value": value, "providers": str(chat_providers.all)},
+        )
+
+
 class ChatBot(TimestampedModel):
     """A ChatBot API for a customer account."""
 
@@ -112,14 +122,6 @@ class ChatBot(TimestampedModel):
         NOT_VERIFIED = "Not Verified", "Not Verified"
         VERIFIED = "Verified", "Verified"
         FAILED = "Failed", "Failed"
-
-    @classmethod
-    def validate_provider(cls, value):
-        if not value in chat_providers.all:
-            raise ValidationError(
-                "%(value)s is not a valid provider. Valid providers are: %(providers)s",
-                params={"value": value, "providers": str(chat_providers.all)},
-            )
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)

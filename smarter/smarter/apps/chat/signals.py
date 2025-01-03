@@ -16,3 +16,5 @@ chat_completion_called = Signal()
 
 # chat completion tools signals
 chat_completion_tool_call_created = Signal()
+
+chat_provider_initialized = Signal()
