@@ -44,10 +44,12 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_ALLOW_ALL = False
 
+# -------------------------------
+# Cross Site Request Forgery (CSRF) settings
+# -------------------------------
 CSRF_COOKIE_SECURE = False
 CSRF_COOKIE_NAME = "csrftoken"
 CSRF_COOKIE_SAMESITE = "lax"
-# Age of CSRF cookie, in seconds (1 day)
 CSRF_COOKIE_AGE = 60 * 60 * 24
 CSRF_COOKIE_DOMAIN = smarter_settings.environment_domain
 CSRF_COOKIE_PATH = "/"
@@ -57,6 +59,9 @@ CSRF_TRUSTED_ORIGINS = []
 CSRF_USE_SESSIONS = False
 
 
+# -------------------------------
+# Django session settings
+# -------------------------------
 # Whether to set the flag restricting cookie leaks on cross-site requests.
 # This can be 'Lax', 'Strict', 'None', or False to disable the flag.
 SESSION_COOKIE_SAMESITE = "lax"

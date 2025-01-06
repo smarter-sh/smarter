@@ -100,37 +100,43 @@ class ChatPluginUsage(TimestampedModel):
         return f"{self.chat.id} - {self.plugin.name}"
 
 
+# --------------------------------------------------------------------------------
+# Serializers
+# --------------------------------------------------------------------------------
+class ChatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Chat
+        fields = "__all__"
+
+
 class ChatHistorySerializer(serializers.ModelSerializer):
-    chat_history = serializers.SerializerMethodField()
+    """Serializer for the ChatHistory model."""
+
+    chat = ChatSerializer(read_only=True)
 
     class Meta:
         model = ChatHistory
-        fields = ["id", "chat", "request", "response", "chat_history"]
-
-    def get_chat_history(self, obj):
-        return obj.chat_history
+        fields = "__all__"
 
 
 class ChatToolCallSerializer(serializers.ModelSerializer):
+    """Serializer for the ChatToolCall model."""
+
+    chat = ChatSerializer(read_only=True)
+
     class Meta:
         model = ChatToolCall
-        fields = ["id", "chat", "plugin", "function_name", "function_args", "request", "response"]
-
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        representation["plugin_name"] = instance.plugin.name if instance.plugin else None
-        return representation
+        fields = ["__all__"]
 
 
 class ChatPluginUsageSerializer(serializers.ModelSerializer):
+    """Serializer for the ChatPluginUsage model."""
+
+    chat = ChatSerializer(read_only=True)
+
     class Meta:
         model = ChatPluginUsage
-        fields = ["id", "chat", "plugin", "input_text"]
-
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        representation["plugin_name"] = instance.plugin.name
-        return representation
+        fields = ["__all__"]
 
 
 class ChatHelper(SmarterRequestHelper):
