@@ -1,7 +1,6 @@
 # pylint: disable=W0613,C0115
 """All models for the OpenAI Function Calling API app."""
 
-import datetime
 import logging
 
 import waffle
@@ -40,6 +39,11 @@ class Chat(TimestampedModel):
     def __str__(self):
         # pylint: disable=E1136
         return f"{self.ip_address} - {self.url}"
+
+    def delete(self, *args, **kwargs):
+        if self.session_key:
+            cache.delete(self.session_key)
+        super().delete(*args, **kwargs)
 
 
 class ChatHistory(TimestampedModel):
@@ -223,7 +227,7 @@ class ChatHelper(SmarterRequestHelper):
             if not chat.chatbot:
                 raise ValueError("ChatBot instance is required for Chat object.")
 
-            cache.set(key=self.session_key, value=chat, timeout=settings.SMARTER_CHAT_CACHE_EXPIRATION)
+            cache.set(key=self.session_key, value=chat, timeout=settings.SMARTER_CHAT_CACHE_EXPIRATION or 300)
             if waffle.switch_is_active("chat_logging"):
                 logger.info("%s - cached chat object %s", self.formatted_class_name, chat)
 
