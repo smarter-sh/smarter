@@ -42,12 +42,10 @@ export async function processApiRequest(
 
   console.log("processApiRequest(): props: ", props);
 
-  const csrftoken = getCookie("csrftoken");
-  const sessionid = getCookie('sessionid');
-
   // Ensure that csrftoken is not included in the Cookie header.
   const cookiesArray = document.cookie.split(';').filter(cookie => !cookie.trim().startsWith('csrftoken='));
   const cookies = cookiesArray.join('; ');
+  const csrftoken = getCookie("csrftoken");
 
 
   const headers = {
