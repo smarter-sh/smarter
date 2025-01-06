@@ -307,6 +307,7 @@ class ChatBotPlugin(TimestampedModel):
 
     class Meta:
         verbose_name_plural = "ChatBot Plugins"
+        unique_together = ("chatbot", "plugin_meta")
 
     chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE)
     plugin_meta = models.ForeignKey(PluginMeta, on_delete=models.CASCADE)
