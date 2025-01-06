@@ -166,6 +166,10 @@ MIDDLEWARE = [
     "smarter.apps.chatbot.middleware.security.SecurityMiddleware",
     #
     # -------------------------------
+    # to ensure that all http responses are in json format
+    # -------------------------------
+    "smarter.apps.chatbot.middleware.json.JsonErrorMiddleware",
+    # -------------------------------
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "waffle.middleware.WaffleMiddleware",
