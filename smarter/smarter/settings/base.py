@@ -44,12 +44,38 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_ALLOW_ALL = False
 
+# -------------------------------
+# Cross Site Request Forgery (CSRF) settings
+# -------------------------------
 CSRF_COOKIE_SECURE = False
 CSRF_COOKIE_NAME = "csrftoken"
 CSRF_COOKIE_SAMESITE = "lax"
+CSRF_COOKIE_AGE = 60 * 60 * 24
+CSRF_COOKIE_DOMAIN = smarter_settings.environment_domain
+CSRF_COOKIE_PATH = "/"
+CSRF_COOKIE_HTTPONLY = False
+CSRF_HEADER_NAME = "HTTP_X_CSRFTOKEN"
+CSRF_TRUSTED_ORIGINS = []
+CSRF_USE_SESSIONS = False
 
+
+# -------------------------------
+# Django session settings
+# -------------------------------
+# Whether to set the flag restricting cookie leaks on cross-site requests.
+# This can be 'Lax', 'Strict', 'None', or False to disable the flag.
 SESSION_COOKIE_SAMESITE = "lax"
+# Whether the session cookie should be secure (https:// only).
 SESSION_COOKIE_SECURE = False
+SESSION_COOKIE_NAME = "sessionid"
+# Age of cookie, in seconds
+SESSION_COOKIE_AGE = CSRF_COOKIE_AGE
+# A string like "example.com", or None for standard domain cookie.
+SESSION_COOKIE_DOMAIN = smarter_settings.environment_domain
+# The path of the session cookie.
+SESSION_COOKIE_PATH = "/"
+# Whether to use the HttpOnly flag.
+SESSION_COOKIE_HTTPONLY = True
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -165,6 +191,10 @@ MIDDLEWARE = [
     # -------------------------------
     "smarter.apps.chatbot.middleware.security.SecurityMiddleware",
     #
+    # -------------------------------
+    # to ensure that all http responses are in json format
+    # -------------------------------
+    "smarter.apps.chatbot.middleware.json.JsonErrorMiddleware",
     # -------------------------------
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",

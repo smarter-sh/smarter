@@ -133,6 +133,22 @@ class MetaAIChatProvider(ChatProviderBase, metaclass=Singleton):
         default_temperature = handler_inputs.default_temperature
         default_max_tokens = handler_inputs.default_max_tokens
 
+        # validations
+        if not chat:
+            raise ValueError(f"{self.__class__.__name__}: chat object is required")
+        if not data:
+            raise ValueError(f"{self.__class__.__name__}: data object is required")
+        if not user:
+            raise ValueError(f"{self.__class__.__name__}: user object is required")
+        # if not default_model:
+        #     raise ValueError(f"{self.__class__.__name__}: default_model is required")
+        if not default_system_role:
+            raise ValueError(f"{self.__class__.__name__}: default_system_role is required")
+        if not default_temperature:
+            raise ValueError(f"{self.__class__.__name__}: default_temperature is required")
+        if not default_max_tokens:
+            raise ValueError(f"{self.__class__.__name__}: default_max_tokens is required")
+
         # initialize our local variables
         request_meta_data: dict = None
         first_iteration = {}
