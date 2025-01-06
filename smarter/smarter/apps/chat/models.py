@@ -1,6 +1,7 @@
 # pylint: disable=W0613,C0115
 """All models for the OpenAI Function Calling API app."""
 
+import datetime
 import logging
 
 import waffle
@@ -136,6 +137,16 @@ class ChatHelper(SmarterRequestHelper):
     def chat_history(self) -> ChatHistory:
         rec = ChatHistory.objects.filter(chat=self.chat).order_by("-created_at").first()
         return rec.chat_history if rec else []
+
+    def console(self, request_timestamp: datetime.datetime) -> dict:
+        """
+        Get the most recent logged console output for the chat session.
+        """
+        return {
+            "session_key": self.session_key,
+            "chat": self.chat.id,
+            "request_timestamp": request_timestamp.isoformat(),
+        }
 
     def get_cached_chat(self):
         """

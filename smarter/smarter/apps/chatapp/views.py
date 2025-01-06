@@ -3,6 +3,7 @@ Views for the React chat app. See doc/DJANGO-REACT-INTEGRATION.md for more
 information about how the React app is integrated into the Django app.
 """
 
+import datetime
 import hashlib
 import json
 import logging
@@ -117,12 +118,17 @@ class ChatConfigView(View, AccountMixin):
     authentication_classes = (SmarterTokenAuthentication, SessionAuthentication)
     permission_classes = (IsAuthenticated,)
 
+    _request_timestamp = datetime.now()
     thing: SmarterJournalThings = None
     command: SmarterJournalCliCommands = None
     _sandbox_mode: bool = True
     session: SmarterChatSession = None
     chatbot_helper: ChatBotHelper = None
     _chatbot: ChatBot = None
+
+    @property
+    def request_timestamp(self):
+        return self._request_timestamp
 
     @property
     def chatbot(self):
@@ -220,6 +226,7 @@ class ChatConfigView(View, AccountMixin):
                 "sandbox_mode": self.sandbox_mode,
                 "debug_mode": waffle.switch_is_active("reactapp_debug_mode"),
                 "chatbot": chatbot_serializer.data,
+                "console": self.session.chat_helper.console(request_timestamp=self.request_timestamp),
                 "meta_data": self.chatbot_helper.to_json(),
                 "history": self.session.chat_helper.chat_history,
                 "tool_calls": [],
