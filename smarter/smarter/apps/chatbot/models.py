@@ -1,5 +1,6 @@
 # pylint: disable=W0613,C0115
 """All models for the OpenAI Function Calling API app."""
+import datetime
 import logging
 import re
 from typing import List, Type
@@ -421,7 +422,7 @@ class ChatBotHelper(AccountMixin):
 
         # 1. return a cached object if we have one.
         #    first, check to see if the cache key exists bc we also cache and return None values
-        self._cache_key = f"{self.CACHE_PREFIX}_{self.url}"
+        self._cache_key = f"{self.CACHE_PREFIX}_{self.account_number}_{self.url}"
         if self.cache_key in cache:
             self._chatbot = cache.get(self.cache_key)
             if self._chatbot and waffle.switch_is_active("chatbothelper_logging"):
