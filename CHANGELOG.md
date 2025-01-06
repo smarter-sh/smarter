@@ -1,3 +1,13 @@
+## [0.7.1](https://github.com/smarter-sh/smarter/compare/v0.7.0...v0.7.1) (2025-01-06)
+
+
+### Bug Fixes
+
+* ensure that csrftoken is not included in 'Cookies' ([840fef1](https://github.com/smarter-sh/smarter/commit/840fef16b2283128a2808011b962cc12c1c00b0a))
+* ensure that http response is a json object ([9338cab](https://github.com/smarter-sh/smarter/commit/9338cab989811b624be80ae348fb1ae456b7d501))
+* ensure that only one csrftoken cookie exists ([c12bddb](https://github.com/smarter-sh/smarter/commit/c12bddb083e123d8a6f8404d9bbf586d38104602))
+* ensure that only one csrftoken cookie exists ([affbcc8](https://github.com/smarter-sh/smarter/commit/affbcc8dd4c4864ec1642b86f04677fcf1aab57f))
+
 # [0.7.0](https://github.com/smarter-sh/smarter/compare/v0.6.1...v0.7.0) (2025-01-03)
 
 ### Features
