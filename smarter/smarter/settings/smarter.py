@@ -8,7 +8,7 @@ from smarter.common.exceptions import SmarterConfigurationError  # pylint: disab
 # SMARTER platform settings
 # -----------------------------------------------------------------------------
 SMARTER_ROOT_DOMAIN = smarter_settings.root_domain
-SMARTER_CACHE_EXPIRATION = 600
+SMARTER_CACHE_EXPIRATION = 60 * 5  # 5 minutes
 SMARTER_API_SCHEMA = "http"
 SMARTER_API_NAME = "Smarter API"
 SMARTER_API_DESCRIPTION = "An enterprise class plugin-based AI chatbot platform"
@@ -27,11 +27,11 @@ SMARTER_BRANDING_URL_LINKEDIN = "https://www.linkedin.com/company/querium-corpor
 
 # Chat settings
 # -----------------------------------------------------------------------------
-SMARTER_CHAT_CACHE_EXPIRATION = 60 * 30  # 5 minutes
+SMARTER_CHAT_CACHE_EXPIRATION = 60 * 5  # 5 minutes
 
 # ChatBot settings
 # -----------------------------------------------------------------------------
-SMARTER_CHATBOT_CACHE_EXPIRATION = 60 * 30  # 5 minutes
+SMARTER_CHATBOT_CACHE_EXPIRATION = 60 * 5  # 5 minutes
 SMARTER_CHATBOT_MAX_RETURNED_HISTORY = 25
 
 # Set these to true if we *DO NOT* place a wildcard A record in the customer API domain

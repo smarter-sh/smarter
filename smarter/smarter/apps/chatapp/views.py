@@ -65,7 +65,17 @@ class SmarterChatSession(SmarterRequestHelper):
 
         if session_key:
             SmarterValidator.validate_session_key(session_key)
-            self._session_key = session_key
+            if Chat.objects.filter(session_key=session_key).exists():
+                self._session_key = session_key
+                self._chat = Chat.objects.get(session_key=session_key)
+            else:
+                self._session_key = self.generate_key()
+                logger.warning(
+                    "%s - session_key not found: %s, new session key generated %s",
+                    self.formatted_class_name,
+                    session_key,
+                    self._session_key,
+                )
         else:
             self._session_key = self.generate_key()
         self._chatbot = chatbot
@@ -74,6 +84,10 @@ class SmarterChatSession(SmarterRequestHelper):
 
         if waffle.switch_is_active("chatapp_view_logging"):
             logger.info("%s - session established: %s", self.formatted_class_name, self.data)
+
+    @property
+    def formatted_class_name(self):
+        return formatted_text(self.__class__.__name__)
 
     @property
     def chatbot(self):
