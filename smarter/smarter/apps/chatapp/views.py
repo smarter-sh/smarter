@@ -226,7 +226,7 @@ class ChatConfigView(View, AccountMixin):
                 "sandbox_mode": self.sandbox_mode,
                 "debug_mode": waffle.switch_is_active("reactapp_debug_mode"),
                 "chatbot": chatbot_serializer.data,
-                "console": self.session.chat_helper.console(request_timestamp=self.request_timestamp),
+                "console": self.session.chat_helper.console,
                 "meta_data": self.chatbot_helper.to_json(),
                 "history": self.session.chat_helper.chat_history,
                 "tool_calls": [],
