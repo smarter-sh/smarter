@@ -8,6 +8,7 @@ import waffle
 from django.conf import settings
 from django.core.cache import cache
 from django.db import models
+from rest_framework import serializers
 
 from smarter.apps.account.models import Account
 from smarter.apps.chatbot.models import ChatBot
@@ -99,6 +100,39 @@ class ChatPluginUsage(TimestampedModel):
         return f"{self.chat.id} - {self.plugin.name}"
 
 
+class ChatHistorySerializer(serializers.ModelSerializer):
+    chat_history = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ChatHistory
+        fields = ["id", "chat", "request", "response", "chat_history"]
+
+    def get_chat_history(self, obj):
+        return obj.chat_history
+
+
+class ChatToolCallSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChatToolCall
+        fields = ["id", "chat", "plugin", "function_name", "function_args", "request", "response"]
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["plugin_name"] = instance.plugin.name if instance.plugin else None
+        return representation
+
+
+class ChatPluginUsageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChatPluginUsage
+        fields = ["id", "chat", "plugin", "input_text"]
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["plugin_name"] = instance.plugin.name
+        return representation
+
+
 class ChatHelper(SmarterRequestHelper):
     """
     Helper class for working with Chat objects. Provides methods for
@@ -138,14 +172,30 @@ class ChatHelper(SmarterRequestHelper):
         rec = ChatHistory.objects.filter(chat=self.chat).order_by("-created_at").first()
         return rec.chat_history if rec else []
 
-    def console(self, request_timestamp: datetime.datetime) -> dict:
+    @property
+    def chat_tool_call(self) -> models.QuerySet:
+        recs = ChatToolCall.objects.filter(chat=self.chat).order_by("-created_at") or []
+        return recs
+
+    @property
+    def chat_plugin_usage(self) -> models.QuerySet:
+        recs = ChatPluginUsage.objects.filter(chat=self.chat).order_by("-created_at") or []
+        return recs
+
+    @property
+    def console(self) -> dict:
         """
         Get the most recent logged console output for the chat session.
         """
+        chat_history_serializer = ChatHistorySerializer(self.chat_history, many=True)
+        chat_tool_call_serializer = ChatToolCallSerializer(self.chat_tool_call, many=True)
+        chat_plugin_usage_serializer = ChatPluginUsageSerializer(self.chat_plugin_usage, many=True)
         return {
             "session_key": self.session_key,
             "chat": self.chat.id,
-            "request_timestamp": request_timestamp.isoformat(),
+            "chat_history": chat_history_serializer.data,
+            "chat_tool_call": chat_tool_call_serializer.data,
+            "chat_plugin_usage": chat_plugin_usage_serializer.data,
         }
 
     def get_cached_chat(self):
