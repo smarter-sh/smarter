@@ -45,6 +45,12 @@ export async function processApiRequest(
   const csrftoken = getCookie("csrftoken");
   const sessionid = getCookie('sessionid');
 
+  // Ensure only one csrftoken is included in the Cookie header
+  const cookiesArray = document.cookie.split(';').filter(cookie => !cookie.trim().startsWith('csrftoken='));
+  cookiesArray.push(`csrftoken=${csrftoken}`);
+  const cookies = cookiesArray.join('; ');
+
+
   const headers = {
     "Accept": "*/*",
     "Content-Type": "application/json",
