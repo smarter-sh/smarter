@@ -56,7 +56,7 @@ export async function processApiRequest(
     "Content-Type": "application/json",
     "X-CSRFToken": csrftoken,
     "Origin": window.location.origin,
-    "Cookie": `sessionid=${sessionid}; csrftoken=${csrftoken}`,
+    "Cookie": cookies,
   };
   const init = {
     method: "POST",
