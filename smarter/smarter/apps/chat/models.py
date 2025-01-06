@@ -7,6 +7,7 @@ import waffle
 from django.conf import settings
 from django.core.cache import cache
 from django.db import models
+from rest_framework import serializers
 
 from smarter.apps.account.models import Account
 from smarter.apps.chatbot.models import ChatBot
@@ -38,6 +39,11 @@ class Chat(TimestampedModel):
     def __str__(self):
         # pylint: disable=E1136
         return f"{self.ip_address} - {self.url}"
+
+    def delete(self, *args, **kwargs):
+        if self.session_key:
+            cache.delete(self.session_key)
+        super().delete(*args, **kwargs)
 
 
 class ChatHistory(TimestampedModel):
@@ -98,6 +104,45 @@ class ChatPluginUsage(TimestampedModel):
         return f"{self.chat.id} - {self.plugin.name}"
 
 
+# --------------------------------------------------------------------------------
+# Serializers
+# --------------------------------------------------------------------------------
+class ChatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Chat
+        fields = "__all__"
+
+
+class ChatHistorySerializer(serializers.ModelSerializer):
+    """Serializer for the ChatHistory model."""
+
+    chat = ChatSerializer(read_only=True)
+
+    class Meta:
+        model = ChatHistory
+        fields = "__all__"
+
+
+class ChatToolCallSerializer(serializers.ModelSerializer):
+    """Serializer for the ChatToolCall model."""
+
+    chat = ChatSerializer(read_only=True)
+
+    class Meta:
+        model = ChatToolCall
+        fields = "__all__"
+
+
+class ChatPluginUsageSerializer(serializers.ModelSerializer):
+    """Serializer for the ChatPluginUsage model."""
+
+    chat = ChatSerializer(read_only=True)
+
+    class Meta:
+        model = ChatPluginUsage
+        fields = "__all__"
+
+
 class ChatHelper(SmarterRequestHelper):
     """
     Helper class for working with Chat objects. Provides methods for
@@ -137,6 +182,32 @@ class ChatHelper(SmarterRequestHelper):
         rec = ChatHistory.objects.filter(chat=self.chat).order_by("-created_at").first()
         return rec.chat_history if rec else []
 
+    @property
+    def chat_tool_call(self) -> models.QuerySet:
+        recs = ChatToolCall.objects.filter(chat=self.chat).order_by("-created_at") or []
+        return recs
+
+    @property
+    def chat_plugin_usage(self) -> models.QuerySet:
+        recs = ChatPluginUsage.objects.filter(chat=self.chat).order_by("-created_at") or []
+        return recs
+
+    @property
+    def console(self) -> dict:
+        """
+        Get the most recent logged console output for the chat session.
+        """
+        chat_history_serializer = ChatHistorySerializer(self.chat_history, many=True)
+        chat_tool_call_serializer = ChatToolCallSerializer(self.chat_tool_call, many=True)
+        chat_plugin_usage_serializer = ChatPluginUsageSerializer(self.chat_plugin_usage, many=True)
+        return {
+            "session_key": self.session_key,
+            "chat": self.chat.id,
+            "chat_history": chat_history_serializer.data,
+            "chat_tool_call": chat_tool_call_serializer.data,
+            "chat_plugin_usage": chat_plugin_usage_serializer.data,
+        }
+
     def get_cached_chat(self):
         """
         Get the chat instance for the current request.
@@ -156,7 +227,7 @@ class ChatHelper(SmarterRequestHelper):
             if not chat.chatbot:
                 raise ValueError("ChatBot instance is required for Chat object.")
 
-            cache.set(key=self.session_key, value=chat, timeout=settings.SMARTER_CHAT_CACHE_EXPIRATION)
+            cache.set(key=self.session_key, value=chat, timeout=settings.SMARTER_CHAT_CACHE_EXPIRATION or 300)
             if waffle.switch_is_active("chat_logging"):
                 logger.info("%s - cached chat object %s", self.formatted_class_name, chat)
 

@@ -54,7 +54,9 @@ class Command(BaseCommand):
             return
 
         for plugin_meta in PluginMeta.objects.filter(account=user_profile.account):
-            ChatBotPlugin.objects.create(chatbot=chatbot, plugin_meta=plugin_meta)
+            if plugin_meta.name in ["EverlastingGobstopper", "ExampleConfiguration"]:
+                if not ChatBotPlugin.objects.filter(chatbot=chatbot, plugin_meta=plugin_meta).exists():
+                    ChatBotPlugin.objects.create(chatbot=chatbot, plugin_meta=plugin_meta)
 
         if foreground:
             deploy_default_api(chatbot_id=chatbot.id)
