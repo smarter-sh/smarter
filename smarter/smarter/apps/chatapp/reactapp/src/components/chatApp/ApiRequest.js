@@ -43,10 +43,15 @@ export async function processApiRequest(
   console.log("processApiRequest(): props: ", props);
 
   // Ensure that csrftoken is not included in the Cookie header.
-  const cookiesArray = document.cookie.split(';').filter(cookie => !cookie.trim().startsWith('csrftoken='));
+  const cookiesArray = document.cookie.split(';').filter(cookie => {
+    const trimmedCookie = cookie.trim();
+    return !trimmedCookie.startsWith('csrftoken=');
+  });
+  console.log("processApiRequest(): cookiesArray: ", cookiesArray);
   const cookies = cookiesArray.join('; ');
+  console.log("processApiRequest(): cookies: ", cookies);
   const csrftoken = getCookie("csrftoken");
-
+  console.log("processApiRequest(): csrftoken: ", csrftoken);
 
   const headers = {
     "Accept": "*/*",
