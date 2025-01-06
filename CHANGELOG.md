@@ -1,4 +1,10 @@
-# [0.7.0](https://github.com/smarter-sh/smarter/compare/v0.6.1...v0.7.0) (2025-01-03)
+# Change Log
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.7.0](https://github.com/smarter-sh/smarter/compare/v0.6.1...v0.7.0) (2025-01-03)
 
 ### Features
 
@@ -14,7 +20,7 @@
 - add LinkedIn oauth configuration
 - monthly Dependabot version bumps
 
-# [0.6.0](https://github.com/smarter-sh/smarter/compare/v0.5.4...v0.6.0) (2024-11-21)
+## [0.6.0](https://github.com/smarter-sh/smarter/compare/v0.5.4...v0.6.0) (2024-11-21)
 
 ### Bug Fixes
 
@@ -34,12 +40,6 @@
 ### Features
 
 - version bump all requirements and upgrade default model to gpt-4-turbo ([fa6def4](https://github.com/smarter-sh/smarter/commit/fa6def47316291d5848c11c0ecfbbb26b4effff5))
-
-# Change Log
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.5.4](https://github.com/smarter-sh/smarter/compare/v0.5.3...v0.5.4) (2024-07-12)
 
