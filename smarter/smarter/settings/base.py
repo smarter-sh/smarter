@@ -47,9 +47,30 @@ CORS_ORIGIN_ALLOW_ALL = False
 CSRF_COOKIE_SECURE = False
 CSRF_COOKIE_NAME = "csrftoken"
 CSRF_COOKIE_SAMESITE = "lax"
+# Age of CSRF cookie, in seconds (1 day)
+CSRF_COOKIE_AGE = 60 * 60 * 24
+CSRF_COOKIE_DOMAIN = smarter_settings.environment_domain
+CSRF_COOKIE_PATH = "/"
+CSRF_COOKIE_HTTPONLY = False
+CSRF_HEADER_NAME = "HTTP_X_CSRFTOKEN"
+CSRF_TRUSTED_ORIGINS = []
+CSRF_USE_SESSIONS = False
 
+
+# Whether to set the flag restricting cookie leaks on cross-site requests.
+# This can be 'Lax', 'Strict', 'None', or False to disable the flag.
 SESSION_COOKIE_SAMESITE = "lax"
+# Whether the session cookie should be secure (https:// only).
 SESSION_COOKIE_SECURE = False
+SESSION_COOKIE_NAME = "sessionid"
+# Age of cookie, in seconds
+SESSION_COOKIE_AGE = CSRF_COOKIE_AGE
+# A string like "example.com", or None for standard domain cookie.
+SESSION_COOKIE_DOMAIN = smarter_settings.environment_domain
+# The path of the session cookie.
+SESSION_COOKIE_PATH = "/"
+# Whether to use the HttpOnly flag.
+SESSION_COOKIE_HTTPONLY = True
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.

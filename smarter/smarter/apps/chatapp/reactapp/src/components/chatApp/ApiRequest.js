@@ -47,11 +47,8 @@ export async function processApiRequest(
     const trimmedCookie = cookie.trim();
     return !trimmedCookie.startsWith('csrftoken=');
   });
-  console.log("processApiRequest(): cookiesArray: ", cookiesArray);
   const cookies = cookiesArray.join('; ');
-  console.log("processApiRequest(): cookies: ", cookies);
   const csrftoken = getCookie("csrftoken");
-  console.log("processApiRequest(): csrftoken: ", csrftoken);
 
   const headers = {
     "Accept": "*/*",
@@ -71,6 +68,9 @@ export async function processApiRequest(
     console.log("processApiRequest() - apiURL:", apiURL);
     console.log("processApiRequest() - init:", init);
     console.log("processApiRequest() - props:", props);
+    console.log("processApiRequest(): cookiesArray: ", cookiesArray);
+    console.log("processApiRequest(): cookies: ", cookies);
+    console.log("processApiRequest(): csrftoken: ", csrftoken);
   }
 
   try {
