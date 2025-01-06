@@ -126,7 +126,7 @@ class ChatToolCallSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChatToolCall
-        fields = ["__all__"]
+        fields = "__all__"
 
 
 class ChatPluginUsageSerializer(serializers.ModelSerializer):
@@ -136,7 +136,7 @@ class ChatPluginUsageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChatPluginUsage
-        fields = ["__all__"]
+        fields = "__all__"
 
 
 class ChatHelper(SmarterRequestHelper):
