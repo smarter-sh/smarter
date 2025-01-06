@@ -3,6 +3,7 @@ Views for the React chat app. See doc/DJANGO-REACT-INTEGRATION.md for more
 information about how the React app is integrated into the Django app.
 """
 
+import datetime
 import hashlib
 import json
 import logging
@@ -64,7 +65,17 @@ class SmarterChatSession(SmarterRequestHelper):
 
         if session_key:
             SmarterValidator.validate_session_key(session_key)
-            self._session_key = session_key
+            if Chat.objects.filter(session_key=session_key).exists():
+                self._session_key = session_key
+                self._chat = Chat.objects.get(session_key=session_key)
+            else:
+                self._session_key = self.generate_key()
+                logger.warning(
+                    "%s - session_key not found: %s, new session key generated %s",
+                    self.formatted_class_name,
+                    session_key,
+                    self._session_key,
+                )
         else:
             self._session_key = self.generate_key()
         self._chatbot = chatbot
@@ -73,6 +84,10 @@ class SmarterChatSession(SmarterRequestHelper):
 
         if waffle.switch_is_active("chatapp_view_logging"):
             logger.info("%s - session established: %s", self.formatted_class_name, self.data)
+
+    @property
+    def formatted_class_name(self):
+        return formatted_text(self.__class__.__name__)
 
     @property
     def chatbot(self):
@@ -117,12 +132,17 @@ class ChatConfigView(View, AccountMixin):
     authentication_classes = (SmarterTokenAuthentication, SessionAuthentication)
     permission_classes = (IsAuthenticated,)
 
+    _request_timestamp = datetime.now()
     thing: SmarterJournalThings = None
     command: SmarterJournalCliCommands = None
     _sandbox_mode: bool = True
     session: SmarterChatSession = None
     chatbot_helper: ChatBotHelper = None
     _chatbot: ChatBot = None
+
+    @property
+    def request_timestamp(self):
+        return self._request_timestamp
 
     @property
     def chatbot(self):
@@ -220,6 +240,7 @@ class ChatConfigView(View, AccountMixin):
                 "sandbox_mode": self.sandbox_mode,
                 "debug_mode": waffle.switch_is_active("reactapp_debug_mode"),
                 "chatbot": chatbot_serializer.data,
+                "console": self.session.chat_helper.console,
                 "meta_data": self.chatbot_helper.to_json(),
                 "history": self.session.chat_helper.chat_history,
                 "tool_calls": [],
