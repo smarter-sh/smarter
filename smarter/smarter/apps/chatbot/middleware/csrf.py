@@ -89,7 +89,7 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware):
 
     def process_view(self, request, callback, callback_args, callback_kwargs):
         if smarter_settings.environment == "local":
-            logger.info("CsrfViewMiddleware._accept: environment is local. ignoring csrf checks")
+            logger.debug("CsrfViewMiddleware._accept: environment is local. ignoring csrf checks")
             return None
         if self.chatbot and waffle.switch_is_active("csrf_middleware_suppress_for_chatbots"):
             logger.info("CsrfViewMiddleware.process_view: csrf_middleware_suppress_for_chatbots is active")

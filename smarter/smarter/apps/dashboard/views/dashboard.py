@@ -72,12 +72,6 @@ class EmailAdded(SmarterWebView):
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
 
-class PlatformHelpView(SmarterWebView):
-    """Platform help view"""
-
-    template_path = "dashboard/help.html"
-
-
 class ChangeLogView(SmarterWebView):
     """Notifications view"""
 

@@ -359,7 +359,7 @@
 							<!--end::Menu item-->
 							<!--begin::Menu item-->
 							<div class="menu-item px-5 my-1">
-								<a href="/account/dashboard/settings/" class="menu-link px-5">Account Settings</a>
+								<a href="/dashboard/account/dashboard/settings/" class="menu-link px-5">Account Settings</a>
 							</div>
 							<!--end::Menu item-->
 							<!--begin::Menu item-->
@@ -441,7 +441,7 @@
 							{% block menu %}
 							<div class="menu menu-column menu-rounded menu-sub-indention fw-semibold"
 								id="#kt_app_sidebar_menu" data-kt-menu="true" data-kt-menu-expand="false">
-								<!--begin:Menu item-->
+								<!--begin:Menu item Workbench-->
 								<div class="here menu-item pt-5">
 									<!--begin:Menu content-->
 									<div class="menu-content">
@@ -453,17 +453,50 @@
 												<span class="path4"></span>
 											</i>
 										</span>
-										<span class="menu-heading here fw-bold text-uppercase fs-7">Chat</span>
+										<span class="menu-heading here fw-bold text-uppercase fs-7">Workbench</span>
 									</div>
 									<!--end:Menu content-->
 								</div>
 								<!--end:Menu item-->
 
-								<!--end:Menu item-->
-								<!--begin:Menu item-->
+								<!--begin:Menu item Dashboard-->
 								<div class="menu-item">
 									<!--begin:Menu link-->
-									<a class="menu-link active" href="/chat/" target="_self">
+									<a class="menu-lin active" href="/dashboard/" target="_self">
+										<span class="menu-icon">
+											<i class="ki-duotone ki-message-programming fs-2">
+												<span class="path1"></span>
+												<span class="path2"></span>
+												<span class="path3"></span>
+											</i>
+										</span>
+										<span class="menu-title">Dashboard</span>
+									</a>
+									<!--end:Menu link-->
+								</div>
+								<!--end:Menu item-->
+
+                <!--begin:Menu item Chatbots-->
+								<div class="menu-item">
+									<!--begin:Menu link-->
+									<a class="menu-link" href="/chatbots/" target="_self">
+										<span class="menu-icon">
+											<i class="ki-duotone ki-message-text-2 fs-2">
+												<span class="path1"></span>
+												<span class="path2"></span>
+												<span class="path3"></span>
+											</i>
+										</span>
+										<span class="menu-title">Chatbots</span>
+									</a>
+									<!--end:Menu link-->
+								</div>
+								<!--end:Menu item-->
+
+								<!--begin:Menu item Plugins-->
+								<div class="menu-item">
+									<!--begin:Menu link-->
+									<a class="menu-link" href="/plugins/" target="_self">
 										<span class="menu-icon">
 											<i class="ki-duotone ki-cube-2 fs-2">
 												<span class="path1"></span>
@@ -483,149 +516,137 @@
 									<!--end:Menu link-->
 								</div>
 								<!--end:Menu item-->
-								<!--begin:Menu item-->
-								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link" href="/chatapp/" target="_self">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-message-text-2 fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-												<span class="path3"></span>
-											</i>
-										</span>
-										<span class="menu-title">Sandbox</span>
-									</a>
-									<!--end:Menu link-->
-								</div>
-								<!--end:Menu item-->
-								<!--begin:Menu item-->
-								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link" href="/chat/langchain/" target="_self">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-tablet-text-down fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-												<span class="path3"></span>
-											</i>
-										</span>
-										<span class="menu-title">Langchain</span>
-									</a>
-									<!--end:Menu link-->
-								</div>
-								<!--end:Menu item-->
-								<!--begin:Menu item-->
-								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link" href="/chat/chatgpt/" target="_self">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-files-tablet fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-												<span class="path3"></span>
-											</i>
-										</span>
-										<span class="menu-title">ChatGPT</span>
-									</a>
-									<!--end:Menu link-->
-								</div>
-								<!--end:Menu item-->
-								<!--begin:Menu item-->
-								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link" href="/api/" target="_self">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-devices-2 fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-												<span class="path3"></span>
-											</i>
-										</span>
-										<span class="menu-title">API</span>
-									</a>
-									<!--end:Menu link-->
-								</div>
-								<!--end:Menu item-->
-								<!--begin:Menu item-->
-								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link" href="/admin/" target="_self">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-devices-2 fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-												<span class="path3"></span>
-											</i>
-										</span>
-										<span class="menu-title">Admin</span>
-									</a>
-									<!--end:Menu link-->
-								</div>
-								<!--end:Menu item-->
 
-								<!--begin:Menu item Profile -->
-								<div data-kt-menu-trigger="click" class="menu-item menu-accordion">
-									<!--begin:Menu link-->
-									<span class="menu-link">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-address-book fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-												<span class="path3"></span>
-											</i>
-										</span>
-										<span class="menu-title">User Profile</span>
-										<span class="menu-arrow"></span>
-									</span>
-									<!--end:Menu link-->
-									<!--begin:Menu sub-->
-									<div class="menu-sub menu-sub-accordion">
-										<!--begin:Menu item-->
-										<div class="menu-item">
-											<!--begin:Menu link-->
-											<a class="menu-link" href="pages/user-profile/overview.html">
-												<span class="menu-bullet">
-													<span class="bullet bullet-dot"></span>
-												</span>
-												<span class="menu-title">Overview</span>
-											</a>
-											<!--end:Menu link-->
-										</div>
-										<!--end:Menu item-->
-									</div>
-									<!--end:Menu sub-->
-								</div>
-								<!--end:Menu item-->
-								<!--begin:Menu item Account-->
-								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link" href="/account/dashboard/overview/" target="_self">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-tablet-text-down fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-												<span class="path3"></span>
-											</i>
-										</span>
-										<span class="menu-title">Account</span>
-									</a>
-									<!--end:Menu link-->
-								</div>
-								<!--end:Menu item-->
-
-								<!--begin:Menu item-->
-								<div class="menu-item pt-5">
+								<!--begin:Menu item Documentation-->
+								<div class="here menu-item pt-5">
 									<!--begin:Menu content-->
 									<div class="menu-content">
-										<span class="menu-heading fw-bold text-uppercase fs-7">Help</span>
+										<span class="menu-icon">
+											<i class="ki-duotone ki-abstract-26 fs-2">
+												<span class="path1"></span>
+												<span class="path2"></span>
+											</i>
+										</span>
+										<span class="menu-heading here fw-bold text-uppercase fs-7">Documentation</span>
 									</div>
 									<!--end:Menu content-->
 								</div>
 								<!--end:Menu item-->
+
+								<!--begin:Menu item Smarter Getting Started-->
 								<div class="menu-item">
 									<!--begin:Menu link-->
-									<a class="menu-link" href="/support/" target="_self">
+									<a class="menu-link" href="/docs/" target="_self">
+                    <span class="menu-bullet">
+                      <span class="bullet bullet-dot"></span>
+                    </span>
+										<span class="menu-title">Getting Started</span>
+									</a>
+									<!--end:Menu link-->
+								</div>
+								<!--end:Menu item-->
+
+								<!--begin:Menu item Swagger-->
+								<div class="menu-item">
+									<!--begin:Menu link-->
+									<a class="menu-link" href="/docs/swagger/" target="_self">
+                    <span class="menu-bullet">
+                      <span class="bullet bullet-dot"></span>
+                    </span>
+										<span class="menu-title">Swagger Api Docs</span>
+									</a>
+									<!--end:Menu link-->
+								</div>
+								<!--end:Menu item-->
+								<!--begin:Menu item Redoc-->
+								<div class="menu-item">
+									<!--begin:Menu link-->
+									<a class="menu-link" href="/docs/redoc/" target="_self">
+                    <span class="menu-bullet">
+                      <span class="bullet bullet-dot"></span>
+                    </span>
+										<span class="menu-title">Redoc Api Docs</span>
+									</a>
+									<!--end:Menu link-->
+								</div>
+								<!--end:Menu item-->
+
+								<!--begin:Menu item Settings-->
+								<div class="menu-item pt-5">
+									<!--begin:Menu content-->
+									<div class="menu-content">
+										<span class="menu-heading fw-bold text-uppercase fs-7">Settings</span>
+									</div>
+									<!--end:Menu content-->
+								</div>
+                <!--begin:Menu item Account -->
+                <div class="menu-item">
+                  <!--begin:Menu link-->
+                  <a class="menu-link" href="/dashboard/account/dashboard/overview/">
+                    <span class="menu-bullet">
+                      <span class="bullet bullet-dot"></span>
+                    </span>
+                    <span class="menu-title">Account</span>
+                  </a>
+                  <!--end:Menu link-->
+                </div>
+                <!--end:Menu item-->
+
+                <!--begin:Menu item Django admin-->
+                <div class="menu-item">
+                  <!--begin:Menu link-->
+                  <a class="menu-link" href="/admin/" target="_self">
+                    <span class="menu-bullet">
+                      <span class="bullet bullet-dot"></span>
+                    </span>
+                    <span class="menu-title">Django Admin</span>
+                  </a>
+                  <!--end:Menu link-->
+                </div>
+                <!--end:Menu item-->
+
+                <!--begin:Menu item Wagtail admin-->
+                <div class="menu-item">
+                  <!--begin:Menu link-->
+                  <a class="menu-link" href="/cms/admin/" target="_self">
+                    <span class="menu-bullet">
+                      <span class="bullet bullet-dot"></span>
+                    </span>
+                    <span class="menu-title">Wagtail Admin</span>
+                  </a>
+                  <!--end:Menu link-->
+                </div>
+                <!--end:Menu item-->
+
+                <!--begin:Menu item Change Log -->
+                <div class="menu-item">
+                  <!--begin:Menu link Change Log-->
+                  <a class="menu-link"
+                    href="https://github.com/smarter-sh/smarter/blob/main/CHANGELOG.md"
+                    target="_blank">
+                    <span class="menu-bullet">
+                      <span class="bullet bullet-dot"></span>
+                    </span>
+                    <span class="menu-title">Change Log {{ dashboard.smarter_version }}</span>
+                  </a>
+                  <!--end:Menu link-->
+                </div>
+                <!--end:Menu item-->
+
+								<!--begin:Menu item Corporate-->
+								<div class="menu-item pt-5">
+									<!--begin:Menu content-->
+									<div class="menu-content">
+										<span class="menu-heading fw-bold text-uppercase fs-7">Corporate</span>
+									</div>
+									<!--end:Menu content-->
+								</div>
+								<!--end:Menu item-->
+
+								<!--begin:Menu item Support-->
+								<div class="menu-item">
+									<!--begin:Menu link-->
+									<a class="menu-link" href="/docs/" target="_self">
 										<span class="menu-icon">
 											<i class="ki-duotone ki-rocket fs-2">
 												<span class="path1"></span>
@@ -637,41 +658,8 @@
 									<!--end:Menu link-->
 								</div>
 								<!--end:Menu item-->
-								<!--begin:Menu item-->
-								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link" href="/docs/" target="_self">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-abstract-26 fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-											</i>
-										</span>
-										<span class="menu-title">Documentation</span>
-									</a>
-									<!--end:Menu link-->
-								</div>
-								<!--end:Menu item-->
-								<!--begin:Menu item-->
-								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link"
-										href="https://preview.keenthemes.com/html/keen/docs/getting-started/changelog"
-										target="_self">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-code fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-												<span class="path3"></span>
-												<span class="path4"></span>
-											</i>
-										</span>
-										<span class="menu-title">Changelog v{{ smarter_version }}</span>
-									</a>
-									<!--end:Menu link-->
-								</div>
-								<!--end:Menu item-->
-								<!--begin:Menu item-->
+
+								<!--begin:Menu item Legal-->
 								<div data-kt-menu-trigger="click" class="menu-item menu-accordion">
 									<!--begin:Menu link-->
 									<span class="menu-link">
@@ -690,7 +678,7 @@
 										<!--begin:Menu item-->
 										<div class="menu-item">
 											<!--begin:Menu link-->
-											<a class="menu-link" href="pages/blog/home.html">
+											<a class="menu-link" href="https://smarter.sh/terms-of-service/">
 												<span class="menu-bullet">
 													<span class="bullet bullet-dot"></span>
 												</span>
@@ -702,7 +690,7 @@
 										<!--begin:Menu item-->
 										<div class="menu-item">
 											<!--begin:Menu link-->
-											<a class="menu-link" href="pages/blog/post.html">
+											<a class="menu-link" href="https://smarter.sh/service-level-agreement/">
 												<span class="menu-bullet">
 													<span class="bullet bullet-dot"></span>
 												</span>
@@ -714,7 +702,7 @@
 										<!--begin:Menu item-->
 										<div class="menu-item">
 											<!--begin:Menu link-->
-											<a class="menu-link" href="pages/blog/post.html">
+											<a class="menu-link" href="https://smarter.sh/acceptable-use-policy/">
 												<span class="menu-bullet">
 													<span class="bullet bullet-dot"></span>
 												</span>
@@ -726,7 +714,7 @@
 										<!--begin:Menu item-->
 										<div class="menu-item">
 											<!--begin:Menu link-->
-											<a class="menu-link" href="pages/blog/post.html">
+											<a class="menu-link" href="https://smarter.sh/privacy-policy/">
 												<span class="menu-bullet">
 													<span class="bullet bullet-dot"></span>
 												</span>
@@ -738,7 +726,7 @@
 										<!--begin:Menu item-->
 										<div class="menu-item">
 											<!--begin:Menu link-->
-											<a class="menu-link" href="pages/blog/post.html">
+											<a class="menu-link" href="https://smarter.sh/cookie-policy/">
 												<span class="menu-bullet">
 													<span class="bullet bullet-dot"></span>
 												</span>
@@ -750,7 +738,7 @@
 										<!--begin:Menu item-->
 										<div class="menu-item">
 											<!--begin:Menu link-->
-											<a class="menu-link" href="pages/blog/post.html">
+											<a class="menu-link" href="https://smarter.sh/pci-compliance/">
 												<span class="menu-bullet">
 													<span class="bullet bullet-dot"></span>
 												</span>
@@ -835,4 +823,5 @@
 {% block javascript_extra %}
 {{ block.super }}
 <script src="{% static 'assets/js/widgets.bundle.js' %}"></script>
+<script src="{% static 'js/dashboard/base.js' %}"></script>
 {% endblock %}

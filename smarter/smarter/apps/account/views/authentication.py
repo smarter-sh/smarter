@@ -4,7 +4,7 @@ from http import HTTPStatus
 
 from django import forms
 from django.contrib.auth import authenticate, login, logout
-from django.shortcuts import HttpResponse, redirect
+from django.shortcuts import HttpResponse
 from django.urls import reverse
 
 from smarter.common.helpers.email_helpers import email_helper
@@ -38,6 +38,8 @@ class LoginView(SmarterNeverCachedWebView):
     template_path = "account/authentication/sign-in.html"
 
     def get(self, request):
+        if request.user.is_authenticated:
+            return redirect_and_expire_cache(path="/")
         form = LoginView.LoginForm()
         context = {"form": form}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
@@ -53,7 +55,7 @@ class LoginView(SmarterNeverCachedWebView):
                 authenticated_user = authenticate(request, username=user.username, password=password)
                 if authenticated_user is not None:
                     login(request, authenticated_user)
-                    return redirect("/")
+                    return redirect_and_expire_cache(path="/")
                 return HttpResponse("Username and/or password do not match.", status=401)
             except User.DoesNotExist:
                 return HttpResponse(f"Invalid login attempt. Unknown user {email}", status=403)
@@ -68,7 +70,7 @@ class LogoutView(SmarterNeverCachedWebView):
 
     def get(self, request):
         logout(request)
-        return redirect("/")
+        return redirect_and_expire_cache(path="/")
 
     def post(self, request):
         logout(request)
