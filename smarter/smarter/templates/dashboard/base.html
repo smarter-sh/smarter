@@ -441,7 +441,7 @@
 							{% block menu %}
 							<div class="menu menu-column menu-rounded menu-sub-indention fw-semibold"
 								id="#kt_app_sidebar_menu" data-kt-menu="true" data-kt-menu-expand="false">
-								<!--begin:Menu item Dashboard-->
+								<!--begin:Menu item Workbench-->
 								<div class="here menu-item pt-5">
 									<!--begin:Menu content-->
 									<div class="menu-content">
@@ -453,98 +453,9 @@
 												<span class="path4"></span>
 											</i>
 										</span>
-										<span class="menu-heading here fw-bold text-uppercase fs-7">Dashboard</span>
+										<span class="menu-heading here fw-bold text-uppercase fs-7">Workbench</span>
 									</div>
 									<!--end:Menu content-->
-								</div>
-								<!--end:Menu item-->
-								<!--begin:Menu item User Profile -->
-								<div data-kt-menu-trigger="click" class="menu-item menu-accordion">
-									<!--begin:Menu link User Profile-->
-									<span class="menu-link">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-address-book fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-												<span class="path3"></span>
-											</i>
-										</span>
-										<span class="menu-title">User Profile</span>
-										<span class="menu-arrow"></span>
-									</span>
-									<!--end:Menu link-->
-									<!--begin:Menu sub-->
-									<div class="menu-sub menu-sub-accordion">
-
-										<!--begin:Menu item Account -->
-										<div class="menu-item">
-											<!--begin:Menu link-->
-											<a class="menu-link" href="/dashboard/account/dashboard/overview/">
-												<span class="menu-bullet">
-													<span class="bullet bullet-dot"></span>
-												</span>
-												<span class="menu-title">Account</span>
-											</a>
-											<!--end:Menu link-->
-										</div>
-										<!--end:Menu item-->
-
-                    <!--begin:Menu item Django admin-->
-                    <div class="menu-item">
-                      <!--begin:Menu link-->
-                      <a class="menu-link" href="/admin/" target="_self">
-                        <span class="menu-icon">
-                          <i class="ki-duotone ki-devices-2 fs-2">
-                            <span class="path1"></span>
-                            <span class="path2"></span>
-                            <span class="path3"></span>
-                          </i>
-                        </span>
-                        <span class="menu-title">Django Admin</span>
-                      </a>
-                      <!--end:Menu link-->
-                    </div>
-                    <!--end:Menu item-->
-
-                    <!--begin:Menu item Wagtail admin-->
-                    <div class="menu-item">
-                      <!--begin:Menu link-->
-                      <a class="menu-link" href="/cms/admin/" target="_self">
-                        <span class="menu-icon">
-                          <i class="ki-duotone ki-devices-2 fs-2">
-                            <span class="path1"></span>
-                            <span class="path2"></span>
-                            <span class="path3"></span>
-                          </i>
-                        </span>
-                        <span class="menu-title">Wagtail Admin</span>
-                      </a>
-                      <!--end:Menu link-->
-                    </div>
-                    <!--end:Menu item-->
-
-                    <!--begin:Menu item Change Log -->
-                    <div class="menu-item">
-                      <!--begin:Menu link Change Log-->
-                      <a class="menu-link"
-                        href="https://github.com/smarter-sh/smarter/blob/main/CHANGELOG.md"
-                        target="_blank">
-                        <span class="menu-icon">
-                          <i class="ki-duotone ki-code fs-2">
-                            <span class="path1"></span>
-                            <span class="path2"></span>
-                            <span class="path3"></span>
-                            <span class="path4"></span>
-                          </i>
-                        </span>
-                        <span class="menu-title">Change Log {{ dashboard.smarter_version }}</span>
-                      </a>
-                      <!--end:Menu link-->
-                    </div>
-                    <!--end:Menu item-->
-
-									</div>
-									<!--end:Menu sub-->
 								</div>
 								<!--end:Menu item-->
 
@@ -638,6 +549,81 @@
 								</div>
 								<!--end:Menu item-->
 
+								<!--begin:Menu item Settings-->
+								<div class="menu-item pt-5">
+									<!--begin:Menu content-->
+									<div class="menu-content">
+										<span class="menu-heading fw-bold text-uppercase fs-7">Settings</span>
+									</div>
+									<!--end:Menu content-->
+								</div>
+                <!--begin:Menu item Account -->
+                <div class="menu-item">
+                  <!--begin:Menu link-->
+                  <a class="menu-link" href="/dashboard/account/dashboard/overview/">
+                    <span class="menu-bullet">
+                      <span class="bullet bullet-dot"></span>
+                    </span>
+                    <span class="menu-title">Account</span>
+                  </a>
+                  <!--end:Menu link-->
+                </div>
+                <!--end:Menu item-->
+
+                <!--begin:Menu item Django admin-->
+                <div class="menu-item">
+                  <!--begin:Menu link-->
+                  <a class="menu-link" href="/admin/" target="_self">
+                    <span class="menu-icon">
+                      <i class="ki-duotone ki-devices-2 fs-2">
+                        <span class="path1"></span>
+                        <span class="path2"></span>
+                        <span class="path3"></span>
+                      </i>
+                    </span>
+                    <span class="menu-title">Django Admin</span>
+                  </a>
+                  <!--end:Menu link-->
+                </div>
+                <!--end:Menu item-->
+
+                <!--begin:Menu item Wagtail admin-->
+                <div class="menu-item">
+                  <!--begin:Menu link-->
+                  <a class="menu-link" href="/cms/admin/" target="_self">
+                    <span class="menu-icon">
+                      <i class="ki-duotone ki-devices-2 fs-2">
+                        <span class="path1"></span>
+                        <span class="path2"></span>
+                        <span class="path3"></span>
+                      </i>
+                    </span>
+                    <span class="menu-title">Wagtail Admin</span>
+                  </a>
+                  <!--end:Menu link-->
+                </div>
+                <!--end:Menu item-->
+
+                <!--begin:Menu item Change Log -->
+                <div class="menu-item">
+                  <!--begin:Menu link Change Log-->
+                  <a class="menu-link"
+                    href="https://github.com/smarter-sh/smarter/blob/main/CHANGELOG.md"
+                    target="_blank">
+                    <span class="menu-icon">
+                      <i class="ki-duotone ki-code fs-2">
+                        <span class="path1"></span>
+                        <span class="path2"></span>
+                        <span class="path3"></span>
+                        <span class="path4"></span>
+                      </i>
+                    </span>
+                    <span class="menu-title">Change Log {{ dashboard.smarter_version }}</span>
+                  </a>
+                  <!--end:Menu link-->
+                </div>
+                <!--end:Menu item-->
+
 								<!--begin:Menu item Corporate-->
 								<div class="menu-item pt-5">
 									<!--begin:Menu content-->
@@ -649,7 +635,7 @@
 								<!--end:Menu item Support-->
 								<div class="menu-item">
 									<!--begin:Menu link-->
-									<a class="menu-link" href="/support/" target="_self">
+									<a class="menu-link" href="/docs/" target="_self">
 										<span class="menu-icon">
 											<i class="ki-duotone ki-rocket fs-2">
 												<span class="path1"></span>
@@ -704,7 +690,7 @@
 										<!--begin:Menu item-->
 										<div class="menu-item">
 											<!--begin:Menu link-->
-											<a class="menu-link" href="pages/blog/post.html">
+											<a class="menu-link" href="https://smarter.sh/acceptable-use-policy/">
 												<span class="menu-bullet">
 													<span class="bullet bullet-dot"></span>
 												</span>
@@ -753,6 +739,7 @@
 									<!--end:Menu sub-->
 								</div>
 								<!--end:Menu item-->
+
 
 							</div>
 							{% endblock %}
