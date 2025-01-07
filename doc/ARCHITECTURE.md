@@ -50,20 +50,20 @@ Not to be confused with Smarter's flagship product, customer-implemented custom 
 
 ### API end points
 
-- [/v0/api-auth/](./smarter/smarter/apps/api/urls.py)
-- [/v0/api-auth/logout](./smarter/smarter/apps/api/urls.py)
-- [/v0/chat/](./smarter/smarter/apps/api/urls.py)
-- [/v0/chat/chatgpt/](./smarter/smarter/apps/api/urls.py)
-- [/v0/chat/langchain/](./smarter/smarter/apps/api/urls.py)
-- [/v0/accounts](./smarter/smarter/apps/account/urls.py) - PENDING
-- [/v0/accounts/<str:account_id>/payment-methods](./smarter/smarter/apps/account/urls.py)
-- [/v0/account](./smarter/smarter/apps/account/urls.py)
-- [/v0/accounts/users/](./smarter/smarter/apps/account/urls.py)
-- [/v0/accounts/users/<str:username>/add-example-plugins](./smarter/smarter/apps/account/urls.py)
-- [/v0/accounts/payment-methods/](./smarter/smarter/apps/account/urls.py)
-- [/v0/plugins/](./smarter/smarter/apps/plugin/urls.py)
-- [/v0/plugins/<int:plugin_id>](./smarter/smarter/apps/plugin/urls.py)
-- [/v0/plugins/<int:plugin_id>/clone/<str:new_name>](./smarter/smarter/apps/plugin/urls.py)
+- [/v1/api-auth/](./smarter/smarter/apps/api/urls.py)
+- [/v1/api-auth/logout](./smarter/smarter/apps/api/urls.py)
+- [/v1/chats/](./smarter/smarter/apps/api/urls.py)
+- [/v1/chats/chatgpt/](./smarter/smarter/apps/api/urls.py)
+- [/v1/chats/langchain/](./smarter/smarter/apps/api/urls.py)
+- [/v1/accounts](./smarter/smarter/apps/account/urls.py) - PENDING
+- [/v1/accounts/<str:account_id>/payment-methods](./smarter/smarter/apps/account/urls.py)
+- [/v1/account](./smarter/smarter/apps/account/urls.py)
+- [/v1/accounts/users/](./smarter/smarter/apps/account/urls.py)
+- [/v1/accounts/users/<str:username>/add-example-plugins](./smarter/smarter/apps/account/urls.py)
+- [/v1/accounts/payment-methods/](./smarter/smarter/apps/account/urls.py)
+- [/v1/plugins/](./smarter/smarter/apps/plugin/urls.py)
+- [/v1/plugins/<int:plugin_id>](./smarter/smarter/apps/plugin/urls.py)
+- [/v1/plugins/<int:plugin_id>/clone/<str:new_name>](./smarter/smarter/apps/plugin/urls.py)
 
 ## Requirements
 
