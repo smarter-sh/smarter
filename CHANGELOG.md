@@ -1,3 +1,18 @@
+## [0.7.2](https://github.com/smarter-sh/smarter/compare/v0.7.1...v0.7.2) (2025-01-07)
+
+
+### Bug Fixes
+
+* api/v1/chatbots/, api/v1/chats/ ([edfa1ed](https://github.com/smarter-sh/smarter/commit/edfa1edbe48d27a1675d489c3028a8da050b846d))
+* change logo anchor to '/' for authenticated users ([6954eb5](https://github.com/smarter-sh/smarter/commit/6954eb526447c68a48eac47a9075eaf16b7143d8))
+* fix all broken dashboard urls ([c85c2d3](https://github.com/smarter-sh/smarter/commit/c85c2d32aa91f735f3090f4ea4a10b787e1bdbc0))
+* fixup legal links in console menu ([4da3b3e](https://github.com/smarter-sh/smarter/commit/4da3b3e668b43070999ac96e06b7980eb0123392))
+* keep authenticated users on the platform ([b9dc50c](https://github.com/smarter-sh/smarter/commit/b9dc50cdb7bb44379452233e306e3bc19e94d86f))
+* reorganize dashboard sidebar menu ([c0238c8](https://github.com/smarter-sh/smarter/commit/c0238c8d6c198c1b85dd3c380efbee8aa499af61))
+* restructure console sidebar menu ([ebfcc38](https://github.com/smarter-sh/smarter/commit/ebfcc381fd73d8589b38a5b0a20f07184949a560))
+* revert chats to chat ([1274813](https://github.com/smarter-sh/smarter/commit/12748131ffdddfc6c15ff5c410b211dfde38b582))
+* sidebar menu active on clicked item ([1c543ab](https://github.com/smarter-sh/smarter/commit/1c543aba33f7e80dca2d1334c90187acc0dc479d))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
