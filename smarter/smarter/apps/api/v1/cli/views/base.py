@@ -206,7 +206,7 @@ class CliBaseApiView(APIView, AccountMixin):
         Get the full url of the request. Reconstructs the exact url of
         the request. example url:
 
-        https://platform.smarter.sh/api/v1/cli/chats/config/example/?new_session=false&uid=Lawrences-Mac-Studio.local-c6%253A6b%253A2e%253A7a%253A3d%253A6c
+        https://platform.smarter.sh/api/v1/cli/chat/config/example/?new_session=false&uid=Lawrences-Mac-Studio.local-c6%253A6b%253A2e%253A7a%253A3d%253A6c
         """
         return self.request.build_absolute_uri()
 

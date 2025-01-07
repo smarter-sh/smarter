@@ -230,7 +230,7 @@ Introduces a powerful new architecture for processing Kubernetes-style manifests
 - add Helm charts
 - add GitHub Actions CI/CD workflows
 - add Makefile commands to automate local developer setup
-- implement final chat REST API, referenced as http://{host}/admin/chats/chathistory/config/ which returns a context dict for a chat session. Enables a single authenticated Smarter user to manage multiple chat sessions in the sandbox.
+- implement final chat REST API, referenced as http://{host}/admin/chat/chathistory/config/ which returns a context dict for a chat session. Enables a single authenticated Smarter user to manage multiple chat sessions in the sandbox.
 
 ## [0.1.0](https://github.com/QueriumCorp/smarter/compare/v0.0.1...v0.1.0) (2024-04-01)
 

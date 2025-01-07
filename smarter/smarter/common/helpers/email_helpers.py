@@ -26,7 +26,7 @@ class EmailHelper(metaclass=Singleton):
 
         valid_emails = [email for email in mailto_list if SmarterValidator.is_valid_email(email)]
 
-        if len(valid_emails) != len(mailto_list) and not quiet:
+        if len(valid_emails) != len(mailto_list) and set(mailto_list) != set(valid_emails) and not quiet:
             logger.warning("invalid email addresses were found in send list: %s", set(mailto_list) - set(valid_emails))
 
         if len(valid_emails) == 0 and not quiet:
