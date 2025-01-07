@@ -1,24 +1,18 @@
 """URL configuration for the web platform."""
 
 from django.urls import include, path
+from django.views.generic.base import RedirectView
 
-from .views.dashboard import (
-    ChangeLogView,
-    DashboardView,
-    EmailAdded,
-    NotificationsView,
-    PlatformHelpView,
-)
+from .views.dashboard import ChangeLogView, DashboardView, EmailAdded, NotificationsView
 
 
 urlpatterns = [
     path("", DashboardView.as_view(), name="dashboard"),
     path("account/", include("smarter.apps.account.urls")),
     path("plugins/", include("smarter.apps.plugin.urls")),
-    path("legal/", include("smarter.apps.dashboard.urls_legal")),
     path("profile/", include("smarter.apps.dashboard.urls_profile")),
-    path("help/", PlatformHelpView.as_view(), name="help"),
-    path("support/", PlatformHelpView.as_view(), name="support"),
+    path("help/", RedirectView.as_view(url="/docs/"), name="help"),
+    path("support/", RedirectView.as_view(url="/docs/"), name="support"),
     path("changelog/", ChangeLogView.as_view(), name="changelog"),
     path("notifications/", NotificationsView.as_view(), name="notifications"),
     path("email-added/", EmailAdded.as_view(), name="email-added"),

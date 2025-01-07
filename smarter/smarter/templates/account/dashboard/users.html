@@ -7,7 +7,7 @@
       {{ block.super }}
       <!--begin::Item-->
       <li class="breadcrumb-item text-muted">
-        <a href="/account/dashboard/users/" class="text-muted text-hover-primary">Users</a>
+        <a href="/dashboard/account/dashboard/users/" class="text-muted text-hover-primary">Users</a>
       </li>
     {% endblock %}
 
@@ -37,7 +37,7 @@
               {% for user in account_users.users %}
               <tr>
                 <td>
-                  <a href="/account/dashboard/users/{{ user.id }}" class="text-hover-primary">{{ user.username }}</a>
+                  <a href="/dashboard/account/dashboard/users/{{ user.id }}" class="text-hover-primary">{{ user.username }}</a>
                 </td>
                 <td>
                   <span class="email">{{ user.email }}</span>

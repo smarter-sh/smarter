@@ -359,7 +359,7 @@
 							<!--end::Menu item-->
 							<!--begin::Menu item-->
 							<div class="menu-item px-5 my-1">
-								<a href="/account/dashboard/settings/" class="menu-link px-5">Account Settings</a>
+								<a href="/dashboard/account/dashboard/settings/" class="menu-link px-5">Account Settings</a>
 							</div>
 							<!--end::Menu item-->
 							<!--begin::Menu item-->
@@ -441,7 +441,7 @@
 							{% block menu %}
 							<div class="menu menu-column menu-rounded menu-sub-indention fw-semibold"
 								id="#kt_app_sidebar_menu" data-kt-menu="true" data-kt-menu-expand="false">
-								<!--begin:Menu item-->
+								<!--begin:Menu item Dashboard-->
 								<div class="here menu-item pt-5">
 									<!--begin:Menu content-->
 									<div class="menu-content">
@@ -453,14 +453,30 @@
 												<span class="path4"></span>
 											</i>
 										</span>
-										<span class="menu-heading here fw-bold text-uppercase fs-7">Chat</span>
+										<span class="menu-heading here fw-bold text-uppercase fs-7">Dashboard</span>
 									</div>
 									<!--end:Menu content-->
 								</div>
 								<!--end:Menu item-->
 
+								<!--begin:Menu item Account-->
+								<div class="menu-item">
+									<!--begin:Menu link-->
+									<a class="menu-link" href="/dashboard/account/dashboard/overview/" target="_self">
+										<span class="menu-icon">
+											<i class="ki-duotone ki-tablet-text-down fs-2">
+												<span class="path1"></span>
+												<span class="path2"></span>
+												<span class="path3"></span>
+											</i>
+										</span>
+										<span class="menu-title">Account</span>
+									</a>
+									<!--end:Menu link-->
+								</div>
 								<!--end:Menu item-->
-								<!--begin:Menu item-->
+								<!--end:Menu item-->
+								<!--begin:Menu item Plugins-->
 								<div class="menu-item">
 									<!--begin:Menu link-->
 									<a class="menu-link active" href="/chat/" target="_self">
@@ -483,10 +499,10 @@
 									<!--end:Menu link-->
 								</div>
 								<!--end:Menu item-->
-								<!--begin:Menu item-->
+								<!--begin:Menu item Chatbots-->
 								<div class="menu-item">
 									<!--begin:Menu link-->
-									<a class="menu-link" href="/chatapp/" target="_self">
+									<a class="menu-link" href="/chatbots/" target="_self">
 										<span class="menu-icon">
 											<i class="ki-duotone ki-message-text-2 fs-2">
 												<span class="path1"></span>
@@ -494,47 +510,15 @@
 												<span class="path3"></span>
 											</i>
 										</span>
-										<span class="menu-title">Sandbox</span>
+										<span class="menu-title">Chatbots</span>
 									</a>
 									<!--end:Menu link-->
 								</div>
 								<!--end:Menu item-->
-								<!--begin:Menu item-->
+								<!--begin:Menu item Swagger-->
 								<div class="menu-item">
 									<!--begin:Menu link-->
-									<a class="menu-link" href="/chat/langchain/" target="_self">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-tablet-text-down fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-												<span class="path3"></span>
-											</i>
-										</span>
-										<span class="menu-title">Langchain</span>
-									</a>
-									<!--end:Menu link-->
-								</div>
-								<!--end:Menu item-->
-								<!--begin:Menu item-->
-								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link" href="/chat/chatgpt/" target="_self">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-files-tablet fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-												<span class="path3"></span>
-											</i>
-										</span>
-										<span class="menu-title">ChatGPT</span>
-									</a>
-									<!--end:Menu link-->
-								</div>
-								<!--end:Menu item-->
-								<!--begin:Menu item-->
-								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link" href="/api/" target="_self">
+									<a class="menu-link" href="/docs/swagger/" target="_self">
 										<span class="menu-icon">
 											<i class="ki-duotone ki-devices-2 fs-2">
 												<span class="path1"></span>
@@ -542,12 +526,29 @@
 												<span class="path3"></span>
 											</i>
 										</span>
-										<span class="menu-title">API</span>
+										<span class="menu-title">Swagger</span>
 									</a>
 									<!--end:Menu link-->
 								</div>
 								<!--end:Menu item-->
-								<!--begin:Menu item-->
+								<!--begin:Menu item Redoc-->
+								<div class="menu-item">
+									<!--begin:Menu link-->
+									<a class="menu-link" href="/docs/redoc/" target="_self">
+										<span class="menu-icon">
+											<i class="ki-duotone ki-devices-2 fs-2">
+												<span class="path1"></span>
+												<span class="path2"></span>
+												<span class="path3"></span>
+											</i>
+										</span>
+										<span class="menu-title">Redoc</span>
+									</a>
+									<!--end:Menu link-->
+								</div>
+								<!--end:Menu item-->
+
+								<!--begin:Menu item Django admin-->
 								<div class="menu-item">
 									<!--begin:Menu link-->
 									<a class="menu-link" href="/admin/" target="_self">
@@ -558,7 +559,23 @@
 												<span class="path3"></span>
 											</i>
 										</span>
-										<span class="menu-title">Admin</span>
+										<span class="menu-title">Django Admin</span>
+									</a>
+									<!--end:Menu link-->
+								</div>
+								<!--end:Menu item-->
+								<!--begin:Menu item Wagtail admin-->
+								<div class="menu-item">
+									<!--begin:Menu link-->
+									<a class="menu-link" href="/cms/admin/" target="_self">
+										<span class="menu-icon">
+											<i class="ki-duotone ki-devices-2 fs-2">
+												<span class="path1"></span>
+												<span class="path2"></span>
+												<span class="path3"></span>
+											</i>
+										</span>
+										<span class="menu-title">Wagtail Admin</span>
 									</a>
 									<!--end:Menu link-->
 								</div>
@@ -597,24 +614,8 @@
 									<!--end:Menu sub-->
 								</div>
 								<!--end:Menu item-->
-								<!--begin:Menu item Account-->
-								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link" href="/account/dashboard/overview/" target="_self">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-tablet-text-down fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-												<span class="path3"></span>
-											</i>
-										</span>
-										<span class="menu-title">Account</span>
-									</a>
-									<!--end:Menu link-->
-								</div>
-								<!--end:Menu item-->
 
-								<!--begin:Menu item-->
+								<!--begin:Menu item Help-->
 								<div class="menu-item pt-5">
 									<!--begin:Menu content-->
 									<div class="menu-content">
@@ -622,7 +623,7 @@
 									</div>
 									<!--end:Menu content-->
 								</div>
-								<!--end:Menu item-->
+								<!--end:Menu item Support-->
 								<div class="menu-item">
 									<!--begin:Menu link-->
 									<a class="menu-link" href="/support/" target="_self">
@@ -637,7 +638,7 @@
 									<!--end:Menu link-->
 								</div>
 								<!--end:Menu item-->
-								<!--begin:Menu item-->
+								<!--begin:Menu item Documentation-->
 								<div class="menu-item">
 									<!--begin:Menu link-->
 									<a class="menu-link" href="/docs/" target="_self">
@@ -654,7 +655,7 @@
 								<!--end:Menu item-->
 								<!--begin:Menu item-->
 								<div class="menu-item">
-									<!--begin:Menu link-->
+									<!--begin:Menu link Change Log-->
 									<a class="menu-link"
 										href="https://github.com/smarter-sh/"
 										target="_blank">
@@ -671,7 +672,7 @@
 									<!--end:Menu link-->
 								</div>
 								<!--end:Menu item-->
-								<!--begin:Menu item-->
+								<!--begin:Menu item Legal-->
 								<div data-kt-menu-trigger="click" class="menu-item menu-accordion">
 									<!--begin:Menu link-->
 									<span class="menu-link">
