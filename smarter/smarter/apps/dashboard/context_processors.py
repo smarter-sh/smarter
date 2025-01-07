@@ -18,7 +18,7 @@ def base(request):
         "dashboard": {
             "product_name": "Smarter",
             "company_name": "Querium, Corp",
-            "smarter_version": __version__,
+            "smarter_version": "v" + __version__,
             "current_year": current_year,
             "product_description": "Smarter is an enterprise class plugin-based chat solution.",
         }
