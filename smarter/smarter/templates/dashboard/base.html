@@ -459,11 +459,44 @@
 								</div>
 								<!--end:Menu item-->
 
+								<!--begin:Menu item Dashboard-->
+								<div class="menu-item">
+									<!--begin:Menu link-->
+									<a class="menu-lin active" href="/dashboard/" target="_self">
+										<span class="menu-icon">
+											<i class="ki-duotone ki-message-programming fs-2">
+												<span class="path1"></span>
+												<span class="path2"></span>
+												<span class="path3"></span>
+											</i>
+										</span>
+										<span class="menu-title">Dashboard</span>
+									</a>
+									<!--end:Menu link-->
+								</div>
 								<!--end:Menu item-->
+
+                <!--begin:Menu item Chatbots-->
+								<div class="menu-item">
+									<!--begin:Menu link-->
+									<a class="menu-link" href="/chatbots/" target="_self">
+										<span class="menu-icon">
+											<i class="ki-duotone ki-message-text-2 fs-2">
+												<span class="path1"></span>
+												<span class="path2"></span>
+												<span class="path3"></span>
+											</i>
+										</span>
+										<span class="menu-title">Chatbots</span>
+									</a>
+									<!--end:Menu link-->
+								</div>
+								<!--end:Menu item-->
+
 								<!--begin:Menu item Plugins-->
 								<div class="menu-item">
 									<!--begin:Menu link-->
-									<a class="menu-link active" href="/chat/" target="_self">
+									<a class="menu-link" href="/plugins/" target="_self">
 										<span class="menu-icon">
 											<i class="ki-duotone ki-cube-2 fs-2">
 												<span class="path1"></span>
@@ -479,22 +512,6 @@
 											</i>
 										</span>
 										<span class="menu-title">Plugins</span>
-									</a>
-									<!--end:Menu link-->
-								</div>
-								<!--end:Menu item-->
-								<!--begin:Menu item Chatbots-->
-								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link" href="/chatbots/" target="_self">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-message-text-2 fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-												<span class="path3"></span>
-											</i>
-										</span>
-										<span class="menu-title">Chatbots</span>
 									</a>
 									<!--end:Menu link-->
 								</div>
@@ -515,6 +532,7 @@
 									<!--end:Menu content-->
 								</div>
 								<!--end:Menu item-->
+
 								<!--begin:Menu item Smarter Getting Started-->
 								<div class="menu-item">
 									<!--begin:Menu link-->
@@ -623,7 +641,9 @@
 									</div>
 									<!--end:Menu content-->
 								</div>
-								<!--end:Menu item Support-->
+								<!--end:Menu item-->
+
+								<!--begin:Menu item Support-->
 								<div class="menu-item">
 									<!--begin:Menu link-->
 									<a class="menu-link" href="/docs/" target="_self">
@@ -638,6 +658,7 @@
 									<!--end:Menu link-->
 								</div>
 								<!--end:Menu item-->
+
 								<!--begin:Menu item Legal-->
 								<div data-kt-menu-trigger="click" class="menu-item menu-accordion">
 									<!--begin:Menu link-->
@@ -802,4 +823,5 @@
 {% block javascript_extra %}
 {{ block.super }}
 <script src="{% static 'assets/js/widgets.bundle.js' %}"></script>
+<script src="{% static 'js/dashboard/base.js' %}"></script>
 {% endblock %}
