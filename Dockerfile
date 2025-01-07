@@ -101,6 +101,10 @@ COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compos
 
 # Build the React app and collect static files
 WORKDIR /home/smarter_user/smarter/smarter/apps/chatapp/reactapp
+RUN mkdir -p /home/smarter_user/.npm
+USER root
+RUN npm install -g npm@11.0.0
+USER smarter_user
 RUN npm install --legacy-peer-deps
 RUN npm run build
 
