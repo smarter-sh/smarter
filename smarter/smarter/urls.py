@@ -30,14 +30,14 @@ urlpatterns = [
     # production smarter platform
     # -----------------------------------
     path("api/", include("smarter.apps.api.urls")),
-    path("chatapp/", include("smarter.apps.chatapp.urls")),
+    path("chatbots/", include("smarter.apps.chatapp.urls")),
     path("dashboard/", include("smarter.apps.dashboard.urls")),
     # django admin
     # -----------------------------------
     path("admin/docs/", include("django.contrib.admindocs.urls")),
     path("admin/", admin.site.urls, name="django_admin"),
     #
-    # documentation pages that are not part of the wagtail site
+    # Wagtail root
     # -----------------------------------
     path("docs/", include("smarter.apps.docs.urls")),
     # -----------------------------------

@@ -7,7 +7,7 @@
       {{ block.super }}
       <!--begin::Item-->
       <li class="breadcrumb-item text-muted">
-        <a href="/account/dashboard/api-keys/" class="text-muted text-hover-primary">API Keys</a>
+        <a href="/dashboard/account/dashboard/api-keys/" class="text-muted text-hover-primary">API Keys</a>
       </li>
     {% endblock %}
 
@@ -116,7 +116,7 @@
             <tbody class="fs-6 fw-semibold text-gray-600">
               {% for api_key in account_apikeys.api_keys %}
               <tr>
-                <td class="ps-9"><a href="/account/dashboard/api-keys/{{ api_key.key_id }}">{{ api_key.user.username }} - {{ api_key.description }}</a></td>
+                <td class="ps-9"><a href="/dashboard/account/dashboard/api-keys/{{ api_key.key_id }}">{{ api_key.user.username }} - {{ api_key.description }}</a></td>
                 <td class="ps-0">{{ api_key }}</td>
                 <td class="ps-0">{{ api_key.created }}</td>
                 <td class="ps-0">{% if api_key.last_used_at %}{{ api_key.last_used_at }}{% else %}Never{% endif %}</td>
