@@ -3,6 +3,7 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.shortcuts import redirect
 from django.urls import include, path, re_path
 from django.views.generic import RedirectView
 from wagtail import urls as wagtail_urls
@@ -25,8 +26,19 @@ admin.site = restricted_site
 admin.autodiscover()
 
 
+def custom_redirect_view(request):
+    """
+    Redirects to the dashboard if the user is authenticated,
+    otherwise to the Wagtail docs homepage.
+    """
+    if request.user.is_authenticated:
+        return redirect("/dashboard/")
+    else:
+        return redirect("/docs/")
+
+
 urlpatterns = [
-    path("", RedirectView.as_view(url="/docs/")),
+    path("", custom_redirect_view, name="home"),
     # production smarter platform
     # -----------------------------------
     path("api/", include("smarter.apps.api.urls")),
