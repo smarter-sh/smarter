@@ -458,23 +458,96 @@
 									<!--end:Menu content-->
 								</div>
 								<!--end:Menu item-->
-
-								<!--begin:Menu item Account-->
-								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link" href="/dashboard/account/dashboard/overview/" target="_self">
+								<!--begin:Menu item User Profile -->
+								<div data-kt-menu-trigger="click" class="menu-item menu-accordion">
+									<!--begin:Menu link User Profile-->
+									<span class="menu-link">
 										<span class="menu-icon">
-											<i class="ki-duotone ki-tablet-text-down fs-2">
+											<i class="ki-duotone ki-address-book fs-2">
 												<span class="path1"></span>
 												<span class="path2"></span>
 												<span class="path3"></span>
 											</i>
 										</span>
-										<span class="menu-title">Account</span>
-									</a>
+										<span class="menu-title">User Profile</span>
+										<span class="menu-arrow"></span>
+									</span>
 									<!--end:Menu link-->
+									<!--begin:Menu sub-->
+									<div class="menu-sub menu-sub-accordion">
+
+										<!--begin:Menu item Account -->
+										<div class="menu-item">
+											<!--begin:Menu link-->
+											<a class="menu-link" href="/dashboard/account/dashboard/overview/">
+												<span class="menu-bullet">
+													<span class="bullet bullet-dot"></span>
+												</span>
+												<span class="menu-title">Account</span>
+											</a>
+											<!--end:Menu link-->
+										</div>
+										<!--end:Menu item-->
+
+                    <!--begin:Menu item Django admin-->
+                    <div class="menu-item">
+                      <!--begin:Menu link-->
+                      <a class="menu-link" href="/admin/" target="_self">
+                        <span class="menu-icon">
+                          <i class="ki-duotone ki-devices-2 fs-2">
+                            <span class="path1"></span>
+                            <span class="path2"></span>
+                            <span class="path3"></span>
+                          </i>
+                        </span>
+                        <span class="menu-title">Django Admin</span>
+                      </a>
+                      <!--end:Menu link-->
+                    </div>
+                    <!--end:Menu item-->
+
+                    <!--begin:Menu item Wagtail admin-->
+                    <div class="menu-item">
+                      <!--begin:Menu link-->
+                      <a class="menu-link" href="/cms/admin/" target="_self">
+                        <span class="menu-icon">
+                          <i class="ki-duotone ki-devices-2 fs-2">
+                            <span class="path1"></span>
+                            <span class="path2"></span>
+                            <span class="path3"></span>
+                          </i>
+                        </span>
+                        <span class="menu-title">Wagtail Admin</span>
+                      </a>
+                      <!--end:Menu link-->
+                    </div>
+                    <!--end:Menu item-->
+
+                    <!--begin:Menu item Change Log -->
+                    <div class="menu-item">
+                      <!--begin:Menu link Change Log-->
+                      <a class="menu-link"
+                        href="https://github.com/smarter-sh/smarter/blob/main/CHANGELOG.md"
+                        target="_blank">
+                        <span class="menu-icon">
+                          <i class="ki-duotone ki-code fs-2">
+                            <span class="path1"></span>
+                            <span class="path2"></span>
+                            <span class="path3"></span>
+                            <span class="path4"></span>
+                          </i>
+                        </span>
+                        <span class="menu-title">Change Log {{ dashboard.smarter_version }}</span>
+                      </a>
+                      <!--end:Menu link-->
+                    </div>
+                    <!--end:Menu item-->
+
+									</div>
+									<!--end:Menu sub-->
 								</div>
 								<!--end:Menu item-->
+
 								<!--end:Menu item-->
 								<!--begin:Menu item Plugins-->
 								<div class="menu-item">
@@ -515,129 +588,7 @@
 									<!--end:Menu link-->
 								</div>
 								<!--end:Menu item-->
-								<!--begin:Menu item Swagger-->
-								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link" href="/docs/swagger/" target="_self">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-devices-2 fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-												<span class="path3"></span>
-											</i>
-										</span>
-										<span class="menu-title">Swagger</span>
-									</a>
-									<!--end:Menu link-->
-								</div>
-								<!--end:Menu item-->
-								<!--begin:Menu item Redoc-->
-								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link" href="/docs/redoc/" target="_self">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-devices-2 fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-												<span class="path3"></span>
-											</i>
-										</span>
-										<span class="menu-title">Redoc</span>
-									</a>
-									<!--end:Menu link-->
-								</div>
-								<!--end:Menu item-->
 
-								<!--begin:Menu item Django admin-->
-								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link" href="/admin/" target="_self">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-devices-2 fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-												<span class="path3"></span>
-											</i>
-										</span>
-										<span class="menu-title">Django Admin</span>
-									</a>
-									<!--end:Menu link-->
-								</div>
-								<!--end:Menu item-->
-								<!--begin:Menu item Wagtail admin-->
-								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link" href="/cms/admin/" target="_self">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-devices-2 fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-												<span class="path3"></span>
-											</i>
-										</span>
-										<span class="menu-title">Wagtail Admin</span>
-									</a>
-									<!--end:Menu link-->
-								</div>
-								<!--end:Menu item-->
-
-								<!--begin:Menu item Profile -->
-								<div data-kt-menu-trigger="click" class="menu-item menu-accordion">
-									<!--begin:Menu link-->
-									<span class="menu-link">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-address-book fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-												<span class="path3"></span>
-											</i>
-										</span>
-										<span class="menu-title">User Profile</span>
-										<span class="menu-arrow"></span>
-									</span>
-									<!--end:Menu link-->
-									<!--begin:Menu sub-->
-									<div class="menu-sub menu-sub-accordion">
-										<!--begin:Menu item-->
-										<div class="menu-item">
-											<!--begin:Menu link-->
-											<a class="menu-link" href="pages/user-profile/overview.html">
-												<span class="menu-bullet">
-													<span class="bullet bullet-dot"></span>
-												</span>
-												<span class="menu-title">Overview</span>
-											</a>
-											<!--end:Menu link-->
-										</div>
-										<!--end:Menu item-->
-									</div>
-									<!--end:Menu sub-->
-								</div>
-								<!--end:Menu item-->
-
-								<!--begin:Menu item Help-->
-								<div class="menu-item pt-5">
-									<!--begin:Menu content-->
-									<div class="menu-content">
-										<span class="menu-heading fw-bold text-uppercase fs-7">Help</span>
-									</div>
-									<!--end:Menu content-->
-								</div>
-								<!--end:Menu item Support-->
-								<div class="menu-item">
-									<!--begin:Menu link-->
-									<a class="menu-link" href="/support/" target="_self">
-										<span class="menu-icon">
-											<i class="ki-duotone ki-rocket fs-2">
-												<span class="path1"></span>
-												<span class="path2"></span>
-											</i>
-										</span>
-										<span class="menu-title">Support Center</span>
-									</a>
-									<!--end:Menu link-->
-								</div>
-								<!--end:Menu item-->
 								<!--begin:Menu item Documentation-->
 								<div class="menu-item">
 									<!--begin:Menu link-->
@@ -653,21 +604,59 @@
 									<!--end:Menu link-->
 								</div>
 								<!--end:Menu item-->
-								<!--begin:Menu item-->
+
+								<!--begin:Menu item Swagger-->
 								<div class="menu-item">
-									<!--begin:Menu link Change Log-->
-									<a class="menu-link"
-										href="https://github.com/smarter-sh/"
-										target="_blank">
+									<!--begin:Menu link-->
+									<a class="menu-link" href="/docs/swagger/" target="_self">
 										<span class="menu-icon">
-											<i class="ki-duotone ki-code fs-2">
+											<i class="ki-duotone ki-devices-2 fs-2">
 												<span class="path1"></span>
 												<span class="path2"></span>
 												<span class="path3"></span>
-												<span class="path4"></span>
 											</i>
 										</span>
-										<span class="menu-title">Change Log {{ dashboard.smarter_version }}</span>
+										<span class="menu-title">Swagger Api Docs</span>
+									</a>
+									<!--end:Menu link-->
+								</div>
+								<!--end:Menu item-->
+								<!--begin:Menu item Redoc-->
+								<div class="menu-item">
+									<!--begin:Menu link-->
+									<a class="menu-link" href="/docs/redoc/" target="_self">
+										<span class="menu-icon">
+											<i class="ki-duotone ki-devices-2 fs-2">
+												<span class="path1"></span>
+												<span class="path2"></span>
+												<span class="path3"></span>
+											</i>
+										</span>
+										<span class="menu-title">Redoc Api Docs</span>
+									</a>
+									<!--end:Menu link-->
+								</div>
+								<!--end:Menu item-->
+
+								<!--begin:Menu item Corporate-->
+								<div class="menu-item pt-5">
+									<!--begin:Menu content-->
+									<div class="menu-content">
+										<span class="menu-heading fw-bold text-uppercase fs-7">Corporate</span>
+									</div>
+									<!--end:Menu content-->
+								</div>
+								<!--end:Menu item Support-->
+								<div class="menu-item">
+									<!--begin:Menu link-->
+									<a class="menu-link" href="/support/" target="_self">
+										<span class="menu-icon">
+											<i class="ki-duotone ki-rocket fs-2">
+												<span class="path1"></span>
+												<span class="path2"></span>
+											</i>
+										</span>
+										<span class="menu-title">Support Center</span>
 									</a>
 									<!--end:Menu link-->
 								</div>
