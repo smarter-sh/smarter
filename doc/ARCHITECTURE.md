@@ -52,9 +52,9 @@ Not to be confused with Smarter's flagship product, customer-implemented custom 
 
 - [/v1/api-auth/](./smarter/smarter/apps/api/urls.py)
 - [/v1/api-auth/logout](./smarter/smarter/apps/api/urls.py)
-- [/v1/chats/](./smarter/smarter/apps/api/urls.py)
-- [/v1/chats/chatgpt/](./smarter/smarter/apps/api/urls.py)
-- [/v1/chats/langchain/](./smarter/smarter/apps/api/urls.py)
+- [/v1/chat/](./smarter/smarter/apps/api/urls.py)
+- [/v1/chat/chatgpt/](./smarter/smarter/apps/api/urls.py)
+- [/v1/chat/langchain/](./smarter/smarter/apps/api/urls.py)
 - [/v1/accounts](./smarter/smarter/apps/account/urls.py) - PENDING
 - [/v1/accounts/<str:account_id>/payment-methods](./smarter/smarter/apps/account/urls.py)
 - [/v1/account](./smarter/smarter/apps/account/urls.py)
