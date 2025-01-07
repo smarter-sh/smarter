@@ -32,6 +32,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 ## [0.6.0](https://github.com/smarter-sh/smarter/compare/v0.5.4...v0.6.0) (2024-11-21)
 
+### Features
+
+- version bump all requirements and upgrade default model to gpt-4-turbo ([fa6def4](https://github.com/smarter-sh/smarter/commit/fa6def47316291d5848c11c0ecfbbb26b4effff5))
+
+## [0.5.4](https://github.com/smarter-sh/smarter/compare/v0.5.3...v0.5.4) (2024-07-12)
+
 ### Bug Fixes
 
 - account_for_user() should ensure that user is not AnonymousUser ([35f08f7](https://github.com/smarter-sh/smarter/commit/35f08f76816412a95c064df0554ab6f4b1b8be3d))
@@ -46,15 +52,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 - make syntax errors ([7afa0c5](https://github.com/smarter-sh/smarter/commit/7afa0c525eb7bf75302c11640a9d5d126689cc22))
 - make syntax errors ([f9432b5](https://github.com/smarter-sh/smarter/commit/f9432b5370e3ca16e4156c934b8d64f1d744abf8))
 - rewrite file instead of append ([9ec807b](https://github.com/smarter-sh/smarter/commit/9ec807bb2f987324c21af36270711a4866d8eb88))
-
-### Features
-
-- version bump all requirements and upgrade default model to gpt-4-turbo ([fa6def4](https://github.com/smarter-sh/smarter/commit/fa6def47316291d5848c11c0ecfbbb26b4effff5))
-
-## [0.5.4](https://github.com/smarter-sh/smarter/compare/v0.5.3...v0.5.4) (2024-07-12)
-
-### Bug Fixes
-
 - add ChatBot.default_system_role migration ([5246cc4](https://github.com/smarter-sh/smarter/commit/5246cc446418f446ca210cb054454c58f7380ac5))
 - add default_system_role to the chat and chatbot models ([266d873](https://github.com/smarter-sh/smarter/commit/266d873e583200750b38045e9f359242555f0a2b))
 - add sensible defaults for all error response attributes ([ecd9d2d](https://github.com/smarter-sh/smarter/commit/ecd9d2dfb5e727674c4e442d47222e87de970b28))
