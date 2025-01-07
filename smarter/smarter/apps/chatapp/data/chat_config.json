@@ -29,7 +29,7 @@
           "id": 1,
           "name": "example",
           "subdomain": null,
-          "url_chatbot": "http://example.3141-5926-5359.api.localhost:8000/api/v1/chatbot/smarter/",
+          "url_chatbot": "http://example.3141-5926-5359.api.localhost:8000/api/v1/chatbots/smarter/",
           "version": null
       },
       "debug_mode": true,

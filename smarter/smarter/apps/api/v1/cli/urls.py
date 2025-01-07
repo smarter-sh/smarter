@@ -52,8 +52,8 @@ class ApiV1CliReverseViews:
 
 urlpatterns = [
     path("apply/", ApiV1CliApplyApiView.as_view(), name=ApiV1CliReverseViews.apply),
-    path("chat/<str:name>/", ApiV1CliChatApiView.as_view(), name=ApiV1CliReverseViews.chat),
-    path("chat/config/<str:name>/", ApiV1CliChatConfigApiView.as_view(), name=ApiV1CliReverseViews.chat_config),
+    path("chats/<str:name>/", ApiV1CliChatApiView.as_view(), name=ApiV1CliReverseViews.chat),
+    path("chats/config/<str:name>/", ApiV1CliChatConfigApiView.as_view(), name=ApiV1CliReverseViews.chat_config),
     path("delete/<str:kind>/", ApiV1CliDeleteApiView.as_view(), name=ApiV1CliReverseViews.delete),
     path("deploy/<str:kind>/", ApiV1CliDeployApiView.as_view(), name=ApiV1CliReverseViews.deploy),
     path("undeploy/<str:kind>/", ApiV1CliUndeployApiView.as_view(), name=ApiV1CliReverseViews.undeploy),

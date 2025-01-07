@@ -231,7 +231,7 @@ class ChatBot(TimestampedModel):
     @property
     def url_chatbot(self):
         base_url = smarter_settings.environment_domain
-        return urljoin(self.scheme + "://" + base_url, "/api/v1/chatbot/smarter/" + self.name + "/")
+        return urljoin(self.scheme + "://" + base_url, "/api/v1/chatbots/smarter/" + self.name + "/")
 
     @property
     def url_chatapp(self):

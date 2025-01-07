@@ -34,7 +34,7 @@ class OpenAIEndPoint:
     """
 
     Embedding = openai.Embedding.__name__
-    ChatCompletion = "chat/completions"
+    ChatCompletion = "chats/completions"
     Moderation = openai.Moderation.__name__
     Image = openai.Image.__name__
     Audio = openai.Audio.__name__

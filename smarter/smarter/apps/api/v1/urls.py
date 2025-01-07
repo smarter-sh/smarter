@@ -20,10 +20,10 @@ from django.views.generic import RedirectView
 
 
 urlpatterns = [
-    path("", RedirectView.as_view(url="docs/")),
+    path("", RedirectView.as_view(url="/docs/")),
     path("account/", include("smarter.apps.account.api.v1.urls")),
-    path("chatbot/", include("smarter.apps.chatbot.api.v1.urls")),
-    path("chat/", include("smarter.apps.chat.api.v1.urls")),
+    path("chatbots/", include("smarter.apps.chatbot.api.v1.urls")),
+    path("chats/", include("smarter.apps.chat.api.v1.urls")),
     path("cli/", include("smarter.apps.api.v1.cli.urls")),
     path("plugins/", include("smarter.apps.plugin.api.v1.urls")),
 ]
