@@ -320,9 +320,9 @@ class ProviderBaseClass(unittest.TestCase):
         self.assertIsNotNone(chat_histories)
 
         # test url api endpoint for chat history
-        response = self.client.get("/api/v1/chat/history/chats/")
+        response = self.client.get("/api/v1/chat/history/chat/")
         self.assertEqual(response.status_code, 200)
-        print("/api/v1/chat/history/chats/ response:", response.json())
+        print("/api/v1/chat/history/chat/ response:", response.json())
 
         # assert that ChatPluginUsage has one or more records for self.user
         plugin_selection_histories = ChatPluginUsage.objects.first()

@@ -15,9 +15,9 @@ from .views.providers.smarter import SmarterChatApiViewSet
 
 urlpatterns = [
     path("smarter/", SmarterChatApiViewSet.as_view(), name="smarter-chat-api"),
-    path("history/chats/", ChatHistoryListView.as_view(), name="chathistory_list"),
+    path("history/chat/", ChatHistoryListView.as_view(), name="chathistory_list"),
     path(
-        "history/chats/<int:pk>/",
+        "history/chat/<int:pk>/",
         ChatHistoryView.as_view(),
         name="chathistory",
     ),

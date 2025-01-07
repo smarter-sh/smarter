@@ -1,5 +1,5 @@
 # pylint: disable=W0611
-"""ChatBot api/v1/chatbot base view, for invoking a ChatBot."""
+"""ChatBot api/v1/chatbots base view, for invoking a ChatBot."""
 import logging
 from http import HTTPStatus
 from typing import List
