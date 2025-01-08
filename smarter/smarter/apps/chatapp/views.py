@@ -63,15 +63,17 @@ class SmarterChatSession(SmarterRequestHelper):
     _chat: Chat = None
     _chatbot: ChatBot = None
     _chat_helper: ChatHelper = None
+    _url: str = None
 
     def __init__(self, request, session_key: str = None, chatbot: ChatBot = None):
         super().__init__(request)
 
+        self._url = request.build_absolute_uri()
         if session_key:
             SmarterValidator.validate_session_key(session_key)
-            if Chat.objects.filter(session_key=session_key).exists():
+            if Chat.objects.filter(session_key=session_key, url=self.url).exists():
                 self._session_key = session_key
-                self._chat = Chat.objects.get(session_key=session_key)
+                self._chat = Chat.objects.get(session_key=session_key, url=self.url)
             else:
                 self._session_key = self.generate_key()
                 logger.warning(
@@ -92,6 +94,10 @@ class SmarterChatSession(SmarterRequestHelper):
     @property
     def formatted_class_name(self):
         return formatted_text(self.__class__.__name__)
+
+    @property
+    def url(self):
+        return self._url
 
     @property
     def chatbot(self):
@@ -190,8 +196,8 @@ class ChatConfigView(View, AccountMixin):
         # json dict that includes, among other pertinent info, this session_key
         # which uniquely identifies the device and the individual chatbot session
         # for the device.
-
-        self.session = SmarterChatSession(request, session_key=data.get("session_key"), chatbot=self.chatbot)
+        session_key = data.get("session_key") or request.GET.get("session_key") or None
+        self.session = SmarterChatSession(request, session_key=session_key, chatbot=self.chatbot)
         self.chatbot_helper = ChatBotHelper(
             url=self.session.url, user=self.session.user_profile.user, account=self.session.account, name=name
         )
