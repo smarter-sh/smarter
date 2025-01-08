@@ -273,24 +273,28 @@ def handle_chat_handler_console_output(sender, **kwargs):
 
 
 @receiver(post_save, sender=Chat)
-def handle_chat_created(sender, **kwargs):
+def handle_chat_created(sender, instance, created, **kwargs):
 
-    logger.info("%s", formatted_text("Chat() record created."))
+    if created:
+        logger.info("%s", formatted_text("Chat() record created."))
 
 
 @receiver(post_save, sender=ChatHistory)
-def handle_chat_history_created(sender, **kwargs):
+def handle_chat_history_created(sender, instance, created, **kwargs):
 
-    logger.info("%s", formatted_text("ChatHistory() record created."))
+    if created:
+        logger.info("%s", formatted_text("ChatHistory() record created."))
 
 
 @receiver(post_save, sender=ChatToolCall)
-def handle_chat_tool_call_created(sender, **kwargs):
+def handle_chat_tool_call_created(sender, instance, created, **kwargs):
 
-    logger.info("%s", formatted_text("ChatToolCall() record created."))
+    if created:
+        logger.info("%s", formatted_text("ChatToolCall() record created."))
 
 
 @receiver(post_save, sender=ChatPluginUsage)
-def handle_plugin_usage_created(sender, **kwargs):
+def handle_plugin_usage_created(sender, instance, created, **kwargs):
 
-    logger.info("%s", formatted_text("ChatPluginUsage() record created."))
+    if created:
+        logger.info("%s", formatted_text("ChatPluginUsage() record created."))
