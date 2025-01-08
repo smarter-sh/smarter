@@ -29,8 +29,8 @@ from smarter.apps.chat.models import Chat, ChatHelper
 from smarter.apps.chatbot.models import ChatBot, ChatBotHelper, ChatBotPlugin
 from smarter.apps.chatbot.serializers import ChatBotPluginSerializer, ChatBotSerializer
 from smarter.common.const import (
-    SMARTER_CHAT_DEBUG_MODE_KEY_NAME,
     SMARTER_CHAT_SESSION_KEY_NAME,
+    SMARTER_WAFFLE_REACTAPP_DEBUG_MODE,
     SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING,
 )
 from smarter.common.exceptions import SmarterExceptionBase, SmarterValueError
@@ -266,7 +266,7 @@ class ChatConfigView(View, AccountMixin):
             "data": {
                 SMARTER_CHAT_SESSION_KEY_NAME: self.session.session_key,
                 "sandbox_mode": self.sandbox_mode,
-                SMARTER_CHAT_DEBUG_MODE_KEY_NAME: waffle.switch_is_active("reactapp_debug_mode"),
+                "debug_mode": waffle.switch_is_active(SMARTER_WAFFLE_REACTAPP_DEBUG_MODE),
                 "chatbot": chatbot_serializer.data,
                 "console": self.session.chat_helper.console,
                 "meta_data": self.chatbot_helper.to_json(),
