@@ -28,6 +28,7 @@ class Chat(TimestampedModel):
 
     class Meta:
         verbose_name_plural = "Chats"
+        unique_together = ("session_key", "url")
 
     session_key = models.CharField(max_length=255, blank=True, null=True)
     account = models.ForeignKey(Account, on_delete=models.CASCADE, blank=True, null=True)
