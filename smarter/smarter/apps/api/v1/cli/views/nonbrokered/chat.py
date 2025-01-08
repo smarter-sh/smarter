@@ -17,6 +17,7 @@ from smarter.apps.chatapp.views import ChatConfigView
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatBotApiView
 from smarter.apps.chatbot.models import ChatBot
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,
@@ -32,7 +33,6 @@ from ..base import APIV1CLIViewError, CliBaseApiView
 
 
 CACHE_EXPIRATION = 24 * 60 * 60  # 24 hours
-SESSION_KEY = "session_key"
 
 logger = logging.getLogger(__name__)
 
@@ -154,7 +154,7 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
 
             # try to extract the session_key from the request body
             # if it exists.
-            self._session_key = self.data.get(SESSION_KEY)
+            self._session_key = self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
         except json.JSONDecodeError:
             pass
 
@@ -178,10 +178,10 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         if self.session_key:
             if self.data:
                 new_body = self.data.copy()
-                new_body[SESSION_KEY] = self.session_key
+                new_body[SMARTER_CHAT_SESSION_KEY_NAME] = self.session_key
                 new_body = json.dumps(new_body)
             else:
-                new_body = json.dumps({SESSION_KEY: self.session_key})
+                new_body = json.dumps({SMARTER_CHAT_SESSION_KEY_NAME: self.session_key})
 
             # pylint: disable=W0212
             request._body = new_body.encode("utf-8")
@@ -297,7 +297,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         ]
 
     def chat_request_body_factory(self, messages: list) -> dict[str, any]:
-        return {"session_key": self.session_key, "messages": messages}
+        return {SMARTER_CHAT_SESSION_KEY_NAME: self.session_key, "messages": messages}
 
     @classmethod
     def chat_request_factory(cls, request: HttpRequest, url: str, body: dict) -> HttpRequest:
@@ -335,7 +335,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             # bootstrap our chat session configuration
             chat_config: dict = json.loads(chat_config.content)
             self._chat_config = chat_config.get(SCLIResponseGet.DATA.value)
-            self._session_key = self.chat_config.get(SESSION_KEY)
+            self._session_key = self.chat_config.get(SMARTER_CHAT_SESSION_KEY_NAME)
             cache.set(key=self.cache_key, value=self.session_key, timeout=CACHE_EXPIRATION)
         except json.JSONDecodeError as e:
             raise APIV1CLIViewError(

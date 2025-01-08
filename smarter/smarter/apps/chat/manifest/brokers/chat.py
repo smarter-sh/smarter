@@ -13,6 +13,7 @@ from smarter.apps.chat.manifest.models.chat.const import MANIFEST_KIND
 from smarter.apps.chat.manifest.models.chat.model import SAMChat
 from smarter.apps.chat.models import Chat
 from smarter.common.api import SmarterApiVersions
+from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
@@ -48,7 +49,7 @@ class ChatSerializer(ModelSerializer):
     # pylint: disable=C0115
     class Meta:
         model = Chat
-        fields = ["session_key", "id", "user_agent"]
+        fields = [SMARTER_CHAT_SESSION_KEY_NAME, "id", "user_agent"]
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)

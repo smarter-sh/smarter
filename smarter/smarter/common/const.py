@@ -18,6 +18,12 @@ SMARTER_COMPANY_NAME = "Smarter"
 SMARTER_EXAMPLE_CHATBOT_NAME = "example"
 SMARTER_CUSTOMER_SUPPORT = "support@smarter.sh"
 
+# The following are used in the React app
+# to store the chatbot chat session key and debug mode settings
+# as browser cookies. The React app has constants
+# for these values as well which should be kept in sync.
+SMARTER_CHAT_SESSION_KEY_NAME = "session_key"
+SMARTER_CHAT_DEBUG_MODE_KEY_NAME = "debug_mode"
 
 HERE = os.path.abspath(os.path.dirname(__file__))  # smarter/smarter/common
 PROJECT_ROOT = str(Path(HERE).parent)  # smarter/smarter

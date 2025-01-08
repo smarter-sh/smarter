@@ -12,6 +12,7 @@ from rest_framework import serializers
 from smarter.apps.account.models import Account
 from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.plugin.models import PluginMeta
+from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.request import SmarterRequestHelper
@@ -28,6 +29,7 @@ class Chat(TimestampedModel):
 
     class Meta:
         verbose_name_plural = "Chats"
+        unique_together = (SMARTER_CHAT_SESSION_KEY_NAME, "url")
 
     session_key = models.CharField(max_length=255, blank=True, null=True)
     account = models.ForeignKey(Account, on_delete=models.CASCADE, blank=True, null=True)
@@ -201,7 +203,7 @@ class ChatHelper(SmarterRequestHelper):
         chat_tool_call_serializer = ChatToolCallSerializer(self.chat_tool_call, many=True)
         chat_plugin_usage_serializer = ChatPluginUsageSerializer(self.chat_plugin_usage, many=True)
         return {
-            "session_key": self.session_key,
+            SMARTER_CHAT_SESSION_KEY_NAME: self.session_key,
             "chat": self.chat.id,
             "chat_history": chat_history_serializer.data,
             "chat_tool_call": chat_tool_call_serializer.data,
