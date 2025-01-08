@@ -46,7 +46,9 @@ export async function fetchConfig() {
   try {
     let thisURL = new URL(window.location.href);
     thisURL.pathname += "config/";
-    thisURL.searchParams.append(SESSION_COOKIE_NAME, session_key);
+    if (session_key) {
+      thisURL.searchParams.append(SESSION_COOKIE_NAME, session_key);
+    }
     let configURL = thisURL.toString();
 
     if (debug_mode) {
