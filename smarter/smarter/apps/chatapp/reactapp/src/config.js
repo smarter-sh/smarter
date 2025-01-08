@@ -85,7 +85,7 @@ export function setConfig(config) {
     };
 
     // set cookies
-    setSessionCookie(config.session_key);
+    setSessionCookie(config.session_key, config.debug_mode);
     setDebugCookie(config.debug_mode);
     return config;
 }

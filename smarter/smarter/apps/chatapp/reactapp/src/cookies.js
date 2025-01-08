@@ -1,7 +1,7 @@
 import { DEBUG_COOKIE_EXPIRATION, DEBUG_COOKIE_NAME, SESSION_COOKIE_NAME, SESSION_COOKIE_EXPIRATION } from "./constants.js";
 
 
-export function getCookie(name) {
+export function getCookie(name, debugMode = false) {
   let cookieValue = null;
   if (document.cookie && document.cookie !== '') {
       const cookies = document.cookie.split(';');
@@ -9,22 +9,32 @@ export function getCookie(name) {
           const cookie = cookies[i].trim();
           if (cookie.substring(0, name.length + 1) === (name + '=')) {
               cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              if (debugMode) {
+                console.log('getCookie(): found ', cookieValue, 'for cookie', name);
+              }
               break;
           }
       }
   }
+  if (debugMode && !cookieValue) {
+    console.warn('getCookie(): no value found for', name);
+  }
   return cookieValue;
 }
 
-export function setSessionCookie(session_key) {
+export function setSessionCookie(session_key, debugMode = false) {
 
       if (session_key) {
         const expirationDate = new Date();
         expirationDate.setTime(expirationDate.getTime() + SESSION_COOKIE_EXPIRATION);
-        const expires = `expires=${expirationDate.toUTCString()}`;
+        const expires = expirationDate.toUTCString();
         const currentPath = window.location.pathname;
-        document.cookie = `${SESSION_COOKIE_NAME}=${session_key}; path=${currentPath}; SameSite=Lax; ${expires}`;
+        const cookieData = `${SESSION_COOKIE_NAME}=${session_key}; path=${currentPath}; SameSite=Lax; expires=${expires}`;
+        document.cookie = cookieData;
+        if (debugMode) {
+          console.log('setSessionCookie(): ', cookieData, new Date().toUTCString(), expirationDate.toUTCString());
         }
+      }
       else {
         console.error("config.js: session_key is not defined");
       }
