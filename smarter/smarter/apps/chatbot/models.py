@@ -546,7 +546,8 @@ class ChatBotHelper(AccountMixin):
         logger.info(f"%s: user={self.user}, account={self.account}", self.formatted_class_name)
         logger.info(f"%s: name={self.name}", self.formatted_class_name)
 
-        logger.info(f"%s: url={self.url}, environment={self.environment}", self.formatted_class_name)
+        logger.info(f"%s: url={self.url}", self.formatted_class_name)
+        logger.info(f"%s: environment={self.environment}", self.formatted_class_name)
         logger.info(f"%s: domain={self.domain}, path={self.path}", self.formatted_class_name)
         logger.info(f"%s: subdomain={self.subdomain}", self.formatted_class_name)
         logger.info(f"%s: root_domain={self.root_domain}", self.formatted_class_name)

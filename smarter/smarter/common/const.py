@@ -31,7 +31,9 @@ SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING = "chatbothelper_logging"
 SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING = "chatbot_api_view_logging"
 SMARTER_WAFFLE_SWITCH_CSRF_MIDDLEWARE_LOGGING = "csrf_middleware_logging"
 SMARTER_WAFFLE_SWITCH_JOURNAL = "journal"
-
+SMARTER_WAFFLE_SWITCH_SUPPRESS_FOR_CHATBOTS = "csrf_middleware_suppress_for_chatbots"
+SMARTER_WAFFLE_SWITCH_CHATAPP_VIEW_LOGGING = "chatapp_view_logging"
+SMARTER_WAFFLE_MANIFEST_LOGGING = "manifest_logging"
 
 HERE = os.path.abspath(os.path.dirname(__file__))  # smarter/smarter/common
 PROJECT_ROOT = str(Path(HERE).parent)  # smarter/smarter

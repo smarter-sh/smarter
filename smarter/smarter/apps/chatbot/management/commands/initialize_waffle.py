@@ -4,6 +4,20 @@ from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from waffle.models import Switch
 
+from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import (
+    SMARTER_CHAT_DEBUG_MODE_KEY_NAME,
+    SMARTER_WAFFLE_MANIFEST_LOGGING,
+    SMARTER_WAFFLE_SWITCH_CHAT_LOGGING,
+    SMARTER_WAFFLE_SWITCH_CHATAPP_VIEW_LOGGING,
+    SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING,
+    SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING,
+    SMARTER_WAFFLE_SWITCH_CSRF_MIDDLEWARE_LOGGING,
+    SMARTER_WAFFLE_SWITCH_JOURNAL,
+    SMARTER_WAFFLE_SWITCH_SUPPRESS_FOR_CHATBOTS,
+    SmarterEnvironments,
+)
+
 
 # pylint: disable=E1101
 class Command(BaseCommand):
@@ -20,16 +34,19 @@ class Command(BaseCommand):
                 print(f"Verified switch {switch_name}")
 
         switches = [
-            "csrf_middleware_suppress_for_chatbots",
-            "csrf_middleware_logging",
-            "chatbothelper_logging",
-            "chatbot_api_view_logging",
-            "chat_logging",
-            "chatapp_view_logging",
-            "reactapp_debug_mode",
-            "manifest_logging",
-            "journal",
+            SMARTER_WAFFLE_SWITCH_SUPPRESS_FOR_CHATBOTS,
+            SMARTER_WAFFLE_SWITCH_CSRF_MIDDLEWARE_LOGGING,
+            SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING,
+            SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING,
+            SMARTER_WAFFLE_SWITCH_CHAT_LOGGING,
+            SMARTER_WAFFLE_SWITCH_CHATAPP_VIEW_LOGGING,
+            SMARTER_CHAT_DEBUG_MODE_KEY_NAME,
+            SMARTER_WAFFLE_MANIFEST_LOGGING,
+            SMARTER_WAFFLE_SWITCH_JOURNAL,
         ]
 
         for switch in switches:
             verify_switch(switch)
+
+        if smarter_settings.environment == SmarterEnvironments.LOCAL:
+            call_command("waffle_switch", SMARTER_CHAT_DEBUG_MODE_KEY_NAME, "on")
