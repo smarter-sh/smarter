@@ -104,10 +104,11 @@ WORKDIR /home/smarter_user/smarter/smarter/apps/chatapp/reactapp
 RUN mkdir -p /home/smarter_user/.npm
 USER root
 RUN npm install -g npm@11.0.0
+RUN npm config set fetch-retry-mintimeout 20000
+RUN npm config set fetch-retry-maxtimeout 120000
 USER smarter_user
-RUN npm install --legacy-peer-deps
+RUN npm install --legacy-peer-deps || npm install --legacy-peer-deps
 RUN npm run build
-
 WORKDIR /home/smarter_user/smarter
 RUN python manage.py collectstatic --noinput
 
