@@ -1,3 +1,10 @@
+## [0.7.7](https://github.com/smarter-sh/smarter/compare/v0.7.6...v0.7.7) (2025-01-08)
+
+
+### Bug Fixes
+
+* pod startup log dump ([e3d22ed](https://github.com/smarter-sh/smarter/commit/e3d22edf2f3d08b19f4e0c277dd09e1aa9714e55))
+
 ## [0.7.6](https://github.com/smarter-sh/smarter/compare/v0.7.5...v0.7.6) (2025-01-08)
 
 
