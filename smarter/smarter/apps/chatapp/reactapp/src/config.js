@@ -65,10 +65,10 @@ export async function fetchConfig() {
     if (response.ok) {
       return response_json.data;
     } else {
-      console.error("getConfig() error", response);
+      console.error("fetchConfig() error", response);
     }
   } catch (error) {
-    console.error("getConfig() error", error);
+    console.error("fetchConfig() error", error);
     return;
   }
 }
