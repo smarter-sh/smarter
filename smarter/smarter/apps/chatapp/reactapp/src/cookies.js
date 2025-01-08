@@ -32,7 +32,7 @@ export function setSessionCookie(session_key, debugMode = false) {
         const cookieData = `${SESSION_COOKIE_NAME}=${session_key}; path=${currentPath}; SameSite=Lax; expires=${expires}`;
         document.cookie = cookieData;
         if (debugMode) {
-          console.log('setSessionCookie(): ', cookieData, new Date().toUTCString(), expirationDate.toUTCString());
+          console.log('setSessionCookie(): ', cookieData, 'now: ', new Date().toUTCString(), 'expiration: ', expirationDate.toUTCString());
         }
       }
       else {
