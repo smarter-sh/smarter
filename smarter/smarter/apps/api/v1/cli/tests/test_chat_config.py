@@ -11,6 +11,10 @@ from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.apps.chatbot.models import ChatBot
 from smarter.common.api import SmarterApiVersions
+from smarter.common.const import (
+    SMARTER_CHAT_DEBUG_MODE_KEY_NAME,
+    SMARTER_CHAT_SESSION_KEY_NAME,
+)
 from smarter.lib.journal.enum import (
     SCLIResponseMetadata,
     SmarterJournalApiResponseKeys,
@@ -71,9 +75,9 @@ class TestApiCliV1ChatConfig(ApiV1TestBase):
 
     def validate_data(self, data: dict) -> None:
         config_fields = [
-            "session_key",
+            SMARTER_CHAT_SESSION_KEY_NAME,
             "sandbox_mode",
-            "debug_mode",
+            SMARTER_CHAT_DEBUG_MODE_KEY_NAME,
             "chatbot",
             "meta_data",
             "history",
@@ -96,11 +100,11 @@ class TestApiCliV1ChatConfig(ApiV1TestBase):
         metadata = response[SmarterJournalApiResponseKeys.METADATA]
         metadata[SCLIResponseMetadata.COMMAND] = SmarterJournalCliCommands.CHAT_CONFIG.value
 
-        session_key = data["session_key"]
+        session_key = data[SMARTER_CHAT_SESSION_KEY_NAME]
 
         # re-request the config to verify that we have a sticky session.
         # the session_key should be the same as the first request.
         response, status = self.get_response(path=url_with_query_params)
         data = response[SmarterJournalApiResponseKeys.DATA]
-        next_session_key = data["session_key"]
+        next_session_key = data[SMARTER_CHAT_SESSION_KEY_NAME]
         self.assertEqual(session_key, next_session_key)
