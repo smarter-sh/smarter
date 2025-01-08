@@ -266,7 +266,7 @@ class ChatConfigView(View, AccountMixin):
             "data": {
                 SMARTER_CHAT_SESSION_KEY_NAME: self.session.session_key,
                 "sandbox_mode": self.sandbox_mode,
-                SMARTER_CHAT_DEBUG_MODE_KEY_NAME: waffle.switch_is_active("reactapp_debug_mode"),
+                SMARTER_CHAT_DEBUG_MODE_KEY_NAME: waffle.switch_is_active(SMARTER_CHAT_DEBUG_MODE_KEY_NAME),
                 "chatbot": chatbot_serializer.data,
                 "console": self.session.chat_helper.console,
                 "meta_data": self.chatbot_helper.to_json(),
