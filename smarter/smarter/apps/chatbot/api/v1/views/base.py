@@ -18,6 +18,7 @@ from smarter.apps.chatbot.serializers import ChatBotSerializer
 from smarter.apps.chatbot.signals import chatbot_called
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
@@ -92,7 +93,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
 
         print(f"ChatBotApiBaseViewSet.dispatch(): chatbot: {self.chatbot_helper.chatbot}")
 
-        if waffle.switch_is_active("chatbot_api_view_logging"):
+        if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
             logger.info("%s.dispatch() - url=%s", self.formatted_class_name, self.url)
             logger.info("%s.dispatch() - headers=%s", self.formatted_class_name, request.META)
             logger.info("%s.dispatch() - user=%s", self.formatted_class_name, request.user)
@@ -120,7 +121,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
 
         self.plugins = ChatBotPlugin().plugins(chatbot=self.chatbot)
 
-        if waffle.switch_is_active("chatbot_api_view_logging"):
+        if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
             logger.info("%s.dispatch(): account=%s", self.formatted_class_name, self.account)
             logger.info("%s.dispatch(): chatbot=%s", self.formatted_class_name, self.chatbot)
             logger.info("%s.dispatch(): user=%s", self.formatted_class_name, self.user)
@@ -130,7 +131,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         return super().dispatch(request, *args, **kwargs)
 
     def options(self, request, *args, **kwargs):
-        if waffle.switch_is_active("chatbot_api_view_logging"):
+        if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
             logger.info("%s.options(): url=%s", self.formatted_class_name, self.chatbot_helper.url)
         response = Response()
         response["Access-Control-Allow-Origin"] = smarter_settings.environment_url
@@ -140,7 +141,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
 
     # pylint: disable=W0613
     def get(self, request, *args, name: str = None, **kwargs):
-        if waffle.switch_is_active("chatbot_api_view_logging"):
+        if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
             logger.info("%s.get(): url=%s", self.formatted_class_name, self.chatbot_helper.url)
             logger.info("%s.get(): headers=%s", self.formatted_class_name, request.META)
         kwargs.get("chatbot_id", None)

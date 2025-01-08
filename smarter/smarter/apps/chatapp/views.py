@@ -7,6 +7,7 @@ import datetime
 import hashlib
 import json
 import logging
+import urllib.parse
 from datetime import datetime
 from http import HTTPStatus
 
@@ -30,6 +31,7 @@ from smarter.apps.chatbot.serializers import ChatBotPluginSerializer, ChatBotSer
 from smarter.common.const import (
     SMARTER_CHAT_DEBUG_MODE_KEY_NAME,
     SMARTER_CHAT_SESSION_KEY_NAME,
+    SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING,
 )
 from smarter.common.exceptions import SmarterExceptionBase, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
@@ -72,32 +74,39 @@ class SmarterChatSession(SmarterRequestHelper):
     def __init__(self, request, session_key: str = None, chatbot: ChatBot = None):
         super().__init__(request)
 
-        self._url = request.build_absolute_uri()
-        if session_key:
-            try:
+        parsed_url = urllib.parse.urlparse(request.build_absolute_uri())
+        # remove any query strings from url and also prune any trailing '/config/' from the url
+        clean_url = parsed_url._replace(query="").geturl()
+        if clean_url.endswith("/config/"):
+            clean_url = clean_url[:-8]
+        self._url = clean_url
+
+        try:
+            if session_key:
                 SmarterValidator.validate_session_key(session_key)
-            except SmarterValueError as e:
-                logger.error("%s - %s", self.formatted_class_name, e)
-                session_key = None
-        if session_key:
-            if Chat.objects.filter(session_key=session_key, url=self.url).exists():
-                self._session_key = session_key
-                self._chat = Chat.objects.get(session_key=session_key, url=self.url)
-            else:
-                self._session_key = self.generate_key()
+        except SmarterValueError as e:
+            logger.error("%s - %s", self.formatted_class_name, e)
+            session_key = None
+
+        try:
+            self._chat = Chat.objects.get(session_key=session_key, url=self.url)
+            self._session_key = session_key
+        except Chat.DoesNotExist:
+            self._session_key = self.generate_key()
+            if session_key:
                 logger.warning(
-                    "%s - session_key not found: %s, new session key generated %s",
+                    "%s - session_key %s not found for url %s. New session key generated %s",
                     self.formatted_class_name,
                     session_key,
+                    self.url,
                     self._session_key,
                 )
-        else:
-            self._session_key = self.generate_key()
+
         self._chatbot = chatbot
         self._chat_helper = ChatHelper(session_key=self.session_key, request=request, chatbot=self.chatbot)
         self._chat = self._chat_helper.chat
 
-        if waffle.switch_is_active("chatapp_view_logging"):
+        if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
             logger.info("%s - session established: %s", self.formatted_class_name, self.data)
 
     @property
@@ -193,7 +202,7 @@ class ChatConfigView(View, AccountMixin):
             data = json.loads(request.body)
         except json.JSONDecodeError:
             data = {}
-        if waffle.switch_is_active("chatapp_view_logging"):
+        if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
             logger.info("%s - data=%s", self.formatted_class_name, data)
 
         # Initialize the chat session for this request. session_key is generated
