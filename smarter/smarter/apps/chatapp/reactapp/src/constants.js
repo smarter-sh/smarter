@@ -1,5 +1,5 @@
 
-export const DEFAULT_COOKIE_EXPIRATION = 60 * 60 * 24 * 1; // 1 day
+export const DEFAULT_COOKIE_EXPIRATION = 1000 * 60 * 60 * 24 * 1; // 1 day
 
 export const CSRF_COOKIE_NAME = 'csrftoken';
 export const DEBUG_COOKIE_NAME = 'debug';
