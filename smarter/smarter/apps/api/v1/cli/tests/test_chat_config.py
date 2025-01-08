@@ -11,10 +11,7 @@ from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.apps.chatbot.models import ChatBot
 from smarter.common.api import SmarterApiVersions
-from smarter.common.const import (
-    SMARTER_CHAT_DEBUG_MODE_KEY_NAME,
-    SMARTER_CHAT_SESSION_KEY_NAME,
-)
+from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib.journal.enum import (
     SCLIResponseMetadata,
     SmarterJournalApiResponseKeys,
@@ -77,7 +74,7 @@ class TestApiCliV1ChatConfig(ApiV1TestBase):
         config_fields = [
             SMARTER_CHAT_SESSION_KEY_NAME,
             "sandbox_mode",
-            SMARTER_CHAT_DEBUG_MODE_KEY_NAME,
+            "debug_mode",
             "chatbot",
             "meta_data",
             "history",

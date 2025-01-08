@@ -62,13 +62,23 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https?://[\w-]+\.api\.smarter\.sh$",
 ]
 # settings that affect whether the browser saves cookies
-CSRF_COOKIE_DOMAIN = None
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_SAMESITE = "Lax"
 
 SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_DOMAIN = None
 
 SECURE_PROXY_SSL_HEADER = None
+
+ENVIRONMENT_DOMAIN = smarter_settings.environment_domain
+CUSTOMER_API_DOMAIN = smarter_settings.customer_api_domain
+SMARTER_ALLOWED_HOSTS = [ENVIRONMENT_DOMAIN, CUSTOMER_API_DOMAIN, f"*.{CUSTOMER_API_DOMAIN}"]
+SMTP_SENDER = smarter_settings.smtp_sender or ENVIRONMENT_DOMAIN
+SMTP_FROM_EMAIL = smarter_settings.smtp_from_email or "no-reply@" + SMTP_SENDER
+
+CORS_ALLOWED_ORIGINS = [f"https://{host}" for host in [ENVIRONMENT_DOMAIN, CUSTOMER_API_DOMAIN]]
+
+# (4_0.E001) As of Django 4.0, the values in the CSRF_TRUSTED_ORIGINS setting must start with a scheme
+# (usually http:// or https://) but found platform.smarter.sh. See the release notes for details.
+CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in SMARTER_ALLOWED_HOSTS]

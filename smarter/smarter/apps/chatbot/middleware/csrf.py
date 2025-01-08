@@ -16,7 +16,10 @@ from django.utils.functional import cached_property
 
 from smarter.apps.chatbot.models import ChatBot
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SMARTER_WAFFLE_SWITCH_CSRF_MIDDLEWARE_LOGGING
+from smarter.common.const import (
+    SMARTER_WAFFLE_SWITCH_CSRF_MIDDLEWARE_LOGGING,
+    SMARTER_WAFFLE_SWITCH_SUPPRESS_FOR_CHATBOTS,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -92,8 +95,8 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware):
         if smarter_settings.environment == "local":
             logger.debug("CsrfViewMiddleware._accept: environment is local. ignoring csrf checks")
             return None
-        if self.chatbot and waffle.switch_is_active("csrf_middleware_suppress_for_chatbots"):
-            logger.info("CsrfViewMiddleware.process_view: csrf_middleware_suppress_for_chatbots is active")
+        if self.chatbot and waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_SUPPRESS_FOR_CHATBOTS):
+            logger.info("CsrfViewMiddleware.process_view: %s is active", SMARTER_WAFFLE_SWITCH_SUPPRESS_FOR_CHATBOTS)
             response = super().process_view(request, callback, callback_args, callback_kwargs)
             if isinstance(response, HttpResponseForbidden):
                 logger.error("CSRF validation failed")
