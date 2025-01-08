@@ -11,15 +11,19 @@ from datetime import datetime
 from http import HTTPStatus
 
 import waffle
+from django.db import models
 from django.http import HttpResponseNotFound
 from django.shortcuts import render
-from django.utils.decorators import method_decorator
+
+# from django.utils.decorators import method_decorator
 from django.views import View
-from django.views.decorators.csrf import csrf_exempt
+
+# from django.views.decorators.csrf import csrf_exempt
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 from smarter.apps.account.mixins import AccountMixin
+from smarter.apps.account.utils import smarter_admin_user_profile
 from smarter.apps.chat.models import Chat, ChatHelper
 from smarter.apps.chatbot.models import ChatBot, ChatBotHelper, ChatBotPlugin
 from smarter.apps.chatbot.serializers import ChatBotPluginSerializer, ChatBotSerializer
@@ -119,7 +123,7 @@ class SmarterChatSession(SmarterRequestHelper):
 
 
 # pylint: disable=R0902
-@method_decorator(csrf_exempt, name="dispatch")
+# @method_decorator(csrf_exempt, name="dispatch")
 class ChatConfigView(View, AccountMixin):
     """
     Chat config view for smarter web. This view is protected and requires the user
@@ -256,7 +260,7 @@ class ChatConfigView(View, AccountMixin):
         return retval
 
 
-@method_decorator(csrf_exempt, name="dispatch")
+# @method_decorator(csrf_exempt, name="dispatch")
 class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
     """
     Chat app view for smarter web. This view is protected and requires the user
@@ -312,3 +316,45 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
         if not self.chatbot:
             return HttpResponseNotFound()
         return render(request, self.template_path)
+
+
+class ChatAppListView(SmarterAuthenticatedNeverCachedWebView):
+    """
+    Chatapp list view for smarter web console. This view is protected and
+    requires the user to be authenticated. It generates cards for each
+    ChatBots.
+    """
+
+    template_path = "chatapps/listview.html"
+    chatbots: models.QuerySet[ChatBot] = None
+    chatbot_helpers: list[ChatBotHelper] = []
+
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        if response.status_code >= 300:
+            return response
+
+        self.chatbot_helpers = []
+
+        def was_already_added(chatbot_helper: ChatBotHelper) -> bool:
+            for b in self.chatbot_helpers:
+                if b.chatbot.id == chatbot_helper.chatbot.id:
+                    return True
+
+        # get all of the smarter demo chatbots
+        smarter_admin = smarter_admin_user_profile()
+        smarter_demo_chatbots = ChatBot.objects.filter(account=smarter_admin.account)
+        for chatbot in smarter_demo_chatbots:
+            chatbot_helper = ChatBotHelper(account=smarter_admin.account, name=chatbot.name)
+            self.chatbot_helpers.append(chatbot_helper)
+
+        # get all chatbots for the account
+        self.chatbots = ChatBot.objects.filter(account=self.account)
+
+        for chatbot in self.chatbots:
+            chatbot_helper = ChatBotHelper(account=self.account, name=chatbot.name)
+            if not was_already_added(chatbot_helper):
+                self.chatbot_helpers.append(chatbot_helper)
+
+        context = {"smarter_admin": smarter_admin, "chatbot_helpers": self.chatbot_helpers}
+        return render(request, template_name=self.template_path, context=context)
