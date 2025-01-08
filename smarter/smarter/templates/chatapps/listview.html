@@ -41,9 +41,9 @@
                 <!--begin::Header-->
                 <div class="p-5">
                   {% if chatbot_helper.chatbot.is_authentication_required %}
-                  <i class="fas fa-lock" style="position: absolute; top: 10px; right: 30px; color: darkred; padding: 5px;"></i>
+                  <i class="fas fa-lock" style="position: absolute; top: 10px; right: 30px; color: darkgreen; padding: 5px;"></i>
                   {% else %}
-                  <i class="fas fa-unlock" style="position: absolute; top: 10px; right: 30px; color: greenyellow; padding: 5px;"></i>
+                  <i class="fas fa-unlock" style="position: absolute; top: 10px; right: 30px; color: darkred; padding: 5px;"></i>
                   {% endif %}
                   {% if chatbot_helper.chatbot.deployed %}
                   <i class="fas fa-check" style="position: absolute; top: 10px; right: 10px; background-color: green; color: white; border-radius: 50%; padding: 5px;"></i>
@@ -59,8 +59,9 @@
                   <p>last updated: {{ chatbot_helper.chatbot.updated_at }}</p>
                   <p>url: <span style="color: black; text-decoration: underline; cursor: pointer;"></span>{{ chatbot_helper.chatbot.url }}</span></p>
                   <p>provider: {{ chatbot_helper.chatbot.provider }}</p>
-                  <p>Authentication required: {{ chatbot_helper.is_authentication_required }}</p>
+                  {% if chatbot_helper.chatbot.description %}
                   <p>description: {{ chatbot_helper.chatbot.description }}</p>
+                  {% endif %}
                   <p>DNS status: {{ chatbot_helper.chatbot.dns_verification_status }}</p>
                   <p>App assistant: {{ chatbot_helper.chatbot.app_assistant }}</p>
                   <p>App name: {{ chatbot_helper.chatbot.app_name }}</p>
