@@ -25,6 +25,14 @@ SMARTER_CUSTOMER_SUPPORT = "support@smarter.sh"
 SMARTER_CHAT_SESSION_KEY_NAME = "session_key"
 SMARTER_CHAT_DEBUG_MODE_KEY_NAME = "debug_mode"
 
+# Smarter Waffle Switches and Flags
+SMARTER_WAFFLE_SWITCH_CHAT_LOGGING = "chat_logging"
+SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING = "chatbothelper_logging"
+SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING = "chatbot_api_view_logging"
+SMARTER_WAFFLE_SWITCH_CSRF_MIDDLEWARE_LOGGING = "csrf_middleware_logging"
+SMARTER_WAFFLE_SWITCH_JOURNAL = "journal"
+
+
 HERE = os.path.abspath(os.path.dirname(__file__))  # smarter/smarter/common
 PROJECT_ROOT = str(Path(HERE).parent)  # smarter/smarter
 PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)  # smarter
