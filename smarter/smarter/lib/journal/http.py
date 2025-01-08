@@ -9,6 +9,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpRequest, JsonResponse
 
 from smarter.common.api import SmarterApiVersions
+from smarter.common.const import SMARTER_WAFFLE_SWITCH_JOURNAL
 from smarter.lib.django.http.serializers import HttpRequestSerializer
 
 from .enum import (
@@ -75,7 +76,7 @@ class SmarterJournaledJsonResponse(JsonResponse):
             SCLIResponseMetadata.COMMAND: str(command),
         }
 
-        if waffle.switch_is_active("journal"):
+        if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_JOURNAL):
             journal = SAMJournal.objects.create(
                 user=request.user,
                 thing=thing,
