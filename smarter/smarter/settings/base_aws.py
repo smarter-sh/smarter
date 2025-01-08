@@ -56,6 +56,8 @@ SMARTER_API_SCHEMA = "https"
 
 # Common security settings
 # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_PROXY_SSL_HEADER = None
+
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https?://[\w-]+\.(\d+-\d+-\d+)\.api\.smarter\.sh$",
     r"^https?://[\w-]+\.platform\.smarter\.sh$",
@@ -68,8 +70,6 @@ CSRF_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_HTTPONLY = True
-
-SECURE_PROXY_SSL_HEADER = None
 
 ENVIRONMENT_DOMAIN = smarter_settings.environment_domain
 CUSTOMER_API_DOMAIN = smarter_settings.customer_api_domain
