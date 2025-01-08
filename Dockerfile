@@ -103,12 +103,18 @@ COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compos
 WORKDIR /home/smarter_user/smarter/smarter/apps/chatapp/reactapp
 RUN mkdir -p /home/smarter_user/.npm
 USER root
-RUN npm install -g npm@11.0.0
+
+# node installation: trying to make this as resilient as possible
+# in light of network issues that have been happening with the npm registry
+# in Azure.
+RUN npm install -g npm@11.0.0 || npm install -g npm@11.0.0
 RUN npm config set fetch-retry-mintimeout 20000
 RUN npm config set fetch-retry-maxtimeout 120000
 USER smarter_user
 RUN npm install --legacy-peer-deps || npm install --legacy-peer-deps
 RUN npm run build
+
+# Collect static files
 WORKDIR /home/smarter_user/smarter
 RUN python manage.py collectstatic --noinput
 
