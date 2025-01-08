@@ -1,3 +1,14 @@
+## [0.7.6](https://github.com/smarter-sh/smarter/compare/v0.7.5...v0.7.6) (2025-01-08)
+
+
+### Bug Fixes
+
+* add SMARTER_WAFFLE_SWITCH_SUPPRESS_FOR_CHATBOTS, SMARTER_WAFFLE_SWITCH_CHATAPP_VIEW_LOGGING, SMARTER_WAFFLE_MANIFEST_LOGGING ([0bebf2f](https://github.com/smarter-sh/smarter/commit/0bebf2fe7b8fa9ed8a2436fdb25f33747878c5fc))
+* cleanup logger entries ([f550259](https://github.com/smarter-sh/smarter/commit/f5502598d52d193279365597e21880b4c0f56097))
+* cookie expirations ([f3f59f9](https://github.com/smarter-sh/smarter/commit/f3f59f9da0b0f0a85277c3e372a06ba94387af2a))
+* CSRF_COOKIE_DOMAIN ([ca7d611](https://github.com/smarter-sh/smarter/commit/ca7d611a7f7e682e523cd15912bf910d7c3fd405))
+* SMARTER_WAFFLE_REACTAPP_DEBUG_MODE ([efd7402](https://github.com/smarter-sh/smarter/commit/efd7402877c798ec224a953be36a3af4f09a7156))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
