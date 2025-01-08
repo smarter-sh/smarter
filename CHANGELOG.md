@@ -1,3 +1,12 @@
+## [0.7.4](https://github.com/smarter-sh/smarter/compare/v0.7.3...v0.7.4) (2025-01-08)
+
+
+### Bug Fixes
+
+* add session_key url param and ensure that session_key is unique to chatbot url path ([60acb6f](https://github.com/smarter-sh/smarter/commit/60acb6f50b1a8331387c85dd5dbd9470c1861093))
+* make combination of session_key and url unique ([a074976](https://github.com/smarter-sh/smarter/commit/a074976846492aa332bc49135192a0c859b5fa7b))
+* parameterize all cookie names and set 24 hour cookie expirations ([c652240](https://github.com/smarter-sh/smarter/commit/c6522406c45fcfef2098775a7bfe203f475ef5d9))
+
 ## [0.7.3](https://github.com/smarter-sh/smarter/compare/v0.7.2...v0.7.3) (2025-01-08)
 
 
