@@ -22,12 +22,12 @@
     v0.5.0:       ./test/events/langchain.response.v0.5.0.json
 -----------------------------------------------------------------------------*/
 import { getCookie } from "../../cookies.js";
-
+import { CSRF_COOKIE_NAME, SESSION_COOKIE_NAME } from "../../constants.js";
 
 function requestBodyFactory(messages, session_key) {
 
   const retval = {
-    "session_key": session_key,
+    [SESSION_COOKIE_NAME]: session_key,
     "messages": messages,
   };
   return JSON.stringify(retval);
@@ -40,18 +40,20 @@ export async function processApiRequest(
   openChatModal,
 ) {
 
-  console.log("processApiRequest(): props: ", props);
+  if (props.config.debug_mode) {
+    console.log("processApiRequest(): props: ", props);
+  }
 
   // Ensure that csrftoken is not included in the Cookie header.
   const cookiesArray = document.cookie.split(';').filter(cookie => {
     const trimmedCookie = cookie.trim();
-    return !trimmedCookie.startsWith('csrftoken=');
+    return !trimmedCookie.startsWith(`${CSRF_COOKIE_NAME}=`);
   });
   const cookies = cookiesArray.join('; ');
-  const csrftoken = getCookie("csrftoken");
+  const csrftoken = getCookie(CSRF_COOKIE_NAME);
 
   const headers = {
-    "Accept": "*/*",
+    "Accept": "application/json",
     "Content-Type": "application/json",
     "X-CSRFToken": csrftoken,
     "Origin": window.location.origin,
