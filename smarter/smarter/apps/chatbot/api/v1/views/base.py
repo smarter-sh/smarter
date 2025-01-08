@@ -91,9 +91,8 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         self._url = SmarterValidator.urlify(self._url, environment=smarter_settings.environment)
         self._chatbot_helper = ChatBotHelper(url=self.url, name=self.name, user=self.request.user)
 
-        print(f"ChatBotApiBaseViewSet.dispatch(): chatbot: {self.chatbot_helper.chatbot}")
-
         if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
+            logger.info("%s.dispatch(): chatbot: %s", self.formatted_class_name, self.chatbot_helper.chatbot)
             logger.info("%s.dispatch() - url=%s", self.formatted_class_name, self.url)
             logger.info("%s.dispatch() - headers=%s", self.formatted_class_name, request.META)
             logger.info("%s.dispatch() - user=%s", self.formatted_class_name, request.user)
