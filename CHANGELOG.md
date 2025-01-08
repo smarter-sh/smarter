@@ -1,3 +1,10 @@
+## [0.7.3](https://github.com/smarter-sh/smarter/compare/v0.7.2...v0.7.3) (2025-01-08)
+
+
+### Bug Fixes
+
+* add a chatbots list view page ([2675d5e](https://github.com/smarter-sh/smarter/commit/2675d5e26df17682b0e9381f3063f4a92521ab95))
+
 ## [0.7.2](https://github.com/smarter-sh/smarter/compare/v0.7.1...v0.7.2) (2025-01-07)
 
 
