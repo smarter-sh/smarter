@@ -6,8 +6,8 @@ from waffle.models import Switch
 
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import (
-    SMARTER_CHAT_DEBUG_MODE_KEY_NAME,
     SMARTER_WAFFLE_MANIFEST_LOGGING,
+    SMARTER_WAFFLE_REACTAPP_DEBUG_MODE,
     SMARTER_WAFFLE_SWITCH_CHAT_LOGGING,
     SMARTER_WAFFLE_SWITCH_CHATAPP_VIEW_LOGGING,
     SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING,
@@ -40,7 +40,7 @@ class Command(BaseCommand):
             SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING,
             SMARTER_WAFFLE_SWITCH_CHAT_LOGGING,
             SMARTER_WAFFLE_SWITCH_CHATAPP_VIEW_LOGGING,
-            SMARTER_CHAT_DEBUG_MODE_KEY_NAME,
+            SMARTER_WAFFLE_REACTAPP_DEBUG_MODE,
             SMARTER_WAFFLE_MANIFEST_LOGGING,
             SMARTER_WAFFLE_SWITCH_JOURNAL,
         ]
@@ -49,4 +49,4 @@ class Command(BaseCommand):
             verify_switch(switch)
 
         if smarter_settings.environment == SmarterEnvironments.LOCAL:
-            call_command("waffle_switch", SMARTER_CHAT_DEBUG_MODE_KEY_NAME, "on")
+            call_command("waffle_switch", SMARTER_WAFFLE_REACTAPP_DEBUG_MODE, "on")

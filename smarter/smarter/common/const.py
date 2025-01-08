@@ -23,7 +23,7 @@ SMARTER_CUSTOMER_SUPPORT = "support@smarter.sh"
 # as browser cookies. The React app has constants
 # for these values as well which should be kept in sync.
 SMARTER_CHAT_SESSION_KEY_NAME = "session_key"
-SMARTER_CHAT_DEBUG_MODE_KEY_NAME = "debug_mode"
+SMARTER_WAFFLE_REACTAPP_DEBUG_MODE = "reactapp_debug_mode"
 
 # Smarter Waffle Switches and Flags
 SMARTER_WAFFLE_SWITCH_CHAT_LOGGING = "chat_logging"
