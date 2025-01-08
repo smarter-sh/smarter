@@ -43,6 +43,7 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_ALLOW_ALL = False
+CORS_ALLOWED_ORIGIN_REGEXES = None
 
 # -------------------------------
 # Cross Site Request Forgery (CSRF) settings
@@ -77,6 +78,7 @@ SESSION_COOKIE_PATH = "/"
 # Whether to use the HttpOnly flag.
 SESSION_COOKIE_HTTPONLY = True
 
+SECURE_PROXY_SSL_HEADER = None
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
