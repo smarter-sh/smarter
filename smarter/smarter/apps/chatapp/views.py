@@ -27,7 +27,11 @@ from smarter.apps.account.utils import smarter_admin_user_profile
 from smarter.apps.chat.models import Chat, ChatHelper
 from smarter.apps.chatbot.models import ChatBot, ChatBotHelper, ChatBotPlugin
 from smarter.apps.chatbot.serializers import ChatBotPluginSerializer, ChatBotSerializer
-from smarter.common.exceptions import SmarterExceptionBase
+from smarter.common.const import (
+    SMARTER_CHAT_DEBUG_MODE_KEY_NAME,
+    SMARTER_CHAT_SESSION_KEY_NAME,
+)
+from smarter.common.exceptions import SmarterExceptionBase, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.request import SmarterRequestHelper
 from smarter.lib.django.validators import SmarterValidator
@@ -70,7 +74,12 @@ class SmarterChatSession(SmarterRequestHelper):
 
         self._url = request.build_absolute_uri()
         if session_key:
-            SmarterValidator.validate_session_key(session_key)
+            try:
+                SmarterValidator.validate_session_key(session_key)
+            except SmarterValueError as e:
+                logger.error("%s - %s", self.formatted_class_name, e)
+                session_key = None
+        if session_key:
             if Chat.objects.filter(session_key=session_key, url=self.url).exists():
                 self._session_key = session_key
                 self._chat = Chat.objects.get(session_key=session_key, url=self.url)
@@ -190,13 +199,13 @@ class ChatConfigView(View, AccountMixin):
         # Initialize the chat session for this request. session_key is generated
         # and managed by the /config/ endpoint for the chatbot
         #
-        # example: https://customer-support.3141-5926-5359.api.smarter.sh/chatbot/config/
+        # example: https://customer-support.3141-5926-5359.api.smarter.sh/chatbots/config/?session_key=123456
         #
         # The React app calls this endpoint at app initialization to get a
         # json dict that includes, among other pertinent info, this session_key
         # which uniquely identifies the device and the individual chatbot session
         # for the device.
-        session_key = data.get("session_key") or request.GET.get("session_key") or None
+        session_key = data.get(SMARTER_CHAT_SESSION_KEY_NAME) or request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME) or None
         self.session = SmarterChatSession(request, session_key=session_key, chatbot=self.chatbot)
         self.chatbot_helper = ChatBotHelper(
             url=self.session.url, user=self.session.user_profile.user, account=self.session.account, name=name
@@ -246,9 +255,9 @@ class ChatConfigView(View, AccountMixin):
 
         retval = {
             "data": {
-                "session_key": self.session.session_key,
+                SMARTER_CHAT_SESSION_KEY_NAME: self.session.session_key,
                 "sandbox_mode": self.sandbox_mode,
-                "debug_mode": waffle.switch_is_active("reactapp_debug_mode"),
+                SMARTER_CHAT_DEBUG_MODE_KEY_NAME: waffle.switch_is_active("reactapp_debug_mode"),
                 "chatbot": chatbot_serializer.data,
                 "console": self.session.chat_helper.console,
                 "meta_data": self.chatbot_helper.to_json(),

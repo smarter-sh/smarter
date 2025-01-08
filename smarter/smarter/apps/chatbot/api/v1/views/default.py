@@ -10,6 +10,7 @@ import waffle
 
 from smarter.apps.chat.models import ChatHelper
 from smarter.apps.chat.providers.providers import chat_providers
+from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
@@ -79,7 +80,7 @@ class DefaultChatBotApiView(ChatBotApiBaseViewSet):
         # json dict that includes, among other pertinent info, this session_key
         # which uniquely identifies the device and the individual chatbot session
         # for the device.
-        self._session_key = self.data.get("session_key")
+        self._session_key = self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
         if self.session_key:
             SmarterValidator.validate_session_key(self.session_key)
         self.chat_helper = ChatHelper(session_key=self.session_key, request=request, chatbot=self.chatbot)
