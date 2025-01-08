@@ -1,56 +1,51 @@
-## [0.7.5](https://github.com/smarter-sh/smarter/compare/v0.7.4...v0.7.5) (2025-01-08)
-
-
-### Bug Fixes
-
-* use a trimmed, cleaned url for Chat() instances ([262d7fa](https://github.com/smarter-sh/smarter/commit/262d7fa3c4d9c873038b4249a305793be4aadac1))
-
-## [0.7.4](https://github.com/smarter-sh/smarter/compare/v0.7.3...v0.7.4) (2025-01-08)
-
-
-### Bug Fixes
-
-* add session_key url param and ensure that session_key is unique to chatbot url path ([60acb6f](https://github.com/smarter-sh/smarter/commit/60acb6f50b1a8331387c85dd5dbd9470c1861093))
-* make combination of session_key and url unique ([a074976](https://github.com/smarter-sh/smarter/commit/a074976846492aa332bc49135192a0c859b5fa7b))
-* parameterize all cookie names and set 24 hour cookie expirations ([c652240](https://github.com/smarter-sh/smarter/commit/c6522406c45fcfef2098775a7bfe203f475ef5d9))
-
-## [0.7.3](https://github.com/smarter-sh/smarter/compare/v0.7.2...v0.7.3) (2025-01-08)
-
-
-### Bug Fixes
-
-* add a chatbots list view page ([2675d5e](https://github.com/smarter-sh/smarter/commit/2675d5e26df17682b0e9381f3063f4a92521ab95))
-
-## [0.7.2](https://github.com/smarter-sh/smarter/compare/v0.7.1...v0.7.2) (2025-01-07)
-
-
-### Bug Fixes
-
-* api/v1/chatbots/, api/v1/chats/ ([edfa1ed](https://github.com/smarter-sh/smarter/commit/edfa1edbe48d27a1675d489c3028a8da050b846d))
-* change logo anchor to '/' for authenticated users ([6954eb5](https://github.com/smarter-sh/smarter/commit/6954eb526447c68a48eac47a9075eaf16b7143d8))
-* fix all broken dashboard urls ([c85c2d3](https://github.com/smarter-sh/smarter/commit/c85c2d32aa91f735f3090f4ea4a10b787e1bdbc0))
-* fixup legal links in console menu ([4da3b3e](https://github.com/smarter-sh/smarter/commit/4da3b3e668b43070999ac96e06b7980eb0123392))
-* keep authenticated users on the platform ([b9dc50c](https://github.com/smarter-sh/smarter/commit/b9dc50cdb7bb44379452233e306e3bc19e94d86f))
-* reorganize dashboard sidebar menu ([c0238c8](https://github.com/smarter-sh/smarter/commit/c0238c8d6c198c1b85dd3c380efbee8aa499af61))
-* restructure console sidebar menu ([ebfcc38](https://github.com/smarter-sh/smarter/commit/ebfcc381fd73d8589b38a5b0a20f07184949a560))
-* revert chats to chat ([1274813](https://github.com/smarter-sh/smarter/commit/12748131ffdddfc6c15ff5c410b211dfde38b582))
-* sidebar menu active on clicked item ([1c543ab](https://github.com/smarter-sh/smarter/commit/1c543aba33f7e80dca2d1334c90187acc0dc479d))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [0.7.1](https://github.com/smarter-sh/smarter/compare/v0.7.0...v0.7.1) (2025-01-06)
-
+## [0.7.5](https://github.com/smarter-sh/smarter/compare/v0.7.4...v0.7.5) (2025-01-08)
 
 ### Bug Fixes
 
-* ensure that csrftoken is not included in 'Cookies' ([840fef1](https://github.com/smarter-sh/smarter/commit/840fef16b2283128a2808011b962cc12c1c00b0a))
-* ensure that http response is a json object ([9338cab](https://github.com/smarter-sh/smarter/commit/9338cab989811b624be80ae348fb1ae456b7d501))
-* ensure that only one csrftoken cookie exists ([c12bddb](https://github.com/smarter-sh/smarter/commit/c12bddb083e123d8a6f8404d9bbf586d38104602))
-* ensure that only one csrftoken cookie exists ([affbcc8](https://github.com/smarter-sh/smarter/commit/affbcc8dd4c4864ec1642b86f04677fcf1aab57f))
+- use a trimmed, cleaned url for Chat() instances ([262d7fa](https://github.com/smarter-sh/smarter/commit/262d7fa3c4d9c873038b4249a305793be4aadac1))
+
+## [0.7.4](https://github.com/smarter-sh/smarter/compare/v0.7.3...v0.7.4) (2025-01-08)
+
+### Bug Fixes
+
+- add session_key url param and ensure that session_key is unique to chatbot url path ([60acb6f](https://github.com/smarter-sh/smarter/commit/60acb6f50b1a8331387c85dd5dbd9470c1861093))
+- make combination of session_key and url unique ([a074976](https://github.com/smarter-sh/smarter/commit/a074976846492aa332bc49135192a0c859b5fa7b))
+- parameterize all cookie names and set 24 hour cookie expirations ([c652240](https://github.com/smarter-sh/smarter/commit/c6522406c45fcfef2098775a7bfe203f475ef5d9))
+
+## [0.7.3](https://github.com/smarter-sh/smarter/compare/v0.7.2...v0.7.3) (2025-01-08)
+
+### Bug Fixes
+
+- add a chatbots list view page ([2675d5e](https://github.com/smarter-sh/smarter/commit/2675d5e26df17682b0e9381f3063f4a92521ab95))
+
+## [0.7.2](https://github.com/smarter-sh/smarter/compare/v0.7.1...v0.7.2) (2025-01-07)
+
+### Bug Fixes
+
+- api/v1/chatbots/, api/v1/chats/ ([edfa1ed](https://github.com/smarter-sh/smarter/commit/edfa1edbe48d27a1675d489c3028a8da050b846d))
+- change logo anchor to '/' for authenticated users ([6954eb5](https://github.com/smarter-sh/smarter/commit/6954eb526447c68a48eac47a9075eaf16b7143d8))
+- fix all broken dashboard urls ([c85c2d3](https://github.com/smarter-sh/smarter/commit/c85c2d32aa91f735f3090f4ea4a10b787e1bdbc0))
+- fixup legal links in console menu ([4da3b3e](https://github.com/smarter-sh/smarter/commit/4da3b3e668b43070999ac96e06b7980eb0123392))
+- keep authenticated users on the platform ([b9dc50c](https://github.com/smarter-sh/smarter/commit/b9dc50cdb7bb44379452233e306e3bc19e94d86f))
+- reorganize dashboard sidebar menu ([c0238c8](https://github.com/smarter-sh/smarter/commit/c0238c8d6c198c1b85dd3c380efbee8aa499af61))
+- restructure console sidebar menu ([ebfcc38](https://github.com/smarter-sh/smarter/commit/ebfcc381fd73d8589b38a5b0a20f07184949a560))
+- revert chats to chat ([1274813](https://github.com/smarter-sh/smarter/commit/12748131ffdddfc6c15ff5c410b211dfde38b582))
+- sidebar menu active on clicked item ([1c543ab](https://github.com/smarter-sh/smarter/commit/1c543aba33f7e80dca2d1334c90187acc0dc479d))
+
+## [0.7.1](https://github.com/smarter-sh/smarter/compare/v0.7.0...v0.7.1) (2025-01-06)
+
+### Bug Fixes
+
+- ensure that csrftoken is not included in 'Cookies' ([840fef1](https://github.com/smarter-sh/smarter/commit/840fef16b2283128a2808011b962cc12c1c00b0a))
+- ensure that http response is a json object ([9338cab](https://github.com/smarter-sh/smarter/commit/9338cab989811b624be80ae348fb1ae456b7d501))
+- ensure that only one csrftoken cookie exists ([c12bddb](https://github.com/smarter-sh/smarter/commit/c12bddb083e123d8a6f8404d9bbf586d38104602))
+- ensure that only one csrftoken cookie exists ([affbcc8](https://github.com/smarter-sh/smarter/commit/affbcc8dd4c4864ec1642b86f04677fcf1aab57f))
 
 # [0.7.0](https://github.com/smarter-sh/smarter/compare/v0.6.1...v0.7.0) (2025-01-03)
 
