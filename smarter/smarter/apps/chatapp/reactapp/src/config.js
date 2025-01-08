@@ -4,12 +4,28 @@
 //
 // The API_KEY is only used to demonstrate how you'd set this up in
 // the event that you needed it.
-import { getCookie } from "./cookies.js";
+import { getCookie, setSessionCookie, setDebugCookie } from "./cookies.js";
+import { CSRF_COOKIE_NAME, DEBUG_COOKIE_NAME, SESSION_COOKIE_NAME} from "./constants.js"
 
 export async function fetchConfig() {
-  const session_key = getCookie('session_key');
-  const csrftoken = getCookie('csrftoken');
-  const debugMode = getCookie('debug') || false;
+  /*
+  Fetch the chat configuration from the backend server. This is a POST request with the
+  session key as the payload. The server will return the configuration
+  as a JSON object.
+
+  See class ChatConfigView(View, AccountMixin) in smarter/smarter/apps/chatapp/views.py.
+  Things to note:
+  - The session key is used to identify the user, the chatbot,
+    and the chat history.
+  - The session key is stored in a cookie that is specific to the path. Thus,
+    each chatbot has its own session key.
+  - The CSRF token is stored in a cookie and is managed by Django.
+  - debug_mode is a boolean that is also stored in a cookie, managed by Django
+    based on a Waffle switch 'reactapp_debug_mode'
+  */
+  const session_key = getCookie(SESSION_COOKIE_NAME);
+  const csrftoken = getCookie(CSRF_COOKIE_NAME);
+  const debug_mode = getCookie(DEBUG_COOKIE_NAME) || false;
 
   const headers = {
     "Accept": "*/*",
@@ -18,7 +34,7 @@ export async function fetchConfig() {
     "Origin": window.location.origin,
   };
   const body = {
-    "session_key": session_key
+    SESSION_COOKIE_NAME: session_key
   };
   const init = {
     method: "POST",
@@ -30,9 +46,10 @@ export async function fetchConfig() {
   try {
     let thisURL = new URL(window.location.href);
     thisURL.pathname += "config/";
+    thisURL.searchParams.append(SESSION_COOKIE_NAME, session_key);
     let configURL = thisURL.toString();
 
-    if (debugMode) {
+    if (debug_mode) {
       console.log('fetchConfig() - init: ', init);
       console.log('fetchConfig() - configURL: ', configURL);
     }
@@ -40,7 +57,9 @@ export async function fetchConfig() {
     const response = await fetch(configURL, init);
     const response_json = await response.json();    // Convert the ReadableStream to a JSON object
 
-    console.log('fetchConfig() - response_json: ', response_json);
+    if (debug_mode) {
+      console.log('fetchConfig() - response_json: ', response_json);
+    }
     if (response.ok) {
       return response_json.data;
     } else {
@@ -64,18 +83,7 @@ export function setConfig(config) {
     };
 
     // set cookies
-    if (config.session_key) {
-      document.cookie = `session_key=${config.session_key}; path=/; SameSite=Lax`;
-    }
-    else {
-      console.error("config.js: session_key is not defined");
-    }
-
-    const debugMode = config.debug_mode || false;
-    document.cookie = `debug=${debugMode}; path=/; SameSite=Lax`;
-
-    if (config.debug_mode) {
-      console.log('setConfig() - config: ', config);
-    }
+    setSessionCookie(config.session_key);
+    setDebugCookie(config.debug_mode);
     return config;
 }
