@@ -449,10 +449,14 @@ class ChatBotHelper(AccountMixin):
             self._chatbot = ChatBot.objects.get(account=self.account, name=self.name)
             if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                 logger.info(
-                    f"{self.formatted_class_name}: initialized self.chatbot={self.chatbot} from account and name"
+                    "%s: initialized self.chatbot=%s from account %s and name %s",
+                    self.formatted_class_name,
+                    self.chatbot,
+                    self.account,
+                    self.name,
                 )
-            if self._chatbot:
-                logger.info(f"{self.formatted_class_name}: initialized self.chatbot={self.chatbot}")
+                if self._chatbot:
+                    logger.info(f"{self.formatted_class_name}: initialized self.chatbot={self.chatbot}")
 
         if not self._chatbot:
             self._chatbot = self.chatbot
@@ -533,9 +537,10 @@ class ChatBotHelper(AccountMixin):
         return formatted_text(self.__class__.__name__)
 
     def log_dump(self):
-        logger.info("%s: %s", "-" * (80 - 15), self.formatted_class_name)
+        horizontal_line = "-" * (80 - 15)
+        logger.info("%s: %s", self.formatted_class_name, horizontal_line)
         logger.info("%s: INITIALIZED.", self.formatted_class_name)
-        logger.info("%s: %s", "-" * (80 - 15), self.formatted_class_name)
+        logger.info("%s: %s", self.formatted_class_name, horizontal_line)
         logger.info(f"%s: chatbot={self.chatbot}", self.formatted_class_name)
         logger.info(f"%s: account_number={self.account_number}", self.formatted_class_name)
         logger.info(f"%s: user={self.user}, account={self.account}", self.formatted_class_name)
@@ -554,7 +559,7 @@ class ChatBotHelper(AccountMixin):
         logger.info(f"%s: is_deployed={self.is_deployed}", self.formatted_class_name)
         logger.info(f"%s: is_valid={self.is_valid}", self.formatted_class_name)
         logger.info(f"%s: is_authentication_required={self.is_authentication_required}", self.formatted_class_name)
-        logger.info("%s: %s", "-" * (80 - 15), self.formatted_class_name)
+        logger.info("%s: %s", self.formatted_class_name, horizontal_line)
 
     def to_json(self):
         return {

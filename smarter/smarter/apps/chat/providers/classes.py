@@ -22,6 +22,7 @@ from smarter.common.exceptions import (
     SmarterIlligalInvocationError,
     SmarterValueError,
 )
+from smarter.common.helpers.console_helpers import formatted_text
 
 
 logger = logging.getLogger(__name__)
@@ -89,6 +90,10 @@ class ChatProviderBase(ABC, metaclass=CombinedMeta):
     available_functions = {
         "get_current_weather": get_current_weather,
     }
+
+    @property
+    def formatted_class_name(self):
+        return formatted_text(self.__class__.__name__)
 
     @property
     def name(self) -> str:
