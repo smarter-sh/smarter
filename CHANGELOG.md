@@ -1,3 +1,10 @@
+## [0.7.5](https://github.com/smarter-sh/smarter/compare/v0.7.4...v0.7.5) (2025-01-08)
+
+
+### Bug Fixes
+
+* use a trimmed, cleaned url for Chat() instances ([262d7fa](https://github.com/smarter-sh/smarter/commit/262d7fa3c4d9c873038b4249a305793be4aadac1))
+
 ## [0.7.4](https://github.com/smarter-sh/smarter/compare/v0.7.3...v0.7.4) (2025-01-08)
 
 
