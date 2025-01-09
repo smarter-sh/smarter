@@ -112,6 +112,7 @@ def handle_plugin_selected(sender, **kwargs):
     input_text: str = kwargs.get("input_text")
     messages: list[dict] = kwargs.get("messages")
     search_term: str = kwargs.get("search_term")
+    session_key: str = kwargs.get("session_key")
 
     prompt = input_text if input_text else formatted_json(messages)
     logger.info(
@@ -126,6 +127,7 @@ def handle_plugin_selected(sender, **kwargs):
         plugin_selector=plugin.plugin_selector,
         search_term=search_term,
         messages={"input_text": input_text} if input_text else messages,
+        session_key=session_key,
     )
     plugin_selector_history.save()
 

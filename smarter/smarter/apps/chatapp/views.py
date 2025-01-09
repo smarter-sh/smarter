@@ -34,6 +34,10 @@ from smarter.apps.chatbot.models import (
     ChatBotRequestsSerializer,
 )
 from smarter.apps.chatbot.serializers import ChatBotPluginSerializer, ChatBotSerializer
+from smarter.apps.plugin.models import (
+    PluginSelectorHistory,
+    PluginSelectorHistorySerializer,
+)
 from smarter.common.const import (
     SMARTER_CHAT_SESSION_KEY_NAME,
     SMARTER_WAFFLE_REACTAPP_DEBUG_MODE,
@@ -275,7 +279,11 @@ class ChatConfigView(View, AccountMixin):
         chatbot_requests_serializer = ChatBotRequestsSerializer(chatbot_requests_queryset, many=True)
         history["chatbot_request_history"] = chatbot_requests_serializer.data
 
-        history["plugin_selector_history"] = None
+        plugin_selector_history_queryset = PluginSelectorHistory.objects.filter(session_key=self.session.session_key)
+        plugin_selector_history_serializer = PluginSelectorHistorySerializer(
+            plugin_selector_history_queryset, many=True
+        )
+        history["plugin_selector_history"] = plugin_selector_history_serializer.data
 
         retval = {
             "data": {
