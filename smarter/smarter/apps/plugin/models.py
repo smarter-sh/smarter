@@ -16,6 +16,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import DatabaseError, models
 from django.db.backends.base.base import BaseDatabaseWrapper
 from django.db.utils import ConnectionHandler
+from rest_framework import serializers
 from taggit.managers import TaggableManager
 
 from smarter.apps.account.models import Account, UserProfile
@@ -136,6 +137,13 @@ class PluginSelector(TimestampedModel):  # pragma: no cover
         return f"{str(self.directive)} - {search_terms}"
 
 
+class PluginSelectorSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PluginSelector
+        fields = "__all__"
+
+
 class PluginSelectorHistory(TimestampedModel):  # pragma: no cover
     """PluginSelectorHistory model."""
 
@@ -144,12 +152,22 @@ class PluginSelectorHistory(TimestampedModel):  # pragma: no cover
     )
     search_term = models.CharField(max_length=255, blank=True, null=True, default="")
     messages = models.JSONField(help_text="The user prompt messages.", default=list, blank=True, null=True)
+    session_key = models.CharField(max_length=255, blank=True, null=True, default="")
 
     def __str__(self) -> str:
         return f"{str(self.plugin_selector.plugin.name)} - {self.search_term}"
 
     class Meta:
         verbose_name_plural = "Plugin Selector History"
+
+
+class PluginSelectorHistorySerializer(serializers.ModelSerializer):
+
+    plugin_selector = PluginSelectorSerializer()
+
+    class Meta:
+        model = PluginSelectorHistory
+        fields = "__all__"
 
 
 class PluginPrompt(TimestampedModel):  # pragma: no cover
