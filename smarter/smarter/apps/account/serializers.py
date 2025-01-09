@@ -33,7 +33,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
     # pylint: disable=missing-class-docstring
     class Meta:
         model = UserProfile
-        fields = ["user", "account"]
+        fields = (
+            "user",
+            "account",
+        )
 
 
 class PaymentMethodSerializer(serializers.ModelSerializer):

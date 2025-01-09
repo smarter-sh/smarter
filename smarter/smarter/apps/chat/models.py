@@ -23,9 +23,6 @@ from smarter.lib.django.request import SmarterRequestHelper
 
 
 logger = logging.getLogger(__name__)
-# -----------------------------------------------------------------------------
-# History Models.
-# -----------------------------------------------------------------------------
 
 
 class Chat(TimestampedModel):
@@ -217,9 +214,9 @@ class ChatHelper(SmarterRequestHelper):
         return recs
 
     @property
-    def console(self) -> dict:
+    def history(self) -> dict:
         """
-        Get the most recent logged console output for the chat session.
+        Get the most recent logged history output for the chat session.
         """
         chat_history_serializer = ChatHistorySerializer(self.chat_history, many=True)
         chat_tool_call_serializer = ChatToolCallSerializer(self.chat_tool_call, many=True)
@@ -228,8 +225,11 @@ class ChatHelper(SmarterRequestHelper):
             SMARTER_CHAT_SESSION_KEY_NAME: self.session_key,
             "chat": self.chat.id,
             "chat_history": chat_history_serializer.data,
-            "chat_tool_call": chat_tool_call_serializer.data,
-            "chat_plugin_usage": chat_plugin_usage_serializer.data,
+            "chat_tool_call_history": chat_tool_call_serializer.data,
+            "chat_plugin_usage_history": chat_plugin_usage_serializer.data,
+            # these two will be added upstream.
+            "chatbot_request_history": None,  # ChatBotRequests
+            "plugin_selector_history": None,  # PluginSelectorHistory
         }
 
     def get_cached_chat(self) -> Chat:
