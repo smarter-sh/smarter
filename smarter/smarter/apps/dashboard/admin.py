@@ -24,6 +24,7 @@ from smarter.apps.chatbot.admin import (
     ChatBotCustomDomainDNSAdmin,
     ChatBotFunctionsAdmin,
     ChatBotPluginAdmin,
+    ChatBotRequestsAdmin,
 )
 from smarter.apps.chatbot.models import (
     ChatBot,
@@ -32,6 +33,7 @@ from smarter.apps.chatbot.models import (
     ChatBotCustomDomainDNS,
     ChatBotFunctions,
     ChatBotPlugin,
+    ChatBotRequests,
 )
 from smarter.apps.plugin.admin import PluginAdmin, PluginDataSqlConnectionAdmin
 from smarter.apps.plugin.models import PluginDataSqlConnection, PluginMeta
@@ -137,6 +139,7 @@ restricted_site.register(ChatBotCustomDomainDNS, ChatBotCustomDomainDNSAdmin)
 restricted_site.register(ChatBotAPIKey, ChatBotAPIKeyAdmin)
 restricted_site.register(ChatBotPlugin, ChatBotPluginAdmin)
 restricted_site.register(ChatBotFunctions, ChatBotFunctionsAdmin)
+restricted_site.register(ChatBotRequests, ChatBotRequestsAdmin)
 
 # Plugin Models
 restricted_site.register(PluginMeta, PluginAdmin)

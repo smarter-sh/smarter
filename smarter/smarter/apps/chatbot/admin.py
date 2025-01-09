@@ -10,6 +10,7 @@ from .models import (
     ChatBotCustomDomain,
     ChatBotCustomDomainDNS,
     ChatBotFunctions,
+    ChatBotRequests,
 )
 
 
@@ -29,6 +30,28 @@ class ChatBotAdmin(RestrictedModelAdmin):
         try:
             user_profile = UserProfile.objects.get(user=request.user)
             return qs.filter(account=user_profile.account)
+        except UserProfile.DoesNotExist:
+            return qs.none()
+
+
+class ChatBotRequestsAdmin(RestrictedModelAdmin):
+    """
+    ChatBotRequests model admin.
+    """
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+    list_display = [field.name for field in ChatBotRequests._meta.fields]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        try:
+            user_profile = UserProfile.objects.get(user=request.user)
+            return qs.filter(chatbot__account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
 
