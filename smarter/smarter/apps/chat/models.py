@@ -116,16 +116,6 @@ class ChatSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class ChatHistorySerializer(serializers.ModelSerializer):
-    """Serializer for the ChatHistory model."""
-
-    chat = ChatSerializer(read_only=True)
-
-    class Meta:
-        model = ChatHistory
-        fields = "__all__"
-
-
 class ChatToolCallSerializer(serializers.ModelSerializer):
     """Serializer for the ChatToolCall model."""
 
@@ -218,13 +208,12 @@ class ChatHelper(SmarterRequestHelper):
         """
         Get the most recent logged history output for the chat session.
         """
-        chat_history_serializer = ChatHistorySerializer(self.chat_history, many=True)
         chat_tool_call_serializer = ChatToolCallSerializer(self.chat_tool_call, many=True)
         chat_plugin_usage_serializer = ChatPluginUsageSerializer(self.chat_plugin_usage, many=True)
         return {
             SMARTER_CHAT_SESSION_KEY_NAME: self.session_key,
             "chat": self.chat.id,
-            "chat_history": chat_history_serializer.data,
+            "chat_history": self.chat_history,
             "chat_tool_call_history": chat_tool_call_serializer.data,
             "chat_plugin_usage_history": chat_plugin_usage_serializer.data,
             # these two will be added upstream.
