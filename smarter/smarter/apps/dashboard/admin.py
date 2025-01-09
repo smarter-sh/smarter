@@ -13,8 +13,8 @@ from smarter.apps.account.models import Account, PaymentMethod, UserProfile
 from smarter.apps.chat.admin import (
     ChatAdmin,
     ChatHistoryAdmin,
+    ChatPluginUsageAdmin,
     ChatToolCallHistoryAdmin,
-    PluginSelectionHistoryAdmin,
 )
 from smarter.apps.chat.models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
 from smarter.apps.chatbot.admin import (
@@ -35,8 +35,16 @@ from smarter.apps.chatbot.models import (
     ChatBotPlugin,
     ChatBotRequests,
 )
-from smarter.apps.plugin.admin import PluginAdmin, PluginDataSqlConnectionAdmin
-from smarter.apps.plugin.models import PluginDataSqlConnection, PluginMeta
+from smarter.apps.plugin.admin import (
+    PluginAdmin,
+    PluginDataSqlConnectionAdmin,
+    PluginSelectionHistoryAdmin,
+)
+from smarter.apps.plugin.models import (
+    PluginDataSqlConnection,
+    PluginMeta,
+    PluginSelectorHistory,
+)
 from smarter.lib.django.admin import RestrictedModelAdmin, SuperUserOnlyModelAdmin
 from smarter.lib.django.user import User
 from smarter.lib.drf.admin import SmarterAuthTokenAdmin
@@ -129,7 +137,7 @@ restricted_site.register(EmailContactList, EmailContactListAdmin)
 # Chat Models
 restricted_site.register(Chat, ChatAdmin)
 restricted_site.register(ChatHistory, ChatHistoryAdmin)
-restricted_site.register(ChatPluginUsage, PluginSelectionHistoryAdmin)
+restricted_site.register(ChatPluginUsage, ChatPluginUsageAdmin)
 restricted_site.register(ChatToolCall, ChatToolCallHistoryAdmin)
 
 # ChatBot
@@ -144,6 +152,7 @@ restricted_site.register(ChatBotRequests, ChatBotRequestsAdmin)
 # Plugin Models
 restricted_site.register(PluginMeta, PluginAdmin)
 restricted_site.register(PluginDataSqlConnection, PluginDataSqlConnectionAdmin)
+restricted_site.register(PluginSelectorHistory, PluginSelectionHistoryAdmin)
 
 
 # All remaining models are registered with the SuperUserOnlyModelAdmin

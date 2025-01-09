@@ -76,6 +76,8 @@ class PluginBase(ABC):
     _selected: bool = False
     _params: dict = None
 
+    _session_key: str = None
+
     # abstract properties
     _plugin_data: Any = TimestampedModel
     _plugin_data_serializer: serializers = None
@@ -90,6 +92,7 @@ class PluginBase(ABC):
         plugin_id: int = None,
         plugin_meta: PluginMeta = None,
         data: Union[dict, str] = None,
+        session_key: str = None,
     ):
         """
         Options for initialization are:
@@ -107,6 +110,7 @@ class PluginBase(ABC):
         self.api_version = api_version or self.api_version
         self._selected = selected
         self._user_profile = user_profile
+        self._session_key = session_key
 
         #######################################################################
         # identifiers for existing plugins
@@ -195,6 +199,11 @@ class PluginBase(ABC):
     ###########################################################################
     # Base class properties
     ###########################################################################
+    @property
+    def session_key(self) -> str:
+        """Return the session key."""
+        return self._session_key
+
     @property
     def metadata_class(self) -> str:
         """Return the metadata class."""
@@ -479,7 +488,11 @@ class PluginBase(ABC):
                 if does_refer_to(prompt=input_text, search_term=search_term):
                     self._selected = True
                     plugin_selected.send(
-                        sender=self.selected, plugin=self, input_text=input_text, search_term=search_term
+                        sender=self.selected,
+                        plugin=self,
+                        input_text=input_text,
+                        search_term=search_term,
+                        session_key=self.session_key,
                     )
                     return True
 
@@ -492,7 +505,12 @@ class PluginBase(ABC):
                         if does_refer_to(prompt=content, search_term=search_term):
                             self._selected = True
                             plugin_selected.send(
-                                sender=self.selected, plugin=self, user=user, messages=messages, search_term=search_term
+                                sender=self.selected,
+                                plugin=self,
+                                user=user,
+                                messages=messages,
+                                search_term=search_term,
+                                session_key=self.session_key,
                             )
                             return True
 
