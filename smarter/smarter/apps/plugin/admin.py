@@ -120,6 +120,7 @@ class PluginSelectionHistoryAdmin(RestrictedModelAdmin):
         "updated_at",
         "plugin_selector",
         "search_term",
+        "session_key",
         "messages",
     )
 
