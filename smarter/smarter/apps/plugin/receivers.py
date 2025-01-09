@@ -123,13 +123,12 @@ def handle_plugin_selected(sender, **kwargs):
         prompt,
     )
 
-    plugin_selector_history = PluginSelectorHistory(
+    PluginSelectorHistory.objects.create(
         plugin_selector=plugin.plugin_selector,
         search_term=search_term,
         messages={"input_text": input_text} if input_text else messages,
         session_key=session_key,
     )
-    plugin_selector_history.save()
 
 
 # ------------------------------------------------------------------------------
