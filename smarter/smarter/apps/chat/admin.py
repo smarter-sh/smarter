@@ -47,7 +47,7 @@ class ChatHistoryAdmin(RestrictedModelAdmin):
             return qs.none()
 
 
-class PluginSelectionHistoryAdmin(RestrictedModelAdmin):
+class ChatPluginUsageAdmin(RestrictedModelAdmin):
     """plugin selection history model admin."""
 
     readonly_fields = (
