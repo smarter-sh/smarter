@@ -26,7 +26,13 @@ from rest_framework.permissions import IsAuthenticated
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.utils import smarter_admin_user_profile
 from smarter.apps.chat.models import Chat, ChatHelper
-from smarter.apps.chatbot.models import ChatBot, ChatBotHelper, ChatBotPlugin
+from smarter.apps.chatbot.models import (
+    ChatBot,
+    ChatBotHelper,
+    ChatBotPlugin,
+    ChatBotRequests,
+    ChatBotRequestsSerializer,
+)
 from smarter.apps.chatbot.serializers import ChatBotPluginSerializer, ChatBotSerializer
 from smarter.common.const import (
     SMARTER_CHAT_SESSION_KEY_NAME,
@@ -261,6 +267,15 @@ class ChatConfigView(View, AccountMixin):
         chatbot_plugins_count = ChatBotPlugin.objects.filter(chatbot=self.chatbot).count()
         chatbot_plugins = ChatBotPlugin.objects.filter(chatbot=self.chatbot).order_by("-pk")[:MAX_RETURNED_PLUGINS]
         chatbot_plugin_serializer = ChatBotPluginSerializer(chatbot_plugins, many=True)
+        history = self.session.chat_helper.history
+
+        # add chatbot_request_history and plugin_selector_history to history
+        # these have to be added here due to circular import issues.
+        chatbot_requests_queryset = ChatBotRequests.objects.filter(session_key=self.session.session_key)
+        chatbot_requests_serializer = ChatBotRequestsSerializer(chatbot_requests_queryset, many=True)
+        history["chatbot_request_history"] = chatbot_requests_serializer.data
+
+        history["plugin_selector_history"] = None
 
         retval = {
             "data": {
@@ -268,10 +283,8 @@ class ChatConfigView(View, AccountMixin):
                 "sandbox_mode": self.sandbox_mode,
                 "debug_mode": waffle.switch_is_active(SMARTER_WAFFLE_REACTAPP_DEBUG_MODE),
                 "chatbot": chatbot_serializer.data,
-                "console": self.session.chat_helper.console,
+                "history": history,
                 "meta_data": self.chatbot_helper.to_json(),
-                "history": self.session.chat_helper.chat_history,
-                "tool_calls": [],
                 "plugins": {
                     "meta_data": {
                         "total_plugins": chatbot_plugins_count,
