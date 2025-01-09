@@ -103,3 +103,34 @@ class PluginDataSqlConnectionAdmin(RestrictedModelAdmin):
             return qs.filter(account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
+
+
+class PluginSelectionHistoryAdmin(RestrictedModelAdmin):
+    """
+    Plugin Selection History model admin.
+    """
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+    list_display = (
+        "created_at",
+        "updated_at",
+        "plugin_selector",
+        "search_term",
+        "session_key",
+        "messages",
+    )
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        try:
+            user_profile = UserProfile.objects.get(user=request.user)
+            plugins = PluginSelector.objects.filter(plugin__account=user_profile.account)
+            return qs.filter(plugin_selector__in=plugins)
+        except UserProfile.DoesNotExist:
+            return qs.none()
