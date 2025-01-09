@@ -1,6 +1,5 @@
 # pylint: disable=W0613,C0115
 """All models for the OpenAI Function Calling API app."""
-import datetime
 import logging
 import re
 from typing import List, Type
@@ -12,6 +11,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import models
+from rest_framework import serializers
 
 from smarter.apps.account.mixins import AccountMixin
 
@@ -372,7 +372,21 @@ class ChatBotRequests(TimestampedModel):
 
     chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE)
     request = models.JSONField(blank=True, null=True)
+    session_key = models.CharField(max_length=255, blank=True, null=True)
     is_aggregation = models.BooleanField(default=False, blank=True, null=True)
+
+
+class ChatBotRequestsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ChatBotRequests
+        fields = (
+            "id",
+            "created_at",
+            "updated_at",
+            "request",
+            "is_aggregation",
+        )
 
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
@@ -397,6 +411,7 @@ class ChatBotHelper(AccountMixin):
     _environment: str = None
     _chatbot: ChatBot = None
     _chatbot_custom_domain: ChatBotCustomDomain = None
+    _chatbot_requests: ChatBotRequests = None
     _name: str = None
 
     # pylint: disable=W1203,R0913,R0915,R0912
