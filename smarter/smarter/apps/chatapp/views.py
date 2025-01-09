@@ -193,10 +193,16 @@ class ChatConfigView(View, AccountMixin):
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             try:
-                raise SmarterChatappViewError("Authentication failed.")
+                raise SmarterChatappViewError(
+                    "Authentication failed. Are you logged in? Smarter sessions automatically expire after 24 hours."
+                )
             except SmarterChatappViewError as e:
                 return SmarterJournaledJsonErrorResponse(
-                    request=request, thing=self.manifest_kind, command=None, e=e, status=HTTPStatus.FORBIDDEN
+                    request=request,
+                    thing=SmarterJournalThings.CHAT_CONFIG,
+                    command=None,
+                    e=e,
+                    status=HTTPStatus.FORBIDDEN.value,
                 )
 
         self._user = request.user
