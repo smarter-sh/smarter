@@ -43,7 +43,11 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_ALLOW_ALL = False
-CORS_ALLOWED_ORIGIN_REGEXES = None
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https?://[\w-]+\.(\d+-\d+-\d+)\.api\.localhost:\d+$",
+    r"^https?://[\w-]+\.localhost:\d+$",
+    r"^https?://[\w-]\.api\.localhost:\d+$",
+]
 
 # -------------------------------
 # Cross Site Request Forgery (CSRF) settings
