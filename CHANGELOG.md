@@ -1,3 +1,14 @@
+## [0.7.9](https://github.com/smarter-sh/smarter/compare/v0.7.8...v0.7.9) (2025-01-09)
+
+
+### Bug Fixes
+
+* add chat_tool_call_history, chat_plugin_usage_history, chatbot_request_history ([2c07e4c](https://github.com/smarter-sh/smarter/commit/2c07e4c029402fd16bb303581d603a86231c8e31))
+* add session_key to PluginSelectorHistory ([10e903a](https://github.com/smarter-sh/smarter/commit/10e903a99f04602fc51fdb9541550b1b4d779447))
+* add session_key to PluginSelectorHistory ([96c2eef](https://github.com/smarter-sh/smarter/commit/96c2eef492da4f8b6732dbbd2ebcf7bd4a6e1b1a))
+* ChatHelper should return the entire chat object rather than only id ([523b8fe](https://github.com/smarter-sh/smarter/commit/523b8fef55fbe52d3dd8d4b20751bb0ee1e73bef))
+* finesse api error handling of ChatConfigView ([8850c4a](https://github.com/smarter-sh/smarter/commit/8850c4aab0d1f9cf5b19ae4c2d8f4318334e3467))
+
 ## [0.7.8](https://github.com/smarter-sh/smarter/compare/v0.7.7...v0.7.8) (2025-01-09)
 
 
