@@ -1,3 +1,10 @@
+## [0.7.8](https://github.com/smarter-sh/smarter/compare/v0.7.7...v0.7.8) (2025-01-09)
+
+
+### Bug Fixes
+
+* add remaining history tables to chatapp config ([dadb9bd](https://github.com/smarter-sh/smarter/commit/dadb9bd94a8d8ed96181254aeaaccca146ee9f42))
+
 ## [0.7.7](https://github.com/smarter-sh/smarter/compare/v0.7.6...v0.7.7) (2025-01-08)
 
 
