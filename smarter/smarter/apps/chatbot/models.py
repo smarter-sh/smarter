@@ -368,7 +368,7 @@ class ChatBotRequests(TimestampedModel):
     """List of Requests for a ChatBot"""
 
     class Meta:
-        verbose_name_plural = "ChatBot Prompt History"
+        verbose_name_plural = "ChatBot Requests History"
 
     chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE)
     request = models.JSONField(blank=True, null=True)

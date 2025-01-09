@@ -129,6 +129,7 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
         json_dumps_params=None,
         **kwargs,
     ):
+        status = kwargs.get("status", None)
         error_class = e.__class__.__name__ if e else "Unknown Exception"
         description: str = ""
         if isinstance(e, Exception) and hasattr(e, "message"):
@@ -139,7 +140,7 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
             description = e
 
         url = request.get_full_path() if request else "Unknown URL"
-        status = e.status if hasattr(e, "status") else "500"
+        status = str(status) if status else e.status if hasattr(e, "status") else "500"
         args = e.args if isinstance(e, dict) and hasattr(e, "args") else "url=" + url
         cause = str(e.__cause__) if isinstance(e, dict) and hasattr(e, "__cause__") else "Python Exception"
         context = (
