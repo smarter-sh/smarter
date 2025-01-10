@@ -1,0 +1,5 @@
+.console-output {
+  position: relative;
+  height: 100%;
+  width: calc(2 * 100% / 3);
+}

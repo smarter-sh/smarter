@@ -18,15 +18,11 @@ import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 import {
   MainContainer,
   ChatContainer,
-  //ChatComponentPropsChildren,
   MessageList,
   Message,
   MessageInput,
   TypingIndicator,
   ConversationHeader,
-  InfoButton,
-  SendButton,
-  StarButton
 } from "@chatscope/chat-ui-kit-react";
 
 // Our stuff
@@ -39,6 +35,8 @@ import { processApiRequest } from "./ApiRequest.js";
 import { ErrorBoundary } from "./errorBoundary.jsx";
 
 
+// Creates a fancier title for the chat app which includes
+// fontawesome icons for validation and deployment status.
 function AppTitle({ username, is_valid, is_deployed }) {
   return (
     <div>
@@ -56,6 +54,11 @@ function AppTitle({ username, is_valid, is_deployed }) {
     </div>
   );
 }
+
+// The main chat app component. This is the top-level component that
+// is exported and used in the index.js file. It is responsible for
+// managing the chat message thread, sending messages to the backend
+// API, and rendering the chat UI.
 function ChatApp(props) {
 
   // app configuration
@@ -228,11 +231,6 @@ function ChatApp(props) {
               userName={<AppTitle username={username} is_valid={is_valid} is_deployed={is_deployed} />}
               info={info}
             />
-            <ConversationHeader.Actions>
-              <SendButton onClick={handleInfoButtonClick} title={info_url} />
-              <StarButton onClick={handleInfoButtonClick} title={info_url} />
-              <InfoButton onClick={handleInfoButtonClick} title={info_url} />
-            </ConversationHeader.Actions>
           </ConversationHeader>
           <MessageList
             style={transparentBackgroundStyle}
