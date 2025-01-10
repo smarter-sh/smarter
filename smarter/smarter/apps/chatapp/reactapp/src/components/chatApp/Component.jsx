@@ -238,7 +238,7 @@ ChatApp.propTypes = {
   welcome_message: PropTypes.string.isRequired,
   placeholder_text: PropTypes.string.isRequired,
   api_url: PropTypes.string.isRequired,
-  api_key: PropTypes.string.isRequired,
+  api_key: PropTypes.string,
   app_name: PropTypes.string.isRequired,
   system_role: PropTypes.string.isRequired,
   assistant_name: PropTypes.string.isRequired,

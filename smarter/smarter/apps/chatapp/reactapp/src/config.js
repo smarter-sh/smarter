@@ -5,7 +5,7 @@
 // The API_KEY is only used to demonstrate how you'd set this up in
 // the event that you needed it.
 import { getCookie, setSessionCookie, setDebugCookie } from "./cookies.js";
-import { CSRF_COOKIE_NAME, DEBUG_COOKIE_NAME, SESSION_COOKIE_NAME} from "./constants.js"
+import { CSRF_COOKIE_NAME, DEBUG_COOKIE_NAME, SESSION_COOKIE_NAME, REACT_LOCAL_DEV_MODE} from "./constants.js"
 
 export async function fetchConfig() {
   /*
@@ -44,6 +44,11 @@ export async function fetchConfig() {
   };
 
   try {
+    if (REACT_LOCAL_DEV_MODE) {
+      const response = await fetch('../data/sample-config.json');
+      const sampleConfig = await response.json();
+      return sampleConfig.data;
+    }
     let thisURL = new URL(window.location.href);
     thisURL.pathname += "config/";
     if (session_key) {
