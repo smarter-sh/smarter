@@ -14,6 +14,7 @@ export const getOpenaiPassthrough = (config) => {
     placeholder_text: `say something to Chester`,
     info_url: null,
     file_attach_button: false,
+    provider: "openai",
     // background_image_url: "/applications/SarcasticChat/SarcasticChat-bg.png",
     // application_logo: "https://www.querium.com/wp-content/uploads/2022/03/cropped-favicon-1-1-192x192.png",
     // uses_openai: true,
