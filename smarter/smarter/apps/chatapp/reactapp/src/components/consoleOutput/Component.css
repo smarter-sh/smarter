@@ -1,5 +1,11 @@
 .console-output {
   position: relative;
   height: 100%;
-  width: calc(2 * 100% / 3);
+  width: 100%;
+  padding: 0px;
+  border: 1px solid red; /* Add a thin red border */
+  display: flex; /* Use flexbox to center the text */
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  text-align: center; /* Ensure text is centered */
 }
