@@ -42,24 +42,32 @@ function ChatApp(props) {
   // In all fairness this probably isn't necessary, but it's a good practice
   // to define the props that are expected to be passed in and also
   // to make these immutable.
-
-  const welcome_message = props.welcome_message;
-  const placeholder_text = props.placeholder_text;
-  const api_url = props.api_url;
-  const api_key = props.api_key;
-  const app_name = props.app_name;
-  const system_role = props.system_role;
-  const assistant_name = props.assistant_name;
-  const info_url = props.info_url;
-  const example_prompts = props.example_prompts;
-  const file_attach_button = props.file_attach_button;
+  const config = props.config;
+  const sandbox_mode = config.sandbox_mode;
+  const debug_mode = config.debug_mode;
+  const welcome_message = config.chatbot.app_welcome_message;
+  const placeholder_text = config.chatbot.app_placeholder;
+  const api_url = config.chatbot.url_chatbot;
+  const api_key = config.api_key;
+  const background_image_url = config.chatbot.app_background_image_url;
+  const app_name = config.chatbot.app_name;
+  const system_role = config.chatbot.default_system_role;
+  const assistant_name = config.chatbot.app_assistant;
+  const info_url = config.chatbot.app_info_url;
+  const example_prompts = config.chatbot.app_example_prompts;
+  const file_attach_button = config.chatbot.app_file_attachment;
+  const provider = config.chatbot.provider;
+  const default_model = config.chatbot.default_model;
+  const version = config.chatbot.version;
+  const username = app_name + " " + version;
+  const info = provider + " " + default_model;
 
   const [isTyping, setIsTyping] = useState(false);
   const fileInputRef = useRef(null);
 
-  const chatId = props.session_key ? props.session_key : 'undefined';
-  const chatHistory = props && props.history && props.history.chat_history ? props.history.chat_history : [];
-  const message_thread = chat_init(welcome_message, system_role, example_prompts, chatId, chatHistory, "BACKEND_CHAT_MOST_RECENT_RESPONSE");
+  const session_key = config.session_key ? config.session_key : 'undefined';
+  const chatHistory = config && config.history && config.history.chat_history ? config.history.chat_history : [];
+  const message_thread = chat_init(welcome_message, system_role, example_prompts, session_key, chatHistory, "BACKEND_CHAT_MOST_RECENT_RESPONSE");
   const [messages, setMessages] = useState(message_thread);
 
   // Error modal state management
@@ -189,8 +197,8 @@ function ChatApp(props) {
         <ChatContainer style={chatContainerStyle}>
           <ConversationHeader>
             <ConversationHeader.Content
-              userName={app_name}
-              info={chatId}
+              userName={username}
+              info={info}
             />
             <ConversationHeader.Actions>
               <SendButton onClick={handleInfoButtonClick} title={info_url} />
