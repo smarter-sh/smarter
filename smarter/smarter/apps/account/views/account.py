@@ -11,9 +11,6 @@ logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------
 # Protected Views
 # ------------------------------------------------------------------------------
-class AccountView(SmarterAuthenticatedNeverCachedWebView):
-
-    template_path = "account/account.html"
 
 
 class AccountOrganizationView(SmarterAuthenticatedNeverCachedWebView):
