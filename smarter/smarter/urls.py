@@ -5,7 +5,6 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.shortcuts import redirect
 from django.urls import include, path, re_path
-from django.views.generic import RedirectView
 from wagtail import urls as wagtail_urls
 from wagtail.documents import urls as wagtaildocs_urls
 from wagtail_transfer import urls as wagtailtransfer_urls
@@ -17,6 +16,7 @@ from smarter.apps.account.views.authentication import (
 )
 from smarter.apps.dashboard.admin import restricted_site
 from smarter.apps.dashboard.views.dashboard import ComingSoon
+from smarter.apps.docs.views.webserver import RobotsTxtView, SitemapXmlView
 
 
 admin.site = restricted_site
@@ -41,6 +41,8 @@ urlpatterns = [
     path("", custom_redirect_view, name="home"),
     # production smarter platform
     # -----------------------------------
+    path("robots.txt", RobotsTxtView.as_view(), name="robots_txt"),
+    path("sitemap.xml", SitemapXmlView.as_view(), name="sitemap_xml"),
     path("api/", include("smarter.apps.api.urls")),
     path("chatbots/", include("smarter.apps.chatapp.urls")),
     path("dashboard/", include("smarter.apps.dashboard.urls")),
