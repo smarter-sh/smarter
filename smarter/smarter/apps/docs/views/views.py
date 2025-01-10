@@ -3,7 +3,7 @@
 
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
-from smarter.lib.django.view_helpers import SmarterWebView
+from smarter.lib.django.view_helpers import SmarterWebHtmlView
 
 from ..utils import json_schema_path, manifest_path
 
@@ -11,7 +11,7 @@ from ..utils import json_schema_path, manifest_path
 # ------------------------------------------------------------------------------
 # Public Access Views
 # ------------------------------------------------------------------------------
-class ManifestsView(SmarterWebView):
+class ManifestsView(SmarterWebHtmlView):
     """Public Access Dashboard view"""
 
     template_path = "docs/manifests.html"
@@ -29,7 +29,7 @@ class ManifestsView(SmarterWebView):
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
 
-class JsonSchemasView(SmarterWebView):
+class JsonSchemasView(SmarterWebHtmlView):
     """Public Access Dashboard view"""
 
     template_path = "docs/json-schemas.html"
