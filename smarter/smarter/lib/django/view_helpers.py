@@ -36,10 +36,9 @@ def redirect_and_expire_cache(path: str = "/"):
 # ------------------------------------------------------------------------------
 # Web Views
 # ------------------------------------------------------------------------------
-class SmarterWebView(View):
+class SmarterView(View):
     """
-    Base view for smarter web views.
-    Includes helpers for rendering, minifying and stripping out developer comments.
+    Base view for smarter views.
     """
 
     template_path: str = ""
@@ -63,6 +62,32 @@ class SmarterWebView(View):
         minified_html = self.minify_html(html=html_no_comments)
         return minified_html
 
+
+class SmarterWebXmlView(SmarterView):
+    """
+    Base view for smarter xml web views.
+    """
+
+    def get(self, request):
+        return render(request=request, template_name=self.template_path, context=self.context)
+
+
+class SmarterWebTxtView(SmarterView):
+    """
+    Base view for smarter xml web views.
+    """
+
+    def get(self, request):
+        minified_html = self.render_clean_html(request, template_path=self.template_path, context=self.context)
+        return HttpResponse(content=minified_html, content_type="text/plain")
+
+
+class SmarterWebHtmlView(SmarterView):
+    """
+    Base view for smarter web views.
+    Includes helpers for rendering, minifying and stripping out developer comments.
+    """
+
     # pylint: disable=W0613
     def clean_http_response(self, request, template_path, context=None):
         """Render a template and return an HttpResponse with comments removed."""
@@ -74,13 +99,13 @@ class SmarterWebView(View):
 
 
 @method_decorator(never_cache, name="dispatch")
-class SmarterNeverCachedWebView(SmarterWebView):
+class SmarterNeverCachedWebView(SmarterWebHtmlView):
     """An optimized web view that is never cached."""
 
 
 @method_decorator(login_required, name="dispatch")
 # @method_decorator(ensure_csrf_cookie, name="dispatch")
-class SmarterAuthenticatedWebView(SmarterWebView):
+class SmarterAuthenticatedWebView(SmarterWebHtmlView):
     """
     An optimized view that requires authentication.
     Includes helpers for getting the account and user profile.

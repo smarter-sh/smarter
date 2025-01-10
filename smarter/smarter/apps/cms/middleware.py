@@ -9,6 +9,8 @@ class HTMLMinifyMiddleware(MiddlewareMixin):
     """Middleware to minify HTML using BeautifulSoup"""
 
     def process_response(self, request, response):
+        if response.content in ["robots.txt", "favicon.ico", "sitemap.xml"]:
+            return response.content
         if "text/html" in response["Content-Type"]:
             soup = BeautifulSoup(response.content, "lxml")
 
