@@ -1,6 +1,7 @@
 """URL configuration for the web platform."""
 
 from django.urls import path
+from django.views.generic.base import RedirectView
 
 from smarter.apps.account.views.dashboard.api_keys import APIKeysView, APIKeyView
 from smarter.apps.account.views.dashboard.billing.billing import BillingView
@@ -24,6 +25,11 @@ from smarter.apps.account.views.dashboard.users import UsersView, UserView
 
 
 urlpatterns = [
+    path(
+        "",
+        RedirectView.as_view(url="/dashboard/account/dashboard/overview/", permanent=False),
+        name="dashboard_account_dashboard_overview",
+    ),
     path("overview/", OverviewView.as_view(), name="account_overview"),
     path("settings/", SettingsView.as_view(), name="account_settings"),
     path("activity/", ActivityView.as_view(), name="account_activity"),
