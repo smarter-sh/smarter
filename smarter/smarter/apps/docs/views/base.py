@@ -18,7 +18,7 @@ from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterExceptionBase
-from smarter.lib.django.view_helpers import SmarterWebView
+from smarter.lib.django.view_helpers import SmarterWebHtmlView
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 
 
@@ -37,7 +37,7 @@ class DocsError(SmarterExceptionBase):
 # ------------------------------------------------------------------------------
 # Public Access Views
 # ------------------------------------------------------------------------------
-class DocsBaseView(SmarterWebView):
+class DocsBaseView(SmarterWebHtmlView):
     """JSON Schema base view"""
 
     template_path: str = None
@@ -83,7 +83,7 @@ class DocsBaseView(SmarterWebView):
 # ------------------------------------------------------------------------------
 # Public Access Base Views
 # ------------------------------------------------------------------------------
-class TxtBaseView(SmarterWebView):
+class TxtBaseView(SmarterWebHtmlView):
     """Text base view"""
 
     template_path = "docs/txt_file.html"
@@ -104,7 +104,7 @@ class TxtBaseView(SmarterWebView):
         return render(request, self.template_path, context=context)
 
 
-class MarkdownBaseView(SmarterWebView):
+class MarkdownBaseView(SmarterWebHtmlView):
     """Markdown base view"""
 
     template_path = "docs/markdown.html"

@@ -10,7 +10,10 @@ from django.http import JsonResponse
 from django.shortcuts import redirect
 
 from smarter.common.helpers.mailchimp_helpers import MailchimpHelper
-from smarter.lib.django.view_helpers import SmarterAuthenticatedWebView, SmarterWebView
+from smarter.lib.django.view_helpers import (
+    SmarterAuthenticatedWebView,
+    SmarterWebHtmlView,
+)
 
 from ..models import EmailContactList
 
@@ -21,7 +24,7 @@ logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------
 # Public Access Views
 # ------------------------------------------------------------------------------
-class ComingSoon(SmarterWebView):
+class ComingSoon(SmarterWebHtmlView):
     """Public Access Dashboard view"""
 
     class EmailForm(forms.Form):
@@ -62,7 +65,7 @@ class ComingSoon(SmarterWebView):
         return JsonResponse({"error": json.dumps(html_error)})
 
 
-class EmailAdded(SmarterWebView):
+class EmailAdded(SmarterWebHtmlView):
     """Confirmation view for email added to contact list."""
 
     template_path = "dashboard/email-added.html"
@@ -72,7 +75,7 @@ class EmailAdded(SmarterWebView):
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
 
-class ChangeLogView(SmarterWebView):
+class ChangeLogView(SmarterWebHtmlView):
     """Notifications view"""
 
     template_path = "dashboard/changelog.html"
@@ -87,7 +90,7 @@ class NotificationsView(SmarterAuthenticatedWebView):
     template_path = "dashboard/notifications.html"
 
 
-class DashboardView(SmarterWebView):
+class DashboardView(SmarterWebHtmlView):
     """Public Access Dashboard view"""
 
     template_path = "dashboard/authenticated.html"
