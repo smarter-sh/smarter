@@ -15,7 +15,7 @@ from smarter.lib.django.view_helpers import SmarterWebView
 
 
 # note: this is the path from the Docker container, not the GitHub repo.
-DOCS_PATH = "/data/doc/"
+DOCS_PATH = "~/data/doc/"
 
 
 # ------------------------------------------------------------------------------
