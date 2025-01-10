@@ -10,6 +10,9 @@ import React, { useRef } from "react";
 import { useState } from "react";
 import PropTypes from "prop-types";
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCheckCircle, faTimesCircle, faRocket } from '@fortawesome/free-solid-svg-icons';
+
 // Chat UI stuff
 import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 import {
@@ -36,15 +39,27 @@ import { processApiRequest } from "./ApiRequest.js";
 import { ErrorBoundary } from "./errorBoundary.jsx";
 
 
+function AppTitle({ username, is_valid, is_deployed }) {
+  return (
+    <div>
+      {username}&nbsp;
+      {is_valid ? (
+        <FontAwesomeIcon icon={faCheckCircle} style={{ color: 'green' }} />
+      ) : (
+        <FontAwesomeIcon icon={faTimesCircle} style={{ color: 'red' }} />
+      )}
+      {is_deployed ? (
+        <>
+        &nbsp;<FontAwesomeIcon icon={faRocket} style={{ color: 'orange' }} />
+        </>
+      ) : null }
+    </div>
+  );
+}
 function ChatApp(props) {
 
-  // props. These are passed in from the parent component.
-  // In all fairness this probably isn't necessary, but it's a good practice
-  // to define the props that are expected to be passed in and also
-  // to make these immutable.
-  const config = props.config;
-  const sandbox_mode = config.sandbox_mode;
-  const debug_mode = config.debug_mode;
+  // app configuration
+  const config = props.config;    // see ../../data/sample-config.json for an example of this object.
   const welcome_message = config.chatbot.app_welcome_message;
   const placeholder_text = config.chatbot.app_placeholder;
   const api_url = config.chatbot.url_chatbot;
@@ -59,8 +74,12 @@ function ChatApp(props) {
   const provider = config.chatbot.provider;
   const default_model = config.chatbot.default_model;
   const version = config.chatbot.version;
-  const username = app_name + " " + version;
-  const info = provider + " " + default_model;
+
+  // chatbot state
+  const is_valid = config.meta_data.is_valid;
+  const is_deployed = config.meta_data.is_deployed;
+  const sandbox_mode = config.sandbox_mode;
+  const debug_mode = config.debug_mode;
 
   const [isTyping, setIsTyping] = useState(false);
   const fileInputRef = useRef(null);
@@ -69,6 +88,15 @@ function ChatApp(props) {
   const chatHistory = config && config.history && config.history.chat_history ? config.history.chat_history : [];
   const message_thread = chat_init(welcome_message, system_role, example_prompts, session_key, chatHistory, "BACKEND_CHAT_MOST_RECENT_RESPONSE");
   const [messages, setMessages] = useState(message_thread);
+
+  const username = app_name + " " + version;
+
+  const total_plugins = config.plugins.meta_data.total_plugins;
+  let info = provider + " " + default_model;
+  if (total_plugins > 0) {
+    info += ` with ${total_plugins} additional plugins`;
+  }
+
 
   // Error modal state management
   function openChatModal(title, msg) {
@@ -197,7 +225,7 @@ function ChatApp(props) {
         <ChatContainer style={chatContainerStyle}>
           <ConversationHeader>
             <ConversationHeader.Content
-              userName={username}
+              userName={<AppTitle username={username} is_valid={is_valid} is_deployed={is_deployed} />}
               info={info}
             />
             <ConversationHeader.Actions>
