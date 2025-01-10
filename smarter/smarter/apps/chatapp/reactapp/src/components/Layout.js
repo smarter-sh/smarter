@@ -9,19 +9,16 @@ export const ContainerLayout = styled.div`
 
 export const ContentLayout = styled.div`
   flex: 1;
+  display: flex;
+  flex-direction: row;
 `;
 
+export const ChatAppWrapper = styled.div`
+  flex-basis: 33.33%;
+`;
 
-export const Logo = styled.div`
-  border-radius: 5%;
-  position: absolute;
-  bottom: 10px;
-  left: 0;
-  right: 0;
-  display: block;
-  margin: 0 auto;
-  width: 90%;
-  height: 125px;
-  background-image: url("/youtube-banner-image.png");
-  background-size: cover;
+export const ConsoleOutputWrapper = styled.div`
+  flex-basis: 66.67%;
+  padding: 10px; /* Add padding to ensure content is not pushed against the right side */
+  box-sizing: border-box; /* Ensure padding is included in the element's total width and height */
 `;
