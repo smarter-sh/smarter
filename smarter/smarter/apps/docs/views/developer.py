@@ -6,59 +6,7 @@ To-do:
  - import markdown, and render the markdown files in the /docs folder.
 
 """
-import os
-
-import markdown
-from django.shortcuts import render
-
-from smarter.lib.django.view_helpers import SmarterWebView
-
-
-# note: this is the path from the Docker container, not the GitHub repo.
-DOCS_PATH = "~/data/doc/"
-
-
-# ------------------------------------------------------------------------------
-# Public Access Base Views
-# ------------------------------------------------------------------------------
-class TxtBaseView(SmarterWebView):
-    """Text base view"""
-
-    template_path = "docs/txt_file.html"
-    text_file: str = None
-    title: str = None
-    leader: str = None
-
-    def get(self, request, *args, **kwargs):
-        file_path = self.text_file
-        with open(file_path, encoding="utf-8") as text_file:
-            text_content = text_file.read()
-
-        context = {
-            "filecontents_html": text_content,
-            "title": self.title,
-            "leader": self.leader,
-        }
-        return render(request, self.template_path, context=context)
-
-
-class MarkdownBaseView(SmarterWebView):
-    """Markdown base view"""
-
-    template_path = "docs/markdown.html"
-    markdown_file: str = None
-
-    def get(self, request, *args, **kwargs):
-        file_path = os.path.join(DOCS_PATH, self.markdown_file)
-        with open(file_path, encoding="utf-8") as markdown_file:
-            md_text = markdown_file.read()
-
-        html = markdown.markdown(md_text)
-        context = {
-            "markdown_html": html,
-        }
-
-        return render(request, self.template_path, context=context)
+from .base import MarkdownBaseView, TxtBaseView
 
 
 # ------------------------------------------------------------------------------

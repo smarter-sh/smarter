@@ -4,10 +4,13 @@ Django REST framework base views for /docs/ brokered viewsets,
 manifest and schema.
 """
 import json
+import os
 from urllib.parse import urlparse
 
+import markdown
 from django.http import HttpRequest
 from django.http.response import HttpResponse
+from django.shortcuts import render
 from django.test import RequestFactory
 from django.urls import reverse
 
@@ -17,6 +20,10 @@ from smarter.common.const import SmarterEnvironments
 from smarter.common.exceptions import SmarterExceptionBase
 from smarter.lib.django.view_helpers import SmarterWebView
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
+
+
+# note: this is the path from the Docker container, not the GitHub repo.
+DOCS_PATH = "~/data/doc/"
 
 
 class DocsError(SmarterExceptionBase):
@@ -71,3 +78,46 @@ class DocsBaseView(SmarterWebView):
         }
 
         return super().dispatch(request, *args, **kwargs)
+
+
+# ------------------------------------------------------------------------------
+# Public Access Base Views
+# ------------------------------------------------------------------------------
+class TxtBaseView(SmarterWebView):
+    """Text base view"""
+
+    template_path = "docs/txt_file.html"
+    text_file: str = None
+    title: str = None
+    leader: str = None
+
+    def get(self, request, *args, **kwargs):
+        file_path = self.text_file
+        with open(file_path, encoding="utf-8") as text_file:
+            text_content = text_file.read()
+
+        context = {
+            "filecontents_html": text_content,
+            "title": self.title,
+            "leader": self.leader,
+        }
+        return render(request, self.template_path, context=context)
+
+
+class MarkdownBaseView(SmarterWebView):
+    """Markdown base view"""
+
+    template_path = "docs/markdown.html"
+    markdown_file: str = None
+
+    def get(self, request, *args, **kwargs):
+        file_path = os.path.join(DOCS_PATH, self.markdown_file)
+        with open(file_path, encoding="utf-8") as markdown_file:
+            md_text = markdown_file.read()
+
+        html = markdown.markdown(md_text)
+        context = {
+            "markdown_html": html,
+        }
+
+        return render(request, self.template_path, context=context)
