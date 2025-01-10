@@ -3,16 +3,16 @@
 generate
 """
 from smarter.common.conf import settings as smarter_settings
-from smarter.lib.django.view_helpers import SmarterWebView
+from smarter.lib.django.view_helpers import SmarterWebTxtView, SmarterWebXmlView
 
 
-class RobotsTxtView(SmarterWebView):
+class RobotsTxtView(SmarterWebTxtView):
     """View to serve the robots.txt file"""
 
     template_path = "robots.txt"
 
 
-class SitemapXmlView(SmarterWebView):
+class SitemapXmlView(SmarterWebXmlView):
     """View to serve the sitemap.xml file"""
 
     template_path = "sitemap.xml"
