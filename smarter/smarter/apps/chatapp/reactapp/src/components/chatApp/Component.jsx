@@ -10,20 +10,19 @@ import React, { useRef } from "react";
 import { useState } from "react";
 import PropTypes from "prop-types";
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCheckCircle, faTimesCircle, faRocket } from '@fortawesome/free-solid-svg-icons';
+
 // Chat UI stuff
 import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 import {
   MainContainer,
   ChatContainer,
-  //ChatComponentPropsChildren,
   MessageList,
   Message,
   MessageInput,
   TypingIndicator,
   ConversationHeader,
-  InfoButton,
-  SendButton,
-  StarButton
 } from "@chatscope/chat-ui-kit-react";
 
 // Our stuff
@@ -36,31 +35,71 @@ import { processApiRequest } from "./ApiRequest.js";
 import { ErrorBoundary } from "./errorBoundary.jsx";
 
 
+// Creates a fancier title for the chat app which includes
+// fontawesome icons for validation and deployment status.
+function AppTitle({ username, is_valid, is_deployed }) {
+  return (
+    <div>
+      {username}&nbsp;
+      {is_valid ? (
+        <FontAwesomeIcon icon={faCheckCircle} style={{ color: 'green' }} />
+      ) : (
+        <FontAwesomeIcon icon={faTimesCircle} style={{ color: 'red' }} />
+      )}
+      {is_deployed ? (
+        <>
+        &nbsp;<FontAwesomeIcon icon={faRocket} style={{ color: 'orange' }} />
+        </>
+      ) : null }
+    </div>
+  );
+}
+
+// The main chat app component. This is the top-level component that
+// is exported and used in the index.js file. It is responsible for
+// managing the chat message thread, sending messages to the backend
+// API, and rendering the chat UI.
 function ChatApp(props) {
 
-  // props. These are passed in from the parent component.
-  // In all fairness this probably isn't necessary, but it's a good practice
-  // to define the props that are expected to be passed in and also
-  // to make these immutable.
+  // app configuration
+  const config = props.config;    // see ../../data/sample-config.json for an example of this object.
+  const welcome_message = config.chatbot.app_welcome_message;
+  const placeholder_text = config.chatbot.app_placeholder;
+  const api_url = config.chatbot.url_chatbot;
+  const api_key = config.api_key;
+  const background_image_url = config.chatbot.app_background_image_url;
+  const app_name = config.chatbot.app_name;
+  const system_role = config.chatbot.default_system_role;
+  const assistant_name = config.chatbot.app_assistant;
+  const info_url = config.chatbot.app_info_url;
+  const example_prompts = config.chatbot.app_example_prompts;
+  const file_attach_button = config.chatbot.app_file_attachment;
+  const provider = config.chatbot.provider;
+  const default_model = config.chatbot.default_model;
+  const version = config.chatbot.version;
 
-  const welcome_message = props.welcome_message;
-  const placeholder_text = props.placeholder_text;
-  const api_url = props.api_url;
-  const api_key = props.api_key;
-  const app_name = props.app_name;
-  const system_role = props.system_role;
-  const assistant_name = props.assistant_name;
-  const info_url = props.info_url;
-  const example_prompts = props.example_prompts;
-  const file_attach_button = props.file_attach_button;
+  // chatbot state
+  const is_valid = config.meta_data.is_valid;
+  const is_deployed = config.meta_data.is_deployed;
+  const sandbox_mode = config.sandbox_mode;
+  const debug_mode = config.debug_mode;
 
   const [isTyping, setIsTyping] = useState(false);
   const fileInputRef = useRef(null);
 
-  const chatId = props.session_key ? props.session_key : 'undefined';
-  const chatHistory = props && props.history && props.history.chat_history ? props.history.chat_history : [];
-  const message_thread = chat_init(welcome_message, system_role, example_prompts, chatId, chatHistory, "BACKEND_CHAT_MOST_RECENT_RESPONSE");
+  const session_key = config.session_key ? config.session_key : 'undefined';
+  const chatHistory = config && config.history && config.history.chat_history ? config.history.chat_history : [];
+  const message_thread = chat_init(welcome_message, system_role, example_prompts, session_key, chatHistory, "BACKEND_CHAT_MOST_RECENT_RESPONSE");
   const [messages, setMessages] = useState(message_thread);
+
+  const username = app_name + " " + version;
+
+  const total_plugins = config.plugins.meta_data.total_plugins;
+  let info = provider + " " + default_model;
+  if (total_plugins > 0) {
+    info += ` with ${total_plugins} additional plugins`;
+  }
+
 
   // Error modal state management
   function openChatModal(title, msg) {
@@ -189,14 +228,9 @@ function ChatApp(props) {
         <ChatContainer style={chatContainerStyle}>
           <ConversationHeader>
             <ConversationHeader.Content
-              userName={app_name}
-              info={chatId}
+              userName={<AppTitle username={username} is_valid={is_valid} is_deployed={is_deployed} />}
+              info={info}
             />
-            <ConversationHeader.Actions>
-              <SendButton onClick={handleInfoButtonClick} title={info_url} />
-              <StarButton onClick={handleInfoButtonClick} title={info_url} />
-              <InfoButton onClick={handleInfoButtonClick} title={info_url} />
-            </ConversationHeader.Actions>
           </ConversationHeader>
           <MessageList
             style={transparentBackgroundStyle}
@@ -238,7 +272,7 @@ ChatApp.propTypes = {
   welcome_message: PropTypes.string.isRequired,
   placeholder_text: PropTypes.string.isRequired,
   api_url: PropTypes.string.isRequired,
-  api_key: PropTypes.string.isRequired,
+  api_key: PropTypes.string,
   app_name: PropTypes.string.isRequired,
   system_role: PropTypes.string.isRequired,
   assistant_name: PropTypes.string.isRequired,
