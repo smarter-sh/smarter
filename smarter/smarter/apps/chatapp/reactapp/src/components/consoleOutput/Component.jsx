@@ -21,6 +21,12 @@ function ConsoleOutput(props) {
   const chatbot_request_history = config.history.chatbot_request_history || [];
   const plugin_selector_history = config.history.plugin_selector_history || [];
 
+  const pod_hash = Math.floor(Math.random() * 0xFFFFFFFF).toString(16);
+  const last_login = new Date().toString();
+  const getRandomIpAddress = () => {
+    return `${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`;
+  };
+
   return (
     <div className="console">
       <head>
@@ -133,7 +139,10 @@ function ConsoleOutput(props) {
               </div>
               {/*end::Nav items*/}
               <div className="console-output rounded">
-                <div className="console-output-content">c:\ shooby dooby do</div>
+                <div className="console-output-content">
+                  <p className="mb-0">Last login: {last_login} from {getRandomIpAddress()}</p>
+                  <p className="mb-0">smarter_user@smarter-{pod_hash}:~/smarter$</p>
+                </div>
               </div>
             </div>
             {/*end::Content container*/}
