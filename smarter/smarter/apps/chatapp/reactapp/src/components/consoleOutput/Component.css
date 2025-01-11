@@ -1,11 +1,38 @@
-.console-output {
+div.app-container {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: 5px !important;
+  margin-right: 5px !important;
+}
+
+.console {
   position: relative;
   height: 100%;
   width: 100%;
   padding: 0px;
-  border: 1px solid red; /* Add a thin red border */
-  display: flex; /* Use flexbox to center the text */
-  justify-content: center; /* Center horizontally */
-  align-items: center; /* Center vertically */
-  text-align: center; /* Ensure text is centered */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.console-output {
+  background-color: #2f2f2f;
+  color: whitesmoke;
+  height: 80vh;
+  margin-top: 0px;
+  padding-top: 0px;
+  margin-left: 0px;
+  margin-right: 0px;
+  display: flex;
+  flex-direction: column-reverse;
+  overflow-y: auto;
+}
+
+.console-output-content {
+  text-align: left;
+  margin: 10px;
+  padding: 10px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 16px;
 }
