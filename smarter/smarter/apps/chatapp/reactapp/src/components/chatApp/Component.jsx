@@ -269,8 +269,8 @@ function ChatApp(props) {
 // define the props that are expected to be passed in and also
 // make these immutable.
 ChatApp.propTypes = {
-  welcome_message: PropTypes.string.isRequired,
-  placeholder_text: PropTypes.string.isRequired,
+  welcome_message: PropTypes.string,
+  placeholder_text: PropTypes.string,
   api_url: PropTypes.string.isRequired,
   api_key: PropTypes.string,
   app_name: PropTypes.string.isRequired,

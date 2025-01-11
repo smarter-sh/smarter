@@ -11,6 +11,7 @@ import PropTypes from "prop-types";
 
 // Our stuff
 import "./Component.css";
+import HelmetHeadStyles from "./HeadStyles"
 
 function ConsoleOutput(props) {
   // app configuration
@@ -29,33 +30,7 @@ function ConsoleOutput(props) {
 
   return (
     <div className="console">
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700"
-          rel="stylesheet"
-        />
-        <link
-          href="https://platform.smarter.sh/static/assets/plugins/custom/fullcalendar/fullcalendar.bundle.css"
-          rel="stylesheet"
-          type="text/css"
-        />
-        <link
-          href="https://platform.smarter.sh/static/assets/plugins/custom/datatables/datatables.bundle.css"
-          rel="stylesheet"
-          type="text/css"
-        />
-        <link
-          href="https://platform.smarter.sh/static/assets/plugins/global/plugins.bundle.css"
-          rel="stylesheet"
-          type="text/css"
-        />
-        <link
-          href="https://platform.smarter.sh/static/assets/css/style.bundle.css"
-          rel="stylesheet"
-          type="text/css"
-        />
-      </head>
-
+      <HelmetHeadStyles />
       {/*begin::Main*/}
       <div className="app-main flex-column flex-row-fluid" id="kt_app_main">
         {/*begin::Content wrapper*/}
@@ -82,7 +57,7 @@ function ConsoleOutput(props) {
               {/*begin::Nav items*/}
               <div
                 id="kt_user_profile_nav"
-                className="rounded bg-gray-200 d-flex flex-stack flex-wrap mb-2 p-2"
+                className="bg-gray-200 d-flex flex-stack flex-wrap mb-2 p-2 console-nav-items"
                 data-kt-sticky="true"
                 data-kt-sticky-name="sticky-profile-navs"
                 data-kt-sticky-offset="{default: false, lg: '200px'}"
@@ -166,10 +141,4 @@ ConsoleOutput.propTypes = {
   plugin_selector_history: PropTypes.array.isRequired,
 };
 
-ConsoleOutput.defaultProps = {
-  plugin_selector_history: [],
-  chat_tool_call_history: [],
-  chat_plugin_usage_history: [],
-  chatbot_request_history: [],
-};
 export default ConsoleOutput;
