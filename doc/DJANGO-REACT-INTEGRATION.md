@@ -210,63 +210,6 @@ export default defineConfig({
 });
 ```
 
-## Backend integration via template context
-
-The React app interacts with the backend via a REST API implemented with Django REST Framework. But we have to provide the app with the correct, environment-specific url for this API during app startup, along with other similar stateful data. We therefore need a way to pass a small set of data to React via the Django template which invokes it. We created a custom [Django template context](./smarter/smarter/apps/dashboard/context_processors.py) that generates this data, and a [Django base template](./smarter/smarter/templates/smarter/base_react.html) that converts it into a javascript element placed in the DOM, which is then [consumed by the React app](./smarter/smarter/apps/chatapp/reactapp/src/config.js) at startup as a const. Note that the custom React context processor is added to the custom React template engine, described above.
-
-**IMPORTANT:** this integration strategy publicly exposes the data it passes to React. It's not visible to the naked eye mind you, but nonetheless, the data is parked inside the DOM and could be seen by simply perusing the web page's source code view.
-
-### Django context generation
-
-```python
-def react(request):
-  """
-  React context processor for all templates that render
-  a React app.
-  """
-
-  # https://platform.smarter.sh/
-  # http://127.0.0.1:8000/
-  base_url = f"{request.scheme}://{request.get_host}"
-  return {
-      "react": True,
-      "react_config": {"BASE_URL": base_url, "API_URL": f"{base_url}/api/v0", "CHAT_ID": "SET-ME-PLEASE"},
-  }
-```
-
-### Django template setup
-
-The Django base_react.html template includes this snippet which will correctly place React's js bundle near the bottom of the `<body>` of the DOM.
-
-```django
-{% block react_javascript %}
-  {{ block.super }}
-  {{ react_config|json_script:'react-config' }}
-{% endblock %}
-```
-
-in turn, the template will render a DOM element like the following. Thus, **BE AWARE** that this data is exposed.
-
-```html
-<script id="react-config" type="application/json">
-  {
-    "BASE_URL": "http://127.0.0.1:8000",
-    "API_URL": "http://127.0.0.1:8000/api/v1",
-    "CHAT_ID": "SET-ME-PLEASE"
-  }
-</script>
-```
-
-### React app consumption
-
-The DOM element can be consumed by JS/React like this:
-
-```javascript
-export const REACT_CONFIG = JSON.parse(
-  document.getElementById("react-config").textContent,
-);
-```
-
 ## CORS Configuration
 
 In dev we have to deal with CORS because, for development purposes, React is served from a different port, http://localhost:5173/, than Django is, http://127.0.0.1:8000/.

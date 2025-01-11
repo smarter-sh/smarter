@@ -1,99 +1,559 @@
 {
-  "api": "smarter.sh/v1",
   "data": {
+      "session_key": "a53bc02eb139e7ce089f39abb3926825e9a4bba5171728c1e54ee271f6c2048a",
+      "sandbox_mode": true,
+      "debug_mode": false,
       "chatbot": {
+          "id": 1,
           "account": {
               "account_number": "3141-5926-5359"
           },
+          "name": "example",
+          "description": "",
+          "version": "0.1.0",
+          "subdomain": null,
+          "custom_domain": null,
+          "deployed": true,
+          "provider": "openai",
+          "default_model": "gpt-4-turbo",
+          "default_system_role": "You are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.",
+          "default_temperature": 0.5,
+          "default_max_tokens": 256,
+          "app_name": "Smarter Demo",
           "app_assistant": "Kent",
-          "app_background_image_url": null,
+          "app_welcome_message": "Welcome to the Smarter demo!",
           "app_example_prompts": [
               "What is the weather in San Francisco?",
               "What is an Everlasting Gobstopper?",
               "example function calling configuration"
           ],
-          "app_file_attachment": false,
-          "app_info_url": "https://smarter.sh",
-          "app_logo_url": "/static/querium/querium-logo-white-transparent.png",
-          "app_name": "Smarter Demo",
           "app_placeholder": "Ask me anything...",
-          "app_welcome_message": "Welcome to the Smarter demo!",
-          "custom_domain": null,
-          "default_system_role": "You are a helpful assistant.",
-          "default_max_tokens": 256,
-          "default_model": "gpt-4-turbo",
-          "default_temperature": 0.5,
-          "deployed": true,
-          "description": null,
-          "dns_verification_status": "Verified",
-          "id": 1,
-          "name": "example",
-          "subdomain": null,
-          "url_chatbot": "http://example.3141-5926-5359.api.localhost:8000/api/v1/chatbots/smarter/",
-          "version": null
+          "app_info_url": "https://smarter.sh",
+          "app_background_image_url": null,
+          "app_logo_url": "/static/querium/querium-logo-white-transparent.png",
+          "app_file_attachment": false,
+          "dns_verification_status": "Not Verified",
+          "url_chatbot": "https://platform.smarter.sh/api/v1/chatbots/smarter/example/"
       },
-      "debug_mode": true,
-      "history": [],
+      "history": {
+          "chat": {
+              "id": 7,
+              "created_at": "2025-01-08T23:09:23.981987Z",
+              "updated_at": "2025-01-08T23:09:23.992270Z",
+              "session_key": "a53bc02eb139e7ce089f39abb3926825e9a4bba5171728c1e54ee271f6c2048a",
+              "ip_address": "192.168.4.40",
+              "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+              "url": "http://platform.smarter.sh/chatbots/example",
+              "account": null,
+              "chatbot": 1
+          },
+          "chat_history": [
+              {
+                  "role": "system",
+                  "content": "You are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.\n\n and also Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response: \"Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\"\n\n\n and also Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response: \"Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\"\n"
+              },
+              {
+                  "role": "assistant",
+                  "content": "Welcome to the Smarter demo!"
+              },
+              {
+                  "role": "assistant",
+                  "content": "Some example prompts to get you started:\r\n\r\nWhat is the weather in San Francisco?\r\nWhat is an Everlasting Gobstopper?\r\nexample function calling configuration\r\n"
+              },
+              {
+                  "role": "user",
+                  "content": "example function calling configuration"
+              },
+              {
+                  "role": "assistant",
+                  "content": "Tool call: function_calling_plugin_0002({\"inquiry_type\":\"about\"})"
+              },
+              {
+                  "role": "assistant",
+                  "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
+              },
+              {
+                  "role": "assistant",
+                  "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
+              },
+              {
+                  "role": "user",
+                  "content": "example function calling configuration"
+              },
+              {
+                  "role": "assistant",
+                  "content": "Tool call: function_calling_plugin_0002({\"inquiry_type\":\"about\"})"
+              },
+              {
+                  "role": "assistant",
+                  "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
+              },
+              {
+                  "role": "assistant",
+                  "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
+              },
+              {
+                  "role": "user",
+                  "content": "what's the weather like in san francisco california right now?"
+              },
+              {
+                  "role": "assistant",
+                  "content": "Tool call: get_current_weather({\"location\":\"San Francisco, CA\",\"unit\":\"USCS\"})"
+              },
+              {
+                  "role": "assistant",
+                  "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\nThe current weather in San Francisco, California is approximately 66.3°F with no precipitation expected at this time."
+              },
+              {
+                  "role": "assistant",
+                  "audio": null,
+                  "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\nThe current weather in San Francisco, California is approximately 66.3°F with no precipitation expected at this time.",
+                  "refusal": null,
+                  "tool_calls": null,
+                  "function_call": null
+              }
+          ],
+          "chat_tool_call_history": [
+              {
+                  "id": 8,
+                  "chat": {
+                      "id": 7,
+                      "created_at": "2025-01-08T23:09:23.981987Z",
+                      "updated_at": "2025-01-08T23:09:23.992270Z",
+                      "session_key": "a53bc02eb139e7ce089f39abb3926825e9a4bba5171728c1e54ee271f6c2048a",
+                      "ip_address": "192.168.4.40",
+                      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+                      "url": "http://platform.smarter.sh/chatbots/example",
+                      "account": null,
+                      "chatbot": 1
+                  },
+                  "created_at": "2025-01-09T23:28:48.986843Z",
+                  "updated_at": "2025-01-09T23:28:48.986891Z",
+                  "function_name": "get_current_weather",
+                  "function_args": "{'location': 'San Francisco, CA', 'unit': 'USCS'}",
+                  "request": {
+                      "model": "gpt-4-turbo",
+                      "messages": [
+                          {
+                              "role": "system",
+                              "content": "You are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.\n\n and also Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response: \"Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\"\n\n\n and also Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response: \"Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\"\n"
+                          },
+                          {
+                              "role": "assistant",
+                              "content": "Welcome to the Smarter demo!"
+                          },
+                          {
+                              "role": "assistant",
+                              "content": "Some example prompts to get you started:\r\n\r\nWhat is the weather in San Francisco?\r\nWhat is an Everlasting Gobstopper?\r\nexample function calling configuration\r\n"
+                          },
+                          {
+                              "role": "user",
+                              "content": "example function calling configuration"
+                          },
+                          {
+                              "role": "assistant",
+                              "content": "Tool call: function_calling_plugin_0002({\"inquiry_type\":\"about\"})"
+                          },
+                          {
+                              "role": "assistant",
+                              "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
+                          },
+                          {
+                              "role": "assistant",
+                              "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
+                          },
+                          {
+                              "role": "user",
+                              "content": "example function calling configuration"
+                          },
+                          {
+                              "role": "assistant",
+                              "content": "Tool call: function_calling_plugin_0002({\"inquiry_type\":\"about\"})"
+                          },
+                          {
+                              "role": "assistant",
+                              "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
+                          },
+                          {
+                              "role": "assistant",
+                              "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
+                          },
+                          {
+                              "role": "user",
+                              "content": "what's the weather like in san francisco california right now?"
+                          },
+                          {
+                              "role": "assistant",
+                              "content": "Tool call: get_current_weather({\"location\":\"San Francisco, CA\",\"unit\":\"USCS\"})"
+                          },
+                          "{\"content\":null,\"refusal\":null,\"role\":\"assistant\",\"audio\":null,\"function_call\":null,\"tool_calls\":[{\"id\":\"call_aYUzYSesInBft9bQKfxC5RSQ\",\"function\":{\"arguments\":\"{\\\"location\\\":\\\"San Francisco, CA\\\",\\\"unit\\\":\\\"USCS\\\"}\",\"name\":\"get_current_weather\"},\"type\":\"function\"}]}",
+                          {
+                              "name": "get_current_weather",
+                              "role": "tool",
+                              "content": "\"[{\\\"date\\\":\\\"2025-01-09 00:00\\\",\\\"temperature\\\":62.7917022705,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 01:00\\\",\\\"temperature\\\":58.9216995239,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 02:00\\\",\\\"temperature\\\":56.1316986084,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 03:00\\\",\\\"temperature\\\":53.7017021179,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 04:00\\\",\\\"temperature\\\":50.9117012024,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 05:00\\\",\\\"temperature\\\":51.0917015076,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 06:00\\\",\\\"temperature\\\":50.3717002869,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 07:00\\\",\\\"temperature\\\":47.7616996765,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 08:00\\\",\\\"temperature\\\":46.5917015076,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 09:00\\\",\\\"temperature\\\":47.0417022705,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 10:00\\\",\\\"temperature\\\":44.1616973877,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 11:00\\\",\\\"temperature\\\":43.7117004395,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 12:00\\\",\\\"temperature\\\":44.1616973877,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 13:00\\\",\\\"temperature\\\":44.1616973877,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 14:00\\\",\\\"temperature\\\":45.1516990662,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 15:00\\\",\\\"temperature\\\":43.3516998291,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 16:00\\\",\\\"temperature\\\":43.9817008972,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 17:00\\\",\\\"temperature\\\":48.9317016602,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 18:00\\\",\\\"temperature\\\":55.6817016602,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 19:00\\\",\\\"temperature\\\":58.5616989136,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 20:00\\\",\\\"temperature\\\":62.251701355,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 21:00\\\",\\\"temperature\\\":64.5917053223,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 22:00\\\",\\\"temperature\\\":65.4916992188,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-09 23:00\\\",\\\"temperature\\\":66.3016967773,\\\"precipitation\\\":0.0}]\"",
+                              "tool_call_id": "call_aYUzYSesInBft9bQKfxC5RSQ"
+                          }
+                      ]
+                  },
+                  "response": {
+                      "id": "chatcmpl-AnwFCOf3HT3zfdsa8E78te6ZXfrKj",
+                      "model": "gpt-4-turbo-2024-04-09",
+                      "usage": {
+                          "total_tokens": 1922,
+                          "prompt_tokens": 1875,
+                          "completion_tokens": 47,
+                          "prompt_tokens_details": {
+                              "audio_tokens": 0,
+                              "cached_tokens": 0
+                          },
+                          "completion_tokens_details": {
+                              "audio_tokens": 0,
+                              "reasoning_tokens": 0,
+                              "accepted_prediction_tokens": 0,
+                              "rejected_prediction_tokens": 0
+                          }
+                      },
+                      "object": "chat.completion",
+                      "choices": [
+                          {
+                              "index": 0,
+                              "message": {
+                                  "role": "assistant",
+                                  "audio": null,
+                                  "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\nThe current weather in San Francisco, California is approximately 66.3°F with no precipitation expected at this time.",
+                                  "refusal": null,
+                                  "tool_calls": null,
+                                  "function_call": null
+                              },
+                              "logprobs": null,
+                              "finish_reason": "stop"
+                          }
+                      ],
+                      "created": 1736465326,
+                      "service_tier": null,
+                      "system_fingerprint": "fp_f17929ee92"
+                  },
+                  "plugin": null
+              },
+              {
+                  "id": 7,
+                  "chat": {
+                      "id": 7,
+                      "created_at": "2025-01-08T23:09:23.981987Z",
+                      "updated_at": "2025-01-08T23:09:23.992270Z",
+                      "session_key": "a53bc02eb139e7ce089f39abb3926825e9a4bba5171728c1e54ee271f6c2048a",
+                      "ip_address": "192.168.4.40",
+                      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+                      "url": "http://platform.smarter.sh/chatbots/example",
+                      "account": null,
+                      "chatbot": 1
+                  },
+                  "created_at": "2025-01-08T23:47:22.615609Z",
+                  "updated_at": "2025-01-08T23:47:22.615656Z",
+                  "function_name": "function_calling_plugin_0002",
+                  "function_args": "{'inquiry_type': 'about'}",
+                  "request": {
+                      "model": "gpt-4-turbo",
+                      "messages": [
+                          {
+                              "role": "system",
+                              "content": "You are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.\n\n and also Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response: \"Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\"\n\n\n and also Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response: \"Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\"\n"
+                          },
+                          {
+                              "role": "assistant",
+                              "content": "Welcome to the Smarter demo!"
+                          },
+                          {
+                              "role": "assistant",
+                              "content": "Some example prompts to get you started:\r\n\r\nWhat is the weather in San Francisco?\r\nWhat is an Everlasting Gobstopper?\r\nexample function calling configuration\r\n"
+                          },
+                          {
+                              "role": "user",
+                              "content": "example function calling configuration"
+                          },
+                          {
+                              "role": "assistant",
+                              "content": "Tool call: function_calling_plugin_0002({\"inquiry_type\":\"about\"})"
+                          },
+                          {
+                              "role": "assistant",
+                              "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
+                          },
+                          {
+                              "role": "assistant",
+                              "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\""
+                          },
+                          {
+                              "role": "user",
+                              "content": "example function calling configuration"
+                          },
+                          {
+                              "role": "assistant",
+                              "content": "Tool call: function_calling_plugin_0002({\"inquiry_type\":\"about\"})"
+                          },
+                          "{\"content\":null,\"refusal\":null,\"role\":\"assistant\",\"audio\":null,\"function_call\":null,\"tool_calls\":[{\"id\":\"call_3wv44ZppbjvRYJKWIOBz9Z7k\",\"function\":{\"arguments\":\"{\\\"inquiry_type\\\":\\\"about\\\"}\",\"name\":\"function_calling_plugin_0002\"},\"type\":\"function\"}]}",
+                          {
+                              "name": "function_calling_plugin_0002",
+                              "role": "tool",
+                              "content": "\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should to be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\\n\"",
+                              "tool_call_id": "call_3wv44ZppbjvRYJKWIOBz9Z7k"
+                          }
+                      ]
+                  },
+                  "response": {
+                      "id": "chatcmpl-Ana3Y8B8bcKfo4Tf2hL9dksTsRPBr",
+                      "model": "gpt-4-turbo-2024-04-09",
+                      "usage": {
+                          "total_tokens": 1065,
+                          "prompt_tokens": 878,
+                          "completion_tokens": 187,
+                          "prompt_tokens_details": {
+                              "audio_tokens": 0,
+                              "cached_tokens": 0
+                          },
+                          "completion_tokens_details": {
+                              "audio_tokens": 0,
+                              "reasoning_tokens": 0,
+                              "accepted_prediction_tokens": 0,
+                              "rejected_prediction_tokens": 0
+                          }
+                      },
+                      "object": "chat.completion",
+                      "choices": [
+                          {
+                              "index": 0,
+                              "message": {
+                                  "role": "assistant",
+                                  "audio": null,
+                                  "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\"",
+                                  "refusal": null,
+                                  "tool_calls": null,
+                                  "function_call": null
+                              },
+                              "logprobs": null,
+                              "finish_reason": "stop"
+                          }
+                      ],
+                      "created": 1736380036,
+                      "service_tier": null,
+                      "system_fingerprint": "fp_f17929ee92"
+                  },
+                  "plugin": null
+              },
+              {
+                  "id": 6,
+                  "chat": {
+                      "id": 7,
+                      "created_at": "2025-01-08T23:09:23.981987Z",
+                      "updated_at": "2025-01-08T23:09:23.992270Z",
+                      "session_key": "a53bc02eb139e7ce089f39abb3926825e9a4bba5171728c1e54ee271f6c2048a",
+                      "ip_address": "192.168.4.40",
+                      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+                      "url": "http://platform.smarter.sh/chatbots/example",
+                      "account": null,
+                      "chatbot": 1
+                  },
+                  "created_at": "2025-01-08T23:09:39.693884Z",
+                  "updated_at": "2025-01-08T23:09:39.693933Z",
+                  "function_name": "function_calling_plugin_0002",
+                  "function_args": "{'inquiry_type': 'about'}",
+                  "request": {
+                      "model": "gpt-4-turbo",
+                      "messages": [
+                          {
+                              "role": "system",
+                              "content": "You are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.\n\n and also Your job is to provide helpful technical information about the OpenAI API Function Calling feature. You should include the following information in your response: \"Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\"\n"
+                          },
+                          {
+                              "role": "assistant",
+                              "content": "Welcome to the Smarter demo!"
+                          },
+                          {
+                              "role": "assistant",
+                              "content": "Some example prompts to get you started:\r\n\r\nWhat is the weather in San Francisco?\r\nWhat is an Everlasting Gobstopper?\r\nexample function calling configuration\r\n"
+                          },
+                          {
+                              "role": "user",
+                              "content": "example function calling configuration"
+                          },
+                          {
+                              "role": "assistant",
+                              "content": "Tool call: function_calling_plugin_0002({\"inquiry_type\":\"about\"})"
+                          },
+                          "{\"content\":null,\"refusal\":null,\"role\":\"assistant\",\"audio\":null,\"function_call\":null,\"tool_calls\":[{\"id\":\"call_2Y72Smqx7aDTp7y00sonImhV\",\"function\":{\"arguments\":\"{\\\"inquiry_type\\\":\\\"about\\\"}\",\"name\":\"function_calling_plugin_0002\"},\"type\":\"function\"}]}",
+                          {
+                              "name": "function_calling_plugin_0002",
+                              "role": "tool",
+                              "content": "\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should to be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\\n\"",
+                              "tool_call_id": "call_2Y72Smqx7aDTp7y00sonImhV"
+                          }
+                      ]
+                  },
+                  "response": {
+                      "id": "chatcmpl-AnZT2ZtFUkhVMAr1HyAiahr4oGbF7",
+                      "model": "gpt-4-turbo-2024-04-09",
+                      "usage": {
+                          "total_tokens": 602,
+                          "prompt_tokens": 415,
+                          "completion_tokens": 187,
+                          "prompt_tokens_details": {
+                              "audio_tokens": 0,
+                              "cached_tokens": 0
+                          },
+                          "completion_tokens_details": {
+                              "audio_tokens": 0,
+                              "reasoning_tokens": 0,
+                              "accepted_prediction_tokens": 0,
+                              "rejected_prediction_tokens": 0
+                          }
+                      },
+                      "object": "chat.completion",
+                      "choices": [
+                          {
+                              "index": 0,
+                              "message": {
+                                  "role": "assistant",
+                                  "audio": null,
+                                  "content": "Congratulations!!! OpenAI API Function Calling chose to call this plugin_data. Here is the additional information that you requested:\n\n\"In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).\"",
+                                  "refusal": null,
+                                  "tool_calls": null,
+                                  "function_call": null
+                              },
+                              "logprobs": null,
+                              "finish_reason": "stop"
+                          }
+                      ],
+                      "created": 1736377772,
+                      "service_tier": null,
+                      "system_fingerprint": "fp_1a5512f3de"
+                  },
+                  "plugin": null
+              }
+          ],
+          "chat_plugin_usage_history": [
+              {
+                  "id": 9,
+                  "chat": {
+                      "id": 7,
+                      "created_at": "2025-01-08T23:09:23.981987Z",
+                      "updated_at": "2025-01-08T23:09:23.992270Z",
+                      "session_key": "a53bc02eb139e7ce089f39abb3926825e9a4bba5171728c1e54ee271f6c2048a",
+                      "ip_address": "192.168.4.40",
+                      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+                      "url": "http://platform.smarter.sh/chatbots/example",
+                      "account": null,
+                      "chatbot": 1
+                  },
+                  "created_at": "2025-01-08T23:47:14.738237Z",
+                  "updated_at": "2025-01-08T23:47:14.738283Z",
+                  "input_text": "example function calling configuration",
+                  "plugin": 2
+              },
+              {
+                  "id": 8,
+                  "chat": {
+                      "id": 7,
+                      "created_at": "2025-01-08T23:09:23.981987Z",
+                      "updated_at": "2025-01-08T23:09:23.992270Z",
+                      "session_key": "a53bc02eb139e7ce089f39abb3926825e9a4bba5171728c1e54ee271f6c2048a",
+                      "ip_address": "192.168.4.40",
+                      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+                      "url": "http://platform.smarter.sh/chatbots/example",
+                      "account": null,
+                      "chatbot": 1
+                  },
+                  "created_at": "2025-01-08T23:09:30.865634Z",
+                  "updated_at": "2025-01-08T23:09:30.865692Z",
+                  "input_text": "example function calling configuration",
+                  "plugin": 2
+              }
+          ],
+          "chatbot_request_history": [],
+          "plugin_selector_history": []
+      },
       "meta_data": {
-          "account": "3141-5926-5359",
+          "url": "https://platform.smarter.sh/chatbots/example/",
+          "environment": "prod",
+          "domain": "platform.smarter.sh",
+          "path": "/chatbots/example/",
+          "root_domain": "smarter.sh",
+          "subdomain": "platform",
           "account_number": "3141-5926-5359",
-          "api_host": "/api/v1/cli/chat/config/example/",
-          "api_subdomain": "localhost:8000",
-          "chatbot": "example",
-          "customer_api_domain": "api.localhost:8000",
-          "domain": "localhost:8000",
-          "environment": "local",
-          "is_authentication_required": false,
-          "is_custom_domain": false,
-          "is_default_domain": false,
-          "is_deployed": true,
+          "api_subdomain": "platform",
+          "api_host": "/chatbots/example/",
+          "customer_api_domain": "api.smarter.sh",
           "is_sandbox_domain": true,
+          "is_default_domain": false,
+          "is_custom_domain": false,
+          "is_deployed": true,
           "is_valid": true,
-          "path": "/api/v1/cli/chat/config/example/",
-          "root_domain": "localhost:8000",
-          "subdomain": "",
-          "url": "http://localhost:8000/api/v1/cli/chat/config/example/?new_session=false\u0026uid=Lawrences-Mac-Studio.local-c6%253A6b%253A2e%253A7a%253A3d%253A6c/",
-          "user": "admin"
+          "is_authentication_required": false,
+          "user": "admin",
+          "account": "3141-5926-5359",
+          "chatbot": "example"
       },
       "plugins": {
           "meta_data": {
-              "plugins_returned": 1,
-              "total_plugins": 1
+              "total_plugins": 2,
+              "plugins_returned": 2
           },
           "plugins": [
               {
-                  "chatbot": 1,
-                  "created_at": "2024-05-23T00:53:52.984475Z",
-                  "id": 2,
+                  "id": 30,
                   "plugin_meta": {
+                      "name": "ExampleConfiguration",
                       "account": {
                           "account_number": "3141-5926-5359"
                       },
+                      "description": "A 'hello world' style plugin. This is an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.",
+                      "pluginClass": "static",
+                      "version": "0.2.0",
                       "author": {
+                          "user": {
+                              "username": "admin",
+                              "email": "admin@smarter.sh"
+                          },
                           "account": {
                               "account_number": "3141-5926-5359"
-                          },
-                          "user": {
-                              "email": "admin@smarter.sh",
-                              "username": "admin"
                           }
                       },
-                      "description": "A 'hello world' style plugin. This is an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.",
-                      "name": "ExampleConfiguration",
-                      "pluginClass": "static",
-                      "tags": [],
-                      "version": "0.2.0"
+                      "tags": []
                   },
-                  "updated_at": "2024-05-23T00:53:52.984488Z"
+                  "created_at": "2024-11-21T17:36:55.506521Z",
+                  "updated_at": "2024-11-21T17:36:55.506549Z",
+                  "chatbot": 1
+              },
+              {
+                  "id": 29,
+                  "plugin_meta": {
+                      "name": "EverlastingGobstopper",
+                      "account": {
+                          "account_number": "3141-5926-5359"
+                      },
+                      "description": "Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
+                      "pluginClass": "static",
+                      "version": "0.2.0",
+                      "author": {
+                          "user": {
+                              "username": "admin",
+                              "email": "admin@smarter.sh"
+                          },
+                          "account": {
+                              "account_number": "3141-5926-5359"
+                          }
+                      },
+                      "tags": []
+                  },
+                  "created_at": "2024-11-21T17:36:55.501294Z",
+                  "updated_at": "2024-11-21T17:36:55.501327Z",
+                  "chatbot": 1
               }
           ]
-      },
-      "sandbox_mode": true,
-      "session_key": "fa99362d36a6b30daf1a7da2a181e8f90825f96dbbf684cc6937ddd4d82f07ba",
-      "tool_calls": []
+      }
   },
+  "api": "smarter.sh/v1",
+  "thing": "ChatConfig",
   "metadata": {
       "command": "chat_config"
-  },
-  "thing": "chat_config"
+  }
 }

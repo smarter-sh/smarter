@@ -6,16 +6,17 @@ import { useState } from "react";
 import {
   ContainerLayout,
   ContentLayout,
+  ChatAppWrapper,
+  ConsoleOutputWrapper,
 } from "./components/Layout/";
 
 // Our code
 import "./App.css";
 import ChatApp from "./components/chatApp/Component";
+import ConsoleOutput from "./components/consoleOutput/Component";
 
 // chatApp definitions
 import { getSmarterSandbox } from "./applications/SmarterSandbox";
-import { getOpenaiPassthrough } from "./applications/OpenaiPassthrough";
-import { getLangchainPassthrough } from "./applications/LangchainPassthrough";
 
 const App = ({ config }) => {
 
@@ -23,9 +24,9 @@ const App = ({ config }) => {
     return <div>Loading Config...</div>;
   }
 
-  const [selectedItem, setSelectedItem] = useState(
-    config.APPLICATIONS.SmarterSandbox,
-  );
+  // const [selectedItem, setSelectedItem] = useState(
+  //   config.APPLICATIONS.SmarterSandbox,
+  // );
 
   if (config.debug_mode) {
     console.log("App() - config:", config);
@@ -33,23 +34,16 @@ const App = ({ config }) => {
 
   return (
     <div className="App">
-      <ContainerLayout>
-        <ContentLayout>
-          {selectedItem === config.APPLICATIONS.SmarterSandbox && (
-            <ChatApp {...getSmarterSandbox(config)} />
-          )}
-        </ContentLayout>
-        <ContentLayout>
-          {selectedItem === config.APPLICATIONS.OpenaiPassthrough && (
-            <ChatApp {...getOpenaiPassthrough(config)} />
-          )}
-        </ContentLayout>
-        <ContentLayout>
-          {selectedItem === config.APPLICATIONS.LangchainPassthrough && (
-            <ChatApp {...getLangchainPassthrough(config)} />
-          )}
-        </ContentLayout>
-      </ContainerLayout>
+<ContainerLayout>
+  <ContentLayout>
+    <ChatAppWrapper>
+      <ChatApp {...getSmarterSandbox(config)} />
+    </ChatAppWrapper>
+    <ConsoleOutputWrapper>
+      <ConsoleOutput config={config} />
+    </ConsoleOutputWrapper>
+  </ContentLayout>
+</ContainerLayout>
     </div>
   );
 };
