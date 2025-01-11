@@ -76,7 +76,7 @@ function ChatApp(props) {
   const file_attach_button = config.chatbot.app_file_attachment;
   const provider = config.chatbot.provider;
   const default_model = config.chatbot.default_model;
-  const version = config.chatbot.version;
+  const version = config.chatbot.version || "0.1.0";
 
   // chatbot state
   const is_valid = config.meta_data.is_valid;
@@ -92,7 +92,7 @@ function ChatApp(props) {
   const message_thread = chat_init(welcome_message, system_role, example_prompts, session_key, chatHistory, "BACKEND_CHAT_MOST_RECENT_RESPONSE");
   const [messages, setMessages] = useState(message_thread);
 
-  const username = app_name + " " + version;
+  const username = app_name + " v" + version;
 
   const total_plugins = config.plugins.meta_data.total_plugins;
   let info = provider + " " + default_model;

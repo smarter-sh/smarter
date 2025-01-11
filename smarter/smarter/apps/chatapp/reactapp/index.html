@@ -1,13 +1,15 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>React App</title>
-  </head>
-  <body>
-    <noscript>This site requires JavaScript.</noscript>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
-</html>
+{% extends "dashboard/base_react.html" %}
+
+{% block canonical %}
+<link rel="canonical" href="/chatbots/" />
+{% endblock %}
+
+{#
+  IMPORTANT: THIS MUST BE PLACED HERE, NOT IN THE BASE TEMPLATE.
+  THE REASON IS THAT THE REACT APP BUNDLE PATH IS LOCATED IN THIS
+  SAME PARENT FOLDER.
+#}
+{% block react_javascript %}
+  {{ block.super }}
+  <script type="module" src="/src/main.jsx"></script>
+{% endblock %}
