@@ -34,16 +34,16 @@ const App = ({ config }) => {
 
   return (
     <div className="App">
-<ContainerLayout>
-  <ContentLayout>
-    <ChatAppWrapper>
-      <ChatApp {...getSmarterSandbox(config)} />
-    </ChatAppWrapper>
-    <ConsoleOutputWrapper>
-      <ConsoleOutput config={config} />
-    </ConsoleOutputWrapper>
-  </ContentLayout>
-</ContainerLayout>
+      <ContainerLayout>
+        <ContentLayout>
+          <ChatAppWrapper>
+            <ChatApp {...getSmarterSandbox(config)} />
+          </ChatAppWrapper>
+          <ConsoleOutputWrapper>
+            <ConsoleOutput config={config} />
+          </ConsoleOutputWrapper>
+        </ContentLayout>
+      </ContainerLayout>
     </div>
   );
 };
