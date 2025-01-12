@@ -70,7 +70,7 @@ See this complete [example config](./json/reactapp.config.json) json dict, based
 
   {% block dashboard_content %}
     {{ block.super }}
-    <div id="root"></div>
+    <div id="smarter_chatapp_root"></div>
   {% endblock %}
 
   {% block react_javascript %}
@@ -140,7 +140,7 @@ smarter/base_react.html:
 
 {% block dashboard_content %}
   {{ block.super }}
-  <div id="root"></div>
+  <div id="smarter_chatapp_root"></div>
 {% endblock %}
 
 {% block react_javascript %}

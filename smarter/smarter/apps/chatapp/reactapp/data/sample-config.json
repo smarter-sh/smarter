@@ -563,9 +563,7 @@
           ]
       },
       "APPLICATIONS": {
-          "SmarterSandbox": "SmarterSandBox",
-          "LangchainPassthrough": "LangchainPassthrough",
-          "OpenaiPassthrough": "OpenaiPassthrough"
+          "SmarterSandbox": "SmarterSandBox"
       }
   },
   "api": "smarter.sh/v1",

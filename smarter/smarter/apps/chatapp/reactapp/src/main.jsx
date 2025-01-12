@@ -4,6 +4,12 @@ import App from "./App.jsx";
 import { ConfigProvider, ConfigContext } from "./ConfigContext.jsx";
 import "./index.css";
 
+function ConfigConsumer() {
+  const { config } = useContext(ConfigContext);
+
+  return config ? <App config={config} /> : <div>Loading...</div>;
+}
+
 function Main() {
   return (
     <ConfigProvider>
@@ -12,13 +18,7 @@ function Main() {
   );
 }
 
-function ConfigConsumer() {
-  const { config } = useContext(ConfigContext);
-
-  return config ? <App config={config} /> : <div>Loading...</div>;
-}
-
-ReactDOM.createRoot(document.getElementById("smarter_chatapp")).render(
+ReactDOM.createRoot(document.getElementById("smarter_chatapp_root")).render(
   <React.StrictMode>
     <Main />
   </React.StrictMode>,
