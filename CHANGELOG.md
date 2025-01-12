@@ -1,3 +1,29 @@
+# [0.8.0](https://github.com/smarter-sh/smarter/compare/v0.7.9...v0.8.0) (2025-01-12)
+
+
+### Bug Fixes
+
+* path to developer docs ([c7b9e74](https://github.com/smarter-sh/smarter/commit/c7b9e749b49b911d56d4d177c0d71fbd7c459faf))
+
+
+### Features
+
+* add ability to create a new chat session. ([0b749cc](https://github.com/smarter-sh/smarter/commit/0b749cc7696aece16e4a31c4eb66a5947b8dd272))
+* add context managed config to ChatApp ([b00845b](https://github.com/smarter-sh/smarter/commit/b00845b9b976136426ee6d2ee523b1badd9e9e50))
+* add custom styling for smarter message items ([3303476](https://github.com/smarter-sh/smarter/commit/3303476c6c9d88ca53751c9367b27403f95641ef))
+* add fontwesome state icons to app title ([ce1c37e](https://github.com/smarter-sh/smarter/commit/ce1c37e7c1a844eb9f29c82233bf50df8c2ae8ed))
+* code menu item click handler ([2d45979](https://github.com/smarter-sh/smarter/commit/2d45979fc4e456965f1c09169cad9e73dc5e20c3))
+* code state-based, formatted console output ([78a8e45](https://github.com/smarter-sh/smarter/commit/78a8e45b810a259db87d8d4571ad71652ca418d7))
+* create a react context for managing config inside of state ([05db6f0](https://github.com/smarter-sh/smarter/commit/05db6f0abbedad3107231a351b932d3e9fed8ae8))
+* scaffold new console output window pane ([f45e6c4](https://github.com/smarter-sh/smarter/commit/f45e6c437336891e477a74c3cffa7e148d37c522))
+* scaffold new console output window pane ([9eaec6b](https://github.com/smarter-sh/smarter/commit/9eaec6b64a86ed93579076fdf2952a2e0e8a8370))
+* scaffold tabbed window ([d58d25c](https://github.com/smarter-sh/smarter/commit/d58d25c7442317c1fa6f16d55f0d6210afcc65e0))
+* simulate an ubuntu pod shell environment ([4496107](https://github.com/smarter-sh/smarter/commit/4496107f083a14381dbfbcf5aaa1da250b675ebe))
+* style console window and make responsive ([19c1862](https://github.com/smarter-sh/smarter/commit/19c1862736e61aace68295e73e9fcd0cf568c03d))
+* style the console json log data ([a837dad](https://github.com/smarter-sh/smarter/commit/a837dad29aef70925c19c77685784fb47efb056c))
+* style the new log console ([98bf303](https://github.com/smarter-sh/smarter/commit/98bf303446f940667aa5ae6a09ad63ae9e940acc))
+* style the smarter system chat items ([680d4bc](https://github.com/smarter-sh/smarter/commit/680d4bc90d52bb7df2f832f536f44c0dfb93c338))
+
 ## [0.7.9](https://github.com/smarter-sh/smarter/compare/v0.7.8...v0.7.9) (2025-01-09)
 
 
