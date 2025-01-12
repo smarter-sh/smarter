@@ -74,8 +74,12 @@ export async function fetchConfig() {
     if (response.ok) {
       return response_json.data;
     } else {
-      console.error("fetchConfig() error", response);
-      return fetchLocalConfig("error-config.json");
+      if (response.status === 403) {
+        window.location.href = "/login/";  // redirect to login page
+      } else {
+        console.error("fetchConfig() error", response);
+        return fetchLocalConfig("error-config.json");
+        }
     }
   } catch (error) {
     console.error("fetchConfig() error", error);
