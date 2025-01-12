@@ -1,11 +1,63 @@
 [![OpenAI](https://a11ybadges.com/badge?logo=openai)](https://platform.openai.com/)
-[![Amazon AWS](https://a11ybadges.com/badge?logo=amazonaws)](https://aws.amazon.com/)
 [![ReactJS](https://a11ybadges.com/badge?logo=react)](https://react.dev/)
-[![FullStackWithLawrence](https://a11ybadges.com/badge?text=FullStackWithLawrence&badgeColor=orange&logo=youtube&logoColor=282828)](https://www.youtube.com/@FullStackWithLawrence)
 
 # React Client Application
 
-This application implements each of the [30 Code Samples](https://platform.openai.com/examples) as found in the OpenAI API official documentation. Created with [React](https://react.dev/) leveraging [@chatscope/chat-ui-kit-react](https://www.npmjs.com/package/@chatscope/chat-ui-kit-react) and [react-pro-sidebar](https://www.npmjs.com/package/react-pro-sidebar) running on [AWS](https://aws.amazon.com/) serverless infrastructure integrated to [OpenAI Python API](https://platform.openai.com/docs/api-reference?lang=python).
+This application implements the interactive chatbot in the web console. It is created with [React](https://react.dev/) leveraging [@chatscope/chat-ui-kit-react](https://www.npmjs.com/package/@chatscope/chat-ui-kit-react) and [react-pro-sidebar](https://www.npmjs.com/package/react-pro-sidebar).
+
+This app interacts with two api's from the [Smarter backend](https://github.com/smarter-sh/smarter):
+
+## Backend integration
+
+### Config
+
+A Json dict containing all configuration data for the chatbot. This is downloaded at run-time when the reactapp is initializing.
+Example: [/chatbots/example/config/?session_key=YOUR-SESSION-KEY](http://localhost:8000/chatbots/example/config/)
+
+See: [sample config](../../../../../doc/json/reactapp.config.json)
+
+### Api
+
+A REST Api for sending and receiving chat prompt requests. The url comes from the config dict (above): data.chatbot.url_chatbot.
+example: `http://localhost:8000/api/v1/chatbots/smarter/example/`
+
+example http request:
+
+```json
+{
+    "method": "POST",
+    "credentials": "include",
+    "mode": "cors",
+    "headers": {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "X-CSRFToken": "q9WXqqIhYJMI3ZSBIOE18JMORBMqAHri",
+        "Origin": "http://localhost:8000",
+        "Cookie": "session_key=a07593ecfaecd24008ca4251096732663ac0213b8cc6bdcce4f4c043276ab0b5;  _ga_2VG1QMYW93=GS1.1.1734966738.12.1.1734968666.60.0.0;  _ga=GA1.1.1265813193.1736184055;  sidebar_minimize_state=on;  debug=true;  _ga_SK81M5HQYS=GS1.1.1736531373.18.1.1736532907.0.0.0"
+    },
+    "body": "{\"session_key\":\"a07593ecfaecd24008ca4251096732663ac0213b8cc6bdcce4f4c043276ab0b5\",\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful chatbot."},{\"role\":\"assistant\",\"content\":\"Welcome to the Smarter demo!\"}]}"
+}
+```
+
+example http response:
+
+```json
+{
+    "data": {
+        "isBase64Encoded": false,
+        "statusCode": 200,
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "body": "{\"id\": \"chatcmpl-AoDpMvoAhf8iSJuEm6pMqkX62HK4G\", \"choices\": [{\"finish_reason\": \"stop\", \"index\": 0, \"logprobs\": null, \"message\": {\"content\": \"Hello! While I'm not your mom, I'm here to help you with any questions or tasks you have. What can I assist you with today?\", \"refusal\": null, \"role\": \"assistant\", \"audio\": null, \"function_call\": null, \"tool_calls\": null}}], \"created\": 1736532916, \"model\": \"gpt-4-turbo-2024-04-09\", \"object\": \"chat.completion\", \"service_tier\": \"default\", \"system_fingerprint\": \"fp_f17929ee92\", \"usage\": {\"completion_tokens\": 33, \"prompt_tokens\": 1122, \"total_tokens\": 1155, \"completion_tokens_details\": {\"accepted_prediction_tokens\": 0, \"audio_tokens\": 0, \"reasoning_tokens\": 0, \"rejected_prediction_tokens\": 0}, \"prompt_tokens_details\": {\"audio_tokens\": 0, \"cached_tokens\": 0}}, \"metadata\": {\"tool_calls\": null, \"model\": \"gpt-4-turbo\", \"temperature\": 0.5, \"max_tokens\": 256, \"input_text\": \"hi mom\"}}"
+    },
+    "api": "smarter.sh/v1",
+    "thing": "Chatbot",
+    "metadata": {
+        "command": "chat"
+    }
+}
+```
 
 ## Getting Started
 
@@ -20,7 +72,6 @@ make client-run
 - [React](https://react.dev/)
 - [Chat UI Kit React](https://www.npmjs.com/package/@chatscope/chat-ui-kit-react)
 - [React Pro Sidebar](https://www.npmjs.com/package/react-pro-sidebar)
-- [AWS Serverless REST API](../api/)
 
 ## Requirements
 
