@@ -1,17 +1,18 @@
 import React from 'react';
 import { Helmet } from 'react-helmet';
+import { REACT_LOCAL_DEV_MODE } from '../../constants';
 
-// add Keen menu styles from
-// fix note: where do we get this bundle from, and how do we integrate to the
-// bundle collected by django?
+// add Keen menu styles when we're in REACT_LOCAL_DEV_MODE
 const HelmetHeadStyles = () => (
   <>
     <Helmet>
-      <link
-        href="https://platform.smarter.sh/static/assets/css/style.bundle.css"
-        rel="stylesheet"
-        type="text/css"
-      />
+    {REACT_LOCAL_DEV_MODE && (
+        <link
+          href="/style.bundle.css"
+          rel="stylesheet"
+          type="text/css"
+        />
+      )}
     </Helmet>
   </>
 );
