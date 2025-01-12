@@ -9,19 +9,30 @@ export const ContainerLayout = styled.div`
 
 export const ContentLayout = styled.div`
   flex: 1;
+  display: flex;
+  flex-direction: row;
+  margin: 0;
+  padding: 0;
 `;
 
+export const ChatAppLayout = styled.div`
+  flex-basis: 33.33%;
+  margin: 0;
+  padding: 5px;
+  @media (max-width: 992px) {
+    flex-basis: 100%;
+  }
 
-export const Logo = styled.div`
-  border-radius: 5%;
-  position: absolute;
-  bottom: 10px;
-  left: 0;
-  right: 0;
-  display: block;
-  margin: 0 auto;
-  width: 90%;
-  height: 125px;
-  background-image: url("/youtube-banner-image.png");
-  background-size: cover;
+`;
+
+export const ConsoleLayout = styled.div`
+  flex-basis: 66.67%;
+  padding: 5px;
+  margin: 0;
+  box-sizing: border-box;
+  // visible on only on large screens
+  @media (max-width: 992px) {
+    display: none;
+    flex-basis: 0%;
+  }
 `;
