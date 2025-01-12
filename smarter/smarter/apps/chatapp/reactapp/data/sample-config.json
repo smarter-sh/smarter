@@ -65,7 +65,7 @@
                   "content": "example function calling configuration"
               },
               {
-                  "role": "assistant",
+                  "role": "smarter",
                   "content": "Tool call: function_calling_plugin_0002({\"inquiry_type\":\"about\"})"
               },
               {
@@ -77,7 +77,7 @@
                   "content": "example function calling configuration"
               },
               {
-                  "role": "assistant",
+                  "role": "smarter",
                   "content": "Tool call: function_calling_plugin_0002({\"inquiry_type\":\"about\"})"
               },
               {
@@ -89,7 +89,7 @@
                   "content": "what's the weather like in san francisco california right now?"
               },
               {
-                  "role": "assistant",
+                  "role": "smarter",
                   "content": "Tool call: get_current_weather({\"location\":\"San Francisco, CA\",\"unit\":\"USCS\"})"
               },
               {

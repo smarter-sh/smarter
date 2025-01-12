@@ -21,3 +21,13 @@ div.cs-message__html-content a:hover {
   text-decoration: underline;
   color: midnightblue;
 }
+
+section.smarter-message .cs-message__html-content {
+  color: brown !important;
+  background-color: blanchedalmond;
+}
+
+section.smarter-message .cs-message__content {
+  color: brown !important;
+  background-color: blanchedalmond;
+}
