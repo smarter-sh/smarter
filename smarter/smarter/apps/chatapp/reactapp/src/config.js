@@ -7,6 +7,12 @@
 import { getCookie, setSessionCookie, setDebugCookie } from "./cookies.js";
 import { CSRF_COOKIE_NAME, DEBUG_COOKIE_NAME, SESSION_COOKIE_NAME, REACT_LOCAL_DEV_MODE} from "./constants.js"
 
+async function fetchLocalConfig(config_file) {
+  const response = await fetch('../data/' + config_file);
+  const sampleConfig = await response.json();
+  return sampleConfig.data;
+}
+
 export async function fetchConfig() {
   /*
   Fetch the chat configuration from the backend server. This is a POST request with the
@@ -45,9 +51,7 @@ export async function fetchConfig() {
 
   try {
     if (REACT_LOCAL_DEV_MODE) {
-      const response = await fetch('../data/sample-config.json');
-      const sampleConfig = await response.json();
-      return sampleConfig.data;
+      return fetchLocalConfig("sample-config.json");
     }
     let thisURL = new URL(window.location.href);
     thisURL.pathname += "config/";
@@ -71,10 +75,11 @@ export async function fetchConfig() {
       return response_json.data;
     } else {
       console.error("fetchConfig() error", response);
+      return fetchLocalConfig("error-config.json");
     }
   } catch (error) {
     console.error("fetchConfig() error", error);
-    return;
+    return fetchLocalConfig("error-config.json");
   }
 }
 
@@ -84,9 +89,7 @@ export function setConfig(config) {
 
     // Application setup
     config.APPLICATIONS = {
-      SmarterSandbox: "SmarterSandBox",
-      LangchainPassthrough: "LangchainPassthrough",
-      OpenaiPassthrough: "OpenaiPassthrough",
+      SmarterSandbox: "SmarterSandBox"
     };
 
     // set cookies

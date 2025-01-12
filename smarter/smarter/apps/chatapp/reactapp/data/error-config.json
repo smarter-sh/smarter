@@ -1,0 +1,91 @@
+{
+  "data": {
+    "session_key": "a53bc02eb139e7ce089f39abb3926825e9a4bba5171728c1e54ee271f6c2048a",
+    "sandbox_mode": true,
+    "debug_mode": false,
+    "chatbot": {
+      "id": 1,
+      "account": {
+        "account_number": "error"
+      },
+      "name": "error",
+      "description": "Error loading config",
+      "version": "error",
+      "subdomain": null,
+      "custom_domain": null,
+      "deployed": true,
+      "provider": "Error",
+      "default_model": "Error",
+      "default_system_role": "Error",
+      "default_temperature": 0,
+      "default_max_tokens": 0,
+      "app_name": "Error",
+      "app_assistant": "Error",
+      "app_welcome_message": "Error",
+      "app_example_prompts": [
+        "Error loading config"
+      ],
+      "app_placeholder": "Error loading config...",
+      "app_info_url": "https://smarter.sh",
+      "app_background_image_url": null,
+      "app_logo_url": "/static/querium/querium-logo-white-transparent.png",
+      "app_file_attachment": false,
+      "dns_verification_status": "Not Verified",
+      "url_chatbot": ""
+    },
+    "history": {
+      "chat": {
+        "id": 7,
+        "created_at": "2025-01-08T23:09:23.981987Z",
+        "updated_at": "2025-01-08T23:09:23.992270Z",
+        "session_key": "a53bc02eb139e7ce089f39abb3926825e9a4bba5171728c1e54ee271f6c2048a",
+        "ip_address": "192.168.4.40",
+        "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "url": "http://platform.smarter.sh/chatbots/example",
+        "account": null,
+        "chatbot": 1
+      },
+      "chat_history": [],
+      "chat_tool_call_history": [],
+      "chat_plugin_usage_history": [],
+      "chatbot_request_history": [],
+      "plugin_selector_history": []
+    },
+    "meta_data": {
+      "url": "https://platform.smarter.sh/chatbots/example/",
+      "environment": "prod",
+      "domain": "platform.smarter.sh",
+      "path": "/chatbots/example/",
+      "root_domain": "smarter.sh",
+      "subdomain": "platform",
+      "account_number": "3141-5926-5359",
+      "api_subdomain": "platform",
+      "api_host": "/chatbots/example/",
+      "customer_api_domain": "api.smarter.sh",
+      "is_sandbox_domain": true,
+      "is_default_domain": false,
+      "is_custom_domain": false,
+      "is_deployed": true,
+      "is_valid": true,
+      "is_authentication_required": false,
+      "user": "admin",
+      "account": "3141-5926-5359",
+      "chatbot": "example"
+    },
+    "plugins": {
+      "meta_data": {
+        "total_plugins": 0,
+        "plugins_returned": 0
+      },
+      "plugins": []
+    },
+    "APPLICATIONS": {
+      "SmarterSandbox": "SmarterSandBox"
+    }
+  },
+  "api": "smarter.sh/v1",
+  "thing": "ChatConfig",
+  "metadata": {
+    "command": "chat_config"
+  }
+}

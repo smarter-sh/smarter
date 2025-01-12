@@ -30,6 +30,8 @@ import {
 // This project
 import { setSessionCookie } from "../../cookies.js";
 import { fetchConfig, setConfig } from "../../config.js";
+import { ChatAppLayout } from "../../components/Layout/";
+
 
 // This component
 import "./Component.css";
@@ -232,62 +234,64 @@ function ChatApp(props) {
 
   // render the chat app
   return (
-    <div className="chat-app">
-      <MainContainer style={mainContainerStyle}>
-        <ErrorBoundary>
-          <ChatModal
-            isModalOpen={isModalOpen}
-            title={modalTitle}
-            message={modalMessage}
-            onCloseClick={closeChatModal}
-          />
-        </ErrorBoundary>
-        <ChatContainer style={chatContainerStyle}>
-          <ConversationHeader>
-            <ConversationHeader.Content
-              userName={<AppTitle username={username} is_valid={is_valid} is_deployed={is_deployed} />}
-              info={info}
+    <ChatAppLayout>
+      <div className="chat-app">
+        <MainContainer style={mainContainerStyle}>
+          <ErrorBoundary>
+            <ChatModal
+              isModalOpen={isModalOpen}
+              title={modalTitle}
+              message={modalMessage}
+              onCloseClick={closeChatModal}
             />
-          <ConversationHeader.Actions>
-            <AddUserButton onClick={handleAddUserButtonClick} title="New" />
-            <InfoButton onClick={handleInfoButtonClick} title={info_url} />
-          </ConversationHeader.Actions>
-          </ConversationHeader>
-          <MessageList
-            style={transparentBackgroundStyle}
-            scrollBehavior="auto"
-            typingIndicator={
-              isTyping ? (
-                <TypingIndicator content={assistant_name + " is typing"} />
-              ) : null
-            }
-          >
-            {messages.filter(message => message.sender !== 'system').map((message, i) => {
-              return <Message
-                key={i}
-                model={message}
-                style={message.sender === 'smarter' ? { color: 'brown' } : {}}
-              />;
-            })}
-          </MessageList>
-          <MessageInput
-            placeholder={placeholder_text}
-            onSend={handleSend}
-            onAttachClick={handleAttachClick}
-            attachButton={file_attach_button}
-            fancyScroll={false}
+          </ErrorBoundary>
+          <ChatContainer style={chatContainerStyle}>
+            <ConversationHeader>
+              <ConversationHeader.Content
+                userName={<AppTitle username={username} is_valid={is_valid} is_deployed={is_deployed} />}
+                info={info}
+              />
+            <ConversationHeader.Actions>
+              <AddUserButton onClick={handleAddUserButtonClick} title="New" />
+              <InfoButton onClick={handleInfoButtonClick} title={info_url} />
+            </ConversationHeader.Actions>
+            </ConversationHeader>
+            <MessageList
+              style={transparentBackgroundStyle}
+              scrollBehavior="auto"
+              typingIndicator={
+                isTyping ? (
+                  <TypingIndicator content={assistant_name + " is typing"} />
+                ) : null
+              }
+            >
+              {messages.filter(message => message.sender !== 'system').map((message, i) => {
+                return <Message
+                  key={i}
+                  model={message}
+                  style={message.sender === 'smarter' ? { color: 'brown' } : {}}
+                />;
+              })}
+            </MessageList>
+            <MessageInput
+              placeholder={placeholder_text}
+              onSend={handleSend}
+              onAttachClick={handleAttachClick}
+              attachButton={file_attach_button}
+              fancyScroll={false}
+            />
+          </ChatContainer>
+          <input
+            type="file"
+            accept=".py"
+            title="Select a Python file"
+            ref={fileInputRef}
+            style={{ display: "none" }}
+            onChange={handleFileChange}
           />
-        </ChatContainer>
-        <input
-          type="file"
-          accept=".py"
-          title="Select a Python file"
-          ref={fileInputRef}
-          style={{ display: "none" }}
-          onChange={handleFileChange}
-        />
-      </MainContainer>
-    </div>
+        </MainContainer>
+      </div>
+    </ChatAppLayout>
   );
 }
 

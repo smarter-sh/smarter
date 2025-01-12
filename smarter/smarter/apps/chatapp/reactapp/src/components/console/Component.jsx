@@ -6,11 +6,15 @@
 //---------------------------------------------------------------------------------
 
 // React stuff
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import PropTypes from "prop-types";
 import ReactJson from 'react-json-view';
 
-// Our stuff
+// This project
+import { ConfigContext } from "../../ConfigContext.jsx";
+import { ConsoleLayout } from "../../components/Layout/";
+
+// This component
 import "./Component.css";
 import HelmetHeadStyles from "./HeadStyles"
 
@@ -136,30 +140,32 @@ function Console(props) {
 
 
   return (
-    <div className="console">
-      <HelmetHeadStyles />
-      {/*begin::Main*/}
-      <div className="app-main flex-column flex-row-fluid" id="chatapp_console_app_main">
-        {/*begin::Content wrapper*/}
-        <div className="d-flex flex-column flex-column-fluid">
-          {/*begin::Content*/}
-          <div id="chatapp_console_app_content" className="app-content flex-column-fluid p-0 pb-5">
-            {/*begin::Content container*/}
-            <div
-              id="chatapp_console_app_content_container"
-              className="app-container container-xxl"
-            >
-              <ConsoleMenu />
-              <ConsoleScreen />
+    <ConsoleLayout>
+      <div className="console">
+        <HelmetHeadStyles />
+        {/*begin::Main*/}
+        <div className="app-main flex-column flex-row-fluid" id="chatapp_console_app_main">
+          {/*begin::Content wrapper*/}
+          <div className="d-flex flex-column flex-column-fluid">
+            {/*begin::Content*/}
+            <div id="chatapp_console_app_content" className="app-content flex-column-fluid p-0 pb-5">
+              {/*begin::Content container*/}
+              <div
+                id="chatapp_console_app_content_container"
+                className="app-container container-xxl"
+              >
+                <ConsoleMenu />
+                <ConsoleScreen />
+              </div>
+              {/*end::Content container*/}
             </div>
-            {/*end::Content container*/}
+            {/*end::Content*/}
           </div>
-          {/*end::Content*/}
+          {/*end::Content wrapper*/}
         </div>
-        {/*end::Content wrapper*/}
+        {/*end:::Main*/}
       </div>
-      {/*end:::Main*/}
-    </div>
+    </ConsoleLayout>
   );
 }
 
