@@ -8,6 +8,7 @@ export const SENDER_ROLE = {
   ASSISTANT: "assistant",
   USER: "user",
   TOOL: "tool",
+  SMARTER: "smarter",
 };
 export const VALID_MESSAGE_ROLES = [
   SENDER_ROLE.SYSTEM,

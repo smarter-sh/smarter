@@ -37,3 +37,11 @@ div.app-container {
   font-family: 'Courier New', Courier, monospace;
   font-size: 16px;
 }
+
+.json-key {
+  color: blue;
+}
+
+.json-value {
+  color: green;
+}
