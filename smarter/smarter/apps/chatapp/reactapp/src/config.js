@@ -87,11 +87,6 @@ export async function fetchConfig() {
 // config json from the server.
 export function setConfig(config) {
 
-    // Application setup
-    config.APPLICATIONS = {
-      SmarterSandbox: "SmarterSandBox"
-    };
-
     // set cookies
     setSessionCookie(config.session_key, config.debug_mode);
     setDebugCookie(config.debug_mode);
