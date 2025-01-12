@@ -79,6 +79,7 @@ function ChatApp(props) {
   const chatHistory = config && config.history && config.history.chat_history ? config.history.chat_history : [];
   const message_thread = chat_init(welcome_message, system_role, example_prompts, session_key, chatHistory, "BACKEND_CHAT_MOST_RECENT_RESPONSE");
   const [messages, setMessages] = useState(message_thread);
+  console.log("messages: ", messages);
 
   const username = app_name + " v" + version;
 
@@ -277,7 +278,7 @@ function ChatApp(props) {
                 return <Message
                   key={i}
                   model={message}
-                  style={message.sender === 'smarter' ? { color: 'brown' } : {}}
+                  className={message.sender === 'smarter' ? 'smarter-message' : ''}
                 />;
               })}
             </MessageList>
