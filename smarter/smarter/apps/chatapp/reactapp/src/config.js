@@ -5,7 +5,13 @@
 // The API_KEY is only used to demonstrate how you'd set this up in
 // the event that you needed it.
 import { getCookie, setSessionCookie, setDebugCookie } from "./cookies.js";
-import { CSRF_COOKIE_NAME, DEBUG_COOKIE_NAME, SESSION_COOKIE_NAME} from "./constants.js"
+import { CSRF_COOKIE_NAME, DEBUG_COOKIE_NAME, SESSION_COOKIE_NAME, REACT_LOCAL_DEV_MODE} from "./constants.js"
+
+async function fetchLocalConfig(config_file) {
+  const response = await fetch('../data/' + config_file);
+  const sampleConfig = await response.json();
+  return sampleConfig.data;
+}
 
 export async function fetchConfig() {
   /*
@@ -23,7 +29,7 @@ export async function fetchConfig() {
   - debug_mode is a boolean that is also stored in a cookie, managed by Django
     based on a Waffle switch 'reactapp_debug_mode'
   */
-  const session_key = getCookie(SESSION_COOKIE_NAME);
+  const session_key = getCookie(SESSION_COOKIE_NAME) || "";
   const csrftoken = getCookie(CSRF_COOKIE_NAME);
   const debug_mode = getCookie(DEBUG_COOKIE_NAME) || false;
 
@@ -44,6 +50,9 @@ export async function fetchConfig() {
   };
 
   try {
+    if (REACT_LOCAL_DEV_MODE) {
+      return fetchLocalConfig("sample-config.json");
+    }
     let thisURL = new URL(window.location.href);
     thisURL.pathname += "config/";
     if (session_key) {
@@ -66,23 +75,17 @@ export async function fetchConfig() {
       return response_json.data;
     } else {
       console.error("fetchConfig() error", response);
+      return fetchLocalConfig("error-config.json");
     }
   } catch (error) {
     console.error("fetchConfig() error", error);
-    return;
+    return fetchLocalConfig("error-config.json");
   }
 }
 
 // do additional configuration after having fetched
 // config json from the server.
 export function setConfig(config) {
-
-    // Application setup
-    config.APPLICATIONS = {
-      SmarterSandbox: "SmarterSandBox",
-      LangchainPassthrough: "LangchainPassthrough",
-      OpenaiPassthrough: "OpenaiPassthrough",
-    };
 
     // set cookies
     setSessionCookie(config.session_key, config.debug_mode);
