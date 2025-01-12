@@ -24,6 +24,7 @@ from smarter.apps.account.tasks import (
 from smarter.apps.chat.providers.classes import ChatProviderBase, HandlerInputBase
 from smarter.apps.chat.providers.openai.classes import EXCEPTION_MAP
 from smarter.apps.chat.providers.utils import (
+    clean_messages,
     ensure_system_role_present,
     exception_response_factory,
     get_request_body,
@@ -170,6 +171,7 @@ class GoogleAIChatProvider(ChatProviderBase, metaclass=Singleton):
             request_body = get_request_body(data=data)
             messages, input_text = parse_request(request_body)
             messages = ensure_system_role_present(messages=messages, default_system_role=default_system_role)
+            messages = clean_messages(messages=messages)
 
             temperature = chat.chatbot.default_temperature or default_temperature
             max_tokens = chat.chatbot.default_max_tokens or default_max_tokens
