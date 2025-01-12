@@ -42,6 +42,8 @@ export async function processApiRequest(
 
   if (props.config.debug_mode) {
     console.log("processApiRequest(): props: ", props);
+    console.log("processApiRequest(): apiURL: ", apiURL);
+    console.log("processApiRequest(): messages: ", messages);
   }
 
   // Ensure that csrftoken is not included in the Cookie header.

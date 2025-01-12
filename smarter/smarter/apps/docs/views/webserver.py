@@ -1,7 +1,9 @@
 # pylint: disable=W0613
 """
-generate
+Web server views for the docs app
 """
+from datetime import datetime
+
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django.view_helpers import SmarterWebTxtView, SmarterWebXmlView
 
@@ -18,6 +20,6 @@ class SitemapXmlView(SmarterWebXmlView):
     template_path = "sitemap.xml"
     context = {
         "base_url": smarter_settings.environment_url,
-        "lastmod": "2025-01-01",
+        "lastmod": datetime.now().strftime("%Y-%m-01"),
         "changefreq": "monthly",
     }

@@ -23,6 +23,9 @@ h5 {
   display: block;
 }
 
+.container {
+  display: flex;
+}
 
 /*-------------- Responsive Styling -----------------------
 
