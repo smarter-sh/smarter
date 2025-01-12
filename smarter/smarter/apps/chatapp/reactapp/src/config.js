@@ -29,7 +29,7 @@ export async function fetchConfig() {
   - debug_mode is a boolean that is also stored in a cookie, managed by Django
     based on a Waffle switch 'reactapp_debug_mode'
   */
-  const session_key = getCookie(SESSION_COOKIE_NAME);
+  const session_key = getCookie(SESSION_COOKIE_NAME) || "";
   const csrftoken = getCookie(CSRF_COOKIE_NAME);
   const debug_mode = getCookie(DEBUG_COOKIE_NAME) || false;
 

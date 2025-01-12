@@ -6,7 +6,7 @@
 //---------------------------------------------------------------------------------
 
 // React stuff
-import React, { useRef } from "react";
+import React, { useRef, useContext } from "react";
 import { useState } from "react";
 import PropTypes from "prop-types";
 
@@ -30,6 +30,7 @@ import {
 // This project
 import { setSessionCookie } from "../../cookies.js";
 import { fetchConfig, setConfig } from "../../config.js";
+import { ConfigContext } from "../../ConfigContext.jsx";
 import { ChatAppLayout } from "../../components/Layout/";
 
 
@@ -41,26 +42,6 @@ import { ChatModal } from "./Modal.jsx";
 import { processApiRequest } from "./ApiRequest.js";
 import { ErrorBoundary } from "./errorBoundary.jsx";
 
-
-// Creates a fancier title for the chat app which includes
-// fontawesome icons for validation and deployment status.
-function AppTitle({ username, is_valid, is_deployed }) {
-  return (
-    <div>
-      {username}&nbsp;
-      {is_valid ? (
-        <FontAwesomeIcon icon={faCheckCircle} style={{ color: 'green' }} />
-      ) : (
-        <FontAwesomeIcon icon={faTimesCircle} style={{ color: 'red' }} />
-      )}
-      {is_deployed ? (
-        <>
-        &nbsp;<FontAwesomeIcon icon={faRocket} style={{ color: 'orange' }} />
-        </>
-      ) : null }
-    </div>
-  );
-}
 
 // The main chat app component. This is the top-level component that
 // is exported and used in the index.js file. It is responsible for
@@ -107,6 +88,19 @@ function ChatApp(props) {
     info += ` with ${total_plugins} additional plugins`;
   }
 
+  // state management: reinitialize the config object
+  const { updateConfig } = useContext(ConfigContext);
+  const reinitializeConfig = async () => {
+    try {
+      if (debug_mode) {
+        console.log("Reinitializing config...");
+      }
+      const newConfig = await fetchConfig();
+      updateConfig(setConfig(newConfig));
+    } catch (error) {
+      console.error("Failed to reinitialize config:", error);
+    }
+  };
 
   // Error modal state management
   function openChatModal(title, msg) {
@@ -122,20 +116,13 @@ function ChatApp(props) {
   const [modalMessage, setmodalMessage] = useState("");
   const [modalTitle, setmodalTitle] = useState("");
 
-  // UI widget event handlers
-  const handleStateChange = () => {
-
-    fetchConfig().then(config => setConfigState(setConfig(config)));
-
-  };
-
   const handleInfoButtonClick = () => {
     window.open(info_url, "_blank");
   };
 
   const handleAddUserButtonClick = () => {
-    setSessionCookie("", true);
-    handleStateChange();
+    setSessionCookie("", debug_mode);
+    reinitializeConfig();
   };
 
   async function handleApiRequest(input_text, base64_encode = true) {
@@ -167,7 +154,7 @@ function ChatApp(props) {
             const newResponseMessage = messageFactory(assistantResponse.message.content, MESSAGE_DIRECTION.INCOMING, SENDER_ROLE.ASSISTANT);
             setMessages((prevMessages) => [...prevMessages, newResponseMessage]);
             setIsTyping(false);
-            handleStateChange();
+            reinitializeConfig();
           }
         } catch (error) {
           setIsTyping(false);
@@ -209,6 +196,27 @@ function ChatApp(props) {
     }
     handleApiRequest(sanitized_input_text, false);
   };
+
+  // Creates a fancier title for the chat app which includes
+  // fontawesome icons for validation and deployment status.
+  function AppTitle({ username, is_valid, is_deployed }) {
+    return (
+      <div>
+        {username}&nbsp;
+        {is_valid ? (
+          <FontAwesomeIcon icon={faCheckCircle} style={{ color: 'green' }} />
+        ) : (
+          <FontAwesomeIcon icon={faTimesCircle} style={{ color: 'red' }} />
+        )}
+        {is_deployed ? (
+          <>
+          &nbsp;<FontAwesomeIcon icon={faRocket} style={{ color: 'orange' }} />
+          </>
+        ) : null }
+      </div>
+    );
+  }
+
 
   // UI widget styles
   // note that most styling is intended to be created in Component.css

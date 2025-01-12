@@ -1,19 +1,16 @@
-// React code
-import React from "react";
-import { useState } from "react";
-
-// Third party components
-import {
-  ContainerLayout,
-  ContentLayout
-} from "./components/Layout/";
-
-// Our code
-import "./App.css";
+import React, { useContext } from "react";
+import { ConfigProvider, ConfigContext } from "./ConfigContext.jsx";
+import { ContainerLayout, ContentLayout } from "./components/Layout/";
 import ChatApp from "./components/chatApp/Component";
 import Console from "./components/console/Component";
+import "./App.css";
 
-const App = ({ config }) => {
+const AppBase = () => {
+  const { config } = useContext(ConfigContext);
+
+  if (!config) {
+    return <div>Loading...</div>;
+  }
 
   if (config.debug_mode) {
     console.log("App() - config:", config);
@@ -30,5 +27,11 @@ const App = ({ config }) => {
     </div>
   );
 };
+
+const App = () => (
+  <ConfigProvider>
+    <AppBase />
+  </ConfigProvider>
+);
 
 export default App;
