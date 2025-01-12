@@ -32,7 +32,7 @@ function Console(props) {
   const pod_hash = Math.floor(Math.random() * 0xFFFFFFFF).toString(16);
   const last_login = new Date().toString();
   const getRandomIpAddress = () => {
-    return `192.10.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`;
+    return `192.168.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`;
   };
   const system_prompt = "smarter_user@smarter-" + pod_hash + ":~/smarter$";
 
@@ -48,22 +48,24 @@ function Console(props) {
       });
 
       let newData = [{}];
-      if (selected === "chat_tool_call_history") {
-        setSelectedMenuItem("chat_tool_call_history");
-        newData = chat_tool_call_history || newData;
+      switch (selected) {
+        case "chat_config":
+          newData = Array.isArray(config) ? config : [config] || newData;
+          break;
+        case "chat_tool_call_history":
+          newData = chat_tool_call_history || newData;
+          break;
+        case "chat_plugin_usage_history":
+          newData = chat_plugin_usage_history || newData;
+          break;
+        case "chatbot_request_history":
+          newData = chatbot_request_history || newData;
+          break;
+        case "plugin_selector_history":
+          newData = plugin_selector_history || newData;
+          break;
       }
-      if (selected === "chat_plugin_usage_history") {
-        setSelectedMenuItem("chat_plugin_usage_history");
-        newData = chat_plugin_usage_history || newData;
-      }
-      if (selected === "chatbot_request_history") {
-        setSelectedMenuItem("chatbot_request_history");
-        newData = chatbot_request_history || newData;
-      }
-      if (selected === "plugin_selector_history") {
-        setSelectedMenuItem("plugin_selector_history");
-        newData = plugin_selector_history || newData;
-      }
+      setSelectedMenuItem(selected);
       setConsoleText(newData);
     }
 
@@ -95,6 +97,7 @@ function Console(props) {
         data-kt-sticky-zindex={95}
       >
         <ul className="nav flex-wrap border-transparent">
+          <ConsoleNavItem label="Config" selected="chat_config" />
           <ConsoleNavItem label="Api Calls" selected="chatbot_request_history" />
           <ConsoleNavItem label="Plugin Selectors" selected="plugin_selector_history" />
           <ConsoleNavItem label="Tool Calls" selected="chat_tool_call_history" />
@@ -113,7 +116,7 @@ function Console(props) {
     );
   };
 
-  const ConsoleOutput = () => {
+  const ConsoleScreen = () => {
     return (
       <div className="console-output rounded">
         <div className="console-output-content">
@@ -136,18 +139,18 @@ function Console(props) {
     <div className="console">
       <HelmetHeadStyles />
       {/*begin::Main*/}
-      <div className="app-main flex-column flex-row-fluid" id="kt_app_main">
+      <div className="app-main flex-column flex-row-fluid" id="chatapp_console_app_main">
         {/*begin::Content wrapper*/}
         <div className="d-flex flex-column flex-column-fluid">
           {/*begin::Content*/}
-          <div id="kt_app_content" className="app-content flex-column-fluid p-0 pb-5">
+          <div id="chatapp_console_app_content" className="app-content flex-column-fluid p-0 pb-5">
             {/*begin::Content container*/}
             <div
-              id="kt_app_content_container"
+              id="chatapp_console_app_content_container"
               className="app-container container-xxl"
             >
               <ConsoleMenu />
-              <ConsoleOutput />
+              <ConsoleScreen />
             </div>
             {/*end::Content container*/}
           </div>

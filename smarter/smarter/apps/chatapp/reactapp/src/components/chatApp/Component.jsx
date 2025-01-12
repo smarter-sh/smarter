@@ -23,11 +23,16 @@ import {
   MessageInput,
   TypingIndicator,
   ConversationHeader,
+  InfoButton,
+  AddUserButton,
 } from "@chatscope/chat-ui-kit-react";
 
-// Our stuff
-import "./Component.css";
+// This project
+import { setSessionCookie } from "../../cookies.js";
+import { fetchConfig, setConfig } from "../../config.js";
 
+// This component
+import "./Component.css";
 import { messageFactory, chatMessages2RequestMessages, chat_init } from "./utils.jsx";
 import { MESSAGE_DIRECTION, SENDER_ROLE } from "./constants.js";
 import { ChatModal } from "./Modal.jsx";
@@ -116,8 +121,19 @@ function ChatApp(props) {
   const [modalTitle, setmodalTitle] = useState("");
 
   // UI widget event handlers
+  const handleStateChange = () => {
+
+    fetchConfig().then(config => setConfigState(setConfig(config)));
+
+  };
+
   const handleInfoButtonClick = () => {
     window.open(info_url, "_blank");
+  };
+
+  const handleAddUserButtonClick = () => {
+    setSessionCookie("", true);
+    handleStateChange();
   };
 
   async function handleApiRequest(input_text, base64_encode = true) {
@@ -149,6 +165,7 @@ function ChatApp(props) {
             const newResponseMessage = messageFactory(assistantResponse.message.content, MESSAGE_DIRECTION.INCOMING, SENDER_ROLE.ASSISTANT);
             setMessages((prevMessages) => [...prevMessages, newResponseMessage]);
             setIsTyping(false);
+            handleStateChange();
           }
         } catch (error) {
           setIsTyping(false);
@@ -231,6 +248,10 @@ function ChatApp(props) {
               userName={<AppTitle username={username} is_valid={is_valid} is_deployed={is_deployed} />}
               info={info}
             />
+          <ConversationHeader.Actions>
+            <AddUserButton onClick={handleAddUserButtonClick} title="New" />
+            <InfoButton onClick={handleInfoButtonClick} title={info_url} />
+          </ConversationHeader.Actions>
           </ConversationHeader>
           <MessageList
             style={transparentBackgroundStyle}
@@ -242,7 +263,11 @@ function ChatApp(props) {
             }
           >
             {messages.filter(message => message.sender !== 'system').map((message, i) => {
-              return <Message key={i} model={message} />;
+              return <Message
+                key={i}
+                model={message}
+                style={message.sender === 'smarter' ? { color: 'brown' } : {}}
+              />;
             })}
           </MessageList>
           <MessageInput

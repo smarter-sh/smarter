@@ -1,25 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React, { useContext } from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
-import { fetchConfig, setConfig } from "./config.js";
+import { ConfigProvider, ConfigContext } from "./ConfigContext.jsx";
 import "./index.css";
 
 function Main() {
-  const [config, setConfigState] = useState(null);
-
-  useEffect(() => {
-    fetchConfig().then(config => setConfigState(setConfig(config)));
-  }, []);
-
-  if (config === null) {
-    return <div>Loading...</div>;
-  }
-  return <App config={config} />;
-
+  return (
+    <ConfigProvider>
+      <ConfigConsumer />
+    </ConfigProvider>
+  );
 }
 
+function ConfigConsumer() {
+  const { config } = useContext(ConfigContext);
 
-ReactDOM.createRoot(document.getElementById("root")).render(
+  return config ? <App config={config} /> : <div>Loading...</div>;
+}
+
+ReactDOM.createRoot(document.getElementById("smarter_chatapp")).render(
   <React.StrictMode>
     <Main />
   </React.StrictMode>,

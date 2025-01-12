@@ -14,6 +14,13 @@ from smarter.common.helpers.console_helpers import (
 )
 
 from .models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall, PluginMeta
+from .providers.openai.const import (
+    OpenAIMessageKeys,
+    OpenAIRequestKeys,
+    OpenAIResponseChoices,
+    OpenAIResponseChoicesMessage,
+    OpenAIResponseKeys,
+)
 from .signals import (
     chat_completion_called,
     chat_completion_plugin_selected,
@@ -67,23 +74,23 @@ def handle_chat_completion_called(sender, **kwargs):
     # to the user.
     if response:
         message: dict = None
-        response_choices = response.get("choices")
+        response_choices = response.get(OpenAIResponseKeys.CHOICES_KEY)
         if response_choices and isinstance(response_choices, list):
             for choice in response_choices:
-                finish_reason = choice.get("finish_reason", "")
-                message = choice.get("message", {})
-                if finish_reason == "tool_calls":
+                finish_reason = choice.get(OpenAIResponseChoices.FINISH_REASON_KEY, "")
+                message = choice.get(OpenAIResponseChoices.MESSAGE_KEY, {})
+                if finish_reason == OpenAIResponseChoicesMessage.TOOL_CALLS_KEY:
                     logger.info(formatted_text_green("Tool calls detected in response."))
-                    tool_calls = message.get("tool_calls")
+                    tool_calls = message.get(OpenAIResponseChoicesMessage.TOOL_CALLS_KEY)
                     for tool_call in tool_calls:
                         function = tool_call.get("function")
                         function_name = function.get("name")
                         function_args = function.get("arguments", "")
                         tool_called = {
-                            "role": "assistant",
-                            "content": f"Tool call: {function_name}({function_args})",
+                            OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SMARTER_MESSAGE_KEY,
+                            OpenAIMessageKeys.MESSAGE_CONTENT_KEY: f"Tool call: {function_name}({function_args})",
                         }
-                        request["messages"].append(tool_called)
+                        request[OpenAIRequestKeys.MESSAGES_KEY].append(tool_called)
                         logger.info("Added tool call to messages: %s", tool_called)
 
     chat_history = ChatHistory(
@@ -101,7 +108,7 @@ def handle_chat_completion_called(sender, **kwargs):
 
 
 @receiver(chat_completion_tool_call_created, dispatch_uid="chat_completion_tool_call_created")
-def handle_chat_completion_tool_call(sender, **kwargs):
+def handle_chat_completion_tool_call_created(sender, **kwargs):
     """Handle chat completion tool call signal."""
 
     chat: Chat = kwargs.get("chat")
@@ -157,7 +164,7 @@ def handle_chat_completion_plugin_selected(sender, **kwargs):
 
 # pylint: disable=W0612
 @receiver(chat_response_success, dispatch_uid="chat_response_success")
-def handle_chat_completion_returned(sender, **kwargs):
+def handle_chat_response_success(sender, **kwargs):
     """Handle chat completion returned signal."""
 
     chat: Chat = kwargs.get("chat")
@@ -167,24 +174,25 @@ def handle_chat_completion_returned(sender, **kwargs):
     # mcdaniel: add the most recent response to the messages list
     # so that the chatbot can display the most recent response
     # to the user.
-    if response:
-        content: str = None
-        message: dict = None
-        response_choices = response.get("choices")
-        if response_choices and isinstance(response_choices, list):
-            for choice in response_choices:
-                finish_reason = choice.get("finish_reason", "")
-                message = choice.get("message", {})
-                if finish_reason == "stop":
-                    logger.info("Stop detected in response.")
-                    content = message.get("content")
-                    role = message.get("role")
-                    assistant_message = {
-                        "role": role,
-                        "content": content,
-                    }
-                    request["messages"].append(assistant_message)
-                    logger.info("Added assistant response to messages.")
+    # mcdaniel jan-2025: DEPRECATED: this is no longer needed as the
+    # if response:
+    #     content: str = None
+    #     message: dict = None
+    #     response_choices = response.get(OpenAIResponseKeys.CHOICES_KEY)
+    #     if response_choices and isinstance(response_choices, list):
+    #         for choice in response_choices:
+    #             finish_reason = choice.get(OpenAIResponseChoices.FINISH_REASON_KEY, "")
+    #             message = choice.get(OpenAIResponseChoices.MESSAGE_KEY, {})
+    #             if finish_reason == "stop":
+    #                 logger.info("Stop detected in response.")
+    #                 content = message.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY)
+    #                 role = message.get(OpenAIMessageKeys.MESSAGE_ROLE_KEY)
+    #                 assistant_message = {
+    #                     OpenAIMessageKeys.MESSAGE_ROLE_KEY: role,
+    #                     OpenAIMessageKeys.MESSAGE_CONTENT_KEY: content,
+    #                 }
+    #                 request[OpenAIRequestKeys.MESSAGES_KEY].append(assistant_message)
+    #                 logger.info("Added assistant response to messages.")
 
     try:
         ChatHistory(
@@ -205,7 +213,7 @@ def handle_chat_completion_returned(sender, **kwargs):
 
 
 @receiver(chat_response_failure, dispatch_uid="chat_response_failure")
-def handle_chat_response_failed(sender, **kwargs):
+def handle_chat_response_failure(sender, **kwargs):
     """Handle chat completion failed signal."""
 
     exception = kwargs.get("exception")
@@ -273,28 +281,28 @@ def handle_chat_handler_console_output(sender, **kwargs):
 
 
 @receiver(post_save, sender=Chat)
-def handle_chat_created(sender, instance, created, **kwargs):
+def handle_chat_post_save(sender, instance, created, **kwargs):
 
     if created:
         logger.info("%s", formatted_text("Chat() record created."))
 
 
 @receiver(post_save, sender=ChatHistory)
-def handle_chat_history_created(sender, instance, created, **kwargs):
+def handle_chat_history_post_save(sender, instance, created, **kwargs):
 
     if created:
         logger.info("%s", formatted_text("ChatHistory() record created."))
 
 
 @receiver(post_save, sender=ChatToolCall)
-def handle_chat_tool_call_created(sender, instance, created, **kwargs):
+def handle_chat_tool_call_post_save(sender, instance, created, **kwargs):
 
     if created:
         logger.info("%s", formatted_text("ChatToolCall() record created."))
 
 
 @receiver(post_save, sender=ChatPluginUsage)
-def handle_plugin_usage_created(sender, instance, created, **kwargs):
+def handle_chat_plugin_usage_post_save(sender, instance, created, **kwargs):
 
     if created:
         logger.info("%s", formatted_text("ChatPluginUsage() record created."))

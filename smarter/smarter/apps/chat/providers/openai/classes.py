@@ -26,6 +26,7 @@ from smarter.apps.chat.providers.classes import (
     HandlerInputBase,
 )
 from smarter.apps.chat.providers.utils import (
+    clean_messages,
     ensure_system_role_present,
     exception_response_factory,
     get_request_body,
@@ -134,6 +135,8 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                         'role': 'assistant',
                         'content': "Welcome to Smarter!. Following are some example prompts: blah blah blah"
                     },
+                    {   "role": "smarter",
+                        "content": "Tool call: function_calling_plugin_0002({\"inquiry_type\":\"about\"})"}
                     {
                         'role': 'user',
                         'content': 'Hello, World!'
@@ -188,6 +191,7 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
             request_body = get_request_body(data=data)
             messages, input_text = parse_request(request_body)
             messages = ensure_system_role_present(messages=messages, default_system_role=default_system_role)
+            messages = clean_messages(messages=messages)
 
             temperature = chat.chatbot.default_temperature or default_temperature
             max_tokens = chat.chatbot.default_max_tokens or default_max_tokens
