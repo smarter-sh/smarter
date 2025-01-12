@@ -8,12 +8,13 @@
 // React stuff
 import React, { useState } from 'react';
 import PropTypes from "prop-types";
+import ReactJson from 'react-json-view';
 
 // Our stuff
 import "./Component.css";
 import HelmetHeadStyles from "./HeadStyles"
 
-function ConsoleOutputWrapper(props) {
+function Console(props) {
   // state
   const [consoleText, setConsoleText] = useState([{}]);
   const [selectedMenuItem, setSelectedMenuItem] = useState("chatbot_request_history");
@@ -26,11 +27,14 @@ function ConsoleOutputWrapper(props) {
   const chatbot_request_history = config.history.chatbot_request_history || [];
   const plugin_selector_history = config.history.plugin_selector_history || [];
 
+
+  // simulated bash shell environment
   const pod_hash = Math.floor(Math.random() * 0xFFFFFFFF).toString(16);
   const last_login = new Date().toString();
   const getRandomIpAddress = () => {
-    return `${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`;
+    return `192.10.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`;
   };
+  const system_prompt = "smarter_user@smarter-" + pod_hash + ":~/smarter$";
 
   // set the console output text based on the selected menu item
   function setSelection(selected="chatbot_request_history") {
@@ -125,30 +129,25 @@ function ConsoleOutputWrapper(props) {
     return (
       <div>
         <p className="mb-0">Last login: {last_login} from {getRandomIpAddress()}</p>
-        <p className="mb-0">smarter_user@smarter-{pod_hash}:~/smarter$</p>
+        <p className="mb-0">{system_prompt}</p>
       </div>
     );
   };
 
   const ConsoleOutput = () => {
     return (
-      <div className="console-output-content">
-        {consoleText.length === 1 && JSON.stringify(consoleText[0]) === '{}' ? (
-          <ConsoleOutputInitializing />
-        ) : (
-          consoleText.map((item, index) => (
-            <pre key={index}>{JSON.stringify(item, null, 2)}</pre>
-          ))
-        )}
-      </div>
-    );
-  };
-
-
-  const ConsoleOutputWrapper = () => {
-    return (
       <div className="console-output rounded">
-        <ConsoleOutput />
+        <div className="console-output-content">
+          <ConsoleOutputInitializing />
+          {consoleText.length === 1 && JSON.stringify(consoleText[0]) === '{}' ? null : (
+            <>
+              {consoleText.map((item, index) => (
+                <ReactJson key={index} src={item} theme="monokai" />
+              ))}
+              <p className="mb-0">{system_prompt}</p>
+            </>
+          )}
+        </div>
       </div>
     );
   };
@@ -168,10 +167,8 @@ function ConsoleOutputWrapper(props) {
               id="kt_app_content_container"
               className="app-container container-xxl"
             >
-              {/*begin::Nav items*/}
               <ConsoleMenu />
-              {/*end::Nav items*/}
-              <ConsoleOutputWrapper />
+              <ConsoleOutput />
             </div>
             {/*end::Content container*/}
           </div>
@@ -186,7 +183,7 @@ function ConsoleOutputWrapper(props) {
 
 // define the props that are expected to be passed in and also
 // make these immutable.
-ConsoleOutputWrapper.propTypes = {
+Console.propTypes = {
   config: PropTypes.object.isRequired,
   chat_tool_call_history: PropTypes.array.isRequired,
   chat_plugin_usage_history: PropTypes.array.isRequired,
@@ -194,4 +191,4 @@ ConsoleOutputWrapper.propTypes = {
   plugin_selector_history: PropTypes.array.isRequired,
 };
 
-export default ConsoleOutputWrapper;
+export default Console;

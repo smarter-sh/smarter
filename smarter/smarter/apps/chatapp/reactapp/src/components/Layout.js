@@ -25,7 +25,7 @@ export const ChatAppWrapper = styled.div`
 
 `;
 
-export const ConsoleOutputWrapper = styled.div`
+export const Console = styled.div`
   flex-basis: 66.67%;
   padding: 5px;
   margin: 0;
