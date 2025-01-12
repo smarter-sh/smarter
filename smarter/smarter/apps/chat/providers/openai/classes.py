@@ -265,6 +265,7 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
             tool_calls = response_message.tool_calls
             if tool_calls:
                 modified_messages = messages.copy()
+                modified_messages = clean_messages(messages=modified_messages)
                 # this is intended to force a json serialization exception
                 # in the event that we've neglected to properly serialize all
                 # responses from openai api.
