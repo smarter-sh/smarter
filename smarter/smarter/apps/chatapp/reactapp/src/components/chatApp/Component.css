@@ -25,9 +25,16 @@ div.cs-message__html-content a:hover {
 section.smarter-message .cs-message__html-content {
   color: brown !important;
   background-color: blanchedalmond;
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+  text-align: center;
 }
 
 section.smarter-message .cs-message__content {
   color: brown !important;
   background-color: blanchedalmond;
+  border: 1px solid brown;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  border-radius: 10px;
 }

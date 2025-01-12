@@ -78,9 +78,6 @@
         "plugins_returned": 0
       },
       "plugins": []
-    },
-    "APPLICATIONS": {
-      "SmarterSandbox": "SmarterSandBox"
     }
   },
   "api": "smarter.sh/v1",
