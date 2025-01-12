@@ -195,3 +195,27 @@ def ensure_system_role_present(
             },
         )
     return messages
+
+
+def clean_messages(messages: list[dict]) -> list:
+    """
+    Remove any messages that are not intended to be sent to the OpenAI API.
+    'messages': [
+            {
+                'role': 'system',
+                'content': "You are a helpful assistant."
+            },
+            {
+                'role': 'assistant',
+                'content': "Welcome to Smarter!. Following are some example prompts: blah blah blah"
+            },
+            {   "role": "smarter",
+                "content": "Tool call: function_calling_plugin_0002({\"inquiry_type\":\"about\"})"}
+            {
+                'role': 'user',
+                'content': 'Hello, World!'
+            }
+        ]
+
+    """
+    return [message for message in messages if message[OpenAIMessageKeys.MESSAGE_ROLE_KEY] in OpenAIMessageKeys.all]
