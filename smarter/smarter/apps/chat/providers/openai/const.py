@@ -48,14 +48,79 @@ class OpenAIMessageKeys:
 
     MESSAGE_ROLE_KEY = "role"
     MESSAGE_CONTENT_KEY = "content"
-    USER_MESSAGE_KEY = "user"
-    ASSISTANT_MESSAGE_KEY = "assistant"
+
     SYSTEM_MESSAGE_KEY = "system"
+    ASSISTANT_MESSAGE_KEY = "assistant"
+    USER_MESSAGE_KEY = "user"
+
+    SMARTER_MESSAGE_KEY = "smarter"
+
+    # the valid openai api message keys
     all = [
         SYSTEM_MESSAGE_KEY,
-        USER_MESSAGE_KEY,
         ASSISTANT_MESSAGE_KEY,
+        USER_MESSAGE_KEY,
     ]
+
+
+class OpenAIRequestKeys:
+    """A class representing the keys for a request in the OpenAI API."""
+
+    MODEL_KEY = "model"
+    TOOLS_KEY = "tools"
+    MESSAGES_KEY = "messages"
+    MAX_TOKENS_KEY = "max_tokens"
+    TEMPERATURE_KEY = "temperature"
+    all = [MODEL_KEY, TOOLS_KEY, MESSAGES_KEY, MAX_TOKENS_KEY, TEMPERATURE_KEY]
+
+
+class OpenAIResponseKeys:
+    """A class representing the keys for a response in the OpenAI API."""
+
+    ID_KEY = "id"
+    MODEL_KEY = "model"
+    USAGE_KEY = "usage"
+    OBJECT_KEY = "object"
+    CHOICES_KEY = "choices"
+    CREATED_KEY = "created"
+    METADATA_KEY = "metadata"
+    SERVICE_TIER = "service_tier"
+    SYSTEM_FINGERPRINT = "system_fingerprint"
+
+    all = [
+        ID_KEY,
+        MODEL_KEY,
+        USAGE_KEY,
+        OBJECT_KEY,
+        CHOICES_KEY,
+        CREATED_KEY,
+        METADATA_KEY,
+        SERVICE_TIER,
+        SYSTEM_FINGERPRINT,
+    ]
+
+
+class OpenAIResponseChoices:
+    """A class representing the keys for a response in the OpenAI API."""
+
+    INDEX_KEY = "index"
+    MESSAGE_KEY = "message"
+    LOGPROBS_KEY = "logprobs"
+    FINISH_REASON_KEY = "finish_reason"
+
+    all = [INDEX_KEY, MESSAGE_KEY, LOGPROBS_KEY, FINISH_REASON_KEY]
+
+
+class OpenAIResponseChoicesMessage:
+    """A class representing the keys for a response choice message in the OpenAI API."""
+
+    ROLE_KEY = "role"
+    AUDIO_KEY = "audio"
+    CONTENT_KEY = "content"
+    REFUSAL_KEY = "refusal"
+    TOOL_CALLS_KEY = "tool_calls"
+    FUNCTION_CALL_KEY = "function_call"
+    all = [ROLE_KEY, AUDIO_KEY, CONTENT_KEY, REFUSAL_KEY, TOOL_CALLS_KEY, FUNCTION_CALL_KEY]
 
 
 VALID_CHAT_COMPLETION_MODELS = [

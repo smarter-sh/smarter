@@ -1,26 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
-import { fetchConfig, setConfig } from "./config.js";
 import "./index.css";
 
-function Main() {
-  const [config, setConfigState] = useState(null);
-
-  useEffect(() => {
-    fetchConfig().then(config => setConfigState(setConfig(config)));
-  }, []);
-
-  if (config === null) {
-    return <div>Loading...</div>;
-  }
-  return <App config={config} />;
-
-}
-
-
-ReactDOM.createRoot(document.getElementById("root")).render(
+ReactDOM.createRoot(document.getElementById("smarter_chatapp_root")).render(
   <React.StrictMode>
-    <Main />
+    <App />
   </React.StrictMode>,
 );
