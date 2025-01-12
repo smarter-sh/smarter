@@ -36,33 +36,54 @@ function Console(props) {
   };
   const system_prompt = "smarter_user@smarter-" + pod_hash + ":~/smarter$";
 
-  // set the console output text based on the selected menu item
-  function setSelection(selected="chatbot_request_history") {
-    let newData = [{}];
-    if (selected === "chat_tool_call_history") {
-      setSelectedMenuItem("chat_tool_call_history");
-      newData = chat_tool_call_history || newData;
+
+  const ConsoleNavItem = (props) => {
+
+    // set the console output text based on the selected menu item
+    function consoleNavItemClicked(event, selected="chatbot_request_history") {
+      // set the 'active' menu item
+      requestAnimationFrame(() => {
+        document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+        event.target.classList.add('active');
+      });
+
+      let newData = [{}];
+      if (selected === "chat_tool_call_history") {
+        setSelectedMenuItem("chat_tool_call_history");
+        newData = chat_tool_call_history || newData;
+      }
+      if (selected === "chat_plugin_usage_history") {
+        setSelectedMenuItem("chat_plugin_usage_history");
+        newData = chat_plugin_usage_history || newData;
+      }
+      if (selected === "chatbot_request_history") {
+        setSelectedMenuItem("chatbot_request_history");
+        newData = chatbot_request_history || newData;
+      }
+      if (selected === "plugin_selector_history") {
+        setSelectedMenuItem("plugin_selector_history");
+        newData = plugin_selector_history || newData;
+      }
+      setConsoleText(newData);
     }
-    if (selected === "chat_plugin_usage_history") {
-      setSelectedMenuItem("chat_plugin_usage_history");
-      newData = chat_plugin_usage_history || newData;
-    }
-    if (selected === "chatbot_request_history") {
-      setSelectedMenuItem("chatbot_request_history");
-      newData = chatbot_request_history || newData;
-    }
-    if (selected === "plugin_selector_history") {
-      setSelectedMenuItem("plugin_selector_history");
-      newData = plugin_selector_history || newData;
-    }
-    console.log("selected: ", newData);
-    setConsoleText(newData);
-  }
+
+    return (
+      <li className="nav-item my-1">
+        <a
+          className="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
+          href="#"
+          onClick={(event) => consoleNavItemClicked(event, props.selected)}
+        >
+          {props.label}
+        </a>
+      </li>
+    );
+  };
 
   const ConsoleMenu = () => {
     return (
       <div
-        id="kt_user_profile_nav"
+        id="chatapp_console"
         className="bg-gray-200 d-flex flex-stack flex-wrap mb-2 p-2 console-nav-items"
         data-kt-sticky="true"
         data-kt-sticky-name="sticky-profile-navs"
@@ -73,54 +94,12 @@ function Console(props) {
         data-kt-sticky-animation="false"
         data-kt-sticky-zindex={95}
       >
-        {/*begin::Nav*/}
         <ul className="nav flex-wrap border-transparent">
-          {/*begin::Nav item*/}
-          <li className="nav-item my-1">
-            <a
-              className="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
-              href="#"
-              onClick={() => setSelection("chatbot_request_history")}
-            >
-              Api Calls
-            </a>
-          </li>
-          {/*end::Nav item*/}
-          {/*begin::Nav item*/}
-          <li className="nav-item my-1">
-            <a
-              className="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
-              href="#"
-              onClick={() => setSelection("plugin_selector_history")}
-            >
-              Plugin Selectors
-            </a>
-          </li>
-          {/*end::Nav item*/}
-          {/*begin::Nav item*/}
-          <li className="nav-item my-1">
-            <a
-              className="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
-              href="#"
-              onClick={() => setSelection("chat_tool_call_history")}
-            >
-              Tool Calls
-            </a>
-          </li>
-          {/*end::Nav item*/}
-          {/*begin::Nav item*/}
-          <li className="nav-item my-1">
-            <a
-              className="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
-              href="#"
-              onClick={() => setSelection("chat_plugin_usage_history")}
-            >
-              Plugin Usage
-            </a>
-          </li>
-          {/*end::Nav item*/}
+          <ConsoleNavItem label="Api Calls" selected="chatbot_request_history" />
+          <ConsoleNavItem label="Plugin Selectors" selected="plugin_selector_history" />
+          <ConsoleNavItem label="Tool Calls" selected="chat_tool_call_history" />
+          <ConsoleNavItem label="Plugin Usage" selected="chat_plugin_usage_history" />
         </ul>
-        {/*end::Nav*/}
       </div>
     );
   };
