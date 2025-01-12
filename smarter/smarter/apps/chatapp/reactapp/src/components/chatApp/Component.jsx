@@ -6,7 +6,7 @@
 //---------------------------------------------------------------------------------
 
 // React stuff
-import React, { useRef } from "react";
+import React, { useRef, useContext } from "react";
 import { useState } from "react";
 import PropTypes from "prop-types";
 
@@ -23,37 +23,25 @@ import {
   MessageInput,
   TypingIndicator,
   ConversationHeader,
+  InfoButton,
+  AddUserButton,
 } from "@chatscope/chat-ui-kit-react";
 
-// Our stuff
-import "./Component.css";
+// This project
+import { setSessionCookie } from "../../cookies.js";
+import { fetchConfig, setConfig } from "../../config.js";
+import { ConfigContext } from "../../ConfigContext.jsx";
+import { ChatAppLayout } from "../../components/Layout/";
 
+
+// This component
+import "./Component.css";
 import { messageFactory, chatMessages2RequestMessages, chat_init } from "./utils.jsx";
 import { MESSAGE_DIRECTION, SENDER_ROLE } from "./constants.js";
 import { ChatModal } from "./Modal.jsx";
 import { processApiRequest } from "./ApiRequest.js";
 import { ErrorBoundary } from "./errorBoundary.jsx";
 
-
-// Creates a fancier title for the chat app which includes
-// fontawesome icons for validation and deployment status.
-function AppTitle({ username, is_valid, is_deployed }) {
-  return (
-    <div>
-      {username}&nbsp;
-      {is_valid ? (
-        <FontAwesomeIcon icon={faCheckCircle} style={{ color: 'green' }} />
-      ) : (
-        <FontAwesomeIcon icon={faTimesCircle} style={{ color: 'red' }} />
-      )}
-      {is_deployed ? (
-        <>
-        &nbsp;<FontAwesomeIcon icon={faRocket} style={{ color: 'orange' }} />
-        </>
-      ) : null }
-    </div>
-  );
-}
 
 // The main chat app component. This is the top-level component that
 // is exported and used in the index.js file. It is responsible for
@@ -76,7 +64,7 @@ function ChatApp(props) {
   const file_attach_button = config.chatbot.app_file_attachment;
   const provider = config.chatbot.provider;
   const default_model = config.chatbot.default_model;
-  const version = config.chatbot.version;
+  const version = config.chatbot.version || "0.1.0";
 
   // chatbot state
   const is_valid = config.meta_data.is_valid;
@@ -91,8 +79,9 @@ function ChatApp(props) {
   const chatHistory = config && config.history && config.history.chat_history ? config.history.chat_history : [];
   const message_thread = chat_init(welcome_message, system_role, example_prompts, session_key, chatHistory, "BACKEND_CHAT_MOST_RECENT_RESPONSE");
   const [messages, setMessages] = useState(message_thread);
+  console.log("messages: ", messages);
 
-  const username = app_name + " " + version;
+  const username = app_name + " v" + version;
 
   const total_plugins = config.plugins.meta_data.total_plugins;
   let info = provider + " " + default_model;
@@ -100,6 +89,19 @@ function ChatApp(props) {
     info += ` with ${total_plugins} additional plugins`;
   }
 
+  // state management: reinitialize the config object
+  const { updateConfig } = useContext(ConfigContext);
+  const reinitializeConfig = async () => {
+    try {
+      if (debug_mode) {
+        console.log("Reinitializing config...");
+      }
+      const newConfig = await fetchConfig();
+      updateConfig(setConfig(newConfig));
+    } catch (error) {
+      console.error("Failed to reinitialize config:", error);
+    }
+  };
 
   // Error modal state management
   function openChatModal(title, msg) {
@@ -115,9 +117,13 @@ function ChatApp(props) {
   const [modalMessage, setmodalMessage] = useState("");
   const [modalTitle, setmodalTitle] = useState("");
 
-  // UI widget event handlers
   const handleInfoButtonClick = () => {
     window.open(info_url, "_blank");
+  };
+
+  const handleAddUserButtonClick = () => {
+    setSessionCookie("", debug_mode);
+    reinitializeConfig();
   };
 
   async function handleApiRequest(input_text, base64_encode = true) {
@@ -149,6 +155,7 @@ function ChatApp(props) {
             const newResponseMessage = messageFactory(assistantResponse.message.content, MESSAGE_DIRECTION.INCOMING, SENDER_ROLE.ASSISTANT);
             setMessages((prevMessages) => [...prevMessages, newResponseMessage]);
             setIsTyping(false);
+            reinitializeConfig();
           }
         } catch (error) {
           setIsTyping(false);
@@ -191,6 +198,27 @@ function ChatApp(props) {
     handleApiRequest(sanitized_input_text, false);
   };
 
+  // Creates a fancier title for the chat app which includes
+  // fontawesome icons for validation and deployment status.
+  function AppTitle({ username, is_valid, is_deployed }) {
+    return (
+      <div>
+        {username}&nbsp;
+        {is_valid ? (
+          <FontAwesomeIcon icon={faCheckCircle} style={{ color: 'green' }} />
+        ) : (
+          <FontAwesomeIcon icon={faTimesCircle} style={{ color: 'red' }} />
+        )}
+        {is_deployed ? (
+          <>
+          &nbsp;<FontAwesomeIcon icon={faRocket} style={{ color: 'orange' }} />
+          </>
+        ) : null }
+      </div>
+    );
+  }
+
+
   // UI widget styles
   // note that most styling is intended to be created in Component.css
   // these are outlying cases where inline styles are required in order to override the default styles
@@ -215,70 +243,71 @@ function ChatApp(props) {
 
   // render the chat app
   return (
-    <div className="chat-app">
-      <MainContainer style={mainContainerStyle}>
-        <ErrorBoundary>
-          <ChatModal
-            isModalOpen={isModalOpen}
-            title={modalTitle}
-            message={modalMessage}
-            onCloseClick={closeChatModal}
-          />
-        </ErrorBoundary>
-        <ChatContainer style={chatContainerStyle}>
-          <ConversationHeader>
-            <ConversationHeader.Content
-              userName={<AppTitle username={username} is_valid={is_valid} is_deployed={is_deployed} />}
-              info={info}
+    <ChatAppLayout>
+      <div className="chat-app">
+        <MainContainer style={mainContainerStyle}>
+          <ErrorBoundary>
+            <ChatModal
+              isModalOpen={isModalOpen}
+              title={modalTitle}
+              message={modalMessage}
+              onCloseClick={closeChatModal}
             />
-          </ConversationHeader>
-          <MessageList
-            style={transparentBackgroundStyle}
-            scrollBehavior="auto"
-            typingIndicator={
-              isTyping ? (
-                <TypingIndicator content={assistant_name + " is typing"} />
-              ) : null
-            }
-          >
-            {messages.filter(message => message.sender !== 'system').map((message, i) => {
-              return <Message key={i} model={message} />;
-            })}
-          </MessageList>
-          <MessageInput
-            placeholder={placeholder_text}
-            onSend={handleSend}
-            onAttachClick={handleAttachClick}
-            attachButton={file_attach_button}
-            fancyScroll={false}
+          </ErrorBoundary>
+          <ChatContainer style={chatContainerStyle}>
+            <ConversationHeader>
+              <ConversationHeader.Content
+                userName={<AppTitle username={username} is_valid={is_valid} is_deployed={is_deployed} />}
+                info={info}
+              />
+            <ConversationHeader.Actions>
+              <AddUserButton onClick={handleAddUserButtonClick} title="New" />
+              <InfoButton onClick={handleInfoButtonClick} title={info_url} />
+            </ConversationHeader.Actions>
+            </ConversationHeader>
+            <MessageList
+              style={transparentBackgroundStyle}
+              scrollBehavior="auto"
+              typingIndicator={
+                isTyping ? (
+                  <TypingIndicator content={assistant_name + " is typing"} />
+                ) : null
+              }
+            >
+              {messages.filter(message => message.sender !== 'system').map((message, i) => {
+                return <Message
+                  key={i}
+                  model={message}
+                  className={message.sender === 'smarter' ? 'smarter-message' : ''}
+                />;
+              })}
+            </MessageList>
+            <MessageInput
+              placeholder={placeholder_text}
+              onSend={handleSend}
+              onAttachClick={handleAttachClick}
+              attachButton={file_attach_button}
+              fancyScroll={false}
+            />
+          </ChatContainer>
+          <input
+            type="file"
+            accept=".py"
+            title="Select a Python file"
+            ref={fileInputRef}
+            style={{ display: "none" }}
+            onChange={handleFileChange}
           />
-        </ChatContainer>
-        <input
-          type="file"
-          accept=".py"
-          title="Select a Python file"
-          ref={fileInputRef}
-          style={{ display: "none" }}
-          onChange={handleFileChange}
-        />
-      </MainContainer>
-    </div>
+        </MainContainer>
+      </div>
+    </ChatAppLayout>
   );
 }
 
 // define the props that are expected to be passed in and also
 // make these immutable.
 ChatApp.propTypes = {
-  welcome_message: PropTypes.string.isRequired,
-  placeholder_text: PropTypes.string.isRequired,
-  api_url: PropTypes.string.isRequired,
-  api_key: PropTypes.string,
-  app_name: PropTypes.string.isRequired,
-  system_role: PropTypes.string.isRequired,
-  assistant_name: PropTypes.string.isRequired,
-  info_url: PropTypes.string.isRequired,
-  example_prompts: PropTypes.array.isRequired,
-  file_attach_button: PropTypes.bool.isRequired,
+  config: PropTypes.object.isRequired,
 };
 
 export default ChatApp;

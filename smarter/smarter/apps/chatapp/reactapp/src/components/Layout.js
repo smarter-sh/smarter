@@ -15,15 +15,24 @@ export const ContentLayout = styled.div`
   padding: 0;
 `;
 
-export const ChatAppWrapper = styled.div`
+export const ChatAppLayout = styled.div`
   flex-basis: 33.33%;
   margin: 0;
   padding: 5px;
+  @media (max-width: 992px) {
+    flex-basis: 100%;
+  }
+
 `;
 
-export const ConsoleOutputWrapper = styled.div`
+export const ConsoleLayout = styled.div`
   flex-basis: 66.67%;
   padding: 5px;
   margin: 0;
-  box-sizing: border-box; /* Ensure padding is included in the element's total width and height */
+  box-sizing: border-box;
+  // visible on only on large screens
+  @media (max-width: 992px) {
+    display: none;
+    flex-basis: 0%;
+  }
 `;

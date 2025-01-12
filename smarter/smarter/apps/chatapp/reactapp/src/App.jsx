@@ -1,51 +1,37 @@
-// React code
-import React from "react";
-import { useState } from "react";
-
-// Third party components
-import {
-  ContainerLayout,
-  ContentLayout,
-  ChatAppWrapper,
-  ConsoleOutputWrapper,
-} from "./components/Layout/";
-
-// Our code
-import "./App.css";
+import React, { useContext } from "react";
+import { ConfigProvider, ConfigContext } from "./ConfigContext.jsx";
+import { ContainerLayout, ContentLayout } from "./components/Layout/";
 import ChatApp from "./components/chatApp/Component";
-import ConsoleOutput from "./components/consoleOutput/Component";
+import Console from "./components/console/Component";
+import "./App.css";
 
-// chatApp definitions
-import { getSmarterSandbox } from "./applications/SmarterSandbox";
-
-const App = ({ config }) => {
+const AppBase = () => {
+  const { config } = useContext(ConfigContext);
 
   if (!config) {
-    return <div>Loading Config...</div>;
+    return <div>Loading...</div>;
   }
-
-  // const [selectedItem, setSelectedItem] = useState(
-  //   config.APPLICATIONS.SmarterSandbox,
-  // );
 
   if (config.debug_mode) {
     console.log("App() - config:", config);
   }
 
   return (
-    <div className="App">
-<ContainerLayout>
-  <ContentLayout>
-    <ChatAppWrapper>
-      <ChatApp {...getSmarterSandbox(config)} />
-    </ChatAppWrapper>
-    <ConsoleOutputWrapper>
-      <ConsoleOutput config={config} />
-    </ConsoleOutputWrapper>
-  </ContentLayout>
-</ContainerLayout>
+    <div id="smarter_chatapp_container" className="App">
+      <ContainerLayout>
+        <ContentLayout>
+          <ChatApp config={config} />
+          <Console config={config} />
+        </ContentLayout>
+      </ContainerLayout>
     </div>
   );
 };
+
+const App = () => (
+  <ConfigProvider>
+    <AppBase />
+  </ConfigProvider>
+);
 
 export default App;
