@@ -184,11 +184,7 @@ function Console(props) {
 // define the props that are expected to be passed in and also
 // make these immutable.
 Console.propTypes = {
-  config: PropTypes.object.isRequired,
-  chat_tool_call_history: PropTypes.array.isRequired,
-  chat_plugin_usage_history: PropTypes.array.isRequired,
-  chatbot_request_history: PropTypes.array.isRequired,
-  plugin_selector_history: PropTypes.array.isRequired,
+  config: PropTypes.object.isRequired
 };
 
 export default Console;
