@@ -56,7 +56,7 @@ const examplePrompts = (prompts) => {
     );
 };
 
-function chat_intro(welcome_message, system_role, example_prompts) {
+export function chat_intro(welcome_message, system_role, example_prompts) {
   /*
   Generate the initial message thread for the chat window. This includes the
   welcome message, and any example prompts that are configured in the
