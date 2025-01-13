@@ -12,6 +12,7 @@ const App = () => {
       <ContainerLayout>
         <ContentLayout>
           <ChatApp />
+          <Console />
         </ContentLayout>
       </ContainerLayout>
     </div>

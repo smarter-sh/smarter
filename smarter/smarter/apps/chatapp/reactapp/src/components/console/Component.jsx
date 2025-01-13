@@ -6,31 +6,71 @@
 //---------------------------------------------------------------------------------
 
 // React stuff
-import React, { useState, useContext } from 'react';
-import PropTypes from "prop-types";
+import React, { useState, useEffect } from 'react';
 import ReactJson from 'react-json-view';
 
 // This project
-import { ConfigContext } from "../../ConfigContext.jsx";
 import { ConsoleLayout } from "../../components/Layout/";
+import { fetchConfig } from "../../config.js";
 
 // This component
 import "./Component.css";
 import HelmetHeadStyles from "./HeadStyles"
 
-function Console(props) {
+function Console() {
   // state
+  const [config, setConfig] = useState({});
   const [consoleText, setConsoleText] = useState([{}]);
   const [selectedMenuItem, setSelectedMenuItem] = useState("chatbot_request_history");
+  const [debugMode, setDebugMode] = useState(false);
+  const [chat_tool_call_history, setChatToolCallHistory] = useState([]);
+  const [chat_plugin_usage_history, setChatPluginUsageHistory] = useState([]);
+  const [chatbot_request_history, setChatbotRequestHistory] = useState([]);
+  const [plugin_selector_history, setPluginSelectorHistory] = useState([]);
 
-  // app configuration
-  const config = props.config; // see ../../data/sample-config.json for an example of this object.
-  const chat_tool_call_history = config.history.chat_tool_call_history || [];
-  const chat_plugin_usage_history =
-    config.history.chat_plugin_usage_history || [];
-  const chatbot_request_history = config.history.chatbot_request_history || [];
-  const plugin_selector_history = config.history.plugin_selector_history || [];
 
+  const fetchAndSetConsoleConfig = async () => {
+    try {
+      const newConfig = await fetchConfig();
+
+      if (newConfig?.debug_mode) {
+        console.log("fetchAndSetConsoleConfig()...");
+        console.log("fetchAndSetConsoleConfig() config:", newConfig);
+      }
+
+      setConfig(newConfig);
+      setDebugMode(newConfig.debug_mode);
+
+      // app configuration
+      setChatToolCallHistory(newConfig.history.chat_tool_call_history || []);
+      setChatPluginUsageHistory(newConfig.history.chat_plugin_usage_history || []);
+      setChatbotRequestHistory(newConfig.history.chatbot_request_history || []);
+      setPluginSelectorHistory(newConfig.history.plugin_selector_history || []);
+
+      if (newConfig?.debug_mode) {
+        console.log("fetchAndSetConsoleConfig() done!");
+      }
+
+    } catch (error) {
+      console.error("Failed to fetch config:", error);
+    }
+  };
+
+  // Lifecycle hooks
+  useEffect(() => {
+    if (debugMode) {
+      console.log('Console() component mounted');
+    }
+
+    fetchAndSetConsoleConfig();
+
+    return () => {
+      if (debugMode) {
+        console.log('Console() component unmounted');
+      }
+    };
+
+  }, []);
 
   // simulated bash shell environment
   const pod_hash = Math.floor(Math.random() * 0xFFFFFFFF).toString(16);
@@ -167,11 +207,5 @@ function Console(props) {
     </ConsoleLayout>
   );
 }
-
-// define the props that are expected to be passed in and also
-// make these immutable.
-Console.propTypes = {
-  config: PropTypes.object.isRequired
-};
 
 export default Console;
