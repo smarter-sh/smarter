@@ -1,7 +1,6 @@
 import React from "react";
 import { ContainerLayout, ContentLayout } from "./components/Layout/";
 import ChatApp from "./components/chatApp/Component";
-import Console from "./components/console/Component";
 import "./App.css";
 
 
@@ -12,7 +11,6 @@ const App = () => {
       <ContainerLayout>
         <ContentLayout>
           <ChatApp />
-          <Console />
         </ContentLayout>
       </ContainerLayout>
     </div>

@@ -26,6 +26,7 @@ import {
 } from "@chatscope/chat-ui-kit-react";
 
 // This project
+import Console from "../../components/console/Component";
 import { setSessionCookie } from "../../cookies.js";
 import { fetchConfig } from "../../config.js";
 import { ChatAppLayout } from "../../components/Layout/";
@@ -263,6 +264,7 @@ function ChatApp() {
 
   // render the chat app
   return (
+    <React.Fragment>
     <ChatAppLayout>
       <div className="chat-app">
         <MainContainer style={mainContainerStyle}>
@@ -321,6 +323,8 @@ function ChatApp() {
         </MainContainer>
       </div>
     </ChatAppLayout>
+    <Console config={config} />
+    </React.Fragment>
   );
 }
 
