@@ -147,6 +147,7 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 ]
             }
         """
+        self.init()
         openai.api_key = self.api_key
         openai.base_url = self.base_url
 
@@ -188,6 +189,7 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
         input_text: str = None
 
         try:
+            logger.info("%s: handler() invoked. messages: %s", self.formatted_class_name, self.messages)
             model = chat.chatbot.default_model or default_model
             default_system_role = chat.chatbot.default_system_role or default_system_role
 
@@ -237,7 +239,6 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
             }
 
             self.handle_first_prompt(
-                sender=OpenAIChatProvider.__class__.__name__,
                 model=model,
                 tools=self.tools,
                 tool_choice="auto",
@@ -266,7 +267,6 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 response=first_iteration["response"],
             )
             self.handle_prompt_completion(
-                sender=OpenAIChatProvider.__class__.__name__,
                 user_id=user.id,
                 model=model,
                 completion_tokens=first_response.usage.completion_tokens,
@@ -349,7 +349,6 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 second_iteration["response"] = second_response_dict
                 second_iteration["request"]["messages"] = serialized_messages
                 self.handle_prompt_completion(
-                    sender=OpenAIChatProvider.__class__.__name__,
                     user_id=user.id,
                     model=model,
                     completion_tokens=second_response.usage.completion_tokens,
@@ -367,7 +366,6 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                     response=second_iteration["response"],
                 )
                 self.handle_prompt_completion_plugin(
-                    sender=OpenAIChatProvider.__class__.__name__,
                     user_id=user.id,
                     model=model,
                     completion_tokens=second_response.usage.completion_tokens,
@@ -396,6 +394,7 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
             )
 
         # success!! return the response
+        logger.info("%s: handler() completed. messages: %s", self.formatted_class_name, self.messages)
         response = second_iteration.get("response") or first_iteration.get("response")
         response["metadata"] = {"tool_calls": serialized_tool_calls, **request_meta_data}
         response[OpenAIMessageKeys.SMARTER_MESSAGE_KEY] = {

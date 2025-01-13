@@ -47,28 +47,22 @@ import { ErrorBoundary } from "./errorBoundary.jsx";
 function ChatApp() {
 
   const [config, setConfig] = useState({});
-  const [sessionKey, setSessionKey] = useState('');
   const [placeholderText, setPlaceholderText] = useState('');
   const [apiUrl, setApiUrl] = useState('');
-  const [appName, setAppName] = useState('');
   const [assistantName, setAssistantName] = useState('');
   const [infoUrl, setInfoUrl] = useState('');
   const [fileAttachButton, setFileAttachButton] = useState(false);
-  const [provider, setProvider] = useState('');
-  const [defaultModel, setDefaultModel] = useState('');
-  const [version, setVersion] = useState('0.1.0');
   const [isValid, setIsValid] = useState(false);
   const [isDeployed, setIsDeployed] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
   const [messages, setMessages] = useState([]);
   const [title, setTitle] = useState('');
-  const [totalPlugins, setTotalPlugins] = useState(0);
   const [info, setInfo] = useState('');
 
   // future use
-  const [apiKey, setApiKey] = useState('');
-  const [backgroundImageUrl, setBackgroundImageUrl] = useState('');
-  const [sandboxMode, setSandboxMode] = useState(false);
+  // const [apiKey, setApiKey] = useState('');
+  // const [backgroundImageUrl, setBackgroundImageUrl] = useState('');
+  // const [sandboxMode, setSandboxMode] = useState(false);
 
   // component internal state
   const [isTyping, setIsTyping] = useState(false);
@@ -84,25 +78,15 @@ function ChatApp() {
       }
 
       setConfig(newConfig);
-      setSessionKey(newConfig.session_key);
       setPlaceholderText(newConfig.chatbot.app_placeholder);
       setApiUrl(newConfig.chatbot.url_chatbot);
-      setAppName(newConfig.chatbot.app_name);
       setAssistantName(newConfig.chatbot.app_assistant);
       setInfoUrl(newConfig.chatbot.app_info_url);
       setFileAttachButton(newConfig.chatbot.app_file_attachment);
-      setProvider(newConfig.chatbot.provider);
-      setDefaultModel(newConfig.chatbot.default_model);
-      setVersion(newConfig.chatbot.version || "1.0.0");
       setIsValid(newConfig.meta_data.is_valid);
       setIsDeployed(newConfig.meta_data.is_deployed);
       setDebugMode(newConfig.debug_mode);
-      setTotalPlugins(newConfig.plugins.meta_data.total_plugins);
 
-      // future use
-      setApiKey(newConfig.api_key);
-      setBackgroundImageUrl(newConfig.chatbot.app_background_image_url);
-      setSandboxMode(newConfig.sandbox_mode);
 
       // wrap up the rest of the initialization
       const newHistory = newConfig.history?.chat_history || [];
@@ -128,12 +112,16 @@ function ChatApp() {
 
   // Lifecycle hooks
   useEffect(() => {
-    console.log('ChatApp() component mounted');
+    if (debugMode) {
+      console.log('ChatApp() component mounted');
+    }
 
     fetchAndSetConfig();
 
     return () => {
-      console.log('ChatApp() component unmounted');
+      if (debugMode) {
+        console.log('ChatApp() component unmounted');
+      }
     };
 
   }, []);
@@ -179,12 +167,7 @@ function ChatApp() {
       (async () => {
         try {
           const msgs = chatMessages2RequestMessages(updatedMessages);
-          const response = await processApiRequest(
-            config,
-            msgs,
-            apiUrl,
-            openChatModal,
-          );
+          const response = await processApiRequest(config, msgs, apiUrl, openChatModal);
 
           if (response) {
             const responseMessages = response.smarter.messages.map((message) => {

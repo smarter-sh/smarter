@@ -194,7 +194,8 @@ class GoogleAIChatProvider(ChatProviderBase, metaclass=Singleton):
                     max_tokens = plugin.plugin_prompt.max_tokens
                     messages = plugin.customize_prompt(messages)
                     custom_tool = plugin.custom_tool
-                    self.tools.append(custom_tool)
+                    if custom_tool not in self.tools:
+                        self.tools.append(custom_tool)
                     self.available_functions[plugin.function_calling_identifier] = plugin.function_calling_plugin
                     chat_completion_plugin_selected.send(
                         sender=GoogleAIChatProvider.handler, chat=chat, plugin=plugin.plugin_meta, input_text=input_text
