@@ -34,15 +34,15 @@ function requestBodyFactory(messages, session_key) {
 }
 
 export async function processApiRequest(
-  props,
+  config,
   messages,
-  apiURL,
+  api_url,
   openChatModal,
 ) {
 
-  if (props.config.debug_mode) {
-    console.log("processApiRequest(): props: ", props);
-    console.log("processApiRequest(): apiURL: ", apiURL);
+  if (config.debug_mode) {
+    console.log("processApiRequest(): config: ", config);
+    console.log("processApiRequest(): api_url: ", api_url);
     console.log("processApiRequest(): messages: ", messages);
   }
 
@@ -66,31 +66,34 @@ export async function processApiRequest(
     credentials: 'include',
     mode: "cors",
     headers: headers,
-    body: requestBodyFactory(messages, props.config.session_key),
+    body: requestBodyFactory(messages, config.session_key),
   };
-  if (props.config.debug_mode) {
-    console.log("processApiRequest() - apiURL:", apiURL);
+  if (config.debug_mode) {
+    console.log("processApiRequest() - api_url:", api_url);
     console.log("processApiRequest() - init:", init);
-    console.log("processApiRequest() - props:", props);
+    console.log("processApiRequest() - config:", config);
     console.log("processApiRequest(): cookiesArray: ", cookiesArray);
     console.log("processApiRequest(): cookies: ", cookies);
     console.log("processApiRequest(): csrftoken: ", csrftoken);
   }
 
   try {
-    const response = await fetch(apiURL, init);
+    const response = await fetch(api_url, init);
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
       const status = await response.status;
       const response_json = await response.json(); // Convert the ReadableStream to a JSON object
       const response_body = await response_json.data.body; // ditto
 
-      if (props.config.debug_mode) {
+      if (config.debug_mode) {
         console.log("processApiRequest(): response status: ", status);
         console.log("processApiRequest(): response: ", response_json);
       }
 
       if (response.ok) {
+        if (config.debug_mode) {
+          console.log("processApiRequest(): response_body: ", JSON.parse(response_body));
+        }
         return JSON.parse(response_body);
       } else {
         /*

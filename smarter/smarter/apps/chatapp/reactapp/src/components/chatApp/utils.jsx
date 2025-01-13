@@ -56,7 +56,7 @@ const examplePrompts = (prompts) => {
     );
 };
 
-function chat_intro(welcome_message, system_role, example_prompts) {
+export function chat_intro(welcome_message, system_role, example_prompts) {
   /*
   Generate the initial message thread for the chat window. This includes the
   welcome message, and any example prompts that are configured in the
@@ -118,7 +118,10 @@ export function chatMessages2RequestMessages(messages) {
   Transform the chat message thread into a list of request messages for the
   backend API.
   */
-  return messages.map((message, index) => {
+  return messages
+    // filter out smarter messages
+    .filter(message => VALID_MESSAGE_ROLES.includes(message.sender))
+    .map((message, index) => {
     return requestMessageFactory(message.sender, message.message);
   });
 };
