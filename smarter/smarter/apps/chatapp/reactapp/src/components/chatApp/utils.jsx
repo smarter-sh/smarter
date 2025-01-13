@@ -118,7 +118,10 @@ export function chatMessages2RequestMessages(messages) {
   Transform the chat message thread into a list of request messages for the
   backend API.
   */
-  return messages.map((message, index) => {
+  return messages
+    // filter out smarter messages
+    .filter(message => VALID_MESSAGE_ROLES.includes(message.sender))
+    .map((message, index) => {
     return requestMessageFactory(message.sender, message.message);
   });
 };

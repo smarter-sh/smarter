@@ -97,7 +97,11 @@ class ChatProviderBase(ABC, metaclass=CombinedMeta):
         self.api_key = api_key
         self._default_model = default_model
         self._exception_map = exception_map or BASE_EXCEPTION_MAP
+        self.init()
         chat_provider_initialized.send(sender=self)
+
+    def init(self):
+        self._messages = []
 
     @property
     def messages(self) -> List[Dict[str, str]]:
@@ -117,22 +121,21 @@ class ChatProviderBase(ABC, metaclass=CombinedMeta):
         )
 
     def append_message_plugin_selected(self, plugin: str) -> None:
-        self.append_message(OpenAIMessageKeys.SMARTER_MESSAGE_KEY, f"Plugin Selected: {plugin}")
+        self.append_message(OpenAIMessageKeys.SMARTER_MESSAGE_KEY, f"Smarter selected this plugin: {plugin}")
 
     def append_message_tool_called(self, function_name: str, function_args: str) -> None:
-        message = f"Tool called: {function_name}({function_args})"
+        message = f"{self.name} called this tool: {function_name}({function_args})"
         self.append_message(OpenAIMessageKeys.SMARTER_MESSAGE_KEY, message)
 
     def handle_first_prompt(
         self,
-        sender: str,
         model: str,
         tools: List[dict],
         tool_choice: str,
         temperature: float,
         max_tokens: int,
     ):
-        message = f"Prompt configuration: llm={sender}, model={model}, temperature={temperature}, max_tokens={max_tokens,} tool_choice={tool_choice}."
+        message = f"Prompt configuration: llm={self.name}, model={model}, temperature={temperature}, max_tokens={max_tokens}, tool_choice={tool_choice}."
         self.append_message(OpenAIMessageKeys.SMARTER_MESSAGE_KEY, message)
 
         if tools:
@@ -155,7 +158,6 @@ class ChatProviderBase(ABC, metaclass=CombinedMeta):
 
     def handle_prompt_completion(
         self,
-        sender: str,
         user_id: int,
         model: str,
         completion_tokens: int,
@@ -169,17 +171,16 @@ class ChatProviderBase(ABC, metaclass=CombinedMeta):
         handle internal billing, and append messages to the response for prompt completion and the billing summary
         """
         create_prompt_completion_charge(
-            sender, user_id, model, completion_tokens, prompt_tokens, total_tokens, system_fingerprint
+            self.name, user_id, model, completion_tokens, prompt_tokens, total_tokens, system_fingerprint
         )
         self.append_message(
             role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY,
-            message=f"Prompt charges: {prompt_tokens} prompt tokens, {completion_tokens} completion tokens = {total_tokens} total tokens charged.",
+            message=f"{self.name} prompt charges: {prompt_tokens} prompt tokens, {completion_tokens} completion tokens = {total_tokens} total tokens charged.",
         )
         self.append_message(role=response_message_role, message=response_message_content)
 
     def handle_prompt_completion_plugin(
         self,
-        sender: str,
         user_id: int,
         model: str,
         completion_tokens: int,
@@ -187,7 +188,9 @@ class ChatProviderBase(ABC, metaclass=CombinedMeta):
         total_tokens: int,
         system_fingerprint: str,
     ) -> None:
-        create_plugin_charge(sender, user_id, model, completion_tokens, prompt_tokens, total_tokens, system_fingerprint)
+        create_plugin_charge(
+            self.name, user_id, model, completion_tokens, prompt_tokens, total_tokens, system_fingerprint
+        )
 
     @property
     def formatted_class_name(self):
