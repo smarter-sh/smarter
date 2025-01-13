@@ -11,18 +11,15 @@ import ReactJson from 'react-json-view';
 
 // This project
 import { ConsoleLayout } from "../../components/Layout/";
-import { fetchConfig } from "../../config.js";
 
 // This component
 import "./Component.css";
 import HelmetHeadStyles from "./HeadStyles"
 
-function Console() {
+function Console({ config }) {
   // state
-  const [config, setConfig] = useState({});
   const [consoleText, setConsoleText] = useState([{}]);
   const [selectedMenuItem, setSelectedMenuItem] = useState("chatbot_request_history");
-  const [debugMode, setDebugMode] = useState(false);
   const [chat_tool_call_history, setChatToolCallHistory] = useState([]);
   const [chat_plugin_usage_history, setChatPluginUsageHistory] = useState([]);
   const [chatbot_request_history, setChatbotRequestHistory] = useState([]);
@@ -31,23 +28,18 @@ function Console() {
 
   const fetchAndSetConsoleConfig = async () => {
     try {
-      const newConfig = await fetchConfig();
-
-      if (newConfig?.debug_mode) {
+      if (config?.debug_mode) {
         console.log("fetchAndSetConsoleConfig()...");
         console.log("fetchAndSetConsoleConfig() config:", newConfig);
       }
 
-      setConfig(newConfig);
-      setDebugMode(newConfig.debug_mode);
-
       // app configuration
-      setChatToolCallHistory(newConfig.history.chat_tool_call_history || []);
-      setChatPluginUsageHistory(newConfig.history.chat_plugin_usage_history || []);
-      setChatbotRequestHistory(newConfig.history.chatbot_request_history || []);
-      setPluginSelectorHistory(newConfig.history.plugin_selector_history || []);
+      setChatToolCallHistory(config.history.chat_tool_call_history || []);
+      setChatPluginUsageHistory(config.history.chat_plugin_usage_history || []);
+      setChatbotRequestHistory(config.history.chatbot_request_history || []);
+      setPluginSelectorHistory(config.history.plugin_selector_history || []);
 
-      if (newConfig?.debug_mode) {
+      if (config?.debug_mode) {
         console.log("fetchAndSetConsoleConfig() done!");
       }
 
@@ -58,14 +50,14 @@ function Console() {
 
   // Lifecycle hooks
   useEffect(() => {
-    if (debugMode) {
+    if (config?.debug_mode) {
       console.log('Console() component mounted');
     }
 
     fetchAndSetConsoleConfig();
 
     return () => {
-      if (debugMode) {
+      if (config?.debug_mode) {
         console.log('Console() component unmounted');
       }
     };
