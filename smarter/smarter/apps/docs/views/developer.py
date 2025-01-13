@@ -17,7 +17,7 @@ class DeveloperDocsRequirementsView(TxtBaseView):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.text_file = "/smarter/requirements/base.txt"
+        self.text_file = "~/smarter/requirements/base.txt"
         self.title = "Python Package Dependencies"
         self.leader = """
         Smarter Platform is a Python-Django micro-service application. Below is a list of the requirements and version
@@ -36,7 +36,7 @@ class DeveloperDocsDockerfileView(TxtBaseView):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.text_file = "/data/Dockerfile"
+        self.text_file = "~/data/Dockerfile"
         self.title = "Dockerfile"
         self.leader = """
         Smarter Platform is a Docker-based Python-Django micro-service application that runs in Kubernetes. Below is
@@ -50,7 +50,7 @@ class DeveloperDocsMakefileView(TxtBaseView):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.text_file = "/data/Makefile"
+        self.text_file = "~/data/Makefile"
         self.title = "Makefile"
         self.leader = """
         This is the Makefile for https://github.com/smarter-sh/smarter which you can use as a reference
@@ -64,7 +64,7 @@ class DeveloperDocsWeatherFunctionView(TxtBaseView):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.text_file = "/smarter/smarter/apps/chat/functions/function_weather.py"
+        self.text_file = "~/smarter/smarter/apps/chat/functions/function_weather.py"
         self.title = "function_weather.py"
         self.leader = """
         This is Smarter's implementation of the Python function 'get_current_weather()' referenced in
@@ -86,7 +86,7 @@ class DeveloperDocsDockerComposeView(TxtBaseView):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.text_file = "/data/docker-compose.yml"
+        self.text_file = "~/data/docker-compose.yml"
         self.title = "docker-compose.yml"
         self.leader = """
         Smarter Platform is a Docker-based Python-Django micro-service application that runs in Kubernetes. Below is
