@@ -14,10 +14,7 @@ from http import HTTPStatus
 import openai
 
 # smarter stuff
-from smarter.apps.account.tasks import (
-    create_plugin_charge,
-    create_prompt_completion_charge,
-)
+from smarter.apps.account.tasks import create_plugin_charge
 
 # smarter chat provider stuff
 from smarter.apps.chat.providers.classes import (
@@ -48,7 +45,13 @@ from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.common.classes import Singleton
 from smarter.common.conf import settings as smarter_settings
 
-from .const import BASE_URL, DEFAULT_MODEL, PROVIDER_NAME, VALID_CHAT_COMPLETION_MODELS
+from .const import (
+    BASE_URL,
+    DEFAULT_MODEL,
+    PROVIDER_NAME,
+    VALID_CHAT_COMPLETION_MODELS,
+    OpenAIMessageKeys,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -144,6 +147,7 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 ]
             }
         """
+        self.init()
         openai.api_key = self.api_key
         openai.base_url = self.base_url
 
@@ -185,6 +189,7 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
         input_text: str = None
 
         try:
+            logger.info("%s: handler() invoked. messages: %s", self.formatted_class_name, self.messages)
             model = chat.chatbot.default_model or default_model
             default_system_role = chat.chatbot.default_system_role or default_system_role
 
@@ -212,6 +217,7 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                     custom_tool = plugin.custom_tool
                     self.tools.append(custom_tool)
                     self.available_functions[plugin.function_calling_identifier] = plugin.function_calling_plugin
+                    self.append_message_plugin_selected(plugin=plugin.plugin_meta.name)
                     chat_completion_plugin_selected.send(
                         sender=OpenAIChatProvider.handler, chat=chat, plugin=plugin.plugin_meta, input_text=input_text
                     )
@@ -231,6 +237,14 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 "temperature": temperature,
                 "max_tokens": max_tokens,
             }
+
+            self.handle_first_prompt(
+                model=model,
+                tools=self.tools,
+                tool_choice="auto",
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
 
             first_response = openai.chat.completions.create(
                 model=model,
@@ -252,19 +266,21 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 request=first_iteration["request"],
                 response=first_iteration["response"],
             )
-            create_prompt_completion_charge(
-                OpenAIChatProvider.__class__.__name__,
-                user.id,
-                model,
-                first_response.usage.completion_tokens,
-                first_response.usage.prompt_tokens,
-                first_response.usage.total_tokens,
-                first_response.system_fingerprint,
+            self.handle_prompt_completion(
+                user_id=user.id,
+                model=model,
+                completion_tokens=first_response.usage.completion_tokens,
+                prompt_tokens=first_response.usage.prompt_tokens,
+                total_tokens=first_response.usage.total_tokens,
+                system_fingerprint=first_response.system_fingerprint,
+                response_message_role=first_response.choices[0].message.role,
+                response_message_content=first_response.choices[0].message.content,
             )
             response_message = first_response.choices[0].message
             tool_calls = response_message.tool_calls
             if tool_calls:
                 modified_messages = messages.copy()
+                modified_messages = clean_messages(messages=modified_messages)
                 # this is intended to force a json serialization exception
                 # in the event that we've neglected to properly serialize all
                 # responses from openai api.
@@ -287,6 +303,7 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                     function_args = json.loads(tool_call.function.arguments)
                     serialized_tool_call["function_name"] = function_name
                     serialized_tool_call["function_args"] = function_args
+                    self.append_message_tool_called(function_name=function_name, function_args=function_args)
 
                     function_response = None
                     if function_name == "get_current_weather":
@@ -331,6 +348,16 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 second_response_dict = json.loads(second_response.model_dump_json())
                 second_iteration["response"] = second_response_dict
                 second_iteration["request"]["messages"] = serialized_messages
+                self.handle_prompt_completion(
+                    user_id=user.id,
+                    model=model,
+                    completion_tokens=second_response.usage.completion_tokens,
+                    prompt_tokens=second_response.usage.prompt_tokens,
+                    total_tokens=second_response.usage.total_tokens,
+                    system_fingerprint=second_response.system_fingerprint,
+                    response_message_role=second_response.choices[0].message.role,
+                    response_message_content=second_response.choices[0].message.content,
+                )
                 chat_completion_tool_call_created.send(
                     sender=OpenAIChatProvider.handler,
                     chat=chat,
@@ -338,14 +365,13 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                     request=second_iteration["request"],
                     response=second_iteration["response"],
                 )
-                create_plugin_charge(
-                    OpenAIChatProvider.handler.__name__,
-                    user.id,
-                    model,
-                    second_response.usage.completion_tokens,
-                    second_response.usage.prompt_tokens,
-                    second_response.usage.total_tokens,
-                    second_response.system_fingerprint,
+                self.handle_prompt_completion_plugin(
+                    user_id=user.id,
+                    model=model,
+                    completion_tokens=second_response.usage.completion_tokens,
+                    prompt_tokens=second_response.usage.prompt_tokens,
+                    total_tokens=second_response.usage.total_tokens,
+                    system_fingerprint=second_response.system_fingerprint,
                 )
 
         # handle anything that went wrong
@@ -368,8 +394,16 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
             )
 
         # success!! return the response
+        logger.info("%s: handler() completed. messages: %s", self.formatted_class_name, self.messages)
         response = second_iteration.get("response") or first_iteration.get("response")
         response["metadata"] = {"tool_calls": serialized_tool_calls, **request_meta_data}
+        response[OpenAIMessageKeys.SMARTER_MESSAGE_KEY] = {
+            # "first_iteration": first_iteration,
+            # "second_iteration": second_iteration,
+            "tools": [tool["function"]["name"] for tool in self.tools],
+            "plugins": [plugin.plugin_meta.name for plugin in plugins],
+            "messages": self.messages,
+        }
         chat_response_success.send(
             sender=OpenAIChatProvider.handler, chat=chat, request=first_iteration.get("request"), response=response
         )
