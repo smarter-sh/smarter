@@ -6,9 +6,7 @@
 //---------------------------------------------------------------------------------
 
 // React stuff
-import React, { useRef, useContext } from "react";
-import { useState } from "react";
-import PropTypes from "prop-types";
+import React, { useRef, useState, useEffect } from "react";
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheckCircle, faTimesCircle, faRocket } from '@fortawesome/free-solid-svg-icons';
@@ -29,14 +27,13 @@ import {
 
 // This project
 import { setSessionCookie } from "../../cookies.js";
-import { fetchConfig, setConfig } from "../../config.js";
-import { ConfigContext } from "../../ConfigContext.jsx";
+import { fetchConfig } from "../../config.js";
 import { ChatAppLayout } from "../../components/Layout/";
 
 
 // This component
 import "./Component.css";
-import { messageFactory, chatMessages2RequestMessages, chat_init } from "./utils.jsx";
+import { messageFactory, chatMessages2RequestMessages, chat_init, chat_intro } from "./utils.jsx";
 import { MESSAGE_DIRECTION, SENDER_ROLE } from "./constants.js";
 import { ChatModal } from "./Modal.jsx";
 import { processApiRequest } from "./ApiRequest.js";
@@ -47,61 +44,100 @@ import { ErrorBoundary } from "./errorBoundary.jsx";
 // is exported and used in the index.js file. It is responsible for
 // managing the chat message thread, sending messages to the backend
 // API, and rendering the chat UI.
-function ChatApp(props) {
+function ChatApp() {
 
-  // app configuration
-  const config = props.config;    // see ../../data/sample-config.json for an example of this object.
-  const welcome_message = config.chatbot.app_welcome_message;
-  const placeholder_text = config.chatbot.app_placeholder;
-  const api_url = config.chatbot.url_chatbot;
-  const api_key = config.api_key;
-  const background_image_url = config.chatbot.app_background_image_url;
-  const app_name = config.chatbot.app_name;
-  const system_role = config.chatbot.default_system_role;
-  const assistant_name = config.chatbot.app_assistant;
-  const info_url = config.chatbot.app_info_url;
-  const example_prompts = config.chatbot.app_example_prompts;
-  const file_attach_button = config.chatbot.app_file_attachment;
-  const provider = config.chatbot.provider;
-  const default_model = config.chatbot.default_model;
-  const version = config.chatbot.version || "0.1.0";
+  const [config, setConfig] = useState({});
+  const [sessionKey, setSessionKey] = useState('');
+  const [placeholderText, setPlaceholderText] = useState('');
+  const [apiUrl, setApiUrl] = useState('');
+  const [appName, setAppName] = useState('');
+  const [assistantName, setAssistantName] = useState('');
+  const [infoUrl, setInfoUrl] = useState('');
+  const [fileAttachButton, setFileAttachButton] = useState(false);
+  const [provider, setProvider] = useState('');
+  const [defaultModel, setDefaultModel] = useState('');
+  const [version, setVersion] = useState('0.1.0');
+  const [isValid, setIsValid] = useState(false);
+  const [isDeployed, setIsDeployed] = useState(false);
+  const [debugMode, setDebugMode] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [title, setTitle] = useState('');
+  const [totalPlugins, setTotalPlugins] = useState(0);
+  const [info, setInfo] = useState('');
 
-  // chatbot state
-  const is_valid = config.meta_data.is_valid;
-  const is_deployed = config.meta_data.is_deployed;
-  const sandbox_mode = config.sandbox_mode;
-  const debug_mode = config.debug_mode;
+  // future use
+  const [apiKey, setApiKey] = useState('');
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState('');
+  const [sandboxMode, setSandboxMode] = useState(false);
 
+  // component internal state
   const [isTyping, setIsTyping] = useState(false);
   const fileInputRef = useRef(null);
 
-  const session_key = config.session_key ? config.session_key : 'undefined';
-  const chatHistory = config && config.history && config.history.chat_history ? config.history.chat_history : [];
-  const message_thread = chat_init(welcome_message, system_role, example_prompts, session_key, chatHistory, "BACKEND_CHAT_MOST_RECENT_RESPONSE");
-  const [messages, setMessages] = useState(message_thread);
-  console.log("messages: ", messages);
-
-  const username = app_name + " v" + version;
-
-  const total_plugins = config.plugins.meta_data.total_plugins;
-  let info = provider + " " + default_model;
-  if (total_plugins > 0) {
-    info += ` with ${total_plugins} additional plugins`;
-  }
-
-  // state management: reinitialize the config object
-  const { updateConfig } = useContext(ConfigContext);
-  const reinitializeConfig = async () => {
+  const fetchAndSetConfig = async () => {
     try {
-      if (debug_mode) {
-        console.log("Reinitializing config...");
-      }
       const newConfig = await fetchConfig();
-      updateConfig(setConfig(newConfig));
+
+      if (newConfig?.debug_mode) {
+        console.log("fetchAndSetConfig()...");
+        console.log("fetchAndSetConfig() config:", newConfig);
+      }
+
+      setConfig(newConfig);
+      setSessionKey(newConfig.session_key);
+      setPlaceholderText(newConfig.chatbot.app_placeholder);
+      setApiUrl(newConfig.chatbot.url_chatbot);
+      setAppName(newConfig.chatbot.app_name);
+      setAssistantName(newConfig.chatbot.app_assistant);
+      setInfoUrl(newConfig.chatbot.app_info_url);
+      setFileAttachButton(newConfig.chatbot.app_file_attachment);
+      setProvider(newConfig.chatbot.provider);
+      setDefaultModel(newConfig.chatbot.default_model);
+      setVersion(newConfig.chatbot.version || "1.0.0");
+      setIsValid(newConfig.meta_data.is_valid);
+      setIsDeployed(newConfig.meta_data.is_deployed);
+      setDebugMode(newConfig.debug_mode);
+      setTotalPlugins(newConfig.plugins.meta_data.total_plugins);
+
+      // future use
+      setApiKey(newConfig.api_key);
+      setBackgroundImageUrl(newConfig.chatbot.app_background_image_url);
+      setSandboxMode(newConfig.sandbox_mode);
+
+      // wrap up the rest of the initialization
+      const newHistory = newConfig.history?.chat_history || [];
+      const newThread = chat_init(newConfig.chatbot.app_welcome_message, newConfig.chatbot.default_system_role, newConfig.chatbot.app_example_prompts, newConfig.session_key, newHistory, "BACKEND_CHAT_MOST_RECENT_RESPONSE");
+      setMessages(newThread);
+
+      const newTitle = `${newConfig.chatbot.app_name} v${newConfig.chatbot.version || "1.0.0"}`;
+      setTitle(newTitle);
+      let newInfo = `${newConfig.chatbot.provider} ${newConfig.chatbot.default_model}`;
+      if (newConfig.plugins.meta_data.total_plugins > 0) {
+        newInfo += ` with ${newConfig.plugins.meta_data.total_plugins} additional plugins`;
+      }
+      setInfo(newInfo);
+
+      if (newConfig?.debug_mode) {
+        console.log("fetchAndSetConfig() done!");
+      }
+
     } catch (error) {
-      console.error("Failed to reinitialize config:", error);
+      console.error("Failed to fetch config:", error);
     }
   };
+
+  // Lifecycle hooks
+  useEffect(() => {
+    console.log('ChatApp() component mounted');
+
+    fetchAndSetConfig();
+
+    return () => {
+      console.log('ChatApp() component unmounted');
+    };
+
+  }, []);
+
 
   // Error modal state management
   function openChatModal(title, msg) {
@@ -118,13 +154,13 @@ function ChatApp(props) {
   const [modalTitle, setmodalTitle] = useState("");
 
   const handleInfoButtonClick = () => {
-    window.open(info_url, "_blank");
+    window.open(infoUrl, "_blank");
   };
 
   const handleAddUserButtonClick = () => {
-    setSessionCookie("", debug_mode);
-    reinitializeConfig();
-  };
+    setSessionCookie("", debugMode);
+    fetchAndSetConfig();
+};
 
   async function handleApiRequest(input_text, base64_encode = true) {
     // API request handler. This function is indirectly called by UI event handlers
@@ -144,18 +180,19 @@ function ChatApp(props) {
         try {
           const msgs = chatMessages2RequestMessages(updatedMessages);
           const response = await processApiRequest(
-            props,
+            config,
             msgs,
-            api_url,
+            apiUrl,
             openChatModal,
           );
 
           if (response) {
-            const assistantResponse = response.choices.find(message => message.message.role === 'assistant');
-            const newResponseMessage = messageFactory(assistantResponse.message.content, MESSAGE_DIRECTION.INCOMING, SENDER_ROLE.ASSISTANT);
-            setMessages((prevMessages) => [...prevMessages, newResponseMessage]);
+            const responseMessages = response.smarter.messages.map((message) => {
+              return messageFactory(message.content, MESSAGE_DIRECTION.INCOMING, message.role);
+            }
+            );
+            setMessages((prevMessages) => [...prevMessages, ...responseMessages]);
             setIsTyping(false);
-            reinitializeConfig();
           }
         } catch (error) {
           setIsTyping(false);
@@ -200,16 +237,16 @@ function ChatApp(props) {
 
   // Creates a fancier title for the chat app which includes
   // fontawesome icons for validation and deployment status.
-  function AppTitle({ username, is_valid, is_deployed }) {
+  function AppTitle({ title, isValid, isDeployed }) {
     return (
       <div>
-        {username}&nbsp;
-        {is_valid ? (
+        {title}&nbsp;
+        {isValid ? (
           <FontAwesomeIcon icon={faCheckCircle} style={{ color: 'green' }} />
         ) : (
           <FontAwesomeIcon icon={faTimesCircle} style={{ color: 'red' }} />
         )}
-        {is_deployed ? (
+        {isDeployed ? (
           <>
           &nbsp;<FontAwesomeIcon icon={faRocket} style={{ color: 'orange' }} />
           </>
@@ -257,12 +294,12 @@ function ChatApp(props) {
           <ChatContainer style={chatContainerStyle}>
             <ConversationHeader>
               <ConversationHeader.Content
-                userName={<AppTitle username={username} is_valid={is_valid} is_deployed={is_deployed} />}
+                userName={<AppTitle title={title} isValid={isValid} isDeployed={isDeployed} />}
                 info={info}
               />
             <ConversationHeader.Actions>
               <AddUserButton onClick={handleAddUserButtonClick} title="New" />
-              <InfoButton onClick={handleInfoButtonClick} title={info_url} />
+              <InfoButton onClick={handleInfoButtonClick} title={infoUrl} />
             </ConversationHeader.Actions>
             </ConversationHeader>
             <MessageList
@@ -270,7 +307,7 @@ function ChatApp(props) {
               scrollBehavior="auto"
               typingIndicator={
                 isTyping ? (
-                  <TypingIndicator content={assistant_name + " is typing"} />
+                  <TypingIndicator content={assistantName + " is typing"} />
                 ) : null
               }
             >
@@ -283,10 +320,10 @@ function ChatApp(props) {
               })}
             </MessageList>
             <MessageInput
-              placeholder={placeholder_text}
+              placeholder={placeholderText}
               onSend={handleSend}
               onAttachClick={handleAttachClick}
-              attachButton={file_attach_button}
+              attachButton={fileAttachButton}
               fancyScroll={false}
             />
           </ChatContainer>
@@ -303,11 +340,5 @@ function ChatApp(props) {
     </ChatAppLayout>
   );
 }
-
-// define the props that are expected to be passed in and also
-// make these immutable.
-ChatApp.propTypes = {
-  config: PropTypes.object.isRequired,
-};
 
 export default ChatApp;
