@@ -34,7 +34,7 @@ import { ChatAppLayout } from "../../components/Layout/";
 
 // This component
 import "./Component.css";
-import { messageFactory, chatMessages2RequestMessages, chat_init, chat_intro } from "./utils.jsx";
+import { messageFactory, chatMessages2RequestMessages, chat_init } from "./utils.jsx";
 import { MESSAGE_DIRECTION, SENDER_ROLE } from "./constants.js";
 import { ChatModal } from "./Modal.jsx";
 import { processApiRequest } from "./ApiRequest.js";
@@ -69,16 +69,21 @@ function ChatApp() {
   const [isTyping, setIsTyping] = useState(false);
   const fileInputRef = useRef(null);
 
+  const refetchConfig = async () => {
+    const newConfig = await fetchConfig();
+
+    if (newConfig?.debug_mode) {
+      console.log("fetchAndSetConfig()...");
+      console.log("fetchAndSetConfig() config:", newConfig);
+    }
+
+    setConfig(newConfig);
+    return newConfig;
+  };
+
   const fetchAndSetConfig = async () => {
     try {
-      const newConfig = await fetchConfig();
-
-      if (newConfig?.debug_mode) {
-        console.log("fetchAndSetConfig()...");
-        console.log("fetchAndSetConfig() config:", newConfig);
-      }
-
-      setConfig(newConfig);
+      const newConfig = await refetchConfig();
       setPlaceholderText(newConfig.chatbot.app_placeholder);
       setApiUrl(newConfig.chatbot.url_chatbot);
       setAssistantName(newConfig.chatbot.app_assistant);
@@ -177,6 +182,7 @@ function ChatApp() {
             );
             setMessages((prevMessages) => [...prevMessages, ...responseMessages]);
             setIsTyping(false);
+            refetchConfig();
           }
         } catch (error) {
           setIsTyping(false);

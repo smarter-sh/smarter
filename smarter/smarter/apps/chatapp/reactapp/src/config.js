@@ -72,7 +72,9 @@ export async function fetchConfig() {
       console.log('fetchConfig() - response_json: ', response_json);
     }
     if (response.ok) {
-      return response_json.data;
+      const newConfig = response_json.data;
+      setConfigCookies(newConfig);
+      return newConfig;
     }
   } catch (error) {
     console.error("fetchConfig() error", error);
@@ -82,7 +84,7 @@ export async function fetchConfig() {
 
 // do additional configuration after having fetched
 // config json from the server.
-export function setConfig(config) {
+export function setConfigCookies(config) {
 
     // set cookies
     setSessionCookie(config.session_key, config.debug_mode);
