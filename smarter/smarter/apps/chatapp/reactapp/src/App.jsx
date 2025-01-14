@@ -1,37 +1,21 @@
-import React, { useContext } from "react";
-import { ConfigProvider, ConfigContext } from "./ConfigContext.jsx";
+import React from "react";
 import { ContainerLayout, ContentLayout } from "./components/Layout/";
 import ChatApp from "./components/chatApp/Component";
-import Console from "./components/console/Component";
 import "./App.css";
 
-const AppBase = () => {
-  const { config } = useContext(ConfigContext);
 
-  if (!config) {
-    return <div>Loading...</div>;
-  }
-
-  if (config.debug_mode) {
-    console.log("App() - config:", config);
-  }
+const App = () => {
 
   return (
     <div id="smarter_chatapp_container" className="App">
       <ContainerLayout>
         <ContentLayout>
-          <ChatApp config={config} />
-          <Console config={config} />
+          <ChatApp />
         </ContentLayout>
       </ContainerLayout>
     </div>
   );
-};
 
-const App = () => (
-  <ConfigProvider>
-    <AppBase />
-  </ConfigProvider>
-);
+};
 
 export default App;

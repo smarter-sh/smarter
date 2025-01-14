@@ -6,78 +6,102 @@
 //---------------------------------------------------------------------------------
 
 // React stuff
-import React, { useState, useContext } from 'react';
-import PropTypes from "prop-types";
+import React, { useState, useEffect } from 'react';
 import ReactJson from 'react-json-view';
 
 // This project
-import { ConfigContext } from "../../ConfigContext.jsx";
 import { ConsoleLayout } from "../../components/Layout/";
 
 // This component
 import "./Component.css";
 import HelmetHeadStyles from "./HeadStyles"
 
-function Console(props) {
-  // state
-  const [consoleText, setConsoleText] = useState([{}]);
-  const [selectedMenuItem, setSelectedMenuItem] = useState("chatbot_request_history");
+function Console({ config }) {
 
-  // app configuration
-  const config = props.config; // see ../../data/sample-config.json for an example of this object.
-  const chat_tool_call_history = config.history.chat_tool_call_history || [];
-  const chat_plugin_usage_history =
-    config.history.chat_plugin_usage_history || [];
-  const chatbot_request_history = config.history.chatbot_request_history || [];
-  const plugin_selector_history = config.history.plugin_selector_history || [];
+  const [consoleText, setConsoleText] = useState();
+  const [chatToolCallHistory, setChatToolCallHistory] = useState();
+  const [chatPluginUsageHistory, setChatPluginUsageHistory] = useState();
+  const [chatbotRequestHistory, setChatbotRequestHistory] = useState();
+  const [pluginSelectorHistory, setPluginSelectorHistory] = useState();
 
+  const [selectedMenuItem, setSelectedMenuItem] = useState("chat_config");
 
   // simulated bash shell environment
-  const pod_hash = Math.floor(Math.random() * 0xFFFFFFFF).toString(16);
-  const last_login = new Date().toString();
-  const getRandomIpAddress = () => {
-    return `192.168.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`;
-  };
-  const system_prompt = "smarter_user@smarter-" + pod_hash + ":~/smarter$";
+  const [podHash, setPodHash] = useState(Math.floor(Math.random() * 0xFFFFFFFF).toString(16));
+  const [lastLogin, setLastLogin] = useState(new Date().toString());
+  const [randomIpAddress, setRandomIpAddress] = useState(`192.168.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`);
+  const [systemPrompt, setSystemPrompt] = useState(`smarter_user@smarter-${podHash}:~/smarter$`);
+
+
+  // Lifecycle hooks
+  useEffect(() => {
+    if (config) {
+      if (config.debug_mode) {
+        console.log('Console() component mounted');
+      }
+
+      setChatToolCallHistory(config.history?.chat_tool_call_history || []);
+      setChatPluginUsageHistory(config.history?.chat_plugin_usage_history || []);
+      setChatbotRequestHistory(config.history?.chatbot_request_history || []);
+      setPluginSelectorHistory(config.history?.plugin_selector_history || []);
+
+      const newConsoleText = Array.isArray(config) ? config : [config] || [{}];
+      setConsoleText(newConsoleText);
+      setSelectedMenuItem("chat_config");
+      }
+
+
+    return () => {
+      if (config?.debug_mode) {
+        console.log('Console() component unmounted');
+      }
+    };
+
+  }, [config]);
 
 
   const ConsoleNavItem = (props) => {
 
     // set the console output text based on the selected menu item
-    function consoleNavItemClicked(event, selected="chatbot_request_history") {
-      // set the 'active' menu item
-      requestAnimationFrame(() => {
-        document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-        event.target.classList.add('active');
-      });
+    function consoleNavItemClicked(event, id) {
 
       let newData = [{}];
-      switch (selected) {
+      switch (id) {
         case "chat_config":
           newData = Array.isArray(config) ? config : [config] || newData;
           break;
         case "chat_tool_call_history":
-          newData = chat_tool_call_history || newData;
+          newData = chatToolCallHistory || newData;
           break;
         case "chat_plugin_usage_history":
-          newData = chat_plugin_usage_history || newData;
+          newData = chatPluginUsageHistory || newData;
           break;
         case "chatbot_request_history":
-          newData = chatbot_request_history || newData;
+          newData = chatbotRequestHistory || newData;
           break;
         case "plugin_selector_history":
-          newData = plugin_selector_history || newData;
+          newData = pluginSelectorHistory || newData;
           break;
       }
-      setSelectedMenuItem(selected);
+      setSelectedMenuItem(id);
       setConsoleText(newData);
+
+      // set the 'active' menu item
+      requestAnimationFrame(() => {
+        if (id != selectedMenuItem) {
+          document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+        } else {
+          event.target.classList.add('active');
+        }
+        });
     }
 
     return (
       <li className="nav-item my-1">
         <a
-          className="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
-          onClick={(event) => consoleNavItemClicked(event, props.selected)}
+          id={props.id}
+          className={`btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1 ${props.id === selectedMenuItem ? 'active' : ''}`}
+          onClick={(event) => consoleNavItemClicked(event, props.id)}
         >
           {props.label}
         </a>
@@ -100,11 +124,11 @@ function Console(props) {
         data-kt-sticky-zindex={95}
       >
         <ul className="nav flex-wrap border-transparent">
-          <ConsoleNavItem label="Config" selected="chat_config" />
-          <ConsoleNavItem label="Api Calls" selected="chatbot_request_history" />
-          <ConsoleNavItem label="Plugin Selectors" selected="plugin_selector_history" />
-          <ConsoleNavItem label="Tool Calls" selected="chat_tool_call_history" />
-          <ConsoleNavItem label="Plugin Usage" selected="chat_plugin_usage_history" />
+          <ConsoleNavItem label="Config" id="chat_config" />
+          <ConsoleNavItem label="Api Calls" id="chatbot_request_history" />
+          <ConsoleNavItem label="Plugin Selectors" id="plugin_selector_history" />
+          <ConsoleNavItem label="Tool Calls" id="chat_tool_call_history" />
+          <ConsoleNavItem label="Plugin Usage" id="chat_plugin_usage_history" />
         </ul>
       </div>
     );
@@ -113,8 +137,8 @@ function Console(props) {
   const ConsoleOutputInitializing = () => {
     return (
       <div>
-        <p className="mb-0">Last login: {last_login} from {getRandomIpAddress()}</p>
-        <p className="mb-0">{system_prompt}</p>
+        <p className="mb-0">Last login: {lastLogin} from {randomIpAddress}</p>
+        <p className="mb-0">{systemPrompt}</p>
       </div>
     );
   };
@@ -124,12 +148,12 @@ function Console(props) {
       <div className="console-output rounded">
         <div className="console-output-content">
           <ConsoleOutputInitializing />
-          {consoleText.length === 1 && JSON.stringify(consoleText[0]) === '{}' ? null : (
+          {Array.isArray(consoleText) && consoleText.length === 1 && JSON.stringify(consoleText[0]) === '{}' ? null : (
             <>
-              {consoleText.map((item, index) => (
+              {Array.isArray(consoleText) ? consoleText.map((item, index) => (
                 <ReactJson key={index} src={item} theme="monokai" />
-              ))}
-              <p className="mb-0">{system_prompt}</p>
+              )) : null}
+              <p className="mb-0">{systemPrompt}</p>
             </>
           )}
         </div>
@@ -167,11 +191,5 @@ function Console(props) {
     </ConsoleLayout>
   );
 }
-
-// define the props that are expected to be passed in and also
-// make these immutable.
-Console.propTypes = {
-  config: PropTypes.object.isRequired
-};
 
 export default Console;
