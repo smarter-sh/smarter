@@ -361,8 +361,8 @@ class MetaAIChatProvider(ChatProviderBase, metaclass=Singleton):
         response = second_iteration.get("response") or first_iteration.get("response")
         response["metadata"] = {"tool_calls": serialized_tool_calls, **request_meta_data}
         response[OpenAIMessageKeys.SMARTER_MESSAGE_KEY] = {
-            "first_iteration": first_iteration,
-            "second_iteration": second_iteration,
+            "first_iteration": json.loads(json.dumps(first_iteration)),
+            "second_iteration": json.loads(json.dumps(second_iteration)),
             "tools": [tool["function"]["name"] for tool in self.tools],
             "plugins": [plugin.plugin_meta.name for plugin in plugins],
             "messages": self.messages,
