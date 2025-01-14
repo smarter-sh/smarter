@@ -68,13 +68,26 @@ def base(request):
     from base.html, which renders the dashboard layout
     """
     current_year = datetime.now().year
+    user_email = "anonymous@mail.edu"
+    username = "anonymous"
+    is_superuser = False
+    is_staff = False
     user = request.user
+    if user.is_authenticated:
+        try:
+            user_email = request.user.email
+            username = request.user.username
+            is_superuser = request.user.is_superuser
+            is_staff = request.user.is_staff
+        except AttributeError:
+            pass
+
     context = {
         "dashboard": {
-            "user_email": request.user.email,
-            "username": request.user.username,
-            "is_superuser": request.user.is_superuser,
-            "is_staff": request.user.is_staff,
+            "user_email": user_email,
+            "username": username,
+            "is_superuser": is_superuser,
+            "is_staff": is_staff,
             "product_name": "Smarter",
             "company_name": "Querium, Corp",
             "smarter_version": "v" + __version__,
