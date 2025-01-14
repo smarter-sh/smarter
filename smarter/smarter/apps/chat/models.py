@@ -64,6 +64,9 @@ class ChatHistory(TimestampedModel):
 
     @property
     def chat_history(self) -> list[dict]:
+        """
+        Used by the Reactapp (via ChatConfigView) to display the chat history.
+        """
         history = self.request.get("messages", []) if self.request else []
         response = self.response.get("choices", []) if self.response else []
         response = response[0] if response else {}
