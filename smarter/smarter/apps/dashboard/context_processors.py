@@ -6,6 +6,60 @@ from datetime import datetime
 from django.conf import settings
 
 from smarter.__version__ import __version__
+from smarter.apps.account.utils import account_for_user
+from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
+from smarter.apps.plugin.models import PluginMeta
+from smarter.lib.cache import cache_results
+
+
+@cache_results(timeout=15 * 60)
+def get_pending_deployments(user):
+    """
+    Get the number of pending deployments for the current user
+    """
+    account = account_for_user(user)
+    chatbots = ChatBot.objects.filter(account=account, deployed=False).count()
+    return chatbots
+
+
+@cache_results(timeout=15 * 60)
+def get_chatbots(user):
+    """
+    Get the number of chatbots for the current user
+    """
+    account = account_for_user(user)
+    chatbots = ChatBot.objects.filter(account=account).count()
+    return chatbots
+
+
+@cache_results(timeout=15 * 60)
+def get_plugins(user):
+    """
+    Get the number of plugins for the current user
+    """
+    account = account_for_user(user)
+    plugins = PluginMeta.objects.filter(account=account).count()
+    return plugins
+
+
+@cache_results(timeout=15 * 60)
+def get_api_keys(user):
+    """
+    Get the number of API keys for the current user
+    """
+    account = account_for_user(user)
+    api_keys_count = ChatBotAPIKey.objects.filter(chatbot__account=account).count()
+    return api_keys_count
+
+
+@cache_results(timeout=15 * 60)
+def get_custom_domains(user):
+    """
+    Get the number of custom domains for the current user
+    """
+    account = account_for_user(user)
+    custom_domains = ChatBotCustomDomain.objects.filter(chatbot__account=account).count()
+    return custom_domains
 
 
 def base(request):
@@ -14,13 +68,36 @@ def base(request):
     from base.html, which renders the dashboard layout
     """
     current_year = datetime.now().year
+    user_email = "anonymous@mail.edu"
+    username = "anonymous"
+    is_superuser = False
+    is_staff = False
+    user = request.user
+    if user.is_authenticated:
+        try:
+            user_email = request.user.email
+            username = request.user.username
+            is_superuser = request.user.is_superuser
+            is_staff = request.user.is_staff
+        except AttributeError:
+            pass
+
     context = {
         "dashboard": {
+            "user_email": user_email,
+            "username": username,
+            "is_superuser": is_superuser,
+            "is_staff": is_staff,
             "product_name": "Smarter",
             "company_name": "Querium, Corp",
             "smarter_version": "v" + __version__,
             "current_year": current_year,
             "product_description": "Smarter is an enterprise class plugin-based chat solution.",
+            "my_resources_pending_deployments": get_pending_deployments(user),
+            "my_resources_chatbots": get_chatbots(user),
+            "my_resources_plugins": get_plugins(user),
+            "my_resources_api_keys": get_api_keys(user),
+            "my_resources_custom_domains": get_custom_domains(user),
         }
     }
     return context
