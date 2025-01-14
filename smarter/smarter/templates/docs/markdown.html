@@ -1,9 +1,12 @@
 {% extends 'docs/base.html' %}
 {% load static %}
 
+{% block head %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'assets/css/github-markdown.css' %}">
+  {% endblock %}
+
 
 {% block docs_content %}
-  <div class="terminal-emulation">
-    {{ markdown_html | safe }}
-  </div>
+  {{ markdown_html | safe }}
 {% endblock %}
