@@ -13,9 +13,6 @@ from http import HTTPStatus
 # 3rd party stuff
 import openai
 
-# smarter stuff
-from smarter.apps.account.tasks import create_plugin_charge
-
 # smarter chat provider stuff
 from smarter.apps.chat.providers.classes import (
     BASE_EXCEPTION_MAP,
@@ -189,7 +186,6 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
         input_text: str = None
 
         try:
-            logger.info("%s: handler() invoked. messages: %s", self.formatted_class_name, self.messages)
             model = chat.chatbot.default_model or default_model
             default_system_role = chat.chatbot.default_system_role or default_system_role
 
@@ -394,12 +390,12 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
             )
 
         # success!! return the response
-        logger.info("%s: handler() completed. messages: %s", self.formatted_class_name, self.messages)
         response = second_iteration.get("response") or first_iteration.get("response")
         response["metadata"] = {"tool_calls": serialized_tool_calls, **request_meta_data}
+
         response[OpenAIMessageKeys.SMARTER_MESSAGE_KEY] = {
-            # "first_iteration": first_iteration,
-            # "second_iteration": second_iteration,
+            "first_iteration": json.loads(json.dumps(first_iteration)),
+            "second_iteration": json.loads(json.dumps(second_iteration)),
             "tools": [tool["function"]["name"] for tool in self.tools],
             "plugins": [plugin.plugin_meta.name for plugin in plugins],
             "messages": self.messages,
