@@ -8,14 +8,17 @@ from .openapi import schema_view
 from .utils import json_schema_name, json_schema_path, manifest_name, manifest_path
 from .views.developer import (
     DeveloperDocsArchitectureView,
+    DeveloperDocsChangelog,
     DeveloperDocsChatBotApiView,
     DeveloperDocsCliView,
+    DeveloperDocsCodeOfConduct,
     DeveloperDocsDjangoReactView,
     DeveloperDocsDockerComposeView,
     DeveloperDocsDockerfileView,
     DeveloperDocsGoodCodoingPracticeView,
     DeveloperDocsMakefileView,
     DeveloperDocsOpenAIGettingStartedView,
+    DeveloperDocsReadme,
     DeveloperDocsRequirementsView,
     DeveloperDocsSemanticVersioningView,
     DeveloperDocsTwelveFactorView,
@@ -54,6 +57,9 @@ urlpatterns = [
     # -------------------------------------------------------------------------
     # Developers docs rendered from markdown in /data/doc/ in the Dockeer container
     # -------------------------------------------------------------------------
+    path("developer/README.md/", DeveloperDocsReadme.as_view(), name="developer-readme"),
+    path("developer/CHANGELOG.md/", DeveloperDocsChangelog.as_view(), name="developer-changelog"),
+    path("developer/CODE_OF_CONDUCT.md/", DeveloperDocsCodeOfConduct.as_view(), name="developer-code-of-conduct"),
     path("developer/makefile/", DeveloperDocsMakefileView.as_view(), name="developer-makefile"),
     path("developer/weather-function/", DeveloperDocsWeatherFunctionView.as_view(), name="developer-weather-function"),
     path("developer/requirements/", DeveloperDocsRequirementsView.as_view(), name="developer-requirements"),
