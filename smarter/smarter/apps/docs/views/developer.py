@@ -98,6 +98,32 @@ class DeveloperDocsDockerComposeView(TxtBaseView):
 # ------------------------------------------------------------------------------
 # Public Access Markdown Views
 # ------------------------------------------------------------------------------
+
+
+class DeveloperDocsReadme(MarkdownBaseView):
+    """Developer README.md view"""
+
+    def dispatch(self, request, *args, **kwargs):
+        self.markdown_file = "README.md"
+        return super().dispatch(request, *args, **kwargs)
+
+
+class DeveloperDocsChangelog(MarkdownBaseView):
+    """Developer CHANGELOG.md view"""
+
+    def dispatch(self, request, *args, **kwargs):
+        self.markdown_file = "CHANGELOG.md"
+        return super().dispatch(request, *args, **kwargs)
+
+
+class DeveloperDocsCodeOfConduct(MarkdownBaseView):
+    """Developer CODE_OF_CONDUCT.md view"""
+
+    def dispatch(self, request, *args, **kwargs):
+        self.markdown_file = "CODE_OF_CONDUCT.md"
+        return super().dispatch(request, *args, **kwargs)
+
+
 class DeveloperDocsTwelveFactorView(MarkdownBaseView):
     """Developer docs 12-factor view"""
 
