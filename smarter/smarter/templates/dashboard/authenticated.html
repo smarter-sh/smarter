@@ -8,6 +8,45 @@
     background-color: lightgray;
     border-radius: 5px;
   }
+  .code-sample-body {
+  position: relative;
+  background-color: #333333;
+  border-radius: 10px;
+  }
+
+  .code-sample-body pre {
+    display: block;
+    justify-content: flex-start;
+    text-align: left;
+    width: auto;
+    word-wrap: break-word !important;
+    unicode-bidi: isolate;
+    white-space: pre-wrap;
+    padding: 15px;
+  }
+
+  .code-sample-copy {
+    position: relative;
+    top: 10px;
+    right: 10px;
+  }
+
+  .code-snippet {
+    --bs-code-color: #f1f1f1;
+    /* Text color */
+    --bs-code-border-color: transparent;
+    /* Border color */
+    --bs-code-bg: #333333;
+    /* Background color */
+    --bs-code-shadow: 0px 3px 9px rgba(0, 0, 0, 0.08);
+    /* Box shadow */
+    white-space: pre;
+    /* This is usually the default for <pre>, but it's good to ensure it's not being overridden */
+    overflow-x: auto;
+    /* Adds a horizontal scrollbar if the content is too wide */
+  }
+
+
   </style>
   <div id="kt_app_content" class="app-content flex-column-fluid">
   <!--begin::Content container-->
@@ -551,6 +590,138 @@
       <!--end::Col-->
     </div>
     <!--end::Row-->
+    <!--begin::Row yt videos-->
+    <div class="row g-5 g-xl-10">
+      <!--begin::Col yt video 1-->
+      <div class="col-xl-6 mb-xl-10">
+        <iframe width="100%" height="315" src="https://www.youtube.com/embed/YtVxkjHzZrE" frameborder="0" allowfullscreen></iframe>
+      </div>
+      <!--end::Col yt video 1-->
+      <!--begin::Col yt video 2-->
+      <div class="col-xl-6 mb-xl-10">
+        <iframe width="100%" height="315" src="https://www.youtube.com/embed/G2RSCzxxupE" frameborder="0" allowfullscreen></iframe>
+      </div>
+      <!--end::Col yt video 2-->
+    </div>
+    <!--end::Row yt videos-->
+    <!--begin::Row manifests-->
+    <div class="row g-5 g-xl-10">
+      <!--begin::Col ChatBot manifest-->
+      <div class="col-xl-6 mb-xl-10">
+        <h5 class="text-center">Example ChatBot Manifest</h5>
+        <div class="code-sample-body">
+          <pre class="code-snippet prettyprint">
+            <code>
+apiVersion: smarter.sh/v1
+kind: Chatbot
+metadata:
+  description: Create and deploy an example Smarter chatbot. Prompt with the phrase, 'example function calling' to trigger the example Static Plugin
+  name: ExampleChatbot
+  version: 0.1.0
+spec:
+  apiKey: camelCaseNameOfApiKey
+  config:
+    appAssistant: Elle
+    appBackgroundImageUrl: https://example.com/background-image.jpg
+    appExamplePrompts:
+    - example function calling
+    - What is the weather in New York?
+    - Tell me a joke
+    - What is the capital of France?
+    appFileAttachment: false
+    appInfoUrl: https://example.com
+    appLogoUrl: https://example.com/logo.png
+    appName: Example Chatbot
+    appPlaceholder: Ask me anything...
+    appWelcomeMessage: Welcome to the Example Chatbot! How can I help you today?
+    customDomain: null
+    defaultMaxTokens: 256
+    defaultModel: gpt-4-turbo
+    defaultSystemRole: You are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time.
+    defaultTemperature: 0.5
+    deployed: true
+    dnsVerificationStatus: Not Verified
+    provider: openai
+    subdomain: example-chatbot
+  functions:
+  - weather
+  plugins:
+  - EverlastingGobstopper
+  - ExampleConfiguration
+            </code>
+          </pre>
+        </div>
+      </div>
+      <!--end::Col ChatBot manifest-->
+      <!--begin::Col Plugin manifest-->
+      <div class="col-xl-6 mb-xl-10">
+        <h5 class="text-center">Example Plugin Manifest</h5>
+        <div class="code-sample-body">
+          <pre class="code-snippet prettyprint">
+            <code>
+apiVersion: smarter.sh/v1
+kind: Plugin
+metadata:
+description: Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.
+name: EverlastingGobstopper
+pluginClass: static
+tags:
+- candy
+- treats
+- chocolate
+- Gobstoppers
+- Willy Wonka
+version: 0.1.0
+spec:
+data:
+  description: Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.
+  staticData:
+    biographical: Willy Wonka is a fictional character appearing in British author Roald Dahls 1964 children's novel Charlie and the Chocolate Factory, its 1972 sequel Charlie and the Great Glass Elevator and several films based on those books. He is the eccentric founder and proprietor of the Wonka Chocolate Factory
+    contact:
+    - name: Willy Wonka
+    - title: Founder and CEO
+    - location: 1234 Chocolate Factory Way, Chocolate City, Chocolate State, USA
+    - phone: +1 123-456-7890
+    - website: https://wwcf.com
+    - whatsapp: 11234567890
+    - email: ww@wwcf.com
+    coupon_codes:
+    - code: 10OFF
+      description: 10% off your next purchase
+      name: 10% off
+    - code: 20OFF
+      description: 20% off your next purchase
+      name: 20% off
+    sales_promotions:
+    - description: The Everlasting Gobstopper is a candy that, according to Willy Wonka, "Never Gets Smaller Or Ever Gets Eaten". It is the main focus of Charlie and the Chocolate Factory, both the 1971 film and the 2005 film, and Willy Wonka and the Chocolate Factory, the 1971 film adaptation of the novel.
+      image: https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Everlasting_Gobstopper.jpg/220px-Everlasting_Gobstopper.jpg
+      name: Everlasting Gobstopper
+      price: $1.00
+    - description: Wonka Bars are a fictional brand of chocolate made by Willy Wonka, and also a chocolate bar inspired by the Willy Wonka Bar from the novel and the films Willy Wonka & the Chocolate Factory and Charlie and the Chocolate Factory.
+      image: https://m.media-amazon.com/images/I/81E-734cMzL._AC_UF894,1000_QL80_.jpg
+      name: Wonka Bar
+      price: $1.00
+prompt:
+  maxTokens: 256
+  model: gpt-4-turbo
+  provider: openai
+  systemRole: You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com).
+  temperature: 0.5
+selector:
+  directive: searchTerms
+  searchTerms:
+  - Gobstopper
+  - Gobstoppers
+  - Gobbstopper
+  - Gobbstoppers
+            </code>
+          </pre>
+        </div>
+      </div>
+      <!--end::Col Plugin manifest-->
+    </div>
+    <!--end::Row manifests-->
+
   </div>
   <!--end::Content container-->
 </div>
