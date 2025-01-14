@@ -260,6 +260,8 @@ runs:
         helm repo remove bitnami || true
         helm repo add bitnami https://charts.bitnami.com/bitnami
         helm repo update
+        # Filter out invalid "airflow" entry
+        sed -i '/airflow/d' ~/.cache/helm/repository/bitnami-index.yaml
         helm dependency build
 
     # Deploy the application to Kubernetes using Helm
