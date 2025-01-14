@@ -23,7 +23,7 @@ from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 
 
 # note: this is the path from the Docker container, not the GitHub repo.
-DOCS_PATH = "~/data/doc/"
+DOCS_PATH = "/home/smarter_user/data/doc/"
 
 
 class DocsError(SmarterExceptionBase):
