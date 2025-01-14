@@ -16565,7 +16565,7 @@ var KTSlidersWidget1 = function() {
     return {
         init: function () {
             // Init default chart
-            initChart(chart1, '#kt_slider_widget_1_chart_1', 76);
+            initChart(chart1, '#kt_slider_widget_smarter_health', 100);
 
             var carousel = document.querySelector('#kt_sliders_widget_1_slider');
 
@@ -16603,7 +16603,7 @@ var KTSlidersWidget1 = function() {
                     chart3.rendered = false;
                 }
 
-                initChart(chart1, '#kt_slider_widget_1_chart_1', 76);
+                initChart(chart1, '#kt_slider_widget_smarter_health', 100);
                 initChart(chart2, '#kt_slider_widget_1_chart_2', 55);
                 initChart(chart3, '#kt_slider_widget_1_chart_3', 25);
             });
