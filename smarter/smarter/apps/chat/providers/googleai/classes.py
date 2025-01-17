@@ -149,6 +149,7 @@ class GoogleAIChatProvider(ChatProviderBase, metaclass=Singleton):
         request_meta_data: dict = None
         first_iteration = {}
         first_response = {}
+        second_response = {}
         second_iteration = {}
         first_response_dict: dict = None
         second_response_dict: dict = None
@@ -347,8 +348,8 @@ class GoogleAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 chat=chat,
                 request_meta_data=request_meta_data,
                 exception=e,
-                first_response=first_response,
-                second_response=second_response,
+                first_response=first_response_dict,
+                second_response=second_response_dict,
             )
             status_code, _message = self.exception_map.get(
                 type(e), (HTTPStatus.INTERNAL_SERVER_ERROR, "Internal server error")
