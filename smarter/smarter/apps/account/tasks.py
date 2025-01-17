@@ -10,8 +10,11 @@ future high-traffic scenarios.
 import logging
 
 # django stuff
+from django.conf import settings
 from django.db import DatabaseError, IntegrityError, transaction
 from django.db.models import Sum
+
+from smarter.common.helpers.console_helpers import formatted_text
 
 # Smarter stuff
 from smarter.smarter_celery import app
@@ -22,14 +25,20 @@ from .models import (
     CHARGE_TYPE_PROMPT_COMPLETION,
     Charge,
     DailyBillingRecord,
-    UserProfile,
 )
+from .utils import user_for_user_id, user_profile_for_user
 
 
 logger = logging.getLogger(__name__)
+module_prefix = formatted_text("smarter.apps.account.tasks.")
 
 
-@app.task(autoretry_for=(Exception,), retry_backoff=True, max_retries=3)
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
+    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
+    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+)
 def create_charge(
     charge_type: str,
     user_id: int,
@@ -39,11 +48,19 @@ def create_charge(
     model: str,
     reference: str,
 ):
-    user_profile = UserProfile.objects.get(user__id=user_id)
+    logger.info(
+        "%s - begin. user_id %s, charge_type %s, reference %s",
+        formatted_text(module_prefix + "create_charge()"),
+        user_id,
+        charge_type,
+        reference,
+    )
+    user = user_for_user_id(user_id)
+    user_profile = user_profile_for_user(user=user)
 
-    charge = Charge(
+    Charge.objects.create(
         account=user_profile.account,
-        user=user_profile.user,
+        user=user,
         charge_type=charge_type,
         completion_tokens=completion_tokens,
         prompt_tokens=prompt_tokens,
@@ -51,11 +68,15 @@ def create_charge(
         model=model,
         reference=reference,
     )
-    charge.save()
 
 
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
+    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
+    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+)
 def create_prompt_completion_charge(
-    reference: str,
     user_id: int,
     model: str,
     completion_tokens: int,
@@ -64,9 +85,9 @@ def create_prompt_completion_charge(
     fingerprint: str,
 ):
     """Create a charge record."""
-    logger.info("Creating prompt completion charge record for user_id: %s, reference: %s", user_id, fingerprint)
 
-    create_charge.delay(
+    logger.info("%s", formatted_text(module_prefix + "create_prompt_completion_charge()"))
+    create_charge(
         charge_type=CHARGE_TYPE_PROMPT_COMPLETION,
         user_id=user_id,
         prompt_tokens=prompt_tokens,
@@ -77,8 +98,13 @@ def create_prompt_completion_charge(
     )
 
 
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
+    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
+    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+)
 def create_plugin_charge(
-    reference: str,
     user_id: int,
     model: str,
     completion_tokens: int,
@@ -87,9 +113,8 @@ def create_plugin_charge(
     fingerprint: str,
 ):
     """Create a charge record."""
-    logger.info("Creating plugin charge record for user_id: %s, reference: %s", user_id, fingerprint)
-
-    create_charge.delay(
+    logger.info("%s", formatted_text(module_prefix + "create_plugin_charge()"))
+    create_charge(
         charge_type=CHARGE_TYPE_PLUGIN,
         user_id=user_id,
         prompt_tokens=prompt_tokens,
@@ -100,14 +125,25 @@ def create_plugin_charge(
     )
 
 
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
+    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
+    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+)
 def aggregate_charges():
     """top-level wrapper for celery aggregation tasks"""
 
-    logger.info("aggregate_charges()")
-    aggregate_daily_billing_records.delay()
+    logger.info(formatted_text(module_prefix + "aggregate_charges()"))
+    aggregate_daily_billing_records()
 
 
-@app.task
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
+    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
+    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+)
 def aggregate_daily_billing_records():
     """
     Aggregate daily records and delete individual Charge records.
@@ -115,6 +151,7 @@ def aggregate_daily_billing_records():
     and can be run multiple times without issue.
     """
     MAX_AGGREGATION_ERROR_THRESHOLD = 10
+    message_prefix = module_prefix + formatted_text("aggregate_daily_billing_records()")
 
     def aggregate(user, account, created_at_date, charge_type):
         """Handle aggregation of one set of charges."""
@@ -150,12 +187,12 @@ def aggregate_daily_billing_records():
 
             aggregation_queryset.delete()
 
-    logger.info("aggregate_daily_charges() - begin.")
+    logger.info("%s - begin.", message_prefix)
     i = 0
     i_error_count = 0
 
     working_queryset = Charge.objects.values("user", "account", "created_at__date", "charge_type").distinct()
-    logger.info("aggregate_daily_charges() found %s pending billing items", working_queryset.count())
+    logger.info("%s found %s pending billing items", working_queryset.count(), message_prefix)
 
     for charge_identity in working_queryset:
         user = charge_identity["user"]
@@ -166,21 +203,21 @@ def aggregate_daily_billing_records():
         try:
             aggregate(user, account, created_at_date, charge_type)
         except (DatabaseError, IntegrityError) as e:
-            logger.error("aggregate_daily_charges() - error processing billing item %s: %s", charge_identity, e)
+            logger.error("%s - error processing billing item %s: %s", message_prefix, charge_identity, e)
             i_error_count += 1
             if i_error_count >= MAX_AGGREGATION_ERROR_THRESHOLD:
-                logger.error("aggregate_daily_charges() - exceeded error threshold, aborting.")
+                logger.error("%s - exceeded error threshold, aborting.", message_prefix)
                 break
         # pylint: disable=W0718
         except Exception as e:
-            logger.error("aggregate_daily_charges() - unknown error processing billing item %s: %s", charge_identity, e)
+            logger.error("%s - unknown error processing billing item %s: %s", message_prefix, charge_identity, e)
             i_error_count += 1
             if i_error_count >= MAX_AGGREGATION_ERROR_THRESHOLD:
-                logger.error("aggregate_daily_charges() - exceeded error threshold, aborting.")
+                logger.error("%s - exceeded error threshold, aborting.", message_prefix)
                 break
 
         i += 1
         if i % 100 == 0:
-            logger.info("aggregate_daily_charges() processed %s billing items", i)
+            logger.info("%s processed %s billing items", message_prefix, i)
 
-    logger.info("aggregate_daily_charges() - finished.")
+    logger.info("%s - finished.", message_prefix)

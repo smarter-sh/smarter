@@ -251,8 +251,6 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 max_tokens=max_tokens,
             )
 
-            logger.info("%s: first_response: %s", self.formatted_class_name, first_response)
-
             first_response_dict = json.loads(first_response.model_dump_json())
             first_iteration["response"] = first_response_dict
             chat_completion_called.send(

@@ -4,7 +4,6 @@
 import logging
 
 from django.db.models.signals import post_save
-from django.db.utils import Error as DjangoDbError
 from django.dispatch import receiver
 
 from smarter.common.helpers.console_helpers import (
@@ -31,6 +30,11 @@ from .signals import (
     chat_response_failure,
     chat_response_success,
 )
+from .tasks import (
+    create_chat_history,
+    create_chat_tool_call_history,
+    create_plugin_usage_history,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -41,14 +45,12 @@ def handle_chat_invoked(sender, **kwargs):
     """Handle chat invoked signal."""
 
     chat: Chat = kwargs.get("chat")
-
     data = kwargs.get("data")
 
     logger.info(
-        "%s for chat %s with data: %s",
+        "%s for chat %s",
         formatted_text("chat_invoked"),
         chat,
-        formatted_json(data),
     )
 
 
@@ -62,11 +64,9 @@ def handle_chat_completion_called(sender, **kwargs):
     response: dict = kwargs.get("response")
 
     logger.info(
-        "%s for chat: %s \nrequest: %s \nresponse: %s",
+        "%s for chat: %s",
         formatted_text(f"chat_completion_called for iteration {iteration}"),
         chat,
-        formatted_json(request),
-        formatted_json(response),
     )
 
     # mcdaniel: add the most recent response to the messages list
@@ -93,15 +93,7 @@ def handle_chat_completion_called(sender, **kwargs):
                         request[OpenAIRequestKeys.MESSAGES_KEY].append(tool_called)
                         logger.info("Added tool call to messages: %s", tool_called)
 
-    chat_history = ChatHistory(
-        chat=chat,
-        request=request,
-        response=response,
-    )
-    try:
-        chat_history.save()
-    except DjangoDbError as exc:
-        logger.error("Error saving chat history: %s", exc)
+        create_chat_history.delay(chat.id, request, response)
 
 
 # pylint: disable=W0612
@@ -120,18 +112,7 @@ def handle_chat_completion_tool_call_created(sender, **kwargs):
         plugin_meta: PluginMeta = tool_call.get("plugin_meta")
         function_name: str = tool_call.get("function_name")
         function_args: str = tool_call.get("function_args")
-
-        try:
-            ChatToolCall(
-                chat=chat,
-                plugin=plugin_meta,
-                function_name=function_name,
-                function_args=function_args,
-                request=request,
-                response=response,
-            ).save()
-        except DjangoDbError as exc:
-            logger.error("Error saving chat tool call: %s", exc)
+        create_chat_tool_call_history.delay(chat.id, plugin_meta.id, function_name, function_args, request, response)
 
 
 @receiver(chat_completion_plugin_selected, dispatch_uid="chat_completion_plugin_selected")
@@ -150,16 +131,9 @@ def handle_chat_completion_plugin_selected(sender, **kwargs):
         input_text,
     )
 
-    plugin_selection_history = ChatPluginUsage(
-        plugin=plugin,
-        chat=chat,
-        input_text=input_text,
+    create_plugin_usage_history.delay(
+        chat.id, plugin.id, function_name=None, function_args=None, request=None, response=None
     )
-
-    try:
-        plugin_selection_history.save()
-    except DjangoDbError as exc:
-        logger.error("Error saving plugin usage: %s", exc)
 
 
 # pylint: disable=W0612
@@ -194,14 +168,7 @@ def handle_chat_response_success(sender, **kwargs):
     #                 request[OpenAIRequestKeys.MESSAGES_KEY].append(assistant_message)
     #                 logger.info("Added assistant response to messages.")
 
-    try:
-        ChatHistory(
-            chat=chat,
-            request=request,
-            response=response,
-        ).save()
-    except DjangoDbError as exc:
-        logger.error("Error saving chat history: %s", exc)
+    create_chat_history.delay(chat.id, request, response)
 
     logger.info(
         "%s for chat %s, \nrequest: %s, \nresponse: %s",
