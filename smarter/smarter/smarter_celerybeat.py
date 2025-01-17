@@ -16,17 +16,17 @@ from smarter.lib.celery_conf import APP as app
 app.conf.beat_schedule = {
     "aggregate-chatbot-history": {
         "task": "smarter.apps.chatbot.tasks.aggregate_chatbot_history",
-        "schedule": timedelta(minutes=1),
+        "schedule": timedelta(hours=12),
         "options": {"queue": "beat_tasks"},
     },
     "aggregate-chat-history": {
         "task": "smarter.apps.chat.tasks.aggregate_chat_history",
-        "schedule": timedelta(minutes=1),
+        "schedule": timedelta(hours=12),
         "options": {"queue": "beat_tasks"},
     },
     "aggregate-charges": {
         "task": "smarter.apps.account.tasks.aggregate_charges",
-        "schedule": timedelta(minutes=1),
+        "schedule": timedelta(hours=1),
         "options": {"queue": "beat_tasks"},
     },
 }
