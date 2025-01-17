@@ -170,8 +170,9 @@ class ChatProviderBase(ABC, metaclass=CombinedMeta):
         """
         handle internal billing, and append messages to the response for prompt completion and the billing summary
         """
-        create_prompt_completion_charge(
-            self.name, user_id, model, completion_tokens, prompt_tokens, total_tokens, system_fingerprint
+        logger.info("%s %s", self.formatted_class_name, formatted_text("handle_prompt_completion()"))
+        create_prompt_completion_charge.delay(
+            user_id, model, completion_tokens, prompt_tokens, total_tokens, system_fingerprint
         )
         self.append_message(
             role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY,
@@ -188,8 +189,14 @@ class ChatProviderBase(ABC, metaclass=CombinedMeta):
         total_tokens: int,
         system_fingerprint: str,
     ) -> None:
-        create_plugin_charge(
-            self.name, user_id, model, completion_tokens, prompt_tokens, total_tokens, system_fingerprint
+        logger.info("%s %s", self.formatted_class_name, formatted_text("handle_prompt_completion_plugin()"))
+        create_plugin_charge.delay(
+            user_id=user_id,
+            model=model,
+            completion_tokens=completion_tokens,
+            prompt_tokens=prompt_tokens,
+            total_tokens=total_tokens,
+            fingerprint=system_fingerprint,
         )
 
     @property
