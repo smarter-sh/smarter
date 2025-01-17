@@ -9,7 +9,6 @@ future high-traffic scenarios.
 import logging
 
 from django.conf import settings
-from django.db.utils import Error as DjangoDbError
 
 from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.plugin.models import PluginMeta
@@ -32,14 +31,11 @@ module_prefix = formatted_text("smarter.apps.chat.tasks.")
 def create_chat_history(chat_id, request, response):
     logger.info("%s chat_id: %s", formatted_text(module_prefix + "create_chat_history()"), chat_id)
     chat = Chat.objects.get(id=chat_id)
-    try:
-        ChatHistory.objects.create(
-            chat=chat,
-            request=request,
-            response=response,
-        )
-    except DjangoDbError as exc:
-        logger.error("Error saving chat history: %s", exc)
+    ChatHistory.objects.create(
+        chat=chat,
+        request=request,
+        response=response,
+    )
 
 
 def aggregate_chat_history():
@@ -71,20 +67,23 @@ def create_chat(session_key, chatbot_id):
 def create_chat_tool_call_history(chat_id, plugin_id, function_name, function_args, request, response):
     """Create chat tool call history record."""
     logger.info("%s", formatted_text(module_prefix + "create_chat_tool_call_history()"))
-    chat = Chat.objects.get(id=chat_id)
-    plugin_meta = PluginMeta.objects.get(id=plugin_id)
-
     try:
-        ChatToolCall.objects.create(
-            chat=chat,
-            plugin=plugin_meta,
-            function_name=function_name,
-            function_args=function_args,
-            request=request,
-            response=response,
-        )
-    except DjangoDbError as exc:
-        logger.error("Error saving chat tool call: %s", exc)
+        chat = Chat.objects.get(id=chat_id)
+    except Chat.DoesNotExist:
+        chat = None
+    try:
+        plugin_meta = PluginMeta.objects.get(id=plugin_id)
+    except PluginMeta.DoesNotExist:
+        plugin_meta = None
+
+    ChatToolCall.objects.create(
+        chat=chat,
+        plugin=plugin_meta,
+        function_name=function_name,
+        function_args=function_args,
+        request=request,
+        response=response,
+    )
 
 
 @app.task(
