@@ -4,18 +4,17 @@ from django.dispatch import Signal
 
 
 # chat signals
-chat_invoked = Signal()
-chat_response_success = Signal()
+chat_invocation_start = Signal()
+chat_invocation_finished = Signal()
 chat_response_failure = Signal()
 
-# chat completion plugin selection
-chat_completion_plugin_selected = Signal()
 
 # chat completion signals
-chat_completion_called = Signal()
+chat_completion_request = Signal()
+chat_completion_response = Signal()
 
 # chat completion tools signals
-chat_completion_tool_call_created = Signal()
+chat_completion_tool_called = Signal()
 
 chat_provider_initialized = Signal()
 chat_handler_console_output = Signal()
