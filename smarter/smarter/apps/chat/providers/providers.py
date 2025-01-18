@@ -15,7 +15,7 @@ from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.classes import Singleton
 from smarter.lib.django.user import UserType
 
-from .classes import ChatProviderBase
+from .base_classes import ChatProviderBase
 from .googleai.classes import (
     GoogleAIChatProvider,
     GoogleAIHandlerInput,

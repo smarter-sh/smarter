@@ -14,7 +14,7 @@ from http import HTTPStatus
 import openai
 
 # smarter chat provider stuff
-from smarter.apps.chat.providers.classes import (
+from smarter.apps.chat.providers.base_classes import (
     BASE_EXCEPTION_MAP,
     ChatProviderBase,
     HandlerInputBase,

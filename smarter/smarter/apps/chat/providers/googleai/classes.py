@@ -15,7 +15,7 @@ from http import HTTPStatus
 import openai
 
 # smarter chat provider stuff
-from smarter.apps.chat.providers.classes import ChatProviderBase, HandlerInputBase
+from smarter.apps.chat.providers.base_classes import ChatProviderBase, HandlerInputBase
 from smarter.apps.chat.providers.openai.classes import EXCEPTION_MAP
 from smarter.apps.chat.providers.openai.const import OpenAIMessageKeys
 from smarter.apps.chat.providers.utils import (
