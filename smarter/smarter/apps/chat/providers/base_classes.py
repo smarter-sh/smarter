@@ -3,7 +3,6 @@ Base class for chat providers.
 """
 
 import logging
-from abc import ABC, abstractmethod
 from http import HTTPStatus
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
@@ -20,7 +19,6 @@ from smarter.apps.chat.functions.function_weather import (
 from smarter.apps.chat.models import Chat
 from smarter.apps.chat.signals import chat_provider_initialized
 from smarter.apps.plugin.plugin.static import PluginStatic
-from smarter.common.classes import Singleton
 from smarter.common.exceptions import (
     SmarterConfigurationError,
     SmarterIlligalInvocationError,
@@ -45,7 +43,7 @@ BASE_EXCEPTION_MAP = {
 }
 
 
-class HandlerInputBase(BaseModel, ABC):
+class HandlerInputBase(BaseModel):
     """
     Input protocol for chat provider handlers. Using OpenAI defaults.
     Providers should subclass this and override the defaults.
@@ -68,13 +66,7 @@ class HandlerInputBase(BaseModel, ABC):
         arbitrary_types_allowed = True
 
 
-class CombinedMeta(type(ABC), Singleton):
-    """
-    Metaclass for combining ABC and Singleton.
-    """
-
-
-class ChatProviderBase(ABC, metaclass=CombinedMeta):
+class ChatProviderBase:
     """
     Base class for chat providers.
     """
@@ -88,7 +80,6 @@ class ChatProviderBase(ABC, metaclass=CombinedMeta):
         "get_current_weather": get_current_weather,
     }
 
-    @abstractmethod
     def __init__(
         self, name: str, default_model: str, exception_map: dict = None, base_url: str = None, api_key: str = None
     ):
@@ -216,11 +207,9 @@ class ChatProviderBase(ABC, metaclass=CombinedMeta):
         return self._exception_map
 
     @property
-    @abstractmethod
     def valid_models(self) -> list[str]:
         pass
 
-    @abstractmethod
     def handler(self, handler_inputs: Type[HandlerInputBase]) -> Callable:
         """
         Handle the chat request.
