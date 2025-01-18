@@ -30,12 +30,12 @@ from smarter.apps.chat.providers.utils import (
 )
 from smarter.apps.chat.providers.validators import validate_item
 from smarter.apps.chat.signals import (
-    chat_completion_called,
-    chat_completion_plugin_selected,
-    chat_completion_tool_call_created,
-    chat_invoked,
+    chat_completion_request,
+    chat_completion_response,
+    chat_completion_tool_called,
+    chat_invocation_finished,
+    chat_invocation_start,
     chat_response_failure,
-    chat_response_success,
 )
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.serializers import PluginMetaSerializer
@@ -198,7 +198,7 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
             temperature = chat.chatbot.default_temperature or default_temperature
             max_tokens = chat.chatbot.default_max_tokens or default_max_tokens
             request_meta_data = request_meta_data_factory(model, temperature, max_tokens, input_text)
-            chat_invoked.send(sender=OpenAIChatProvider.handler, chat=chat, data=data)
+            chat_invocation_start.send(sender=OpenAIChatProvider.handler, chat=chat, data=data)
 
             # does the prompt have anything to do with any of the search terms defined in a plugin?
             # FIX NOTE: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_tokens
@@ -215,9 +215,6 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                     self.tools.append(custom_tool)
                     self.available_functions[plugin.function_calling_identifier] = plugin.function_calling_plugin
                     self.append_message_plugin_selected(plugin=plugin.plugin_meta.name)
-                    chat_completion_plugin_selected.send(
-                        sender=OpenAIChatProvider.handler, chat=chat, plugin=plugin.plugin_meta, input_text=input_text
-                    )
 
             # https://platform.openai.com/docs/guides/gpt/chat-completions-api
             validate_item(
@@ -243,6 +240,13 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 max_tokens=max_tokens,
             )
 
+            chat_completion_request.send(
+                sender=OpenAIChatProvider.handler,
+                chat=chat,
+                iteration=1,
+                request=first_iteration["request"],
+            )
+
             first_response = openai.chat.completions.create(
                 model=model,
                 messages=messages,
@@ -254,14 +258,14 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
 
             first_response_dict = json.loads(first_response.model_dump_json())
             first_iteration["response"] = first_response_dict
-            chat_completion_called.send(
+            chat_completion_response.send(
                 sender=OpenAIChatProvider.handler,
                 chat=chat,
                 iteration=1,
                 request=first_iteration["request"],
                 response=first_iteration["response"],
             )
-            self.handle_prompt_completion(
+            self.handle_prompt_completion_response(
                 user_id=user.id,
                 model=model,
                 completion_tokens=first_response.usage.completion_tokens,
@@ -331,7 +335,7 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                     "model": model,
                     "messages": serialized_messages,
                 }
-                chat_completion_called.send(
+                chat_completion_request.send(
                     sender=OpenAIChatProvider.handler, chat=chat, iteration=2, request=second_iteration["request"]
                 )
                 second_response = openai.chat.completions.create(
@@ -343,7 +347,14 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                 second_response_dict = json.loads(second_response.model_dump_json())
                 second_iteration["response"] = second_response_dict
                 second_iteration["request"]["messages"] = serialized_messages
-                self.handle_prompt_completion(
+                chat_completion_response.send(
+                    sender=OpenAIChatProvider.handler,
+                    chat=chat,
+                    iteration=2,
+                    request=second_iteration["request"],
+                    response=second_iteration["response"],
+                )
+                self.handle_prompt_completion_response(
                     user_id=user.id,
                     model=model,
                     completion_tokens=second_response.usage.completion_tokens,
@@ -353,7 +364,7 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
                     response_message_role=second_response.choices[0].message.role,
                     response_message_content=second_response.choices[0].message.content,
                 )
-                chat_completion_tool_call_created.send(
+                chat_completion_tool_called.send(
                     sender=OpenAIChatProvider.handler,
                     chat=chat,
                     tool_calls=serialized_tool_calls,
@@ -399,7 +410,7 @@ class OpenAIChatProvider(ChatProviderBase, metaclass=Singleton):
             "plugins": [plugin.plugin_meta.name for plugin in plugins],
             "messages": self.messages,
         }
-        chat_response_success.send(
+        chat_invocation_finished.send(
             sender=OpenAIChatProvider.handler, chat=chat, request=first_iteration.get("request"), response=response
         )
         return http_response_factory(status_code=HTTPStatus.OK, body=response)

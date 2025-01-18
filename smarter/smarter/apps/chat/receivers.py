@@ -7,7 +7,7 @@ import waffle
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.plugin.models import PluginMeta, PluginSelector, PluginSelectorHistory
 from smarter.common.const import SMARTER_WAFFLE_SWITCH_CHAT_LOGGING
 from smarter.common.helpers.console_helpers import (
     formatted_json,
@@ -24,14 +24,14 @@ from .providers.openai.const import (
     OpenAIResponseKeys,
 )
 from .signals import (
-    chat_completion_called,
-    chat_completion_plugin_selected,
-    chat_completion_tool_call_created,
+    chat_completion_request,
+    chat_completion_response,
+    chat_completion_tool_called,
     chat_handler_console_output,
-    chat_invoked,
+    chat_invocation_finished,
+    chat_invocation_start,
     chat_provider_initialized,
     chat_response_failure,
-    chat_response_success,
 )
 from .tasks import create_chat_history, create_chat_tool_call_history
 
@@ -39,7 +39,7 @@ from .tasks import create_chat_history, create_chat_tool_call_history
 logger = logging.getLogger(__name__)
 
 
-@receiver(chat_invoked, dispatch_uid="chat_invoked")
+@receiver(chat_invocation_start, dispatch_uid="chat_invocation_start")
 def handle_chat_invoked(sender, **kwargs):
     """Handle chat invoked signal."""
 
@@ -48,13 +48,43 @@ def handle_chat_invoked(sender, **kwargs):
 
     logger.info(
         "%s for chat %s",
-        formatted_text("chat_invoked"),
+        formatted_text("chat_invocation_start"),
         chat,
     )
 
 
-@receiver(chat_completion_called, dispatch_uid="chat_completion_called")
-def handle_chat_completion_called(sender, **kwargs):
+@receiver(chat_completion_request, dispatch_uid="chat_completion_request")
+def handle_chat_completion_request_sent(sender, **kwargs):
+    """Handle chat completion request sent signal."""
+
+    chat: Chat = kwargs.get("chat")
+    iteration: int = kwargs.get("iteration")
+    request: dict = kwargs.get("request")
+    prefix = formatted_text(f"chat_completion_request for iteration {iteration}")
+
+    logger.info(
+        "%s for chat: %s",
+        prefix,
+        chat,
+    )
+
+    if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+        logger.info(
+            "%s for chat %s, \nrequest: %s",
+            formatted_text("chat_completion_request"),
+            chat,
+            formatted_json(request),
+        )
+    else:
+        logger.info(
+            "%s for chat: %s",
+            prefix,
+            chat,
+        )
+
+
+@receiver(chat_completion_response, dispatch_uid="chat_completion_response")
+def handle_chat_completion_response_received(sender, **kwargs):
     """Handle chat completion called signal."""
 
     chat: Chat = kwargs.get("chat")
@@ -62,7 +92,7 @@ def handle_chat_completion_called(sender, **kwargs):
     iteration: int = kwargs.get("iteration")
     request: dict = kwargs.get("request")
     response: dict = kwargs.get("response")
-    prefix = formatted_text(f"chat_completion_called for iteration {iteration}")
+    prefix = formatted_text(f"chat_completion_response for iteration {iteration}")
 
     logger.info(
         "%s for chat: %s",
@@ -97,8 +127,8 @@ def handle_chat_completion_called(sender, **kwargs):
         create_chat_history(chat_id, request, response)
 
 
-@receiver(chat_completion_tool_call_created, dispatch_uid="chat_completion_tool_call_created")
-def handle_chat_completion_tool_call_created(sender, **kwargs):
+@receiver(chat_completion_tool_called, dispatch_uid="chat_completion_tool_called")
+def handle_chat_completion_tool_called(sender, **kwargs):
     """Handle chat completion tool call signal."""
 
     chat: Chat = kwargs.get("chat")
@@ -106,6 +136,13 @@ def handle_chat_completion_tool_call_created(sender, **kwargs):
     tool_calls: list[dict] = kwargs.get("tool_calls")
     request: dict = kwargs.get("request")
     response: dict = kwargs.get("response")
+    prefix = formatted_text("handle_chat_completion_tool_called()")
+
+    logger.info(
+        "%s for chat: %s",
+        prefix,
+        chat_id,
+    )
 
     for tool_call in tool_calls:
         plugin_meta: PluginMeta = tool_call.get("plugin_meta")
@@ -115,25 +152,8 @@ def handle_chat_completion_tool_call_created(sender, **kwargs):
         create_chat_tool_call_history(chat_id, plugin_meta_id, function_name, function_args, request, response)
 
 
-@receiver(chat_completion_plugin_selected, dispatch_uid="chat_completion_plugin_selected")
-def handle_chat_completion_plugin_selected(sender, **kwargs):
-    """Handle plugin selected signal."""
-
-    plugin: PluginMeta = kwargs.get("plugin")
-    chat: Chat = kwargs.get("chat")
-    input_text = kwargs.get("input_text")
-
-    logger.info(
-        "%s for chat %s, plugin: %s, input_text: %s",
-        formatted_text("chat_completion_plugin_selected"),
-        chat,
-        plugin,
-        input_text,
-    )
-
-
 # pylint: disable=W0612
-@receiver(chat_response_success, dispatch_uid="chat_response_success")
+@receiver(chat_invocation_finished, dispatch_uid="chat_invocation_finished")
 def handle_chat_response_success(sender, **kwargs):
     """Handle chat completion returned signal."""
 
@@ -169,7 +189,7 @@ def handle_chat_response_success(sender, **kwargs):
     if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
         logger.info(
             "%s for chat %s, \nrequest: %s, \nresponse: %s",
-            formatted_text("chat_response_success"),
+            formatted_text("chat_invocation_finished"),
             chat,
             formatted_json(request),
             formatted_json(response),
@@ -177,7 +197,7 @@ def handle_chat_response_success(sender, **kwargs):
     else:
         logger.info(
             "%s for chat %s",
-            formatted_text("chat_response_success"),
+            formatted_text("chat_invocation_finished"),
             chat,
         )
 

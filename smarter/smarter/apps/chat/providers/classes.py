@@ -156,7 +156,7 @@ class ChatProviderBase(ABC, metaclass=CombinedMeta):
                 message = f"Tool presented: {tool_name}({inputs}) - {tool_description} "
                 self.append_message(OpenAIMessageKeys.SMARTER_MESSAGE_KEY, message)
 
-    def handle_prompt_completion(
+    def handle_prompt_completion_response(
         self,
         user_id: int,
         model: str,
@@ -170,7 +170,7 @@ class ChatProviderBase(ABC, metaclass=CombinedMeta):
         """
         handle internal billing, and append messages to the response for prompt completion and the billing summary
         """
-        logger.info("%s %s", self.formatted_class_name, formatted_text("handle_prompt_completion()"))
+        logger.info("%s %s", self.formatted_class_name, formatted_text("handle_prompt_completion_response()"))
         create_prompt_completion_charge.delay(
             user_id, model, completion_tokens, prompt_tokens, total_tokens, system_fingerprint
         )
