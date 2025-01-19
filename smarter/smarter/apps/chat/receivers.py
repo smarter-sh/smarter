@@ -7,7 +7,7 @@ import waffle
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from smarter.apps.plugin.models import PluginMeta, PluginSelector, PluginSelectorHistory
+from smarter.apps.plugin.models import PluginMeta
 from smarter.common.const import SMARTER_WAFFLE_SWITCH_CHAT_LOGGING
 from smarter.common.helpers.console_helpers import (
     formatted_json,

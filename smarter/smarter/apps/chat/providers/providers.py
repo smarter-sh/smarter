@@ -8,14 +8,18 @@ There are a few objectives of this class:
 3. To provide a default provider and handler.
 """
 
+import logging
 from typing import Callable, Dict, List, Optional, Type
 
+import waffle
 from django.core.cache import cache
 
 from smarter.apps.chat.models import Chat
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.classes import Singleton
+from smarter.common.const import SMARTER_WAFFLE_SWITCH_CHAT_LOGGING
 from smarter.common.exceptions import SmarterValueError
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.user import UserType
 
 from .base_classes import OpenAICompatibleChatProvider
@@ -27,6 +31,7 @@ from .openai.classes import PROVIDER_NAME as OPENAI_PROVIDER_NAME
 from .openai.classes import OpenAIChatProvider
 
 
+logger = logging.getLogger(__name__)
 CACHE_PREFIX = "smarter.apps.chat.providers"
 CACHE_TIMEOUT = 600
 
@@ -68,6 +73,12 @@ class ChatProviders(metaclass=Singleton):
             self._default = OpenAIChatProvider()
         return self._default
 
+    def get_cache_key(self, chat: Chat) -> str:
+        """
+        Get the cache key for the chat object.
+        """
+        return f"{CACHE_PREFIX}.{chat.session_key}"
+
     def validate_chat(self, chat: Chat) -> None:
         """
         Validate the chat object.
@@ -85,16 +96,27 @@ class ChatProviders(metaclass=Singleton):
     ) -> Callable:
         """Expose the handler method of the default provider"""
         self.validate_chat(chat)
+        cache_key = self.get_cache_key(chat)
+        cached_provider: OpenAIChatProvider = cache.get(cache_key)
 
-        cache_key = f"{CACHE_PREFIX}.openai_handler_{chat.session_key}"
-        cached_result = cache.get(cache_key)
+        if cached_provider is not None:
+            if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+                logger.info(
+                    "%s returning cached OpenAIChatProvider for chat %s", formatted_text("openai_handler()"), chat.id
+                )
 
-        if cached_result is not None:
-            return cached_result
+            # if we have a cached provider, we can use it to invoke the handler
+            # with everything preinitialized (from the last invocation) get the response.
+            result = cached_provider.handler(chat=chat, data=data, plugins=plugins, user=user)
 
-        result = self.default.handler(chat=chat, data=data, plugins=plugins, user=user)
-        cache.set(cache_key, result, timeout=CACHE_TIMEOUT)
+            # the state of the class instance will change after the handler is invoked
+            # so we need to update the cache with the new state, and we'll also reset the timeout.
+            cache.set(cache_key, cached_provider, timeout=CACHE_TIMEOUT)
+            return result
 
+        result = self.openai.handler(chat=chat, data=data, plugins=plugins, user=user)
+        cache.set(cache_key, self.openai, timeout=CACHE_TIMEOUT)
+        self._openai = None
         return result
 
     def googleai_handler(
@@ -102,16 +124,23 @@ class ChatProviders(metaclass=Singleton):
     ) -> Callable:
         """Expose the handler method of the googleai provider"""
         self.validate_chat(chat)
+        cache_key = self.get_cache_key(chat)
+        cached_provider: GoogleAIChatProvider = cache.get(cache_key)
 
-        cache_key = f"{CACHE_PREFIX}.googleai_handler{chat.session_key}"
-        cached_result = cache.get(cache_key)
-
-        if cached_result is not None:
-            return cached_result
+        if cached_provider is not None:
+            if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+                logger.info(
+                    "%s returning cached GoogleAIChatProvider for chat %s",
+                    formatted_text("googleai_handler()"),
+                    chat.id,
+                )
+            result = cached_provider.handler(chat=chat, data=data, plugins=plugins, user=user)
+            cache.set(cache_key, cached_provider, timeout=CACHE_TIMEOUT)
+            return result
 
         result = self.googleai.handler(chat=chat, data=data, plugins=plugins, user=user)
-        cache.set(cache_key, result, timeout=CACHE_TIMEOUT)
-
+        cache.set(cache_key, self.googleai, timeout=CACHE_TIMEOUT)
+        self._googleai = None
         return result
 
     def metaai_handler(
@@ -119,16 +148,21 @@ class ChatProviders(metaclass=Singleton):
     ) -> Callable:
         """Expose the handler method of the metaai provider"""
         self.validate_chat(chat)
+        cache_key = self.get_cache_key(chat)
+        cached_provider: MetaAIChatProvider = cache.get(cache_key)
 
-        cache_key = f"{CACHE_PREFIX}.metaai_handler{chat.session_key}"
-        cached_result = cache.get(cache_key)
-
-        if cached_result is not None:
-            return cached_result
+        if cached_provider is not None:
+            if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+                logger.info(
+                    "%s returning cached MetaAIChatProvider for chat %s", formatted_text("metaai_handler()"), chat.id
+                )
+            result = cached_provider.handler(chat=chat, data=data, plugins=plugins, user=user)
+            cache.set(cache_key, cached_provider, timeout=CACHE_TIMEOUT)
+            return result
 
         result = self.metaai.handler(chat=chat, data=data, plugins=plugins, user=user)
-        cache.set(cache_key, result, timeout=CACHE_TIMEOUT)
-
+        cache.set(cache_key, self.metaai, timeout=CACHE_TIMEOUT)
+        self._metaai = None
         return result
 
     def default_handler(
