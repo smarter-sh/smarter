@@ -32,10 +32,12 @@ class ProviderDbMixin:
     This mixin contains the database related methods for the provider model.
     """
 
-    _chat: Chat = None
-    _chat_tool_call: ChatToolCall = None
-    _chat_plugin_usage: ChatPluginUsage = None
-    _charges: QuerySet[Charge] = None
+    __slots__ = ("_chat", "_chat_tool_call", "_chat_plugin_usage", "_charges", "_session_key")
+
+    _chat: Chat
+    _chat_tool_call: ChatToolCall
+    _chat_plugin_usage: ChatPluginUsage
+    _charges: QuerySet[Charge]
 
     def __init__(self, *args, **kwargs):
         """
@@ -45,6 +47,19 @@ class ProviderDbMixin:
         self._session_key = kwargs.get("session_key", None)
         self._chat = kwargs.get("chat", None)
 
+        self._chat_tool_call = None
+        self._chat_plugin_usage = None
+        self._charges = None
+
+    @property
+    def ready(self) -> bool:
+        """
+        This method returns the ready status.
+        """
+        super_ready = super().ready
+        chat_ready = self.chat.ready if self.chat else False
+        return super_ready and chat_ready
+
     @property
     def chat(self) -> Chat:
         """
@@ -52,6 +67,7 @@ class ProviderDbMixin:
         """
         if self._chat is None and self.session_key is not None:
             self._chat = Chat.objects.get(session_key=self.session_key)
+            self._session_key = self._chat.session_key
         return self._chat
 
     @property
