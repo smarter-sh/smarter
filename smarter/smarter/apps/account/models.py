@@ -11,6 +11,8 @@ from django.core.validators import RegexValidator
 from django.db import models
 from django.template.loader import render_to_string
 
+from smarter.common.conf import settings as smarter_settings
+
 # our stuff
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.email_helpers import email_helper
@@ -52,6 +54,7 @@ def welcome_email_context(first_name: str) -> dict:
 
     first_name = first_name.capitalize()
     return {
+        "base_url": smarter_settings.environment_url,
         "first_name": first_name,
         "corporate_name": settings.SMARTER_BRANDING_CORPORATE_NAME,
         "support_phone": settings.SMARTER_BRANDING_SUPPORT_PHONE_NUMBER,

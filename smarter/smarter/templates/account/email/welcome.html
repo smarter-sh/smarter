@@ -3,7 +3,7 @@
 <html lang="en">
 	<!--begin::Head-->
 	<head>
-    <base href="https://platform.smarter.sh" />
+    <base href="{{ base_url }}" />
 		<title>Smarter</title>
 		<meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -73,17 +73,17 @@
 												<!--begin:Text-->
 												<div style="font-size:14px; text-align:left; font-weight:500; margin:0 60px 33px 60px; font-family:Arial,Helvetica,sans-serif">
 													<p style="color:#181C32; font-size: 18px; font-weight:600; margin-bottom:27px">Hey {{ first_name }},</p>
-													<p style="color:#3F4254; line-height:1.6">Smarter provides unified access to a broad range of large language models from the idustry's best providers including OpenAI, Google AI, Meta AI, Azure Cognitive Services, Amazon and others. Smarter's <a href="/docs/plugins/" target="_blank">plugin architecture</a> allows you to easily train models with proprietary data, while keeping your data private. And <a href="/docs/manifests/" target="_blank">Smarter's manifest approach</a> to resource management simplifies the process of working with AI resources in the cloud. <a href="https://smarter.sh/cli/" target="_blank">Smarter's CLI</a>, available for Windows, macOS and Linux, allows you to easily interact with the platform from the command line, as well as from a growing ecosystem of OEM tools.</p>
-												</div>
-												<!--end:Text-->
-												<!--begin:Text-->
-												<div style="font-size:14px; text-align:left; font-weight:500; margin:0 60px 33px 60px; font-family:Arial,Helvetica,sans-serif">
 													<p style="color:#3F4254; line-height:1.6">Your account has been created for you. To get started, please sign in. You can do this by clicking the button below. You can use this email address as your username. You can sign in with either. If you have any questions, please contact us at <a href="mailto:{{ support_email }}" style="font-weight:600">{{ support_email }}</a>.</p>
 												</div>
 												<!--end:Text-->
 												<!--begin:Action-->
-												<a href="/login/" target="_blank" style="background-color:rgba(255, 87, 51, .75); border-radius:6px; display:inline-block; margin-left:60px; padding:11px 19px; color: #FFFFFF; font-size: 14px; font-weight:500; font-family:Arial,Helvetica,sans-serif">Sign In</a>
+												<a href="/login/" target="_blank" style="background-color:rgba(255, 87, 51, .75); border-radius:6px; display:inline-block; margin-bottom:30px; margin-left:60px; padding:11px 19px; color: #FFFFFF; font-size: 14px; font-weight:500; font-family:Arial,Helvetica,sans-serif">Sign In</a>
 												<!--end:Action-->
+												<!--begin:Text-->
+												<div style="font-size:14px; text-align:left; font-weight:500; margin:0 60px 33px 60px; font-family:Arial,Helvetica,sans-serif">
+													<p style="color:#3F4254; line-height:1.6">Smarter provides unified access to a broad range of large language models from the idustry's best providers including OpenAI, Google AI, Meta AI, Azure Cognitive Services, Amazon and others. Smarter's <a href="/docs/plugins/" target="_blank">plugin architecture</a> allows you to easily train models with proprietary data, while keeping your data private. And Smarter's <a href="/docs/manifests/" target="_blank">manifest approach</a> to resource management simplifies the process of working with AI resources in the cloud. Smarter's <a href="https://smarter.sh/cli/" target="_blank">command-line interface (CLI)</a>, available for Windows, macOS and Linux, allows you to easily interact with the platform from the command line, as well as from a growing ecosystem of OEM tools.</p>
+												</div>
+												<!--end:Text-->
 											</div>
 											<!--end:Email content-->
 										</td>
