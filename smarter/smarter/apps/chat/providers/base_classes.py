@@ -14,10 +14,12 @@ from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
 )
 
+from smarter.apps.account.models import Account
 from smarter.apps.account.tasks import (
     create_plugin_charge,
     create_prompt_completion_charge,
 )
+from smarter.apps.account.utils import account_for_user
 from smarter.apps.chat.functions.function_weather import (
     get_current_weather,
     weather_tool_factory,
@@ -109,6 +111,7 @@ class OpenAICompatibleChatProvider(ProviderDbMixin):
 
     __slots__ = (
         "_name",
+        "_account",
         "_default_model",
         "_default_system_role",
         "_default_temperature",
@@ -152,6 +155,7 @@ class OpenAICompatibleChatProvider(ProviderDbMixin):
     data: dict
     plugins: Optional[List[PluginStatic]]
     user: Optional[Any]
+    _account: Account
 
     iteration: int
     request_meta_data: dict
@@ -178,7 +182,12 @@ class OpenAICompatibleChatProvider(ProviderDbMixin):
         default_temperature: float,
         default_max_tokens: int,
         valid_chat_completion_models: list[str],
+        **kwargs,
     ):
+        self.chat = kwargs.get("chat")
+        super().__init__(
+            chat=self.chat,
+        )
         self.init()
         self._name = name
         self._base_url = base_url
@@ -208,6 +217,7 @@ class OpenAICompatibleChatProvider(ProviderDbMixin):
         self.data = None
         self.plugins = None
         self.user = None
+        self._account = None
 
         self.iteration = 1
         self.request_meta_data = {}
@@ -260,6 +270,18 @@ class OpenAICompatibleChatProvider(ProviderDbMixin):
             raise ValueError(
                 f"Internal error. Invalid default model: {self.default_model} not found in list of valid {self.name} models {self.valid_chat_completion_models}."
             )
+
+    @property
+    def ready(self) -> bool:
+        return self.chat and self.data and self.user and self.account
+
+    @property
+    def account(self) -> Account:
+        if self._account:
+            return self._account
+        if self.user:
+            self._account = account_for_user(self.user)
+        return self._account
 
     @property
     def messages(self) -> List[Dict[str, str]]:

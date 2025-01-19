@@ -32,7 +32,3 @@ class GoogleAIChatProvider(OpenAICompatibleChatProvider, metaclass=Singleton):
             default_max_tokens=smarter_settings.llm_default_max_tokens,
             valid_chat_completion_models=VALID_CHAT_COMPLETION_MODELS,
         )
-
-
-# create an instance of the GoogleAI chat provider singleton
-googleai_chat_provider = GoogleAIChatProvider()

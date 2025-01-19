@@ -10,22 +10,25 @@ There are a few objectives of this class:
 
 from typing import Callable, Dict, List, Optional, Type
 
+from django.core.cache import cache
+
 from smarter.apps.chat.models import Chat
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.classes import Singleton
+from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.user import UserType
 
 from .base_classes import OpenAICompatibleChatProvider
-from .const import PROVIDER_NAME as OPENAI_PROVIDER_NAME
-from .googleai.classes import (
-    GoogleAIChatProvider,
-    GoogleAIHandlerInput,
-    googleai_chat_provider,
-)
+from .googleai.classes import GoogleAIChatProvider
 from .googleai.const import PROVIDER_NAME as GOOGLEAI_PROVIDER_NAME
-from .metaai.classes import MetaAIChatProvider, MetaAIHandlerInput, metaai_chat_provider
+from .metaai.classes import MetaAIChatProvider
 from .metaai.const import PROVIDER_NAME as METAAI_PROVIDER_NAME
-from .openai.classes import OpenAIChatProvider, openai_chat_provider
+from .openai.classes import PROVIDER_NAME as OPENAI_PROVIDER_NAME
+from .openai.classes import OpenAIChatProvider
+
+
+CACHE_PREFIX = "smarter.apps.chat.providers"
+CACHE_TIMEOUT = 600
 
 
 class ChatProviders(metaclass=Singleton):
@@ -44,26 +47,35 @@ class ChatProviders(metaclass=Singleton):
     @property
     def googleai(self) -> GoogleAIChatProvider:
         if self._googleai is None:
-            self._googleai = googleai_chat_provider
+            self._googleai = GoogleAIChatProvider()
         return self._googleai
 
     @property
     def metaai(self) -> MetaAIChatProvider:
         if self._metaai is None:
-            self._metaai = metaai_chat_provider
+            self._metaai = MetaAIChatProvider()
         return self._metaai
 
     @property
     def openai(self) -> OpenAIChatProvider:
         if self._openai is None:
-            self._openai = openai_chat_provider
+            self._openai = OpenAIChatProvider()
         return self._openai
 
     @property
     def default(self) -> Type[OpenAICompatibleChatProvider]:
         if self._default is None:
-            self._default = openai_chat_provider
+            self._default = OpenAIChatProvider()
         return self._default
+
+    def validate_chat(self, chat: Chat) -> None:
+        """
+        Validate the chat object.
+        """
+        if not chat:
+            raise SmarterValueError("Chat object is required to get the handler")
+        if not chat.session_key:
+            raise SmarterValueError("Chat session key is required to get the handler")
 
     # -------------------------------------------------------------------------
     # all handlers
@@ -72,37 +84,52 @@ class ChatProviders(metaclass=Singleton):
         self, chat: Chat, data: dict, plugins: Optional[List[PluginStatic]] = None, user: Optional[UserType] = None
     ) -> Callable:
         """Expose the handler method of the default provider"""
-        handler_inputs = OpenAIHandlerInput(
-            chat=chat,
-            data=data,
-            plugins=plugins,
-            user=user,
-        )
-        return self.default.handler(handler_inputs=handler_inputs)
+        self.validate_chat(chat)
+
+        cache_key = f"{CACHE_PREFIX}.openai_handler_{chat.session_key}"
+        cached_result = cache.get(cache_key)
+
+        if cached_result is not None:
+            return cached_result
+
+        result = self.default.handler(chat=chat, data=data, plugins=plugins, user=user)
+        cache.set(cache_key, result, timeout=CACHE_TIMEOUT)
+
+        return result
 
     def googleai_handler(
         self, chat: Chat, data: dict, plugins: Optional[List[PluginStatic]] = None, user: Optional[UserType] = None
     ) -> Callable:
         """Expose the handler method of the googleai provider"""
-        handler_inputs = GoogleAIHandlerInput(
-            chat=chat,
-            data=data,
-            plugins=plugins,
-            user=user,
-        )
-        return self.googleai.handler(handler_inputs=handler_inputs)
+        self.validate_chat(chat)
+
+        cache_key = f"{CACHE_PREFIX}.googleai_handler{chat.session_key}"
+        cached_result = cache.get(cache_key)
+
+        if cached_result is not None:
+            return cached_result
+
+        result = self.googleai.handler(chat=chat, data=data, plugins=plugins, user=user)
+        cache.set(cache_key, result, timeout=CACHE_TIMEOUT)
+
+        return result
 
     def metaai_handler(
         self, chat: Chat, data: dict, plugins: Optional[List[PluginStatic]] = None, user: Optional[UserType] = None
     ) -> Callable:
         """Expose the handler method of the metaai provider"""
-        handler_inputs = MetaAIHandlerInput(
-            chat=chat,
-            data=data,
-            plugins=plugins,
-            user=user,
-        )
-        return self.metaai.handler(handler_inputs=handler_inputs)
+        self.validate_chat(chat)
+
+        cache_key = f"{CACHE_PREFIX}.metaai_handler{chat.session_key}"
+        cached_result = cache.get(cache_key)
+
+        if cached_result is not None:
+            return cached_result
+
+        result = self.metaai.handler(chat=chat, data=data, plugins=plugins, user=user)
+        cache.set(cache_key, result, timeout=CACHE_TIMEOUT)
+
+        return result
 
     def default_handler(
         self, chat: Chat, data: dict, plugins: Optional[List[PluginStatic]] = None, user: Optional[UserType] = None
