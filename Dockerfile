@@ -8,7 +8,7 @@
 #------------------------------------------------------------------------------
 
 # Use the official Python image as a parent image
-FROM --platform=linux/amd64 python:3.12-bookworm
+FROM --platform=linux/amd64 python:3.12-bookworm AS base
 
 LABEL maintainer="Lawrence McDaniel <lawrence@querium.com>"
 
@@ -30,6 +30,8 @@ RUN mkdir -p /data/.kube && \
 # Set the KUBECONFIG environment variable
 ENV KUBECONFIG=/data/.kube/config
 
+FROM base AS systempackages
+
 # Setup our file system.
 # so that the Docker file system matches up with the local file system.
 WORKDIR /smarter
@@ -40,54 +42,60 @@ COPY ./scripts/pull_s3_env.sh .
 RUN chown smarter_user:smarter_user -R . && \
     chmod +x pull_s3_env.sh
 
-# bring Ubuntu up to date
-RUN apt-get update && apt-get install -y
+# bring Ubuntu up to date and install dependencies
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    gnupg \
+    default-mysql-client \
+    build-essential \
+    libssl-dev \
+    libffi-dev \
+    python3-dev \
+    python-dev-is-python3 \
+    unzip && \
+    rm -rf /var/lib/apt/lists/*
 
 # install Node
 # see: https://deb.nodesource.com/
-RUN apt-get install -y ca-certificates curl gnupg && \
-    mkdir -p /etc/apt/keyrings/ && \
-    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg  && \
-    NODE_MAJOR=20  && \
-    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list  && \
-    apt-get update && apt-get install nodejs -y
-
-
-RUN apt-get update
-
-RUN apt-get install default-mysql-client build-essential libssl-dev libffi-dev python3-dev python-dev-is-python3 -y
-
-RUN rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /etc/apt/keyrings/ && \
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
+    NODE_MAJOR=20 && \
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list && \
+    apt-get update && apt-get install -y nodejs && \
+    rm -rf /var/lib/apt/lists/*
 
 # Download kubectl, which is a requirement for using the Kubernetes API
-RUN apt-get install -y curl && \
-    curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" && \
+RUN curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" && \
     chmod +x ./kubectl && \
     mv ./kubectl /usr/local/bin/kubectl
 
 # install aws cli
 RUN curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
     unzip awscliv2.zip && \
-    ./aws/install
+    ./aws/install && \
+    rm -rf awscliv2.zip aws
 
-# Set permissions for the non-root user
+    # Set permissions for the non-root user
 RUN chown -R smarter_user:smarter_user /smarter
 
 # Switch to non-root user
 USER smarter_user
 
+FROM systempackages AS pythonpackages
 # Create and activate a virtual environment in the user's home directory
 RUN python -m venv /home/smarter_user/venv
 ENV PATH="/home/smarter_user/venv/bin:$PATH"
 
 # Add all Python package dependencies
-RUN pip install --upgrade pip
-RUN pip install -r requirements/docker.txt
+RUN pip install --upgrade pip && \
+    pip install -r requirements/docker.txt
 
 # Install Python dependencies for the local environment for cases where
 # we're going to run python unit tests in the Docker container.
 RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r requirements/local.txt ; fi
 
+FROM pythonpackages AS application
 # Add our source code and make the 'smarter' directory the working directory
 # we want this to be the last step so that we can take advantage of Docker's
 # caching mechanism.
@@ -102,6 +110,8 @@ COPY --chown=smarter_user:smarter_user ./Dockerfile ./data/Dockerfile
 COPY --chown=smarter_user:smarter_user ./Makefile ./data/Makefile
 COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compose.yml
 
+FROM application as nodepackages
+
 # Build the React app and collect static files
 WORKDIR /home/smarter_user/smarter/smarter/apps/chatapp/reactapp
 RUN mkdir -p /home/smarter_user/.npm
@@ -110,16 +120,18 @@ USER root
 # node installation: trying to make this as resilient as possible
 # in light of network issues that have been happening with the npm registry
 # in Azure.
-RUN npm install -g npm@11.0.0 || npm install -g npm@11.0.0
-RUN npm config set fetch-retry-mintimeout 20000
-RUN npm config set fetch-retry-maxtimeout 120000
+RUN npm install -g npm@11.0.0 || npm install -g npm@11.0.0 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000
 USER smarter_user
-RUN npm install --legacy-peer-deps || npm install --legacy-peer-deps
-RUN npm run build
+RUN npm install --legacy-peer-deps || npm install --legacy-peer-deps && \
+    npm run build
 
 # Collect static files
+FROM nodepackages AS collectassets
 WORKDIR /home/smarter_user/smarter
 RUN python manage.py collectstatic --noinput
 
+FROM collectassets AS final
 CMD ["gunicorn", "smarter.wsgi:application", "-b", "0.0.0.0:8000"]
 EXPOSE 8000
