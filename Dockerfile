@@ -8,9 +8,13 @@
 #------------------------------------------------------------------------------
 
 # Use the official Python image as a parent image
+################################## base #######################################
 FROM --platform=linux/amd64 python:3.12-bookworm AS base
+LABEL maintainer="Lawrence McDaniel <lawrence@querium.com>" \
+      description="Docker image for the Smarter application." \
+      license="MIT" \
+      vcs-url="https://github.com/smarter-sh/smarter"
 
-LABEL maintainer="Lawrence McDaniel <lawrence@querium.com>"
 
 # Environment: local, alpha, beta, next, or production
 ARG ENVIRONMENT
@@ -30,6 +34,7 @@ RUN mkdir -p /data/.kube && \
 # Set the KUBECONFIG environment variable
 ENV KUBECONFIG=/data/.kube/config
 
+############################## systempackages #################################
 FROM base AS systempackages
 
 # Setup our file system.
@@ -82,6 +87,7 @@ RUN chown -R smarter_user:smarter_user /smarter
 # Switch to non-root user
 USER smarter_user
 
+############################## pythonpackages #################################
 FROM systempackages AS pythonpackages
 # Create and activate a virtual environment in the user's home directory
 RUN python -m venv /home/smarter_user/venv
@@ -95,6 +101,7 @@ RUN pip install --upgrade pip && \
 # we're going to run python unit tests in the Docker container.
 RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r requirements/local.txt ; fi
 
+################################# application #################################
 FROM pythonpackages AS application
 # Add our source code and make the 'smarter' directory the working directory
 # we want this to be the last step so that we can take advantage of Docker's
@@ -110,6 +117,7 @@ COPY --chown=smarter_user:smarter_user ./Dockerfile ./data/Dockerfile
 COPY --chown=smarter_user:smarter_user ./Makefile ./data/Makefile
 COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compose.yml
 
+################################## nodepackages ###############################
 FROM application as nodepackages
 
 # Build the React app and collect static files
@@ -128,10 +136,12 @@ RUN npm install --legacy-peer-deps || npm install --legacy-peer-deps && \
     npm run build
 
 # Collect static files
+############################## collectassets ##################################
 FROM nodepackages AS collectassets
 WORKDIR /home/smarter_user/smarter
 RUN python manage.py collectstatic --noinput
 
+################################# final #######################################
 FROM collectassets AS final
 CMD ["gunicorn", "smarter.wsgi:application", "-b", "0.0.0.0:8000"]
 EXPOSE 8000
