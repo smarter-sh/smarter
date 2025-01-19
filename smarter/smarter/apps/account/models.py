@@ -50,6 +50,7 @@ PROVIDERS = [
 def welcome_email_context(first_name: str) -> dict:
     """
     Return the context for the welcome email template.
+    templates/account/email/welcome.html
     """
 
     first_name = first_name.capitalize()
