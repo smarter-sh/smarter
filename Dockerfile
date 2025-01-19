@@ -8,7 +8,7 @@
 #------------------------------------------------------------------------------
 
 # Use the official Python image as a parent image
-FROM --platform=linux/amd64 python:3.11-bookworm
+FROM --platform=linux/amd64 python:3.12-bookworm
 
 LABEL maintainer="Lawrence McDaniel <lawrence@querium.com>"
 
