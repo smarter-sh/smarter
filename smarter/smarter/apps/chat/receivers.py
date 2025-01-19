@@ -16,7 +16,7 @@ from smarter.common.helpers.console_helpers import (
 )
 
 from .models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
-from .providers.openai.const import (
+from .providers.const import (
     OpenAIMessageKeys,
     OpenAIRequestKeys,
     OpenAIResponseChoices,
@@ -206,28 +206,30 @@ def handle_chat_response_success(sender, **kwargs):
 def handle_chat_response_failure(sender, **kwargs):
     """Handle chat completion failed signal."""
 
+    iteration: int = kwargs.get("iteration")
     exception = kwargs.get("exception")
     chat: Chat = kwargs.get("chat")
     request_meta_data = kwargs.get("request_meta_data")
     first_response = kwargs.get("first_response")
     second_response = kwargs.get("second_response")
 
-    logger.info(
-        "%s for chat: %s, request_meta_data: %s, exception: %s",
+    logger.error(
+        "%s during iteration %s for chat: %s, request_meta_data: %s, exception: %s",
         formatted_text("chat_response_failure"),
+        iteration,
         chat if chat else None,
         formatted_json(request_meta_data),
         exception,
     )
-    if first_response:
-        logger.info(
+    if iteration == 1 and first_response:
+        logger.error(
             "%s for chat: %s, first_response: %s",
             formatted_text("chat_response_dump"),
             chat if chat else None,
             formatted_json(first_response),
         )
-    if second_response:
-        logger.info(
+    if iteration == 2 and second_response:
+        logger.error(
             "%s for chat: %s, second_response: %s",
             formatted_text("chat_response_dump"),
             chat if chat else None,

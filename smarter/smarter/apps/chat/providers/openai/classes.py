@@ -10,7 +10,12 @@ from smarter.common.classes import Singleton
 from smarter.common.conf import settings as smarter_settings
 
 # smarter chat provider stuff
-from .const import BASE_URL, DEFAULT_MODEL, PROVIDER_NAME, VALID_CHAT_COMPLETION_MODELS
+from ..const import VALID_CHAT_COMPLETION_MODELS
+
+
+BASE_URL = "https://api.openai.com/v1/"  # don't forget the trailing slash
+PROVIDER_NAME = "openai"
+DEFAULT_MODEL = "gpt-4o-mini"
 
 
 logger = logging.getLogger(__name__)

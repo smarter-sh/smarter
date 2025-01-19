@@ -12,7 +12,7 @@ from smarter.common.const import LANGCHAIN_MESSAGE_HISTORY_ROLES
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import DateTimeEncoder
 
-from .openai.const import OpenAIMessageKeys
+from .const import OpenAIMessageKeys
 from .validators import (
     validate_endpoint,
     validate_max_tokens,

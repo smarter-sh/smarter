@@ -4,6 +4,7 @@
 import unittest
 from typing import Callable
 
+from smarter.apps.chat.providers.const import PROVIDER_NAME as OPENAI_PROVIDER_NAME
 from smarter.apps.chat.providers.googleai.classes import GoogleAIChatProvider
 from smarter.apps.chat.providers.googleai.const import (
     PROVIDER_NAME as GOOGLEAI_PROVIDER_NAME,
@@ -13,9 +14,6 @@ from smarter.apps.chat.providers.metaai.const import (
     PROVIDER_NAME as METAAI_PROVIDER_NAME,
 )
 from smarter.apps.chat.providers.openai.classes import OpenAIChatProvider
-from smarter.apps.chat.providers.openai.const import (
-    PROVIDER_NAME as OPENAI_PROVIDER_NAME,
-)
 from smarter.apps.chat.providers.providers import chat_providers
 
 from .classes import ProviderBaseClass

@@ -4,18 +4,12 @@ import json
 
 from smarter.common.exceptions import SmarterValueError
 
-from .openai.const import OpenAIEndPoint, OpenAIMessageKeys, OpenAIObjectTypes
+from .const import OpenAIEndPoint, OpenAIMessageKeys, OpenAIObjectTypes
 
 
 ####################################################################################################
 # Legacy openai validators
 ####################################################################################################
-
-
-def validate_item(item, valid_items: list, item_type: str) -> None:
-    """Ensure that item exists in valid_items"""
-    if item not in valid_items:
-        raise SmarterValueError(f"Item {item} not found in {item_type}: {valid_items}")
 
 
 def validate_temperature(temperature: any) -> None:

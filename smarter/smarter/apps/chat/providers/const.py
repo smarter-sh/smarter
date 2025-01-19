@@ -5,11 +5,6 @@ Constants for the OpenAI provider.
 import openai
 
 
-BASE_URL = "https://api.openai.com/v1/"  # don't forget the trailing slash
-PROVIDER_NAME = "openai"
-DEFAULT_MODEL = "gpt-4o-mini"
-
-
 # pylint: disable=too-few-public-methods
 class OpenAIObjectTypes:
     """V1 API Object Types (replace OpeanAIEndPoint)"""
