@@ -16,6 +16,7 @@ from smarter.common.classes import Singleton
 from smarter.lib.django.user import UserType
 
 from .base_classes import OpenAICompatibleChatProvider
+from .const import PROVIDER_NAME as OPENAI_PROVIDER_NAME
 from .googleai.classes import (
     GoogleAIChatProvider,
     GoogleAIHandlerInput,
@@ -25,7 +26,6 @@ from .googleai.const import PROVIDER_NAME as GOOGLEAI_PROVIDER_NAME
 from .metaai.classes import MetaAIChatProvider, MetaAIHandlerInput, metaai_chat_provider
 from .metaai.const import PROVIDER_NAME as METAAI_PROVIDER_NAME
 from .openai.classes import OpenAIChatProvider, openai_chat_provider
-from .openai.const import PROVIDER_NAME as OPENAI_PROVIDER_NAME
 
 
 class ChatProviders(metaclass=Singleton):

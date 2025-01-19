@@ -15,7 +15,7 @@ from typing import Any, Callable
 from django.test import Client
 
 from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
-from smarter.apps.chat.providers.openai.const import OpenAIMessageKeys
+from smarter.apps.chat.providers.const import OpenAIMessageKeys
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.plugin.static import PluginStatic

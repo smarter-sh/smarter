@@ -23,6 +23,7 @@ from smarter.smarter_celery import app
 from .models import (
     CHARGE_TYPE_PLUGIN,
     CHARGE_TYPE_PROMPT_COMPLETION,
+    Account,
     Charge,
     DailyBillingRecord,
 )
@@ -39,15 +40,28 @@ module_prefix = formatted_text("smarter.apps.account.tasks.")
     max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
     queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
 )
-def create_charge(
-    charge_type: str,
-    user_id: int,
-    prompt_tokens: int,
-    completion_tokens: int,
-    total_tokens: int,
-    model: str,
-    reference: str,
-):
+def create_charge(*args, **kwargs):
+    """Create a charge record."""
+    account: Account = None
+    user_id = kwargs.get("user_id")
+    if user_id:
+        user = user_for_user_id(user_id)
+        user_profile = user_profile_for_user(user=user)
+        account = user_profile.account
+    else:
+        account_id = kwargs.get("account_id")
+        if account_id:
+            account = Account.objects.get(id=account_id)
+
+    session_key = kwargs.get("session_key")
+    provider = kwargs.get("provider")
+    charge_type = kwargs.get("charge_type")
+    prompt_tokens = kwargs.get("prompt_tokens")
+    completion_tokens = kwargs.get("completion_tokens")
+    total_tokens = kwargs.get("total_tokens")
+    model = kwargs.get("model")
+    reference = kwargs.get("reference")
+
     logger.info(
         "%s - begin. user_id %s, charge_type %s, reference %s",
         formatted_text(module_prefix + "create_charge()"),
@@ -55,11 +69,11 @@ def create_charge(
         charge_type,
         reference,
     )
-    user = user_for_user_id(user_id)
-    user_profile = user_profile_for_user(user=user)
 
     Charge.objects.create(
-        account=user_profile.account,
+        account=account,
+        session_key=session_key,
+        provider=provider,
         user=user,
         charge_type=charge_type,
         completion_tokens=completion_tokens,

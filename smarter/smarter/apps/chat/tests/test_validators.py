@@ -24,7 +24,7 @@ from smarter.apps.chat.providers.validators import (
 # our stuff
 from smarter.common.exceptions import SmarterValueError
 
-from ..providers.openai.const import OpenAIEndPoint, OpenAIObjectTypes  # noqa: E402
+from ..providers.const import OpenAIEndPoint, OpenAIObjectTypes  # noqa: E402
 from ..tests.test_setup import get_test_file  # noqa: E402
 
 

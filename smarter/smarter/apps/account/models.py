@@ -302,6 +302,7 @@ class Charge(TimestampedModel):
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="charge", null=False, blank=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="charge", null=False, blank=False)
+    session_key = models.CharField(max_length=255, null=True, blank=True)
     provider = models.CharField(
         max_length=255,
         choices=PROVIDERS,
