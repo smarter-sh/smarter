@@ -8,6 +8,7 @@ import random
 
 from django.core.validators import RegexValidator
 from django.db import models
+from django.template.loader import render_to_string
 
 # our stuff
 from smarter.common.exceptions import SmarterValueError
@@ -142,9 +143,8 @@ class AccountContact(TimestampedModel):
 
     def send_welcome_email(self) -> None:
         """Send a welcome email to the contact."""
-        template_path = os.path.join(HERE, "./assets/html/welcome.html")
-        with open(template_path, encoding="utf-8") as welcome_email_template:
-            html_template = welcome_email_template.read()
+        context = {"first_name": self.first_name, "support_email": "lawrence@querium.com"}
+        html_template = render_to_string("accounts/email/welcome.html", context)
 
         subject = "Welcome to Smarter!"
         body = html_template
