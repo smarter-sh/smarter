@@ -6,6 +6,7 @@ import logging
 import os
 import random
 
+from django.conf import settings
 from django.core.validators import RegexValidator
 from django.db import models
 from django.template.loader import render_to_string
@@ -42,6 +43,26 @@ PROVIDERS = [
     (PROVIDER_METAAI, "Meta AI"),
     (PROVIDER_GOOGLEAI, "Google AI"),
 ]
+
+
+def welcome_email_context(first_name: str) -> dict:
+    """
+    Return the context for the welcome email template.
+    """
+
+    first_name = first_name.capitalize()
+    return {
+        "first_name": first_name,
+        "corporate_name": settings.SMARTER_BRANDING_CORPORATE_NAME,
+        "support_phone": settings.SMARTER_BRANDING_SUPPORT_PHONE_NUMBER,
+        "support_email": settings.SMARTER_BRANDING_SUPPORT_EMAIL,
+        "contact_address": settings.SMARTER_BRANDING_ADDRESS,
+        "contact_url": settings.SMARTER_BRANDING_CONTACT,
+        "office_hours": settings.SMARTER_BRANDING_SUPPORT_HOURS,
+        "facebook_url": settings.SMARTER_BRANDING_URL_FACEBOOK,
+        "twitter_url": settings.SMARTER_BRANDING_URL_TWITTER,
+        "linkedin_url": settings.SMARTER_BRANDING_URL_LINKEDIN,
+    }
 
 
 class Account(TimestampedModel):
@@ -143,7 +164,7 @@ class AccountContact(TimestampedModel):
 
     def send_welcome_email(self) -> None:
         """Send a welcome email to the contact."""
-        context = {"first_name": self.first_name, "support_email": "lawrence@querium.com"}
+        context = welcome_email_context(first_name=self.first_name)
         html_template = render_to_string("accounts/email/welcome.html", context)
 
         subject = "Welcome to Smarter!"
