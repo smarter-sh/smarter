@@ -43,7 +43,6 @@ class ProviderDbMixin:
         """
         Constructor method for the ProviderDbMixin class.
         """
-        super().__init__(*args, **kwargs)
         self._session_key = kwargs.get("session_key", None)
         self._chat = kwargs.get("chat", None)
 
