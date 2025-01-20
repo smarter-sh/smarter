@@ -103,18 +103,22 @@ def update_chat(*args, **kwargs):
     max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
     queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
 )
-def create_chat_tool_call_history(chat_id, plugin_id, function_name, function_args, request, response):
+def create_chat_tool_call_history(chat_id, plugin_meta_id, function_name, function_args, request, response):
     """Create chat tool call history record."""
     logger.info("%s", formatted_text(module_prefix + "create_chat_tool_call_history()"))
+    chat = None
+    plugin_meta = None
+
     try:
         chat = Chat.objects.get(id=chat_id)
     except Chat.DoesNotExist as e:
         raise SmarterValueError(f"Chat with id {chat_id} does not exist") from e
 
     try:
-        plugin_meta = PluginMeta.objects.get(id=plugin_id)
+        if plugin_meta_id:
+            plugin_meta = PluginMeta.objects.get(id=plugin_meta_id)
     except PluginMeta.DoesNotExist as e:
-        raise SmarterValueError(f"PluginMeta with id {plugin_id} does not exist") from e
+        raise SmarterValueError(f"PluginMeta with id {plugin_meta_id} does not exist") from e
 
     ChatToolCall.objects.create(
         chat=chat,

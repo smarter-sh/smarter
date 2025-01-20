@@ -524,19 +524,24 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             messages=self.messages,
         )
 
-    def handle_tool_called(self) -> None:
-        logger.info("%s %s", self.formatted_class_name, formatted_text("handle_tool_called()"))
+    def handle_tool_called(self, function_name: str, function_args: str) -> None:
+        """
+        handle a built-in tool call. example: get_current_weather()
+        """
+        logger.info("%s %s - %s", self.formatted_class_name, formatted_text("handle_tool_called()"), function_name)
         chat_completion_tool_called.send(
             sender=self.handler,
             chat=self.chat,
-            tool_calls=self.serialized_tool_calls,
-            request=self.second_iteration[InternalKeys.REQUEST_KEY],
-            response=self.second_iteration[InternalKeys.RESPONSE_KEY],
+            plugin=None,
+            function_name=function_name,
+            function_args=function_args,
+            request=self.first_iteration[InternalKeys.REQUEST_KEY],
+            response=self.first_iteration[InternalKeys.RESPONSE_KEY],
         )
         self._insert_charge_by_type(CHARGE_TYPE_TOOL)
 
     def handle_plugin_called(self, plugin: PluginStatic) -> None:
-        logger.info("%s %s", self.formatted_class_name, formatted_text("handle_plugin_called()"))
+        logger.info("%s %s - %s", self.formatted_class_name, formatted_text("handle_plugin_called()"), plugin.name)
         chat_completion_plugin_called.send(
             sender=self.handler,
             chat=self.chat,
@@ -564,7 +569,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 location=function_args.get("location"),
                 unit=function_args.get("unit"),
             )
-            self.handle_tool_called()
+            self.handle_tool_called(function_name=function_name, function_args=function_args)
         elif function_name.startswith("function_calling_plugin"):
             # FIX NOTE: we should revisit this. technically, we're supposed to be calling
             # function_to_call, assigned above. but just to play it safe,

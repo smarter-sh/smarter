@@ -128,7 +128,9 @@ def handle_chat_completion_tool_called(sender, **kwargs):
 
     chat: Chat = kwargs.get("chat")
     chat_id = chat.id if chat else None
-    tool_calls: list[dict] = kwargs.get("tool_calls")
+    plugin_meta_id = None
+    function_name: str = kwargs.get("function_name")
+    function_args: str = kwargs.get("function_args")
     request: dict = kwargs.get("request")
     response: dict = kwargs.get("response")
     prefix = formatted_text("handle_chat_completion_tool_called()")
@@ -139,12 +141,7 @@ def handle_chat_completion_tool_called(sender, **kwargs):
         chat_id,
     )
 
-    for tool_call in tool_calls:
-        plugin_meta: PluginMeta = tool_call.get("plugin_meta")
-        plugin_meta_id: int = plugin_meta.id if plugin_meta else None
-        function_name: str = tool_call.get("function_name")
-        function_args: str = tool_call.get("function_args")
-        create_chat_tool_call_history.delay(chat_id, plugin_meta_id, function_name, function_args, request, response)
+    create_chat_tool_call_history.delay(chat_id, plugin_meta_id, function_name, function_args, request, response)
 
 
 # pylint: disable=W0612

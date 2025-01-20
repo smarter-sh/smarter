@@ -222,7 +222,6 @@ class ChatHelper(SmarterRequestHelper):
             "chat_plugin_usage_history": chat_plugin_usage_serializer.data,
             # these two will be added upstream.
             "chatbot_request_history": None,  # ChatBotRequests
-            "plugin_selector_history": None,  # PluginSelectorHistory
         }
 
     def get_cached_chat(self) -> Chat:
