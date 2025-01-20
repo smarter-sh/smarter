@@ -201,8 +201,33 @@ def filter_openai_messages(messages: list[dict]) -> list:
                 "content": "Tool call: function_calling_plugin_0002({\"inquiry_type\":\"about\"})"}
             {
                 'role': 'user',
-                'content': 'Hello, World!'
+                'content': 'what is the weather in San Francisco, CA?'
+            },
+            {
+                'role': 'assistant',
+                'content': None,
+                'refusal': None,
+                'audio': None,
+                'function_call': None,
+                'tool_calls': [
+                        {'id': 'call_EnLha2WhjOnJ0lEj32Lsj4PU', 'function': {'arguments': '{
+                                "location": "San Francisco, CA"
+                            }', 'name': 'get_current_weather'
+                            }, 'type': 'function'
+                        }
+                    ]
+            },
+            {
+                'role': 'smarter',
+                'content': "openai called this tool: get_current_weather({'location': 'San Francisco, CA'})"
+            },
+            {
+                'tool_call_id': 'call_EnLha2WhjOnJ0lEj32Lsj4PU',
+                'role': 'tool',
+                'name': 'get_current_weather',
+                'content': '"[{\\"date\\":\\"2025-01-20 00: 00\\",\\"temperature\\":10.4565000534,\\"precipitation\\":0.0},{\\"date\\":\\"2025-01-20 01: 00\\",\\"temperature\\":9.1065006256,\\"precipitation\\":0.0},{\\"date\\":\\"2025-01-20 02: 00\\",\\"temperature\\":7.5064997673,\\"precipitation\\":0.0},{\\"date\\":\\"2025-01-20 03: 00\\",\\"temperature\\":6.9564995766,\\"precipitation\\":0.0},{\\"date\\":\\"2025-01-20 04: 00\\",\\"temperature\\":6.6564998627,\\"precipitation\\":0.0},{\\"date\\":\\"2025-01-20 05: 00\\",\\"temperature\\":6.556499958,\\"precipitation\\":0.0},{\\"date\\":\\"2025-01-20 06: 00\\",\\"temperature\\":6.6064996719,\\"precipitation\\":0.0},{\\"date\\":\\"2025-01-20 07: 00\\",\\"temperature\\":6.7064995766,\\"precipitation\\":0.0},{\\"date\\":\\"2025-01-20 08: 00\\",\\"temperature\\":6.6064996719,\\"precipitation\\":0.0},{\\"date\\":\\"2025-01-20 09: 00\\",\\"temperature\\":6.5064997673,\\"precipitation\\":0.0},{\\"date\\":\\"2025-01-20 10: 00\\",\\"temperature\\":6.556499958,\\"precipitation\\":0.0},{\\"date\\":\\"2025-01-20 11: 00\\",\\"temperature\\":6.9064998627,\\"precipitation\\":0.0},{\\"date\\":\\"2025-01-20 12: 00\\",\\"temperature\\":7.1064996719,\\"precipitation\\":0.0},{\\"date\\":\\"2025-01-20 13: 00\\",\\"temperature\\":6.5064997673,\\"precipitation\\":0.0},{\\"date\\":\\"2025-01-20 14: 00\\",\\"temperature\\":6.5064997673,\\"precipitation\\":0.0},{\\"date\\":\\"2025-01-20 15: 00\\",\\"temperature\\":6.806499958,\\"precipitation\\":0.0},{\\"date\\":\\"2025-01-20 16: 00\\",\\"temperature\\":6.306499958,\\"precipitation\\":0.0},{\\"date\\":\\"2025-01-20 17: 00\\",\\"temperature\\":8.9064998627,\\"precipitation\\":0.0},{\\"date\\":\\"2025-01-20 18: 00\\",\\"temperature\\":10.6065006256,\\"precipitation\\":0.0},{\\"date\\":\\"2025-01-20 19: 00\\",\\"temperature\\":12.2065000534,\\"precipitation\\":0.0},{\\"date\\":\\"2025-01-20 20: 00\\",\\"temperature\\":13.6065006256,\\"precipitation\\":0.0},{\\"date\\":\\"2025-01-20 21: 00\\",\\"temperature\\":14.8565006256,\\"precipitation\\":0.0},{\\"date\\":\\"2025-01-20 22: 00\\",\\"temperature\\":16.0065002441,\\"precipitation\\":0.0},{\\"date\\":\\"2025-01-20 23: 00\\",\\"temperature\\":16.7565002441,\\"precipitation\\":0.0}]"'
             }
+
         ]
 
     """

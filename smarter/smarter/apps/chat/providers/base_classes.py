@@ -108,9 +108,9 @@ class InternalKeys:
     SMARTER_PLUGIN_KEY = "smarter_plugin"
 
 
-class OpenAICompatibleChatProvider(ProviderDbMixin, AccountMixin):
+class ChatProviderBase(ProviderDbMixin, AccountMixin):
     """
-    Base class for chat providers.
+    Base class for all chat providers.
     """
 
     __slots__ = (
@@ -365,6 +365,24 @@ class OpenAICompatibleChatProvider(ProviderDbMixin, AccountMixin):
         message = f"{self.provider} called this tool: {function_name}({function_args})"
         self.append_message(OpenAIMessageKeys.SMARTER_MESSAGE_KEY, message)
 
+    def _insert_charge_by_type(self, charge_type: str) -> None:
+        self.insert_charge(
+            provider=self.provider,
+            charge_type=charge_type,
+            completion_tokens=self.completion_tokens,
+            prompt_tokens=self.prompt_tokens,
+            total_tokens=self.total_tokens,
+            model=self.model,
+            reference=self.reference,
+        )
+
+
+class OpenAICompatibleChatProvider(ChatProviderBase):
+    """
+    A chat provider that works with any vendor provider that is
+    fully compatible with OpenAI's text completion API.
+    """
+
     def prep_first_request(self):
         tool_choice = OPENAI_TOOL_CHOICE
         self.first_iteration[InternalKeys.REQUEST_KEY] = {
@@ -455,17 +473,6 @@ class OpenAICompatibleChatProvider(ProviderDbMixin, AccountMixin):
         response_message_role = response.choices[0].message.role
         response_message_content = response.choices[0].message.content
         self.append_message(role=response_message_role, message=response_message_content)
-
-    def _insert_charge_by_type(self, charge_type: str) -> None:
-        self.insert_charge(
-            provider=self.provider,
-            charge_type=charge_type,
-            completion_tokens=self.completion_tokens,
-            prompt_tokens=self.prompt_tokens,
-            total_tokens=self.total_tokens,
-            model=self.model,
-            reference=self.reference,
-        )
 
     def handle_tool_called(self) -> None:
         logger.info("%s %s", self.formatted_class_name, formatted_text("handle_tool_called()"))
@@ -641,7 +648,7 @@ class OpenAICompatibleChatProvider(ProviderDbMixin, AccountMixin):
             tool_calls: list[ChatCompletionMessageToolCall] = response_message.tool_calls
             if tool_calls:
                 # extend conversation with assistant's reply
-                self.messages.append(response_message.model_dump_json())
+                self.messages.append(json.loads(response_message.model_dump_json()))
                 self.iteration = 2
                 self.serialized_tool_calls = []
 
