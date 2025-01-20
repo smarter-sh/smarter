@@ -34,9 +34,6 @@ RUN mkdir -p /data/.kube && \
 # Set the KUBECONFIG environment variable
 ENV KUBECONFIG=/data/.kube/config
 
-############################## systempackages #################################
-FROM base AS systempackages
-
 # Setup our file system.
 # so that the Docker file system matches up with the local file system.
 WORKDIR /smarter
@@ -46,6 +43,9 @@ RUN chown smarter_user:smarter_user -R .
 COPY ./scripts/pull_s3_env.sh .
 RUN chown smarter_user:smarter_user -R . && \
     chmod +x pull_s3_env.sh
+
+############################## systempackages #################################
+FROM base AS systempackages
 
 # bring Ubuntu up to date and install dependencies
 RUN apt-get update && apt-get install -y \
@@ -101,14 +101,13 @@ RUN pip install --upgrade pip && \
 # we're going to run python unit tests in the Docker container.
 RUN if [ "$ENVIRONMENT" = "local" ] ; then pip install -r requirements/local.txt ; fi
 
-################################# application #################################
-FROM pythonpackages AS application
+################################# data #################################
+FROM pythonpackages AS data
 # Add our source code and make the 'smarter' directory the working directory
 # we want this to be the last step so that we can take advantage of Docker's
 # caching mechanism.
 WORKDIR /home/smarter_user/
 
-COPY --chown=smarter_user:smarter_user ./smarter ./smarter
 COPY --chown=smarter_user:smarter_user ./doc ./data/doc
 COPY --chown=smarter_user:smarter_user ./README.md ./data/doc/README.md
 COPY --chown=smarter_user:smarter_user ./CHANGELOG.md ./data/doc/CHANGELOG.md
@@ -117,10 +116,16 @@ COPY --chown=smarter_user:smarter_user ./Dockerfile ./data/Dockerfile
 COPY --chown=smarter_user:smarter_user ./Makefile ./data/Makefile
 COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compose.yml
 
-################################## nodepackages ###############################
-FROM application as nodepackages
+################################## reactapp ###############################
+# we want to do this ahead of the overall ./smarter codebase so that we can
+# take advantage of Docker's caching mechanism, and avoid rebuilding the
+# React app and the node environment on every build.
+FROM data AS reactapp
 
 # Build the React app and collect static files
+WORKDIR /home/smarter_user/
+RUN mkdir -p ./smarter/smarter/apps/chatapp/reactapp
+COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/chatapp/reactapp ./smarter/smarter/apps/chatapp/reactapp
 WORKDIR /home/smarter_user/smarter/smarter/apps/chatapp/reactapp
 RUN mkdir -p /home/smarter_user/.npm
 USER root
@@ -135,9 +140,15 @@ USER smarter_user
 RUN npm install --legacy-peer-deps || npm install --legacy-peer-deps && \
     npm run build
 
+############################## application ##################################
+FROM reactapp AS application
+# do this last so that we can take advantage of Docker's caching mechanism.
+WORKDIR /home/smarter_user/
+COPY --chown=smarter_user:smarter_user ./smarter ./smarter
+
 # Collect static files
 ############################## collectassets ##################################
-FROM nodepackages AS collectassets
+FROM application AS collectassets
 WORKDIR /home/smarter_user/smarter
 RUN python manage.py collectstatic --noinput
 
