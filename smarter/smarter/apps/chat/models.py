@@ -41,7 +41,7 @@ class Chat(TimestampedModel):
 
     def __str__(self):
         # pylint: disable=E1136
-        return f"{self.ip_address} - {self.url}"
+        return f"{self.id} - {self.ip_address} - {self.url}"
 
     def delete(self, *args, **kwargs):
         if self.session_key:
@@ -58,6 +58,7 @@ class ChatHistory(TimestampedModel):
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
     request = models.JSONField(blank=True, null=True)
     response = models.JSONField(blank=True, null=True)
+    messages = models.JSONField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.chat.id}"
@@ -67,7 +68,7 @@ class ChatHistory(TimestampedModel):
         """
         Used by the Reactapp (via ChatConfigView) to display the chat history.
         """
-        history = self.request.get("messages", []) if self.request else []
+        history = self.messages if self.messages else self.request.get("messages", []) if self.request else []
         response = self.response.get("choices", []) if self.response else []
         response = response[0] if response else {}
         response = response.get("message", {})

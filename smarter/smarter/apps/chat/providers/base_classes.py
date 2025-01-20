@@ -105,6 +105,9 @@ class InternalKeys:
     MESSAGES_KEY = "messages"
     PLUGINS_KEY = "plugins"
     MODEL_KEY = "model"
+    TEMPERATURE_KEY = "temperature"
+    MAX_TOKENS_KEY = "max_tokens"
+
     SMARTER_PLUGIN_KEY = SMARTER_SYSTEM_KEY_PREFIX + "plugin"
     SMARTER_IS_NEW = SMARTER_SYSTEM_KEY_PREFIX + "is_new"
 
@@ -422,8 +425,8 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             InternalKeys.MODEL_KEY: self.model,
             InternalKeys.MESSAGES_KEY: self.openai_messages,
             InternalKeys.TOOLS_KEY: self.tools,
-            "temperature": self.temperature,
-            "max_tokens": self.max_tokens,
+            InternalKeys.TEMPERATURE_KEY: self.temperature,
+            InternalKeys.MAX_TOKENS_KEY: self.max_tokens,
             "tool_choice": tool_choice,
         }
 
@@ -476,43 +479,50 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         handle internal billing, and append messages to the response for prompt completion and the billing summary
 
         """
-        logger.info("%s %s", self.formatted_class_name, formatted_text("handle_response()"))
-
-        if self.iteration == 1:
-            self.first_iteration[InternalKeys.RESPONSE_KEY] = json.loads(self.first_response.model_dump_json())
-        if self.iteration == 2:
-            self.second_iteration[InternalKeys.RESPONSE_KEY] = json.loads(self.second_response.model_dump_json())
+        logger.info(
+            "%s %s", self.formatted_class_name, formatted_text(f"handle_response() iteration: {self.iteration}")
+        )
 
         response = self.second_response if self.iteration == 2 else self.first_response
+        response_message_role = response.choices[0].message.role
+        response_message_content = response.choices[0].message.content
+
         self.prompt_tokens = response.usage.prompt_tokens
         self.completion_tokens = response.usage.completion_tokens
         self.total_tokens = response.usage.total_tokens
         self.reference = response.system_fingerprint
-
-        chat_completion_response.send(
-            sender=self.handler,
-            chat=self.chat,
-            iteration=self.iteration,
-            request=(
-                self.first_iteration[InternalKeys.REQUEST_KEY]
-                if self.iteration == 1
-                else self.second_iteration[InternalKeys.REQUEST_KEY]
-            ),
-            response=(
-                self.first_iteration[InternalKeys.RESPONSE_KEY]
-                if self.iteration == 1
-                else self.second_iteration[InternalKeys.RESPONSE_KEY]
-            ),
-        )
 
         self._insert_charge_by_type(CHARGE_TYPE_PROMPT_COMPLETION)
         self.append_message(
             role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY,
             message=f"{self.provider} prompt charges: {self.prompt_tokens} prompt tokens, {self.completion_tokens} completion tokens = {self.total_tokens} total tokens charged.",
         )
-        response_message_role = response.choices[0].message.role
-        response_message_content = response.choices[0].message.content
         self.append_message(role=response_message_role, message=response_message_content)
+
+        if self.iteration == 1:
+            self.first_iteration[InternalKeys.RESPONSE_KEY] = json.loads(self.first_response.model_dump_json())
+        if self.iteration == 2:
+            self.second_iteration[InternalKeys.RESPONSE_KEY] = json.loads(self.second_response.model_dump_json())
+
+        serialized_request = (
+            self.first_iteration[InternalKeys.REQUEST_KEY]
+            if self.iteration == 1
+            else self.second_iteration[InternalKeys.REQUEST_KEY]
+        )
+        serialized_response = (
+            self.first_iteration[InternalKeys.RESPONSE_KEY]
+            if self.iteration == 1
+            else self.second_iteration[InternalKeys.RESPONSE_KEY]
+        )
+
+        chat_completion_response.send(
+            sender=self.handler,
+            chat=self.chat,
+            iteration=self.iteration,
+            request=serialized_request,
+            response=serialized_response,
+            messages=self.messages,
+        )
 
     def handle_tool_called(self) -> None:
         logger.info("%s %s", self.formatted_class_name, formatted_text("handle_tool_called()"))
@@ -525,14 +535,13 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         )
         self._insert_charge_by_type(CHARGE_TYPE_TOOL)
 
-    def handle_plugin_called(self):
+    def handle_plugin_called(self, plugin: PluginStatic) -> None:
         logger.info("%s %s", self.formatted_class_name, formatted_text("handle_plugin_called()"))
         chat_completion_plugin_called.send(
             sender=self.handler,
             chat=self.chat,
-            tool_calls=self.serialized_tool_calls,
-            request=self.second_iteration[InternalKeys.REQUEST_KEY],
-            response=self.second_iteration[InternalKeys.RESPONSE_KEY],
+            plugin=plugin,
+            input_text=self.input_text,
         )
         self._insert_charge_by_type(CHARGE_TYPE_PLUGIN)
 
@@ -565,7 +574,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             plugin.params = function_args
             function_response = plugin.function_calling_plugin(inquiry_type=function_args.get("inquiry_type"))
             serialized_tool_call[InternalKeys.SMARTER_PLUGIN_KEY] = PluginMetaSerializer(plugin.plugin_meta).data
-            self.handle_plugin_called()
+            self.handle_plugin_called(plugin=plugin)
         tool_call_message = {
             "tool_call_id": tool_call.id,
             "role": "tool",
@@ -610,9 +619,9 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         Return a dictionary of request meta data.
         """
         return {
-            "model": self.model,
-            "temperature": self.temperature,
-            "max_tokens": self.max_tokens,
+            InternalKeys.MODEL_KEY: self.model,
+            InternalKeys.TEMPERATURE_KEY: self.temperature,
+            InternalKeys.MAX_TOKENS_KEY: self.max_tokens,
             "input_text": self.input_text,
         }
 
@@ -736,5 +745,6 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             chat=self.chat,
             request=self.first_iteration.get(InternalKeys.REQUEST_KEY),
             response=response,
+            messages=self.messages,
         )
         return http_response_factory(status_code=HTTPStatus.OK, body=response)

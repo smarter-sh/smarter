@@ -9,20 +9,9 @@ from django.dispatch import receiver
 
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.const import SMARTER_WAFFLE_SWITCH_CHAT_LOGGING
-from smarter.common.helpers.console_helpers import (
-    formatted_json,
-    formatted_text,
-    formatted_text_green,
-)
+from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 
 from .models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
-from .providers.const import (
-    OpenAIMessageKeys,
-    OpenAIRequestKeys,
-    OpenAIResponseChoices,
-    OpenAIResponseChoicesMessage,
-    OpenAIResponseKeys,
-)
 from .signals import (
     chat_completion_plugin_called,
     chat_completion_request,
@@ -34,15 +23,19 @@ from .signals import (
     chat_response_failure,
     chat_started,
 )
-from .tasks import create_chat_history, create_chat_tool_call_history
+from .tasks import (
+    create_chat_history,
+    create_chat_plugin_usage,
+    create_chat_tool_call_history,
+)
 
 
 logger = logging.getLogger(__name__)
 
 
 @receiver(chat_started, dispatch_uid="chat_started")
-def handle_chat_invoked(sender, **kwargs):
-    """Handle chat invoked signal."""
+def handle_chat_started(sender, **kwargs):
+    """Handle chat started signal."""
 
     chat: Chat = kwargs.get("chat")
     data = kwargs.get("data")
@@ -93,56 +86,40 @@ def handle_chat_completion_response_received(sender, **kwargs):
     iteration: int = kwargs.get("iteration")
     request: dict = kwargs.get("request")
     response: dict = kwargs.get("response")
+    messages: list[dict] = kwargs.get("messages")
     prefix = formatted_text(f"chat_completion_response for iteration {iteration}")
 
-    logger.info(
-        "%s for chat: %s",
-        prefix,
-        chat,
-    )
-
-    # mcdaniel: add the most recent response to the messages list
-    # so that the chatbot can display the most recent response
-    # to the user.
-    if response:
-        message: dict = None
-        response_choices = response.get(OpenAIResponseKeys.CHOICES_KEY)
-        if response_choices and isinstance(response_choices, list):
-            for choice in response_choices:
-                finish_reason = choice.get(OpenAIResponseChoices.FINISH_REASON_KEY, "")
-                message = choice.get(OpenAIResponseChoices.MESSAGE_KEY, {})
-                if finish_reason == OpenAIResponseChoicesMessage.TOOL_CALLS_KEY:
-                    logger.info("%s %s", prefix, formatted_text_green("Tool calls detected in response."))
-                    tool_calls = message.get(OpenAIResponseChoicesMessage.TOOL_CALLS_KEY)
-                    for tool_call in tool_calls:
-                        function = tool_call.get("function")
-                        function_name = function.get("name")
-                        function_args = function.get("arguments", "")
-                        tool_called = {
-                            OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SMARTER_MESSAGE_KEY,
-                            OpenAIMessageKeys.MESSAGE_CONTENT_KEY: f"Tool call: {function_name}({function_args})",
-                        }
-                        request[OpenAIRequestKeys.MESSAGES_KEY].append(tool_called)
-                        logger.info("%s Added tool call to messages: %s", prefix, tool_called)
-
-        create_chat_history(chat_id, request, response)
+    if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+        logger.info(
+            "%s for chat %s, \nrequest: %s, \nresponse: %s",
+            formatted_text("chat_completion_response"),
+            chat,
+            formatted_json(request),
+            formatted_json(response),
+        )
+    else:
+        logger.info(
+            "%s for chat %s",
+            formatted_text("chat_completion_response"),
+            chat,
+        )
 
 
 @receiver(chat_completion_plugin_called, dispatch_uid="chat_completion_plugin_called")
 def handle_chat_completion_plugin_called(sender, **kwargs):
     """Handle chat completion plugin call signal."""
     chat: Chat = kwargs.get("chat")
-    chat_id = chat.id if chat else None
-    tool_calls: list[dict] = kwargs.get("tool_calls")
-    request: dict = kwargs.get("request")
-    response: dict = kwargs.get("response")
-    prefix = formatted_text("handle_chat_completion_plugin_called()")
+    plugin: PluginMeta = kwargs.get("plugin")
+    input_text: str = kwargs.get("input_text")
 
     logger.info(
-        "%s for chat: %s",
-        prefix,
-        chat_id,
+        "%s for chat %s, \nplugin: %s, \ninput_text: %s",
+        formatted_text("chat_completion_plugin_called"),
+        chat,
+        plugin,
+        input_text,
     )
+    create_chat_plugin_usage.delay(chat_id=chat.id, plugin_id=plugin.id, input_text=input_text)
 
 
 @receiver(chat_completion_tool_called, dispatch_uid="chat_completion_tool_called")
@@ -167,7 +144,7 @@ def handle_chat_completion_tool_called(sender, **kwargs):
         plugin_meta_id: int = plugin_meta.id if plugin_meta else None
         function_name: str = tool_call.get("function_name")
         function_args: str = tool_call.get("function_args")
-        create_chat_tool_call_history(chat_id, plugin_meta_id, function_name, function_args, request, response)
+        create_chat_tool_call_history.delay(chat_id, plugin_meta_id, function_name, function_args, request, response)
 
 
 # pylint: disable=W0612
@@ -178,6 +155,7 @@ def handle_chat_response_success(sender, **kwargs):
     chat: Chat = kwargs.get("chat")
     request: dict = kwargs.get("request")
     response: dict = kwargs.get("response")
+    messages: list[dict] = kwargs.get("messages")
 
     # mcdaniel: add the most recent response to the messages list
     # so that the chatbot can display the most recent response
@@ -202,7 +180,7 @@ def handle_chat_response_success(sender, **kwargs):
     #                 request[OpenAIRequestKeys.MESSAGES_KEY].append(assistant_message)
     #                 logger.info("Added assistant response to messages.")
 
-    create_chat_history(chat.id, request, response)
+    create_chat_history.delay(chat.id, request, response, messages)
 
     if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
         logger.info(
