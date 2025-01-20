@@ -30,14 +30,10 @@ module_prefix = formatted_text("smarter.apps.chat.tasks.")
     max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
     queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
 )
-def create_chat_history(chat_id, request, response):
+def create_chat_history(chat_id, request, response, messages):
     logger.info("%s chat_id: %s", formatted_text(module_prefix + "create_chat_history()"), chat_id)
     chat = Chat.objects.get(id=chat_id)
-    ChatHistory.objects.create(
-        chat=chat,
-        request=request,
-        response=response,
-    )
+    ChatHistory.objects.create(chat=chat, request=request, response=response, messages=messages)
 
 
 def aggregate_chat_history():
