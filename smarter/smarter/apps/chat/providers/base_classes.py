@@ -362,12 +362,20 @@ class OpenAICompatibleChatProvider(ProviderDbMixin):
 
         """
         user_id = self.user.id
-        completion_tokens = (self.second_response.usage.completion_tokens,)
-        prompt_tokens = (self.second_response.usage.prompt_tokens,)
-        total_tokens = (self.second_response.usage.total_tokens,)
-        system_fingerprint = (self.second_response.system_fingerprint,)
-        response_message_role = (self.second_response.choices[0].message.role,)
-        response_message_content = (self.second_response.choices[0].message.content,)
+        if self.iteration == 1:
+            completion_tokens = self.first_response.usage.completion_tokens
+            prompt_tokens = self.first_response.usage.prompt_tokens
+            total_tokens = self.first_response.usage.total_tokens
+            system_fingerprint = self.first_response.system_fingerprint
+            response_message_role = self.first_response.choices[0].message.role
+            response_message_content = self.first_response.choices[0].message.content
+        else:
+            completion_tokens = self.second_response.usage.completion_tokens
+            prompt_tokens = self.second_response.usage.prompt_tokens
+            total_tokens = self.second_response.usage.total_tokens
+            system_fingerprint = self.second_response.system_fingerprint
+            response_message_role = self.second_response.choices[0].message.role
+            response_message_content = self.second_response.choices[0].message.content
 
         chat_completion_response.send(
             sender=self.handler,
@@ -379,7 +387,13 @@ class OpenAICompatibleChatProvider(ProviderDbMixin):
 
         logger.info("%s %s", self.formatted_class_name, formatted_text("handle_prompt_completion_response()"))
         create_prompt_completion_charge.delay(
-            user_id, model, completion_tokens, prompt_tokens, total_tokens, system_fingerprint
+            user_id=user_id,
+            provider=self.name,
+            model=model,
+            completion_tokens=completion_tokens,
+            prompt_tokens=prompt_tokens,
+            total_tokens=total_tokens,
+            system_fingerprint=system_fingerprint,
         )
         self.append_message(
             role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY,

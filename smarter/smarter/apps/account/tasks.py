@@ -92,11 +92,12 @@ def create_charge(*args, **kwargs):
 )
 def create_prompt_completion_charge(
     user_id: int,
+    provider: str,
     model: str,
     completion_tokens: int,
     prompt_tokens: int,
     total_tokens: int,
-    fingerprint: str,
+    system_fingerprint: str,
 ):
     """Create a charge record."""
 
@@ -104,11 +105,12 @@ def create_prompt_completion_charge(
     create_charge(
         charge_type=CHARGE_TYPE_PROMPT_COMPLETION,
         user_id=user_id,
+        provider=provider,
         prompt_tokens=prompt_tokens,
         completion_tokens=completion_tokens,
         total_tokens=total_tokens,
         model=model,
-        reference=fingerprint,
+        reference=system_fingerprint,
     )
 
 

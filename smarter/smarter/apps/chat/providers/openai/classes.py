@@ -30,7 +30,7 @@ class OpenAIChatProvider(OpenAICompatibleChatProvider, metaclass=Singleton):
         super().__init__(
             name=PROVIDER_NAME,
             base_url=BASE_URL,
-            api_key=smarter_settings.openai_api_key.get_secret,
+            api_key=smarter_settings.openai_api_key.get_secret_value(),
             default_model=DEFAULT_MODEL,
             default_system_role=smarter_settings.llm_default_system_role,
             default_temperature=smarter_settings.llm_default_temperature,
