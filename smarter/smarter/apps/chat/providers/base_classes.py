@@ -14,12 +14,12 @@ from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
 )
 
-from smarter.apps.account.models import Account
-from smarter.apps.account.tasks import (
-    create_plugin_charge,
-    create_prompt_completion_charge,
+from smarter.apps.account.mixins import AccountMixin
+from smarter.apps.account.models import (
+    CHARGE_TYPE_PLUGIN,
+    CHARGE_TYPE_PROMPT_COMPLETION,
+    CHARGE_TYPE_TOOL,
 )
-from smarter.apps.account.utils import account_for_user
 from smarter.apps.chat.functions.function_weather import (
     get_current_weather,
     weather_tool_factory,
@@ -28,22 +28,22 @@ from smarter.apps.chat.models import Chat
 
 # smarter chat provider stuff
 from smarter.apps.chat.providers.utils import (
-    clean_messages,
     ensure_system_role_present,
     exception_response_factory,
+    filter_openai_messages,
     get_request_body,
     http_response_factory,
     parse_request,
-    request_meta_data_factory,
 )
 from smarter.apps.chat.signals import (
+    chat_completion_plugin_called,
     chat_completion_request,
     chat_completion_response,
     chat_completion_tool_called,
-    chat_invocation_finished,
-    chat_invocation_start,
+    chat_finished,
     chat_provider_initialized,
     chat_response_failure,
+    chat_started,
 )
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.serializers import PluginMetaSerializer
@@ -91,6 +91,8 @@ EXCEPTION_MAP[openai.UnprocessableEntityError] = (HTTPStatus.BAD_REQUEST, "BadRe
 EXCEPTION_MAP[openai.APIResponseValidationError] = (HTTPStatus.BAD_REQUEST, "BadRequestError")
 EXCEPTION_MAP[openai.ContentFilterFinishReasonError] = (HTTPStatus.BAD_REQUEST, "BadRequestError")
 
+OPENAI_TOOL_CHOICE = "auto"
+
 
 class InternalKeys:
     """
@@ -102,16 +104,17 @@ class InternalKeys:
     TOOLS_KEY = "tools"
     MESSAGES_KEY = "messages"
     PLUGINS_KEY = "plugins"
+    MODEL_KEY = "model"
+    SMARTER_PLUGIN_KEY = "smarter_plugin"
 
 
-class OpenAICompatibleChatProvider(ProviderDbMixin):
+class OpenAICompatibleChatProvider(ProviderDbMixin, AccountMixin):
     """
     Base class for chat providers.
     """
 
     __slots__ = (
-        "_name",
-        "_account",
+        "_provider",
         "_default_model",
         "_default_system_role",
         "_default_temperature",
@@ -123,23 +126,27 @@ class OpenAICompatibleChatProvider(ProviderDbMixin):
         "chat",
         "data",
         "plugins",
-        "user",
+        "model",
+        "temperature",
+        "max_tokens",
+        "input_text",
+        "completion_tokens",
+        "prompt_tokens",
+        "total_tokens",
+        "reference",
         "iteration",
         "request_meta_data",
         "first_iteration",
         "first_response",
-        "second_response",
         "second_iteration",
-        "first_response_dict",
-        "second_response_dict",
+        "second_response",
         "serialized_tool_calls",
         "input_text",
-        "weather_tool",
         "tools",
         "available_functions",
     )
 
-    _name: str
+    _provider: str
     _default_model: str
     _default_system_role: str
     _default_temperature: float
@@ -154,8 +161,16 @@ class OpenAICompatibleChatProvider(ProviderDbMixin):
     chat: Chat
     data: dict
     plugins: Optional[List[PluginStatic]]
-    user: Optional[Any]
-    _account: Account
+
+    model: str
+    temperature: float
+    max_tokens: int
+    input_text: str
+
+    completion_tokens: int
+    prompt_tokens: int
+    total_tokens: int
+    reference: str
 
     iteration: int
     request_meta_data: dict
@@ -163,18 +178,15 @@ class OpenAICompatibleChatProvider(ProviderDbMixin):
     first_response: ChatCompletion
     second_response: ChatCompletion
     second_iteration: dict
-    first_response_dict: dict
-    second_response_dict: dict
     serialized_tool_calls: list[dict]
-    input_text: str
 
     # built-in tools that we make available to all providers
-    tools: list
+    tools: list[dict]
     available_functions: dict
 
     def __init__(
         self,
-        name: str,
+        provider: str,
         base_url: str,
         api_key: str,
         default_model: str,
@@ -184,12 +196,10 @@ class OpenAICompatibleChatProvider(ProviderDbMixin):
         valid_chat_completion_models: list[str],
         **kwargs,
     ):
+        super().__init__(**kwargs)
         self.chat = kwargs.get("chat")
-        super().__init__(
-            chat=self.chat,
-        )
         self.init()
-        self._name = name
+        self._provider = provider
         self._base_url = base_url
         self._api_key = api_key
 
@@ -202,6 +212,7 @@ class OpenAICompatibleChatProvider(ProviderDbMixin):
         chat_provider_initialized.send(sender=self)
 
     def init(self):
+        super().init()
         self._default_model = None
         self._default_system_role = None
         self._default_temperature = None
@@ -216,8 +227,16 @@ class OpenAICompatibleChatProvider(ProviderDbMixin):
         self.chat = None
         self.data = None
         self.plugins = None
-        self.user = None
-        self._account = None
+
+        self.model = None
+        self.temperature = None
+        self.max_tokens = None
+        self.input_text = None
+
+        self.completion_tokens = None
+        self.prompt_tokens = None
+        self.total_tokens = None
+        self.reference = None
 
         self.iteration = 1
         self.request_meta_data = {}
@@ -233,15 +252,11 @@ class OpenAICompatibleChatProvider(ProviderDbMixin):
             InternalKeys.MESSAGES_KEY: [],
         }
 
-        self.first_response_dict = None
-        self.second_response_dict = None
         self.serialized_tool_calls = None
-        self.input_text = None
 
         self.chat = None
         self.data = None
         self.plugins = []
-        self.user = None
 
         weather_tool = weather_tool_factory()
         self.tools: list[dict] = [weather_tool]
@@ -268,7 +283,7 @@ class OpenAICompatibleChatProvider(ProviderDbMixin):
 
         if self.default_model not in self.valid_chat_completion_models:
             raise ValueError(
-                f"Internal error. Invalid default model: {self.default_model} not found in list of valid {self.name} models {self.valid_chat_completion_models}."
+                f"Internal error. Invalid default model: {self.default_model} not found in list of valid {self.provider} models {self.valid_chat_completion_models}."
             )
 
     @property
@@ -276,149 +291,20 @@ class OpenAICompatibleChatProvider(ProviderDbMixin):
         return self.chat and self.data and self.user and self.account
 
     @property
-    def account(self) -> Account:
-        if self._account:
-            return self._account
-        if self.user:
-            self._account = account_for_user(self.user)
-        return self._account
-
-    @property
     def messages(self) -> List[Dict[str, str]]:
         return self._messages
 
-    def append_message(self, role: str, message: str) -> None:
-        if role not in OpenAIMessageKeys.all_roles:
-            raise SmarterValueError(
-                f"Internal error. Invalid message role: {role} not found in list of valid {self.name} message roles {OpenAIMessageKeys.all_roles}."
-            )
-        if not message:
-            # nothing to append
-            return
-
-        self._messages.append(
-            {OpenAIMessageKeys.MESSAGE_ROLE_KEY: role, OpenAIMessageKeys.MESSAGE_CONTENT_KEY: message}
-        )
-
-    def append_message_plugin_selected(self, plugin: str) -> None:
-        self.append_message(OpenAIMessageKeys.SMARTER_MESSAGE_KEY, f"Smarter selected this plugin: {plugin}")
-
-    def append_message_tool_called(self, function_name: str, function_args: str) -> None:
-        message = f"{self.name} called this tool: {function_name}({function_args})"
-        self.append_message(OpenAIMessageKeys.SMARTER_MESSAGE_KEY, message)
-
-    def prep_first_completion_request(
-        self,
-        messages: list[dict],
-        model: str,
-        tools: List[dict],
-        tool_choice: str,
-        temperature: float,
-        max_tokens: int,
-    ):
-        self.first_iteration[InternalKeys.REQUEST_KEY] = {
-            "model": model,
-            InternalKeys.MESSAGES_KEY: messages,
-            InternalKeys.TOOLS_KEY: self.tools,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-        }
-
-        # create a Smarter UI message with the established configuration
-        message = f"Prompt configuration: llm={self.name}, model={model}, temperature={temperature}, max_tokens={max_tokens}, tool_choice={tool_choice}."
-        self.append_message(OpenAIMessageKeys.SMARTER_MESSAGE_KEY, message)
-
-        # for any tools that are included in the request, add Smarter UI messages for each tool
-        if tools:
-            for tool in tools:
-                tool_type = tool.get("type")
-                this_tool = tool.get(tool_type) or {}
-                tool_name = this_tool.get("name") or "error: missing name"
-                tool_description = this_tool.get("description") or "error: missing description"
-                tool_parameters = this_tool.get("parameters", {}).get("properties", {})
-                inputs = []
-                for parameter, details in tool_parameters.items():
-                    if "description" in details:
-                        inputs.append(f"{parameter}: {details['description']}")
-                    elif "enum" in details:
-                        inputs.append(f"{parameter}: {', '.join(details['enum'])}")
-
-                inputs = ", ".join(inputs)
-                message = f"Tool presented: {tool_name}({inputs}) - {tool_description} "
-                self.append_message(OpenAIMessageKeys.SMARTER_MESSAGE_KEY, message)
-
-        # send a chat completion request signal. this triggers a variety of db records to be created
-        # asynchronously in the background via Celery tasks.
-        chat_completion_request.send(
-            sender=self.handler,
-            chat=self.chat,
-            iteration=self.iteration,
-            request=self.first_iteration[InternalKeys.REQUEST_KEY],
-        )
-
-    def handle_prompt_completion_response(self, model: str) -> None:
-        """
-        handle internal billing, and append messages to the response for prompt completion and the billing summary
-
-        """
-        user_id = self.user.id
-        if self.iteration == 1:
-            completion_tokens = self.first_response.usage.completion_tokens
-            prompt_tokens = self.first_response.usage.prompt_tokens
-            total_tokens = self.first_response.usage.total_tokens
-            system_fingerprint = self.first_response.system_fingerprint
-            response_message_role = self.first_response.choices[0].message.role
-            response_message_content = self.first_response.choices[0].message.content
-        else:
-            completion_tokens = self.second_response.usage.completion_tokens
-            prompt_tokens = self.second_response.usage.prompt_tokens
-            total_tokens = self.second_response.usage.total_tokens
-            system_fingerprint = self.second_response.system_fingerprint
-            response_message_role = self.second_response.choices[0].message.role
-            response_message_content = self.second_response.choices[0].message.content
-
-        chat_completion_response.send(
-            sender=self.handler,
-            chat=self.chat,
-            iteration=self.iteration,
-            request=self.second_iteration[InternalKeys.REQUEST_KEY],
-            response=self.second_iteration[InternalKeys.RESPONSE_KEY],
-        )
-
-        logger.info("%s %s", self.formatted_class_name, formatted_text("handle_prompt_completion_response()"))
-        create_prompt_completion_charge.delay(
-            user_id=user_id,
-            provider=self.name,
-            model=model,
-            completion_tokens=completion_tokens,
-            prompt_tokens=prompt_tokens,
-            total_tokens=total_tokens,
-            system_fingerprint=system_fingerprint,
-        )
-        self.append_message(
-            role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY,
-            message=f"{self.name} prompt charges: {prompt_tokens} prompt tokens, {completion_tokens} completion tokens = {total_tokens} total tokens charged.",
-        )
-        self.append_message(role=response_message_role, message=response_message_content)
-
-    def handle_prompt_completion_plugin(self, model: str) -> None:
-        logger.info("%s %s", self.formatted_class_name, formatted_text("handle_prompt_completion_plugin()"))
-        create_plugin_charge.delay(
-            user_id=self.user.id,
-            model=model,
-            completion_tokens=self.second_response.usage.completion_tokens,
-            prompt_tokens=self.second_response.usage.prompt_tokens,
-            total_tokens=self.second_response.usage.total_tokens,
-            fingerprint=self.second_response.system_fingerprint,
-        )
+    @messages.setter
+    def messages(self, value: List[Dict[str, str]]) -> None:
+        self._messages = value
 
     @property
     def formatted_class_name(self):
         return formatted_text(self.__class__.__name__)
 
     @property
-    def name(self) -> str:
-        return self._name
+    def provider(self) -> str:
+        return self._provider
 
     @property
     def base_url(self) -> str:
@@ -453,7 +339,7 @@ class OpenAICompatibleChatProvider(ProviderDbMixin):
         request_body = get_request_body(data=data)
         messages, _ = parse_request(request_body)
         messages = ensure_system_role_present(messages=messages, default_system_role=default_system_role)
-        messages = clean_messages(messages=messages)
+        messages = filter_openai_messages(messages=messages)
         return messages
 
     def get_input_text_prompt(self, data: dict) -> str:
@@ -461,7 +347,149 @@ class OpenAICompatibleChatProvider(ProviderDbMixin):
         _, input_text = parse_request(request_body)
         return input_text
 
-    def prepare_tool_call(self, tool_call) -> dict:
+    def append_message(self, role: str, message: str) -> None:
+        if role not in OpenAIMessageKeys.all_roles:
+            raise SmarterValueError(
+                f"Internal error. Invalid message role: {role} not found in list of valid {self.provider} message roles {OpenAIMessageKeys.all_roles}."
+            )
+        if not message:
+            # nothing to append
+            return
+
+        self.messages.append({OpenAIMessageKeys.MESSAGE_ROLE_KEY: role, OpenAIMessageKeys.MESSAGE_CONTENT_KEY: message})
+
+    def append_message_plugin_selected(self, plugin: str) -> None:
+        self.append_message(OpenAIMessageKeys.SMARTER_MESSAGE_KEY, f"Smarter selected this plugin: {plugin}")
+
+    def append_message_tool_called(self, function_name: str, function_args: str) -> None:
+        message = f"{self.provider} called this tool: {function_name}({function_args})"
+        self.append_message(OpenAIMessageKeys.SMARTER_MESSAGE_KEY, message)
+
+    def prep_first_request(self):
+        tool_choice = OPENAI_TOOL_CHOICE
+        self.first_iteration[InternalKeys.REQUEST_KEY] = {
+            InternalKeys.MODEL_KEY: self.model,
+            InternalKeys.MESSAGES_KEY: self.messages,
+            InternalKeys.TOOLS_KEY: self.tools,
+            "temperature": self.temperature,
+            "max_tokens": self.max_tokens,
+            "tool_choice": tool_choice,
+        }
+
+        # create a Smarter UI message with the established configuration
+        message = f"Prompt configuration: llm={self.provider}, model={self.model}, temperature={self.temperature}, max_tokens={self.max_tokens}, tool_choice={tool_choice}."
+        self.append_message(OpenAIMessageKeys.SMARTER_MESSAGE_KEY, message)
+
+        # for any tools that are included in the request, add Smarter UI messages for each tool
+        if self.tools:
+            for tool in self.tools:
+                tool_type = tool.get("type")
+                this_tool = tool.get(tool_type) or {}
+                tool_name = this_tool.get("name") or "error: missing name"
+                tool_description = this_tool.get("description") or "error: missing description"
+                tool_parameters = this_tool.get("parameters", {}).get("properties", {})
+                inputs = []
+                for parameter, details in tool_parameters.items():
+                    if "description" in details:
+                        inputs.append(f"{parameter}: {details['description']}")
+                    elif "enum" in details:
+                        inputs.append(f"{parameter}: {', '.join(details['enum'])}")
+
+                inputs = ", ".join(inputs)
+                message = f"Tool presented: {tool_name}({inputs}) - {tool_description} "
+                self.append_message(OpenAIMessageKeys.SMARTER_MESSAGE_KEY, message)
+
+        # send a chat completion request signal. this triggers a variety of db records to be created
+        # asynchronously in the background via Celery tasks.
+        chat_completion_request.send(
+            sender=self.handler,
+            chat=self.chat,
+            iteration=self.iteration,
+            request=self.first_iteration[InternalKeys.REQUEST_KEY],
+        )
+
+    def prep_second_request(self):
+        self.second_iteration[InternalKeys.REQUEST_KEY] = {
+            InternalKeys.MODEL_KEY: self.model,
+            InternalKeys.MESSAGES_KEY: json.dumps(self.messages),
+        }
+        chat_completion_request.send(
+            sender=self.handler,
+            chat=self.chat,
+            iteration=self.iteration,
+            request=self.second_iteration[InternalKeys.REQUEST_KEY],
+        )
+
+    def handle_response(self) -> None:
+        """
+        handle internal billing, and append messages to the response for prompt completion and the billing summary
+
+        """
+        logger.info("%s %s", self.formatted_class_name, formatted_text("handle_response()"))
+
+        if self.iteration == 1:
+            self.first_iteration[InternalKeys.RESPONSE_KEY] = json.loads(self.first_response.model_dump_json())
+        if self.iteration == 2:
+            self.second_iteration[InternalKeys.RESPONSE_KEY] = json.loads(self.second_response.model_dump_json())
+            self.second_iteration[InternalKeys.REQUEST_KEY][InternalKeys.MESSAGES_KEY] = json.dumps(self.messages)
+
+        response = self.second_response if self.iteration == 2 else self.first_response
+        self.prompt_tokens = response.usage.prompt_tokens
+        self.completion_tokens = response.usage.completion_tokens
+        self.total_tokens = response.usage.total_tokens
+        self.reference = response.system_fingerprint
+
+        chat_completion_response.send(
+            sender=self.handler,
+            chat=self.chat,
+            iteration=self.iteration,
+            request=self.second_iteration[InternalKeys.REQUEST_KEY],
+            response=self.second_iteration[InternalKeys.RESPONSE_KEY],
+        )
+
+        self._insert_charge_by_type(CHARGE_TYPE_PROMPT_COMPLETION)
+        self.append_message(
+            role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY,
+            message=f"{self.provider} prompt charges: {self.prompt_tokens} prompt tokens, {self.completion_tokens} completion tokens = {self.total_tokens} total tokens charged.",
+        )
+        response_message_role = response.choices[0].message.role
+        response_message_content = response.choices[0].message.content
+        self.append_message(role=response_message_role, message=response_message_content)
+
+    def _insert_charge_by_type(self, charge_type: str) -> None:
+        self.insert_charge(
+            provider=self.provider,
+            charge_type=charge_type,
+            completion_tokens=self.completion_tokens,
+            prompt_tokens=self.prompt_tokens,
+            total_tokens=self.total_tokens,
+            model=self.model,
+            reference=self.reference,
+        )
+
+    def handle_tool_called(self) -> None:
+        logger.info("%s %s", self.formatted_class_name, formatted_text("handle_tool_called()"))
+        chat_completion_tool_called.send(
+            sender=self.handler,
+            chat=self.chat,
+            tool_calls=self.serialized_tool_calls,
+            request=self.second_iteration[InternalKeys.REQUEST_KEY],
+            response=self.second_iteration[InternalKeys.RESPONSE_KEY],
+        )
+        self._insert_charge_by_type(CHARGE_TYPE_TOOL)
+
+    def handle_plugin_called(self):
+        logger.info("%s %s", self.formatted_class_name, formatted_text("handle_plugin_called()"))
+        chat_completion_plugin_called.send(
+            sender=self.handler,
+            chat=self.chat,
+            tool_calls=self.serialized_tool_calls,
+            request=self.second_iteration[InternalKeys.REQUEST_KEY],
+            response=self.second_iteration[InternalKeys.RESPONSE_KEY],
+        )
+        self._insert_charge_by_type(CHARGE_TYPE_PLUGIN)
+
+    def process_tool_call(self, tool_call: ChatCompletionMessageToolCall) -> tuple[dict[str, Any], dict[str, Any]]:
         """
         tool_call: List[ChatCompletionMessageToolCall]
         """
@@ -480,6 +508,7 @@ class OpenAICompatibleChatProvider(ProviderDbMixin):
                 location=function_args.get("location"),
                 unit=function_args.get("unit"),
             )
+            self.handle_tool_called()
         elif function_name.startswith("function_calling_plugin"):
             # FIX NOTE: we should revisit this. technically, we're supposed to be calling
             # function_to_call, assigned above. but just to play it safe,
@@ -488,14 +517,56 @@ class OpenAICompatibleChatProvider(ProviderDbMixin):
             plugin = PluginStatic(plugin_id=plugin_id)
             plugin.params = function_args
             function_response = plugin.function_calling_plugin(inquiry_type=function_args.get("inquiry_type"))
-            serialized_tool_call["smarter_plugin"] = PluginMetaSerializer(plugin.plugin_meta).data
+            serialized_tool_call[InternalKeys.SMARTER_PLUGIN_KEY] = PluginMetaSerializer(plugin.plugin_meta).data
+            self.handle_plugin_called()
         tool_call_message = {
             "tool_call_id": tool_call.id,
             "role": "tool",
             "name": function_name,
             "content": function_response,
         }
-        return tool_call_message, serialized_tool_call
+        self.messages.append(tool_call_message)
+        self.serialized_tool_calls.append(serialized_tool_call)
+
+    def handle_plugin_selected(self, plugin: PluginStatic) -> None:
+        # does the prompt have anything to do with any of the search terms defined in a plugin?
+        # FIX NOTE: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_tokens
+        logger.warning(
+            "smarter.apps.chat.providers.base_classes.OpenAICompatibleChatProvider.handler(): plugins selector needs to be refactored to use Django model."
+        )
+        self.model = plugin.plugin_prompt.model
+        self.temperature = plugin.plugin_prompt.temperature
+        self.max_tokens = plugin.plugin_prompt.max_tokens
+        self.messages = plugin.customize_prompt(self.messages)
+        self.tools.append(plugin.custom_tool)
+        self.available_functions[plugin.function_calling_identifier] = plugin.function_calling_plugin
+        self.append_message_plugin_selected(plugin=plugin.plugin_meta.name)
+
+    def handle_success(self) -> dict:
+        response = self.second_iteration.get(InternalKeys.RESPONSE_KEY) or self.first_iteration.get(
+            InternalKeys.RESPONSE_KEY
+        )
+        response["metadata"] = {"tool_calls": self.serialized_tool_calls, **self.request_meta_data}
+
+        response[OpenAIMessageKeys.SMARTER_MESSAGE_KEY] = {
+            "first_iteration": json.loads(json.dumps(self.first_iteration)),
+            "second_iteration": json.loads(json.dumps(self.second_iteration)),
+            InternalKeys.TOOLS_KEY: [tool["function"]["name"] for tool in self.tools],
+            InternalKeys.PLUGINS_KEY: [plugin.plugin_meta.name for plugin in self.plugins],
+            InternalKeys.MESSAGES_KEY: self.messages,
+        }
+        return response
+
+    def request_meta_data_factory(self):
+        """
+        Return a dictionary of request meta data.
+        """
+        return {
+            "model": self.model,
+            "temperature": self.temperature,
+            "max_tokens": self.max_tokens,
+            "input_text": self.input_text,
+        }
 
     def handler(self, chat: Chat, data: dict, plugins: list[PluginStatic], user: UserType) -> dict:
         """
@@ -508,9 +579,6 @@ class OpenAICompatibleChatProvider(ProviderDbMixin):
             data: Request data (see below)
             plugins: a List of plugins to potentially show to the LLM
             user: User instance
-            default_model: Default model to use for the chat completion example: "gpt-4-turbo"
-            default_temperature: Default temperature to use for the chat completion example: 0.5
-            default_max_tokens: Default max tokens to use for the chat completion example: 256
 
         data: {
             'session_key': '6f3bdd1981e0cac2de5fdc7afc2fb4e565826473a124153220e9f6bf49bca67b',
@@ -533,119 +601,62 @@ class OpenAICompatibleChatProvider(ProviderDbMixin):
             }
         """
         self.chat = chat
+        if chat:
+            self.account = chat.account
         self.data = data
         self.plugins = plugins
         self.user = user
 
-        self.validate()
+        chat_started.send(sender=self.handler, chat=self.chat, data=self.data)
         self.iteration = 1
         openai.api_key = self.api_key
         openai.base_url = self.base_url
-        model = self.chat.chatbot.default_model or self.default_model
-        temperature = self.chat.chatbot.default_temperature or self.default_temperature
-        max_tokens = self.chat.chatbot.default_max_tokens or self.default_max_tokens
 
         try:
-            messages = self.get_message_thread(data=self.data)
-            input_text = self.get_input_text_prompt(data=self.data)
-            request_meta_data = request_meta_data_factory(model, temperature, max_tokens, input_text)
-            chat_invocation_start.send(sender=self.handler, chat=self.chat, data=self.data)
+            self.validate()
+            self.model = self.chat.chatbot.default_model or self.default_model
+            self.temperature = self.chat.chatbot.default_temperature or self.default_temperature
+            self.max_tokens = self.chat.chatbot.default_max_tokens or self.default_max_tokens
+            self.messages = self.get_message_thread(data=self.data)
+            self.input_text = self.get_input_text_prompt(data=self.data)
+            self.request_meta_data = self.request_meta_data_factory()
 
-            # does the prompt have anything to do with any of the search terms defined in a plugin?
-            # FIX NOTE: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_tokens
-            logger.warning(
-                "smarter.apps.chat.providers.base_classes.OpenAICompatibleChatProvider.handler(): plugins selector needs to be refactored to use Django model."
-            )
             for plugin in self.plugins:
-                if plugin.selected(user=self.user, input_text=input_text):
-                    model = plugin.plugin_prompt.model
-                    temperature = plugin.plugin_prompt.temperature
-                    max_tokens = plugin.plugin_prompt.max_tokens
-                    messages = plugin.customize_prompt(messages)
-                    custom_tool = plugin.custom_tool
-                    self.tools.append(custom_tool)
-                    self.available_functions[plugin.function_calling_identifier] = plugin.function_calling_plugin
-                    self.append_message_plugin_selected(plugin=plugin.plugin_meta.name)
+                if plugin.selected(user=self.user, input_text=self.input_text):
+                    self.handle_plugin_selected(plugin=plugin)
 
-            self.prep_first_completion_request(
-                messages=messages,
-                model=model,
-                tools=self.tools,
-                tool_choice="auto",
-                temperature=temperature,
-                max_tokens=max_tokens,
-            )
+            self.prep_first_request()
 
             self.first_response = openai.chat.completions.create(
-                model=model,
-                messages=messages,
+                model=self.model,
+                messages=filter_openai_messages(self.messages),
                 tools=self.tools,
-                tool_choice="auto",
-                temperature=temperature,
-                max_tokens=max_tokens,
+                tool_choice=OPENAI_TOOL_CHOICE,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
             )
 
-            # serialize the response and then convert to json. this deconstructs the
-            # response from openai Python objects into pure json.
-            first_response_dict = json.loads(self.first_response.model_dump_json())
-            self.first_iteration[InternalKeys.RESPONSE_KEY] = first_response_dict
-            self.handle_prompt_completion_response(model=model)
+            self.handle_response()
             response_message = self.first_response.choices[0].message
             tool_calls: list[ChatCompletionMessageToolCall] = response_message.tool_calls
             if tool_calls:
+                # extend conversation with assistant's reply
+                self.messages.append(response_message.model_dump_json())
                 self.iteration = 2
-                second_request_messages = messages.copy()
-                second_request_messages = clean_messages(messages=second_request_messages)
-                # this is intended to force a json serialization exception
-                # in the event that we've neglected to properly serialize all
-                # responses from openai api.
-                response_message_serialized = response_message.model_dump_json()
-                second_request_messages_serialized: list[dict] = json.loads(json.dumps(second_request_messages))
-                second_request_messages_serialized.append(response_message_serialized)
                 self.serialized_tool_calls = []
 
-                # Step 3: call the function
-                # Note: the JSON response may not always be valid; be sure to handle errors
-                second_request_messages.append(response_message)  # extend conversation with assistant's reply
-
-                # Step 4: send the info for each function call and function response to the model
-
                 for tool_call in tool_calls:
-                    tool_call_message, serialized_tool_call = self.prepare_tool_call(tool_call)
-                    second_request_messages.append(tool_call_message)  # extend conversation with function response
-                    second_request_messages_serialized.append(tool_call_message)
-                    self.serialized_tool_calls.append(serialized_tool_call)
+                    self.process_tool_call(tool_call)
 
-                self.second_iteration[InternalKeys.REQUEST_KEY] = {
-                    "model": model,
-                    InternalKeys.MESSAGES_KEY: second_request_messages_serialized,
-                }
-                chat_completion_request.send(
-                    sender=self.handler,
-                    chat=self.chat,
-                    iteration=self.iteration,
-                    request=self.second_iteration[InternalKeys.REQUEST_KEY],
-                )
+                self.prep_second_request()
+
                 self.second_response = openai.chat.completions.create(
-                    model=model,
-                    messages=second_request_messages,
-                    temperature=temperature,
-                    max_tokens=max_tokens,
-                )  # get a new response from the model where it can see the function response
-                self.second_response_dict = json.loads(self.second_response.model_dump_json())
-                self.second_iteration[InternalKeys.RESPONSE_KEY] = self.second_response_dict
-                self.second_iteration[InternalKeys.REQUEST_KEY][
-                    InternalKeys.MESSAGES_KEY
-                ] = second_request_messages_serialized
-                self.handle_prompt_completion_response(model=model)
-                chat_completion_tool_called.send(
-                    sender=self.handler,
-                    chat=self.chat,
-                    tool_calls=self.serialized_tool_calls,
-                    request=self.second_iteration[InternalKeys.REQUEST_KEY],
-                    response=self.second_iteration[InternalKeys.RESPONSE_KEY],
+                    model=self.model,
+                    messages=filter_openai_messages(self.messages),
+                    temperature=self.temperature,
+                    max_tokens=self.max_tokens,
                 )
-                self.handle_prompt_completion_plugin(model=model)
+                self.handle_response()
 
         # handle anything that went wrong
         # pylint: disable=broad-exception-caught
@@ -656,8 +667,8 @@ class OpenAICompatibleChatProvider(ProviderDbMixin):
                 chat=self.chat,
                 request_meta_data=self.request_meta_data,
                 exception=e,
-                first_response=first_response_dict,
-                second_response=self.second_response_dict,
+                first_response=self.first_iteration[InternalKeys.RESPONSE_KEY],
+                second_response=self.second_iteration[InternalKeys.RESPONSE_KEY],
             )
             status_code, _message = EXCEPTION_MAP.get(
                 type(e), (HTTPStatus.INTERNAL_SERVER_ERROR, "Internal server error")
@@ -668,19 +679,9 @@ class OpenAICompatibleChatProvider(ProviderDbMixin):
             )
 
         # success!! return the response
-        response = self.second_iteration.get(InternalKeys.RESPONSE_KEY) or self.first_iteration.get(
-            InternalKeys.RESPONSE_KEY
-        )
-        response["metadata"] = {"tool_calls": self.serialized_tool_calls, **request_meta_data}
+        response = self.handle_success()
 
-        response[OpenAIMessageKeys.SMARTER_MESSAGE_KEY] = {
-            "first_iteration": json.loads(json.dumps(self.first_iteration)),
-            "second_iteration": json.loads(json.dumps(self.second_iteration)),
-            InternalKeys.TOOLS_KEY: [tool["function"]["name"] for tool in self.tools],
-            InternalKeys.PLUGINS_KEY: [plugin.plugin_meta.name for plugin in self.plugins],
-            InternalKeys.MESSAGES_KEY: self.messages,
-        }
-        chat_invocation_finished.send(
+        chat_finished.send(
             sender=self.handler,
             chat=self.chat,
             request=self.first_iteration.get(InternalKeys.REQUEST_KEY),

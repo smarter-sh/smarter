@@ -90,63 +90,6 @@ def create_charge(*args, **kwargs):
     max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
     queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
 )
-def create_prompt_completion_charge(
-    user_id: int,
-    provider: str,
-    model: str,
-    completion_tokens: int,
-    prompt_tokens: int,
-    total_tokens: int,
-    system_fingerprint: str,
-):
-    """Create a charge record."""
-
-    logger.info("%s", formatted_text(module_prefix + "create_prompt_completion_charge()"))
-    create_charge(
-        charge_type=CHARGE_TYPE_PROMPT_COMPLETION,
-        user_id=user_id,
-        provider=provider,
-        prompt_tokens=prompt_tokens,
-        completion_tokens=completion_tokens,
-        total_tokens=total_tokens,
-        model=model,
-        reference=system_fingerprint,
-    )
-
-
-@app.task(
-    autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
-)
-def create_plugin_charge(
-    user_id: int,
-    model: str,
-    completion_tokens: int,
-    prompt_tokens: int,
-    total_tokens: int,
-    fingerprint: str,
-):
-    """Create a charge record."""
-    logger.info("%s", formatted_text(module_prefix + "create_plugin_charge()"))
-    create_charge(
-        charge_type=CHARGE_TYPE_PLUGIN,
-        user_id=user_id,
-        prompt_tokens=prompt_tokens,
-        completion_tokens=completion_tokens,
-        total_tokens=total_tokens,
-        model=model,
-        reference=fingerprint,
-    )
-
-
-@app.task(
-    autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
-)
 def aggregate_charges():
     """top-level wrapper for celery aggregation tasks"""
 

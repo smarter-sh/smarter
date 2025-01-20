@@ -3,11 +3,13 @@ This file contains the mixins for the provider model.
 """
 
 # pylint: disable=W0613
+import logging
 
 from django.db.models import Sum
 from django.db.models.query import QuerySet
 
-from smarter.apps.account.models import Account, Charge
+from smarter.apps.account.mixins import AccountMixin
+from smarter.apps.account.models import Charge
 from smarter.apps.account.tasks import create_charge
 from smarter.apps.chat.models import Chat, ChatPluginUsage, ChatToolCall
 from smarter.apps.chat.tasks import (
@@ -15,6 +17,10 @@ from smarter.apps.chat.tasks import (
     create_chat_tool_call_history,
     update_chat,
 )
+from smarter.common.exceptions import SmarterValueError
+
+
+logger = logging.getLogger(__name__)
 
 
 class InternalKeys:
@@ -27,12 +33,12 @@ class InternalKeys:
     TotalTokens = "total_tokens"
 
 
-class ProviderDbMixin:
+class ProviderDbMixin(AccountMixin):
     """
     This mixin contains the database related methods for the provider model.
     """
 
-    __slots__ = ("_chat", "_chat_tool_call", "_chat_plugin_usage", "_charges", "_session_key")
+    __slots__ = ("_chat", "_chat_tool_call", "_chat_plugin_usage", "_charges")
 
     _chat: Chat
     _chat_tool_call: ChatToolCall
@@ -43,9 +49,20 @@ class ProviderDbMixin:
         """
         Constructor method for the ProviderDbMixin class.
         """
-        self._session_key = kwargs.get("session_key", None)
-        self._chat = kwargs.get("chat", None)
+        super().__init__(*args, **kwargs)
+        self.init()
+        session_key = kwargs.get("session_key", None)
+        if session_key:
+            self._chat = Chat.objects.get(session_key=session_key)
+        else:
+            self._chat = kwargs.get("chat", None)
 
+    def init(self):
+        """
+        This method initializes the provider instance.
+        """
+        super().init()
+        self._chat = None
         self._chat_tool_call = None
         self._chat_plugin_usage = None
         self._charges = None
@@ -64,24 +81,7 @@ class ProviderDbMixin:
         """
         This method returns the chat instance.
         """
-        if self._chat is None and self.session_key is not None:
-            self._chat = Chat.objects.get(session_key=self.session_key)
-            self._session_key = self._chat.session_key
         return self._chat
-
-    @property
-    def session_key(self) -> str:
-        """
-        This method returns the session key.
-        """
-        return self.chat.session_key if self.chat else None
-
-    @property
-    def account(self) -> Account:
-        """
-        This method returns the account instance.
-        """
-        return self.chat.account if self.chat else None
 
     @property
     def chat_tool_call(self) -> ChatToolCall:
@@ -110,8 +110,8 @@ class ProviderDbMixin:
             total_tokens = models.IntegerField()
 
         """
-        if self._charges is None and self.account is not None and self.session_key is not None:
-            self._charges = Charge.objects.get(account=self.account, session_key=self.session_key)
+        if self._charges is None and self.account is not None and self.chat is not None:
+            self._charges = Charge.objects.get(account=self.account, session_key=self.chat.session_key)
         return self._charges
 
     @property
@@ -207,13 +207,16 @@ class ProviderDbMixin:
         This method inserts a new charge record.
         """
         if not self.account:
-            return
-        user = (kwargs.get("user", None),)
+            raise SmarterValueError("Account is required to create a charge record.")
+        if not self.chat:
+            raise SmarterValueError("Chat is required to create a charge record.")
+        if not self.user:
+            logger.warning("Creating a charge record with no User.")
 
         create_charge.delay(
             account_id=self.account.id,
-            user_id=user.id if user else None,
-            session_key=self.session_key,
+            user_id=self.user.id if self.user else None,
+            session_key=self.chat.session_key,
             provider=kwargs.get("provider", None),
             charge_type=kwargs.get("charge_type", None),
             prompt_tokens=kwargs.get("prompt_tokens", None),
