@@ -30,7 +30,6 @@ from smarter.apps.chat.models import Chat
 from smarter.apps.chat.providers.utils import (
     ensure_system_role_present,
     exception_response_factory,
-    filter_openai_messages,
     get_request_body,
     http_response_factory,
     parse_request,
@@ -92,6 +91,7 @@ EXCEPTION_MAP[openai.APIResponseValidationError] = (HTTPStatus.BAD_REQUEST, "Bad
 EXCEPTION_MAP[openai.ContentFilterFinishReasonError] = (HTTPStatus.BAD_REQUEST, "BadRequestError")
 
 OPENAI_TOOL_CHOICE = "auto"
+SMARTER_SYSTEM_KEY_PREFIX = "smarter_"
 
 
 class InternalKeys:
@@ -105,7 +105,8 @@ class InternalKeys:
     MESSAGES_KEY = "messages"
     PLUGINS_KEY = "plugins"
     MODEL_KEY = "model"
-    SMARTER_PLUGIN_KEY = "smarter_plugin"
+    SMARTER_PLUGIN_KEY = SMARTER_SYSTEM_KEY_PREFIX + "plugin"
+    SMARTER_IS_NEW = SMARTER_SYSTEM_KEY_PREFIX + "is_new"
 
 
 class ChatProviderBase(ProviderDbMixin, AccountMixin):
@@ -267,22 +268,24 @@ class ChatProviderBase(ProviderDbMixin, AccountMixin):
     def validate(self):
 
         if not self.chat:
-            raise ValueError(f"{self.formatted_class_name}: chat object is required")
+            raise SmarterValueError(f"{self.formatted_class_name}: chat object is required")
         if not self.data:
-            raise ValueError(f"{self.formatted_class_name}: data object is required")
+            raise SmarterValueError(f"{self.formatted_class_name}: data object is required")
         if not self.user:
-            raise ValueError(f"{self.formatted_class_name}: user object is required")
+            raise SmarterValueError(f"{self.formatted_class_name}: user object is required")
+        if not self.account:
+            raise SmarterValueError(f"{self.formatted_class_name}: account object is required")
         if not self.default_model:
-            raise ValueError(f"{self.formatted_class_name}: default_model is required")
+            raise SmarterValueError(f"{self.formatted_class_name}: default_model is required")
         if not self.default_system_role:
-            raise ValueError(f"{self.formatted_class_name}: default_system_role is required")
+            raise SmarterValueError(f"{self.formatted_class_name}: default_system_role is required")
         if not self.default_temperature:
-            raise ValueError(f"{self.formatted_class_name}: default_temperature is required")
+            raise SmarterValueError(f"{self.formatted_class_name}: default_temperature is required")
         if not self.default_max_tokens:
-            raise ValueError(f"{self.formatted_class_name}: default_max_tokens is required")
+            raise SmarterValueError(f"{self.formatted_class_name}: default_max_tokens is required")
 
         if self.default_model not in self.valid_chat_completion_models:
-            raise ValueError(
+            raise SmarterValueError(
                 f"Internal error. Invalid default model: {self.default_model} not found in list of valid {self.provider} models {self.valid_chat_completion_models}."
             )
 
@@ -339,8 +342,11 @@ class ChatProviderBase(ProviderDbMixin, AccountMixin):
         request_body = get_request_body(data=data)
         messages, _ = parse_request(request_body)
         messages = ensure_system_role_present(messages=messages, default_system_role=default_system_role)
-        messages = filter_openai_messages(messages=messages)
-        return messages
+        retval = []
+        for message in messages:
+            message[InternalKeys.SMARTER_IS_NEW] = False
+            retval.append(message)
+        return retval
 
     def get_input_text_prompt(self, data: dict) -> str:
         request_body = get_request_body(data=data)
@@ -356,7 +362,13 @@ class ChatProviderBase(ProviderDbMixin, AccountMixin):
             # nothing to append
             return
 
-        self.messages.append({OpenAIMessageKeys.MESSAGE_ROLE_KEY: role, OpenAIMessageKeys.MESSAGE_CONTENT_KEY: message})
+        self.messages.append(
+            {
+                OpenAIMessageKeys.MESSAGE_ROLE_KEY: role,
+                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: message,
+                InternalKeys.SMARTER_IS_NEW: True,
+            }
+        )
 
     def append_message_plugin_selected(self, plugin: str) -> None:
         self.append_message(OpenAIMessageKeys.SMARTER_MESSAGE_KEY, f"Smarter selected this plugin: {plugin}")
@@ -383,11 +395,32 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
     fully compatible with OpenAI's text completion API.
     """
 
+    @property
+    def openai_messages(self) -> list:
+        filtered = [
+            message for message in self.messages if message[OpenAIMessageKeys.MESSAGE_ROLE_KEY] in OpenAIMessageKeys.all
+        ]
+        retval = []
+        for message in filtered:
+            message_copy = message.copy()
+            if InternalKeys.SMARTER_IS_NEW in message_copy:
+                del message_copy[InternalKeys.SMARTER_IS_NEW]
+            retval.append(message_copy)
+        return retval
+
+    @property
+    def new_messages(self) -> list:
+        try:
+            return [message for message in self.messages if message[InternalKeys.SMARTER_IS_NEW]]
+        except KeyError:
+            logger.error("new_messages(): KeyError: 'smarter_is_new' key not found in message.")
+            return self.messages
+
     def prep_first_request(self):
         tool_choice = OPENAI_TOOL_CHOICE
         self.first_iteration[InternalKeys.REQUEST_KEY] = {
             InternalKeys.MODEL_KEY: self.model,
-            InternalKeys.MESSAGES_KEY: self.messages,
+            InternalKeys.MESSAGES_KEY: self.openai_messages,
             InternalKeys.TOOLS_KEY: self.tools,
             "temperature": self.temperature,
             "max_tokens": self.max_tokens,
@@ -429,7 +462,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
     def prep_second_request(self):
         self.second_iteration[InternalKeys.REQUEST_KEY] = {
             InternalKeys.MODEL_KEY: self.model,
-            InternalKeys.MESSAGES_KEY: json.dumps(self.messages),
+            InternalKeys.MESSAGES_KEY: self.openai_messages,
         }
         chat_completion_request.send(
             sender=self.handler,
@@ -449,7 +482,6 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             self.first_iteration[InternalKeys.RESPONSE_KEY] = json.loads(self.first_response.model_dump_json())
         if self.iteration == 2:
             self.second_iteration[InternalKeys.RESPONSE_KEY] = json.loads(self.second_response.model_dump_json())
-            self.second_iteration[InternalKeys.REQUEST_KEY][InternalKeys.MESSAGES_KEY] = json.dumps(self.messages)
 
         response = self.second_response if self.iteration == 2 else self.first_response
         self.prompt_tokens = response.usage.prompt_tokens
@@ -461,8 +493,16 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             sender=self.handler,
             chat=self.chat,
             iteration=self.iteration,
-            request=self.second_iteration[InternalKeys.REQUEST_KEY],
-            response=self.second_iteration[InternalKeys.RESPONSE_KEY],
+            request=(
+                self.first_iteration[InternalKeys.REQUEST_KEY]
+                if self.iteration == 1
+                else self.second_iteration[InternalKeys.REQUEST_KEY]
+            ),
+            response=(
+                self.first_iteration[InternalKeys.RESPONSE_KEY]
+                if self.iteration == 1
+                else self.second_iteration[InternalKeys.RESPONSE_KEY]
+            ),
         )
 
         self._insert_charge_by_type(CHARGE_TYPE_PROMPT_COMPLETION)
@@ -531,6 +571,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             "role": "tool",
             "name": function_name,
             "content": function_response,
+            InternalKeys.SMARTER_IS_NEW: True,
         }
         self.messages.append(tool_call_message)
         self.serialized_tool_calls.append(serialized_tool_call)
@@ -560,7 +601,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             "second_iteration": json.loads(json.dumps(self.second_iteration)),
             InternalKeys.TOOLS_KEY: [tool["function"]["name"] for tool in self.tools],
             InternalKeys.PLUGINS_KEY: [plugin.plugin_meta.name for plugin in self.plugins],
-            InternalKeys.MESSAGES_KEY: self.messages,
+            InternalKeys.MESSAGES_KEY: self.new_messages,
         }
         return response
 
@@ -636,7 +677,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
 
             self.first_response = openai.chat.completions.create(
                 model=self.model,
-                messages=filter_openai_messages(self.messages),
+                messages=self.openai_messages,
                 tools=self.tools,
                 tool_choice=OPENAI_TOOL_CHOICE,
                 temperature=self.temperature,
@@ -648,7 +689,9 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             tool_calls: list[ChatCompletionMessageToolCall] = response_message.tool_calls
             if tool_calls:
                 # extend conversation with assistant's reply
-                self.messages.append(json.loads(response_message.model_dump_json()))
+                response = json.loads(response_message.model_dump_json())
+                response[InternalKeys.SMARTER_IS_NEW] = True
+                self.messages.append(response)
                 self.iteration = 2
                 self.serialized_tool_calls = []
 
@@ -659,7 +702,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
 
                 self.second_response = openai.chat.completions.create(
                     model=self.model,
-                    messages=filter_openai_messages(self.messages),
+                    messages=self.openai_messages,
                     temperature=self.temperature,
                     max_tokens=self.max_tokens,
                 )
