@@ -23,7 +23,7 @@ class MetaAIChatProvider(OpenAICompatibleChatProvider, metaclass=Singleton):
 
     def __init__(self):
         super().__init__(
-            name=PROVIDER_NAME,
+            provider=PROVIDER_NAME,
             base_url=BASE_URL,
             api_key=smarter_settings.openai_api_key.get_secret_value(),
             default_model=DEFAULT_MODEL,

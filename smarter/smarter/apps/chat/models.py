@@ -38,20 +38,6 @@ class Chat(TimestampedModel):
     ip_address = models.GenericIPAddressField(blank=True, null=True)
     user_agent = models.CharField(max_length=255, blank=True, null=True)
     url = models.URLField(blank=True, null=True)
-    request = models.JSONField(blank=True, null=True)
-    response = models.JSONField(blank=True, null=True)
-
-    @property
-    def chat_history(self) -> list[dict]:
-        """
-        Used by the Reactapp (via ChatConfigView) to display the chat history.
-        """
-        history = self.request.get("messages", []) if self.request else []
-        response = self.response.get("choices", []) if self.response else []
-        response = response[0] if response else {}
-        response = response.get("message", {})
-        history.append(response)
-        return history
 
     def __str__(self):
         # pylint: disable=E1136
