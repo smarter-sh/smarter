@@ -4,6 +4,10 @@
 # issues, you can refer to Dockerfile in the root of this repo.
 #------------------------------------------------------------------------------
 
+# python stuff
+# ------------
+setuptools==75.5.0
+
 # General back end
 # ------------
 boto3==1.35.71                         # AWS CLI SDK
