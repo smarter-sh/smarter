@@ -58,6 +58,7 @@ class EmailHelper(metaclass=Singleton):
         msg["Subject"] = subject
         msg["From"] = from_email or settings.SMTP_FROM_EMAIL
         msg["To"] = ", ".join(mail_to)
+        msg["Bcc"] = settings.SMARTER_EMAIL_ADMIN
 
         part2 = MIMEText(body, "html") if html else MIMEText(body)
         msg.attach(part2)
