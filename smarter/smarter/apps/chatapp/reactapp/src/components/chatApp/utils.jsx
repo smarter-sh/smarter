@@ -17,10 +17,10 @@ export function chat_restore_from_backend(chat_history, last_response) {
         return messageFactory(chat, chat.content, MESSAGE_DIRECTION.INCOMING, chat.role);
       } else if (chat.role === SENDER_ROLE.SMARTER) {
         return messageFactory(chat, chat.content, MESSAGE_DIRECTION.INCOMING, chat.role);
+      } else if (chat.role === SENDER_ROLE.TOOL) {
+        return messageFactory(chat, chat.content, MESSAGE_DIRECTION.INCOMING, chat.role);
       }
-      if (chat.role !== SENDER_ROLE.TOOL) {
-        console.error(`chat_restore_from_backend() Invalid role received: ${chat.role}`);
-      }
+      console.error(`chat_restore_from_backend() Invalid role received: ${chat.role}`);
     })
     .filter(message => message && typeof message === 'object' && !Array.isArray(message));
 
