@@ -33,6 +33,8 @@ export async function fetchConfig() {
   const csrftoken = getCookie(CSRF_COOKIE_NAME);
   const debug_mode = getCookie(DEBUG_COOKIE_NAME) || false;
 
+  console.log('debug_mode:', debug_mode);
+
   const headers = {
     "Accept": "*/*",
     "Content-Type": "application/json",
