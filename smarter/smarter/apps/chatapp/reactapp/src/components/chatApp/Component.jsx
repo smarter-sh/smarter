@@ -177,7 +177,9 @@ function ChatApp() {
           const response = await processApiRequest(config, msgs, apiUrl, openChatModal);
 
           if (response) {
-            const responseMessages = response.smarter.messages.map((message) => {
+            const responseMessages = response.smarter.messages
+            .filter((message) => message.content !== null)
+            .map((message) => {
               return messageFactory(message, message.content, MESSAGE_DIRECTION.INCOMING, message.role);
             }
             );

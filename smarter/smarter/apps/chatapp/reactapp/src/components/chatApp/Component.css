@@ -40,15 +40,14 @@ section.smarter-message .cs-message__content {
 }
 
 section.tool-message .cs-message__html-content {
-  color: brown !important;
+  color:beige !important;
   background-color: rgb(39, 40, 34);
   font-family: 'Courier New', Courier, monospace;
   font-weight: bold;
-  text-align: center;
 }
 
 section.tool-message .cs-message__content {
-  color: brown !important;
+  color:beige !important;
   background-color: rgb(39, 40, 34);
   border: 1px solid brown;
   margin-top: 10px;
