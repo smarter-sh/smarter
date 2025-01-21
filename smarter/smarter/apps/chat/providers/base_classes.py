@@ -340,15 +340,23 @@ class ChatProviderBase(ProviderDbMixin, AccountMixin):
     def valid_chat_completion_models(self) -> list[str]:
         return self._valid_chat_completion_models
 
+    def messages_add_is_new(self, messages: list[dict], is_new: bool = False) -> list[dict]:
+        """
+        Set the is_new flag for all messages in the message thread.
+        """
+        retval = []
+        for message in messages:
+            new_message = message.copy()
+            new_message[InternalKeys.SMARTER_IS_NEW] = is_new
+            retval.append(new_message)
+        return retval
+
     def get_message_thread(self, data: dict) -> List[Dict[str, str]]:
         default_system_role = self.chat.chatbot.default_system_role or self.default_system_role
         request_body = get_request_body(data=data)
         messages, _ = parse_request(request_body)
         messages = ensure_system_role_present(messages=messages, default_system_role=default_system_role)
-        retval = []
-        for message in messages:
-            message[InternalKeys.SMARTER_IS_NEW] = False
-            retval.append(message)
+        retval = self.messages_add_is_new(messages, is_new=False)
         return retval
 
     def get_input_text_prompt(self, data: dict) -> str:
@@ -416,10 +424,15 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         try:
             return [message for message in self.messages if message[InternalKeys.SMARTER_IS_NEW]]
         except KeyError:
-            logger.error("new_messages(): KeyError: 'smarter_is_new' key not found in message.")
+            prefix = formatted_text(f"{self.formatted_class_name} new_messages()")
+            logger.error(
+                "%s - KeyError: '%s' key not found in message: %s", prefix, InternalKeys.SMARTER_IS_NEW, self.messages
+            )
             return self.messages
 
     def prep_first_request(self):
+        # ensure that all message history is marked as not new
+        self.messages = self.messages_add_is_new(self.messages, is_new=False)
         tool_choice = OPENAI_TOOL_CHOICE
         self.first_iteration[InternalKeys.REQUEST_KEY] = {
             InternalKeys.MODEL_KEY: self.model,
