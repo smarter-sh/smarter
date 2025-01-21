@@ -1,0 +1,375 @@
+{
+  "id": "chatcmpl-ArxSn0PeO5P5dTUXgWAbzqAHtZqNq",
+  "choices": [
+      {
+          "finish_reason": "stop",
+          "index": 0,
+          "logprobs": null,
+          "message": {
+              "content": "The current weather in San Francisco, CA is approximately 17.3°C with no precipitation expected at this time. The temperature will gradually decrease to around 9.1°C by early morning and then slightly rise again during the day. There is no rain forecasted for the next 24 hours.",
+              "refusal": null,
+              "role": "assistant",
+              "audio": null,
+              "function_call": null,
+              "tool_calls": null
+          }
+      }
+  ],
+  "created": 1737423325,
+  "model": "gpt-4-turbo-2024-04-09",
+  "object": "chat.completion",
+  "service_tier": "default",
+  "system_fingerprint": "fp_f17929ee92",
+  "usage": {
+      "completion_tokens": 61,
+      "prompt_tokens": 918,
+      "total_tokens": 979,
+      "completion_tokens_details": {
+          "accepted_prediction_tokens": 0,
+          "audio_tokens": 0,
+          "reasoning_tokens": 0,
+          "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cached_tokens": 0
+      }
+  },
+  "metadata": {
+      "tool_calls": [
+          {
+              "function_name": "get_current_weather",
+              "function_args": {
+                  "location": "San Francisco, CA"
+              }
+          }
+      ],
+      "model": "gpt-4-turbo",
+      "temperature": 0.5,
+      "max_tokens": 256,
+      "input_text": "What is the weather in San Francisco?"
+  },
+  "smarter": {
+      "first_iteration": {
+          "request": {
+              "model": "gpt-4-turbo",
+              "messages": [
+                  {
+                      "role": "system",
+                      "content": "You are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time."
+                  },
+                  {
+                      "role": "assistant",
+                      "content": "Welcome to the Smarter demo!"
+                  },
+                  {
+                      "role": "assistant",
+                      "content": "Some example prompts to get you started:\r\n\r\nWhat is the weather in San Francisco?\r\nWhat is an Everlasting Gobstopper?\r\nexample function calling configuration\r\n"
+                  },
+                  {
+                      "role": "user",
+                      "content": "What is the weather in San Francisco?"
+                  }
+              ],
+              "tools": [
+                  {
+                      "type": "function",
+                      "function": {
+                          "name": "get_current_weather",
+                          "description": "Get the current weather in a given location",
+                          "parameters": {
+                              "type": "object",
+                              "properties": {
+                                  "location": {
+                                      "type": "string",
+                                      "description": "The city and state, e.g. San Francisco, CA"
+                                  },
+                                  "unit": {
+                                      "type": "string",
+                                      "enum": [
+                                          "METRIC",
+                                          "USCS"
+                                      ]
+                                  }
+                              },
+                              "required": [
+                                  "location"
+                              ]
+                          }
+                      }
+                  },
+                  {
+                      "type": "function",
+                      "function": {
+                          "name": "function_calling_plugin_0002",
+                          "description": "an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.",
+                          "parameters": {
+                              "type": "object",
+                              "properties": {
+                                  "inquiry_type": {
+                                      "type": "string",
+                                      "enum": [
+                                          "about",
+                                          "links",
+                                          "platformProvider"
+                                      ]
+                                  }
+                              },
+                              "required": [
+                                  "inquiry_type"
+                              ]
+                          }
+                      }
+                  },
+                  {
+                      "type": "function",
+                      "function": {
+                          "name": "function_calling_plugin_0002",
+                          "description": "an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.",
+                          "parameters": {
+                              "type": "object",
+                              "properties": {
+                                  "inquiry_type": {
+                                      "type": "string",
+                                      "enum": [
+                                          "about",
+                                          "links",
+                                          "platformProvider"
+                                      ]
+                                  }
+                              },
+                              "required": [
+                                  "inquiry_type"
+                              ]
+                          }
+                      }
+                  }
+              ],
+              "temperature": 0.5,
+              "max_tokens": 256,
+              "tool_choice": "auto"
+          },
+          "response": {
+              "id": "chatcmpl-ArxSmD7IRQmgMv6pZF4GTnH6qyszJ",
+              "choices": [
+                  {
+                      "finish_reason": "tool_calls",
+                      "index": 0,
+                      "logprobs": null,
+                      "message": {
+                          "content": null,
+                          "refusal": null,
+                          "role": "assistant",
+                          "audio": null,
+                          "function_call": null,
+                          "tool_calls": [
+                              {
+                                  "id": "call_uXS2QmGd24JpNM0PQXyS3h8o",
+                                  "function": {
+                                      "arguments": "{\"location\":\"San Francisco, CA\"}",
+                                      "name": "get_current_weather"
+                                  },
+                                  "type": "function"
+                              }
+                          ]
+                      }
+                  }
+              ],
+              "created": 1737423324,
+              "model": "gpt-4-turbo-2024-04-09",
+              "object": "chat.completion",
+              "service_tier": "default",
+              "system_fingerprint": "fp_c936bae6c5",
+              "usage": {
+                  "completion_tokens": 19,
+                  "prompt_tokens": 312,
+                  "total_tokens": 331,
+                  "completion_tokens_details": {
+                      "accepted_prediction_tokens": 0,
+                      "audio_tokens": 0,
+                      "reasoning_tokens": 0,
+                      "rejected_prediction_tokens": 0
+                  },
+                  "prompt_tokens_details": {
+                      "audio_tokens": 0,
+                      "cached_tokens": 0
+                  }
+              }
+          }
+      },
+      "second_iteration": {
+          "request": {
+              "model": "gpt-4-turbo",
+              "messages": [
+                  {
+                      "role": "system",
+                      "content": "You are a helpful chatbot. When given the opportunity to utilize function calling, you should always do so. This will allow you to provide the best possible responses to the user. If you are unable to provide a response, you should prompt the user for more information. If you are still unable to provide a response, you should inform the user that you are unable to help them at this time."
+                  },
+                  {
+                      "role": "assistant",
+                      "content": "Welcome to the Smarter demo!"
+                  },
+                  {
+                      "role": "assistant",
+                      "content": "Some example prompts to get you started:\r\n\r\nWhat is the weather in San Francisco?\r\nWhat is an Everlasting Gobstopper?\r\nexample function calling configuration\r\n"
+                  },
+                  {
+                      "role": "user",
+                      "content": "What is the weather in San Francisco?"
+                  },
+                  {
+                      "content": null,
+                      "refusal": null,
+                      "role": "assistant",
+                      "audio": null,
+                      "function_call": null,
+                      "tool_calls": [
+                          {
+                              "id": "call_uXS2QmGd24JpNM0PQXyS3h8o",
+                              "function": {
+                                  "arguments": "{\"location\":\"San Francisco, CA\"}",
+                                  "name": "get_current_weather"
+                              },
+                              "type": "function"
+                          }
+                      ]
+                  },
+                  {
+                      "tool_call_id": "call_uXS2QmGd24JpNM0PQXyS3h8o",
+                      "role": "tool",
+                      "name": "get_current_weather",
+                      "content": "\"[{\\\"date\\\":\\\"2025-01-21 00:00\\\",\\\"temperature\\\":17.2565002441,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 01:00\\\",\\\"temperature\\\":14.7065000534,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 02:00\\\",\\\"temperature\\\":12.0065002441,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 03:00\\\",\\\"temperature\\\":10.8065004349,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 04:00\\\",\\\"temperature\\\":10.1564998627,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 05:00\\\",\\\"temperature\\\":9.7565002441,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 06:00\\\",\\\"temperature\\\":9.1065006256,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 07:00\\\",\\\"temperature\\\":9.3065004349,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 08:00\\\",\\\"temperature\\\":8.7065000534,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 09:00\\\",\\\"temperature\\\":8.3565006256,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 10:00\\\",\\\"temperature\\\":7.1564998627,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 11:00\\\",\\\"temperature\\\":6.5064997673,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 12:00\\\",\\\"temperature\\\":7.3564996719,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 13:00\\\",\\\"temperature\\\":6.6064996719,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 14:00\\\",\\\"temperature\\\":6.2064995766,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 15:00\\\",\\\"temperature\\\":5.6064996719,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 16:00\\\",\\\"temperature\\\":6.2064995766,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 17:00\\\",\\\"temperature\\\":8.6065006256,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 18:00\\\",\\\"temperature\\\":11.3065004349,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 19:00\\\",\\\"temperature\\\":12.7065000534,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 20:00\\\",\\\"temperature\\\":14.1065006256,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 21:00\\\",\\\"temperature\\\":15.5565004349,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 22:00\\\",\\\"temperature\\\":16.5065002441,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 23:00\\\",\\\"temperature\\\":16.6564998627,\\\"precipitation\\\":0.0}]\""
+                  }
+              ]
+          },
+          "response": {
+              "id": "chatcmpl-ArxSn0PeO5P5dTUXgWAbzqAHtZqNq",
+              "choices": [
+                  {
+                      "finish_reason": "stop",
+                      "index": 0,
+                      "logprobs": null,
+                      "message": {
+                          "content": "The current weather in San Francisco, CA is approximately 17.3°C with no precipitation expected at this time. The temperature will gradually decrease to around 9.1°C by early morning and then slightly rise again during the day. There is no rain forecasted for the next 24 hours.",
+                          "refusal": null,
+                          "role": "assistant",
+                          "audio": null,
+                          "function_call": null,
+                          "tool_calls": null
+                      }
+                  }
+              ],
+              "created": 1737423325,
+              "model": "gpt-4-turbo-2024-04-09",
+              "object": "chat.completion",
+              "service_tier": "default",
+              "system_fingerprint": "fp_f17929ee92",
+              "usage": {
+                  "completion_tokens": 61,
+                  "prompt_tokens": 918,
+                  "total_tokens": 979,
+                  "completion_tokens_details": {
+                      "accepted_prediction_tokens": 0,
+                      "audio_tokens": 0,
+                      "reasoning_tokens": 0,
+                      "rejected_prediction_tokens": 0
+                  },
+                  "prompt_tokens_details": {
+                      "audio_tokens": 0,
+                      "cached_tokens": 0
+                  }
+              },
+              "metadata": {
+                  "tool_calls": [
+                      {
+                          "function_name": "get_current_weather",
+                          "function_args": {
+                              "location": "San Francisco, CA"
+                          }
+                      }
+                  ],
+                  "model": "gpt-4-turbo",
+                  "temperature": 0.5,
+                  "max_tokens": 256,
+                  "input_text": "What is the weather in San Francisco?"
+              }
+          },
+          "messages": []
+      },
+      "tools": [
+          "get_current_weather",
+          "function_calling_plugin_0002",
+          "function_calling_plugin_0002"
+      ],
+      "plugins": [
+          "ExampleConfiguration"
+      ],
+      "messages": [
+          {
+              "role": "smarter",
+              "content": "Prompt configuration: llm=openai, model=gpt-4-turbo, temperature=0.5, max_tokens=256, tool_choice=auto.",
+              "smarter_is_new": true
+          },
+          {
+              "role": "smarter",
+              "content": "Tool presented: get_current_weather(location: The city and state, e.g. San Francisco, CA, unit: METRIC, USCS) - Get the current weather in a given location ",
+              "smarter_is_new": true
+          },
+          {
+              "role": "smarter",
+              "content": "Tool presented: function_calling_plugin_0002(inquiry_type: about, links, platformProvider) - an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module. ",
+              "smarter_is_new": true
+          },
+          {
+              "role": "smarter",
+              "content": "Tool presented: function_calling_plugin_0002(inquiry_type: about, links, platformProvider) - an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module. ",
+              "smarter_is_new": true
+          },
+          {
+              "role": "smarter",
+              "content": "openai prompt charges: 312 prompt tokens, 19 completion tokens = 331 total tokens charged.",
+              "smarter_is_new": true
+          },
+          {
+              "content": null,
+              "refusal": null,
+              "role": "assistant",
+              "audio": null,
+              "function_call": null,
+              "tool_calls": [
+                  {
+                      "id": "call_uXS2QmGd24JpNM0PQXyS3h8o",
+                      "function": {
+                          "arguments": "{\"location\":\"San Francisco, CA\"}",
+                          "name": "get_current_weather"
+                      },
+                      "type": "function"
+                  }
+              ],
+              "smarter_is_new": true
+          },
+          {
+              "role": "smarter",
+              "content": "openai called this tool: get_current_weather({'location': 'San Francisco, CA'})",
+              "smarter_is_new": true
+          },
+          {
+              "tool_call_id": "call_uXS2QmGd24JpNM0PQXyS3h8o",
+              "role": "tool",
+              "name": "get_current_weather",
+              "content": "\"[{\\\"date\\\":\\\"2025-01-21 00:00\\\",\\\"temperature\\\":17.2565002441,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 01:00\\\",\\\"temperature\\\":14.7065000534,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 02:00\\\",\\\"temperature\\\":12.0065002441,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 03:00\\\",\\\"temperature\\\":10.8065004349,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 04:00\\\",\\\"temperature\\\":10.1564998627,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 05:00\\\",\\\"temperature\\\":9.7565002441,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 06:00\\\",\\\"temperature\\\":9.1065006256,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 07:00\\\",\\\"temperature\\\":9.3065004349,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 08:00\\\",\\\"temperature\\\":8.7065000534,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 09:00\\\",\\\"temperature\\\":8.3565006256,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 10:00\\\",\\\"temperature\\\":7.1564998627,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 11:00\\\",\\\"temperature\\\":6.5064997673,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 12:00\\\",\\\"temperature\\\":7.3564996719,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 13:00\\\",\\\"temperature\\\":6.6064996719,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 14:00\\\",\\\"temperature\\\":6.2064995766,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 15:00\\\",\\\"temperature\\\":5.6064996719,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 16:00\\\",\\\"temperature\\\":6.2064995766,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 17:00\\\",\\\"temperature\\\":8.6065006256,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 18:00\\\",\\\"temperature\\\":11.3065004349,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 19:00\\\",\\\"temperature\\\":12.7065000534,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 20:00\\\",\\\"temperature\\\":14.1065006256,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 21:00\\\",\\\"temperature\\\":15.5565004349,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 22:00\\\",\\\"temperature\\\":16.5065002441,\\\"precipitation\\\":0.0},{\\\"date\\\":\\\"2025-01-21 23:00\\\",\\\"temperature\\\":16.6564998627,\\\"precipitation\\\":0.0}]\"",
+              "smarter_is_new": true
+          },
+          {
+              "role": "smarter",
+              "content": "openai prompt charges: 918 prompt tokens, 61 completion tokens = 979 total tokens charged.",
+              "smarter_is_new": true
+          },
+          {
+              "role": "assistant",
+              "content": "The current weather in San Francisco, CA is approximately 17.3°C with no precipitation expected at this time. The temperature will gradually decrease to around 9.1°C by early morning and then slightly rise again during the day. There is no rain forecasted for the next 24 hours.",
+              "smarter_is_new": true
+          }
+      ]
+  }
+}
