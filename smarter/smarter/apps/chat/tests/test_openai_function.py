@@ -13,7 +13,7 @@ from time import sleep
 from django.test import Client
 
 from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
-from smarter.apps.chat.providers.openai.const import OpenAIMessageKeys
+from smarter.apps.chat.providers.const import OpenAIMessageKeys
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.plugin.static import PluginStatic
@@ -23,11 +23,10 @@ from smarter.lib.unittest.utils import get_readonly_yaml_file
 from ..models import Chat, ChatPluginUsage
 from ..providers.providers import chat_providers
 from ..signals import (
-    chat_completion_called,
-    chat_completion_plugin_selected,
-    chat_invoked,
+    chat_completion_response,
+    chat_finished,
     chat_response_failure,
-    chat_response_success,
+    chat_started,
 )
 from ..tests.test_setup import get_test_file, get_test_file_path
 
@@ -49,7 +48,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
     _plugin_selected = False
     _chat_invoked = False
     _chat_completion_plugin_selected = False
-    _chat_completion_called = False
+    _chat_completion_response_received = False
     _chat_completion_returned = False
     _chat_completion_failed = False
     _chat_completion_tool_call_received = False
@@ -66,8 +65,8 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
     def chat_invoked_signal_handler(self, *args, **kwargs):
         self._chat_invoked = True
 
-    def chat_completion_called_signal_handler(self, *args, **kwargs):
-        self._chat_completion_called = True
+    def chat_completion_response_received_signal_handler(self, *args, **kwargs):
+        self._chat_completion_response_received = True
 
     def chat_completion_returned_signal_handler(self, *args, **kwargs):
         self._chat_completion_returned = True
@@ -83,10 +82,9 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         return {
             "plugin_called": self._plugin_called,
             "plugin_selected": self._plugin_selected,
-            "chat_invoked": self._chat_invoked,
-            "chat_completion_plugin_selected": self._chat_completion_plugin_selected,
-            "chat_completion_called": self._chat_completion_called,
-            "chat_response_success": self._chat_completion_returned,
+            "chat_started": self._chat_invoked,
+            "chat_completion_response": self._chat_completion_response_received,
+            "chat_finished": self._chat_completion_returned,
             "chat_response_failure": self._chat_completion_failed,
         }
 
@@ -229,10 +227,9 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         # setup receivers for all signals to check if they are called
         plugin_selected.connect(self.plugin_selected_signal_handler)
         plugin_called.connect(self.plugin_called_signal_handler)
-        chat_invoked.connect(self.chat_invoked_signal_handler)
-        chat_completion_plugin_selected.connect(self.chat_completion_plugin_selected_signal_handler)
-        chat_completion_called.connect(self.chat_completion_called_signal_handler)
-        chat_response_success.connect(self.chat_completion_returned_signal_handler)
+        chat_started.connect(self.chat_invoked_signal_handler)
+        chat_completion_response.connect(self.chat_completion_response_received_signal_handler)
+        chat_finished.connect(self.chat_completion_returned_signal_handler)
         chat_response_failure.connect(self.chat_completion_failed_signal_handler)
 
         response = None
