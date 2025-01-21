@@ -128,7 +128,7 @@ class DefaultChatBotApiView(ChatBotApiBaseViewSet):
             logger.info("%s.post() - chatbot: %s", self.formatted_class_name, self.chatbot)
             logger.info("%s.post() - plugins: %s", self.formatted_class_name, self.plugins)
 
-        handler = chat_providers.get_handler(name=self.chatbot.provider)
+        handler = chat_providers.get_handler(provider=self.chatbot.provider)
         response = handler(chat=self.chat_helper.chat, data=self.data, plugins=self.plugins, user=self.user)
         response = {
             SmarterJournalApiResponseKeys.DATA: response,

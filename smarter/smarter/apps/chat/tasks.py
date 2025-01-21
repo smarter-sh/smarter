@@ -32,7 +32,11 @@ module_prefix = "smarter.apps.chat.tasks."
 )
 def create_chat_history(chat_id, request, response, messages):
     logger.info("%s chat_id: %s", formatted_text(module_prefix + "create_chat_history()"), chat_id)
-    chat = Chat.objects.get(id=chat_id)
+    try:
+        chat = Chat.objects.get(id=chat_id)
+    except Chat.DoesNotExist:
+        logger.error("%s chat_id: %s does not exist", formatted_text(module_prefix + "create_chat_history()"), chat_id)
+        return
     ChatHistory.objects.create(chat=chat, request=request, response=response, messages=messages)
 
 

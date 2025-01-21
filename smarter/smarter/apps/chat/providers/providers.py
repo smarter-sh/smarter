@@ -183,21 +183,21 @@ class ChatProviders(metaclass=Singleton):
             "DEFAULT": self.default_handler,
         }
 
-    def get_handler(self, name: str = None) -> Callable:
+    def get_handler(self, provider: str = None) -> Callable:
         """
-        A convenience method to get a handler by name.
+        A convenience method to get a handler by provider name.
         """
-        if not name:
+        if not provider:
             return self.default_handler
 
-        handler = self.all_handlers.get(name)
+        handler = self.all_handlers.get(provider)
         if not handler:
-            raise ValueError(f"Handler not found for provider: {name}")
+            raise ValueError(f"Handler not found for provider: {provider}")
         return handler
 
     @property
     def all(self) -> list[str]:
-        return list({self.googleai.name, self.metaai.name, self.openai.name, self.default.name})
+        return list({self.googleai.provider, self.metaai.provider, self.openai.provider, self.default.provider})
 
 
 chat_providers = ChatProviders()

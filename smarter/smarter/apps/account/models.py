@@ -169,7 +169,7 @@ class AccountContact(TimestampedModel):
     def send_welcome_email(self) -> None:
         """Send a welcome email to the contact."""
         context = welcome_email_context(first_name=self.first_name)
-        html_template = render_to_string("accounts/email/welcome.html", context)
+        html_template = render_to_string("account/email/welcome.html", context)
 
         subject = "Welcome to Smarter!"
         body = html_template

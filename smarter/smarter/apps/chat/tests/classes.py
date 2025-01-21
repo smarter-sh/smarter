@@ -22,7 +22,7 @@ from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
 from smarter.lib.unittest.utils import get_readonly_yaml_file
 
-from ..models import Chat, ChatPluginUsage
+from ..models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
 from ..providers.providers import chat_providers
 from ..signals import (
     chat_completion_response,
@@ -151,7 +151,7 @@ class ProviderBaseClass(unittest.TestCase):
         # create a chatbot that uses the provider
         print(f"Setting up provider {self.provider}")
         self.chatbot = self.chatbot_factory(provider=self.provider)
-        self.handler = chat_providers.get_handler(name=self.provider)
+        self.handler = chat_providers.get_handler(provider=self.provider)
         print(f"provider {self.provider} is setup")
 
         self.client = Client()
@@ -168,6 +168,9 @@ class ProviderBaseClass(unittest.TestCase):
     def tearDown(self):
         """Tear down test fixtures."""
         if self.chat:
+            ChatHistory.objects.filter(chat=self.chat).delete()
+            ChatToolCall.objects.filter(chat=self.chat).delete()
+            ChatPluginUsage.objects.filter(chat=self.chat).delete()
             self.chat.delete()
         if self.chatbot:
             self.chatbot.delete()
