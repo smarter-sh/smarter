@@ -40,9 +40,9 @@ spec:
                 - "smarter.smarter_celery.app"
                 - "inspect"
                 - "ping"
-            initialDelaySeconds: 30
+            initialDelaySeconds: 90
             periodSeconds: 30
-            timeoutSeconds: 10
+            timeoutSeconds: 30
             failureThreshold: 3
           readinessProbe:
             exec:
