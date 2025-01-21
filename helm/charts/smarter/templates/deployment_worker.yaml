@@ -109,6 +109,30 @@ spec:
           resources: {}
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
+        livenessProbe:
+          exec:
+            command:
+              - "celery"
+              - "-A"
+              - "smarter.smarter_celery.app"
+              - "inspect"
+              - "ping"
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+              - "celery"
+              - "-A"
+              - "smarter.smarter_celery.app"
+              - "inspect"
+              - "ping"
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
       dnsPolicy: ClusterFirst
       enableServiceLinks: true
       restartPolicy: Always
