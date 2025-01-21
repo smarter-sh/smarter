@@ -14,8 +14,8 @@ class Command(BaseCommand):
         """Add arguments to the command."""
         parser.add_argument("--account_number", type=str, help="The Smarter account number to which the user belongs")
         parser.add_argument("--company_name", type=str, help="The company name to which the user belongs")
-        parser.add_argument("--username", type=str, help="The username for the new superuser")
-        parser.add_argument("--email", type=str, help="The email address for the new superuser")
+        parser.add_argument("--username", type=str, help="The username")
+        parser.add_argument("--email", type=str, help="The email address")
 
     def handle(self, *args, **options):
         """create the superuser account."""
