@@ -21,7 +21,7 @@ from .models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
 
 
 logger = logging.getLogger(__name__)
-module_prefix = formatted_text("smarter.apps.chat.tasks.")
+module_prefix = "smarter.apps.chat.tasks."
 
 
 @app.task(

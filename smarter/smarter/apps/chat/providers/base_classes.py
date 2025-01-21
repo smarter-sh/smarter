@@ -306,7 +306,8 @@ class ChatProviderBase(ProviderDbMixin, AccountMixin):
 
     @property
     def formatted_class_name(self):
-        return formatted_text(self.__class__.__name__)
+        identifier = self.__class__.__name__ + f"({id(self)})"
+        return formatted_text(identifier)
 
     @property
     def provider(self) -> str:
