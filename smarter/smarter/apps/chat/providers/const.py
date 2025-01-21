@@ -43,6 +43,7 @@ class OpenAIMessageKeys:
 
     MESSAGE_ROLE_KEY = "role"
     MESSAGE_CONTENT_KEY = "content"
+    MESSAGE_NAME_KEY = "name"
 
     SYSTEM_MESSAGE_KEY = "system"
     ASSISTANT_MESSAGE_KEY = "assistant"

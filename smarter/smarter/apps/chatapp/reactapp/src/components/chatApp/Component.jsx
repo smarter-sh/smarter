@@ -307,7 +307,7 @@ function ChatApp() {
                 return <Message
                   key={i}
                   model={message}
-                  className={message.sender === 'smarter' ? 'smarter-message' : ''}
+                  className={message.sender === 'smarter' ? 'smarter-message' : message.sender === 'tool' ? 'tool-message' : ''}
                 />;
               })}
             </MessageList>

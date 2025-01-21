@@ -5,7 +5,7 @@ Base class for chat providers.
 import json
 import logging
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 # 3rd party stuff
 import openai
@@ -145,7 +145,6 @@ class ChatProviderBase(ProviderDbMixin, AccountMixin):
         "second_iteration",
         "second_response",
         "serialized_tool_calls",
-        "input_text",
         "tools",
         "available_functions",
     )
@@ -162,7 +161,6 @@ class ChatProviderBase(ProviderDbMixin, AccountMixin):
     _base_url: str
     _api_key: str
 
-    chat: Chat
     data: dict
     plugins: Optional[List[PluginStatic]]
 
@@ -201,8 +199,8 @@ class ChatProviderBase(ProviderDbMixin, AccountMixin):
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self.chat = kwargs.get("chat")
         self.init()
+        self.chat = kwargs.get("chat")
         self._provider = provider
         self._base_url = base_url
         self._api_key = api_key
@@ -230,7 +228,7 @@ class ChatProviderBase(ProviderDbMixin, AccountMixin):
 
         self.chat = None
         self.data = None
-        self.plugins = None
+        self.plugins = []
 
         self.model = None
         self.temperature = None
@@ -257,10 +255,6 @@ class ChatProviderBase(ProviderDbMixin, AccountMixin):
         }
 
         self.serialized_tool_calls = None
-
-        self.chat = None
-        self.data = None
-        self.plugins = []
 
         weather_tool = weather_tool_factory()
         self.tools: list[dict] = [weather_tool]
@@ -341,7 +335,7 @@ class ChatProviderBase(ProviderDbMixin, AccountMixin):
     def valid_chat_completion_models(self) -> list[str]:
         return self._valid_chat_completion_models
 
-    def messages_add_is_new(self, messages: list[dict], is_new: bool = False) -> list[dict]:
+    def messages_set_is_new(self, messages: list[dict], is_new: bool = False) -> list[dict]:
         """
         Set the is_new flag for all messages in the message thread.
         """
@@ -355,9 +349,11 @@ class ChatProviderBase(ProviderDbMixin, AccountMixin):
     def get_message_thread(self, data: dict) -> List[Dict[str, str]]:
         default_system_role = self.chat.chatbot.default_system_role or self.default_system_role
         request_body = get_request_body(data=data)
-        messages, _ = parse_request(request_body)
-        messages = ensure_system_role_present(messages=messages, default_system_role=default_system_role)
-        retval = self.messages_add_is_new(messages, is_new=False)
+        client_message_thread, _ = parse_request(request_body)
+        client_message_thread = ensure_system_role_present(
+            messages=client_message_thread, default_system_role=default_system_role
+        )
+        retval = self.messages_set_is_new(client_message_thread, is_new=False)
         return retval
 
     def get_input_text_prompt(self, data: dict) -> str:
@@ -365,32 +361,31 @@ class ChatProviderBase(ProviderDbMixin, AccountMixin):
         _, input_text = parse_request(request_body)
         return input_text
 
-    def append_message(self, role: str, message: str) -> None:
+    def append_message(self, role: str, content: str, message: dict = None) -> None:
         if role not in OpenAIMessageKeys.all_roles:
             raise SmarterValueError(
                 f"Internal error. Invalid message role: {role} not found in list of valid {self.provider} message roles {OpenAIMessageKeys.all_roles}."
             )
-        if not message:
-            # nothing to append
+        if not content:
+            logger.warning("append_message() - content is empty. Skipping.")
             return
-
-        self.messages.append(
-            {
-                OpenAIMessageKeys.MESSAGE_ROLE_KEY: role,
-                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: message,
-                InternalKeys.SMARTER_IS_NEW: True,
-            }
-        )
+        message = message or {}
+        new_message = message.copy()
+        new_message[OpenAIMessageKeys.MESSAGE_ROLE_KEY] = role
+        new_message[OpenAIMessageKeys.MESSAGE_CONTENT_KEY] = content
+        new_message[InternalKeys.SMARTER_IS_NEW] = True
+        self.messages.append(new_message)
 
     def append_message_plugin_selected(self, plugin: str) -> None:
-        self.append_message(OpenAIMessageKeys.SMARTER_MESSAGE_KEY, f"Smarter selected this plugin: {plugin}")
+        content = f"Smarter selected this plugin: {plugin}"
+        self.append_message(role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY, content=content)
 
     def append_message_tool_called(self, function_name: str, function_args: str) -> None:
-        message = f"{self.provider} called this tool: {function_name}({function_args})"
-        self.append_message(OpenAIMessageKeys.SMARTER_MESSAGE_KEY, message)
+        content = f"{self.provider} called this tool: {function_name}({function_args})"
+        self.append_message(role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY, content=content)
 
     def _insert_charge_by_type(self, charge_type: str) -> None:
-        self.insert_charge(
+        self.db_insert_charge(
             provider=self.provider,
             charge_type=charge_type,
             completion_tokens=self.completion_tokens,
@@ -432,8 +427,9 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             return self.messages
 
     def prep_first_request(self):
+        logger.info("%s %s", self.formatted_class_name, formatted_text("prep_first_request()"))
         # ensure that all message history is marked as not new
-        self.messages = self.messages_add_is_new(self.messages, is_new=False)
+        self.messages = self.messages_set_is_new(self.messages, is_new=False)
         tool_choice = OPENAI_TOOL_CHOICE
         self.first_iteration[InternalKeys.REQUEST_KEY] = {
             InternalKeys.MODEL_KEY: self.model,
@@ -445,8 +441,8 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         }
 
         # create a Smarter UI message with the established configuration
-        message = f"Prompt configuration: llm={self.provider}, model={self.model}, temperature={self.temperature}, max_tokens={self.max_tokens}, tool_choice={tool_choice}."
-        self.append_message(OpenAIMessageKeys.SMARTER_MESSAGE_KEY, message)
+        content = f"Prompt configuration: llm={self.provider}, model={self.model}, temperature={self.temperature}, max_tokens={self.max_tokens}, tool_choice={tool_choice}."
+        self.append_message(role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY, content=content)
 
         # for any tools that are included in the request, add Smarter UI messages for each tool
         if self.tools:
@@ -464,8 +460,8 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                         inputs.append(f"{parameter}: {', '.join(details['enum'])}")
 
                 inputs = ", ".join(inputs)
-                message = f"Tool presented: {tool_name}({inputs}) - {tool_description} "
-                self.append_message(OpenAIMessageKeys.SMARTER_MESSAGE_KEY, message)
+                content = f"Tool presented: {tool_name}({inputs}) - {tool_description} "
+                self.append_message(role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY, content=content)
 
         # send a chat completion request signal. this triggers a variety of db records to be created
         # asynchronously in the background via Celery tasks.
@@ -477,6 +473,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         )
 
     def prep_second_request(self):
+        logger.info("%s %s", self.formatted_class_name, formatted_text("prep_second_request()"))
         self.second_iteration[InternalKeys.REQUEST_KEY] = {
             InternalKeys.MODEL_KEY: self.model,
             InternalKeys.MESSAGES_KEY: self.openai_messages,
@@ -488,6 +485,11 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             request=self.second_iteration[InternalKeys.REQUEST_KEY],
         )
 
+    def append_openai_response(self, response: ChatCompletion) -> None:
+        response_message = response.choices[0].message
+        message_json = json.loads(response_message.model_dump_json())
+        self.append_message(role=response_message.role, content=response_message.content, message=message_json)
+
     def handle_response(self) -> None:
         """
         handle internal billing, and append messages to the response for prompt completion and the billing summary
@@ -498,8 +500,6 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         )
 
         response = self.second_response if self.iteration == 2 else self.first_response
-        response_message_role = response.choices[0].message.role
-        response_message_content = response.choices[0].message.content
 
         self.prompt_tokens = response.usage.prompt_tokens
         self.completion_tokens = response.usage.completion_tokens
@@ -509,9 +509,8 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         self._insert_charge_by_type(CHARGE_TYPE_PROMPT_COMPLETION)
         self.append_message(
             role=OpenAIMessageKeys.SMARTER_MESSAGE_KEY,
-            message=f"{self.provider} prompt charges: {self.prompt_tokens} prompt tokens, {self.completion_tokens} completion tokens = {self.total_tokens} total tokens charged.",
+            content=f"{self.provider} prompt charges: {self.prompt_tokens} prompt tokens, {self.completion_tokens} completion tokens = {self.total_tokens} total tokens charged.",
         )
-        self.append_message(role=response_message_role, message=response_message_content)
 
         if self.iteration == 1:
             self.first_iteration[InternalKeys.RESPONSE_KEY] = json.loads(self.first_response.model_dump_json())
@@ -564,10 +563,14 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         )
         self._insert_charge_by_type(CHARGE_TYPE_PLUGIN)
 
-    def process_tool_call(self, tool_call: ChatCompletionMessageToolCall) -> tuple[dict[str, Any], dict[str, Any]]:
+    def process_tool_call(self, tool_call: ChatCompletionMessageToolCall):
         """
         tool_call: List[ChatCompletionMessageToolCall]
         """
+        logger.info("%s %s", self.formatted_class_name, formatted_text("process_tool_call()"))
+        if not tool_call:
+            logger.warning("process_tool_call() - tool_call is empty. Skipping.")
+            return
         serialized_tool_call = {}
         plugin: PluginStatic = None
         function_name = tool_call.function.name
@@ -596,17 +599,17 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             self.handle_plugin_called(plugin=plugin)
         tool_call_message = {
             "tool_call_id": tool_call.id,
-            "role": "tool",
-            "name": function_name,
-            "content": function_response,
-            InternalKeys.SMARTER_IS_NEW: True,
+            OpenAIMessageKeys.MESSAGE_NAME_KEY: function_name,
         }
-        self.messages.append(tool_call_message)
+        self.append_message(
+            role=OpenAIMessageKeys.TOOL_MESSAGE_KEY, content=function_response, message=tool_call_message
+        )
         self.serialized_tool_calls.append(serialized_tool_call)
 
     def handle_plugin_selected(self, plugin: PluginStatic) -> None:
         # does the prompt have anything to do with any of the search terms defined in a plugin?
         # FIX NOTE: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_tokens
+        logger.info("%s %s", self.formatted_class_name, formatted_text("handle_plugin_selected()"))
         logger.warning(
             "smarter.apps.chat.providers.base_classes.OpenAICompatibleChatProvider.handler(): plugins selector needs to be refactored to use Django model."
         )
@@ -619,6 +622,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         self.append_message_plugin_selected(plugin=plugin.plugin_meta.name)
 
     def handle_success(self) -> dict:
+        logger.info("%s %s", self.formatted_class_name, formatted_text("handle_success()"))
         response = self.second_iteration.get(InternalKeys.RESPONSE_KEY) or self.first_iteration.get(
             InternalKeys.RESPONSE_KEY
         )
@@ -637,6 +641,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         """
         Return a dictionary of request meta data.
         """
+        logger.info("%s %s", self.formatted_class_name, formatted_text("request_meta_data_factory()"))
         return {
             InternalKeys.MODEL_KEY: self.model,
             InternalKeys.TEMPERATURE_KEY: self.temperature,
@@ -676,6 +681,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 ]
             }
         """
+        logger.info("%s %s", self.formatted_class_name, formatted_text("handler()"))
         self.chat = chat
         if chat:
             self.account = chat.account
@@ -693,9 +699,26 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             self.model = self.chat.chatbot.default_model or self.default_model
             self.temperature = self.chat.chatbot.default_temperature or self.default_temperature
             self.max_tokens = self.chat.chatbot.default_max_tokens or self.default_max_tokens
-            self.messages = self.get_message_thread(data=self.data)
             self.input_text = self.get_input_text_prompt(data=self.data)
             self.request_meta_data = self.request_meta_data_factory()
+
+            # initialize the message history from the persisted
+            # message history in the database, if it exists,
+            # and append the user's message.
+            #
+            # using the persisted message history ensures that the chat
+            # provider has a consistent view of the conversation history
+            # and that system and meta messages are preserved in their
+            # original form and order.
+            self.messages = self.db_message_history
+            if self.messages:
+                self.append_message(role=OpenAIMessageKeys.USER_MESSAGE_KEY, content=self.input_text)
+            else:
+                # new thread with no history, so we initialize with everything
+                # that was passed in by the React front-end. There customarily
+                # is 1 or more system messages, 1 or more assistant messages,
+                # and a user message.
+                self.messages = self.get_message_thread(data=self.data)
 
             for plugin in self.plugins:
                 if plugin.selected(user=self.user, input_text=self.input_text):
@@ -711,15 +734,14 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 temperature=self.temperature,
                 max_tokens=self.max_tokens,
             )
-
             self.handle_response()
+            self.append_openai_response(self.first_response)
             response_message = self.first_response.choices[0].message
             tool_calls: list[ChatCompletionMessageToolCall] = response_message.tool_calls
             if tool_calls:
                 # extend conversation with assistant's reply
                 response = json.loads(response_message.model_dump_json())
                 response[InternalKeys.SMARTER_IS_NEW] = True
-                self.messages.append(response)
                 self.iteration = 2
                 self.serialized_tool_calls = []
 
@@ -734,6 +756,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                     temperature=self.temperature,
                     max_tokens=self.max_tokens,
                 )
+                self.append_openai_response(self.second_response)
                 self.handle_response()
 
         # handle anything that went wrong

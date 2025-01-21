@@ -69,10 +69,10 @@ class ChatHistory(TimestampedModel):
         Used by the Reactapp (via ChatConfigView) to display the chat history.
         """
         history = self.messages if self.messages else self.request.get("messages", []) if self.request else []
-        response = self.response.get("choices", []) if self.response else []
-        response = response[0] if response else {}
-        response = response.get("message", {})
-        history.append(response)
+        # response = self.response.get("choices", []) if self.response else []
+        # response = response[0] if response else {}
+        # response = response.get("message", {})
+        # history.append(response)
         return history
 
 
