@@ -15,7 +15,7 @@ PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
 if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
 
-from smarter.apps.chat.providers.openai.const import OpenAIMessageKeys  # noqa: E402
+from smarter.apps.chat.providers.const import OpenAIMessageKeys  # noqa: E402
 
 # our stuff
 from smarter.apps.chat.providers.utils import (  # noqa: E402
