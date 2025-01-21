@@ -1,3 +1,29 @@
+# [0.9.0](https://github.com/smarter-sh/smarter/compare/v0.8.0...v0.9.0) (2025-01-14)
+
+
+### Bug Fixes
+
+* all docs paths should be relative to the ubuntu smarter_user home folder ([b7de813](https://github.com/smarter-sh/smarter/commit/b7de8139d0e02ccfe9d8778984539e43aaf86e22))
+* chatbot_requests_serializer is many=False ([419825d](https://github.com/smarter-sh/smarter/commit/419825d472afc50db69ffb0f793d95648dbd8f4c))
+* check whether user is authenticated before setting dashboard context ([b0f7d7a](https://github.com/smarter-sh/smarter/commit/b0f7d7a53d5eb51b8b9b508094394dc008907095))
+* clean messages on 2nd pass ([8e1ab22](https://github.com/smarter-sh/smarter/commit/8e1ab22a31cd015e137437852b3b0287977ff6f3))
+* developer doc paths ([b459d4d](https://github.com/smarter-sh/smarter/commit/b459d4d3ec248f300c5450f540d7947dff1f58b6))
+* developer doc paths ([8793dea](https://github.com/smarter-sh/smarter/commit/8793dea455b271b0af18d7ff97b7c4e3c083da83))
+* redirect to login page on 403 error ([b3f0240](https://github.com/smarter-sh/smarter/commit/b3f0240a3fa0ed4bd71cd66c8301f44b593ecd9d))
+* trouble shoot smarter dict first_iteration and second_iteration dicts ([2388b86](https://github.com/smarter-sh/smarter/commit/2388b8621b11fe853b325b71f4ee6b66793f0fac))
+* we only want the most recent batch of requests ([a90a4d8](https://github.com/smarter-sh/smarter/commit/a90a4d873dde0148345b54928f60db8a228e8e4d))
+
+
+### Features
+
+* add more smarter dashboard widgets ([a9d66f7](https://github.com/smarter-sh/smarter/commit/a9d66f78f2174e0a1c1c623eac1fd2cf40c1681b))
+* add smarter meta prompts for function calling and token charges ([357b576](https://github.com/smarter-sh/smarter/commit/357b576152809c1f6961e41ea67fec87f7c65513))
+* code dashboard widgets ([3967b7a](https://github.com/smarter-sh/smarter/commit/3967b7a15745dc9b87014ffbe7a54a4c23de1220))
+* create and style smarter dashboard widgets ([9d059e7](https://github.com/smarter-sh/smarter/commit/9d059e7a9b3e811e34451a69139c098b657aa50c))
+* ensure that message history is not duplicated ([7421540](https://github.com/smarter-sh/smarter/commit/74215406aa314f8843a8b8ce46456ed4eed9a092))
+* finesse component state management ([b9916b3](https://github.com/smarter-sh/smarter/commit/b9916b3727c3015304806d67455e82081fae864c))
+* get Console working with ChatApp config as a prop ([2c087c0](https://github.com/smarter-sh/smarter/commit/2c087c025d4a55b775f7cf1ffbb5e3c9aae176b6))
+
 # [0.8.0](https://github.com/smarter-sh/smarter/compare/v0.7.9...v0.8.0) (2025-01-12)
 
 ### Bug Fixes
