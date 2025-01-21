@@ -18,7 +18,7 @@ from smarter.apps.chat.providers.const import OpenAIMessageKeys
 from smarter.common.api import SmarterApiVersions
 
 # FIX NOTE: these imports need to be parameterized by version.
-from smarter.common.exceptions import SmarterExceptionBase
+from smarter.common.exceptions import SmarterExceptionBase, SmarterValueError
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import UserType
 from smarter.lib.manifest.enum import SAMKeys
@@ -521,8 +521,11 @@ class PluginBase(ABC):
 
         if not self.ready:
             raise SmarterPluginError("Plugin is not ready.")
+        if not messages:
+            raise SmarterValueError("Messages is empty.")
 
-        for i, message in enumerate(messages):
+        messages_copy = messages.copy()
+        for i, message in enumerate(messages_copy):
             if message.get(OpenAIMessageKeys.MESSAGE_ROLE_KEY) == OpenAIMessageKeys.SYSTEM_MESSAGE_KEY:
                 system_role = message.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY)
                 custom_prompt = {
@@ -531,10 +534,10 @@ class PluginBase(ABC):
                     + "\n\n and also "
                     + self.plugin_prompt.system_role,
                 }
-                messages[i] = custom_prompt
+                messages_copy[i] = custom_prompt
                 break
 
-        return messages
+        return messages_copy
 
     def function_calling_plugin(self, inquiry_type: str) -> str:
         """Return select info from custom plugin object"""
