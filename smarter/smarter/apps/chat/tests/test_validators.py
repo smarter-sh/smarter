@@ -13,7 +13,6 @@ sys.path.append(PYTHON_ROOT)  # noqa: E402
 from smarter.apps.chat.providers.validators import (
     validate_completion_request,
     validate_endpoint,
-    validate_item,
     validate_max_tokens,
     validate_messages,
     validate_object_types,
@@ -46,17 +45,6 @@ class TestValidators(unittest.TestCase):
     def env_path(self, filename):
         """Return the path to the .env file."""
         return os.path.join(self.here, filename)
-
-    def test_validate_item(self):
-        """Test validate_item."""
-        valid_items = ["item1", "item2", "item3"]
-        item = "item1"
-        # verify that no exception is raised
-        validate_item(item, valid_items, "valid_items")
-
-        item = "i_cause_an_exception"
-        with self.assertRaises(SmarterValueError):
-            validate_item(item, valid_items, "valid_items")
 
     def test_validate_temperature(self):
         """Test validate_temperature."""
