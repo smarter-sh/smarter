@@ -10,13 +10,13 @@ export function chat_restore_from_backend(chat_history, last_response) {
     const messages = (chat_history ? chat_history : [])
     .map((chat) => {
       if (chat.role === SENDER_ROLE.USER) {
-        return messageFactory(chat.content, MESSAGE_DIRECTION.OUTGOING, chat.role);
+        return messageFactory(chat, chat.content, MESSAGE_DIRECTION.OUTGOING, chat.role);
       } else if (chat.role === SENDER_ROLE.SYSTEM) {
-        return messageFactory(chat.content, MESSAGE_DIRECTION.INCOMING, chat.role);
+        return messageFactory(chat, chat.content, MESSAGE_DIRECTION.INCOMING, chat.role);
       } else if (chat.role === SENDER_ROLE.ASSISTANT) {
-        return messageFactory(chat.content, MESSAGE_DIRECTION.INCOMING, chat.role);
+        return messageFactory(chat, chat.content, MESSAGE_DIRECTION.INCOMING, chat.role);
       } else if (chat.role === SENDER_ROLE.SMARTER) {
-        return messageFactory(chat.content, MESSAGE_DIRECTION.INCOMING, chat.role);
+        return messageFactory(chat, chat.content, MESSAGE_DIRECTION.INCOMING, chat.role);
       }
       if (chat.role !== SENDER_ROLE.TOOL) {
         console.error(`chat_restore_from_backend() Invalid role received: ${chat.role}`);
@@ -26,8 +26,9 @@ export function chat_restore_from_backend(chat_history, last_response) {
 
 
     if (last_response?.choices?.[0]?.message?.content) {
-      const last_message_content = last_response.choices[0].message.content;
-      messages.push(messageFactory(last_message_content, MESSAGE_DIRECTION.INCOMING, SENDER_ROLE.ASSISTANT));
+      const last_message = last_response.choices[0].message;
+      const last_message_content = last_message.content;
+      messages.push(messageFactory(last_message, last_message_content, MESSAGE_DIRECTION.INCOMING, SENDER_ROLE.ASSISTANT));
     }
 
     return messages;
@@ -62,12 +63,12 @@ export function chat_intro(welcome_message, system_role, example_prompts) {
   welcome message, and any example prompts that are configured in the
   Application settings.
    */
-  let messages = [messageFactory(system_role, MESSAGE_DIRECTION.INCOMING, SENDER_ROLE.SYSTEM)];
-  messages.push(messageFactory(welcome_message, MESSAGE_DIRECTION.INCOMING, SENDER_ROLE.ASSISTANT));
+  let messages = [messageFactory({}, system_role, MESSAGE_DIRECTION.INCOMING, SENDER_ROLE.SYSTEM)];
+  messages.push(messageFactory({}, welcome_message, MESSAGE_DIRECTION.INCOMING, SENDER_ROLE.ASSISTANT));
 
   const examples = examplePrompts(example_prompts);
   if (examples) {
-    messages.push(messageFactory(examples, MESSAGE_DIRECTION.INCOMING, SENDER_ROLE.ASSISTANT));
+    messages.push(messageFactory({}, examples, MESSAGE_DIRECTION.INCOMING, SENDER_ROLE.ASSISTANT));
   }
 
   return messages;
@@ -79,6 +80,7 @@ export function convertMarkdownLinksToHTML(message) {
    */
   if (typeof message !== 'string') {
     console.error(`convertMarkdownLinksToHTML() Expected a string but received ${typeof message}`);
+    console.error("convertMarkdownLinksToHTML() broke here", message);
     return message; // or return a default value
   }
 
@@ -86,32 +88,32 @@ export function convertMarkdownLinksToHTML(message) {
   return message.replace(markdownLinkRegex, '<a href="$2">$1</a>');
 };
 
-export function messageFactory(message, direction, sender) {
+export function messageFactory(originalMessage, content, direction, sender) {
   /*
   Create a new message object.
    */
-  const converted_message = convertMarkdownLinksToHTML(message);
-  if (typeof converted_message === 'string' && typeof direction === 'string' && typeof sender === 'string') {
-    return {
-      message: converted_message,
-      direction: direction,
-      sentTime: new Date().toLocaleString(),
-      sender: sender,
-    };
+  const converted_content = (typeof content === 'string' && content !== null) ? convertMarkdownLinksToHTML(content) : content;
+  const retVal = {
+    message: converted_content,
+    direction: direction,
+    sender: sender,
+    sentTime: new Date().toLocaleString(),
+  };
+  if (originalMessage) {
+    retVal.originalMessage = originalMessage;
   } else {
-    return null; // or throw new Error('message, direction, and sender must be strings');
+    retVal.originalMessage = retVal;
   }
+  return retVal;
+
 };
 
-export function requestMessageFactory(role, content) {
-  /*
-  Create a new message object for the request to the backend API.
-   */
-  return {
-    role: role,
-    content: content,
-  };
-};
+function requestMessageFactory(message) {
+  let retVal = message.originalMessage || {};
+  retVal.role = message.originalMessage && message.originalMessage.role ? message.originalMessage.role : message.sender;
+  retVal.content = message.originalMessage && message.originalMessage.message ? message.originalMessage.message : message.message;
+  return retVal;
+}
 
 export function chatMessages2RequestMessages(messages) {
   /*
@@ -122,7 +124,7 @@ export function chatMessages2RequestMessages(messages) {
     // filter out smarter messages
     .filter(message => VALID_MESSAGE_ROLES.includes(message.sender))
     .map((message, index) => {
-    return requestMessageFactory(message.sender, message.message);
+    return requestMessageFactory(message);
   });
 };
 

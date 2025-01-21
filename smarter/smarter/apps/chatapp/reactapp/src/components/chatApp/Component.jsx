@@ -161,7 +161,7 @@ function ChatApp() {
     // inside this module. It asynchronously sends the user's input to the
     // backend API using the fetch() function. The response from the API is
     // then used to update the chat message thread and the UI via React state.
-    const newMessage = messageFactory(input_text, MESSAGE_DIRECTION.OUTGOING, SENDER_ROLE.USER);
+    const newMessage = messageFactory({}, input_text, MESSAGE_DIRECTION.OUTGOING, SENDER_ROLE.USER);
     if (base64_encode) {
       console.error("base64 encoding not implemented yet.");
     }
@@ -172,12 +172,13 @@ function ChatApp() {
 
       (async () => {
         try {
+          console.log("handleApiRequest() messages:", updatedMessages);
           const msgs = chatMessages2RequestMessages(updatedMessages);
           const response = await processApiRequest(config, msgs, apiUrl, openChatModal);
 
           if (response) {
             const responseMessages = response.smarter.messages.map((message) => {
-              return messageFactory(message.content, MESSAGE_DIRECTION.INCOMING, message.role);
+              return messageFactory(message, message.content, MESSAGE_DIRECTION.INCOMING, message.role);
             }
             );
             setMessages((prevMessages) => [...prevMessages, ...responseMessages]);
