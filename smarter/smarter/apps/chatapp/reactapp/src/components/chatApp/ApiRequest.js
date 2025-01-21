@@ -105,7 +105,7 @@ export async function processApiRequest(
           - the response_body object is intended to always be available when the status is 400.
             However, there potentially COULD be a case where the response itself contains message text.
         */
-        console.log("processApiRequest(): error: ", status, response.statusText, response_body.message);
+        console.error("processApiRequest(): error: ", status, response.statusText, response_body.message);
 
         let errTitle = "Error " + status;
         let errMessage = response.statusText ||

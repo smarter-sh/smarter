@@ -172,7 +172,9 @@ function ChatApp() {
 
       (async () => {
         try {
-          console.log("handleApiRequest() messages:", updatedMessages);
+          if (debugMode) {
+            console.log("handleApiRequest() messages:", updatedMessages);
+          }
           const msgs = chatMessages2RequestMessages(updatedMessages);
           const response = await processApiRequest(config, msgs, apiUrl, openChatModal);
 
