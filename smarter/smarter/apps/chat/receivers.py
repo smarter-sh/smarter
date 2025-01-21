@@ -196,32 +196,34 @@ def handle_chat_response_failure(sender, **kwargs):
     exception = kwargs.get("exception")
     chat: Chat = kwargs.get("chat")
     request_meta_data = kwargs.get("request_meta_data")
-    first_response = kwargs.get("first_response")
-    second_response = kwargs.get("second_response")
+    first_iteration = kwargs.get("first_iteration")
+    second_iteration = kwargs.get("second_iteration")
+    messages = kwargs.get("messages")
     sender_name = get_sender_name(sender)
 
     logger.error(
-        "signal received from %s %s during iteration %s for chat: %s, request_meta_data: %s, exception: %s",
-        sender_name,
+        "%s signal received from %s during iteration %s for chat: %s, request_meta_data: %s, exception: %s",
         formatted_text("chat_response_failure"),
+        sender_name,
         iteration,
         chat if chat else None,
         formatted_json(request_meta_data),
         exception,
     )
-    if iteration == 1 and first_response:
+    logger.error("chat_response_failure %s %s", formatted_text("messages dump:"), formatted_json(messages))
+    if iteration == 1 and first_iteration:
         logger.error(
-            "%s for chat: %s, first_response: %s",
-            formatted_text("chat_response_dump"),
+            "%s for chat: %s, first_iteration: %s",
+            formatted_text("dump"),
             chat if chat else None,
-            formatted_json(first_response),
+            formatted_json(first_iteration),
         )
-    if iteration == 2 and second_response:
+    if iteration == 2 and second_iteration:
         logger.error(
-            "%s for chat: %s, second_response: %s",
-            formatted_text("chat_response_dump"),
+            "%s for chat: %s, second_iteration: %s",
+            formatted_text("dump"),
             chat if chat else None,
-            formatted_json(second_response),
+            formatted_json(second_iteration),
         )
 
 

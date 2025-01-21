@@ -366,8 +366,8 @@ class ChatProviderBase(ProviderDbMixin, AccountMixin):
             raise SmarterValueError(
                 f"Internal error. Invalid message role: {role} not found in list of valid {self.provider} message roles {OpenAIMessageKeys.all_roles}."
             )
-        if not content:
-            logger.warning("append_message() - content is empty. Skipping.")
+        if not content and not message:
+            logger.warning("append_message() - content and message are both empty. Skipping.")
             return
         message = message or {}
         new_message = message.copy()
@@ -768,8 +768,9 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 chat=self.chat,
                 request_meta_data=self.request_meta_data,
                 exception=e,
-                first_response=self.first_iteration[InternalKeys.RESPONSE_KEY],
-                second_response=self.second_iteration[InternalKeys.RESPONSE_KEY],
+                first_iteration=self.first_iteration,
+                second_iteration=self.second_iteration,
+                messages=self.messages,
             )
             status_code, _message = EXCEPTION_MAP.get(
                 type(e), (HTTPStatus.INTERNAL_SERVER_ERROR, "Internal server error")
