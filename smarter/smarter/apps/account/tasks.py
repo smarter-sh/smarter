@@ -20,18 +20,12 @@ from smarter.common.helpers.console_helpers import formatted_text
 from smarter.smarter_celery import app
 
 # Account stuff
-from .models import (
-    CHARGE_TYPE_PLUGIN,
-    CHARGE_TYPE_PROMPT_COMPLETION,
-    Account,
-    Charge,
-    DailyBillingRecord,
-)
+from .models import Account, Charge, DailyBillingRecord
 from .utils import user_for_user_id, user_profile_for_user
 
 
 logger = logging.getLogger(__name__)
-module_prefix = formatted_text("smarter.apps.account.tasks.")
+module_prefix = "smarter.apps.account.tasks."
 
 
 @app.task(
@@ -61,10 +55,11 @@ def create_charge(*args, **kwargs):
     total_tokens = kwargs.get("total_tokens")
     model = kwargs.get("model")
     reference = kwargs.get("reference")
+    prefix = formatted_text(module_prefix + "create_charge()")
 
     logger.info(
-        "%s - begin. user_id %s, charge_type %s, reference %s",
-        formatted_text(module_prefix + "create_charge()"),
+        "%s. user_id %s, charge_type %s, reference %s",
+        prefix,
         user_id,
         charge_type,
         reference,
@@ -93,7 +88,8 @@ def create_charge(*args, **kwargs):
 def aggregate_charges():
     """top-level wrapper for celery aggregation tasks"""
 
-    logger.info(formatted_text(module_prefix + "aggregate_charges()"))
+    prefix = formatted_text(module_prefix + "aggregate_charges()")
+    logger.info(prefix)
     aggregate_daily_billing_records()
 
 
@@ -110,7 +106,7 @@ def aggregate_daily_billing_records():
     and can be run multiple times without issue.
     """
     MAX_AGGREGATION_ERROR_THRESHOLD = 10
-    message_prefix = module_prefix + formatted_text("aggregate_daily_billing_records()")
+    message_prefix = formatted_text(module_prefix + "aggregate_daily_billing_records()")
 
     def aggregate(user, account, created_at_date, charge_type):
         """Handle aggregation of one set of charges."""

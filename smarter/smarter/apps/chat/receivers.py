@@ -33,6 +33,10 @@ from .tasks import (
 logger = logging.getLogger(__name__)
 
 
+def get_sender_name(sender):
+    return f"{sender.__self__.__class__.__name__}.{sender.__name__}({id(sender)})"
+
+
 @receiver(chat_started, dispatch_uid="chat_started")
 def handle_chat_started(sender, **kwargs):
     """Handle chat started signal."""
@@ -40,8 +44,10 @@ def handle_chat_started(sender, **kwargs):
     chat: Chat = kwargs.get("chat")
     data = kwargs.get("data")
 
+    sender_name = get_sender_name(sender)
     logger.info(
-        "%s for chat %s",
+        "signal received from %s %s for chat %s",
+        sender_name,
         formatted_text("chat_started"),
         chat,
     )
@@ -54,10 +60,12 @@ def handle_chat_completion_request_sent(sender, **kwargs):
     chat: Chat = kwargs.get("chat")
     iteration: int = kwargs.get("iteration")
     request: dict = kwargs.get("request")
+    sender_name = get_sender_name(sender)
     prefix = formatted_text(f"chat_completion_request for iteration {iteration}")
 
     logger.info(
-        "%s for chat: %s",
+        "signal received from %s %s for chat: %s ",
+        sender_name,
         prefix,
         chat,
     )
@@ -88,10 +96,12 @@ def handle_chat_completion_response_received(sender, **kwargs):
     response: dict = kwargs.get("response")
     messages: list[dict] = kwargs.get("messages")
     prefix = formatted_text(f"chat_completion_response for iteration {iteration}")
+    sender_name = get_sender_name(sender)
 
     if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
         logger.info(
-            "%s for chat %s, \nrequest: %s, \nresponse: %s",
+            "signal received from %s %s for chat %s, \nrequest: %s, \nresponse: %s",
+            sender_name,
             formatted_text("chat_completion_response"),
             chat,
             formatted_json(request),
@@ -111,9 +121,11 @@ def handle_chat_completion_plugin_called(sender, **kwargs):
     chat: Chat = kwargs.get("chat")
     plugin: PluginMeta = kwargs.get("plugin")
     input_text: str = kwargs.get("input_text")
+    sender_name = get_sender_name(sender)
 
     logger.info(
-        "%s for chat %s, \nplugin: %s, \ninput_text: %s",
+        "signal received from %s %s for chat %s, \nplugin: %s, \ninput_text: %s",
+        sender_name,
         formatted_text("chat_completion_plugin_called"),
         chat,
         plugin,
@@ -134,9 +146,11 @@ def handle_chat_completion_tool_called(sender, **kwargs):
     request: dict = kwargs.get("request")
     response: dict = kwargs.get("response")
     prefix = formatted_text("handle_chat_completion_tool_called()")
+    sender_name = get_sender_name(sender)
 
     logger.info(
-        "%s for chat: %s",
+        "signal received from %s %s for chat: %s",
+        sender_name,
         prefix,
         chat_id,
     )
@@ -153,35 +167,12 @@ def handle_chat_response_success(sender, **kwargs):
     request: dict = kwargs.get("request")
     response: dict = kwargs.get("response")
     messages: list[dict] = kwargs.get("messages")
-
-    # mcdaniel: add the most recent response to the messages list
-    # so that the chatbot can display the most recent response
-    # to the user.
-    # mcdaniel jan-2025: DEPRECATED: this is no longer needed as the
-    # if response:
-    #     content: str = None
-    #     message: dict = None
-    #     response_choices = response.get(OpenAIResponseKeys.CHOICES_KEY)
-    #     if response_choices and isinstance(response_choices, list):
-    #         for choice in response_choices:
-    #             finish_reason = choice.get(OpenAIResponseChoices.FINISH_REASON_KEY, "")
-    #             message = choice.get(OpenAIResponseChoices.MESSAGE_KEY, {})
-    #             if finish_reason == "stop":
-    #                 logger.info("Stop detected in response.")
-    #                 content = message.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY)
-    #                 role = message.get(OpenAIMessageKeys.MESSAGE_ROLE_KEY)
-    #                 assistant_message = {
-    #                     OpenAIMessageKeys.MESSAGE_ROLE_KEY: role,
-    #                     OpenAIMessageKeys.MESSAGE_CONTENT_KEY: content,
-    #                 }
-    #                 request[OpenAIRequestKeys.MESSAGES_KEY].append(assistant_message)
-    #                 logger.info("Added assistant response to messages.")
-
-    create_chat_history.delay(chat.id, request, response, messages)
+    sender_name = get_sender_name(sender)
 
     if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
         logger.info(
-            "%s for chat %s, \nrequest: %s, \nresponse: %s",
+            "signal received from %s %s for chat %s, \nrequest: %s, \nresponse: %s",
+            sender_name,
             formatted_text("chat_finished"),
             chat,
             formatted_json(request),
@@ -189,10 +180,12 @@ def handle_chat_response_success(sender, **kwargs):
         )
     else:
         logger.info(
-            "%s for chat %s",
+            "signal received from %s %s for chat %s",
+            sender_name,
             formatted_text("chat_finished"),
             chat,
         )
+    create_chat_history.delay(chat.id, request, response, messages)
 
 
 @receiver(chat_response_failure, dispatch_uid="chat_response_failure")
@@ -205,9 +198,11 @@ def handle_chat_response_failure(sender, **kwargs):
     request_meta_data = kwargs.get("request_meta_data")
     first_response = kwargs.get("first_response")
     second_response = kwargs.get("second_response")
+    sender_name = get_sender_name(sender)
 
     logger.error(
-        "%s during iteration %s for chat: %s, request_meta_data: %s, exception: %s",
+        "signal received from %s %s during iteration %s for chat: %s, request_meta_data: %s, exception: %s",
+        sender_name,
         formatted_text("chat_response_failure"),
         iteration,
         chat if chat else None,
