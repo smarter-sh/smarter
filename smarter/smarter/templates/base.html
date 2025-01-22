@@ -1,103 +1,117 @@
 {% load static wagtailcore_tags wagtailuserbar %}
 <!DOCTYPE html>
 <html lang="en">
-	<!--begin::Head-->
-	<head>
-    {% block head %}
-    <link rel="shortcut icon" type="image/png"  href="{% static 'querium/querium-favicon-192x192.png' %}" />
-    <title>Querium Smarter</title>
+<!--begin::Head-->
+<head>
+  {% block head %}
+  <link rel="shortcut icon" type="image/png" href="{% static 'querium/querium-favicon-192x192.png' %}" />
+  <title>Querium Smarter</title>
+  <meta charset="utf-8" />
+  <meta name="robots" content="index, follow" />
+  <meta name="revisit-after" content="10 days">
+  <meta name="author" content="Lawrence McDaniel" />
+  <meta name="author-url" content="https://lawrencemcdaniel.com" />
+  <meta name="generator" content="Python, Django, ReactJS, Wagtail, Django Rest Framework" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="Smarter is a plugin-based, no-code platform for securely managing AI resources and private data in the cloud, at scale." />
+  <meta name="keywords"
+    content="Querium, Smarter, generative AI, Chatbots, prompt engineering, documentation, chatGPT" />
+  {% block head_meta_og_image %}
+  <meta property="og:image" content="https://cdn.platform.smarter.sh/cms/img/smarter_og_image.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Smarter by Querium Corp." />
+  {% endblock %}
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Smarter by Querium" />
+  <meta property="og:site_name" content="Smarter" />
+  <!-- Twitter Card Tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@smarter" />
+  <meta name="twitter:title" content="Smarter by Querium" />
+  <meta name="twitter:description"
+    content="Smarter is a plugin-based, no-code platform for securely managing AI resources and private data in the cloud, at scale." />
+  <meta name="twitter:image" content="https://cdn.platform.smarter.sh/cms/img/smarter_og_image.png" />
 
-		<meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<meta name="description" content="Smarter is a plugin-based, no-code platform for securely managing AI resources and private data in the cloud, at scale." />
-		<meta name="keywords" content="Querium, Smarter, generative AI, Chatbots, prompt engineering, documentation, chatGPT" />
-    {% block head_meta_og_image %}
-    <meta property="og:image" content="https://cdn.platform.smarter.sh/cms/img/smarter_og_image.png" />
-    <meta property="og:image:type" content="image/png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Smarter by Querium Corp." />
-    {% endblock %}
-    <meta property="og:locale" content="en_US" />
-		<meta property="og:type" content="article" />
-		<meta property="og:title" content="Querium Smarter - Documentation" />
-		<meta property="og:site_name" content="Querium Smarter" />
+  {% block canonical %}
+  <link rel="canonical" href="/" />
+  {% endblock %}
 
-    {% block canonical %}
-		<link rel="canonical" href="/" />
-    {% endblock %}
+  <!--begin::Fonts(mandatory for all pages)-->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
+  <!--end::Fonts-->
+  <!--begin::Vendor Stylesheets(used for this page only)-->
+  <link href="{% static 'assets/plugins/custom/fullcalendar/fullcalendar.bundle.css' %}" rel="stylesheet"
+    type="text/css" />
+  <link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}" rel="stylesheet" type="text/css" />
+  <!--end::Vendor Stylesheets-->
+  <!--begin::Global Stylesheets Bundle(mandatory for all pages)-->
+  <link href="{% static 'assets/plugins/global/plugins.bundle.css' %}" rel="stylesheet" type="text/css" />
+  <link href="{% static 'assets/css/style.bundle.css' %}" rel="stylesheet" type="text/css" />
+  <!--end::Global Stylesheets Bundle-->
+  <script>// Frame-busting to prevent site from being loaded within a frame without permission (click-jacking) if (window.top != window.self) { window.top.location.replace(window.self.location.href); }</script>
+  {% endblock %}
+  {% block head_extra %}
+  {% endblock %}
+</head>
+<!--end::Head-->
+<!--begin::Body-->
 
-		<!--begin::Fonts(mandatory for all pages)-->
-		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
-		<!--end::Fonts-->
-		<!--begin::Vendor Stylesheets(used for this page only)-->
-		<link href="{% static 'assets/plugins/custom/fullcalendar/fullcalendar.bundle.css' %}" rel="stylesheet" type="text/css" />
-		<link href="{% static 'assets/plugins/custom/datatables/datatables.bundle.css' %}" rel="stylesheet" type="text/css" />
-		<!--end::Vendor Stylesheets-->
-		<!--begin::Global Stylesheets Bundle(mandatory for all pages)-->
-		<link href="{% static 'assets/plugins/global/plugins.bundle.css' %}" rel="stylesheet" type="text/css" />
-		<link href="{% static 'assets/css/style.bundle.css' %}" rel="stylesheet" type="text/css" />
-		<!--end::Global Stylesheets Bundle-->
-		<script>// Frame-busting to prevent site from being loaded within a frame without permission (click-jacking) if (window.top != window.self) { window.top.location.replace(window.self.location.href); }</script>
-    {% endblock %}
-    {% block head_extra %}
-    {% endblock %}
-	</head>
-	<!--end::Head-->
-	<!--begin::Body-->
-	<body id="kt_app_body" data-kt-app-layout="dark-sidebar" data-kt-app-header-fixed="true" data-kt-app-sidebar-enabled="true" data-kt-app-sidebar-fixed="true" data-kt-app-sidebar-hoverable="true" data-kt-app-sidebar-push-header="true" data-kt-app-sidebar-push-toolbar="true" data-kt-app-sidebar-push-footer="true" data-kt-app-toolbar-enabled="true" class="app-default">
+<body id="kt_app_body" data-kt-app-layout="dark-sidebar" data-kt-app-header-fixed="true"
+  data-kt-app-sidebar-enabled="true" data-kt-app-sidebar-fixed="true" data-kt-app-sidebar-hoverable="true"
+  data-kt-app-sidebar-push-header="true" data-kt-app-sidebar-push-toolbar="true" data-kt-app-sidebar-push-footer="true"
+  data-kt-app-toolbar-enabled="true" class="app-default">
 
-    {% block body_class %}
-    {% endblock %}
+  {% block body_class %}
+  {% endblock %}
 
-		<!--begin::Theme mode setup on page load-->
-		<script>var defaultThemeMode = "light"; var themeMode; if ( document.documentElement ) { if ( document.documentElement.hasAttribute("data-bs-theme-mode")) { themeMode = document.documentElement.getAttribute("data-bs-theme-mode"); } else { if ( localStorage.getItem("data-bs-theme") !== null ) { themeMode = localStorage.getItem("data-bs-theme"); } else { themeMode = defaultThemeMode; } } if (themeMode === "system") { themeMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; } document.documentElement.setAttribute("data-bs-theme", themeMode); }</script>
-		<!--end::Theme mode setup on page load-->
-		<!--begin::App-->
-    <!--begin::Root-->
-		<div class="d-flex flex-column flex-root app-root" id="kt_app_root">
-      <div class="smarter-root-page-content">
-        {% block root %}
-          <div class="smarter-wagtail-page-content">
-            {% block content %}
-            {% endblock %}
-          </div>
-          <div class="smarter-static-page-content">
-            {% block docs_content %}
-            {% endblock %}
-          </div>
-      {% endblock %}
+  <!--begin::Theme mode setup on page load-->
+  <script>var defaultThemeMode = "light"; var themeMode; if (document.documentElement) { if (document.documentElement.hasAttribute("data-bs-theme-mode")) { themeMode = document.documentElement.getAttribute("data-bs-theme-mode"); } else { if (localStorage.getItem("data-bs-theme") !== null) { themeMode = localStorage.getItem("data-bs-theme"); } else { themeMode = defaultThemeMode; } } if (themeMode === "system") { themeMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; } document.documentElement.setAttribute("data-bs-theme", themeMode); }</script>
+  <!--end::Theme mode setup on page load-->
+  <!--begin::App-->
+  <!--begin::Root-->
+  <div class="d-flex flex-column flex-root app-root" id="kt_app_root">
+    <div class="smarter-root-page-content">
+      {% block root %}
+      <div class="smarter-wagtail-page-content">
+        {% block content %}
+        {% endblock %}
       </div>
-		</div>
-    <!--end::Root-->
-    <!--end::App-->
-
-{% block modal %}
+      <div class="smarter-static-page-content">
+        {% block docs_content %}
+        {% endblock %}
+      </div>
+      {% endblock %}
+    </div>
+  </div>
+  <!--end::Root-->
+  <!--end::App-->
+  {% block modal %}
   <!--begin::all modals-->
   <!--end::all modals-->
-{% endblock %}
-
-
-    {% block javascript %}
-		<!--begin::Javascript-->
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-SK81M5HQYS"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-SK81M5HQYS');
-    </script>
-
-		<!--begin::Global Javascript Bundle(mandatory for all pages)-->
-		<script src="{% static 'assets/plugins/global/plugins.bundle.js' %}"></script>
-		<script src="{% static 'assets/js/scripts.bundle.js' %}"></script>
-		<!--end::Global Javascript Bundle-->
-		<!--end::Javascript-->
-    {% endblock %}
-    {% block javascript_extra %}
-    {% endblock %}
-		<script src="{% static 'js/smarter-base.js' %}"></script>
-	</body>
-	<!--end::Body-->
+  {% endblock %}
+  {% block javascript %}
+  <!--begin::Javascript-->
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-SK81M5HQYS"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-SK81M5HQYS');
+  </script>
+  <!--begin::Global Javascript Bundle(mandatory for all pages)-->
+  <script src="{% static 'assets/plugins/global/plugins.bundle.js' %}"></script>
+  <script src="{% static 'assets/js/scripts.bundle.js' %}"></script>
+  <!--end::Global Javascript Bundle-->
+  <!--end::Javascript-->
+  {% endblock %}
+  {% block javascript_extra %}
+  {% endblock %}
+  <script src="{% static 'js/smarter-base.js' %}"></script>
+</body>
+<!--end::Body-->
 </html>

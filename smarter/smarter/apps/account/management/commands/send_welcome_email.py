@@ -14,8 +14,8 @@ class Command(BaseCommand):
         """Add arguments to the command."""
         parser.add_argument("--account_number", type=str, help="The Smarter account number to which the user belongs")
         parser.add_argument("--company_name", type=str, help="The company name to which the user belongs")
-        parser.add_argument("--username", type=str, help="The username for the new superuser")
-        parser.add_argument("--email", type=str, help="The email address for the new superuser")
+        parser.add_argument("--username", type=str, help="The username")
+        parser.add_argument("--email", type=str, help="The email address")
 
     def handle(self, *args, **options):
         """create the superuser account."""
@@ -28,6 +28,8 @@ class Command(BaseCommand):
 
         if username:
             user_profile = UserProfile.objects.get(user__username=username)
+            account = user_profile.account
+            email = email or user_profile.user.email
         elif email:
             user_profile = UserProfile.objects.get(user__email=email)
             account = user_profile.account
@@ -53,7 +55,7 @@ class Command(BaseCommand):
 
         account_contact, _ = AccountContact.objects.get_or_create(
             account=account,
-            email=user_profile.user.email,
+            email=email,
         )
 
         account_contact.send_welcome_email()

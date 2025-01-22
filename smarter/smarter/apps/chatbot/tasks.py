@@ -23,6 +23,7 @@ from smarter.common.helpers.aws.exceptions import (
 )
 from smarter.common.helpers.aws.route53 import AWSHostedZoneNotFound
 from smarter.common.helpers.aws_helpers import aws_helper
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.k8s_helpers import kubernetes_helper
 from smarter.smarter_celery import app
 
@@ -38,6 +39,7 @@ from .models import (
 logger = logging.getLogger(__name__)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
+module_prefix = formatted_text("smarter.apps.chatbot.tasks.")
 
 
 class ChatBotCustomDomainNotFound(SmarterChatBotException):
@@ -78,6 +80,7 @@ def verify_certificate(certificate_arn: str):
 )
 def create_chatbot_request(chatbot_id: int, request_data: dict):
     """Create a ChatBot request record."""
+    logger.info("%s - chatbot %s", module_prefix + formatted_text("create_chatbot_request()"), chatbot_id)
     chatbot = ChatBot.objects.get(id=chatbot_id)
     session_key = request_data.get("session_key")
     ChatBotRequests.objects.create(chatbot=chatbot, request=request_data, session_key=session_key)

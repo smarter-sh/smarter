@@ -33,8 +33,9 @@ class ChatHistoryAdmin(RestrictedModelAdmin):
     readonly_fields = (
         "created_at",
         "updated_at",
+        "chat_history",
     )
-    list_display = ["chat", "request", "response"]
+    list_display = ["chat", "chat_history"]
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
