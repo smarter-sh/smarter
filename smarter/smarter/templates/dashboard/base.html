@@ -462,6 +462,7 @@
                 <!--end:Menu item-->
 
                 <!--begin:Menu item Django admin-->
+                {% if user.is_superuser %}
                 <div class="menu-item">
                   <!--begin:Menu link-->
                   <a class="menu-link" href="/admin/" target="_self">
@@ -472,9 +473,11 @@
                   </a>
                   <!--end:Menu link-->
                 </div>
+                {% endif %}
                 <!--end:Menu item-->
 
                 <!--begin:Menu item Wagtail admin-->
+                {% if user.is_superuser %}
                 <div class="menu-item">
                   <!--begin:Menu link-->
                   <a class="menu-link" href="/cms/admin/" target="_self">
@@ -485,9 +488,11 @@
                   </a>
                   <!--end:Menu link-->
                 </div>
+                {% endif %}
                 <!--end:Menu item-->
 
                 <!--begin:Menu item Change Log -->
+                {% if user.is_superuser %}
                 <div class="menu-item">
                   <!--begin:Menu link Change Log-->
                   <a class="menu-link"
@@ -500,6 +505,7 @@
                   </a>
                   <!--end:Menu link-->
                 </div>
+                {% endif %}
                 <!--end:Menu item-->
 
 								<!--begin:Menu item Corporate-->
