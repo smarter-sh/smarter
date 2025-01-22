@@ -55,7 +55,7 @@ class Command(BaseCommand):
 
         account_contact, _ = AccountContact.objects.get_or_create(
             account=account,
-            email=user_profile.user.email,
+            email=email,
         )
 
         account_contact.send_welcome_email()
