@@ -11,7 +11,7 @@ from pydantic_core import ValidationError as PydanticValidationError
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
-from smarter.apps.chat.providers.openai.const import OpenAIMessageKeys
+from smarter.apps.chat.providers.const import OpenAIMessageKeys
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginSpecKeys,
     SAMPluginSpecPromptKeys,

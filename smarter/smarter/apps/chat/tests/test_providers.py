@@ -12,10 +12,10 @@ from smarter.apps.chat.providers.metaai.classes import MetaAIChatProvider
 from smarter.apps.chat.providers.metaai.const import (
     PROVIDER_NAME as METAAI_PROVIDER_NAME,
 )
-from smarter.apps.chat.providers.openai.classes import OpenAIChatProvider
-from smarter.apps.chat.providers.openai.const import (
+from smarter.apps.chat.providers.openai.classes import (
     PROVIDER_NAME as OPENAI_PROVIDER_NAME,
 )
+from smarter.apps.chat.providers.openai.classes import OpenAIChatProvider
 from smarter.apps.chat.providers.providers import chat_providers
 
 from .classes import ProviderBaseClass
@@ -33,24 +33,24 @@ class TestChatProviders(unittest.TestCase):
     def test_providers_name_readonly(self):
         """Test that chat provider names are read-only."""
         with self.assertRaises(AttributeError):
-            chat_providers.openai.name = "new_name"
+            chat_providers.openai.provider = "new_name"
 
         with self.assertRaises(AttributeError):
-            chat_providers.googleai.name = "new_name"
+            chat_providers.googleai.provider = "new_name"
 
         with self.assertRaises(AttributeError):
-            chat_providers.metaai.name = "new_name"
+            chat_providers.metaai.provider = "new_name"
 
     def test_providers_get_handler(self):
         """Test provider get_handler()."""
 
-        handler = chat_providers.get_handler(chat_providers.openai.name)
+        handler = chat_providers.get_handler(provider=chat_providers.openai.provider)
         self.assertIsInstance(handler, Callable)
 
-        handler = chat_providers.get_handler(chat_providers.googleai.name)
+        handler = chat_providers.get_handler(provider=chat_providers.googleai.provider)
         self.assertIsInstance(handler, Callable)
 
-        handler = chat_providers.get_handler(chat_providers.metaai.name)
+        handler = chat_providers.get_handler(provider=chat_providers.metaai.provider)
         self.assertIsInstance(handler, Callable)
 
         handler = chat_providers.get_handler()
@@ -70,7 +70,7 @@ class TestProviderGoogleai(ProviderBaseClass):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.provider = chat_providers.googleai.name
+        self.provider = chat_providers.googleai.provider
 
 
 class TestProviderMetaai(ProviderBaseClass):
@@ -78,7 +78,7 @@ class TestProviderMetaai(ProviderBaseClass):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.provider = chat_providers.metaai.name
+        self.provider = chat_providers.metaai.provider
 
 
 class TestProviderOpenai(ProviderBaseClass):
@@ -86,4 +86,4 @@ class TestProviderOpenai(ProviderBaseClass):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.provider = chat_providers.openai.name
+        self.provider = chat_providers.openai.provider

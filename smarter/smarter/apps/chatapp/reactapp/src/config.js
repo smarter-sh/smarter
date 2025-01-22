@@ -31,7 +31,9 @@ export async function fetchConfig() {
   */
   const session_key = getCookie(SESSION_COOKIE_NAME) || "";
   const csrftoken = getCookie(CSRF_COOKIE_NAME);
-  const debug_mode = getCookie(DEBUG_COOKIE_NAME) || false;
+  const debug_mode = getCookie(DEBUG_COOKIE_NAME) === 'true';
+
+  console.log('debug_mode:', debug_mode);
 
   const headers = {
     "Accept": "*/*",

@@ -5,11 +5,6 @@ Constants for the OpenAI provider.
 import openai
 
 
-BASE_URL = "https://api.openai.com/v1/"  # don't forget the trailing slash
-PROVIDER_NAME = "openai"
-DEFAULT_MODEL = "gpt-4o-mini"
-
-
 # pylint: disable=too-few-public-methods
 class OpenAIObjectTypes:
     """V1 API Object Types (replace OpeanAIEndPoint)"""
@@ -48,10 +43,12 @@ class OpenAIMessageKeys:
 
     MESSAGE_ROLE_KEY = "role"
     MESSAGE_CONTENT_KEY = "content"
+    MESSAGE_NAME_KEY = "name"
 
     SYSTEM_MESSAGE_KEY = "system"
     ASSISTANT_MESSAGE_KEY = "assistant"
     USER_MESSAGE_KEY = "user"
+    TOOL_MESSAGE_KEY = "tool"
 
     SMARTER_MESSAGE_KEY = "smarter"
 
@@ -60,9 +57,10 @@ class OpenAIMessageKeys:
         SYSTEM_MESSAGE_KEY,
         ASSISTANT_MESSAGE_KEY,
         USER_MESSAGE_KEY,
+        TOOL_MESSAGE_KEY,
     ]
-    all_openai_roles = [SYSTEM_MESSAGE_KEY, ASSISTANT_MESSAGE_KEY, USER_MESSAGE_KEY]
-    all_roles = [SYSTEM_MESSAGE_KEY, ASSISTANT_MESSAGE_KEY, USER_MESSAGE_KEY, SMARTER_MESSAGE_KEY]
+    all_openai_roles = [SYSTEM_MESSAGE_KEY, ASSISTANT_MESSAGE_KEY, USER_MESSAGE_KEY, TOOL_MESSAGE_KEY]
+    all_roles = [SYSTEM_MESSAGE_KEY, ASSISTANT_MESSAGE_KEY, USER_MESSAGE_KEY, TOOL_MESSAGE_KEY, SMARTER_MESSAGE_KEY]
 
 
 class OpenAIRequestKeys:

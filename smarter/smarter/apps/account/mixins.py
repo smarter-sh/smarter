@@ -2,6 +2,7 @@
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import account_admin_user, account_for_user
+from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
 
@@ -22,6 +23,7 @@ class AccountMixin:
         user: UserType = None,
         account_number: str = None,
     ):
+        self.init()
         if account_number:
             SmarterValidator.validate_account_number(account_number)
             self._account = account or Account.objects.get(account_number=account_number)
@@ -40,6 +42,17 @@ class AccountMixin:
             self._account = account_for_user(self._user)
         return self._account
 
+    @account.setter
+    def account(self, account: Account):
+        self._account = account
+        if account and self._user:
+            try:
+                self._user_profile = UserProfile.objects.get(user=self.user, account=account)
+            except UserProfile.DoesNotExist as e:
+                raise SmarterBusinessRuleViolation(
+                    f"User {self._user} does not belong to the account {account.account_number}."
+                ) from e
+
     @property
     def user(self) -> UserType:
         if self._user:
@@ -49,6 +62,12 @@ class AccountMixin:
         elif self._account:
             self._user = account_admin_user(self.account)
         return self._user
+
+    @user.setter
+    def user(self, user: UserType):
+        self._user = user
+        self._account = account_for_user(user)
+        self._user_profile = None
 
     @property
     def user_profile(self) -> UserProfile:
@@ -68,3 +87,11 @@ class AccountMixin:
             user = account_admin_user(self.account)
             self._user_profile = UserProfile.objects.get(user=user, account=self.account)
         return self._user_profile
+
+    def init(self):
+        """
+        This method initializes the account and user properties.
+        """
+        self._account = None
+        self._user = None
+        self._user_profile = None
