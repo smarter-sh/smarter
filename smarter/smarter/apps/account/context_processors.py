@@ -24,7 +24,7 @@ def base(request):
         "account_authentication": {
             "login_url": settings.LOGIN_URL,
             "logout_url": "/logout/",
-            "forgot_password_url": "/account/password-reset-request/",
+            "forgot_password_url": "/dashboard/account/password-reset-request/",
         }
     }
     if request.user.is_authenticated:
