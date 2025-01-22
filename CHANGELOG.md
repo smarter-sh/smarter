@@ -1,3 +1,10 @@
+## [0.10.2](https://github.com/smarter-sh/smarter/compare/v0.10.1...v0.10.2) (2025-01-22)
+
+
+### Bug Fixes
+
+* broken plugins link ([99cc24d](https://github.com/smarter-sh/smarter/commit/99cc24d72a9abe881c000281e88333d69108bd8e))
+
 ## [0.10.1](https://github.com/smarter-sh/smarter/compare/v0.10.0...v0.10.1) (2025-01-22)
 
 
