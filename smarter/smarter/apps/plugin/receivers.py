@@ -4,10 +4,12 @@
 import json
 import logging
 
+import waffle
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 
+from smarter.common.const import SMARTER_WAFFLE_SWITCH_CHAT_LOGGING
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 
 from .models import (
@@ -86,13 +88,21 @@ def handle_plugin_called(sender, **kwargs):
     except (TypeError, json.JSONDecodeError):
         pass
 
-    logger.info(
-        "%s - %s inquiry_type: %s inquiry_return: %s",
-        formatted_text("plugin_called"),
-        plugin.name,
-        inquiry_type,
-        formatted_json(inquiry_return) if inquiry_return else None,
-    )
+    if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+        logger.info(
+            "%s - %s inquiry_type: %s inquiry_return: %s",
+            formatted_text("plugin_called"),
+            plugin.name,
+            inquiry_type,
+            formatted_json(inquiry_return) if inquiry_return else None,
+        )
+    else:
+        logger.info(
+            "%s - %s inquiry_type: %s",
+            formatted_text("plugin_called"),
+            plugin.name,
+            inquiry_type,
+        )
 
 
 @receiver(plugin_ready, dispatch_uid="plugin_ready")
@@ -137,39 +147,43 @@ def handle_plugin_selected(sender, **kwargs):
 
 
 @receiver(post_save, sender=PluginMeta)
-def handle_plugin_meta_created(sender, instance, **kwargs):
+def handle_plugin_meta_created(sender, instance, created, **kwargs):
 
-    logger.info("%s %s", formatted_text("PluginMeta() record created:"), instance.name)
+    if created:
+        logger.debug("%s %s", formatted_text("PluginMeta() record created:"), instance.name)
 
 
 @receiver(post_save, sender=PluginSelector)
-def handle_plugin_selector_created(sender, **kwargs):
+def handle_plugin_selector_created(sender, instance, created, **kwargs):
     """Handle plugin selector created signal."""
 
-    logger.info("%s", formatted_text("PluginSelector() record created."))
+    if created:
+        logger.debug("%s", formatted_text("PluginSelector() record created."))
 
 
 @receiver(post_save, sender=PluginPrompt)
-def handle_plugin_prompt_created(sender, **kwargs):
+def handle_plugin_prompt_created(sender, instance, created, **kwargs):
     """Handle plugin prompt created signal."""
 
-    logger.info("%s", formatted_text("PluginPrompt() record created."))
+    if created:
+        logger.debug("%s", formatted_text("PluginPrompt() record created."))
 
 
 @receiver(post_save, sender=PluginDataStatic)
-def handle_plugin_data_created(sender, **kwargs):
+def handle_plugin_data_created(sender, instance, created, **kwargs):
     """Handle plugin data created signal."""
 
-    logger.info("%s", formatted_text("PluginDataStatic() record created."))
+    if created:
+        logger.debug("%s", formatted_text("PluginDataStatic() record created."))
 
 
 @receiver(post_save, sender=PluginSelectorHistory)
-def handle_plugin_selector_history_created(sender, **kwargs):
+def handle_plugin_selector_history_created(sender, instance, created, **kwargs):
     """Handle plugin selector history created signal."""
 
-    plugin_selector_history = kwargs.get("instance")
-    logger.info(
-        "%s - %s",
-        formatted_text("PluginSelectorHistory() created"),
-        formatted_json(model_to_dict(plugin_selector_history)),
-    )
+    if created:
+        logger.debug(
+            "%s - %s",
+            formatted_text("PluginSelectorHistory() created"),
+            formatted_json(model_to_dict(instance)),
+        )

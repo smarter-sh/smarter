@@ -1,96 +1,88 @@
-# [0.9.0](https://github.com/smarter-sh/smarter/compare/v0.8.0...v0.9.0) (2025-01-14)
-
-
-### Bug Fixes
-
-* all docs paths should be relative to the ubuntu smarter_user home folder ([b7de813](https://github.com/smarter-sh/smarter/commit/b7de8139d0e02ccfe9d8778984539e43aaf86e22))
-* chatbot_requests_serializer is many=False ([419825d](https://github.com/smarter-sh/smarter/commit/419825d472afc50db69ffb0f793d95648dbd8f4c))
-* check whether user is authenticated before setting dashboard context ([b0f7d7a](https://github.com/smarter-sh/smarter/commit/b0f7d7a53d5eb51b8b9b508094394dc008907095))
-* clean messages on 2nd pass ([8e1ab22](https://github.com/smarter-sh/smarter/commit/8e1ab22a31cd015e137437852b3b0287977ff6f3))
-* developer doc paths ([b459d4d](https://github.com/smarter-sh/smarter/commit/b459d4d3ec248f300c5450f540d7947dff1f58b6))
-* developer doc paths ([8793dea](https://github.com/smarter-sh/smarter/commit/8793dea455b271b0af18d7ff97b7c4e3c083da83))
-* redirect to login page on 403 error ([b3f0240](https://github.com/smarter-sh/smarter/commit/b3f0240a3fa0ed4bd71cd66c8301f44b593ecd9d))
-* trouble shoot smarter dict first_iteration and second_iteration dicts ([2388b86](https://github.com/smarter-sh/smarter/commit/2388b8621b11fe853b325b71f4ee6b66793f0fac))
-* we only want the most recent batch of requests ([a90a4d8](https://github.com/smarter-sh/smarter/commit/a90a4d873dde0148345b54928f60db8a228e8e4d))
-
-
-### Features
-
-* add more smarter dashboard widgets ([a9d66f7](https://github.com/smarter-sh/smarter/commit/a9d66f78f2174e0a1c1c623eac1fd2cf40c1681b))
-* add smarter meta prompts for function calling and token charges ([357b576](https://github.com/smarter-sh/smarter/commit/357b576152809c1f6961e41ea67fec87f7c65513))
-* code dashboard widgets ([3967b7a](https://github.com/smarter-sh/smarter/commit/3967b7a15745dc9b87014ffbe7a54a4c23de1220))
-* create and style smarter dashboard widgets ([9d059e7](https://github.com/smarter-sh/smarter/commit/9d059e7a9b3e811e34451a69139c098b657aa50c))
-* ensure that message history is not duplicated ([7421540](https://github.com/smarter-sh/smarter/commit/74215406aa314f8843a8b8ce46456ed4eed9a092))
-* finesse component state management ([b9916b3](https://github.com/smarter-sh/smarter/commit/b9916b3727c3015304806d67455e82081fae864c))
-* get Console working with ChatApp config as a prop ([2c087c0](https://github.com/smarter-sh/smarter/commit/2c087c025d4a55b775f7cf1ffbb5e3c9aae176b6))
-
-# [0.8.0](https://github.com/smarter-sh/smarter/compare/v0.7.9...v0.8.0) (2025-01-12)
-
-
-### Bug Fixes
-
-* path to developer docs ([c7b9e74](https://github.com/smarter-sh/smarter/commit/c7b9e749b49b911d56d4d177c0d71fbd7c459faf))
-
-
-### Features
-
-* add ability to create a new chat session. ([0b749cc](https://github.com/smarter-sh/smarter/commit/0b749cc7696aece16e4a31c4eb66a5947b8dd272))
-* add context managed config to ChatApp ([b00845b](https://github.com/smarter-sh/smarter/commit/b00845b9b976136426ee6d2ee523b1badd9e9e50))
-* add custom styling for smarter message items ([3303476](https://github.com/smarter-sh/smarter/commit/3303476c6c9d88ca53751c9367b27403f95641ef))
-* add fontwesome state icons to app title ([ce1c37e](https://github.com/smarter-sh/smarter/commit/ce1c37e7c1a844eb9f29c82233bf50df8c2ae8ed))
-* code menu item click handler ([2d45979](https://github.com/smarter-sh/smarter/commit/2d45979fc4e456965f1c09169cad9e73dc5e20c3))
-* code state-based, formatted console output ([78a8e45](https://github.com/smarter-sh/smarter/commit/78a8e45b810a259db87d8d4571ad71652ca418d7))
-* create a react context for managing config inside of state ([05db6f0](https://github.com/smarter-sh/smarter/commit/05db6f0abbedad3107231a351b932d3e9fed8ae8))
-* scaffold new console output window pane ([f45e6c4](https://github.com/smarter-sh/smarter/commit/f45e6c437336891e477a74c3cffa7e148d37c522))
-* scaffold new console output window pane ([9eaec6b](https://github.com/smarter-sh/smarter/commit/9eaec6b64a86ed93579076fdf2952a2e0e8a8370))
-* scaffold tabbed window ([d58d25c](https://github.com/smarter-sh/smarter/commit/d58d25c7442317c1fa6f16d55f0d6210afcc65e0))
-* simulate an ubuntu pod shell environment ([4496107](https://github.com/smarter-sh/smarter/commit/4496107f083a14381dbfbcf5aaa1da250b675ebe))
-* style console window and make responsive ([19c1862](https://github.com/smarter-sh/smarter/commit/19c1862736e61aace68295e73e9fcd0cf568c03d))
-* style the console json log data ([a837dad](https://github.com/smarter-sh/smarter/commit/a837dad29aef70925c19c77685784fb47efb056c))
-* style the new log console ([98bf303](https://github.com/smarter-sh/smarter/commit/98bf303446f940667aa5ae6a09ad63ae9e940acc))
-* style the smarter system chat items ([680d4bc](https://github.com/smarter-sh/smarter/commit/680d4bc90d52bb7df2f832f536f44c0dfb93c338))
-
-## [0.7.9](https://github.com/smarter-sh/smarter/compare/v0.7.8...v0.7.9) (2025-01-09)
-
-
-### Bug Fixes
-
-* add chat_tool_call_history, chat_plugin_usage_history, chatbot_request_history ([2c07e4c](https://github.com/smarter-sh/smarter/commit/2c07e4c029402fd16bb303581d603a86231c8e31))
-* add session_key to PluginSelectorHistory ([10e903a](https://github.com/smarter-sh/smarter/commit/10e903a99f04602fc51fdb9541550b1b4d779447))
-* add session_key to PluginSelectorHistory ([96c2eef](https://github.com/smarter-sh/smarter/commit/96c2eef492da4f8b6732dbbd2ebcf7bd4a6e1b1a))
-* ChatHelper should return the entire chat object rather than only id ([523b8fe](https://github.com/smarter-sh/smarter/commit/523b8fef55fbe52d3dd8d4b20751bb0ee1e73bef))
-* finesse api error handling of ChatConfigView ([8850c4a](https://github.com/smarter-sh/smarter/commit/8850c4aab0d1f9cf5b19ae4c2d8f4318334e3467))
-
-## [0.7.8](https://github.com/smarter-sh/smarter/compare/v0.7.7...v0.7.8) (2025-01-09)
-
-
-### Bug Fixes
-
-* add remaining history tables to chatapp config ([dadb9bd](https://github.com/smarter-sh/smarter/commit/dadb9bd94a8d8ed96181254aeaaccca146ee9f42))
-
-## [0.7.7](https://github.com/smarter-sh/smarter/compare/v0.7.6...v0.7.7) (2025-01-08)
-
-
-### Bug Fixes
-
-* pod startup log dump ([e3d22ed](https://github.com/smarter-sh/smarter/commit/e3d22edf2f3d08b19f4e0c277dd09e1aa9714e55))
-
-## [0.7.6](https://github.com/smarter-sh/smarter/compare/v0.7.5...v0.7.6) (2025-01-08)
-
-
-### Bug Fixes
-
-* add SMARTER_WAFFLE_SWITCH_SUPPRESS_FOR_CHATBOTS, SMARTER_WAFFLE_SWITCH_CHATAPP_VIEW_LOGGING, SMARTER_WAFFLE_MANIFEST_LOGGING ([0bebf2f](https://github.com/smarter-sh/smarter/commit/0bebf2fe7b8fa9ed8a2436fdb25f33747878c5fc))
-* cleanup logger entries ([f550259](https://github.com/smarter-sh/smarter/commit/f5502598d52d193279365597e21880b4c0f56097))
-* cookie expirations ([f3f59f9](https://github.com/smarter-sh/smarter/commit/f3f59f9da0b0f0a85277c3e372a06ba94387af2a))
-* CSRF_COOKIE_DOMAIN ([ca7d611](https://github.com/smarter-sh/smarter/commit/ca7d611a7f7e682e523cd15912bf910d7c3fd405))
-* SMARTER_WAFFLE_REACTAPP_DEBUG_MODE ([efd7402](https://github.com/smarter-sh/smarter/commit/efd7402877c798ec224a953be36a3af4f09a7156))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.9.0](https://github.com/smarter-sh/smarter/compare/v0.8.0...v0.9.0) (2025-01-14)
+
+### Bug Fixes
+
+- all docs paths should be relative to the ubuntu smarter_user home folder ([b7de813](https://github.com/smarter-sh/smarter/commit/b7de8139d0e02ccfe9d8778984539e43aaf86e22))
+- chatbot_requests_serializer is many=False ([419825d](https://github.com/smarter-sh/smarter/commit/419825d472afc50db69ffb0f793d95648dbd8f4c))
+- check whether user is authenticated before setting dashboard context ([b0f7d7a](https://github.com/smarter-sh/smarter/commit/b0f7d7a53d5eb51b8b9b508094394dc008907095))
+- clean messages on 2nd pass ([8e1ab22](https://github.com/smarter-sh/smarter/commit/8e1ab22a31cd015e137437852b3b0287977ff6f3))
+- developer doc paths ([b459d4d](https://github.com/smarter-sh/smarter/commit/b459d4d3ec248f300c5450f540d7947dff1f58b6))
+- developer doc paths ([8793dea](https://github.com/smarter-sh/smarter/commit/8793dea455b271b0af18d7ff97b7c4e3c083da83))
+- redirect to login page on 403 error ([b3f0240](https://github.com/smarter-sh/smarter/commit/b3f0240a3fa0ed4bd71cd66c8301f44b593ecd9d))
+- trouble shoot smarter dict first_iteration and second_iteration dicts ([2388b86](https://github.com/smarter-sh/smarter/commit/2388b8621b11fe853b325b71f4ee6b66793f0fac))
+- we only want the most recent batch of requests ([a90a4d8](https://github.com/smarter-sh/smarter/commit/a90a4d873dde0148345b54928f60db8a228e8e4d))
+
+### Features
+
+- add more smarter dashboard widgets ([a9d66f7](https://github.com/smarter-sh/smarter/commit/a9d66f78f2174e0a1c1c623eac1fd2cf40c1681b))
+- add smarter meta prompts for function calling and token charges ([357b576](https://github.com/smarter-sh/smarter/commit/357b576152809c1f6961e41ea67fec87f7c65513))
+- code dashboard widgets ([3967b7a](https://github.com/smarter-sh/smarter/commit/3967b7a15745dc9b87014ffbe7a54a4c23de1220))
+- create and style smarter dashboard widgets ([9d059e7](https://github.com/smarter-sh/smarter/commit/9d059e7a9b3e811e34451a69139c098b657aa50c))
+- ensure that message history is not duplicated ([7421540](https://github.com/smarter-sh/smarter/commit/74215406aa314f8843a8b8ce46456ed4eed9a092))
+- finesse component state management ([b9916b3](https://github.com/smarter-sh/smarter/commit/b9916b3727c3015304806d67455e82081fae864c))
+- get Console working with ChatApp config as a prop ([2c087c0](https://github.com/smarter-sh/smarter/commit/2c087c025d4a55b775f7cf1ffbb5e3c9aae176b6))
+
+## [0.8.0](https://github.com/smarter-sh/smarter/compare/v0.7.9...v0.8.0) (2025-01-12)
+
+### Bug Fixes
+
+- path to developer docs ([c7b9e74](https://github.com/smarter-sh/smarter/commit/c7b9e749b49b911d56d4d177c0d71fbd7c459faf))
+
+### Features
+
+- add ability to create a new chat session. ([0b749cc](https://github.com/smarter-sh/smarter/commit/0b749cc7696aece16e4a31c4eb66a5947b8dd272))
+- add context managed config to ChatApp ([b00845b](https://github.com/smarter-sh/smarter/commit/b00845b9b976136426ee6d2ee523b1badd9e9e50))
+- add custom styling for smarter message items ([3303476](https://github.com/smarter-sh/smarter/commit/3303476c6c9d88ca53751c9367b27403f95641ef))
+- add fontwesome state icons to app title ([ce1c37e](https://github.com/smarter-sh/smarter/commit/ce1c37e7c1a844eb9f29c82233bf50df8c2ae8ed))
+- code menu item click handler ([2d45979](https://github.com/smarter-sh/smarter/commit/2d45979fc4e456965f1c09169cad9e73dc5e20c3))
+- code state-based, formatted console output ([78a8e45](https://github.com/smarter-sh/smarter/commit/78a8e45b810a259db87d8d4571ad71652ca418d7))
+- create a react context for managing config inside of state ([05db6f0](https://github.com/smarter-sh/smarter/commit/05db6f0abbedad3107231a351b932d3e9fed8ae8))
+- scaffold new console output window pane ([f45e6c4](https://github.com/smarter-sh/smarter/commit/f45e6c437336891e477a74c3cffa7e148d37c522))
+- scaffold new console output window pane ([9eaec6b](https://github.com/smarter-sh/smarter/commit/9eaec6b64a86ed93579076fdf2952a2e0e8a8370))
+- scaffold tabbed window ([d58d25c](https://github.com/smarter-sh/smarter/commit/d58d25c7442317c1fa6f16d55f0d6210afcc65e0))
+- simulate an ubuntu pod shell environment ([4496107](https://github.com/smarter-sh/smarter/commit/4496107f083a14381dbfbcf5aaa1da250b675ebe))
+- style console window and make responsive ([19c1862](https://github.com/smarter-sh/smarter/commit/19c1862736e61aace68295e73e9fcd0cf568c03d))
+- style the console json log data ([a837dad](https://github.com/smarter-sh/smarter/commit/a837dad29aef70925c19c77685784fb47efb056c))
+- style the new log console ([98bf303](https://github.com/smarter-sh/smarter/commit/98bf303446f940667aa5ae6a09ad63ae9e940acc))
+- style the smarter system chat items ([680d4bc](https://github.com/smarter-sh/smarter/commit/680d4bc90d52bb7df2f832f536f44c0dfb93c338))
+
+## [0.7.9](https://github.com/smarter-sh/smarter/compare/v0.7.8...v0.7.9) (2025-01-09)
+
+### Bug Fixes
+
+- add chat_tool_call_history, chat_plugin_usage_history, chatbot_request_history ([2c07e4c](https://github.com/smarter-sh/smarter/commit/2c07e4c029402fd16bb303581d603a86231c8e31))
+- add session_key to PluginSelectorHistory ([10e903a](https://github.com/smarter-sh/smarter/commit/10e903a99f04602fc51fdb9541550b1b4d779447))
+- add session_key to PluginSelectorHistory ([96c2eef](https://github.com/smarter-sh/smarter/commit/96c2eef492da4f8b6732dbbd2ebcf7bd4a6e1b1a))
+- ChatHelper should return the entire chat object rather than only id ([523b8fe](https://github.com/smarter-sh/smarter/commit/523b8fef55fbe52d3dd8d4b20751bb0ee1e73bef))
+- finesse api error handling of ChatConfigView ([8850c4a](https://github.com/smarter-sh/smarter/commit/8850c4aab0d1f9cf5b19ae4c2d8f4318334e3467))
+
+## [0.7.8](https://github.com/smarter-sh/smarter/compare/v0.7.7...v0.7.8) (2025-01-09)
+
+### Bug Fixes
+
+- add remaining history tables to chatapp config ([dadb9bd](https://github.com/smarter-sh/smarter/commit/dadb9bd94a8d8ed96181254aeaaccca146ee9f42))
+
+## [0.7.7](https://github.com/smarter-sh/smarter/compare/v0.7.6...v0.7.7) (2025-01-08)
+
+### Bug Fixes
+
+- pod startup log dump ([e3d22ed](https://github.com/smarter-sh/smarter/commit/e3d22edf2f3d08b19f4e0c277dd09e1aa9714e55))
+
+## [0.7.6](https://github.com/smarter-sh/smarter/compare/v0.7.5...v0.7.6) (2025-01-08)
+
+### Bug Fixes
+
+- add SMARTER_WAFFLE_SWITCH_SUPPRESS_FOR_CHATBOTS, SMARTER_WAFFLE_SWITCH_CHATAPP_VIEW_LOGGING, SMARTER_WAFFLE_MANIFEST_LOGGING ([0bebf2f](https://github.com/smarter-sh/smarter/commit/0bebf2fe7b8fa9ed8a2436fdb25f33747878c5fc))
+- cleanup logger entries ([f550259](https://github.com/smarter-sh/smarter/commit/f5502598d52d193279365597e21880b4c0f56097))
+- cookie expirations ([f3f59f9](https://github.com/smarter-sh/smarter/commit/f3f59f9da0b0f0a85277c3e372a06ba94387af2a))
+- CSRF_COOKIE_DOMAIN ([ca7d611](https://github.com/smarter-sh/smarter/commit/ca7d611a7f7e682e523cd15912bf910d7c3fd405))
+- SMARTER_WAFFLE_REACTAPP_DEBUG_MODE ([efd7402](https://github.com/smarter-sh/smarter/commit/efd7402877c798ec224a953be36a3af4f09a7156))
 
 ## [0.7.5](https://github.com/smarter-sh/smarter/compare/v0.7.4...v0.7.5) (2025-01-08)
 
@@ -145,7 +137,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Bug Fixes
 
 - add chat llm providers for MetaAI and GoogleAI
-- refactor: create a ChatProviderBase abstract base class and a default…
+- refactor: create a OpenAICompatibleChatProvider abstract base class and a default…
 - refactor Dockerfile and docker-compose.yml to build and run as non-root user
 - refactor build/deploy workflows
 - add LinkedIn oauth configuration

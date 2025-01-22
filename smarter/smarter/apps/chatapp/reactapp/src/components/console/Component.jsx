@@ -22,7 +22,6 @@ function Console({ config }) {
   const [chatToolCallHistory, setChatToolCallHistory] = useState();
   const [chatPluginUsageHistory, setChatPluginUsageHistory] = useState();
   const [chatbotRequestHistory, setChatbotRequestHistory] = useState();
-  const [pluginSelectorHistory, setPluginSelectorHistory] = useState();
 
   const [selectedMenuItem, setSelectedMenuItem] = useState("chat_config");
 
@@ -43,7 +42,6 @@ function Console({ config }) {
       setChatToolCallHistory(config.history?.chat_tool_call_history || []);
       setChatPluginUsageHistory(config.history?.chat_plugin_usage_history || []);
       setChatbotRequestHistory(config.history?.chatbot_request_history || []);
-      setPluginSelectorHistory(config.history?.plugin_selector_history || []);
 
       const newConsoleText = Array.isArray(config) ? config : [config] || [{}];
       setConsoleText(newConsoleText);
@@ -78,9 +76,6 @@ function Console({ config }) {
           break;
         case "chatbot_request_history":
           newData = chatbotRequestHistory || newData;
-          break;
-        case "plugin_selector_history":
-          newData = pluginSelectorHistory || newData;
           break;
       }
       setSelectedMenuItem(id);
@@ -126,7 +121,6 @@ function Console({ config }) {
         <ul className="nav flex-wrap border-transparent">
           <ConsoleNavItem label="Config" id="chat_config" />
           <ConsoleNavItem label="Api Calls" id="chatbot_request_history" />
-          <ConsoleNavItem label="Plugin Selectors" id="plugin_selector_history" />
           <ConsoleNavItem label="Tool Calls" id="chat_tool_call_history" />
           <ConsoleNavItem label="Plugin Usage" id="chat_plugin_usage_history" />
         </ul>

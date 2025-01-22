@@ -10,10 +10,6 @@
 
 -r base.txt
 
-# python stuff
-# ------------
-setuptools==75.5.0
-
 # tests
 # ------------
 pytest==8.3.4

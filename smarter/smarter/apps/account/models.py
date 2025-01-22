@@ -1,11 +1,17 @@
 """Account models."""
 
+# pylint: disable=missing-class-docstring
+
 import logging
 import os
 import random
 
+from django.conf import settings
 from django.core.validators import RegexValidator
 from django.db import models
+from django.template.loader import render_to_string
+
+from smarter.common.conf import settings as smarter_settings
 
 # our stuff
 from smarter.common.exceptions import SmarterValueError
@@ -14,12 +20,53 @@ from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
 
-from .const import CHARGE_TYPE_PLUGIN, CHARGE_TYPE_PROMPT_COMPLETION, CHARGE_TYPE_TOOL
 from .signals import new_charge_created, new_user_created
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 logger = logging.getLogger(__name__)
+
+CHARGE_TYPE_PROMPT_COMPLETION = "completion"
+CHARGE_TYPE_PLUGIN = "plugin"
+CHARGE_TYPE_TOOL = "tool"
+
+CHARGE_TYPES = [
+    (CHARGE_TYPE_PROMPT_COMPLETION, "Prompt Completion"),
+    (CHARGE_TYPE_PLUGIN, "Plugin"),
+    (CHARGE_TYPE_TOOL, "Tool"),
+]
+
+PROVIDER_OPENAI = "openai"
+PROVIDER_METAAI = "metaai"
+PROVIDER_GOOGLEAI = "googleai"
+
+PROVIDERS = [
+    (PROVIDER_OPENAI, "OpenAI"),
+    (PROVIDER_METAAI, "Meta AI"),
+    (PROVIDER_GOOGLEAI, "Google AI"),
+]
+
+
+def welcome_email_context(first_name: str) -> dict:
+    """
+    Return the context for the welcome email template.
+    templates/account/email/welcome.html
+    """
+
+    first_name = first_name.capitalize()
+    return {
+        "base_url": smarter_settings.environment_url,
+        "first_name": first_name,
+        "corporate_name": settings.SMARTER_BRANDING_CORPORATE_NAME,
+        "support_phone": settings.SMARTER_BRANDING_SUPPORT_PHONE_NUMBER,
+        "support_email": settings.SMARTER_BRANDING_SUPPORT_EMAIL,
+        "contact_address": settings.SMARTER_BRANDING_ADDRESS,
+        "contact_url": settings.SMARTER_BRANDING_CONTACT,
+        "office_hours": settings.SMARTER_BRANDING_SUPPORT_HOURS,
+        "facebook_url": settings.SMARTER_BRANDING_URL_FACEBOOK,
+        "twitter_url": settings.SMARTER_BRANDING_URL_TWITTER,
+        "linkedin_url": settings.SMARTER_BRANDING_URL_LINKEDIN,
+    }
 
 
 class Account(TimestampedModel):
@@ -31,19 +78,19 @@ class Account(TimestampedModel):
     )
 
     account_number = models.CharField(
-        validators=[account_number_format], max_length=255, unique=True, default="default_value"
+        validators=[account_number_format], max_length=255, unique=True, default="9999-9999-9999", blank=True, null=True
     )
     company_name = models.CharField(max_length=255)
-    phone_number = models.CharField(max_length=50)
-    address1 = models.CharField(max_length=255)
-    address2 = models.CharField(max_length=255)
-    city = models.CharField(max_length=255)
-    state = models.CharField(max_length=255)
-    postal_code = models.CharField(max_length=20)
-    country = models.CharField(max_length=255)
-    language = models.CharField(max_length=255)
-    timezone = models.CharField(max_length=255)
-    currency = models.CharField(max_length=255)
+    phone_number = models.CharField(max_length=50, blank=True, null=True)
+    address1 = models.CharField(max_length=255, blank=True, null=True)
+    address2 = models.CharField(max_length=255, blank=True, null=True)
+    city = models.CharField(max_length=255, blank=True, null=True)
+    state = models.CharField(max_length=255, blank=True, null=True)
+    postal_code = models.CharField(max_length=20, blank=True, null=True)
+    country = models.CharField(max_length=255, default="USA", blank=True, null=True)
+    language = models.CharField(max_length=255, default="EN", blank=True, null=True)
+    timezone = models.CharField(max_length=255, blank=True, null=True)
+    currency = models.CharField(max_length=255, default="USD", blank=True, null=True)
 
     @classmethod
     def randomized_account_number(cls):
@@ -68,7 +115,7 @@ class Account(TimestampedModel):
         return account_number
 
     def save(self, *args, **kwargs):
-        if self.account_number == "default_value":
+        if self.account_number == "9999-9999-9999":
             self.account_number = self.randomized_account_number()
         SmarterValidator.validate_account_number(self.account_number)
         super().save(*args, **kwargs)
@@ -121,9 +168,8 @@ class AccountContact(TimestampedModel):
 
     def send_welcome_email(self) -> None:
         """Send a welcome email to the contact."""
-        template_path = os.path.join(HERE, "./assets/html/welcome.html")
-        with open(template_path, encoding="utf-8") as welcome_email_template:
-            html_template = welcome_email_template.read()
+        context = welcome_email_context(first_name=self.first_name)
+        html_template = render_to_string("account/email/welcome.html", context)
 
         subject = "Welcome to Smarter!"
         body = html_template
@@ -252,17 +298,41 @@ class PaymentMethod(TimestampedModel):
         return self.card_type + " " + self.card_last_4
 
 
+class LLMPrices(TimestampedModel):
+    """
+    LLM Price model for account billing.
+    Stores markup factors to be used proportionately
+    across the universe of billed entities.
+
+    example:
+    Provider A bills us $x during a billing period.
+    In turn, we bill each Account $x * markup_factor * their proportional
+    usage of provider A.
+    """
+
+    charge_type = models.CharField(max_length=20)
+    provider = models.CharField(max_length=255)
+    model = models.CharField(max_length=255)
+    price = models.DecimalField(max_digits=10, decimal_places=6)
+
+    class Meta:
+        unique_together = ("charge_type", "provider", "model")
+
+    def __str__(self):
+        return f"{self.charge_type} - {self.provider} - {self.model} - {self.price}"
+
+
 class Charge(TimestampedModel):
     """Charge model for periodic account billing."""
 
-    CHARGE_TYPES = [
-        (CHARGE_TYPE_PROMPT_COMPLETION, "Prompt Completion"),
-        (CHARGE_TYPE_PLUGIN, "Plugin"),
-        (CHARGE_TYPE_TOOL, "Tool"),
-    ]
-
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="charge")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="charge")
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="charge", null=False, blank=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="charge", null=False, blank=False)
+    session_key = models.CharField(max_length=255, null=True, blank=True)
+    provider = models.CharField(
+        max_length=255,
+        choices=PROVIDERS,
+        default=PROVIDER_OPENAI,
+    )
     charge_type = models.CharField(
         max_length=20,
         choices=CHARGE_TYPES,
@@ -277,9 +347,6 @@ class Charge(TimestampedModel):
     def save(self, *args, **kwargs):
         is_new = self.pk is None
 
-        if self.user is None or self.account is None:
-            raise SmarterValueError("User and Account cannot be null")
-
         super().save(*args, **kwargs)
         if is_new:
             logger.debug(
@@ -288,4 +355,31 @@ class Charge(TimestampedModel):
             new_charge_created.send(sender=self.__class__, charge=self)
 
     def __str__(self):
-        return str(self.id) + " - " + self.model + " - " + self.total_tokens
+        return f"""{self.account.account_number} - {self.user.email} - {self.provider} - {self.charge_type} - {self.total_tokens}"""
+
+
+class DailyBillingRecord(TimestampedModel):
+    """Daily billing record model for aggregated charges."""
+
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="daily_billing_records")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="daily_billing_records")
+    provider = models.CharField(
+        max_length=255,
+        choices=PROVIDERS,
+    )
+    date = models.DateField()
+    charge_type = models.CharField(
+        max_length=20,
+        choices=CHARGE_TYPES,
+    )
+    prompt_tokens = models.IntegerField()
+    completion_tokens = models.IntegerField()
+    total_tokens = models.IntegerField()
+
+    class Meta:
+        unique_together = ("account", "user", "provider", "date")
+
+    def __str__(self):
+        return (
+            f"{self.account.account_number} - {self.user.email} - {self.provider} - {self.date} - {self.total_tokens}"
+        )

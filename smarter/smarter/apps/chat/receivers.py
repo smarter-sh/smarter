@@ -1,247 +1,229 @@
 """Django Signal Receivers for chat app."""
 
-# pylint: disable=W0613,C0115
+# pylint: disable=W0612,W0613,C0115
 import logging
 
+import waffle
 from django.db.models.signals import post_save
-from django.db.utils import Error as DjangoDbError
 from django.dispatch import receiver
 
-from smarter.common.helpers.console_helpers import (
-    formatted_json,
-    formatted_text,
-    formatted_text_green,
-)
+from smarter.apps.plugin.models import PluginMeta
+from smarter.common.const import SMARTER_WAFFLE_SWITCH_CHAT_LOGGING
+from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 
-from .models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall, PluginMeta
-from .providers.openai.const import (
-    OpenAIMessageKeys,
-    OpenAIRequestKeys,
-    OpenAIResponseChoices,
-    OpenAIResponseChoicesMessage,
-    OpenAIResponseKeys,
-)
+from .models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
 from .signals import (
-    chat_completion_called,
-    chat_completion_plugin_selected,
-    chat_completion_tool_call_created,
+    chat_completion_plugin_called,
+    chat_completion_request,
+    chat_completion_response,
+    chat_completion_tool_called,
+    chat_finished,
     chat_handler_console_output,
-    chat_invoked,
     chat_provider_initialized,
     chat_response_failure,
-    chat_response_success,
+    chat_started,
+)
+from .tasks import (
+    create_chat_history,
+    create_chat_plugin_usage,
+    create_chat_tool_call_history,
 )
 
 
 logger = logging.getLogger(__name__)
 
 
-@receiver(chat_invoked, dispatch_uid="chat_invoked")
-def handle_chat_invoked(sender, **kwargs):
-    """Handle chat invoked signal."""
+def get_sender_name(sender):
+    return f"{sender.__self__.__class__.__name__}.{sender.__name__}({id(sender)})"
+
+
+@receiver(chat_started, dispatch_uid="chat_started")
+def handle_chat_started(sender, **kwargs):
+    """Handle chat started signal."""
 
     chat: Chat = kwargs.get("chat")
-
     data = kwargs.get("data")
 
+    sender_name = get_sender_name(sender)
     logger.info(
-        "%s for chat %s with data: %s",
-        formatted_text("chat_invoked"),
+        "signal received from %s %s for chat %s",
+        sender_name,
+        formatted_text("chat_started"),
         chat,
-        formatted_json(data),
     )
 
 
-@receiver(chat_completion_called, dispatch_uid="chat_completion_called")
-def handle_chat_completion_called(sender, **kwargs):
-    """Handle chat completion called signal."""
+@receiver(chat_completion_request, dispatch_uid="chat_completion_request")
+def handle_chat_completion_request_sent(sender, **kwargs):
+    """Handle chat completion request sent signal."""
 
     chat: Chat = kwargs.get("chat")
     iteration: int = kwargs.get("iteration")
     request: dict = kwargs.get("request")
-    response: dict = kwargs.get("response")
+    sender_name = get_sender_name(sender)
+    prefix = formatted_text(f"chat_completion_request for iteration {iteration}")
 
     logger.info(
-        "%s for chat: %s \nrequest: %s \nresponse: %s",
-        formatted_text(f"chat_completion_called for iteration {iteration}"),
+        "signal received from %s %s for chat: %s ",
+        sender_name,
+        prefix,
         chat,
-        formatted_json(request),
-        formatted_json(response),
     )
 
-    # mcdaniel: add the most recent response to the messages list
-    # so that the chatbot can display the most recent response
-    # to the user.
-    if response:
-        message: dict = None
-        response_choices = response.get(OpenAIResponseKeys.CHOICES_KEY)
-        if response_choices and isinstance(response_choices, list):
-            for choice in response_choices:
-                finish_reason = choice.get(OpenAIResponseChoices.FINISH_REASON_KEY, "")
-                message = choice.get(OpenAIResponseChoices.MESSAGE_KEY, {})
-                if finish_reason == OpenAIResponseChoicesMessage.TOOL_CALLS_KEY:
-                    logger.info(formatted_text_green("Tool calls detected in response."))
-                    tool_calls = message.get(OpenAIResponseChoicesMessage.TOOL_CALLS_KEY)
-                    for tool_call in tool_calls:
-                        function = tool_call.get("function")
-                        function_name = function.get("name")
-                        function_args = function.get("arguments", "")
-                        tool_called = {
-                            OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SMARTER_MESSAGE_KEY,
-                            OpenAIMessageKeys.MESSAGE_CONTENT_KEY: f"Tool call: {function_name}({function_args})",
-                        }
-                        request[OpenAIRequestKeys.MESSAGES_KEY].append(tool_called)
-                        logger.info("Added tool call to messages: %s", tool_called)
-
-    chat_history = ChatHistory(
-        chat=chat,
-        request=request,
-        response=response,
-    )
-    try:
-        chat_history.save()
-    except DjangoDbError as exc:
-        logger.error("Error saving chat history: %s", exc)
+    if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+        logger.info(
+            "%s for chat %s, \nrequest: %s",
+            formatted_text("chat_completion_request"),
+            chat,
+            formatted_json(request),
+        )
+    else:
+        logger.info(
+            "%s for chat: %s",
+            prefix,
+            chat,
+        )
 
 
-# pylint: disable=W0612
-
-
-@receiver(chat_completion_tool_call_created, dispatch_uid="chat_completion_tool_call_created")
-def handle_chat_completion_tool_call_created(sender, **kwargs):
-    """Handle chat completion tool call signal."""
+@receiver(chat_completion_response, dispatch_uid="chat_completion_response")
+def handle_chat_completion_response_received(sender, **kwargs):
+    """Handle chat completion called signal."""
 
     chat: Chat = kwargs.get("chat")
-    tool_calls: list[dict] = kwargs.get("tool_calls")
+    chat_id = chat.id if chat else None
+    iteration: int = kwargs.get("iteration")
     request: dict = kwargs.get("request")
     response: dict = kwargs.get("response")
+    messages: list[dict] = kwargs.get("messages")
+    prefix = formatted_text(f"chat_completion_response for iteration {iteration}")
+    sender_name = get_sender_name(sender)
 
-    for tool_call in tool_calls:
-        plugin_meta: PluginMeta = tool_call.get("plugin_meta")
-        function_name: str = tool_call.get("function_name")
-        function_args: str = tool_call.get("function_args")
+    if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+        logger.info(
+            "signal received from %s %s for chat %s, \nrequest: %s, \nresponse: %s",
+            sender_name,
+            formatted_text("chat_completion_response"),
+            chat,
+            formatted_json(request),
+            formatted_json(response),
+        )
+    else:
+        logger.info(
+            "%s for chat %s",
+            formatted_text("chat_completion_response"),
+            chat,
+        )
 
-        try:
-            ChatToolCall(
-                chat=chat,
-                plugin=plugin_meta,
-                function_name=function_name,
-                function_args=function_args,
-                request=request,
-                response=response,
-            ).save()
-        except DjangoDbError as exc:
-            logger.error("Error saving chat tool call: %s", exc)
 
-
-@receiver(chat_completion_plugin_selected, dispatch_uid="chat_completion_plugin_selected")
-def handle_chat_completion_plugin_selected(sender, **kwargs):
-    """Handle plugin selected signal."""
-
-    plugin: PluginMeta = kwargs.get("plugin")
+@receiver(chat_completion_plugin_called, dispatch_uid="chat_completion_plugin_called")
+def handle_chat_completion_plugin_called(sender, **kwargs):
+    """Handle chat completion plugin call signal."""
     chat: Chat = kwargs.get("chat")
-    input_text = kwargs.get("input_text")
+    plugin: PluginMeta = kwargs.get("plugin")
+    input_text: str = kwargs.get("input_text")
+    sender_name = get_sender_name(sender)
 
     logger.info(
-        "%s for chat %s, plugin: %s, input_text: %s",
-        formatted_text("chat_completion_plugin_selected"),
+        "signal received from %s %s for chat %s, \nplugin: %s, \ninput_text: %s",
+        sender_name,
+        formatted_text("chat_completion_plugin_called"),
         chat,
         plugin,
         input_text,
     )
+    create_chat_plugin_usage.delay(chat_id=chat.id, plugin_id=plugin.id, input_text=input_text)
 
-    plugin_selection_history = ChatPluginUsage(
-        plugin=plugin,
-        chat=chat,
-        input_text=input_text,
+
+@receiver(chat_completion_tool_called, dispatch_uid="chat_completion_tool_called")
+def handle_chat_completion_tool_called(sender, **kwargs):
+    """Handle chat completion tool call signal."""
+
+    chat: Chat = kwargs.get("chat")
+    chat_id = chat.id if chat else None
+    plugin_meta_id = None
+    function_name: str = kwargs.get("function_name")
+    function_args: str = kwargs.get("function_args")
+    request: dict = kwargs.get("request")
+    response: dict = kwargs.get("response")
+    prefix = formatted_text("handle_chat_completion_tool_called()")
+    sender_name = get_sender_name(sender)
+
+    logger.info(
+        "signal received from %s %s for chat: %s",
+        sender_name,
+        prefix,
+        chat_id,
     )
 
-    try:
-        plugin_selection_history.save()
-    except DjangoDbError as exc:
-        logger.error("Error saving plugin usage: %s", exc)
+    create_chat_tool_call_history.delay(chat_id, plugin_meta_id, function_name, function_args, request, response)
 
 
 # pylint: disable=W0612
-@receiver(chat_response_success, dispatch_uid="chat_response_success")
+@receiver(chat_finished, dispatch_uid="chat_finished")
 def handle_chat_response_success(sender, **kwargs):
     """Handle chat completion returned signal."""
 
     chat: Chat = kwargs.get("chat")
     request: dict = kwargs.get("request")
     response: dict = kwargs.get("response")
+    messages: list[dict] = kwargs.get("messages")
+    sender_name = get_sender_name(sender)
 
-    # mcdaniel: add the most recent response to the messages list
-    # so that the chatbot can display the most recent response
-    # to the user.
-    # mcdaniel jan-2025: DEPRECATED: this is no longer needed as the
-    # if response:
-    #     content: str = None
-    #     message: dict = None
-    #     response_choices = response.get(OpenAIResponseKeys.CHOICES_KEY)
-    #     if response_choices and isinstance(response_choices, list):
-    #         for choice in response_choices:
-    #             finish_reason = choice.get(OpenAIResponseChoices.FINISH_REASON_KEY, "")
-    #             message = choice.get(OpenAIResponseChoices.MESSAGE_KEY, {})
-    #             if finish_reason == "stop":
-    #                 logger.info("Stop detected in response.")
-    #                 content = message.get(OpenAIMessageKeys.MESSAGE_CONTENT_KEY)
-    #                 role = message.get(OpenAIMessageKeys.MESSAGE_ROLE_KEY)
-    #                 assistant_message = {
-    #                     OpenAIMessageKeys.MESSAGE_ROLE_KEY: role,
-    #                     OpenAIMessageKeys.MESSAGE_CONTENT_KEY: content,
-    #                 }
-    #                 request[OpenAIRequestKeys.MESSAGES_KEY].append(assistant_message)
-    #                 logger.info("Added assistant response to messages.")
-
-    try:
-        ChatHistory(
-            chat=chat,
-            request=request,
-            response=response,
-        ).save()
-    except DjangoDbError as exc:
-        logger.error("Error saving chat history: %s", exc)
-
-    logger.info(
-        "%s for chat %s, \nrequest: %s, \nresponse: %s",
-        formatted_text("chat_response_success"),
-        chat,
-        formatted_json(request),
-        formatted_json(response),
-    )
+    if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+        logger.info(
+            "signal received from %s %s for chat %s, \nrequest: %s, \nresponse: %s",
+            sender_name,
+            formatted_text("chat_finished"),
+            chat,
+            formatted_json(request),
+            formatted_json(response),
+        )
+    else:
+        logger.info(
+            "signal received from %s %s for chat %s",
+            sender_name,
+            formatted_text("chat_finished"),
+            chat,
+        )
+    create_chat_history.delay(chat.id, request, response, messages)
 
 
 @receiver(chat_response_failure, dispatch_uid="chat_response_failure")
 def handle_chat_response_failure(sender, **kwargs):
     """Handle chat completion failed signal."""
 
+    iteration: int = kwargs.get("iteration")
     exception = kwargs.get("exception")
     chat: Chat = kwargs.get("chat")
     request_meta_data = kwargs.get("request_meta_data")
-    first_response = kwargs.get("first_response")
-    second_response = kwargs.get("second_response")
+    first_iteration = kwargs.get("first_iteration")
+    second_iteration = kwargs.get("second_iteration")
+    messages = kwargs.get("messages")
+    sender_name = get_sender_name(sender)
 
-    logger.info(
-        "%s for chat: %s, request_meta_data: %s, exception: %s",
+    logger.error(
+        "%s signal received from %s during iteration %s for chat: %s, request_meta_data: %s, exception: %s",
         formatted_text("chat_response_failure"),
+        sender_name,
+        iteration,
         chat if chat else None,
         formatted_json(request_meta_data),
         exception,
     )
-    if first_response:
-        logger.info(
-            "%s for chat: %s, first_response: %s",
-            formatted_text("chat_response_dump"),
+    logger.error("chat_response_failure %s %s", formatted_text("messages dump:"), formatted_json(messages))
+    if iteration == 1 and first_iteration:
+        logger.error(
+            "%s for chat: %s, first_iteration: %s",
+            formatted_text("dump"),
             chat if chat else None,
-            formatted_json(first_response),
+            formatted_json(first_iteration),
         )
-    if second_response:
-        logger.info(
-            "%s for chat: %s, second_response: %s",
-            formatted_text("chat_response_dump"),
+    if iteration == 2 and second_iteration:
+        logger.error(
+            "%s for chat: %s, second_iteration: %s",
+            formatted_text("dump"),
             chat if chat else None,
-            formatted_json(second_response),
+            formatted_json(second_iteration),
         )
 
 
@@ -255,7 +237,7 @@ def handle_chat_provider_initialized(sender, **kwargs):
     logger.info(
         "%s with name: %s, base_url: %s",
         formatted_text(f"{sender.__class__.__name__}() initialized"),
-        sender.name,
+        sender.provider,
         sender.base_url,
     )
 
@@ -284,25 +266,25 @@ def handle_chat_handler_console_output(sender, **kwargs):
 def handle_chat_post_save(sender, instance, created, **kwargs):
 
     if created:
-        logger.info("%s", formatted_text("Chat() record created."))
+        logger.debug("%s", formatted_text("Chat() record created."))
 
 
 @receiver(post_save, sender=ChatHistory)
 def handle_chat_history_post_save(sender, instance, created, **kwargs):
 
     if created:
-        logger.info("%s", formatted_text("ChatHistory() record created."))
+        logger.debug("%s", formatted_text("ChatHistory() record created."))
 
 
 @receiver(post_save, sender=ChatToolCall)
 def handle_chat_tool_call_post_save(sender, instance, created, **kwargs):
 
     if created:
-        logger.info("%s", formatted_text("ChatToolCall() record created."))
+        logger.debug("%s", formatted_text("ChatToolCall() record created."))
 
 
 @receiver(post_save, sender=ChatPluginUsage)
 def handle_chat_plugin_usage_post_save(sender, instance, created, **kwargs):
 
     if created:
-        logger.info("%s", formatted_text("ChatPluginUsage() record created."))
+        logger.debug("%s", formatted_text("ChatPluginUsage() record created."))

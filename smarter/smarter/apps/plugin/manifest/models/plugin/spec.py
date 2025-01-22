@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlparse import parse as sql_parse
 from sqlparse.exceptions import SQLParseError
 
-from smarter.apps.chat.providers.openai.const import VALID_CHAT_COMPLETION_MODELS
+from smarter.apps.chat.providers.const import VALID_CHAT_COMPLETION_MODELS
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginMetadataClass,
     SAMPluginMetadataClassValues,
