@@ -78,7 +78,7 @@ class TestApiCliV1ChatConfig(ApiV1TestBase):
             "chatbot",
             "meta_data",
             "history",
-            "tool_calls",
+            "meta_data",
             "plugins",
         ]
         for field in config_fields:

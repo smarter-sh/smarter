@@ -281,10 +281,10 @@ class ChatConfigView(View, AccountMixin):
 
         # add chatbot_request_history and plugin_selector_history to history
         # these have to be added here due to circular import issues.
-        chatbot_requests_queryset = (
-            ChatBotRequests.objects.filter(session_key=self.session.session_key).order_by("-created_at").first()
+        chatbot_requests_queryset = ChatBotRequests.objects.filter(session_key=self.session.session_key).order_by(
+            "-created_at"
         )
-        chatbot_requests_serializer = ChatBotRequestsSerializer(chatbot_requests_queryset, many=False)
+        chatbot_requests_serializer = ChatBotRequestsSerializer(chatbot_requests_queryset, many=True)
         history["chatbot_request_history"] = chatbot_requests_serializer.data
 
         plugin_selector_history_queryset = PluginSelectorHistory.objects.filter(session_key=self.session.session_key)

@@ -35,7 +35,7 @@ services:
       args:
         ENVIRONMENT: ${ENVIRONMENT}
     image: smarter
-    command: watchmedo auto-restart --directory=./smarter --pattern=*.py --recursive -- gunicorn smarter.wsgi:application -b 0.0.0.0:8000
+    command: watchmedo auto-restart --directory=./smarter --pattern=*.py --recursive -- gunicorn smarter.wsgi:application -b 0.0.0.0:8000 --timeout 120
     volumes:
       - type: bind
         source: ./smarter
@@ -60,7 +60,7 @@ services:
       args:
         ENVIRONMENT: ${ENVIRONMENT}
     image: smarter
-    command: celery -A smarter.smarter_celery.app worker --concurrency=4 --loglevel=info -Q default_celery_task_queue
+    command: celery -A smarter.smarter_celery.app worker --concurrency=4 --loglevel=info -Q default_celery_task_queue -E
     depends_on:
       - smarter-mysql
       - smarter-redis
