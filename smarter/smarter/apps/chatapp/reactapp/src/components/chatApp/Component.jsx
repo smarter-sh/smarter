@@ -59,6 +59,7 @@ function ChatApp() {
   const [messages, setMessages] = useState([]);
   const [title, setTitle] = useState('');
   const [info, setInfo] = useState('');
+  const [showMetadata, setShowMetadata] = useState(true);
 
   // future use
   // const [apiKey, setApiKey] = useState('');
@@ -148,7 +149,27 @@ function ChatApp() {
   const [modalTitle, setmodalTitle] = useState("");
 
   const handleInfoButtonClick = () => {
-    window.open(infoUrl, "_blank");
+    const newValue = !showMetadata;
+    setShowMetadata(newValue);
+    if (debugMode) {
+      console.log("showMetadata:", newValue);
+    }
+    const newMessages = messages.map(message => {
+      if (message.message === null) {
+        return { ...message, display: false };
+      }
+      if (['smarter', 'system', 'tool'].includes(message.sender)) {
+          // toggle backend messages
+          if (debugMode) {
+            //console.log("toggle message:", message);
+          }
+          return { ...message, display: newValue };
+      } else {
+          // always show user and assistant messages
+          return { ...message, display: true };
+      }
+    });
+    setMessages(newMessages);
   };
 
   const handleAddUserButtonClick = () => {
@@ -250,6 +271,22 @@ function ChatApp() {
     );
   }
 
+  function SmarterMessage({ i, message }) {
+    let messageClassNames = '';
+    if (message.sender === 'smarter') {
+      messageClassNames = 'smarter-message';
+    } else if (['tool', 'system'].includes(message.sender) ) {
+      messageClassNames = 'system-message';
+    }
+    return (
+      <Message
+        key={i}
+        model={message}
+        className={messageClassNames}
+      />
+    );
+  }
+
 
   // UI widget styles
   // note that most styling is intended to be created in Component.css
@@ -294,8 +331,8 @@ function ChatApp() {
                 info={info}
               />
             <ConversationHeader.Actions>
-              <AddUserButton onClick={handleAddUserButtonClick} title="New" />
-              <InfoButton onClick={handleInfoButtonClick} title={infoUrl} />
+              <AddUserButton onClick={handleAddUserButtonClick} title="Start a new chat" />
+              <InfoButton onClick={handleInfoButtonClick} title="Toggle system meta data" />
             </ConversationHeader.Actions>
             </ConversationHeader>
             <MessageList
@@ -307,12 +344,8 @@ function ChatApp() {
                 ) : null
               }
             >
-              {messages.filter(message => message.sender !== 'system').map((message, i) => {
-                return <Message
-                  key={i}
-                  model={message}
-                  className={message.sender === 'smarter' ? 'smarter-message' : message.sender === 'tool' ? 'tool-message' : ''}
-                />;
+              {messages.filter(message => message.display).map((message, i) => {
+                return <SmarterMessage i={i} message={message} />;
               })}
             </MessageList>
             <MessageInput

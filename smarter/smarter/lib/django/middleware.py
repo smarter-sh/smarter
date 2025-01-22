@@ -84,6 +84,7 @@ class BlockSensitiveFilesMiddleware(MiddlewareMixin):
             "*.sock",
             "*.pid.lock",
             "*.pidfile",
+            "ecp/Current/exporttool/microsoft.exchange.ediscovery.exporttool.application",
         }
 
     def __call__(self, request):

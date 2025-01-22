@@ -92,12 +92,14 @@ export function messageFactory(originalMessage, content, direction, sender) {
   /*
   Create a new message object.
    */
-  const converted_content = (typeof content === 'string' && content !== null) ? convertMarkdownLinksToHTML(content) : content;
+  const display = (typeof content === 'string' && content !== null);
+  const converted_content = display ? convertMarkdownLinksToHTML(content) : content;
   const retVal = {
     message: converted_content,
     direction: direction,
     sender: sender,
     sentTime: new Date().toLocaleString(),
+    display: display,
   };
   if (originalMessage) {
     retVal.originalMessage = originalMessage;
