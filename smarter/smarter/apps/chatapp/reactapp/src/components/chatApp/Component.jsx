@@ -155,6 +155,9 @@ function ChatApp() {
       console.log("showMetadata:", newValue);
     }
     const newMessages = messages.map(message => {
+      if (message.message === null) {
+        return { ...message, display: false };
+      }
       if (['smarter', 'system', 'tool'].includes(message.sender)) {
           // toggle backend messages
           if (debugMode) {
