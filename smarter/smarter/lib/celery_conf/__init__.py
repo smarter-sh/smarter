@@ -12,6 +12,8 @@ APP.config_from_object("django.conf:settings", namespace="CELERY")
 # Load task modules from all registered Django APP configs.
 APP.autodiscover_tasks()
 
+APP.conf.broker_connection_retry_on_startup = True
+
 try:
     with APP.connection() as conn:
         conn.ensure_connection(max_retries=3)

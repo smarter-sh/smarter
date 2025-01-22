@@ -38,3 +38,19 @@ section.smarter-message .cs-message__content {
   margin-bottom: 10px;
   border-radius: 10px;
 }
+
+section.system-message .cs-message__html-content {
+  color:beige !important;
+  background-color: rgb(39, 40, 34);
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+}
+
+section.system-message .cs-message__content {
+  color:beige !important;
+  background-color: rgb(39, 40, 34);
+  border: 1px solid brown;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+}
