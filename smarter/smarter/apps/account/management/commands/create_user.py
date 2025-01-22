@@ -2,6 +2,7 @@
 
 import secrets
 import string
+from urllib.parse import urljoin
 
 from django.core.management.base import BaseCommand
 
@@ -65,9 +66,10 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"Password: {password}"))
 
             # Send email to user
+            login_url = urljoin(smarter_settings.environment_url, "login")
             body = f"""Your Smarter user account has been created. Do not share your account credentials with anyone.
 
-            Url: {smarter_settings.environment_domain}/login
+            Url: {login_url}
             Username: {username}
             Email: {email}
             Password: {password}
