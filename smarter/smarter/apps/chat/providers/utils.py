@@ -12,7 +12,7 @@ from smarter.common.const import LANGCHAIN_MESSAGE_HISTORY_ROLES
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import DateTimeEncoder
 
-from .openai.const import OpenAIMessageKeys
+from .const import OpenAIMessageKeys
 from .validators import (
     validate_endpoint,
     validate_max_tokens,
@@ -167,18 +167,6 @@ def get_messages_for_role(messages: list, role: str) -> list:
     return retval
 
 
-def request_meta_data_factory(model, temperature, max_tokens, input_text):
-    """
-    Return a dictionary of request meta data.
-    """
-    return {
-        "model": model,
-        "temperature": temperature,
-        "max_tokens": max_tokens,
-        "input_text": input_text,
-    }
-
-
 def ensure_system_role_present(
     messages: list[dict], default_system_role: str = smarter_settings.llm_default_system_role
 ) -> list:
@@ -195,27 +183,3 @@ def ensure_system_role_present(
             },
         )
     return messages
-
-
-def clean_messages(messages: list[dict]) -> list:
-    """
-    Remove any messages that are not intended to be sent to the OpenAI API.
-    'messages': [
-            {
-                'role': 'system',
-                'content': "You are a helpful assistant."
-            },
-            {
-                'role': 'assistant',
-                'content': "Welcome to Smarter!. Following are some example prompts: blah blah blah"
-            },
-            {   "role": "smarter",
-                "content": "Tool call: function_calling_plugin_0002({\"inquiry_type\":\"about\"})"}
-            {
-                'role': 'user',
-                'content': 'Hello, World!'
-            }
-        ]
-
-    """
-    return [message for message in messages if message[OpenAIMessageKeys.MESSAGE_ROLE_KEY] in OpenAIMessageKeys.all]

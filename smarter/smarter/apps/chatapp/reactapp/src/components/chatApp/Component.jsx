@@ -59,6 +59,7 @@ function ChatApp() {
   const [messages, setMessages] = useState([]);
   const [title, setTitle] = useState('');
   const [info, setInfo] = useState('');
+  const [showMetadata, setShowMetadata] = useState(true);
 
   // future use
   // const [apiKey, setApiKey] = useState('');
@@ -148,7 +149,27 @@ function ChatApp() {
   const [modalTitle, setmodalTitle] = useState("");
 
   const handleInfoButtonClick = () => {
-    window.open(infoUrl, "_blank");
+    const newValue = !showMetadata;
+    setShowMetadata(newValue);
+    if (debugMode) {
+      console.log("showMetadata:", newValue);
+    }
+    const newMessages = messages.map(message => {
+      if (message.message === null) {
+        return { ...message, display: false };
+      }
+      if (['smarter', 'system', 'tool'].includes(message.sender)) {
+          // toggle backend messages
+          if (debugMode) {
+            //console.log("toggle message:", message);
+          }
+          return { ...message, display: newValue };
+      } else {
+          // always show user and assistant messages
+          return { ...message, display: true };
+      }
+    });
+    setMessages(newMessages);
   };
 
   const handleAddUserButtonClick = () => {
@@ -161,7 +182,7 @@ function ChatApp() {
     // inside this module. It asynchronously sends the user's input to the
     // backend API using the fetch() function. The response from the API is
     // then used to update the chat message thread and the UI via React state.
-    const newMessage = messageFactory(input_text, MESSAGE_DIRECTION.OUTGOING, SENDER_ROLE.USER);
+    const newMessage = messageFactory({}, input_text, MESSAGE_DIRECTION.OUTGOING, SENDER_ROLE.USER);
     if (base64_encode) {
       console.error("base64 encoding not implemented yet.");
     }
@@ -172,12 +193,17 @@ function ChatApp() {
 
       (async () => {
         try {
+          if (debugMode) {
+            console.log("handleApiRequest() messages:", updatedMessages);
+          }
           const msgs = chatMessages2RequestMessages(updatedMessages);
           const response = await processApiRequest(config, msgs, apiUrl, openChatModal);
 
           if (response) {
-            const responseMessages = response.smarter.messages.map((message) => {
-              return messageFactory(message.content, MESSAGE_DIRECTION.INCOMING, message.role);
+            const responseMessages = response.smarter.messages
+            .filter((message) => message.content !== null)
+            .map((message) => {
+              return messageFactory(message, message.content, MESSAGE_DIRECTION.INCOMING, message.role);
             }
             );
             setMessages((prevMessages) => [...prevMessages, ...responseMessages]);
@@ -245,6 +271,22 @@ function ChatApp() {
     );
   }
 
+  function SmarterMessage({ i, message }) {
+    let messageClassNames = '';
+    if (message.sender === 'smarter') {
+      messageClassNames = 'smarter-message';
+    } else if (['tool', 'system'].includes(message.sender) ) {
+      messageClassNames = 'system-message';
+    }
+    return (
+      <Message
+        key={i}
+        model={message}
+        className={messageClassNames}
+      />
+    );
+  }
+
 
   // UI widget styles
   // note that most styling is intended to be created in Component.css
@@ -289,8 +331,8 @@ function ChatApp() {
                 info={info}
               />
             <ConversationHeader.Actions>
-              <AddUserButton onClick={handleAddUserButtonClick} title="New" />
-              <InfoButton onClick={handleInfoButtonClick} title={infoUrl} />
+              <AddUserButton onClick={handleAddUserButtonClick} title="Start a new chat" />
+              <InfoButton onClick={handleInfoButtonClick} title="Toggle system meta data" />
             </ConversationHeader.Actions>
             </ConversationHeader>
             <MessageList
@@ -302,12 +344,8 @@ function ChatApp() {
                 ) : null
               }
             >
-              {messages.filter(message => message.sender !== 'system').map((message, i) => {
-                return <Message
-                  key={i}
-                  model={message}
-                  className={message.sender === 'smarter' ? 'smarter-message' : ''}
-                />;
+              {messages.filter(message => message.display).map((message, i) => {
+                return <SmarterMessage i={i} message={message} />;
               })}
             </MessageList>
             <MessageInput

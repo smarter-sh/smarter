@@ -6,6 +6,8 @@ import string
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.common.conf import settings as smarter_settings
+from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib.django.user import User
 
 
@@ -15,9 +17,11 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
-        parser.add_argument("--account_number", type=str, help="The Smarter account number to which the user belongs")
-        parser.add_argument("--username", type=str, help="The username for the new superuser")
-        parser.add_argument("--email", type=str, help="The email address for the new superuser")
+        parser.add_argument(
+            "--account_number", type=str, required=True, help="The Smarter account number to which the user belongs"
+        )
+        parser.add_argument("--username", type=str, required=True, help="The username for the new superuser")
+        parser.add_argument("--email", type=str, required=True, help="The email address for the new superuser")
         parser.add_argument("--password", type=str, help="The password for the new superuser")
         parser.add_argument(
             "--admin", action="store_true", default=False, help="True if the new user is an admin, False otherwise."
@@ -50,22 +54,32 @@ class Command(BaseCommand):
             alphabet = string.ascii_letters + string.digits + string.punctuation
             password = "".join(secrets.choice(alphabet) for _ in range(password_length))
 
-        if username and email:
-            if not User.objects.filter(username=username).exists():
-                user = User.objects.create_user(username=username, email=email)
-                if is_admin:
-                    user.is_staff = True
-                user.is_active = True
-                user.set_password(password)
-                user.save()
-                self.stdout.write(self.style.SUCCESS("User" + f" {username} {email} has been created."))
-                self.stdout.write(self.style.SUCCESS(f"Password: {password}"))
-            else:
-                if password:
-                    self.change_password(username, password)
-                    self.stdout.write(self.style.SUCCESS("Updated password."))
+        if not User.objects.filter(username=username).exists():
+            user = User.objects.create_user(username=username, email=email)
+            if is_admin:
+                user.is_staff = True
+            user.is_active = True
+            user.set_password(password)
+            user.save()
+            self.stdout.write(self.style.SUCCESS("User" + f" {username} {email} has been created."))
+            self.stdout.write(self.style.SUCCESS(f"Password: {password}"))
+
+            # Send email to user
+            body = f"""Your Smarter user account has been created. Do not share your account credentials with anyone.
+
+            Url: {smarter_settings.environment_domain}/login
+            Username: {username}
+            Email: {email}
+            Password: {password}
+            """
+            email_helper.send_email(
+                subject="Your Smarter user account has been created", to=email, body=body, html=False, quiet=False
+            )
+
         else:
-            self.stdout.write(self.style.ERROR("Username and email are required."))
+            if password:
+                self.change_password(username, password)
+                self.stdout.write(self.style.SUCCESS("Updated password."))
 
         user = User.objects.get(username=username)
         user_profile, created = UserProfile.objects.get_or_create(user=user, account=account)

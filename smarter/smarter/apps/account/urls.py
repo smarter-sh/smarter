@@ -3,6 +3,9 @@
 from django.urls import include, path
 from django.views.generic.base import RedirectView
 
+from smarter.common.conf import settings as smarter_settings
+from smarter.common.const import SmarterEnvironments
+
 from .views.authentication import (
     AccountActivateView,
     AccountActivationEmailView,
@@ -37,3 +40,8 @@ urlpatterns = [
     path("password-confirm/", PasswordConfirmView.as_view(), name="account_password_confirm"),
     path("password-reset-link/<uidb64>/<token>/", PasswordResetView.as_view(), name="password_reset_link"),
 ]
+
+if smarter_settings.environment == SmarterEnvironments.LOCAL:
+    from .views.email import EmailWelcomeView
+
+    urlpatterns.append(path("email/welcome/<first_name>/", EmailWelcomeView.as_view(), name="welcome"))
