@@ -1,44 +1,66 @@
-## [0.10.2](https://github.com/smarter-sh/smarter/compare/v0.10.1...v0.10.2) (2025-01-22)
-
-
-### Bug Fixes
-
-* broken plugins link ([99cc24d](https://github.com/smarter-sh/smarter/commit/99cc24d72a9abe881c000281e88333d69108bd8e))
-
-## [0.10.1](https://github.com/smarter-sh/smarter/compare/v0.10.0...v0.10.1) (2025-01-22)
-
-
-### Bug Fixes
-
-* broken password reset url ([fb916a7](https://github.com/smarter-sh/smarter/commit/fb916a7c2fbceca5c323f002d11f171210c9ae4b))
-
-# [0.10.0](https://github.com/smarter-sh/smarter/compare/v0.9.0...v0.10.0) (2025-01-22)
-
-
-### Bug Fixes
-
-* add toggle switch to display/hide system messages ([0d2e5dd](https://github.com/smarter-sh/smarter/commit/0d2e5dd713918a9d4100f2fe7b73dd9544742058))
-* add toggle switch to display/hide system messages ([979c586](https://github.com/smarter-sh/smarter/commit/979c586b67a629f2934f2012a4cfb4b54ada9a94))
-* ensure that all django objects are created via Celery ([9b4812b](https://github.com/smarter-sh/smarter/commit/9b4812b468e576b765c302c06d6d21b1c26adf8f))
-* make verbose logging a function of a waffle switch ([8e90ee5](https://github.com/smarter-sh/smarter/commit/8e90ee5d8293b5f0e800d200e891892d127b86d4))
-* send user credentials by email ([07d4dad](https://github.com/smarter-sh/smarter/commit/07d4dad4eba37c0151227c889c1a011857eee10d))
-* sign in url should be a valid url instead of only a domain ([d37d30b](https://github.com/smarter-sh/smarter/commit/d37d30be2c073d13eabeeb1d47862ae93ff9b480))
-
-
-### Features
-
-* add an html welcome email for new accounts. ([310e137](https://github.com/smarter-sh/smarter/commit/310e137a101afc7f353ecf0b032eb144c045cf78))
-* add DailyBillingRecord model ([8f29565](https://github.com/smarter-sh/smarter/commit/8f29565dd564052adf7c1ba1b93b5d23ea157cdd))
-* cache chat instances by session_key ([9fb97e9](https://github.com/smarter-sh/smarter/commit/9fb97e977a7fe7a23fd65988cb450c5991ea9da3))
-* create ProviderDbMixin as middleware for all async db operations ([1e5c964](https://github.com/smarter-sh/smarter/commit/1e5c9649dfae0897c1bf31f4fe34f8a481351849))
-* echo tool return values to the chat console ([1b43c97](https://github.com/smarter-sh/smarter/commit/1b43c970ab15fe9c4c861af70558d08994c1df2b))
-* log any cache hits ([35e04d3](https://github.com/smarter-sh/smarter/commit/35e04d3a548dbc9f401d2f9753ce26f2cd57ec2d))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.10.2](https://github.com/smarter-sh/smarter/compare/v0.10.1...v0.10.2) (2025-01-22)
+
+### Bug Fixes
+
+- broken plugins link ([99cc24d](https://github.com/smarter-sh/smarter/commit/99cc24d72a9abe881c000281e88333d69108bd8e))
+
+## [0.10.1](https://github.com/smarter-sh/smarter/compare/v0.10.0...v0.10.1) (2025-01-22)
+
+### Bug Fixes
+
+- broken password reset url ([fb916a7](https://github.com/smarter-sh/smarter/commit/fb916a7c2fbceca5c323f002d11f171210c9ae4b))
+
+# [0.10.0](https://github.com/smarter-sh/smarter/compare/v0.9.0...v0.10.0) (2025-01-22)
+
+### Bug Fixes
+
+- add toggle switch to display/hide system messages ([0d2e5dd](https://github.com/smarter-sh/smarter/commit/0d2e5dd713918a9d4100f2fe7b73dd9544742058))
+- add toggle switch to display/hide system messages ([979c586](https://github.com/smarter-sh/smarter/commit/979c586b67a629f2934f2012a4cfb4b54ada9a94))
+- ensure that all django objects are created via Celery ([9b4812b](https://github.com/smarter-sh/smarter/commit/9b4812b468e576b765c302c06d6d21b1c26adf8f))
+- make verbose logging a function of a waffle switch ([8e90ee5](https://github.com/smarter-sh/smarter/commit/8e90ee5d8293b5f0e800d200e891892d127b86d4))
+- send user credentials by email ([07d4dad](https://github.com/smarter-sh/smarter/commit/07d4dad4eba37c0151227c889c1a011857eee10d))
+- sign in url should be a valid url instead of only a domain ([d37d30b](https://github.com/smarter-sh/smarter/commit/d37d30be2c073d13eabeeb1d47862ae93ff9b480))
+
+### Features
+
+- add an html welcome email for new accounts. ([310e137](https://github.com/smarter-sh/smarter/commit/310e137a101afc7f353ecf0b032eb144c045cf78))
+- add DailyBillingRecord model ([8f29565](https://github.com/smarter-sh/smarter/commit/8f29565dd564052adf7c1ba1b93b5d23ea157cdd))
+- cache chat instances by session_key ([9fb97e9](https://github.com/smarter-sh/smarter/commit/9fb97e977a7fe7a23fd65988cb450c5991ea9da3))
+- create ProviderDbMixin as middleware for all async db operations ([1e5c964](https://github.com/smarter-sh/smarter/commit/1e5c9649dfae0897c1bf31f4fe34f8a481351849))
+- echo tool return values to the chat console ([1b43c97](https://github.com/smarter-sh/smarter/commit/1b43c970ab15fe9c4c861af70558d08994c1df2b))
+- log any cache hits ([35e04d3](https://github.com/smarter-sh/smarter/commit/35e04d3a548dbc9f401d2f9753ce26f2cd57ec2d))
+
+## [0.10.1](https://github.com/smarter-sh/smarter/compare/v0.10.0...v0.10.1) (2025-01-22)
+
+### Bug Fixes
+
+- broken password reset url ([fb916a7](https://github.com/smarter-sh/smarter/commit/fb916a7c2fbceca5c323f002d11f171210c9ae4b))
+
+# [0.10.0](https://github.com/smarter-sh/smarter/compare/v0.9.0...v0.10.0) (2025-01-22)
+
+### Bug Fixes
+
+- add toggle switch to display/hide system messages ([0d2e5dd](https://github.com/smarter-sh/smarter/commit/0d2e5dd713918a9d4100f2fe7b73dd9544742058))
+- add toggle switch to display/hide system messages ([979c586](https://github.com/smarter-sh/smarter/commit/979c586b67a629f2934f2012a4cfb4b54ada9a94))
+- ensure that all django objects are created via Celery ([9b4812b](https://github.com/smarter-sh/smarter/commit/9b4812b468e576b765c302c06d6d21b1c26adf8f))
+- make verbose logging a function of a waffle switch ([8e90ee5](https://github.com/smarter-sh/smarter/commit/8e90ee5d8293b5f0e800d200e891892d127b86d4))
+- send user credentials by email ([07d4dad](https://github.com/smarter-sh/smarter/commit/07d4dad4eba37c0151227c889c1a011857eee10d))
+- sign in url should be a valid url instead of only a domain ([d37d30b](https://github.com/smarter-sh/smarter/commit/d37d30be2c073d13eabeeb1d47862ae93ff9b480))
+
+### Features
+
+- add an html welcome email for new accounts. ([310e137](https://github.com/smarter-sh/smarter/commit/310e137a101afc7f353ecf0b032eb144c045cf78))
+- add DailyBillingRecord model ([8f29565](https://github.com/smarter-sh/smarter/commit/8f29565dd564052adf7c1ba1b93b5d23ea157cdd))
+- cache chat instances by session_key ([9fb97e9](https://github.com/smarter-sh/smarter/commit/9fb97e977a7fe7a23fd65988cb450c5991ea9da3))
+- create ProviderDbMixin as middleware for all async db operations ([1e5c964](https://github.com/smarter-sh/smarter/commit/1e5c9649dfae0897c1bf31f4fe34f8a481351849))
+- echo tool return values to the chat console ([1b43c97](https://github.com/smarter-sh/smarter/commit/1b43c970ab15fe9c4c861af70558d08994c1df2b))
+- log any cache hits ([35e04d3](https://github.com/smarter-sh/smarter/commit/35e04d3a548dbc9f401d2f9753ce26f2cd57ec2d))
 
 ## [0.9.0](https://github.com/smarter-sh/smarter/compare/v0.8.0...v0.9.0) (2025-01-14)
 
