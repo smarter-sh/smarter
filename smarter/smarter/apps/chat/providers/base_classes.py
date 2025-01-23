@@ -45,6 +45,7 @@ from smarter.apps.chat.signals import (
     chat_started,
 )
 from smarter.apps.plugin.plugin.static import PluginStatic
+from smarter.apps.plugin.receivers import plugin_selected
 from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.common.exceptions import (
     SmarterConfigurationError,
@@ -542,16 +543,21 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         handle a built-in tool call. example: get_current_weather()
         """
         logger.info("%s %s - %s", self.formatted_class_name, formatted_text("handle_tool_called()"), function_name)
+        request = (self.first_iteration[InternalKeys.REQUEST_KEY],)
+        response = (self.first_iteration[InternalKeys.RESPONSE_KEY],)
         chat_completion_tool_called.send(
             sender=self.handler,
             chat=self.chat,
             plugin=None,
             function_name=function_name,
             function_args=function_args,
-            request=self.first_iteration[InternalKeys.REQUEST_KEY],
-            response=self.first_iteration[InternalKeys.RESPONSE_KEY],
+            request=request,
+            response=response,
         )
         self._insert_charge_by_type(CHARGE_TYPE_TOOL)
+        self.db_insert_chat_tool_call(
+            function_name=function_name, function_args=function_args, request=request, response=response
+        )
 
     def handle_plugin_called(self, plugin: PluginStatic) -> None:
         logger.info("%s %s - %s", self.formatted_class_name, formatted_text("handle_plugin_called()"), plugin.name)
@@ -562,6 +568,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             input_text=self.input_text,
         )
         self._insert_charge_by_type(CHARGE_TYPE_PLUGIN)
+        self.db_insert_chat_plugin_usage(chat=self.chat, plugin=plugin, input_text=self.input_text)
 
     def process_tool_call(self, tool_call: ChatCompletionMessageToolCall):
         """
@@ -620,6 +627,13 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         self.tools.append(plugin.custom_tool)
         self.available_functions[plugin.function_calling_identifier] = plugin.function_calling_plugin
         self.append_message_plugin_selected(plugin=plugin.plugin_meta.name)
+        plugin_selected.send(
+            sender=self.handler,
+            plugin=plugin,
+            input_text=self.input_text,
+            messages=self.messages,
+            session_key=self.chat.session_key,
+        )
 
     def handle_success(self) -> dict:
         logger.info("%s %s", self.formatted_class_name, formatted_text("handle_success()"))
