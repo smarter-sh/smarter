@@ -45,7 +45,7 @@ class TestApiDocsJsonSchemas(unittest.TestCase):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
 
-    def test_get_authenitcated_json_schemas(self):
+    def test_get_authenticated_json_schemas(self):
         """
         Test all docs//json-schema/ endpoints with an authenticated user
         to ensure that we get a 200 response
