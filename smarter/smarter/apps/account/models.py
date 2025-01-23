@@ -150,6 +150,7 @@ class AccountContact(TimestampedModel):
     class Meta:
         verbose_name = "Account Contact"
         verbose_name_plural = "Account Contacts"
+        unique_together = ("account", "email")
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="contacts")
     first_name = models.CharField(max_length=255)

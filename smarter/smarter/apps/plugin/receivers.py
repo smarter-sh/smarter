@@ -9,6 +9,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
 
+from smarter.apps.account.utils import user_profile_for_user
 from smarter.common.const import SMARTER_WAFFLE_SWITCH_CHAT_LOGGING
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 
@@ -118,8 +119,9 @@ def handle_plugin_ready(sender, **kwargs):
 def handle_plugin_selected(sender, **kwargs):
     """Handle plugin selected signal."""
 
+    user = kwargs.get("user")
+    user_id: int = user.id if user else None
     plugin = kwargs.get("plugin")
-    plugin = PluginStatic(plugin_id=plugin.id)
     input_text: str = kwargs.get("input_text")
     messages: list[dict] = kwargs.get("messages")
     search_term: str = kwargs.get("search_term")
@@ -135,7 +137,12 @@ def handle_plugin_selected(sender, **kwargs):
     )
 
     create_plugin_selector_history.delay(
-        plugin_id=plugin.id, input_text=input_text, messages=messages, search_term=search_term, session_key=session_key
+        plugin_id=plugin.id,
+        user_id=user_id,
+        input_text=input_text,
+        messages=messages,
+        search_term=search_term,
+        session_key=session_key,
     )
 
 
