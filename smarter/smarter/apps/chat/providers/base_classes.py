@@ -45,7 +45,6 @@ from smarter.apps.chat.signals import (
     chat_started,
 )
 from smarter.apps.plugin.plugin.static import PluginStatic
-from smarter.apps.plugin.receivers import plugin_selected
 from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.common.exceptions import (
     SmarterConfigurationError,
@@ -599,7 +598,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             # function_to_call, assigned above. but just to play it safe,
             # we're directly invoking the plugin's function_calling_plugin() method.
             plugin_id = int(function_name[-4:])
-            plugin = PluginStatic(plugin_id=plugin_id)
+            plugin = PluginStatic(plugin_id=plugin_id, user_profile=self.user_profile)
             plugin.params = function_args
             function_response = plugin.function_calling_plugin(inquiry_type=function_args.get("inquiry_type"))
             serialized_tool_call[InternalKeys.SMARTER_PLUGIN_KEY] = PluginMetaSerializer(plugin.plugin_meta).data
@@ -627,13 +626,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         self.tools.append(plugin.custom_tool)
         self.available_functions[plugin.function_calling_identifier] = plugin.function_calling_plugin
         self.append_message_plugin_selected(plugin=plugin.plugin_meta.name)
-        plugin_selected.send(
-            sender=self.handler,
-            plugin=plugin,
-            input_text=self.input_text,
-            messages=self.messages,
-            session_key=self.chat.session_key,
-        )
+        # note to self: Plugin sends a plugin_selected signal, so no need to send it here.
 
     def handle_success(self) -> dict:
         logger.info("%s %s", self.formatted_class_name, formatted_text("handle_success()"))
