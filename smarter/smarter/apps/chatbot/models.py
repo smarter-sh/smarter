@@ -17,6 +17,7 @@ from smarter.apps.account.mixins import AccountMixin
 
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.utils import user_profile_for_user
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
@@ -318,21 +319,26 @@ class ChatBotPlugin(TimestampedModel):
 
     @property
     def plugin(self) -> PluginStatic:
-        return PluginStatic(plugin_meta=self.plugin_meta)
+        admin_user = UserProfile.admin_for_account(self.chatbot.account)
+        user_profile = user_profile_for_user(admin_user)
+        return PluginStatic(plugin_meta=self.plugin_meta, user_profile=user_profile)
 
     @classmethod
     def load(cls: Type["ChatBotPlugin"], chatbot: ChatBot, data) -> "ChatBotPlugin":
         """Load (aka import) a plugin from a data file in yaml or json format."""
-        user_profile = UserProfile.admin_for_account(chatbot.account)
+        admin_user = UserProfile.admin_for_account(chatbot.account)
+        user_profile = user_profile_for_user(admin_user)
         plugin = PluginStatic(data=data, user_profile=user_profile)
         return cls.objects.create(chatbot=chatbot, plugin_meta=plugin.meta)
 
     @classmethod
     def plugins(cls, chatbot: ChatBot) -> List[PluginStatic]:
         chatbot_plugins = cls.objects.filter(chatbot=chatbot)
+        admin_user = UserProfile.admin_for_account(chatbot.account)
+        user_profile = user_profile_for_user(admin_user)
         retval = []
         for chatbot_plugin in chatbot_plugins:
-            retval.append(PluginStatic(plugin_meta=chatbot_plugin.plugin_meta))
+            retval.append(PluginStatic(plugin_meta=chatbot_plugin.plugin_meta, user_profile=user_profile))
         return retval
 
     @classmethod
