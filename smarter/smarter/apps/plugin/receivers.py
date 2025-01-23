@@ -126,7 +126,7 @@ def handle_plugin_selected(sender, **kwargs):
 
     prompt = input_text if input_text else formatted_json(messages)
     logger.info(
-        "%s - %s search_term: %s \nprompt(s): %s",
+        "signal received for %s - %s search_term: %s prompt(s): %s",
         formatted_text("plugin_selected"),
         plugin.name,
         search_term,
