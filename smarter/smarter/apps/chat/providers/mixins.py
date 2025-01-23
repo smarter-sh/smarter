@@ -229,13 +229,15 @@ class ProviderDbMixin(AccountMixin):
         """
         This method inserts the chat plugin usage instance.
         """
-        if not self.chat:
+        chat = kwargs.get("chat", None)
+        if not chat:
+            logger.warning("db_insert_chat_plugin_usage() Chat is required to create a chat plugin usage record.")
             return
-        chat_id = self.chat.id
+        chat_id = chat.id
         plugin = kwargs.get("plugin", None)
         plugin_id = plugin.id if plugin else None
         input_text = kwargs.get("input_text", None)
-        create_chat_plugin_usage.delay(chat_id, plugin_id, input_text)
+        create_chat_plugin_usage.delay(chat_id=chat_id, plugin_id=plugin_id, input_text=input_text)
 
     def db_insert_charge(self, *args, **kwargs):
         """

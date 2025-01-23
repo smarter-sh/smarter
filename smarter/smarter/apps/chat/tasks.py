@@ -141,13 +141,16 @@ def create_chat_tool_call_history(chat_id, plugin_meta_id, function_name, functi
     queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
 )
 def create_chat_plugin_usage(*args, **kwargs):
-    """Create plugin usage history record."""
-    logger.info("%s", formatted_text(module_prefix + "create_plugin_usage_history()"))
+    """Create plugin usage record."""
     chat_id = kwargs.get("chat_id", None)
+    plugin_id = kwargs.get("plugin_id", None)
+
+    logger.info(
+        "%s chat_id=%s, plugin_id=%s", formatted_text(module_prefix + "create_plugin_usage()"), chat_id, plugin_id
+    )
     if chat_id is None:
         raise SmarterValueError("chat_id is required")
 
-    plugin_id = kwargs.get("plugin_id", None)
     if plugin_id is None:
         raise SmarterValueError("plugin_id is required")
 
@@ -168,21 +171,4 @@ def create_chat_plugin_usage(*args, **kwargs):
         chat=chat,
         plugin=plugin_meta,
         input_text=input_text,
-    )
-
-
-@app.task(
-    autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
-)
-def create_plugin_selection_history(user_id, plugin_id, event, inquiry_type, inquiry_return):
-    """
-    Create plugin selection history record.
-    NOT IN USE
-    """
-    logger.info("%s", formatted_text(module_prefix + "create_plugin_selection_history()"))
-    ChatPluginUsage.objects.create(
-        user_id=user_id, plugin_id=plugin_id, event=event, inquiry_type=inquiry_type, inquiry_return=inquiry_return
     )
