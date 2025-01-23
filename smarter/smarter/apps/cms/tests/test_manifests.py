@@ -33,7 +33,7 @@ class TestApiDocsManifests(unittest.TestCase):
         """Tear down test fixtures."""
         admin_user_teardown(cls.user, cls.account, cls.user_profile)
 
-    def test_get_unauthenitcated_manifests(self):
+    def test_get_unauthenticated_manifests(self):
         """
         Test all docs//manifests/ endpoints with an unauthenticated user
         to ensure that we get a 200 response
@@ -45,7 +45,7 @@ class TestApiDocsManifests(unittest.TestCase):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
 
-    def test_get_authenitcated_manifests(self):
+    def test_get_authenticated_manifests(self):
         """
         Test all docs//manifests/ endpoints with an authenticated user
         to ensure that we get a 200 response

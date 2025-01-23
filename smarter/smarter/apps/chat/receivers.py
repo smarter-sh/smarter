@@ -23,11 +23,7 @@ from .signals import (
     chat_response_failure,
     chat_started,
 )
-from .tasks import (
-    create_chat_history,
-    create_chat_plugin_usage,
-    create_chat_tool_call_history,
-)
+from .tasks import create_chat_history
 
 
 logger = logging.getLogger(__name__)
@@ -131,7 +127,6 @@ def handle_chat_completion_plugin_called(sender, **kwargs):
         plugin,
         input_text,
     )
-    create_chat_plugin_usage.delay(chat_id=chat.id, plugin_id=plugin.id, input_text=input_text)
 
 
 @receiver(chat_completion_tool_called, dispatch_uid="chat_completion_tool_called")
@@ -154,8 +149,6 @@ def handle_chat_completion_tool_called(sender, **kwargs):
         prefix,
         chat_id,
     )
-
-    create_chat_tool_call_history.delay(chat_id, plugin_meta_id, function_name, function_args, request, response)
 
 
 # pylint: disable=W0612
