@@ -7,6 +7,7 @@ import os
 # python stuff
 import secrets
 import sys
+import time
 import unittest
 from pathlib import Path
 from time import sleep
@@ -38,6 +39,7 @@ PROJECT_ROOT = str(Path(HERE).parent.parent)
 PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
 if PYTHON_ROOT not in sys.path:
     sys.path.append(PYTHON_ROOT)  # noqa: E402
+CELERY_WAIT = 1
 
 
 class ProviderBaseClass(unittest.TestCase):
@@ -323,6 +325,9 @@ class ProviderBaseClass(unittest.TestCase):
         response = self.client.get("/api/v1/chat/history/chat/")
         self.assertEqual(response.status_code, 200)
         print("/api/v1/chat/history/chat/ response:", response.json())
+
+        # give celery time to process the chat completion
+        time.sleep(CELERY_WAIT)  # Pause execution for 1 second
 
         # assert that ChatPluginUsage has one or more records for self.user
         plugin_selection_histories = ChatPluginUsage.objects.first()

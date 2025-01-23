@@ -6,7 +6,6 @@ import logging
 
 # smarter stuff
 from smarter.apps.chat.providers.base_classes import OpenAICompatibleChatProvider
-from smarter.common.classes import Singleton
 from smarter.common.conf import settings as smarter_settings
 
 # smarter chat provider stuff
@@ -21,7 +20,7 @@ DEFAULT_MODEL = "gpt-4o-mini"
 logger = logging.getLogger(__name__)
 
 
-class OpenAIChatProvider(OpenAICompatibleChatProvider, metaclass=Singleton):
+class OpenAIChatProvider(OpenAICompatibleChatProvider):
     """
     OpenAI chat provider.
     """
