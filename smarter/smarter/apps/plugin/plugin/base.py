@@ -372,7 +372,10 @@ class PluginBase(ABC):
         """Return the user profile."""
         if not self._user_profile:
             self._user_profile = smarter_admin_user_profile()
-            logger.warning("UserProfile not set. Falling back to Smarter admin user profile.")
+            logger.warning(
+                "PluginBase.user_profile(). session_key=%s UserProfile not set. Falling back to Smarter admin user profile.",
+                self.session_key,
+            )
         return self._user_profile
 
     @property
@@ -490,6 +493,7 @@ class PluginBase(ABC):
                     plugin_selected.send(
                         sender=self.selected,
                         plugin=self,
+                        user=self.user_profile.user if self.user_profile else None,
                         input_text=input_text,
                         search_term=search_term,
                         session_key=self.session_key,
