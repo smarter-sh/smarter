@@ -6,7 +6,7 @@ from urllib.parse import urljoin
 
 from django.core.management.base import BaseCommand
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account, AccountContact, UserProfile
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib.django.user import User
@@ -21,9 +21,11 @@ class Command(BaseCommand):
         parser.add_argument(
             "--account_number", type=str, required=True, help="The Smarter account number to which the user belongs"
         )
-        parser.add_argument("--username", type=str, required=True, help="The username for the new superuser")
-        parser.add_argument("--email", type=str, required=True, help="The email address for the new superuser")
-        parser.add_argument("--password", type=str, help="The password for the new superuser")
+        parser.add_argument("--username", type=str, required=True, help="The username for the new user")
+        parser.add_argument("--email", type=str, required=True, help="The email address for the new user")
+        parser.add_argument("--first_name", type=str, required=True, help="The first name of the new user")
+        parser.add_argument("--last_name", type=str, required=True, help="The last name of the new user")
+        parser.add_argument("--password", type=str, help="The password for the new user")
         parser.add_argument(
             "--admin", action="store_true", default=False, help="True if the new user is an admin, False otherwise."
         )
@@ -45,6 +47,8 @@ class Command(BaseCommand):
         account_number = options["account_number"]
         username = options["username"]
         email = options["email"]
+        first_name = options["first_name"]
+        last_name = options["last_name"]
         password = options["password"]
         is_admin = options["admin"]
 
@@ -89,3 +93,11 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.SUCCESS(f"User profile created for {user_profile.user} {user_profile.account.company_name}.")
             )
+
+        try:
+            account_contact = AccountContact.objects.get(account=account, email=email)
+            account_contact.first_name = first_name
+            account_contact.last_name = last_name
+            account_contact.save()
+        except AccountContact.DoesNotExist:
+            AccountContact.objects.create(account=account, first_name=first_name, last_name=last_name, email=email)
