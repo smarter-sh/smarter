@@ -6,7 +6,6 @@ import logging
 
 # smarter stuff
 from smarter.apps.chat.providers.base_classes import OpenAICompatibleChatProvider
-from smarter.common.classes import Singleton
 from smarter.common.conf import settings as smarter_settings
 
 # smarter chat provider stuff
@@ -16,7 +15,7 @@ from .const import BASE_URL, DEFAULT_MODEL, PROVIDER_NAME, VALID_CHAT_COMPLETION
 logger = logging.getLogger(__name__)
 
 
-class GoogleAIChatProvider(OpenAICompatibleChatProvider, metaclass=Singleton):
+class GoogleAIChatProvider(OpenAICompatibleChatProvider):
     """
     GoogleAI chat provider.
     """
