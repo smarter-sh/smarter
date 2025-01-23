@@ -169,20 +169,3 @@ def create_chat_plugin_usage(*args, **kwargs):
         plugin=plugin_meta,
         input_text=input_text,
     )
-
-
-@app.task(
-    autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
-)
-def create_plugin_selection_history(user_id, plugin_id, event, inquiry_type, inquiry_return):
-    """
-    Create plugin selection history record.
-    NOT IN USE
-    """
-    logger.info("%s", formatted_text(module_prefix + "create_plugin_selection_history()"))
-    ChatPluginUsage.objects.create(
-        user_id=user_id, plugin_id=plugin_id, event=event, inquiry_type=inquiry_type, inquiry_return=inquiry_return
-    )
