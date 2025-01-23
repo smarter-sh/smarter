@@ -29,6 +29,7 @@ from .signals import (
     plugin_selected,
     plugin_updated,
 )
+from .tasks import create_plugin_selector_history
 
 
 logger = logging.getLogger(__name__)
@@ -126,18 +127,15 @@ def handle_plugin_selected(sender, **kwargs):
 
     prompt = input_text if input_text else formatted_json(messages)
     logger.info(
-        "%s - %s search_term: %s \nprompt(s): %s",
+        "signal received for %s - %s search_term: %s prompt(s): %s",
         formatted_text("plugin_selected"),
         plugin.name,
         search_term,
         prompt,
     )
 
-    PluginSelectorHistory.objects.create(
-        plugin_selector=plugin.plugin_selector,
-        search_term=search_term,
-        messages={"input_text": input_text} if input_text else messages,
-        session_key=session_key,
+    create_plugin_selector_history.delay(
+        plugin_id=plugin.id, input_text=input_text, messages=messages, search_term=search_term, session_key=session_key
     )
 
 

@@ -16,7 +16,6 @@ from django.core.cache import cache
 
 from smarter.apps.chat.models import Chat
 from smarter.apps.plugin.plugin.static import PluginStatic
-from smarter.common.classes import Singleton
 from smarter.common.const import SMARTER_WAFFLE_SWITCH_CHAT_LOGGING
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
@@ -36,7 +35,7 @@ CACHE_PREFIX = "smarter.apps.chat.providers"
 CACHE_TIMEOUT = 600
 
 
-class ChatProviders(metaclass=Singleton):
+class ChatProviders:
     """
     Collection of all the chat providers.
     """

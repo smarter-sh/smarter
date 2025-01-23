@@ -1,3 +1,12 @@
+## [0.10.3](https://github.com/smarter-sh/smarter/compare/v0.10.2...v0.10.3) (2025-01-22)
+
+
+### Bug Fixes
+
+* broken favicon link ([80c22ef](https://github.com/smarter-sh/smarter/commit/80c22ef175bc74c8009ec426feb6164dbb0acd12))
+* broken link media/illustrations/sigma-1/17-dark.png ([bbce490](https://github.com/smarter-sh/smarter/commit/bbce490deecfb1e94a8742749250f352250fffcb))
+* only show django admin, wagtail, changelog to superusers ([65183dd](https://github.com/smarter-sh/smarter/commit/65183dd60ad4865766df85cfc5e626c3126c8b40))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
