@@ -13,6 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
 
 from smarter.apps.account.mixins import AccountMixin
+from smarter.apps.account.utils import account_for_user
 from smarter.apps.chatbot.models import ChatBot, ChatBotHelper, ChatBotPlugin
 from smarter.apps.chatbot.serializers import ChatBotSerializer
 from smarter.apps.chatbot.signals import chatbot_called
@@ -65,7 +66,8 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
     @property
     def chatbot(self):
         if not self._chatbot:
-            self._chatbot = ChatBot.objects.get(name=self.name, account=self.account)
+            self._chatbot_helper = ChatBotHelper(name=self.name, account=self.account)
+            self._chatbot = self._chatbot_helper.chatbot if self._chatbot_helper.chatbot else None
         return self._chatbot
 
     @property
@@ -89,7 +91,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         self._name = self._name or name
         self._url = self.request.build_absolute_uri()
         self._url = SmarterValidator.urlify(self._url, environment=smarter_settings.environment)
-        self._chatbot_helper = ChatBotHelper(url=self.url, name=self.name, user=self.request.user)
+        self._chatbot_helper = ChatBotHelper(url=self.url, name=self.name, user=self.user, account=self.account)
 
         if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
             logger.info("%s.dispatch(): chatbot: %s", self.formatted_class_name, self.chatbot_helper.chatbot)

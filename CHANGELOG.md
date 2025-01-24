@@ -1,3 +1,14 @@
+## [0.10.4](https://github.com/smarter-sh/smarter/compare/v0.10.3...v0.10.4) (2025-01-23)
+
+
+### Bug Fixes
+
+* add first_name, last_name ([8ff338a](https://github.com/smarter-sh/smarter/commit/8ff338ab882857514434088cbda39ff9c9b2a809))
+* give celery time to create records before making assertions ([0948076](https://github.com/smarter-sh/smarter/commit/0948076e75da9a2da651d83615bb90cacbd3951b))
+* move PluginSelectorHistory.objects.create() to celery ([4dd28de](https://github.com/smarter-sh/smarter/commit/4dd28deb3d26149c26f1fc9da117648c18f9de04))
+* provide a user_profile to Plugin whenever possible ([ab2a5fc](https://github.com/smarter-sh/smarter/commit/ab2a5fcd87847311c067d366040fec97574f810b))
+* providers should not be singletons ([5d210fa](https://github.com/smarter-sh/smarter/commit/5d210faa68603829043a0134d5829b6a5bb6b38b))
+
 ## [0.10.3](https://github.com/smarter-sh/smarter/compare/v0.10.2...v0.10.3) (2025-01-22)
 
 
