@@ -13,7 +13,7 @@ from http import HTTPStatus
 
 import waffle
 from django.db import models
-from django.http import HttpResponseNotFound
+from django.http import HttpResponseNotFound, HttpResponseServerError
 from django.shortcuts import render
 
 # from django.utils.decorators import method_decorator
@@ -364,11 +364,21 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
         if response.status_code >= 300:
             return response
         self.url = request.build_absolute_uri()
-        self.chatbot_helper = ChatBotHelper(url=self.url, user=self.user_profile.user, account=self.account, name=name)
-        self.chatbot = self.chatbot_helper.chatbot
-        if not self.chatbot:
-            return HttpResponseNotFound()
-        return render(request, self.template_path)
+
+        try:
+            self.chatbot_helper = ChatBotHelper(
+                url=self.url, user=self.user_profile.user, account=self.account, name=name
+            )
+            self.chatbot = self.chatbot_helper.chatbot if self.chatbot_helper.chatbot else None
+            if not self.chatbot:
+                raise ChatBot.DoesNotExist
+        except ChatBot.DoesNotExist:
+            return render(request=request, template_name="404.html", status=404)
+        # pylint: disable=broad-except
+        except Exception as e:
+            return HttpResponseServerError(f"Error: {e}")
+
+        return render(request=request, template_name=self.template_path)
 
 
 class ChatAppListView(SmarterAuthenticatedNeverCachedWebView):
