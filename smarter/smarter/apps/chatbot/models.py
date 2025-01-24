@@ -17,7 +17,7 @@ from smarter.apps.account.mixins import AccountMixin
 
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.utils import user_profile_for_user
+from smarter.apps.account.utils import smarter_admin_user_profile, user_profile_for_user
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
@@ -464,10 +464,17 @@ class ChatBotHelper(AccountMixin):
         if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
             logger.info(f"{self.formatted_class_name}: __init__()")
 
-        # 2. try using account and nme
+        # 2a. try using account and name
         if self.account and self.name:
-            logger.info(f"{self.formatted_class_name}: account={self.account}, name={self.name}")
-            self._chatbot = ChatBot.objects.get(account=self.account, name=self.name)
+            if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+                logger.info(f"{self.formatted_class_name}: account={self.account}, name={self.name}")
+            try:
+                self._chatbot = ChatBot.objects.get(account=self.account, name=self.name)
+            except ChatBot.DoesNotExist:
+                # 2b. try again using the Smarter admin account in case this is a demo chatbot
+                smarter_admin = smarter_admin_user_profile()
+                self._chatbot = ChatBot.objects.get(account=smarter_admin.account, name=self.name)
+
             if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                 logger.info(
                     "%s: initialized self.chatbot=%s from account %s and name %s",
