@@ -13,7 +13,7 @@ from http import HTTPStatus
 
 import waffle
 from django.db import models
-from django.http import HttpResponseNotFound, HttpResponseServerError, JsonResponse
+from django.http import HttpResponseServerError, JsonResponse
 from django.shortcuts import render
 
 # from django.utils.decorators import method_decorator
@@ -38,11 +38,7 @@ from smarter.apps.plugin.models import (
     PluginSelectorHistory,
     PluginSelectorHistorySerializer,
 )
-from smarter.common.const import (
-    SMARTER_CHAT_SESSION_KEY_NAME,
-    SMARTER_WAFFLE_REACTAPP_DEBUG_MODE,
-    SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING,
-)
+from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.common.exceptions import SmarterExceptionBase, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.request import SmarterRequestHelper
@@ -117,7 +113,7 @@ class SmarterChatSession(SmarterRequestHelper):
         self._chat_helper = ChatHelper(session_key=self.session_key, request=request, chatbot=self.chatbot)
         self._chat = self._chat_helper.chat
 
-        if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
+        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
             logger.info("%s - session established: %s", self.formatted_class_name, self.session_key)
 
     @property
@@ -219,7 +215,7 @@ class ChatConfigView(View, AccountMixin):
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
-        if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
+        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
             logger.info(
                 "%s - chatbot=%s - chatbot_helper=%s", self.formatted_class_name, self.chatbot, self.chatbot_helper
             )
@@ -228,7 +224,7 @@ class ChatConfigView(View, AccountMixin):
             data = json.loads(request.body)
         except json.JSONDecodeError:
             data = {}
-        if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
+        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
             logger.info("%s - data=%s", self.formatted_class_name, data)
 
         # Initialize the chat session for this request. session_key is generated
@@ -303,7 +299,7 @@ class ChatConfigView(View, AccountMixin):
             "data": {
                 SMARTER_CHAT_SESSION_KEY_NAME: self.session.session_key,
                 "sandbox_mode": self.sandbox_mode,
-                "debug_mode": waffle.switch_is_active(SMARTER_WAFFLE_REACTAPP_DEBUG_MODE),
+                "debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_REACTAPP_DEBUG_MODE),
                 "chatbot": chatbot_serializer.data,
                 "history": history,
                 "meta_data": self.chatbot_helper.to_json(),

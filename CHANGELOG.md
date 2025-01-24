@@ -1,3 +1,13 @@
+## [0.10.5](https://github.com/smarter-sh/smarter/compare/v0.10.4...v0.10.5) (2025-01-24)
+
+
+### Bug Fixes
+
+* add smarter demo bots to ChatBotHelper.__init__() ([52e7cdd](https://github.com/smarter-sh/smarter/commit/52e7cdd4b449e52779d7f747163927d2a102f82c))
+* ChatConfigView() should always return json ([e1274bb](https://github.com/smarter-sh/smarter/commit/e1274bbb856062384d1ddbdb7a34111ee1e2833b))
+* ChatConfigView() should always return json ([bbb04b4](https://github.com/smarter-sh/smarter/commit/bbb04b49b9f21c787213f7db8eb2b6d10ba4582f))
+* ensure that we can fall back to a smarter chatbot if it exists ([a221491](https://github.com/smarter-sh/smarter/commit/a221491efd6b32c8ecd19b5ad58cc3c8c4e052b4))
+
 ## [0.10.4](https://github.com/smarter-sh/smarter/compare/v0.10.3...v0.10.4) (2025-01-23)
 
 
