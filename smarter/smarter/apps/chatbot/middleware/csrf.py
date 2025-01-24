@@ -16,10 +16,7 @@ from django.utils.functional import cached_property
 
 from smarter.apps.chatbot.models import ChatBot
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import (
-    SMARTER_WAFFLE_SWITCH_CSRF_MIDDLEWARE_LOGGING,
-    SMARTER_WAFFLE_SWITCH_SUPPRESS_FOR_CHATBOTS,
-)
+from smarter.common.const import SmarterWaffleSwitches
 
 
 logger = logging.getLogger(__name__)
@@ -71,7 +68,9 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware):
         # Does this url point to a ChatBot?
         # ------------------------------------------------------
         self.chatbot = ChatBot.get_by_request(request=request)
-        if self.chatbot and waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CSRF_MIDDLEWARE_LOGGING):
+        if self.chatbot and waffle.switch_is_active(
+            SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CSRF_MIDDLEWARE_LOGGING
+        ):
             logger.info("CsrfViewMiddleware.process_request: csrf_middleware_logging is active")
             logger.info("=" * 80)
             logger.info("CsrfViewMiddleware ChatBot: %s", self.chatbot)
@@ -95,8 +94,11 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware):
         if smarter_settings.environment == "local":
             logger.debug("CsrfViewMiddleware._accept: environment is local. ignoring csrf checks")
             return None
-        if self.chatbot and waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_SUPPRESS_FOR_CHATBOTS):
-            logger.info("CsrfViewMiddleware.process_view: %s is active", SMARTER_WAFFLE_SWITCH_SUPPRESS_FOR_CHATBOTS)
+        if self.chatbot and waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_SUPPRESS_FOR_CHATBOTS):
+            logger.info(
+                "CsrfViewMiddleware.process_view: %s is active",
+                SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_SUPPRESS_FOR_CHATBOTS,
+            )
             response = super().process_view(request, callback, callback_args, callback_kwargs)
             if isinstance(response, HttpResponseForbidden):
                 logger.error("CSRF validation failed")

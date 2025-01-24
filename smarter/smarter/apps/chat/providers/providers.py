@@ -16,7 +16,7 @@ from django.core.cache import cache
 
 from smarter.apps.chat.models import Chat
 from smarter.apps.plugin.plugin.static import PluginStatic
-from smarter.common.const import SMARTER_WAFFLE_SWITCH_CHAT_LOGGING
+from smarter.common.const import SmarterWaffleSwitches
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.user import UserType
@@ -99,7 +99,7 @@ class ChatProviders:
         cached_provider: OpenAIChatProvider = cache.get(cache_key)
 
         if cached_provider is not None:
-            if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
                 logger.info(
                     "%s returning cached OpenAIChatProvider for chat %s", formatted_text("openai_handler()"), chat.id
                 )
@@ -127,7 +127,7 @@ class ChatProviders:
         cached_provider: GoogleAIChatProvider = cache.get(cache_key)
 
         if cached_provider is not None:
-            if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
                 logger.info(
                     "%s returning cached GoogleAIChatProvider for chat %s",
                     formatted_text("googleai_handler()"),
@@ -151,7 +151,7 @@ class ChatProviders:
         cached_provider: MetaAIChatProvider = cache.get(cache_key)
 
         if cached_provider is not None:
-            if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
                 logger.info(
                     "%s returning cached MetaAIChatProvider for chat %s", formatted_text("metaai_handler()"), chat.id
                 )

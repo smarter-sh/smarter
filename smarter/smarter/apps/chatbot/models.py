@@ -21,7 +21,7 @@ from smarter.apps.account.utils import smarter_admin_user_profile, user_profile_
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING
+from smarter.common.const import SmarterWaffleSwitches
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import UserType
@@ -441,43 +441,46 @@ class ChatBotHelper(AccountMixin):
 
         if url:
             SmarterValidator.validate_url(url)  # raises ValidationError if url is invalid
-            parsed_url = urlparse(url)
-            path = parsed_url.path
-            if path in ["", "/"] and not name and not account:
-                if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
-                    logger.info(f"{self.formatted_class_name}: nothing to do for url={url}")
-                return
-
             url = SmarterValidator.urlify(
                 url, environment=smarter_settings.environment
             )  # normalizes the url so that we dont find ourselves working with variations of the same url
-
+            if url == smarter_settings.environment_url:
+                if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+                    logger.info(f"{self.formatted_class_name}: nothing to do for self.url={url}")
+                return None
             self._url = url
-            if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                 logger.info(f"{self.formatted_class_name}: initialized self.url={self.url}")
 
         if name:
             self._name = name
-            if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                 logger.info(f"{self.formatted_class_name}: initialized self.name={self.name}")
 
         if account:
             self._account = account
-            if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                 logger.info(f"{self.formatted_class_name}: initialized self.account={self.account}")
 
         if user:
             self._user = user
-            if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                 logger.info(f"{self.formatted_class_name}: initialized self.user={self.user}")
 
         if environment:
             self._environment = environment
-            if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                 logger.info(f"{self.formatted_class_name}: initialized self.environment={self.environment}")
 
         if self.account:
             self._account_number = self.account.account_number
+
+        # middleware sends lots of airballs to ChatBotHelper bc it doesn't
+        # know how to distinguish between a ChatBot url Vs any other url.
+        # therefore, we won't consider ourselves to be initializing unless
+        # we make it past this point.
+        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+            logger.info(f"{self.formatted_class_name}: __init__() url={self.url}, name={name}, account={account}")
 
         super().__init__(account=account, user=user, account_number=self.account_number)
 
@@ -486,7 +489,9 @@ class ChatBotHelper(AccountMixin):
         self._cache_key = f"{self.CACHE_PREFIX}_{self.account_number}_{self.url}"
         if self.cache_key in cache:
             self._chatbot = cache.get(self.cache_key)
-            if self._chatbot and waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+            if self._chatbot and waffle.switch_is_active(
+                SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING
+            ):
                 logger.info(
                     "%s: %s, account: %s for url: %s",
                     formatted_text(f"{self.formatted_class_name}: returning cached chatbot"),
@@ -494,17 +499,11 @@ class ChatBotHelper(AccountMixin):
                     self.chatbot.account.account_number,
                     self.url,
                 )
-
-            # most calls arrive here, because in most cases the url is not a
-            # chatbot url and its already cached.
             return None
-
-        if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
-            logger.info(f"{self.formatted_class_name}: __init__()")
 
         # 2a. try using account and name
         if self.account and self.name:
-            if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                 logger.info(f"{self.formatted_class_name}: account={self.account}, name={self.name}")
             try:
                 self._chatbot = ChatBot.objects.get(account=self.account, name=self.name)
@@ -513,7 +512,7 @@ class ChatBotHelper(AccountMixin):
                 smarter_admin = smarter_admin_user_profile()
                 self._chatbot = ChatBot.objects.get(account=smarter_admin.account, name=self.name)
 
-            if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                 logger.info(
                     "%s: initialized self.chatbot=%s from account %s and name %s",
                     self.formatted_class_name,
@@ -527,13 +526,13 @@ class ChatBotHelper(AccountMixin):
 
         if not self._chatbot and user and not self._user:
             self._user = user
-            if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                 logger.info(f"{self.formatted_class_name}: initialized self.user={self.user}")
             self._user_profile = UserProfile.objects.get(user=self.user)
-            if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                 logger.info(f"{self.formatted_class_name}: initialized self.user_profile from self.user={self.user}")
             self._account = self.user_profile.account
-            if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                 logger.info(
                     f"{self.formatted_class_name}: initialized self.account from self.user_profile={self.user_profile}"
                 )
@@ -543,13 +542,13 @@ class ChatBotHelper(AccountMixin):
             if created:
                 logger.warning(f"{self.formatted_class_name}: created missing user_profile={self.user_profile}")
             self._account = self.user_profile.account
-            if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                 logger.info(f"{self.formatted_class_name}: initialized self.account={self.account}")
 
         if not self._chatbot and self._account and name:
             try:
                 self._chatbot = ChatBot.objects.get(account=self._account, name=name)
-                if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+                if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                     logger.info(f"{self.formatted_class_name}: initialized self.chatbot={self.chatbot}")
             except ChatBot.DoesNotExist:
                 pass
@@ -557,7 +556,7 @@ class ChatBotHelper(AccountMixin):
         if not self._chatbot and self._account and self.api_subdomain:
             try:
                 self._chatbot = ChatBot.objects.get(account=self._account, name=self.api_subdomain)
-                if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+                if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                     logger.info(f"{self.formatted_class_name}: initialized self.chatbot={self.chatbot}")
             except ChatBot.DoesNotExist:
                 pass
@@ -565,18 +564,20 @@ class ChatBotHelper(AccountMixin):
         if not self._chatbot and self.account_number and self.api_subdomain:
             try:
                 self._chatbot = ChatBot.objects.get(account=self.account, name=self.api_subdomain)
-                if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+                if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                     logger.info(f"{self.formatted_class_name}: initialized self.chatbot={self.chatbot}")
             except ChatBot.DoesNotExist:
                 pass
 
-        if self._chatbot and waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+        if self._chatbot and waffle.switch_is_active(
+            SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING
+        ):
             self.log_dump()
 
         if self._chatbot:
             # cache the url so we don't have to parse it again
             cache.set(key=self.cache_key, value=self._chatbot, timeout=settings.SMARTER_CHATBOT_CACHE_EXPIRATION)
-            if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                 logger.info("%s: cached url - %s", self.formatted_class_name, self.url)
             return None
         logger.warning(
@@ -769,7 +770,7 @@ class ChatBotHelper(AccountMixin):
             if retval:
                 try:
                     self._account = Account.objects.get(account_number=retval)
-                    if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+                    if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                         logger.info("%s: initialized self.account=%s", self.formatted_class_name, self.account)
                 except Account.DoesNotExist:
                     logger.warning(f"Account {retval} not found")
@@ -799,7 +800,7 @@ class ChatBotHelper(AccountMixin):
 
         if self._account_number:
             self._account = Account.objects.get(account_number=self._account_number)
-            if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                 logger.info("%s: initialized self.account=%s", self.formatted_class_name, self.account)
 
         return self._account_number
@@ -906,7 +907,7 @@ class ChatBotHelper(AccountMixin):
         if self.account and self.name:
             try:
                 self._chatbot = ChatBot.objects.get(account=self.account, name=self.name)
-                if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+                if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                     logger.info(
                         "%s: initialized chatbot %s from account %s and name %s",
                         self.formatted_class_name,
@@ -917,7 +918,7 @@ class ChatBotHelper(AccountMixin):
             except ChatBot.DoesNotExist:
                 try:
                     self._chatbot = ChatBot.objects.get(account=admin_account, name=self.name)
-                    if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+                    if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                         logger.info(
                             f"{self.formatted_class_name}: initialized chatbot {self._chatbot} from account {admin_account} and name {self.name}"
                         )
@@ -933,13 +934,13 @@ class ChatBotHelper(AccountMixin):
             match = re.search(r"/api/v1/chatbots/(\d+)", self.url)
             if match:
                 chatbot_id = int(match.group(1))
-                if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+                if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                     logger.info(
                         f"{self.formatted_class_name}: matched ChatBot id {chatbot_id} from regular expression against {self.url}"
                     )
                 try:
                     self._chatbot = ChatBot.objects.get(id=chatbot_id)
-                    if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+                    if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                         logger.info(
                             f"{self.formatted_class_name}: initialized chatbot {self._chatbot} from sandbox domain {self.url}"
                         )
@@ -951,14 +952,14 @@ class ChatBotHelper(AccountMixin):
         if self.is_default_domain:
             try:
                 self._chatbot = ChatBot.objects.get(account=self.account, name=self.api_subdomain, deployed=True)
-                if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+                if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                     logger.info(
                         f"{self.formatted_class_name}: initialized chatbot {self._chatbot} from account {self.account} and api_subdomain {self.api_subdomain}"
                     )
             except ChatBot.DoesNotExist:
                 try:
                     self._chatbot = ChatBot.objects.get(account=admin_account, name=self.api_subdomain, deployed=True)
-                    if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+                    if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                         logger.info(
                             f"{self.formatted_class_name}: initialized chatbot {self._chatbot} from account {admin_account} and name {self.api_subdomain}"
                         )
@@ -972,7 +973,7 @@ class ChatBotHelper(AccountMixin):
         if self.is_custom_domain:
             try:
                 self._chatbot = ChatBot.objects.get(custom_domain=self.chatbot_custom_domain, deployed=True)
-                if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+                if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                     logger.info(
                         f"{self.formatted_class_name}: initialized chatbot {self._chatbot} from custom domain {self.chatbot_custom_domain}"
                     )
@@ -990,7 +991,7 @@ class ChatBotHelper(AccountMixin):
                 except ChatBot.DoesNotExist:
                     try:
                         self._chatbot = ChatBot.objects.get(account=admin_account, name=self.api_subdomain)
-                        if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+                        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                             logger.info(
                                 f"{self.formatted_class_name}: initialized chatbot {self._chatbot} from account {admin_account} and name {self.api_subdomain}"
                             )
