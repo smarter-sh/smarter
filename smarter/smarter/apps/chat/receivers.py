@@ -8,7 +8,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from smarter.apps.plugin.models import PluginMeta
-from smarter.common.const import SMARTER_WAFFLE_SWITCH_CHAT_LOGGING
+from smarter.common.const import SmarterWaffleSwitches
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 
 from .models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
@@ -66,7 +66,7 @@ def handle_chat_completion_request_sent(sender, **kwargs):
         chat,
     )
 
-    if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+    if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
         logger.info(
             "%s for chat %s, \nrequest: %s",
             formatted_text("chat_completion_request"),
@@ -94,7 +94,7 @@ def handle_chat_completion_response_received(sender, **kwargs):
     prefix = formatted_text(f"chat_completion_response for iteration {iteration}")
     sender_name = get_sender_name(sender)
 
-    if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+    if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
         logger.info(
             "signal received from %s %s for chat %s, \nrequest: %s, \nresponse: %s",
             sender_name,
@@ -162,7 +162,7 @@ def handle_chat_response_success(sender, **kwargs):
     messages: list[dict] = kwargs.get("messages")
     sender_name = get_sender_name(sender)
 
-    if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+    if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
         logger.info(
             "signal received from %s %s for chat %s, \nrequest: %s, \nresponse: %s",
             sender_name,
