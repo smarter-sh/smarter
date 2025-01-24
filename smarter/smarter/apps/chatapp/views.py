@@ -13,7 +13,7 @@ from http import HTTPStatus
 
 import waffle
 from django.db import models
-from django.http import HttpResponseNotFound, HttpResponseServerError
+from django.http import HttpResponseNotFound, HttpResponseServerError, JsonResponse
 from django.shortcuts import render
 
 # from django.utils.decorators import method_decorator
@@ -209,10 +209,11 @@ class ChatConfigView(View, AccountMixin):
         name = kwargs.pop("name", None)
         self._sandbox_mode = name is not None
 
-        try:
-            self._chatbot = ChatBot.objects.get(name=name, account=self.account)
-        except ChatBot.DoesNotExist:
-            return HttpResponseNotFound(f"Chatbot not found: {name}")
+        # mcdaniel: why was this here?????
+        # try:
+        #     self._chatbot = ChatBot.objects.get(name=name, account=self.account)
+        # except ChatBot.DoesNotExist:
+        #     return HttpResponseNotFound(f"Chatbot not found: {name}")
 
         try:
             data = json.loads(request.body)
@@ -232,10 +233,16 @@ class ChatConfigView(View, AccountMixin):
         # for the device.
         session_key = data.get(SMARTER_CHAT_SESSION_KEY_NAME) or request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME) or None
         self.session = SmarterChatSession(request, session_key=session_key, chatbot=self.chatbot)
-        self.chatbot_helper = ChatBotHelper(
-            url=self.session.url, user=self.session.user_profile.user, account=self.session.account, name=name
-        )
-        self._chatbot = self.chatbot_helper.chatbot
+        try:
+            self.chatbot_helper = ChatBotHelper(
+                url=self.session.url, user=self.session.user_profile.user, account=self.session.account, name=name
+            )
+            self._chatbot = self.chatbot_helper.chatbot
+        except ChatBot.DoesNotExist:
+            return JsonResponse({"error": "Not found"}, status=404)
+        # pylint: disable=broad-except
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
 
         if not self.chatbot:
             return HttpResponseNotFound()
