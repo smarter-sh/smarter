@@ -84,6 +84,7 @@ class SmarterChatSession(SmarterRequestHelper):
     def __init__(self, request, session_key: str = None, chatbot: ChatBot = None):
         super().__init__(request)
 
+        self._chatbot = chatbot
         parsed_url = urllib.parse.urlparse(request.build_absolute_uri())
         # remove any query strings from url and also prune any trailing '/config/' from the url
         clean_url = parsed_url._replace(query="").geturl()
@@ -101,6 +102,7 @@ class SmarterChatSession(SmarterRequestHelper):
         try:
             self._chat = Chat.objects.get(session_key=session_key, url=self.url)
             self._session_key = session_key
+            self._chatbot = self._chat.chatbot
         except Chat.DoesNotExist:
             self._session_key = self.generate_key()
             if session_key:
@@ -112,12 +114,11 @@ class SmarterChatSession(SmarterRequestHelper):
                     self._session_key,
                 )
 
-        self._chatbot = chatbot
         self._chat_helper = ChatHelper(session_key=self.session_key, request=request, chatbot=self.chatbot)
         self._chat = self._chat_helper.chat
 
         if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
-            logger.info("%s - session established: %s", self.formatted_class_name, self.data)
+            logger.info("%s - session established: %s", self.formatted_class_name, self.session_key)
 
     @property
     def formatted_class_name(self):
@@ -209,11 +210,19 @@ class ChatConfigView(View, AccountMixin):
         name = kwargs.pop("name", None)
         self._sandbox_mode = name is not None
 
-        # mcdaniel: why was this here?????
-        # try:
-        #     self._chatbot = ChatBot.objects.get(name=name, account=self.account)
-        # except ChatBot.DoesNotExist:
-        #     return HttpResponseNotFound(f"Chatbot not found: {name}")
+        try:
+            self.chatbot_helper = ChatBotHelper(account=self.account, name=name)
+            self._chatbot = self.chatbot_helper.chatbot
+        except ChatBot.DoesNotExist:
+            return JsonResponse({"error": "Not found"}, status=404)
+        # pylint: disable=broad-except
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+        if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
+            logger.info(
+                "%s - chatbot=%s - chatbot_helper=%s", self.formatted_class_name, self.chatbot, self.chatbot_helper
+            )
 
         try:
             data = json.loads(request.body)
@@ -233,16 +242,6 @@ class ChatConfigView(View, AccountMixin):
         # for the device.
         session_key = data.get(SMARTER_CHAT_SESSION_KEY_NAME) or request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME) or None
         self.session = SmarterChatSession(request, session_key=session_key, chatbot=self.chatbot)
-        try:
-            self.chatbot_helper = ChatBotHelper(
-                url=self.session.url, user=self.session.user_profile.user, account=self.session.account, name=name
-            )
-            self._chatbot = self.chatbot_helper.chatbot
-        except ChatBot.DoesNotExist:
-            return JsonResponse({"error": "Not found"}, status=404)
-        # pylint: disable=broad-except
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
 
         if not self.chatbot:
             return JsonResponse({"error": "Not found"}, status=404)
