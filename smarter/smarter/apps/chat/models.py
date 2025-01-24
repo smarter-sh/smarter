@@ -13,10 +13,7 @@ from rest_framework import serializers
 from smarter.apps.account.models import Account
 from smarter.apps.chatbot.models import ChatBot
 from smarter.apps.plugin.models import PluginMeta
-from smarter.common.const import (
-    SMARTER_CHAT_SESSION_KEY_NAME,
-    SMARTER_WAFFLE_SWITCH_CHAT_LOGGING,
-)
+from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.request import SmarterRequestHelper
@@ -156,7 +153,7 @@ class ChatHelper(SmarterRequestHelper):
         self._session_key = session_key
         self._chatbot = chatbot
         self._chat = self.get_cached_chat()
-        if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
             logger.info(
                 "%s - initialized chat: %s session_key: %s", self.formatted_class_name, self.chat, self.chat.session_key
             )
@@ -234,7 +231,7 @@ class ChatHelper(SmarterRequestHelper):
             chat = Chat(**chat)
 
         if chat:
-            if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
                 logger.info(
                     "%s - retrieved cached chat: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
                 )
@@ -248,13 +245,13 @@ class ChatHelper(SmarterRequestHelper):
             chat.chatbot = self.chatbot
             chat.save()
         else:
-            if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
                 logger.info(
                     "%s - queried chat instance: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
                 )
 
         cache.set(key=self.session_key, value=chat, timeout=settings.SMARTER_CHAT_CACHE_EXPIRATION or 300)
-        if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
             logger.info(
                 "%s - cached chat instance: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
             )
