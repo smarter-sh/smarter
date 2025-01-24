@@ -23,17 +23,37 @@ SMARTER_CUSTOMER_SUPPORT = "support@smarter.sh"
 # as browser cookies. The React app has constants
 # for these values as well which should be kept in sync.
 SMARTER_CHAT_SESSION_KEY_NAME = "session_key"
-SMARTER_WAFFLE_REACTAPP_DEBUG_MODE = "reactapp_debug_mode"
+
 
 # Smarter Waffle Switches and Flags
-SMARTER_WAFFLE_SWITCH_CHAT_LOGGING = "chat_logging"
-SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING = "chatbothelper_logging"
-SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING = "chatbot_api_view_logging"
-SMARTER_WAFFLE_SWITCH_CSRF_MIDDLEWARE_LOGGING = "csrf_middleware_logging"
-SMARTER_WAFFLE_SWITCH_JOURNAL = "journal"
-SMARTER_WAFFLE_SWITCH_SUPPRESS_FOR_CHATBOTS = "csrf_middleware_suppress_for_chatbots"
-SMARTER_WAFFLE_SWITCH_CHATAPP_VIEW_LOGGING = "chatapp_view_logging"
-SMARTER_WAFFLE_MANIFEST_LOGGING = "manifest_logging"
+class SmarterWaffleSwitches:
+    """A class representing the fixed set of Waffle switches for the Smarter API."""
+
+    SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING = "chatbot_api_view_logging"
+    SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING = "chatbothelper_logging"
+    SMARTER_WAFFLE_SWITCH_CHAT_LOGGING = "chat_logging"
+    SMARTER_WAFFLE_SWITCH_CSRF_MIDDLEWARE_LOGGING = "csrf_middleware_logging"
+    SMARTER_WAFFLE_SWITCH_JOURNAL = "journal"
+    SMARTER_WAFFLE_SWITCH_SUPPRESS_FOR_CHATBOTS = "csrf_middleware_suppress_for_chatbots"
+    SMARTER_WAFFLE_SWITCH_CHATAPP_VIEW_LOGGING = "chatapp_view_logging"
+    SMARTER_WAFFLE_MANIFEST_LOGGING = "manifest_logging"
+    SMARTER_WAFFLE_REACTAPP_DEBUG_MODE = "reactapp_debug_mode"
+
+    @property
+    def all(self):
+        """Return all switches."""
+        return [
+            self.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING,
+            self.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING,
+            self.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING,
+            self.SMARTER_WAFFLE_SWITCH_CSRF_MIDDLEWARE_LOGGING,
+            self.SMARTER_WAFFLE_SWITCH_JOURNAL,
+            self.SMARTER_WAFFLE_SWITCH_SUPPRESS_FOR_CHATBOTS,
+            self.SMARTER_WAFFLE_SWITCH_CHATAPP_VIEW_LOGGING,
+            self.SMARTER_WAFFLE_MANIFEST_LOGGING,
+            self.SMARTER_WAFFLE_REACTAPP_DEBUG_MODE,
+        ]
+
 
 HERE = os.path.abspath(os.path.dirname(__file__))  # smarter/smarter/common
 PROJECT_ROOT = str(Path(HERE).parent)  # smarter/smarter

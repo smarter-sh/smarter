@@ -10,7 +10,7 @@ from django.dispatch import receiver
 from django.forms.models import model_to_dict
 
 from smarter.apps.account.utils import user_profile_for_user
-from smarter.common.const import SMARTER_WAFFLE_SWITCH_CHAT_LOGGING
+from smarter.common.const import SmarterWaffleSwitches
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
 
 from .models import (
@@ -90,7 +90,7 @@ def handle_plugin_called(sender, **kwargs):
     except (TypeError, json.JSONDecodeError):
         pass
 
-    if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+    if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
         logger.info(
             "%s - %s inquiry_type: %s inquiry_return: %s",
             formatted_text("plugin_called"),
