@@ -56,7 +56,10 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
         """Test a url for the chatbot we created."""
         helper = ChatBotHelper(url=self.chatbot.url, environment=smarter_settings.environment)
 
-        self.assertTrue(helper.is_valid)
+        self.assertTrue(
+            helper.is_valid,
+            f"Expected a chatbot helper to be valid, but got {helper.is_valid} for url {self.chatbot.url} -- helper: {helper}, user: {helper.user}, profile: {helper.user_profile}",
+        )
         self.assertTrue(helper.account == self.account)
         self.assertTrue(
             helper.chatbot.url == self.chatbot.url, f"Expected {self.chatbot.url}, but got {helper.chatbot.url}"
@@ -91,10 +94,7 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
         self.assertTrue(helper.chatbot is None)
         self.assertTrue(helper.account_number is None)
         self.assertTrue(helper.is_custom_domain is False)
-        self.assertTrue(
-            str(reschemed_url) == "http://www.google.com/",
-            f"Expected http://www.google.com, but got {reschemed_url}",
-        )
+        self.assertTrue(reschemed_url is None)
         self.assertTrue(helper.is_deployed is False)
         self.assertTrue(helper.api_host is None)
         self.assertTrue(helper.api_subdomain == "www")
