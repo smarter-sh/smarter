@@ -245,7 +245,7 @@ class ChatConfigView(View, AccountMixin):
             return JsonResponse({"error": str(e)}, status=500)
 
         if not self.chatbot:
-            return HttpResponseNotFound()
+            return JsonResponse({"error": "Not found"}, status=404)
 
         self.thing = SmarterJournalThings(SmarterJournalThings.CHAT_CONFIG)
         self.command = SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT_CONFIG)
