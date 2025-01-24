@@ -13,7 +13,7 @@ from http import HTTPStatus
 
 import waffle
 from django.db import models
-from django.http import HttpResponseNotFound
+from django.http import HttpResponseNotFound, HttpResponseServerError, JsonResponse
 from django.shortcuts import render
 
 # from django.utils.decorators import method_decorator
@@ -84,6 +84,7 @@ class SmarterChatSession(SmarterRequestHelper):
     def __init__(self, request, session_key: str = None, chatbot: ChatBot = None):
         super().__init__(request)
 
+        self._chatbot = chatbot
         parsed_url = urllib.parse.urlparse(request.build_absolute_uri())
         # remove any query strings from url and also prune any trailing '/config/' from the url
         clean_url = parsed_url._replace(query="").geturl()
@@ -101,6 +102,7 @@ class SmarterChatSession(SmarterRequestHelper):
         try:
             self._chat = Chat.objects.get(session_key=session_key, url=self.url)
             self._session_key = session_key
+            self._chatbot = self._chat.chatbot
         except Chat.DoesNotExist:
             self._session_key = self.generate_key()
             if session_key:
@@ -112,12 +114,11 @@ class SmarterChatSession(SmarterRequestHelper):
                     self._session_key,
                 )
 
-        self._chatbot = chatbot
         self._chat_helper = ChatHelper(session_key=self.session_key, request=request, chatbot=self.chatbot)
         self._chat = self._chat_helper.chat
 
         if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
-            logger.info("%s - session established: %s", self.formatted_class_name, self.data)
+            logger.info("%s - session established: %s", self.formatted_class_name, self.session_key)
 
     @property
     def formatted_class_name(self):
@@ -210,9 +211,18 @@ class ChatConfigView(View, AccountMixin):
         self._sandbox_mode = name is not None
 
         try:
-            self._chatbot = ChatBot.objects.get(name=name, account=self.account)
+            self.chatbot_helper = ChatBotHelper(account=self.account, name=name)
+            self._chatbot = self.chatbot_helper.chatbot
         except ChatBot.DoesNotExist:
-            return HttpResponseNotFound(f"Chatbot not found: {name}")
+            return JsonResponse({"error": "Not found"}, status=404)
+        # pylint: disable=broad-except
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+        if waffle.switch_is_active(SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
+            logger.info(
+                "%s - chatbot=%s - chatbot_helper=%s", self.formatted_class_name, self.chatbot, self.chatbot_helper
+            )
 
         try:
             data = json.loads(request.body)
@@ -232,13 +242,9 @@ class ChatConfigView(View, AccountMixin):
         # for the device.
         session_key = data.get(SMARTER_CHAT_SESSION_KEY_NAME) or request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME) or None
         self.session = SmarterChatSession(request, session_key=session_key, chatbot=self.chatbot)
-        self.chatbot_helper = ChatBotHelper(
-            url=self.session.url, user=self.session.user_profile.user, account=self.session.account, name=name
-        )
-        self._chatbot = self.chatbot_helper.chatbot
 
         if not self.chatbot:
-            return HttpResponseNotFound()
+            return JsonResponse({"error": "Not found"}, status=404)
 
         self.thing = SmarterJournalThings(SmarterJournalThings.CHAT_CONFIG)
         self.command = SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT_CONFIG)
@@ -364,11 +370,21 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
         if response.status_code >= 300:
             return response
         self.url = request.build_absolute_uri()
-        self.chatbot_helper = ChatBotHelper(url=self.url, user=self.user_profile.user, account=self.account, name=name)
-        self.chatbot = self.chatbot_helper.chatbot
-        if not self.chatbot:
-            return HttpResponseNotFound()
-        return render(request, self.template_path)
+
+        try:
+            self.chatbot_helper = ChatBotHelper(
+                url=self.url, user=self.user_profile.user, account=self.account, name=name
+            )
+            self.chatbot = self.chatbot_helper.chatbot if self.chatbot_helper.chatbot else None
+            if not self.chatbot:
+                raise ChatBot.DoesNotExist
+        except ChatBot.DoesNotExist:
+            return render(request=request, template_name="404.html", status=404)
+        # pylint: disable=broad-except
+        except Exception as e:
+            return HttpResponseServerError(f"Error: {e}")
+
+        return render(request=request, template_name=self.template_path)
 
 
 class ChatAppListView(SmarterAuthenticatedNeverCachedWebView):
