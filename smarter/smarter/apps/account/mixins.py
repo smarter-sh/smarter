@@ -30,7 +30,7 @@ class AccountMixin:
         self._user = user
 
         if self._user and self._account:
-            self._user_profile = UserProfile.objects.get(user=self._user, account=self._account)
+            self._user_profile = self.get_user_profile(user=self._user, account=self._account)
 
     @property
     def account(self) -> Account:
@@ -47,7 +47,7 @@ class AccountMixin:
         self._account = account
         if account and self._user:
             try:
-                self._user_profile = UserProfile.objects.get(user=self.user, account=account)
+                self._user_profile = self.get_user_profile(user=self._user, account=self._account)
             except UserProfile.DoesNotExist as e:
                 raise SmarterBusinessRuleViolation(
                     f"User {self._user} does not belong to the account {account.account_number}."
@@ -74,19 +74,34 @@ class AccountMixin:
         if self._user_profile:
             return self._user_profile
         if self._user and self._account:
-            self._user_profile = UserProfile.objects.get(user=self.user, account=self.account)
+            self._user_profile = self.get_user_profile(user=self.user, account=self.account)
         elif self._user:
+            self._user_profile = self.get_user_profile(user=self.user)
+        elif self._account:
+            user = account_admin_user(self.account)
+            self._user_profile = self.get_user_profile(user=user, account=self.account)
+        return self._user_profile
+
+    def get_user_profile(self, user: UserType = None, account: Account = None) -> UserProfile:
+        if not user:
+            return None
+        if not user.is_authenticated:
+            return None
+
+        try:
+            return UserProfile.objects.get(user=user, account=account)
+        except UserProfile.DoesNotExist as e:
+            raise SmarterBusinessRuleViolation(
+                f"User {user} does not belong to the account {account.account_number}."
+            ) from e
+        except TypeError:
             # note: we'll only get a UserType if the user is authenticated.
             # Other self._user will be a SimpleLazyObject. The exception that we're trying to avoid is
             # when AccountMixin is used with public views that don't require authentication, in which case
             # self._user will be a SimpleLazyObject and we can't call UserProfile.objects.get(user=self.user)
             #
             # TypeError: Field 'id' expected a number but got <SimpleLazyObject: <django.contrib.auth.models.AnonymousUser object at 0x7fd7f18a78d0>>.
-            self._user_profile = UserProfile.objects.get(user=self.user) if isinstance(self._user, User) else None
-        elif self._account:
-            user = account_admin_user(self.account)
-            self._user_profile = UserProfile.objects.get(user=user, account=self.account)
-        return self._user_profile
+            return None
 
     def init(self):
         """
