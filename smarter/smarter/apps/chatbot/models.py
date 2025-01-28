@@ -433,20 +433,20 @@ class ChatBotHelper(AccountMixin):
     parse the url multiple times.
 
     examples of valid urls:
-    - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
-    - https://hr.smarter.querium.com/chatbot/
+    - https://example.3141-5926-5359.alpha.api.smarter.sh/
+    - https://example.smarter.querium.com/chatbot/
     """
 
-    CACHE_PREFIX = "ChatBotHelper_"
-
-    _chatbot_id: int = None
-    _url: str = None
-    _account_number: str = None
-    _environment: str = None
-    _chatbot: ChatBot = None
-    _chatbot_custom_domain: ChatBotCustomDomain = None
-    _chatbot_requests: ChatBotRequests = None
-    _name: str = None
+    __slots__ = [
+        "_chatbot_id",
+        "_url",
+        "_account_number",
+        "_environment",
+        "_chatbot",
+        "_chatbot_custom_domain",
+        "_chatbot_requests",
+        "_name",
+    ]
 
     # pylint: disable=W1203,R0913,R0915,R0912
     # mcdaniel apr-2024 TODO: refactor this class to reduce complexity, and memory usage.
@@ -464,6 +464,15 @@ class ChatBotHelper(AccountMixin):
         :param url: The URL to parse.
         :param environment: The environment to use for the URL. (for unit testing only)
         """
+        self._chatbot_id: int = None
+        self._url: str = None
+        self._account_number: str = None
+        self._environment: str = None
+        self._chatbot: ChatBot = None
+        self._chatbot_custom_domain: ChatBotCustomDomain = None
+        self._chatbot_requests: ChatBotRequests = None
+        self._name: str = None
+
         self.helper_logger(
             f"__init__() received: url={url}, user={user}, account={account}, name={name}, chatbot_id={chatbot_id}"
         )
@@ -505,7 +514,7 @@ class ChatBotHelper(AccountMixin):
                 self.helper_logger(f"initialized self.account_number={self.account_number} from named url")
                 if self._account_number:
                     self._account = Account.objects.get(account_number=self.account_number)
-                    self.helper_logger(f"initialized self.account={self.account} from named url")
+                    self.helper_logger(f"initialized self.account={self.account} from account number")
                 self._chatbot = self._chatbot or self.get_from_cache()
                 if self._chatbot:
                     return None
@@ -514,6 +523,10 @@ class ChatBotHelper(AccountMixin):
                     self._chatbot = ChatBot.objects.get(account=self.account, name=self.name)
                     self.set_to_cache(self._chatbot)
                     self.helper_logger(f"initialized self.chatbot={self.chatbot} from named url")
+                    return None
+
+        if self._chatbot:
+            return None
 
         if name and not self._name:
             self._name = name
@@ -661,8 +674,9 @@ class ChatBotHelper(AccountMixin):
 
     @property
     def cache_key(self) -> str:
+        CACHE_PREFIX = "ChatBotHelper_"
         if self.account_number and self.url:
-            return f"{self.CACHE_PREFIX}_{self.account_number}_{self.url}"
+            return f"{CACHE_PREFIX}_{self.account_number}_{self.url}"
         return None
 
     @property
