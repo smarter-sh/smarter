@@ -482,15 +482,16 @@ class ChatBotHelper(AccountMixin):
 
         if chatbot_id:
             self._chatbot_id = chatbot_id
-            try:
-                self._chatbot = ChatBot.objects.get(id=chatbot_id)
-                self.set_to_cache(self._chatbot)
-            except ChatBot.DoesNotExist as e:
-                raise SmarterValueError(f"ChatBot with id={chatbot_id} does not exist") from e
-
-            self._account = self._chatbot.account
-            self._name = self._chatbot.name
-            self.helper_logger(f"initialized self.chatbot={self.chatbot} from id={chatbot_id}")
+            self._chatbot = self.get_from_cache()
+            if not self._chatbot:
+                try:
+                    chatbot = ChatBot.objects.get(id=chatbot_id)
+                    self.set_to_cache(chatbot)
+                    self._chatbot = chatbot
+                    self._account = self.chatbot.account
+                    self._name = self.chatbot.name
+                except ChatBot.DoesNotExist as e:
+                    raise SmarterValueError(f"ChatBot with id={chatbot_id} does not exist") from e
             return None
 
         if url:
@@ -674,6 +675,8 @@ class ChatBotHelper(AccountMixin):
         CACHE_PREFIX = "ChatBotHelper_"
         if self.account_number and self.url:
             return f"{CACHE_PREFIX}_{self.account_number}_{self.url}"
+        if self.chatbot_id:
+            return f"{CACHE_PREFIX}_{self.chatbot_id}"
         return None
 
     @property
