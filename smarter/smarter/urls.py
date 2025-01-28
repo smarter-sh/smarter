@@ -16,6 +16,7 @@ from smarter.apps.account.views.authentication import (
     LoginView,
     LogoutView,
 )
+from smarter.apps.chatapp.views import ChatConfigView
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatBotApiView
 from smarter.apps.chatbot.models import ChatBotHelper
 from smarter.apps.dashboard.admin import restricted_site
@@ -32,7 +33,7 @@ admin.autodiscover()
 logger = logging.getLogger(__name__)
 
 
-def custom_redirect_view(request):
+def root_redirector(request):
     """
     Handles traffic sent to the root of the website. Requests
     can take the form of:
@@ -56,8 +57,17 @@ def custom_redirect_view(request):
     return redirect("/docs/")
 
 
+def config_redirector(request):
+    full_url = request.build_absolute_uri()
+    chatbot_helper = ChatBotHelper(url=full_url)
+    if chatbot_helper and chatbot_helper.chatbot:
+        view = ChatConfigView.as_view()
+        return view(request, chatbot_id=chatbot_helper.chatbot.id)
+
+
 urlpatterns = [
-    path("", custom_redirect_view, name="home"),
+    path("", root_redirector, name="home"),
+    path("config/", config_redirector, name="root_config"),
     # production smarter platform
     # -----------------------------------
     path("robots.txt", RobotsTxtView.as_view(), name="robots_txt"),
