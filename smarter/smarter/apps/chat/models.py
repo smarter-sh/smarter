@@ -146,14 +146,16 @@ class ChatHelper(SmarterRequestHelper):
     creating and retrieving Chat objects and managing the cache.
     """
 
-    _session_key: str = None
-    _chat: Chat = None
-    _chatbot: ChatBot = None
-    _chatbot_helper: ChatBotHelper = None
-    _clean_url: str = None
+    __slots__ = ("_session_key", "_chat", "_chatbot", "_chatbot_helper", "_clean_url", "account", "request")
 
     def __init__(self, request, session_key: str, chatbot: ChatBot = None) -> None:
         super().__init__(request)
+        self._session_key: str = None
+        self._chat: Chat = None
+        self._chatbot: ChatBot = None
+        self._chatbot_helper: ChatBotHelper = None
+        self._clean_url: str = None
+
         if not session_key and not chatbot:
             raise SmarterValueError(
                 f"{self.formatted_class_name} either a session_key or a ChatBot instance is required"
