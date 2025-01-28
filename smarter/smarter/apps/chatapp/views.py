@@ -41,6 +41,7 @@ from smarter.apps.plugin.models import (
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.common.exceptions import SmarterExceptionBase
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.utils import generate_key
 from smarter.lib.django.request import SmarterRequestHelper
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
@@ -88,8 +89,8 @@ class SmarterChatSession(SmarterRequestHelper):
             self._chatbot = chatbot
             self.account = chatbot.account
 
-        self._session_key = session_key or self.generate_key()
-        self._chat_helper = ChatHelper(session_key=self.session_key, request=request, chatbot=self.chatbot)
+        self._session_key = session_key or generate_key(self.unique_client_string)
+        self._chat_helper = ChatHelper(request=request, session_key=self.session_key, chatbot=self.chatbot)
         self._chat = self._chat_helper.chat
 
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
@@ -126,12 +127,6 @@ class SmarterChatSession(SmarterRequestHelper):
     @property
     def client_key(self):
         return hashlib.sha256(self.unique_client_string.encode()).hexdigest()
-
-    def generate_key(self):
-        key_string = self.unique_client_string + str(datetime.now())
-        session_key = hashlib.sha256(key_string.encode()).hexdigest()
-        logger.info("%s - New session key generated %s for %s", self.formatted_class_name, session_key, self.url)
-        return session_key
 
     def clean_url(self, url: str) -> str:
         """

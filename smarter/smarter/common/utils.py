@@ -1,9 +1,10 @@
 # pylint: disable=duplicate-code
 # pylint: disable=E1101
 """Utility functions for the OpenAI Lambda functions"""
-import datetime
+import hashlib
 import json  # library for interacting with JSON data https://www.json.org/json-en.html
 import logging
+from datetime import datetime
 
 from pydantic import SecretStr
 
@@ -15,7 +16,7 @@ class DateTimeEncoder(json.JSONEncoder):
     """JSON encoder that handles datetime objects."""
 
     def default(self, o):
-        if isinstance(o, datetime.datetime):
+        if isinstance(o, datetime):
             return o.strftime("%Y-%m-%d")
         if isinstance(o, SecretStr):
             return "*** REDACTED ***"
@@ -42,3 +43,12 @@ def dict_is_contained_in(dict1, dict2):
                 print(f"value {value} is not present in the model dict: ")
                 return False
     return True
+
+
+def generate_key(unique_string: str) -> str:
+    """
+    Generate a session key based on a unique string and the current datetime.
+    """
+    key_string = unique_string + str(datetime.now())
+    session_key = hashlib.sha256(key_string.encode()).hexdigest()
+    return session_key

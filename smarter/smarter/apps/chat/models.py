@@ -16,6 +16,7 @@ from smarter.apps.plugin.models import PluginMeta
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.utils import generate_key
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.request import SmarterRequestHelper
 from smarter.lib.django.validators import SmarterValidator
@@ -151,28 +152,19 @@ class ChatHelper(SmarterRequestHelper):
     _chatbot_helper: ChatBotHelper = None
     _clean_url: str = None
 
-    def __init__(self, session_key: str, request, chatbot: ChatBot = None) -> None:
+    def __init__(self, request, session_key: str, chatbot: ChatBot = None) -> None:
         super().__init__(request)
+        if not session_key and not chatbot:
+            raise SmarterValueError(
+                f"{self.formatted_class_name} either a session_key or a ChatBot instance is required"
+            )
 
-        if session_key:
-            try:
-                SmarterValidator.validate_session_key(session_key)
-            except SmarterValueError as e:
-                raise SmarterValueError(f"Illegal session_key format received: {e}") from e
+        if chatbot:
+            self._chatbot = chatbot
+            self.account = chatbot.account
 
-        self._session_key = session_key
-        self._chatbot = chatbot
-        self.account = chatbot.account if chatbot else None
+        self.session_key = session_key or generate_key(unique_string=self.unique_client_string)
         self._chat = self.get_cached_chat()
-        if self._chat:
-            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
-                logger.info(
-                    "%s - initialized chat: %s session_key: %s, chatbot: %s",
-                    self.formatted_class_name,
-                    self.chat,
-                    self.chat.session_key,
-                    self.chatbot,
-                )
 
     @property
     def chat(self):
@@ -196,6 +188,14 @@ class ChatHelper(SmarterRequestHelper):
     @property
     def session_key(self):
         return self._session_key
+
+    @session_key.setter
+    def session_key(self, value):
+        try:
+            SmarterValidator.validate_session_key(value)
+        except SmarterValueError as e:
+            raise SmarterValueError(f"Illegal session_key format received: {e}") from e
+        self._session_key = value
 
     @property
     def chatbot_helper(self) -> ChatBotHelper:
@@ -246,6 +246,10 @@ class ChatHelper(SmarterRequestHelper):
             "chatbot_request_history": None,  # ChatBotRequests
         }
 
+    @property
+    def unique_client_string(self):
+        return f"{self.account.account_number}{self.url}{self.user_agent}{self.ip_address}"
+
     def get_cached_chat(self) -> Chat:
         """
         Get the chat instance for the current request.
@@ -258,16 +262,25 @@ class ChatHelper(SmarterRequestHelper):
                 )
             return chat
 
-        try:
-            chat = Chat.objects.get(session_key=self.session_key)
-            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
-                logger.info(
-                    "%s - retrieved Chat instance: %s session_key: %s",
-                    self.formatted_class_name,
-                    chat,
-                    chat.session_key,
+        if self.session_key:
+            try:
+                chat = Chat.objects.get(session_key=self.session_key)
+                if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+                    logger.info(
+                        "%s - retrieved Chat instance: %s session_key: %s",
+                        self.formatted_class_name,
+                        chat,
+                        chat.session_key,
+                    )
+            except Chat.DoesNotExist:
+                pass
+
+        if not chat:
+            if not self.chatbot:
+                raise SmarterValueError(
+                    f"{self.formatted_class_name} ChatBot instance is required for creating a Chat object."
                 )
-        except Chat.DoesNotExist:
+
             chat = Chat.objects.create(
                 session_key=self.session_key,
                 account=self.account,
