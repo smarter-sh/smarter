@@ -16,6 +16,7 @@ from smarter.apps.account.views.authentication import (
     LoginView,
     LogoutView,
 )
+from smarter.apps.chatbot.api.v1.views.default import DefaultChatBotApiView
 from smarter.apps.chatbot.models import ChatBotHelper
 from smarter.apps.dashboard.admin import restricted_site
 from smarter.apps.dashboard.views.dashboard import ComingSoon
@@ -33,10 +34,12 @@ logger = logging.getLogger(__name__)
 
 def custom_redirect_view(request):
     """
-    Redirects to one of the following:
-    - a /api/v1/chatbot/ endpoint if the url is of the form
-    - the dashboard if the user is authenticated,
-    - otherwise to the Wagtail docs homepage.
+    Handles traffic sent to the root of the website. Requests
+    can take the form of:
+    1. a chatbot endpoint if the user is not authenticated and the
+       url is of the form https://example.3141-5926-5359.api.smarter.sh/,
+    2. the dashboard if the user is authenticated,
+    3. otherwise to the Wagtail docs homepage.
     """
     # 1. check if the user is authenticated, if so redirect to the dashboard
     if request.user.is_authenticated:
@@ -44,10 +47,10 @@ def custom_redirect_view(request):
 
     # 2. check if the url is of the form https://example.3141-5926-5359.api.smarter.sh/
     full_url = request.build_absolute_uri()
-    helper = ChatBotHelper(url=full_url)
-    if helper.chatbot:
-        logger.info(f"Redirecting to chatbot {helper.chatbot.id}")
-        return redirect(f"/api/v1/chatbots/{helper.chatbot.id}/chatbot/", permanent=True)
+    chatbot_helper = ChatBotHelper(url=full_url)
+    if chatbot_helper and chatbot_helper.chatbot:
+        view = DefaultChatBotApiView.as_view()
+        return view(request, chatbot_id=chatbot_helper.chatbot.id)
 
     # 3. otherwise redirect to the Wagtail docs homepage
     return redirect("/docs/")

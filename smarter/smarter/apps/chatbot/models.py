@@ -420,7 +420,7 @@ class ChatBotHelper(AccountMixin):
 
     CACHE_PREFIX = "ChatBotHelper_"
 
-    _id: int = None
+    _chatbot_id: int = None
     _cache_key: str = None
     _url: str = None
     _account_number: str = None
@@ -455,7 +455,7 @@ class ChatBotHelper(AccountMixin):
             return None
 
         if chatbot_id:
-            self._id = chatbot_id
+            self._chatbot_id = chatbot_id
             try:
                 self._chatbot = ChatBot.objects.get(id=chatbot_id)
             except ChatBot.DoesNotExist as e:
@@ -494,6 +494,13 @@ class ChatBotHelper(AccountMixin):
                     if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
                         logger.info(
                             f"{self.formatted_class_name}: initialized self.account={self.account} from named url"
+                        )
+                if self.name and self.account_number:
+                    self._chatbot = ChatBot.objects.get(account=self.account, name=self.name)
+                    self._chatbot_id = self.chatbot.id
+                    if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+                        logger.info(
+                            f"{self.formatted_class_name}: initialized self.chatbot={self.chatbot} from named url"
                         )
 
         if name:
@@ -592,8 +599,8 @@ class ChatBotHelper(AccountMixin):
         return str(self.url) if self.url else "undefined"
 
     @property
-    def id(self) -> int:
-        return self._id
+    def chatbot_id(self) -> int:
+        return self._chatbot_id
 
     @property
     def name(self):
@@ -905,11 +912,17 @@ class ChatBotHelper(AccountMixin):
         if not self.url:
             return False
         if not smarter_settings.api_domain in self.url:
+            logger.info(
+                f"{self.formatted_class_name}: api_domain {smarter_settings.api_domain} not found in url {self.url}"
+            )
             return False
         account_pattern = SMARTER_ACCOUNT_NUMBER_REGEX
         match = re.search(account_pattern, self.url)
         if match:
             return True
+        logger.info(
+            f"{self.formatted_class_name}: did not match account number pattern {account_pattern} against {self.url}"
+        )
         return False
 
     @property
@@ -920,11 +933,11 @@ class ChatBotHelper(AccountMixin):
         if self._chatbot:
             return self._chatbot
 
-        if self.id:
+        if self.chatbot_id:
             try:
-                self._chatbot = ChatBot.objects.get(id=self.id)
+                self._chatbot = ChatBot.objects.get(id=self.chatbot_id)
             except ChatBot.DoesNotExist as e:
-                raise SmarterValueError(f"ChatBot with id={self.id} does not exist") from e
+                raise SmarterValueError(f"ChatBot with id={self.chatbot_id} does not exist") from e
             return self._chatbot
 
         admin_account = smarter_admin_user_profile().account

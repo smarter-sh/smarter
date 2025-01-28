@@ -2,7 +2,6 @@
 """
 Smarter Customer API view.
 """
-import json
 import logging
 from http import HTTPStatus
 
