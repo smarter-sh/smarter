@@ -41,7 +41,7 @@ from smarter.apps.plugin.models import (
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.common.exceptions import SmarterExceptionBase
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.common.utils import generate_key
+from smarter.common.utils import clean_url, generate_key
 from smarter.lib.django.request import SmarterRequestHelper
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
@@ -174,19 +174,19 @@ class ChatConfigView(View, AccountMixin):
     def formatted_class_name(self):
         return formatted_text(self.__class__.__name__)
 
-    def dispatch(self, request, *args, **kwargs):
+    def dispatch(self, request, *args, chatbot_id: int = None, **kwargs):
         self._user = request.user
         name = kwargs.pop("name", None)
         self._sandbox_mode = name is not None
 
         chatbot_id = kwargs.pop("chatbot_id", None)
-        if chatbot_id:
-            try:
-                self.chatbot_helper = ChatBotHelper(chatbot_id=chatbot_id)
-                self._chatbot = self.chatbot_helper.chatbot
-                self.account = self.chatbot_helper.account
-            except ChatBot.DoesNotExist:
-                return JsonResponse({"error": "Not found"}, status=404)
+        try:
+            url = clean_url(request.build_absolute_uri())
+            self.chatbot_helper = ChatBotHelper(chatbot_id=chatbot_id, user=self.user, account=self.account, url=url)
+            self._chatbot = self.chatbot_helper.chatbot
+            self.account = self.chatbot_helper.account
+        except ChatBot.DoesNotExist:
+            return JsonResponse({"error": "Not found"}, status=404)
 
         if not self._chatbot:
             try:

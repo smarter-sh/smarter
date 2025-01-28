@@ -4,6 +4,7 @@
 import hashlib
 import json  # library for interacting with JSON data https://www.json.org/json-en.html
 import logging
+import urllib.parse
 from datetime import datetime
 
 from pydantic import SecretStr
@@ -52,3 +53,13 @@ def generate_key(unique_string: str) -> str:
     key_string = unique_string + str(datetime.now())
     session_key = hashlib.sha256(key_string.encode()).hexdigest()
     return session_key
+
+
+def clean_url(url: str) -> str:
+    """
+    Clean the url of any query strings and trailing '/config/' strings.
+    """
+    parsed_url = urllib.parse.urlparse(url)
+    # remove any query strings from url and also prune any trailing '/config/' from the url
+    retval = parsed_url._replace(query="").geturl()
+    return retval
