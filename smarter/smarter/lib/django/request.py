@@ -14,7 +14,6 @@ class SmarterRequestHelper(AccountMixin):
     provides lazy loading of the user, account, and user profile.
     """
 
-    _request = None
     _url: str = None
 
     def __init__(self, request):

@@ -52,7 +52,7 @@ class HttpRequestSerializer(serializers.Serializer):
         return ret
 
     def get_url(self, obj):
-        if obj.request:
+        if obj and hasattr(obj, "request") and obj.request:
             _url = obj.request.build_absolute_uri()
             return _url
         return None
