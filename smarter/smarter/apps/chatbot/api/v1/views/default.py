@@ -69,7 +69,7 @@ class DefaultChatBotApiView(ChatBotApiBaseViewSet):
         if self.session_key:
             SmarterValidator.validate_session_key(self.session_key)
         if self.chatbot or self.session_key:
-            self.chat_helper = ChatHelper(session_key=self.session_key, request=request, chatbot=self.chatbot)
+            self.chat_helper = ChatHelper(request=request, session_key=self.session_key, chatbot=self.chatbot)
             if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
                 logger.info(
                     "%s initialized with chat: %s, chatbot: %s",
