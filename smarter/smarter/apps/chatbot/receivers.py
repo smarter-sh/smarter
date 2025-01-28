@@ -4,9 +4,11 @@
 import json
 import logging
 
+import waffle
 from django.dispatch import receiver
 from django.http import HttpRequest
 
+from smarter.common.const import SmarterWaffleSwitches
 from smarter.common.helpers.console_helpers import formatted_text
 
 from .models import ChatBot
@@ -65,15 +67,15 @@ def handle_chatbot_called(sender, **kwargs):
     """Handle chatbot_called signal."""
 
     chatbot: ChatBot = kwargs.get("chatbot")
-    logger.info("%s - %s", formatted_text("chatbot_called"), chatbot.hostname)
+    if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+        logger.info("%s - %s", formatted_text("chatbot_called"), chatbot.hostname)
 
     request: HttpRequest = kwargs.get("request")
     try:
         request_data = json.loads(request.body)
+        create_chatbot_request.delay(chatbot.id, request_data)
     except json.JSONDecodeError:
         logger.warning("handle_chatbot_called() received an empty or invalid request body from %s", chatbot.hostname)
         request_data = {
             "JSONDecodeError": "received an empty or invalid request body",
         }
-
-    create_chatbot_request.delay(chatbot.id, request_data)

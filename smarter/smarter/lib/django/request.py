@@ -20,8 +20,6 @@ class SmarterRequestHelper(AccountMixin):
     def __init__(self, request):
         if request.user.is_authenticated:
             self._request = request
-        else:
-            logger.warning("request.user is not authenticated.")
         super().__init__(user=request.user)
 
     @property
