@@ -155,7 +155,11 @@ class ChatHelper(SmarterRequestHelper):
         self._chat = self.get_cached_chat()
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
             logger.info(
-                "%s - initialized chat: %s session_key: %s", self.formatted_class_name, self.chat, self.chat.session_key
+                "%s - initialized chat: %s session_key: %s, chatbot: %s",
+                self.formatted_class_name,
+                self.chat,
+                self.chat.session_key,
+                self.chatbot,
             )
 
     @property
