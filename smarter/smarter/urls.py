@@ -1,5 +1,7 @@
 """URL configuration for Smarter Api and web console."""
 
+import logging
+
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -14,6 +16,7 @@ from smarter.apps.account.views.authentication import (
     LoginView,
     LogoutView,
 )
+from smarter.apps.chatbot.models import ChatBotHelper
 from smarter.apps.dashboard.admin import restricted_site
 from smarter.apps.dashboard.views.dashboard import ComingSoon
 from smarter.apps.docs.views.webserver import RobotsTxtView, SitemapXmlView
@@ -25,16 +28,29 @@ admin.site = restricted_site
 # and register their models with your custom admin site
 admin.autodiscover()
 
+logger = logging.getLogger(__name__)
+
 
 def custom_redirect_view(request):
     """
-    Redirects to the dashboard if the user is authenticated,
-    otherwise to the Wagtail docs homepage.
+    Redirects to one of the following:
+    - a /api/v1/chatbot/ endpoint if the url is of the form
+    - the dashboard if the user is authenticated,
+    - otherwise to the Wagtail docs homepage.
     """
+    # 1. check if the user is authenticated, if so redirect to the dashboard
     if request.user.is_authenticated:
         return redirect("/dashboard/")
-    else:
-        return redirect("/docs/")
+
+    # 2. check if the url is of the form https://example.3141-5926-5359.api.smarter.sh/
+    full_url = request.build_absolute_uri()
+    helper = ChatBotHelper(url=full_url)
+    if helper.chatbot:
+        logger.info(f"Redirecting to chatbot {helper.chatbot.id}")
+        return redirect(f"/api/v1/chatbots/{helper.chatbot.id}/chatbot/", permanent=True)
+
+    # 3. otherwise redirect to the Wagtail docs homepage
+    return redirect("/docs/")
 
 
 urlpatterns = [

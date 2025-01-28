@@ -20,7 +20,8 @@ from django.views.generic import RedirectView
 
 
 urlpatterns = [
-    path("", RedirectView.as_view(url="/docs/api/")),
+    # the url is of the form https://example.3141-5926-5359.alpha.api.smarter.sh
+    path("", include("smarter.apps.chatbot.api.v1.urls")),
     path("account/", include("smarter.apps.account.api.v1.urls")),
     path("chatbots/", include("smarter.apps.chatbot.api.v1.urls")),
     path("chat/", include("smarter.apps.chat.api.v1.urls")),

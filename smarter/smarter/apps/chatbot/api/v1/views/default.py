@@ -26,12 +26,8 @@ logger = logging.getLogger(__name__)
 
 
 class DefaultChatBotApiView(ChatBotApiBaseViewSet):
-    """Main view for Smarter ChatBot API."""
-
-    data: dict = {}
-    chat_helper: ChatHelper = None
-
     """
+    Main view for Smarter ChatBot API.
     top-level viewset for customer-deployed Plugin-based Chat APIs.
     """
 
@@ -59,17 +55,7 @@ class DefaultChatBotApiView(ChatBotApiBaseViewSet):
             ]
         }
         """
-        logger.info("DefaultChatBotApiView.dispatch() - name=%s", name)
-        kwargs.pop("chatbot_id", None)
-        self.request = request
-        self._user = request.user
-        self._name = name
-        try:
-            self.data = json.loads(request.body)
-        except json.JSONDecodeError:
-            self.data = {}
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
-            logger.info("%s - data=%s", self.formatted_class_name, self.data)
+        retval = super().dispatch(request, *args, **kwargs)
 
         # Initialize the chat session for this request. session_key is generated
         # and managed by the /config/ endpoint for the chatbot
@@ -83,12 +69,17 @@ class DefaultChatBotApiView(ChatBotApiBaseViewSet):
         self._session_key = self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
         if self.session_key:
             SmarterValidator.validate_session_key(self.session_key)
-        self.chat_helper = ChatHelper(session_key=self.session_key, request=request, chatbot=self.chatbot)
+        if self.chatbot or self.session_key:
+            self.chat_helper = ChatHelper(session_key=self.session_key, request=request, chatbot=self.chatbot)
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
+                logger.info(
+                    "%s initialized with chat: %s, chatbot: %s",
+                    self.formatted_class_name,
+                    self.chat_helper.chat,
+                    self.chatbot,
+                )
 
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
-            logger.info("%s initialized with chat object %s", self.formatted_class_name, self.chat_helper.chat)
-
-        return super().dispatch(request, *args, **kwargs)
+        return retval
 
     # pylint: disable=W0613
     def post(self, request, *args, name: str = None, **kwargs):
