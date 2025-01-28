@@ -162,6 +162,7 @@ class ChatHelper(SmarterRequestHelper):
 
         self._session_key = session_key
         self._chatbot = chatbot
+        self.account = chatbot.account if chatbot else None
         self._chat = self.get_cached_chat()
         if self._chat:
             if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
@@ -250,34 +251,39 @@ class ChatHelper(SmarterRequestHelper):
         Get the chat instance for the current request.
         """
         chat: Chat = cache.get(self.session_key)
-
         if chat:
             if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
                 logger.info(
                     "%s - retrieved cached chat: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
                 )
+            return chat
+
+        try:
+            chat = Chat.objects.get(session_key=self.session_key)
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+                logger.info(
+                    "%s - retrieved chat instance: %s session_key: %s",
+                    self.formatted_class_name,
+                    chat,
+                    chat.session_key,
+                )
+        except Chat.DoesNotExist:
+            chat = Chat.objects.create(
+                session_key=self.session_key,
+                account=self.account,
+                chatbot=self.chatbot,
+                ip_address=self.ip_address,
+                user_agent=self.user_agent,
+                url=self.url,
+            )
+
+        cache.set(key=self.session_key, value=chat, timeout=settings.SMARTER_CHAT_CACHE_EXPIRATION or 300)
+        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+            logger.info(
+                "%s - cached chat instance: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
+            )
+
+        if not chat.chatbot:
+            raise ValueError(f"{self.formatted_class_name} ChatBot instance is required for Chat object.")
+
         return chat
-
-        # chat, created = Chat.objects.get_or_create(session_key=self.session_key)
-        # if created:
-        #     chat.url = self.url
-        #     chat.ip_address = self.ip_address
-        #     chat.user_agent = self.user_agent
-        #     chat.chatbot = self.chatbot
-        #     chat.save()
-        # else:
-        #     if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
-        #         logger.info(
-        #             "%s - queried chat instance: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
-        #         )
-
-        # cache.set(key=self.session_key, value=chat, timeout=settings.SMARTER_CHAT_CACHE_EXPIRATION or 300)
-        # if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
-        #     logger.info(
-        #         "%s - cached chat instance: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
-        #     )
-
-        # if not chat.chatbot:
-        #     raise ValueError(f"{self.formatted_class_name} ChatBot instance is required for Chat object.")
-
-        # return chat
