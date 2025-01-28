@@ -74,7 +74,11 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         self._user = self._chatbot_helper.user
         self._account = self._chatbot_helper.account
         logger.info(
-            "ChatBotHelper: %s initialized with url: %s id: %s", self._chatbot_helper, self.url, self.chatbot_id
+            "%s: %s initialized with url: %s id: %s",
+            self.formatted_class_name,
+            self._chatbot_helper,
+            self.url,
+            self.chatbot_id,
         )
         return self._chatbot_helper
 

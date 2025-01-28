@@ -11,7 +11,7 @@ from django.db import models
 from rest_framework import serializers
 
 from smarter.apps.account.models import Account
-from smarter.apps.chatbot.models import ChatBot
+from smarter.apps.chatbot.models import ChatBot, ChatBotHelper
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.common.helpers.console_helpers import formatted_text
@@ -29,12 +29,12 @@ class Chat(TimestampedModel):
         verbose_name_plural = "Chats"
         unique_together = (SMARTER_CHAT_SESSION_KEY_NAME, "url")
 
-    session_key = models.CharField(max_length=255, blank=True, null=True)
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, blank=True, null=True)
-    chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE, blank=True, null=True)
-    ip_address = models.GenericIPAddressField(blank=True, null=True)
-    user_agent = models.CharField(max_length=255, blank=True, null=True)
-    url = models.URLField(blank=True, null=True)
+    session_key = models.CharField(max_length=255, blank=False, null=False, unique=True)
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, blank=False, null=False)
+    chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE, blank=False, null=False)
+    ip_address = models.GenericIPAddressField(blank=False, null=False)
+    user_agent = models.CharField(max_length=255, blank=False, null=False)
+    url = models.URLField(blank=False, null=False)
 
     def __str__(self):
         # pylint: disable=E1136
@@ -146,6 +146,7 @@ class ChatHelper(SmarterRequestHelper):
     _session_key: str = None
     _chat: Chat = None
     _chatbot: ChatBot = None
+    _chatbot_helper: ChatBotHelper = None
     _clean_url: str = None
 
     def __init__(self, session_key: str, request, chatbot: ChatBot = None) -> None:
@@ -153,14 +154,15 @@ class ChatHelper(SmarterRequestHelper):
         self._session_key = session_key
         self._chatbot = chatbot
         self._chat = self.get_cached_chat()
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
-            logger.info(
-                "%s - initialized chat: %s session_key: %s, chatbot: %s",
-                self.formatted_class_name,
-                self.chat,
-                self.chat.session_key,
-                self.chatbot,
-            )
+        if self._chat:
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+                logger.info(
+                    "%s - initialized chat: %s session_key: %s, chatbot: %s",
+                    self.formatted_class_name,
+                    self.chat,
+                    self.chat.session_key,
+                    self.chatbot,
+                )
 
     @property
     def chat(self):
@@ -186,8 +188,17 @@ class ChatHelper(SmarterRequestHelper):
         return self._session_key
 
     @property
+    def chatbot_helper(self) -> ChatBotHelper:
+        if self._chatbot_helper:
+            return self._chatbot_helper
+        self._chatbot_helper = ChatBotHelper(url=self.url)
+        return self._chatbot_helper
+
+    @property
     def chatbot(self):
-        return self._chatbot
+        if self._chatbot:
+            return self._chatbot
+        self._chatbot = self.chatbot_helper.chatbot if self._chatbot_helper else None
 
     @property
     def formatted_class_name(self):
@@ -229,38 +240,35 @@ class ChatHelper(SmarterRequestHelper):
         """
         Get the chat instance for the current request.
         """
-        chat = cache.get(self.session_key)
-
-        if isinstance(chat, dict):
-            chat = Chat(**chat)
+        chat: Chat = cache.get(self.session_key)
 
         if chat:
             if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
                 logger.info(
                     "%s - retrieved cached chat: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
                 )
-            return chat
-
-        chat, created = Chat.objects.get_or_create(session_key=self.session_key)
-        if created:
-            chat.url = self.url
-            chat.ip_address = self.ip_address
-            chat.user_agent = self.user_agent
-            chat.chatbot = self.chatbot
-            chat.save()
-        else:
-            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
-                logger.info(
-                    "%s - queried chat instance: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
-                )
-
-        cache.set(key=self.session_key, value=chat, timeout=settings.SMARTER_CHAT_CACHE_EXPIRATION or 300)
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
-            logger.info(
-                "%s - cached chat instance: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
-            )
-
-        if not chat.chatbot:
-            raise ValueError(f"{self.formatted_class_name} ChatBot instance is required for Chat object.")
-
         return chat
+
+        # chat, created = Chat.objects.get_or_create(session_key=self.session_key)
+        # if created:
+        #     chat.url = self.url
+        #     chat.ip_address = self.ip_address
+        #     chat.user_agent = self.user_agent
+        #     chat.chatbot = self.chatbot
+        #     chat.save()
+        # else:
+        #     if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+        #         logger.info(
+        #             "%s - queried chat instance: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
+        #         )
+
+        # cache.set(key=self.session_key, value=chat, timeout=settings.SMARTER_CHAT_CACHE_EXPIRATION or 300)
+        # if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+        #     logger.info(
+        #         "%s - cached chat instance: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
+        #     )
+
+        # if not chat.chatbot:
+        #     raise ValueError(f"{self.formatted_class_name} ChatBot instance is required for Chat object.")
+
+        # return chat

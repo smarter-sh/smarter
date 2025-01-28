@@ -448,8 +448,6 @@ class ChatBotHelper(AccountMixin):
         "_name",
     ]
 
-    # pylint: disable=W1203,R0913,R0915,R0912
-    # mcdaniel apr-2024 TODO: refactor this class to reduce complexity, and memory usage.
     def __init__(
         self,
         url: str = None,
@@ -572,7 +570,6 @@ class ChatBotHelper(AccountMixin):
                 smarter_admin = smarter_admin_user_profile()
                 self._chatbot = ChatBot.objects.get(account=smarter_admin.account, name=self.name)
             self.set_to_cache(self._chatbot)
-
             self.helper_logger(
                 f"initialized self.chatbot={self.chatbot} from account {self.account} and name {self.name}"
             )
@@ -597,7 +594,7 @@ class ChatBotHelper(AccountMixin):
 
     @property
     def chatbot_id(self) -> int:
-        return self._chatbot_id
+        return self._chatbot.id if self._chatbot else self._chatbot_id
 
     @property
     def name(self):
