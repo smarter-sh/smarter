@@ -17,6 +17,7 @@ from smarter.apps.account.mixins import AccountMixin
 
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.serializers import AccountMiniSerializer
 from smarter.apps.account.utils import smarter_admin_user_profile, user_profile_for_user
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.static import PluginStatic
@@ -404,6 +405,24 @@ class ChatBotRequestsSerializer(serializers.ModelSerializer):
         )
 
 
+class ChatBotSerializer(serializers.ModelSerializer):
+    url_chatbot = serializers.ReadOnlyField()
+    account = AccountMiniSerializer()
+
+    class Meta:
+        model = ChatBot
+        fields = []
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.Meta.fields = [
+            field.name
+            for field in self.Meta.model._meta.get_fields()
+            if field.name not in ["chat", "chatbotapikey", "chatbotplugin", "chatbotfunctions", "chatbotrequests"]
+        ]
+        self.Meta.fields += ["url_chatbot", "account"]
+
+
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
 class ChatBotHelper(AccountMixin):
     """Maps urls and attribute data to their respective ChatBot models.
@@ -654,19 +673,19 @@ class ChatBotHelper(AccountMixin):
             "path": self.path,
             "root_domain": self.root_domain,
             "subdomain": self.subdomain,
-            "account_number": self.account_number,
             "api_subdomain": self.api_subdomain,
             "api_host": self.api_host,
             "customer_api_domain": self.customer_api_domain,
             "is_sandbox_domain": self.is_sandbox_domain,
             "is_default_domain": self.is_default_domain,
             "is_custom_domain": self.is_custom_domain,
+            "is_named_url": self.is_named_url,
             "is_deployed": self.is_deployed,
             "is_valid": self.is_valid,
             "is_authentication_required": self.is_authentication_required,
             "user": self.user.username if self.user else None,
             "account": self.account.account_number if self.account else None,
-            "chatbot": self.chatbot.name if self.chatbot else None,
+            "chatbot": ChatBotSerializer(self.chatbot).data if self.chatbot else None,
         }
 
     @property
