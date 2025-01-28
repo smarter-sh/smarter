@@ -37,6 +37,8 @@ from .signals import (
 )
 
 
+SMARTER_ACCOUNT_NUMBER_REGEX = r"\b\d{4}-\d{4}-\d{4}\b"
+
 logger = logging.getLogger(__name__)
 
 
@@ -802,6 +804,12 @@ class ChatBotHelper(AccountMixin):
 
     @property
     def api_subdomain(self) -> str:
+        """
+        Extracts the API subdomain from the URL.
+
+        example: https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
+        returns 'hr'
+        """
         try:
             result = urlparse(self.url)
             domain_parts = result.netloc.split(".")
@@ -892,19 +900,16 @@ class ChatBotHelper(AccountMixin):
     @property
     def is_named_url(self) -> bool:
         """
-        Returns True if the url is of the form https://example.3141-5926-5359.alpha.api.smarter.sh/
+        Returns True if the url is of the form https://example.3141-5926-5359.api.smarter.sh/
         """
         if not self.url:
-            logger.info("is_named_url() - no url")
             return False
         if not smarter_settings.api_domain in self.url:
-            logger.info("is_named_url() - api_domain %s not found", smarter_settings.api_domain)
             return False
-        account_pattern = r"\b\d{4}-\d{4}-\d{4}\b"
+        account_pattern = SMARTER_ACCOUNT_NUMBER_REGEX
         match = re.search(account_pattern, self.url)
         if match:
             return True
-        logger.info("is_named_url() - account number not found")
         return False
 
     @property
@@ -1057,8 +1062,15 @@ class ChatBotHelper(AccountMixin):
         return self._chatbot_custom_domain
 
     def account_number_from_url(self) -> str:
+        """
+        Extracts the account number from the URL.
+        :return: The account number or None if not found.
+
+        example: https://hr.3141-5926-5359.alpha.api.smarter.sh/
+        returns '3141-5926-5359'
+        """
         if not self.url:
             return None
-        pattern = r"\d{4}-\d{4}-\d{4}"
+        pattern = SMARTER_ACCOUNT_NUMBER_REGEX
         match = re.search(pattern, self.url)
         return match.group(0) if match else None

@@ -70,26 +70,10 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         # ensure that we have some combination of properties that can identify a chatbot
         if not (self.url or self.id or (self.account and self.name)):
             return None
-        logger.info(
-            "ChatBotApiBaseViewSet.chatbot_helper(): attempting to set with url=%s, id=%s, account=%s, name=%s",
-            self.url,
-            self.id,
-            self.account,
-            self.name,
-        )
         self._chatbot_helper = ChatBotHelper(
             url=self.url, name=self.name, user=self.user, account=self.account, chatbot_id=self.id
         )
         if self._chatbot_helper:
-            logger.info("ChatBotApiBaseViewSet.chatbot_helper(): chatbot=%s", self._chatbot_helper.chatbot)
-            logger.info(
-                "ChatBotApiBaseViewSet.chatbot_helper(): got the following url=%s, name=%s, user=%s, account=%s, id=%s",
-                self._chatbot_helper.url,
-                self._chatbot_helper.name,
-                self._chatbot_helper.user,
-                self._chatbot_helper.account,
-                self._chatbot_helper.id,
-            )
             self._user = self._chatbot_helper.user
             self._url = self._chatbot_helper.url
             self._account = self._chatbot_helper.account
@@ -130,14 +114,15 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         self._url = self.request.build_absolute_uri()
         self._url = SmarterValidator.urlify(self._url, environment=smarter_settings.environment)
         if not self.chatbot:
-            logger.error(
-                "fuck a duck. Could not initialize ChatBotHelper url: %s, name: %s, user: %s, account: %s, id: %s",
-                self.url,
-                self.name,
-                self.user,
-                self.account,
-                self.id,
-            )
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
+                logger.error(
+                    "Could not initialize ChatBotHelper url: %s, name: %s, user: %s, account: %s, id: %s",
+                    self.url,
+                    self.name,
+                    self.user,
+                    self.account,
+                    self.id,
+                )
             return JsonResponse({}, status=HTTPStatus.NOT_FOUND)
         self._account = self.chatbot.account
 
