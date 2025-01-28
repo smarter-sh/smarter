@@ -254,7 +254,7 @@ class ChatHelper(SmarterRequestHelper):
         if chat:
             if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
                 logger.info(
-                    "%s - retrieved cached chat: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
+                    "%s - retrieved cached Chat: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
                 )
             return chat
 
@@ -262,7 +262,7 @@ class ChatHelper(SmarterRequestHelper):
             chat = Chat.objects.get(session_key=self.session_key)
             if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
                 logger.info(
-                    "%s - retrieved chat instance: %s session_key: %s",
+                    "%s - retrieved Chat instance: %s session_key: %s",
                     self.formatted_class_name,
                     chat,
                     chat.session_key,
@@ -276,6 +276,13 @@ class ChatHelper(SmarterRequestHelper):
                 user_agent=self.user_agent,
                 url=self.url,
             )
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+                logger.info(
+                    "%s - created new Chat instance: %s session_key: %s",
+                    self.formatted_class_name,
+                    chat,
+                    chat.session_key,
+                )
 
         cache.set(key=self.session_key, value=chat, timeout=settings.SMARTER_CHAT_CACHE_EXPIRATION or 300)
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
