@@ -39,10 +39,9 @@ from smarter.apps.plugin.models import (
     PluginSelectorHistorySerializer,
 )
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
-from smarter.common.exceptions import SmarterExceptionBase, SmarterValueError
+from smarter.common.exceptions import SmarterExceptionBase
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.request import SmarterRequestHelper
-from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
 from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
@@ -80,36 +79,16 @@ class SmarterChatSession(SmarterRequestHelper):
     def __init__(self, request, session_key: str = None, chatbot: ChatBot = None):
         super().__init__(request)
 
-        self._chatbot = chatbot
-        parsed_url = urllib.parse.urlparse(request.build_absolute_uri())
-        # remove any query strings from url and also prune any trailing '/config/' from the url
-        clean_url = parsed_url._replace(query="").geturl()
-        if clean_url.endswith("/config/"):
-            clean_url = clean_url[:-8]
-        self._url = clean_url
+        if not session_key and not chatbot:
+            raise SmarterChatappViewError("Either a session_key or a chatbot instance is required")
 
-        try:
-            if session_key:
-                SmarterValidator.validate_session_key(session_key)
-        except SmarterValueError as e:
-            logger.error("%s - %s", self.formatted_class_name, e)
-            session_key = None
+        self._url = self.clean_url(request.build_absolute_uri())
 
-        try:
-            self._chat = Chat.objects.get(session_key=session_key, url=self.url)
-            self._session_key = session_key
-            self._chatbot = self._chat.chatbot
-        except Chat.DoesNotExist:
-            self._session_key = self.generate_key()
-            if session_key:
-                logger.warning(
-                    "%s - session_key %s not found for url %s. New session key generated %s",
-                    self.formatted_class_name,
-                    session_key,
-                    self.url,
-                    self._session_key,
-                )
+        if chatbot:
+            self._chatbot = chatbot
+            self.account = chatbot.account
 
+        self._session_key = session_key or self.generate_key()
         self._chat_helper = ChatHelper(session_key=self.session_key, request=request, chatbot=self.chatbot)
         self._chat = self._chat_helper.chat
 
@@ -150,7 +129,20 @@ class SmarterChatSession(SmarterRequestHelper):
 
     def generate_key(self):
         key_string = self.unique_client_string + str(datetime.now())
-        return hashlib.sha256(key_string.encode()).hexdigest()
+        session_key = hashlib.sha256(key_string.encode()).hexdigest()
+        logger.info("%s - New session key generated %s for %s", self.formatted_class_name, session_key, self.url)
+        return session_key
+
+    def clean_url(self, url: str) -> str:
+        """
+        Clean the url of any query strings and trailing '/config/' strings.
+        """
+        parsed_url = urllib.parse.urlparse(url)
+        # remove any query strings from url and also prune any trailing '/config/' from the url
+        clean_url = parsed_url._replace(query="").geturl()
+        if clean_url.endswith("/config/"):
+            clean_url = clean_url[:-8]
+        return clean_url
 
 
 # pylint: disable=R0902
@@ -188,7 +180,30 @@ class ChatConfigView(View, AccountMixin):
         return formatted_text(self.__class__.__name__)
 
     def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
+        self._user = request.user
+        name = kwargs.pop("name", None)
+        self._sandbox_mode = name is not None
+
+        chatbot_id = kwargs.pop("chatbot_id", None)
+        if chatbot_id:
+            try:
+                self.chatbot_helper = ChatBotHelper(chatbot_id=chatbot_id)
+                self._chatbot = self.chatbot_helper.chatbot
+                self.account = self.chatbot_helper.account
+            except ChatBot.DoesNotExist:
+                return JsonResponse({"error": "Not found"}, status=404)
+
+        if not self._chatbot:
+            try:
+                self.chatbot_helper = ChatBotHelper(account=self.account, name=name)
+                self._chatbot = self.chatbot_helper.chatbot
+            except ChatBot.DoesNotExist:
+                return JsonResponse({"error": "Not found"}, status=404)
+            # pylint: disable=broad-except
+            except Exception as e:
+                return JsonResponse({"error": str(e)}, status=500)
+
+        if self.chatbot_helper and self.chatbot_helper.is_authentication_required and not request.user.is_authenticated:
             try:
                 raise SmarterChatappViewError(
                     "Authentication failed. Are you logged in? Smarter sessions automatically expire after 24 hours."
@@ -201,19 +216,6 @@ class ChatConfigView(View, AccountMixin):
                     e=e,
                     status=HTTPStatus.FORBIDDEN.value,
                 )
-
-        self._user = request.user
-        name = kwargs.pop("name", None)
-        self._sandbox_mode = name is not None
-
-        try:
-            self.chatbot_helper = ChatBotHelper(account=self.account, name=name)
-            self._chatbot = self.chatbot_helper.chatbot
-        except ChatBot.DoesNotExist:
-            return JsonResponse({"error": "Not found"}, status=404)
-        # pylint: disable=broad-except
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
 
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
             logger.info(

@@ -14,9 +14,11 @@ from smarter.apps.account.models import Account
 from smarter.apps.chatbot.models import ChatBot, ChatBotHelper
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.request import SmarterRequestHelper
+from smarter.lib.django.validators import SmarterValidator
 
 
 logger = logging.getLogger(__name__)
@@ -151,6 +153,13 @@ class ChatHelper(SmarterRequestHelper):
 
     def __init__(self, session_key: str, request, chatbot: ChatBot = None) -> None:
         super().__init__(request)
+
+        if session_key:
+            try:
+                SmarterValidator.validate_session_key(session_key)
+            except SmarterValueError as e:
+                raise SmarterValueError(f"Illegal session_key format received: {e}") from e
+
         self._session_key = session_key
         self._chatbot = chatbot
         self._chat = self.get_cached_chat()
