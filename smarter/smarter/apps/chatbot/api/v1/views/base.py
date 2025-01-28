@@ -6,8 +6,6 @@ from http import HTTPStatus
 from typing import List
 
 import waffle
-
-# from cachetools import TTLCache, cached
 from django.http import HttpRequest, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -30,8 +28,6 @@ from smarter.lib.django.view_helpers import SmarterNeverCachedWebView
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-# cache = TTLCache(ttl=600, maxsize=1000)
-
 
 # pylint: disable=too-many-instance-attributes
 @method_decorator(csrf_exempt, name="dispatch")
@@ -43,41 +39,43 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
     - dispatching.
     """
 
-    data: dict = {}
-    chat_helper: ChatHelper = None
-
+    _chatbot_id: int = None
     _url: str = None
-    request: HttpRequest = None
-    http_method_names: list[str] = ["get", "post", "options"]
     _chatbot_helper: ChatBotHelper = None
-    plugins: List[PluginStatic] = None
     _session_key: str = None
     _name: str = None
-    _id: int = None
+
+    data: dict = {}
+    chat_helper: ChatHelper = None
+    request: HttpRequest = None
+    http_method_names: list[str] = ["get", "post", "options"]
+    plugins: List[PluginStatic] = None
 
     @property
     def session_key(self):
         return self._session_key
 
     @property
-    def id(self):
-        return self._id
+    def chatbot_id(self):
+        return self._chatbot_id
 
     @property
     def chatbot_helper(self) -> ChatBotHelper:
         if self._chatbot_helper:
             return self._chatbot_helper
         # ensure that we have some combination of properties that can identify a chatbot
-        if not (self.url or self.id or (self.account and self.name)):
+        if not (self.url or self.chatbot_id or (self.account and self.name)):
             return None
         self._chatbot_helper = ChatBotHelper(
-            url=self.url, name=self.name, user=self.user, account=self.account, chatbot_id=self.id
+            url=self.url, name=self.name, user=self.user, account=self.account, chatbot_id=self.chatbot_id
         )
-        if self._chatbot_helper:
-            self._user = self._chatbot_helper.user
-            self._url = self._chatbot_helper.url
-            self._account = self._chatbot_helper.account
-            self._id = self._chatbot_helper.id
+        self._chatbot_id = self._chatbot_helper.chatbot_id
+        self._url = self._chatbot_helper.url
+        self._user = self._chatbot_helper.user
+        self._account = self._chatbot_helper.account
+        logger.info(
+            "ChatBotHelper: %s initialized with url: %s id: %s", self._chatbot_helper, self.url, self.chatbot_id
+        )
         return self._chatbot_helper
 
     @property
@@ -107,12 +105,16 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
 
     def dispatch(self, request, *args, name: str = None, **kwargs):
         retval = super().dispatch(request, *args, **kwargs)
+
         self.request = self.request or request
-        self._id = kwargs.pop("chatbot_id")
         self._user = self._user or request.user
-        self._name = self._name or name
-        self._url = self.request.build_absolute_uri()
-        self._url = SmarterValidator.urlify(self._url, environment=smarter_settings.environment)
+        self._chatbot_id = kwargs.pop("chatbot_id")
+        if self.chatbot:
+            self._account = self.chatbot.account
+        else:
+            self._name = self._name or name
+            self._url = self.request.build_absolute_uri()
+            self._url = SmarterValidator.urlify(self._url, environment=smarter_settings.environment)
         if not self.chatbot:
             if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
                 logger.error(
@@ -121,14 +123,13 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
                     self.name,
                     self.user,
                     self.account,
-                    self.id,
+                    self.chatbot_id,
                 )
             return JsonResponse({}, status=HTTPStatus.NOT_FOUND)
-        self._account = self.chatbot.account
 
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
             logger.info("%s.dispatch() - url=%s", self.formatted_class_name, self.url)
-            logger.info("%s.dispatch() - id=%s", self.formatted_class_name, self.id)
+            logger.info("%s.dispatch() - id=%s", self.formatted_class_name, self.chatbot_id)
             logger.info("%s.dispatch() - name=%s", self.formatted_class_name, self.name)
             logger.info("%s.dispatch() - account=%s", self.formatted_class_name, self.account)
             logger.info("%s.dispatch() - chatbot=%s", self.formatted_class_name, self.chatbot)
