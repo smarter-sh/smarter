@@ -18,8 +18,7 @@ class SmarterRequestHelper(AccountMixin):
     _url: str = None
 
     def __init__(self, request):
-        if request.user.is_authenticated:
-            self._request = request
+        self._request = request
         super().__init__(user=request.user)
 
     @property
