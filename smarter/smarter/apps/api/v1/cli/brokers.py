@@ -97,6 +97,13 @@ class Brokers:
 
     @classmethod
     def from_url(cls, url) -> str:
+        """
+        Returns the kind of broker from the given URL. This is used to
+        determine the broker to use when the kind is not provided in the
+        request.
+
+        example: http://localhost:8000/api/v1/cli/example_manifest/Account/
+        """
         parsed_url = urlparse(url)
         if parsed_url:
             slugs = parsed_url.path.split("/")
