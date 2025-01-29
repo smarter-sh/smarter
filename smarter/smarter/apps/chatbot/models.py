@@ -495,6 +495,7 @@ class ChatBotHelper(AccountMixin):
             return None
 
         if url:
+            url = self.clean_url(url)
             SmarterValidator.validate_url(url)  # raises ValidationError if url is invalid
             url = SmarterValidator.urlify(
                 url, environment=smarter_settings.environment
@@ -608,6 +609,11 @@ class ChatBotHelper(AccountMixin):
 
         if self.is_named_url:
             self._name = self.subdomain
+        else:
+            # covers a case like http://localhost:8000/chatbots/example/
+            # where api_host == /chatbots/example/
+            last_slug = self.api_host.split("/")[-2] if self.api_host else None
+            self._name = last_slug
 
         return self._name
 
@@ -1113,3 +1119,14 @@ class ChatBotHelper(AccountMixin):
         Create a log entry
         """
         logger.warning(f"{self.formatted_class_name}: {message}")
+
+    def clean_url(self, url: str) -> str:
+        """
+        Clean the url of any query strings and trailing '/config/' strings.
+        """
+        parsed_url = urlparse(url)
+        # remove any query strings from url and also prune any trailing '/config/' from the url
+        retval = parsed_url._replace(query="").geturl()
+        if retval.endswith("/config/"):
+            retval = retval[:-8]
+        return retval
