@@ -43,6 +43,8 @@ from .signals import (
 )
 
 
+CACHE_PREFIX = "ChatBotHelper_"
+
 logger = logging.getLogger(__name__)
 
 
@@ -435,7 +437,14 @@ class ChatBotHelper(AccountMixin):
     parse the url multiple times.
 
     examples of valid urls:
+    # authentication optional urls
     - https://example.3141-5926-5359.alpha.api.smarter.sh/
+    - https://example.3141-5926-5359.alpha.api.smarter.sh/config/
+
+    # authenticated urls
+    - https://alpha.api.smarter.sh/chatbots/1/
+    - https://alpha.api.smarter.sh/chatbots/example/
+    - https://alpha.api.smarter.sh/smarter/example/
     - https://example.smarter.querium.com/chatbot/
     """
 
@@ -464,14 +473,20 @@ class ChatBotHelper(AccountMixin):
         :param url: The URL to parse.
         :param environment: The environment to use for the URL. (for unit testing only)
         """
-        self._chatbot_id: int = None
-        self._url: str = None
-        self._account_number: str = None
-        self._environment: str = None
-        self._chatbot: ChatBot = None
+        self._chatbot_id: int = chatbot_id
+        self._url: str = url
+        self._account_number: str = account.account_number if account else None
+        self._name: str = name
+        self._environment: str = environment
+        self.user: UserType = user
+
+        # in a lot of cases this is as far as we'll need to go.
+        self._chatbot: ChatBot = self.get_from_cache()
+        if self._chatbot:
+            return None
+
         self._chatbot_custom_domain: ChatBotCustomDomain = None
         self._chatbot_requests: ChatBotRequests = None
-        self._name: str = None
 
         self.helper_logger(
             f"__init__() received: url={url}, user={user}, account={account}, name={name}, chatbot_id={chatbot_id}"
@@ -597,11 +612,11 @@ class ChatBotHelper(AccountMixin):
         raise ChatBot.DoesNotExist(f"ChatBot object not found for account: {self.account} and name: {self.name}")
 
     def __str__(self):
-        return str(self.url) if self.url else "undefined"
+        return str(self.chatbot) if self.chatbot else "undefined"
 
     @property
     def chatbot_id(self) -> int:
-        return self._chatbot.id if self._chatbot else self._chatbot_id
+        return self._chatbot_id if self._chatbot_id else self.chatbot.id if self.chatbot else None
 
     @property
     def name(self):
@@ -684,7 +699,6 @@ class ChatBotHelper(AccountMixin):
 
     @property
     def cache_key(self) -> str:
-        CACHE_PREFIX = "ChatBotHelper_"
         if self.account_number and self.url:
             return f"{CACHE_PREFIX}_{self.account_number}_{self.url}"
         if self.chatbot_id:
@@ -1081,6 +1095,21 @@ class ChatBotHelper(AccountMixin):
             return None
 
         return self._chatbot_custom_domain
+
+    @classmethod
+    def get_by_id(cls, chatbot_id: int) -> ChatBot:
+        """
+        Returns a ChatBot object by its id.
+        """
+        cache_key = f"{CACHE_PREFIX}_{chatbot_id}"
+        chatbot: ChatBot = cache.get(cache_key)
+        if chatbot:
+            return chatbot
+        try:
+            chatbot = cls.objects.get(id=chatbot_id)
+            return chatbot
+        except cls.DoesNotExist:
+            return None
 
     def get_from_cache(self) -> ChatBot:
         """
