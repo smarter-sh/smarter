@@ -612,8 +612,9 @@ class ChatBotHelper(AccountMixin):
         else:
             # covers a case like http://localhost:8000/chatbots/example/
             # where api_host == /chatbots/example/
-            last_slug = self.api_host.split("/")[-2] if self.api_host else None
-            self._name = last_slug
+            split_host = self.api_host.split("/") if self.api_host else None
+            if split_host and len(split_host) > 2:
+                self._name = split_host[-2]
 
         return self._name
 
@@ -923,8 +924,10 @@ class ChatBotHelper(AccountMixin):
         """
         if not self.url:
             return False
-        if not smarter_settings.api_domain in self.url:
-            self.helper_logger(f"api_domain {smarter_settings.api_domain} not found in url {self.url}")
+        if not smarter_settings.customer_api_domain in self.url:
+            self.helper_logger(
+                f"customer_api_domain {smarter_settings.customer_api_domain} not found in url {self.url}"
+            )
             return False
         account_pattern = SMARTER_ACCOUNT_NUMBER_REGEX
         match = re.search(account_pattern, self.url)
