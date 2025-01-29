@@ -1,5 +1,6 @@
 """Smarter API V1 Manifests Enumerations."""
 
+import logging
 from urllib.parse import urlparse
 
 from smarter.apps.account.manifest.models.account.const import (
@@ -34,7 +35,8 @@ from smarter.lib.drf.manifest.models.auth_token.const import (
 )
 from smarter.lib.manifest.enum import SmarterEnumAbstract
 
-from .version import SMARTER_API_VERSION
+
+logger = logging.getLogger(__name__)
 
 
 class SAMKinds(SmarterEnumAbstract):
@@ -73,9 +75,10 @@ class SAMKinds(SmarterEnumAbstract):
         parsed_url = urlparse(url)
         if parsed_url:
             slugs = parsed_url.path.split("/")
-            if not "api" in slugs or not SMARTER_API_VERSION in slugs:
+            if not "api" in slugs:
                 return None
             for slug in slugs:
                 this_slug = str(slug).lower()
                 if this_slug in cls.all_slugs():
                     return this_slug
+        logger.warning("SAMKinds.from_url() could not extract manifest kind from URL: %s", url)
