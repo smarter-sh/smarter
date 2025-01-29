@@ -3,7 +3,7 @@
 import logging
 import re
 from typing import List, Type
-from urllib.parse import urljoin, urlparse
+from urllib.parse import ParseResult, urljoin, urlparse
 
 import tldextract
 import waffle
@@ -242,7 +242,7 @@ class ChatBot(TimestampedModel):
     @property
     def url_chatbot(self):
         base_url = smarter_settings.environment_domain
-        return urljoin(self.scheme + "://" + base_url, "/api/v1/chatbots/smarter/" + self.name + "/")
+        return urljoin(self.scheme + "://" + base_url, f"/api/v1/chatbots/{self.id}/")
 
     @property
     def url_chatapp(self):
@@ -485,6 +485,11 @@ class ChatBotHelper(AccountMixin):
         self.user: UserType = user
 
         # in a lot of cases this is as far as we'll need to go.
+        if (self.url and self.url == smarter_settings.environment_url) or (
+            self.parsed_url and self.parsed_url.path == "/"
+        ):
+            return None
+
         self._chatbot: ChatBot = self.get_from_cache()
         if self._chatbot:
             return None
@@ -639,10 +644,10 @@ class ChatBotHelper(AccountMixin):
         else:
             # covers a case like http://localhost:8000/chatbots/example/
             # where api_host == /chatbots/example/
-            split_host = self.api_host.split("/") if self.api_host else None
-            if split_host and len(split_host) > 2:
-                self._name = split_host[-2]
-
+            if self.api_host and "/chatbots/" in self.api_host:
+                split_host = self.api_host.split("/") if self.api_host else None
+                if split_host and len(split_host) > 2:
+                    self._name = split_host[-2]
         return self._name
 
     @property
@@ -718,13 +723,6 @@ class ChatBotHelper(AccountMixin):
         return None
 
     @property
-    def parsed_url(self):
-        if self.url:
-            SmarterValidator.validate_url(self.url)
-            return urlparse(self._url)
-        return None
-
-    @property
     def environment(self) -> str:
         """
         The environment to use for the URL.
@@ -756,6 +754,13 @@ class ChatBotHelper(AccountMixin):
             else None
         )
         return self._url
+
+    @property
+    def parsed_url(self) -> ParseResult:
+        if self.url:
+            SmarterValidator.validate_url(self.url)
+            return urlparse(self._url)
+        return None
 
     @property
     def domain(self) -> str:
@@ -1159,9 +1164,8 @@ class ChatBotHelper(AccountMixin):
         """
         Clean the url of any query strings and trailing '/config/' strings.
         """
-        parsed_url = urlparse(url)
         # remove any query strings from url and also prune any trailing '/config/' from the url
-        retval = parsed_url._replace(query="").geturl()
+        retval = self.parsed_url._replace(query="").geturl()
         if retval.endswith("/config/"):
             retval = retval[:-8]
         return retval
