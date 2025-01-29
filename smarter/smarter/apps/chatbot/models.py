@@ -18,7 +18,12 @@ from smarter.apps.account.mixins import AccountMixin
 # our stuff
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.serializers import AccountMiniSerializer
-from smarter.apps.account.utils import smarter_admin_user_profile, user_profile_for_user
+from smarter.apps.account.utils import (
+    SMARTER_ACCOUNT_NUMBER_REGEX,
+    account_number_from_url,
+    smarter_admin_user_profile,
+    user_profile_for_user,
+)
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
@@ -37,8 +42,6 @@ from .signals import (
     chatbot_dns_verified,
 )
 
-
-SMARTER_ACCOUNT_NUMBER_REGEX = r"\b\d{4}-\d{4}-\d{4}\b"
 
 logger = logging.getLogger(__name__)
 
@@ -475,10 +478,10 @@ class ChatBotHelper(AccountMixin):
             f"__init__() received: url={url}, user={user}, account={account}, name={name}, chatbot_id={chatbot_id}"
         )
 
-        super().__init__(account=account, user=user, account_number=self.account_number)
-
         if not url and not name and not account and not chatbot_id:
             return None
+
+        super().__init__(account=account, user=user, account_number=self.account_number)
 
         if chatbot_id:
             self._chatbot_id = chatbot_id
@@ -495,7 +498,7 @@ class ChatBotHelper(AccountMixin):
             return None
 
         if url:
-            url = self.clean_url(url)
+            url = self.clean_url(url)  # eliminates url params and prunes trailing slugs like /config/
             SmarterValidator.validate_url(url)  # raises ValidationError if url is invalid
             url = SmarterValidator.urlify(
                 url, environment=smarter_settings.environment
@@ -510,7 +513,7 @@ class ChatBotHelper(AccountMixin):
             if self.is_named_url:
                 self._name = self.api_subdomain
                 self.helper_logger(f"initialized self.name={self.name} from named url")
-                self._account_number = self.account_number_from_url()
+                self._account_number = account_number_from_url(self.url)
                 self.helper_logger(f"initialized self.account_number={self.account_number} from named url")
                 if self._account_number:
                     self._account = Account.objects.get(account_number=self.account_number)
@@ -800,7 +803,7 @@ class ChatBotHelper(AccountMixin):
             self._account_number = self.account.account_number
             return self._account_number
 
-        self._account_number = self.account_number_from_url()
+        self._account_number = account_number_from_url(self.url)
 
         if self.is_sandbox_domain and not self._account_number:
             logger.debug("account_number() - sandbox domain")
@@ -1075,20 +1078,6 @@ class ChatBotHelper(AccountMixin):
             return None
 
         return self._chatbot_custom_domain
-
-    def account_number_from_url(self) -> str:
-        """
-        Extracts the account number from the URL.
-        :return: The account number or None if not found.
-
-        example: https://hr.3141-5926-5359.alpha.api.smarter.sh/
-        returns '3141-5926-5359'
-        """
-        if not self.url:
-            return None
-        pattern = SMARTER_ACCOUNT_NUMBER_REGEX
-        match = re.search(pattern, self.url)
-        return match.group(0) if match else None
 
     def get_from_cache(self) -> ChatBot:
         """
