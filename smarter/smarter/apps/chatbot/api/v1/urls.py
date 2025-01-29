@@ -1,6 +1,6 @@
 """URL configuration for chat app."""
 
-from django.urls import path
+from django.urls import path, re_path
 
 from .views.default import DefaultChatBotApiView
 from .views.views import (
@@ -46,12 +46,5 @@ urlpatterns = [
         "<int:chatbot_id>/functions/<int:function_id>/plugins",
         ChatBotPluginListView.as_view(),
         name="chatbot-api-function-plugins",
-    ),
-    # see smarter.apps.chatbot.models.Chatbot.url_chatbot()
-    path(
-        "<str:account>/<str:name>/",
-        DefaultChatBotApiView.as_view(),
-        name="chatbot-api-smarter-by-name",
-        kwargs={"account": "smarter"},
     ),
 ]
