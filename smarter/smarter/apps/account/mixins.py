@@ -25,9 +25,8 @@ class AccountMixin:
     ):
         self.init()
         if account_number:
-            SmarterValidator.validate_account_number(account_number)
-            self._account = account or Account.objects.get(account_number=account_number)
-        self._user = user
+            self.account = account or Account.objects.get(account_number=account_number)
+        self.user = user
 
         if self._user and self._account:
             self._user_profile = self.get_user_profile(user=self._user, account=self._account)
@@ -44,6 +43,7 @@ class AccountMixin:
 
     @account.setter
     def account(self, account: Account):
+        SmarterValidator.validate_account_number(account)
         self._account = account
         if account and self._user:
             try:

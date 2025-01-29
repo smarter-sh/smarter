@@ -1,11 +1,14 @@
 """Account utilities."""
 
+import re
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.lib.cache import cache_results
 from smarter.lib.django.user import UserType
+from smarter.lib.django.validators import SmarterValidator
 
 from .models import Account, UserProfile
 
@@ -13,6 +16,7 @@ from .models import Account, UserProfile
 User = get_user_model()
 
 CACHE_TIMEOUT = 60 * 5
+SMARTER_ACCOUNT_NUMBER_REGEX = r"\b\d{4}-\d{4}-\d{4}\b"
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
@@ -73,3 +77,19 @@ def smarter_admin_user_profile() -> UserProfile:
     staff_user_profile = UserProfile.objects.filter(account=smarter_account, user__is_staff=True).order_by("pk").first()
 
     return super_user_profile or staff_user_profile
+
+
+def account_number_from_url(url: str) -> str:
+    """
+    Extracts the account number from the URL.
+    :return: The account number or None if not found.
+
+    example: https://hr.3141-5926-5359.alpha.api.smarter.sh/
+    returns '3141-5926-5359'
+    """
+    if not url:
+        return None
+    SmarterValidator.validate_url(url)
+    pattern = SMARTER_ACCOUNT_NUMBER_REGEX
+    match = re.search(pattern, url)
+    return match.group(0) if match else None
