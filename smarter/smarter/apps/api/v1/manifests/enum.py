@@ -64,6 +64,10 @@ class SAMKinds(SmarterEnumAbstract):
 
     @classmethod
     def from_url(cls, url) -> str:
+        """
+        Extract the manifest kind from a URL.
+        example: http://localhost:8000/api/v1/cli/example_manifest/Account/
+        """
         parsed_url = urlparse(url)
         if parsed_url:
             slugs = parsed_url.path.split("/")

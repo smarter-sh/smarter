@@ -157,6 +157,11 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
 
     @classmethod
     def from_url(cls, url) -> str:
+        """
+        Parse a url and return the SmarterJournalCliCommands enum value
+        if it exists in the url path.
+        example: http://localhost:8000/api/v1/cli/example_manifest/Account/
+        """
         parsed_url = urlparse(url)
         if parsed_url:
             slugs = parsed_url.path.split("/")
