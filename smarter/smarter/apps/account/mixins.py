@@ -43,7 +43,6 @@ class AccountMixin:
 
     @account.setter
     def account(self, account: Account):
-        SmarterValidator.validate_account_number(account)
         self._account = account
         if account and self._user:
             try:
