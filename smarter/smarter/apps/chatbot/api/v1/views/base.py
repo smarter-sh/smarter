@@ -85,9 +85,9 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
 
     @property
     def name(self):
-        if not self._name:
-            self._name = self.chatbot_helper.name if self._chatbot_helper else None
-        return self._name
+        if self._name:
+            return self._name
+        self._name = self.chatbot_helper.name if self._chatbot_helper else None
 
     @property
     def chatbot(self):

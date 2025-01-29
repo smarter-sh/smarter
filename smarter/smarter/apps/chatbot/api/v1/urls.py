@@ -48,6 +48,10 @@ urlpatterns = [
         name="chatbot-api-function-plugins",
     ),
     # see smarter.apps.chatbot.models.Chatbot.url_chatbot()
-    path("smarter/<str:name>/", DefaultChatBotApiView.as_view(), name="chatbot-api-smarter-by-name"),
-    path("smarter/", DefaultChatBotApiView.as_view(), name="chatbot-api-smarter"),
+    path(
+        "<str:account>/<str:name>/",
+        DefaultChatBotApiView.as_view(),
+        name="chatbot-api-smarter-by-name",
+        kwargs={"account": "smarter"},
+    ),
 ]
