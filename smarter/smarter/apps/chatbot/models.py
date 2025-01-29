@@ -28,7 +28,7 @@ from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterWaffleSwitches
-from smarter.common.exceptions import SmarterValueError
+from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import UserType
@@ -426,7 +426,6 @@ class ChatBotSerializer(serializers.ModelSerializer):
         self.Meta.fields += ["url_chatbot", "account"]
 
 
-# pylint: disable=too-many-instance-attributes,too-many-public-methods
 class ChatBotHelper(AccountMixin):
     """Maps urls and attribute data to their respective ChatBot models.
     Abstracts url parsing logic so that we can use it in multiple
@@ -503,21 +502,23 @@ class ChatBotHelper(AccountMixin):
             url = SmarterValidator.urlify(
                 url, environment=smarter_settings.environment
             )  # normalizes the url so that we dont find ourselves working with variations of the same url
+
             if url == smarter_settings.environment_url:
                 self.helper_logger(f"nothing to do for self.url={url}")
                 return None
             self._url = url
-            self.helper_logger(f"initialized self.url={self.url} from url")
+
+            self.helper_logger(f"__init__() initialized self.url={self.url} from url")
 
             # example: https://example.3141-5926-5359.api.smarter.sh
             if self.is_named_url:
                 self._name = self.api_subdomain
-                self.helper_logger(f"initialized self.name={self.name} from named url")
+                self.helper_logger(f"__init__() initialized self.name={self.name} from named url")
                 self._account_number = account_number_from_url(self.url)
-                self.helper_logger(f"initialized self.account_number={self.account_number} from named url")
+                self.helper_logger(f"__init__() initialized self.account_number={self.account_number} from named url")
                 if self._account_number:
                     self._account = Account.objects.get(account_number=self.account_number)
-                    self.helper_logger(f"initialized self.account={self.account} from account number")
+                    self.helper_logger(f"__init__() initialized self.account={self.account} from account number")
                 self._chatbot = self._chatbot or self.get_from_cache()
                 if self._chatbot:
                     return None
@@ -525,7 +526,7 @@ class ChatBotHelper(AccountMixin):
                 if self.name and self.account_number:
                     self._chatbot = ChatBot.objects.get(account=self.account, name=self.name)
                     self.set_to_cache(self._chatbot)
-                    self.helper_logger(f"initialized self.chatbot={self.chatbot} from named url")
+                    self.helper_logger(f"__init__() initialized self.chatbot={self.chatbot} from named url")
                     return None
 
         if self._chatbot:
@@ -533,19 +534,19 @@ class ChatBotHelper(AccountMixin):
 
         if name and not self._name:
             self._name = name
-            self.helper_logger(f"initialized self.name={self.name} from name")
+            self.helper_logger(f"__init__() initialized self.name={self.name} from name")
 
         if account and not self._account:
             self._account = account
-            self.helper_logger(f"initialized self.account={self.account} from account")
+            self.helper_logger(f"__init__() initialized self.account={self.account} from account")
 
         if user and not self._user:
             self._user = user
-            self.helper_logger(f"initialized self.user={self.user} from user")
+            self.helper_logger(f"__init__() initialized self.user={self.user} from user")
 
         if environment and not self._environment:
             self._environment = environment
-            self.helper_logger(f"initialized self.environment={self.environment} from environment")
+            self.helper_logger(f"__init__() initialized self.environment={self.environment} from environment")
 
         if self.account:
             self._account_number = self.account.account_number
@@ -576,7 +577,7 @@ class ChatBotHelper(AccountMixin):
                 self._chatbot = ChatBot.objects.get(account=smarter_admin.account, name=self.name)
             self.set_to_cache(self._chatbot)
             self.helper_logger(
-                f"initialized self.chatbot={self.chatbot} from account {self.account} and name {self.name}"
+                f"__init__() initialized self.chatbot={self.chatbot} from account {self.account} and name {self.name}"
             )
             return None
 
@@ -688,11 +689,12 @@ class ChatBotHelper(AccountMixin):
             return f"{CACHE_PREFIX}_{self.account_number}_{self.url}"
         if self.chatbot_id:
             return f"{CACHE_PREFIX}_{self.chatbot_id}"
-        return None
+        raise SmarterConfigurationError("cache_key() - invalid cache key")
 
     @property
     def parsed_url(self):
         if self.url:
+            SmarterValidator.validate_url(self.url)
             return urlparse(self._url)
         return None
 
@@ -722,8 +724,11 @@ class ChatBotHelper(AccountMixin):
         """
         if self._url:
             return SmarterValidator.urlify(self._url, environment=smarter_settings.environment)
-        if self._chatbot:
-            self._url = SmarterValidator.urlify(self.chatbot.url, environment=smarter_settings.environment)
+        self._url = (
+            SmarterValidator.urlify(self.chatbot.url, environment=smarter_settings.environment)
+            if self._chatbot
+            else None
+        )
         return self._url
 
     @property
@@ -736,9 +741,9 @@ class ChatBotHelper(AccountMixin):
         - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
           returns 'hr.3141-5926-5359.alpha.api.smarter.sh'
         """
-        if not self.url:
-            return None
-        return self.parsed_url.netloc
+        if self.url:
+            return self.parsed_url.netloc
+        return None
 
     @property
     def path(self) -> str:
@@ -932,11 +937,9 @@ class ChatBotHelper(AccountMixin):
                 f"customer_api_domain {smarter_settings.customer_api_domain} not found in url {self.url}"
             )
             return False
-        account_pattern = SMARTER_ACCOUNT_NUMBER_REGEX
-        match = re.search(account_pattern, self.url)
-        if match:
+        if account_number_from_url(self.url):
             return True
-        self.helper_logger(f"did not match account number pattern {account_pattern} against {self.url}")
+        self.helper_logger(f"did not match account number regex {SMARTER_ACCOUNT_NUMBER_REGEX} against {self.url}")
         return False
 
     @property
