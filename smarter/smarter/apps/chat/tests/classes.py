@@ -162,6 +162,7 @@ class ProviderBaseClass(unittest.TestCase):
         self.chat = Chat.objects.create(
             session_key=secrets.token_hex(32),
             chatbot=self.chatbot,
+            account=self.account,
             ip_address="192.1.1.1",
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
             url="https://www.test.com",
