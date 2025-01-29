@@ -11,7 +11,10 @@ from django.http import HttpRequest, JsonResponse
 
 from smarter.common.api import SmarterApiVersions
 from smarter.common.const import SmarterWaffleSwitches
-from smarter.lib.django.http.serializers import HttpRequestSerializer
+from smarter.lib.django.http.serializers import (
+    HttpAnonymousRequestSerializer,
+    HttpAuthenticatedRequestSerializer,
+)
 
 from .enum import (
     SCLIResponseMetadata,
@@ -78,12 +81,27 @@ class SmarterJournaledJsonResponse(JsonResponse):
         }
 
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_JOURNAL):
-            user = request.user if request and request.user and request.user.is_authenticated else None
+            # WSGIRequest can be finicky depending on the kind of response we're dealing with.
+            # in general, we only want the user object if it's authenticated, which happens
+            # when the user is logged in to the web console, and also when the request is made
+            # via api, with a valid api key.
+            #
+            # Original exception text was: 'WSGIRequest' object has no attribute 'user'.
+            try:
+                if request.user.is_authenticated:
+                    user = request.user
+                    request_data = HttpAuthenticatedRequestSerializer(request).data
+                else:
+                    user = None
+                    request_data = HttpAnonymousRequestSerializer(request).data
+            except AttributeError:
+                user = None
+                request_data = HttpAnonymousRequestSerializer(request).data
             journal = SAMJournal.objects.create(
                 user=user,
                 thing=thing,
                 command=command,
-                request=HttpRequestSerializer(request).data,
+                request=request_data,
                 response=data,
                 status_code=status,
             )

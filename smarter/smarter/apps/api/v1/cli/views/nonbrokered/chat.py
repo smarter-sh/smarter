@@ -4,6 +4,7 @@
 import hashlib
 import json
 import logging
+from http import HTTPStatus
 from typing import Tuple
 from urllib.parse import urlparse
 
@@ -370,6 +371,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
                 e=e,
                 thing=SmarterJournalThings(SmarterJournalThings.CHAT),
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
         # unescape the chat response body so that it looks
@@ -420,6 +422,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
                 e=APIV1CLIChatViewError(f"Chatbot {name} not found."),
                 thing=SmarterJournalThings(SmarterJournalThings.CHAT),
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+                status=HTTPStatus.NOT_FOUND,
             )
 
         # pylint: disable=W0718
@@ -431,4 +434,5 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
                 e=APIV1CLIChatViewError(f"Internal error. {e}"),
                 thing=SmarterJournalThings(SmarterJournalThings.CHAT),
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )

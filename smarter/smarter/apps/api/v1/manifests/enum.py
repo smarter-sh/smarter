@@ -1,5 +1,7 @@
 """Smarter API V1 Manifests Enumerations."""
 
+from urllib.parse import urlparse
+
 from smarter.apps.account.manifest.models.account.const import (
     MANIFEST_KIND as ACCOUNT_MANIFEST_KIND,
 )
@@ -59,3 +61,13 @@ class SAMKinds(SmarterEnumAbstract):
     @classmethod
     def plural_slugs(cls):
         return [f"{slug.lower()}s" for slug in cls.all_values()]
+
+    @classmethod
+    def from_url(cls, url) -> str:
+        parsed_url = urlparse(url)
+        if parsed_url:
+            slugs = parsed_url.path.split("/")
+            for slug in slugs:
+                this_slug = str(slug).lower()
+                if this_slug in cls.all_slugs():
+                    return this_slug

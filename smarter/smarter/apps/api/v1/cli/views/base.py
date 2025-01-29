@@ -181,15 +181,13 @@ class CliBaseApiView(APIView, AccountMixin):
 
         # if we still don't have a manifest kind, then we should
         # analyze the url path to determine the manifest kind.
-        # url: http://testserver/api/v1/cli/logs/Chatbot/?name=TestChatBot
+        # urls:
+        # - http://testserver/api/v1/cli/logs/Chatbot/?name=TestChatBot
+        # - http://testserver/api/v1/cli/chat/config/TestChatBot/
         if not self._manifest_kind:
-            parsed_url = self.url_parsed
-            if parsed_url:
-                path = parsed_url.path
-                last_slug = path.rstrip("/").split("/")[-1]
-                if last_slug:
-                    self._manifest_kind = last_slug
-                    logger.warning("setting manifest kind from url. Using last slug in %s", self.url)
+            self._manifest_kind = Brokers.from_url(self.url)
+            if self._manifest_kind:
+                logger.warning("setting manifest kind to %s from analysis of url %s", self._manifest_kind, self.url)
 
         # resolve any inconsistencies in the casing of the manifest kind
         # that we might have received.
