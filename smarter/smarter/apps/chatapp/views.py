@@ -186,7 +186,7 @@ class ChatConfigView(View, AccountMixin):
             self._chatbot = self.chatbot_helper.chatbot
             self.account = self.chatbot_helper.account
         except ChatBot.DoesNotExist:
-            return JsonResponse({"error": "Not found"}, status=404)
+            return JsonResponse({"error": "Not found"}, status=HTTPStatus.NOT_FOUND.value)
 
         if not self._chatbot:
             try:

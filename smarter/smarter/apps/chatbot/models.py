@@ -588,7 +588,8 @@ class ChatBotHelper(AccountMixin):
         if self._chatbot:
             self.set_to_cache(self._chatbot)
             return None
-        self.helper_warning(f"could not initialize ChatBot object for account: {self.account} and name: {self.name}")
+
+        raise ChatBot.DoesNotExist(f"ChatBot object not found for account: {self.account} and name: {self.name}")
 
     def __str__(self):
         return str(self.url) if self.url else "undefined"
