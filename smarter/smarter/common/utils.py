@@ -60,6 +60,5 @@ def clean_url(url: str) -> str:
     Clean the url of any query strings and trailing '/config/' strings.
     """
     parsed_url = urllib.parse.urlparse(url)
-    # remove any query strings from url and also prune any trailing '/config/' from the url
     retval = parsed_url._replace(query="").geturl()
     return retval

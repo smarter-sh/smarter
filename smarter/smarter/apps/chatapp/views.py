@@ -134,10 +134,10 @@ class SmarterChatSession(SmarterRequestHelper):
         """
         parsed_url = urllib.parse.urlparse(url)
         # remove any query strings from url and also prune any trailing '/config/' from the url
-        clean_url = parsed_url._replace(query="").geturl()
-        if clean_url.endswith("/config/"):
-            clean_url = clean_url[:-8]
-        return clean_url
+        retval = parsed_url._replace(query="").geturl()
+        if retval.endswith("/config/"):
+            retval = retval[:-8]
+        return retval
 
 
 # pylint: disable=R0902
@@ -193,10 +193,10 @@ class ChatConfigView(View, AccountMixin):
                 self.chatbot_helper = ChatBotHelper(account=self.account, name=name)
                 self._chatbot = self.chatbot_helper.chatbot
             except ChatBot.DoesNotExist:
-                return JsonResponse({"error": "Not found"}, status=404)
+                return JsonResponse({"error": "Not found"}, status=HTTPStatus.NOT_FOUND.value)
             # pylint: disable=broad-except
             except Exception as e:
-                return JsonResponse({"error": str(e)}, status=500)
+                return JsonResponse({"error": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR.value)
 
         if self.chatbot_helper and self.chatbot_helper.is_authentication_required and not request.user.is_authenticated:
             try:
