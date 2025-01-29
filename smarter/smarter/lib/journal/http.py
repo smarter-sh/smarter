@@ -86,7 +86,9 @@ class SmarterJournaledJsonResponse(JsonResponse):
             # when the user is logged in to the web console, and also when the request is made
             # via api, with a valid api key.
             #
-            # Original exception text was: 'WSGIRequest' object has no attribute 'user'.
+            # Original exception text was:
+            # 'WSGIRequest' object has no attribute 'user'.
+            # AttributeError: 'PreparedRequest' object has no attribute 'user'
             try:
                 if request.user.is_authenticated:
                     user = request.user
@@ -95,6 +97,10 @@ class SmarterJournaledJsonResponse(JsonResponse):
                     user = None
                     request_data = HttpAnonymousRequestSerializer(request).data
             except AttributeError:
+                user = None
+                request_data = HttpAnonymousRequestSerializer(request).data
+            except Exception:
+                logger.warning("Could not determine user from request, and, AttributeError was not raised.")
                 user = None
                 request_data = HttpAnonymousRequestSerializer(request).data
             journal = SAMJournal.objects.create(
