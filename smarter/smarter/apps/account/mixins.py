@@ -72,11 +72,13 @@ class AccountMixin:
     def user_profile(self) -> UserProfile:
         if self._user_profile:
             return self._user_profile
-        if self._user and self._account:
+        # note that we have to use property references here in order to trigger
+        # the property setters.
+        if self.user and self.account:
             self._user_profile = self.get_user_profile(user=self.user, account=self.account)
-        elif self._user:
+        elif self.user:
             self._user_profile = self.get_user_profile(user=self.user)
-        elif self._account:
+        elif self.account:
             user = account_admin_user(self.account)
             self._user_profile = self.get_user_profile(user=user, account=self.account)
         return self._user_profile
