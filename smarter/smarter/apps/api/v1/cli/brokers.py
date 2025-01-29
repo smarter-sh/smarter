@@ -20,6 +20,7 @@ from urllib.parse import urlparse
 from smarter.apps.account.manifest.brokers.account import SAMAccountBroker
 from smarter.apps.account.manifest.brokers.user import SAMUserBroker
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
 from smarter.apps.chat.manifest.brokers.chat import SAMChatBroker
 from smarter.apps.chat.manifest.brokers.chat_history import SAMChatHistoryBroker
 from smarter.apps.chat.manifest.brokers.chat_plugin_usage import (
@@ -107,6 +108,8 @@ class Brokers:
         parsed_url = urlparse(url)
         if parsed_url:
             slugs = parsed_url.path.split("/")
+            if not "api" in slugs or not SMARTER_API_VERSION in slugs:
+                return None
             for slug in slugs:
                 this_slug = str(slug).lower()
                 kind = cls.get_broker_kind(this_slug)
