@@ -3,6 +3,7 @@
 
 import logging
 import traceback
+from http import HTTPStatus
 
 import waffle
 from django.core.serializers.json import DjangoJSONEncoder
@@ -69,7 +70,7 @@ class SmarterJournaledJsonResponse(JsonResponse):
         json_dumps_params=None,
         **kwargs,
     ):
-        status = kwargs.get("status", None)
+        status = kwargs.get("status", HTTPStatus.OK.value)
         data[SmarterJournalApiResponseKeys.API] = SmarterApiVersions.V1
         data[SmarterJournalApiResponseKeys.THING] = str(thing)
         data[SmarterJournalApiResponseKeys.METADATA] = {
@@ -77,8 +78,9 @@ class SmarterJournaledJsonResponse(JsonResponse):
         }
 
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_JOURNAL):
+            user = request.user if request and request.user.is_authenticated else None
             journal = SAMJournal.objects.create(
-                user=request.user,
+                user=user,
                 thing=thing,
                 command=command,
                 request=HttpRequestSerializer(request).data,
@@ -87,7 +89,7 @@ class SmarterJournaledJsonResponse(JsonResponse):
             )
 
             data[SmarterJournalApiResponseKeys.METADATA] = {
-                SCLIResponseMetadata.KEY.value: journal.key,
+                SCLIResponseMetadata.KEY: journal.key,
             }
 
         super().__init__(data=data, encoder=encoder, safe=safe, json_dumps_params=json_dumps_params, **kwargs)
