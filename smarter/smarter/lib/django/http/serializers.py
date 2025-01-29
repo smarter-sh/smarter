@@ -17,8 +17,8 @@ class UserSerializer(serializers.ModelSerializer):
         ]
 
 
-class HttpRequestSerializer(serializers.Serializer):
-    """Http request serializer for smarter api."""
+class HttpAnonymousRequestSerializer(serializers.Serializer):
+    """Http anonymous request serializer for smarter api."""
 
     url = serializers.SerializerMethodField()
     method = serializers.CharField(max_length=10)
@@ -29,7 +29,6 @@ class HttpRequestSerializer(serializers.Serializer):
     path = serializers.CharField()
     encoding = serializers.CharField()
     content_type = serializers.CharField()
-    user = UserSerializer()
 
     # pylint: disable=missing-class-docstring
     class Meta:
@@ -43,13 +42,7 @@ class HttpRequestSerializer(serializers.Serializer):
             "path",
             "encoding",
             "content_type",
-            "user",
         ]
-
-    def to_representation(self, instance):
-        ret = super().to_representation(instance)
-        ret["user"] = ret["user"]["username"]
-        return ret
 
     def get_url(self, obj):
         if obj and hasattr(obj, "request") and obj.request:
@@ -64,3 +57,18 @@ class HttpRequestSerializer(serializers.Serializer):
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         return instance
+
+
+class HttpAuthenticatedRequestSerializer(HttpAnonymousRequestSerializer):
+    """Http authenticated request serializer for smarter api."""
+
+    user = UserSerializer()
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        fields = HttpAnonymousRequestSerializer.Meta.fields + ["user"]
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret["user"] = ret["user"]["username"]
+        return ret

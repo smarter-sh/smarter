@@ -15,6 +15,7 @@ the necessary operations to facilitate cli requests that include:
 """
 
 from typing import Dict, Type
+from urllib.parse import urlparse
 
 from smarter.apps.account.manifest.brokers.account import SAMAccountBroker
 from smarter.apps.account.manifest.brokers.user import SAMUserBroker
@@ -93,6 +94,17 @@ class Brokers:
     @classmethod
     def all_brokers(cls) -> list[str]:
         return list(cls._brokers.keys())
+
+    @classmethod
+    def from_url(cls, url) -> str:
+        parsed_url = urlparse(url)
+        if parsed_url:
+            slugs = parsed_url.path.split("/")
+            for slug in slugs:
+                this_slug = str(slug).lower()
+                kind = cls.get_broker_kind(this_slug)
+                if kind:
+                    return kind
 
 
 # an internal self-check to ensure that all SAMKinds have a Broker implementation

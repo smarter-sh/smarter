@@ -139,6 +139,7 @@ class DefaultChatBotApiView(ChatBotApiBaseViewSet):
                 safe=False,
                 thing=SmarterJournalThings(SmarterJournalThings.CHATBOT),
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+                status=HTTPStatus.NOT_FOUND,
             )
         handler = chat_providers.get_handler(provider=self.chatbot.provider)
         if not self.chat_helper:
@@ -148,6 +149,7 @@ class DefaultChatBotApiView(ChatBotApiBaseViewSet):
                 safe=False,
                 thing=SmarterJournalThings(SmarterJournalThings.CHATBOT),
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+                status=HTTPStatus.NOT_FOUND,
             )
         response = handler(chat=self.chat_helper.chat, data=self.data, plugins=self.plugins, user=self.user)
         response = {

@@ -1,5 +1,7 @@
 """Smarter API Manifests Enumerations."""
 
+from urllib.parse import urlparse
+
 from smarter.common.enum import SmarterEnumAbstract
 from smarter.common.exceptions import SmarterExceptionBase
 
@@ -152,3 +154,13 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
             cls.UNDEPLOY.value: "undeployed",
             cls.WHOAMI.value: "fetched identity",
         }
+
+    @classmethod
+    def from_url(cls, url) -> str:
+        parsed_url = urlparse(url)
+        if parsed_url:
+            slugs = parsed_url.path.split("/")
+            for slug in slugs:
+                this_slug = str(slug).lower()
+                if this_slug in cls.all_values():
+                    return this_slug
