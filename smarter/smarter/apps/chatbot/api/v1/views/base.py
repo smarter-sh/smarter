@@ -113,7 +113,9 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
 
         self.request = self.request or request
         self._user = self._user or request.user
-        self._chatbot_id = kwargs.pop("chatbot_id")
+        self._chatbot_id = kwargs.get("chatbot_id")
+        if self._chatbot_id:
+            kwargs.pop("chatbot_id")
         if self.chatbot:
             self._account = self.chatbot.account
         else:
