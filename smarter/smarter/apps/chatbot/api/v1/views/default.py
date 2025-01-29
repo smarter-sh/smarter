@@ -7,6 +7,7 @@ from http import HTTPStatus
 
 import waffle
 
+from smarter.apps.account.utils import smarter_admin_user_profile
 from smarter.apps.chat.models import ChatHelper
 from smarter.apps.chat.providers.providers import chat_providers
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
@@ -54,6 +55,14 @@ class DefaultChatBotApiView(ChatBotApiBaseViewSet):
             ]
         }
         """
+        self._name = name
+
+        # FIX NOTE: this is kludgy, but it works for now.
+        # handles the case of smarter example chatbots
+        # like /smarter/example/
+        account_name = kwargs.get("account")
+        if account_name == "smarter":
+            self.account = smarter_admin_user_profile().account
         retval = super().dispatch(request, *args, **kwargs)
 
         # Initialize the chat session for this request. session_key is generated
