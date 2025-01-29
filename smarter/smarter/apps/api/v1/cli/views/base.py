@@ -185,20 +185,15 @@ class CliBaseApiView(APIView, AccountMixin):
         # - http://testserver/api/v1/cli/logs/Chatbot/?name=TestChatBot
         # - http://testserver/api/v1/cli/chat/config/TestChatBot/
         if not self._manifest_kind:
-            self._manifest_kind = Brokers.from_url(self.url)
+            self._manifest_kind = SAMKinds.from_url(self.url)
             if self._manifest_kind:
                 logger.warning("setting manifest kind to %s from analysis of url %s", self._manifest_kind, self.url)
 
-        # resolve any inconsistencies in the casing of the manifest kind
-        # that we might have received.
-        # example: 'chatbot' vs 'ChatBot', 'plugin_data_sql_connection' vs 'PluginDataSqlConnection'
-        retval = Brokers.get_broker_kind(self._manifest_kind)
-        if not retval:
-            # be careful with recursion here.
-            raise APIV1CLIViewError(
-                f"Unsupported manifest kind: {self._manifest_kind}. should be one of {SAMKinds.all_values()}. url: {self.url} command: {self.command} manifest_name: {self._manifest_name} broker: {self._broker}"
-            )
-        return retval
+        # may or may not have a manifest kind at this point.
+        # anti examples:
+        # - http://testserver/api/v1/cli/whoami/
+        # - http://testserver/api/v1/cli/apply/
+        return self._manifest_kind
 
     @property
     def command(self) -> SmarterJournalCliCommands:

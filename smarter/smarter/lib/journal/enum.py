@@ -1,9 +1,13 @@
 """Smarter API Manifests Enumerations."""
 
+import logging
 from urllib.parse import urlparse
 
 from smarter.common.enum import SmarterEnumAbstract
 from smarter.common.exceptions import SmarterExceptionBase
+
+
+logger = logging.getLogger(__name__)
 
 
 class SmarterJournalEnumException(SmarterExceptionBase):
@@ -171,3 +175,4 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
                 this_slug = str(slug).lower()
                 if this_slug in cls.all_values():
                     return this_slug
+        logger.warning("SmarterJournalCliCommands.from_url() could not extract manifest kind from URL: %s", url)
