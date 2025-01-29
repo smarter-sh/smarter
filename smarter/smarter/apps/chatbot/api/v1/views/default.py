@@ -10,6 +10,7 @@ import waffle
 from smarter.apps.account.utils import smarter_admin_user_profile
 from smarter.apps.chat.models import ChatHelper
 from smarter.apps.chat.providers.providers import chat_providers
+from smarter.apps.chatbot.exceptions import SmarterChatBotException
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.journal.enum import (
@@ -17,7 +18,10 @@ from smarter.lib.journal.enum import (
     SmarterJournalCliCommands,
     SmarterJournalThings,
 )
-from smarter.lib.journal.http import SmarterJournaledJsonResponse
+from smarter.lib.journal.http import (
+    SmarterJournaledJsonErrorResponse,
+    SmarterJournaledJsonResponse,
+)
 
 from .base import ChatBotApiBaseViewSet
 
@@ -116,15 +120,35 @@ class DefaultChatBotApiView(ChatBotApiBaseViewSet):
         """
 
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
-            logger.info("%s.post() - provider=%s", self.formatted_class_name, self.chatbot.provider)
+            logger.info(
+                "%s.post() - provider=%s", self.formatted_class_name, self.chatbot.provider if self.chatbot else None
+            )
             logger.info("%s.post() - data=%s", self.formatted_class_name, self.data)
             logger.info("%s.post() - account: %s", self.formatted_class_name, self.account)
             logger.info("%s.post() - user: %s", self.formatted_class_name, self.user)
-            logger.info("%s.post() - chat: %s", self.formatted_class_name, self.chat_helper.chat)
+            logger.info(
+                "%s.post() - chat: %s", self.formatted_class_name, self.chat_helper.chat if self.chat_helper else None
+            )
             logger.info("%s.post() - chatbot: %s", self.formatted_class_name, self.chatbot)
             logger.info("%s.post() - plugins: %s", self.formatted_class_name, self.plugins)
 
+        if not self.chatbot:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                e=SmarterChatBotException("ChatBot not found"),
+                safe=False,
+                thing=SmarterJournalThings(SmarterJournalThings.CHATBOT),
+                command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+            )
         handler = chat_providers.get_handler(provider=self.chatbot.provider)
+        if not self.chat_helper:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                e=SmarterChatBotException("ChatHelper not found"),
+                safe=False,
+                thing=SmarterJournalThings(SmarterJournalThings.CHATBOT),
+                command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+            )
         response = handler(chat=self.chat_helper.chat, data=self.data, plugins=self.plugins, user=self.user)
         response = {
             SmarterJournalApiResponseKeys.DATA: response,

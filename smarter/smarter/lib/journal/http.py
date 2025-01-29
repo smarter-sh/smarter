@@ -78,7 +78,7 @@ class SmarterJournaledJsonResponse(JsonResponse):
         }
 
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_JOURNAL):
-            user = request.user if request and request.user.is_authenticated else None
+            user = request.user if request and request.user and request.user.is_authenticated else None
             journal = SAMJournal.objects.create(
                 user=user,
                 thing=thing,
@@ -150,11 +150,11 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
             if isinstance(e, dict) and hasattr(e, "__context__")
             else "thing=" + str(thing) + ", command=" + str(command)
         )
-
+        stack_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
         data = {}
         data[SmarterJournalApiResponseKeys.ERROR] = {
             SmarterJournalApiResponseErrorKeys.ERROR_CLASS: error_class,
-            SmarterJournalApiResponseErrorKeys.STACK_TRACE: traceback.format_exc(),
+            SmarterJournalApiResponseErrorKeys.STACK_TRACE: stack_trace,
             SmarterJournalApiResponseErrorKeys.DESCRIPTION: description,
             SmarterJournalApiResponseErrorKeys.STATUS: status,
             SmarterJournalApiResponseErrorKeys.ARGS: args,

@@ -87,20 +87,21 @@ class AccountMixin:
         if not user.is_authenticated:
             return None
 
-        try:
-            return UserProfile.objects.get(user=user, account=account)
-        except UserProfile.DoesNotExist as e:
-            raise SmarterBusinessRuleViolation(
-                f"User {user} does not belong to the account {account.account_number}."
-            ) from e
-        except TypeError:
-            # note: we'll only get a UserType if the user is authenticated.
-            # Other self._user will be a SimpleLazyObject. The exception that we're trying to avoid is
-            # when AccountMixin is used with public views that don't require authentication, in which case
-            # self._user will be a SimpleLazyObject and we can't call UserProfile.objects.get(user=self.user)
-            #
-            # TypeError: Field 'id' expected a number but got <SimpleLazyObject: <django.contrib.auth.models.AnonymousUser object at 0x7fd7f18a78d0>>.
-            return None
+        if user and account:
+            try:
+                return UserProfile.objects.get(user=user, account=account)
+            except UserProfile.DoesNotExist as e:
+                raise SmarterBusinessRuleViolation(
+                    f"User {user} does not belong to the account {account.account_number}."
+                ) from e
+            except TypeError:
+                # note: we'll only get a UserType if the user is authenticated.
+                # Other self._user will be a SimpleLazyObject. The exception that we're trying to avoid is
+                # when AccountMixin is used with public views that don't require authentication, in which case
+                # self._user will be a SimpleLazyObject and we can't call UserProfile.objects.get(user=self.user)
+                #
+                # TypeError: Field 'id' expected a number but got <SimpleLazyObject: <django.contrib.auth.models.AnonymousUser object at 0x7fd7f18a78d0>>.
+                return None
 
     def init(self):
         """

@@ -587,20 +587,25 @@ class ChatBotHelper(AccountMixin):
         if self.account and self.name:
             try:
                 self._chatbot = ChatBot.objects.get(account=self.account, name=self.name)
+                self.set_to_cache(self._chatbot)
+                self.helper_logger(
+                    f"__init__() initialized self.chatbot={self.chatbot} from account {self.account} and name {self.name}"
+                )
+                return None
             except ChatBot.DoesNotExist:
                 # 2b. try again using the Smarter admin account in case this is a demo chatbot
                 smarter_admin = smarter_admin_user_profile()
-                self._chatbot = ChatBot.objects.get(account=smarter_admin.account, name=self.name)
-            self.set_to_cache(self._chatbot)
-            self.helper_logger(
-                f"__init__() initialized self.chatbot={self.chatbot} from account {self.account} and name {self.name}"
-            )
-            return None
+                try:
+                    self._chatbot = ChatBot.objects.get(account=smarter_admin.account, name=self.name)
+                except ChatBot.DoesNotExist:
+                    self.helper_warning(f"did not find chatbot using {self.account} and {self.name}")
 
         if self._user and self._user.is_authenticated:
             self._user_profile = self._user_profile or UserProfile.objects.get(user=self.user)
             self._account = self._account or self.user_profile.account
 
+        # basically repeats this entire set of logic but from inside
+        # the chatbot property with whatever we have at this point.
         if not self._chatbot:
             self._chatbot = self.chatbot
 
@@ -610,7 +615,9 @@ class ChatBotHelper(AccountMixin):
             self.set_to_cache(self._chatbot)
             return None
 
-        raise ChatBot.DoesNotExist(f"ChatBot object not found for account: {self.account} and name: {self.name}")
+        self.helper_warning(
+            f"__init__() failed to initialize self.chatbot with url={url}, name={name}, account={account}, chatbot_id={chatbot_id}"
+        )
 
     def __str__(self):
         return str(self.chatbot) if self.chatbot else "undefined"
@@ -993,9 +1000,8 @@ class ChatBotHelper(AccountMixin):
                     self.helper_logger(
                         f"initialized chatbot {self._chatbot} from account {admin_account} and name {self.name}"
                     )
-                except ChatBot.DoesNotExist as e:
-                    self.helper_warning(f"didn't find chatbot for account: {self.account} name: {self.name} {self.url}")
-                    raise ChatBot.DoesNotExist from e
+                except ChatBot.DoesNotExist:
+                    self.helper_warning(f"didn't find chatbot for account: {self.account} name: {self.name}")
             return self._chatbot
 
         if self.is_sandbox_domain:
