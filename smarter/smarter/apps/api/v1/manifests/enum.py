@@ -34,6 +34,8 @@ from smarter.lib.drf.manifest.models.auth_token.const import (
 )
 from smarter.lib.manifest.enum import SmarterEnumAbstract
 
+from .version import SMARTER_API_VERSION
+
 
 class SAMKinds(SmarterEnumAbstract):
     """Smarter manifest kinds enumeration."""
@@ -71,6 +73,8 @@ class SAMKinds(SmarterEnumAbstract):
         parsed_url = urlparse(url)
         if parsed_url:
             slugs = parsed_url.path.split("/")
+            if not "api" in slugs or not SMARTER_API_VERSION in slugs:
+                return None
             for slug in slugs:
                 this_slug = str(slug).lower()
                 if this_slug in cls.all_slugs():

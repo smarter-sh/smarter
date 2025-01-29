@@ -165,6 +165,8 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
         parsed_url = urlparse(url)
         if parsed_url:
             slugs = parsed_url.path.split("/")
+            if not "api" in slugs:
+                return None
             for slug in slugs:
                 this_slug = str(slug).lower()
                 if this_slug in cls.all_values():
