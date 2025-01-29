@@ -449,13 +449,13 @@ class ChatBotHelper(AccountMixin):
     """
 
     __slots__ = [
+        "_chatbot",
+        "_chatbot_custom_domain",
+        "_chatbot_requests",
         "_chatbot_id",
         "_url",
         "_account_number",
         "_environment",
-        "_chatbot",
-        "_chatbot_custom_domain",
-        "_chatbot_requests",
         "_name",
     ]
 
@@ -473,20 +473,21 @@ class ChatBotHelper(AccountMixin):
         :param url: The URL to parse.
         :param environment: The environment to use for the URL. (for unit testing only)
         """
+        self._chatbot: ChatBot = None
+        self._chatbot_custom_domain: ChatBotCustomDomain = None
+        self._chatbot_requests: ChatBotRequests = None
+
         self._chatbot_id: int = chatbot_id
         self._url: str = url
         self._account_number: str = account.account_number if account else None
-        self._name: str = name
         self._environment: str = environment
+        self._name: str = name
         self.user: UserType = user
 
         # in a lot of cases this is as far as we'll need to go.
         self._chatbot: ChatBot = self.get_from_cache()
         if self._chatbot:
             return None
-
-        self._chatbot_custom_domain: ChatBotCustomDomain = None
-        self._chatbot_requests: ChatBotRequests = None
 
         self.helper_logger(
             f"__init__() received: url={url}, user={user}, account={account}, name={name}, chatbot_id={chatbot_id}"
@@ -616,7 +617,7 @@ class ChatBotHelper(AccountMixin):
 
     @property
     def chatbot_id(self) -> int:
-        return self._chatbot_id if self._chatbot_id else self.chatbot.id if self.chatbot else None
+        return self._chatbot_id if self._chatbot_id else self.chatbot.id if self._chatbot else None
 
     @property
     def name(self):
@@ -699,11 +700,15 @@ class ChatBotHelper(AccountMixin):
 
     @property
     def cache_key(self) -> str:
-        if self.account_number and self.url:
-            return f"{CACHE_PREFIX}_{self.account_number}_{self.url}"
-        if self.chatbot_id:
-            return f"{CACHE_PREFIX}_{self.chatbot_id}"
-        raise SmarterConfigurationError("cache_key() - invalid cache key")
+        """
+        The cache key to use for this object. using private variable
+        references to avoid infinite recursion.
+        """
+        if self._account_number and self._url:
+            return f"{CACHE_PREFIX}_{self._account_number}_{self._url}"
+        if self._chatbot_id:
+            return f"{CACHE_PREFIX}_{self._chatbot_id}"
+        return None
 
     @property
     def parsed_url(self):
@@ -1065,7 +1070,7 @@ class ChatBotHelper(AccountMixin):
                 return self._chatbot
 
         if self._chatbot:
-            logger.info(f"initialized ChatBot: {self._chatbot}")
+            self.helper_logger(f"chatbot() initialized: {self._chatbot}")
         return self._chatbot
 
     @property
