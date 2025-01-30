@@ -37,7 +37,6 @@ from smarter.lib.journal.http import (
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -67,13 +66,23 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         # Initialize the chat session for this request. session_key is generated
         # and managed by the /config/ endpoint for the chatbot
         #
-        # example: https://customer-support.3141-5926-5359.api.smarter.sh/chatbot/config/
+        # examples:
+        # - https://customer-support.3141-5926-5359.api.smarter.sh/
+        # - https://platform.smarter/chatbots/example/
+        # - https://platform.smarter/api/v1/chatbots/1/chat/
         #
         # The React app calls this endpoint at app initialization to get a
         # json dict that includes, among other pertinent info, this session_key
         # which uniquely identifies the device and the individual chatbot session
         # for the device.
+        #
+        # the session_key is intended to be sent in the body of the request
+        # as a key-value pair, e.g. {"session_key": "1234567890"}
+        #
+        # But, this method will also check the request headers for the session_key.
         self._session_key = self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
+        if not self._session_key:
+            self._session_key = self.get_cookie_value(SMARTER_CHAT_SESSION_KEY_NAME)
         if self._session_key:
             SmarterValidator.validate_session_key(self._session_key)
         return self._session_key
@@ -148,6 +157,17 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         if host in smarter_settings.environment_domain:
             return True
         return False
+
+    def get_cookie_value(self, cookie_name):
+        """
+        Retrieve the value of a cookie from the request object.
+
+        :param request: Django HttpRequest object
+        :param cookie_name: Name of the cookie to retrieve
+        :return: Value of the cookie or None if the cookie does not exist
+        """
+        if self.request and self.request.COOKIES:
+            return self.request.COOKIES.get(cookie_name)
 
     def helper_logger(self, message: str):
         """
