@@ -177,7 +177,6 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
             logger.info(f"{self.formatted_class_name}: {message}")
 
     def dispatch(self, request, *args, name: str = None, **kwargs):
-        retval = super().dispatch(request, *args, **kwargs)
 
         self.request = self.request or request
         self._user = self._user or request.user
@@ -230,7 +229,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
             return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
         if self.chatbot_helper.is_authentication_required and not request.user.is_authenticated:
             data = {"message": "Forbidden. Please provide a valid API key."}
-            return retval
+            return JsonResponse(data=data, status=HTTPStatus.FORBIDDEN)
 
         self.plugins = ChatBotPlugin().plugins(chatbot=self.chatbot)
 
