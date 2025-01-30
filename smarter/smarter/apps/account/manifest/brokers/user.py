@@ -262,7 +262,7 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
             self.user.save()
         except Exception as e:
             raise SAMUserBrokerError(
-                f"Failed to apply {self.kind} {self.user.name}", thing=self.kind, command=command
+                f"Failed to apply {self.kind} {self.user.email}", thing=self.kind, command=command
             ) from e
         return self.json_response_ok(command=command, data={})
 
@@ -297,7 +297,7 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
                 raise SAMUserBrokerError(
-                    f"Failed to describe {self.kind} {self.user.name}", thing=self.kind, command=command
+                    f"Failed to describe {self.kind} {self.user.email}", thing=self.kind, command=command
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
@@ -310,7 +310,7 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 raise SAMUserBrokerError(
-                    f"Failed to delete {self.kind} {self.user.name}", thing=self.kind, command=command
+                    f"Failed to delete {self.kind} {self.user.email}", thing=self.kind, command=command
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
@@ -325,7 +325,7 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 raise SAMUserBrokerError(
-                    f"Failed to deploy {self.kind} {self.user.name}", thing=self.kind, command=command
+                    f"Failed to deploy {self.kind} {self.user.email}", thing=self.kind, command=command
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
@@ -340,7 +340,7 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 raise SAMUserBrokerError(
-                    f"Failed to deploy {self.kind} {self.user.name}", thing=self.kind, command=command
+                    f"Failed to deploy {self.kind} {self.user.email}", thing=self.kind, command=command
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
