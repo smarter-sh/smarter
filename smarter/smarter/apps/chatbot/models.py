@@ -894,7 +894,7 @@ class ChatBotHelper(AccountMixin):
             self._account_number = self._account_number or self.chatbot.account.account_number if self.chatbot else None
 
         if self._account_number:
-            self._account = self._account or Account.objects.get(account_number=self._account_number)
+            self._account = self._account or get_cached_account(account_number=self._account_number)
             self.helper_logger(f"initialized self.account={self.account}")
 
         return self._account_number
