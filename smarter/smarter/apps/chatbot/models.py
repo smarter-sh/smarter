@@ -1148,10 +1148,11 @@ class ChatBotHelper(AccountMixin):
         """
         Caches a ChatBot object.
         """
-        cache.set(key=self.cache_key, value=chatbot, timeout=settings.SMARTER_CHATBOT_CACHE_EXPIRATION)
-        self.helper_logger(
-            message=f"cached {self.cache_key} timeout: {settings.SMARTER_CHATBOT_CACHE_EXPIRATION} chatbot: {chatbot}"
-        )
+        if chatbot and self.cache_key:
+            cache.set(key=self.cache_key, value=chatbot, timeout=settings.SMARTER_CHATBOT_CACHE_EXPIRATION)
+            self.helper_logger(
+                message=f"cached {self.cache_key} timeout: {settings.SMARTER_CHATBOT_CACHE_EXPIRATION} chatbot: {chatbot}"
+            )
 
     def helper_logger(self, message: str):
         """
