@@ -11,6 +11,7 @@ from smarter.apps.account.mixins import AccountMixin
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.common.helpers.url_helpers import session_key_from_url
+from smarter.lib.django.user import UserType
 from smarter.lib.django.validators import SmarterValidator, SmarterValueError
 
 
@@ -31,8 +32,8 @@ class SmarterRequestHelper(AccountMixin, SmarterHelperMixin):
         self._url: str = None
         self._session_key: str = None
         self._data: dict = None
-        self._user = request.user if request.user.is_authenticated else None
-        super().__init__(user=request.user)
+        self._user: UserType = request.user if request.user.is_authenticated else None
+        super().__init__(user=self._user)
 
     @property
     def request(self):
@@ -44,10 +45,18 @@ class SmarterRequestHelper(AccountMixin, SmarterHelperMixin):
 
     @property
     def request_timestamp(self):
+        """
+        create a consistent timestamp
+        based on the time that this object was instantiated.
+        """
         return self._request_timestamp
 
     @property
     def data(self) -> dict:
+        """
+        Get the request body data as a dictionary.
+        used for setting the session_key.
+        """
         if self._data:
             return self._data
         try:
@@ -62,6 +71,9 @@ class SmarterRequestHelper(AccountMixin, SmarterHelperMixin):
 
     @property
     def unique_client_string(self):
+        """
+        Generate a unique string based on the client's IP address, user agent, and the current datetime.
+        """
         return f"{self.account.account_number}{self.url}{self.user_agent}{self.ip_address}"
 
     @property
