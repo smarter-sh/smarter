@@ -788,14 +788,10 @@ class ChatBotHelper(AccountMixin):
         - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
         - https://hr.smarter.querium.com/chatbot/
         """
+        if self._chatbot:
+            self._url = self.chatbot.url
         if self._url:
             return SmarterValidator.urlify(self._url, environment=smarter_settings.environment)
-        self._url = (
-            SmarterValidator.urlify(self.chatbot.url, environment=smarter_settings.environment)
-            if self._chatbot
-            else None
-        )
-        return self._url
 
     @property
     def parsed_url(self) -> ParseResult:
