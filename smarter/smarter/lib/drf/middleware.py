@@ -6,6 +6,7 @@ knox.auth TokenAuthentication tokens.
 import logging
 from http import HTTPStatus
 
+import waffle
 from django.contrib.auth import login
 from django.utils.deprecation import MiddlewareMixin
 from knox.settings import knox_settings
@@ -13,6 +14,7 @@ from rest_framework.authentication import get_authorization_header
 from rest_framework.exceptions import AuthenticationFailed
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.common.const import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
 
@@ -23,7 +25,9 @@ from .token_authentication import (
 
 
 logger = logging.getLogger(__name__)
-logger.info("Loading smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware")
+
+if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+    logger.info("Loading smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware")
 
 
 class SmarterTokenAuthenticationMiddleware(MiddlewareMixin):

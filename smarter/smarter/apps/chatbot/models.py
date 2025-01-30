@@ -479,6 +479,9 @@ class ChatBotHelper(AccountMixin):
         :param url: The URL to parse.
         :param environment: The environment to use for the URL. (for unit testing only)
         """
+        self.helper_logger(
+            f"ChatBotHelper.__init__() url={url}, user={user}, account={account}, name={name}, environment={environment}, chatbot_id={chatbot_id}"
+        )
         self._chatbot: ChatBot = None
         self._chatbot_custom_domain: ChatBotCustomDomain = None
         self._chatbot_requests: ChatBotRequests = None
@@ -488,16 +491,24 @@ class ChatBotHelper(AccountMixin):
         self._account_number: str = account.account_number if account else None
         self._environment: str = environment
         self._name: str = name
-        self.user: UserType = user
+        self.user: UserType = user if user and user.is_authenticated else None
+
+        # if we recognize the format of the domain then we can
+        # parse enough identifying information to initialize the
+        # cache key.
+        self.eval_named_url()
+        if self._chatbot:
+            self.helper_logger(f"__init__() initialized self.chatbot={self.chatbot} from cache hit based on named url")
+            return None
 
         # in a lot of cases this is as far as we'll need to go.
-        if (self.url and self.url == smarter_settings.environment_url) or (
-            self.parsed_url and self.parsed_url.path == "/"
-        ):
+        if self.url and self.url == smarter_settings.environment_url:
+            self.helper_logger("nothing to do for self.url==smarter_settings.environment_url")
             return None
 
         self._chatbot: ChatBot = self.get_from_cache()
         if self._chatbot:
+            self.helper_logger(f"__init__() initialized self.chatbot={self.chatbot} from cache.")
             return None
 
         self.helper_logger(
@@ -505,6 +516,7 @@ class ChatBotHelper(AccountMixin):
         )
 
         if not url and not name and not account and not chatbot_id:
+            self.helper_logger("nothing to do for no url, name, account, or chatbot_id")
             return None
 
         super().__init__(account=account, user=user, account_number=self.account_number)
@@ -521,9 +533,11 @@ class ChatBotHelper(AccountMixin):
                     self._name = self.chatbot.name
                 except ChatBot.DoesNotExist as e:
                     raise SmarterValueError(f"ChatBot with id={chatbot_id} does not exist") from e
+                self.helper_logger("initialized from ChatBot.objects.get(id=chatbot_id)")
             return None
 
         if url:
+            self.helper_logger("__init__() initializing from url")
             url = self.clean_url(url)  # eliminates url params and prunes trailing slugs like /config/
             SmarterValidator.validate_url(url)  # raises ValidationError if url is invalid
             url = SmarterValidator.urlify(
@@ -548,15 +562,22 @@ class ChatBotHelper(AccountMixin):
                     self.helper_logger(f"__init__() initialized self.account={self.account} from account number")
                 self._chatbot = self._chatbot or self.get_from_cache()
                 if self._chatbot:
-                    return None
-
-                if self.name and self.account_number:
-                    self._chatbot = ChatBot.objects.get(account=self.account, name=self.name)
-                    self.set_to_cache(self._chatbot)
                     self.helper_logger(f"__init__() initialized self.chatbot={self.chatbot} from named url")
                     return None
 
+                if self.name and self.account_number:
+                    self.helper_logger(
+                        f"__init__() evaluating self.name={self.name} and self.account_number={self.account_number}"
+                    )
+                    self._chatbot = ChatBot.objects.get(account=self.account, name=self.name)
+                    self.set_to_cache(self._chatbot)
+                    self.helper_logger(
+                        f"__init__() initialized self.chatbot={self.chatbot} from ChatBot.objects.get(account=self.account, name=self.name) using named url"
+                    )
+                    return None
+
         if self._chatbot:
+            self.helper_logger(f"initialized self.chatbot {self.chatbot} from ?????")
             return None
 
         if name and not self._name:
@@ -590,6 +611,7 @@ class ChatBotHelper(AccountMixin):
         #    first, check to see if the cache key exists bc we also cache and return None values
         self._chatbot = self._chatbot or self.get_from_cache()
         if self._chatbot:
+            self.helper_logger(f"__init__() initialized self.chatbot={self.chatbot} from cache")
             return None
 
         self.helper_logger(f"__init__() cache miss. cache_key={self.cache_key}")
@@ -624,6 +646,7 @@ class ChatBotHelper(AccountMixin):
 
         if self._chatbot:
             self.set_to_cache(self._chatbot)
+            self.helper_logger(f"__init__() initialized self.chatbot={self.chatbot} from ???")
             return None
 
         self.helper_warning(
@@ -725,12 +748,20 @@ class ChatBotHelper(AccountMixin):
         The cache key to use for this object. using private variable
         references to avoid infinite recursion.
         """
+
+        # account number + name takes precedence bc these can be
+        # extracted from named urls using string parsing.
+        if self._account_number and self._name:
+            return f"{CACHE_PREFIX}_{self._account_number}_{self._name}"
+
+        # alternatively, we can use the chatbot id if we have it.
         if self._chatbot_id:
             return f"{CACHE_PREFIX}_{self._chatbot_id}"
+
+        # lastly, we can get the id from the chatbot object if its been
+        # initialized.
         if self._chatbot:
             return f"{CACHE_PREFIX}_{self._chatbot.id}"
-        if self._account_number and self._url:
-            return f"{CACHE_PREFIX}_{self._account_number}_{self._url}"
         return None
 
     @property
@@ -1181,3 +1212,19 @@ class ChatBotHelper(AccountMixin):
         if retval.endswith("/config/"):
             retval = retval[:-8]
         return retval
+
+    def eval_named_url(self):
+        """
+        Evaluates the named url.
+
+        examples of valid urls:
+        # authentication optional urls
+        - https://example.3141-5926-5359.alpha.api.smarter.sh/
+        - https://example.3141-5926-5359.alpha.api.smarter.sh/config/
+        """
+        if self.is_named_url:
+            self._name = self.api_subdomain
+            # force an initialization of account instance using the
+            # account number pattern found in the named url.
+            if self.account_number:
+                self._chatbot = self.get_from_cache()
