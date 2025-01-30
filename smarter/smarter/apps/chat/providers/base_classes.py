@@ -270,8 +270,6 @@ class ChatProviderBase(ProviderDbMixin, AccountMixin):
             raise SmarterValueError(f"{self.formatted_class_name}: data object is required")
         if not self.user:
             raise SmarterValueError(f"{self.formatted_class_name}: user object is required")
-        if not self.account:
-            raise SmarterValueError(f"{self.formatted_class_name}: account object is required")
         if not self.default_model:
             raise SmarterValueError(f"{self.formatted_class_name}: default_model is required")
         if not self.default_system_role:
@@ -285,6 +283,9 @@ class ChatProviderBase(ProviderDbMixin, AccountMixin):
             raise SmarterValueError(
                 f"Internal error. Invalid default model: {self.default_model} not found in list of valid {self.provider} models {self.valid_chat_completion_models}."
             )
+
+        if not self.account:
+            self.account = self.chat.account
 
     @property
     def ready(self) -> bool:
