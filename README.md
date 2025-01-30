@@ -42,6 +42,7 @@ Smarter is currently compatible with the following LLM providers:
 - Google AI: Gemini, Aqa
 - Meta AI: Llama, Phi 3, Gema, Mistral, Qwen, nous-hermes
 - OpenAI: chatGPT, o1
+- DeepSeek R1, V3
 
 ### Plugin Architecture
 

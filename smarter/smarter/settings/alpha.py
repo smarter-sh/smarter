@@ -18,7 +18,11 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https?://[\w-]+\.alpha\.platform\.smarter\.sh$",
     r"^https?://[\w-]+\.alpha\.api\.smarter\.sh$",
 ]
-
+# for react.js local dev/test
+CORS_ALLOWED_ORIGINS += [
+    "http://127.0.0.1:3000",
+    "http://localhost:3000",
+]
 
 logger.info("*" * 80)
 logger.info("CORS_ALLOWED_ORIGINS: %s", CORS_ALLOWED_ORIGINS)
