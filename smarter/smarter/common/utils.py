@@ -52,6 +52,7 @@ def generate_key(unique_string: str) -> str:
     """
     key_string = unique_string + str(datetime.now())
     session_key = hashlib.sha256(key_string.encode()).hexdigest()
+    logger.info("Generated new session key: %s", session_key)
     return session_key
 
 

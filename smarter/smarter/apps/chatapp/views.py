@@ -80,9 +80,6 @@ class SmarterChatSession(SmarterRequestHelper):
     def __init__(self, request, session_key: str = None, chatbot: ChatBot = None):
         super().__init__(request)
 
-        if not session_key and not chatbot:
-            raise SmarterChatappViewError("Either a session_key or a chatbot instance is required")
-
         self._url = self.clean_url(request.build_absolute_uri())
 
         if chatbot:
@@ -90,6 +87,11 @@ class SmarterChatSession(SmarterRequestHelper):
             self.account = chatbot.account
 
         self._session_key = session_key or generate_key(self.unique_client_string)
+
+        # leaving this in place as a reminder that we need one or the other
+        if not self.session_key and not self.chatbot:
+            raise SmarterChatappViewError("Either a session_key or a chatbot instance is required")
+
         self._chat_helper = ChatHelper(request=request, session_key=self.session_key, chatbot=self.chatbot)
         self._chat = self._chat_helper.chat
 
@@ -179,7 +181,6 @@ class ChatConfigView(View, AccountMixin):
         name = kwargs.pop("name", None)
         self._sandbox_mode = name is not None
 
-        chatbot_id = kwargs.pop("chatbot_id", None)
         try:
             url = clean_url(request.build_absolute_uri())
             self.chatbot_helper = ChatBotHelper(chatbot_id=chatbot_id, user=self.user, account=self.account, url=url)
