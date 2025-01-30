@@ -3,8 +3,14 @@ Middleware to ensure that all requests for 'application/JSON' return responses
 that are also in JSON format.
 """
 
+import logging
+
 from django.http import JsonResponse
 from django.utils.deprecation import MiddlewareMixin
+
+
+logger = logging.getLogger(__name__)
+logger.info("Loading smarter.apps.chatbot.middleware.json.JsonErrorMiddleware")
 
 
 class JsonErrorMiddleware(MiddlewareMixin):
