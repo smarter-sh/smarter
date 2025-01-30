@@ -168,6 +168,9 @@ class ChatHelper(SmarterRequestHelper):
         self.session_key = session_key or generate_key(unique_string=self.unique_client_string)
         self._chat = self.get_cached_chat()
 
+    def __str__(self):
+        return self.session_key
+
     @property
     def chat(self):
         return self._chat

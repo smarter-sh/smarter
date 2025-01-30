@@ -13,16 +13,27 @@ from rest_framework.response import Response
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.chat.models import ChatHelper
+from smarter.apps.chat.providers.providers import chat_providers
+from smarter.apps.chatbot.exceptions import SmarterChatBotException
 from smarter.apps.chatbot.models import ChatBotHelper, ChatBotPlugin
 from smarter.apps.chatbot.serializers import ChatBotSerializer
 from smarter.apps.chatbot.signals import chatbot_called
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SmarterWaffleSwitches
+from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.view_helpers import SmarterNeverCachedWebView
+from smarter.lib.journal.enum import (
+    SmarterJournalApiResponseKeys,
+    SmarterJournalCliCommands,
+    SmarterJournalThings,
+)
+from smarter.lib.journal.http import (
+    SmarterJournaledJsonErrorResponse,
+    SmarterJournaledJsonResponse,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -42,22 +53,52 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
     _chatbot_id: int = None
     _url: str = None
     _chatbot_helper: ChatBotHelper = None
+    _chat_helper: ChatHelper = None
     _session_key: str = None
     _name: str = None
 
     data: dict = {}
-    chat_helper: ChatHelper = None
     request: HttpRequest = None
     http_method_names: list[str] = ["get", "post", "options"]
     plugins: List[PluginStatic] = None
 
     @property
     def session_key(self):
+        # Initialize the chat session for this request. session_key is generated
+        # and managed by the /config/ endpoint for the chatbot
+        #
+        # example: https://customer-support.3141-5926-5359.api.smarter.sh/chatbot/config/
+        #
+        # The React app calls this endpoint at app initialization to get a
+        # json dict that includes, among other pertinent info, this session_key
+        # which uniquely identifies the device and the individual chatbot session
+        # for the device.
+        self._session_key = self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
+        if self._session_key:
+            SmarterValidator.validate_session_key(self._session_key)
         return self._session_key
 
     @property
     def chatbot_id(self):
         return self._chatbot_id
+
+    @property
+    def chat_helper(self) -> ChatHelper:
+        if self._chat_helper:
+            return self._chat_helper
+        if self.session_key or self.chatbot:
+            self._chat_helper = ChatHelper(request=self.request, session_key=self.session_key, chatbot=self.chatbot)
+            if self._chat_helper:
+                self.helper_logger(
+                    (
+                        "%s initialized with chat: %s, chatbot: %s",
+                        self.formatted_class_name,
+                        self.chat_helper.chat,
+                        self.chatbot,
+                    )
+                )
+
+        return self._chat_helper
 
     @property
     def chatbot_helper(self) -> ChatBotHelper:
@@ -107,6 +148,13 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         if host in smarter_settings.environment_domain:
             return True
         return False
+
+    def helper_logger(self, message: str):
+        """
+        Create a log entry
+        """
+        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
+            logger.info(f"{self.formatted_class_name}: {message}")
 
     def dispatch(self, request, *args, name: str = None, **kwargs):
         retval = super().dispatch(request, *args, **kwargs)
@@ -166,21 +214,20 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
 
         self.plugins = ChatBotPlugin().plugins(chatbot=self.chatbot)
 
+        try:
+            self.data = json.loads(request.body)
+        except json.JSONDecodeError:
+            self.data = {}
+
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
             logger.info("%s.dispatch(): account=%s", self.formatted_class_name, self.account)
             logger.info("%s.dispatch(): chatbot=%s", self.formatted_class_name, self.chatbot)
             logger.info("%s.dispatch(): user=%s", self.formatted_class_name, self.user)
             logger.info("%s.dispatch(): plugins=%s", self.formatted_class_name, self.plugins)
-
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
-            logger.info("%s - name=%s", self.formatted_class_name, self.name)
-
-        try:
-            self.data = json.loads(request.body)
-        except json.JSONDecodeError:
-            self.data = {}
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
-            logger.info("%s - data=%s", self.formatted_class_name, self.data)
+            logger.info("%s.dispatch(): name=%s", self.formatted_class_name, self.name)
+            logger.info("%s.dispatch(): data=%s", self.formatted_class_name, self.data)
+            logger.info("%s.dispatch(): session_key=%s", self.formatted_class_name, self.session_key)
+            logger.info("%s.dispatch(): chat_helper=%s", self.formatted_class_name, self.chat_helper)
 
         chatbot_called.send(sender=self.__class__, chatbot=self.chatbot, request=request, args=args, kwargs=kwargs)
 
@@ -213,3 +260,76 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
             "meta": self.chatbot_helper.to_json() if self.chatbot_helper else None,
         }
         return JsonResponse(data=retval, status=HTTPStatus.OK)
+
+    # pylint: disable=W0613
+    def post(self, request, *args, name: str = None, **kwargs):
+        """
+        POST request handler for the Smarter Chat API. We need to parse the request host
+        to determine which ChatBot instance to use. There are two possible hostname formats:
+
+        URL with default api domain
+        -------------------
+        example: https://customer-support.3141-5926-5359.api.smarter.sh/chatbot/
+        where
+         - `customer-service' == chatbot.name`
+         - `3141-5926-5359 == chatbot.account.account_number`
+         - `api.smarter.sh == smarter_settings.customer_api_domain`
+
+        URL with custom domain
+        -------------------
+        example: https://api.smarter.querium.com/chatbot/
+        where
+         - `api.smarter.querium.com == chatbot.custom_domain`
+         - `ChatBotCustomDomain.is_verified == True` noting that
+           an asynchronous task has verified the domain NS records.
+
+        The ChatBot instance hostname is determined by the following logic:
+        `chatbot.hostname == chatbot.custom_domain or chatbot.default_host`
+        """
+
+        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
+            logger.info(
+                "%s.post() - provider=%s", self.formatted_class_name, self.chatbot.provider if self.chatbot else None
+            )
+            logger.info("%s.post() - data=%s", self.formatted_class_name, self.data)
+            logger.info("%s.post() - account: %s", self.formatted_class_name, self.account)
+            logger.info("%s.post() - user: %s", self.formatted_class_name, self.user)
+            logger.info(
+                "%s.post() - chat: %s", self.formatted_class_name, self.chat_helper.chat if self.chat_helper else None
+            )
+            logger.info("%s.post() - chatbot: %s", self.formatted_class_name, self.chatbot)
+            logger.info("%s.post() - plugins: %s", self.formatted_class_name, self.plugins)
+
+        if not self.chatbot:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                e=SmarterChatBotException("ChatBot not found"),
+                safe=False,
+                thing=SmarterJournalThings(SmarterJournalThings.CHATBOT),
+                command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+                status=HTTPStatus.NOT_FOUND,
+            )
+        handler = chat_providers.get_handler(provider=self.chatbot.provider)
+        if not self.chat_helper:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                e=SmarterChatBotException("ChatHelper not found"),
+                safe=False,
+                thing=SmarterJournalThings(SmarterJournalThings.CHATBOT),
+                command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+                status=HTTPStatus.NOT_FOUND,
+            )
+        response = handler(chat=self.chat_helper.chat, data=self.data, plugins=self.plugins, user=self.user)
+        response = {
+            SmarterJournalApiResponseKeys.DATA: response,
+        }
+        response = SmarterJournaledJsonResponse(
+            request=request,
+            data=response,
+            command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+            thing=SmarterJournalThings(SmarterJournalThings.CHATBOT),
+            status=HTTPStatus.OK,
+            safe=False,
+        )
+        self.helper_logger(("%s response=%s", self.formatted_class_name, response))
+        return response
