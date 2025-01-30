@@ -99,22 +99,27 @@ class SmarterJournaledJsonResponse(JsonResponse):
             except AttributeError:
                 user = None
                 request_data = HttpAnonymousRequestSerializer(request).data
+            # pylint: disable=broad-except
             except Exception:
                 logger.warning("Could not determine user from request, and, AttributeError was not raised.")
                 user = None
                 request_data = HttpAnonymousRequestSerializer(request).data
-            journal = SAMJournal.objects.create(
-                user=user,
-                thing=thing,
-                command=command,
-                request=request_data,
-                response=data,
-                status_code=status,
-            )
 
-            data[SmarterJournalApiResponseKeys.METADATA] = {
-                SCLIResponseMetadata.KEY: journal.key,
-            }
+            try:
+                journal = SAMJournal.objects.create(
+                    user=user,
+                    thing=thing,
+                    command=command,
+                    request=request_data,
+                    response=data,
+                    status_code=status,
+                )
+                data[SmarterJournalApiResponseKeys.METADATA] = {
+                    SCLIResponseMetadata.KEY: journal.key,
+                }
+            # pylint: disable=broad-except
+            except Exception as e:
+                logger.error("Could not create journal entry: %s", e)
 
         super().__init__(data=data, encoder=encoder, safe=safe, json_dumps_params=json_dumps_params, **kwargs)
 
@@ -174,7 +179,11 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
             if isinstance(e, dict) and hasattr(e, "__context__")
             else "thing=" + str(thing) + ", command=" + str(command)
         )
-        stack_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
+        try:
+            stack_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
+        # pylint: disable=broad-except
+        except Exception:
+            stack_trace = "No stack trace available."
         data = {}
         data[SmarterJournalApiResponseKeys.ERROR] = {
             SmarterJournalApiResponseErrorKeys.ERROR_CLASS: error_class,
