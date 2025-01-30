@@ -722,10 +722,12 @@ class ChatBotHelper(AccountMixin):
         The cache key to use for this object. using private variable
         references to avoid infinite recursion.
         """
-        if self._account_number and self._url:
-            return f"{CACHE_PREFIX}_{self._account_number}_{self._url}"
         if self._chatbot_id:
             return f"{CACHE_PREFIX}_{self._chatbot_id}"
+        if self._chatbot:
+            return f"{CACHE_PREFIX}_{self._chatbot.id}"
+        if self._account_number and self._url:
+            return f"{CACHE_PREFIX}_{self._account_number}_{self._url}"
         return None
 
     @property
