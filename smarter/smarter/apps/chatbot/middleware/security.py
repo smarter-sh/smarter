@@ -16,7 +16,9 @@ from ..models import ChatBotHelper
 
 
 logger = logging.getLogger(__name__)
-logger.info("Loading smarter.apps.chatbot.middleware.security.SecurityMiddleware")
+
+if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+    logger.info("Loading smarter.apps.chatbot.middleware.security.SecurityMiddleware")
 
 
 class SecurityMiddleware(DjangoSecurityMiddleware):

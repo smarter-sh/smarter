@@ -5,12 +5,17 @@ that are also in JSON format.
 
 import logging
 
+import waffle
 from django.http import JsonResponse
 from django.utils.deprecation import MiddlewareMixin
 
+from smarter.common.const import SmarterWaffleSwitches
+
 
 logger = logging.getLogger(__name__)
-logger.info("Loading smarter.apps.chatbot.middleware.json.JsonErrorMiddleware")
+
+if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+    logger.info("Loading smarter.apps.chatbot.middleware.json.JsonErrorMiddleware")
 
 
 class JsonErrorMiddleware(MiddlewareMixin):

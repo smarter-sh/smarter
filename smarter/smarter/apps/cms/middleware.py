@@ -3,12 +3,17 @@
 
 import logging
 
+import waffle
 from bs4 import BeautifulSoup, Comment
 from django.utils.deprecation import MiddlewareMixin
 
+from smarter.common.const import SmarterWaffleSwitches
+
 
 logger = logging.getLogger(__name__)
-logger.info("Loading smarter.apps.cms.middleware.HTMLMinifyMiddleware")
+
+if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+    logger.info("Loading smarter.apps.cms.middleware.HTMLMinifyMiddleware")
 
 
 class HTMLMinifyMiddleware(MiddlewareMixin):
