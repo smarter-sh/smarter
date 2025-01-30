@@ -23,6 +23,7 @@ from .token_authentication import (
 
 
 logger = logging.getLogger(__name__)
+logger.info("Loading smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware")
 
 
 class SmarterTokenAuthenticationMiddleware(MiddlewareMixin):

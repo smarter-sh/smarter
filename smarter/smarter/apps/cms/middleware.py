@@ -1,8 +1,14 @@
 # pylint: disable=W0613
 """Wagtail Middleware to minify HTML"""
 
+import logging
+
 from bs4 import BeautifulSoup, Comment
 from django.utils.deprecation import MiddlewareMixin
+
+
+logger = logging.getLogger(__name__)
+logger.info("Loading smarter.apps.cms.middleware.HTMLMinifyMiddleware")
 
 
 class HTMLMinifyMiddleware(MiddlewareMixin):

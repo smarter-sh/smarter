@@ -20,6 +20,7 @@ from smarter.common.const import SmarterWaffleSwitches
 
 
 logger = logging.getLogger(__name__)
+logger.info("Loading smarter.apps.chatbot.middleware.csrf.CsrfViewMiddleware")
 
 
 class CsrfViewMiddleware(DjangoCsrfViewMiddleware):
@@ -68,9 +69,7 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware):
         # Does this url point to a ChatBot?
         # ------------------------------------------------------
         self.chatbot = ChatBot.get_by_request(request=request)
-        if self.chatbot and waffle.switch_is_active(
-            SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CSRF_MIDDLEWARE_LOGGING
-        ):
+        if self.chatbot and waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
             logger.info("CsrfViewMiddleware.process_request: csrf_middleware_logging is active")
             logger.info("=" * 80)
             logger.info("CsrfViewMiddleware ChatBot: %s", self.chatbot)
