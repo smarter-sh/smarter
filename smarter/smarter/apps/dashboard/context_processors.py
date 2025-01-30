@@ -6,7 +6,7 @@ from datetime import datetime
 from django.conf import settings
 
 from smarter.__version__ import __version__
-from smarter.apps.account.utils import account_for_user
+from smarter.apps.account.utils import get_cached_account_for_user
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
 from smarter.apps.plugin.models import PluginMeta
 from smarter.lib.cache import cache_results
@@ -17,7 +17,7 @@ def get_pending_deployments(user):
     """
     Get the number of pending deployments for the current user
     """
-    account = account_for_user(user)
+    account = get_cached_account_for_user(user)
     chatbots = ChatBot.objects.filter(account=account, deployed=False).count()
     return chatbots
 
@@ -27,7 +27,7 @@ def get_chatbots(user):
     """
     Get the number of chatbots for the current user
     """
-    account = account_for_user(user)
+    account = get_cached_account_for_user(user)
     chatbots = ChatBot.objects.filter(account=account).count()
     return chatbots
 
@@ -37,7 +37,7 @@ def get_plugins(user):
     """
     Get the number of plugins for the current user
     """
-    account = account_for_user(user)
+    account = get_cached_account_for_user(user)
     plugins = PluginMeta.objects.filter(account=account).count()
     return plugins
 
@@ -47,7 +47,7 @@ def get_api_keys(user):
     """
     Get the number of API keys for the current user
     """
-    account = account_for_user(user)
+    account = get_cached_account_for_user(user)
     api_keys_count = ChatBotAPIKey.objects.filter(chatbot__account=account).count()
     return api_keys_count
 
@@ -57,7 +57,7 @@ def get_custom_domains(user):
     """
     Get the number of custom domains for the current user
     """
-    account = account_for_user(user)
+    account = get_cached_account_for_user(user)
     custom_domains = ChatBotCustomDomain.objects.filter(chatbot__account=account).count()
     return custom_domains
 

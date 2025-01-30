@@ -3,7 +3,7 @@
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.utils import account_admin_user
+from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.lib.django.user import User
 from smarter.lib.drf.models import SmarterAuthToken
 
@@ -39,7 +39,7 @@ class Command(BaseCommand):
             user = User.objects.get(username=username)
             account = UserProfile.objects.get(user=user).account
         if not user:
-            user = User.objects.get(username=username) if username else account_admin_user(account)
+            user = User.objects.get(username=username) if username else get_cached_admin_user_for_account(account)
         UserProfile.objects.get(user=user, account=account)
 
         auth_token, token_key = SmarterAuthToken.objects.create(

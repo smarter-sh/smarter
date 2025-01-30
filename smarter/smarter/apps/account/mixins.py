@@ -1,10 +1,14 @@
 """Mixin class that provides the account and user properties."""
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.utils import account_admin_user, account_for_user
+from smarter.apps.account.utils import (
+    get_cached_account_for_user,
+    get_cached_admin_user_for_account,
+)
 from smarter.common.exceptions import SmarterBusinessRuleViolation
-from smarter.lib.django.user import User, UserType
-from smarter.lib.django.validators import SmarterValidator
+from smarter.lib.django.user import UserType
+
+from .utils import get_cached_account, get_cached_user_profile
 
 
 class AccountMixin:
@@ -25,7 +29,7 @@ class AccountMixin:
     ):
         self.init()
         if account_number:
-            self.account = account or Account.objects.get(account_number=account_number)
+            self.account = account or get_cached_account(account_number=account_number)
         self.user = user
 
         if self._user and self._account:
@@ -38,7 +42,7 @@ class AccountMixin:
         if self._user_profile:
             self._account = self.user_profile.account
         elif self._user:
-            self._account = account_for_user(self._user)
+            self._account = get_cached_account_for_user(self._user)
         return self._account
 
     @account.setter
@@ -59,13 +63,13 @@ class AccountMixin:
         if self._user_profile:
             self._user = self._user_profile.user
         elif self._account:
-            self._user = account_admin_user(self.account)
+            self._user = get_cached_admin_user_for_account(self.account)
         return self._user
 
     @user.setter
     def user(self, user: UserType):
         self._user = user
-        self._account = account_for_user(user)
+        self._account = get_cached_account_for_user(user)
         self._user_profile = None
 
     @property
@@ -79,7 +83,7 @@ class AccountMixin:
         elif self.user:
             self._user_profile = self.get_user_profile(user=self.user)
         elif self.account:
-            user = account_admin_user(self.account)
+            user = get_cached_admin_user_for_account(self.account)
             self._user_profile = self.get_user_profile(user=user, account=self.account)
         return self._user_profile
 
@@ -91,7 +95,7 @@ class AccountMixin:
 
         if user and account:
             try:
-                return UserProfile.objects.get(user=user, account=account)
+                return get_cached_user_profile(user=user, account=account)
             except UserProfile.DoesNotExist as e:
                 raise SmarterBusinessRuleViolation(
                     f"User {user} does not belong to the account {account.account_number}."
