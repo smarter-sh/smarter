@@ -1,7 +1,5 @@
 """URL configuration for Smarter Api and web console."""
 
-import logging
-
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -30,8 +28,6 @@ admin.site = restricted_site
 # and register their models with your custom admin site
 admin.autodiscover()
 
-logger = logging.getLogger(__name__)
-
 
 def root_redirector(request):
     """
@@ -42,7 +38,6 @@ def root_redirector(request):
     2. the dashboard if the user is authenticated,
     3. otherwise to the Wagtail docs homepage.
     """
-    logger.info("urls.py root_redirector()")
     # 1. check if the user is authenticated, if so redirect to the dashboard
     if request.user.is_authenticated:
         return redirect("/dashboard/")
@@ -59,7 +54,6 @@ def root_redirector(request):
 
 
 def config_redirector(request):
-    logger.info("urls.py config_redirector()")
     full_url = request.build_absolute_uri()
     chatbot_helper = ChatBotHelper(url=full_url)
     if chatbot_helper and chatbot_helper.chatbot:
