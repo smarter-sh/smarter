@@ -19,7 +19,6 @@ from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.serializers import AccountMiniSerializer
 from smarter.apps.account.utils import (
-    SMARTER_ACCOUNT_NUMBER_REGEX,
     account_number_from_url,
     get_cached_account,
     get_cached_smarter_admin_user_profile,
@@ -635,7 +634,7 @@ class ChatBotHelper(AccountMixin):
                     self.helper_warning(f"did not find chatbot using {self.account} and {self.name}")
 
         if self._user and self._user.is_authenticated:
-            self._user_profile = self._user_profile or UserProfile.objects.get(user=self.user)
+            self._user_profile = self._user_profile or get_cached_user_profile(user=self.user)
             self._account = self._account or self.user_profile.account
 
         # basically repeats this entire set of logic but from inside
@@ -1019,6 +1018,11 @@ class ChatBotHelper(AccountMixin):
         Returns a lazy instance of the ChatBot
         """
         if self._chatbot:
+            return self._chatbot
+
+        self._chatbot = self.get_from_cache()
+        if self._chatbot:
+            self.helper_logger(f"chatbot() initialized: {self._chatbot} from cache")
             return self._chatbot
 
         if self.chatbot_id:
