@@ -635,7 +635,10 @@ class ChatBotHelper(AccountMixin):
 
     @property
     def chatbot_id(self) -> int:
-        return self._chatbot_id if self._chatbot_id else self.chatbot.id if self._chatbot else None
+        if self._chatbot_id:
+            return self._chatbot_id
+        if self._chatbot:
+            self._chatbot_id = self.chatbot.id
 
     @property
     def name(self):
