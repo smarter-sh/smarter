@@ -13,13 +13,11 @@ from rest_framework import serializers
 from smarter.apps.account.models import Account
 from smarter.apps.chatbot.models import ChatBot, ChatBotHelper
 from smarter.apps.plugin.models import PluginMeta
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
+from smarter.common.const import SmarterWaffleSwitches
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.common.utils import generate_key
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.request import SmarterRequestHelper
-from smarter.lib.django.validators import SmarterValidator
 
 
 logger = logging.getLogger(__name__)
@@ -30,7 +28,7 @@ class Chat(TimestampedModel):
 
     class Meta:
         verbose_name_plural = "Chats"
-        unique_together = (SMARTER_CHAT_SESSION_KEY_NAME, "url")
+        unique_together = ("session_key", "url")
 
     session_key = models.CharField(max_length=255, blank=False, null=False, unique=True)
     account = models.ForeignKey(Account, on_delete=models.CASCADE, blank=False, null=False)
@@ -148,9 +146,9 @@ class ChatHelper(SmarterRequestHelper):
 
     __slots__ = ("_session_key", "_chat", "_chatbot", "_chatbot_helper", "_clean_url")
 
+    # FIX NOTE: remove session_key
     def __init__(self, request, session_key: str, chatbot: ChatBot = None) -> None:
         super().__init__(request)
-        self._session_key: str = None
         self._chat: Chat = None
         self._chatbot: ChatBot = None
         self._chatbot_helper: ChatBotHelper = None
@@ -165,7 +163,6 @@ class ChatHelper(SmarterRequestHelper):
             self._chatbot = chatbot
             self.account = chatbot.account
 
-        self.session_key = session_key or generate_key(unique_string=self.unique_client_string)
         self._chat = self.get_cached_chat()
 
     def __str__(self):
@@ -189,18 +186,6 @@ class ChatHelper(SmarterRequestHelper):
             self._clean_url = self._clean_url[:-8]
 
         return self._clean_url
-
-    @property
-    def session_key(self):
-        return self._session_key
-
-    @session_key.setter
-    def session_key(self, value):
-        try:
-            SmarterValidator.validate_session_key(value)
-        except SmarterValueError as e:
-            raise SmarterValueError(f"Illegal session_key format received: {e}") from e
-        self._session_key = value
 
     @property
     def chatbot_helper(self) -> ChatBotHelper:

@@ -3,11 +3,8 @@ Views for the React chat app. See doc/DJANGO-REACT-INTEGRATION.md for more
 information about how the React app is integrated into the Django app.
 """
 
-import datetime
 import hashlib
-import json
 import logging
-import urllib.parse
 from datetime import datetime
 from http import HTTPStatus
 
@@ -23,7 +20,6 @@ from django.views import View
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.chat.models import Chat, ChatHelper
 from smarter.apps.chatbot.models import (
@@ -38,10 +34,11 @@ from smarter.apps.plugin.models import (
     PluginSelectorHistory,
     PluginSelectorHistorySerializer,
 )
+from smarter.common.classes import SmarterHelperMixin
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.common.exceptions import SmarterExceptionBase
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.common.utils import clean_url, generate_key
+from smarter.common.helpers.url_helpers import clean_url
 from smarter.lib.django.request import SmarterRequestHelper
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
@@ -66,18 +63,17 @@ class SmarterChatappViewError(SmarterExceptionBase):
         return "Smarter Chatapp error"
 
 
-class SmarterChatSession(SmarterRequestHelper):
+class SmarterChatSession(SmarterRequestHelper, SmarterHelperMixin):
     """
     Helper class that provides methods for creating a session key and client key.
     """
 
-    _session_key: str = None
     _chat: Chat = None
-    _chatbot: ChatBot = None
     _chat_helper: ChatHelper = None
-    _url: str = None
+    _chatbot: ChatBot = None
 
-    def __init__(self, request, session_key: str = None, chatbot: ChatBot = None):
+    # FIX NOTE: REMOVE session_key
+    def __init__(self, request, chatbot: ChatBot = None):
         super().__init__(request)
 
         self._url = self.clean_url(request.build_absolute_uri())
@@ -85,8 +81,6 @@ class SmarterChatSession(SmarterRequestHelper):
         if chatbot:
             self._chatbot = chatbot
             self.account = chatbot.account
-
-        self._session_key = session_key or generate_key(self.unique_client_string)
 
         # leaving this in place as a reminder that we need one or the other
         if not self.session_key and not self.chatbot:
@@ -99,20 +93,8 @@ class SmarterChatSession(SmarterRequestHelper):
             logger.info("%s - session established: %s", self.formatted_class_name, self.session_key)
 
     @property
-    def formatted_class_name(self):
-        return formatted_text(self.__class__.__name__)
-
-    @property
-    def url(self):
-        return self._url
-
-    @property
     def chatbot(self):
         return self._chatbot
-
-    @property
-    def session_key(self):
-        return self._session_key
 
     @property
     def chat(self):
@@ -122,21 +104,11 @@ class SmarterChatSession(SmarterRequestHelper):
     def chat_helper(self):
         return self._chat_helper
 
-    @property
-    def unique_client_string(self):
-        return f"{self.account.account_number}{self.url}{self.user_agent}{self.ip_address}"
-
-    @property
-    def client_key(self):
-        return hashlib.sha256(self.unique_client_string.encode()).hexdigest()
-
     def clean_url(self, url: str) -> str:
         """
         Clean the url of any query strings and trailing '/config/' strings.
         """
-        parsed_url = urllib.parse.urlparse(url)
-        # remove any query strings from url and also prune any trailing '/config/' from the url
-        retval = parsed_url._replace(query="").geturl()
+        retval = clean_url(url)
         if retval.endswith("/config/"):
             retval = retval[:-8]
         return retval
@@ -144,7 +116,7 @@ class SmarterChatSession(SmarterRequestHelper):
 
 # pylint: disable=R0902
 # @method_decorator(csrf_exempt, name="dispatch")
-class ChatConfigView(View, AccountMixin):
+class ChatConfigView(View, SmarterRequestHelper, SmarterHelperMixin):
     """
     Chat config view for smarter web. This view is protected and requires the user
     to be authenticated. It works with any ChatBots but is aimed at chatbots running
@@ -156,7 +128,6 @@ class ChatConfigView(View, AccountMixin):
     authentication_classes = (SmarterTokenAuthentication, SessionAuthentication)
     permission_classes = (IsAuthenticated,)
 
-    _request_timestamp = datetime.now()
     thing: SmarterJournalThings = None
     command: SmarterJournalCliCommands = None
     _sandbox_mode: bool = True
@@ -165,24 +136,15 @@ class ChatConfigView(View, AccountMixin):
     _chatbot: ChatBot = None
 
     @property
-    def request_timestamp(self):
-        return self._request_timestamp
-
-    @property
     def chatbot(self):
         return self._chatbot
 
-    @property
-    def formatted_class_name(self):
-        return formatted_text(self.__class__.__name__)
-
     def dispatch(self, request, *args, chatbot_id: int = None, **kwargs):
-        self._user = request.user
         name = kwargs.pop("name", None)
         self._sandbox_mode = name is not None
 
         try:
-            url = clean_url(request.build_absolute_uri())
+            url = clean_url(self.url)
             self.chatbot_helper = ChatBotHelper(chatbot_id=chatbot_id, user=self.user, account=self.account, url=url)
             self._chatbot = self.chatbot_helper.chatbot
             self.account = self.chatbot_helper.account
@@ -218,13 +180,6 @@ class ChatConfigView(View, AccountMixin):
                 "%s - chatbot=%s - chatbot_helper=%s", self.formatted_class_name, self.chatbot, self.chatbot_helper
             )
 
-        try:
-            data = json.loads(request.body)
-        except json.JSONDecodeError:
-            data = {}
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
-            logger.info("%s - data=%s", self.formatted_class_name, data)
-
         # Initialize the chat session for this request. session_key is generated
         # and managed by the /config/ endpoint for the chatbot
         #
@@ -234,8 +189,7 @@ class ChatConfigView(View, AccountMixin):
         # json dict that includes, among other pertinent info, this session_key
         # which uniquely identifies the device and the individual chatbot session
         # for the device.
-        session_key = data.get(SMARTER_CHAT_SESSION_KEY_NAME) or request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME) or None
-        self.session = SmarterChatSession(request, session_key=session_key, chatbot=self.chatbot)
+        self.session = SmarterChatSession(request, chatbot=self.chatbot)
 
         if not self.chatbot:
             return JsonResponse({"error": "Not found"}, status=404)
