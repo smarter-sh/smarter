@@ -28,7 +28,7 @@ from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterWaffleSwitches
-from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import UserType
@@ -241,8 +241,14 @@ class ChatBot(TimestampedModel):
 
     @property
     def url_chatbot(self):
+        """
+        returned by ChatConfigView.config()
+        consumed by React.js app for http requests on new prompts
+        interpreted by smarter.apps.chatbot.api.v1.urls.py as
+        path("<int:chatbot_id>/chat/", ChatConfigView.as_view(), name="chatbot-api-chatbot")
+        """
         base_url = smarter_settings.environment_domain
-        return urljoin(self.scheme + "://" + base_url, f"/api/v1/chatbots/{self.id}/")
+        return urljoin(self.scheme + "://" + base_url, f"/api/v1/chatbots/{self.id}/chat/")
 
     @property
     def url_chatapp(self):
