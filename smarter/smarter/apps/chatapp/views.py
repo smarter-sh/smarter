@@ -24,7 +24,7 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.utils import smarter_admin_user_profile
+from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.chat.models import Chat, ChatHelper
 from smarter.apps.chatbot.models import (
     ChatBot,
@@ -404,7 +404,7 @@ class ChatAppListView(SmarterAuthenticatedNeverCachedWebView):
                     return True
 
         # get all of the smarter demo chatbots
-        smarter_admin = smarter_admin_user_profile()
+        smarter_admin = get_cached_smarter_admin_user_profile()
         smarter_demo_chatbots = ChatBot.objects.filter(account=smarter_admin.account)
         for chatbot in smarter_demo_chatbots:
             chatbot_helper = ChatBotHelper(account=smarter_admin.account, name=chatbot.name)

@@ -21,7 +21,7 @@ from smarter.smarter_celery import app
 
 # Account stuff
 from .models import Account, Charge, DailyBillingRecord
-from .utils import user_for_user_id, user_profile_for_user
+from .utils import get_cached_user_for_user_id, get_cached_user_profile
 
 
 logger = logging.getLogger(__name__)
@@ -39,8 +39,8 @@ def create_charge(*args, **kwargs):
     account: Account = None
     user_id = kwargs.get("user_id")
     if user_id:
-        user = user_for_user_id(user_id)
-        user_profile = user_profile_for_user(user=user)
+        user = get_cached_user_for_user_id(user_id)
+        user_profile = get_cached_user_profile(user=user)
         account = user_profile.account
     else:
         account_id = kwargs.get("account_id")

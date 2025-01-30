@@ -21,8 +21,9 @@ from smarter.apps.account.serializers import AccountMiniSerializer
 from smarter.apps.account.utils import (
     SMARTER_ACCOUNT_NUMBER_REGEX,
     account_number_from_url,
-    smarter_admin_user_profile,
-    user_profile_for_user,
+    get_cached_account,
+    get_cached_smarter_admin_user_profile,
+    get_cached_user_profile,
 )
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.static import PluginStatic
@@ -337,7 +338,7 @@ class ChatBotPlugin(TimestampedModel):
         if not self.chatbot:
             return None
         admin_user = UserProfile.admin_for_account(self.chatbot.account)
-        user_profile = user_profile_for_user(admin_user)
+        user_profile = get_cached_user_profile(admin_user)
         return PluginStatic(plugin_meta=self.plugin_meta, user_profile=user_profile)
 
     @classmethod
@@ -346,7 +347,7 @@ class ChatBotPlugin(TimestampedModel):
         if not chatbot:
             return None
         admin_user = UserProfile.admin_for_account(chatbot.account)
-        user_profile = user_profile_for_user(admin_user)
+        user_profile = get_cached_user_profile(admin_user)
         plugin = PluginStatic(data=data, user_profile=user_profile)
         return cls.objects.create(chatbot=chatbot, plugin_meta=plugin.meta)
 
@@ -356,7 +357,7 @@ class ChatBotPlugin(TimestampedModel):
             return []
         chatbot_plugins = cls.objects.filter(chatbot=chatbot)
         admin_user = UserProfile.admin_for_account(chatbot.account)
-        user_profile = user_profile_for_user(admin_user)
+        user_profile = get_cached_user_profile(admin_user)
         retval = []
         for chatbot_plugin in chatbot_plugins:
             retval.append(PluginStatic(plugin_meta=chatbot_plugin.plugin_meta, user_profile=user_profile))
@@ -558,7 +559,7 @@ class ChatBotHelper(AccountMixin):
                 self._account_number = account_number_from_url(self.url)
                 self.helper_logger(f"__init__() initialized self.account_number={self.account_number} from named url")
                 if self._account_number:
-                    self._account = Account.objects.get(account_number=self.account_number)
+                    self._account = get_cached_account(account_number=self.account_number)
                     self.helper_logger(f"__init__() initialized self.account={self.account} from account number")
                 self._chatbot = self._chatbot or self.get_from_cache()
                 if self._chatbot:
@@ -627,7 +628,7 @@ class ChatBotHelper(AccountMixin):
                 return None
             except ChatBot.DoesNotExist:
                 # 2b. try again using the Smarter admin account in case this is a demo chatbot
-                smarter_admin = smarter_admin_user_profile()
+                smarter_admin = get_cached_smarter_admin_user_profile()
                 try:
                     self._chatbot = ChatBot.objects.get(account=smarter_admin.account, name=self.name)
                 except ChatBot.DoesNotExist:
@@ -1006,13 +1007,10 @@ class ChatBotHelper(AccountMixin):
         if not self.url:
             return False
         if not smarter_settings.customer_api_domain in self.url:
-            self.helper_logger(
-                f"customer_api_domain {smarter_settings.customer_api_domain} not found in url {self.url}"
-            )
             return False
         if account_number_from_url(self.url):
             return True
-        self.helper_logger(f"did not match account number regex {SMARTER_ACCOUNT_NUMBER_REGEX} against {self.url}")
+        self.helper_logger(f"is_named_url() - not a named url: {self.url}")
         return False
 
     @property
@@ -1031,7 +1029,7 @@ class ChatBotHelper(AccountMixin):
                 raise SmarterValueError(f"ChatBot with id={self.chatbot_id} does not exist") from e
             return self._chatbot
 
-        admin_account = smarter_admin_user_profile().account
+        admin_account = get_cached_smarter_admin_user_profile().account
 
         if self.account and self.name:
             try:

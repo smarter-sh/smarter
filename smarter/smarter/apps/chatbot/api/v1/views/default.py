@@ -7,7 +7,7 @@ from http import HTTPStatus
 
 import waffle
 
-from smarter.apps.account.utils import smarter_admin_user_profile
+from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.chat.models import ChatHelper
 
 from .base import ChatBotApiBaseViewSet
@@ -53,7 +53,7 @@ class DefaultChatBotApiView(ChatBotApiBaseViewSet):
         # like /smarter/example/
         account_name = kwargs.get("account")
         if account_name == "smarter":
-            self.account = smarter_admin_user_profile().account
+            self.account = get_cached_smarter_admin_user_profile().account
         retval = super().dispatch(request, *args, **kwargs)
 
         return retval
