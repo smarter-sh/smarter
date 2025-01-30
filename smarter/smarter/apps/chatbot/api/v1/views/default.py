@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 class DefaultChatBotApiView(ChatBotApiBaseViewSet):
     """
-    Main view for Smarter ChatBot API.
+    Main view for Smarter ChatBot API chat prompts.
     top-level viewset for customer-deployed Plugin-based Chat APIs.
     """
 
@@ -83,13 +83,14 @@ class DefaultChatBotApiView(ChatBotApiBaseViewSet):
             SmarterValidator.validate_session_key(self.session_key)
         if self.chatbot or self.session_key:
             self.chat_helper = ChatHelper(request=request, session_key=self.session_key, chatbot=self.chatbot)
-            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
-                logger.info(
+            self.helper_logger(
+                (
                     "%s initialized with chat: %s, chatbot: %s",
                     self.formatted_class_name,
                     self.chat_helper.chat,
                     self.chatbot,
                 )
+            )
 
         return retval
 
@@ -163,6 +164,12 @@ class DefaultChatBotApiView(ChatBotApiBaseViewSet):
             status=HTTPStatus.OK,
             safe=False,
         )
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
-            logger.info("%s response=%s", self.formatted_class_name, response)
+        self.helper_logger(("%s response=%s", self.formatted_class_name, response))
         return response
+
+    def helper_logger(self, message: str):
+        """
+        Create a log entry
+        """
+        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
+            logger.info(f"{self.formatted_class_name}: {message}")
