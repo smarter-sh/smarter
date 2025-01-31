@@ -238,7 +238,7 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
         retval = {
             "data": {
                 SMARTER_CHAT_SESSION_KEY_NAME: self.session.session_key,
-                "sandbox_mode": self.chatbot_helper.is_sandbox_domain,
+                "sandbox_mode": self.chatbot_helper.is_chatbot_sandbox_url,
                 "debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_REACTAPP_DEBUG_MODE),
                 "chatbot": chatbot_serializer.data,
                 "history": history,

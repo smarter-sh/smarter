@@ -505,7 +505,7 @@ class ChatBotHelper(SmarterRequestMixin):
             f"__init__() chatbot={self.chatbot}, url={self.url}, name={self.name}, chatbot_id={self.chatbot_id} user: {self.user}, account: {self.account}"
         )
 
-        if not self._name and self.is_sandbox_domain:
+        if not self._name and self.is_chatbot_sandbox_url:
             parsed_url = urlparse(self.url)
             self._name = parsed_url.path.split("/")[-2]
 
@@ -547,8 +547,8 @@ class ChatBotHelper(SmarterRequestMixin):
         valid possibilities:
         - self._name, assigned in __init__()
         - self.chatbot.name
-        - self.subdomain when is_named_url
-        - self.path slug when is_sandbox_domain
+        - self.subdomain when is_chatbot_named_url
+        - self.path slug when is_chatbot_sandbox_url
         """
         if self._name:
             return self._name
@@ -559,11 +559,11 @@ class ChatBotHelper(SmarterRequestMixin):
         if self._chatbot:
             self._name = self.chatbot.name
 
-        if self.is_named_url:
+        if self.is_chatbot_named_url:
             # covers a case like http://example.api.localhost:8000/
             self._name = self.subdomain
 
-        if self.is_sandbox_domain:
+        if self.is_chatbot_sandbox_url:
             # covers a case like http://localhost:8000/chatbots/example/
             path_parts = self.parsed_url.path.split("/")
             if len(path_parts) > 2:
@@ -627,7 +627,7 @@ class ChatBotHelper(SmarterRequestMixin):
         if self.is_custom_domain:
             domain_parts = self.domain.split(".")
             return ".".join(domain_parts[1:])
-        if self.is_sandbox_domain:
+        if self.is_chatbot_sandbox_url:
             return self.path
         return None
 
@@ -668,7 +668,7 @@ class ChatBotHelper(SmarterRequestMixin):
 
     @property
     def is_authentication_required(self) -> bool:
-        if self.is_sandbox_domain:
+        if self.is_chatbot_sandbox_url:
             return True
 
         if ChatBotAPIKey.objects.filter(chatbot=self.chatbot, api_key__is_active=True).exists():
