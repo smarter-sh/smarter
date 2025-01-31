@@ -57,6 +57,10 @@ class AccountMixin:
                 ) from e
 
     @property
+    def account_number(self) -> str:
+        return self.account.account_number if self.account else None
+
+    @property
     def user(self) -> UserType:
         if self._user:
             return self._user

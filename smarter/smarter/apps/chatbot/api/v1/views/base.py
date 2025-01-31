@@ -116,9 +116,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         # ensure that we have some combination of properties that can identify a chatbot
         if not (self.url or self.chatbot_id or (self.account and self.name)):
             return None
-        self._chatbot_helper = ChatBotHelper(
-            url=self.url, name=self.name, user=self.user, account=self.account, chatbot_id=self.chatbot_id
-        )
+        self._chatbot_helper = ChatBotHelper(request=self.request, name=self.name, chatbot_id=self.chatbot_id)
         self._chatbot_id = self._chatbot_helper.chatbot_id
         self._url = self._chatbot_helper.url
         self._user = self._chatbot_helper.user

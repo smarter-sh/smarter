@@ -27,6 +27,8 @@ def session_key_from_url(url: str) -> str:
     Returns:
         The session key.
     """
+    if not url:
+        return None
     SmarterValidator.validate_url(url)
     parsed_url = urlparse(url)
     query_params = parse_qs(parsed_url.query)

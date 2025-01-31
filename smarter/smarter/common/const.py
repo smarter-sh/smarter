@@ -31,6 +31,7 @@ class SmarterWaffleSwitches:
 
     SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING = "chatbot_api_view_logging"
     SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING = "chatbothelper_logging"
+    SMARTER_WAFFLE_SWITCH_REQUEST_MIXIN_LOGGING = "request_mixin_logging"
     SMARTER_WAFFLE_SWITCH_CHAT_LOGGING = "chat_logging"
     SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING = "csrf_middleware_logging"
     SMARTER_WAFFLE_SWITCH_JOURNAL = "journal"
