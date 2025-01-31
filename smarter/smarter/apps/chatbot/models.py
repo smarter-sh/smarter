@@ -540,21 +540,33 @@ class ChatBotHelper(SmarterRequestMixin):
 
     @property
     def name(self):
+        """
+        Returns the name of the chatbot.
+        valid possibilities:
+        - self._name, assigned in __init__()
+        - self.chatbot.name
+        - self.subdomain when is_named_url
+        - self.path slug when is_sandbox_domain
+        """
         if self._name:
             return self._name
+
+        if not self.is_chatbot:
+            return None
 
         if self._chatbot:
             self._name = self.chatbot.name
 
         if self.is_named_url:
+            # covers a case like http://example.api.localhost:8000/
             self._name = self.subdomain
-        else:
+
+        if self.is_sandbox_domain:
             # covers a case like http://localhost:8000/chatbots/example/
-            # where api_host == /chatbots/example/
-            if self.api_host and "/chatbots/" in self.api_host:
-                split_host = self.api_host.split("/") if self.api_host else None
-                if split_host and len(split_host) > 2:
-                    self._name = split_host[-2]
+            path_parts = self.parsed_url.path.split("/")
+            if len(path_parts) > 2:
+                self._name = path_parts[2]
+
         return self._name
 
     @property

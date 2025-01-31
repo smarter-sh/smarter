@@ -120,9 +120,9 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
     def session_key(self):
         """
         Get the session key from one of the following:
-         - url parameter
-         - request json body
-         - request header
+         - url parameter http://localhost:8000/chatbots/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
+         - request json body {'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}
+         - request header {'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}
          - a session_key generator
         """
         if self._session_key:
@@ -132,15 +132,13 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             # the request object IN THEORY should only send
             # a session_key for a chatbot url.
             return None
-        if not self._session_key:
-            self._session_key = (
-                session_key_from_url(self.url)
-                or self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
-                or self.request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME)
-            )
+        self._session_key = (
+            session_key_from_url(self.url)
+            or self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
+            or self.request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME)
+        )
         self._session_key = self._session_key or self.generate_key()
         SmarterValidator.validate_session_key(self._session_key)
-
         return self._session_key
 
     @property
