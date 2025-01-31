@@ -240,13 +240,13 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         """
         Returns True if the url resolves to a chatbot.
         """
-        return self.is_chatbot_named_url or self.is_chatbot_sandbox_url or self.is_chatbot_api_url
+        return self.is_chatbot_named_url or self.is_chatbot_sandbox_url or self.is_chatbot_smarter_api_url
 
     @property
-    def is_chatbot_api_url(self) -> bool:
+    def is_smarter_api(self) -> bool:
         """
-        Returns True if the url is of the form http://localhost:8000/api/v1/chatbots/1/chat/
-        path_parts: ['', 'api', 'v1', 'chatbots', '1', 'chat', '']
+        Returns True if the url is of the form http://localhost:8000/api/v1/
+        example path_parts: ['', 'api', 'v1', 'chatbots', '1', 'chat', '']
         """
         path_parts = self.parsed_url.path.split("/")
         if not path_parts:
@@ -257,12 +257,24 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             return False
         if path_parts[2] != "v1":
             return False
+        return True
+
+    @property
+    def is_chatbot_smarter_api_url(self) -> bool:
+        """
+        Returns True if the url is of the form http://localhost:8000/api/v1/chatbots/1/chat/
+        path_parts: ['', 'api', 'v1', 'chatbots', '1', 'chat', '']
+        """
+        if not self.is_smarter_api:
+            return False
+
+        path_parts = self.parsed_url.path.split("/")
         if path_parts[3] != "chatbots":
             return False
         if not path_parts[4].isnumeric():
             return False
 
-        return False
+        return True
 
     @property
     def is_chatbot_named_url(self) -> bool:
@@ -447,6 +459,9 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         """
         return self.parsed_url.netloc if self.parsed_url else None
 
+    # --------------------------------------------------------------------------
+    # instance methods
+    # --------------------------------------------------------------------------
     def to_json(self) -> dict:
         """
         serializes the object.
@@ -455,8 +470,9 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             "url": self.url,
             "session_key": self.session_key,
             "data": self.data,
+            "is_smarter_api": self.is_smarter_api,
             "is_chatbot": self.is_chatbot,
-            "is_chatbot_api_url": self.is_chatbot_api_url,
+            "is_chatbot_smarter_api_url": self.is_chatbot_smarter_api_url,
             "is_chatbot_named_url": self.is_chatbot_named_url,
             "is_chatbot_sandbox_url": self.is_chatbot_sandbox_url,
             "is_default_domain": self.is_default_domain,
