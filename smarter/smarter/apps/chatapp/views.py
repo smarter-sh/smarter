@@ -34,7 +34,7 @@ from smarter.apps.plugin.models import (
 )
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
-from smarter.common.exceptions import SmarterExceptionBase
+from smarter.common.exceptions import SmarterExceptionBase, SmarterValueError
 from smarter.common.helpers.url_helpers import clean_url
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
@@ -69,7 +69,6 @@ class SmarterChatSession(SmarterRequestMixin, SmarterHelperMixin):
     _chat_helper: ChatHelper = None
     _chatbot: ChatBot = None
 
-    # FIX NOTE: REMOVE session_key
     def __init__(self, request, chatbot: ChatBot = None):
         super().__init__(request)
 
@@ -139,10 +138,7 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
         name = kwargs.pop("name", None)
 
         try:
-            url = self.clean_url(self.url)
-            self.chatbot_helper = ChatBotHelper(
-                chatbot_id=chatbot_id, user=self.user, account=self.account, url=url, name=name
-            )
+            self.chatbot_helper = ChatBotHelper(request=request, chatbot_id=chatbot_id, name=name)
             self._chatbot = self.chatbot_helper.chatbot
             self.account = self.chatbot_helper.account
         except ChatBot.DoesNotExist:
@@ -312,9 +308,7 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
                 self.user_profile.user,
                 name,
             )
-            self.chatbot_helper = ChatBotHelper(
-                url=self.url, user=self.user_profile.user, account=self.account, name=name
-            )
+            self.chatbot_helper = ChatBotHelper(request=request, name=name)
             self.chatbot = self.chatbot_helper.chatbot if self.chatbot_helper.chatbot else None
             if not self.chatbot:
                 raise ChatBot.DoesNotExist
@@ -346,22 +340,25 @@ class ChatAppListView(SmarterAuthenticatedNeverCachedWebView):
         self.chatbot_helpers = []
 
         def was_already_added(chatbot_helper: ChatBotHelper) -> bool:
+            if not chatbot_helper.chatbot:
+                raise SmarterValueError("chatbot_helper.chatbot is not set")
             for b in self.chatbot_helpers:
-                if b.chatbot.id == chatbot_helper.chatbot.id:
+                if b.chatbot and b.chatbot.id == chatbot_helper.chatbot.id:
                     return True
 
         # get all of the smarter demo chatbots
         smarter_admin = get_cached_smarter_admin_user_profile()
         smarter_demo_chatbots = ChatBot.objects.filter(account=smarter_admin.account)
         for chatbot in smarter_demo_chatbots:
-            chatbot_helper = ChatBotHelper(account=smarter_admin.account, name=chatbot.name, user=request.user)
+            logger.info("ChatAppListView - chatbot=%s", chatbot)
+            chatbot_helper = ChatBotHelper(request=request, name=chatbot.name, chatbot_id=chatbot.id)
             self.chatbot_helpers.append(chatbot_helper)
 
         # get all chatbots for the account
         self.chatbots = ChatBot.objects.filter(account=self.account)
 
         for chatbot in self.chatbots:
-            chatbot_helper = ChatBotHelper(account=self.account, name=chatbot.name, user=request.user)
+            chatbot_helper = ChatBotHelper(request=request, name=chatbot.name, chatbot_id=chatbot.id)
             if not was_already_added(chatbot_helper):
                 self.chatbot_helpers.append(chatbot_helper)
 

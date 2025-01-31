@@ -194,7 +194,8 @@ class ChatHelper(SmarterRequestMixin):
     def chatbot_helper(self) -> ChatBotHelper:
         if self._chatbot_helper:
             return self._chatbot_helper
-        self._chatbot_helper = ChatBotHelper(url=self.url)
+        if self.chatbot:
+            self._chatbot_helper = ChatBotHelper(chatbot_id=self.chatbot.id)
         return self._chatbot_helper
 
     @property

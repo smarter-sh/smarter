@@ -43,8 +43,7 @@ def root_redirector(request):
         return redirect("/dashboard/")
 
     # 2. check if the url is of the form https://example.3141-5926-5359.api.smarter.sh/
-    full_url = request.build_absolute_uri()
-    chatbot_helper = ChatBotHelper(url=full_url, user=request.user)
+    chatbot_helper = ChatBotHelper(request=request)
     if chatbot_helper and chatbot_helper.chatbot:
         view = DefaultChatBotApiView.as_view()
         return view(request, chatbot_id=chatbot_helper.chatbot.id)
@@ -54,8 +53,7 @@ def root_redirector(request):
 
 
 def config_redirector(request):
-    full_url = request.build_absolute_uri()
-    chatbot_helper = ChatBotHelper(url=full_url, user=request.user)
+    chatbot_helper = ChatBotHelper(request=request)
     if chatbot_helper and chatbot_helper.chatbot:
         view = ChatConfigView.as_view()
         return view(request, chatbot_id=chatbot_helper.chatbot.id)
