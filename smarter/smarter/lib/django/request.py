@@ -14,6 +14,7 @@ known url patterns for Smarter chatbots. key features include:
 import hashlib
 import json
 import logging
+import re
 import warnings
 from datetime import datetime
 from urllib.parse import ParseResult, parse_qs, urlparse, urlunsplit
@@ -45,6 +46,28 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
 
     Works with any Django request object and any valid url, but is designed
     as a helper class for Smarter ChatBot urls.
+
+    valid end points:
+        root end points for named urls (deployed chatbots)
+        --------------------------------
+        example.api.localhost:8000/			            DefaultChatBotApiView
+        example.api.localhost:8000/config		        ChatConfigView
+
+        authenticated sandbox end points
+        --------------------------------
+        /chatbots/<str:name>/				            ChatAppView
+        /chatbots/<str:name>/config/			        ChatConfigView
+
+        smarter.sh/v1 end points
+        --------------------------------
+        /api/v1/chatbots/<int:chatbot_id>/chat/		    DefaultChatBotApiView
+        /api/v1/chatbots/<int:chatbot_id>/chat/config/	ChatConfigView
+
+        /api/v1/cli/chat/<str:name>/			        ApiV1CliChatApiView		    -> * non-brokered view based on url returned by ChatConfigView
+        /api/v1/cli/chat/config/<str:name>/", 		    ApiV1CliChatConfigApiView	-> ChatConfigView
+
+        api/v1/chat/        ** these seem to be dead ends
+        api/v1/chat/
 
     example urls:
     - http://testserver
@@ -255,7 +278,8 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             return False
         if path_parts[1] != "api":
             return False
-        if path_parts[2] != "v1":
+        # expecting 'v1', 'v2', 'v3', etc. in the path
+        if not re.match(r"^v\d+", path_parts[2]):
             return False
         return True
 
