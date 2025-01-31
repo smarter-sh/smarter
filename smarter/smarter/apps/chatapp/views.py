@@ -3,9 +3,7 @@ Views for the React chat app. See doc/DJANGO-REACT-INTEGRATION.md for more
 information about how the React app is integrated into the Django app.
 """
 
-import hashlib
 import logging
-from datetime import datetime
 from http import HTTPStatus
 
 import waffle
@@ -37,9 +35,8 @@ from smarter.apps.plugin.models import (
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.common.exceptions import SmarterExceptionBase
-from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.url_helpers import clean_url
-from smarter.lib.django.request import SmarterRequestHelper
+from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
 from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
@@ -63,7 +60,7 @@ class SmarterChatappViewError(SmarterExceptionBase):
         return "Smarter Chatapp error"
 
 
-class SmarterChatSession(SmarterRequestHelper, SmarterHelperMixin):
+class SmarterChatSession(SmarterRequestMixin, SmarterHelperMixin):
     """
     Helper class that provides methods for creating a session key and client key.
     """
@@ -116,7 +113,7 @@ class SmarterChatSession(SmarterRequestHelper, SmarterHelperMixin):
 
 # pylint: disable=R0902
 # @method_decorator(csrf_exempt, name="dispatch")
-class ChatConfigView(View, SmarterRequestHelper, SmarterHelperMixin):
+class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
     """
     Chat config view for smarter web. This view is protected and requires the user
     to be authenticated. It works with any ChatBots but is aimed at chatbots running
@@ -130,7 +127,6 @@ class ChatConfigView(View, SmarterRequestHelper, SmarterHelperMixin):
 
     thing: SmarterJournalThings = None
     command: SmarterJournalCliCommands = None
-    _sandbox_mode: bool = True
     session: SmarterChatSession = None
     chatbot_helper: ChatBotHelper = None
     _chatbot: ChatBot = None
@@ -141,25 +137,16 @@ class ChatConfigView(View, SmarterRequestHelper, SmarterHelperMixin):
 
     def dispatch(self, request, *args, chatbot_id: int = None, **kwargs):
         name = kwargs.pop("name", None)
-        self._sandbox_mode = name is not None
 
         try:
-            url = clean_url(self.url)
-            self.chatbot_helper = ChatBotHelper(chatbot_id=chatbot_id, user=self.user, account=self.account, url=url)
+            url = self.clean_url(self.url)
+            self.chatbot_helper = ChatBotHelper(
+                chatbot_id=chatbot_id, user=self.user, account=self.account, url=url, name=name
+            )
             self._chatbot = self.chatbot_helper.chatbot
             self.account = self.chatbot_helper.account
         except ChatBot.DoesNotExist:
             return JsonResponse({"error": "Not found"}, status=HTTPStatus.NOT_FOUND.value)
-
-        if not self._chatbot:
-            try:
-                self.chatbot_helper = ChatBotHelper(account=self.account, name=name)
-                self._chatbot = self.chatbot_helper.chatbot
-            except ChatBot.DoesNotExist:
-                return JsonResponse({"error": "Not found"}, status=HTTPStatus.NOT_FOUND.value)
-            # pylint: disable=broad-except
-            except Exception as e:
-                return JsonResponse({"error": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR.value)
 
         if self.chatbot_helper and self.chatbot_helper.is_authentication_required and not request.user.is_authenticated:
             try:
@@ -214,9 +201,14 @@ class ChatConfigView(View, SmarterRequestHelper, SmarterHelperMixin):
         data = self.config(request=request)
         return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 
-    @property
-    def sandbox_mode(self):
-        return self._sandbox_mode
+    def clean_url(self, url: str) -> str:
+        """
+        Clean the url of any query strings and trailing '/config/' strings.
+        """
+        retval = clean_url(url)
+        if retval.endswith("/config/"):
+            retval = retval[:-8]
+        return retval
 
     def config(self, request) -> dict:
         """
@@ -250,7 +242,7 @@ class ChatConfigView(View, SmarterRequestHelper, SmarterHelperMixin):
         retval = {
             "data": {
                 SMARTER_CHAT_SESSION_KEY_NAME: self.session.session_key,
-                "sandbox_mode": self.sandbox_mode,
+                "sandbox_mode": self.chatbot_helper.is_sandbox_domain,
                 "debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_REACTAPP_DEBUG_MODE),
                 "chatbot": chatbot_serializer.data,
                 "history": history,
@@ -300,26 +292,26 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
     relative to the static directory, not the templates directory.
     """
 
-    _sandbox_mode: bool = False
-
     template_path = "index.html"
     chatbot: ChatBot = None
     chatbot_helper: ChatBotHelper = None
     url: str = None
 
-    @property
-    def sandbox_mode(self):
-        return self._sandbox_mode
-
     def dispatch(self, request, *args, **kwargs):
         name = kwargs.pop("name", None)
-        self._sandbox_mode = name is not None
         response = super().dispatch(request, *args, **kwargs)
         if response.status_code >= 300:
             return response
         self.url = request.build_absolute_uri()
 
         try:
+            logger.info(
+                "ChatAppView - url=%s, account=%s, user=%s, name=%s",
+                self.url,
+                self.account,
+                self.user_profile.user,
+                name,
+            )
             self.chatbot_helper = ChatBotHelper(
                 url=self.url, user=self.user_profile.user, account=self.account, name=name
             )
@@ -362,14 +354,14 @@ class ChatAppListView(SmarterAuthenticatedNeverCachedWebView):
         smarter_admin = get_cached_smarter_admin_user_profile()
         smarter_demo_chatbots = ChatBot.objects.filter(account=smarter_admin.account)
         for chatbot in smarter_demo_chatbots:
-            chatbot_helper = ChatBotHelper(account=smarter_admin.account, name=chatbot.name)
+            chatbot_helper = ChatBotHelper(account=smarter_admin.account, name=chatbot.name, user=request.user)
             self.chatbot_helpers.append(chatbot_helper)
 
         # get all chatbots for the account
         self.chatbots = ChatBot.objects.filter(account=self.account)
 
         for chatbot in self.chatbots:
-            chatbot_helper = ChatBotHelper(account=self.account, name=chatbot.name)
+            chatbot_helper = ChatBotHelper(account=self.account, name=chatbot.name, user=request.user)
             if not was_already_added(chatbot_helper):
                 self.chatbot_helpers.append(chatbot_helper)
 

@@ -24,7 +24,7 @@ from smarter.lib.django.validators import SmarterValidator, SmarterValueError
 logger = logging.getLogger(__name__)
 
 
-class SmarterRequestHelper(AccountMixin, SmarterHelperMixin):
+class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
     """
     Helper class for the Django request object that enforces authentication and
     provides lazy loading of the user, account, user profile and session_key.
