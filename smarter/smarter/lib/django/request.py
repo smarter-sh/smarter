@@ -48,29 +48,33 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
     as a helper class for Smarter ChatBot urls.
 
     valid end points:
-        root end points for named urls (self.is_chatbot_named_url==True)
-        --------------------------------
-        example.api.localhost:8000/			            -> smarter.apps.chatbot.api.v1.views.default.DefaultChatBotApiView
-        example.api.localhost:8000/config		        -> smarter.apps.chatapp.views.ChatConfigView
+        1.) root end points for named urls. Public or authenticated chats
+            self.is_chatbot_named_url==True
+        --------
+        - http://example.api.localhost:8000/			                        -> smarter.apps.chatbot.api.v1.views.default.DefaultChatBotApiView
+        - http://example.api.localhost:8000/config		                        -> smarter.apps.chatapp.views.ChatConfigView
 
-        authenticated sandbox end points (self.is_chatbot_sandbox_url==True)
-        --------------------------------
-        /chatbots/<str:name>/				            -> smarter.apps.chatapp.views.ChatAppView
-        /chatbots/<str:name>/config/			        -> smarter.apps.chatapp.views.ChatConfigView
+        2.) authenticated sandbox end points. Authenticated chats
+            self.is_chatbot_sandbox_url==True
+        --------
+        - http://localhost:8000/chatbots/<str:name>/				            -> smarter.apps.chatapp.views.ChatAppView
+        - http://localhost:8000/chatbots/<str:name>/config/			            -> smarter.apps.chatapp.views.ChatConfigView
 
-        smarter.sh/v1 end points (self.is_chatbot_smarter_api_url==True)
-        --------------------------------
-        /api/v1/chatbots/<int:chatbot_id>/chat/		    -> smarter.apps.chatbot.api.v1.views.default.DefaultChatBotApiView
-        /api/v1/chatbots/<int:chatbot_id>/chat/config/	-> smarter.apps.chatapp.views.ChatConfigView
+        3.) smarter.sh/v1 end points. Public or authenticated chats
+            self.is_chatbot_smarter_api_url==True
+        --------
+        - http://localhost:8000/api/v1/chatbots/<int:chatbot_id>/chat/		    -> smarter.apps.chatbot.api.v1.views.default.DefaultChatBotApiView
+        - http://localhost:8000/api/v1/chatbots/<int:chatbot_id>/chat/config/	-> smarter.apps.chatapp.views.ChatConfigView
 
-        command-line interface api end points (self.is_chatbot_cli_api_url==True)
-        --------------------------------
-        /api/v1/cli/chat/<str:name>/			        -> smarter.apps.chatbot.api.v1.cli.views.nonbrokered.chat.ApiV1CliChatApiView		    -> * non-brokered view based on url returned by ChatConfigView
-        /api/v1/cli/chat/config/<str:name>/", 		    -> smarter.apps.chatbot.api.v1.cli..views.nonbrokered.chat_config.ApiV1CliChatConfigApiView	-> ChatConfigView
+        4.) command-line interface api end points. Authenticated chats
+            self.is_chatbot_cli_api_url==True
+        --------
+        - http://localhost:8000/api/v1/cli/chat/<str:name>/			            -> smarter.apps.chatbot.api.v1.cli.views.nonbrokered.chat.ApiV1CliChatApiView -> * non-brokered view based on url returned by ChatConfigView
+        - http://localhost:8000/api/v1/cli/chat/config/<str:name>/", 		    -> smarter.apps.chatbot.api.v1.cli..views.nonbrokered.chat_config.ApiV1CliChatConfigApiView	-> ChatConfigView
 
-        --------------------------------
-        api/v1/chat/        ** these seem to be dead ends
-        api/v1/chat/
+        5.) wtf are these???????
+        - http://localhost:8000/api/v1/chat/        ** these seem to be dead ends
+        - http://localhost:8000/api/v1/chat/
 
     example urls:
     - http://testserver
@@ -183,6 +187,55 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         if self._session_key:
             SmarterValidator.validate_session_key(session_key)
         self.helper_logger(f"@session_key.setter={self._session_key}")
+
+    @property
+    def chatbot_id(self) -> int:
+        """
+        Extract the chatbot id from the URL.
+        example: http://localhost:8000/api/v1/chatbots/<int:chatbot_id>/chat/config/
+        """
+        if self.is_chatbot_smarter_api_url:
+            try:
+                path_parts = self.parsed_url.path.split("/")
+                return int(path_parts[4]) if len(path_parts) > 4 else None
+            # pylint: disable=broad-except
+            except Exception:
+                pass
+        return None
+
+    @property
+    def chatbot_name(self) -> str:
+        """
+        Extract the chatbot name from the URL.
+        """
+        if not self.is_chatbot:
+            return None
+
+        # 1.) http://example.api.localhost:8000/config
+        if self.is_chatbot_named_url:
+            return self.subdomain
+
+        # 2.) example: http://localhost:8000/chatbots/<str:name>/config/
+        if self.is_chatbot_sandbox_url:
+            try:
+                path_parts = self.parsed_url.path.split("/")
+                return path_parts[2] if len(path_parts) > 2 else None
+            # pylint: disable=broad-except
+            except Exception:
+                pass
+        # 3.) http://localhost:8000/api/v1/chatbots/<int:chatbot_id>
+        # no name. nothing to do in this case.
+
+        # 4.) http://localhost:8000/api/v1/cli/chat/config/<str:name>/
+        # http://localhost:8000/api/v1/cli/chat/<str:name>/
+        if self.is_chatbot_cli_api_url:
+            try:
+                path_parts = self.parsed_url.path.split("/")
+                return path_parts[-1] if len(path_parts) >= 5 else None
+            # pylint: disable=broad-except
+            except Exception:
+                pass
+        return None
 
     @property
     def timestamp(self):
@@ -519,6 +572,8 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             "url": self.url,
             "session_key": self.session_key,
             "data": self.data,
+            "chatbot_id": self.chatbot_id,
+            "chatbot_name": self.chatbot_name,
             "is_smarter_api": self.is_smarter_api,
             "is_chatbot": self.is_chatbot,
             "is_chatbot_smarter_api_url": self.is_chatbot_smarter_api_url,
