@@ -391,7 +391,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
     def post(self, request, name, *args, **kwargs):
         """
         Smarter API command-line interface 'chat' view. This is a non-brokered view
-        that sends facilitates chat sessions to a ChatBot by creating a http post request
+        that sends chat sessions to a ChatBot by creating a http post request
         to the ChatBot's published url. The chatbot is expected to be a Smarter chatbot
         that is capable of receiving a list of messages and returning a response in the
         smarter.sh/v1 protocol.
