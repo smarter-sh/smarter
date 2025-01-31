@@ -419,19 +419,20 @@ CACHE_TIMEOUT = 60 * 5
 @cache_results(timeout=CACHE_TIMEOUT)
 def get_cached_chatbot(chatbot_id: int = None, name: str = None, account: Account = None) -> ChatBot:
     """
-    Returns the chatbot for the given chatbot_id.
+    Returns the chatbot from the cache if it exists, otherwise
+    it queries the database and caches the result.
     """
+    chatbot: ChatBot = None
+
     if chatbot_id:
         chatbot = ChatBot.objects.get(id=chatbot_id)
-        logger.info("%s caching chatbot %s", formatted_text("get_cached_chatbot()"), chatbot)
-        return chatbot
-
-    if name and account:
-        chatbot = ChatBot.objects.get(name=name, account=account)
-
+    else:
+        if name and account:
+            chatbot = ChatBot.objects.get(name=name, account=account)
     if chatbot:
         logger.info("%s caching chatbot %s", formatted_text("get_cached_chatbot()"), chatbot)
-        return chatbot
+
+    return chatbot
 
 
 class ChatBotHelper(SmarterRequestMixin):
