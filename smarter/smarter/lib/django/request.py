@@ -96,7 +96,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             self._data = {}
 
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
-            self.helper_logger("%s - data=%s", self.formatted_class_name, self._data)
+            self.helper_logger(f"data={self._data}")
 
         return self._data
 
@@ -216,8 +216,14 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
     @property
     def is_sandbox_domain(self) -> bool:
         """
-        example url: https://alpha.platform.smarter.sh/chatbots/example/
-                     https://<environment_domain>/chatbots/<name>
+        example urls:
+        - https://alpha.platform.smarter.sh/chatbots/example/
+          https://<environment_domain>/chatbots/<name>
+          path_parts: ['', 'chatbots', 'example', '']
+
+        - https://alpha.platform.smarter.sh/chatbots/example/config/
+          https://<environment_domain>/chatbots/<name>/config/
+          path_parts: ['', 'chatbots', 'example', 'config', '']
         """
         if not self.url:
             return False
@@ -227,14 +233,51 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             return False
 
         path_parts = self.parsed_url.path.split("/")
-        # Check if the path has exactly 3 parts:
+        # valid path_parts:
         #   ['', 'chatbots', '<slug>']
         #   ['', 'chatbots', '<slug>', '']
-        if not len(path_parts) in [3, 4] or path_parts[1] != "chatbots" or not path_parts[2]:
-            self.helper_logger(f"is_sandbox_domain() - invalid path: {path_parts} for url: {self.url}")
+        #   ['', 'chatbots', '<slug>', 'config']
+        #   ['', 'chatbots', '<slug>', 'config', '']
+        if not path_parts:
+            self.helper_logger(f"is_sandbox_domain() - not path_parts: {path_parts} for url: {self.url}")
             return False
-        retval = self.parsed_url.netloc == smarter_settings.environment_domain and path_parts[2].isalpha()
-        return retval
+        if self.parsed_url.netloc != smarter_settings.environment_domain:
+            self.helper_logger(
+                f"is_sandbox_domain() - netloc != smarter_settings.environment_domain: {self.parsed_url.netloc} for url: {self.url}"
+            )
+            return False
+        if len(path_parts) < 3:
+            self.helper_logger(f"is_sandbox_domain() - len(path_parts) < 3: {path_parts} for url: {self.url}")
+            return False
+        if path_parts[1] != "chatbots":
+            # expecting this form: ['', 'chatbots', '<slug>', 'config', '']
+            self.helper_logger(f"is_sandbox_domain() - path_parts[1] != 'chatbots': {path_parts} for url: {self.url}")
+            return False
+        if not path_parts[2].isalpha():
+            # expecting <slug> to be alpha: ['', 'chatbots', '<slug>', 'config', '']
+            self.helper_logger(f"is_sandbox_domain() - not path_parts[2].isalpha(): {path_parts} for url: {self.url}")
+            return False
+        if len(path_parts) > 5:
+            self.helper_logger(f"is_sandbox_domain() - len(path_parts) > 5: {path_parts} for url: {self.url}")
+            return False
+
+        if len(path_parts) == 3 and not path_parts[2].isalpha():
+            # expecting: ['', 'chatbots', '<slug>']
+            self.helper_logger(f"is_sandbox_domain() - not path_parts[2].isalpha(): {path_parts} for url: {self.url}")
+            return False
+
+        if len(path_parts) == 4 and not path_parts[3] in ["config", ""]:
+            # expecting either of:
+            # ['', 'chatbots', '<slug>', 'config']
+            # ['', 'chatbots', '<slug>', '']
+            self.helper_logger(f"is_sandbox_domain() - not 'config' in path_parts[3]: {path_parts} for url: {self.url}")
+            return False
+        if len(path_parts) == 5 and path_parts[3] != "config":
+            # expecting: ['', 'chatbots', '<slug>', 'config', '']
+            self.helper_logger(f"is_sandbox_domain() - not 'config' in path_parts[4]: {path_parts} for url: {self.url}")
+            return False
+
+        return True
 
     @property
     def is_default_domain(self) -> bool:
