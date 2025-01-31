@@ -108,6 +108,10 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             return self._url_urlunparse_without_params
 
         if self._url:
+            # rebuild the url minus any query parameters
+            # example:
+            # a request url like https://hr.3141-5926-5359.alpha.api.smarter.sh/config/?session_key=38486326c21ef4bcb7e7bc305bdb062f16ee97ed8d2462dedb4565c860cd8ecc
+            # will return https://hr.3141-5926-5359.alpha.api.smarter.sh/config/
             self._url_urlunparse_without_params = urlunsplit(
                 (self._url.scheme, self._url.netloc, self._url.path, "", "")
             )
