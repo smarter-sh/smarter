@@ -594,7 +594,7 @@ class ChatBotHelper(SmarterRequestMixin):
         helper_json = {
             "environment": smarter_settings.environment,
             "customer_api_domain": smarter_settings.customer_api_domain,
-            "chatbot_id": self.chatbot_id,
+            "chatbot_id": self.chatbot.id if self.chatbot else None,
             "is_deployed": self.is_deployed,
             "is_valid": self.is_valid,
             "error": self._err,
@@ -686,6 +686,8 @@ class ChatBotHelper(SmarterRequestMixin):
         if self.chatbot_id:
             try:
                 self._chatbot = get_cached_chatbot(chatbot_id=self.chatbot_id)
+                self.helper_logger(f"initialized chatbot {self._chatbot} from chatbot_id {self.chatbot_id}")
+                return self._chatbot
             except ChatBot.DoesNotExist as e:
                 raise SmarterValueError(f"ChatBot with id={self.chatbot_id} does not exist") from e
 
@@ -697,6 +699,7 @@ class ChatBotHelper(SmarterRequestMixin):
                 self.helper_logger(
                     f"initialized chatbot {self._chatbot} from account {self.account} and name {self.name}"
                 )
+                return self._chatbot
             except ChatBot.DoesNotExist:
                 try:
                     self._chatbot = get_cached_chatbot(account=self.account, name=self.name)
@@ -705,7 +708,6 @@ class ChatBotHelper(SmarterRequestMixin):
                     )
                 except ChatBot.DoesNotExist:
                     self.helper_warning(f"didn't find chatbot for account: {self.account} name: {self.name}")
-            return self._chatbot
 
         if self.is_default_domain:
             try:
@@ -714,6 +716,7 @@ class ChatBotHelper(SmarterRequestMixin):
                 self.helper_logger(
                     f"initialized chatbot {self._chatbot} from account {self.account} and api_subdomain {self.api_subdomain}"
                 )
+                return self._chatbot
             except ChatBot.DoesNotExist:
                 try:
                     # FIX NOTE: THIS MUST BE DEPLOYED.
@@ -726,7 +729,6 @@ class ChatBotHelper(SmarterRequestMixin):
                         f"didn't find chatbot for default_domain with account: {self.account} name: {self.api_subdomain} {self.url}"
                     )
                     raise ChatBot.DoesNotExist from e
-            return self._chatbot
 
         if self.is_custom_domain:
             try:
@@ -734,34 +736,33 @@ class ChatBotHelper(SmarterRequestMixin):
                 self.helper_logger(
                     message=f"initialized chatbot {self._chatbot} from custom domain {self.chatbot_custom_domain}"
                 )
+                return self._chatbot
             except ChatBot.DoesNotExist as e:
                 raise ChatBot.DoesNotExist from e
+
+        # this scenario would most likely occur when running a chat session from the cli.
+        # The cli uses the url_chatbot property from chat_config to get the chatbot url, and this
+        # property does not evaluate the deployment state as part of its logic.
+        if self.account and self.api_subdomain:
+            try:
+                self._chatbot = get_cached_chatbot(account=self.account, name=self.api_subdomain)
+                self.helper_logger(
+                    f"initialized chatbot {self._chatbot} from account {self.account} and api_subdomain {self.api_subdomain}"
+                )
+                return self._chatbot
+            except ChatBot.DoesNotExist:
+                try:
+                    self._chatbot = get_cached_chatbot(account=admin_account, name=self.api_subdomain)
+                    self.helper_logger(
+                        message=f"initialized chatbot {self._chatbot} from account {admin_account} and name {self.api_subdomain}"
+                    )
+                except ChatBot.DoesNotExist as e:
+                    self.helper_warning(
+                        f"didn't find chatbot for account: {self.account} name: {self.api_subdomain} {self.url}"
+                    )
+                    raise ChatBot.DoesNotExist from e
             return self._chatbot
 
-        if not self._chatbot:
-            # this scenario would most likely occur when running a chat session from the cli.
-            # The cli uses the url_chatbot property from chat_config to get the chatbot url, and this
-            # property does not evaluate the deployment state as part of its logic.
-            if self.account and self.api_subdomain:
-                try:
-                    self._chatbot = get_cached_chatbot(account=self.account, name=self.api_subdomain)
-                except ChatBot.DoesNotExist:
-                    try:
-                        self._chatbot = get_cached_chatbot(account=admin_account, name=self.api_subdomain)
-                        self.helper_logger(
-                            message=f"initialized chatbot {self._chatbot} from account {admin_account} and name {self.api_subdomain}"
-                        )
-                    except ChatBot.DoesNotExist as e:
-                        self.helper_warning(
-                            f"didn't find chatbot for account: {self.account} name: {self.api_subdomain} {self.url}"
-                        )
-                        raise ChatBot.DoesNotExist from e
-                if not self._chatbot.deployed:
-                    self.helper_warning(f"Initializing with chatbot {self._chatbot}, which is not deployed.")
-                return self._chatbot
-
-        if self._chatbot:
-            self.helper_logger(f"chatbot() initialized: {self._chatbot}")
         return self._chatbot
 
     @property
