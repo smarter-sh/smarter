@@ -8,7 +8,13 @@ from datetime import datetime
 import waffle
 
 from smarter.apps.account.mixins import AccountMixin
+from smarter.apps.account.utils import (
+    account_number_from_url,
+    get_cached_account,
+    get_cached_admin_user_for_account,
+)
 from smarter.common.classes import SmarterHelperMixin
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.common.helpers.url_helpers import session_key_from_url
 from smarter.lib.django.user import UserType
@@ -21,7 +27,19 @@ logger = logging.getLogger(__name__)
 class SmarterRequestHelper(AccountMixin, SmarterHelperMixin):
     """
     Helper class for the Django request object that enforces authentication and
-    provides lazy loading of the user, account, user profile and session_key
+    provides lazy loading of the user, account, user profile and session_key.
+
+    Works with any Django request object and any valid url, but is designed
+    as a helper class for Smarter ChatBot urls.
+
+    example urls:
+    - http://example.3141-5926-5359.api.localhost:8000/
+    - http://example.3141-5926-5359.api.localhost:8000/?session_key=9913baee675fb6618519c478bd4805c4ff9eeaab710e4f127ba67bb1eb442126
+    - http://example.3141-5926-5359.api.localhost:8000/config/
+    - http://example.3141-5926-5359.api.localhost:8000/config/?session_key=9913baee675fb6618519c478bd4805c4ff9eeaab710e4f127ba67bb1eb442126
+
+    session_key is a unique identifier for a chat session.
+    It originates from generate_key() in this class.
     """
 
     __slots__ = ["_request", "_request_timestamp", "_url", "_session_key", "_data"]
@@ -33,6 +51,12 @@ class SmarterRequestHelper(AccountMixin, SmarterHelperMixin):
         self._session_key: str = None
         self._data: dict = None
         self._user: UserType = request.user if request.user.is_authenticated else None
+        if self.is_named_url:
+            account_number = account_number_from_url(self.url)
+            self.account = get_cached_account(account_number=account_number)
+
+            if self.account and not self._user:
+                self._user = get_cached_admin_user_for_account(account=self.account)
         super().__init__(user=self._user)
 
     @property
@@ -132,5 +156,18 @@ class SmarterRequestHelper(AccountMixin, SmarterHelperMixin):
         """
         key_string = self.unique_client_string + str(datetime.now())
         session_key = hashlib.sha256(key_string.encode()).hexdigest()
-        logger.info("Generated new session key: %s", session_key)
+        logger.info("%s Generated new session key: %s", self.formatted_class_name, session_key)
         return session_key
+
+    @property
+    def is_named_url(self) -> bool:
+        """
+        Returns True if the url is of the form https://example.3141-5926-5359.api.smarter.sh/
+        """
+        if not self.url:
+            return False
+        if not smarter_settings.customer_api_domain in self.url:
+            return False
+        if account_number_from_url(self.url):
+            return True
+        return False

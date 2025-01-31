@@ -21,7 +21,11 @@ from smarter.smarter_celery import app
 
 # Account stuff
 from .models import Account, Charge, DailyBillingRecord
-from .utils import get_cached_user_for_user_id, get_cached_user_profile
+from .utils import (
+    get_cached_admin_user_for_account,
+    get_cached_user_for_user_id,
+    get_cached_user_profile,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -36,16 +40,24 @@ module_prefix = "smarter.apps.account.tasks."
 )
 def create_charge(*args, **kwargs):
     """Create a charge record."""
+
     account: Account = None
+    user = None
+    user_profile = None
+
     user_id = kwargs.get("user_id")
     if user_id:
         user = get_cached_user_for_user_id(user_id)
-        user_profile = get_cached_user_profile(user=user)
-        account = user_profile.account
+        if user:
+            user_profile = get_cached_user_profile(user=user)
+            if user_profile:
+                account = user_profile.account
     else:
         account_id = kwargs.get("account_id")
         if account_id:
             account = Account.objects.get(id=account_id)
+            if account:
+                user = get_cached_admin_user_for_account(account=account)
 
     session_key = kwargs.get("session_key")
     provider = kwargs.get("provider")
