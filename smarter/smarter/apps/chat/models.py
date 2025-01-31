@@ -17,7 +17,7 @@ from smarter.common.const import SmarterWaffleSwitches
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.model_helpers import TimestampedModel
-from smarter.lib.django.request import SmarterRequestHelper
+from smarter.lib.django.request import SmarterRequestMixin
 
 
 logger = logging.getLogger(__name__)
@@ -138,7 +138,7 @@ class ChatPluginUsageSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class ChatHelper(SmarterRequestHelper):
+class ChatHelper(SmarterRequestMixin):
     """
     Helper class for working with Chat objects. Provides methods for
     creating and retrieving Chat objects and managing the cache.
