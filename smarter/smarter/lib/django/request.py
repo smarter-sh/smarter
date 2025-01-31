@@ -1,4 +1,15 @@
-"""Django request helper class."""
+"""
+Smarter request mixin.
+
+This is a helper class for the Django request object that resolves
+known url patterns for Smarter chatbots. key features include:
+- lazy loading of the user, account, user profile and session_key.
+- meta data for describing chatbot characteristics.
+- session_key generation.
+- url parsing and validation.
+- url pattern recognition.
+- logging.
+"""
 
 import hashlib
 import json
@@ -36,10 +47,21 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
     as a helper class for Smarter ChatBot urls.
 
     example urls:
+    - http://testserver
+    - http://localhost:8000/
+    - http://localhost:8000/docs/
+    - http://localhost:8000/dashboard/
+    - https://alpha.platform.smarter.sh/api/v1/chatbots/1/chatbot/
+    - http://example.com/contact/
+    - http://localhost:8000/chatbots/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
+    - https://hr.3141-5926-5359.alpha.api.smarter.sh/
+    - https://hr.3141-5926-5359.alpha.api.smarter.sh/config/?session_key=38486326c21ef4bcb7e7bc305bdb062f16ee97ed8d2462dedb4565c860cd8ecc
     - http://example.3141-5926-5359.api.localhost:8000/
     - http://example.3141-5926-5359.api.localhost:8000/?session_key=9913baee675fb6618519c478bd4805c4ff9eeaab710e4f127ba67bb1eb442126
     - http://example.3141-5926-5359.api.localhost:8000/config/
     - http://example.3141-5926-5359.api.localhost:8000/config/?session_key=9913baee675fb6618519c478bd4805c4ff9eeaab710e4f127ba67bb1eb442126
+    - http://localhost:8000/api/v1/chatbots/1/chat/
+    - https://hr.smarter.querium.com/
 
     session_key is a unique identifier for a chat session.
     It originates from generate_key() in this class.
@@ -66,7 +88,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             self.user: UserType = request.user if request.user.is_authenticated else None
         else:
             self.helper_logger("SmarterRequestMixin - 'WSGIRequest' object has no attribute 'user'")
-        if self.is_named_url:
+        if self.is_chatbot_named_url:
             account_number = account_number_from_url(self.url)
             self.account = get_cached_account(account_number=account_number)
 
@@ -91,18 +113,6 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         """
         The URL to parse.
         :return: The URL to parse.
-
-        examples:
-        - http://testserver
-        - http://localhost:8000/
-        - http://localhost:8000/docs/
-        - http://localhost:8000/dashboard/
-        - https://alpha.platform.smarter.sh/api/v1/chatbots/1/chatbot/
-        - http://example.com/contact/
-        - http://localhost:8000/chatbots/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
-        - https://hr.3141-5926-5359.alpha.api.smarter.sh/
-        - https://hr.3141-5926-5359.alpha.api.smarter.sh/config/?session_key=38486326c21ef4bcb7e7bc305bdb062f16ee97ed8d2462dedb4565c860cd8ecc
-        - https://hr.smarter.querium.com/
         """
         if self._url_urlunparse_without_params:
             return self._url_urlunparse_without_params
@@ -230,10 +240,32 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         """
         Returns True if the url resolves to a chatbot.
         """
-        return self.is_named_url or self.is_sandbox_domain
+        return self.is_chatbot_named_url or self.is_chatbot_sandbox_url or self.is_chatbot_api_url
 
     @property
-    def is_named_url(self) -> bool:
+    def is_chatbot_api_url(self) -> bool:
+        """
+        Returns True if the url is of the form http://localhost:8000/api/v1/chatbots/1/chat/
+        path_parts: ['', 'api', 'v1', 'chatbots', '1', 'chat', '']
+        """
+        path_parts = self.parsed_url.path.split("/")
+        if not path_parts:
+            return False
+        if len(path_parts) < 7:
+            return False
+        if path_parts[1] != "api":
+            return False
+        if path_parts[2] != "v1":
+            return False
+        if path_parts[3] != "chatbots":
+            return False
+        if not path_parts[4].isnumeric():
+            return False
+
+        return False
+
+    @property
+    def is_chatbot_named_url(self) -> bool:
         """
         Returns True if the url is of the form https://example.3141-5926-5359.api.smarter.sh/
         """
@@ -246,7 +278,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         return False
 
     @property
-    def is_sandbox_domain(self) -> bool:
+    def is_chatbot_sandbox_url(self) -> bool:
         """
         example urls:
         - https://alpha.platform.smarter.sh/chatbots/example/
@@ -258,7 +290,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
           path_parts: ['', 'chatbots', 'example', 'config', '']
         """
         if not self.url:
-            self.helper_logger(f"is_sandbox_domain() - not self.url: {self.url}")
+            self.helper_logger(f"is_chatbot_sandbox_url() - not self.url: {self.url}")
             return False
 
         path_parts = self.parsed_url.path.split("/")
@@ -268,42 +300,52 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         #   ['', 'chatbots', '<slug>', 'config']
         #   ['', 'chatbots', '<slug>', 'config', '']
         if not path_parts:
-            self.helper_logger(f"is_sandbox_domain() - not path_parts: {path_parts} for url: {self.url}")
+            self.helper_logger(f"is_chatbot_sandbox_url() - not path_parts: {path_parts} for url: {self.url}")
             return False
         if self.parsed_url.netloc != smarter_settings.environment_domain:
             self.helper_logger(
-                f"is_sandbox_domain() - netloc != smarter_settings.environment_domain: {self.parsed_url.netloc} for url: {self.url}"
+                f"is_chatbot_sandbox_url() - netloc != smarter_settings.environment_domain: {self.parsed_url.netloc} for url: {self.url}"
             )
             return False
         if len(path_parts) < 3:
-            self.helper_logger(f"is_sandbox_domain() - len(path_parts) < 3: {path_parts} for url: {self.url}")
+            self.helper_logger(f"is_chatbot_sandbox_url() - len(path_parts) < 3: {path_parts} for url: {self.url}")
             return False
         if path_parts[1] != "chatbots":
             # expecting this form: ['', 'chatbots', '<slug>', 'config', '']
-            self.helper_logger(f"is_sandbox_domain() - path_parts[1] != 'chatbots': {path_parts} for url: {self.url}")
+            self.helper_logger(
+                f"is_chatbot_sandbox_url() - path_parts[1] != 'chatbots': {path_parts} for url: {self.url}"
+            )
             return False
         if not path_parts[2].isalpha():
             # expecting <slug> to be alpha: ['', 'chatbots', '<slug>', 'config', '']
-            self.helper_logger(f"is_sandbox_domain() - not path_parts[2].isalpha(): {path_parts} for url: {self.url}")
+            self.helper_logger(
+                f"is_chatbot_sandbox_url() - not path_parts[2].isalpha(): {path_parts} for url: {self.url}"
+            )
             return False
         if len(path_parts) > 5:
-            self.helper_logger(f"is_sandbox_domain() - len(path_parts) > 5: {path_parts} for url: {self.url}")
+            self.helper_logger(f"is_chatbot_sandbox_url() - len(path_parts) > 5: {path_parts} for url: {self.url}")
             return False
 
         if len(path_parts) == 3 and not path_parts[2].isalpha():
             # expecting: ['', 'chatbots', '<slug>']
-            self.helper_logger(f"is_sandbox_domain() - not path_parts[2].isalpha(): {path_parts} for url: {self.url}")
+            self.helper_logger(
+                f"is_chatbot_sandbox_url() - not path_parts[2].isalpha(): {path_parts} for url: {self.url}"
+            )
             return False
 
         if len(path_parts) == 4 and not path_parts[3] in ["config", ""]:
             # expecting either of:
             # ['', 'chatbots', '<slug>', 'config']
             # ['', 'chatbots', '<slug>', '']
-            self.helper_logger(f"is_sandbox_domain() - not 'config' in path_parts[3]: {path_parts} for url: {self.url}")
+            self.helper_logger(
+                f"is_chatbot_sandbox_url() - not 'config' in path_parts[3]: {path_parts} for url: {self.url}"
+            )
             return False
         if len(path_parts) == 5 and path_parts[3] != "config":
             # expecting: ['', 'chatbots', '<slug>', 'config', '']
-            self.helper_logger(f"is_sandbox_domain() - not 'config' in path_parts[4]: {path_parts} for url: {self.url}")
+            self.helper_logger(
+                f"is_chatbot_sandbox_url() - not 'config' in path_parts[4]: {path_parts} for url: {self.url}"
+            )
             return False
 
         return True
@@ -414,8 +456,9 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             "session_key": self.session_key,
             "data": self.data,
             "is_chatbot": self.is_chatbot,
-            "is_named_url": self.is_named_url,
-            "is_sandbox_domain": self.is_sandbox_domain,
+            "is_chatbot_api_url": self.is_chatbot_api_url,
+            "is_chatbot_named_url": self.is_chatbot_named_url,
+            "is_chatbot_sandbox_url": self.is_chatbot_sandbox_url,
             "is_default_domain": self.is_default_domain,
             "path": self.path,
             "root_domain": self.root_domain,
