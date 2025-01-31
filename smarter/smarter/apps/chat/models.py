@@ -144,7 +144,10 @@ class ChatHelper(SmarterRequestHelper):
     creating and retrieving Chat objects and managing the cache.
     """
 
-    __slots__ = ("_session_key", "_chat", "_chatbot", "_chatbot_helper", "_clean_url")
+    _chat: Chat = None
+    _chatbot: ChatBot = None
+    _chatbot_helper: ChatBotHelper = None
+    _clean_url: str = None
 
     # FIX NOTE: remove session_key
     def __init__(self, request, session_key: str, chatbot: ChatBot = None) -> None:
