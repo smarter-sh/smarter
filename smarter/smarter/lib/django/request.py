@@ -48,24 +48,27 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
     as a helper class for Smarter ChatBot urls.
 
     valid end points:
-        root end points for named urls (deployed chatbots)
+        root end points for named urls (self.is_chatbot_named_url==True)
         --------------------------------
-        example.api.localhost:8000/			            DefaultChatBotApiView
-        example.api.localhost:8000/config		        ChatConfigView
+        example.api.localhost:8000/			            -> smarter.apps.chatbot.api.v1.views.default.DefaultChatBotApiView
+        example.api.localhost:8000/config		        -> smarter.apps.chatapp.views.ChatConfigView
 
-        authenticated sandbox end points
+        authenticated sandbox end points (self.is_chatbot_sandbox_url==True)
         --------------------------------
-        /chatbots/<str:name>/				            ChatAppView
-        /chatbots/<str:name>/config/			        ChatConfigView
+        /chatbots/<str:name>/				            -> smarter.apps.chatapp.views.ChatAppView
+        /chatbots/<str:name>/config/			        -> smarter.apps.chatapp.views.ChatConfigView
 
-        smarter.sh/v1 end points
+        smarter.sh/v1 end points (self.is_chatbot_smarter_api_url==True)
         --------------------------------
-        /api/v1/chatbots/<int:chatbot_id>/chat/		    DefaultChatBotApiView
-        /api/v1/chatbots/<int:chatbot_id>/chat/config/	ChatConfigView
+        /api/v1/chatbots/<int:chatbot_id>/chat/		    -> smarter.apps.chatbot.api.v1.views.default.DefaultChatBotApiView
+        /api/v1/chatbots/<int:chatbot_id>/chat/config/	-> smarter.apps.chatapp.views.ChatConfigView
 
-        /api/v1/cli/chat/<str:name>/			        ApiV1CliChatApiView		    -> * non-brokered view based on url returned by ChatConfigView
-        /api/v1/cli/chat/config/<str:name>/", 		    ApiV1CliChatConfigApiView	-> ChatConfigView
+        command-line interface api end points (self.is_chatbot_cli_api_url==True)
+        --------------------------------
+        /api/v1/cli/chat/<str:name>/			        -> smarter.apps.chatbot.api.v1.cli.views.nonbrokered.chat.ApiV1CliChatApiView		    -> * non-brokered view based on url returned by ChatConfigView
+        /api/v1/cli/chat/config/<str:name>/", 		    -> smarter.apps.chatbot.api.v1.cli..views.nonbrokered.chat_config.ApiV1CliChatConfigApiView	-> ChatConfigView
 
+        --------------------------------
         api/v1/chat/        ** these seem to be dead ends
         api/v1/chat/
 
@@ -263,7 +266,12 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         """
         Returns True if the url resolves to a chatbot.
         """
-        return self.is_chatbot_named_url or self.is_chatbot_sandbox_url or self.is_chatbot_smarter_api_url
+        return (
+            self.is_chatbot_named_url
+            or self.is_chatbot_sandbox_url
+            or self.is_chatbot_smarter_api_url
+            or self.is_chatbot_cli_api_url
+        )
 
     @property
     def is_smarter_api(self) -> bool:
@@ -296,6 +304,23 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         if path_parts[3] != "chatbots":
             return False
         if not path_parts[4].isnumeric():
+            return False
+
+        return True
+
+    @property
+    def is_chatbot_cli_api_url(self) -> bool:
+        """
+        Returns True if the url is of the form http://localhost:8000/api/v1/cli/chat/example/
+        path_parts: ['', 'api', 'v1', 'cli', 'chat', 'example', '']
+        """
+        if not self.is_smarter_api:
+            return False
+
+        path_parts = self.parsed_url.path.split("/")
+        if path_parts[3] != "cli":
+            return False
+        if path_parts[4] != "chat":
             return False
 
         return True
@@ -499,6 +524,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             "is_chatbot_smarter_api_url": self.is_chatbot_smarter_api_url,
             "is_chatbot_named_url": self.is_chatbot_named_url,
             "is_chatbot_sandbox_url": self.is_chatbot_sandbox_url,
+            "is_chatbot_cli_api_url": self.is_chatbot_cli_api_url,
             "is_default_domain": self.is_default_domain,
             "path": self.path,
             "root_domain": self.root_domain,
