@@ -176,26 +176,11 @@ class ChatHelper(SmarterRequestMixin):
         return self._chat
 
     @property
-    def url(self) -> str:
-        if self._clean_url:
-            return self._clean_url
-
-        super_url = super().url
-        if super_url is None:
-            return None
-        parsed_url = urllib.parse.urlparse(super_url)
-        self._clean_url = parsed_url._replace(query="").geturl()
-        if self._clean_url.endswith("/config/"):
-            self._clean_url = self._clean_url[:-8]
-
-        return self._clean_url
-
-    @property
     def chatbot_helper(self) -> ChatBotHelper:
         if self._chatbot_helper:
             return self._chatbot_helper
         if self.chatbot:
-            self._chatbot_helper = ChatBotHelper(chatbot_id=self.chatbot.id)
+            self._chatbot_helper = ChatBotHelper(request=self.request, chatbot_id=self.chatbot.id)
         return self._chatbot_helper
 
     @property

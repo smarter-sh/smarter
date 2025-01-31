@@ -17,7 +17,7 @@ class SAMJournal(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     thing = models.CharField(max_length=24, choices=SmarterJournalThings.choices(), blank=True, null=True)
-    command = models.CharField(max_length=24, choices=SmarterJournalCliCommands.choices())
+    command = models.CharField(max_length=24, choices=SmarterJournalCliCommands.choices(), blank=True, null=True)
     request = models.JSONField()
     response = models.JSONField()
     status_code = models.PositiveSmallIntegerField(default=200)

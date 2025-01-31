@@ -467,6 +467,7 @@ class ChatBotHelper(SmarterRequestMixin):
     _chatbot_requests: ChatBotRequests = None
     _chatbot_id: int = None
     _name: str = None
+    _err: str = None
 
     def __init__(
         self,
@@ -480,7 +481,7 @@ class ChatBotHelper(SmarterRequestMixin):
         :param environment: The environment to use for the URL. (for unit testing only)
         """
         super().__init__(request)
-        self.helper_logger(f"ChatBotHelper.__init__() to_json(): {self.to_json()}")
+        self.helper_logger(f"__init__() to_json(): {json.dumps(self.to_json(), indent=4, sort_keys=True)}")
         if not chatbot_id and not name and not self.is_chatbot:
             # keep in mind that self.is_chatbot comes from SmartRequestMixin and is
             # based on an analysis of the url format. we frequently get called
@@ -489,7 +490,7 @@ class ChatBotHelper(SmarterRequestMixin):
             # and/or name.
             # example: http://localhost:8000/chatbots/ which yields a list of chatbots
             # but the url itself is not a chatbot url.
-            self.helper_logger(f"ChatBotHelper.__init__() {self.url} is not a chatbot.")
+            self.helper_logger(f"__init__() {self.url} is not a chatbot.")
             return None
 
         self._chatbot: ChatBot = None
@@ -498,9 +499,10 @@ class ChatBotHelper(SmarterRequestMixin):
 
         self.chatbot_id: int = chatbot_id
         self._name: str = name
+        self._err: str = None
 
         self.helper_logger(
-            f"ChatBotHelper.__init__() chatbot={self.chatbot}, url={self.url}, name={self.name}, chatbot_id={self.chatbot_id} user: {self.user}, account: {self.account}"
+            f"__init__() chatbot={self.chatbot}, url={self.url}, name={self.name}, chatbot_id={self.chatbot_id} user: {self.user}, account: {self.account}"
         )
 
         if not self._name and self.is_sandbox_domain:
@@ -592,12 +594,18 @@ class ChatBotHelper(SmarterRequestMixin):
         helper_json = {
             "environment": smarter_settings.environment,
             "customer_api_domain": smarter_settings.customer_api_domain,
+            "chatbot_id": self.chatbot_id,
             "is_deployed": self.is_deployed,
             "is_valid": self.is_valid,
+            "error": self._err,
             "is_authentication_required": self.is_authentication_required,
+            "name": self.name,
             "user": self.user.username if self.user else None,
             "account": self.account.account_number if self.account else None,
             "chatbot": ChatBotSerializer(self.chatbot).data if self.chatbot else None,
+            "api_host": self.api_host,
+            "is_custom_domain": self.is_custom_domain,
+            "chatbot_custom_domain": self.chatbot_custom_domain,
         }
         retval.update(helper_json)
         return retval
@@ -641,9 +649,20 @@ class ChatBotHelper(SmarterRequestMixin):
 
     @property
     def is_valid(self) -> bool:
-        if self.chatbot is None:
+        if self.is_authentication_required:
+            if not self.user:
+                self._err = f"is_valid() returning false because {self.name} chatbot requires authentication but user is unassigned"
+                return False
+            if not self.user.is_authenticated:
+                self._err = f"is_valid() returning false because {self.name} chatbot requires authentication but user {self.user.username} is not authenticated"
+                return False
+        if not self.is_chatbot:
+            self._err = f"is_valid() returning false because {self.url} is not a chatbot"
             return False
-        if self.user and self.user.is_authenticated and not self.user_profile:
+        if self.chatbot is None:
+            self._err = (
+                f"is_valid() returning false because {self.url} is a chatbot but ChatBotHelper.chatbot is unassigned"
+            )
             return False
         return True
 
