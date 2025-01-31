@@ -411,7 +411,6 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         """
         return {
             "url": self.url,
-            "_url": self._url,
             "session_key": self.session_key,
             "data": self.data,
             "is_chatbot": self.is_chatbot,
