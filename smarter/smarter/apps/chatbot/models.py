@@ -649,6 +649,9 @@ class ChatBotHelper(SmarterRequestMixin):
 
     @property
     def is_authentication_required(self) -> bool:
+        if self.is_sandbox_domain:
+            return True
+
         if ChatBotAPIKey.objects.filter(chatbot=self.chatbot, api_key__is_active=True).exists():
             return True
         return False

@@ -3,8 +3,9 @@
 import hashlib
 import json
 import logging
+import warnings
 from datetime import datetime
-from urllib.parse import ParseResult, urlparse
+from urllib.parse import ParseResult, parse_qs, urlparse, urlunsplit
 
 import tldextract
 import waffle
@@ -44,13 +45,23 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
     It originates from generate_key() in this class.
     """
 
-    __slots__ = ["_request", "_timestamp", "_session_key", "_data"]
+    __slots__ = ["_request", "_timestamp", "_session_key", "_data", "_url", "_url_urlunparse_without_params"]
 
     def __init__(self, request):
-        self.request = request
+        # slot definition/initialization
+        self._request = None
         self._timestamp = datetime.now()
         self._session_key: str = None
+        self._url: ParseResult = None
+        self._url_urlunparse_without_params: str = None
         self._data: dict = None
+
+        # instance initialization
+        self.request = request
+
+        self.url = self.request.build_absolute_uri()
+        self.session_key = self.get_session_key()
+
         if hasattr(request, "user"):
             self.user: UserType = request.user if request.user.is_authenticated else None
         else:
@@ -73,6 +84,65 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         if not request:
             raise SmarterValueError("request object is required")
         self._request = request
+        self.helper_logger(f"@request.setter={self._request.build_absolute_uri()}")
+
+    @property
+    def url(self) -> str:
+        """
+        The URL to parse.
+        :return: The URL to parse.
+
+        examples:
+        - http://testserver
+        - http://localhost:8000/
+        - http://localhost:8000/docs/
+        - http://localhost:8000/dashboard/
+        - https://alpha.platform.smarter.sh/api/v1/chatbots/1/chatbot/
+        - http://example.com/contact/
+        - http://localhost:8000/chatbots/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
+        - https://hr.3141-5926-5359.alpha.api.smarter.sh/
+        - https://hr.3141-5926-5359.alpha.api.smarter.sh/config/?session_key=38486326c21ef4bcb7e7bc305bdb062f16ee97ed8d2462dedb4565c860cd8ecc
+        - https://hr.smarter.querium.com/
+        """
+        if self._url_urlunparse_without_params:
+            return self._url_urlunparse_without_params
+
+        if self._url:
+            self._url_urlunparse_without_params = urlunsplit(
+                (self._url.scheme, self._url.netloc, self._url.path, "", "")
+            )
+            return self._url_urlunparse_without_params
+
+    @url.setter
+    def url(self, url: str):
+        """
+        validate, standardize and parse the request url string into a ParseResult.
+        Note that the setter and getter both work with strings
+        but we store the private instance variable _url as a ParseResult.
+        """
+        self._url = url
+        if self._url:
+            self._url = urlparse(url)
+            self.helper_logger(f"@url.setter={self._url}")
+
+    @property
+    def session_key(self):
+        """
+        Get the session key from one of the following:
+         - url parameter http://localhost:8000/chatbots/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
+         - request json body {'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}
+         - request header {'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}
+         - a session_key generator
+        """
+        if self._session_key:
+            return self._session_key
+
+    @session_key.setter
+    def session_key(self, session_key: str):
+        self._session_key = session_key
+        if self._session_key:
+            SmarterValidator.validate_session_key(session_key)
+        self.helper_logger(f"@session_key.setter={self._session_key}")
 
     @property
     def timestamp(self):
@@ -117,37 +187,17 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         return f"{account_number}.{url}.{self.user_agent}.{self.ip_address}.{timestamp}"
 
     @property
-    def session_key(self):
-        """
-        Get the session key from one of the following:
-         - url parameter http://localhost:8000/chatbots/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
-         - request json body {'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}
-         - request header {'session_key': '1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a'}
-         - a session_key generator
-        """
-        if self._session_key:
-            return self._session_key
-        if not self.is_chatbot:
-            # session_key is only relevant for chatbots
-            # the request object IN THEORY should only send
-            # a session_key for a chatbot url.
-            return None
-        self._session_key = (
-            session_key_from_url(self.url)
-            or self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
-            or self.request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME)
-        )
-        self._session_key = self._session_key or self.generate_key()
-        SmarterValidator.validate_session_key(self._session_key)
-        return self._session_key
-
-    @property
     def client_key(self):
         """
         for smarter.sh/v1 api endpoints, the client_key is used to identify the client.
         Generate a unique client key based on the client's IP address, user agent, and the current datetime.
         """
-        return self.generate_key()
+        warnings.warn(
+            "The 'client_key' property is deprecated and will be removed in a future version.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.session_key
 
     @property
     def ip_address(self):
@@ -160,26 +210,6 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         if self.request:
             return self.request.META.get("HTTP_USER_AGENT", "")
         return None
-
-    @property
-    def url(self):
-        """
-        The URL to parse.
-        :return: The URL to parse.
-
-        examples:
-        - http://testserver
-        - http://localhost:8000/
-        - http://localhost:8000/docs/
-        - http://localhost:8000/dashboard/
-        - https://alpha.platform.smarter.sh/api/v1/chatbots/1/chatbot/
-        - http://example.com/contact/
-        - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
-        - https://hr.smarter.querium.com/chatbot/
-        """
-        if self.request:
-            self._url = self.request.build_absolute_uri()
-        return self._url
 
     def generate_key(self) -> str:
         """
@@ -224,10 +254,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
           path_parts: ['', 'chatbots', 'example', 'config', '']
         """
         if not self.url:
-            return False
-        if not self.user:
-            return False
-        if not self.user.is_authenticated:
+            self.helper_logger(f"is_sandbox_domain() - not self.url: {self.url}")
             return False
 
         path_parts = self.parsed_url.path.split("/")
@@ -358,12 +385,9 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
     @property
     def parsed_url(self) -> ParseResult:
         """
-        validate and parse the url in a ParseResult.
+        expose our private _url
         """
-        if self.url:
-            SmarterValidator.validate_url(self.url)
-            return urlparse(self._url)
-        return None
+        return self._url
 
     @property
     def domain(self) -> str:
@@ -383,6 +407,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         """
         return {
             "url": self.url,
+            "_url": self._url,
             "session_key": self.session_key,
             "data": self.data,
             "is_chatbot": self.is_chatbot,
@@ -401,7 +426,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             "client_key": self.client_key,
             "ip_address": self.ip_address,
             "user_agent": self.user_agent,
-            "parsed_url": str(self.parsed_url),
+            "parsed_url": str(self.parsed_url) if self.parsed_url else None,
         }
 
     def eval_chatbot_url(self):
@@ -423,3 +448,31 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         """
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_REQUEST_MIXIN_LOGGING):
             logger.info(f"{self.formatted_class_name}: {message}")
+
+    def get_session_key(self) -> str:
+        """
+        Extract the session key from the URL, the request body, or the request headers.
+        """
+        session_key: str = None
+
+        if self._url:
+            # this is our expected case. we look for the session key in th parsed url.
+            query_params = parse_qs(self._url.query)
+            session_key = query_params.get("session_key", [None])[0] if query_params else None
+            if session_key:
+                return session_key
+
+        # alternatively we look for the session key in the request body
+        # and also in the request headers.
+        session_key = (
+            session_key_from_url(self.request.build_absolute_uri())
+            or self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
+            or self.request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME)
+        )
+        if session_key:
+            return session_key
+
+        # if we still don't have a session key, we generate a new one.
+        self.helper_logger(f"Generating new session key for {self.url}")
+        session_key = self.generate_key()
+        return session_key
