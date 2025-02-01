@@ -170,6 +170,21 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             self.helper_logger(f"@url.setter={self._url}")
 
     @property
+    def parsed_url(self) -> ParseResult:
+        """
+        expose our private _url
+        """
+        return self._url
+
+    @property
+    def url_path_parts(self) -> list:
+        """
+        Extract the path parts from the URL.
+        """
+        if self.parsed_url:
+            return self.parsed_url.path.split("/")
+
+    @property
     def session_key(self):
         """
         Get the session key from one of the following:
@@ -195,13 +210,8 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         example: http://localhost:8000/api/v1/chatbots/<int:chatbot_id>/chat/config/
         """
         if self.is_chatbot_smarter_api_url:
-            try:
-                path_parts = self.parsed_url.path.split("/")
-                return int(path_parts[4]) if len(path_parts) > 4 else None
-            # pylint: disable=broad-except
-            except Exception:
-                pass
-        return None
+            path_parts = self.url_path_parts
+            return int(path_parts[4]) if len(path_parts) > 4 else None
 
     @property
     def chatbot_name(self) -> str:
@@ -218,7 +228,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         # 2.) example: http://localhost:8000/chatbots/<str:name>/config/
         if self.is_chatbot_sandbox_url:
             try:
-                path_parts = self.parsed_url.path.split("/")
+                path_parts = self.url_path_parts
                 return path_parts[2] if len(path_parts) > 2 else None
             # pylint: disable=broad-except
             except Exception:
@@ -230,7 +240,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         # http://localhost:8000/api/v1/cli/chat/<str:name>/
         if self.is_chatbot_cli_api_url:
             try:
-                path_parts = self.parsed_url.path.split("/")
+                path_parts = self.url_path_parts
                 return path_parts[-1] if len(path_parts) >= 5 else None
             # pylint: disable=broad-except
             except Exception:
@@ -332,7 +342,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         Returns True if the url is of the form http://localhost:8000/api/v1/
         example path_parts: ['', 'api', 'v1', 'chatbots', '1', 'chat', '']
         """
-        path_parts = self.parsed_url.path.split("/")
+        path_parts = self.url_path_parts
         if not path_parts:
             return False
         if len(path_parts) < 7:
@@ -353,7 +363,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         if not self.is_smarter_api:
             return False
 
-        path_parts = self.parsed_url.path.split("/")
+        path_parts = self.url_path_parts
         if path_parts[3] != "chatbots":
             return False
         if not path_parts[4].isnumeric():
@@ -370,7 +380,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         if not self.is_smarter_api:
             return False
 
-        path_parts = self.parsed_url.path.split("/")
+        path_parts = self.url_path_parts
         if path_parts[3] != "cli":
             return False
         if path_parts[4] != "chat":
@@ -407,7 +417,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             self.helper_logger(f"is_chatbot_sandbox_url() - not self.url: {self.url}")
             return False
 
-        path_parts = self.parsed_url.path.split("/")
+        path_parts = self.url_path_parts
         # valid path_parts:
         #   ['', 'chatbots', '<slug>']
         #   ['', 'chatbots', '<slug>', '']
@@ -541,13 +551,6 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             return domain_parts[0]
         except TypeError:
             return None
-
-    @property
-    def parsed_url(self) -> ParseResult:
-        """
-        expose our private _url
-        """
-        return self._url
 
     @property
     def domain(self) -> str:
