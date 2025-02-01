@@ -552,6 +552,20 @@ class ChatBotHelper(SmarterRequestMixin):
             self.user = get_cached_smarter_admin_user_profile().user
 
     @property
+    def chatbot_name(self) -> str:
+        """
+        Returns the ChatBot.name for the ChatBotHelper.
+        """
+        if super().chatbot_name:
+            return super().chatbot_name
+
+        if self.name:
+            return self.name
+
+        if self.chatbot:
+            return self.chatbot.name
+
+    @property
     def name(self):
         """
         Returns the name of the chatbot.
