@@ -524,8 +524,19 @@ class ChatBotHelper(SmarterRequestMixin):
 
     @property
     def chatbot_id(self) -> int:
+        """
+        Returns the ChatBot.id for the ChatBotHelper.
+        """
+
+        # check SmarterRequestMixin for chatbot_id
+        if super().chatbot_id:
+            return super().chatbot_id
+
+        # check for a value passed in
         if self._chatbot_id:
             return self._chatbot_id
+
+        # check for a chatbot object
         if self._chatbot:
             self._chatbot_id = self.chatbot.id
         return self._chatbot_id
