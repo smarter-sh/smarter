@@ -561,9 +561,6 @@ class ChatBotHelper(SmarterRequestMixin):
         if self.name:
             return self.name
 
-        if self.chatbot:
-            return self.chatbot.name
-
     @property
     def name(self):
         """
@@ -577,8 +574,8 @@ class ChatBotHelper(SmarterRequestMixin):
         if self._name:
             return self._name
 
-        if self.chatbot_name:
-            self._name = self.chatbot_name
+        if super().chatbot_name:
+            self._name = super().chatbot_name
             return self._name
 
         if not self.is_chatbot:
