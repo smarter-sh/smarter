@@ -74,6 +74,8 @@ class AccountMixin:
             self.user_profile = None
             return
         if self._user:
+            # If the user is already set, then we need to verify that the user is part of the account
+            # by attempting to fetch the user_profile.
             try:
                 self.user_profile = get_cached_user_profile(user=self._user, account=self._account)
             except UserProfile.DoesNotExist as e:
@@ -110,6 +112,10 @@ class AccountMixin:
         if self._user_profile:
             self._user = self._user_profile.user
         elif self._account:
+            # if the account is set but the user is not then we'll substitute the admin user
+            # for the account. This could happen in cases where requests are not authenticated
+            # but we still need to identify a user, such as logging, creating billable charges,
+            # and journaling.
             self._user = get_cached_admin_user_for_account(self.account)
             logger.warning("AccountMixin: user not set, using admin user %s for account %s", self._user, self._account)
         return self._user
