@@ -33,8 +33,10 @@ class AccountMixin:
         self._account: Account = None
         self._user: UserType = None
         self._user_profile: UserProfile = None
-        self.account = account or get_cached_account(account_number=account_number) if account_number else None
+
+        # set the user first, as it can be used to set the account when the account is not provided.
         self.user = user
+        self.account = account or get_cached_account(account_number=account_number) if account_number else None
 
     @property
     def account(self) -> Account:
@@ -52,24 +54,35 @@ class AccountMixin:
 
     @account.setter
     def account(self, account: Account):
+        """
+        Set the account for the current user. Handle
+        management of user_profile.
+        """
         self._account = account
         if not self._account:
             # unset the user_profile if the account is unset
             self.user_profile = None
-        if account and self._user:
+            return
+        if self._user:
             try:
-                self._user_profile = self.get_user_profile(user=self._user, account=self._account)
+                self.user_profile = get_cached_user_profile(user=self._user, account=self._account)
             except UserProfile.DoesNotExist as e:
                 raise SmarterBusinessRuleViolation(
-                    f"User {self._user} does not belong to the account {account.account_number}."
+                    f"User {self._user} does not belong to the account {self.account.account_number}."
                 ) from e
 
     @property
     def account_number(self) -> str:
+        """
+        A helper function to get the account number from the account.
+        """
         return self.account.account_number if self.account else None
 
     @account_number.setter
     def account_number(self, account_number: str):
+        """
+        A helper function to set the account from the account_number.
+        """
         if not account_number:
             self.account = None
             self.user_profile = None
@@ -78,6 +91,10 @@ class AccountMixin:
 
     @property
     def user(self) -> UserType:
+        """
+        Returns the user for the current user. Handle
+        lazy instantiation from user_profile or account.
+        """
         if self._user:
             return self._user
         if self._user_profile:
@@ -89,23 +106,47 @@ class AccountMixin:
 
     @user.setter
     def user(self, user: UserType):
+        """
+        Set the user for the current user. Handle
+        management of user_profile, if the user is unset.
+        Otherwise, initialize the account in which the user is contained.
+        """
         self._user = user
         if not self._user:
             # unset the user_profile if the user is unset
             self.user_profile = None
             return
-        self._account = get_cached_account_for_user(user)
-        self._user_profile = None
+        if self._account:
+            # If the account is already set, then we need to check if the user is part of the account
+            # by attempting to fetch the user_profile.
+            try:
+                self._user_profile = get_cached_user_profile(user=self._user, account=self._account)
+            except UserProfile.DoesNotExist as e:
+                raise SmarterBusinessRuleViolation(
+                    f"User {self._user} does not belong to the account {self.account.account_number}."
+                ) from e
+        else:
+            self._user_profile = None
 
     @property
     def user_profile(self) -> UserProfile:
+        """
+        Returns the user_profile for the current user. Handle
+        lazy instantiation from user or account.
+        """
         if self._user_profile:
             return self._user_profile
         # note that we have to use property references here in order to trigger
         # the property setters.
-        if self.user and self.account:
-            self._user_profile = get_cached_user_profile(user=self.user, account=self.account)
-        elif self.user:
+        if self._account and self._user:
+            try:
+                self._user_profile = get_cached_user_profile(user=self._user, account=self._account)
+                return self._user_profile
+            except UserProfile.DoesNotExist as e:
+                raise SmarterBusinessRuleViolation(
+                    f"User {self._user} does not belong to the account {self.account.account_number}."
+                ) from e
+        if self.user:
             self._user_profile = get_cached_user_profile(user=self.user)
         elif self.account:
             user = get_cached_admin_user_for_account(self.account)
@@ -115,30 +156,13 @@ class AccountMixin:
 
     @user_profile.setter
     def user_profile(self, user_profile: UserProfile):
+        """
+        Set the user_profile for the current user. If we're unsetting the user_profile,
+        then leave the user and account as they are. But if we're setting the user_profile,
+        then set the user and account as well.
+        """
         self._user_profile = user_profile
         if not self._user_profile:
             return
         self._user = self._user_profile.user
         self._account = self._user_profile.account
-
-    def get_user_profile(self, user: UserType = None, account: Account = None) -> UserProfile:
-        if not user:
-            return None
-        if not user.is_authenticated:
-            return None
-
-        if user and account:
-            try:
-                return get_cached_user_profile(user=user, account=account)
-            except UserProfile.DoesNotExist as e:
-                raise SmarterBusinessRuleViolation(
-                    f"User {user} does not belong to the account {account.account_number}."
-                ) from e
-            except TypeError:
-                # note: we'll only get a UserType if the user is authenticated.
-                # Other self._user will be a SimpleLazyObject. The exception that we're trying to avoid is
-                # when AccountMixin is used with public views that don't require authentication, in which case
-                # self._user will be a SimpleLazyObject and we can't call UserProfile.objects.get(user=self.user)
-                #
-                # TypeError: Field 'id' expected a number but got <SimpleLazyObject: <django.contrib.auth.models.AnonymousUser object at 0x7fd7f18a78d0>>.
-                return None
