@@ -25,6 +25,7 @@ class TestSmarterRequestMixin(unittest.TestCase):
     - http://localhost:8000/docs/
     - http://localhost:8000/dashboard/
     - https://alpha.platform.smarter.sh/api/v1/chatbots/1/chatbot/
+    - https://alpha.platform.smarter.sh/api/v1/cli/chat/example/
     - http://example.com/contact/
     - http://localhost:8000/chatbots/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
     - https://hr.3141-5926-5359.alpha.api.smarter.sh/
@@ -236,3 +237,45 @@ class TestSmarterRequestMixin(unittest.TestCase):
 
         url = "http://localhost:8000/api/v1/chatbots/1/chat/"
         test_url(url, "/api/v1/chatbots/1/chat/")
+
+        url = "http://localhost:8000/api/v1/chatbots/1/chat/config/"
+        test_url(url, "/api/v1/chatbots/1/chat/config/")
+
+    def test_api_cli_url(self):
+        """
+        Test that SmarterRequestMixin can be instantiated with an unauthenticated request.
+        http://localhost:8000/api/v1/cli/chat/example/config/
+        """
+        smarter_admin_user_profile = get_cached_smarter_admin_user_profile()
+        if smarter_admin_user_profile is None:
+            self.skipTest("Smarter admin user profile is not available")
+
+        self.client.login(username=smarter_admin_user_profile.user.username, password=SMARTER_DEV_ADMIN_PASSWORD)
+
+        def test_url(url: str, path: str):
+            response = self.client.get(url, SERVER_NAME="localhost:8000")
+            request = response.wsgi_request
+            self.assertEqual(url, request.build_absolute_uri())
+            if not request.user.is_authenticated:
+                self.skipTest("User is not authenticated")
+
+            srm = SmarterRequestMixin(request)
+
+            self.assertEqual(srm.url, url)
+            self.assertEqual(srm.user, smarter_admin_user_profile.user)
+            self.assertEqual(srm.account, smarter_admin_user_profile.account)
+            self.assertIsNotNone(srm.client_key)
+            self.assertEqual(srm.domain, "localhost:8000")
+            self.assertTrue(srm.is_chatbot)
+            self.assertFalse(srm.is_chatbot_named_url)
+            self.assertTrue(srm.is_chatbot_cli_api_url)
+            self.assertFalse(srm.is_chatbot_sandbox_url)
+            self.assertTrue(srm.is_smarter_api)
+            self.assertEqual(srm.path, path)
+
+        url = "http://localhost:8000/api/v1/cli/chat/example/config/"
+        test_url(url, "/api/v1/cli/chat/example/config/")
+
+        # mcdaniel: have to do this later. we'll need to establish a new chat session with uid == the session key.
+        # url = "https://alpha.platform.smarter.sh/api/v1/cli/chat/example/?uid=ded1f63c8e7574255961cd65e3c3fecb606f4b3b4c7ef1d8432f467ec8bd8da9"
+        # test_url(url, "/api/v1/cli/chat/example/")
