@@ -217,7 +217,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
 
         # 1.) http://example.api.localhost:8000/config
         if self.is_chatbot_named_url:
-            netloc_parts = self.parsed_url.netloc.split(".")
+            netloc_parts = self.parsed_url.netloc.split(".") if self.parsed_url and self.parsed_url.netloc else None
             return netloc_parts[0] if netloc_parts else None
 
         # 2.) example: http://localhost:8000/chatbots/<str:name>/config/
