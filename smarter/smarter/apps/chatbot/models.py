@@ -577,6 +577,10 @@ class ChatBotHelper(SmarterRequestMixin):
         if self._name:
             return self._name
 
+        if self.chatbot_name:
+            self._name = self.chatbot_name
+            return self._name
+
         if not self.is_chatbot:
             return None
 
@@ -585,7 +589,7 @@ class ChatBotHelper(SmarterRequestMixin):
 
         if self.is_chatbot_named_url:
             # covers a case like http://example.api.localhost:8000/
-            self._name = self.subdomain
+            pass
 
         if self.is_chatbot_sandbox_url:
             # covers a case like http://localhost:8000/chatbots/example/
@@ -764,23 +768,21 @@ class ChatBotHelper(SmarterRequestMixin):
         # this scenario would most likely occur when running a chat session from the cli.
         # The cli uses the url_chatbot property from chat_config to get the chatbot url, and this
         # property does not evaluate the deployment state as part of its logic.
-        if self.account and self.api_subdomain:
+        if self.account and self.name:
             try:
-                self._chatbot = get_cached_chatbot(account=self.account, name=self.api_subdomain)
+                self._chatbot = get_cached_chatbot(account=self.account, name=self.name)
                 self.helper_logger(
-                    f"initialized chatbot {self._chatbot} from account {self.account} and api_subdomain {self.api_subdomain}"
+                    f"initialized chatbot {self._chatbot} from account {self.account} and name {self.name}"
                 )
                 return self._chatbot
             except ChatBot.DoesNotExist:
                 try:
-                    self._chatbot = get_cached_chatbot(account=admin_account, name=self.api_subdomain)
+                    self._chatbot = get_cached_chatbot(account=admin_account, name=self.name)
                     self.helper_logger(
-                        message=f"initialized chatbot {self._chatbot} from account {admin_account} and name {self.api_subdomain}"
+                        message=f"initialized chatbot {self._chatbot} from account {admin_account} and name {self.name}"
                     )
                 except ChatBot.DoesNotExist as e:
-                    self.helper_warning(
-                        f"didn't find chatbot for account: {self.account} name: {self.api_subdomain} {self.url}"
-                    )
+                    self.helper_warning(f"didn't find chatbot for account: {self.account} name: {self.name} {self.url}")
                     raise ChatBot.DoesNotExist from e
             return self._chatbot
 
