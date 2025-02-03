@@ -100,6 +100,8 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
     __slots__ = ["_request", "_timestamp", "_session_key", "_data", "_url", "_url_urlunparse_without_params"]
 
     def __init__(self, request):
+        super().__init__()
+
         # slot definition/initialization
         self._request = None
         self._timestamp = datetime.now()
@@ -115,7 +117,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         self.session_key = self.get_session_key()
 
         if hasattr(request, "user"):
-            self.user: UserType = request.user if request.user.is_authenticated else None
+            self.user = request.user if request.user.is_authenticated else None
         else:
             self.helper_logger("SmarterRequestMixin - 'WSGIRequest' object has no attribute 'user'")
         if self.is_chatbot_named_url:
@@ -124,7 +126,6 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
 
             if self.account and not self._user:
                 self._user = get_cached_admin_user_for_account(account=self.account)
-        super().__init__(user=self._user)
         self.eval_chatbot_url()
 
     @property
