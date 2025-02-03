@@ -21,6 +21,7 @@ from urllib.parse import ParseResult, parse_qs, urlparse, urlunsplit
 
 import tldextract
 import waffle
+from django.core.handlers.wsgi import WSGIRequest
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.utils import (
@@ -98,27 +99,25 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
 
     __slots__ = ["_request", "_timestamp", "_session_key", "_data", "_url", "_url_urlunparse_without_params"]
 
-    def __init__(self, request):
-        super().__init__()
+    def __init__(self, request: WSGIRequest, *args, **kwargs):
+        # instance initialization
+        if not request:
+            raise SmarterValueError("request object is required")
+        self._request = request
+        self.helper_logger(f"@request.setter={self._request.build_absolute_uri()}")
+        super().__init__(*args, **kwargs)
 
         # slot definition/initialization
-        self._request = None
         self._timestamp = datetime.now()
         self._session_key: str = None
         self._data: dict = None
         self._url: ParseResult = None
         self._url_urlunparse_without_params: str = None
 
-        # instance initialization
-        if not request:
-            raise SmarterValueError("request object is required")
-        self._request = request
-        self.helper_logger(f"@request.setter={self._request.build_absolute_uri()}")
-
         # validate, standardize and parse the request url string into a ParseResult.
         # Note that the setter and getter both work with strings
         # but we store the private instance variable _url as a ParseResult.
-        url = self.request.build_absolute_uri()
+        url = self.smarter_request.build_absolute_uri()
         self._url = urlparse(url)
         self.helper_logger(f"url={self._url}")
 
@@ -141,7 +140,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         self.eval_chatbot_url()
 
     @property
-    def request(self):
+    def smarter_request(self) -> WSGIRequest:
         return self._request
 
     @property
@@ -259,7 +258,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         if self._data:
             return self._data
         try:
-            self._data = json.loads(self.request.body)
+            self._data = json.loads(self.smarter_request.body)
         except json.JSONDecodeError:
             self._data = {}
 
@@ -299,14 +298,14 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
 
     @property
     def ip_address(self):
-        if self.request:
-            return self.request.META.get("REMOTE_ADDR", "")
+        if self.smarter_request:
+            return self.smarter_request.META.get("REMOTE_ADDR", "")
         return None
 
     @property
     def user_agent(self):
-        if self.request:
-            return self.request.META.get("HTTP_USER_AGENT", "")
+        if self.smarter_request:
+            return self.smarter_request.META.get("HTTP_USER_AGENT", "")
         return None
 
     def generate_key(self) -> str:
@@ -639,9 +638,9 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         # alternatively we look for the session key in the request body
         # and also in the request headers.
         session_key = (
-            session_key_from_url(self.request.build_absolute_uri())
+            session_key_from_url(self.smarter_request.build_absolute_uri())
             or self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
-            or self.request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME)
+            or self.smarter_request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME)
         )
         if session_key:
             return session_key

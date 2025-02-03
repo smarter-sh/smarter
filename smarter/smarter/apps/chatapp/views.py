@@ -136,6 +136,7 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
 
     def dispatch(self, request, *args, chatbot_id: int = None, **kwargs):
         name = kwargs.pop("name", None)
+        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
 
         try:
             self.chatbot_helper = ChatBotHelper(request=request, chatbot_id=chatbot_id, name=name)

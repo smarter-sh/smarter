@@ -163,3 +163,31 @@ class TestSmarterRequestMixin(unittest.TestCase):
         self.assertEqual(srm.domain, "example.3141-5926-5359.api.localhost:8000")
 
         self.assertEqual(srm.chatbot_name, "example")
+
+    def test_sandbox_url(self):
+        """
+        Test that SmarterRequestMixin can be instantiated with an unauthenticated request.
+        http://localhost:8000/chatbots/example/config/?session_key=1aeee4c1f183354247f43f80261573da921b0167c7c843b28afd3cb5ebba0d9a
+        """
+        url = "http://localhost:8000/chatbots/example/config/"
+        self.client.login(username=self.user.username, password="12345")
+        response = self.client.get(url)
+        request = response.wsgi_request
+        self.assertEqual(url, request.build_absolute_uri())
+        if not request.user.is_authenticated:
+            self.skipTest("User is not authenticated")
+
+        srm = SmarterRequestMixin(request)
+
+        self.assertIsNone(srm.account)
+        self.assertEqual(srm.user, self.user)
+        self.assertEqual(srm.url, url)
+        self.assertTrue(srm.is_chatbot)
+        self.assertFalse(srm.is_chatbot_named_url)
+        self.assertFalse(srm.is_chatbot_cli_api_url)
+        self.assertTrue(srm.is_chatbot_sandbox_url)
+        self.assertFalse(srm.is_smarter_api)
+        self.assertIsNotNone(srm.session_key)
+        self.assertIsInstance(srm.session_key, str)
+        self.assertEqual(srm.domain, "localhost:8000")
+        self.assertEqual(srm.chatbot_name, "example")

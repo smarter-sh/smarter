@@ -227,6 +227,8 @@ class ChatHelper(SmarterRequestMixin):
 
     @property
     def unique_client_string(self):
+        if not self.account:
+            return f"{self.url}{self.user_agent}{self.ip_address}"
         return f"{self.account.account_number}{self.url}{self.user_agent}{self.ip_address}"
 
     def get_cached_chat(self) -> Chat:
