@@ -71,8 +71,14 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware):
     def process_request(self, request):
         # Does this url point to a ChatBot?
         # ------------------------------------------------------
-        self.chatbot_helper = ChatBotHelper(request=request)
-        self.chatbot = self.chatbot_helper.chatbot
+        try:
+            self.chatbot_helper = ChatBotHelper(request=request)
+            self.chatbot = self.chatbot_helper.chatbot if self.chatbot_helper else None
+        # pylint: disable=broad-except
+        except Exception:
+            # this is not a ChatBot request
+            self.chatbot = None
+
         if self.chatbot and waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
             logger.info("CsrfViewMiddleware.process_request: csrf_middleware_logging is active")
             logger.info("=" * 80)
