@@ -32,7 +32,6 @@ from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.common.helpers.url_helpers import session_key_from_url
-from smarter.lib.django.user import UserType
 from smarter.lib.django.validators import SmarterValidator, SmarterValueError
 
 
@@ -51,8 +50,8 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         1.) root end points for named urls. Public or authenticated chats
             self.is_chatbot_named_url==True
         --------
-        - http://example.api.localhost:8000/			                        -> smarter.apps.chatbot.api.v1.views.default.DefaultChatBotApiView
-        - http://example.api.localhost:8000/config		                        -> smarter.apps.chatapp.views.ChatConfigView
+        - http://example.3141-5926-5359.api.localhost:8000/			            -> smarter.apps.chatbot.api.v1.views.default.DefaultChatBotApiView
+        - http://example.3141-5926-5359.api.localhost:8000/config		        -> smarter.apps.chatapp.views.ChatConfigView
 
         2.) authenticated sandbox end points. Authenticated chats
             self.is_chatbot_sandbox_url==True
@@ -106,14 +105,23 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         self._request = None
         self._timestamp = datetime.now()
         self._session_key: str = None
+        self._data: dict = None
         self._url: ParseResult = None
         self._url_urlunparse_without_params: str = None
-        self._data: dict = None
 
         # instance initialization
-        self.request = request
+        if not request:
+            raise SmarterValueError("request object is required")
+        self._request = request
+        self.helper_logger(f"@request.setter={self._request.build_absolute_uri()}")
 
-        self.url = self.request.build_absolute_uri()
+        # validate, standardize and parse the request url string into a ParseResult.
+        # Note that the setter and getter both work with strings
+        # but we store the private instance variable _url as a ParseResult.
+        url = self.request.build_absolute_uri()
+        self._url = urlparse(url)
+        self.helper_logger(f"url={self._url}")
+
         self.session_key = self.get_session_key()
 
         if hasattr(request, "user"):
@@ -131,13 +139,6 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
     @property
     def request(self):
         return self._request
-
-    @request.setter
-    def request(self, request):
-        if not request:
-            raise SmarterValueError("request object is required")
-        self._request = request
-        self.helper_logger(f"@request.setter={self._request.build_absolute_uri()}")
 
     @property
     def url(self) -> str:
@@ -157,18 +158,6 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
                 (self._url.scheme, self._url.netloc, self._url.path, "", "")
             )
             return self._url_urlunparse_without_params
-
-    @url.setter
-    def url(self, url: str):
-        """
-        validate, standardize and parse the request url string into a ParseResult.
-        Note that the setter and getter both work with strings
-        but we store the private instance variable _url as a ParseResult.
-        """
-        self._url = url
-        if self._url:
-            self._url = urlparse(url)
-            self.helper_logger(f"@url.setter={self._url}")
 
     @property
     def parsed_url(self) -> ParseResult:
