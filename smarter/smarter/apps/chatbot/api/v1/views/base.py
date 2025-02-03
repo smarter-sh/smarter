@@ -15,7 +15,7 @@ from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.chat.models import ChatHelper
 from smarter.apps.chat.providers.providers import chat_providers
 from smarter.apps.chatbot.exceptions import SmarterChatBotException
-from smarter.apps.chatbot.models import ChatBotHelper, ChatBotPlugin
+from smarter.apps.chatbot.models import ChatBot, ChatBotHelper, ChatBotPlugin
 from smarter.apps.chatbot.serializers import ChatBotSerializer
 from smarter.apps.chatbot.signals import chatbot_called
 from smarter.apps.plugin.plugin.static import PluginStatic
@@ -116,7 +116,12 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         # ensure that we have some combination of properties that can identify a chatbot
         if not (self.url or self.chatbot_id or (self.account and self.name)):
             return None
-        self._chatbot_helper = ChatBotHelper(request=self.request, name=self.name, chatbot_id=self.chatbot_id)
+        try:
+            self._chatbot_helper = ChatBotHelper(request=self.request, name=self.name, chatbot_id=self.chatbot_id)
+        # smarter.apps.chatbot.models.ChatBot.DoesNotExist: ChatBot matching query does not exist.
+        except ChatBot.DoesNotExist as e:
+            raise SmarterChatBotException("ChatBot not found") from e
+
         self._chatbot_id = self._chatbot_helper.chatbot_id
         self._url = self._chatbot_helper.url
         self._user = self._chatbot_helper.user

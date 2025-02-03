@@ -709,12 +709,9 @@ class ChatBotHelper(SmarterRequestMixin):
             return self._chatbot
 
         if self.chatbot_id:
-            try:
-                self._chatbot = get_cached_chatbot(chatbot_id=self.chatbot_id)
-                self.helper_logger(f"initialized chatbot {self._chatbot} from chatbot_id {self.chatbot_id}")
-                return self._chatbot
-            except ChatBot.DoesNotExist as e:
-                raise SmarterValueError(f"ChatBot with id={self.chatbot_id} does not exist") from e
+            self._chatbot = get_cached_chatbot(chatbot_id=self.chatbot_id)
+            self.helper_logger(f"initialized chatbot {self._chatbot} from chatbot_id {self.chatbot_id}")
+            return self._chatbot
 
         admin_account = get_cached_smarter_admin_user_profile().account
 
