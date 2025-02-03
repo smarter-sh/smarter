@@ -1,4 +1,4 @@
-"""Mixin class that provides the account and user properties."""
+"""A helper class that provides setters/getters for account and user."""
 
 import logging
 
@@ -19,15 +19,25 @@ logger = logging.getLogger(__name__)
 
 class AccountMixin:
     """
-    Mixin class that provides the account and user properties.
+    Provides the account and user properties. Leverages
+    cached queries to reduce database overhead. Cache expiration is
+    intended to be short-lived, so that changes to the account or user
+    are reflected in the properties. The account and user
+    properties are lazy-loaded, and the user_profile property is
+    derived from the account and user properties.
+
+    account: Account - the account to which the user belongs.
+    account_number: str - a string of the format ####-####-#### that uniquely
+       identifies an account and can be passed as a proxy to the account object.
+    user: UserType - the Django user for the current user.
     """
 
     __slots__ = ["_account", "_user", "_user_profile"]
 
     def __init__(
         self,
-        account: Account = None,
         user: UserType = None,
+        account: Account = None,
         account_number: str = None,
     ):
         self._account: Account = None
