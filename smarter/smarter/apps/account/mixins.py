@@ -2,15 +2,16 @@
 
 import logging
 
-from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.utils import (
-    get_cached_account_for_user,
-    get_cached_admin_user_for_account,
-)
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib.django.user import UserType
 
-from .utils import get_cached_account, get_cached_user_profile
+from .models import Account, UserProfile
+from .utils import (
+    get_cached_account,
+    get_cached_account_for_user,
+    get_cached_admin_user_for_account,
+    get_cached_user_profile,
+)
 
 
 logger = logging.getLogger(__name__)
