@@ -681,10 +681,12 @@ class ChatBotHelper(SmarterRequestMixin):
             if not self.user.is_authenticated:
                 self._err = f"is_valid() returning false because {self.name} chatbot requires authentication but user {self.user.username} is not authenticated"
                 return False
+        if self.chatbot:
+            return True
         if not self.is_chatbot:
             self._err = f"is_valid() returning false because {self.url} is not a chatbot"
             return False
-        if self.chatbot is None:
+        else:
             self._err = (
                 f"is_valid() returning false because {self.url} is a chatbot but ChatBotHelper.chatbot is unassigned"
             )

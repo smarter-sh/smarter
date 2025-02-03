@@ -255,6 +255,7 @@ class CliBaseApiView(APIView, AccountMixin):
             It provides a service interface that 'brokers' the http request for the
             underlying object that provides the object-specific service (create, update, get, delete, etc).
         """
+        AccountMixin.__init__(self, user=request.user)
         # Parse the query string parameters from the request into a dictionary.
         # This is used to pass additional parameters to the child view's post method.
         self._manifest_name = self.params.get("name", None)

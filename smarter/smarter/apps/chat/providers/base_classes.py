@@ -214,7 +214,6 @@ class ChatProviderBase(ProviderDbMixin, AccountMixin):
         chat_provider_initialized.send(sender=self)
 
     def init(self):
-        super().init()
         self._default_model = None
         self._default_system_role = None
         self._default_temperature = None

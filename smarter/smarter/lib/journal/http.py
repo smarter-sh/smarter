@@ -90,7 +90,7 @@ class SmarterJournaledJsonResponse(JsonResponse):
             # 'WSGIRequest' object has no attribute 'user'.
             # AttributeError: 'PreparedRequest' object has no attribute 'user'
             try:
-                if request.user.is_authenticated:
+                if hasattr(request, "user") and request.user.is_authenticated:
                     user = request.user
                     request_data = HttpAuthenticatedRequestSerializer(request).data
                 else:
