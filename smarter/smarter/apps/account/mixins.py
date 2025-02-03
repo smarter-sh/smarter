@@ -45,8 +45,8 @@ class AccountMixin:
         self._user_profile: UserProfile = None
 
         # set the user first, as it can be used to set the account when the account is not provided.
-        self.user = user
-        self.account = account or get_cached_account(account_number=account_number) if account_number else None
+        self._user = user
+        self._account = get_cached_account(account_number=account_number) if account_number else account
 
     @property
     def account(self) -> Account:
@@ -57,7 +57,7 @@ class AccountMixin:
         if self._account:
             return self._account
         if self._user_profile:
-            self._account = self.user_profile.account
+            self._account = self._user_profile.account
         elif self._user:
             self._account = get_cached_account_for_user(self._user)
         return self._account
@@ -71,16 +71,16 @@ class AccountMixin:
         self._account = account
         if not self._account:
             # unset the user_profile if the account is unset
-            self.user_profile = None
+            self._user_profile = None
             return
         if self._user:
             # If the user is already set, then we need to verify that the user is part of the account
             # by attempting to fetch the user_profile.
             try:
-                self.user_profile = get_cached_user_profile(user=self._user, account=self._account)
+                self._user_profile = UserProfile.objects.get(user=self._user, account=self._account)
             except UserProfile.DoesNotExist as e:
                 raise SmarterBusinessRuleViolation(
-                    f"User {self._user} does not belong to the account {self.account.account_number}."
+                    f"User {self._user} does not belong to the account {self._account.account_number}."
                 ) from e
 
     @property
@@ -88,7 +88,7 @@ class AccountMixin:
         """
         A helper function to get the account number from the account.
         """
-        return self.account.account_number if self.account else None
+        return self._account.account_number if self._account else None
 
     @account_number.setter
     def account_number(self, account_number: str):
@@ -96,10 +96,10 @@ class AccountMixin:
         A helper function to set the account from the account_number.
         """
         if not account_number:
-            self.account = None
-            self.user_profile = None
+            self._account = None
+            self._user_profile = None
             return
-        self.account = get_cached_account(account_number=account_number)
+        self._account = get_cached_account(account_number=account_number)
 
     @property
     def user(self) -> UserType:
@@ -116,7 +116,7 @@ class AccountMixin:
             # for the account. This could happen in cases where requests are not authenticated
             # but we still need to identify a user, such as logging, creating billable charges,
             # and journaling.
-            self._user = get_cached_admin_user_for_account(self.account)
+            self._user = get_cached_admin_user_for_account(self._account)
             logger.warning("AccountMixin: user not set, using admin user %s for account %s", self._user, self._account)
         return self._user
 
@@ -136,10 +136,10 @@ class AccountMixin:
             # If the account is already set, then we need to check if the user is part of the account
             # by attempting to fetch the user_profile.
             try:
-                self._user_profile = get_cached_user_profile(user=self._user, account=self._account)
+                self._user_profile = UserProfile.objects.get(user=self._user, account=self._account)
             except UserProfile.DoesNotExist as e:
                 raise SmarterBusinessRuleViolation(
-                    f"User {self._user} does not belong to the account {self.account.account_number}."
+                    f"User {self._user} does not belong to the account {self._account.account_number}."
                 ) from e
         else:
             self._user_profile = None

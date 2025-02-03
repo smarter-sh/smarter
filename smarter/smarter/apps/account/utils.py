@@ -2,6 +2,7 @@
 
 import logging
 import re
+import uuid
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
@@ -61,18 +62,14 @@ def get_cached_user_profile(user: UserType, account: Account = None) -> UserProf
     """
     Locates the user_profile for a given user, or None.
     """
-    if user and user.is_authenticated:
-        try:
-            user_profile = (
-                UserProfile.objects.get(user=user, account=account) if account else UserProfile.objects.get(user=user)
-            )
-            logger.info(
-                "%s caching user profile for user %s", formatted_text("get_cached_user_profile()"), user_profile
-            )
-            return user_profile
-        except UserProfile.DoesNotExist:
-            pass
-    return None
+    try:
+        user_profile = (
+            UserProfile.objects.get(user=user, account=account) if account else UserProfile.objects.get(user=user)
+        )
+        logger.info("%s caching user profile for user %s", formatted_text("get_cached_user_profile()"), user_profile)
+        return user_profile
+    except UserProfile.DoesNotExist:
+        pass
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
@@ -94,10 +91,16 @@ def get_cached_admin_user_for_account(account: Account) -> UserType:
     Returns the account admin user for the given account.
     """
 
+    console_prefix = formatted_text("get_cached_admin_user_for_account()")
     user_profile = UserProfile.objects.filter(account=account, user__is_staff=True).order_by("pk").first()
-    logger.info(
-        "%s caching user profile for user %s", formatted_text("get_cached_admin_user_for_account()"), user_profile
-    )
+    if not user_profile:
+        # Create a new admin user and user profile
+        random_email = f"{uuid.uuid4().hex[:8]}@mail.com"
+        admin_user = User.objects.create_user(username=account.account_number, email=random_email, is_staff=True)
+        user_profile = UserProfile.objects.create(user=admin_user, account=account)
+        logger.warning("%s created new admin user profile for user %s", console_prefix, user_profile)
+    else:
+        logger.info("%s caching user profile for user %s", console_prefix, user_profile)
     return user_profile.user if user_profile else None
 
 
