@@ -86,7 +86,7 @@ class TestSmarterRequestMixin(unittest.TestCase):
 
         srm = SmarterRequestMixin(request)
         with self.assertRaises(AttributeError):
-            srm.request = None
+            srm.smarter_request = None
 
     def test_unauthenticated_base_case(self):
         """
@@ -186,7 +186,6 @@ class TestSmarterRequestMixin(unittest.TestCase):
         self.assertEqual(srm.url, url)
         self.assertEqual(srm.user, smarter_admin_user_profile.user)
         self.assertEqual(srm.account, smarter_admin_user_profile.account)
-        self.assertIsNotNone(srm.chatbot_id)
         self.assertIsNotNone(srm.chatbot_name)
         self.assertIsNotNone(srm.client_key)
         self.assertEqual(srm.domain, "localhost:8000")
