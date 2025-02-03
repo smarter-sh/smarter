@@ -180,7 +180,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
             logger.info(f"{self.formatted_class_name}: {message}")
 
     def dispatch(self, request, *args, name: str = None, **kwargs):
-
+        AccountMixin.__init__(self, request.user)
         self.request = self.request or request
         self._user = self._user or request.user
         self._chatbot_id = kwargs.get("chatbot_id")
