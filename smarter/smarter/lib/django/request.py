@@ -100,19 +100,17 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
     __slots__ = ["_request", "_timestamp", "_session_key", "_data", "_url", "_url_urlunparse_without_params"]
 
     def __init__(self, request: WSGIRequest, *args, **kwargs):
-        # instance initialization
-        if not request:
-            raise SmarterValueError("request object is required")
         self._request = request
-        self.helper_logger(f"@request.setter={self._request.build_absolute_uri()}")
-        super().__init__(*args, **kwargs)
-
-        # slot definition/initialization
         self._timestamp = datetime.now()
         self._session_key: str = None
         self._data: dict = None
         self._url: ParseResult = None
         self._url_urlunparse_without_params: str = None
+        super().__init__(*args, **kwargs)
+
+        if not request:
+            return None
+        self.helper_logger(f"@request.setter={self._request.build_absolute_uri()}")
 
         # validate, standardize and parse the request url string into a ParseResult.
         # Note that the setter and getter both work with strings
@@ -258,7 +256,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         if self._data:
             return self._data
         try:
-            self._data = json.loads(self.smarter_request.body)
+            self._data = json.loads(self.smarter_request.body) if self.smarter_request else {}
         except json.JSONDecodeError:
             self._data = {}
 

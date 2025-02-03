@@ -63,7 +63,6 @@ class ProviderDbMixin(AccountMixin):
         """
         This method initializes the provider instance.
         """
-        super().init()
         self._chat = None
         self._chat_tool_call = None
         self._chat_plugin_usage = None
