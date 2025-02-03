@@ -8,8 +8,12 @@ from urllib.parse import ParseResult
 from django.contrib.auth.models import User
 from django.test import Client, RequestFactory
 
+from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.validators import SmarterValueError
+
+
+SMARTER_DEV_ADMIN_PASSWORD = "smarter"
 
 
 class TestSmarterRequestMixin(unittest.TestCase):
@@ -122,3 +126,40 @@ class TestSmarterRequestMixin(unittest.TestCase):
         self.assertIsInstance(srm.parsed_url, ParseResult)
         self.assertIsNotNone(srm.to_json())
         self.assertIsInstance(srm.to_json(), dict)
+
+    def test_named_api_url(self):
+        """
+        Test that SmarterRequestMixin can be instantiated with an unauthenticated request.
+        http://example.3141-5926-5359.api.localhost:8000/
+
+        we need to authenticate with the Smarter admin account and the dev environment
+        needs to be fully initialized.
+        """
+        url = "http://example.3141-5926-5359.api.localhost:8000/"
+        smarter_admin_user_profile = get_cached_smarter_admin_user_profile()
+        if smarter_admin_user_profile is None:
+            self.skipTest("Smarter admin user profile is not available")
+
+        self.client.login(username=smarter_admin_user_profile.user.username, password=SMARTER_DEV_ADMIN_PASSWORD)
+        response = self.client.get(url, SERVER_NAME="example.3141-5926-5359.api.localhost:8000")
+        request = response.wsgi_request
+        self.assertEqual(request.user, smarter_admin_user_profile.user)
+        self.assertEqual(url, request.build_absolute_uri())
+        if not request.user.is_authenticated:
+            self.skipTest("User is not authenticated")
+
+        srm = SmarterRequestMixin(request)
+
+        self.assertEqual(srm.account, smarter_admin_user_profile.account)
+        self.assertEqual(srm.user, smarter_admin_user_profile.user)
+        self.assertEqual(srm.url, url)
+        self.assertTrue(srm.is_chatbot)
+        self.assertTrue(srm.is_chatbot_named_url)
+        self.assertFalse(srm.is_chatbot_cli_api_url)
+        self.assertFalse(srm.is_chatbot_sandbox_url)
+        self.assertFalse(srm.is_smarter_api)
+        self.assertIsNotNone(srm.session_key)
+        self.assertIsInstance(srm.session_key, str)
+        self.assertEqual(srm.domain, "example.3141-5926-5359.api.localhost:8000")
+
+        self.assertEqual(srm.chatbot_name, "example")

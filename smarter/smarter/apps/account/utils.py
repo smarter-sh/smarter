@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.cache import cache_results
 from smarter.lib.django.user import UserType
@@ -90,6 +91,8 @@ def get_cached_admin_user_for_account(account: Account) -> UserType:
     """
     Returns the account admin user for the given account.
     """
+    if not account:
+        raise SmarterValueError("Account is required")
 
     console_prefix = formatted_text("get_cached_admin_user_for_account()")
     user_profile = UserProfile.objects.filter(account=account, user__is_staff=True).order_by("pk").first()

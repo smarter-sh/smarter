@@ -125,7 +125,11 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         self.session_key = self.get_session_key()
 
         if hasattr(request, "user"):
-            self.user = request.user if request.user.is_authenticated else None
+            if request.user.is_authenticated:
+                self.user = request.user
+                self.helper_logger(f"SmarterRequestMixin - request.user={self.user}")
+            else:
+                self.helper_logger("SmarterRequestMixin - request.user is not authenticated.")
         else:
             self.helper_logger("SmarterRequestMixin - 'WSGIRequest' object has no attribute 'user'")
         if self.is_chatbot_named_url:
@@ -213,7 +217,8 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
 
         # 1.) http://example.api.localhost:8000/config
         if self.is_chatbot_named_url:
-            return self.subdomain
+            netloc_parts = self.parsed_url.netloc.split(".")
+            return netloc_parts[0] if netloc_parts else None
 
         # 2.) example: http://localhost:8000/chatbots/<str:name>/config/
         if self.is_chatbot_sandbox_url:
@@ -596,11 +601,20 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         """
         if not self.is_chatbot:
             return
-        if not self.account:
-            account_number = account_number_from_url(self.url)
-            self.account = get_cached_account(account_number=account_number)
-        if not self.user:
-            self.user = get_cached_admin_user_for_account(account=self.account)
+        if self.is_chatbot_named_url:
+            # http://example.3141-5926-5359.api.localhost:8000/
+            if not self.account:
+                account_number = account_number_from_url(self.url)
+                if account_number:
+                    self.account = get_cached_account(account_number=account_number)
+            if self.account and not self.user:
+                self.user = get_cached_admin_user_for_account(account=self.account)
+        if self.is_chatbot_smarter_api_url:
+            # https://alpha.platform.smarter.sh/api/v1/chatbots/1/chatbot/
+            pass
+        if self.is_chatbot_cli_api_url:
+            # http://localhost:8000/api/v1/cli/chat/example/
+            pass
 
     def helper_logger(self, message: str):
         """

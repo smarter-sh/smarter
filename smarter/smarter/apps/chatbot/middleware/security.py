@@ -5,14 +5,14 @@ from urllib.parse import urlparse
 
 import waffle
 from django.conf import settings
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, HttpResponseNotFound
 from django.middleware.security import SecurityMiddleware as DjangoSecurityMiddleware
 
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterWaffleSwitches
 from smarter.lib.django.validators import SmarterValidator
 
-from ..models import ChatBotHelper
+from ..models import ChatBot, ChatBotHelper
 
 
 logger = logging.getLogger(__name__)
@@ -74,7 +74,12 @@ class SecurityMiddleware(DjangoSecurityMiddleware):
         # ---------------------------------------------------------------------
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
             logger.info("SecurityMiddleware() instantiating ChatBotHelper() for url: %s", url)
-        helper = ChatBotHelper(url=url, user=request.user)
+        try:
+            helper = ChatBotHelper(request=request)
+        except ChatBot.DoesNotExist as e:
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+                logger.error("SecurityMiddleware() %s failed to instantiate ChatBotHelper(): %s", url, e)
+            return HttpResponseNotFound("ChatBot not found")
         if helper.chatbot is not None:
             if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
                 logger.info("SecurityMiddleware() ChatBotHelper() verified that %s is a chatbot.", url)
