@@ -104,6 +104,7 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
             file_path=file_path,
             url=url,
         )
+        AccountMixin.__init__(self, account=account, user=request.user)
 
     def manifest_to_django_orm(self) -> dict:
         """

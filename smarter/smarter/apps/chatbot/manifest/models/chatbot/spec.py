@@ -42,77 +42,58 @@ class SAMChatbotSpecConfig(AbstractSAMSpecBase):
         None,
         description=(f"{class_identifier}.custom_domain[str]. Optional. The custom domain to use for the chatbot."),
     )
-    deployed: bool = (
-        Field(..., description=(f"{class_identifier}.deployed[bool]. Required. Whether the chatbot is deployed.")),
+    deployed: bool = Field(
+        default=False, description=f"{class_identifier}.deployed[bool]. Required. Whether the chatbot is deployed."
     )
+
     provider: Optional[str] = Field(
         None,
-        description=(
-            f"{class_identifier}.provider[str]. Optional. The provider to use for the chatbot. Default: openai."
-        ),
+        description=f"{class_identifier}.provider[str]. Optional. The provider to use for the chatbot. Default: openai.",
     )
     defaultModel: Optional[str] = Field(
-        None,
-        description=(f"{class_identifier}.default_model[str]. Optional. The default model to use for the chatbot."),
+        None, description=f"{class_identifier}.default_model[str]. Optional. The default model to use for the chatbot."
     )
     defaultSystemRole: Optional[str] = Field(
         None,
-        description=(
-            f"{class_identifier}.default_system_role[str]. Optional. The default system prompt to use for the chatbot."
-        ),
+        description=f"{class_identifier}.default_system_role[str]. Optional. The default system prompt to use for the chatbot.",
     )
     defaultTemperature: Optional[float] = Field(
         None,
-        description=(
-            f"{class_identifier}.default_temperature[float]. Optional. The default temperature to use for the chatbot."
-        ),
+        description=f"{class_identifier}.default_temperature[float]. Optional. The default temperature to use for the chatbot.",
     )
     defaultMaxTokens: Optional[int] = Field(
         None,
-        description=(
-            f"{class_identifier}.default_max_tokens[int]. Optional. The default max tokens to use for the chatbot."
-        ),
+        description=f"{class_identifier}.default_max_tokens[int]. Optional. The default max tokens to use for the chatbot.",
     )
 
     appName: Optional[str] = Field(
-        None,
-        description=(f"{class_identifier}.app_name[str]. Optional. The name of the chatbot."),
+        None, description=f"{class_identifier}.app_name[str]. Optional. The name of the chatbot."
     )
     appAssistant: Optional[str] = Field(
-        None,
-        description=(f"{class_identifier}.app_assistant[str]. Optional. The assistant name of the chatbot."),
+        None, description=f"{class_identifier}.app_assistant[str]. Optional. The assistant name of the chatbot."
     )
     appWelcomeMessage: Optional[str] = Field(
-        None,
-        description=(f"{class_identifier}.app_welcome_message[str]. Optional. The welcome message of the chatbot."),
+        None, description=f"{class_identifier}.app_welcome_message[str]. Optional. The welcome message of the chatbot."
     )
     appExamplePrompts: Optional[List[str]] = Field(
-        None,
-        description=(f"{class_identifier}.app_example_prompts[list]. Optional. The example prompts of the chatbot."),
+        None, description=f"{class_identifier}.app_example_prompts[list]. Optional. The example prompts of the chatbot."
     )
     appPlaceholder: Optional[str] = Field(
-        None,
-        description=(f"{class_identifier}.app_placeholder[str]. Optional. The placeholder of the chatbot."),
+        None, description=f"{class_identifier}.app_placeholder[str]. Optional. The placeholder of the chatbot."
     )
     appInfoUrl: Optional[str] = Field(
-        None,
-        description=(f"{class_identifier}.app_info_url[str]. Optional. The info URL of the chatbot."),
+        None, description=f"{class_identifier}.app_info_url[str]. Optional. The info URL of the chatbot."
     )
     appBackgroundImageUrl: Optional[str] = Field(
         None,
-        description=(
-            f"{class_identifier}.app_background_image_url[str]. Optional. The background image URL of the chatbot."
-        ),
+        description=f"{class_identifier}.app_background_image_url[str]. Optional. The background image URL of the chatbot.",
     )
     appLogoUrl: Optional[str] = Field(
-        None,
-        description=(f"{class_identifier}.app_logo_url[str]. Optional. The logo URL of the chatbot."),
+        None, description=f"{class_identifier}.app_logo_url[str]. Optional. The logo URL of the chatbot."
     )
     appFileAttachment: Optional[bool] = Field(
         None,
-        description=(
-            f"{class_identifier}.app_file_attachment[bool]. Optional. Whether the chatbot supports file attachment."
-        ),
+        description=f"{class_identifier}.app_file_attachment[bool]. Optional. Whether the chatbot supports file attachment.",
     )
 
 
@@ -122,23 +103,17 @@ class SAMChatbotSpec(AbstractSAMSpecBase):
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
     config: SAMChatbotSpecConfig = Field(
-        ...,
-        description=(f"{class_identifier}.config[object]. The configuration for the {MANIFEST_KIND}."),
+        ..., description=f"{class_identifier}.config[object]. The configuration for the {MANIFEST_KIND}."
     )
     plugins: Optional[List[str]] = Field(
         None,
-        description=(f"{class_identifier}.searchTerms[list]. Optional. The Plugins to add to the " f"{MANIFEST_KIND}."),
+        description=f"{class_identifier}.searchTerms[list]. Optional. The Plugins to add to the " f"{MANIFEST_KIND}.",
     )
     functions: Optional[List[str]] = Field(
         None,
-        description=(
-            f"{class_identifier}.functions[list]. Optional. The built-in Smarter Functions to add to the "
-            f"{MANIFEST_KIND}."
-        ),
+        description=f"{class_identifier}.functions[list]. Optional. The built-in Smarter Functions to add to the {MANIFEST_KIND}.",
     )
     apiKey: Optional[str] = Field(
         None,
-        description=(
-            f"{class_identifier}.api_key[str]. Optional. The name of the API key that this chatbot uses for authentication."
-        ),
+        description=f"{class_identifier}.api_key[str]. Optional. The name of the API key that this chatbot uses for authentication.",
     )

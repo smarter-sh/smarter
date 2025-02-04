@@ -11,9 +11,9 @@ from smarter.lib.django.user import User, UserType
 
 def admin_user_factory(account: Account = None) -> tuple[UserType, Account, UserProfile]:
     hashed_slug = hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:16]
-    username = f"test_{hashed_slug}"
+    username = f"testUser_{hashed_slug}"
     user = User.objects.create(username=username, password="12345", is_active=True, is_staff=True, is_superuser=True)
-    account = account or Account.objects.create(company_name=f"Test_{hashed_slug}", phone_number="123-456-789")
+    account = account or Account.objects.create(company_name=f"TestAccount_{hashed_slug}", phone_number="123-456-789")
     user_profile = UserProfile.objects.create(user=user, account=account, is_test=True)
 
     return user, account, user_profile
@@ -21,9 +21,9 @@ def admin_user_factory(account: Account = None) -> tuple[UserType, Account, User
 
 def mortal_user_factory(account: Account = None) -> tuple[UserType, Account, UserProfile]:
     hashed_slug = hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:16]
-    username = f"test_{hashed_slug}"
+    username = f"testUser_{hashed_slug}"
     user = User.objects.create(username=username, password="12345", is_active=True, is_staff=False, is_superuser=False)
-    account = account or Account.objects.create(company_name=f"Test_{hashed_slug}", phone_number="123-456-789")
+    account = account or Account.objects.create(company_name=f"TestAccount_{hashed_slug}", phone_number="123-456-789")
     user_profile = UserProfile.objects.create(user=user, account=account, is_test=True)
 
     return user, account, user_profile

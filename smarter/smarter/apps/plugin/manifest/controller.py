@@ -36,11 +36,12 @@ class PluginController(AbstractController):
     _plugin_meta: PluginMeta = None
 
     def __init__(self, account: Account, manifest: SAMPlugin = None, plugin_meta: PluginMeta = None):
+        super().__init__(account=account)
         if (bool(manifest) and bool(plugin_meta)) or (not bool(manifest) and not bool(plugin_meta)):
             raise SAMPluginControllerError(
                 f"One and only one of manifest or plugin_meta should be provided. Received? manifest: {bool(manifest)}, plugin_meta: {bool(plugin_meta)}."
             )
-        self._account = account
+        # self._account = account
         self._manifest = manifest
         self._plugin_meta = plugin_meta
 

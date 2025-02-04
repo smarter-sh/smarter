@@ -14,12 +14,15 @@ from django.http import HttpResponseForbidden
 from django.middleware.csrf import CsrfViewMiddleware as DjangoCsrfViewMiddleware
 from django.utils.functional import cached_property
 
-from smarter.apps.chatbot.models import ChatBot
+from smarter.apps.chatbot.models import ChatBot, ChatBotHelper
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterWaffleSwitches
 
 
 logger = logging.getLogger(__name__)
+
+if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+    logger.info("Loading smarter.apps.chatbot.middleware.csrf.CsrfViewMiddleware")
 
 
 class CsrfViewMiddleware(DjangoCsrfViewMiddleware):
@@ -31,6 +34,7 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware):
     template tag.
     """
 
+    chatbot_helper: ChatBotHelper = None
     chatbot: ChatBot = None
 
     @cached_property
@@ -67,10 +71,15 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware):
     def process_request(self, request):
         # Does this url point to a ChatBot?
         # ------------------------------------------------------
-        self.chatbot = ChatBot.get_by_request(request=request)
-        if self.chatbot and waffle.switch_is_active(
-            SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CSRF_MIDDLEWARE_LOGGING
-        ):
+        try:
+            self.chatbot_helper = ChatBotHelper(request=request)
+            self.chatbot = self.chatbot_helper.chatbot if self.chatbot_helper else None
+        # pylint: disable=broad-except
+        except Exception:
+            # this is not a ChatBot request
+            self.chatbot = None
+
+        if self.chatbot and waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
             logger.info("CsrfViewMiddleware.process_request: csrf_middleware_logging is active")
             logger.info("=" * 80)
             logger.info("CsrfViewMiddleware ChatBot: %s", self.chatbot)
