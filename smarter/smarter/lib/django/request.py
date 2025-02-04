@@ -97,7 +97,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
     It originates from generate_key() in this class.
     """
 
-    __slots__ = ["_request", "_timestamp", "_session_key", "_data", "_url", "_url_urlunparse_without_params"]
+    __slots__ = ("_request", "_timestamp", "_session_key", "_data", "_url", "_url_urlunparse_without_params")
 
     def __init__(self, request: WSGIRequest, *args, **kwargs):
         self._request = request

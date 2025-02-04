@@ -40,19 +40,12 @@ class ProviderDbMixin(AccountMixin):
 
     __slots__ = ("_chat", "_chat_tool_call", "_chat_plugin_usage", "_charges", "_chat_history", "_message_history")
 
-    _chat: Chat
-    _chat_tool_call: ChatToolCall
-    _chat_plugin_usage: ChatPluginUsage
-    _charges: QuerySet[Charge]
-    _chat_history: QuerySet[ChatHistory]
-    _message_history: list[dict]
-
     def __init__(self, *args, **kwargs):
         """
         Constructor method for the ProviderDbMixin class.
         """
-        super().__init__(*args, **kwargs)
         self.init()
+        super().__init__(*args, **kwargs)
         session_key = kwargs.get("session_key", None)
         if session_key:
             self._chat = Chat.objects.get(session_key=session_key)
@@ -63,12 +56,12 @@ class ProviderDbMixin(AccountMixin):
         """
         This method initializes the provider instance.
         """
-        self._chat = None
-        self._chat_tool_call = None
-        self._chat_plugin_usage = None
-        self._charges = None
-        self._chat_history = None
-        self._message_history = None
+        self._chat: Chat = None
+        self._chat_tool_call: ChatToolCall = None
+        self._chat_plugin_usage: ChatPluginUsage = None
+        self._charges: QuerySet[Charge] = None
+        self._chat_history: QuerySet[ChatHistory] = None
+        self._message_history: list[dict] = None
 
     @property
     def ready(self) -> bool:

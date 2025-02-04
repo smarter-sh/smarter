@@ -112,7 +112,7 @@ class InternalKeys:
     SMARTER_IS_NEW = SMARTER_SYSTEM_KEY_PREFIX + "is_new"
 
 
-class ChatProviderBase(ProviderDbMixin, AccountMixin):
+class ChatProviderBase(ProviderDbMixin):
     """
     Base class for all chat providers.
     """
@@ -196,9 +196,10 @@ class ChatProviderBase(ProviderDbMixin, AccountMixin):
         default_temperature: float,
         default_max_tokens: int,
         valid_chat_completion_models: list[str],
+        *args,
         **kwargs,
     ):
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
         self.init()
         self.chat = kwargs.get("chat")
         self._provider = provider
@@ -214,6 +215,7 @@ class ChatProviderBase(ProviderDbMixin, AccountMixin):
         chat_provider_initialized.send(sender=self)
 
     def init(self):
+        super().init()
         self._default_model = None
         self._default_system_role = None
         self._default_temperature = None

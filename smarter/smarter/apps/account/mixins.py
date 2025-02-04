@@ -32,7 +32,7 @@ class AccountMixin:
     user: UserType - the Django user for the current user.
     """
 
-    __slots__ = ["_account", "_user", "_user_profile"]
+    __slots__ = ("_account", "_user", "_user_profile")
 
     def __init__(
         self,

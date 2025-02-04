@@ -454,19 +454,14 @@ class ChatBotHelper(SmarterRequestMixin):
     - https://example.smarter.querium.com/chatbot/
     """
 
-    # __slots__ = [
-    #     "_chatbot",
-    #     "_chatbot_custom_domain",
-    #     "_chatbot_requests",
-    #     "_chatbot_id",
-    #     "_name",
-    # ]
-    _chatbot: ChatBot = None
-    _chatbot_custom_domain: ChatBotCustomDomain = None
-    _chatbot_requests: ChatBotRequests = None
-    _chatbot_id: int = None
-    _name: str = None
-    _err: str = None
+    __slots__ = (
+        "_chatbot",
+        "_chatbot_custom_domain",
+        "_chatbot_requests",
+        "_chatbot_id",
+        "_name",
+        "_err",
+    )
 
     def __init__(
         self,
@@ -479,6 +474,12 @@ class ChatBotHelper(SmarterRequestMixin):
         :param url: The URL to parse.
         :param environment: The environment to use for the URL. (for unit testing only)
         """
+        self._chatbot: ChatBot = None
+        self._chatbot_custom_domain: ChatBotCustomDomain = None
+        self._chatbot_requests: ChatBotRequests = None
+        self._chatbot_id: int = None
+        self._name: str = None
+        self._err: str = None
         super().__init__(request)
         self.helper_logger(f"__init__() to_json(): {json.dumps(self.to_json(), indent=4, sort_keys=True)}")
         if not chatbot_id and not name and not self.is_chatbot:
