@@ -50,10 +50,26 @@ class TestSmarterRequestMixin(unittest.TestCase):
 
     def test_init_without_request_object(self):
         """
-        Test that SmarterRequestMixin raises an error when instantiated without a request object.
+        Test that SmarterRequestMixin doesn't identify any kind of resource nor api.
         """
-        with self.assertRaises(SmarterValueError):
-            SmarterRequestMixin(request=None)
+        srm = SmarterRequestMixin(request=None)
+        self.assertIsNone(srm.account)
+        self.assertIsNone(srm.session_key)
+        self.assertIsNone(srm.domain)
+        self.assertIsNone(srm.ip_address)
+        self.assertIsNone(srm.chatbot_id)
+        self.assertIsNone(srm.chatbot_name)
+        self.assertFalse(srm.is_smarter_api)
+        self.assertFalse(srm.is_chatbot)
+        self.assertFalse(srm.is_chatbot_smarter_api_url)
+        self.assertFalse(srm.is_chatbot_named_url)
+        self.assertFalse(srm.is_chatbot_sandbox_url)
+        self.assertFalse(srm.is_chatbot_cli_api_url)
+        self.assertFalse(srm.is_default_domain)
+        self.assertIsNone(srm.path)
+        self.assertIsNone(srm.root_domain)
+        self.assertIsNone(srm.subdomain)
+        self.assertIsNone(srm.user)
 
     def test_unauthenticated_instantiation(self):
         """

@@ -33,7 +33,7 @@ from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.common.helpers.url_helpers import session_key_from_url
-from smarter.lib.django.validators import SmarterValidator, SmarterValueError
+from smarter.lib.django.validators import SmarterValidator
 
 
 logger = logging.getLogger(__name__)
