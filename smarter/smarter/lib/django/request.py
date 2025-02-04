@@ -297,13 +297,13 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
     @property
     def ip_address(self):
         if self.smarter_request:
-            return self.smarter_request.META.get("REMOTE_ADDR", "")
+            return self.smarter_request.META.get("REMOTE_ADDR", "") or "ip_address"
         return None
 
     @property
     def user_agent(self):
         if self.smarter_request:
-            return self.smarter_request.META.get("HTTP_USER_AGENT", "")
+            return self.smarter_request.META.get("HTTP_USER_AGENT", "") or "user_agent"
         return None
 
     def generate_key(self) -> str:
