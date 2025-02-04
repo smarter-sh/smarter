@@ -80,6 +80,24 @@ class SmarterJournaledJsonResponse(JsonResponse):
             SCLIResponseMetadata.COMMAND: str(command),
         }
 
+        def anonymous_serialized_request(request) -> dict:
+            """
+            handles AttributeError: Got AttributeError when attempting to get a value for field `GET` on serializer `HttpAnonymousRequestSerializer`.
+            """
+            try:
+                return HttpAnonymousRequestSerializer(request).data
+            except AttributeError:
+                return {}
+
+        def authenticated_serialized_request(request) -> dict:
+            """
+            handles the same but for authenticated requests
+            """
+            try:
+                return HttpAuthenticatedRequestSerializer(request).data
+            except AttributeError:
+                return {}
+
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_JOURNAL):
             # WSGIRequest can be finicky depending on the kind of response we're dealing with.
             # in general, we only want the user object if it's authenticated, which happens
@@ -92,18 +110,18 @@ class SmarterJournaledJsonResponse(JsonResponse):
             try:
                 if hasattr(request, "user") and request.user.is_authenticated:
                     user = request.user
-                    request_data = HttpAuthenticatedRequestSerializer(request).data
+                    request_data = authenticated_serialized_request(request)
                 else:
                     user = None
-                    request_data = HttpAnonymousRequestSerializer(request).data
+                    request_data = anonymous_serialized_request(request)
             except AttributeError:
                 user = None
-                request_data = HttpAnonymousRequestSerializer(request).data
+                request_data = anonymous_serialized_request(request)
             # pylint: disable=broad-except
             except Exception:
                 logger.warning("Could not determine user from request, and, AttributeError was not raised.")
                 user = None
-                request_data = HttpAnonymousRequestSerializer(request).data
+                request_data = anonymous_serialized_request(request)
 
             try:
                 journal = SAMJournal.objects.create(
