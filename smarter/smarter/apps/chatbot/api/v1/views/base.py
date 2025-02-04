@@ -315,10 +315,12 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
                 "%s.post() - provider=%s", self.formatted_class_name, self.chatbot.provider if self.chatbot else None
             )
             logger.info("%s.post() - data=%s", self.formatted_class_name, self.data)
-            logger.info("%s.post() - account: %s", self.formatted_class_name, self.account)
+            logger.info("%s.post() - account: %s - %s", self.formatted_class_name, self.account, self.account_number)
             logger.info("%s.post() - user: %s", self.formatted_class_name, self.user)
             logger.info(
-                "%s.post() - chat: %s", self.formatted_class_name, self.chat_helper.chat if self.chat_helper else None
+                "%s.post() - chat: %s",
+                self.formatted_class_name,
+                self.chat_helper.chat.account.account_number if self.chat_helper else None,
             )
             logger.info("%s.post() - chatbot: %s", self.formatted_class_name, self.chatbot)
             logger.info("%s.post() - plugins: %s", self.formatted_class_name, self.plugins)
