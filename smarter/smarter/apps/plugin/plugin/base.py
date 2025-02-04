@@ -13,7 +13,7 @@ from rest_framework import serializers
 
 from smarter.apps.account.manifest.models.user_profile import UserProfileModel
 from smarter.apps.account.models import UserProfile
-from smarter.apps.account.utils import smarter_admin_user_profile
+from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.chat.providers.const import OpenAIMessageKeys
 from smarter.common.api import SmarterApiVersions
 
@@ -371,7 +371,7 @@ class PluginBase(ABC):
     def user_profile(self) -> UserProfile:
         """Return the user profile."""
         if not self._user_profile:
-            self._user_profile = smarter_admin_user_profile()
+            self._user_profile = get_cached_smarter_admin_user_profile()
             logger.warning(
                 "PluginBase.user_profile(). session_key=%s UserProfile not set. Falling back to Smarter admin user profile.",
                 self.session_key,

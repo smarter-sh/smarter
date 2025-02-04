@@ -14,7 +14,9 @@ the necessary operations to facilitate cli requests that include:
     - undeploy
 """
 
+import logging
 from typing import Dict, Type
+from urllib.parse import urlparse
 
 from smarter.apps.account.manifest.brokers.account import SAMAccountBroker
 from smarter.apps.account.manifest.brokers.user import SAMUserBroker
@@ -33,6 +35,9 @@ from smarter.apps.plugin.manifest.brokers.sql_connection import (
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib.drf.manifest.brokers.auth_token import SAMSmarterAuthTokenBroker
 from smarter.lib.manifest.broker import AbstractBroker, BrokerNotImplemented
+
+
+logger = logging.getLogger(__name__)
 
 
 class Brokers:
@@ -93,6 +98,27 @@ class Brokers:
     @classmethod
     def all_brokers(cls) -> list[str]:
         return list(cls._brokers.keys())
+
+    @classmethod
+    def from_url(cls, url) -> str:
+        """
+        Returns the kind of broker from the given URL. This is used to
+        determine the broker to use when the kind is not provided in the
+        request.
+
+        example: http://localhost:8000/api/v1/cli/example_manifest/Account/
+        """
+        parsed_url = urlparse(url)
+        if parsed_url:
+            slugs = parsed_url.path.split("/")
+            if not "api" in slugs:
+                return None
+            for slug in slugs:
+                this_slug = str(slug).lower()
+                kind = cls.get_broker_kind(this_slug)
+                if kind:
+                    return kind
+        logger.warning("Brokers.from_url() could not extract manifest kind from URL: %s", url)
 
 
 # an internal self-check to ensure that all SAMKinds have a Broker implementation

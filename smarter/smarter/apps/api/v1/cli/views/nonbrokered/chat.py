@@ -4,6 +4,7 @@
 import hashlib
 import json
 import logging
+from http import HTTPStatus
 from typing import Tuple
 from urllib.parse import urlparse
 
@@ -370,6 +371,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
                 e=e,
                 thing=SmarterJournalThings(SmarterJournalThings.CHAT),
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
         # unescape the chat response body so that it looks
@@ -389,7 +391,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
     def post(self, request, name, *args, **kwargs):
         """
         Smarter API command-line interface 'chat' view. This is a non-brokered view
-        that sends facilitates chat sessions to a ChatBot by creating a http post request
+        that sends chat sessions to a ChatBot by creating a http post request
         to the ChatBot's published url. The chatbot is expected to be a Smarter chatbot
         that is capable of receiving a list of messages and returning a response in the
         smarter.sh/v1 protocol.
@@ -420,6 +422,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
                 e=APIV1CLIChatViewError(f"Chatbot {name} not found."),
                 thing=SmarterJournalThings(SmarterJournalThings.CHAT),
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+                status=HTTPStatus.NOT_FOUND,
             )
 
         # pylint: disable=W0718
@@ -431,4 +434,5 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
                 e=APIV1CLIChatViewError(f"Internal error. {e}"),
                 thing=SmarterJournalThings(SmarterJournalThings.CHAT),
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+                status=HTTPStatus.INTERNAL_SERVER_ERROR,
             )

@@ -94,6 +94,8 @@ class SmarterValidator:
     @staticmethod
     def validate_url(url: str) -> None:
         """Validate URL format"""
+        if not url:
+            raise SmarterValueError(f"Invalid url {url}")
         try:
             if any(local_url in url for local_url in SmarterValidator.LOCAL_URLS):
                 return

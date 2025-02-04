@@ -13,6 +13,9 @@ from smarter.lib.manifest.models import AbstractSAMBase
 class AbstractController(abc.ABC, AccountMixin):
     """Map the Pydantic metadata.kindClass to the corresponding object instance."""
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
     ###########################################################################
     # Abstract property implementations
     ###########################################################################

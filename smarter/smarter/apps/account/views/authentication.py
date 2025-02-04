@@ -56,12 +56,14 @@ class LoginView(SmarterNeverCachedWebView):
                 if authenticated_user is not None:
                     login(request, authenticated_user)
                     return redirect_and_expire_cache(path="/")
-                return HttpResponse("Username and/or password do not match.", status=401)
+                return HttpResponse("Username and/or password do not match.", status=HTTPStatus.BAD_REQUEST)
             except User.DoesNotExist:
-                return HttpResponse(f"Invalid login attempt. Unknown user {email}", status=403)
+                return HttpResponse(f"Invalid login attempt. Unknown user {email}", status=HTTPStatus.FORBIDDEN)
             # pylint: disable=W0718
             except Exception as e:
-                return HttpResponse(f"An unknown error occurred {e.description}", status=500)
+                return HttpResponse(
+                    f"An unknown error occurred {e.description}", status=HTTPStatus.INTERNAL_SERVER_ERROR
+                )
         return HttpResponse("Received invalid responses.", status=HTTPStatus.BAD_REQUEST)
 
 

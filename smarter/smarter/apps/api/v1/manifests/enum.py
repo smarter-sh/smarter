@@ -1,5 +1,8 @@
 """Smarter API V1 Manifests Enumerations."""
 
+import logging
+from urllib.parse import urlparse
+
 from smarter.apps.account.manifest.models.account.const import (
     MANIFEST_KIND as ACCOUNT_MANIFEST_KIND,
 )
@@ -33,6 +36,9 @@ from smarter.lib.drf.manifest.models.auth_token.const import (
 from smarter.lib.manifest.enum import SmarterEnumAbstract
 
 
+logger = logging.getLogger(__name__)
+
+
 class SAMKinds(SmarterEnumAbstract):
     """Smarter manifest kinds enumeration."""
 
@@ -59,3 +65,20 @@ class SAMKinds(SmarterEnumAbstract):
     @classmethod
     def plural_slugs(cls):
         return [f"{slug.lower()}s" for slug in cls.all_values()]
+
+    @classmethod
+    def from_url(cls, url) -> str:
+        """
+        Extract the manifest kind from a URL.
+        example: http://localhost:8000/api/v1/cli/example_manifest/Account/
+        """
+        parsed_url = urlparse(url)
+        if parsed_url:
+            slugs = parsed_url.path.split("/")
+            if not "api" in slugs:
+                return None
+            for slug in slugs:
+                this_slug = str(slug).lower()
+                if this_slug in cls.all_slugs():
+                    return this_slug
+        logger.warning("SAMKinds.from_url() could not extract manifest kind from URL: %s", url)

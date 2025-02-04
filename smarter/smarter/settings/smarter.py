@@ -28,7 +28,7 @@ SMARTER_EMAIL_ADMIN = "lawrence@querium.com"
 
 # Chat settings
 # -----------------------------------------------------------------------------
-SMARTER_CHAT_CACHE_EXPIRATION = 60 * 5  # 5 minutes
+SMARTER_CHAT_CACHE_EXPIRATION = 5  # 5 seconds. just enough to fend off a DDOS attack.
 
 # ChatBot settings
 # -----------------------------------------------------------------------------
