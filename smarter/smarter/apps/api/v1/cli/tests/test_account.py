@@ -140,17 +140,17 @@ class TestApiCliV1Account(ApiV1TestBase):
         # validate our changes
         data = response[SmarterJournalApiResponseKeys.DATA]
         config = data[SAMKeys.SPEC.value]["config"]
-        self.assertEqual(config["companyName"], "test data")
-        self.assertEqual(config["phoneNumber"], "+1 617 834 6172")
-        self.assertEqual(config["address1"], "Avenida Reforma 222")
-        self.assertEqual(config["address2"], "Piso 19")
-        self.assertEqual(config["city"], "CDMX")
-        self.assertEqual(config["state"], "CDMX")
-        self.assertEqual(config["postalCode"], "06600")
-        self.assertEqual(config["country"], "Mexico")
-        self.assertEqual(config["language"], "es-ES")
-        self.assertEqual(config["timezone"], "America/Mexico_City")
-        self.assertEqual(config["currency"], "MXN")
+        self.assertEqual(config["companyName"], self.account.company_name)
+        self.assertEqual(config["phoneNumber"], self.account.phone_number)
+        self.assertEqual(config["address1"], self.account.address1)
+        self.assertEqual(config["address2"], self.account.address2)
+        self.assertEqual(config["city"], self.account.city)
+        self.assertEqual(config["state"], self.account.state)
+        self.assertEqual(config["postalCode"], self.account.postal_code)
+        self.assertEqual(config["country"], self.account.country)
+        self.assertEqual(config["language"], self.account.language)
+        self.assertEqual(config["timezone"], self.account.timezone)
+        self.assertEqual(config["currency"], self.account.currency)
 
     def test_get(self) -> None:
         """Test get command"""

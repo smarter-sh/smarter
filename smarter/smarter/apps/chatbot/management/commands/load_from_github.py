@@ -11,7 +11,7 @@ import yaml
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.utils import account_admin_user
+from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.plugin.static import PluginStatic
@@ -234,7 +234,7 @@ class Command(BaseCommand):
             self.account = Account.objects.get(account_number=account_number)
 
         if not self.user_profile:
-            admin_user = account_admin_user(self.account)
+            admin_user = get_cached_admin_user_for_account(self.account)
             print(f"No user profile found. Defaulting to {admin_user}.")
             self.user_profile = UserProfile.objects.get(account=self.account, user=admin_user)
 

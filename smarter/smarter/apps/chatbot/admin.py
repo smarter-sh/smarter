@@ -2,6 +2,7 @@
 """Admin configuration for the chatbot app."""
 
 from smarter.apps.account.models import UserProfile
+from smarter.apps.account.utils import get_cached_user_profile
 from smarter.lib.django.admin import RestrictedModelAdmin
 
 from .models import (
@@ -35,7 +36,7 @@ class ChatBotAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
+            user_profile = get_cached_user_profile(user=request.user)
             return qs.filter(account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
@@ -57,7 +58,7 @@ class ChatBotRequestsAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
+            user_profile = get_cached_user_profile(user=request.user)
             return qs.filter(chatbot__account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
@@ -77,7 +78,7 @@ class ChatBotCustomDomainAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
+            user_profile = get_cached_user_profile(user=request.user)
             return qs.filter(account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
@@ -97,7 +98,7 @@ class ChatBotCustomDomainDNSAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
+            user_profile = get_cached_user_profile(user=request.user)
             return qs.filter(custom_domain__account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
@@ -117,7 +118,7 @@ class ChatBotAPIKeyAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
+            user_profile = get_cached_user_profile(user=request.user)
             return qs.filter(chatbot__account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
@@ -136,7 +137,7 @@ class ChatBotPluginAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
+            user_profile = get_cached_user_profile(user=request.user)
             return qs.filter(chatbot__account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()
@@ -156,7 +157,7 @@ class ChatBotFunctionsAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
+            user_profile = get_cached_user_profile(user=request.user)
             return qs.filter(chatbot__account=user_profile.account)
         except UserProfile.DoesNotExist:
             return qs.none()

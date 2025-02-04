@@ -2,8 +2,10 @@
 
 import json
 import logging
+import re
 from http import HTTPStatus
 from typing import Type
+from urllib.parse import ParseResult, urlparse
 
 import yaml
 from django.http import QueryDict
@@ -176,10 +178,22 @@ class CliBaseApiView(APIView, AccountMixin):
             self._manifest_kind = str(self.manifest_data.get("kind", None))
         if not self._manifest_kind and self.loader:
             self._manifest_kind = str(self.loader.manifest_kind) if self.loader else None
-        # resolve any inconsistencies in the casing of the manifest kind
-        # that we might have received.
-        # example: 'chatbot' vs 'ChatBot', 'plugin_data_sql_connection' vs 'PluginDataSqlConnection'
-        return Brokers.get_broker_kind(self._manifest_kind)
+
+        # if we still don't have a manifest kind, then we should
+        # analyze the url path to determine the manifest kind.
+        # urls:
+        # - http://testserver/api/v1/cli/logs/Chatbot/?name=TestChatBot
+        # - http://testserver/api/v1/cli/chat/config/TestChatBot/
+        if not self._manifest_kind:
+            self._manifest_kind = SAMKinds.from_url(self.url)
+            if self._manifest_kind:
+                logger.warning("setting manifest kind to %s from analysis of url %s", self._manifest_kind, self.url)
+
+        # may or may not have a manifest kind at this point.
+        # anti examples:
+        # - http://testserver/api/v1/cli/whoami/
+        # - http://testserver/api/v1/cli/apply/
+        return self._manifest_kind
 
     @property
     def command(self) -> SmarterJournalCliCommands:
@@ -187,18 +201,14 @@ class CliBaseApiView(APIView, AccountMixin):
         Translate the request route into a SmarterJournalCliCommands enum
         instance. For example, if the route is '/api/v1/cli/apply/', then
         the corresponding command will be SmarterJournalCliCommands.APPLY.
+
+        url: http://testserver/api/v1/cli/logs/Chatbot/?name=TestChatBot
         """
-
-        def get_slug(path):
-            parts = path.split("/")
-            try:
-                slug_index = parts.index("cli") + 1
-                return parts[slug_index]
-            except ValueError:
-                return None
-
-        this_command = get_slug(self.request.path)
-        return SmarterJournalCliCommands(this_command)
+        match = re.search(r"/cli/([^/]+)/", self.url or "")
+        if match:
+            _command = match.group(1)
+            return SmarterJournalCliCommands(_command)
+        raise APIV1CLIViewError(f"Could not determine command from url: {self.url}")
 
     @property
     def url(self) -> str:
@@ -209,6 +219,10 @@ class CliBaseApiView(APIView, AccountMixin):
         https://platform.smarter.sh/api/v1/cli/chat/config/example/?new_session=false&uid=Lawrences-Mac-Studio.local-c6%253A6b%253A2e%253A7a%253A3d%253A6c
         """
         return self.request.build_absolute_uri()
+
+    @property
+    def url_parsed(self) -> ParseResult:
+        return urlparse(self.url) if self.url else None
 
     # pylint: disable=too-many-return-statements,too-many-branches
     def dispatch(self, request, *args, **kwargs):
@@ -241,6 +255,14 @@ class CliBaseApiView(APIView, AccountMixin):
             It provides a service interface that 'brokers' the http request for the
             underlying object that provides the object-specific service (create, update, get, delete, etc).
         """
+        try:
+            AccountMixin.__init__(self, user=request.user)
+            if self.user.is_authenticated and not self.user_profile:
+                raise APIV1CLIViewError("Could not find account for user.")
+        except SmarterExceptionBase as e:
+            return SmarterJournaledJsonErrorResponse(
+                request=request, thing=self.manifest_kind, command=self.command, e=e, status=HTTPStatus.FORBIDDEN
+            )
         # Parse the query string parameters from the request into a dictionary.
         # This is used to pass additional parameters to the child view's post method.
         self._manifest_name = self.params.get("name", None)
@@ -251,18 +273,12 @@ class CliBaseApiView(APIView, AccountMixin):
                     raise APIV1CLIViewError("Unauthorized access attempted.")
                 except APIV1CLIViewError as e:
                     return SmarterJournaledJsonErrorResponse(
-                        request=request, thing=self.manifest_kind, command=None, e=e, status=HTTPStatus.FORBIDDEN
+                        request=request,
+                        thing=self.manifest_kind,
+                        command=self.command,
+                        e=e,
+                        status=HTTPStatus.FORBIDDEN,
                     )
-
-        # set all of our identifying attributes from the request.
-        self._user = request.user
-        try:
-            if self.user.is_authenticated and not self.user_profile:
-                raise APIV1CLIViewError("Could not find account for user.")
-        except SmarterExceptionBase as e:
-            return SmarterJournaledJsonErrorResponse(
-                request=request, thing=self.manifest_kind, command=None, e=e, status=HTTPStatus.FORBIDDEN
-            )
 
         user_agent = request.headers.get("User-Agent", "")
         if "Go-http-client" not in user_agent:
@@ -275,7 +291,7 @@ class CliBaseApiView(APIView, AccountMixin):
                 return SmarterJournaledJsonErrorResponse(
                     request=request,
                     thing=self.manifest_kind,
-                    command=None,
+                    command=self.command,
                     e=SAMBadRequestError(
                         f"Unsupported manifest kind: {self.manifest_kind}. should be one of {SAMKinds.all_values()}"
                     ),
@@ -304,7 +320,11 @@ class CliBaseApiView(APIView, AccountMixin):
                     raise APIV1CLIViewError("Could not parse manifest. Valid formats: yaml, json.") from e
                 except APIV1CLIViewError as ex:
                     return SmarterJournaledJsonErrorResponse(
-                        request=request, thing=self.manifest_kind, command=None, e=ex, status=HTTPStatus.BAD_REQUEST
+                        request=request,
+                        thing=self.manifest_kind,
+                        command=self.command,
+                        e=ex,
+                        status=HTTPStatus.BAD_REQUEST,
                     )
 
         # generic exception handler that simply ensures that in all cases

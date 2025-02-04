@@ -15,6 +15,7 @@ from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 
 from smarter.apps.account.models import UserProfile
+from smarter.apps.account.utils import get_cached_user_profile
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.serializers import PluginMetaSerializer
@@ -50,7 +51,7 @@ class PluginCloneView(SmarterAuthenticatedAPIView):
     """PluginStatic clone view for smarter api."""
 
     def post(self, request, plugin_id, new_name):
-        user_profile = UserProfile.objects.get(user=request.user)
+        user_profile = get_cached_user_profile(user=request.user)
         plugin = PluginStatic(plugin_id=plugin_id, user_profile=user_profile)
         new_id = plugin.clone(new_name)
         return redirect("/plugins/" + str(new_id) + "/")
@@ -72,7 +73,7 @@ class AddPluginExamplesView(SmarterAuthenticatedAPIView):
     def post(self, request, user_id=None):
         try:
             user = User.objects.get(id=user_id) if user_id else request.user
-            user_profile = UserProfile.objects.get(user=user)
+            user_profile = get_cached_user_profile(user=user)
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -131,7 +132,7 @@ def get_plugin(request, plugin_id):
     plugin: PluginStatic = None
 
     try:
-        user_profile = UserProfile.objects.get(user=request.user)
+        user_profile = get_cached_user_profile(user=request.user)
     except UserProfile.DoesNotExist:
         return JsonResponse({"error": "User not found"}, status=404)
 
@@ -152,7 +153,7 @@ def get_plugin(request, plugin_id):
 def create_plugin(request, data: dict = None):
     """Create a plugin from a json representation in the body of the request."""
     try:
-        user_profile = UserProfile.objects.get(user=request.user)
+        user_profile = get_cached_user_profile(user=request.user)
     except UserProfile.DoesNotExist:
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
 
@@ -187,7 +188,7 @@ def update_plugin(request):
     """update a plugin from a json representation in the body of the request."""
 
     try:
-        user_profile = UserProfile.objects.get(user=request.user)
+        user_profile = get_cached_user_profile(user=request.user)
     except UserProfile.DoesNotExist:
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
 
@@ -216,7 +217,7 @@ def update_plugin(request):
 def delete_plugin(request, plugin_id):
     """delete a plugin by id."""
     try:
-        user_profile = UserProfile.objects.get(user=request.user)
+        user_profile = get_cached_user_profile(user=request.user)
     except UserProfile.DoesNotExist:
         return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
 

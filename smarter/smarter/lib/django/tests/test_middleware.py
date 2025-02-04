@@ -1,6 +1,7 @@
 """Test BlockSensitiveFilesMiddleware."""
 
 import unittest
+from http import HTTPStatus
 
 from django.http import HttpResponse
 from django.test import RequestFactory
@@ -19,10 +20,10 @@ class TestBlockSensitiveFilesMiddleware(unittest.TestCase, AccountMixin):
     def test_non_sensitive_file(self):
         request = self.factory.get("/non_sensitive_file.txt")
         response = self.middleware(request)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_sensitive_file(self):
         for sensitive_file in self.middleware.sensitive_files:
             request = self.factory.get("/" + sensitive_file)
             response = self.middleware(request)
-            self.assertEqual(response.status_code, 403)
+            self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)

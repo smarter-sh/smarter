@@ -9,7 +9,7 @@ from pathlib import Path
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.utils import account_admin_user
+from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.apps.chat.models import Chat
 from smarter.apps.chat.providers.providers import chat_providers
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
@@ -45,7 +45,7 @@ class Command(BaseCommand):
         if not account:
             raise ValueError(f"Account not found: {SMARTER_ACCOUNT_NUMBER}")
 
-        user = account_admin_user(account)
+        user = get_cached_admin_user_for_account(account)
         if not user:
             raise ValueError(f"User not found for account: {account}")
 

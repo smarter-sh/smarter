@@ -22,12 +22,12 @@
     v0.5.0:       ./test/events/langchain.response.v0.5.0.json
 -----------------------------------------------------------------------------*/
 import { getCookie } from "../../cookies.js";
-import { CSRF_COOKIE_NAME, SESSION_COOKIE_NAME } from "../../constants.js";
+import { CSRF_COOKIE_NAME } from "../../constants.js";
 
 function requestBodyFactory(messages, session_key) {
 
   const retval = {
-    [SESSION_COOKIE_NAME]: session_key,
+    "session_key": session_key,
     "messages": messages,
   };
   return JSON.stringify(retval);
