@@ -87,6 +87,11 @@ class SmarterJournaledJsonResponse(JsonResponse):
             try:
                 return HttpAnonymousRequestSerializer(request).data
             except AttributeError:
+                url = request.build_absolute_uri() if request else "Unknown URL"
+                logger.error(
+                    "SmarterJournaledJsonResponse() HttpAnonymousRequestSerializer could not serialize request data for %s",
+                    url,
+                )
                 return {}
 
         def authenticated_serialized_request(request) -> dict:
@@ -96,6 +101,11 @@ class SmarterJournaledJsonResponse(JsonResponse):
             try:
                 return HttpAuthenticatedRequestSerializer(request).data
             except AttributeError:
+                url = request.build_absolute_uri() if request else "Unknown URL"
+                logger.error(
+                    "SmarterJournaledJsonResponse() HttpAuthenticatedRequestSerializer could not serialize request data for %s",
+                    url,
+                )
                 return {}
 
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_JOURNAL):
