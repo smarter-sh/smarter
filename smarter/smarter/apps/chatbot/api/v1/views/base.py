@@ -6,6 +6,7 @@ from http import HTTPStatus
 from typing import List
 
 import waffle
+from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -179,15 +180,14 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
             logger.info(f"{self.formatted_class_name}: {message}")
 
-    def dispatch(self, request, *args, name: str = None, **kwargs):
+    def dispatch(self, request: WSGIRequest, *args, name: str = None, **kwargs):
         AccountMixin.__init__(self, user=request.user)
-        self.request = self.request or request
-        self._user = self._user or request.user
+        self.request = request
         self._chatbot_id = kwargs.get("chatbot_id")
         if self._chatbot_id:
             kwargs.pop("chatbot_id")
         if self.chatbot:
-            self._account = self.chatbot.account
+            self.account = self.chatbot.account
         else:
             self._name = self._name or name
             self._url = self.request.build_absolute_uri()
@@ -237,6 +237,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         self.plugins = ChatBotPlugin().plugins(chatbot=self.chatbot)
 
         try:
+            logger.info("%s.dispatch(): request.body=%s", self.formatted_class_name, request.body)
             self.data = json.loads(request.body)
         except json.JSONDecodeError:
             self.data = {}

@@ -14,7 +14,6 @@ from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
 )
 
-from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import (
     CHARGE_TYPE_PLUGIN,
     CHARGE_TYPE_PROMPT_COMPLETION,
@@ -290,7 +289,7 @@ class ChatProviderBase(ProviderDbMixin):
 
     @property
     def ready(self) -> bool:
-        return self.chat and self.data and self.user and self.account
+        return self.chat and self.data and self.account
 
     @property
     def messages(self) -> List[Dict[str, str]]:

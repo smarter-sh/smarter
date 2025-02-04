@@ -480,7 +480,7 @@ class ChatBotHelper(SmarterRequestMixin):
         self._chatbot_id: int = None
         self._name: str = None
         self._err: str = None
-        super().__init__(request)
+        super().__init__(request=request)
         self.helper_logger(f"__init__() to_json(): {json.dumps(self.to_json(), indent=4, sort_keys=True)}")
         if not chatbot_id and not name and not self.is_chatbot:
             # keep in mind that self.is_chatbot comes from SmartRequestMixin and is

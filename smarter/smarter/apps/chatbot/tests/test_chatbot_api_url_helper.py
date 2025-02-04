@@ -6,12 +6,12 @@ import hashlib
 import random
 import unittest
 
+from django.core.handlers.wsgi import WSGIRequest
 from django.test import RequestFactory
 
 from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
 from smarter.apps.chatbot.models import ChatBot, ChatBotCustomDomain, ChatBotHelper
 from smarter.common.conf import settings as smarter_settings
-from smarter.lib.django.validators import SmarterValidator
 
 
 # pylint: disable=too-many-instance-attributes
@@ -57,7 +57,7 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
 
     def test_valid_url(self):
         """Test a url for the chatbot we created."""
-        request = self.wsgi_request_factory.get(self.chatbot.url, SERVER_NAME="api.localhost:8000")
+        request: WSGIRequest = self.wsgi_request_factory.get(self.chatbot.url, SERVER_NAME="api.localhost:8000")
         helper = ChatBotHelper(request=request, chatbot_id=self.chatbot.id)
 
         self.assertTrue(
@@ -84,7 +84,7 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
 
     def test_non_api_url(self):
         """Test a non-api url."""
-        request = self.wsgi_request_factory.get("/", SERVER_NAME="localhost:8000")
+        request: WSGIRequest = self.wsgi_request_factory.get("/", SERVER_NAME="localhost:8000")
         helper = ChatBotHelper(request=request, chatbot_id=None)
 
         self.assertFalse(helper.is_chatbot)
@@ -100,7 +100,7 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
         """Test a custom domain."""
         self.assertIsNotNone(self.custom_chatbot.id)
         url = self.custom_chatbot.url
-        request = self.wsgi_request_factory.get(url, SERVER_NAME="smarter.querium.com")
+        request: WSGIRequest = self.wsgi_request_factory.get(url, SERVER_NAME="smarter.querium.com")
         helper = ChatBotHelper(request=request, chatbot_id=self.custom_chatbot.id)
 
         chatbot = helper.chatbot

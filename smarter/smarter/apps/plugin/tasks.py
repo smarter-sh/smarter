@@ -8,6 +8,7 @@ from smarter.apps.account.utils import (
     get_cached_user_for_user_id,
     get_cached_user_profile,
 )
+from smarter.apps.plugin.plugin.base import SmarterPluginError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.smarter_celery import app
 
@@ -36,7 +37,18 @@ def create_plugin_selector_history(*args, **kwargs):
         user_profile = get_cached_user_profile(user)
 
     plugin_id = kwargs.get("plugin_id")
-    plugin = PluginStatic(plugin_id=plugin_id, user_profile=user_profile)
+    try:
+        # to catch a race situation in unit tests.
+        plugin = PluginStatic(plugin_id=plugin_id, user_profile=user_profile)
+    except SmarterPluginError as e:
+        logger.error(
+            "%s plugin_id: %s, user_profile: %s, error: %s",
+            formatted_text(module_prefix + "create_plugin_selector_history()"),
+            plugin_id,
+            user_profile,
+            e,
+        )
+        return
 
     logger.info(
         "%s plugin_id: %s, user_profile: %s",
