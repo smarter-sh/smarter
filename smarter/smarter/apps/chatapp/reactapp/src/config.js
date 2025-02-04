@@ -42,7 +42,7 @@ export async function fetchConfig() {
     "Origin": window.location.origin,
   };
   const body = {
-    SESSION_COOKIE_NAME: session_key
+    [SESSION_COOKIE_NAME]: session_key
   };
   const init = {
     method: "POST",

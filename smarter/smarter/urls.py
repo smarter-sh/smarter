@@ -24,8 +24,8 @@ from smarter.apps.docs.views.webserver import FaviconView, RobotsTxtView, Sitema
 
 admin.site = restricted_site
 
-# This will load the admin modules of all installed apps
-# and register their models with your custom admin site
+# Load the admin modules of all installed apps
+# and register their models with the custom admin site
 admin.autodiscover()
 
 
@@ -34,25 +34,34 @@ def root_redirector(request):
     Handles traffic sent to the root of the website. Requests
     can take the form of:
     1. a chatbot endpoint if the user is not authenticated and the
-       url is of the form https://example.3141-5926-5359.api.smarter.sh/,
+       url is of any of the following forms
+       - https://example.3141-5926-5359.api.smarter.sh/
+       - https://example.3141-5926-5359.api.smarter.sh/config/
+       - localhost:8000/api/v1/chatbots/1/chat/
+       - localhost:8000/api/v1/chatbots/1/chat/config/
+       - localhost:8000/api/v1/cli/chat/example/
+       - localhost:8000/api/v1/cli/chat/example/config/
     2. the dashboard if the user is authenticated,
     3. otherwise to the Wagtail docs homepage.
     """
-    # 1. check if the user is authenticated, if so redirect to the dashboard
-    if request.user.is_authenticated:
-        return redirect("/dashboard/")
-
-    # 2. check if the url is of the form https://example.3141-5926-5359.api.smarter.sh/
+    # 1. check if the url is a chatbot endpoint
     chatbot_helper = ChatBotHelper(request=request)
     if chatbot_helper and chatbot_helper.chatbot:
         view = DefaultChatBotApiView.as_view()
         return view(request, chatbot_id=chatbot_helper.chatbot.id)
+
+    # 2. check if the user is authenticated, if so redirect to the dashboard
+    if request.user.is_authenticated:
+        return redirect("/dashboard/")
 
     # 3. otherwise redirect to the Wagtail docs homepage
     return redirect("/docs/")
 
 
 def config_redirector(request):
+    """
+    Handles traffic sent to the config endpoints of the website.
+    """
     chatbot_helper = ChatBotHelper(request=request)
     if chatbot_helper and chatbot_helper.chatbot:
         view = ChatConfigView.as_view()

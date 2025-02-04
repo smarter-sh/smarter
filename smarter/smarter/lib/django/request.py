@@ -110,7 +110,9 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
 
         if not request:
             return None
-        self.helper_logger(f"@request.setter={self._request.build_absolute_uri()}")
+
+        if not self.qualified_request:
+            return None
 
         # validate, standardize and parse the request url string into a ParseResult.
         # Note that the setter and getter both work with strings
@@ -140,6 +142,37 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
     @property
     def smarter_request(self) -> WSGIRequest:
         return self._request
+
+    @property
+    def qualified_request(self) -> bool:
+        """
+        A cursory screening of the wsgi request object to look for
+        any disqualifying conditions that confirm that this is not a
+        request that we are interested in.
+        """
+        if not self._request:
+            return False
+        if self._request.path in ["/favicon.ico", "/robots.txt", "/sitemap.xml"]:
+            return False
+
+        static_extensions = [
+            ".css",
+            ".js",
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".gif",
+            ".svg",
+            ".woff",
+            ".woff2",
+            ".ttf",
+            ".eot",
+            ".ico",
+        ]
+        if any(self._request.path.endswith(ext) for ext in static_extensions):
+            return False
+
+        return True
 
     @property
     def url(self) -> str:
@@ -321,7 +354,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         """
         Returns True if the url resolves to a chatbot.
         """
-        return (
+        return self.qualified_request and (
             self.is_chatbot_named_url
             or self.is_chatbot_sandbox_url
             or self.is_chatbot_smarter_api_url
@@ -405,8 +438,9 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
           https://<environment_domain>/chatbots/<name>/config/
           path_parts: ['', 'chatbots', 'example', 'config', '']
         """
+        if not self.qualified_request:
+            return False
         if not self.url:
-            self.helper_logger(f"is_chatbot_sandbox_url() - not self.url: {self.url}")
             return False
 
         path_parts = self.url_path_parts
