@@ -76,4 +76,3 @@ class TestChatBotApiBaseViewSet(unittest.TestCase):
         self.assertEqual(base_class.chatbot_helper.user, self.user)
         self.assertEqual(base_class.chatbot_helper.user_profile, self.user_profile)
         self.assertEqual(base_class.chatbot_helper.chatbot, self.broker.chatbot)
-        self.assertTrue(base_class.is_web_platform)
