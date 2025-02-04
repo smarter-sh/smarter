@@ -10,10 +10,10 @@ from smarter.apps.account.manifest.enum import SAMUserSpecKeys
 from smarter.apps.account.manifest.models.user.const import MANIFEST_KIND
 from smarter.apps.account.manifest.models.user.model import SAMUser
 from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account, AccountContact, UserProfile
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.django.serializers import UserSerializer
-from smarter.lib.django.user import User, UserType
+from smarter.lib.django.user import get_user_model
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
@@ -32,6 +32,7 @@ from smarter.lib.manifest.enum import (
 from smarter.lib.manifest.loader import SAMLoader
 
 
+User = get_user_model()
 MAX_RESULTS = 1000
 
 
@@ -59,8 +60,7 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
     # override the base abstract manifest model with the User model
     _manifest: SAMUser = None
     _pydantic_model: typing.Type[SAMUser] = SAMUser
-    _user: UserType = None
-    _username: str = None
+    _account_contact: AccountContact = None
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -94,21 +94,33 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
             file_path=file_path,
             url=url,
         )
-        self._username: str = self.params.get("username", None)
-        if self._username:
+        AccountMixin.__init__(self, account=account, user=request.user)
+        username: str = self.params.get("username", self.user.username if self.user else None)
+        if username:
             try:
-                self._user = None
-                self._user_profile = UserProfile.objects.get(user=self.user, account=self.account)
-            except UserProfile.DoesNotExist as e:
+                self.user = User.objects.get(username=username)
+            except User.DoesNotExist as e:
                 raise SAMBrokerErrorNotFound(
-                    message=f"{self.kind} {self._username} not found in your account.",
-                    thing=self.kind,
-                    command=SmarterJournalCliCommands.GET,
+                    f"Failed to load {self.kind} {username}. Not found", thing=self.kind
                 ) from e
 
     @property
+    def account_contact(self) -> AccountContact:
+        if self._account_contact:
+            return self._account_contact
+        if not self.user:
+            return None
+        if not self.user.is_authenticated:
+            return None
+        try:
+            self._account_contact = AccountContact.objects.get(account=self.account, email=self.user.email)
+        except AccountContact.DoesNotExist:
+            pass
+        return self._account_contact
+
+    @property
     def username(self) -> str:
-        return self._username
+        return self.user.username if self.user else None
 
     def manifest_to_django_orm(self) -> dict:
         """
@@ -196,11 +208,11 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
             },
             SAMKeys.SPEC.value: {
                 SAMUserSpecKeys.CONFIG.value: {
-                    "firstName": self.user.first_name if self.user else None or "John",
-                    "lastName": self.user.last_name if self.user else None or "Doe",
-                    "email": self.user.email if self.user else None or "joe@mail.com",
-                    "isStaff": self.user.is_staff if self.user else None or False,
-                    "isActive": self.user.is_active if self.user else None or True,
+                    "firstName": self.account_contact.first_name if self.account_contact else "John",
+                    "lastName": self.account_contact.last_name if self.account_contact else "Doe",
+                    "email": self.user.email if self.user and self.user.is_authenticated else "joe@mail.com",
+                    "isStaff": self.user.is_staff if self.user and self.user.is_authenticated else False,
+                    "isActive": self.user.is_active if self.user and self.user.is_authenticated else True,
                 },
             },
         }
@@ -219,13 +231,13 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
                 model_dump = UserSerializer(user).data
                 if not model_dump:
                     raise SAMUserBrokerError(
-                        f"Model dump failed for {self.kind} {user.name}", thing=self.kind, command=command
+                        f"Model dump failed for {self.kind} {user.username}", thing=self.kind, command=command
                     )
                 camel_cased_model_dump = self.snake_to_camel(model_dump)
                 data.append(camel_cased_model_dump)
             except Exception as e:
                 raise SAMUserBrokerError(
-                    f"Model dump failed for {self.kind} {user.name}", thing=self.kind, command=command
+                    f"Model dump failed for {self.kind} {user.username}", thing=self.kind, command=command
                 ) from e
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
