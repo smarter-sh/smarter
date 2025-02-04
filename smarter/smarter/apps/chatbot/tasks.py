@@ -496,8 +496,9 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
 
     try:
         chatbot = ChatBot.objects.get(id=chatbot_id)
-    except ChatBot.DoesNotExist as e:
-        raise ChatBotTaskError(f"Chatbot {chatbot_id} not found.") from e
+    except ChatBot.DoesNotExist:
+        logger.error("%s Chatbot %s not found. Nothing to do, returning.", fn_name, chatbot_id)
+        return None
 
     # Prerequisites.
     # ensure that the customer API domain has an A record that we can use to create the chatbot's A record

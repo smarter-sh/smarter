@@ -49,6 +49,8 @@ from smarter.lib.django.admin import RestrictedModelAdmin, SuperUserOnlyModelAdm
 from smarter.lib.django.user import User
 from smarter.lib.drf.admin import SmarterAuthTokenAdmin
 from smarter.lib.drf.models import SmarterAuthToken
+from smarter.lib.journal.admin import SAMJournalAdmin
+from smarter.lib.journal.models import SAMJournal
 
 from .models import EmailContactList
 
@@ -154,6 +156,8 @@ restricted_site.register(PluginMeta, PluginAdmin)
 restricted_site.register(PluginDataSqlConnection, PluginDataSqlConnectionAdmin)
 restricted_site.register(PluginSelectorHistory, PluginSelectionHistoryAdmin)
 
+# Journal Models
+restricted_site.register(SAMJournal, SAMJournalAdmin)
 
 # All remaining models are registered with the SuperUserOnlyModelAdmin
 # to restrict access to superusers only

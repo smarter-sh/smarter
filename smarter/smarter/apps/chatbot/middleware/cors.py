@@ -10,14 +10,20 @@ import re
 from typing import Pattern, Sequence
 from urllib.parse import SplitResult, urlparse, urlsplit
 
+import waffle
 from corsheaders.conf import conf
 from corsheaders.middleware import CorsMiddleware as DjangoCorsMiddleware
+from django.conf import settings
 from django.http import HttpRequest
 
 from smarter.apps.chatbot.models import ChatBot, ChatBotHelper
+from smarter.common.const import SmarterWaffleSwitches
 
 
 logger = logging.getLogger(__name__)
+
+if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+    logger.info("Loading smarter.apps.chatbot.middleware.cors.CorsMiddleware")
 
 
 class CorsMiddleware(DjangoCorsMiddleware):
@@ -39,13 +45,16 @@ class CorsMiddleware(DjangoCorsMiddleware):
 
     @url.setter
     def url(self, url: SplitResult = None):
-        # if url == self._url:
-        #     return
 
-        # reduce the ulr to its base url.
-        self._url = url
+        url_string = url.geturl()
+        if url_string in settings.CORS_ALLOWED_ORIGINS:
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+                logger.info("CorsMiddleware() url: %s is an allowed origin", url.geturl())
+            return None
 
         # get the chatbot helper for the url and try to find the chatbot
+        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+            logger.info("CorsMiddleware() instantiating ChatBotHelper() for url: %s", url.geturl())
         self.helper = ChatBotHelper(url=url.geturl())
         self._chatbot = self.helper.chatbot if self.helper.chatbot else None
 
@@ -55,6 +64,9 @@ class CorsMiddleware(DjangoCorsMiddleware):
         # will remain consistent.
         if self.helper and self.helper.chatbot:
             self._url = self.helper.chatbot.url
+            return None
+
+        self._url = url
 
     @property
     def CORS_ALLOWED_ORIGINS(self) -> list[str] | tuple[str]:

@@ -10,7 +10,7 @@ from django.test import Client
 from django.urls import reverse
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.utils import account_admin_user
+from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
 from smarter.lib.drf.models import SmarterAuthToken
@@ -60,7 +60,7 @@ class Command(BaseCommand):
         account_number = options["account_number"]
 
         account = Account.get_by_account_number(account_number)
-        user = account_admin_user(account=account)
+        user = get_cached_admin_user_for_account(account=account)
         if username != user.get_username():
             try:
                 user_profile = UserProfile.objects.get(account=account, user__username=username)
