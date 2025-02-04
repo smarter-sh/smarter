@@ -150,8 +150,6 @@ class TestChatBotTasks(unittest.TestCase):
         self.assertTrue(SmarterValidator.is_valid_url(self.chatbot.url_chatbot))
         print("self.chatbot.url_chatapp", self.chatbot.url_chatapp)
         self.assertTrue(SmarterValidator.is_valid_url(self.chatbot.url_chatapp))
-        print("self.chatbot.get_by_url(self.chatbot.url)", self.chatbot.get_by_url(self.chatbot.url))
-        self.assertIsInstance(self.chatbot.get_by_url(self.chatbot.url), ChatBot)
         print("self.chatbot.mode(self.chatbot.url)", self.chatbot.mode(self.chatbot.url))
         self.assertEqual(self.chatbot.mode(self.chatbot.url), "sandbox")
 

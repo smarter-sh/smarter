@@ -4,7 +4,8 @@ import logging
 
 from django.conf import settings
 
-from .models import Account, UserProfile
+from .models import UserProfile
+from .utils import get_cached_user_profile
 
 
 logger = logging.getLogger(__name__)
@@ -12,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 def base(request):
     """Base context processor for templates that inherit from account/base.html"""
-    account: Account = None
     account_context = {
         "account": {
             "registration_url": "/register/",
@@ -29,15 +29,14 @@ def base(request):
     }
     if request.user.is_authenticated:
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
-            account = Account.objects.get(id=user_profile.account_id)
+            user_profile = get_cached_user_profile(user=request.user)
         except UserProfile.DoesNotExist:
             logger.warning("UserProfile.DoesNotExist: user_profile not found for user %s", request.user)
 
         account_authenticated_context = {
             "account_authenticated": {
                 "user": request.user,
-                "account": account or None,
+                "account": user_profile.account or None,
             }
         }
         return {**account_context, **account_authentication_context, **account_authenticated_context}

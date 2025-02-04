@@ -11,12 +11,13 @@ from django.db import models
 from rest_framework import serializers
 
 from smarter.apps.account.models import Account
-from smarter.apps.chatbot.models import ChatBot
+from smarter.apps.chatbot.models import ChatBot, ChatBotHelper
 from smarter.apps.plugin.models import PluginMeta
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
+from smarter.common.const import SmarterWaffleSwitches
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.model_helpers import TimestampedModel
-from smarter.lib.django.request import SmarterRequestHelper
+from smarter.lib.django.request import SmarterRequestMixin
 
 
 logger = logging.getLogger(__name__)
@@ -27,14 +28,14 @@ class Chat(TimestampedModel):
 
     class Meta:
         verbose_name_plural = "Chats"
-        unique_together = (SMARTER_CHAT_SESSION_KEY_NAME, "url")
+        unique_together = ("session_key", "url")
 
-    session_key = models.CharField(max_length=255, blank=True, null=True)
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, blank=True, null=True)
-    chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE, blank=True, null=True)
-    ip_address = models.GenericIPAddressField(blank=True, null=True)
-    user_agent = models.CharField(max_length=255, blank=True, null=True)
-    url = models.URLField(blank=True, null=True)
+    session_key = models.CharField(max_length=255, blank=False, null=False, unique=True)
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, blank=False, null=False)
+    chatbot = models.ForeignKey(ChatBot, on_delete=models.CASCADE, blank=False, null=False)
+    ip_address = models.GenericIPAddressField(blank=False, null=False)
+    user_agent = models.CharField(max_length=255, blank=False, null=False)
+    url = models.URLField(blank=False, null=False)
 
     def __str__(self):
         # pylint: disable=E1136
@@ -137,53 +138,56 @@ class ChatPluginUsageSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class ChatHelper(SmarterRequestHelper):
+class ChatHelper(SmarterRequestMixin):
     """
     Helper class for working with Chat objects. Provides methods for
     creating and retrieving Chat objects and managing the cache.
     """
 
-    _session_key: str = None
     _chat: Chat = None
     _chatbot: ChatBot = None
+    _chatbot_helper: ChatBotHelper = None
     _clean_url: str = None
 
-    def __init__(self, session_key: str, request, chatbot: ChatBot = None) -> None:
+    # FIX NOTE: remove session_key
+    def __init__(self, request, session_key: str, chatbot: ChatBot = None) -> None:
         super().__init__(request)
-        self._session_key = session_key
-        self._chatbot = chatbot
-        self._chat = self.get_cached_chat()
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
-            logger.info(
-                "%s - initialized chat: %s session_key: %s", self.formatted_class_name, self.chat, self.chat.session_key
+        self._chat: Chat = None
+        self._chatbot: ChatBot = None
+        self._chatbot_helper: ChatBotHelper = None
+        self._clean_url: str = None
+
+        if not session_key and not chatbot:
+            raise SmarterValueError(
+                f"{self.formatted_class_name} either a session_key or a ChatBot instance is required"
             )
+
+        if chatbot:
+            self._chatbot = chatbot
+            self.account = chatbot.account
+
+        self._chat = self.get_cached_chat()
+
+    def __str__(self):
+        return self.session_key
 
     @property
     def chat(self):
         return self._chat
 
     @property
-    def url(self) -> str:
-        if self._clean_url:
-            return self._clean_url
-
-        super_url = super().url
-        if super_url is None:
-            return None
-        parsed_url = urllib.parse.urlparse(super_url)
-        self._clean_url = parsed_url._replace(query="").geturl()
-        if self._clean_url.endswith("/config/"):
-            self._clean_url = self._clean_url[:-8]
-
-        return self._clean_url
-
-    @property
-    def session_key(self):
-        return self._session_key
+    def chatbot_helper(self) -> ChatBotHelper:
+        if self._chatbot_helper:
+            return self._chatbot_helper
+        if self.chatbot:
+            self._chatbot_helper = ChatBotHelper(request=self.request, chatbot_id=self.chatbot.id)
+        return self._chatbot_helper
 
     @property
     def chatbot(self):
-        return self._chatbot
+        if self._chatbot:
+            return self._chatbot
+        self._chatbot = self.chatbot_helper.chatbot if self._chatbot_helper else None
 
     @property
     def formatted_class_name(self):
@@ -221,33 +225,57 @@ class ChatHelper(SmarterRequestHelper):
             "chatbot_request_history": None,  # ChatBotRequests
         }
 
+    @property
+    def unique_client_string(self):
+        if not self.account:
+            return f"{self.url}{self.user_agent}{self.ip_address}"
+        return f"{self.account.account_number}{self.url}{self.user_agent}{self.ip_address}"
+
     def get_cached_chat(self) -> Chat:
         """
         Get the chat instance for the current request.
         """
-        chat = cache.get(self.session_key)
-
-        if isinstance(chat, dict):
-            chat = Chat(**chat)
-
+        chat: Chat = cache.get(self.session_key)
         if chat:
             if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
                 logger.info(
-                    "%s - retrieved cached chat: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
+                    "%s - retrieved cached Chat: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
                 )
             return chat
 
-        chat, created = Chat.objects.get_or_create(session_key=self.session_key)
-        if created:
-            chat.url = self.url
-            chat.ip_address = self.ip_address
-            chat.user_agent = self.user_agent
-            chat.chatbot = self.chatbot
-            chat.save()
-        else:
+        if self.session_key:
+            try:
+                chat = Chat.objects.get(session_key=self.session_key)
+                if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+                    logger.info(
+                        "%s - retrieved Chat instance: %s session_key: %s",
+                        self.formatted_class_name,
+                        chat,
+                        chat.session_key,
+                    )
+            except Chat.DoesNotExist:
+                pass
+
+        if not chat:
+            if not self.chatbot:
+                raise SmarterValueError(
+                    f"{self.formatted_class_name} ChatBot instance is required for creating a Chat object."
+                )
+
+            chat = Chat.objects.create(
+                session_key=self.session_key,
+                account=self.account,
+                chatbot=self.chatbot,
+                ip_address=self.ip_address,
+                user_agent=self.user_agent,
+                url=self.url,
+            )
             if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
                 logger.info(
-                    "%s - queried chat instance: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
+                    "%s - created new Chat instance: %s session_key: %s",
+                    self.formatted_class_name,
+                    chat,
+                    chat.session_key,
                 )
 
         cache.set(key=self.session_key, value=chat, timeout=settings.SMARTER_CHAT_CACHE_EXPIRATION or 300)

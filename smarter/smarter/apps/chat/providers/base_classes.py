@@ -14,7 +14,6 @@ from openai.types.chat.chat_completion_message_tool_call import (
     ChatCompletionMessageToolCall,
 )
 
-from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import (
     CHARGE_TYPE_PLUGIN,
     CHARGE_TYPE_PROMPT_COMPLETION,
@@ -112,7 +111,7 @@ class InternalKeys:
     SMARTER_IS_NEW = SMARTER_SYSTEM_KEY_PREFIX + "is_new"
 
 
-class ChatProviderBase(ProviderDbMixin, AccountMixin):
+class ChatProviderBase(ProviderDbMixin):
     """
     Base class for all chat providers.
     """
@@ -196,9 +195,10 @@ class ChatProviderBase(ProviderDbMixin, AccountMixin):
         default_temperature: float,
         default_max_tokens: int,
         valid_chat_completion_models: list[str],
+        *args,
         **kwargs,
     ):
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
         self.init()
         self.chat = kwargs.get("chat")
         self._provider = provider
@@ -270,8 +270,6 @@ class ChatProviderBase(ProviderDbMixin, AccountMixin):
             raise SmarterValueError(f"{self.formatted_class_name}: data object is required")
         if not self.user:
             raise SmarterValueError(f"{self.formatted_class_name}: user object is required")
-        if not self.account:
-            raise SmarterValueError(f"{self.formatted_class_name}: account object is required")
         if not self.default_model:
             raise SmarterValueError(f"{self.formatted_class_name}: default_model is required")
         if not self.default_system_role:
@@ -286,9 +284,12 @@ class ChatProviderBase(ProviderDbMixin, AccountMixin):
                 f"Internal error. Invalid default model: {self.default_model} not found in list of valid {self.provider} models {self.valid_chat_completion_models}."
             )
 
+        if not self.account:
+            self.account = self.chat.account
+
     @property
     def ready(self) -> bool:
-        return self.chat and self.data and self.user and self.account
+        return self.chat and self.data and self.account
 
     @property
     def messages(self) -> List[Dict[str, str]]:

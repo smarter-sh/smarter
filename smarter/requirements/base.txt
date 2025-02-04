@@ -10,7 +10,7 @@ setuptools==75.5.0
 
 # General back end
 # ------------
-boto3==1.35.71                         # AWS CLI SDK
+boto3==1.36.11                         # AWS CLI SDK
 botocore                                # AWS CLI SDK
 cachetools==5.5.0                       # Python object caching library
 celery==5.4.0                           # asynchronous task queue. works with redis.
@@ -32,14 +32,14 @@ whitenoise==6.8.2                       # static file serving
 # ------------
 Django==5.1.3
 django-extensions==3.2.3
-django-debug-toolbar==4.4.6
+django-debug-toolbar==5.0.1
 django-redis==5.4.0                     # object caching
 django-celery-beat==2.7.0               # scheduled asynchronous tasks
 djangorestframework==3.15.2             # for creating REST APIs on top of Django
 django-filter==24.1                     # REST API filtering
 django-taggit==5.0.1                    # Smarter Plugin tagging
 django-rest-knox==5.0.2                 # Token authentication for REST APIs
-dj-stripe==2.8.4                        # Stripe card processing integration
+dj-stripe==2.9.0                        # Stripe card processing integration
 django-cors-headers==4.6.0              # Cross-origin resource sharing
 django-waffle==4.2.0                    # Feature flagging
 
