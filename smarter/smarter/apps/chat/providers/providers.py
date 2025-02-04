@@ -32,7 +32,7 @@ from .openai.classes import OpenAIChatProvider
 
 logger = logging.getLogger(__name__)
 CACHE_PREFIX = "smarter.apps.chat.providers"
-CACHE_TIMEOUT = 600
+CACHE_TIMEOUT = 10
 
 
 class ChatProviders:

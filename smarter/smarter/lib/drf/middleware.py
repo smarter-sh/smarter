@@ -6,12 +6,16 @@ knox.auth TokenAuthentication tokens.
 import logging
 from http import HTTPStatus
 
+import waffle
 from django.contrib.auth import login
 from django.utils.deprecation import MiddlewareMixin
 from knox.settings import knox_settings
 from rest_framework.authentication import get_authorization_header
 from rest_framework.exceptions import AuthenticationFailed
 
+from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.common.const import SmarterWaffleSwitches
+from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
 
 from .token_authentication import (
@@ -22,6 +26,9 @@ from .token_authentication import (
 
 logger = logging.getLogger(__name__)
 
+if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+    logger.info("Loading smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware")
+
 
 class SmarterTokenAuthenticationMiddleware(MiddlewareMixin):
     """
@@ -30,6 +37,7 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin):
     """
 
     authorization_header = None
+    request = None
 
     # pylint: disable=unused-argument
     def is_token_auth(self, request) -> bool:
@@ -44,6 +52,11 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin):
             return False
         return True
 
+    def url(self) -> str:
+        """Return the full URL from the request object."""
+        if self.request:
+            return self.request.build_absolute_uri()
+
     def __init__(self, get_response):
         super().__init__(get_response)
         self.get_response = get_response
@@ -51,6 +64,7 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin):
     def __call__(self, request):
         """Try to authenticate the request using SmarterTokenAuthentication."""
         self.authorization_header = get_authorization_header(request)
+        self.request = request
         if not self.is_token_auth(request):
             # we're not using token authentication, no need to do anything
             return self.get_response(request)
@@ -80,6 +94,10 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin):
                 logger.warning(
                     "%s() failed token authentication attempt using token %s", self.__class__.__name__, auth_token
                 )
-                return SmarterJournaledJsonErrorResponse(request=request, e=e, status=HTTPStatus.UNAUTHORIZED)
+                thing = SAMKinds.from_url(self.url())
+                command = SmarterJournalCliCommands.from_url(self.url())
+                return SmarterJournaledJsonErrorResponse(
+                    request=request, e=e, thing=thing, command=command, status=HTTPStatus.UNAUTHORIZED
+                )
 
         return self.get_response(request)

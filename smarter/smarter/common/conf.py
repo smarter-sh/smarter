@@ -552,7 +552,7 @@ class Settings(BaseSettings):
 
     @property
     def api_domain(self) -> str:
-        """Return the API domain name. ie api.smarter.sh"""
+        """Return the root API domain name. ie api.smarter.sh"""
         return f"{SMARTER_CUSTOMER_API_SUBDOMAIN}.{self.root_domain}"
 
     @property

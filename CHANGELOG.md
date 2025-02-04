@@ -1,38 +1,35 @@
-## [0.10.5](https://github.com/smarter-sh/smarter/compare/v0.10.4...v0.10.5) (2025-01-24)
-
-
-### Bug Fixes
-
-* add smarter demo bots to ChatBotHelper.__init__() ([52e7cdd](https://github.com/smarter-sh/smarter/commit/52e7cdd4b449e52779d7f747163927d2a102f82c))
-* ChatConfigView() should always return json ([e1274bb](https://github.com/smarter-sh/smarter/commit/e1274bbb856062384d1ddbdb7a34111ee1e2833b))
-* ChatConfigView() should always return json ([bbb04b4](https://github.com/smarter-sh/smarter/commit/bbb04b49b9f21c787213f7db8eb2b6d10ba4582f))
-* ensure that we can fall back to a smarter chatbot if it exists ([a221491](https://github.com/smarter-sh/smarter/commit/a221491efd6b32c8ecd19b5ad58cc3c8c4e052b4))
-
-## [0.10.4](https://github.com/smarter-sh/smarter/compare/v0.10.3...v0.10.4) (2025-01-23)
-
-
-### Bug Fixes
-
-* add first_name, last_name ([8ff338a](https://github.com/smarter-sh/smarter/commit/8ff338ab882857514434088cbda39ff9c9b2a809))
-* give celery time to create records before making assertions ([0948076](https://github.com/smarter-sh/smarter/commit/0948076e75da9a2da651d83615bb90cacbd3951b))
-* move PluginSelectorHistory.objects.create() to celery ([4dd28de](https://github.com/smarter-sh/smarter/commit/4dd28deb3d26149c26f1fc9da117648c18f9de04))
-* provide a user_profile to Plugin whenever possible ([ab2a5fc](https://github.com/smarter-sh/smarter/commit/ab2a5fcd87847311c067d366040fec97574f810b))
-* providers should not be singletons ([5d210fa](https://github.com/smarter-sh/smarter/commit/5d210faa68603829043a0134d5829b6a5bb6b38b))
-
-## [0.10.3](https://github.com/smarter-sh/smarter/compare/v0.10.2...v0.10.3) (2025-01-22)
-
-
-### Bug Fixes
-
-* broken favicon link ([80c22ef](https://github.com/smarter-sh/smarter/commit/80c22ef175bc74c8009ec426feb6164dbb0acd12))
-* broken link media/illustrations/sigma-1/17-dark.png ([bbce490](https://github.com/smarter-sh/smarter/commit/bbce490deecfb1e94a8742749250f352250fffcb))
-* only show django admin, wagtail, changelog to superusers ([65183dd](https://github.com/smarter-sh/smarter/commit/65183dd60ad4865766df85cfc5e626c3126c8b40))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.10.5](https://github.com/smarter-sh/smarter/compare/v0.10.4...v0.10.5) (2025-01-24)
+
+### Bug Fixes
+
+- add smarter demo bots to ChatBotHelper.**init**() ([52e7cdd](https://github.com/smarter-sh/smarter/commit/52e7cdd4b449e52779d7f747163927d2a102f82c))
+- ChatConfigView() should always return json ([e1274bb](https://github.com/smarter-sh/smarter/commit/e1274bbb856062384d1ddbdb7a34111ee1e2833b))
+- ChatConfigView() should always return json ([bbb04b4](https://github.com/smarter-sh/smarter/commit/bbb04b49b9f21c787213f7db8eb2b6d10ba4582f))
+- ensure that we can fall back to a smarter chatbot if it exists ([a221491](https://github.com/smarter-sh/smarter/commit/a221491efd6b32c8ecd19b5ad58cc3c8c4e052b4))
+
+## [0.10.4](https://github.com/smarter-sh/smarter/compare/v0.10.3...v0.10.4) (2025-01-23)
+
+### Bug Fixes
+
+- add first_name, last_name ([8ff338a](https://github.com/smarter-sh/smarter/commit/8ff338ab882857514434088cbda39ff9c9b2a809))
+- give celery time to create records before making assertions ([0948076](https://github.com/smarter-sh/smarter/commit/0948076e75da9a2da651d83615bb90cacbd3951b))
+- move PluginSelectorHistory.objects.create() to celery ([4dd28de](https://github.com/smarter-sh/smarter/commit/4dd28deb3d26149c26f1fc9da117648c18f9de04))
+- provide a user_profile to Plugin whenever possible ([ab2a5fc](https://github.com/smarter-sh/smarter/commit/ab2a5fcd87847311c067d366040fec97574f810b))
+- providers should not be singletons ([5d210fa](https://github.com/smarter-sh/smarter/commit/5d210faa68603829043a0134d5829b6a5bb6b38b))
+
+## [0.10.3](https://github.com/smarter-sh/smarter/compare/v0.10.2...v0.10.3) (2025-01-22)
+
+### Bug Fixes
+
+- broken favicon link ([80c22ef](https://github.com/smarter-sh/smarter/commit/80c22ef175bc74c8009ec426feb6164dbb0acd12))
+- broken link media/illustrations/sigma-1/17-dark.png ([bbce490](https://github.com/smarter-sh/smarter/commit/bbce490deecfb1e94a8742749250f352250fffcb))
+- only show django admin, wagtail, changelog to superusers ([65183dd](https://github.com/smarter-sh/smarter/commit/65183dd60ad4865766df85cfc5e626c3126c8b40))
 
 ## [0.10.2](https://github.com/smarter-sh/smarter/compare/v0.10.1...v0.10.2) (2025-01-22)
 
