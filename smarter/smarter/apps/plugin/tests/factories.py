@@ -3,7 +3,10 @@
 import requests
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.utils import account_admin_user, user_profile_for_user
+from smarter.apps.account.utils import (
+    get_cached_admin_user_for_account,
+    get_cached_user_profile,
+)
 from smarter.common.exceptions import SmarterValueError
 
 from ..manifest.enum import SAMPluginMetadataClassValues
@@ -13,8 +16,8 @@ from ..models import PluginMeta
 def plugin_meta_factory(plugin_class: str, account: Account, user_profile: UserProfile = None) -> PluginMeta:
 
     if not user_profile:
-        user = account_admin_user(account=account)
-        user_profile = user_profile_for_user(user=user)
+        user = get_cached_admin_user_for_account(account=account)
+        user_profile = get_cached_user_profile(user=user)
 
     if not plugin_class in SAMPluginMetadataClassValues.all_values():
         raise SmarterValueError(

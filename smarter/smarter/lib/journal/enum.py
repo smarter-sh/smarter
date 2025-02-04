@@ -1,7 +1,13 @@
 """Smarter API Manifests Enumerations."""
 
+import logging
+from urllib.parse import urlparse
+
 from smarter.common.enum import SmarterEnumAbstract
 from smarter.common.exceptions import SmarterExceptionBase
+
+
+logger = logging.getLogger(__name__)
 
 
 class SmarterJournalEnumException(SmarterExceptionBase):
@@ -152,3 +158,21 @@ class SmarterJournalCliCommands(SmarterEnumAbstract):
             cls.UNDEPLOY.value: "undeployed",
             cls.WHOAMI.value: "fetched identity",
         }
+
+    @classmethod
+    def from_url(cls, url) -> str:
+        """
+        Parse a url and return the SmarterJournalCliCommands enum value
+        if it exists in the url path.
+        example: http://localhost:8000/api/v1/cli/example_manifest/Account/
+        """
+        parsed_url = urlparse(url)
+        if parsed_url:
+            slugs = parsed_url.path.split("/")
+            if not "api" in slugs:
+                return None
+            for slug in slugs:
+                this_slug = str(slug).lower()
+                if this_slug in cls.all_values():
+                    return this_slug
+        logger.warning("SmarterJournalCliCommands.from_url() could not extract manifest kind from URL: %s", url)

@@ -3,6 +3,7 @@
 
 import logging
 import traceback
+from http import HTTPStatus
 
 import waffle
 from django.core.serializers.json import DjangoJSONEncoder
@@ -10,7 +11,10 @@ from django.http import HttpRequest, JsonResponse
 
 from smarter.common.api import SmarterApiVersions
 from smarter.common.const import SmarterWaffleSwitches
-from smarter.lib.django.http.serializers import HttpRequestSerializer
+from smarter.lib.django.http.serializers import (
+    HttpAnonymousRequestSerializer,
+    HttpAuthenticatedRequestSerializer,
+)
 
 from .enum import (
     SCLIResponseMetadata,
@@ -69,26 +73,81 @@ class SmarterJournaledJsonResponse(JsonResponse):
         json_dumps_params=None,
         **kwargs,
     ):
-        status = kwargs.get("status", None)
+        status = kwargs.get("status", HTTPStatus.OK.value)
         data[SmarterJournalApiResponseKeys.API] = SmarterApiVersions.V1
         data[SmarterJournalApiResponseKeys.THING] = str(thing)
         data[SmarterJournalApiResponseKeys.METADATA] = {
             SCLIResponseMetadata.COMMAND: str(command),
         }
 
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_JOURNAL):
-            journal = SAMJournal.objects.create(
-                user=request.user,
-                thing=thing,
-                command=command,
-                request=HttpRequestSerializer(request).data,
-                response=data,
-                status_code=status,
-            )
+        def anonymous_serialized_request(request) -> dict:
+            """
+            handles AttributeError: Got AttributeError when attempting to get a value for field `GET` on serializer `HttpAnonymousRequestSerializer`.
+            """
+            try:
+                return HttpAnonymousRequestSerializer(request).data
+            except AttributeError:
+                url = request.build_absolute_uri() if request else "Unknown URL"
+                logger.error(
+                    "SmarterJournaledJsonResponse() HttpAnonymousRequestSerializer could not serialize request data for %s",
+                    url,
+                )
+                return {}
 
-            data[SmarterJournalApiResponseKeys.METADATA] = {
-                SCLIResponseMetadata.KEY.value: journal.key,
-            }
+        def authenticated_serialized_request(request) -> dict:
+            """
+            handles the same but for authenticated requests
+            """
+            try:
+                return HttpAuthenticatedRequestSerializer(request).data
+            except AttributeError:
+                url = request.build_absolute_uri() if request else "Unknown URL"
+                logger.error(
+                    "SmarterJournaledJsonResponse() HttpAuthenticatedRequestSerializer could not serialize request data for %s",
+                    url,
+                )
+                return {}
+
+        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_JOURNAL):
+            # WSGIRequest can be finicky depending on the kind of response we're dealing with.
+            # in general, we only want the user object if it's authenticated, which happens
+            # when the user is logged in to the web console, and also when the request is made
+            # via api, with a valid api key.
+            #
+            # Original exception text was:
+            # 'WSGIRequest' object has no attribute 'user'.
+            # AttributeError: 'PreparedRequest' object has no attribute 'user'
+            try:
+                if hasattr(request, "user") and request.user.is_authenticated:
+                    user = request.user
+                    request_data = authenticated_serialized_request(request)
+                else:
+                    user = None
+                    request_data = anonymous_serialized_request(request)
+            except AttributeError:
+                user = None
+                request_data = anonymous_serialized_request(request)
+            # pylint: disable=broad-except
+            except Exception:
+                logger.warning("Could not determine user from request, and, AttributeError was not raised.")
+                user = None
+                request_data = anonymous_serialized_request(request)
+
+            try:
+                journal = SAMJournal.objects.create(
+                    user=user,
+                    thing=thing,
+                    command=command,
+                    request=request_data,
+                    response=data,
+                    status_code=status,
+                )
+                data[SmarterJournalApiResponseKeys.METADATA] = {
+                    SCLIResponseMetadata.KEY: journal.key,
+                }
+            # pylint: disable=broad-except
+            except Exception as e:
+                logger.error("Could not create journal entry: %s", e)
 
         super().__init__(data=data, encoder=encoder, safe=safe, json_dumps_params=json_dumps_params, **kwargs)
 
@@ -139,7 +198,7 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
         elif isinstance(e, str):
             description = e
 
-        url = request.get_full_path() if request else "Unknown URL"
+        url = request.build_absolute_uri() if request else "Unknown URL"
         status = str(status) if status else e.status if hasattr(e, "status") else "500"
         args = e.args if isinstance(e, dict) and hasattr(e, "args") else "url=" + url
         cause = str(e.__cause__) if isinstance(e, dict) and hasattr(e, "__cause__") else "Python Exception"
@@ -148,11 +207,15 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
             if isinstance(e, dict) and hasattr(e, "__context__")
             else "thing=" + str(thing) + ", command=" + str(command)
         )
-
+        try:
+            stack_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
+        # pylint: disable=broad-except
+        except Exception:
+            stack_trace = "No stack trace available."
         data = {}
         data[SmarterJournalApiResponseKeys.ERROR] = {
             SmarterJournalApiResponseErrorKeys.ERROR_CLASS: error_class,
-            SmarterJournalApiResponseErrorKeys.STACK_TRACE: traceback.format_exc(),
+            SmarterJournalApiResponseErrorKeys.STACK_TRACE: stack_trace,
             SmarterJournalApiResponseErrorKeys.DESCRIPTION: description,
             SmarterJournalApiResponseErrorKeys.STATUS: status,
             SmarterJournalApiResponseErrorKeys.ARGS: args,

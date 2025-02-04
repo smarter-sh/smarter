@@ -76,7 +76,7 @@ services:
       test:
         ["CMD", "celery", "-A", "smarter.smarter_celery.app", "inspect", "ping"]
       interval: 30s
-      timeout: 10s
+      timeout: 30s
       retries: 3
 
   smarter-beat:
@@ -113,5 +113,5 @@ services:
           "ping",
         ]
       interval: 30s
-      timeout: 10s
+      timeout: 30s
       retries: 3
