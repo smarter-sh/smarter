@@ -1,45 +1,50 @@
-## [0.10.6](https://github.com/smarter-sh/smarter/compare/v0.10.5...v0.10.6) (2025-02-04)
-
-
-### Bug Fixes
-
-* add a generic Exception handler for cases where Python doesn't catch AttributeError ([42a757b](https://github.com/smarter-sh/smarter/commit/42a757b4e44824887389f57aaa4ea1236000f585))
-* add account to Chat.objects.create() ([9cb4e0c](https://github.com/smarter-sh/smarter/commit/9cb4e0cf5cc48bb6f790ec71f304738768b92a4a))
-* bad user attribute. changed 'user' to 'email' ([8fa4156](https://github.com/smarter-sh/smarter/commit/8fa4156195d2f224070d2b93afbaafbc7319ccaf))
-* catch any exception on SAMJournal.objects.create() ([e2e3746](https://github.com/smarter-sh/smarter/commit/e2e3746e587c9e481df11086af56f90ea2750a0d))
-* chatbot_id initialization from <int:chatbot_id>/chat/config/ ([2ed7f77](https://github.com/smarter-sh/smarter/commit/2ed7f771d8e9940af50600f135824698da0b3b25))
-* ChatBotHelper and ChatBotApiBaseViewSet handling of named urls - https://example.3141-5926-5359.api.smarter.sh ([2bc5877](https://github.com/smarter-sh/smarter/commit/2bc5877cdd4e74373ff2e3818f10b6bd8fe722de))
-* cleanup json dump ([24e62b5](https://github.com/smarter-sh/smarter/commit/24e62b5f1114605095483e9307ffa842a9cd79cf))
-* ensure that ChatBotHelper still works with sandbox urls ([6bca39a](https://github.com/smarter-sh/smarter/commit/6bca39adccb61a792a238cb0cc56d128347df783))
-* ensure that the url path includes /api/ ([4bfebb9](https://github.com/smarter-sh/smarter/commit/4bfebb9a149cf8e48c8fe32535b4d315e29cdb37))
-* ensure that thing and command are present in journaled json error responses ([1110ef3](https://github.com/smarter-sh/smarter/commit/1110ef3ee5883f6f2e5120b4e320d548a6055513))
-* ensure that thing and command are present in journaled json error responses ([e0cf9c3](https://github.com/smarter-sh/smarter/commit/e0cf9c3c03b637e08679b4f16c4b2658ee460e43))
-* ensure that we can journal commands w no manifest ([5de8a5e](https://github.com/smarter-sh/smarter/commit/5de8a5e3cca0c47663c4294885f5c2f74ca417fe))
-* fail more gracefully is we don't find the chatbot ([04f674c](https://github.com/smarter-sh/smarter/commit/04f674c8fa74d6be08ee9fe7e95586ca4da7c343))
-* get the journal working with anonymous users ([ceb1d6b](https://github.com/smarter-sh/smarter/commit/ceb1d6bb7b994ec9e3a5c16d404a2630e54986b1))
-* handle /smarter/<str:name> ([de979e0](https://github.com/smarter-sh/smarter/commit/de979e0d26fafb661a4561c0f1195c83a807eebf))
-* handle cases where properties are unset after initialization ([188b72b](https://github.com/smarter-sh/smarter/commit/188b72ba0570a4b677e5c6507ae187ec914162a3))
-* handle cases where properties are unset after initialization ([785d1e8](https://github.com/smarter-sh/smarter/commit/785d1e84844ff33a934f1bd166280def4376a2fc))
-* handle cases where properties are unset after initialization ([84abe52](https://github.com/smarter-sh/smarter/commit/84abe5200de63fd9fd504d85d19f548665ccfd1d))
-* initialize user_profile from user and account properties instead of local variables ([ececf82](https://github.com/smarter-sh/smarter/commit/ececf82d5c7e02751c7cc92fc936737e82b9b52e))
-* instantiations from chatbot id ([e0bf9f1](https://github.com/smarter-sh/smarter/commit/e0bf9f134fcb66afa377dd0c3c9af2bbcbe6d563))
-* is_named_url ([423eae8](https://github.com/smarter-sh/smarter/commit/423eae8b3f888b619cf58a9897e8f78682c2d440))
-* journaled json error responses ([d6a1599](https://github.com/smarter-sh/smarter/commit/d6a15993c23a6cb72dcfdcb64ae763bc72dffac7))
-* make bool defaults serializable ([3e88a43](https://github.com/smarter-sh/smarter/commit/3e88a43559d583c8640036bfca0a026638eb0331))
-* only cache if we actually have an object. duhgit add . ([1dc01b2](https://github.com/smarter-sh/smarter/commit/1dc01b25ba0c9ff523ff3510910b64e246597caa))
-* only create a new chat session if we have all of the data ([e96fc6f](https://github.com/smarter-sh/smarter/commit/e96fc6f9f38c15088f1d625db9a97c6a29e0e7c9))
-* race condition when tearing down ([27a8729](https://github.com/smarter-sh/smarter/commit/27a8729a4592f10e8a2b6d6b2edf66e57dbbf736))
-* recursion problems in self.cache due introduced by early read attempts ([25edb2a](https://github.com/smarter-sh/smarter/commit/25edb2a38ce0784b50dd7573086a3a6edc01aeed))
-* remove /smarter/ endpoint ([0e12955](https://github.com/smarter-sh/smarter/commit/0e129553d96fbc757b1204d431d4069df4a66797))
-* send a 403 response on auth failure ([7df3489](https://github.com/smarter-sh/smarter/commit/7df3489e9e3f73a36d21ee32602ba36c45d58065))
-* set db password on each deployment, in case it changes ([df09b48](https://github.com/smarter-sh/smarter/commit/df09b48c5daf2b4b7b1c276a5880292168bb3a90))
-* url_chatbot should take the form /api/v1/chatbots/{self.id}/ ([fc1662e](https://github.com/smarter-sh/smarter/commit/fc1662e089558218f8aa4e82ce9c8438baede1fd))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.10.6](https://github.com/smarter-sh/smarter/compare/v0.10.5...v0.10.6) (2025-02-04)
+
+This is a major low-level refactoring of business logic for Account and WSGI request objects. Summarizing the nature of changes:
+
+- moved most db insert/update/delete operations to asynchronous background tasks.
+- refactor all account logic into [AccountMixin](./smarter/smarter/apps/account/mixins.py) to standardize business logic and to improve db caching
+- refactor all WSGI request analysis into [SmarterRequestMixin](./smarter/smarter/lib/django/request.py) to standardize identification of chat and chatbot requests and to improve cache performance.
+
+### Bug Fixes
+
+- add a generic Exception handler for cases where Python doesn't catch AttributeError ([42a757b](https://github.com/smarter-sh/smarter/commit/42a757b4e44824887389f57aaa4ea1236000f585))
+- add account to Chat.objects.create() ([9cb4e0c](https://github.com/smarter-sh/smarter/commit/9cb4e0cf5cc48bb6f790ec71f304738768b92a4a))
+- bad user attribute. changed 'user' to 'email' ([8fa4156](https://github.com/smarter-sh/smarter/commit/8fa4156195d2f224070d2b93afbaafbc7319ccaf))
+- catch any exception on SAMJournal.objects.create() ([e2e3746](https://github.com/smarter-sh/smarter/commit/e2e3746e587c9e481df11086af56f90ea2750a0d))
+- chatbot_id initialization from <int:chatbot_id>/chat/config/ ([2ed7f77](https://github.com/smarter-sh/smarter/commit/2ed7f771d8e9940af50600f135824698da0b3b25))
+- ChatBotHelper and ChatBotApiBaseViewSet handling of named urls - https://example.3141-5926-5359.api.smarter.sh ([2bc5877](https://github.com/smarter-sh/smarter/commit/2bc5877cdd4e74373ff2e3818f10b6bd8fe722de))
+- cleanup json dump ([24e62b5](https://github.com/smarter-sh/smarter/commit/24e62b5f1114605095483e9307ffa842a9cd79cf))
+- ensure that ChatBotHelper still works with sandbox urls ([6bca39a](https://github.com/smarter-sh/smarter/commit/6bca39adccb61a792a238cb0cc56d128347df783))
+- ensure that the url path includes /api/ ([4bfebb9](https://github.com/smarter-sh/smarter/commit/4bfebb9a149cf8e48c8fe32535b4d315e29cdb37))
+- ensure that thing and command are present in journaled json error responses ([1110ef3](https://github.com/smarter-sh/smarter/commit/1110ef3ee5883f6f2e5120b4e320d548a6055513))
+- ensure that thing and command are present in journaled json error responses ([e0cf9c3](https://github.com/smarter-sh/smarter/commit/e0cf9c3c03b637e08679b4f16c4b2658ee460e43))
+- ensure that we can journal commands w no manifest ([5de8a5e](https://github.com/smarter-sh/smarter/commit/5de8a5e3cca0c47663c4294885f5c2f74ca417fe))
+- fail more gracefully is we don't find the chatbot ([04f674c](https://github.com/smarter-sh/smarter/commit/04f674c8fa74d6be08ee9fe7e95586ca4da7c343))
+- get the journal working with anonymous users ([ceb1d6b](https://github.com/smarter-sh/smarter/commit/ceb1d6bb7b994ec9e3a5c16d404a2630e54986b1))
+- handle /smarter/<str:name> ([de979e0](https://github.com/smarter-sh/smarter/commit/de979e0d26fafb661a4561c0f1195c83a807eebf))
+- handle cases where properties are unset after initialization ([188b72b](https://github.com/smarter-sh/smarter/commit/188b72ba0570a4b677e5c6507ae187ec914162a3))
+- handle cases where properties are unset after initialization ([785d1e8](https://github.com/smarter-sh/smarter/commit/785d1e84844ff33a934f1bd166280def4376a2fc))
+- handle cases where properties are unset after initialization ([84abe52](https://github.com/smarter-sh/smarter/commit/84abe5200de63fd9fd504d85d19f548665ccfd1d))
+- initialize user_profile from user and account properties instead of local variables ([ececf82](https://github.com/smarter-sh/smarter/commit/ececf82d5c7e02751c7cc92fc936737e82b9b52e))
+- instantiations from chatbot id ([e0bf9f1](https://github.com/smarter-sh/smarter/commit/e0bf9f134fcb66afa377dd0c3c9af2bbcbe6d563))
+- is_named_url ([423eae8](https://github.com/smarter-sh/smarter/commit/423eae8b3f888b619cf58a9897e8f78682c2d440))
+- journaled json error responses ([d6a1599](https://github.com/smarter-sh/smarter/commit/d6a15993c23a6cb72dcfdcb64ae763bc72dffac7))
+- make bool defaults serializable ([3e88a43](https://github.com/smarter-sh/smarter/commit/3e88a43559d583c8640036bfca0a026638eb0331))
+- only cache if we actually have an object. duhgit add . ([1dc01b2](https://github.com/smarter-sh/smarter/commit/1dc01b25ba0c9ff523ff3510910b64e246597caa))
+- only create a new chat session if we have all of the data ([e96fc6f](https://github.com/smarter-sh/smarter/commit/e96fc6f9f38c15088f1d625db9a97c6a29e0e7c9))
+- race condition when tearing down ([27a8729](https://github.com/smarter-sh/smarter/commit/27a8729a4592f10e8a2b6d6b2edf66e57dbbf736))
+- recursion problems in self.cache due introduced by early read attempts ([25edb2a](https://github.com/smarter-sh/smarter/commit/25edb2a38ce0784b50dd7573086a3a6edc01aeed))
+- remove /smarter/ endpoint ([0e12955](https://github.com/smarter-sh/smarter/commit/0e129553d96fbc757b1204d431d4069df4a66797))
+- send a 403 response on auth failure ([7df3489](https://github.com/smarter-sh/smarter/commit/7df3489e9e3f73a36d21ee32602ba36c45d58065))
+- set db password on each deployment, in case it changes ([df09b48](https://github.com/smarter-sh/smarter/commit/df09b48c5daf2b4b7b1c276a5880292168bb3a90))
+- url_chatbot should take the form /api/v1/chatbots/{self.id}/ ([fc1662e](https://github.com/smarter-sh/smarter/commit/fc1662e089558218f8aa4e82ce9c8438baede1fd))
 
 ## [0.10.5](https://github.com/smarter-sh/smarter/compare/v0.10.4...v0.10.5) (2025-01-24)
 
