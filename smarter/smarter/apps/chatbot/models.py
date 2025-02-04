@@ -8,6 +8,7 @@ from urllib.parse import urljoin, urlparse
 import waffle
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.core.handlers.wsgi import WSGIRequest
 from django.db import models
 from rest_framework import serializers
 
@@ -465,7 +466,7 @@ class ChatBotHelper(SmarterRequestMixin):
 
     def __init__(
         self,
-        request,
+        request: WSGIRequest,
         name: str = None,
         chatbot_id: int = None,
     ):
@@ -481,7 +482,8 @@ class ChatBotHelper(SmarterRequestMixin):
         self._name: str = None
         self._err: str = None
         super().__init__(request=request)
-        self.helper_logger(f"__init__() to_json(): {json.dumps(self.to_json(), indent=4, sort_keys=True)}")
+        if self.is_chatbot:
+            self.helper_logger(f"__init__() to_json(): {json.dumps(self.to_json(), indent=4, sort_keys=True)}")
         if not chatbot_id and not name and not self.is_chatbot:
             # keep in mind that self.is_chatbot comes from SmartRequestMixin and is
             # based on an analysis of the url format. we frequently get called
@@ -490,7 +492,7 @@ class ChatBotHelper(SmarterRequestMixin):
             # and/or name.
             # example: http://localhost:8000/chatbots/ which yields a list of chatbots
             # but the url itself is not a chatbot url.
-            self.helper_logger(f"__init__() {self.url} is not a chatbot.")
+            self.helper_logger(f"__init__() { request.build_absolute_uri() } is not a chatbot.")
             return None
 
         self._chatbot: ChatBot = None
