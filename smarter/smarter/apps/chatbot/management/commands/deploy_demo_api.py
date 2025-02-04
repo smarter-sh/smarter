@@ -3,7 +3,7 @@
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.utils import account_admin_user
+from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.models import PluginMeta
@@ -26,7 +26,7 @@ class Command(BaseCommand):
         print(log_prefix, "Deploying the Smarter demo API...")
 
         account = Account.objects.get(account_number=SMARTER_ACCOUNT_NUMBER)
-        user = account_admin_user(account)
+        user = get_cached_admin_user_for_account(account)
         user_profile, _ = UserProfile.objects.get_or_create(user=user, account=account)
         chatbot, _ = ChatBot.objects.get_or_create(account=account, name=SMARTER_EXAMPLE_CHATBOT_NAME)
         chatbot.provider = SettingsDefaults.LLM_DEFAULT_PROVIDER

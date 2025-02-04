@@ -18,17 +18,13 @@ class SAMSmarterAuthTokenSpecConfig(AbstractSAMSpecBase):
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".configuration"
 
-    isActive: bool = (
-        Field(
-            ...,
-            description=(f"{class_identifier}.isActive[bool]. Required. Whether the {MANIFEST_KIND} is activated."),
-        ),
+    isActive: bool = Field(
+        default=False,
+        description=f"{class_identifier}.isActive[bool]. Required. Whether the {MANIFEST_KIND} is activated.",
     )
     username: str = Field(
         ...,
-        description=(
-            f"{class_identifier}.username[str]. The Smarter username to which this {MANIFEST_KIND} is attached."
-        ),
+        description=f"{class_identifier}.username[str]. The Smarter username to which this {MANIFEST_KIND} is attached.",
     )
 
 

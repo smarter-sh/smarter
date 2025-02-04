@@ -107,8 +107,8 @@ docker-init:
 		python manage.py makemigrations && python manage.py migrate && \
 		python manage.py initialize_waffle && \
 		python manage.py create_smarter_admin --username admin --email admin@smarter.sh --password smarter && \
-		python manage.py create_user --account_number 3141-5926-5359 --username staff_user --email staff@smarter.sh --password smarter --admin && \
-		python manage.py create_user --account_number 3141-5926-5359 --username customer_user --email customer@smarter.sh --password smarter && \
+		python manage.py create_user --account_number 3141-5926-5359 --username staff_user --email staff@smarter.sh --password smarter --first_name Smarter --last_name User --admin && \
+		python manage.py create_user --account_number 3141-5926-5359 --username customer_user --email customer@smarter.sh --password smarter --first_name Customer --last_name User && \
 		python manage.py add_plugin_examples admin && \
 		python manage.py verify_dns_configuration && \
 		python manage.py deploy_demo_api && \

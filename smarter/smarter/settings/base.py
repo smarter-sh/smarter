@@ -38,11 +38,11 @@ LOCAL_HOSTS = smarter_settings.local_hosts
 if "collectstatic" in sys.argv:
     CELERY_TASK_ALWAYS_EAGER = True
 
+CORS_ORIGIN_ALLOW_ALL = False
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "x-api-key",
 ]
 CORS_ALLOW_CREDENTIALS = True
-CORS_ORIGIN_ALLOW_ALL = False
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https?://[\w-]+\.(\d+-\d+-\d+)\.api\.localhost:\d+$",
     r"^https?://[\w-]+\.localhost:\d+$",

@@ -105,6 +105,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
             file_path=file_path,
             url=url,
         )
+        AccountMixin.__init__(self, account=account, user=request.user)
 
     @property
     def smarter_auth_token(self) -> SmarterAuthToken:
