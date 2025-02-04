@@ -255,7 +255,14 @@ class CliBaseApiView(APIView, AccountMixin):
             It provides a service interface that 'brokers' the http request for the
             underlying object that provides the object-specific service (create, update, get, delete, etc).
         """
-        AccountMixin.__init__(self, user=request.user)
+        try:
+            AccountMixin.__init__(self, user=request.user)
+            if self.user.is_authenticated and not self.user_profile:
+                raise APIV1CLIViewError("Could not find account for user.")
+        except SmarterExceptionBase as e:
+            return SmarterJournaledJsonErrorResponse(
+                request=request, thing=self.manifest_kind, command=self.command, e=e, status=HTTPStatus.FORBIDDEN
+            )
         # Parse the query string parameters from the request into a dictionary.
         # This is used to pass additional parameters to the child view's post method.
         self._manifest_name = self.params.get("name", None)
@@ -272,16 +279,6 @@ class CliBaseApiView(APIView, AccountMixin):
                         e=e,
                         status=HTTPStatus.FORBIDDEN,
                     )
-
-        # set all of our identifying attributes from the request.
-        self._user = request.user
-        try:
-            if self.user.is_authenticated and not self.user_profile:
-                raise APIV1CLIViewError("Could not find account for user.")
-        except SmarterExceptionBase as e:
-            return SmarterJournaledJsonErrorResponse(
-                request=request, thing=self.manifest_kind, command=self.command, e=e, status=HTTPStatus.FORBIDDEN
-            )
 
         user_agent = request.headers.get("User-Agent", "")
         if "Go-http-client" not in user_agent:
