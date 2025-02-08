@@ -192,8 +192,8 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
         self.assertIsNone(a_record)
 
     def test_deploy_demo_api(self):
-        """Test deploy_demo_api command."""
-        call_command("deploy_demo_api")
+        """Test deploy_example_chatbot command."""
+        call_command("deploy_example_chatbot")
         print("sleeping for 15 seconds to allow DNS record to be created")
         time.sleep(15)
 
