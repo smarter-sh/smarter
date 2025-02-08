@@ -13,7 +13,7 @@ from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_EXAMPLE_CHATBOT
 
 # pylint: disable=E1101
 class Command(BaseCommand):
-    """Deploy the Smarter demo API."""
+    """Deploy the Smarter demo ChatBot."""
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
@@ -22,7 +22,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         foreground = options["foreground"]
 
-        log_prefix = "manage.py deploy_demo_api:"
+        log_prefix = "manage.py deploy_example_chatbot:"
         print(log_prefix, "Deploying the Smarter demo API...")
 
         account = Account.objects.get(account_number=SMARTER_ACCOUNT_NUMBER)

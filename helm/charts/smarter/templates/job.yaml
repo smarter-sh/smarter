@@ -31,7 +31,7 @@ spec:
               python manage.py initialize_wagtail
               python manage.py add_plugin_examples admin
               python manage.py verify_dns_configuration
-              python manage.py deploy_demo_api
+              python manage.py deploy_example_chatbot
               python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/QueriumCorp/smarter-demo
           command:
             - /bin/sh
