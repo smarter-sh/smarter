@@ -54,7 +54,7 @@ pydantic-settings==2.6.1                # settings management
 # ------------
 openai==1.61.1                          # OpenAI API
 google-generativeai==0.8.4              # Google Generative AI API
-llamaai==0.1.36                         # Llama AI API
+llamaai==0.1.27                         # Llama AI API
 langchain==0.3.12                       # LLM abstractions library for building complex workflows
 langchain-openai==0.2.12                # OpenAI plugin for Langchain
 
