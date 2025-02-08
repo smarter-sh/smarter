@@ -132,7 +132,7 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
         self.assertTrue(self.signals["chatbot_dns_verification_status_changed"])
 
     def test_deploy_and_undeploy(self):
-        """Test deploy_api and undeploy_api commands."""
+        """Test deploy_chatbot and undeploy_chatbot commands."""
 
         #######################################################################
         # Deploy the chatbot
@@ -145,7 +145,9 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
             domain_name=smarter_settings.customer_api_domain
         )
 
-        call_command("deploy_api", "--account_number", f"{self.account.account_number}", "--name", self.chatbot.name)
+        call_command(
+            "deploy_chatbot", "--account_number", f"{self.account.account_number}", "--name", self.chatbot.name
+        )
         print("sleeping for 15 seconds to allow DNS record to be created")
         time.sleep(15)
         chatbot = ChatBot.objects.get(name=self.chatbot.name, account=self.account)
@@ -174,7 +176,7 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
         print("-" * 80)
 
         call_command(
-            "undeploy_api",
+            "undeploy_chatbot",
             "--account_number",
             f"{self.account.account_number}",
             "--name",
