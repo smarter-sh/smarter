@@ -114,6 +114,7 @@ docker-init:
 		python manage.py deploy_example_chatbot && \
 		python manage.py seed_chat_history && \
 		python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/QueriumCorp/smarter-demo && \
+		python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/smarter-sh/examples --repo_version 2 && \
 		python manage.py initialize_wagtail" && \
 	echo "Docker and Smarter are initialized." && \
 	docker ps
@@ -135,7 +136,7 @@ docker-collectstatic:
 
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "./manage.py test"
+	docker exec smarter-app bash -c "./manage.py test smarter.apps.chatbot.tests.test_managepy_commands.ManageCommandCreatePluginTestCase.test_load_from_github_v2"
 
 docker-prune:
 	make docker-check && \

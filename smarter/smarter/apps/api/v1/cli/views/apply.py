@@ -1,6 +1,7 @@
 # pylint: disable=W0613
 """Smarter API command-line interface 'apply' view"""
 
+from django.core.handlers.wsgi import WSGIRequest
 from drf_yasg.utils import swagger_auto_schema
 
 from .base import CliBaseApiView
@@ -30,7 +31,7 @@ The client making the HTTP request to this endpoint is expected to be the Smarte
 The response from this endpoint is a JSON object.
 """
     )
-    def post(self, request, *args, **kwargs):
+    def post(self, request: WSGIRequest, *args, **kwargs):
         """
         Handles the POST HTTP request for the 'apply' command.
 
