@@ -77,18 +77,22 @@ def create_charge(*args, **kwargs):
         reference,
     )
 
-    Charge.objects.create(
-        account=account,
-        session_key=session_key,
-        provider=provider,
-        user=user,
-        charge_type=charge_type,
-        completion_tokens=completion_tokens,
-        prompt_tokens=prompt_tokens,
-        total_tokens=total_tokens,
-        model=model,
-        reference=reference,
-    )
+    try:
+        Charge.objects.create(
+            account=account,
+            session_key=session_key,
+            provider=provider,
+            user=user,
+            charge_type=charge_type,
+            completion_tokens=completion_tokens,
+            prompt_tokens=prompt_tokens,
+            total_tokens=total_tokens,
+            model=model,
+            reference=reference,
+        )
+    # pylint: disable=W0703
+    except Exception as e:
+        logger.error("%s - error creating charge: %s", prefix, e)
 
 
 @app.task(
