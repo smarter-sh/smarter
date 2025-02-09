@@ -14,6 +14,7 @@ from requests import PreparedRequest
 from rest_framework.serializers import ModelSerializer
 
 from smarter.common.api import SmarterApiVersions
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseErrorKeys,
@@ -501,8 +502,7 @@ class AbstractBroker(ABC):
         from the Django model serializer.
         """
         fields_and_types = [
-            self.snake_to_camel({"name": field_name, "type": type(field).__name__}, convert_values=True)
-            for field_name, field in serializer.fields.items()
+            {"name": field_name, "type": type(field).__name__} for field_name, field in serializer.fields.items()
         ]
         return fields_and_types
 
@@ -538,6 +538,33 @@ class AbstractBroker(ABC):
             else:
                 new_value = value
             retval[new_key] = new_value
+        return retval
+
+    def clean_cli_param(self, param: str, param_name: str = "unknown", url: str = None) -> str:
+        """
+        - Remove any leading or trailing whitespace from the param.
+        - Ensure that the param is a string.
+        - Return the cleaned param.
+        """
+        class_name = self.__class__.__name__ + "().clean_cli_param()"
+        class_name = formatted_text(class_name)
+        retval = param.strip() if isinstance(param, str) else param
+
+        if not isinstance(param, str):
+            logger.warning(
+                "%s param: <%s>. Expected str but got type: %s for url: %s", class_name, param_name, type(param), url
+            )
+
+        if isinstance(param, list):
+            retval = param[0]
+            logger.warning(
+                "%s set param <%s> to first element of list: %s for url: %s", class_name, param_name, param, url
+            )
+
+        if isinstance(param, str) and param.strip() == "":
+            logger.warning("%s param <%s> is an empty string, setting to None for url: %s", class_name, param_name, url)
+            retval = None
+
         return retval
 
 
