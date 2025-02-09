@@ -1,3 +1,12 @@
+## [0.10.8](https://github.com/smarter-sh/smarter/compare/v0.10.7...v0.10.8) (2025-02-09)
+
+
+### Bug Fixes
+
+* convert url params into valid strings ([f12346a](https://github.com/smarter-sh/smarter/commit/f12346ad878e2ec248991988351bceed837e0683))
+* get_model_titles() should return titles in underscored lower case ([6a31bb6](https://github.com/smarter-sh/smarter/commit/6a31bb61cd6b086b6139a93aca4b0a8f9709b33c))
+* send all table output in camelCase ([81a49bb](https://github.com/smarter-sh/smarter/commit/81a49bb7ef035284a7a0a769ac73492eaaa818ef))
+
 ## [0.10.7](https://github.com/smarter-sh/smarter/compare/v0.10.6...v0.10.7) (2025-02-09)
 
 
