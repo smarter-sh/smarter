@@ -132,7 +132,7 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
         self.assertTrue(self.signals["chatbot_dns_verification_status_changed"])
 
     def test_deploy_and_undeploy(self):
-        """Test deploy_api and undeploy_api commands."""
+        """Test deploy_chatbot and undeploy_chatbot commands."""
 
         #######################################################################
         # Deploy the chatbot
@@ -145,7 +145,9 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
             domain_name=smarter_settings.customer_api_domain
         )
 
-        call_command("deploy_api", "--account_number", f"{self.account.account_number}", "--name", self.chatbot.name)
+        call_command(
+            "deploy_chatbot", "--account_number", f"{self.account.account_number}", "--name", self.chatbot.name
+        )
         print("sleeping for 15 seconds to allow DNS record to be created")
         time.sleep(15)
         chatbot = ChatBot.objects.get(name=self.chatbot.name, account=self.account)
@@ -174,7 +176,7 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
         print("-" * 80)
 
         call_command(
-            "undeploy_api",
+            "undeploy_chatbot",
             "--account_number",
             f"{self.account.account_number}",
             "--name",
@@ -192,8 +194,8 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
         self.assertIsNone(a_record)
 
     def test_deploy_demo_api(self):
-        """Test deploy_demo_api command."""
-        call_command("deploy_demo_api")
+        """Test deploy_example_chatbot command."""
+        call_command("deploy_example_chatbot")
         print("sleeping for 15 seconds to allow DNS record to be created")
         time.sleep(15)
 
@@ -208,7 +210,7 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
         """Test initialize_waffle command."""
         call_command("initialize_waffle")
 
-    def test_load_from_github(self):
+    def test_load_from_github_v1(self):
         """Test load_from_github command."""
 
         call_command(
@@ -219,6 +221,21 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
             "https://github.com/QueriumCorp/smarter-demo",
             "--username",
             self.user.get_username(),
+        )
+
+    def test_load_from_github_v2(self):
+        """Test load_from_github command."""
+
+        call_command(
+            "load_from_github",
+            "--account_number",
+            f"{self.account.account_number}",
+            "--url",
+            "https://github.com/smarter-sh/examples",
+            "--username",
+            self.user.get_username(),
+            "--repo_version",
+            "2",
         )
 
     def test_verify_api_infrastructure(self):
