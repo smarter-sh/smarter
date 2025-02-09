@@ -1,0 +1,32 @@
+apiVersion: smarter.sh/v1
+kind: Chatbot
+metadata:
+  description: "A MetaAI Llama pass-through chatbot."
+  name: metaai
+  version: 0.1.0
+spec:
+  apiKey: null
+  config:
+    appAssistant: Llama
+    appBackgroundImageUrl: null
+    appExamplePrompts:
+    - Write a Python function that generates the Fibonacci sequence.
+    - Summarize the book "The Great Gatsby" in 100 words or less.
+    - Provide a technical definition for the term "machine learning."
+    appFileAttachment: false
+    appInfoUrl: https://developers.meta.com/ai/
+    appLogoUrl: /static/querium/querium-logo-white-transparent.png
+    appName: MetaAI Llama 3.1
+    appPlaceholder: Ask me anything...
+    appWelcomeMessage: Welcome to Llama 3.1!
+    customDomain: null
+    defaultMaxTokens: 4096
+    defaultModel: llama3.1-70b
+    defaultSystemRole: You are a helpful chatbot.
+    defaultTemperature: 0.5
+    deployed: true
+    dnsVerificationStatus: Verified
+    provider: metaai
+    subdomain: null
+  functions: []
+  plugins: []

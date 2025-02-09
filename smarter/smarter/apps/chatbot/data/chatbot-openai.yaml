@@ -1,0 +1,32 @@
+apiVersion: smarter.sh/v1
+kind: Chatbot
+metadata:
+  description: "An OpenAI ChatGPT 4 pass-through chatbot."
+  name: openai
+  version: 0.1.0
+spec:
+  apiKey: null
+  config:
+    appAssistant: Oscar
+    appBackgroundImageUrl: null
+    appExamplePrompts:
+    - Write a Python function that generates the Fibonacci sequence.
+    - Summarize the book "The Great Gatsby" in 100 words or less.
+    - Provide a technical definition for the term "machine learning."
+    appFileAttachment: false
+    appInfoUrl: https://platform.openai.com/
+    appLogoUrl: /static/querium/querium-logo-white-transparent.png
+    appName: OpenAI ChatGPT 4
+    appPlaceholder: Ask me anything...
+    appWelcomeMessage: Welcome to ChatGPT 4!
+    customDomain: null
+    defaultMaxTokens: 4096
+    defaultModel: gpt-4
+    defaultSystemRole: You are a helpful chatbot.
+    defaultTemperature: 0.5
+    deployed: true
+    dnsVerificationStatus: Verified
+    provider: openai
+    subdomain: null
+  functions: []
+  plugins: []

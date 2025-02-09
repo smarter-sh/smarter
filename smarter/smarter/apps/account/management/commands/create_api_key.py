@@ -33,8 +33,11 @@ class Command(BaseCommand):
             return
 
         account = None
+        user = None
+
         if account_number:
             account = Account.objects.get(account_number=account_number)
+            user = get_cached_admin_user_for_account(account)
         if username:
             user = User.objects.get(username=username)
             account = UserProfile.objects.get(user=user).account

@@ -19,7 +19,7 @@ class Command(BaseCommand):
         """Add arguments to the command."""
         parser.add_argument("--account_number", type=str, help="The Smarter account number to which the user belongs")
         parser.add_argument("--company_name", type=str, help="The company name to which the user belongs")
-        parser.add_argument("--name", type=str, help="The name/subdomain for the new API")
+        parser.add_argument("--name", type=str, help="The name/subdomain of the ChatBot")
         parser.add_argument("--foreground", action="store_true", help="Run the task in the foreground")
 
     def handle(self, *args, **options):

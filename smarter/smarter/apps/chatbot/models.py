@@ -492,7 +492,8 @@ class ChatBotHelper(SmarterRequestMixin):
             # and/or name.
             # example: http://localhost:8000/chatbots/ which yields a list of chatbots
             # but the url itself is not a chatbot url.
-            self.helper_logger(f"__init__() { request.build_absolute_uri() } is not a chatbot.")
+            if isinstance(request, WSGIRequest):
+                self.helper_logger(f"__init__() { request.build_absolute_uri() } is not a chatbot.")
             return None
 
         self._chatbot: ChatBot = None
