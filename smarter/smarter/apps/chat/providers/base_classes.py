@@ -114,6 +114,28 @@ class InternalKeys:
 class ChatProviderBase(ProviderDbMixin):
     """
     Base class for all chat providers.
+
+    Attributes:
+        chat: The chat instance.
+        data: The request data.
+        plugins: A list of plugins.
+        model: The model to use for chat completions.
+        temperature: The temperature to use for chat completions.
+        max_tokens: The maximum tokens to use for chat completions.
+        input_text: The input text for the chat completion.
+        completion_tokens: The number of completion tokens used.
+        prompt_tokens: The number of prompt tokens used.
+        total_tokens: The total number of tokens used.
+        reference: The reference for the chat completion.
+        iteration: The iteration number.
+        request_meta_data: The request meta data.
+        first_iteration: The first iteration request and response.
+        first_response: The first response.
+        second_response: The second response.
+        second_iteration: The second iteration request and response.
+        serialized_tool_calls: A list of serialized tool calls.
+        tools: A list of tools.
+        available_functions: A dictionary of available functions.
     """
 
     __slots__ = (
@@ -195,6 +217,7 @@ class ChatProviderBase(ProviderDbMixin):
         default_temperature: float,
         default_max_tokens: int,
         valid_chat_completion_models: list[str],
+        add_built_in_tools: bool,
         *args,
         **kwargs,
     ):
@@ -210,6 +233,16 @@ class ChatProviderBase(ProviderDbMixin):
         self._default_temperature = default_temperature
         self._default_max_tokens = default_max_tokens
         self._valid_chat_completion_models = valid_chat_completion_models
+
+        weather_tool = weather_tool_factory()
+        self.tools: list[dict] = [weather_tool] if add_built_in_tools else []
+        self.available_functions = (
+            {
+                "get_current_weather": get_current_weather,
+            }
+            if add_built_in_tools
+            else {}
+        )
 
         chat_provider_initialized.send(sender=self)
 
@@ -255,12 +288,6 @@ class ChatProviderBase(ProviderDbMixin):
         }
 
         self.serialized_tool_calls = None
-
-        weather_tool = weather_tool_factory()
-        self.tools: list[dict] = [weather_tool]
-        self.available_functions = {
-            "get_current_weather": get_current_weather,
-        }
 
     def validate(self):
 
@@ -402,6 +429,9 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
     A chat provider that works with any vendor provider that is
     fully compatible with OpenAI's text completion API.
     """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     @property
     def openai_messages(self) -> list:

@@ -5,7 +5,7 @@ import re
 import uuid
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.models import AbstractUser, AnonymousUser
 
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.exceptions import SmarterValueError
@@ -76,7 +76,7 @@ def get_cached_user_profile(user: UserType, account: Account = None) -> UserProf
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
-def get_cached_user_for_user_id(user_id: int) -> UserType:
+def get_cached_user_for_user_id(user_id: int) -> AbstractUser:
     """
     Returns the user for the given user_id.
     """
@@ -89,7 +89,7 @@ def get_cached_user_for_user_id(user_id: int) -> UserType:
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
-def get_cached_admin_user_for_account(account: Account) -> UserType:
+def get_cached_admin_user_for_account(account: Account) -> AbstractUser:
     """
     Returns the account admin user for the given account.
     """

@@ -154,6 +154,10 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             return False
         if self._request.path in ["/favicon.ico", "/robots.txt", "/sitemap.xml"]:
             return False
+        if self._request.path.startswith("/admin/"):
+            return False
+        if self._request.path.startswith("/docs/"):
+            return False
 
         static_extensions = [
             ".css",

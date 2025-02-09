@@ -6,6 +6,7 @@ import traceback
 from http import HTTPStatus
 
 import waffle
+from django.core.handlers.wsgi import WSGIRequest
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpRequest, JsonResponse
 
@@ -87,7 +88,7 @@ class SmarterJournaledJsonResponse(JsonResponse):
             try:
                 return HttpAnonymousRequestSerializer(request).data
             except AttributeError:
-                url = request.build_absolute_uri() if request else "Unknown URL"
+                url = request.build_absolute_uri() if isinstance(request, WSGIRequest) else "Unknown URL"
                 logger.error(
                     "SmarterJournaledJsonResponse() HttpAnonymousRequestSerializer could not serialize request data for %s",
                     url,
@@ -101,7 +102,7 @@ class SmarterJournaledJsonResponse(JsonResponse):
             try:
                 return HttpAuthenticatedRequestSerializer(request).data
             except AttributeError:
-                url = request.build_absolute_uri() if request else "Unknown URL"
+                url = request.build_absolute_uri() if isinstance(request, WSGIRequest) else "Unknown URL"
                 logger.error(
                     "SmarterJournaledJsonResponse() HttpAuthenticatedRequestSerializer could not serialize request data for %s",
                     url,
