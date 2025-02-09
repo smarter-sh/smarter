@@ -195,6 +195,7 @@ class ChatProviderBase(ProviderDbMixin):
         default_temperature: float,
         default_max_tokens: int,
         valid_chat_completion_models: list[str],
+        add_built_in_tools: bool,
         *args,
         **kwargs,
     ):
@@ -210,6 +211,16 @@ class ChatProviderBase(ProviderDbMixin):
         self._default_temperature = default_temperature
         self._default_max_tokens = default_max_tokens
         self._valid_chat_completion_models = valid_chat_completion_models
+
+        weather_tool = weather_tool_factory()
+        self.tools: list[dict] = [weather_tool] if add_built_in_tools else []
+        self.available_functions = (
+            {
+                "get_current_weather": get_current_weather,
+            }
+            if add_built_in_tools
+            else {}
+        )
 
         chat_provider_initialized.send(sender=self)
 
@@ -255,12 +266,6 @@ class ChatProviderBase(ProviderDbMixin):
         }
 
         self.serialized_tool_calls = None
-
-        weather_tool = weather_tool_factory()
-        self.tools: list[dict] = [weather_tool]
-        self.available_functions = {
-            "get_current_weather": get_current_weather,
-        }
 
     def validate(self):
 
@@ -402,6 +407,9 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
     A chat provider that works with any vendor provider that is
     fully compatible with OpenAI's text completion API.
     """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     @property
     def openai_messages(self) -> list:
