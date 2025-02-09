@@ -9,9 +9,11 @@ import subprocess
 
 import yaml
 from django.core.management.base import BaseCommand
+from django.test import RequestFactory
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import get_cached_admin_user_for_account
+from smarter.apps.api.v1.cli.views.apply import ApiV1CliApplyApiView
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.plugin.static import PluginStatic
@@ -125,6 +127,8 @@ class Command(BaseCommand):
             raise subprocess.CalledProcessError(
                 returncode=result, cmd=f"git clone {self.url} {self.local_path}", output="Failed to clone repository"
             )
+        else:
+            print(f"Cloned {self.url} to {self.local_path}")
 
     def delete_repo(self):
         """Delete a cloned GitHub repository from the local file system."""
@@ -134,6 +138,8 @@ class Command(BaseCommand):
                 raise subprocess.CalledProcessError(
                     returncode=result, cmd=f"rm -rf {self.local_path}", output="Failed to delete repository"
                 )
+            else:
+                print(f"Deleted {self.local_path}")
 
     def load_plugin(self, filespec: str):
         """Load a plugin from a file on the local file system."""
@@ -154,7 +160,52 @@ class Command(BaseCommand):
         plugin = PluginStatic(data=data, user_profile=self.user_profile)
         return plugin
 
-    def process_repo(self):
+    def apply_manifest(self, manifest_data: str) -> None:
+        """
+        Apply a manifest to the Smarter API.
+        """
+        if not manifest_data:
+            raise SmarterValueError("Manifest data is missing.")
+
+        request_factory = RequestFactory()
+        url = smarter_settings.environment_url + "/api/v1/cli/apply"
+        request = request_factory.post(url, data=manifest_data, content_type="application/json")
+        request.user = self.user
+        api_v1_cli_apply_view = ApiV1CliApplyApiView.as_view()
+        response = api_v1_cli_apply_view(request=request)
+        return response
+
+    def process_repo_v2(self):
+        """
+        Process a GitHub repository containing yaml manifest files.
+        Folders are optional and can be used to organize the manifest files, but otherwise
+        do not contain any special meaning.
+        """
+        if not self.user_profile:
+            raise SmarterValueError("User profile is required.")
+        self.clone_repo()
+
+        # pylint: disable=too-many-nested-blocks
+        for root, directory_names, _ in os.walk(self.local_path):
+            for directory in [d for d in directory_names if not d.startswith(".")]:
+                # note: we're not currently doing anything with the directory names,
+                directory_path = os.path.join(root, directory)
+                for _, _, files in os.walk(directory_path):
+                    for file in files:
+                        if file.endswith(".yaml") or file.endswith(".yml"):
+                            filespec = os.path.join(directory_path, file)
+                            filename = os.path.basename(filespec)
+                            with open(filespec, encoding="utf-8") as file:
+                                manifest_data = file.read()
+                                self.apply_manifest(manifest_data=manifest_data)
+                            try:
+                                print(f"Applied manifest: {directory}/{filename}")
+                            # pylint: disable=broad-except
+                            except Exception as e:
+                                print(f"Error applying manifest: {filename}")
+                                print(e)
+
+    def process_repo_v1(self):
         """
         Process a GitHub repository containing yaml plugin files organized into folders,
         where each folder name is the subdomain for a customer API.
@@ -217,12 +268,16 @@ class Command(BaseCommand):
             help="Account number that will own the new plugin.",
         )
         parser.add_argument("--username", type=str, nargs="?", default=None, help="A user associated with the account.")
+        parser.add_argument(
+            "--repo_version", type=str, nargs="?", default="1", help="The version of the Github repo reader."
+        )
 
     def handle(self, *args, **options):
         """Process the GitHub repository"""
         self.url = options["url"]
         account_number = options["account_number"]
         username = options["username"]
+        repo_version = int(options["repo_version"])
 
         if not account_number and not username:
             raise SmarterValueError("username and/or account_number is required.")
@@ -238,4 +293,9 @@ class Command(BaseCommand):
             print(f"No user profile found. Defaulting to {admin_user}.")
             self.user_profile = UserProfile.objects.get(account=self.account, user=admin_user)
 
-        self.process_repo()
+        if repo_version == 2:
+            # iterate repo and apply manifests
+            self.process_repo_v2()
+        else:
+            # iterate repo, assume that folders refer to chatbots, and load plugins
+            self.process_repo_v1()

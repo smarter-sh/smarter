@@ -24,10 +24,11 @@ class GoogleAIChatProvider(OpenAICompatibleChatProvider):
         super().__init__(
             provider=PROVIDER_NAME,
             base_url=BASE_URL,
-            api_key=smarter_settings.openai_api_key.get_secret_value(),
+            api_key=smarter_settings.gemini_api_key.get_secret_value(),
             default_model=DEFAULT_MODEL,
             default_system_role=smarter_settings.llm_default_system_role,
             default_temperature=smarter_settings.llm_default_temperature,
             default_max_tokens=smarter_settings.llm_default_max_tokens,
             valid_chat_completion_models=VALID_CHAT_COMPLETION_MODELS,
+            add_built_in_tools=False,
         )

@@ -8,6 +8,7 @@ from typing import Type
 from urllib.parse import ParseResult, urlparse
 
 import yaml
+from django.core.handlers.wsgi import WSGIRequest
 from django.http import QueryDict
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -17,6 +18,7 @@ from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
 from smarter.common.exceptions import SmarterExceptionBase
+from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
@@ -57,6 +59,7 @@ class CliBaseApiView(APIView, AccountMixin):
 
     authentication_classes = (SmarterTokenAuthentication,)
     permission_classes = (IsAuthenticated,)
+    request: WSGIRequest = None
 
     _BrokerClass: Type[AbstractBroker] = None
     _broker: AbstractBroker = None
@@ -148,6 +151,10 @@ class CliBaseApiView(APIView, AccountMixin):
         which needs to be rendered into a Pydantic model. The Pydantic model is then
         used to instantiate a broker for the manifest kind.
         """
+        if self._manifest_data:
+            # belt & suspenders: ensure that the manifest data is a json object.
+            if isinstance(self._manifest_data, str):
+                self._manifest_data = json.loads(self._manifest_data)
         return self._manifest_data
 
     @property
@@ -218,7 +225,7 @@ class CliBaseApiView(APIView, AccountMixin):
 
         https://platform.smarter.sh/api/v1/cli/chat/config/example/?new_session=false&uid=Lawrences-Mac-Studio.local-c6%253A6b%253A2e%253A7a%253A3d%253A6c
         """
-        return self.request.build_absolute_uri()
+        return SmarterValidator.urlify(self.request.build_absolute_uri())
 
     @property
     def url_parsed(self) -> ParseResult:
@@ -255,55 +262,13 @@ class CliBaseApiView(APIView, AccountMixin):
             It provides a service interface that 'brokers' the http request for the
             underlying object that provides the object-specific service (create, update, get, delete, etc).
         """
-        try:
-            AccountMixin.__init__(self, user=request.user)
-            if self.user.is_authenticated and not self.user_profile:
-                raise APIV1CLIViewError("Could not find account for user.")
-        except SmarterExceptionBase as e:
-            return SmarterJournaledJsonErrorResponse(
-                request=request, thing=self.manifest_kind, command=self.command, e=e, status=HTTPStatus.FORBIDDEN
-            )
-        # Parse the query string parameters from the request into a dictionary.
-        # This is used to pass additional parameters to the child view's post method.
-        self._manifest_name = self.params.get("name", None)
-
-        if self.authentication_classes and self.permission_classes:
-            if not request.user.is_authenticated:
-                try:
-                    raise APIV1CLIViewError("Unauthorized access attempted.")
-                except APIV1CLIViewError as e:
-                    return SmarterJournaledJsonErrorResponse(
-                        request=request,
-                        thing=self.manifest_kind,
-                        command=self.command,
-                        e=e,
-                        status=HTTPStatus.FORBIDDEN,
-                    )
-
-        user_agent = request.headers.get("User-Agent", "")
-        if "Go-http-client" not in user_agent:
-            logger.warning("The User-Agent is not a Go lang application: %s", user_agent)
-
-        kind = kwargs.get("kind", None)
-        if kind:
-            self._manifest_kind = Brokers.get_broker_kind(kind)
-            if not self.manifest_kind:
-                return SmarterJournaledJsonErrorResponse(
-                    request=request,
-                    thing=self.manifest_kind,
-                    command=self.command,
-                    e=SAMBadRequestError(
-                        f"Unsupported manifest kind: {self.manifest_kind}. should be one of {SAMKinds.all_values()}"
-                    ),
-                    status=HTTPStatus.BAD_REQUEST,
-                )
-
+        self.request: WSGIRequest = request
         # Manifest parsing and broker instantiation are lazy implementations.
         # So for now, we'll only set the private class variable _manifest_data
         # from the request body, and then we'll leave it to the child views to
         # decide if/when to actually parse the manifest and instantiate the broker.
         try:
-            data = request.body.decode("utf-8")
+            data = self.request.body.decode("utf-8")
             # if the command is 'chat', then the raw prompt text
             # or the encoded file attachment data will be in the request body.
             # otherwise, the request body should contain manifest text.
@@ -327,6 +292,49 @@ class CliBaseApiView(APIView, AccountMixin):
                         status=HTTPStatus.BAD_REQUEST,
                     )
 
+        try:
+            AccountMixin.__init__(self, user=self.request.user)
+            if self.user.is_authenticated and not self.user_profile:
+                raise APIV1CLIViewError("Could not find account for user.")
+        except SmarterExceptionBase as e:
+            return SmarterJournaledJsonErrorResponse(
+                request=self.request, thing=self.manifest_kind, command=self.command, e=e, status=HTTPStatus.FORBIDDEN
+            )
+        # Parse the query string parameters from the request into a dictionary.
+        # This is used to pass additional parameters to the child view's post method.
+        self._manifest_name = self.params.get("name", None)
+
+        if self.authentication_classes and self.permission_classes:
+            if not self.request.user.is_authenticated:
+                try:
+                    raise APIV1CLIViewError("Unauthorized access attempted.")
+                except APIV1CLIViewError as e:
+                    return SmarterJournaledJsonErrorResponse(
+                        request=self.request,
+                        thing=self.manifest_kind,
+                        command=self.command,
+                        e=e,
+                        status=HTTPStatus.FORBIDDEN,
+                    )
+
+        user_agent = self.request.headers.get("User-Agent", "")
+        if "Go-http-client" not in user_agent:
+            logger.warning("The User-Agent is not a Go lang application: %s", user_agent)
+
+        kind = kwargs.get("kind", None)
+        if kind:
+            self._manifest_kind = Brokers.get_broker_kind(kind)
+            if not self.manifest_kind:
+                return SmarterJournaledJsonErrorResponse(
+                    request=request,
+                    thing=self.manifest_kind,
+                    command=self.command,
+                    e=SAMBadRequestError(
+                        f"Unsupported manifest kind: {self.manifest_kind}. should be one of {SAMKinds.all_values()}"
+                    ),
+                    status=HTTPStatus.BAD_REQUEST,
+                )
+
         # generic exception handler that simply ensures that in all cases
         # the response is a JsonResponse with a status code.
         #
@@ -335,10 +343,10 @@ class CliBaseApiView(APIView, AccountMixin):
         # to the super class dispatch method, and the parameters are passed
         # to the child view's post method.
         try:
-            return super().dispatch(request, *args, **{**self.params, **kwargs})
+            return super().dispatch(self.request, *args, **{**self.params, **kwargs})
         except SAMBrokerErrorNotImplemented as not_implemented_error:
             return SmarterJournaledJsonErrorResponse(
-                request=request,
+                request=self.request,
                 thing=self.manifest_kind,
                 command=self.command,
                 e=not_implemented_error.get_formatted_err_message,
@@ -346,7 +354,7 @@ class CliBaseApiView(APIView, AccountMixin):
             )
         except SAMBrokerErrorNotReady as not_ready_error:
             return SmarterJournaledJsonErrorResponse(
-                request=request,
+                request=self.request,
                 thing=self.manifest_kind,
                 command=self.command,
                 e=not_ready_error.get_formatted_err_message,
@@ -354,7 +362,7 @@ class CliBaseApiView(APIView, AccountMixin):
             )
         except SAMBrokerErrorNotFound as not_found_error:
             return SmarterJournaledJsonErrorResponse(
-                request=request,
+                request=self.request,
                 thing=self.manifest_kind,
                 command=self.command,
                 e=not_found_error.get_formatted_err_message,
@@ -362,7 +370,7 @@ class CliBaseApiView(APIView, AccountMixin):
             )
         except SAMBrokerReadOnlyError as read_only_error:
             return SmarterJournaledJsonErrorResponse(
-                request=request,
+                request=self.request,
                 thing=self.manifest_kind,
                 command=self.command,
                 e=read_only_error.get_formatted_err_message,
@@ -370,7 +378,7 @@ class CliBaseApiView(APIView, AccountMixin):
             )
         except SAMBrokerError as broker_error:
             return SmarterJournaledJsonErrorResponse(
-                request=request,
+                request=self.request,
                 thing=self.manifest_kind,
                 command=self.command,
                 e=broker_error.get_formatted_err_message,
@@ -379,7 +387,7 @@ class CliBaseApiView(APIView, AccountMixin):
         # pylint: disable=broad-except
         except Exception as e:
             return SmarterJournaledJsonErrorResponse(
-                request=request,
+                request=self.request,
                 thing=self.manifest_kind,
                 command=self.command,
                 e=e,
