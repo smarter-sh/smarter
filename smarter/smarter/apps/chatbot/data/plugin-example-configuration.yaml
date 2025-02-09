@@ -1,0 +1,42 @@
+apiVersion: smarter.sh/v1
+kind: Plugin
+metadata:
+  description: The example plugin. This is a 'hello world' style plugin. This is an
+    example plugin to integrate with OpenAI API Function Calling additional information
+    plugin_data, in this module.
+  name: ExampleConfiguration
+  pluginClass: static
+  tags: []
+  version: 0.2.0
+spec:
+  data:
+    description: an example plugin to integrate with OpenAI API Function Calling additional
+      information plugin_data, in this module.
+    staticData:
+      description: an example plugin to integrate with OpenAI API Function Calling
+        additional information plugin_data, in this module.
+      staticData:
+        about: |
+          In an API call, you can describe functions and have the model intelligently choose to output a JSON object containing arguments to call one or many functions. The Chat Completions API does not call the plugin_data; instead, the model generates JSON that you can use to call the plugin_data in your code. The latest models (gpt-4-turbo and gpt-4-1106-preview) have been trained to both detect when a plugin_data should to be called (depending on the input) and to respond with JSON that adheres to the plugin_data signature more closely than previous models. With this capability also comes potential risks. We strongly recommend building in user confirmation flows before taking actions that impact the world on behalf of users (sending an email, posting something online, making a purchase, etc).
+        links:
+        - documentation: https://platform.openai.com/docs/guides/function-calling
+        - website: https://openai.com/
+        - wikipedia: https://en.wikipedia.org/wiki/OpenAI
+        platformProvider: OpenAI
+  prompt:
+    maxTokens: 256
+    model: gpt-4-turbo
+    provider: openai
+    systemRole: 'Your job is to provide helpful technical information about the OpenAI
+      API Function Calling feature by calling the tool for ''the example plugin''.
+      Begin your response with: "Congratulations!!! OpenAI API Function Calling chose
+      to call this plugin_data. Here is the additional information that you requested:".
+      Thereon, you should return exactly the text that you receive from the tool call
+      response, without any additions, nor embelishments.'
+    temperature: 0
+  selector:
+    directive: searchTerms
+    searchTerms:
+    - example function calling configuration
+    - Example configuration
+    - example function calling
