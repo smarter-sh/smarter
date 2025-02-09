@@ -1,3 +1,15 @@
+## [0.10.7](https://github.com/smarter-sh/smarter/compare/v0.10.6...v0.10.7) (2025-02-09)
+
+
+### Bug Fixes
+
+* check isinstance(request, WSGIRequest) ([8e2492e](https://github.com/smarter-sh/smarter/commit/8e2492ebb66b06bfaf868f85ebf7022d0cbb1d91))
+* fully inspect request before attempting to do anything with it ([19f9ace](https://github.com/smarter-sh/smarter/commit/19f9ace2ea74bb8ea31dc66b501c61f8c74e4f57))
+* initialize the admin for the account when we only have an account number ([7770406](https://github.com/smarter-sh/smarter/commit/7770406e658ccbabb0add0bfb1d3e6bd944373f5))
+* look for mysql db errors ([c41e21f](https://github.com/smarter-sh/smarter/commit/c41e21f461d8d7cd6fb609c4b88da09894953c44))
+* set api keys for googleai and metaai ([26596fb](https://github.com/smarter-sh/smarter/commit/26596fb531339ae5421a71e2efb16d2c47392dd1))
+* SmarterRequestMixin should ignore paths for django /admin/ and /docs/ ([cb777f7](https://github.com/smarter-sh/smarter/commit/cb777f70b140d40f5db62c57fc78e79efb406a05))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
