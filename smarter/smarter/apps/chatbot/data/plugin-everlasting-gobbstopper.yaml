@@ -1,0 +1,68 @@
+apiVersion: smarter.sh/v1
+kind: Plugin
+metadata:
+  description: Get additional information about the Everlasting Gobstopper product
+    created by Willy Wonka Chocolate Factory. Information includes sales promotions,
+    coupon codes, company contact information and biographical background on the company
+    founder.
+  name: EverlastingGobstopper
+  pluginClass: static
+  tags: []
+  version: 0.2.0
+spec:
+  data:
+    description: Get additional information about the Everlasting Gobstopper product
+      created by Willy Wonka Chocolate Factory. Information includes sales promotions,
+      coupon codes, company contact information and biographical background on the
+      company founder.
+    staticData:
+      description: Get additional information about the Everlasting Gobstopper product
+        created by Willy Wonka Chocolate Factory. Information includes sales promotions,
+        coupon codes, company contact information and biographical background on the
+        company founder.
+      staticData:
+        biographical: |
+          Willy Wonka is a fictional character appearing in British author Roald Dahl's 1964 children's novel Charlie and the Chocolate Factory, its 1972 sequel Charlie and the Great Glass Elevator and several films based on those books. He is the eccentric founder and proprietor of the Wonka Chocolate Factory
+        contact:
+        - name: Willy Wonka
+        - title: Founder and CEO
+        - location: 1234 Chocolate Factory Way, Chocolate City, Chocolate State, USA
+        - phone: +1 123-456-7890
+        - website: https://wwcf.com
+        - whatsapp: 11234567890
+        - email: ww@wwcf.com
+        couponCodes:
+        - code: 10OFF
+          description: |
+            10% off your next purchase
+          name: 10% off
+        - code: 20OFF
+          description: |
+            20% off your next purchase
+          name: 20% off
+        salesPromotions:
+        - description: |
+            The Everlasting Gobstopper is a candy that, according to Willy Wonka, "Never Gets Smaller Or Ever Gets Eaten". It is the main focus of Charlie and the Chocolate Factory, both the 1971 film and the 2005 film, and Willy Wonka and the Chocolate Factory, the 1971 film adaptation of the novel.
+          image: https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Everlasting_Gobstopper.jpg/220px-Everlasting_Gobstopper.jpg
+          name: Everlasting Gobstopper
+          price: $1.00
+        - description: |
+            Wonka Bars are a fictional brand of chocolate made by Willy Wonka, and also a chocolate bar inspired by the Willy Wonka Bar from the novel and the films Willy Wonka & the Chocolate Factory and Charlie and the Chocolate Factory.
+          image: https://m.media-amazon.com/images/I/81E-734cMzL._AC_UF894,1000_QL80_.jpg
+          name: Wonka Bar
+          price: $1.00
+  prompt:
+    maxTokens: 256
+    model: gpt-4-turbo
+    provider: openai
+    systemRole: You are a helpful marketing agent for the [Willy Wonka Chocolate Factory](https://wwcf.com).
+      Whenever possible you should defer to the tool calls provided for additional
+      information about everlasting gobstoppers.
+    temperature: 1
+  selector:
+    directive: searchTerms
+    searchTerms:
+    - Gobstopper
+    - Gobstoppers
+    - Gobbstopper
+    - Gobbstoppers

@@ -1,9 +1,10 @@
 # pylint: disable=W0718
 """Smarter API Plugin Manifest handler"""
 
+import logging
 from typing import Type
 
-from django.http import HttpRequest
+from django.core.handlers.wsgi import WSGIRequest
 from taggit.models import Tag
 
 from smarter.apps.account.mixins import AccountMixin
@@ -41,6 +42,8 @@ PluginMap: dict[str, PluginBase] = {
     SAMPluginMetadataClassValues.SQL.value: PluginSql,
 }
 
+logger = logging.getLogger(__name__)
+
 
 class SAMPluginBrokerError(SAMBrokerError):
     """Base exception for Smarter API Plugin Broker handling."""
@@ -69,7 +72,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        request: HttpRequest,
+        request: WSGIRequest,
         account: Account,
         api_version: str = SmarterApiVersions.V1,
         name: str = None,
@@ -155,7 +158,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     ###########################################################################
     # Smarter manifest abstract method implementations
     ###########################################################################
-    def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def example_manifest(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         plugin_class: str = self.params.get("plugin_class", SAMPluginMetadataClassValues.STATIC.value)
@@ -178,10 +181,11 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         ]
         return titles
 
-    def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def get(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
         name: str = self.params.get("name", None)
+        name = self.clean_cli_param(param=name, param_name="name", url=request.build_absolute_uri())
         all_objects: bool = self.params.get("all_objects", False)
         tags: str = self.params.get("tags", None)
         data = []
@@ -198,6 +202,8 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
                     plugins = PluginMeta.objects.filter(account=self.account, tags__in=tags)[:MAX_RESULTS]
                 else:
                     plugins = PluginMeta.objects.filter(account=self.account)[:MAX_RESULTS]
+
+        logger.info("SAMPluginBroker().get() found %s Plugins for account %s", plugins.count(), self.account)
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for plugin_meta in plugins:
@@ -227,7 +233,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         }
         return self.json_response_ok(command=command, data=data)
 
-    def apply(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def apply(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """
         apply the manifest. copy the manifest data to the Django ORM model and
         save the model to the database. Call super().apply() to ensure that the
@@ -254,7 +260,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
             return self.json_response_ok(command=command, data={})
         raise SAMBrokerErrorNotReady(f"Plugin {self.plugin_meta.name} not ready", thing=self.kind, command=command)
 
-    def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def describe(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
         self.set_and_verify_name_param(command=command)
@@ -270,12 +276,12 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
                 ) from e
         raise SAMBrokerErrorNotReady(f"Plugin {self.plugin_meta.name} not ready", thing=self.kind, command=command)
 
-    def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def chat(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented(message="chat() not implemented", thing=self.kind, command=command)
 
-    def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def delete(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
         self.set_and_verify_name_param(command=command)
@@ -289,17 +295,17 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
                 ) from e
         raise SAMBrokerErrorNotReady(f"Plugin {self.plugin_meta.name} not ready", thing=self.kind, command=command)
 
-    def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def deploy(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("deploy() not implemented", thing=self.kind, command=command)
 
-    def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def undeploy(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("undeploy() not implemented", thing=self.kind, command=command)
 
-    def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+    def logs(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
         raise SAMBrokerErrorNotImplemented("logs() not implemented", thing=self.kind, command=command)

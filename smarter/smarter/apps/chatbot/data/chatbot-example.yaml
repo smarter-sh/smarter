@@ -1,0 +1,39 @@
+apiVersion: smarter.sh/v1
+kind: Chatbot
+metadata:
+  description: "An example chatbot with tool calling and Smarter Plugins."
+  name: example
+  version: 0.1.0
+spec:
+  apiKey: null
+  config:
+    appAssistant: Kent
+    appBackgroundImageUrl: null
+    appExamplePrompts:
+    - What is the weather in San Francisco?
+    - What is an Everlasting Gobstopper?
+    - example function calling configuration
+    appFileAttachment: false
+    appInfoUrl: https://smarter.sh
+    appLogoUrl: /static/querium/querium-logo-white-transparent.png
+    appName: Smarter Demo
+    appPlaceholder: Ask me anything...
+    appWelcomeMessage: Welcome to the Smarter demo!
+    customDomain: null
+    defaultMaxTokens: 256
+    defaultModel: gpt-4-turbo
+    defaultSystemRole: You are a helpful chatbot. When given the opportunity to utilize
+      function calling, you should always do so. This will allow you to provide the
+      best possible responses to the user. If you are unable to provide a response,
+      you should prompt the user for more information. If you are still unable to
+      provide a response, you should inform the user that you are unable to help them
+      at this time.
+    defaultTemperature: 0.5
+    deployed: true
+    dnsVerificationStatus: Verified
+    provider: openai
+    subdomain: null
+  functions: []
+  plugins:
+  - EverlastingGobstopper
+  - ExampleConfiguration
