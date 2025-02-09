@@ -502,7 +502,8 @@ class AbstractBroker(ABC):
         from the Django model serializer.
         """
         fields_and_types = [
-            {"name": field_name, "type": type(field).__name__} for field_name, field in serializer.fields.items()
+            self.snake_to_camel({"name": field_name, "type": type(field).__name__}, convert_values=True)
+            for field_name, field in serializer.fields.items()
         ]
         return fields_and_types
 

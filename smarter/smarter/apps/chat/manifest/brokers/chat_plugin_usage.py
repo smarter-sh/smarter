@@ -244,7 +244,8 @@ class SAMChatPluginUsageBroker(AbstractBroker, AccountMixin):
                     raise SAMChatPluginUsageBrokerError(
                         f"Model dump failed for {self.kind} {plugin_usage.id}", thing=self.kind, command=command
                     )
-                data.append(model_dump)
+                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                data.append(camel_cased_model_dump)
             except Exception as e:
                 raise SAMChatPluginUsageBrokerError(
                     f"Model dump failed for {self.kind} {plugin_usage.id}", thing=self.kind, command=command
