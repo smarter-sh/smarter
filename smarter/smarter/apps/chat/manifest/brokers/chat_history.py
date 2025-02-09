@@ -244,7 +244,8 @@ class SAMChatHistoryBroker(AbstractBroker, AccountMixin):
                     raise SAMChatHistoryBrokerError(
                         f"Model dump failed for {self.kind} {chat.id}", thing=self.kind, command=command
                     )
-                data.append(model_dump)
+                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                data.append(camel_cased_model_dump)
             except Exception as e:
                 raise SAMChatHistoryBrokerError(
                     f"Model dump failed for {self.kind} {chat.id}", thing=self.kind, command=command

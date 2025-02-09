@@ -235,7 +235,8 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
                 model_dump = ChatSerializer(chat).data
                 if not model_dump:
                     raise SAMChatBrokerError(f"Model dump failed for {self.kind} {chat.id}")
-                data.append(model_dump)
+                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                data.append(camel_cased_model_dump)
             except Exception as e:
                 raise SAMChatBrokerError(
                     f"Model dump failed for {self.kind} {chat.id}", thing=self.kind, command=command
