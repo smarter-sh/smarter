@@ -292,7 +292,7 @@ spec:
 
 
   prompt:
-    maxTokens: 8192
+    maxTokens: 4096
     model: gpt-4
     provider: openai
     systemRole: |
