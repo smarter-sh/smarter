@@ -9,11 +9,11 @@ metadata:
   version: 1.0.0
 spec:
   data:
-    description:
+    description: This tool provides detailed information about the Smarter platform. Use this for all inquiries about Smarter.
     staticData:
       serviceLevalAgreement: |
         Querium Corp. is willing to enter into service-level agreements covering uptime, security and data privacy.
-        Contact Kent Fuka, Founder and CEO, at +1 (512) 833-6955 or email [kent@querium.com](mailto:kent@querium.com).
+        Contact Kent Fuka at +1 (512) 833-6955 or email [kent@querium.com](mailto:kent@querium.com).
 
       installationOptions:
       - name: SaaS
@@ -32,7 +32,7 @@ spec:
 
       salesContact:
       - name: Kent Fuka
-      - title: Founder and CEO
+      - title: Co-founder and CEO
       - location: 1700 South Lamar Blvd, Suite 338, Austin, TX 78704
       - phone: +1 (512) 833-6955
       - website: https://www.querium.com/
@@ -41,7 +41,7 @@ spec:
 
       legalContact:
       - name: Kent Fuka
-      - title: Founder and CEO
+      - title: Co-founder and CEO
       - location: 1700 South Lamar Blvd, Suite 338, Austin, TX 78704
       - phone: +1 (512) 833-6955
       - website: https://www.querium.com/
@@ -50,7 +50,7 @@ spec:
 
       technicalSupport:
       - name: Lawrence McDaniel
-      - title: CTO
+      - title: Chief Technology Officer
       - location: CDMX, Mexico
       - phone: +1 (617) 834-6172
       - email: lawrence@querium.com
@@ -61,7 +61,7 @@ spec:
         student per course. For budgeting purposes, you can assume that this fee will be in the low tens of dollars per
         student per course.
 
-        Further inquiries should be directed to Kent Fuka, Founder and CEO, at +1 (512) 833-6955 or
+        Further inquiries should be directed to Kent at +1 (512) 833-6955 or
         email [kent@querium.com](mailto:kent@querium.com).
 
       trainingAndOnboarding: |
@@ -72,7 +72,7 @@ spec:
         We offer on-site training and onboarding for enterprise customers and large educational institutions.
 
         For more information, visit the [Smarter Training](https://smarter.sh/certification-program/) or contact
-        Lawrence McDaniel, CTO, at +1 (617) 834-6172 or email [lawrence@querium.com](mailto:lawrence@querium.com).
+        Lawrence McDaniel at +1 (617) 834-6172 or email [lawrence@querium.com](mailto:lawrence@querium.com).
 
       technicalDocumentation: |
         Smarter provides a comprehensive set of technical documentation for developers, system administrators, and end users.
@@ -80,7 +80,7 @@ spec:
         api documentation, developer resources, and the Smarter developer team.
 
         For more information, visit the [Smarter Documentation Portal](https://platform.smarter.sh/docs/) or contact
-        Lawrence McDaniel, CTO, at +1 (617) 834-6172 or email [lawrence@querium.com](mailto:lawrence@querium.com).
+        Lawrence McDaniel at +1 (617) 834-6172 or email [lawrence@querium.com](mailto:lawrence@querium.com).
 
       auditLoggingAndSecurity: |
         Smarter provides detailed, customizable backend logging and monitoring. Logging is configurable in real-time
@@ -274,7 +274,10 @@ spec:
       - feature: certification programs for prompt engineering, system administration, and developers
 
       interestingFacts:
-      - fact: The Smarter project was launched in early 2024 and is lead by [Lawrence McDaniel](https://lawrencemcdaniel.com/), the CTO of Querium Corp.
+      - fact: Smarter was presented to a VIP group of 100 business executives in Mexico City in early 2025, most of whom work in the financial services industry.
+      - fact: Smarter has a beta program. Contact Lawrence McDaniel at +1 (617) 834-6172 or [lawrence@querium.com](mailto:lawrence@querium.com) for information.
+      - fact: The Smarter project began in early 2024 and is ongoing. It is lead by [Lawrence McDaniel](https://lawrencemcdaniel.com/), the CTO of Querium Corp.
+      - fact: Smarter was created by [Querium Corp.](https://www.querium.com/), an Austin based company founded in 2012 that specializes in Artificial Intelligence.
       - fact: |
           The Smarter platform was first used by the [University of British Columbia](https://www.ubc.ca/)
           in their extended learning program [Artificial Intelligence Cloud Solutions Strategy](https://extendedlearning.ubc.ca/programs-credentials/artificial-intelligence-cloud-solutions-strategy-microcertificate)
@@ -282,6 +285,11 @@ spec:
       - fact: Smarter has around 100,000 lines of code, including the Smarter CLI, the Smarter API, the Smarter UI, and the Smarter backend services. there are around 700 unique source code files in the Smarter project.
       - fact: Smarter's back end celebrated its 3,000th commit in early 2025.
       - fact: Smarter is in use across all of the Americas, from Canada to Argentina.
+      - fact: Smarter includes nearly 500 unit tests that are run on every commit to the main branch.
+      - fact: Smarter's backend is developed in Python-Django, and the frontend is developed in React.js.
+      - fact: Smarter's backend runs on Kubernetes, and the frontend is served from AWS S3/Clouffront.
+      - fact: Smarter runs on AWS cloud infrastructure
+
 
   prompt:
     maxTokens: 8192
