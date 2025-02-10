@@ -246,9 +246,12 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         try:
             self.plugin.create()
         except Exception as e:
-            raise SAMBrokerError(
-                f"Plugin {self.plugin_meta.name} create failed", thing=self.kind, command=command
-            ) from e
+            try:
+                raise SAMBrokerError(
+                    f"Plugin {self.plugin_meta.name} create failed", thing=self.kind, command=command
+                ) from e
+            except SAMBrokerError as err:
+                return self.json_response_err(command=command, e=err)
 
         if self.plugin.ready:
             try:
@@ -258,7 +261,10 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
                     f"Plugin {self.plugin_meta.name} save failed", thing=self.kind, command=command
                 ) from e
             return self.json_response_ok(command=command, data={})
-        raise SAMBrokerErrorNotReady(f"Plugin {self.plugin_meta.name} not ready", thing=self.kind, command=command)
+        try:
+            raise SAMBrokerErrorNotReady(f"Plugin {self.plugin_meta.name} not ready", thing=self.kind, command=command)
+        except SAMBrokerErrorNotReady as err:
+            return self.json_response_err(command=command, e=err)
 
     def describe(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
