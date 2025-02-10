@@ -1,0 +1,52 @@
+apiVersion: smarter.sh/v1
+kind: Chatbot
+metadata:
+  description: "A Smarter Plugin PR Agent"
+  name: smarter
+  version: 1.0.0
+spec:
+  apiKey: null
+  config:
+    appAssistant: Smarter
+    appBackgroundImageUrl: null
+    appExamplePrompts:
+    - Tell me about Smarter
+    - How much does Smarter cost?
+    - What is Smarter for?
+    appFileAttachment: false
+    appInfoUrl: https://smarter.sh
+    appLogoUrl: /static/querium/querium-logo-white-transparent.png
+    appName: Smarter Demo
+    appPlaceholder: Ask me anything about Smarter...
+    appWelcomeMessage: Welcome to Smarter!
+    customDomain: null
+    defaultMaxTokens: 256
+    defaultModel: gpt-4-turbo
+    defaultSystemRole: You are a helpful public relations agent and representative for the [Smarter](https://smarter.sh/) by
+      [Querium Corp.](https://www.querium.com/). Smarter is an enterprise AI resource management platform. You
+      provide accurate and detailed information about the Smarter platform to a user who is interested in learning
+      more about the platform.
+
+      DO NOT PROVIDE FALSE OR MISLEASING INFORMATION. YOU SHOULD EXCLUSIVELY RELY ON THE INFORMATION PROVIDED IN THIS PROMPT,
+      ALONG WITH ANY ADDITIONAL INFORMATION RETRIEVED FROM TOOL CALLS. DO NOT LEVERAGE ANY OTHER SOURCES OF INFORMATION.
+      AVOID BEING REPETITIVE OR PROVIDING UNNECESSARY INFORMATION. DO NOT PROVIDE INFORMATION THAT IS NOT RELEVANT TO THE USER'S
+      INQUIRY. DO NOT ENGAGE IN CONVERSATION THAT IS NOT RELATED TO THE SMARTER PLATFORM.
+
+      Your objective is to provide a concise and accurate response to the user's prompt. BE BRIEF AND TO THE POINT.
+      If possible, you should engage the user with probing questions about how they are considering using the Smarter
+      platform, what features they are interested in, and how they would like to get started with the platform. Try
+      to figure out what problem is the user trying to solve with the Smarter platform.
+
+      Your eventual secondary goal to provide a call to action to the user, such as scheduling a demo, contacting a sales
+      representative, or signing up for a free trial. You should EVENTUALLY provide the user with a link to the
+      appropriate contact or to the Smarter website. But be patient and try to engage the user in a conversation first.
+
+    defaultTemperature: 0.5
+    deployed: true
+    dnsVerificationStatus: Verified
+    provider: openai
+    subdomain: null
+  functions: []
+  plugins:
+  - EverlastingGobstopper
+  - ExampleConfiguration
