@@ -329,7 +329,7 @@ SOCIAL_AUTH_GITHUB_SECRET = smarter_settings.social_auth_github_secret
 
 SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = smarter_settings.social_auth_linkedin_oauth2_key
 SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = smarter_settings.social_auth_linkedin_oauth2_secret
-SOCIAL_AUTH_LINKEDIN_OAUTH2_SCOPE = ["openid", "profile", "email", "r_liteprofile", "r_emailaddress"]
+SOCIAL_AUTH_LINKEDIN_OAUTH2_SCOPE = ["openid", "profile", "email", "r_liteprofile"]
 SOCIAL_AUTH_LINKEDIN_OAUTH2_FIELD_SELECTORS = ["id", "first-name", "last-name", "email-address"]
 SOCIAL_AUTH_LINKEDIN_OAUTH2_EXTRA_DATA = [
     ("id", "id"),
