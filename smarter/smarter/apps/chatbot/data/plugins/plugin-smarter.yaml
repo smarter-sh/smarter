@@ -260,6 +260,29 @@ spec:
         - [Smarter on Github](https://github.com/smarter-sh/)
         - [Querium Corp. web site](https://www.querium.com/)
 
+      keyFeatures:
+      - feature: a declarative, manifest-based approach to managing AI resources
+      - feature: a plugin architecture for extending and simplifying the use of llm tool-calling features
+      - feature: unified access to popular LLM providers including DeepSeek, Google AI, Meta AI, OpenAI, and others.
+      - feature: a powerful API and command-line interface for managing AI resources, available for Windows, macOS, Linux and Docker
+      - feature: a rich set of tools for managing AI resources, including model training, deployment, monitoring, and scaling
+      - feature: a comprehensive set of documentation, training, and support resources for developers, system administrators, and end users
+      - feature: |
+          open source UI components and libraries to jumpstart your custom AI-driven projects,
+          including this [react.js chat component on NPM](https://github.com/smarter-sh/smarter-chat) and the
+          [Golang command-line interface](https://github.com/smarter-sh/smarter-cli).
+      - feature: certification programs for prompt engineering, system administration, and developers
+
+      interestingFacts:
+      - fact: The Smarter project was launched in early 2024 and is lead by [Lawrence McDaniel](https://lawrencemcdaniel.com/), the CTO of Querium Corp.
+      - fact: |
+          The Smarter platform was first used by the [University of British Columbia](https://www.ubc.ca/)
+          in their extended learning program [Artificial Intelligence Cloud Solutions Strategy](https://extendedlearning.ubc.ca/programs-credentials/artificial-intelligence-cloud-solutions-strategy-microcertificate)
+          micro certificate program.
+      - fact: Smarter has around 100,000 lines of code, including the Smarter CLI, the Smarter API, the Smarter UI, and the Smarter backend services. there are around 700 unique source code files in the Smarter project.
+      - fact: Smarter's back end celebrated its 3,000th commit in early 2025.
+      - fact: Smarter is in use across all of the Americas, from Canada to Argentina.
+
   prompt:
     maxTokens: 8192
     model: gpt-4
@@ -284,30 +307,8 @@ spec:
       responds positively, provide them with this link to the [Smarter website contact form](https://smarter.sh/contact/),
       or to the [Smarter demo scheduling page](https://smarter.sh/contact/), or to the [Smarter sales contact page](https://smarter.sh/contact/).
 
-      Key features of the Smarter platform include
-      - feature: a declarative, manifest-based approach to managing AI resources
-      - feature: a plugin architecture for extending and simplifying the use of llm tool-calling features
-      - feature: unified access to popular LLM providers including DeepSeek, Google AI, Meta AI, OpenAI, and others.
-      - feature: a powerful API and command-line interface for managing AI resources, available for Windows, macOS, Linux and Docker
-      - feature: a rich set of tools for managing AI resources, including model training, deployment, monitoring, and scaling
-      - feature: a comprehensive set of documentation, training, and support resources for developers, system administrators, and end users
-      - feature: open source UI components and libraries to jumpstart your custom AI-driven projects,
-        including this [react.js chat component on NPM](https://github.com/smarter-sh/smarter-chat) and the
-        [Golang command-line interface](https://github.com/smarter-sh/smarter-cli).
-      - feature: certification programs for prompt engineering, system administration, and developers
-
-      Here is a list of random interesting facts about the Smarter platform that you can use during initial conversations, as
-      an ice breaker, or to keep the conversation going.
-      - fact: The Smarter project was launched in early 2024 and is lead by
-        [Lawrence McDaniel](https://lawrencemcdaniel.com/), the CTO of Querium Corp.
-      - fact: The Smarter platform was first used by the [University of British Columbia](https://www.ubc.ca/)
-        in their extended learning program [Artificial Intelligence Cloud Solutions Strategy](https://extendedlearning.ubc.ca/programs-credentials/artificial-intelligence-cloud-solutions-strategy-microcertificate)
-        micro certificate program.
-      - fact: Smarter has around 100,000 lines of code, including the Smarter CLI, the Smarter API, the Smarter UI, and the Smarter
-        backend services. there are around 700 unique source code files in the Smarter project.
-      - fact: Smarter's back end celebrated its 3,000th commit in early 2025.
-      - fact: Smarter is in use across all of the Americas, from Canada to Argentina.
-
+      During initial conversations you can refer to the "interesting facts" from the tool provided for ice breaker materials,
+      or to keep the conversation going.
 
     temperature: 1
   selector:
