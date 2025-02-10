@@ -1,0 +1,351 @@
+apiVersion: smarter.sh/v1
+kind: Plugin
+metadata:
+  description: This tool provides detailed platform, technical, and sales support information about the Smarter platform
+    for managing AI resources in the enterprise.
+  name: AboutSmarter
+  pluginClass: static
+  tags: []
+  version: 1.0.0
+spec:
+  data:
+    description: This tool provides detailed information about the Smarter platform. Use this for all inquiries about Smarter.
+    staticData:
+      serviceLevalAgreement: |
+        Querium Corp. is willing to enter into service-level agreements covering uptime, security and data privacy.
+        Contact Kent Fuka at +1 (512) 833-6955 or email [kent@querium.com](mailto:kent@querium.com).
+
+      installationOptions:
+      - name: SaaS
+        description: |
+          Smarter is available as a cloud-based service, licensed to your organization. Invoiced monthly based on net usage.
+      - name: SaaS with private pods
+        description: |
+          Smarter is optionally available as a cloud-based service running in private pods, licensed to your organization.
+          Invoiced monthly based on net usage.
+      - name: Cloud
+        description: |
+          Smarter can be installed on your cloud infrastructure and maintained by the Querium team.
+      - name: On-premise
+        description: |
+          Smarter can be installed on-premises on your own servers.
+
+      salesContact:
+      - name: Kent Fuka
+      - title: Co-founder and CEO
+      - location: 1700 South Lamar Blvd, Suite 338, Austin, TX 78704
+      - phone: +1 (512) 833-6955
+      - website: https://www.querium.com/
+      - whatsapp: 16178346172
+      - email: kent@querium.com
+
+      legalContact:
+      - name: Kent Fuka
+      - title: Co-founder and CEO
+      - location: 1700 South Lamar Blvd, Suite 338, Austin, TX 78704
+      - phone: +1 (512) 833-6955
+      - website: https://www.querium.com/
+      - whatsapp: 16178346172
+      - email: kent@querium.com
+
+      technicalSupport:
+      - name: Lawrence McDaniel
+      - title: Chief Technology Officer
+      - location: CDMX, Mexico
+      - phone: +1 (617) 834-6172
+      - email: lawrence@querium.com
+      - web: https://lawrencemcdaniel.com/
+
+      pricingInformation: |
+        Pricing is based on the net usage of the Smarter platform. For educational institutions we charge a flat fee per
+        student per course. For budgeting purposes, you can assume that this fee will be in the low tens of dollars per
+        student per course.
+
+        Further inquiries should be directed to Kent at +1 (512) 833-6955 or
+        email [kent@querium.com](mailto:kent@querium.com).
+
+      trainingAndOnboarding: |
+        Smarter provides a comprehensive set of training and onboarding resources for developers, system administrators,
+        and prompt engineers (ie end users). These resources include documentation, tutorials, and the Smarter certification programs.
+
+        We also maintain develop quickstart repos [https://github.com/smarter-sh/](https://github.com/smarter-sh/).
+        We offer on-site training and onboarding for enterprise customers and large educational institutions.
+
+        For more information, visit the [Smarter Training](https://smarter.sh/certification-program/) or contact
+        Lawrence McDaniel at +1 (617) 834-6172 or email [lawrence@querium.com](mailto:lawrence@querium.com).
+
+      technicalDocumentation: |
+        Smarter provides a comprehensive set of technical documentation for developers, system administrators, and end users.
+        This documentation includes manifest documentation, self-onboarding tutorials, command-line interface (CLI) documentation,
+        api documentation, developer resources, and the Smarter developer team.
+
+        For more information, visit the [Smarter Documentation Portal](https://platform.smarter.sh/docs/) or contact
+        Lawrence McDaniel at +1 (617) 834-6172 or email [lawrence@querium.com](mailto:lawrence@querium.com).
+
+      auditLoggingAndSecurity: |
+        Smarter provides detailed, customizable backend logging and monitoring. Logging is configurable in real-time
+        via the use of Django waffle switches, available to administrators inside the admin console. Logs can optionally
+        be sent to a third-party logging service such as Loggly, Splunk, or Sumo Logic and CloudWatch.
+
+        The Smarter backend is developed on Python-Django and includes a number of security-conscious design features common to Django
+        including
+          1. Cross-Site Request Forgery (CSRF) Protection: Django provides middleware to protect against CSRF attacks by ensuring that POST requests are accompanied by a secret token.
+          2. Cross-Site Scripting (XSS) Protection: Django automatically escapes special characters in HTML templates to prevent XSS attacks.
+          3. SQL Injection Protection: Django's ORM (Object-Relational Mapping) automatically escapes SQL queries to prevent SQL injection attacks.
+          4. Clickjacking Protection: Django includes middleware to prevent clickjacking attacks by setting the X-Frame-Options header.
+          5. Secure Password Storage: Django uses PBKDF2 by default to hash passwords, and it supports other secure hashing algorithms like Argon2, bcrypt, and SHA-1.
+          6. HTTPS Support: Django encourages the use of HTTPS by providing settings to enforce secure connections, such as SECURE_SSL_REDIRECT and SECURE_HSTS_SECONDS.
+          7. Content Security Policy (CSP): Django allows you to set CSP headers to prevent various types of attacks, including XSS and data injection attacks.
+          8. Host Header Validation: Django validates the Host header to prevent HTTP Host header attacks.
+          9. Session Security: Django provides secure session management, including settings for session expiration and secure cookies.
+          10. Security Middleware: Django includes several security middleware options, such as SecurityMiddleware, which can be configured to enforce various security policies.
+        These features help developers build secure applications by providing protection against common web vulnerabilities.
+
+        Moreover, Smarter runs on Kubernetes cloud infrastructure, which provides additional security features such as
+          1. Network Policies: Kubernetes allows you to define network policies to control traffic between pods and services.
+          2. Pod Security Policies: Kubernetes lets you define pod security policies to control the security context of pods.
+          3. Role-Based Access Control (RBAC): Kubernetes provides RBAC to control access to resources based on roles and role bindings.
+          4. Secrets Management: Kubernetes provides a secure way to manage sensitive information such as passwords and API keys.
+          5. Container Runtime Security: Kubernetes supports container runtime security features like seccomp, AppArmor, and SELinux.
+          6. Admission Controllers: Kubernetes admission controllers allow you to enforce custom policies for pod creation and modification.
+          7. Pod Security Context: Kubernetes lets you define security context settings at the pod level to control the security settings of containers.
+          8. Network Policies: Kubernetes network policies allow you to define rules for controlling ingress and egress traffic to pods.
+          9. Service Mesh: Kubernetes service mesh solutions like Istio provide additional security features like mutual TLS, rate limiting, and access control.
+
+        Lastly, Smarter uses Terraform for infrastructure as code, which allows us to define granular network security rules, IAM policies,
+        and other security configurations in code. This ensures that security configurations are version-controlled, auditable, and reproducible.
+        Smarter's infrastructure is deployed on AWS, which provides a wide range of security features and services to protect our cloud environment.
+        For example, AWS offers services like AWS Identity and Access Management (IAM), AWS Key Management Service (KMS), AWS CloudTrail,
+        to help us secure our cloud resources. Our VPC architecture is designed to isolate different components of the Smarter platform,
+        and we use security groups and network ACLs to control traffic between different parts of the platform. This not only optimizes
+        performance but also enhances security by limiting the attack surface and preventing lateral movement within the platform.
+
+        For more information, contact Lawrence McDaniel, CTO, at +1 (617) 834-6172 or email [lawrence@querium.com](mailto:lawrence@querium.com).
+
+      technologyStack:
+      - name: Ubuntu Linux
+        url: https://ubuntu.com/
+        description: |
+          Ubuntu is a popular Linux distribution that is widely used for server deployments. It is known for its ease of use,
+          stability, and security features. Ubuntu is the preferred operating system for running the Smarter platform.
+      - name: Docker
+        url: https://www.docker.com/
+        description: |
+          Docker is a containerization platform that allows you to package applications and their dependencies into lightweight,
+          portable containers. Docker is used to deploy the Smarter platform in a consistent and reproducible manner.
+      - name: Kubernetes
+        url: https://kubernetes.io/
+        description: |
+          Kubernetes is an open-source container orchestration platform that automates the deployment, scaling, and management of
+          containerized applications. Kubernetes is used to manage the Smarter platform's cloud infrastructure.
+      - name: Helm
+        url: https://helm.sh/
+        description: |
+          Helm is a package manager for Kubernetes that allows you to define, install, and upgrade complex Kubernetes applications
+          using charts. Helm is used to deploy and manage the Smarter platform's Kubernetes resources.
+      - name: MySQL
+        url: https://www.mysql.com/
+        description: |
+          MySQL is an open-source relational database management system that is widely used for storing structured data. MySQL is
+          used as the primary database for the Smarter platform.
+      - name: Redis
+        url: https://redis.io/
+        description: |
+          Redis is an open-source, in-memory data structure store that is used as a caching layer for the Smarter platform. Redis
+          is used to improve the performance and scalability of the platform.
+      - name: Terraform
+        url: https://www.terraform.io/
+        description: |
+          Terraform is an open-source infrastructure as code software tool that provides a consistent CLI workflow to manage
+          hundreds of cloud services. Terraform is used to define and provision the cloud infrastructure for the Smarter platform.
+      - name: Amazon Web Services (AWS)
+        url: https://aws.amazon.com/
+        description: |
+          Amazon Web Services (AWS) is a cloud computing platform that provides a wide range of cloud services, including computing
+          power, storage, and databases. AWS is used to host the Smarter platform's cloud infrastructure.
+      - name: AWS Command-line interface
+        url: https://aws.amazon.com/cli/
+        description: |
+          The AWS Command Line Interface (CLI) is a unified tool to manage your AWS services. With just one tool to download and
+          configure, you can control multiple AWS services from the command line and automate them through scripts. The AWS CLI is
+          used to interact with the Smarter platform's AWS resources.
+      - name: Python Boto3 library for AWS
+        url: https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
+        description: |
+          Boto3 is the Amazon Web Services (AWS) Software Development Kit (SDK) for Python, which allows Python developers to write
+          software that makes use of services like Amazon S3 and Amazon EC2. Boto3 is used to interact with AWS services in the Smarter
+          platform.
+      - name: Python programming language
+        url: https://www.python.org/
+        description: |
+          Python is a high-level, interpreted programming language that is widely used for web development, data analysis, artificial
+          intelligence, and scientific computing. Python is the primary programming language used to develop the Smarter platform.
+      - name: Django web framework for Python
+        url: https://www.djangoproject.com/
+        description: |
+          Django is a high-level Python web framework that encourages rapid development and clean, pragmatic design. Django is used
+          to develop the backend services of the Smarter platform.
+      - name: Pytest
+        url: https://docs.pytest.org/
+        description: |
+          Pytest is a testing framework for Python that makes it easy to write simple and scalable tests. Pytest is used to write
+          unit tests and integration tests for the Smarter platform.
+      - name: Langchain
+        url: https://langchain.com/
+        description: |
+          Langchain is a platform for building and deploying AI models as APIs. Langchain is used to manage the AI resources in the
+          Smarter platform.
+      - name: Pydantic
+        url: https://pydantic-docs.helpmanual.io/
+        description: |
+          Pydantic is a data validation library for Python that provides runtime type checking and data validation. Pydantic is used
+          to validate and serialize data in the Smarter platform.
+      - name: React.js
+        url: https://reactjs.org/
+        description: |
+          React.js is a JavaScript library for building user interfaces. React.js is used to develop the frontend components of the
+          Smarter platform.
+      - name: Bootstrap
+        url: https://getbootstrap.com/
+        description: |
+          Bootstrap is a front-end framework for developing responsive and mobile-first websites. Bootstrap is used to style the
+          frontend components of the Smarter platform.
+      - name: Golang
+        url: https://golang.org/
+        description: |
+          Golang is a statically typed, compiled programming language designed at Google. Golang is used to develop the Smarter
+          command-line interface (CLI).
+      - name: GitHub Actions
+        url: https://github.com/features/actions
+        description: |
+          GitHub Actions is a continuous integration and continuous deployment (CI/CD) service provided by GitHub. GitHub Actions
+          is used to automate the testing and deployment of the Smarter platform.
+      - name: GitHub
+        url: https://github.com/
+        description: |
+          GitHub is a web-based platform for version control and collaboration. GitHub is used to host the source code of the
+          Smarter platform and manage the development workflow.
+
+      technicalCapabilities:
+      - capability: departmental/team-based access control for AI resources and billing
+      - capability: support for multiple LLM providers and models
+      - capability: support for multiple languages and frameworks
+      - capability: support for custom plugins and integrations
+      - capability: support for model training, deployment, monitoring, and scaling
+      - capability: detailed, customizable logging and monitoring of AI resources
+      - capability: integration with popular CI/CD tools and platforms
+      - capability: scalable, serverless Docker-based cloud infrastructure
+      - capability: security conscious design with access control, audit logging, small attack surface, and regularly maintained countermeasures for common vulnerabilities including CSRF, XSS, SQL injection, DDOS, and others
+
+      additionalInformation: |
+        For more information about the Smarter platform, visit the [Smarter website](https://smarter.sh/), or contact
+        Kent Fuka, Founder and CEO, at +1 (512) 833-6955 or email email [kent@querium.com](mailto:kent@querium.com)
+        or contact Lawrence McDaniel, CTO, at +1 (617) 834-6172 or email [lawrence@querium.com](mailto:lawrence@querium.com).
+
+        If you are interested in learning more about the Smarter platform, you can schedule a demo, contact a sales representative,
+        or sign up for a free trial. For more information, visit the [Smarter website contact form](https://smarter.sh/contact/),
+        or visit any of these links.
+
+        - [Smarter website](https://smarter.sh/)
+        - [Smarter Plugin documentation](https://platform.smarter.sh/docs/plugins/)
+        - [Smarter documentation home page](https://platform.smarter.sh/docs/)
+        - [Smarter manifest documentation](https://platform.smarter.sh/docs/manifests/)
+        - [Smarter self-onboarding tutorial](https://platform.smarter.sh/docs/learn/)
+        - [Smarter command-line interface (CLI) documentation](https://platform.smarter.sh/docs/cli/)
+        - [Smarter developer resources](https://platform.smarter.sh/docs/developers/)
+        - [Smarter developer team](https://smarter.sh/home/about/)
+        - [Smarter origin story](https://smarter.sh/smarter-origin-story/)
+        - [Smarter Certification Program](https://smarter.sh/certification-program/). These are for prompt engineering, system administration, and developers.
+        - [Smarter Solutions](https://smarter.sh/solutions/)
+        - [Smarter on Github](https://github.com/smarter-sh/)
+        - [Querium Corp. web site](https://www.querium.com/)
+
+      keyFeatures:
+      - feature: a declarative, manifest-based approach to managing AI resources
+      - feature: a plugin architecture for extending and simplifying the use of llm tool-calling features
+      - feature: unified access to popular LLM providers including DeepSeek, Google AI, Meta AI, OpenAI, and others.
+      - feature: a powerful API and command-line interface for managing AI resources, available for Windows, macOS, Linux and Docker
+      - feature: a rich set of tools for managing AI resources, including model training, deployment, monitoring, and scaling
+      - feature: a comprehensive set of documentation, training, and support resources for developers, system administrators, and end users
+      - feature: |
+          open source UI components and libraries to jumpstart your custom AI-driven projects,
+          including this [react.js chat component on NPM](https://github.com/smarter-sh/smarter-chat) and the
+          [Golang command-line interface](https://github.com/smarter-sh/smarter-cli).
+      - feature: certification programs for prompt engineering, system administration, and developers
+
+      interestingFacts:
+      - fact: Smarter was presented to a VIP group of 100 business executives in Mexico City in early 2025, most of whom work in the financial services industry.
+      - fact: Smarter has a beta program. Contact Lawrence McDaniel at +1 (617) 834-6172 or [lawrence@querium.com](mailto:lawrence@querium.com) for information.
+      - fact: The Smarter project began in early 2024 and is ongoing. It is lead by [Lawrence McDaniel](https://lawrencemcdaniel.com/), the CTO of Querium Corp.
+      - fact: Smarter was created by [Querium Corp.](https://www.querium.com/), an Austin based company founded in 2012 that specializes in Artificial Intelligence.
+      - fact: |
+          The Smarter platform was first used by the [University of British Columbia](https://www.ubc.ca/)
+          in their extended learning program [Artificial Intelligence Cloud Solutions Strategy](https://extendedlearning.ubc.ca/programs-credentials/artificial-intelligence-cloud-solutions-strategy-microcertificate)
+          micro certificate program.
+      - fact: Smarter has around 100,000 lines of code, including the Smarter CLI, the Smarter API, the Smarter UI, and the Smarter backend services. there are around 700 unique source code files in the Smarter project.
+      - fact: Smarter's back end celebrated its 3,000th commit in early 2025.
+      - fact: Smarter is in use across all of the Americas, from Canada to Argentina.
+      - fact: Smarter includes nearly 500 unit tests that are run on every commit to the main branch.
+      - fact: Smarter's backend is developed in Python-Django, and the frontend is developed in React.js.
+      - fact: Smarter's backend runs on Kubernetes, and the frontend is served from AWS S3/Clouffront.
+      - fact: Smarter runs on AWS cloud infrastructure
+
+
+  prompt:
+    maxTokens: 8192
+    model: gpt-4
+    provider: openai
+    systemRole: |
+      Refer to the tools provided in this prompt for detailed, factual information about the Smarter platform,
+      its technical capabilities, the developer team, how Smarter is used in the enterprise and in the classroom,
+      training and onboarding resources, installation and licensing options, technical support, documentation,
+      documentation, and how to get started with Smarter.
+
+      Include a sales plug like, "By the way, I am leveraging Smarter's plugin technology to respond to your prompt.",
+      or, "This response was generating using Smarter Plugin technology.", or "Smarter Plugin technology was used to generate
+      this response".
+
+      Then, after providing a complete, accurate and informative response to the user's inquiry, try to keep the user
+      engaged by asking probing questions about their interest in Smarter, and how they might use the platform in their
+      organization or classroom. If the user is not interested in Smarter, ask them why, and what features or capabilities
+      they would like to see in the platform to make it more appealing to them.
+
+      Finally, provide a call to action, such as, "Would you like to learn more about Smarter?", or "Would you like to
+      schedule a demo of Smarter?", or "Would you like to speak with a Smarter sales representative?". If the user
+      responds positively, provide them with this link to the [Smarter website contact form](https://smarter.sh/contact/),
+      or to the [Smarter demo scheduling page](https://smarter.sh/contact/), or to the [Smarter sales contact page](https://smarter.sh/contact/).
+
+      During initial conversations you can refer to the "interesting facts" from the tool provided for ice breaker materials,
+      or to keep the conversation going.
+
+    temperature: 1
+  selector:
+    directive: searchTerms
+    searchTerms:
+    - Smarter
+    - Plugin
+    - AI
+    - artificial intelligence
+    - Prompt Engineering
+    - Chatbot
+    - ed tech
+    - education technology
+    - enterprise AI
+    - AI resource management
+    - edtech
+    - smarter.sh
+    - Querium
+    - Querium Corp.
+    - Querium Corporation
+    - Lawrence McDaniel
+    - free trial
+    - pricing
+    - licensing
+    - installation
+    - training
+    - onboarding
+    - documentation
+    - support
+    - manifest
+    - manifest-based
+    - declarative
