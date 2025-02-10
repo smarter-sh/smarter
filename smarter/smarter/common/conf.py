@@ -425,27 +425,27 @@ class Settings(BaseSettings):
     )
     social_auth_google_oauth2_key: Optional[str] = Field(
         SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
-        env=["SOCIAL_AUTH_GOOGLE_OAUTH2_KEY", "TF_VAR_SOCIAL_AUTH_GOOGLE_OAUTH2_KEY"],
+        env=["SOCIAL_AUTH_GOOGLE_OAUTH2_KEY"],
     )
     social_auth_google_oauth2_secret: Optional[str] = Field(
         SettingsDefaults.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET,
-        env=["SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET", "TF_VAR_SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET"],
+        env=["SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET"],
     )
     social_auth_github_key: Optional[str] = Field(
         SettingsDefaults.SOCIAL_AUTH_GITHUB_KEY,
-        env=["SOCIAL_AUTH_GITHUB_KEY", "TF_VAR_SOCIAL_AUTH_GITHUB_KEY"],
+        env=["SOCIAL_AUTH_GITHUB_KEY"],
     )
     social_auth_github_secret: Optional[str] = Field(
         SettingsDefaults.SOCIAL_AUTH_GITHUB_SECRET,
-        env=["SOCIAL_AUTH_GITHUB_SECRET", "TF_VAR_SOCIAL_AUTH_GITHUB_SECRET"],
+        env=["SOCIAL_AUTH_GITHUB_SECRET"],
     )
     social_auth_linkedin_oauth2_key: Optional[str] = Field(
         SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY,
-        env=["SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY", "TF_VAR_SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY"],
+        env=["SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY"],
     )
     social_auth_linkedin_oauth2_secret: Optional[str] = Field(
         SettingsDefaults.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET,
-        env=["SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET", "TF_VAR_SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET"],
+        env=["SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET"],
     )
     langchain_memory_key: Optional[str] = Field(SettingsDefaults.LANGCHAIN_MEMORY_KEY, env="LANGCHAIN_MEMORY_KEY")
     logo: Optional[str] = Field(SettingsDefaults.LOGO, env="LOGO")
