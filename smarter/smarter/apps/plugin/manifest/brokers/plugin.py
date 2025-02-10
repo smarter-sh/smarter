@@ -104,6 +104,9 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
 
     @property
     def plugin_meta(self) -> PluginMeta:
+        if self.manifest:
+            # want the manifest to take precedence over the plugin_meta
+            return None
         if self._plugin_meta:
             return self._plugin_meta
         if self.name and self.account:
@@ -246,20 +249,13 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         try:
             self.plugin.create()
         except Exception as e:
-            try:
-                raise SAMBrokerError(
-                    f"Plugin {self.plugin_meta.name} create failed", thing=self.kind, command=command
-                ) from e
-            except SAMBrokerError as err:
-                return self.json_response_err(command=command, e=err)
+            return self.json_response_err(command=command, e=e)
 
         if self.plugin.ready:
             try:
                 self.plugin.save()
             except Exception as e:
-                raise SAMBrokerError(
-                    f"Plugin {self.plugin_meta.name} save failed", thing=self.kind, command=command
-                ) from e
+                return self.json_response_err(command=command, e=e)
             return self.json_response_ok(command=command, data={})
         try:
             raise SAMBrokerErrorNotReady(f"Plugin {self.plugin_meta.name} not ready", thing=self.kind, command=command)
