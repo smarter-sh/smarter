@@ -130,6 +130,8 @@ class PluginSelector(TimestampedModel):  # pragma: no cover
     search_terms = models.JSONField(
         help_text="search terms in JSON format that, if detected in the user prompt, will incentivize Smarter to load this plugin.",
         default=list,
+        blank=True,
+        null=True,
     )
 
     def __str__(self) -> str:
