@@ -320,32 +320,4 @@ spec:
 
     temperature: 1
   selector:
-    directive: searchTerms
-    searchTerms:
-    - Smarter
-    - Plugin
-    - AI
-    - artificial intelligence
-    - Prompt Engineering
-    - Chatbot
-    - ed tech
-    - education technology
-    - enterprise AI
-    - AI resource management
-    - edtech
-    - smarter.sh
-    - Querium
-    - Querium Corp.
-    - Querium Corporation
-    - Lawrence McDaniel
-    - free trial
-    - pricing
-    - licensing
-    - installation
-    - training
-    - onboarding
-    - documentation
-    - support
-    - manifest
-    - manifest-based
-    - declarative
+    directive: always
