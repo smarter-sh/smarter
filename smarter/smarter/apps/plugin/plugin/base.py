@@ -25,6 +25,7 @@ from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 
+from ..manifest.enum import SAMPluginSpecSelectorKeyDirectiveValues
 from ..manifest.models.plugin.const import MANIFEST_KIND
 from ..manifest.models.plugin.model import SAMPlugin
 from ..models import PluginDataBase, PluginMeta, PluginPrompt, PluginSelector
@@ -482,6 +483,10 @@ class PluginBase(ABC):
             return False
         if self._selected:
             return True
+
+        if self.plugin_selector.directive == SAMPluginSpecSelectorKeyDirectiveValues.ALWAYS.value:
+            self._selected = True
+            return self._selected
 
         search_terms = self.plugin_selector.search_terms
 
