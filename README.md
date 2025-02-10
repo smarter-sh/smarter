@@ -3,18 +3,25 @@
 [![OpenAI](https://a11ybadges.com/badge?logo=openai)](https://platform.openai.com/)
 [![LangChain](https://a11ybadges.com/badge?text=LangChain&badgeColor=0834ac)](https://www.langchain.com/)
 [![Python](https://a11ybadges.com/badge?logo=python)](https://www.python.org/)
-[![Django](https://a11ybadges.com/badge?logo=django)](https://www.djangoproject.com/)
+[![Django](https://a11ybadges.com/badge?logo=django)](https://www.djangoproject.com/)<br>
 [![Unit Tests](https://github.com/QueriumCorp/smarter/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/QueriumCorp/smarter/actions/workflows/releaseController.yml)
 ![Release Status](https://github.com/QueriumCorp/smarter/actions/workflows/release.yml/badge.svg?branch=main)
 ![Auto Assign](https://github.com/QueriumCorp/smarter/actions/workflows/auto-assign.yml/badge.svg)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![hack.d Lawrence McDaniel](https://img.shields.io/badge/hack.d-Lawrence%20McDaniel-orange.svg)](https://lawrencemcdaniel.com)
 
-**Smarter is an enterprise-class platform for designing and managing chat solutions. Think of Smarter as the 'Redhat Linux' of chat.**
+**Smarter is an enterprise-class batteries-included platform for managing AI resources.**
 
-Smarter gives prompt engineering teams an intuitive workbench approach to designing, prototyping, testing, deploying and managing powerful chat solutions for common corporate use cases including customer sales support, vendor/supplier management, human resources, and more. Smarter is compatible with a wide variety of chatbot UI front ends for technology ecosystems such as NPM, Wordpress, Squarespace, Drupal, Office 365, Sharepoint, .Net, Netsuite, salesforce.com, and SAP. It is developed to support prompt engineering teams working in large organizations. Accordindly, Smarter provides common enterprise features such as security, accounting cost codes, and audit capabilities.
+- declarative manifest based resource management
+- command-line interface for Windows, macOS, Linux and Docker
+- web console / prompt engineer workbench
+- rest api
+- publicly accessible online documentation and self onboarding resources
+- open source UI components for jump starting projects
 
-Smarter is LLM provider-agnostic, and provides seamless integrations to a continuously evolving list of value added services for security management, prompt content moderation, audit, cost accounting, and workflow management. It can be used as a pay-as-you-go, platform as a service, or, installed in your own AWS cloud account and supported by Querium's professional services team. It can also be installed on-premise in a hybrid model.
+Smarter gives prompt engineering teams an intuitive workbench approach to designing, prototyping, testing, deploying and managing powerful AI resources for common corporate use cases including customer facing chat solutions, back office workflow automation and more. It is compatible with a wide variety of chatbot UI front ends for technology ecosystems including NPM, Wordpress, Squarespace, Drupal, Office 365, Sharepoint, .Net, Netsuite, salesforce.com, and SAP. It is developed to support prompt engineering teams working in large organizations. Accordindly, Smarter provides common enterprise features such as security, accounting cost codes, and audit capabilities.
+
+Smarter provides seamless integration and interoperation between LLms from DeepSeek, Google AI, Meta AI and OpenAI. It is LLM provider-agnostic, and provides seamless integrations to a continuously evolving list of value added services for security management, prompt content moderation, audit, cost accounting, and workflow management. It can be used as a pay-as-you-go, platform as a service, or, installed in your own AWS cloud account and supported by Querium's professional services team. It can also be installed on-premise in a hybrid model.
 
 Smarter is cost effective when running at scale. It is extensible and architected on the philosophy of a compact core that does not require customization nor forking. It is horizontally scalable. It is natively multi-tenant, and can be installed alongside your existing systems. The principal technologies in the Smarter platform stack include:
 
@@ -27,9 +34,11 @@ Smarter is cost effective when running at scale. It is extensible and architecte
 - Pytest/Pluggy
 - Langchain
 - Pydantic
-- ReactJS/Bootstrap
+- react.js
+- Bootstrap
 - Go lang
 - GitHub Actions
+- Amazon Web Services
 
 ## Designed by and for prompt engineers
 
