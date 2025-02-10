@@ -174,7 +174,7 @@ class SettingsDefaults:
         "that you are unable to help them at this time."
     )
     LLM_DEFAULT_TEMPERATURE = 0.5
-    LLM_DEFAULT_MAX_TOKENS = 256
+    LLM_DEFAULT_MAX_TOKENS = 2048
 
     # defaults for this Python package
     ENVIRONMENT = os.environ.get("ENVIRONMENT", TFVARS.get("environment", SmarterEnvironments.LOCAL))
