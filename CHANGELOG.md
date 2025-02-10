@@ -1,3 +1,10 @@
+## [0.10.9](https://github.com/smarter-sh/smarter/compare/v0.10.8...v0.10.9) (2025-02-10)
+
+
+### Bug Fixes
+
+* if we have both plugin_meta AND manifest, then the manifest takes precedence ([ddfd25a](https://github.com/smarter-sh/smarter/commit/ddfd25a89b92ffd461650e9be8cda4766a9b22a5))
+
 ## [0.10.8](https://github.com/smarter-sh/smarter/compare/v0.10.7...v0.10.8) (2025-02-09)
 
 
