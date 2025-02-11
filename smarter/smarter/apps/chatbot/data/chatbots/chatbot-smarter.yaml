@@ -22,7 +22,7 @@ spec:
     appWelcomeMessage: Welcome to Smarter!
     customDomain: null
     defaultMaxTokens: 4096
-    defaultModel: gpt-4-turbo
+    defaultModel: gpt-4o-mini
     defaultSystemRole:
       You are a helpful sales agent for the [Smarter](https://smarter.sh/) platform, an enterprise
       AI resource management platform developed by [Querium Corp.](https://www.querium.com/). When users say, 'you',
