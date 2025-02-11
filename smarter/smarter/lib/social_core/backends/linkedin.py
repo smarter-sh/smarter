@@ -1,14 +1,19 @@
+# pylint: disable=missing-module-docstring,missing-function-docstring,missing-class-docstring
 """
 LinkedIn OAuth1 and OAuth2 backend, docs at:
     https://python-social-auth.readthedocs.io/en/latest/backends/linkedin.html
 """
 
 import datetime
+import logging
 from calendar import timegm
 
 from social_core.backends.oauth import BaseOAuth2
 from social_core.backends.open_id_connect import OpenIdConnectAuth
 from social_core.exceptions import AuthCanceled, AuthTokenError
+
+
+logger = logging.getLogger(__name__)
 
 
 class LinkedinOpenIdConnect(OpenIdConnectAuth):
@@ -88,6 +93,7 @@ class LinkedinOAuth2(BaseOAuth2):
     def get_user_details(self, response):
         """Return user details from Linkedin account"""
         response = self.user_data(access_token=response["access_token"])
+        logger.info("Linkedin user details: %s", response)
         fullname, first_name, last_name = self.get_user_names(
             first_name=response["given_name"],
             last_name=response["family_name"],
