@@ -284,7 +284,7 @@ DATABASES = {
 AUTHENTICATION_BACKENDS = (
     "social_core.backends.google.GoogleOAuth2",
     "social_core.backends.github.GithubOAuth2",
-    "social_core.backends.linkedin.LinkedinOAuth2",
+    "smarter.lib.social_core.backends.linkedin.LinkedinOAuth2",
     "django.contrib.auth.backends.ModelBackend",
 )
 
@@ -328,7 +328,6 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = smarter_settings.social_auth_google_oauth2_se
 SOCIAL_AUTH_GITHUB_KEY = smarter_settings.social_auth_github_key
 SOCIAL_AUTH_GITHUB_SECRET = smarter_settings.social_auth_github_secret
 
-LinkedinOAuth2.DEFAULT_SCOPE = ["openid", "profile", "email"]
 SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = smarter_settings.social_auth_linkedin_oauth2_key
 SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = smarter_settings.social_auth_linkedin_oauth2_secret
 SOCIAL_AUTH_LINKEDIN_OAUTH2_SCOPE = ["openid", "profile", "email"]
