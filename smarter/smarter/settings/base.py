@@ -1,4 +1,4 @@
-º  # pylint: disable=unused-wildcard-import, wildcard-import, unused-import, wrong-import-position
+# pylint: disable=unused-wildcard-import, wildcard-import, unused-import, wrong-import-position
 """
 Django base settings.
 
@@ -326,7 +326,7 @@ SOCIAL_AUTH_PIPELINE = (
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = smarter_settings.social_auth_google_oauth2_key
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = smarter_settings.social_auth_google_oauth2_secret
 SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = urllib.parse.urljoin(
-    smarter_settings.environment_url, "/social-auth/complete/linkedin-oauth2/"
+    smarter_settings.environment_url, "/social-auth/complete/google-oauth2/"
 )
 
 SOCIAL_AUTH_GITHUB_KEY = smarter_settings.social_auth_github_key
