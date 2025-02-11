@@ -35,8 +35,8 @@ def base(request):
 
         account_authenticated_context = {
             "account_authenticated": {
-                "user": request.user,
-                "account": user_profile.account or None,
+                "user": request.user if request and hasattr(request, "user") else None,
+                "account": user_profile.account if user_profile else None,
             }
         }
         return {**account_context, **account_authentication_context, **account_authenticated_context}
