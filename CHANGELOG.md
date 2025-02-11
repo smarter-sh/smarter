@@ -1,3 +1,13 @@
+## [0.10.10](https://github.com/smarter-sh/smarter/compare/v0.10.9...v0.10.10) (2025-02-11)
+
+
+### Bug Fixes
+
+* check for SAMPluginSpecSelectorKeyDirectiveValues.ALWAYS in selected() ([b841915](https://github.com/smarter-sh/smarter/commit/b8419154cb202705006cf1e61624c55bdec0c174))
+* consider that user_profile might be NoneType ([ee51324](https://github.com/smarter-sh/smarter/commit/ee51324902d91caa5a33d113fee62ebede49a54e))
+* search_terms must allow nulls and blanks ([f4f71f3](https://github.com/smarter-sh/smarter/commit/f4f71f362ab5c72d1ec6fb56db6e766f93af1b37))
+* set SOCIAL_AUTH_LINKEDIN_OAUTH2_SCOPE ([39a91e1](https://github.com/smarter-sh/smarter/commit/39a91e1553a923d913310395f9d14eecc9639a6d))
+
 ## [0.10.9](https://github.com/smarter-sh/smarter/compare/v0.10.8...v0.10.9) (2025-02-10)
 
 
