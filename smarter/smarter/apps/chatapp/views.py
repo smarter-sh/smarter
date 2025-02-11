@@ -347,13 +347,13 @@ class ChatAppListView(SmarterAuthenticatedNeverCachedWebView):
                 if b.chatbot and b.chatbot.id == chatbot_helper.chatbot.id:
                     return True
 
-        # get all of the smarter demo chatbots
         smarter_admin = get_cached_smarter_admin_user_profile()
-        smarter_demo_chatbots = ChatBot.objects.filter(account=smarter_admin.account)
-        for chatbot in smarter_demo_chatbots:
-            logger.info("ChatAppListView - chatbot=%s", chatbot)
-            chatbot_helper = ChatBotHelper(request=request, name=chatbot.name, chatbot_id=chatbot.id)
-            self.chatbot_helpers.append(chatbot_helper)
+        # get all of the smarter demo chatbots
+        # smarter_demo_chatbots = ChatBot.objects.filter(account=smarter_admin.account)
+        # for chatbot in smarter_demo_chatbots:
+        #     logger.info("ChatAppListView - chatbot=%s", chatbot)
+        #     chatbot_helper = ChatBotHelper(request=request, name=chatbot.name, chatbot_id=chatbot.id)
+        #     self.chatbot_helpers.append(chatbot_helper)
 
         # get all chatbots for the account
         self.chatbots = ChatBot.objects.filter(account=self.account)
