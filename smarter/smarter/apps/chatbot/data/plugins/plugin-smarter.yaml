@@ -363,6 +363,6 @@ spec:
       During initial conversations you can refer to the "interesting facts" from the tool provided for ice breaker materials,
       or to keep the conversation going.
 
-    temperature: 1
+    temperature: 0.0
   selector:
     directive: always
