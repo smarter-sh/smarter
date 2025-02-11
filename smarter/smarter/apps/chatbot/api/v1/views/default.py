@@ -49,24 +49,18 @@ class DefaultChatBotApiView(ChatBotApiBaseViewSet):
         """
         self._name = name
 
-        # FIX NOTE: this is kludgy, but it works for now.
-        # handles the case of smarter example chatbots
-        # like /smarter/example/
-        account_name = kwargs.get("account")
-        if account_name == "smarter":
-            self.account = get_cached_smarter_admin_user_profile().account
-
         try:
             retval = super().dispatch(request, *args, **kwargs)
         # pylint: disable=broad-except
         except Exception as e:
-            logger.error("DefaultChatBotApiView.dispatch: %s", e)
+            err_traceback = traceback.format_exc()
+            logger.error("DefaultChatBotApiView.dispatch: %s, %s", e, err_traceback)
             retval = JsonResponse(
                 status=HTTPStatus.INTERNAL_SERVER_ERROR,
                 data={
                     "error": "An error occurred while processing your request.",
                     "details": str(e),
-                    "trace": traceback.format_exc(),
+                    "trace": err_traceback,
                 },
             )
         return retval
