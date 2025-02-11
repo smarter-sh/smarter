@@ -24,6 +24,9 @@ CORS_ALLOWED_ORIGINS += [
     "http://localhost:3000",
 ]
 
+# see: https://python-social-auth.readthedocs.io/en/latest/configuration/settings.html
+SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
+
 logger.info("*" * 80)
 logger.info("CORS_ALLOWED_ORIGINS: %s", CORS_ALLOWED_ORIGINS)
 logger.info("CORS_ALLOWED_ORIGIN_REGEXES: %s", CORS_ALLOWED_ORIGIN_REGEXES)
