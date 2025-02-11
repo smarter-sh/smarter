@@ -15,20 +15,25 @@ spec:
         Querium Corp. is willing to enter into service-level agreements covering uptime, security and data privacy.
         Contact Kent Fuka at +1 (512) 833-6955 or email [kent@querium.com](mailto:kent@querium.com).
 
-      installationOptions:
-      - name: SaaS
-        description: |
-          Smarter is available as a cloud-based service, licensed to your organization. Invoiced monthly based on net usage.
-      - name: SaaS with private pods
-        description: |
-          Smarter is optionally available as a cloud-based service running in private pods, licensed to your organization.
-          Invoiced monthly based on net usage.
-      - name: Cloud
-        description: |
-          Smarter can be installed on your cloud infrastructure and maintained by the Querium team.
-      - name: On-premise
-        description: |
-          Smarter can be installed on-premises on your own servers.
+      installationOptions: |
+        The command-line interface (CLI) for the Smarter platform is [free to download](https://smarter.sh/cli/)
+        and runs on Windows, macOS, Linux, and Docker. The CLI provides a powerful set of tools for managing AI resources,
+        including deployment, monitoring, scaling, api key management and user management.
+
+        Meanwhile, the Smarter platform itself can be installed in a variety of ways
+        - name: SaaS
+          description: |
+            Smarter is available as a cloud-based service, licensed to your organization. Invoiced monthly based on net usage.
+        - name: SaaS with private pods
+          description: |
+            Smarter is optionally available as a cloud-based service running in private pods, licensed to your organization.
+            Invoiced monthly based on net usage.
+        - name: Cloud
+          description: |
+            Smarter can be installed on your cloud infrastructure and maintained by the Querium team.
+        - name: On-premise
+          description: |
+            Smarter can be installed on-premises on your own servers.
 
       salesContact:
       - name: Kent Fuka
