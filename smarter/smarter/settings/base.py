@@ -1,4 +1,4 @@
-# pylint: disable=unused-wildcard-import, wildcard-import, unused-import, wrong-import-position
+º  # pylint: disable=unused-wildcard-import, wildcard-import, unused-import, wrong-import-position
 """
 Django base settings.
 
@@ -18,6 +18,7 @@ import logging.config
 import os
 import secrets
 import sys
+import urllib.parse
 from pathlib import Path
 
 from corsheaders.defaults import default_headers
@@ -324,6 +325,9 @@ SOCIAL_AUTH_PIPELINE = (
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = smarter_settings.social_auth_google_oauth2_key
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = smarter_settings.social_auth_google_oauth2_secret
+SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = urllib.parse.urljoin(
+    smarter_settings.environment_url, "/social-auth/complete/linkedin-oauth2/"
+)
 
 SOCIAL_AUTH_GITHUB_KEY = smarter_settings.social_auth_github_key
 SOCIAL_AUTH_GITHUB_SECRET = smarter_settings.social_auth_github_secret
@@ -332,6 +336,9 @@ SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY = smarter_settings.social_auth_linkedin_oauth2_k
 SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET = smarter_settings.social_auth_linkedin_oauth2_secret
 SOCIAL_AUTH_LINKEDIN_OAUTH2_SCOPE = ["openid", "profile", "email"]
 SOCIAL_AUTH_LINKEDIN_OAUTH2_FIELD_SELECTORS = ["id", "first-name", "last-name", "email-address"]
+SOCIAL_AUTH_LINKEDIN_OAUTH2_REDIRECT_URI = urllib.parse.urljoin(
+    smarter_settings.environment_url, "/social-auth/complete/linkedin-oauth2/"
+)
 SOCIAL_AUTH_LINKEDIN_OAUTH2_EXTRA_DATA = [
     ("id", "id"),
     ("firstName", "first_name"),
