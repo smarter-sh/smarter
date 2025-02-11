@@ -34,7 +34,7 @@ class LinkedinOpenIdConnect(OpenIdConnectAuth):
     def validate_claims(self, id_token):
         """Copy of the regular validate_claims method without the nonce validation."""
 
-        utc_timestamp = timegm(datetime.datetime.now(datetime.timezone.utc).timetuple())
+        utc_timestamp = timegm(datetime.datetime.utcnow().utctimetuple())
 
         if "nbf" in id_token and utc_timestamp < id_token["nbf"]:
             raise AuthTokenError(self, "Incorrect id_token: nbf")
@@ -56,7 +56,7 @@ class LinkedinOAuth2(BaseOAuth2):
     USER_EMAILS_URL = "https://api.linkedin.com/v2/emailAddress" "?q=members&projection=(elements*(handle~))"
     ACCESS_TOKEN_METHOD = "POST"
     REDIRECT_STATE = False
-    DEFAULT_SCOPE = ["email", "profile", "openid"]
+    DEFAULT_SCOPE = ["openid", "profile", "email"]
     EXTRA_DATA = [
         ("id", "id"),
         ("expires_in", "expires"),
@@ -67,7 +67,12 @@ class LinkedinOAuth2(BaseOAuth2):
     ]
 
     def user_details_url(self):
-        return self.USER_DETAILS_URL
+        # use set() since LinkedIn fails when values are duplicated
+        fields_selectors = list(set(["id", "firstName", "lastName"] + self.setting("FIELD_SELECTORS", [])))
+        # user sort to ease the tests URL mocking
+        fields_selectors.sort()
+        fields_selectors = ",".join(fields_selectors)
+        return self.USER_DETAILS_URL.format(projection=fields_selectors)
 
     def user_emails_url(self):
         return self.USER_EMAILS_URL
@@ -75,10 +80,10 @@ class LinkedinOAuth2(BaseOAuth2):
     def user_data(self, access_token, *args, **kwargs):
         response = self.get_json(self.user_details_url(), headers=self.user_data_headers(access_token))
 
-        if "email" in set(self.setting("FIELD_SELECTORS", [])):
+        if "emailAddress" in set(self.setting("FIELD_SELECTORS", [])):
             emails = self.email_data(access_token, *args, **kwargs)
             if emails:
-                response["email"] = emails[0]
+                response["emailAddress"] = emails[0]
 
         return response
 
@@ -86,27 +91,50 @@ class LinkedinOAuth2(BaseOAuth2):
         response = self.get_json(self.user_emails_url(), headers=self.user_data_headers(access_token))
         email_addresses = []
         for element in response.get("elements", []):
-            email_address = element.get("handle~", {}).get("email")
+            email_address = element.get("handle~", {}).get("emailAddress")
             email_addresses.append(email_address)
         return list(filter(None, email_addresses))
 
     def get_user_details(self, response):
         """Return user details from Linkedin account"""
-        response = self.user_data(access_token=response["access_token"])
-        logger.info("Linkedin user details: %s", response)
-        fullname, first_name, last_name = self.get_user_names(
-            first_name=response["given_name"],
-            last_name=response["family_name"],
-        )
-        email = response.get("email", "")
-        return {
-            "id": response.get("sub", ""),
+
+        def get_localized_name(name):
+            """
+            FirstName & Last Name object
+            {
+                  'localized': {
+                     'en_US': 'Smith'
+                  },
+                  'preferredLocale': {
+                     'country': 'US',
+                     'language': 'en'
+                  }
+            }
+            :return the localizedName from the lastName object
+            """
+            locale = "{}_{}".format(name["preferredLocale"]["language"], name["preferredLocale"]["country"])
+            return name["localized"].get(locale, "")
+
+        response_first_name = response.get("firstName")
+        response_last_name = response.get("lastName")
+        if response_first_name and response_last_name:
+            fullname, first_name, last_name = self.get_user_names(
+                first_name=get_localized_name(response["firstName"]),
+                last_name=get_localized_name(response["lastName"]),
+            )
+        else:
+            fullname, first_name, last_name = "unknown", "unknown", "unknown"
+
+        email = response.get("emailAddress", "unknown@mail.com")
+        retval = {
             "username": first_name + last_name,
             "fullname": fullname,
             "first_name": first_name,
             "last_name": last_name,
             "email": email,
         }
+        logger.info("User details: %s", retval)
+        return retval
 
     def user_data_headers(self, access_token):
         headers = {}
