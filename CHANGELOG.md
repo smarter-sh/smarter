@@ -1,64 +1,58 @@
-## [0.10.12](https://github.com/smarter-sh/smarter/compare/v0.10.11...v0.10.12) (2025-02-14)
-
-
-### Bug Fixes
-
-* add a logged in receiver to verify UserProfile for authenticated user ([fb35a97](https://github.com/smarter-sh/smarter/commit/fb35a97bbeaf872ee41b7fb60d2d1500b1e1e16a))
-* set SOCIAL_AUTH_LINKEDIN_OAUTH2_SCOPE ([563bc8e](https://github.com/smarter-sh/smarter/commit/563bc8e30e26b907a7fecfd62d276601ea121479))
-* stop echoing the new pwd to the console ([d1836ee](https://github.com/smarter-sh/smarter/commit/d1836ee44183c6efdb1f79f2b2ce6f634e12978d))
-* whoami, status, version don't have a manifest kind ([c01d841](https://github.com/smarter-sh/smarter/commit/c01d84183bd26ce955c5c6cc90d39409fe3c3874))
-
-## [0.10.11](https://github.com/smarter-sh/smarter/compare/v0.10.10...v0.10.11) (2025-02-11)
-
-
-### Bug Fixes
-
-* back-peddle on blending Smarter account bots with other accounts ([715e237](https://github.com/smarter-sh/smarter/commit/715e237cebeaff0982b9df24b7257d9d3601cb66))
-* remove functionality to combine Smarter account chatbots ([9f58f8a](https://github.com/smarter-sh/smarter/commit/9f58f8ad04c1a4ff2661bfd57161d97d170ce5c6))
-
-## [0.10.10](https://github.com/smarter-sh/smarter/compare/v0.10.9...v0.10.10) (2025-02-11)
-
-
-### Bug Fixes
-
-* check for SAMPluginSpecSelectorKeyDirectiveValues.ALWAYS in selected() ([b841915](https://github.com/smarter-sh/smarter/commit/b8419154cb202705006cf1e61624c55bdec0c174))
-* consider that user_profile might be NoneType ([ee51324](https://github.com/smarter-sh/smarter/commit/ee51324902d91caa5a33d113fee62ebede49a54e))
-* search_terms must allow nulls and blanks ([f4f71f3](https://github.com/smarter-sh/smarter/commit/f4f71f362ab5c72d1ec6fb56db6e766f93af1b37))
-* set SOCIAL_AUTH_LINKEDIN_OAUTH2_SCOPE ([39a91e1](https://github.com/smarter-sh/smarter/commit/39a91e1553a923d913310395f9d14eecc9639a6d))
-
-## [0.10.9](https://github.com/smarter-sh/smarter/compare/v0.10.8...v0.10.9) (2025-02-10)
-
-
-### Bug Fixes
-
-* if we have both plugin_meta AND manifest, then the manifest takes precedence ([ddfd25a](https://github.com/smarter-sh/smarter/commit/ddfd25a89b92ffd461650e9be8cda4766a9b22a5))
-
-## [0.10.8](https://github.com/smarter-sh/smarter/compare/v0.10.7...v0.10.8) (2025-02-09)
-
-
-### Bug Fixes
-
-* convert url params into valid strings ([f12346a](https://github.com/smarter-sh/smarter/commit/f12346ad878e2ec248991988351bceed837e0683))
-* get_model_titles() should return titles in underscored lower case ([6a31bb6](https://github.com/smarter-sh/smarter/commit/6a31bb61cd6b086b6139a93aca4b0a8f9709b33c))
-* send all table output in camelCase ([81a49bb](https://github.com/smarter-sh/smarter/commit/81a49bb7ef035284a7a0a769ac73492eaaa818ef))
-
-## [0.10.7](https://github.com/smarter-sh/smarter/compare/v0.10.6...v0.10.7) (2025-02-09)
-
-
-### Bug Fixes
-
-* check isinstance(request, WSGIRequest) ([8e2492e](https://github.com/smarter-sh/smarter/commit/8e2492ebb66b06bfaf868f85ebf7022d0cbb1d91))
-* fully inspect request before attempting to do anything with it ([19f9ace](https://github.com/smarter-sh/smarter/commit/19f9ace2ea74bb8ea31dc66b501c61f8c74e4f57))
-* initialize the admin for the account when we only have an account number ([7770406](https://github.com/smarter-sh/smarter/commit/7770406e658ccbabb0add0bfb1d3e6bd944373f5))
-* look for mysql db errors ([c41e21f](https://github.com/smarter-sh/smarter/commit/c41e21f461d8d7cd6fb609c4b88da09894953c44))
-* set api keys for googleai and metaai ([26596fb](https://github.com/smarter-sh/smarter/commit/26596fb531339ae5421a71e2efb16d2c47392dd1))
-* SmarterRequestMixin should ignore paths for django /admin/ and /docs/ ([cb777f7](https://github.com/smarter-sh/smarter/commit/cb777f70b140d40f5db62c57fc78e79efb406a05))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.10.12](https://github.com/smarter-sh/smarter/compare/v0.10.11...v0.10.12) (2025-02-14)
+
+### Bug Fixes
+
+- add a logged in receiver to verify UserProfile for authenticated user ([fb35a97](https://github.com/smarter-sh/smarter/commit/fb35a97bbeaf872ee41b7fb60d2d1500b1e1e16a))
+- set SOCIAL_AUTH_LINKEDIN_OAUTH2_SCOPE ([563bc8e](https://github.com/smarter-sh/smarter/commit/563bc8e30e26b907a7fecfd62d276601ea121479))
+- stop echoing the new pwd to the console ([d1836ee](https://github.com/smarter-sh/smarter/commit/d1836ee44183c6efdb1f79f2b2ce6f634e12978d))
+- whoami, status, version don't have a manifest kind ([c01d841](https://github.com/smarter-sh/smarter/commit/c01d84183bd26ce955c5c6cc90d39409fe3c3874))
+
+## [0.10.11](https://github.com/smarter-sh/smarter/compare/v0.10.10...v0.10.11) (2025-02-11)
+
+### Bug Fixes
+
+- back-peddle on blending Smarter account bots with other accounts ([715e237](https://github.com/smarter-sh/smarter/commit/715e237cebeaff0982b9df24b7257d9d3601cb66))
+- remove functionality to combine Smarter account chatbots ([9f58f8a](https://github.com/smarter-sh/smarter/commit/9f58f8ad04c1a4ff2661bfd57161d97d170ce5c6))
+
+## [0.10.10](https://github.com/smarter-sh/smarter/compare/v0.10.9...v0.10.10) (2025-02-11)
+
+### Bug Fixes
+
+- check for SAMPluginSpecSelectorKeyDirectiveValues.ALWAYS in selected() ([b841915](https://github.com/smarter-sh/smarter/commit/b8419154cb202705006cf1e61624c55bdec0c174))
+- consider that user_profile might be NoneType ([ee51324](https://github.com/smarter-sh/smarter/commit/ee51324902d91caa5a33d113fee62ebede49a54e))
+- search_terms must allow nulls and blanks ([f4f71f3](https://github.com/smarter-sh/smarter/commit/f4f71f362ab5c72d1ec6fb56db6e766f93af1b37))
+- set SOCIAL_AUTH_LINKEDIN_OAUTH2_SCOPE ([39a91e1](https://github.com/smarter-sh/smarter/commit/39a91e1553a923d913310395f9d14eecc9639a6d))
+
+## [0.10.9](https://github.com/smarter-sh/smarter/compare/v0.10.8...v0.10.9) (2025-02-10)
+
+### Bug Fixes
+
+- if we have both plugin_meta AND manifest, then the manifest takes precedence ([ddfd25a](https://github.com/smarter-sh/smarter/commit/ddfd25a89b92ffd461650e9be8cda4766a9b22a5))
+
+## [0.10.8](https://github.com/smarter-sh/smarter/compare/v0.10.7...v0.10.8) (2025-02-09)
+
+### Bug Fixes
+
+- convert url params into valid strings ([f12346a](https://github.com/smarter-sh/smarter/commit/f12346ad878e2ec248991988351bceed837e0683))
+- get_model_titles() should return titles in underscored lower case ([6a31bb6](https://github.com/smarter-sh/smarter/commit/6a31bb61cd6b086b6139a93aca4b0a8f9709b33c))
+- send all table output in camelCase ([81a49bb](https://github.com/smarter-sh/smarter/commit/81a49bb7ef035284a7a0a769ac73492eaaa818ef))
+
+## [0.10.7](https://github.com/smarter-sh/smarter/compare/v0.10.6...v0.10.7) (2025-02-09)
+
+### Bug Fixes
+
+- check isinstance(request, WSGIRequest) ([8e2492e](https://github.com/smarter-sh/smarter/commit/8e2492ebb66b06bfaf868f85ebf7022d0cbb1d91))
+- fully inspect request before attempting to do anything with it ([19f9ace](https://github.com/smarter-sh/smarter/commit/19f9ace2ea74bb8ea31dc66b501c61f8c74e4f57))
+- initialize the admin for the account when we only have an account number ([7770406](https://github.com/smarter-sh/smarter/commit/7770406e658ccbabb0add0bfb1d3e6bd944373f5))
+- look for mysql db errors ([c41e21f](https://github.com/smarter-sh/smarter/commit/c41e21f461d8d7cd6fb609c4b88da09894953c44))
+- set api keys for googleai and metaai ([26596fb](https://github.com/smarter-sh/smarter/commit/26596fb531339ae5421a71e2efb16d2c47392dd1))
+- SmarterRequestMixin should ignore paths for django /admin/ and /docs/ ([cb777f7](https://github.com/smarter-sh/smarter/commit/cb777f70b140d40f5db62c57fc78e79efb406a05))
 
 ## [0.10.6](https://github.com/smarter-sh/smarter/compare/v0.10.5...v0.10.6) (2025-02-04)
 
