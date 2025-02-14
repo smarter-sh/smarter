@@ -60,7 +60,7 @@ class Command(BaseCommand):
             password = "".join(secrets.choice(alphabet) for _ in range(password_length))
 
         if not User.objects.filter(username=username).exists():
-            user = User.objects.create_user(username=username, email=email)
+            user = User.objects.create_user(username=username, email=email, first_name=first_name, last_name=last_name)
             if is_admin:
                 user.is_staff = True
             user.is_active = True
