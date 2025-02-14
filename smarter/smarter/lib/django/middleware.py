@@ -108,5 +108,7 @@ class BlockSensitiveFilesMiddleware(MiddlewareMixin, SmarterHelperMixin):
 
         if any(sensitive_file in request.path for sensitive_file in self.sensitive_files):
             logger.warning("%s Blocked request for sensitive file: %s", self.formatted_class_name, request.path)
-            return HttpResponseForbidden("Your request has been blocked by Smarter")
+            return HttpResponseForbidden(
+                "Your request has been blocked by Smarter. Contact support@smarter.sh for assistance."
+            )
         return self.get_response(request)
