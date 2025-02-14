@@ -67,7 +67,6 @@ class Command(BaseCommand):
             user.set_password(password)
             user.save()
             self.stdout.write(self.style.SUCCESS("User" + f" {username} {email} has been created."))
-            self.stdout.write(self.style.SUCCESS(f"Password: {password}"))
 
             # Send email to user
             login_url = urljoin(smarter_settings.environment_url, "login")

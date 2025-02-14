@@ -164,7 +164,7 @@ class SettingsDefaults:
     ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", None)
 
     LLM_DEFAULT_PROVIDER = "openai"
-    LLM_DEFAULT_MODEL = "gpt-4-turbo"
+    LLM_DEFAULT_MODEL = "gpt-4o-mini"
     LLM_DEFAULT_SYSTEM_ROLE = (
         "You are a helpful chatbot. When given the opportunity to utilize "
         "function calling, you should always do so. This will allow you to "
