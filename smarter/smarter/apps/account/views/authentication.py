@@ -4,6 +4,11 @@ from http import HTTPStatus
 
 from django import forms
 from django.contrib.auth import authenticate, login, logout
+from django.http import (
+    HttpResponseBadRequest,
+    HttpResponseForbidden,
+    HttpResponseServerError,
+)
 from django.shortcuts import HttpResponse
 from django.urls import reverse
 
@@ -56,15 +61,13 @@ class LoginView(SmarterNeverCachedWebView):
                 if authenticated_user is not None:
                     login(request, authenticated_user)
                     return redirect_and_expire_cache(path="/")
-                return HttpResponse("Username and/or password do not match.", status=HTTPStatus.BAD_REQUEST)
+                return HttpResponseBadRequest("Username and/or password do not match.")
             except User.DoesNotExist:
-                return HttpResponse(f"Invalid login attempt. Unknown user {email}", status=HTTPStatus.FORBIDDEN)
+                return HttpResponseForbidden(f"Invalid login attempt. Unknown user {email}")
             # pylint: disable=W0718
             except Exception as e:
-                return HttpResponse(
-                    f"An unknown error occurred {e.description}", status=HTTPStatus.INTERNAL_SERVER_ERROR
-                )
-        return HttpResponse("Received invalid responses.", status=HTTPStatus.BAD_REQUEST)
+                return HttpResponseServerError(f"An unknown error occurred {e.description}")
+        return HttpResponseBadRequest("Received invalid responses.")
 
 
 class LogoutView(SmarterNeverCachedWebView):
