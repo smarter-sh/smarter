@@ -15,6 +15,7 @@ from django.middleware.csrf import CsrfViewMiddleware as DjangoCsrfViewMiddlewar
 from django.utils.functional import cached_property
 
 from smarter.apps.chatbot.models import ChatBot, ChatBotHelper
+from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterWaffleSwitches
 
@@ -25,7 +26,7 @@ if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWAR
     logger.info("Loading smarter.apps.chatbot.middleware.csrf.CsrfViewMiddleware")
 
 
-class CsrfViewMiddleware(DjangoCsrfViewMiddleware):
+class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
     """
     Require a present and correct csrfmiddlewaretoken for POST requests that
     have a CSRF cookie, and set an outgoing CSRF cookie.
@@ -46,7 +47,7 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware):
         retval = settings.CSRF_TRUSTED_ORIGINS
         if self.chatbot is not None:
             retval += [self.chatbot.url]
-        logger.info("CsrfViewMiddleware.CSRF_TRUSTED_ORIGINS: %s", retval)
+        logger.info("%s.CSRF_TRUSTED_ORIGINS: %s", self.formatted_class_name, retval)
         return retval
 
     @cached_property
@@ -80,20 +81,26 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware):
             self.chatbot = None
 
         if self.chatbot and waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
-            logger.info("CsrfViewMiddleware.process_request: csrf_middleware_logging is active")
+            logger.info("%s.process_request: csrf_middleware_logging is active", self.formatted_class_name)
             logger.info("=" * 80)
-            logger.info("CsrfViewMiddleware ChatBot: %s", self.chatbot)
+            logger.info("%s ChatBot: %s", self.formatted_class_name, self.chatbot)
             for cookie in request.COOKIES:
                 logger.info("CsrfViewMiddleware request.COOKIES: %s", cookie)
-            logger.info("CsrfViewMiddleware cookie settings")
-            logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_NAME: %s", settings.CSRF_COOKIE_NAME)
-            logger.info("CsrfViewMiddleware request.META['CSRF_COOKIE']: %s", request.META.get("CSRF_COOKIE"))
-            logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_AGE: %s", settings.CSRF_COOKIE_AGE)
-            logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_DOMAIN: %s", settings.CSRF_COOKIE_DOMAIN)
-            logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_PATH: %s", settings.CSRF_COOKIE_PATH)
-            logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_SECURE: %s", settings.CSRF_COOKIE_SECURE)
-            logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_HTTPONLY: %s", settings.CSRF_COOKIE_HTTPONLY)
-            logger.info("CsrfViewMiddleware settings.CSRF_COOKIE_SAMESITE: %s", settings.CSRF_COOKIE_SAMESITE)
+            logger.info("%s cookie settings", self.formatted_class_name)
+            logger.info("%s settings.CSRF_COOKIE_NAME: %s", self.formatted_class_name, settings.CSRF_COOKIE_NAME)
+            logger.info(
+                "%s request.META['CSRF_COOKIE']: %s", self.formatted_class_name, request.META.get("CSRF_COOKIE")
+            )
+            logger.info("%s settings.CSRF_COOKIE_AGE: %s", self.formatted_class_name, settings.CSRF_COOKIE_AGE)
+            logger.info("%s settings.CSRF_COOKIE_DOMAIN: %s", self.formatted_class_name, settings.CSRF_COOKIE_DOMAIN)
+            logger.info("%s settings.CSRF_COOKIE_PATH: %s", self.formatted_class_name, settings.CSRF_COOKIE_PATH)
+            logger.info("%s settings.CSRF_COOKIE_SECURE: %s", self.formatted_class_name, settings.CSRF_COOKIE_SECURE)
+            logger.info(
+                "%s settings.CSRF_COOKIE_HTTPONLY: %s", self.formatted_class_name, settings.CSRF_COOKIE_HTTPONLY
+            )
+            logger.info(
+                "%s settings.CSRF_COOKIE_SAMESITE: %s", self.formatted_class_name, settings.CSRF_COOKIE_SAMESITE
+            )
             logger.info("=" * 80)
 
         # ------------------------------------------------------
@@ -101,16 +108,17 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware):
 
     def process_view(self, request, callback, callback_args, callback_kwargs):
         if smarter_settings.environment == "local":
-            logger.debug("CsrfViewMiddleware._accept: environment is local. ignoring csrf checks")
+            logger.debug("%s._accept: environment is local. ignoring csrf checks", self.formatted_class_name)
             return None
         if self.chatbot and waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_SUPPRESS_FOR_CHATBOTS):
             logger.info(
-                "CsrfViewMiddleware.process_view: %s is active",
+                "%s.process_view: %s is active",
+                self.formatted_class_name,
                 SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_SUPPRESS_FOR_CHATBOTS,
             )
             response = super().process_view(request, callback, callback_args, callback_kwargs)
             if isinstance(response, HttpResponseForbidden):
-                logger.error("CSRF validation failed")
+                logger.error("%s CSRF validation failed", self.formatted_class_name)
                 return None
             return response
         return super().process_view(request, callback, callback_args, callback_kwargs)

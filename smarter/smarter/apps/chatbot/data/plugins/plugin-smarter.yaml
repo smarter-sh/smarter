@@ -338,7 +338,7 @@ spec:
 
   prompt:
     maxTokens: 4096
-    model: gpt-4
+    model: gpt-4o-mini
     provider: openai
     systemRole: |
       Refer to the tools provided in this prompt for detailed, factual information about the Smarter platform,
