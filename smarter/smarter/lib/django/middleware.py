@@ -104,6 +104,7 @@ class BlockSensitiveFilesMiddleware(MiddlewareMixin, SmarterHelperMixin):
         # Allow specific patterns to pass through
         for pattern in self.allowed_patterns:
             if pattern.match(request_path):
+                logger.info("%s amnesty granted to: %s", self.formatted_class_name, request.path)
                 return self.get_response(request)
 
         if any(sensitive_file in request.path for sensitive_file in self.sensitive_files):
