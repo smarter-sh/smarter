@@ -1,3 +1,13 @@
+## [0.10.12](https://github.com/smarter-sh/smarter/compare/v0.10.11...v0.10.12) (2025-02-14)
+
+
+### Bug Fixes
+
+* add a logged in receiver to verify UserProfile for authenticated user ([fb35a97](https://github.com/smarter-sh/smarter/commit/fb35a97bbeaf872ee41b7fb60d2d1500b1e1e16a))
+* set SOCIAL_AUTH_LINKEDIN_OAUTH2_SCOPE ([563bc8e](https://github.com/smarter-sh/smarter/commit/563bc8e30e26b907a7fecfd62d276601ea121479))
+* stop echoing the new pwd to the console ([d1836ee](https://github.com/smarter-sh/smarter/commit/d1836ee44183c6efdb1f79f2b2ce6f634e12978d))
+* whoami, status, version don't have a manifest kind ([c01d841](https://github.com/smarter-sh/smarter/commit/c01d84183bd26ce955c5c6cc90d39409fe3c3874))
+
 ## [0.10.11](https://github.com/smarter-sh/smarter/compare/v0.10.10...v0.10.11) (2025-02-11)
 
 
