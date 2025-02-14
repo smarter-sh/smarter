@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser, AnonymousUser
 
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER
-from smarter.common.exceptions import SmarterValueError
+from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.cache import cache_results
 from smarter.lib.django.user import UserType
@@ -39,6 +39,29 @@ def get_cached_account(account_id: int = None, account_number: str = None) -> Ac
         account = Account.objects.get(account_number=account_number)
         logger.info("%s caching account %s", formatted_text("get_cached_account()"), account)
         return account
+
+
+def get_cached_smarter_account() -> Account:
+    """
+    Returns the smarter account.
+    """
+    account = get_cached_account(account_number=SMARTER_ACCOUNT_NUMBER)
+    return account
+
+
+@cache_results(timeout=CACHE_TIMEOUT)
+def get_cached_default_account() -> Account:
+    """
+    Returns the default account.
+    """
+    try:
+        account = Account.objects.get(is_default_account=True)
+    except Account.DoesNotExist as e:
+        raise SmarterConfigurationError("No default account found.") from e
+    except Account.MultipleObjectsReturned as e:
+        raise SmarterConfigurationError("Multiple default accounts found.") from e
+    logger.info("%s caching default account %s", formatted_text("get_cached_default_account()"), account)
+    return account
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
