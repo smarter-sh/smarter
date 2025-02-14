@@ -24,6 +24,7 @@ from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterWaffleSwitches
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.llm import get_date_time_string
 from smarter.lib.cache import cache_results
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.request import SmarterRequestMixin
@@ -165,6 +166,10 @@ class ChatBot(TimestampedModel):
         null=True,
         choices=DnsVerificationStatusChoices.choices,
     )
+
+    @property
+    def default_system_role_enhanced(self):
+        return f"{get_date_time_string()}{self.default_system_role}"
 
     @property
     def default_host(self):

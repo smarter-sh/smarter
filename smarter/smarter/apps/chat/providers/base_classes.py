@@ -2,7 +2,6 @@
 Base class for chat providers.
 """
 
-import datetime
 import json
 import logging
 from http import HTTPStatus
@@ -52,6 +51,7 @@ from smarter.common.exceptions import (
     SmarterValueError,
 )
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.common.helpers.llm import get_date_time_string
 from smarter.lib.django.user import UserType
 
 from .const import OpenAIMessageKeys
@@ -376,16 +376,19 @@ class ChatProviderBase(ProviderDbMixin):
         return retval
 
     def get_message_thread(self, data: dict) -> List[Dict[str, str]]:
-        default_system_role = (
-            f"The current date/time is {datetime.datetime.now().astimezone().strftime('%A, %Y-%m-%dT%H:%M:%S%z')}\n"
-        )
-        default_system_role += self.chat.chatbot.default_system_role or self.default_system_role
+        """
+        Initialize a new message thread with a system prompt
+        and the incoming data.
+        """
+        default_system_role = get_date_time_string()
+        default_system_role += self.chat.chatbot.default_system_role_enhanced or self.default_system_role
         request_body = get_request_body(data=data)
         client_message_thread, _ = parse_request(request_body)
         client_message_thread = ensure_system_role_present(
             messages=client_message_thread, default_system_role=default_system_role
         )
         retval = self.messages_set_is_new(client_message_thread, is_new=False)
+        logger.info("get_message_thread() - client_message_thread: %s", retval)
         return retval
 
     def get_input_text_prompt(self, data: dict) -> str:
@@ -433,9 +436,6 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
     A chat provider that works with any vendor provider that is
     fully compatible with OpenAI's text completion API.
     """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
     @property
     def openai_messages(self) -> list:
@@ -760,6 +760,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 # that was passed in by the React front-end. There customarily
                 # is 1 or more system messages, 1 or more assistant messages,
                 # and a user message.
+                logger.info("hi fuckhead.")
                 self.messages = self.get_message_thread(data=self.data)
 
             for plugin in self.plugins:
