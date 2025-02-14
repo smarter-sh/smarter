@@ -80,6 +80,7 @@ class Account(TimestampedModel):
     account_number = models.CharField(
         validators=[account_number_format], max_length=255, unique=True, default="9999-9999-9999", blank=True, null=True
     )
+    is_default_account = models.BooleanField(default=False)
     company_name = models.CharField(max_length=255)
     phone_number = models.CharField(max_length=50, blank=True, null=True)
     address1 = models.CharField(max_length=255, blank=True, null=True)
