@@ -1,3 +1,11 @@
+## [0.10.13](https://github.com/smarter-sh/smarter/compare/v0.10.12...v0.10.13) (2025-02-14)
+
+
+### Bug Fixes
+
+* allow password reset urls ([f08e397](https://github.com/smarter-sh/smarter/commit/f08e397531bf2069ba8274691db94e786bedf62c))
+* allow password reset urls ([a70652d](https://github.com/smarter-sh/smarter/commit/a70652da9e09a425e57fe0e2dd2bc0f7b4aa4711))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
