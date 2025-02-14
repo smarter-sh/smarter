@@ -1,3 +1,11 @@
+## [0.10.11](https://github.com/smarter-sh/smarter/compare/v0.10.10...v0.10.11) (2025-02-11)
+
+
+### Bug Fixes
+
+* back-peddle on blending Smarter account bots with other accounts ([715e237](https://github.com/smarter-sh/smarter/commit/715e237cebeaff0982b9df24b7257d9d3601cb66))
+* remove functionality to combine Smarter account chatbots ([9f58f8a](https://github.com/smarter-sh/smarter/commit/9f58f8ad04c1a4ff2661bfd57161d97d170ce5c6))
+
 ## [0.10.10](https://github.com/smarter-sh/smarter/compare/v0.10.9...v0.10.10) (2025-02-11)
 
 
