@@ -540,7 +540,7 @@ class PluginBase(ABC):
                 custom_prompt = {
                     OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
                     OpenAIMessageKeys.MESSAGE_CONTENT_KEY: system_role
-                    + "\n\n and also "
+                    + "\n\nAnd also:\n"
                     + self.plugin_prompt.system_role,
                 }
                 messages_copy[i] = custom_prompt

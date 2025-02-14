@@ -17,6 +17,7 @@ from .models import (
 class ChatBotSerializer(serializers.ModelSerializer):
     url_chatbot = serializers.ReadOnlyField()
     account = AccountMiniSerializer()
+    default_system_role = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatBot
@@ -46,6 +47,9 @@ class ChatBotSerializer(serializers.ModelSerializer):
             "dns_verification_status",
             "url_chatbot",
         ]
+
+    def get_default_system_role(self, obj: ChatBot):
+        return obj.default_system_role_enhanced
 
 
 class ChatBotAPIKeySerializer(serializers.ModelSerializer):
