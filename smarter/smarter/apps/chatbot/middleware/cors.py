@@ -14,9 +14,11 @@ import waffle
 from corsheaders.conf import conf
 from corsheaders.middleware import CorsMiddleware as DjangoCorsMiddleware
 from django.conf import settings
+from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest
 
 from smarter.apps.chatbot.models import ChatBot, ChatBotHelper
+from smarter.common.classes import SmarterHelperMixin
 from smarter.common.const import SmarterWaffleSwitches
 
 
@@ -26,12 +28,19 @@ if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWAR
     logger.info("Loading smarter.apps.chatbot.middleware.cors.CorsMiddleware")
 
 
-class CorsMiddleware(DjangoCorsMiddleware):
+class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
     """CORSMiddleware is used to handle CORS headers for the application."""
 
     _url: SplitResult = None
     _chatbot: ChatBot = None
     helper: ChatBotHelper = None
+    request: WSGIRequest = None
+
+    def __call__(self, request: HttpRequest):
+        # You can now access the request object here
+        self.request = request
+        response = self.get_response(request)
+        return response
 
     @property
     def chatbot(self) -> ChatBot:
@@ -49,13 +58,13 @@ class CorsMiddleware(DjangoCorsMiddleware):
         url_string = url.geturl()
         if url_string in settings.CORS_ALLOWED_ORIGINS:
             if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
-                logger.info("CorsMiddleware() url: %s is an allowed origin", url.geturl())
+                logger.info("%s url: %s is an allowed origin", self.formatted_class_name, url.geturl())
             return None
 
         # get the chatbot helper for the url and try to find the chatbot
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
-            logger.info("CorsMiddleware() instantiating ChatBotHelper() for url: %s", url.geturl())
-        self.helper = ChatBotHelper(url=url.geturl())
+            logger.info("%s instantiating ChatBotHelper() for url: %s", self.formatted_class_name, url.geturl())
+        self.helper = ChatBotHelper(self.request)
         self._chatbot = self.helper.chatbot if self.helper.chatbot else None
 
         # If the chatbot is found, update the chatbot url
