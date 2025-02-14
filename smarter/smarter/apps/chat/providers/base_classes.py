@@ -388,7 +388,6 @@ class ChatProviderBase(ProviderDbMixin):
             messages=client_message_thread, default_system_role=default_system_role
         )
         retval = self.messages_set_is_new(client_message_thread, is_new=False)
-        logger.info("get_message_thread() - client_message_thread: %s", retval)
         return retval
 
     def get_input_text_prompt(self, data: dict) -> str:
@@ -760,7 +759,6 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
                 # that was passed in by the React front-end. There customarily
                 # is 1 or more system messages, 1 or more assistant messages,
                 # and a user message.
-                logger.info("hi fuckhead.")
                 self.messages = self.get_message_thread(data=self.data)
 
             for plugin in self.plugins:

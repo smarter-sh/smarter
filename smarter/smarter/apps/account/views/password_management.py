@@ -1,11 +1,13 @@
 """Django password management views."""
 
+import logging
 from http import HTTPStatus
 
 from django import forms
 from django.conf import settings
 from django.shortcuts import HttpResponse, redirect
 
+from smarter.common.classes import SmarterHelperMixin
 from smarter.common.helpers.email_helpers import email_helper
 from smarter.lib.django.token_generators import (
     ExpiringTokenGenerator,
@@ -14,8 +16,11 @@ from smarter.lib.django.token_generators import (
     TokenIntegrityError,
     TokenParseError,
 )
-from smarter.lib.django.user import User
+from smarter.lib.django.user import User, UserType
 from smarter.lib.django.view_helpers import SmarterNeverCachedWebView
+
+
+logger = logging.getLogger(__name__)
 
 
 class PasswordResetRequestView(SmarterNeverCachedWebView):
@@ -58,7 +63,7 @@ class PasswordResetRequestView(SmarterNeverCachedWebView):
         return HttpResponse("Email sent.", status=200)
 
 
-class PasswordResetView(SmarterNeverCachedWebView):
+class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
     """View for resetting password."""
 
     template_path = "account/authentication/new-password.html"
@@ -72,13 +77,16 @@ class PasswordResetView(SmarterNeverCachedWebView):
 
     # pylint: disable=unused-argument
     def get(self, request, *args, **kwargs):
-        user: User = None
+        logger.info("%s.get() begin", self.formatted_class_name)
+        user: UserType = None
         form = PasswordResetView.NewPasswordForm()
         uidb64 = kwargs.get("uidb64", None)
         token = kwargs.get("token", None)
 
+        logger.info("%s.get() initialized", self.formatted_class_name)
         try:
             user = self.expiring_token.decode_link(uidb64=uidb64, token=token)
+            logger.info("%s.get() user: %s", self.formatted_class_name, user)
         except User.DoesNotExist:
             return HttpResponse("Invalid password reset link. User does not exist.", status=404)
         except (TypeError, ValueError, OverflowError, TokenParseError, TokenConversionError, TokenIntegrityError) as e:
@@ -86,6 +94,7 @@ class PasswordResetView(SmarterNeverCachedWebView):
         except TokenExpiredError as e:
             return HttpResponse(e, status=HTTPStatus.UNAUTHORIZED)
 
+        logger.info("%s.get() finalizing", self.formatted_class_name)
         context = {"form": form, "password_reset": {"uidb64": uidb64, "token": token, "user": user}}
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
