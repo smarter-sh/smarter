@@ -1,6 +1,7 @@
 """This module is used to suppress DisallowedHost exception and return HttpResponseForbidden instead."""
 
 import logging
+import re
 
 from django.http import HttpResponseForbidden
 from django.utils.deprecation import MiddlewareMixin
@@ -17,6 +18,9 @@ class BlockSensitiveFilesMiddleware(MiddlewareMixin, SmarterHelperMixin):
     def __init__(self, get_response):
         super().__init__(get_response)
         self.get_response = get_response
+
+        # allow password reset links
+        self.allowed_patterns = [re.compile(r"^/dashboard/account/password-reset-link/[^/]+/[^/]+/$")]
         self.sensitive_files = {
             ".env",
             "config.php",
@@ -95,6 +99,13 @@ class BlockSensitiveFilesMiddleware(MiddlewareMixin, SmarterHelperMixin):
         }
 
     def __call__(self, request):
+        request_path = request.path.lower()
+
+        # Allow specific patterns to pass through
+        for pattern in self.allowed_patterns:
+            if pattern.match(request_path):
+                return self.get_response(request)
+
         if any(sensitive_file in request.path for sensitive_file in self.sensitive_files):
             logger.warning("%s Blocked request for sensitive file: %s", self.formatted_class_name, request.path)
             return HttpResponseForbidden("Your request has been blocked by Smarter")
