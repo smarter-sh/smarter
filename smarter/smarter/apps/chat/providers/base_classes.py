@@ -2,6 +2,7 @@
 Base class for chat providers.
 """
 
+import datetime
 import json
 import logging
 from http import HTTPStatus
@@ -375,6 +376,7 @@ class ChatProviderBase(ProviderDbMixin):
         return retval
 
     def get_message_thread(self, data: dict) -> List[Dict[str, str]]:
+        default_system_role = f"The current date/time is {datetime.datetime.now().astimezone().isoformat()}\n"
         default_system_role = self.chat.chatbot.default_system_role or self.default_system_role
         request_body = get_request_body(data=data)
         client_message_thread, _ = parse_request(request_body)
