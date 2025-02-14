@@ -21,7 +21,7 @@ spec:
     appWelcomeMessage: Welcome to ChatGPT 4!
     customDomain: null
     defaultMaxTokens: 4096
-    defaultModel: gpt-4
+    defaultModel: gpt-4o-mini
     defaultSystemRole: You are a helpful chatbot.
     defaultTemperature: 0.5
     deployed: true
