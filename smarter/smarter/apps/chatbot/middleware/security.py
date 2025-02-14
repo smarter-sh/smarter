@@ -8,6 +8,7 @@ from django.conf import settings
 from django.http import HttpResponseBadRequest, HttpResponseNotFound
 from django.middleware.security import SecurityMiddleware as DjangoSecurityMiddleware
 
+from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterWaffleSwitches
 from smarter.lib.django.validators import SmarterValidator
@@ -21,7 +22,7 @@ if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWAR
     logger.info("Loading smarter.apps.chatbot.middleware.security.SecurityMiddleware")
 
 
-class SecurityMiddleware(DjangoSecurityMiddleware):
+class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
     """
     Override Django's SecurityMiddleware to create our own implementation
     of ALLOWED_HOSTS, referred to as SMARTER_ALLOWED_HOSTS.
@@ -45,7 +46,8 @@ class SecurityMiddleware(DjangoSecurityMiddleware):
         if host in SmarterValidator.LOCAL_HOSTS:
             if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
                 logger.info(
-                    "SecurityMiddleware() %s found in SmarterValidator.LOCAL_HOSTS: %s",
+                    "%s %s found in SmarterValidator.LOCAL_HOSTS: %s",
+                    self.formatted_class_name,
                     host,
                     SmarterValidator.LOCAL_HOSTS,
                 )
@@ -61,7 +63,8 @@ class SecurityMiddleware(DjangoSecurityMiddleware):
         if host in settings.SMARTER_ALLOWED_HOSTS:
             if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
                 logger.info(
-                    "SecurityMiddleware() %s found in settings.SMARTER_ALLOWED_HOSTS: %s",
+                    "%s %s found in settings.SMARTER_ALLOWED_HOSTS: %s",
+                    self.formatted_class_name,
                     host,
                     settings.SMARTER_ALLOWED_HOSTS,
                 )
@@ -73,18 +76,18 @@ class SecurityMiddleware(DjangoSecurityMiddleware):
         #     for a deployed ChatBot.
         # ---------------------------------------------------------------------
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
-            logger.info("SecurityMiddleware() instantiating ChatBotHelper() for url: %s", url)
+            logger.info("%s instantiating ChatBotHelper() for url: %s", self.formatted_class_name, url)
         try:
             helper = ChatBotHelper(request=request)
         except ChatBot.DoesNotExist as e:
             if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
-                logger.error("SecurityMiddleware() %s failed to instantiate ChatBotHelper(): %s", url, e)
+                logger.error("%s %s failed to instantiate ChatBotHelper(): %s", self.formatted_class_name, url, e)
             return HttpResponseNotFound("ChatBot not found")
         if helper.chatbot is not None:
             if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
-                logger.info("SecurityMiddleware() ChatBotHelper() verified that %s is a chatbot.", url)
+                logger.info("%s ChatBotHelper() verified that %s is a chatbot.", self.formatted_class_name, url)
             return None
 
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
-            logger.error("SecurityMiddleware() %s failed security tests.", url)
+            logger.error("%s %s failed security tests.", self.formatted_class_name, url)
         return HttpResponseBadRequest("Bad Request (400) - Invalid Hostname.")
