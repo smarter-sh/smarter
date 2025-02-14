@@ -169,6 +169,9 @@ class ChatBot(TimestampedModel):
 
     @property
     def default_system_role_enhanced(self):
+        """
+        prepends a date/time string to the default_system_role
+        """
         return f"{get_date_time_string()}{self.default_system_role}"
 
     @property
