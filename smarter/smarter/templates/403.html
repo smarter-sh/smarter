@@ -3,7 +3,7 @@
 
 {% block root %}
 			<!--begin::Page bg image-->
-			<style>body { background-image: url("{% static 'assets/media/auth/bg13.jpg' %}"); } [data-bs-theme="dark"] body { background-image: url("{% static 'assets/media/auth/bg13-dark.jpg' %}"); }</style>
+			<style>body { background-image: url("{% static 'assets/media/auth/bg11.jpg' %}"); } [data-bs-theme="dark"] body { background-image: url("{% static 'assets/media/auth/bg11-dark.jpg' %}"); }</style>
 			<!--end::Page bg image-->
 			<!--begin::Authentication - Signup Welcome Message -->
 			<div class="d-flex flex-column flex-center flex-column-fluid">
@@ -13,15 +13,15 @@
 					<div class="card card-flush w-lg-650px py-5">
 						<div class="card-body py-15 py-lg-20">
 							<!--begin::Title-->
-							<h1 class="fw-bolder fs-2hx text-gray-900 mb-4">Oops!</h1>
+							<h1 class="fw-bolder fs-2qx text-gray-900 mb-4">Permission Denied</h1>
 							<!--end::Title-->
 							<!--begin::Text-->
 							<div class="fw-semibold fs-6 text-gray-500 mb-7">{{ error_message }}</div>
 							<!--end::Text-->
 							<!--begin::Illustration-->
-							<div class="mb-3">
-								<img src="{% static 'assets/media/auth/404.png' %}" class="mw-100 mh-300px theme-light-show" alt="" />
-								<img src="{% static 'assets/media/auth/404-dark.png' %}" class="mw-100 mh-300px theme-dark-show" alt="" />
+							<div class="mb-11">
+								<img src="{% static 'assets/media/auth/welcome.png' %}" class="mw-100 mh-300px theme-light-show" alt="" />
+								<img src="{% static 'assets/media/auth/welcome-dark.png' %}" class="mw-100 mh-300px theme-dark-show" alt="" />
 							</div>
 							<!--end::Illustration-->
 							<!--begin::Link-->
@@ -36,4 +36,5 @@
 				<!--end::Content-->
 			</div>
 			<!--end::Authentication - Signup Welcome Message-->
+
 {% endblock %}

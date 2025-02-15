@@ -8,7 +8,7 @@ from http import HTTPStatus
 
 import waffle
 from django.db import models
-from django.http import HttpResponseServerError, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import render
 
 # from django.utils.decorators import method_decorator
@@ -38,6 +38,10 @@ from smarter.common.exceptions import SmarterExceptionBase, SmarterValueError
 from smarter.common.helpers.url_helpers import clean_url
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
+from smarter.lib.django.views.error import (
+    SmarterHttpResponseNotFound,
+    SmarterHttpResponseServerError,
+)
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
 from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
 from smarter.lib.journal.http import (
@@ -176,7 +180,7 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
         self.session = SmarterChatSession(request, chatbot=self.chatbot)
 
         if not self.chatbot:
-            return JsonResponse({"error": "Not found"}, status=404)
+            return JsonResponse({"error": "Not found"}, status=HTTPStatus.NOT_FOUND.value)
 
         self.thing = SmarterJournalThings(SmarterJournalThings.CHAT_CONFIG)
         self.command = SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT_CONFIG)
@@ -314,10 +318,10 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
             if not self.chatbot:
                 raise ChatBot.DoesNotExist
         except ChatBot.DoesNotExist:
-            return render(request=request, template_name="404.html", status=404)
+            return SmarterHttpResponseNotFound(request=request, error_message="ChatBot not found")
         # pylint: disable=broad-except
         except Exception as e:
-            return HttpResponseServerError(f"Error: {e}")
+            return SmarterHttpResponseServerError(request=request, error_message=str(e))
 
         return render(request=request, template_name=self.template_path)
 
@@ -348,14 +352,6 @@ class ChatAppListView(SmarterAuthenticatedNeverCachedWebView):
                     return True
 
         smarter_admin = get_cached_smarter_admin_user_profile()
-        # get all of the smarter demo chatbots
-        # smarter_demo_chatbots = ChatBot.objects.filter(account=smarter_admin.account)
-        # for chatbot in smarter_demo_chatbots:
-        #     logger.info("ChatAppListView - chatbot=%s", chatbot)
-        #     chatbot_helper = ChatBotHelper(request=request, name=chatbot.name, chatbot_id=chatbot.id)
-        #     self.chatbot_helpers.append(chatbot_helper)
-
-        # get all chatbots for the account
         self.chatbots = ChatBot.objects.filter(account=self.account)
 
         for chatbot in self.chatbots:

@@ -27,7 +27,7 @@ class BillingAddressesView(SmarterAdminWebView):
     # TODO: Replace this with actual billing addresses
     def get(self, request):
         retval = [billing_address_factory(), billing_address_factory(), billing_address_factory()]
-        return http.JsonResponse(data=retval, safe=False, status=HTTPStatus.OK)
+        return http.JsonResponse(data=retval, safe=False, status=HTTPStatus.OK.value)
 
 
 class BillingAddressView(SmarterAdminWebView):
@@ -46,14 +46,14 @@ class BillingAddressView(SmarterAdminWebView):
             state = form.cleaned_data["state"]
             postcode = form.cleaned_data["postcode"]
             country = form.cleaned_data["country"]
-            return http.JsonResponse(status=HTTPStatus.OK, data={})
-        return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data={})
+            return http.JsonResponse(status=HTTPStatus.OK.value, data={})
+        return http.JsonResponse(status=HTTPStatus.BAD_REQUEST.value, data={})
 
     # pylint: disable=W0221
     def get(self, request, billing_address_id: str):
         """View for the payment method."""
         retval = billing_address_factory()
-        return http.JsonResponse(data=retval, safe=False, status=HTTPStatus.OK)
+        return http.JsonResponse(data=retval, safe=False, status=HTTPStatus.OK.value)
 
     def post(self, request, billing_address_id: str = None):
         self.process_form(request)
@@ -65,4 +65,4 @@ class BillingAddressView(SmarterAdminWebView):
         self.process_form(request)
 
     def delete(self, request, billing_address_id: str):
-        return http.JsonResponse(data={}, status=HTTPStatus.OK)
+        return http.JsonResponse(data={}, status=HTTPStatus.OK.value)
