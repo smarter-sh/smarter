@@ -49,7 +49,7 @@ class UserListView(AccountListViewBase):
             account_users = UserProfile.objects.filter(account__user=self.request.user).values_list("user", flat=True)
             return User.objects.filter(id__in=account_users)
         except UserProfile.DoesNotExist:
-            return Response({"error": "User not found"}, status=HTTPStatus.NOT_FOUND)
+            return Response({"error": "User not found"}, status=HTTPStatus.NOT_FOUND.value)
 
 
 # -----------------------------------------------------------------------
@@ -69,9 +69,9 @@ def validate_request_body(request):
         if "password" not in request.data:
             raise ValidationError("Invalid request data. Missing 'password' field.")
     except ValidationError as e:
-        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
+        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST.value)
     except Exception as e:
-        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
+        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST.value)
     return None
 
 
@@ -82,19 +82,20 @@ def eval_permissions(request, user_to_update: UserType, user_to_update_profile: 
             request_user_account = UserProfile.objects.get(user=request.user).account
         except UserProfile.DoesNotExist:
             return JsonResponse(
-                {"error": "You are not authorized to modify Smarter user accounts."}, status=HTTPStatus.UNAUTHORIZED
+                {"error": "You are not authorized to modify Smarter user accounts."},
+                status=HTTPStatus.UNAUTHORIZED.value,
             )
 
         # if the user is not a superuser then at most they can update users within their own account
         if user_to_update_profile and user_to_update_profile.account != request_user_account:
             return JsonResponse(
-                {"error": "You are not authorized to modify this user account."}, status=HTTPStatus.UNAUTHORIZED
+                {"error": "You are not authorized to modify this user account."}, status=HTTPStatus.UNAUTHORIZED.value
             )
 
         # if the user is neither a superuser nor a staff member then they can only update their own account
         if not request.user.is_staff and user_to_update != request.user:
             return JsonResponse(
-                {"error": "You are not authorized to modify this user account."}, status=HTTPStatus.UNAUTHORIZED
+                {"error": "You are not authorized to modify this user account."}, status=HTTPStatus.UNAUTHORIZED.value
             )
     return None
 
@@ -104,12 +105,12 @@ def get_user_for_operation(request):
     user_profile: UserProfile = None
 
     if not isinstance(request.user, User):
-        return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
+        return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED.value)
 
     try:
         user = User.objects.get(id=request.data.get("id"))
     except User.DoesNotExist:
-        return JsonResponse({"error": "User not found"}, status=HTTPStatus.BAD_REQUEST)
+        return JsonResponse({"error": "User not found"}, status=HTTPStatus.BAD_REQUEST.value)
 
     try:
         user_profile = UserProfile.objects.get(user=user)
@@ -125,16 +126,16 @@ def get_user(request, user_id: int = None):
     user: UserType = None
     if user_id is None:
         serializer = UserSerializer(request.user)
-        return Response(serializer.data, status=HTTPStatus.OK)
+        return Response(serializer.data, status=HTTPStatus.OK.value)
 
     # if the user is a superuser, they can get any user
     if request.user.is_superuser:
         try:
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:
-            return JsonResponse({"error": "User not found"}, status=HTTPStatus.NOT_FOUND)
+            return JsonResponse({"error": "User not found"}, status=HTTPStatus.NOT_FOUND.value)
         serializer = UserSerializer(user)
-        return Response(serializer.data, status=HTTPStatus.OK)
+        return Response(serializer.data, status=HTTPStatus.OK.value)
 
     # if the user is a staff member, they can get users within their own account
     if request.user.is_staff:
@@ -142,16 +143,16 @@ def get_user(request, user_id: int = None):
             account = UserProfile.objects.get(user=request.user).account
             user = UserProfile.objects.get(account=account, user_id=user_id).user
         except User.DoesNotExist:
-            return JsonResponse({"error": "User not found"}, status=HTTPStatus.NOT_FOUND)
+            return JsonResponse({"error": "User not found"}, status=HTTPStatus.NOT_FOUND.value)
         serializer = UserSerializer(user)
         return Response(serializer.data, status=HTTPStatus.OK)
 
     # mere mortals can only get their own account
     if user_id != request.user.id:
-        return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
+        return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED.value)
 
     serializer = UserSerializer(request.user)
-    return Response(serializer.data, status=HTTPStatus.OK)
+    return Response(serializer.data, status=HTTPStatus.OK.value)
 
 
 def create_user(request):
@@ -159,7 +160,7 @@ def create_user(request):
     account: Account = None
     data: dict = None
     if not request.user.is_superuser and not request.user.is_staff:
-        return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
+        return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED.value)
 
     validate_request_body(request)
     data = request.data
@@ -168,7 +169,7 @@ def create_user(request):
     try:
         account = UserProfile.objects.get(user=request.user).account
     except UserProfile.DoesNotExist:
-        return JsonResponse({"error": "User is not associated with any account."}, status=HTTPStatus.UNAUTHORIZED)
+        return JsonResponse({"error": "User is not associated with any account."}, status=HTTPStatus.UNAUTHORIZED.value)
 
     try:
         with transaction.atomic():
@@ -176,7 +177,7 @@ def create_user(request):
             user.save()
             UserProfile.objects.create(user=request.user, account=account)
     except Exception as e:
-        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
+        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST.value)
 
     return HttpResponseRedirect(request.path_info + str(user.id) + "/")
 
@@ -198,9 +199,11 @@ def update_user(request):
                 setattr(user_to_update, key, value)
         user_to_update.save()
     except ValidationError as e:
-        return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
+        return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST.value)
     except Exception as e:
-        return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+        return JsonResponse(
+            {"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR.value
+        )
 
     return HttpResponseRedirect(request.path_info)
 
@@ -213,14 +216,16 @@ def delete_user(request, user_id: int = None):
         else:
             account = UserProfile.objects.get(user=request.user).account
     except UserProfile.DoesNotExist:
-        return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
+        return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
 
     try:
         with transaction.atomic():
             account.delete()
             UserProfile.objects.get(user=request.user).delete()
     except Exception as e:
-        return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+        return JsonResponse(
+            {"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR.value
+        )
 
     plugins_path = request.path_info.rsplit("/", 2)[0]
     return HttpResponseRedirect(plugins_path)

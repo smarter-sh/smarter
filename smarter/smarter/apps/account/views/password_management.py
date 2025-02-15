@@ -18,6 +18,11 @@ from smarter.lib.django.token_generators import (
 )
 from smarter.lib.django.user import User, UserType
 from smarter.lib.django.view_helpers import SmarterNeverCachedWebView
+from smarter.lib.django.views.error import (
+    SmarterHttpResponseBadRequest,
+    SmarterHttpResponseForbidden,
+    SmarterHttpResponseNotFound,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -44,13 +49,13 @@ class PasswordResetRequestView(SmarterNeverCachedWebView):
     def post(self, request):
         form = PasswordResetRequestView.EmailForm(request.POST)
         if not form.is_valid():
-            return HttpResponse("Email address is invalid.", status=HTTPStatus.BAD_REQUEST)
+            return SmarterHttpResponseBadRequest(request=request, error_message="Email address is invalid.")
         email = form.cleaned_data["email"]
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             # Do not reveal if the email is not in the system.
-            return HttpResponse("", status=200)
+            return HttpResponse("", status=HTTPStatus.OK.value)
 
         password_reset_link = self.expiring_token.encode_link(
             request=request, user=user, reverse_link="password_reset_link"
@@ -60,7 +65,7 @@ class PasswordResetRequestView(SmarterNeverCachedWebView):
         subject = "Reset your password"
         to = email
         email_helper.send_email(subject=subject, body=body, to=to, html=True)
-        return HttpResponse("Email sent.", status=200)
+        return HttpResponse("Email sent.", status=HTTPStatus.OK.value)
 
 
 class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
@@ -88,11 +93,13 @@ class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
             user = self.expiring_token.decode_link(uidb64=uidb64, token=token)
             logger.info("%s.get() user: %s", self.formatted_class_name, user)
         except User.DoesNotExist:
-            return HttpResponse("Invalid password reset link. User does not exist.", status=404)
+            return SmarterHttpResponseNotFound(
+                request=request, error_message="Invalid password reset link. User does not exist."
+            )
         except (TypeError, ValueError, OverflowError, TokenParseError, TokenConversionError, TokenIntegrityError) as e:
-            return HttpResponse(e, status=HTTPStatus.BAD_REQUEST)
+            return SmarterHttpResponseBadRequest(request=request, error_message=str(e))
         except TokenExpiredError as e:
-            return HttpResponse(e, status=HTTPStatus.UNAUTHORIZED)
+            return SmarterHttpResponseForbidden(request=request, error_message=str(e))
 
         logger.info("%s.get() finalizing", self.formatted_class_name)
         context = {"form": form, "password_reset": {"uidb64": uidb64, "token": token, "user": user}}
@@ -103,22 +110,24 @@ class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
         token = kwargs.get("token", None)
         form = PasswordResetView.NewPasswordForm(request.POST)
         if not form.is_valid():
-            return HttpResponse("input form is invalid.", status=HTTPStatus.BAD_REQUEST)
+            return SmarterHttpResponseBadRequest(request=request, error_message="input form is invalid.")
 
         password = form.cleaned_data["password"]
         password_confirm = form.cleaned_data["password_confirm"]
 
         if password != password_confirm:
-            return HttpResponse("Passwords do not match.", status=HTTPStatus.BAD_REQUEST)
+            return SmarterHttpResponseBadRequest(request=request, error_message="Passwords do not match.")
 
         try:
             user = self.expiring_token.decode_link(uidb64, token)
         except User.DoesNotExist:
-            return HttpResponse("Invalid password reset link. User does not exist.", status=404)
+            return SmarterHttpResponseNotFound(
+                request=request, error_message="Invalid password reset link. User does not exist."
+            )
         except (TypeError, ValueError, OverflowError, TokenParseError, TokenConversionError, TokenIntegrityError) as e:
-            return HttpResponse(e, status=HTTPStatus.BAD_REQUEST)
+            return SmarterHttpResponseBadRequest(request=request, error_message=str(e))
         except TokenExpiredError as e:
-            return HttpResponse(e, status=HTTPStatus.UNAUTHORIZED)
+            return SmarterHttpResponseForbidden(request=request, error_message=str(e))
 
         user.set_password(password)
         user.save()

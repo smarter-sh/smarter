@@ -289,7 +289,7 @@ class CliBaseApiView(APIView, AccountMixin):
                         thing=self.manifest_kind,
                         command=self.command,
                         e=ex,
-                        status=HTTPStatus.BAD_REQUEST,
+                        status=HTTPStatus.BAD_REQUEST.value,
                     )
 
         try:
@@ -298,7 +298,11 @@ class CliBaseApiView(APIView, AccountMixin):
                 raise APIV1CLIViewError("Could not find account for user.")
         except SmarterExceptionBase as e:
             return SmarterJournaledJsonErrorResponse(
-                request=self.request, thing=self.manifest_kind, command=self.command, e=e, status=HTTPStatus.FORBIDDEN
+                request=self.request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=e,
+                status=HTTPStatus.FORBIDDEN.value,
             )
         # Parse the query string parameters from the request into a dictionary.
         # This is used to pass additional parameters to the child view's post method.
@@ -314,7 +318,7 @@ class CliBaseApiView(APIView, AccountMixin):
                         thing=self.manifest_kind,
                         command=self.command,
                         e=e,
-                        status=HTTPStatus.FORBIDDEN,
+                        status=HTTPStatus.FORBIDDEN.value,
                     )
 
         user_agent = self.request.headers.get("User-Agent", "")
@@ -332,7 +336,7 @@ class CliBaseApiView(APIView, AccountMixin):
                     e=SAMBadRequestError(
                         f"Unsupported manifest kind: {self.manifest_kind}. should be one of {SAMKinds.all_values()}"
                     ),
-                    status=HTTPStatus.BAD_REQUEST,
+                    status=HTTPStatus.BAD_REQUEST.value,
                 )
 
         # generic exception handler that simply ensures that in all cases
@@ -350,7 +354,7 @@ class CliBaseApiView(APIView, AccountMixin):
                 thing=self.manifest_kind,
                 command=self.command,
                 e=not_implemented_error.get_formatted_err_message,
-                status=HTTPStatus.NOT_IMPLEMENTED,
+                status=HTTPStatus.NOT_IMPLEMENTED.value,
             )
         except SAMBrokerErrorNotReady as not_ready_error:
             return SmarterJournaledJsonErrorResponse(
@@ -358,7 +362,7 @@ class CliBaseApiView(APIView, AccountMixin):
                 thing=self.manifest_kind,
                 command=self.command,
                 e=not_ready_error.get_formatted_err_message,
-                status=HTTPStatus.SERVICE_UNAVAILABLE,
+                status=HTTPStatus.SERVICE_UNAVAILABLE.value,
             )
         except SAMBrokerErrorNotFound as not_found_error:
             return SmarterJournaledJsonErrorResponse(
@@ -366,7 +370,7 @@ class CliBaseApiView(APIView, AccountMixin):
                 thing=self.manifest_kind,
                 command=self.command,
                 e=not_found_error.get_formatted_err_message,
-                status=HTTPStatus.NOT_FOUND,
+                status=HTTPStatus.NOT_FOUND.value,
             )
         except SAMBrokerReadOnlyError as read_only_error:
             return SmarterJournaledJsonErrorResponse(
@@ -374,7 +378,7 @@ class CliBaseApiView(APIView, AccountMixin):
                 thing=self.manifest_kind,
                 command=self.command,
                 e=read_only_error.get_formatted_err_message,
-                status=HTTPStatus.METHOD_NOT_ALLOWED,
+                status=HTTPStatus.METHOD_NOT_ALLOWED.value,
             )
         except SAMBrokerError as broker_error:
             return SmarterJournaledJsonErrorResponse(
@@ -382,7 +386,7 @@ class CliBaseApiView(APIView, AccountMixin):
                 thing=self.manifest_kind,
                 command=self.command,
                 e=broker_error.get_formatted_err_message,
-                status=HTTPStatus.BAD_REQUEST,
+                status=HTTPStatus.BAD_REQUEST.value,
             )
         # pylint: disable=broad-except
         except Exception as e:
@@ -391,5 +395,5 @@ class CliBaseApiView(APIView, AccountMixin):
                 thing=self.manifest_kind,
                 command=self.command,
                 e=e,
-                status=HTTPStatus.INTERNAL_SERVER_ERROR,
+                status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
             )

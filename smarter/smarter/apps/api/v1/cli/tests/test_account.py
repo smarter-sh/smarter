@@ -74,7 +74,7 @@ class TestApiCliV1Account(ApiV1TestBase):
 
         path = reverse(ApiV1CliReverseViews.example_manifest, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
-        self.assertEqual(status, HTTPStatus.OK)
+        self.assertEqual(status, HTTPStatus.OK.value)
         self.validate_response(response)
 
         data = response[SmarterJournalApiResponseKeys.DATA]
@@ -88,7 +88,7 @@ class TestApiCliV1Account(ApiV1TestBase):
         """Test describe command"""
         path = reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
-        self.assertEqual(status, HTTPStatus.OK)
+        self.assertEqual(status, HTTPStatus.OK.value)
         self.validate_response(response)
 
         data = response[SmarterJournalApiResponseKeys.DATA]
@@ -102,7 +102,7 @@ class TestApiCliV1Account(ApiV1TestBase):
         response, status = self.get_response(path=path)
 
         # validate the response and status are both good
-        self.assertEqual(status, HTTPStatus.OK)
+        self.assertEqual(status, HTTPStatus.OK.value)
         self.assertIsInstance(response, dict)
 
         # muck up the manifest with some test data
@@ -128,13 +128,13 @@ class TestApiCliV1Account(ApiV1TestBase):
         manifest = yaml.dump(data)
         path = reverse(ApiV1CliReverseViews.apply)
         response, status = self.get_response(path=path, manifest=manifest)
-        self.assertEqual(status, HTTPStatus.OK)
+        self.assertEqual(status, HTTPStatus.OK.value)
         self.assertIsInstance(response, dict)
 
         # requery and validate our changes
         path = reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
-        self.assertEqual(status, HTTPStatus.OK)
+        self.assertEqual(status, HTTPStatus.OK.value)
         self.assertIsInstance(response, dict)
 
         # validate our changes
@@ -185,7 +185,7 @@ class TestApiCliV1Account(ApiV1TestBase):
         response, status = self.get_response(path=path)
 
         # validate the response and status are both good
-        self.assertEqual(status, HTTPStatus.OK)
+        self.assertEqual(status, HTTPStatus.OK.value)
         self.assertIsInstance(response, dict)
 
         self.assertIn(SmarterJournalApiResponseKeys.DATA, response.keys())
@@ -217,7 +217,7 @@ class TestApiCliV1Account(ApiV1TestBase):
         response, status = self.get_response(path=path)
 
         # validate the response and status are both good
-        self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
+        self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED.value)
         self.assertIsInstance(response, dict)
 
         error = response["error"]
@@ -235,7 +235,7 @@ class TestApiCliV1Account(ApiV1TestBase):
         response, status = self.get_response(path=path)
 
         # validate the response and status are both good
-        self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
+        self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED.value)
         self.assertIsInstance(response, dict)
 
         error = response["error"]
@@ -253,7 +253,7 @@ class TestApiCliV1Account(ApiV1TestBase):
         response, status = self.get_response(path=path)
 
         # validate the response and status are both good
-        self.assertEqual(status, HTTPStatus.OK)
+        self.assertEqual(status, HTTPStatus.OK.value)
         self.assertIsInstance(response, dict)
 
     def test_delete(self) -> None:

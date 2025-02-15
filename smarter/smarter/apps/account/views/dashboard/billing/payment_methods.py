@@ -34,7 +34,7 @@ class PaymentMethodsView(SmarterAdminWebView):
         """View for the payment methods."""
 
         retval = [payment_method_factory(), payment_method_factory(), payment_method_factory()]
-        return http.JsonResponse(data=retval, safe=False, status=HTTPStatus.OK)
+        return http.JsonResponse(data=retval, safe=False, status=HTTPStatus.OK.value)
 
 
 class PaymentMethodView(SmarterAdminWebView):
@@ -52,14 +52,14 @@ class PaymentMethodView(SmarterAdminWebView):
             # card_expiration_month = form.cleaned_data["card_expiration_month"]
             # card_expiry_year = form.cleaned_data["card_expiry_year"]
             # card_cvc = form.cleaned_data["card_cvc"]
-            return http.JsonResponse(status=HTTPStatus.OK, data={})
-        return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data={})
+            return http.JsonResponse(status=HTTPStatus.OK.value, data={})
+        return http.JsonResponse(status=HTTPStatus.BAD_REQUEST.value, data={})
 
     # pylint: disable=W0221
     def get(self, request, payment_method_id: str):
         """View for the payment method detail."""
         retval = payment_method_factory()
-        return http.JsonResponse(data=retval, safe=False, status=HTTPStatus.OK)
+        return http.JsonResponse(data=retval, safe=False, status=HTTPStatus.OK.value)
 
     def post(self, request, payment_method_id: str = None):
         return self.process_form(request)
@@ -72,4 +72,4 @@ class PaymentMethodView(SmarterAdminWebView):
 
     def delete(self, request, payment_method_id: str):
         logger.info("Deleting payment method %s", payment_method_id)
-        return http.JsonResponse(data={}, status=HTTPStatus.OK)
+        return http.JsonResponse(data={}, status=HTTPStatus.OK.value)
