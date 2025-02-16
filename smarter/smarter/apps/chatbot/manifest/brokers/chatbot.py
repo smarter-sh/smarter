@@ -302,7 +302,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                         "What is the weather in New York?",
                         "Tell me a joke",
                         "what's the current price of Apple stock?",
-                        "How many days ago was 1-Feb-1971?",
+                        "How many days ago was 29-Feb-1972?",
                     ],
                     "appPlaceholder": "Ask me anything...",
                     "appInfoUrl": "https://example.com",
