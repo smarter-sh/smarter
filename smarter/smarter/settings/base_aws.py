@@ -77,7 +77,12 @@ SMARTER_ALLOWED_HOSTS = [ENVIRONMENT_DOMAIN, CUSTOMER_API_DOMAIN, f"*.{CUSTOMER_
 SMTP_SENDER = smarter_settings.smtp_sender or ENVIRONMENT_DOMAIN
 SMTP_FROM_EMAIL = smarter_settings.smtp_from_email or "no-reply@" + SMTP_SENDER
 
-CORS_ALLOWED_ORIGINS = [f"https://{host}" for host in [ENVIRONMENT_DOMAIN, CUSTOMER_API_DOMAIN]]
+CORS_ALLOWED_ORIGINS += [
+    f"http://{host}" for host in [ENVIRONMENT_DOMAIN, CUSTOMER_API_DOMAIN, smarter_settings.environment_cdn_domain]
+]
+CORS_ALLOWED_ORIGINS += [
+    f"https://{host}" for host in [ENVIRONMENT_DOMAIN, CUSTOMER_API_DOMAIN, smarter_settings.environment_cdn_domain]
+]
 
 
 # (4_0.E001) As of Django 4.0, the values in the CSRF_TRUSTED_ORIGINS setting must start with a scheme

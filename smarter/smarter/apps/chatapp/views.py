@@ -299,7 +299,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
     # The React app originates from https://github.com/smarter-sh/smarter-chat
     # and is built-deployed to AWS Cloudfront. The React app is served from
     # a url like: https://cdn.platform.smarter.sh/ui-chat/index.html
-    reactjs_cdn_path = "ui-chat/index.html"
+    reactjs_cdn_path = "/ui-chat/index.html"
     reactjs_cdn_url = urljoin(smarter_settings.environment_cdn_url, reactjs_cdn_path)
 
     # start with a string like: "smarter.sh/v1/ui-chat/root"
@@ -319,13 +319,15 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         self.url = request.build_absolute_uri()
 
         try:
-            logger.info(
-                "ChatAppWorkbenchView - url=%s, account=%s, user=%s, name=%s",
-                self.url,
-                self.account,
-                self.user_profile.user,
-                name,
-            )
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_REACTAPP_DEBUG_MODE):
+                logger.info(
+                    "%s - url=%s, account=%s, user=%s, name=%s",
+                    self.formatted_class_name,
+                    self.url,
+                    self.account,
+                    self.user_profile.user,
+                    name,
+                )
             self.chatbot_helper = ChatBotHelper(request=request, name=name)
             self.chatbot = self.chatbot_helper.chatbot if self.chatbot_helper.chatbot else None
             if not self.chatbot:
@@ -339,6 +341,9 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         context = {
             "ui_chat_url": self.reactjs_cdn_url,
             "div_id": self.div_root_id,
+            "debug_mode": (
+                "true" if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_REACTAPP_DEBUG_MODE) else "false"
+            ),
         }
         return render(request=request, template_name=self.template_path, context=context)
 

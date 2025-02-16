@@ -18,6 +18,7 @@ from django.views.decorators.cache import cache_control, cache_page, never_cache
 from htmlmin.main import minify
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.common.classes import SmarterHelperMixin
 from smarter.lib.django.views.error import SmarterHttpResponseNotFound
 
 
@@ -37,7 +38,7 @@ def redirect_and_expire_cache(path: str = "/"):
 # ------------------------------------------------------------------------------
 # Web Views
 # ------------------------------------------------------------------------------
-class SmarterView(View):
+class SmarterView(View, SmarterHelperMixin):
     """
     Base view for smarter views.
     """
