@@ -1,7 +1,9 @@
 """Plugin utils module."""
 
 import json
+import logging
 import os
+import re
 
 import yaml
 
@@ -11,6 +13,9 @@ from smarter.common.const import PYTHON_ROOT
 from smarter.lib.django.user import UserType
 
 from .static import PluginStatic
+
+
+logger = logging.getLogger(__name__)
 
 
 class Plugins:
@@ -49,7 +54,7 @@ class Plugins:
 class PluginExample:
     """A class for working with built-in yaml-based plugin examples."""
 
-    _name: str = None
+    _filename: str = None
     _json: json = None
     _yaml: str = None
 
@@ -59,12 +64,22 @@ class PluginExample:
             self._yaml = file.read()
             self._json = yaml.safe_load(self._yaml)
 
-        self._name = filename
+        self._filename = filename
+
+    @property
+    def filename(self) -> str:
+        """Return the name of the plugin."""
+        return self._filename
 
     @property
     def name(self) -> str:
         """Return the name of the plugin."""
-        return self._name
+        try:
+            retval = self._json["metadata"]["name"]
+        except KeyError:
+            logger.warning("PluginExample: %d is malformed and has no metadata.name", self.filename)
+            retval = self.convert_filename()
+        return retval
 
     def to_yaml(self) -> str:
         """Return the plugin as a yaml string."""
@@ -75,6 +90,20 @@ class PluginExample:
     def to_json(self) -> dict:
         """Return the plugin as a dictionary."""
         return self._json
+
+    def convert_filename(self) -> str:
+        """Convert the filename to the desired format."""
+        if not isinstance(self.filename, str):
+            return self.filename
+        try:
+            filename = os.path.splitext(self.filename)[0]  # Remove the file extension
+            name = re.sub(r"[-_]", " ", filename)  # Replace hyphens and underscores with spaces
+            name = name.title().replace(" ", "")  # Capitalize each word and remove spaces
+            return name
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error("PluginExample: %s failed to convert filename: %s", self.filename, e)
+            return self.filename
 
 
 class PluginExamples:
