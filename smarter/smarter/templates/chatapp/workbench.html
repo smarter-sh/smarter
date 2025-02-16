@@ -13,25 +13,46 @@
         const text = await response.text();
         const parser = new DOMParser();
         const doc = parser.parseFromString(text, 'text/html');
+        const elements = doc.head.childNodes;
 
-        const elements = doc.body.childNodes;
-        const rootDiv = document.getElementById('{{ div_id }}');
+        console.log('context debug_mode:', '{{ debug_mode }}');
+        if ('{{ debug_mode }}' === 'true') {
+          console.log('debug mode is enabled.');
+          console.log('root div id:', '{{ div_id }}');
+          console.log('received 200 response from the server:', '{{ ui_chat_url }}');
+          console.log('html text:', text);
+          console.log('html doc:', doc);
+          console.log('DOM elements:', elements);
+        }
 
         elements.forEach(element => {
-        if (!element.classList.contains('internal')) {
-            rootDiv.insertAdjacentElement('beforebegin', element);
+          if (element.nodeType === Node.ELEMENT_NODE) {
+            if (!element.classList.contains('internal')) {
+              if (element.tagName === 'LINK') {
+                document.head.insertAdjacentElement('beforeend', element);
+                if ('{{ debug_mode }}' === 'true') {
+                  console.log('injected chat app element into the head.', element);
+                }
+              }
+              if (element.tagName === 'SCRIPT') {
+                document.body.insertAdjacentElement('beforeend', element);
+                if ('{{ debug_mode }}' === 'true') {
+                  console.log('injected chat app element into the body.', element);
+                }
+              }
+            }
           }
         });
       } catch (error) {
         console.error('Error fetching and injecting chat app into the DOM. \
-         This error originates from the Smarter Chat component, \
-         Which is served from AWS Cloudfront, {{ ui_chat_url }} \
-         Begin your trouble shooting journey by ensuring that this \
-         url permits public anonymous http GET requests. Additionally, \
-         this url is expected to return css and js link elements \
-         pointing to a valid react.js build. Source code for this \
-         react.js build is located at, \
-         https://github.com/smarter-sh/smarter-chat', error);
+This error originates from the Smarter Chat component, \
+Which is served from AWS Cloudfront, {{ ui_chat_url }} \
+Begin your trouble shooting journey by ensuring that this \
+url permits public anonymous http GET requests. Additionally, \
+this url is expected to return css and js link elements \
+pointing to a valid react.js build. Source code for this \
+react.js build is located at, \
+https://github.com/smarter-sh/smarter-chat', error);
       }
     }
     document.addEventListener("DOMContentLoaded", function() {
