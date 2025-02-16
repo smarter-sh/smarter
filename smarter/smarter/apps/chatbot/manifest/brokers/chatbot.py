@@ -301,8 +301,8 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                     "appExamplePrompts": [
                         "What is the weather in New York?",
                         "Tell me a joke",
-                        "example function calling",
-                        "What is the capital of France?",
+                        "what's the current price of Apple stock?",
+                        "How many days ago was 1-Feb-1971?",
                     ],
                     "appPlaceholder": "Ask me anything...",
                     "appInfoUrl": "https://example.com",
@@ -314,7 +314,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                     "dnsVerificationStatus": "Not Verified",
                 },
                 SAMChatbotSpecKeys.PLUGINS.value: get_plugin_examples_by_name(),
-                SAMChatbotSpecKeys.FUNCTIONS.value: ["weather"],
+                SAMChatbotSpecKeys.FUNCTIONS.value: ["weather", "datemath", "stockprice"],
                 SAMChatbotSpecKeys.APIKEY.value: "camelCaseNameOfApiKey",
             },
         }
