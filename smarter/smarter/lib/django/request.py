@@ -57,7 +57,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         2.) authenticated sandbox end points. Authenticated chats
             self.is_chatbot_sandbox_url==True
         --------
-        - http://localhost:8000/chatbots/<str:name>/				            -> smarter.apps.chatapp.views.ChatAppView
+        - http://localhost:8000/chatbots/<str:name>/				            -> smarter.apps.chatapp.views.ChatAppWorkbenchView
         - http://localhost:8000/chatbots/<str:name>/config/			            -> smarter.apps.chatapp.views.ChatConfigView
 
         3.) smarter.sh/v1 end points. Public or authenticated chats

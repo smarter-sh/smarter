@@ -518,6 +518,11 @@ class Settings(BaseSettings):
         return f"cdn.{self.environment_domain}"
 
     @property
+    def environment_cdn_url(self) -> str:
+        """Return the CDN URL."""
+        return SmarterValidator.urlify(self.environment_cdn_domain, environment=self.environment)
+
+    @property
     def environment_domain(self) -> str:
         """Return the complete domain name."""
         if self.environment == SmarterEnvironments.PROD:
@@ -531,8 +536,6 @@ class Settings(BaseSettings):
 
     @property
     def environment_url(self) -> str:
-        if self.environment == SmarterEnvironments.LOCAL:
-            return SmarterValidator.urlify(self.environment_domain, environment=self.environment)
         return SmarterValidator.urlify(self.environment_domain, environment=self.environment)
 
     @property
