@@ -15,10 +15,8 @@
         const doc = parser.parseFromString(text, 'text/html');
         const elements = doc.head.childNodes;
 
-        console.log('context debug_mode:', '{{ debug_mode }}');
         if ('{{ debug_mode }}' === 'true') {
-          console.log('debug mode is enabled.');
-          console.log('root div id:', '{{ div_id }}');
+          console.log('reactapp root div id=', '{{ div_id }}');
           console.log('received 200 response from the server:', '{{ ui_chat_url }}');
           console.log('html text:', text);
           console.log('html doc:', doc);
@@ -35,9 +33,13 @@
                 }
               }
               if (element.tagName === 'SCRIPT') {
-                document.body.insertAdjacentElement('beforeend', element);
+                const script = document.createElement('script');
+                script.src = element.src;
+                script.async = element.async;
+                script.defer = element.defer;
+                document.body.appendChild(script);
                 if ('{{ debug_mode }}' === 'true') {
-                  console.log('injected chat app element into the body.', element);
+                  console.log('injected and executed chat app script.', script);
                 }
               }
             }
