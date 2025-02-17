@@ -4,61 +4,8 @@
   {{ block.super }}
 
   <!-- react.js app entry point -->
-  <div id="{{ div_id }}"></div>
+  <div style="height: 88vh;" id="{{ div_id }}"></div>
   <!-- retrieve and inject the js/css artifacts of the react.js build into the DOM. -->
-  <script>
-    async function injectReactApp() {
-      try {
-        const response = await fetch('{{ ui_chat_url }}');
-        const text = await response.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(text, 'text/html');
-        const elements = doc.head.childNodes;
+  <script async="" src="{{ ui_chat_loader_url }}"></script>
 
-        if ('{{ debug_mode }}' === 'true') {
-          console.log('reactapp root div id=', '{{ div_id }}');
-          console.log('received 200 response from the server:', '{{ ui_chat_url }}');
-          console.log('html text:', text);
-          console.log('html doc:', doc);
-          console.log('DOM elements:', elements);
-        }
-
-        elements.forEach(element => {
-          if (element.nodeType === Node.ELEMENT_NODE) {
-            if (!element.classList.contains('internal')) {
-              if (element.tagName === 'LINK') {
-                document.head.insertAdjacentElement('beforeend', element);
-                if ('{{ debug_mode }}' === 'true') {
-                  console.log('injected chat app element into the head.', element);
-                }
-              }
-              if (element.tagName === 'SCRIPT') {
-                const script = document.createElement('script');
-                script.src = element.src;
-                script.async = element.async;
-                script.defer = element.defer;
-                document.body.appendChild(script);
-                if ('{{ debug_mode }}' === 'true') {
-                  console.log('injected and executed chat app script.', script);
-                }
-              }
-            }
-          }
-        });
-      } catch (error) {
-        console.error('Error fetching and injecting chat app into the DOM. \
-This error originates from the Smarter Chat component, \
-Which is served from AWS Cloudfront, {{ ui_chat_url }} \
-Begin your trouble shooting journey by ensuring that this \
-url permits public anonymous http GET requests. Additionally, \
-this url is expected to return css and js link elements \
-pointing to a valid react.js build. Source code for this \
-react.js build is located at, \
-https://github.com/smarter-sh/smarter-chat', error);
-      }
-    }
-    document.addEventListener("DOMContentLoaded", function() {
-      injectReactApp();
-    });
-  </script>
-{% endblock %}
+  {% endblock %}
