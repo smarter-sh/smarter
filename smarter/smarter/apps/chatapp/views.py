@@ -299,12 +299,12 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
     # The React app originates from https://github.com/smarter-sh/smarter-chat
     # and is built-deployed to AWS Cloudfront. The React app is served from
     # a url like: https://cdn.platform.smarter.sh/ui-chat/index.html
-    reactjs_cdn_path = "/ui-chat/index.html"
-    reactjs_cdn_url = urljoin(smarter_settings.environment_cdn_url, reactjs_cdn_path)
+    reactjs_cdn_path = "/ui-chat/app-loader.js"
+    reactjs_loader_url = urljoin(smarter_settings.environment_cdn_url, reactjs_cdn_path)
 
     # start with a string like: "smarter.sh/v1/ui-chat/root"
     # then convert it into an html safe id like: "smarter-sh-v1-ui-chat-root"
-    div_root_id = SmarterApiVersions.V1 + reactjs_cdn_path.replace("index.html", "root")
+    div_root_id = SmarterApiVersions.V1 + reactjs_cdn_path.replace("app-loader.js", "root")
     div_root_id = div_root_id.replace(".", "-").replace("/", "-")
 
     chatbot: ChatBot = None
@@ -339,7 +339,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
             return SmarterHttpResponseServerError(request=request, error_message=str(e))
 
         context = {
-            "ui_chat_url": self.reactjs_cdn_url,
+            "ui_chat_loader_url": self.reactjs_loader_url,
             "div_id": self.div_root_id,
             "debug_mode": (
                 "true" if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_REACTAPP_DEBUG_MODE) else "false"
