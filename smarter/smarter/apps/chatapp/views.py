@@ -339,11 +339,10 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
             return SmarterHttpResponseServerError(request=request, error_message=str(e))
 
         context = {
-            "ui_chat_loader_url": self.reactjs_loader_url,
             "div_id": self.div_root_id,
-            "debug_mode": (
-                "true" if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_REACTAPP_DEBUG_MODE) else "false"
-            ),
+            "app_loader_url": self.reactjs_loader_url,
+            "chatbot_api_url": self.chatbot.url,
+            "toggle_metadata": False,
         }
         return render(request=request, template_name=self.template_path, context=context)
 
