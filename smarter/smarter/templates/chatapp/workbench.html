@@ -4,8 +4,16 @@
   {{ block.super }}
 
   <!-- react.js app entry point -->
-  <div style="height: 88vh;" id="{{ div_id }}"></div>
-  <!-- retrieve and inject the js/css artifacts of the react.js build into the DOM. -->
-  <script async="" src="{{ ui_chat_loader_url }}"></script>
+  <div
+    id="{{ div_id }}"
+    style="height: 88vh;"
+    smarter-chatbot-api-url="{{ chatbot_api_url }}"
+    smarter-toggle-metadata="{{ toggle_metadata }}">
+  </div>
+  <!--
+    retrieve and inject the js/css artifacts of the react.js build into the DOM.
+    example: https://cdn.platform.smarter.sh/ui-chat/app-loader.js
+  -->
+  <script async="" src="{{ app_loader_url }}"></script>
 
-  {% endblock %}
+{% endblock %}
