@@ -6,6 +6,7 @@ from smarter.apps.account.utils import get_cached_user_profile
 from smarter.lib.django.admin import RestrictedModelAdmin
 
 from .models import (
+    ChatBot,
     ChatBotAPIKey,
     ChatBotCustomDomain,
     ChatBotCustomDomainDNS,
@@ -27,15 +28,18 @@ class ChatBotAdmin(RestrictedModelAdmin):
         "url",
         "account",
         "name",
-        "ready",
         "deployed",
+        "mode",
+        "ready",
         "dns_verification_status",
         "tls_certificate_issuance_status",
-        "short_default_system_role",
     ]
 
-    def ready(self, obj):
+    def ready(self, obj: ChatBot):
         return obj.ready()
+
+    def mode(self, obj: ChatBot):
+        return obj.mode(obj.url)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
