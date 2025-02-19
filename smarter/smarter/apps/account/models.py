@@ -234,7 +234,11 @@ class UserProfile(TimestampedModel):
         )
 
     # Add more fields here as needed
-    user = models.OneToOneField(User, unique=True, db_index=True, related_name="user_profile", on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="user_profile",
+    )
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="users")
     is_test = models.BooleanField(default=False)
 
