@@ -9,6 +9,7 @@ import logging
 import os
 import time
 from string import Template
+from urllib.parse import urlparse
 
 import botocore
 import dns.resolver
@@ -39,7 +40,7 @@ from .models import (
 logger = logging.getLogger(__name__)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-module_prefix = formatted_text("smarter.apps.chatbot.tasks.")
+module_prefix = "smarter.apps.chatbot.tasks."
 
 
 class ChatBotCustomDomainNotFound(SmarterChatBotException):
@@ -69,7 +70,13 @@ def aggregate_chatbot_history():
 )
 def verify_certificate(certificate_arn: str):
     """Verify an AWS ACM certificate."""
-    aws_helper.acm.verify_certificate(certificate_arn=certificate_arn)
+    prefix = formatted_text(module_prefix + "verify_certificate()")
+    logger.info("%s - %s", prefix, certificate_arn)
+    verified = aws_helper.acm.verify_certificate(certificate_arn=certificate_arn)
+    if verified:
+        logger.info("%s - certificate %s verified.", prefix, certificate_arn)
+    else:
+        logger.error("%s - certificate %s verification failed.", prefix, certificate_arn)
 
 
 @app.task(
@@ -80,7 +87,7 @@ def verify_certificate(certificate_arn: str):
 )
 def create_chatbot_request(chatbot_id: int, request_data: dict):
     """Create a ChatBot request record."""
-    logger.info("%s - chatbot %s", module_prefix + formatted_text("create_chatbot_request()"), chatbot_id)
+    logger.info("%s - chatbot %s", formatted_text(module_prefix + "create_chatbot_request()"), chatbot_id)
     chatbot = ChatBot.objects.get(id=chatbot_id)
     session_key = request_data.get("session_key")
     ChatBotRequests.objects.create(chatbot=chatbot, request=request_data, session_key=session_key)
@@ -563,18 +570,47 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
 )
 def undeploy_default_api(chatbot_id: int):
     """Reverse a Chatbot deployment by destroying the customer API default domain A record for a chatbot."""
+    prefix = formatted_text(module_prefix + "undeploy_default_api()")
 
     chatbot: ChatBot = None
     try:
         chatbot = ChatBot.objects.get(id=chatbot_id)
     except ChatBot.DoesNotExist:
-        logger.info("Chatbot %s not found. Nothing to do, returning.", chatbot_id)
-
-    destroy_domain_A_record(hostname=chatbot.default_host, api_host_domain=smarter_settings.customer_api_domain)
+        logger.error("%s Chatbot %s not found.", prefix, chatbot_id)
 
     chatbot.deployed = False
-    chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.NOT_VERIFIED
     chatbot.save()
+
+
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
+    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
+    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+)
+def delete_default_api(url: str, account_number: str, name: str):
+    """
+    Delete aws resources for a customer API
+    - delete default domain Route53 A record for a chatbot.
+    - delete ingress resources: ingress, certificate, secret.
+    """
+    prefix = formatted_text(module_prefix + "delete_default_api()")
+    logger.info("%s - chatbot %s %s %s", prefix, url, account_number, name)
+
+    def get_domain_name(url):
+        parsed_url = urlparse(url)
+        domain_name = parsed_url.netloc
+        return domain_name
+
+    hostname = get_domain_name(url)
+    destroy_domain_A_record(hostname=hostname, api_host_domain=smarter_settings.customer_api_domain)
+    ingress_deleted, certificate_deleted, secret_delete = kubernetes_helper.delete_ingress_resources(
+        hostname=hostname, namespace=smarter_settings.environment_namespace
+    )
+    if ingress_deleted and certificate_deleted and secret_delete:
+        logger.info("%s - chatbot %s %s %s all resources successfully deleted", prefix, url, account_number, name)
+    else:
+        logger.error("%s - chatbot %s %s %s one or more resources were not deleted", prefix, url, account_number, name)
 
 
 @app.task(
