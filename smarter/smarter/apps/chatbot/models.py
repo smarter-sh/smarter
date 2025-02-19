@@ -135,6 +135,12 @@ class ChatBot(TimestampedModel):
         VERIFIED = "Verified", "Verified"
         FAILED = "Failed", "Failed"
 
+    class TlsCertificateIssuanceStatusChoices(models.TextChoices):
+        NO_CERTIFICATE = "No Certificate", "No Certificate"
+        REQUESTED = "Requested", "Requested"
+        ISSUED = "Issued", "Issued"
+        FAILED = "Failed", "Failed"
+
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
@@ -169,6 +175,13 @@ class ChatBot(TimestampedModel):
         blank=True,
         null=True,
         choices=DnsVerificationStatusChoices.choices,
+    )
+    tls_certificate_issuance_status = models.CharField(
+        max_length=255,
+        default=TlsCertificateIssuanceStatusChoices.NO_CERTIFICATE,
+        blank=True,
+        null=True,
+        choices=TlsCertificateIssuanceStatusChoices.choices,
     )
 
     @property
@@ -261,6 +274,22 @@ class ChatBot(TimestampedModel):
     def url_chatapp(self):
         return urljoin(self.url, "chatapp/")
 
+    def ready(self):
+        """
+        A ChatBot is ready if it is its in sandbox mode, or, if it is:
+        - deployed
+        - has a verified DNS A record
+        - has a valid, issued tls certificate.
+        """
+        if self.mode(self.url) == self.Modes.SANDBOX:
+            return True
+
+        return (
+            self.dns_verification_status == self.DnsVerificationStatusChoices.VERIFIED
+            and self.deployed
+            and self.tls_certificate_issuance_status == self.TlsCertificateIssuanceStatusChoices.ISSUED
+        )
+
     def mode(self, url: str) -> str:
         logger.debug("mode: %s", url)
         if not url:
@@ -276,9 +305,13 @@ class ChatBot(TimestampedModel):
             return self.Modes.DEFAULT
         if sandbox_url and sandbox_url in url:
             return self.Modes.SANDBOX
-        logger.error("Invalid ChatBot url %s received for default_url: %s", url, self.default_url)
-        logger.error("sandbox_url: %s", self.sandbox_url)
-        logger.error("custom_url: %a", self.custom_url)
+        logger.error(
+            "Invalid ChatBot url %s received for default_url: %s, sandbox_url: %s, custom_url: %a",
+            url,
+            self.default_url,
+            self.sandbox_url,
+            self.custom_url,
+        )
         # default to default mode as a safety measure
         return self.Modes.UNKNOWN
 

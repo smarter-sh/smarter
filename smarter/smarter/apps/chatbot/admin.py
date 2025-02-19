@@ -6,7 +6,6 @@ from smarter.apps.account.utils import get_cached_user_profile
 from smarter.lib.django.admin import RestrictedModelAdmin
 
 from .models import (
-    ChatBot,
     ChatBotAPIKey,
     ChatBotCustomDomain,
     ChatBotCustomDomainDNS,
@@ -22,14 +21,21 @@ class ChatBotAdmin(RestrictedModelAdmin):
         "created_at",
         "updated_at",
     )
-    list_display = [field.name for field in ChatBot._meta.fields if field.name != "default_system_role"] + [
-        "short_default_system_role"
+    list_display = [
+        "created_at",
+        "updated_at",
+        "url",
+        "account",
+        "name",
+        "ready",
+        "deployed",
+        "dns_verification_status",
+        "tls_certificate_issuance_status",
+        "short_default_system_role",
     ]
 
-    def short_default_system_role(self, obj):
-        return obj.default_system_role[:50]
-
-    short_default_system_role.short_description = "Default System Role"
+    def ready(self, obj):
+        return obj.ready()
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
