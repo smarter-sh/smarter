@@ -561,6 +561,18 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
             manifest = template.substitute(ingress_values)
         kubernetes_helper.apply_manifest(manifest)
 
+        # verify that the ingress resources were created:
+        wait_time = 300
+        logger.info(
+            "%s waiting %s seconds for ingress resources to be created and for certificate to be issued",
+            fn_name,
+            wait_time,
+        )
+        time.sleep(wait_time)
+        kubernetes_helper.verify_ingress_resources(
+            hostname=domain_name, namespace=smarter_settings.environment_namespace
+        )
+
 
 @app.task(
     autoretry_for=(Exception,),
