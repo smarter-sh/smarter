@@ -283,10 +283,14 @@ class ChatBot(TimestampedModel):
         return self.Modes.UNKNOWN
 
     def save(self, *args, **kwargs):
+        is_new = self.pk is None
         SmarterValidator.validate_domain(self.hostname)
-        orig = ChatBot.objects.get(pk=self.pk) if self.pk is not None else self
         super().save(*args, **kwargs)
-        if self.pk is not None:
+        if is_new:
+            if self.deployed:
+                chatbot_deployed.send(sender=self.__class__, chatbot=self)
+        else:
+            orig = ChatBot.objects.get(pk=self.pk) if self.pk is not None else self
             if orig.dns_verification_status != self.dns_verification_status:
                 chatbot_dns_verification_status_changed.send(sender=self.__class__, chatbot=self)
                 chatbot_deploy_status_changed.send(sender=self.__class__, chatbot=self)
@@ -297,10 +301,10 @@ class ChatBot(TimestampedModel):
                 if self.dns_verification_status == ChatBot.DnsVerificationStatusChoices.FAILED:
                     chatbot_dns_failed.send(sender=self.__class__, chatbot=self)
                     chatbot_deploy_failed.send(sender=self.__class__, chatbot=self)
-        if self.deployed and not orig.deployed:
-            chatbot_deployed.send(sender=self.__class__, chatbot=self)
-        if not self.deployed and orig.deployed:
-            chatbot_undeployed.send(sender=self.__class__, chatbot=self)
+            if self.deployed and not orig.deployed:
+                chatbot_deployed.send(sender=self.__class__, chatbot=self)
+            if not self.deployed and orig.deployed:
+                chatbot_undeployed.send(sender=self.__class__, chatbot=self)
 
     def __str__(self):
         return self.url if self.url else "undefined"
