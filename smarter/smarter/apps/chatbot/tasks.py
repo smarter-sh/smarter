@@ -536,7 +536,7 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
         and able to respond to prompts.\n\n
         If you also created a custom domain for your chatbot then you'll be separately notified once it has been verified.
         If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT}."""
-        AccountContact.send_email_to_account(account=chatbot.account, subject=subject, body=body)
+        AccountContact.send_email_to_primary_contact(account=chatbot.account, subject=subject, body=body)
 
     # if we're running in Kubernetes then we should create an ingress manifest
     # for the customer API domain so that we can issue a certificate for it.

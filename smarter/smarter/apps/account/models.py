@@ -197,9 +197,12 @@ class AccountContact(TimestampedModel):
     def send_email_to_primary_contact(
         cls, account: Account, subject: str, body: str, html: bool = False, from_email: str = None
     ) -> None:
-        """Send an email to all contacts of an account."""
+        """Send an email to the primary point of contact of an account."""
         contact = cls.get_primary_contact(account)
-        contact.send_email(subject=subject, body=body, html=html, from_email=from_email)
+        if contact:
+            contact.send_email(subject=subject, body=body, html=html, from_email=from_email)
+        else:
+            logger.error("No primary contact found for account %s", account)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
