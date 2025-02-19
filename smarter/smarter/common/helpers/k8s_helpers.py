@@ -7,6 +7,7 @@ import subprocess
 import time
 from typing import Tuple
 
+from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 from ..classes import Singleton, SmarterHelperMixin
@@ -36,7 +37,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
 
     def update_kubeconfig(self):
         """Generate a fresh kubeconfig file for the EKS cluster."""
-        prefix = f"{module_prefix}.update_kubeconfig()"
+        prefix = formatted_text(f"{module_prefix}.update_kubeconfig()")
 
         logger.info(
             "%s.update_kubeconfig() updating kubeconfig for Kubernetes cluster %s",
@@ -56,10 +57,10 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
 
     def apply_manifest(self, manifest: str):
         """Apply a Kubernetes manifest to the cluster."""
-        prefix = f"{module_prefix}.apply_manifest()"
+        prefix = formatted_text(f"{module_prefix}.apply_manifest()")
 
         logger.info(
-            "%s.apply_manifest() applying Kubernetes manifest to cluster %s",
+            "%s applying Kubernetes manifest to cluster %s",
             prefix,
             smarter_settings.aws_eks_cluster_name,
         )
@@ -77,7 +78,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         Verify that an ingress and all child resources exist in the
         cluster.
         """
-        prefix = f"{module_prefix}.verify_ingress_resources()"
+        prefix = formatted_text(f"{module_prefix}.verify_ingress_resources()")
 
         logger.info(
             "%s.verify_ingress_resources() verifying ingress resources in cluster %s, hostname %s, namespace %s",
@@ -122,7 +123,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         command:
         - kubectl get ingress smarter.3141-5926-5359.api.smarter.sh -n smarter-platform-prod -o json
         """
-        prefix = f"{module_prefix}.verify_ingress()"
+        prefix = formatted_text(f"{module_prefix}.verify_ingress()")
         logger.info(
             "%s verifying ingress in cluster %s, name %s, namespace %s",
             prefix,
@@ -151,7 +152,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         parse json response and check for the following:
         - status.conditions.type == Ready
         """
-        prefix = f"{module_prefix}.verify_certificate()"
+        prefix = formatted_text(f"{module_prefix}.verify_certificate()")
         logger.info(
             "%s verifying certificate in cluster %s, name %s, namespace %s",
             prefix,
@@ -211,7 +212,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         command:
         - kubectl get secret smarter.3141-5926-5359.api.smarter.sh-tls -n smarter-platform-prod -o json
         """
-        prefix = f"{module_prefix}.verify_secret()"
+        prefix = formatted_text(f"{module_prefix}.verify_secret()")
         logger.info(
             "%s verifying secret in cluster %s, name %s, namespace %s",
             prefix,
