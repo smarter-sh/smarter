@@ -32,10 +32,14 @@ from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.drf.models import SmarterAuthToken
 
 from .signals import (
+    chatbot_deploy_failed,
+    chatbot_deploy_status_changed,
+    chatbot_deployed,
     chatbot_dns_failed,
     chatbot_dns_verification_initiated,
     chatbot_dns_verification_status_changed,
     chatbot_dns_verified,
+    chatbot_undeployed,
 )
 
 
@@ -285,12 +289,18 @@ class ChatBot(TimestampedModel):
         if self.pk is not None:
             if orig.dns_verification_status != self.dns_verification_status:
                 chatbot_dns_verification_status_changed.send(sender=self.__class__, chatbot=self)
+                chatbot_deploy_status_changed.send(sender=self.__class__, chatbot=self)
                 if self.dns_verification_status == ChatBot.DnsVerificationStatusChoices.VERIFYING:
                     chatbot_dns_verification_initiated.send(sender=self.__class__, chatbot=self)
                 if self.dns_verification_status == ChatBot.DnsVerificationStatusChoices.VERIFIED:
                     chatbot_dns_verified.send(sender=self.__class__, chatbot=self)
                 if self.dns_verification_status == ChatBot.DnsVerificationStatusChoices.FAILED:
                     chatbot_dns_failed.send(sender=self.__class__, chatbot=self)
+                    chatbot_deploy_failed.send(sender=self.__class__, chatbot=self)
+        if self.deployed and not orig.deployed:
+            chatbot_deployed.send(sender=self.__class__, chatbot=self)
+        if not self.deployed and orig.deployed:
+            chatbot_undeployed.send(sender=self.__class__, chatbot=self)
 
     def __str__(self):
         return self.url if self.url else "undefined"
