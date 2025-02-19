@@ -130,7 +130,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             name,
             namespace,
         )
-        command = ["kubectl", "get", "ingress", name, "-n", namespace, "-o", "jsonpath"]
+        command = ["kubectl", "get", "ingress", name, "-n", namespace, "-o", "json"]
         try:
             output = subprocess.check_output(command)
             logger.info("%s found ingress resource: %s", prefix, output)
@@ -159,7 +159,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             name,
             namespace,
         )
-        command = ["kubectl", "get", "certificate", name, "-n", namespace, "-o", "jsonpath"]
+        command = ["kubectl", "get", "certificate", name, "-n", namespace, "-o", "json"]
         # if the certificate is found, the output will be the certificate data in json format.
         try:
             output = subprocess.check_output(command, text=True)
@@ -219,7 +219,7 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             name,
             namespace,
         )
-        command = ["kubectl", "get", "secret", name, "-n", namespace, "-o", "jsonpath"]
+        command = ["kubectl", "get", "secret", name, "-n", namespace, "-o", "json"]
         # if the secret is found, the output will be the secret data in json format.
         try:
             output = subprocess.check_output(command)
