@@ -560,11 +560,11 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
             template = Template(ingress_template.read())
             manifest = template.substitute(ingress_values)
         kubernetes_helper.apply_manifest(manifest)
-        chatbot.tls_certificate_issuance_status = chatbot.TlsCertificateIssuanceStatusChoices.REQUESTED
-        chatbot.save()
 
         if chatbot.tls_certificate_issuance_status != chatbot.TlsCertificateIssuanceStatusChoices.ISSUED:
-            # verify that the ingress resources were created:
+            # move ourselves back to the first step in the process.
+            chatbot.tls_certificate_issuance_status = chatbot.TlsCertificateIssuanceStatusChoices.REQUESTED
+            chatbot.save()
             wait_time = 300
             logger.info(
                 "%s waiting %s seconds for ingress resources to be created and for certificate to be issued",
@@ -572,17 +572,19 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
                 wait_time,
             )
             time.sleep(wait_time)
-            ingress_verified, secret_verified, certificate_verified = kubernetes_helper.verify_ingress_resources(
-                hostname=domain_name, namespace=smarter_settings.environment_namespace
-            )
-            if ingress_verified and secret_verified and certificate_verified:
-                chatbot.tls_certificate_issuance_status = chatbot.TlsCertificateIssuanceStatusChoices.ISSUED
-                chatbot.save()
-                logger.info("%s - chatbot %s %s all resources successfully created", fn_name, domain_name, chatbot)
-            else:
-                logger.error("%s - chatbot %s %s one or more resources were not created", fn_name, domain_name, chatbot)
-                chatbot.tls_certificate_issuance_status = chatbot.TlsCertificateIssuanceStatusChoices.FAILED
-                chatbot.save()
+
+        # verify that the ingress resources were created:
+        ingress_verified, secret_verified, certificate_verified = kubernetes_helper.verify_ingress_resources(
+            hostname=domain_name, namespace=smarter_settings.environment_namespace
+        )
+        if ingress_verified and secret_verified and certificate_verified:
+            chatbot.tls_certificate_issuance_status = chatbot.TlsCertificateIssuanceStatusChoices.ISSUED
+            chatbot.save()
+            logger.info("%s - chatbot %s %s all resources successfully created", fn_name, domain_name, chatbot)
+        else:
+            logger.error("%s - chatbot %s %s one or more resources were not created", fn_name, domain_name, chatbot)
+            chatbot.tls_certificate_issuance_status = chatbot.TlsCertificateIssuanceStatusChoices.FAILED
+            chatbot.save()
 
 
 @app.task(
