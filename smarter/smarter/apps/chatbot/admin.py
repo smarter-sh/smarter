@@ -35,10 +35,10 @@ class ChatBotAdmin(RestrictedModelAdmin):
         "tls_certificate_issuance_status",
     ]
 
-    def ready(self, obj: ChatBot):
+    def ready(self, obj: ChatBot) -> bool:
         return obj.ready()
 
-    def mode(self, obj: ChatBot):
+    def mode(self, obj: ChatBot) -> str:
         return obj.mode(obj.url)
 
     def get_queryset(self, request):
