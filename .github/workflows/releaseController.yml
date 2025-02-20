@@ -50,6 +50,8 @@ on:
       - "**.jsx"
       - "smarter/smarter/static/**"
       - "smarter/smarter/templates/**"
+    branches:
+      - beta
 
 env:
   AWS_REGION: us-east-2
