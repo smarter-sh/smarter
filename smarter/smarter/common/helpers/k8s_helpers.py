@@ -22,6 +22,11 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
     """A helper class for interacting with Kubernetes clusters."""
 
     _kubeconfig: dict = None
+    _configured: bool = False
+
+    @property
+    def configured(self) -> bool:
+        return self._configured
 
     @property
     def kubeconfig_path(self) -> str:
@@ -37,6 +42,9 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
 
     def update_kubeconfig(self):
         """Generate a fresh kubeconfig file for the EKS cluster."""
+        if self.configured:
+            return
+
         prefix = formatted_text(f"{module_prefix}.update_kubeconfig()")
 
         logger.info(
@@ -54,15 +62,17 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             smarter_settings.aws_eks_cluster_name,
         ]
         subprocess.check_call(command)
+        self._configured = True
 
     def apply_manifest(self, manifest: str):
         """Apply a Kubernetes manifest to the cluster."""
         prefix = formatted_text(f"{module_prefix}.apply_manifest()")
 
         logger.info(
-            "%s applying Kubernetes manifest to cluster %s",
+            "%s applying Kubernetes manifest to cluster %s:\n%s",
             prefix,
             smarter_settings.aws_eks_cluster_name,
+            manifest,
         )
         self.update_kubeconfig()
         with subprocess.Popen(
@@ -103,8 +113,10 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             if certificate_verified:
                 break
             logger.info(
-                "%s.verify_ingress_resources() certificate not ready, sleeping for %s seconds",
+                "%s.verify_ingress_resources() certificate %s %s not ready, sleeping for %s seconds",
                 prefix,
+                hostname,
+                namespace,
                 sleep_time,
             )
             time.sleep(sleep_time)
@@ -133,11 +145,16 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         )
         command = ["kubectl", "get", "ingress", name, "-n", namespace, "-o", "json"]
         try:
+            self.update_kubeconfig()
             output = subprocess.check_output(command)
-            logger.info("%s found ingress resource: %s", prefix, output)
+            output_dict = json.loads(output)
+            logger.info("%s found ingress resource: %s", prefix, output_dict)
             logger.info("%s Ingress %s in namespace %s is ready", prefix, name, namespace)
-        except subprocess.CalledProcessError as e:
-            logger.exception("Failed to verify ingress resource: %s", e)
+        except subprocess.CalledProcessError:
+            logger.warning("%s did not find ingress resource %s %s", prefix, name, namespace)
+            return False
+        except json.JSONDecodeError as e:
+            logger.exception("%s failed to parse ingress resource: %s", prefix, e)
             return False
         return True
 
@@ -163,8 +180,9 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         command = ["kubectl", "get", "certificate", name, "-n", namespace, "-o", "json"]
         # if the certificate is found, the output will be the certificate data in json format.
         try:
+            self.update_kubeconfig()
             output = subprocess.check_output(command, text=True)
-            logger.info("%s found certificate resource: %s", prefix, output)
+            logger.info("%s found certificate resource for %s %s", prefix, name, namespace)
             certificate_info: dict = None
             try:
                 certificate_info = json.loads(output)
@@ -223,12 +241,16 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         command = ["kubectl", "get", "secret", name, "-n", namespace, "-o", "json"]
         # if the secret is found, the output will be the secret data in json format.
         try:
+            self.update_kubeconfig()
             output = subprocess.check_output(command)
-            logger.info("%s found secret resource: %s", prefix, output)
-            logger.info("%s Secret %s in namespace %s is ready", prefix, name, namespace)
+            json.loads(output)
+            logger.info("%s secret %s in namespace %s is ready", prefix, name, namespace)
             return True
-        except subprocess.CalledProcessError as e:
-            logger.exception("Failed to verify secret resource: %s", e)
+        except subprocess.CalledProcessError:
+            logger.error("%s Failed to verify secret resource %s %s", prefix, name, namespace)
+            return False
+        except json.JSONDecodeError as e:
+            logger.exception("%s Failed to parse secret resource: %s", prefix, e)
             return False
         return True
 
@@ -325,11 +347,13 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
             return False
         return True
 
-    def get_namespaces(self):
+    def get_namespaces(self) -> dict:
         """Get all namespaces in the Kubernetes cluster."""
         logger.info("retrieving namespaces from Kubernetes cluster %s", smarter_settings.aws_eks_cluster_name)
         self.update_kubeconfig()
-        subprocess.check_call(["kubectl", "get", "pods", "-n", "kube-system"])
+        output = subprocess.check_output(["kubectl", "get", "pods", "-n", "kube-system", "-o", "json"])
+        output_dict = json.loads(output)
+        return output_dict
 
 
 kubernetes_helper = KubernetesHelper()

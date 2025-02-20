@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
 from botocore.exceptions import ProfileNotFound
 
+from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import Services
 from smarter.common.conf import settings as smarter_settings
 
@@ -29,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
-class AWSBase:
+class AWSBase(SmarterHelperMixin):
     """
     AWS helper base class. Responsible for
     - initializing the AWS connection and ensuring that we don't invoke boto3 until we're in a ready state.
