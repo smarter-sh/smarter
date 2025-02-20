@@ -8,6 +8,7 @@ WARNING: depends on k8s namespace smarter-platform-alpha
 import os
 import random
 import string
+import time
 import unittest
 from string import Template
 
@@ -105,7 +106,8 @@ class Testk8sHelpers(unittest.TestCase):
             template = Template(ingress_template.read())
             manifest = template.substitute(ingress_values)
         kubernetes_helper.apply_manifest(manifest)
-        output = kubernetes_helper.verify_ingress(self.name, self.namespace)
+        time.sleep(10)
+        output = kubernetes_helper.verify_ingress(self.hostname, self.namespace)
         self.assertTrue(output)
 
     # def test_verify_ingress_resources(self):

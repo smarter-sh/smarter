@@ -391,7 +391,7 @@ def verify_domain(
 )
 def create_domain_A_record(hostname: str, api_host_domain: str) -> dict:
     """Create an A record for the API domain."""
-    fn_name = "create_domain_A_record()"
+    fn_name = formatted_text(module_prefix + "create_domain_A_record()")
     logger.info("%s for hostname %s, api_host_domain %s", fn_name, hostname, api_host_domain)
 
     try:
