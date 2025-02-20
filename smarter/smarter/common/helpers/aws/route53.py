@@ -5,7 +5,8 @@ import logging
 import time
 from typing import Tuple
 
-# our stuff
+import dns.resolver
+
 from .aws import AWSBase
 from .exceptions import AWSRoute53RecordVerificationTimeout
 
@@ -31,7 +32,7 @@ class AWSRoute53(AWSBase):
 
     def get_hosted_zone(self, domain_name) -> str:
         """Return the hosted zone."""
-        logger.info("get_hosted_zone() domain_name: %s", domain_name)
+        logger.info("%s.get_hosted_zone() domain_name: %s", self.formatted_class_name, domain_name)
         domain_name = self.domain_resolver(domain_name)
         response = self.client.list_hosted_zones()
         for hosted_zone in response["HostedZones"]:
@@ -64,7 +65,7 @@ class AWSRoute53(AWSBase):
                 }
             }
         """
-        logger.info("get_or_create_hosted_zone() domain_name: %s", domain_name)
+        logger.info("%s.get_or_create_hosted_zone() domain_name: %s", self.formatted_class_name, domain_name)
         domain_name = self.domain_resolver(domain_name)
         hosted_zone = self.get_hosted_zone(domain_name)
         if hosted_zone:
@@ -81,21 +82,21 @@ class AWSRoute53(AWSBase):
 
     def get_hosted_zone_id(self, hosted_zone) -> str:
         """Return the hosted zone id."""
-        logger.info("get_hosted_zone_id() hosted_zone: %s", hosted_zone)
+        logger.info("%s.get_hosted_zone_id() hosted_zone: %s", self.formatted_class_name, hosted_zone)
         if hosted_zone:
             return hosted_zone["Id"].split("/")[-1]
         return None
 
     def get_hosted_zone_id_for_domain(self, domain_name) -> str:
         """Return the hosted zone id for the domain."""
-        logger.info("get_hosted_zone_id_for_domain() domain_name: %s", domain_name)
+        logger.info("%s.get_hosted_zone_id_for_domain() domain_name: %s", self.formatted_class_name, domain_name)
         domain_name = self.domain_resolver(domain_name)
         hosted_zone, _ = self.get_or_create_hosted_zone(domain_name)
         return self.get_hosted_zone_id(hosted_zone)
 
     def delete_hosted_zone(self, domain_name):
         # Get the hosted zone id
-        logger.info("delete_hosted_zone() domain_name: %s", domain_name)
+        logger.info("%s.delete_hosted_zone() domain_name: %s", self.formatted_class_name, domain_name)
         domain_name = self.domain_resolver(domain_name)
         hosted_zone_id = self.get_hosted_zone_id_for_domain(domain_name)
 
@@ -132,8 +133,10 @@ class AWSRoute53(AWSBase):
                 ]
             }
         """
+        prefix = self.formatted_class_name + ".get_dns_record()"
         logger.info(
-            "get_dns_record() hosted_zone_id: %s record_name: %s record_type: %s",
+            "%s hosted_zone_id: %s record_name: %s record_type: %s",
+            prefix,
             hosted_zone_id,
             record_name,
             record_type,
@@ -150,9 +153,9 @@ class AWSRoute53(AWSBase):
                     name_match(record_name=record_name, record=record)
                     and str(record["Type"]).upper() == record_type.upper()
                 ):
-                    logger.info("get_dns_record() found record: %s", record)
+                    logger.info("%s found record: %s", prefix, record)
                     return record
-        logger.warning("get_dns_record() did not find record for %s %s", record_name, record_type)
+        logger.warning("%s did not find record for %s %s", prefix, record_name, record_type)
         return None
 
     def get_ns_records(self, hosted_zone_id: str):
@@ -181,7 +184,7 @@ class AWSRoute53(AWSBase):
             },
         ]
         """
-        logger.info("get_ns_records() hosted_zone_id: %s", hosted_zone_id)
+        logger.info("%s.get_ns_records() hosted_zone_id: %s", self.formatted_class_name, hosted_zone_id)
         response = self.client.list_resource_record_sets(HostedZoneId=hosted_zone_id)
         retval = []
         for record in response["ResourceRecordSets"]:
@@ -200,7 +203,7 @@ class AWSRoute53(AWSBase):
         record_value=None,  # can be a single text value of a list of dict
     ) -> Tuple[dict, bool]:
         action: str = None
-        fn_name = "get_or_create_dns_record()"
+        fn_name = self.formatted_class_name + "get_or_create_dns_record()"
         logger.info(
             "%s hosted_zone_id: %s record_name: %s record_type: %s",
             fn_name,
@@ -308,7 +311,8 @@ class AWSRoute53(AWSBase):
     ) -> None:
         """Destroy the DNS record."""
         logger.info(
-            "destroy_dns_record() hosted_zone_id: %s record_name: %s record_type: %s",
+            "%s.destroy_dns_record() hosted_zone_id: %s record_name: %s record_type: %s",
+            self.formatted_class_name,
             hosted_zone_id,
             record_name,
             record_type,
@@ -354,10 +358,28 @@ class AWSRoute53(AWSBase):
             "ResourceRecords": [{"Value": "192.1.1.1"}]
         }
         """
-        logger.info("get_environment_A_record() domain: %s", domain)
+        logger.info("%s.get_environment_A_record() domain: %s", self.formatted_class_name, domain)
         domain = domain or self.environment_domain
         domain = self.domain_resolver(domain)
         hosted_zone, _ = self.get_or_create_hosted_zone(domain_name=domain)
         hosted_zone_id = self.get_hosted_zone_id(hosted_zone)
         environment_A_record = self.get_dns_record(hosted_zone_id=hosted_zone_id, record_name=domain, record_type="A")
         return environment_A_record
+
+    def verify_dns_record(self, domain_name: str) -> bool:
+        """Verify the DNS record."""
+        prefix = self.formatted_class_name + ".verify_dns_record()"
+        logger.info("%s - %s", prefix, domain_name)
+        domain_name = self.domain_resolver(domain_name)
+
+        for _ in range(15):
+            try:
+                answers = dns.resolver.resolve(domain_name, "A")
+                if len(answers) > 0:
+                    logger.info("Domain %s is verified.", domain_name)
+                    return True
+            except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
+                logger.info("%s did not find domain %s. Sleeping 60 seconds", prefix, domain_name)
+                time.sleep(60)
+        logger.error("Domain %s does not exist or no DNS answer after multiple attempts", domain_name)
+        return False
