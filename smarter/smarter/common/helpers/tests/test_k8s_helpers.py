@@ -1,13 +1,14 @@
 # pylint: disable=wrong-import-position
 """
 Test k8s_helper class.
-WARNING: depends on k8s namespace smarter-platform-alpha
+
+WARNINGS:
+- depends on k8s namespace smarter-platform-alpha
+- leaving the DNS resources in place permanently as it takes 15+ minutes to propagate
 """
 
 # python stuff
 import os
-import random
-import string
 import time
 import unittest
 from string import Template
@@ -19,7 +20,6 @@ from smarter.common.helpers.k8s_helpers import kubernetes_helper
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-randomized_name = "".join(random.choices(string.ascii_letters + string.digits, k=8)).lower()
 
 
 class Testk8sHelpers(unittest.TestCase):
@@ -27,7 +27,8 @@ class Testk8sHelpers(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        self.name = randomized_name
+        # a reusable bs randomized name for these tests.
+        self.name = "ty7xlk2i-unit-test"
         self.environment = SmarterEnvironments.ALPHA
         self.api_domain = f"{self.environment}.api.{smarter_settings.root_domain}"
         self.cluster_issuer = self.api_domain
@@ -35,17 +36,19 @@ class Testk8sHelpers(unittest.TestCase):
         self.hostname = f"{self.name}.{self.account_number}.{self.cluster_issuer}"
         self.namespace = f"{smarter_settings.platform_name}-platform-{self.environment}"
 
+        # get-or-create the top-level api domain: alpha.api.smarter.sh
         aws_helper.route53.create_domain_a_record(
             hostname=self.api_domain, api_host_domain=smarter_settings.root_domain
         )
+        # get-or-create the subdomain for the test: ty7xlk2i.alpha.api.smarter.sh
         aws_helper.route53.create_domain_a_record(hostname=self.hostname, api_host_domain=self.api_domain)
 
+        # verify the DNS records. First time usage takes 15+ minutes to propagate
+        # assuming you're not inside the aws vpc. Subsequent runs are near-immediate.
         aws_helper.route53.verify_dns_record(self.hostname)
 
     def tearDown(self):
         """Clean up test fixtures."""
-        hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(self.api_domain)
-        aws_helper.route53.destroy_dns_record(hosted_zone_id=hosted_zone_id, record_name=self.hostname, record_type="A")
 
     def test_kubeconfig(self):
         """Test kubeconfig property."""
