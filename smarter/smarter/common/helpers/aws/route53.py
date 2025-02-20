@@ -203,7 +203,7 @@ class AWSRoute53(AWSBase):
         record_value=None,  # can be a single text value of a list of dict
     ) -> Tuple[dict, bool]:
         action: str = None
-        fn_name = self.formatted_class_name + "get_or_create_dns_record()"
+        fn_name = self.formatted_class_name + ".get_or_create_dns_record()"
         logger.info(
             "%s hosted_zone_id: %s record_name: %s record_type: %s",
             fn_name,
@@ -239,7 +239,7 @@ class AWSRoute53(AWSBase):
         )
         if fetched_record:
             if match_values(record_value, fetched_record) or match_alias(record_alias_target, fetched_record):
-                logger.info("get_or_create_dns_record() returning matched record: %s", fetched_record)
+                logger.info("%s returning matched record: %s", fn_name, fetched_record)
                 return (fetched_record, False)
             action = "UPSERT"
             logger.info("%s updating %s %s record", fn_name, record_name, record_type)
@@ -304,8 +304,8 @@ class AWSRoute53(AWSBase):
         self,
         hosted_zone_id: str,
         record_name: str,
-        record_type: str,
-        record_ttl: int,
+        record_type: str = "A",
+        record_ttl: int = None,
         alias_target=None,  # may or may not exist
         record_resource_records=None,  # can be a single text value of a list of dict
     ) -> None:
@@ -331,6 +331,7 @@ class AWSRoute53(AWSBase):
         if alias_target:
             change_batch["Changes"][0]["ResourceRecordSet"]["AliasTarget"] = alias_target
         if record_resource_records:
+            record_ttl = record_ttl or change_batch["Changes"][0]["ResourceRecordSet"]["TTL"]
             change_batch["Changes"][0]["ResourceRecordSet"]["TTL"] = record_ttl
             if isinstance(record_resource_records, list):
                 change_batch["Changes"][0]["ResourceRecordSet"]["ResourceRecords"] = [
@@ -367,7 +368,18 @@ class AWSRoute53(AWSBase):
         return environment_A_record
 
     def verify_dns_record(self, domain_name: str) -> bool:
-        """Verify the DNS record."""
+        """
+        Verify the DNS record.
+        DNS propagation can take time, and it fluctuates wildly based on the
+        DNS provider and where you are located. In mexico city, it can take
+        up to an hour for AWS Route53 records to propagate. On the other
+        hand, inside the AWS VPC it generally takes less than 5 minutes.
+
+        This function will try to resolve the domain name every 60 seconds
+        for up to 15 minutes. Keep in mind that other Kubernetes
+        functions that depend on DNS records will likely be able to see
+        DNS records if you cannot.
+        """
         prefix = self.formatted_class_name + ".verify_dns_record()"
         logger.info("%s - %s", prefix, domain_name)
         domain_name = self.domain_resolver(domain_name)
@@ -376,7 +388,7 @@ class AWSRoute53(AWSBase):
             try:
                 answers = dns.resolver.resolve(domain_name, "A")
                 if len(answers) > 0:
-                    logger.info("Domain %s is verified.", domain_name)
+                    logger.info("%s domain %s is verified.", prefix, domain_name)
                     return True
             except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
                 logger.info("%s did not find domain %s. Sleeping 60 seconds", prefix, domain_name)

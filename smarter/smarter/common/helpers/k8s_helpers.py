@@ -147,9 +147,8 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
         try:
             self.update_kubeconfig()
             output = subprocess.check_output(command)
-            output_dict = json.loads(output)
-            logger.info("%s found ingress resource: %s", prefix, output_dict)
-            logger.info("%s Ingress %s in namespace %s is ready", prefix, name, namespace)
+            json.loads(output)
+            logger.info("%s found ingress resource %s %s", prefix, name, namespace)
         except subprocess.CalledProcessError:
             logger.warning("%s did not find ingress resource %s %s", prefix, name, namespace)
             return False
