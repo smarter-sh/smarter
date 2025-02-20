@@ -39,6 +39,9 @@ INSTALLED_APPS += ["django_extensions"]
 #         "debug_toolbar.middleware.DebugToolbarMiddleware",
 #     ]
 
+MIDDLEWARE += [
+    "corsheaders.middleware.CorsMiddleware",
+]
 CORS_ALLOWED_ORIGINS += [
     "http://127.0.0.1:5173",  # Django
     "http://127.0.0.1:3000",  # React

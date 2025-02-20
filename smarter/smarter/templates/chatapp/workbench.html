@@ -6,6 +6,7 @@
   <!-- react.js app entry point -->
   <div
     id="{{ div_id }}"
+    class="smarter-chat"
     style="height: 88vh;"
     smarter-chatbot-api-url="{{ chatbot_api_url }}"
     smarter-toggle-metadata="{{ toggle_metadata }}">
@@ -14,6 +15,6 @@
     retrieve and inject the js/css artifacts of the react.js build into the DOM.
     example: https://cdn.platform.smarter.sh/ui-chat/app-loader.js
   -->
-  <script async="" src="{{ app_loader_url }}"></script>
+  <script class="smarter-chat" async="" src="{{ app_loader_url }}"></script>
 
 {% endblock %}
