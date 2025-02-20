@@ -472,11 +472,13 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
         logger.info("%s Chatbot %s has been deployed to %s", fn_name, chatbot.name, domain_name)
 
         # send an email to the account owner to notify them that the chatbot has been deployed
-        subject = f"Chatbot {chatbot.name} has been deployed"
-        body = f"""Your chatbot {chatbot.name} has been deployed to domain {domain_name} and is now activated
-        and able to respond to prompts.\n\n
-        If you also created a custom domain for your chatbot then you'll be separately notified once it has been verified.
-        If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT}."""
+        subject = f"Your Smarter chatbot {chatbot.url} has been deployed"
+        body = (
+            f"Your chatbot, {chatbot.name}, has been deployed to {chatbot.url}. "
+            f"It is now activated and able to respond to prompts.\n\n"
+            f"If you also created a custom domain for your chatbot then you'll be separately notified once it has been verified. "
+            f"If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT}."
+        )
         AccountContact.send_email_to_primary_contact(account=chatbot.account, subject=subject, body=body)
 
     # if we're running in Kubernetes then we should create an ingress manifest
