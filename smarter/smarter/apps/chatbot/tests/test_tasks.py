@@ -16,6 +16,7 @@ from smarter.lib.django.validators import SmarterValidator
 from ..tasks import (  # register_custom_domain,; verify_custom_domain,
     create_custom_domain_dns_record,
     deploy_default_api,
+    undeploy_default_api,
     verify_domain,
 )
 
@@ -170,3 +171,23 @@ class TestChatBotTasks(unittest.TestCase):
         resolved_hostname = aws_helper.aws.domain_resolver(self.chatbot.default_host)
         self.assertIn(a_record["Name"], [resolved_hostname, resolved_hostname + "."])
         self.assertEqual(a_record["Type"], "A")
+
+        self.assertTrue(self.chatbot.deployed)
+        self.assertTrue(self.chatbot.ready())
+        self.assertEqual(self.chatbot.dns_verification_status, ChatBot.DnsVerificationStatusChoices.VERIFIED)
+        self.assertEqual(
+            self.chatbot.tls_certificate_issuance_status, ChatBot.TlsCertificateIssuanceStatusChoices.ISSUED
+        )
+
+    def test_undeploy_default_api(self):
+        """Test that we can undeploy the default API."""
+        deploy_default_api(chatbot_id=self.chatbot.id, with_domain_verification=False)
+        undeploy_default_api(chatbot_id=self.chatbot.id)
+
+        self.assertFalse(self.chatbot.deployed)
+
+        # DNS record and TLS certificate should still be valid
+        self.assertEqual(self.chatbot.dns_verification_status, ChatBot.DnsVerificationStatusChoices.VERIFIED)
+        self.assertEqual(
+            self.chatbot.tls_certificate_issuance_status, ChatBot.TlsCertificateIssuanceStatusChoices.ISSUED
+        )
