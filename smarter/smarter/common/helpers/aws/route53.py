@@ -5,13 +5,18 @@ import logging
 import time
 from typing import Tuple
 
+import botocore
 import dns.resolver
+from django.conf import settings
+
+from smarter.common.helpers.console_helpers import formatted_text
 
 from .aws import AWSBase
 from .exceptions import AWSRoute53RecordVerificationTimeout
 
 
 logger = logging.getLogger(__name__)
+module_prefix = "smarter.common.helpers.aws.route53."
 
 
 class AWSHostedZoneNotFound(Exception):
@@ -305,7 +310,7 @@ class AWSRoute53(AWSBase):
         hosted_zone_id: str,
         record_name: str,
         record_type: str = "A",
-        record_ttl: int = None,
+        record_ttl: int = 600,
         alias_target=None,  # may or may not exist
         record_resource_records=None,  # can be a single text value of a list of dict
     ) -> None:
@@ -395,3 +400,56 @@ class AWSRoute53(AWSBase):
                 time.sleep(60)
         logger.error("Domain %s does not exist or no DNS answer after multiple attempts", domain_name)
         return False
+
+    def create_domain_a_record(self, hostname: str, api_host_domain: str) -> dict:
+        """Creates an A record inside an AWS Route53 hosted zone."""
+        fn_name = formatted_text(module_prefix + "create_domain_a_record()")
+        logger.info("%s for hostname %s, api_host_domain %s", fn_name, hostname, api_host_domain)
+
+        try:
+            hostname = self.domain_resolver(hostname)
+            api_host_domain = self.domain_resolver(api_host_domain)
+
+            logger.info("%s resolved hostname: %s", fn_name, hostname)
+
+            # add the A record to the customer API domain
+            hosted_zone_id = self.get_hosted_zone_id_for_domain(domain_name=api_host_domain)
+            logger.info("%s found hosted zone %s for parent domain %s", fn_name, hosted_zone_id, api_host_domain)
+
+            # retrieve the A record from the environment domain hosted zone. we'll
+            # use this to create the A record in the customer API domain
+            a_record = self.get_environment_A_record(domain=api_host_domain)
+            if not a_record:
+                raise AWSHostedZoneNotFound(f"Hosted zone not found for domain {api_host_domain}")
+
+            logger.info(
+                "%s propagating A record %s from parent domain %s to deployment target %s",
+                fn_name,
+                a_record,
+                api_host_domain,
+                hostname,
+            )
+
+            deployment_record, created = self.get_or_create_dns_record(
+                hosted_zone_id=hosted_zone_id,
+                record_name=hostname,
+                record_type="A",
+                record_alias_target=a_record["AliasTarget"] if "AliasTarget" in a_record else None,
+                record_value=a_record["ResourceRecords"] if "ResourceRecords" in a_record else None,
+                record_ttl=settings.SMARTER_CHATBOT_TASKS_DEFAULT_TTL,
+            )
+            verb = "Created" if created else "Verified"
+            logger.info(
+                "%s %s deployment DNS record %s AWS Route53 hosted zone %s %s",
+                fn_name,
+                verb,
+                deployment_record,
+                api_host_domain,
+                hosted_zone_id,
+            )
+            return deployment_record
+
+        except botocore.exceptions.ClientError as e:
+            # If the domain already exists, we can ignore the error
+            if "InvalidChangeBatch" not in str(e):
+                raise
