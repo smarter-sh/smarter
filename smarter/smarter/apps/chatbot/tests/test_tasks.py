@@ -15,7 +15,6 @@ from smarter.lib.django.validators import SmarterValidator
 
 from ..tasks import (  # register_custom_domain,; verify_custom_domain,
     create_custom_domain_dns_record,
-    create_domain_A_record,
     deploy_default_api,
     verify_domain,
 )
@@ -108,7 +107,7 @@ class TestChatBotTasks(unittest.TestCase):
         print("resolved_domain", resolved_domain)
         print("hosted_zone", hosted_zone)
         print("hosted_zone_id", hosted_zone_id)
-        dns_record = create_domain_A_record(
+        dns_record = aws_helper.route53.create_domain_a_record(
             hostname=resolved_domain, api_host_domain=aws_helper.aws.customer_api_domain
         )
 

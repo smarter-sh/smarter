@@ -11,7 +11,6 @@ import time
 from string import Template
 from urllib.parse import urlparse
 
-import botocore
 import dns.resolver
 from django.conf import settings
 
@@ -22,7 +21,6 @@ from smarter.common.helpers.aws.exceptions import (
     AWSACMCertificateNotFound,
     AWSACMVerificationNotFound,
 )
-from smarter.common.helpers.aws.route53 import AWSHostedZoneNotFound
 from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.k8s_helpers import kubernetes_helper
@@ -383,67 +381,6 @@ def verify_domain(
     return False
 
 
-@app.task(
-    autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
-)
-def create_domain_A_record(hostname: str, api_host_domain: str) -> dict:
-    """Create an A record for the API domain."""
-    fn_name = formatted_text(module_prefix + "create_domain_A_record()")
-    logger.info("%s for hostname %s, api_host_domain %s", fn_name, hostname, api_host_domain)
-
-    try:
-        hostname = aws_helper.aws.domain_resolver(hostname)
-        api_host_domain = aws_helper.aws.domain_resolver(api_host_domain)
-
-        logger.info("%s resolved hostname: %s", fn_name, hostname)
-
-        # add the A record to the customer API domain
-        hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=api_host_domain)
-        logger.info("%s found hosted zone %s for parent domain %s", fn_name, hosted_zone_id, api_host_domain)
-
-        # retrieve the A record from the environment domain hosted zone. we'll
-        # use this to create the A record in the customer API domain
-        a_record = aws_helper.route53.get_environment_A_record(domain=api_host_domain)
-        if not a_record:
-            raise AWSHostedZoneNotFound(f"Hosted zone not found for domain {api_host_domain}")
-
-        logger.info(
-            "%s propagating A record %s from parent domain %s to deployment target %s",
-            fn_name,
-            a_record,
-            api_host_domain,
-            hostname,
-        )
-
-        deployment_record, created = aws_helper.route53.get_or_create_dns_record(
-            hosted_zone_id=hosted_zone_id,
-            record_name=hostname,
-            record_type="A",
-            record_alias_target=a_record["AliasTarget"] if "AliasTarget" in a_record else None,
-            record_value=a_record["ResourceRecords"] if "ResourceRecords" in a_record else None,
-            record_ttl=settings.SMARTER_CHATBOT_TASKS_DEFAULT_TTL,
-        )
-        verb = "Created" if created else "Verified"
-        logger.info(
-            "%s %s deployment DNS record %s AWS Route53 hosted zone %s %s",
-            fn_name,
-            verb,
-            deployment_record,
-            api_host_domain,
-            hosted_zone_id,
-        )
-        return deployment_record
-
-    except botocore.exceptions.ClientError as e:
-        # If the domain already exists, we can ignore the error
-        if "InvalidChangeBatch" not in str(e):
-            raise
-    return None
-
-
 def destroy_domain_A_record(hostname: str, api_host_domain: str):
     fn_name = "destroy_domain_A_record()"
     hostname = aws_helper.aws.domain_resolver(hostname)
@@ -510,11 +447,15 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     # Prerequisites.
     # ensure that the customer API domain has an A record that we can use to create the chatbot's A record
     # our expected case is that the record already exists and that this step is benign.
-    create_domain_A_record(hostname=smarter_settings.customer_api_domain, api_host_domain=smarter_settings.root_domain)
+    aws_helper.route53.create_domain_a_record(
+        hostname=smarter_settings.customer_api_domain, api_host_domain=smarter_settings.root_domain
+    )
 
     domain_name = chatbot.default_host
     if settings.SMARTER_CHATBOT_TASKS_CREATE_DNS_RECORD:
-        create_domain_A_record(hostname=domain_name, api_host_domain=smarter_settings.customer_api_domain)
+        aws_helper.route53.create_domain_a_record(
+            hostname=domain_name, api_host_domain=smarter_settings.customer_api_domain
+        )
 
     if settings.SMARTER_CHATBOT_TASKS_CREATE_DNS_RECORD and with_domain_verification:
         chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.VERIFYING
@@ -657,7 +598,7 @@ def deploy_custom_api(chatbot_id: int):
         )
         return
 
-    create_domain_A_record(hostname=domain_name, api_host_domain=domain_name)
+    aws_helper.route53.create_domain_a_record(hostname=domain_name, api_host_domain=domain_name)
 
     # verify the hosted zone of the custom domain
     hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name)

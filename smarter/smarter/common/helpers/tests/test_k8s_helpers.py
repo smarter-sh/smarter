@@ -12,7 +12,6 @@ import time
 import unittest
 from string import Template
 
-from smarter.apps.chatbot.tasks import create_domain_A_record
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
 from smarter.common.helpers.aws_helpers import aws_helper
@@ -36,8 +35,10 @@ class Testk8sHelpers(unittest.TestCase):
         self.hostname = f"{self.name}.{self.account_number}.{self.cluster_issuer}"
         self.namespace = f"{smarter_settings.platform_name}-platform-{self.environment}"
 
-        create_domain_A_record(hostname=self.api_domain, api_host_domain=smarter_settings.root_domain)
-        create_domain_A_record(hostname=self.hostname, api_host_domain=self.api_domain)
+        aws_helper.route53.create_domain_a_record(
+            hostname=self.api_domain, api_host_domain=smarter_settings.root_domain
+        )
+        aws_helper.route53.create_domain_a_record(hostname=self.hostname, api_host_domain=self.api_domain)
 
         aws_helper.route53.verify_dns_record(self.hostname)
 
