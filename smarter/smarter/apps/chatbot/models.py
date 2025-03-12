@@ -32,10 +32,14 @@ from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.drf.models import SmarterAuthToken
 
 from .signals import (
+    chatbot_deploy_failed,
+    chatbot_deploy_status_changed,
+    chatbot_deployed,
     chatbot_dns_failed,
     chatbot_dns_verification_initiated,
     chatbot_dns_verification_status_changed,
     chatbot_dns_verified,
+    chatbot_undeployed,
 )
 
 
@@ -131,6 +135,12 @@ class ChatBot(TimestampedModel):
         VERIFIED = "Verified", "Verified"
         FAILED = "Failed", "Failed"
 
+    class TlsCertificateIssuanceStatusChoices(models.TextChoices):
+        NO_CERTIFICATE = "No Certificate", "No Certificate"
+        REQUESTED = "Requested", "Requested"
+        ISSUED = "Issued", "Issued"
+        FAILED = "Failed", "Failed"
+
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
@@ -166,6 +176,13 @@ class ChatBot(TimestampedModel):
         null=True,
         choices=DnsVerificationStatusChoices.choices,
     )
+    tls_certificate_issuance_status = models.CharField(
+        max_length=255,
+        default=TlsCertificateIssuanceStatusChoices.NO_CERTIFICATE,
+        blank=True,
+        null=True,
+        choices=TlsCertificateIssuanceStatusChoices.choices,
+    )
 
     @property
     def default_system_role_enhanced(self):
@@ -179,9 +196,9 @@ class ChatBot(TimestampedModel):
         """
         self.name: 'example'
         self.account.account_number: '1234-5678-9012'
-        smarter_settings.customer_api_domain: 'alpha.api.smarter.sh'
+        smarter_settings.environment_api_domain: 'alpha.api.smarter.sh'
         """
-        domain = f"{self.name}.{self.account.account_number}.{smarter_settings.customer_api_domain}"
+        domain = f"{self.name}.{self.account.account_number}.{smarter_settings.environment_api_domain}"
         SmarterValidator.validate_domain(domain)
         return domain
 
@@ -257,6 +274,22 @@ class ChatBot(TimestampedModel):
     def url_chatapp(self):
         return urljoin(self.url, "chatapp/")
 
+    def ready(self):
+        """
+        A ChatBot is ready if it is its in sandbox mode, or, if it is:
+        - deployed
+        - has a verified DNS A record
+        - has a valid, issued tls certificate.
+        """
+        if self.mode(self.url) == self.Modes.SANDBOX:
+            return True
+
+        return (
+            self.dns_verification_status == self.DnsVerificationStatusChoices.VERIFIED
+            and self.deployed
+            and self.tls_certificate_issuance_status == self.TlsCertificateIssuanceStatusChoices.ISSUED
+        )
+
     def mode(self, url: str) -> str:
         logger.debug("mode: %s", url)
         if not url:
@@ -272,25 +305,39 @@ class ChatBot(TimestampedModel):
             return self.Modes.DEFAULT
         if sandbox_url and sandbox_url in url:
             return self.Modes.SANDBOX
-        logger.error("Invalid ChatBot url %s received for default_url: %s", url, self.default_url)
-        logger.error("sandbox_url: %s", self.sandbox_url)
-        logger.error("custom_url: %a", self.custom_url)
+        logger.error(
+            "Invalid ChatBot url %s received for default_url: %s, sandbox_url: %s, custom_url: %a",
+            url,
+            self.default_url,
+            self.sandbox_url,
+            self.custom_url,
+        )
         # default to default mode as a safety measure
         return self.Modes.UNKNOWN
 
     def save(self, *args, **kwargs):
+        is_new = self.pk is None
         SmarterValidator.validate_domain(self.hostname)
-        orig = ChatBot.objects.get(pk=self.pk) if self.pk is not None else self
         super().save(*args, **kwargs)
-        if self.pk is not None:
+        if is_new:
+            if self.deployed:
+                chatbot_deployed.send(sender=self.__class__, chatbot=self)
+        else:
+            orig = ChatBot.objects.get(pk=self.pk) if self.pk is not None else self
             if orig.dns_verification_status != self.dns_verification_status:
                 chatbot_dns_verification_status_changed.send(sender=self.__class__, chatbot=self)
+                chatbot_deploy_status_changed.send(sender=self.__class__, chatbot=self)
                 if self.dns_verification_status == ChatBot.DnsVerificationStatusChoices.VERIFYING:
                     chatbot_dns_verification_initiated.send(sender=self.__class__, chatbot=self)
                 if self.dns_verification_status == ChatBot.DnsVerificationStatusChoices.VERIFIED:
                     chatbot_dns_verified.send(sender=self.__class__, chatbot=self)
                 if self.dns_verification_status == ChatBot.DnsVerificationStatusChoices.FAILED:
                     chatbot_dns_failed.send(sender=self.__class__, chatbot=self)
+                    chatbot_deploy_failed.send(sender=self.__class__, chatbot=self)
+            if self.deployed and not orig.deployed:
+                chatbot_deployed.send(sender=self.__class__, chatbot=self)
+            if not self.deployed and orig.deployed:
+                chatbot_undeployed.send(sender=self.__class__, chatbot=self)
 
     def __str__(self):
         return self.url if self.url else "undefined"
@@ -630,7 +677,7 @@ class ChatBotHelper(SmarterRequestMixin):
         retval = super().to_json()
         helper_json = {
             "environment": smarter_settings.environment,
-            "customer_api_domain": smarter_settings.customer_api_domain,
+            "environment_api_domain": smarter_settings.environment_api_domain,
             "chatbot_id": self.chatbot.id if self.chatbot else None,
             "is_deployed": self.is_deployed,
             "is_valid": self.is_valid,
@@ -660,7 +707,7 @@ class ChatBotHelper(SmarterRequestMixin):
           return 'smarter.querium.com'
         """
         if self.is_default_domain:
-            return smarter_settings.customer_api_domain
+            return smarter_settings.environment_api_domain
         if self.is_custom_domain:
             domain_parts = self.domain.split(".")
             return ".".join(domain_parts[1:])

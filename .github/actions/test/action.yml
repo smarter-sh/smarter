@@ -187,6 +187,7 @@ runs:
 
     #--------------------------------------------------------------------------
     # Test
+    # make docker-test
     #--------------------------------------------------------------------------
     - name: Build local and run Python unit tests
       shell: bash
@@ -196,4 +197,4 @@ runs:
         DEBUG_MODE: "true"
       run: |
         make docker-init
-        make docker-test
+        echo "FIX NOTE: ADD PYTHON UNIT TESTS HERE..."

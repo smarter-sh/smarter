@@ -31,11 +31,11 @@ class ApiV1CliWhoamiApiView(CliBaseApiView):
                 request=self.request,
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.WHOAMI),
                 data=data,
-                status=HTTPStatus.OK,
+                status=HTTPStatus.OK.value,
             )
         # pylint: disable=W0718
         except Exception as e:
-            return JsonResponse(data={"error": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            return JsonResponse(data={"error": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR.value)
 
     def post(self, request):
         """Get method for PluginManifestView."""

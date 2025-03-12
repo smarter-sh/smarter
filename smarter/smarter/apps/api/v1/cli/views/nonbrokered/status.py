@@ -71,11 +71,11 @@ class ApiV1CliStatusApiView(CliBaseApiView):
                 self.request,
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.STATUS),
                 data=data,
-                status=HTTPStatus.OK,
+                status=HTTPStatus.OK.value,
             )
         # pylint: disable=W0718
         except Exception as e:
-            return JsonResponse(data={"error": str(e)}, status=HTTPStatus.BAD_REQUEST)
+            return JsonResponse(data={"error": str(e)}, status=HTTPStatus.BAD_REQUEST.value)
 
     def post(self, request):
         """Get method for PluginManifestView."""

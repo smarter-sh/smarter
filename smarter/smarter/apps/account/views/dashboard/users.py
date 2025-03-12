@@ -68,7 +68,7 @@ class UserView(SmarterAdminWebView):
             target_user_profile = UserProfile.objects.create(user=target_user, account=user_profile.account)
             target_user_profile.save()
             return redirect("account_user", user_id=target_user.id)
-        return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data=user_form.errors)
+        return http.JsonResponse(status=HTTPStatus.BAD_REQUEST.value, data=user_form.errors)
 
     def _handle_write(self, request, user_id, data=None):
 
@@ -77,19 +77,19 @@ class UserView(SmarterAdminWebView):
         try:
             target_user = User.objects.get(id=user_id)
         except User.DoesNotExist:
-            return http.JsonResponse(status=HTTPStatus.NOT_FOUND, data={"User": "User not found."})
+            return http.JsonResponse(status=HTTPStatus.NOT_FOUND.value, data={"User": "User not found."})
 
         target_user_profile = UserProfile.objects.get(user=target_user)
         if target_user_profile.account != user_profile.account:
             return http.JsonResponse(
-                status=HTTPStatus.FORBIDDEN, data={"User": "User not associated with your account."}
+                status=HTTPStatus.FORBIDDEN.value, data={"User": "User not associated with your account."}
             )
 
         user_form = UserForm(data, instance=target_user)
         if user_form.is_valid():
             user_form.save()
-            return http.JsonResponse(status=HTTPStatus.OK, data={})
-        return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data=user_form.errors)
+            return http.JsonResponse(status=HTTPStatus.OK.value, data={})
+        return http.JsonResponse(status=HTTPStatus.BAD_REQUEST.value, data=user_form.errors)
 
     # pylint: disable=W0221
     def get(self, request, user_id=None):
@@ -98,7 +98,7 @@ class UserView(SmarterAdminWebView):
             user = User.objects.get(id=user_id)
             user_form = UserForm(instance=user)
         except User.DoesNotExist:
-            return http.JsonResponse(status=HTTPStatus.NOT_FOUND, data={"User": "User not found."})
+            return http.JsonResponse(status=HTTPStatus.NOT_FOUND.value, data={"User": "User not found."})
 
         context = {
             "account_users": {
@@ -129,16 +129,16 @@ class UserView(SmarterAdminWebView):
         try:
             target_user = User.objects.get(id=user_id)
         except User.DoesNotExist:
-            return http.JsonResponse(status=HTTPStatus.NOT_FOUND, data={"User": "User not found."})
+            return http.JsonResponse(status=HTTPStatus.NOT_FOUND.value, data={"User": "User not found."})
 
         target_user_profile = UserProfile.objects.get(user=target_user)
         if target_user_profile.account != user_profile.account:
             return http.JsonResponse(
-                status=HTTPStatus.FORBIDDEN, data={"User": "User not associated with your account."}
+                status=HTTPStatus.FORBIDDEN.value, data={"User": "User not associated with your account."}
             )
 
         with transaction.atomic():
             target_user_profile.delete()
             target_user.delete()
 
-        return http.JsonResponse(status=HTTPStatus.OK, data={})
+        return http.JsonResponse(status=HTTPStatus.OK.value, data={})
