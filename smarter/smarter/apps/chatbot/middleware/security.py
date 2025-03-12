@@ -21,22 +21,6 @@ from smarter.lib.django.views.error import (
 from ..models import ChatBot, ChatBotHelper
 
 
-EXEMPTED_FILE_EXTENSIONS = [
-    ".html",
-    ".js",
-    ".css",
-    ".png",
-    ".jpg",
-    ".jpeg",
-    ".gif",
-    ".svg",
-    ".ico",
-    ".woff",
-    ".woff2",
-    ".ttf",
-    ".eot",
-    ".otf",
-]
 logger = logging.getLogger(__name__)
 
 if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
@@ -61,15 +45,7 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
 
     def process_request(self, request):
 
-        # 1.) If it's a benign file extension, allow it to pass through
-        # ---------------------------------------------------------------------
-        _, file_extension = os.path.splitext(request.path)
-        if file_extension in EXEMPTED_FILE_EXTENSIONS:
-            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
-                logger.info("%s exempted file extension: %s", self.formatted_class_name, file_extension)
-            return None
-
-        # 2.) If the request is from a local host, allow it to pass through
+        # 1.) If the request is from a local host, allow it to pass through
         # ---------------------------------------------------------------------
         host = request.get_host()
         if host in SmarterValidator.LOCAL_HOSTS:
@@ -86,7 +62,7 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         parsed_host = urlparse(url)
         host = parsed_host.hostname
 
-        # 3.) If the host is in the list of allowed hosts for
+        # 2.) If the host is in the list of allowed hosts for
         #     our environment then allow it to pass through
         # ---------------------------------------------------------------------
         for allowed_host in settings.SMARTER_ALLOWED_HOSTS:
@@ -100,7 +76,7 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
                     )
                 return None
 
-        # 4.) If the host is a domain for a deployed ChatBot, allow it to pass through
+        # 3.) If the host is a domain for a deployed ChatBot, allow it to pass through
         #     FIX NOTE: this is ham fisted and should be refactored. we shouldn't need
         #     to instantiate a ChatBotHelper object just to check if the host is a domain
         #     for a deployed ChatBot.
