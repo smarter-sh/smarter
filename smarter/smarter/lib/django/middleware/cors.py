@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import logging
 import re
+from collections.abc import Awaitable
 from typing import Pattern, Sequence
 from urllib.parse import SplitResult, urlparse, urlsplit
 
@@ -15,6 +16,7 @@ from corsheaders.conf import conf
 from corsheaders.middleware import CorsMiddleware as DjangoCorsMiddleware
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest
+from django.http.response import HttpResponseBase
 
 from smarter.apps.chatbot.models import ChatBot, ChatBotHelper
 from smarter.common.classes import SmarterHelperMixin
@@ -35,11 +37,15 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
     helper: ChatBotHelper = None
     request: WSGIRequest = None
 
-    def __call__(self, request: HttpRequest):
-        # You can now access the request object here
+    def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
+        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+            url = request.build_absolute_uri()
+            logger.info("%s.__call__() - url=%s", self.formatted_class_name, url)
+        self._url = None
+        self._chatbot = None
+        self.helper = None
         self.request = request
-        response = self.get_response(request)
-        return response
+        super().__call__(request)
 
     @property
     def chatbot(self) -> ChatBot:
