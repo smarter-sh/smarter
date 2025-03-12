@@ -45,7 +45,7 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
         self._chatbot = None
         self.helper = None
         self.request = request
-        super().__call__(request)
+        return super().__call__(request)  # Ensure the response is returned
 
     @property
     def chatbot(self) -> ChatBot:
