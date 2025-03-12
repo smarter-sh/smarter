@@ -27,7 +27,7 @@ class TestChatBotTasks(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         hashed_slug = hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:16]
-        self.domain_name = f"{hashed_slug}.{aws_helper.aws.customer_api_domain}"
+        self.domain_name = f"{hashed_slug}.{aws_helper.aws.environment_api_domain}"
         self.hosted_zone = aws_helper.route53.get_hosted_zone(domain_name=self.domain_name)
         if self.hosted_zone:
             aws_helper.route53.delete_hosted_zone(domain_name=self.domain_name)
@@ -102,14 +102,14 @@ class TestChatBotTasks(unittest.TestCase):
         """Test that we can create an A record for a domain."""
 
         resolved_domain = aws_helper.aws.domain_resolver(self.domain_name)
-        hosted_zone = aws_helper.route53.get_hosted_zone(domain_name=aws_helper.aws.customer_api_domain)
+        hosted_zone = aws_helper.route53.get_hosted_zone(domain_name=aws_helper.aws.environment_api_domain)
         hosted_zone_id = aws_helper.route53.get_hosted_zone_id(hosted_zone=hosted_zone)
 
         print("resolved_domain", resolved_domain)
         print("hosted_zone", hosted_zone)
         print("hosted_zone_id", hosted_zone_id)
         dns_record = aws_helper.route53.create_domain_a_record(
-            hostname=resolved_domain, api_host_domain=aws_helper.aws.customer_api_domain
+            hostname=resolved_domain, api_host_domain=aws_helper.aws.environment_api_domain
         )
 
         print("dns_record", dns_record)
@@ -154,7 +154,7 @@ class TestChatBotTasks(unittest.TestCase):
         self.assertEqual(self.chatbot.mode(self.chatbot.url), "sandbox")
 
         hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(
-            domain_name=aws_helper.aws.customer_api_domain
+            domain_name=aws_helper.aws.environment_api_domain
         )
         a_record = None
         retries = 5

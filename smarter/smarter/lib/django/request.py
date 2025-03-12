@@ -424,7 +424,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         """
         if not self.url:
             return False
-        if not smarter_settings.customer_api_domain in self.url:
+        if not smarter_settings.environment_api_domain in self.url:
             return False
         if account_number_from_url(self.url):
             return True
@@ -508,7 +508,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
     def is_default_domain(self) -> bool:
         if not self.url:
             return False
-        return smarter_settings.customer_api_domain in self.url
+        return smarter_settings.environment_api_domain in self.url
 
     @property
     def path(self) -> str:

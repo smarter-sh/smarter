@@ -14,8 +14,8 @@ from smarter.common.conf import settings as smarter_settings
 
 # our stuff
 from smarter.common.const import (
-    SMARTER_CUSTOMER_API_SUBDOMAIN,
-    SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN,
+    SMARTER_API_SUBDOMAIN,
+    SMARTER_PLATFORM_SUBDOMAIN,
     SmarterEnvironments,
 )
 
@@ -248,15 +248,15 @@ class AWSBase(SmarterHelperMixin):
         we need to rebuild these in order to reformat the localhost domain into
         a proxy domain that will work with AWS Route53 and Kubernetes
         """
-        return f"{self.environment}.{SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
+        return f"{self.environment}.{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
 
     @property
-    def customer_api_domain(self) -> str:
+    def environment_api_domain(self) -> str:
         """
         we need to rebuild these in order to reformat the localhost domain into
         a proxy domain that will work with AWS Route53 and Kubernetes
         """
-        return f"{self.environment}.{SMARTER_CUSTOMER_API_SUBDOMAIN}.{self.root_domain}"
+        return f"{self.environment}.{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
 
     @property
     def root_domain(self) -> str:
@@ -272,8 +272,8 @@ class AWSBase(SmarterHelperMixin):
             proxy_domain: str = None
             if smarter_settings.environment_domain in domain:
                 proxy_domain = domain.replace(smarter_settings.environment_domain, self.environment_domain)
-            if smarter_settings.customer_api_domain in domain:
-                proxy_domain = domain.replace(smarter_settings.customer_api_domain, self.customer_api_domain)
+            if smarter_settings.environment_api_domain in domain:
+                proxy_domain = domain.replace(smarter_settings.environment_api_domain, self.environment_api_domain)
             if proxy_domain:
                 SmarterValidator.validate_domain(domain)
                 logger.info("replacing %s with proxy domain %s", domain, proxy_domain)

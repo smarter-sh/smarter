@@ -72,7 +72,7 @@ SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_HTTPONLY = True
 
 ENVIRONMENT_DOMAIN = smarter_settings.environment_domain
-CUSTOMER_API_DOMAIN = smarter_settings.customer_api_domain
+CUSTOMER_API_DOMAIN = smarter_settings.environment_api_domain
 SMARTER_ALLOWED_HOSTS = [ENVIRONMENT_DOMAIN, CUSTOMER_API_DOMAIN, f"*.{CUSTOMER_API_DOMAIN}"]
 SMTP_SENDER = smarter_settings.smtp_sender or ENVIRONMENT_DOMAIN
 SMTP_FROM_EMAIL = smarter_settings.smtp_from_email or "no-reply@" + SMTP_SENDER

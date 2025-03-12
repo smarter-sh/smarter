@@ -344,7 +344,7 @@ def verify_domain(
             # 1. verify that the DNS record actually exists. If it doesn't then there's no point in proceeding.
             if not hosted_zone_id:
                 customer_api_domain_hosted_zone = aws_helper.route53.get_hosted_zone(
-                    smarter_settings.customer_api_domain
+                    smarter_settings.environment_api_domain
                 )
                 hosted_zone_id = aws_helper.route53.get_hosted_zone_id(hosted_zone=customer_api_domain_hosted_zone)
 
@@ -448,13 +448,13 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     # ensure that the customer API domain has an A record that we can use to create the chatbot's A record
     # our expected case is that the record already exists and that this step is benign.
     aws_helper.route53.create_domain_a_record(
-        hostname=smarter_settings.customer_api_domain, api_host_domain=smarter_settings.root_domain
+        hostname=smarter_settings.environment_api_domain, api_host_domain=smarter_settings.root_domain
     )
 
     domain_name = chatbot.default_host
     if settings.SMARTER_CHATBOT_TASKS_CREATE_DNS_RECORD:
         aws_helper.route53.create_domain_a_record(
-            hostname=domain_name, api_host_domain=smarter_settings.customer_api_domain
+            hostname=domain_name, api_host_domain=smarter_settings.environment_api_domain
         )
 
     if settings.SMARTER_CHATBOT_TASKS_CREATE_DNS_RECORD and with_domain_verification:
@@ -489,12 +489,12 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     ):
         logger.info("%s creating ingress manifest for %s", fn_name, domain_name)
         ingress_values = {
-            "cluster_issuer": smarter_settings.customer_api_domain,
+            "cluster_issuer": smarter_settings.environment_api_domain,
             "environment_namespace": smarter_settings.environment_namespace,
             "domain": domain_name,
             "service_name": smarter_settings.platform_name,
             "platform_url": smarter_settings.environment_url,
-            "api_url": smarter_settings.customer_api_url,
+            "api_url": smarter_settings.environment_api_url,
         }
 
         # create and apply the ingress manifest
@@ -571,7 +571,7 @@ def delete_default_api(url: str, account_number: str, name: str):
         return domain_name
 
     hostname = get_domain_name(url)
-    destroy_domain_A_record(hostname=hostname, api_host_domain=smarter_settings.customer_api_domain)
+    destroy_domain_A_record(hostname=hostname, api_host_domain=smarter_settings.environment_api_domain)
     ingress_deleted, certificate_deleted, secret_delete = kubernetes_helper.delete_ingress_resources(
         hostname=hostname, namespace=smarter_settings.environment_namespace
     )
