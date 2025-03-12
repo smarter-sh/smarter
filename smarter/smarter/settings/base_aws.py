@@ -72,16 +72,16 @@ SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_HTTPONLY = True
 
 ENVIRONMENT_DOMAIN = smarter_settings.environment_domain
-CUSTOMER_API_DOMAIN = smarter_settings.environment_api_domain
-SMARTER_ALLOWED_HOSTS = [ENVIRONMENT_DOMAIN, CUSTOMER_API_DOMAIN, f"*.{CUSTOMER_API_DOMAIN}"]
+ENVIRONMENT_API_DOMAIN = smarter_settings.environment_api_domain
+SMARTER_ALLOWED_HOSTS = [ENVIRONMENT_DOMAIN, ENVIRONMENT_API_DOMAIN, f"*.{ENVIRONMENT_API_DOMAIN}"]
 SMTP_SENDER = smarter_settings.smtp_sender or ENVIRONMENT_DOMAIN
 SMTP_FROM_EMAIL = smarter_settings.smtp_from_email or "no-reply@" + SMTP_SENDER
 
 CORS_ALLOWED_ORIGINS += [
-    f"http://{host}" for host in [ENVIRONMENT_DOMAIN, CUSTOMER_API_DOMAIN, smarter_settings.environment_cdn_domain]
+    f"http://{host}" for host in [ENVIRONMENT_DOMAIN, ENVIRONMENT_API_DOMAIN, smarter_settings.environment_cdn_domain]
 ]
 CORS_ALLOWED_ORIGINS += [
-    f"https://{host}" for host in [ENVIRONMENT_DOMAIN, CUSTOMER_API_DOMAIN, smarter_settings.environment_cdn_domain]
+    f"https://{host}" for host in [ENVIRONMENT_DOMAIN, ENVIRONMENT_API_DOMAIN, smarter_settings.environment_cdn_domain]
 ]
 
 
