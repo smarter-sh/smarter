@@ -20,7 +20,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         """create the superuser account."""
         domain = options["domain"]
-        foreground = options["foreground"]
+        foreground = options["foreground"] if "foreground" in options else False
 
         try:
             custom_domain = ChatBotCustomDomain.objects.get(domain_name=domain)

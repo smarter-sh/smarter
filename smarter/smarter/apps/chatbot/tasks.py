@@ -448,7 +448,7 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     # ensure that the customer API domain has an A record that we can use to create the chatbot's A record
     # our expected case is that the record already exists and that this step is benign.
     aws_helper.route53.create_domain_a_record(
-        hostname=smarter_settings.environment_api_domain, api_host_domain=smarter_settings.root_domain
+        hostname=smarter_settings.environment_api_domain, api_host_domain=smarter_settings.platform_domain
     )
 
     domain_name = chatbot.default_host
