@@ -196,9 +196,9 @@ class ChatBot(TimestampedModel):
         """
         self.name: 'example'
         self.account.account_number: '1234-5678-9012'
-        smarter_settings.customer_api_domain: 'alpha.api.smarter.sh'
+        smarter_settings.environment_api_domain: 'alpha.api.smarter.sh'
         """
-        domain = f"{self.name}.{self.account.account_number}.{smarter_settings.customer_api_domain}"
+        domain = f"{self.name}.{self.account.account_number}.{smarter_settings.environment_api_domain}"
         SmarterValidator.validate_domain(domain)
         return domain
 
@@ -677,7 +677,7 @@ class ChatBotHelper(SmarterRequestMixin):
         retval = super().to_json()
         helper_json = {
             "environment": smarter_settings.environment,
-            "customer_api_domain": smarter_settings.customer_api_domain,
+            "environment_api_domain": smarter_settings.environment_api_domain,
             "chatbot_id": self.chatbot.id if self.chatbot else None,
             "is_deployed": self.is_deployed,
             "is_valid": self.is_valid,
@@ -707,7 +707,7 @@ class ChatBotHelper(SmarterRequestMixin):
           return 'smarter.querium.com'
         """
         if self.is_default_domain:
-            return smarter_settings.customer_api_domain
+            return smarter_settings.environment_api_domain
         if self.is_custom_domain:
             domain_parts = self.domain.split(".")
             return ".".join(domain_parts[1:])

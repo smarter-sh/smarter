@@ -296,7 +296,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         where
          - `customer-service' == chatbot.name`
          - `3141-5926-5359 == chatbot.account.account_number`
-         - `api.smarter.sh == smarter_settings.customer_api_domain`
+         - `api.smarter.sh == smarter_settings.environment_api_domain`
 
         URL with custom domain
         -------------------
