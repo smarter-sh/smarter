@@ -9,8 +9,8 @@ import logging
 import os
 import time
 from string import Template
+from urllib.parse import urlparse
 
-import botocore
 import dns.resolver
 from django.conf import settings
 
@@ -21,7 +21,6 @@ from smarter.common.helpers.aws.exceptions import (
     AWSACMCertificateNotFound,
     AWSACMVerificationNotFound,
 )
-from smarter.common.helpers.aws.route53 import AWSHostedZoneNotFound
 from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.k8s_helpers import kubernetes_helper
@@ -39,7 +38,7 @@ from .models import (
 logger = logging.getLogger(__name__)
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-module_prefix = formatted_text("smarter.apps.chatbot.tasks.")
+module_prefix = "smarter.apps.chatbot.tasks."
 
 
 class ChatBotCustomDomainNotFound(SmarterChatBotException):
@@ -69,7 +68,13 @@ def aggregate_chatbot_history():
 )
 def verify_certificate(certificate_arn: str):
     """Verify an AWS ACM certificate."""
-    aws_helper.acm.verify_certificate(certificate_arn=certificate_arn)
+    prefix = formatted_text(module_prefix + "verify_certificate()")
+    logger.info("%s - %s", prefix, certificate_arn)
+    verified = aws_helper.acm.verify_certificate(certificate_arn=certificate_arn)
+    if verified:
+        logger.info("%s - certificate %s verified.", prefix, certificate_arn)
+    else:
+        logger.error("%s - certificate %s verification failed.", prefix, certificate_arn)
 
 
 @app.task(
@@ -80,7 +85,7 @@ def verify_certificate(certificate_arn: str):
 )
 def create_chatbot_request(chatbot_id: int, request_data: dict):
     """Create a ChatBot request record."""
-    logger.info("%s - chatbot %s", module_prefix + formatted_text("create_chatbot_request()"), chatbot_id)
+    logger.info("%s - chatbot %s", formatted_text(module_prefix + "create_chatbot_request()"), chatbot_id)
     chatbot = ChatBot.objects.get(id=chatbot_id)
     session_key = request_data.get("session_key")
     ChatBotRequests.objects.create(chatbot=chatbot, request=request_data, session_key=session_key)
@@ -339,7 +344,7 @@ def verify_domain(
             # 1. verify that the DNS record actually exists. If it doesn't then there's no point in proceeding.
             if not hosted_zone_id:
                 customer_api_domain_hosted_zone = aws_helper.route53.get_hosted_zone(
-                    smarter_settings.customer_api_domain
+                    smarter_settings.environment_api_domain
                 )
                 hosted_zone_id = aws_helper.route53.get_hosted_zone_id(hosted_zone=customer_api_domain_hosted_zone)
 
@@ -374,67 +379,6 @@ def verify_domain(
 
     logger.error("%s unable to verify domain %s after %s attempts.", fn_name, domain_name, max_attempts)
     return False
-
-
-@app.task(
-    autoretry_for=(Exception,),
-    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
-    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
-    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
-)
-def create_domain_A_record(hostname: str, api_host_domain: str) -> dict:
-    """Create an A record for the API domain."""
-    fn_name = "create_domain_A_record()"
-    logger.info("%s for hostname %s, api_host_domain %s", fn_name, hostname, api_host_domain)
-
-    try:
-        hostname = aws_helper.aws.domain_resolver(hostname)
-        api_host_domain = aws_helper.aws.domain_resolver(api_host_domain)
-
-        logger.info("%s resolved hostname: %s", fn_name, hostname)
-
-        # add the A record to the customer API domain
-        hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=api_host_domain)
-        logger.info("%s found hosted zone %s for parent domain %s", fn_name, hosted_zone_id, api_host_domain)
-
-        # retrieve the A record from the environment domain hosted zone. we'll
-        # use this to create the A record in the customer API domain
-        a_record = aws_helper.route53.get_environment_A_record(domain=api_host_domain)
-        if not a_record:
-            raise AWSHostedZoneNotFound(f"Hosted zone not found for domain {api_host_domain}")
-
-        logger.info(
-            "%s propagating A record %s from parent domain %s to deployment target %s",
-            fn_name,
-            a_record,
-            api_host_domain,
-            hostname,
-        )
-
-        deployment_record, created = aws_helper.route53.get_or_create_dns_record(
-            hosted_zone_id=hosted_zone_id,
-            record_name=hostname,
-            record_type="A",
-            record_alias_target=a_record["AliasTarget"] if "AliasTarget" in a_record else None,
-            record_value=a_record["ResourceRecords"] if "ResourceRecords" in a_record else None,
-            record_ttl=settings.SMARTER_CHATBOT_TASKS_DEFAULT_TTL,
-        )
-        verb = "Created" if created else "Verified"
-        logger.info(
-            "%s %s deployment DNS record %s AWS Route53 hosted zone %s %s",
-            fn_name,
-            verb,
-            deployment_record,
-            api_host_domain,
-            hosted_zone_id,
-        )
-        return deployment_record
-
-    except botocore.exceptions.ClientError as e:
-        # If the domain already exists, we can ignore the error
-        if "InvalidChangeBatch" not in str(e):
-            raise
-    return None
 
 
 def destroy_domain_A_record(hostname: str, api_host_domain: str):
@@ -489,7 +433,7 @@ def destroy_domain_A_record(hostname: str, api_host_domain: str):
 def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     """Create a customer API default domain A record for a chatbot."""
 
-    fn_name = "deploy_default_api()"
+    fn_name = formatted_text(module_prefix + "deploy_default_api()")
     logger.info("%s - chatbot %s", fn_name, chatbot_id)
     chatbot: ChatBot = None
     activate = True
@@ -503,11 +447,15 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     # Prerequisites.
     # ensure that the customer API domain has an A record that we can use to create the chatbot's A record
     # our expected case is that the record already exists and that this step is benign.
-    create_domain_A_record(hostname=smarter_settings.customer_api_domain, api_host_domain=smarter_settings.root_domain)
+    aws_helper.route53.create_domain_a_record(
+        hostname=smarter_settings.environment_api_domain, api_host_domain=smarter_settings.root_domain
+    )
 
     domain_name = chatbot.default_host
     if settings.SMARTER_CHATBOT_TASKS_CREATE_DNS_RECORD:
-        create_domain_A_record(hostname=domain_name, api_host_domain=smarter_settings.customer_api_domain)
+        aws_helper.route53.create_domain_a_record(
+            hostname=domain_name, api_host_domain=smarter_settings.environment_api_domain
+        )
 
     if settings.SMARTER_CHATBOT_TASKS_CREATE_DNS_RECORD and with_domain_verification:
         chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.VERIFYING
@@ -524,12 +472,14 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
         logger.info("%s Chatbot %s has been deployed to %s", fn_name, chatbot.name, domain_name)
 
         # send an email to the account owner to notify them that the chatbot has been deployed
-        subject = f"Chatbot {chatbot.name} has been deployed"
-        body = f"""Your chatbot {chatbot.name} has been deployed to domain {domain_name} and is now activated
-        and able to respond to prompts.\n\n
-        If you also created a custom domain for your chatbot then you'll be separately notified once it has been verified.
-        If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT}."""
-        AccountContact.send_email_to_account(account=chatbot.account, subject=subject, body=body)
+        subject = f"Your Smarter chatbot {chatbot.url} has been deployed"
+        body = (
+            f"Your chatbot, {chatbot.name}, has been deployed to {chatbot.url}. "
+            f"It is now activated and able to respond to prompts.\n\n"
+            f"If you also created a custom domain for your chatbot then you'll be separately notified once it has been verified. "
+            f"If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT}."
+        )
+        AccountContact.send_email_to_primary_contact(account=chatbot.account, subject=subject, body=body)
 
     # if we're running in Kubernetes then we should create an ingress manifest
     # for the customer API domain so that we can issue a certificate for it.
@@ -539,12 +489,12 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
     ):
         logger.info("%s creating ingress manifest for %s", fn_name, domain_name)
         ingress_values = {
-            "cluster_issuer": smarter_settings.customer_api_domain,
+            "cluster_issuer": smarter_settings.environment_api_domain,
             "environment_namespace": smarter_settings.environment_namespace,
             "domain": domain_name,
             "service_name": smarter_settings.platform_name,
             "platform_url": smarter_settings.environment_url,
-            "api_url": smarter_settings.customer_api_url,
+            "api_url": smarter_settings.environment_api_url,
         }
 
         # create and apply the ingress manifest
@@ -553,6 +503,31 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
             template = Template(ingress_template.read())
             manifest = template.substitute(ingress_values)
         kubernetes_helper.apply_manifest(manifest)
+
+        if chatbot.tls_certificate_issuance_status != chatbot.TlsCertificateIssuanceStatusChoices.ISSUED:
+            # move ourselves back to the first step in the process.
+            chatbot.tls_certificate_issuance_status = chatbot.TlsCertificateIssuanceStatusChoices.REQUESTED
+            chatbot.save()
+            wait_time = 300
+            logger.info(
+                "%s waiting %s seconds for ingress resources to be created and for certificate to be issued",
+                fn_name,
+                wait_time,
+            )
+            time.sleep(wait_time)
+
+        # verify that the ingress resources were created:
+        ingress_verified, secret_verified, certificate_verified = kubernetes_helper.verify_ingress_resources(
+            hostname=domain_name, namespace=smarter_settings.environment_namespace
+        )
+        if ingress_verified and secret_verified and certificate_verified:
+            chatbot.tls_certificate_issuance_status = chatbot.TlsCertificateIssuanceStatusChoices.ISSUED
+            chatbot.save()
+            logger.info("%s - chatbot %s %s all resources successfully created", fn_name, domain_name, chatbot)
+        else:
+            logger.error("%s - chatbot %s %s one or more resources were not created", fn_name, domain_name, chatbot)
+            chatbot.tls_certificate_issuance_status = chatbot.TlsCertificateIssuanceStatusChoices.FAILED
+            chatbot.save()
 
 
 @app.task(
@@ -563,18 +538,47 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
 )
 def undeploy_default_api(chatbot_id: int):
     """Reverse a Chatbot deployment by destroying the customer API default domain A record for a chatbot."""
+    prefix = formatted_text(module_prefix + "undeploy_default_api()")
 
     chatbot: ChatBot = None
     try:
         chatbot = ChatBot.objects.get(id=chatbot_id)
     except ChatBot.DoesNotExist:
-        logger.info("Chatbot %s not found. Nothing to do, returning.", chatbot_id)
-
-    destroy_domain_A_record(hostname=chatbot.default_host, api_host_domain=smarter_settings.customer_api_domain)
+        logger.error("%s Chatbot %s not found.", prefix, chatbot_id)
 
     chatbot.deployed = False
-    chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.NOT_VERIFIED
     chatbot.save()
+
+
+@app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=settings.SMARTER_CHATBOT_TASKS_CELERY_RETRY_BACKOFF,
+    max_retries=settings.SMARTER_CHATBOT_TASKS_CELERY_MAX_RETRIES,
+    queue=settings.SMARTER_CHATBOT_TASKS_CELERY_TASK_QUEUE,
+)
+def delete_default_api(url: str, account_number: str, name: str):
+    """
+    Delete aws resources for a customer API
+    - delete default domain Route53 A record for a chatbot.
+    - delete ingress resources: ingress, certificate, secret.
+    """
+    prefix = formatted_text(module_prefix + "delete_default_api()")
+    logger.info("%s - chatbot %s %s %s", prefix, url, account_number, name)
+
+    def get_domain_name(url):
+        parsed_url = urlparse(url)
+        domain_name = parsed_url.netloc
+        return domain_name
+
+    hostname = get_domain_name(url)
+    destroy_domain_A_record(hostname=hostname, api_host_domain=smarter_settings.environment_api_domain)
+    ingress_deleted, certificate_deleted, secret_delete = kubernetes_helper.delete_ingress_resources(
+        hostname=hostname, namespace=smarter_settings.environment_namespace
+    )
+    if ingress_deleted and certificate_deleted and secret_delete:
+        logger.info("%s - chatbot %s %s %s all resources successfully deleted", prefix, url, account_number, name)
+    else:
+        logger.error("%s - chatbot %s %s %s one or more resources were not deleted", prefix, url, account_number, name)
 
 
 @app.task(
@@ -596,7 +600,7 @@ def deploy_custom_api(chatbot_id: int):
         )
         return
 
-    create_domain_A_record(hostname=domain_name, api_host_domain=domain_name)
+    aws_helper.route53.create_domain_a_record(hostname=domain_name, api_host_domain=domain_name)
 
     # verify the hosted zone of the custom domain
     hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name)

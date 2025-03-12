@@ -70,11 +70,11 @@ class ApiV1CliVersionApiView(CliBaseApiView):
                 request=self.request,
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.VERSION),
                 data=data,
-                status=HTTPStatus.OK,
+                status=HTTPStatus.OK.value,
             )
         # pylint: disable=W0718
         except Exception as e:
-            return JsonResponse(data={"error": str(e)}, status=HTTPStatus.BAD_REQUEST)
+            return JsonResponse(data={"error": str(e)}, status=HTTPStatus.BAD_REQUEST.value)
 
     def post(self, request):
         return self.info()

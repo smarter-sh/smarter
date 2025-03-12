@@ -57,7 +57,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         2.) authenticated sandbox end points. Authenticated chats
             self.is_chatbot_sandbox_url==True
         --------
-        - http://localhost:8000/chatbots/<str:name>/				            -> smarter.apps.chatapp.views.ChatAppView
+        - http://localhost:8000/chatbots/<str:name>/				            -> smarter.apps.chatapp.views.ChatAppWorkbenchView
         - http://localhost:8000/chatbots/<str:name>/config/			            -> smarter.apps.chatapp.views.ChatConfigView
 
         3.) smarter.sh/v1 end points. Public or authenticated chats
@@ -424,7 +424,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         """
         if not self.url:
             return False
-        if not smarter_settings.customer_api_domain in self.url:
+        if not smarter_settings.environment_api_domain in self.url:
             return False
         if account_number_from_url(self.url):
             return True
@@ -508,7 +508,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
     def is_default_domain(self) -> bool:
         if not self.url:
             return False
-        return smarter_settings.customer_api_domain in self.url
+        return smarter_settings.environment_api_domain in self.url
 
     @property
     def path(self) -> str:
