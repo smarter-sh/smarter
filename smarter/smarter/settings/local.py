@@ -18,7 +18,7 @@ from .base import *
 logger.info("Loading smarter.settings.local")
 
 ENVIRONMENT_DOMAIN = smarter_settings.environment_domain
-CUSTOMER_API_DOMAIN = smarter_settings.environment_api_domain
+ENVIRONMENT_API_DOMAIN = smarter_settings.environment_api_domain
 
 SMARTER_ALLOWED_HOSTS = LOCAL_HOSTS
 
@@ -85,7 +85,7 @@ logger.info("*" * 80)
 logger.info("CORS_ALLOW_HEADERS: %s", CORS_ALLOW_HEADERS)
 logger.info("CORS_ALLOWED_ORIGINS: %s", CORS_ALLOWED_ORIGINS)
 logger.info("CORS_ALLOWED_ORIGIN_REGEXES: %s", CORS_ALLOWED_ORIGIN_REGEXES)
-logger.info("CUSTOMER_API_DOMAIN: %s", CUSTOMER_API_DOMAIN)
+logger.info("ENVIRONMENT_API_DOMAIN: %s", ENVIRONMENT_API_DOMAIN)
 logger.info("ENVIRONMENT_DOMAIN: %s", ENVIRONMENT_DOMAIN)
 logger.info("SECURE_PROXY_SSL_HEADER: %s", SECURE_PROXY_SSL_HEADER)
 logger.info("SMARTER_API_SCHEMA: %s", SMARTER_API_SCHEMA)
