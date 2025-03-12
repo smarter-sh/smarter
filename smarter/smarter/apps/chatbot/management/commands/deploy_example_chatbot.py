@@ -20,7 +20,7 @@ class Command(BaseCommand):
         parser.add_argument("--foreground", action="store_true", help="Run the task in the foreground")
 
     def handle(self, *args, **options):
-        foreground = options["foreground"]
+        foreground = options["foreground"] if "foreground" in options else False
 
         log_prefix = "manage.py deploy_example_chatbot:"
         print(log_prefix, "Deploying the Smarter demo API...")

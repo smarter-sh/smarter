@@ -27,7 +27,7 @@ class Command(BaseCommand):
         account_number = options["account_number"]
         company_name = options["company_name"]
         name = options["name"]
-        foreground = options["foreground"]
+        foreground = options["foreground"] if "foreground" in options else False
 
         account: Account = None
         chatbot: ChatBot = None
