@@ -30,7 +30,7 @@ whitenoise==6.8.2                       # static file serving
 
 # Django
 # ------------
-Django==5.1.3
+Django==5.1.7
 django-extensions==3.2.3
 django-debug-toolbar==5.0.1
 django-redis==5.4.0                     # object caching
@@ -82,5 +82,5 @@ drf-yasg==1.21.8                        # Swagger API documentation
 lxml==5.2.2                             # parser for Wagtail page compression
 markdown==3.6                           # Markdown reader/parser
 python-hcl2==5.1.1                      # Terraform hcl parser for reading Terraform tfvars files
-wagtail==6.3.2                          # Wagail CMS, for building static pages
+wagtail==6.4.1                          # Wagail CMS, for building static pages
 wagtail-transfer==0.9.4                 # https://github.com/wagtail/wagtail-transfer
