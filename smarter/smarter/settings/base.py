@@ -63,7 +63,11 @@ CSRF_COOKIE_DOMAIN = smarter_settings.environment_domain
 CSRF_COOKIE_PATH = "/"
 CSRF_COOKIE_HTTPONLY = False
 CSRF_HEADER_NAME = "HTTP_X_CSRFTOKEN"
-CSRF_TRUSTED_ORIGINS = []
+CSRF_TRUSTED_ORIGINS = [
+    smarter_settings.environment_domain,
+    smarter_settings.api_domain,
+    smarter_settings.customer_api_domain,
+]
 CSRF_USE_SESSIONS = False
 
 
