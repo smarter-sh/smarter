@@ -6,11 +6,14 @@ organized in directories by customer API name.
 import os
 import re
 import subprocess
+from urllib.parse import urljoin
 
 import yaml
 from django.core.management.base import BaseCommand
+from django.http import HttpResponse
 from django.test import RequestFactory
 
+from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.apps.api.v1.cli.views.apply import ApiV1CliApplyApiView
@@ -19,82 +22,15 @@ from smarter.apps.chatbot.tasks import deploy_default_api
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
-from smarter.lib.django.user import User, UserType
+from smarter.lib.django.user import User
 from smarter.lib.django.validators import SmarterValidator
 
 
 # pylint: disable=E1101,too-many-instance-attributes
-class Command(BaseCommand):
+class Command(BaseCommand, AccountMixin):
     """Deploy customer APIs from a GitHub repository of plugin YAML files organized by customer API name."""
 
     _url: str = None
-    _user: UserType = None
-    _account: Account = None
-    _user_profile: UserProfile = None
-
-    @property
-    def user(self) -> UserType:
-        if self._user:
-            return self._user
-        if self._user_profile:
-            return self._user_profile.user
-        return None
-
-    @user.setter
-    def user(self, value):
-        if not isinstance(value, User):
-            raise SmarterValueError("User must be a User object.")
-        if not value.is_staff:
-            raise SmarterValueError(f"User {value.username} is not an account admin.")
-        if self._account:
-            try:
-                self._user_profile = UserProfile.objects.get(account=self._account, user=value)
-            except UserProfile.DoesNotExist as e:
-                raise SmarterValueError(
-                    f"User {value.username} is not associated with account {self._account.account_number}."
-                ) from e
-        else:
-            self._user_profile = UserProfile.objects.filter(user=value).first()
-            self._account = self._user_profile.account
-        self._user = value
-
-    @property
-    def account(self) -> Account:
-        if self._account:
-            return self._account
-        if self._user_profile:
-            return self._user_profile.account
-        return None
-
-    @account.setter
-    def account(self, value):
-        if not isinstance(value, Account):
-            raise SmarterValueError("Account must be an Account object.")
-        if self._user:
-            # ensure that we have integrity between user and account
-            UserProfile.objects.get(account=value, user=self._user)
-        self._account = value
-
-    @property
-    def user_profile(self) -> UserProfile:
-        if self._user_profile:
-            return self._user_profile
-        if self._user and self._account:
-            try:
-                self._user_profile = UserProfile.objects.get(user=self._user, account=self._account)
-            except UserProfile.DoesNotExist as e:
-                raise SmarterValueError(
-                    f"User {self._user.username} is not associated with account {self._account.account_number}."
-                ) from e
-        return self._user_profile
-
-    @user_profile.setter
-    def user_profile(self, value):
-        if not isinstance(value, UserProfile):
-            raise SmarterValueError("User profile must be a UserProfile object.")
-        self._user_profile = value
-        self._user = value.user
-        self._account = value.account
 
     @property
     def url(self) -> str:
@@ -160,7 +96,7 @@ class Command(BaseCommand):
         plugin = PluginStatic(data=data, user_profile=self.user_profile)
         return plugin
 
-    def apply_manifest(self, manifest_data: str) -> None:
+    def apply_manifest(self, manifest_data: str) -> HttpResponse:
         """
         Apply a manifest to the Smarter API.
         """
@@ -168,7 +104,7 @@ class Command(BaseCommand):
             raise SmarterValueError("Manifest data is missing.")
 
         request_factory = RequestFactory()
-        url = smarter_settings.environment_url + "/api/v1/cli/apply"
+        url = urljoin(smarter_settings.environment_url, "/api/v1/cli/apply")
         request = request_factory.post(url, data=manifest_data, content_type="application/json")
         request.user = self.user
         api_v1_cli_apply_view = ApiV1CliApplyApiView.as_view()
