@@ -31,6 +31,11 @@ class Command(BaseCommand, AccountMixin):
 
     _url: str = None
 
+    def __init__(self, stdout=None, stderr=None, no_color=False, force_color=False):
+        super().__init__(stdout, stderr, no_color, force_color)
+        AccountMixin.__init__(self)
+        self._url = None
+
     @property
     def url(self) -> str:
         if not self._url:
@@ -75,11 +80,7 @@ class Command(BaseCommand, AccountMixin):
         Account: The account to which the manifest applies.
         manifest_data: a string representation of a yaml manifest file
         """
-        self.stdout.write(
-            self.style.NOTICE(
-                f"Applying manifest for account {self.account.account_number} {self.account.company_name}."
-            )
-        )
+        self.stdout.write(f"Applying manifest for account {self.account.account_number} {self.account.company_name}.")
         request_factory = RequestFactory()
         response: HttpResponse = None
         self.url = urljoin(smarter_settings.environment_url, "/api/v1/cli/apply")
@@ -88,9 +89,7 @@ class Command(BaseCommand, AccountMixin):
             request: WSGIRequest = request_factory.post(self.url, data=manifest_data, content_type="application/json")
             request.user = self.user
             force_authenticate(request, user=self.user)
-            self.stdout.write(
-                self.style.NOTICE(f"Sending POST request to {self.url} with authenticated user {request.user}.")
-            )
+            self.stdout.write(f"Sending POST request to {self.url} with authenticated user {request.user}.")
             api_v1_cli_apply_view = ApiV1CliApplyApiView.as_view()
             response: HttpResponse = api_v1_cli_apply_view(request=request)
 
@@ -128,9 +127,7 @@ class Command(BaseCommand, AccountMixin):
         - check the response
         """
         self.stdout.write(
-            self.style.NOTICE(
-                f"Creating plugin from manifest {yaml_file} for account {self.account.account_number} {self.account.company_name}."
-            )
+            f"Creating plugin from manifest {yaml_file} for account {self.account.account_number} {self.account.company_name}."
         )
         file_data = self.read_file(file_path=yaml_file)
         parsed_manifest_data = self.parse_yaml(file_data)
