@@ -121,6 +121,7 @@ FROM data AS application
 # do this last so that we can take advantage of Docker's caching mechanism.
 WORKDIR /home/smarter_user/
 COPY --chown=smarter_user:smarter_user ./smarter ./smarter
+COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/chatbot/data/ ./data/manifests/
 
 # Collect static files
 ############################## collectassets ##################################
