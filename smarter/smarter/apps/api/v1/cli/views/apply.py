@@ -1,5 +1,8 @@
 # pylint: disable=W0613
-"""Smarter API command-line interface 'apply' view"""
+"""
+Smarter API command-line interface 'apply' view
+/api/v1/cli/apply/
+"""
 
 from django.core.handlers.wsgi import WSGIRequest
 from drf_yasg.utils import swagger_auto_schema
