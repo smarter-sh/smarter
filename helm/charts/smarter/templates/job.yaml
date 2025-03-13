@@ -65,6 +65,10 @@ spec:
               value: "{{ .Values.env.MYSQL_USER }}"
             - name: MYSQL_PASSWORD
               value: "{{ .Values.env.MYSQL_PASSWORD }}"
+            - name: MYSQL_ROOT_USERNAME
+              value: "{{ .Values.env.MYSQL_ROOT_USERNAME }}"
+            - name: MYSQL_ROOT_PASSWORD
+              value: "{{ .Values.env.MYSQL_ROOT_PASSWORD }}"
             - name: OPENAI_API_KEY
               value: "{{ .Values.env.OPENAI_API_KEY }}"
             - name: PINECONE_API_KEY
