@@ -26,19 +26,21 @@ spec:
               python manage.py makemigrations
               python manage.py migrate
               python manage.py create_smarter_admin --username "{{ .Values.env.SMARTER_ADMIN_USERNAME }}" --email "{{ .Values.env.SMARTER_ADMIN_USERNAME }}@{{ .Values.env.ROOT_DOMAIN }}" --password "{{ .Values.env.SMARTER_ADMIN_PASSWORD }}"
-              python manage.py create_user --account_number 3141-5926-5359 --username staff_user --email staff@smarter.sh --password "{{ .Values.env.SMARTER_ADMIN_PASSWORD }}" --first_name Staff --last_name User --admin
-              python manage.py create_user --account_number 3141-5926-5359 --username customer_user --email customer@smarter.sh --password "{{ .Values.env.SMARTER_ADMIN_PASSWORD }}" --first_name Customer --last_name User
               python manage.py create_account --account_number 5680-6558-6577 --company_name 'University of British Columbia'
               python manage.py create_account --account_number 4386-2072-3294 --company_name 'Beta Users'
+              python manage.py create_user --account_number 3141-5926-5359 --username staff_user --email staff@smarter.sh --password "{{ .Values.env.SMARTER_ADMIN_PASSWORD }}" --first_name Staff --last_name User --admin
+              python manage.py create_user --account_number 3141-5926-5359 --username customer_user --email customer@smarter.sh --password "{{ .Values.env.SMARTER_ADMIN_PASSWORD }}" --first_name Customer --last_name User
               python manage.py initialize_waffle
               python manage.py initialize_wagtail
-              python manage.py add_plugin_examples admin
               python manage.py verify_dns_configuration
+              python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/QueriumCorp/smarter-demo
+              python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/smarter-sh/examples --repo_version 2
+              python manage.py load_from_github --account_number 5680-6558-6577 --username admin --url https://github.com/smarter-sh/examples --repo_version 2
+              python manage.py load_from_github --account_number 4386-2072-3294 --username admin --url https://github.com/smarter-sh/examples --repo_version 2
+              python manage.py add_plugin_examples admin
               python manage.py deploy_builtin_chatbots --account_number 3141-5926-5359
               python manage.py deploy_builtin_chatbots --account_number 4386-2072-3294
               python manage.py deploy_builtin_chatbots --account_number 5680-6558-6577
-              python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/QueriumCorp/smarter-demo
-              python manage.py load_from_github --account_number 3141-5926-5359 --username admin --url https://github.com/smarter-sh/examples --repo_version 2
           command:
             - /bin/sh
             - -c

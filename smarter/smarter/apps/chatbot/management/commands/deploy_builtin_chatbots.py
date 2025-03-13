@@ -51,7 +51,7 @@ class Command(BaseCommand, AccountMixin):
         Read the data from a file.
         file_path: The path to the file.
         """
-        self.stdout.write(self.style.NOTICE(f"Reading file {file_path}."))
+        self.stdout.write(f"Reading file {file_path}.")
         with open(file_path, encoding="utf-8") as file:
             data = file.read()
             return data
@@ -61,7 +61,7 @@ class Command(BaseCommand, AccountMixin):
         Parse a yaml file.
         data: a string representing the yaml file.
         """
-        self.stdout.write(self.style.NOTICE("Parsing yaml file."))
+        self.stdout.write("Parsing yaml file.")
         try:
             manifest_data: dict = yaml.safe_load(data)
             return manifest_data
@@ -151,9 +151,7 @@ class Command(BaseCommand, AccountMixin):
         - deploy the chatbot as a Celery task
         """
         self.stdout.write(
-            self.style.NOTICE(
-                f"Creating and deploying chatbot from manifest {yaml_file} for account {self.account.account_number} {self.account.company_name}."
-            )
+            f"Creating and deploying chatbot from manifest {yaml_file} for account {self.account.account_number} {self.account.company_name}."
         )
         chatbot: ChatBot = None
 
@@ -218,7 +216,7 @@ class Command(BaseCommand, AccountMixin):
             self.stdout.write(self.style.NOTICE(f"Creating Plugin {i} of {len(plugin_files)}"))
             self.stdout.write(self.style.NOTICE("-" * 80))
             self.create_plugin(yaml_file=yaml_file)
-            self.stdout.write(self.style.NOTICE(""))
+            self.stdout.write(self.style.NOTICE("\n"))
 
         chatbots_path = os.path.join(smarter_settings.data_directory, "manifests/chatbots/*.yaml")
         chatbot_files = glob.glob(chatbots_path)
@@ -228,3 +226,4 @@ class Command(BaseCommand, AccountMixin):
             self.stdout.write(self.style.NOTICE(f"Creating ChatBot {i} of {len(chatbot_files)}"))
             self.stdout.write(self.style.NOTICE("-" * 80))
             self.create_and_deploy_chatbot(yaml_file=yaml_file)
+            self.stdout.write(self.style.NOTICE("\n"))
