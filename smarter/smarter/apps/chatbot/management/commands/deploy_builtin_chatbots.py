@@ -194,7 +194,7 @@ class Command(BaseCommand, AccountMixin):
     def handle(self, *args, **options):
 
         if not options["account_number"]:
-            self.stderr.write(self.style.ERROR("You must provide an account number."))
+            raise SmarterValueError("You must provide an account number.")
 
         self.account_number = options["account_number"]
         self.user = get_cached_admin_user_for_account(account=self.account)
