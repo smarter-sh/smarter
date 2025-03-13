@@ -492,7 +492,7 @@ class Settings(BaseSettings):
     @property
     def data_directory(self) -> str:
         """Data directory"""
-        return "/data"
+        return "/home/smarter_user/data"
 
     @property
     def aws_apigateway_name(self) -> str:

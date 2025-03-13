@@ -210,7 +210,7 @@ class Command(BaseCommand, AccountMixin):
         )
         self.stdout.write(self.style.NOTICE("=" * 80))
 
-        plugins_path = os.path.abspath("/home/smarter_user/data/manifests/plugins/*.yaml")
+        plugins_path = os.path.join(smarter_settings.data_directory, "manifests/plugins/*.yaml")
         plugin_files = glob.glob(plugins_path)
         i = 0
         for yaml_file in plugin_files:
@@ -220,7 +220,7 @@ class Command(BaseCommand, AccountMixin):
             self.create_plugin(yaml_file=yaml_file)
             self.stdout.write(self.style.NOTICE(""))
 
-        chatbots_path = os.path.abspath("/home/smarter_user/data/manifests/chatbots/*.yaml")
+        chatbots_path = os.path.join(smarter_settings.data_directory, "manifests/chatbots/*.yaml")
         chatbot_files = glob.glob(chatbots_path)
         i = 0
         for yaml_file in chatbot_files:
