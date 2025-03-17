@@ -178,7 +178,7 @@ class SettingsDefaults:
 
     # defaults for this Python package
     ENVIRONMENT = os.environ.get("ENVIRONMENT", TFVARS.get("environment", SmarterEnvironments.LOCAL))
-    ROOT_DOMAIN = os.environ.get("ROOT_DOMAIN", TFVARS.get("root_domain", "example.com"))
+    ROOT_DOMAIN = os.environ.get("ROOT_DOMAIN", TFVARS.get("root_domain", "smarter.sh"))
     SHARED_RESOURCE_IDENTIFIER = os.environ.get(
         "SHARED_RESOURCE_IDENTIFIER", TFVARS.get("shared_resource_identifier", "smarter")
     )
