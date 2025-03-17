@@ -202,7 +202,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
                     self.account,
                     self.chatbot_id,
                 )
-            return JsonResponse({}, status=HTTPStatus.NOT_FOUND)
+            return JsonResponse({}, status=HTTPStatus.NOT_FOUND.value)
 
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
             logger.info("%s.dispatch() - url=%s", self.formatted_class_name, self.url)
@@ -229,10 +229,10 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
                 },
             }
             self.chatbot_helper.log_dump()
-            return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST)
+            return JsonResponse(data=data, status=HTTPStatus.BAD_REQUEST.value)
         if self.chatbot_helper.is_authentication_required and not request.user.is_authenticated:
             data = {"message": "Forbidden. Please provide a valid API key."}
-            return JsonResponse(data=data, status=HTTPStatus.FORBIDDEN)
+            return JsonResponse(data=data, status=HTTPStatus.FORBIDDEN.value)
 
         self.plugins = ChatBotPlugin().plugins(chatbot=self.chatbot)
 
@@ -282,7 +282,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
             "user": self.user.username if self.user else None,
             "meta": self.chatbot_helper.to_json() if self.chatbot_helper else None,
         }
-        return JsonResponse(data=retval, status=HTTPStatus.OK)
+        return JsonResponse(data=retval, status=HTTPStatus.OK.value)
 
     # pylint: disable=W0613
     def post(self, request, *args, name: str = None, **kwargs):
@@ -296,7 +296,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         where
          - `customer-service' == chatbot.name`
          - `3141-5926-5359 == chatbot.account.account_number`
-         - `api.smarter.sh == smarter_settings.customer_api_domain`
+         - `api.smarter.sh == smarter_settings.environment_api_domain`
 
         URL with custom domain
         -------------------
@@ -332,7 +332,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
                 safe=False,
                 thing=SmarterJournalThings(SmarterJournalThings.CHATBOT),
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
-                status=HTTPStatus.NOT_FOUND,
+                status=HTTPStatus.NOT_FOUND.value,
             )
         handler = chat_providers.get_handler(provider=self.chatbot.provider)
         if not self.chat_helper:
@@ -342,7 +342,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
                 safe=False,
                 thing=SmarterJournalThings(SmarterJournalThings.CHATBOT),
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
-                status=HTTPStatus.NOT_FOUND,
+                status=HTTPStatus.NOT_FOUND.value,
             )
         response = handler(chat=self.chat_helper.chat, data=self.data, plugins=self.plugins, user=self.user)
         response = {
@@ -353,7 +353,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
             data=response,
             command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
             thing=SmarterJournalThings(SmarterJournalThings.CHATBOT),
-            status=HTTPStatus.OK,
+            status=HTTPStatus.OK.value,
             safe=False,
         )
         self.helper_logger(("%s response=%s", self.formatted_class_name, response))

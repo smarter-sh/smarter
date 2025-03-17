@@ -21,7 +21,7 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         hashed_slug = hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:16]
-        self.domain_name = f"{hashed_slug}.{smarter_settings.customer_api_domain}"
+        self.domain_name = f"{hashed_slug}.{smarter_settings.environment_api_domain}"
 
         self.user, self.account, self.user_profile = admin_user_factory()
 
@@ -72,8 +72,8 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
         self.assertTrue(helper.is_custom_domain is False, f"this is not a default domain {helper.url}")
         self.assertTrue(helper.chatbot.deployed is True)
         self.assertTrue(
-            helper.api_host == smarter_settings.customer_api_domain,
-            f"Expected {smarter_settings.customer_api_domain}, but got {helper.api_host}",
+            helper.api_host == smarter_settings.environment_api_domain,
+            f"Expected {smarter_settings.environment_api_domain}, but got {helper.api_host}",
         )
 
     def test_bad_url(self):

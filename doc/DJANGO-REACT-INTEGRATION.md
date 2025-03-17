@@ -81,7 +81,7 @@ See this complete [example config](./json/reactapp.config.json) json dict, based
 
 ## Django Template Engine Configuration
 
-The Django template engine needs to know how to find React-rendered html templates. Note that React's builds are generated in a subfolder named `dist` located in the root folder of the React project, and that it's `index.html` entry point file contains links to auto-generated css and js bundles, meaning that the rendered index.html is specific to the resources in the build that generated it, and it therefore cannot be generalized/templated. Thus, we need a way to gracefully enable Django's templating engine to 'discover' these apps in whichever Django apps they might exist, so that these files can be served by Django templates as-is. To this end we've created a custom React [template loader](./smarter/smarter/template_loader.py) and a 2nd template engine located in [base.py](./smarter/smarter/settings/base.py) that references the custom loader. We additionally created this custom [base template](./smarter/smarter/templates//smarter/base_react.html) for React that ensures that React's `<div id="root"></div>` DOM element and it's js entry point bundle are correctly placed with the DOM.
+The Django template engine needs to know how to find React-rendered html templates. Note that React's builds are generated in a subfolder named `dist` located in the root folder of the React project, and that it's `index.html` entry point file contains links to auto-generated css and js bundles, meaning that the rendered index.html is specific to the resources in the build that generated it, and it therefore cannot be generalized/templated. Thus, we need a way to gracefully enable Django's templating engine to 'discover' these apps in whichever Django apps they might exist, so that these files can be served by Django templates as-is. To this end we've created a custom React [template loader](./smarter/smarter/template_loader.py) and a 2nd template engine located in [base.py](./smarter/smarter/settings/base.py) that references the custom loader. We additionally created this custom [base template](./smarter/smarter/templates//chatapp/base_react.html) for React that ensures that React's `<div id="root"></div>` DOM element and it's js entry point bundle are correctly placed with the DOM.
 
 ```python
 class ReactAppLoader(FilesystemLoader):
@@ -130,7 +130,7 @@ class ReactAppLoader(FilesystemLoader):
 
 The original `index.html` created by Vite is replaced with this Django template. Note that this template is first processed by React's build process, which will convert the `main.jsx` reference to an actual js bundle filename. And then afterwards, Django's collectstatic procedure will copy the `dist` folder contents to the staticfiles folder, to be served by Django's static asset server.
 
-smarter/base_react.html:
+chatapp/base_react.html:
 
 ```django
 {% extends "smarter/base.html" %}
@@ -152,7 +152,7 @@ smarter/base_react.html:
 Example Django view template for serving a React app:
 
 ```django
-{% extends "smarter/base_react.html" %}
+{% extends "chatapp/base_react.html" %}
 
 {% block canonical %}
 <link rel="canonical" href="/chatapp/" />

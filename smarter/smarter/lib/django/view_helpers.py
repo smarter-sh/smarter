@@ -7,7 +7,7 @@ from django import template
 from django.conf import settings
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseNotFound
+from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.utils.cache import patch_vary_headers
 from django.utils.decorators import method_decorator
@@ -18,6 +18,8 @@ from django.views.decorators.cache import cache_control, cache_page, never_cache
 from htmlmin.main import minify
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.common.classes import SmarterHelperMixin
+from smarter.lib.django.views.error import SmarterHttpResponseNotFound
 
 
 logger = logging.getLogger(__name__)
@@ -36,7 +38,7 @@ def redirect_and_expire_cache(path: str = "/"):
 # ------------------------------------------------------------------------------
 # Web Views
 # ------------------------------------------------------------------------------
-class SmarterView(View):
+class SmarterView(View, SmarterHelperMixin):
     """
     Base view for smarter views.
     """
@@ -129,7 +131,7 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
             if not request.user.is_authenticated:
                 return redirect_and_expire_cache(path="/login/")
             logger.error("SmarterAuthenticatedWebView.dispatch(): UserProfile.DoesNotExist")
-            return HttpResponseNotFound
+            return SmarterHttpResponseNotFound(request=request, error_message="User profile not found")
 
         self.account = self.user_profile.account
 

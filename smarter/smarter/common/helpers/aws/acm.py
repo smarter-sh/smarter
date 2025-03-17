@@ -134,7 +134,11 @@ class AWSCertificateManager(AWSBase):
         while not self.certificate_is_verified(certificate_arn=certificate_arn):
             attempts += 1
             if attempts >= max_attempts:
-                raise AWSACMVerificationFailed(f"Failed to verify ACM certificate ARN {certificate_arn}")
+                try:
+                    raise AWSACMVerificationFailed(f"Failed to verify ACM certificate ARN {certificate_arn}")
+                except AWSACMVerificationFailed as e:
+                    logger.exception(e)
+                    return False
             time.sleep(sleep_interval)
         return True
 

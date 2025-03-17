@@ -1,4 +1,6 @@
 User-agent: *
 Disallow: /admin/
 Disallow: /login/
+Disallow: /dashboard/
 Allow: /
+Sitemap: /sitemap.xml

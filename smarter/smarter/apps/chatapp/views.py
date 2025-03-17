@@ -5,10 +5,11 @@ information about how the React app is integrated into the Django app.
 
 import logging
 from http import HTTPStatus
+from urllib.parse import urljoin
 
 import waffle
 from django.db import models
-from django.http import HttpResponseServerError, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import render
 
 # from django.utils.decorators import method_decorator
@@ -32,12 +33,18 @@ from smarter.apps.plugin.models import (
     PluginSelectorHistory,
     PluginSelectorHistorySerializer,
 )
+from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.common.exceptions import SmarterExceptionBase, SmarterValueError
 from smarter.common.helpers.url_helpers import clean_url
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
+from smarter.lib.django.views.error import (
+    SmarterHttpResponseNotFound,
+    SmarterHttpResponseServerError,
+)
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
 from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
 from smarter.lib.journal.http import (
@@ -111,7 +118,6 @@ class SmarterChatSession(SmarterRequestMixin, SmarterHelperMixin):
 
 
 # pylint: disable=R0902
-# @method_decorator(csrf_exempt, name="dispatch")
 class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
     """
     Chat config view for smarter web. This view is protected and requires the user
@@ -176,7 +182,7 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
         self.session = SmarterChatSession(request, chatbot=self.chatbot)
 
         if not self.chatbot:
-            return JsonResponse({"error": "Not found"}, status=404)
+            return JsonResponse({"error": "Not found"}, status=HTTPStatus.NOT_FOUND.value)
 
         self.thing = SmarterJournalThings(SmarterJournalThings.CHAT_CONFIG)
         self.command = SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT_CONFIG)
@@ -256,12 +262,11 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
         return retval
 
 
-# @method_decorator(csrf_exempt, name="dispatch")
-class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
+class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
     """
     Chat app view for smarter web. This view is protected and requires the user
-    to be authenticated. It works with deployed ChatBots. The url is expected to
-    be in one of three formats.
+    to be authenticated. It works with deployed and not-yet-deployed ChatBots.
+    The url is expected to be in one of three formats.
 
     Sandbox mode:
     - http://smarter.querium.com/chatapp/hr/
@@ -269,27 +274,39 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
 
     Production mode:
     - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatapp/
-    - https://hr.smarter.querium.com/chatapp/
-
 
     It serves the chat app's main page within the Smarter
-    dashboard web app. React builds are served from the static directory and the
-    build assets use hashed file names, so we probably don't really need to worry
-    about cache behavior. However, we're using the `never_cache` decorator to
+    dashboard web app. React builds are served from an AWS Cloudfront CDN
+    such as https://cdn.platform.smarter.sh/ui-chat/index.html, which
+    returns an html snippet containing reactjs build artifacts such as:
+
+        <script type="module" crossorigin src="https://cdn.platform.smarter.sh/ui-chat/assets/main-BNT0OHb-.js"></script>
+        <link rel="stylesheet" crossorigin href="https://cdn.platform.smarter.sh/ui-chat/assets/main-D14Wl0PM.css">
+
+    Our Django template will inject this html snippet into the DOM, and
+    the React app will take over from there.
+
+    Cache behavior:
+    We probably don't need to worry about cache behavior.
+    Nonetheless, we're using the `never_cache` decorator to
     ensure that the browser doesn't cache the page itself, which could cause
     problems if the user logs out and then logs back in without refreshing the
     page.
-
-    template_path: Keep in mind that the index.html entry point for the React
-    app is served from the static directory, not the templates directory. This
-    is because the React app is built and served as a static asset. The
-    `template_path` attribute is used to specify the path to the final index.html file
-    which is first built by npm and then later copied to the Django static directory
-    via the Django manage.py `collectstatic` command. This is why the path is
-    relative to the static directory, not the templates directory.
     """
 
-    template_path = "index.html"
+    template_path = "chatapp/workbench.html"
+
+    # The React app originates from https://github.com/smarter-sh/smarter-chat
+    # and is built-deployed to AWS Cloudfront. The React app is served from
+    # a url like: https://cdn.platform.smarter.sh/ui-chat/index.html
+    reactjs_cdn_path = "/ui-chat/app-loader.js"
+    reactjs_loader_url = urljoin(smarter_settings.environment_cdn_url, reactjs_cdn_path)
+
+    # start with a string like: "smarter.sh/v1/ui-chat/root"
+    # then convert it into an html safe id like: "smarter-sh-v1-ui-chat-root"
+    div_root_id = SmarterApiVersions.V1 + reactjs_cdn_path.replace("app-loader.js", "root")
+    div_root_id = div_root_id.replace(".", "-").replace("/", "-")
+
     chatbot: ChatBot = None
     chatbot_helper: ChatBotHelper = None
     url: str = None
@@ -302,24 +319,32 @@ class ChatAppView(SmarterAuthenticatedNeverCachedWebView):
         self.url = request.build_absolute_uri()
 
         try:
-            logger.info(
-                "ChatAppView - url=%s, account=%s, user=%s, name=%s",
-                self.url,
-                self.account,
-                self.user_profile.user,
-                name,
-            )
+            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_REACTAPP_DEBUG_MODE):
+                logger.info(
+                    "%s - url=%s, account=%s, user=%s, name=%s",
+                    self.formatted_class_name,
+                    self.url,
+                    self.account,
+                    self.user_profile.user,
+                    name,
+                )
             self.chatbot_helper = ChatBotHelper(request=request, name=name)
             self.chatbot = self.chatbot_helper.chatbot if self.chatbot_helper.chatbot else None
             if not self.chatbot:
                 raise ChatBot.DoesNotExist
         except ChatBot.DoesNotExist:
-            return render(request=request, template_name="404.html", status=404)
+            return SmarterHttpResponseNotFound(request=request, error_message="ChatBot not found")
         # pylint: disable=broad-except
         except Exception as e:
-            return HttpResponseServerError(f"Error: {e}")
+            return SmarterHttpResponseServerError(request=request, error_message=str(e))
 
-        return render(request=request, template_name=self.template_path)
+        context = {
+            "div_id": self.div_root_id,
+            "app_loader_url": self.reactjs_loader_url,
+            "chatbot_api_url": self.chatbot.url,
+            "toggle_metadata": False,
+        }
+        return render(request=request, template_name=self.template_path, context=context)
 
 
 class ChatAppListView(SmarterAuthenticatedNeverCachedWebView):
@@ -329,7 +354,7 @@ class ChatAppListView(SmarterAuthenticatedNeverCachedWebView):
     ChatBots.
     """
 
-    template_path = "chatapps/listview.html"
+    template_path = "chatbot/listview.html"
     chatbots: models.QuerySet[ChatBot] = None
     chatbot_helpers: list[ChatBotHelper] = []
 
@@ -348,14 +373,6 @@ class ChatAppListView(SmarterAuthenticatedNeverCachedWebView):
                     return True
 
         smarter_admin = get_cached_smarter_admin_user_profile()
-        # get all of the smarter demo chatbots
-        # smarter_demo_chatbots = ChatBot.objects.filter(account=smarter_admin.account)
-        # for chatbot in smarter_demo_chatbots:
-        #     logger.info("ChatAppListView - chatbot=%s", chatbot)
-        #     chatbot_helper = ChatBotHelper(request=request, name=chatbot.name, chatbot_id=chatbot.id)
-        #     self.chatbot_helpers.append(chatbot_helper)
-
-        # get all chatbots for the account
         self.chatbots = ChatBot.objects.filter(account=self.account)
 
         for chatbot in self.chatbots:
