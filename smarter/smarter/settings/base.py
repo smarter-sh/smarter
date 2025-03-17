@@ -50,6 +50,7 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https?://[\w-]+\.localhost:\d+$",
     r"^https?://[\w-]\.api\.localhost:\d+$",
 ]
+CORS_ALLOWED_ORIGINS = []
 
 # -------------------------------
 # Cross Site Request Forgery (CSRF) settings
@@ -62,7 +63,10 @@ CSRF_COOKIE_DOMAIN = smarter_settings.environment_domain
 CSRF_COOKIE_PATH = "/"
 CSRF_COOKIE_HTTPONLY = False
 CSRF_HEADER_NAME = "HTTP_X_CSRFTOKEN"
-CSRF_TRUSTED_ORIGINS = []
+CSRF_TRUSTED_ORIGINS = [
+    smarter_settings.environment_domain,
+    smarter_settings.environment_api_domain,
+]
 CSRF_USE_SESSIONS = False
 
 
@@ -176,12 +180,12 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     # this replaces corsheaders.middleware.CorsMiddleware"
-    "smarter.apps.chatbot.middleware.cors.CorsMiddleware",
+    "smarter.lib.django.middleware.cors.CorsMiddleware",
     # this replaces django.middleware.security.SecurityMiddleware
     # simple middleware to block requests for common sensitive files
     # like .env, private key files, etc.
     # -------------------------------
-    "smarter.lib.django.middleware.BlockSensitiveFilesMiddleware",
+    "smarter.lib.django.middleware.sensitive_files.BlockSensitiveFilesMiddleware",
     #
     # -------------------------------
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -191,7 +195,7 @@ MIDDLEWARE = [
     # this replaces django.middleware.csrf.CsrfViewMiddleware
     # to add chatbot-specific CSRF handling
     # -------------------------------
-    "smarter.apps.chatbot.middleware.csrf.CsrfViewMiddleware",
+    "smarter.lib.django.middleware.csrf.CsrfViewMiddleware",
     #
     # -------------------------------
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -202,7 +206,7 @@ MIDDLEWARE = [
     # -------------------------------
     # to ensure that all http responses are in json format
     # -------------------------------
-    "smarter.apps.chatbot.middleware.json.JsonErrorMiddleware",
+    "smarter.lib.django.middleware.json.JsonErrorMiddleware",
     # -------------------------------
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -248,7 +252,6 @@ TEMPLATES = [
         "APP_DIRS": False,
         "OPTIONS": {
             "loaders": [
-                "smarter.apps.chatapp.template_loaders.ReactAppLoader",
                 "django.template.loaders.filesystem.Loader",
             ],
             "context_processors": [

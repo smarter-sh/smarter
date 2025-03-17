@@ -142,7 +142,7 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
 
         # hosted zone for the Customer api domain
         api_hosted_zone_id = aws_helper.route53.get_hosted_zone_id_for_domain(
-            domain_name=smarter_settings.customer_api_domain
+            domain_name=smarter_settings.environment_api_domain
         )
 
         call_command(

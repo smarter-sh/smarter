@@ -44,7 +44,7 @@ class PaymentMethodsListView(AccountListViewBase):
         if self.request.user.is_superuser or self.request.user.is_staff:
             account = get_object_or_404(UserProfile, user=self.request.user).account
             return PaymentMethod.objects.filter(account=account)
-        return HttpResponse("Unauthorized", status=HTTPStatus.UNAUTHORIZED)
+        return HttpResponse("Unauthorized", status=HTTPStatus.UNAUTHORIZED.value)
 
 
 # -----------------------------------------------------------------------
@@ -58,9 +58,9 @@ def validate_request_body(request):
                 f"Invalid request data. Was expecting a dictionary but received {type(request.data)}."
             )
     except ValidationError as e:
-        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
+        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST.value)
     except Exception as e:
-        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
+        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST.value)
     return None
 
 
@@ -69,13 +69,13 @@ def get_payment_method(request, payment_method_id: int):
     account: Account = None
 
     if not request.user.is_superuser and not request.user.is_staff:
-        return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
+        return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED.value)
 
     try:
         payment_method = PaymentMethod.objects.get(id=payment_method_id)
         account = payment_method.account
     except PaymentMethod.DoesNotExist:
-        return JsonResponse({"error": "Payment method not found"}, status=HTTPStatus.NOT_FOUND)
+        return JsonResponse({"error": "Payment method not found"}, status=HTTPStatus.NOT_FOUND.value)
 
     if isinstance(request.user, User):
         user_profile = UserProfile.objects.get(user=request.user)
@@ -87,9 +87,11 @@ def get_payment_method(request, payment_method_id: int):
         or (user_profile.account == account and request.user.is_staff)
     ):
         serializer = PaymentMethodSerializer(payment_method)
-        return Response(serializer.data, status=HTTPStatus.OK)
+        return Response(serializer.data, status=HTTPStatus.OK.value)
 
-    return JsonResponse({"error": "You are not authorized to modify this account."}, status=HTTPStatus.UNAUTHORIZED)
+    return JsonResponse(
+        {"error": "You are not authorized to modify this account."}, status=HTTPStatus.UNAUTHORIZED.value
+    )
 
 
 def create_payment_method(request):
@@ -98,7 +100,7 @@ def create_payment_method(request):
     data: dict = None
 
     if not request.user.is_superuser and not request.user.is_staff:
-        return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
+        return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED.value)
 
     validate_request_body(request)
     data = request.data
@@ -107,13 +109,13 @@ def create_payment_method(request):
     try:
         account = UserProfile.objects.get(user=request.user).account
     except UserProfile.DoesNotExist:
-        return JsonResponse({"error": "User is not associated with any account."}, status=HTTPStatus.UNAUTHORIZED)
+        return JsonResponse({"error": "User is not associated with any account."}, status=HTTPStatus.UNAUTHORIZED.value)
 
     try:
         data["account"] = account
         payment_method = PaymentMethod.objects.create(**data)
     except Exception as e:
-        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST)
+        return JsonResponse({"error": "Invalid request data", "exception": str(e)}, status=HTTPStatus.BAD_REQUEST.value)
 
     return HttpResponseRedirect(request.path_info + str(payment_method.id) + "/")
 
@@ -124,7 +126,7 @@ def update_payment_method(request):
     payment_method_to_update: UserType = None
 
     if not request.user.is_superuser and not request.user.is_staff:
-        return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
+        return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED.value)
 
     validate_request_body(request)
     data = request.data
@@ -133,7 +135,7 @@ def update_payment_method(request):
         payment_method = PaymentMethod.objects.get(id=request.data.get("id"))
         account = payment_method.account
     except PaymentMethod.DoesNotExist:
-        return JsonResponse({"error": "Payment method not found"}, status=HTTPStatus.NOT_FOUND)
+        return JsonResponse({"error": "Payment method not found"}, status=HTTPStatus.NOT_FOUND.value)
 
     if isinstance(request.user, User):
         user_profile = UserProfile.objects.get(user=request.user)
@@ -142,7 +144,9 @@ def update_payment_method(request):
     if isinstance(request.user, User) and not (
         request.user.is_superuser or (user_profile.account == account and request.user.is_staff)
     ):
-        return JsonResponse({"error": "You are not authorized to modify this account."}, status=HTTPStatus.UNAUTHORIZED)
+        return JsonResponse(
+            {"error": "You are not authorized to modify this account."}, status=HTTPStatus.UNAUTHORIZED.value
+        )
 
     try:
         for key, value in data.items():
@@ -152,7 +156,9 @@ def update_payment_method(request):
     except ValidationError as e:
         return JsonResponse({"error": e.message}, status=HTTPStatus.BAD_REQUEST)
     except Exception as e:
-        return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+        return JsonResponse(
+            {"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR.value
+        )
 
     return HttpResponseRedirect(request.path_info)
 
@@ -161,7 +167,7 @@ def delete_payment_method(request, payment_method_id: int = None):
     """delete a plugin by id."""
 
     if not request.user.is_superuser and not request.user.is_staff:
-        return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED)
+        return JsonResponse({"error": "Unauthorized"}, status=HTTPStatus.UNAUTHORIZED.value)
 
     try:
         if payment_method_id:
@@ -169,14 +175,16 @@ def delete_payment_method(request, payment_method_id: int = None):
         else:
             account = UserProfile.objects.get(user=request.user).account
     except UserProfile.DoesNotExist:
-        return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED)
+        return JsonResponse({"error": "User not found"}, status=HTTPStatus.UNAUTHORIZED.value)
 
     try:
         with transaction.atomic():
             account.delete()
             UserProfile.objects.get(user=request.user).delete()
     except Exception as e:
-        return JsonResponse({"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+        return JsonResponse(
+            {"error": "Internal error", "exception": str(e)}, status=HTTPStatus.INTERNAL_SERVER_ERROR.value
+        )
 
     plugins_path = request.path_info.rsplit("/", 2)[0]
     return HttpResponseRedirect(plugins_path)

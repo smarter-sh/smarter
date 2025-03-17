@@ -116,35 +116,12 @@ COPY --chown=smarter_user:smarter_user ./Dockerfile ./data/Dockerfile
 COPY --chown=smarter_user:smarter_user ./Makefile ./data/Makefile
 COPY --chown=smarter_user:smarter_user ./docker-compose.yml ./data/docker-compose.yml
 
-################################## reactapp ###############################
-# we want to do this ahead of the overall ./smarter codebase so that we can
-# take advantage of Docker's caching mechanism, and avoid rebuilding the
-# React app and the node environment on every build.
-FROM data AS reactapp
-
-# Build the React app and collect static files
-WORKDIR /home/smarter_user/
-RUN mkdir -p ./smarter/smarter/apps/chatapp/reactapp
-COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/chatapp/reactapp ./smarter/smarter/apps/chatapp/reactapp
-WORKDIR /home/smarter_user/smarter/smarter/apps/chatapp/reactapp
-RUN mkdir -p /home/smarter_user/.npm
-USER root
-
-# node installation: trying to make this as resilient as possible
-# in light of network issues that have been happening with the npm registry
-# in Azure.
-RUN npm install -g npm@11.0.0 || npm install -g npm@11.0.0 && \
-    npm config set fetch-retry-mintimeout 20000 && \
-    npm config set fetch-retry-maxtimeout 120000
-USER smarter_user
-RUN npm install --legacy-peer-deps || npm install --legacy-peer-deps && \
-    npm run build
-
 ############################## application ##################################
-FROM reactapp AS application
+FROM data AS application
 # do this last so that we can take advantage of Docker's caching mechanism.
 WORKDIR /home/smarter_user/
 COPY --chown=smarter_user:smarter_user ./smarter ./smarter
+COPY --chown=smarter_user:smarter_user ./smarter/smarter/apps/chatbot/data/ ./data/manifests/
 
 # Collect static files
 ############################## collectassets ##################################

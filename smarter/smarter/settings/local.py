@@ -18,7 +18,7 @@ from .base import *
 logger.info("Loading smarter.settings.local")
 
 ENVIRONMENT_DOMAIN = smarter_settings.environment_domain
-CUSTOMER_API_DOMAIN = smarter_settings.customer_api_domain
+ENVIRONMENT_API_DOMAIN = smarter_settings.environment_api_domain
 
 SMARTER_ALLOWED_HOSTS = LOCAL_HOSTS
 
@@ -39,7 +39,10 @@ INSTALLED_APPS += ["django_extensions"]
 #         "debug_toolbar.middleware.DebugToolbarMiddleware",
 #     ]
 
-CORS_ALLOWED_ORIGINS = [
+MIDDLEWARE += [
+    "corsheaders.middleware.CorsMiddleware",
+]
+CORS_ALLOWED_ORIGINS += [
     "http://127.0.0.1:5173",  # Django
     "http://127.0.0.1:3000",  # React
     "http://127.0.0.1:8000",  # Django
@@ -47,6 +50,9 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "http://localhost:3000",
 ]
+CORS_ALLOWED_ORIGINS.append(f"http://{smarter_settings.environment_cdn_domain}")
+CORS_ALLOWED_ORIGINS.append(f"https://{smarter_settings.environment_cdn_domain}")
+
 CSRF_TRUSTED_ORIGINS = [f"http://{host}" for host in smarter_settings.local_hosts]
 CSRF_COOKIE_DOMAIN = ENVIRONMENT_DOMAIN.split(":")[0]
 CSRF_COOKIE_SAMESITE = "lax"
@@ -79,7 +85,7 @@ logger.info("*" * 80)
 logger.info("CORS_ALLOW_HEADERS: %s", CORS_ALLOW_HEADERS)
 logger.info("CORS_ALLOWED_ORIGINS: %s", CORS_ALLOWED_ORIGINS)
 logger.info("CORS_ALLOWED_ORIGIN_REGEXES: %s", CORS_ALLOWED_ORIGIN_REGEXES)
-logger.info("CUSTOMER_API_DOMAIN: %s", CUSTOMER_API_DOMAIN)
+logger.info("ENVIRONMENT_API_DOMAIN: %s", ENVIRONMENT_API_DOMAIN)
 logger.info("ENVIRONMENT_DOMAIN: %s", ENVIRONMENT_DOMAIN)
 logger.info("SECURE_PROXY_SSL_HEADER: %s", SECURE_PROXY_SSL_HEADER)
 logger.info("SMARTER_API_SCHEMA: %s", SMARTER_API_SCHEMA)
