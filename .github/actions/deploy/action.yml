@@ -181,7 +181,7 @@ runs:
       id: get-mysql-root-secret
       uses: ./.github/actions/k8s-get-secret
       with:
-        eks-namespace: apps-hosting-service
+        eks-namespace: ${{ env.NAMESPACE }}
         eks-secret-name: mysql-root
 
     # extract the Django admin user credentials from the Kubernetes secret.
