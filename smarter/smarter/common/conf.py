@@ -41,8 +41,8 @@ from ..lib.django.validators import SmarterValidator
 # our stuff
 from .const import (
     IS_USING_TFVARS,
-    SMARTER_CUSTOMER_API_SUBDOMAIN,
-    SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN,
+    SMARTER_API_SUBDOMAIN,
+    SMARTER_PLATFORM_SUBDOMAIN,
     TFVARS,
     VERSION,
     SmarterEnvironments,
@@ -492,7 +492,7 @@ class Settings(BaseSettings):
     @property
     def data_directory(self) -> str:
         """Data directory"""
-        return "/data"
+        return "/home/smarter_user/data"
 
     @property
     def aws_apigateway_name(self) -> str:
@@ -515,24 +515,31 @@ class Settings(BaseSettings):
     @property
     def environment_cdn_domain(self) -> str:
         """Return the CDN domain."""
+        if self.environment == SmarterEnvironments.LOCAL:
+            return f"cdn.{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
         return f"cdn.{self.environment_domain}"
+
+    @property
+    def environment_cdn_url(self) -> str:
+        """Return the CDN URL."""
+        if self.environment == SmarterEnvironments.LOCAL:
+            return SmarterValidator.urlify(self.environment_cdn_domain, environment=SmarterEnvironments.PROD)
+        return SmarterValidator.urlify(self.environment_cdn_domain, environment=self.environment)
 
     @property
     def environment_domain(self) -> str:
         """Return the complete domain name."""
         if self.environment == SmarterEnvironments.PROD:
-            return SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN + "." + self.root_domain
+            return SMARTER_PLATFORM_SUBDOMAIN + "." + self.root_domain
         if self.environment in SmarterEnvironments.aws_environments:
-            return self.environment + "." + SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN + "." + self.root_domain
+            return self.environment + "." + SMARTER_PLATFORM_SUBDOMAIN + "." + self.root_domain
         if self.environment == SmarterEnvironments.LOCAL:
             return "localhost:8000"
         # default domain format
-        return self.environment + "." + SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN + "." + self.root_domain
+        return self.environment + "." + SMARTER_PLATFORM_SUBDOMAIN + "." + self.root_domain
 
     @property
     def environment_url(self) -> str:
-        if self.environment == SmarterEnvironments.LOCAL:
-            return SmarterValidator.urlify(self.environment_domain, environment=self.environment)
         return SmarterValidator.urlify(self.environment_domain, environment=self.environment)
 
     @property
@@ -543,37 +550,28 @@ class Settings(BaseSettings):
     @property
     def environment_namespace(self) -> str:
         """Return the Kubernetes namespace for the environment."""
-        return f"{self.platform_name}-{SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN}-{settings.environment}"
+        return f"{self.platform_name}-{SMARTER_PLATFORM_SUBDOMAIN}-{settings.environment}"
 
     @property
     def platform_domain(self) -> str:
         """Return the platform domain name. ie platform.smarter.sh"""
-        return f"{SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
+        return f"{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
 
     @property
     def api_domain(self) -> str:
         """Return the root API domain name. ie api.smarter.sh"""
-        return f"{SMARTER_CUSTOMER_API_SUBDOMAIN}.{self.root_domain}"
+        return f"{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
 
     @property
-    def customer_api_domain(self) -> str:
-        """Return the customer API domain name."""
-        if self.environment == SmarterEnvironments.PROD:
-            # api.smarter.sh
-            return f"{SMARTER_CUSTOMER_API_SUBDOMAIN}.{self.root_domain}"
-        if self.environment in SmarterEnvironments.aws_environments:
-            # alpha.api.smarter.sh, beta.api.smarter.sh, next.api.smarter.sh
-            return f"{self.environment}.{SMARTER_CUSTOMER_API_SUBDOMAIN}.{self.root_domain}"
-        if self.environment == SmarterEnvironments.LOCAL:
-            return f"{SMARTER_CUSTOMER_API_SUBDOMAIN}.localhost:8000"
-        # default domain format
-        return f"{self.environment}.{SMARTER_CUSTOMER_API_SUBDOMAIN}.{self.root_domain}"
+    def environment_api_domain(self) -> str:
+        """Return the customer API domain name. ie api.alpha.platform.smarter.sh"""
+        return f"{SMARTER_API_SUBDOMAIN}.{self.environment_domain}"
 
     @property
-    def customer_api_url(self) -> str:
+    def environment_api_url(self) -> str:
         if self.environment == SmarterEnvironments.LOCAL:
-            return SmarterValidator.urlify(self.customer_api_domain, environment=self.environment)
-        return SmarterValidator.urlify(self.customer_api_domain, environment=self.environment)
+            return SmarterValidator.urlify(self.environment_api_domain, environment=self.environment)
+        return SmarterValidator.urlify(self.environment_api_domain, environment=self.environment)
 
     @property
     def aws_s3_bucket_name(self) -> str:

@@ -1,15 +1,7 @@
 # pylint: disable=W0613
 """Django Authentication views."""
-from http import HTTPStatus
-
 from django import forms
 from django.contrib.auth import authenticate, login, logout
-from django.http import (
-    HttpResponseBadRequest,
-    HttpResponseForbidden,
-    HttpResponseServerError,
-)
-from django.shortcuts import HttpResponse
 from django.urls import reverse
 
 from smarter.common.helpers.email_helpers import email_helper
@@ -25,6 +17,12 @@ from smarter.lib.django.view_helpers import (
     SmarterAuthenticatedNeverCachedWebView,
     SmarterNeverCachedWebView,
     redirect_and_expire_cache,
+)
+from smarter.lib.django.views.error import (
+    SmarterHttpResponseBadRequest,
+    SmarterHttpResponseForbidden,
+    SmarterHttpResponseNotFound,
+    SmarterHttpResponseServerError,
 )
 
 
@@ -61,13 +59,19 @@ class LoginView(SmarterNeverCachedWebView):
                 if authenticated_user is not None:
                     login(request, authenticated_user)
                     return redirect_and_expire_cache(path="/")
-                return HttpResponseBadRequest("Username and/or password do not match.")
+                return SmarterHttpResponseBadRequest(
+                    request=request, error_message="Username and/or password do not match."
+                )
             except User.DoesNotExist:
-                return HttpResponseForbidden(f"Invalid login attempt. Unknown user {email}")
+                return SmarterHttpResponseForbidden(
+                    request=request, error_message=f"Invalid login attempt. Unknown user {email}"
+                )
             # pylint: disable=W0718
             except Exception as e:
-                return HttpResponseServerError(f"An unknown error occurred {e.description}")
-        return HttpResponseBadRequest("Received invalid responses.")
+                return SmarterHttpResponseServerError(
+                    request=request, error_message=f"An unknown error occurred {e.description}"
+                )
+        return SmarterHttpResponseBadRequest(request=request, error_message="Received invalid responses.")
 
 
 class LogoutView(SmarterNeverCachedWebView):
@@ -154,11 +158,13 @@ class AccountActivateView(SmarterNeverCachedWebView):
             user.is_active = True
             user.save()
         except User.DoesNotExist:
-            return HttpResponse("Invalid password reset link. User does not exist.", status=404)
+            return SmarterHttpResponseNotFound(
+                request=request, error_message="Invalid password reset link. User does not exist."
+            )
         except (TypeError, ValueError, OverflowError, TokenParseError, TokenConversionError, TokenIntegrityError) as e:
-            return HttpResponse(e, status=HTTPStatus.BAD_REQUEST)
+            return SmarterHttpResponseBadRequest(request=request, error_message=str(e))
         except TokenExpiredError as e:
-            return HttpResponse(e, status=HTTPStatus.UNAUTHORIZED)
+            return SmarterHttpResponseForbidden(request=request, error_message=str(e))
 
         return self.clean_http_response(request, template_path=self.template_path)
 
