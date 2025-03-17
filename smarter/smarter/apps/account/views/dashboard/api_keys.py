@@ -11,6 +11,10 @@ from django.urls import reverse
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.lib.django.view_helpers import SmarterAdminWebView
+from smarter.lib.django.views.error import (
+    SmarterHttpResponseForbidden,
+    SmarterHttpResponseNotFound,
+)
 from smarter.lib.drf.models import SmarterAuthToken
 
 
@@ -93,14 +97,14 @@ class APIKeyView(APIKeyBase):
             api_key.description = apikey_form.cleaned_data["description"]
             api_key.is_active = apikey_form.cleaned_data["is_active"]
             api_key.save()
-            return http.JsonResponse(status=HTTPStatus.OK, data=apikey_form.data)
-        return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data=apikey_form.errors)
+            return http.JsonResponse(status=HTTPStatus.OK.value, data=apikey_form.data)
+        return http.JsonResponse(status=HTTPStatus.BAD_REQUEST.value, data=apikey_form.errors)
 
     def _handle_json(self, request, key_id):
         try:
             api_key = SmarterAuthToken.objects.get(key_id=key_id)
         except SmarterAuthToken.DoesNotExist:
-            return http.JsonResponse(status=HTTPStatus.NOT_FOUND, data={"error": "API Key not found"})
+            return http.JsonResponse(status=HTTPStatus.NOT_FOUND.value, data={"error": "API Key not found"})
 
         data = json.loads(request.body)
         if "action" in data:
@@ -121,7 +125,7 @@ class APIKeyView(APIKeyBase):
                 api_key.is_active = apikey_form.cleaned_data["is_active"]
                 api_key.save()
 
-        return http.JsonResponse(status=HTTPStatus.OK, data={})
+        return http.JsonResponse(status=HTTPStatus.OK.value, data={})
 
     def _handle_write_request(self, request, key_id):
         if request.content_type == "multipart/form-data":
@@ -149,7 +153,7 @@ class APIKeyView(APIKeyBase):
         if key_id is None:
             return self._handle_create(request)
         if not self.is_valid_uuid(key_id):
-            return http.HttpResponseNotFound({"error": "Invalid key_id"})
+            return SmarterHttpResponseNotFound(request=request, error_message="Invalid API Key ID")
 
         try:
             # cases where we received a uuid identifier for an existing api key
@@ -157,7 +161,7 @@ class APIKeyView(APIKeyBase):
             apikey_form = APIKeyForm(instance=apikey)
             if not apikey.has_permissions(user=request.user):
                 return http.JsonResponse(
-                    status=HTTPStatus.FORBIDDEN, data={"error": "You are not allowed to view this api key"}
+                    status=HTTPStatus.FORBIDDEN.value, data={"error": "You are not allowed to view this api key"}
                 )
 
             # ensure that the string value we received is a valid token that
@@ -166,7 +170,7 @@ class APIKeyView(APIKeyBase):
                 if not apikey.validate_token(new_api_key):
                     raise ValueError("Invalid token")
         except (SmarterAuthToken.DoesNotExist, ValueError):
-            return http.HttpResponseNotFound({"error": "API Key not found"})
+            return SmarterHttpResponseNotFound(request=request, error_message="API Key not found")
 
         context = {
             "account_apikeys": {
@@ -191,8 +195,10 @@ class APIKeyView(APIKeyBase):
         try:
             apikey = SmarterAuthToken.objects.get(key_id=key_id)
         except SmarterAuthToken.DoesNotExist:
-            return http.JsonResponse(status=HTTPStatus.NOT_FOUND, data={"error": "API Key not found"})
+            return http.JsonResponse(status=HTTPStatus.NOT_FOUND.value, data={"error": "API Key not found"})
         if not apikey.has_permissions(user=request.user):
-            return http.HttpResponseForbidden({"error": "You are not allowed to delete this api key"})
+            return SmarterHttpResponseForbidden(
+                request=request, error_message="You are not allowed to delete this api key"
+            )
         apikey.delete()
-        return http.JsonResponse(status=HTTPStatus.OK, data={})
+        return http.JsonResponse(status=HTTPStatus.OK.value, data={})

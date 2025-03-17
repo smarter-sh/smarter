@@ -5,7 +5,7 @@ metadata:
     cert-manager.io/cluster-issuer: ${cluster_issuer}
     kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/enable-cors: "true"
-    nginx.ingress.kubernetes.io/cors-allow-origin: "${platform_url}, ${api_url}"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://${domain}"
     nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS, DELETE"
     nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,X-LANG,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,X-Api-Key,X-Device-Id,Access-Control-Allow-Origin,X-CSRFToken"
     nginx.ingress.kubernetes.io/affinity: cookie
@@ -32,16 +32,6 @@ spec:
                   number: 8000
             path: /
             pathType: Prefix
-    - host: "*.${domain}"
-      http:
-        paths:
-          - backend:
-              service:
-                name: ${service_name}
-                port:
-                  number: 8000
-            path: /
-            pathType: Prefix
   # -----------------------------------------------------
   # automagically create tls/ssl cert via cert-manager
   # https://cert-manager.io/docs/usage/ingress/
@@ -49,5 +39,4 @@ spec:
   tls:
     - hosts:
         - ${domain}
-        - "*.${domain}"
       secretName: ${domain}-tls

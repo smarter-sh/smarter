@@ -54,17 +54,17 @@ class SettingsView(SmarterAdminWebView):
         account_form = AccountForm(request.POST, instance=user_profile.account)
         if account_form.is_valid():
             if not self._exists("value", str(account_form.instance.currency), CURRENCIES):
-                return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data={"currency": "Invalid currency."})
+                return http.JsonResponse(status=HTTPStatus.BAD_REQUEST.value, data={"currency": "Invalid currency."})
             if not self._exists("code", str(account_form.instance.country), COUNTRIES):
-                return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data={"country": "Invalid country."})
+                return http.JsonResponse(status=HTTPStatus.BAD_REQUEST.value, data={"country": "Invalid country."})
             if not self._exists("value", str(account_form.instance.language), LANGUAGES):
-                return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data={"language": "Invalid language."})
+                return http.JsonResponse(status=HTTPStatus.BAD_REQUEST.value, data={"language": "Invalid language."})
             if not self._exists("value", str(account_form.instance.timezone), TIMEZONES):
-                return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data={"timezone": "Invalid timezone."})
+                return http.JsonResponse(status=HTTPStatus.BAD_REQUEST.value, data={"timezone": "Invalid timezone."})
 
             account_form.save()
-            return http.JsonResponse(status=HTTPStatus.OK, data={})
-        return http.JsonResponse(status=HTTPStatus.BAD_REQUEST, data=account_form.errors)
+            return http.JsonResponse(status=HTTPStatus.OK.value, data={})
+        return http.JsonResponse(status=HTTPStatus.BAD_REQUEST.value, data=account_form.errors)
 
     # -------------------------------------------------------------------------
     # HTTP override methods

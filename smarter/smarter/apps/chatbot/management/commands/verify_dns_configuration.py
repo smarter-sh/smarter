@@ -5,8 +5,8 @@ from django.core.management.base import BaseCommand
 
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import (
-    SMARTER_CUSTOMER_API_SUBDOMAIN,
-    SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN,
+    SMARTER_API_SUBDOMAIN,
+    SMARTER_PLATFORM_SUBDOMAIN,
     SmarterEnvironments,
 )
 from smarter.common.helpers.aws_helpers import aws_helper
@@ -16,14 +16,14 @@ ALL_DOMAINS = [
     smarter_settings.root_domain,
     smarter_settings.api_domain,
     smarter_settings.platform_domain,
-    f"{SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN}.{smarter_settings.root_domain}",
-    f"{SmarterEnvironments.ALPHA}.{SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN}.{smarter_settings.root_domain}",
-    f"{SmarterEnvironments.BETA}.{SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN}.{smarter_settings.root_domain}",
-    f"{SmarterEnvironments.NEXT}.{SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN}.{smarter_settings.root_domain}",
-    f"{SMARTER_CUSTOMER_API_SUBDOMAIN}.{smarter_settings.root_domain}",
-    f"{SmarterEnvironments.ALPHA}.{SMARTER_CUSTOMER_API_SUBDOMAIN}.{smarter_settings.root_domain}",
-    f"{SmarterEnvironments.BETA}.{SMARTER_CUSTOMER_API_SUBDOMAIN}.{smarter_settings.root_domain}",
-    f"{SmarterEnvironments.NEXT}.{SMARTER_CUSTOMER_API_SUBDOMAIN}.{smarter_settings.root_domain}",
+    f"{SMARTER_PLATFORM_SUBDOMAIN}.{smarter_settings.root_domain}",
+    f"{SmarterEnvironments.ALPHA}.{SMARTER_PLATFORM_SUBDOMAIN}.{smarter_settings.root_domain}",
+    f"{SmarterEnvironments.BETA}.{SMARTER_PLATFORM_SUBDOMAIN}.{smarter_settings.root_domain}",
+    f"{SmarterEnvironments.NEXT}.{SMARTER_PLATFORM_SUBDOMAIN}.{smarter_settings.root_domain}",
+    f"{SMARTER_API_SUBDOMAIN}.{smarter_settings.root_domain}",
+    f"{SmarterEnvironments.ALPHA}.{SMARTER_API_SUBDOMAIN}.{smarter_settings.root_domain}",
+    f"{SmarterEnvironments.BETA}.{SMARTER_API_SUBDOMAIN}.{smarter_settings.root_domain}",
+    f"{SmarterEnvironments.NEXT}.{SMARTER_API_SUBDOMAIN}.{smarter_settings.root_domain}",
 ]
 
 
@@ -475,7 +475,7 @@ class Command(BaseCommand):
 
         self.verify_base_dns_config()
 
-        self.verify(domain=smarter_settings.customer_api_domain, parent_domain=smarter_settings.api_domain)
+        self.verify(domain=smarter_settings.environment_api_domain, parent_domain=smarter_settings.environment_domain)
         self.verify(domain=smarter_settings.environment_domain, parent_domain=smarter_settings.platform_domain)
 
         print("*" * 80)

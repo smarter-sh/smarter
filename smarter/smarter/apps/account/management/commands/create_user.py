@@ -84,7 +84,7 @@ class Command(BaseCommand):
         else:
             if password:
                 self.change_password(username, password)
-                self.stdout.write(self.style.SUCCESS("Updated password."))
+                self.stdout.write(self.style.SUCCESS(f"Updated password for {username}."))
 
         user = User.objects.get(username=username)
         user_profile, created = UserProfile.objects.get_or_create(user=user, account=account)

@@ -5,12 +5,18 @@ import logging
 import time
 from typing import Tuple
 
-# our stuff
+import botocore
+import dns.resolver
+from django.conf import settings
+
+from smarter.common.helpers.console_helpers import formatted_text
+
 from .aws import AWSBase
 from .exceptions import AWSRoute53RecordVerificationTimeout
 
 
 logger = logging.getLogger(__name__)
+module_prefix = "smarter.common.helpers.aws.route53."
 
 
 class AWSHostedZoneNotFound(Exception):
@@ -31,7 +37,7 @@ class AWSRoute53(AWSBase):
 
     def get_hosted_zone(self, domain_name) -> str:
         """Return the hosted zone."""
-        logger.info("get_hosted_zone() domain_name: %s", domain_name)
+        logger.info("%s.get_hosted_zone() domain_name: %s", self.formatted_class_name, domain_name)
         domain_name = self.domain_resolver(domain_name)
         response = self.client.list_hosted_zones()
         for hosted_zone in response["HostedZones"]:
@@ -64,7 +70,7 @@ class AWSRoute53(AWSBase):
                 }
             }
         """
-        logger.info("get_or_create_hosted_zone() domain_name: %s", domain_name)
+        logger.info("%s.get_or_create_hosted_zone() domain_name: %s", self.formatted_class_name, domain_name)
         domain_name = self.domain_resolver(domain_name)
         hosted_zone = self.get_hosted_zone(domain_name)
         if hosted_zone:
@@ -81,21 +87,21 @@ class AWSRoute53(AWSBase):
 
     def get_hosted_zone_id(self, hosted_zone) -> str:
         """Return the hosted zone id."""
-        logger.info("get_hosted_zone_id() hosted_zone: %s", hosted_zone)
+        logger.info("%s.get_hosted_zone_id() hosted_zone: %s", self.formatted_class_name, hosted_zone)
         if hosted_zone:
             return hosted_zone["Id"].split("/")[-1]
         return None
 
     def get_hosted_zone_id_for_domain(self, domain_name) -> str:
         """Return the hosted zone id for the domain."""
-        logger.info("get_hosted_zone_id_for_domain() domain_name: %s", domain_name)
+        logger.info("%s.get_hosted_zone_id_for_domain() domain_name: %s", self.formatted_class_name, domain_name)
         domain_name = self.domain_resolver(domain_name)
         hosted_zone, _ = self.get_or_create_hosted_zone(domain_name)
         return self.get_hosted_zone_id(hosted_zone)
 
     def delete_hosted_zone(self, domain_name):
         # Get the hosted zone id
-        logger.info("delete_hosted_zone() domain_name: %s", domain_name)
+        logger.info("%s.delete_hosted_zone() domain_name: %s", self.formatted_class_name, domain_name)
         domain_name = self.domain_resolver(domain_name)
         hosted_zone_id = self.get_hosted_zone_id_for_domain(domain_name)
 
@@ -132,8 +138,10 @@ class AWSRoute53(AWSBase):
                 ]
             }
         """
+        prefix = self.formatted_class_name + ".get_dns_record()"
         logger.info(
-            "get_dns_record() hosted_zone_id: %s record_name: %s record_type: %s",
+            "%s hosted_zone_id: %s record_name: %s record_type: %s",
+            prefix,
             hosted_zone_id,
             record_name,
             record_type,
@@ -150,9 +158,9 @@ class AWSRoute53(AWSBase):
                     name_match(record_name=record_name, record=record)
                     and str(record["Type"]).upper() == record_type.upper()
                 ):
-                    logger.info("get_dns_record() found record: %s", record)
+                    logger.info("%s found record: %s", prefix, record)
                     return record
-        logger.warning("get_dns_record() did not find record for %s %s", record_name, record_type)
+        logger.warning("%s did not find record for %s %s", prefix, record_name, record_type)
         return None
 
     def get_ns_records(self, hosted_zone_id: str):
@@ -181,7 +189,7 @@ class AWSRoute53(AWSBase):
             },
         ]
         """
-        logger.info("get_ns_records() hosted_zone_id: %s", hosted_zone_id)
+        logger.info("%s.get_ns_records() hosted_zone_id: %s", self.formatted_class_name, hosted_zone_id)
         response = self.client.list_resource_record_sets(HostedZoneId=hosted_zone_id)
         retval = []
         for record in response["ResourceRecordSets"]:
@@ -200,7 +208,7 @@ class AWSRoute53(AWSBase):
         record_value=None,  # can be a single text value of a list of dict
     ) -> Tuple[dict, bool]:
         action: str = None
-        fn_name = "get_or_create_dns_record()"
+        fn_name = self.formatted_class_name + ".get_or_create_dns_record()"
         logger.info(
             "%s hosted_zone_id: %s record_name: %s record_type: %s",
             fn_name,
@@ -236,7 +244,7 @@ class AWSRoute53(AWSBase):
         )
         if fetched_record:
             if match_values(record_value, fetched_record) or match_alias(record_alias_target, fetched_record):
-                logger.info("get_or_create_dns_record() returning matched record: %s", fetched_record)
+                logger.info("%s returning matched record: %s", fn_name, fetched_record)
                 return (fetched_record, False)
             action = "UPSERT"
             logger.info("%s updating %s %s record", fn_name, record_name, record_type)
@@ -301,14 +309,15 @@ class AWSRoute53(AWSBase):
         self,
         hosted_zone_id: str,
         record_name: str,
-        record_type: str,
-        record_ttl: int,
+        record_type: str = "A",
+        record_ttl: int = 600,
         alias_target=None,  # may or may not exist
         record_resource_records=None,  # can be a single text value of a list of dict
     ) -> None:
         """Destroy the DNS record."""
         logger.info(
-            "destroy_dns_record() hosted_zone_id: %s record_name: %s record_type: %s",
+            "%s.destroy_dns_record() hosted_zone_id: %s record_name: %s record_type: %s",
+            self.formatted_class_name,
             hosted_zone_id,
             record_name,
             record_type,
@@ -327,6 +336,7 @@ class AWSRoute53(AWSBase):
         if alias_target:
             change_batch["Changes"][0]["ResourceRecordSet"]["AliasTarget"] = alias_target
         if record_resource_records:
+            record_ttl = record_ttl or change_batch["Changes"][0]["ResourceRecordSet"]["TTL"]
             change_batch["Changes"][0]["ResourceRecordSet"]["TTL"] = record_ttl
             if isinstance(record_resource_records, list):
                 change_batch["Changes"][0]["ResourceRecordSet"]["ResourceRecords"] = [
@@ -354,10 +364,92 @@ class AWSRoute53(AWSBase):
             "ResourceRecords": [{"Value": "192.1.1.1"}]
         }
         """
-        logger.info("get_environment_A_record() domain: %s", domain)
+        logger.info("%s.get_environment_A_record() domain: %s", self.formatted_class_name, domain)
         domain = domain or self.environment_domain
         domain = self.domain_resolver(domain)
         hosted_zone, _ = self.get_or_create_hosted_zone(domain_name=domain)
         hosted_zone_id = self.get_hosted_zone_id(hosted_zone)
         environment_A_record = self.get_dns_record(hosted_zone_id=hosted_zone_id, record_name=domain, record_type="A")
         return environment_A_record
+
+    def verify_dns_record(self, domain_name: str) -> bool:
+        """
+        Verify the DNS record.
+        DNS propagation can take time, and it fluctuates wildly based on the
+        DNS provider and where you are located. In mexico city, it can take
+        up to an hour for AWS Route53 records to propagate. On the other
+        hand, inside the AWS VPC it generally takes less than 5 minutes.
+
+        This function will try to resolve the domain name every 60 seconds
+        for up to 15 minutes. Keep in mind that other Kubernetes
+        functions that depend on DNS records will likely be able to see
+        DNS records if you cannot.
+        """
+        prefix = self.formatted_class_name + ".verify_dns_record()"
+        logger.info("%s - %s", prefix, domain_name)
+        domain_name = self.domain_resolver(domain_name)
+
+        for _ in range(15):
+            try:
+                answers = dns.resolver.resolve(domain_name, "A")
+                if len(answers) > 0:
+                    logger.info("%s domain %s is verified.", prefix, domain_name)
+                    return True
+            except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
+                logger.info("%s did not find domain %s. Sleeping 60 seconds", prefix, domain_name)
+                time.sleep(60)
+        logger.error("Domain %s does not exist or no DNS answer after multiple attempts", domain_name)
+        return False
+
+    def create_domain_a_record(self, hostname: str, api_host_domain: str) -> dict:
+        """Creates an A record inside an AWS Route53 hosted zone."""
+        fn_name = formatted_text(module_prefix + "create_domain_a_record()")
+        logger.info("%s for hostname %s, api_host_domain %s", fn_name, hostname, api_host_domain)
+
+        try:
+            hostname = self.domain_resolver(hostname)
+            api_host_domain = self.domain_resolver(api_host_domain)
+
+            logger.info("%s resolved hostname: %s", fn_name, hostname)
+
+            # add the A record to the customer API domain
+            hosted_zone_id = self.get_hosted_zone_id_for_domain(domain_name=api_host_domain)
+            logger.info("%s found hosted zone %s for parent domain %s", fn_name, hosted_zone_id, api_host_domain)
+
+            # retrieve the A record from the environment domain hosted zone. we'll
+            # use this to create the A record in the customer API domain
+            a_record = self.get_environment_A_record(domain=api_host_domain)
+            if not a_record:
+                raise AWSHostedZoneNotFound(f"Hosted zone not found for domain {api_host_domain}")
+
+            logger.info(
+                "%s propagating A record %s from parent domain %s to deployment target %s",
+                fn_name,
+                a_record,
+                api_host_domain,
+                hostname,
+            )
+
+            deployment_record, created = self.get_or_create_dns_record(
+                hosted_zone_id=hosted_zone_id,
+                record_name=hostname,
+                record_type="A",
+                record_alias_target=a_record["AliasTarget"] if "AliasTarget" in a_record else None,
+                record_value=a_record["ResourceRecords"] if "ResourceRecords" in a_record else None,
+                record_ttl=settings.SMARTER_CHATBOT_TASKS_DEFAULT_TTL,
+            )
+            verb = "Created" if created else "Verified"
+            logger.info(
+                "%s %s deployment DNS record %s AWS Route53 hosted zone %s %s",
+                fn_name,
+                verb,
+                deployment_record,
+                api_host_domain,
+                hosted_zone_id,
+            )
+            return deployment_record
+
+        except botocore.exceptions.ClientError as e:
+            # If the domain already exists, we can ignore the error
+            if "InvalidChangeBatch" not in str(e):
+                raise

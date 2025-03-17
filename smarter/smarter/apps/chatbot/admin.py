@@ -22,14 +22,24 @@ class ChatBotAdmin(RestrictedModelAdmin):
         "created_at",
         "updated_at",
     )
-    list_display = [field.name for field in ChatBot._meta.fields if field.name != "default_system_role"] + [
-        "short_default_system_role"
+    list_display = [
+        "created_at",
+        "updated_at",
+        "url",
+        "account",
+        "name",
+        "deployed",
+        "mode",
+        "ready",
+        "dns_verification_status",
+        "tls_certificate_issuance_status",
     ]
 
-    def short_default_system_role(self, obj):
-        return obj.default_system_role[:50]
+    def ready(self, obj: ChatBot) -> bool:
+        return obj.ready()
 
-    short_default_system_role.short_description = "Default System Role"
+    def mode(self, obj: ChatBot) -> str:
+        return obj.mode(obj.url)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
