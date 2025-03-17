@@ -8,13 +8,14 @@ from urllib.parse import urlparse
 import boto3  # AWS SDK for Python https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
 from botocore.exceptions import ProfileNotFound
 
+from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import Services
 from smarter.common.conf import settings as smarter_settings
 
 # our stuff
 from smarter.common.const import (
-    SMARTER_CUSTOMER_API_SUBDOMAIN,
-    SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN,
+    SMARTER_API_SUBDOMAIN,
+    SMARTER_PLATFORM_SUBDOMAIN,
     SmarterEnvironments,
 )
 
@@ -29,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
-class AWSBase:
+class AWSBase(SmarterHelperMixin):
     """
     AWS helper base class. Responsible for
     - initializing the AWS connection and ensuring that we don't invoke boto3 until we're in a ready state.
@@ -247,15 +248,15 @@ class AWSBase:
         we need to rebuild these in order to reformat the localhost domain into
         a proxy domain that will work with AWS Route53 and Kubernetes
         """
-        return f"{self.environment}.{SMARTER_CUSTOMER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
+        return f"{self.environment}.{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
 
     @property
-    def customer_api_domain(self) -> str:
+    def environment_api_domain(self) -> str:
         """
         we need to rebuild these in order to reformat the localhost domain into
         a proxy domain that will work with AWS Route53 and Kubernetes
         """
-        return f"{self.environment}.{SMARTER_CUSTOMER_API_SUBDOMAIN}.{self.root_domain}"
+        return f"{self.environment}.{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
 
     @property
     def root_domain(self) -> str:
@@ -271,8 +272,8 @@ class AWSBase:
             proxy_domain: str = None
             if smarter_settings.environment_domain in domain:
                 proxy_domain = domain.replace(smarter_settings.environment_domain, self.environment_domain)
-            if smarter_settings.customer_api_domain in domain:
-                proxy_domain = domain.replace(smarter_settings.customer_api_domain, self.customer_api_domain)
+            if smarter_settings.environment_api_domain in domain:
+                proxy_domain = domain.replace(smarter_settings.environment_api_domain, self.environment_api_domain)
             if proxy_domain:
                 SmarterValidator.validate_domain(domain)
                 logger.info("replacing %s with proxy domain %s", domain, proxy_domain)
