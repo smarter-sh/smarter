@@ -12,6 +12,7 @@ from django.conf import settings
 from django.db import models
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.utils.decorators import method_decorator
 
 # from django.utils.decorators import method_decorator
 from django.views import View
@@ -123,6 +124,7 @@ class SmarterChatSession(SmarterRequestMixin, SmarterHelperMixin):
 
 
 # pylint: disable=R0902
+@method_decorator(csrf_exempt, name="dispatch")
 class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
     """
     Chat config view for smarter web. This view is protected and requires the user
@@ -158,7 +160,6 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
             self._chatbot_helper = ChatBotHelper(request=self.request)
         return self._chatbot_helper
 
-    @csrf_exempt
     def dispatch(self, request, *args, chatbot_id: int = None, **kwargs):
         logger.info("%s - dispatch()", self.formatted_class_name)
         name = kwargs.pop("name", None)
