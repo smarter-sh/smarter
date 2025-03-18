@@ -6,6 +6,7 @@ import logging
 
 from django.core.cache import cache
 from django.http import HttpRequest
+from django.views.decorators.csrf import csrf_exempt
 
 from smarter.apps.chatapp.views import ChatConfigView
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
@@ -40,6 +41,7 @@ class ApiV1CliChatConfigApiView(ApiV1CliChatBaseApiView):
     this request.
     """
 
+    @csrf_exempt
     def post(self, request: HttpRequest, name: str, uid: str, *args, **kwargs):
         """
         Api v1 post method for chat config view. Returns the configuration

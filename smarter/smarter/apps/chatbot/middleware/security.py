@@ -15,10 +15,9 @@ from smarter.common.const import SmarterWaffleSwitches
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.views.error import (
     SmarterHttpResponseBadRequest,
-    SmarterHttpResponseNotFound,
 )
 
-from ..models import ChatBot, ChatBotHelper
+from ..models import ChatBot, get_cached_chatbot_by_request
 
 
 logger = logging.getLogger(__name__)
@@ -83,13 +82,8 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         # ---------------------------------------------------------------------
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
             logger.info("%s instantiating ChatBotHelper() for url: %s", self.formatted_class_name, url)
-        try:
-            helper = ChatBotHelper(request=request)
-        except ChatBot.DoesNotExist as e:
-            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
-                logger.error("%s %s failed to instantiate ChatBotHelper(): %s", self.formatted_class_name, url, e)
-            return SmarterHttpResponseNotFound(request=request, error_message="ChatBot not found")
-        if helper.chatbot is not None:
+        chatbot: ChatBot = get_cached_chatbot_by_request(request=request)
+        if chatbot is not None:
             if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
                 logger.info("%s ChatBotHelper() verified that %s is a chatbot.", self.formatted_class_name, url)
             return None
