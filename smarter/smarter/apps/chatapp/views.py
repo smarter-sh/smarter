@@ -19,7 +19,6 @@ from django.views.decorators.csrf import csrf_exempt
 
 # from django.views.decorators.csrf import csrf_exempt
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.permissions import IsAuthenticated
 
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.chat.models import Chat, ChatHelper
@@ -54,6 +53,9 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonErrorResponse,
     SmarterJournaledJsonResponse,
 )
+
+
+# from rest_framework.permissions import IsAuthenticated
 
 
 MAX_RETURNED_PLUGINS = 10
@@ -131,22 +133,36 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
     """
 
     authentication_classes = (SmarterTokenAuthentication, SessionAuthentication)
-    permission_classes = (IsAuthenticated,)
+    # permission_classes = (IsAuthenticated,)
 
     thing: SmarterJournalThings = None
     command: SmarterJournalCliCommands = None
     session: SmarterChatSession = None
-    chatbot_helper: ChatBotHelper = None
+    _chatbot_helper: ChatBotHelper = None
     _chatbot: ChatBot = None
 
     @property
     def chatbot(self):
         return self._chatbot
 
+    @property
+    def chatbot_helper(self) -> ChatBotHelper:
+        if self._chatbot_helper:
+            return self._chatbot_helper
+        if self.chatbot:
+            # throw everything but the kitchen sink at the ChatBotHelper
+            self._chatbot_helper = ChatBotHelper(
+                request=self.request, name=self._chatbot.name, chatbot_id=self._chatbot.id
+            )
+        else:
+            self._chatbot_helper = ChatBotHelper(request=self.request)
+        return self._chatbot_helper
+
     @csrf_exempt
     def dispatch(self, request, *args, chatbot_id: int = None, **kwargs):
         name = kwargs.pop("name", None)
         SmarterRequestMixin.__init__(self, request, *args, **kwargs)
+        logger.warning("%s authentication is disabled for this view.", self.formatted_class_name)
 
         try:
             self._chatbot = get_cached_chatbot_by_request(request=request)
