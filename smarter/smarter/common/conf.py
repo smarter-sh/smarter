@@ -568,11 +568,11 @@ class Settings(BaseSettings):
         if self.environment == SmarterEnvironments.PROD:
             return f"{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
         if self.environment in SmarterEnvironments.aws_environments:
-            return f"{self.environment}.{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
+            return f"{self.environment}.{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
         if self.environment == SmarterEnvironments.LOCAL:
             return f"{SMARTER_API_SUBDOMAIN}.localhost:8000"
         # default domain format
-        return f"{self.environment}.{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
+        return f"{self.environment}.{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
 
     @property
     def environment_api_url(self) -> str:
