@@ -565,7 +565,14 @@ class Settings(BaseSettings):
     @property
     def environment_api_domain(self) -> str:
         """Return the customer API domain name. ie api.alpha.platform.smarter.sh"""
-        return f"{SMARTER_API_SUBDOMAIN}.{self.environment_domain}"
+        if self.environment == SmarterEnvironments.PROD:
+            return f"{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
+        if self.environment in SmarterEnvironments.aws_environments:
+            return f"{self.environment}.{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
+        if self.environment == SmarterEnvironments.LOCAL:
+            return f"{SMARTER_API_SUBDOMAIN}.localhost:8000"
+        # default domain format
+        return f"{self.environment}.{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
 
     @property
     def environment_api_url(self) -> str:
