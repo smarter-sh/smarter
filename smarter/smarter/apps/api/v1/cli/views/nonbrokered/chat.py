@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 from django.core.cache import cache
 from django.http import HttpRequest, HttpResponse
 from django.test import RequestFactory
+from django.views.decorators.csrf import csrf_exempt
 
 from smarter.apps.chat.models import Chat, ChatHistory
 from smarter.apps.chat.providers.const import OpenAIMessageKeys
@@ -388,6 +389,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         )
 
     # pylint: disable=too-many-locals
+    @csrf_exempt
     def post(self, request, name, *args, **kwargs):
         """
         Smarter API command-line interface 'chat' view. This is a non-brokered view

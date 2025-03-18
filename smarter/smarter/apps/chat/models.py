@@ -2,7 +2,6 @@
 """All models for the OpenAI Function Calling API app."""
 
 import logging
-import urllib.parse
 
 import waffle
 from django.conf import settings
@@ -11,7 +10,10 @@ from django.db import models
 from rest_framework import serializers
 
 from smarter.apps.account.models import Account
-from smarter.apps.chatbot.models import ChatBot, ChatBotHelper
+from smarter.apps.chatbot.models import (
+    ChatBot,
+    get_cached_chatbot_by_request,
+)
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.const import SmarterWaffleSwitches
 from smarter.common.exceptions import SmarterValueError
@@ -146,7 +148,6 @@ class ChatHelper(SmarterRequestMixin):
 
     _chat: Chat = None
     _chatbot: ChatBot = None
-    _chatbot_helper: ChatBotHelper = None
     _clean_url: str = None
 
     # FIX NOTE: remove session_key
@@ -154,7 +155,6 @@ class ChatHelper(SmarterRequestMixin):
         super().__init__(request)
         self._chat: Chat = None
         self._chatbot: ChatBot = None
-        self._chatbot_helper: ChatBotHelper = None
         self._clean_url: str = None
 
         if not session_key and not chatbot:
@@ -176,18 +176,10 @@ class ChatHelper(SmarterRequestMixin):
         return self._chat
 
     @property
-    def chatbot_helper(self) -> ChatBotHelper:
-        if self._chatbot_helper:
-            return self._chatbot_helper
-        if self.chatbot:
-            self._chatbot_helper = ChatBotHelper(request=self.request, chatbot_id=self.chatbot.id)
-        return self._chatbot_helper
-
-    @property
     def chatbot(self):
         if self._chatbot:
             return self._chatbot
-        self._chatbot = self.chatbot_helper.chatbot if self._chatbot_helper else None
+        self._chatbot = get_cached_chatbot_by_request(request=self.request)
 
     @property
     def formatted_class_name(self):
