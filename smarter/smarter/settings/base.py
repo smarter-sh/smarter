@@ -81,7 +81,7 @@ SESSION_COOKIE_SECURE = False
 SESSION_COOKIE_NAME = "sessionid"
 # Age of cookie, in seconds
 SESSION_COOKIE_AGE = CSRF_COOKIE_AGE
-# A string like "example.com", or None for standard domain cookie.
+# A string like "alpha.platform.smarter.sh", or None for standard domain cookie.
 SESSION_COOKIE_DOMAIN = smarter_settings.environment_domain
 # The path of the session cookie.
 SESSION_COOKIE_PATH = "/"
