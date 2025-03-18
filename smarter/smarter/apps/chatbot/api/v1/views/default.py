@@ -8,8 +8,7 @@ import traceback
 from http import HTTPStatus
 
 from django.http import JsonResponse
-
-from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
+from django.views.decorators.csrf import csrf_exempt
 
 from .base import ChatBotApiBaseViewSet
 
@@ -23,6 +22,7 @@ class DefaultChatBotApiView(ChatBotApiBaseViewSet):
     top-level viewset for customer-deployed Plugin-based Chat APIs.
     """
 
+    @csrf_exempt
     def dispatch(self, request, *args, name: str = None, **kwargs):
         """
         Smarter API ChatBot dispatch method.
