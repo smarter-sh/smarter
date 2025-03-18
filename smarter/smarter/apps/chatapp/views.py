@@ -296,9 +296,11 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
 
     template_path = "chatapp/workbench.html"
 
-    # The React app originates from https://github.com/smarter-sh/smarter-chat
-    # and is built-deployed to AWS Cloudfront. The React app is served from
-    # a url like: https://cdn.platform.smarter.sh/ui-chat/index.html
+    # The React app originates from
+    #  - https://github.com/smarter-sh/smarter-chat and
+    #  - https://github.com/smarter-sh/smarter-workbench
+    # and is built-deployed to AWS Cloudfront. The React app is loaded from
+    # a url like: https://cdn.alpha.platform.smarter.sh/ui-chat/index.html
     reactjs_cdn_path = "/ui-chat/app-loader.js"
     reactjs_loader_url = urljoin(smarter_settings.environment_cdn_url, reactjs_cdn_path)
 

@@ -139,13 +139,13 @@ class Command(BaseCommand, AccountMixin):
                             filespec = os.path.join(directory_path, file)
                             filename = os.path.basename(filespec)
                             with open(filespec, encoding="utf-8") as file:
-                                manifest_data = file.read()
-                                self.apply_manifest(manifest_data=manifest_data)
-                            try:
-                                self.stdout.write(f"Applied manifest: {directory}/{filename}")
-                            # pylint: disable=broad-except
-                            except Exception as e:
-                                self.stderr.write(f"Error applying manifest: {filename} {e}")
+                                try:
+                                    manifest_data = file.read()
+                                    self.apply_manifest(manifest_data=manifest_data)
+                                    self.stdout.write(f"Applied manifest: {directory}/{filename}")
+                                # pylint: disable=broad-except
+                                except Exception as e:
+                                    self.stderr.write(f"Error applying manifest: {filename} {e}")
 
     def process_repo_v1(self):
         """
