@@ -8,6 +8,7 @@ from http import HTTPStatus
 from urllib.parse import urljoin
 
 import waffle
+from django.conf import settings
 from django.db import models
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -340,11 +341,17 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         except Exception as e:
             return SmarterHttpResponseServerError(request=request, error_message=str(e))
 
+        # the basic idea is to pass the names of the necessary cookies to the React app, and then
+        # it is supposed to find and read the cookies to get the chat session key, csrf token, etc.
         context = {
             "div_id": self.div_root_id,
             "app_loader_url": self.reactjs_loader_url,
             "chatbot_api_url": self.chatbot.url,
-            "toggle_metadata": False,
+            "toggle_metadata": True,
+            "csrf_cookie_name": settings.CSRF_COOKIE_NAME,
+            "smarter_session_cookie_name": SMARTER_CHAT_SESSION_KEY_NAME,  # this is the Smarter chat session, not the Django session.
+            "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
+            "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
         }
         return render(request=request, template_name=self.template_path, context=context)
 
