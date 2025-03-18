@@ -475,8 +475,8 @@ class Command(BaseCommand):
 
         self.verify_base_dns_config()
 
-        self.verify(domain=smarter_settings.environment_api_domain, parent_domain=smarter_settings.environment_domain)
-        self.verify(domain=smarter_settings.environment_domain, parent_domain=smarter_settings.platform_domain)
+        self.verify(domain=smarter_settings.environment_api_domain, parent_domain=smarter_settings.root_domain)
+        self.verify(domain=smarter_settings.environment_domain, parent_domain=smarter_settings.root_domain)
 
         print("*" * 80)
         self.stdout.write(self.style.SUCCESS(f"{self.log_prefix} completed successfully."))

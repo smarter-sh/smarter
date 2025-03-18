@@ -1,3 +1,28 @@
+## [0.10.14](https://github.com/smarter-sh/smarter/compare/v0.10.13...v0.10.14) (2025-03-17)
+
+
+### Bug Fixes
+
+* Add chatbot deploy, undeploy and delete signals and receivers. Add KubernetesHelper functions to delete ingress resources. Refactor chatbot task logging ([3c4a7db](https://github.com/smarter-sh/smarter/commit/3c4a7db8f22034035eab6f0b44a5ac51e1455e16))
+* add ChatBot.tls_certificate_issuance_status ([e771c22](https://github.com/smarter-sh/smarter/commit/e771c22bd7dfc40f5372f784d3a80f2c96657aa5))
+* add ChatBot.tls_certificate_issuance_status ([39bf944](https://github.com/smarter-sh/smarter/commit/39bf94455c3533df08a217ac0570a7eb435f8912))
+* add mysql root credentials ([08db79c](https://github.com/smarter-sh/smarter/commit/08db79c57c9498263472c04034db6be172908d95))
+* add verifications for ingress, certificate, secret ([07b655d](https://github.com/smarter-sh/smarter/commit/07b655d1b5386c254496303e2163bca60d8e0b13))
+* CSRF_TRUSTED_ORIGINS = [smarter_settings.environment_domain, smarter_settings.api_domain, smarter_settings.customer_api_domain] ([31541b0](https://github.com/smarter-sh/smarter/commit/31541b0d72947a847ab5bd16899aaa066c582458))
+* don't wait if the tls cert is already verified ([bc997ec](https://github.com/smarter-sh/smarter/commit/bc997ece515150b9b4241e1210d70ed734344e0a))
+* enable the dismiss button on the password reset confirmation modal ([3ac954b](https://github.com/smarter-sh/smarter/commit/3ac954b1f9dc05a9bb897660b10f82a6e8840200))
+* environment_api_domain should reside inside platform domain ([7ce6a8e](https://github.com/smarter-sh/smarter/commit/7ce6a8e5dc5d01d81923f2528faf77a3e09cd380))
+* exempt known benign file extensions ([dfaf2b5](https://github.com/smarter-sh/smarter/commit/dfaf2b54b821aa533a6f0f66027b62ea218d7319))
+* explicitly initialize AccountMixin() in __init__() ([46da800](https://github.com/smarter-sh/smarter/commit/46da800e92cddd2a3b86114afe645ed1845196bb))
+* namespace ([e5e4d8a](https://github.com/smarter-sh/smarter/commit/e5e4d8a8b9212599901ddfc8eba885678ae138a8))
+* only send deployment emails to primary point of contact for account ([d5ceba7](https://github.com/smarter-sh/smarter/commit/d5ceba71b64d4f2e8a11e9bed764396d8af9154f))
+* only wait if the tls cert is not yet verified ([99a9b2e](https://github.com/smarter-sh/smarter/commit/99a9b2e29fe84c198a138337b6b75bbb3e3df9f2))
+* override __call__() ([5d7b115](https://github.com/smarter-sh/smarter/commit/5d7b11510ee9c39fef5d1614f853c6a4f797ab08))
+* override __call__() ([4691899](https://github.com/smarter-sh/smarter/commit/46918990da1c82cc568a0155bddc47054c72b7b6))
+* split user creation from password update ([72a0b4e](https://github.com/smarter-sh/smarter/commit/72a0b4e8b8fcfa7b812ae210f6e4ac754a2cd0dd))
+* user is not longer 1:1 with user_profile ([862fa85](https://github.com/smarter-sh/smarter/commit/862fa851ff6367f48d791da1d61df55aad33e5f8))
+* user is not longer 1:1 with user_profile ([ba145f0](https://github.com/smarter-sh/smarter/commit/ba145f026155268a67f054ee008bed49d9d1f9af))
+
 ## [0.10.13](https://github.com/smarter-sh/smarter/compare/v0.10.12...v0.10.13) (2025-02-14)
 
 
