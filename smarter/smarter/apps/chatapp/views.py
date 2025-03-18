@@ -8,16 +8,18 @@ from http import HTTPStatus
 from urllib.parse import urljoin
 
 import waffle
+from django.conf import settings
 from django.db import models
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.utils.decorators import method_decorator
 
 # from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 
 # from django.views.decorators.csrf import csrf_exempt
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.permissions import IsAuthenticated
 
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.chat.models import Chat, ChatHelper
@@ -27,6 +29,7 @@ from smarter.apps.chatbot.models import (
     ChatBotPlugin,
     ChatBotRequests,
     ChatBotRequestsSerializer,
+    get_cached_chatbot_by_request,
 )
 from smarter.apps.chatbot.serializers import ChatBotPluginSerializer, ChatBotSerializer
 from smarter.apps.plugin.models import (
@@ -51,6 +54,9 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonErrorResponse,
     SmarterJournaledJsonResponse,
 )
+
+
+# from rest_framework.permissions import IsAuthenticated
 
 
 MAX_RETURNED_PLUGINS = 10
@@ -118,36 +124,54 @@ class SmarterChatSession(SmarterRequestMixin, SmarterHelperMixin):
 
 
 # pylint: disable=R0902
+@method_decorator(csrf_exempt, name="dispatch")
 class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
     """
     Chat config view for smarter web. This view is protected and requires the user
     to be authenticated. It works with any ChatBots but is aimed at chatbots running
     inside the web console in sandbox mode.
 
-    example: https://sales.3141-5926-5359.alpha.api.smarter.sh/chatbot/config/
+    example: https://smarter.3141-5926-5359.alpha.api.smarter.sh/config/
     """
 
     authentication_classes = (SmarterTokenAuthentication, SessionAuthentication)
-    permission_classes = (IsAuthenticated,)
+    # permission_classes = (IsAuthenticated,)
 
     thing: SmarterJournalThings = None
     command: SmarterJournalCliCommands = None
     session: SmarterChatSession = None
-    chatbot_helper: ChatBotHelper = None
+    _chatbot_helper: ChatBotHelper = None
     _chatbot: ChatBot = None
 
     @property
     def chatbot(self):
         return self._chatbot
 
+    @property
+    def chatbot_helper(self) -> ChatBotHelper:
+        if self._chatbot_helper:
+            return self._chatbot_helper
+        if self.chatbot:
+            # throw everything but the kitchen sink at the ChatBotHelper
+            self._chatbot_helper = ChatBotHelper(
+                request=self.request, name=self._chatbot.name, chatbot_id=self._chatbot.id
+            )
+        else:
+            self._chatbot_helper = ChatBotHelper(request=self.request)
+        return self._chatbot_helper
+
     def dispatch(self, request, *args, chatbot_id: int = None, **kwargs):
+        logger.info("%s - dispatch()", self.formatted_class_name)
         name = kwargs.pop("name", None)
         SmarterRequestMixin.__init__(self, request, *args, **kwargs)
+        logger.warning("%s authentication is disabled for this view.", self.formatted_class_name)
 
         try:
-            self.chatbot_helper = ChatBotHelper(request=request, chatbot_id=chatbot_id, name=name)
-            self._chatbot = self.chatbot_helper.chatbot
-            self.account = self.chatbot_helper.account
+            self._chatbot = get_cached_chatbot_by_request(request=request)
+            if not self._chatbot:
+                self.chatbot_helper = ChatBotHelper(request=request, chatbot_id=chatbot_id, name=name)
+                self._chatbot = self.chatbot_helper.chatbot
+                self.account = self.chatbot_helper.account
         except ChatBot.DoesNotExist:
             return JsonResponse({"error": "Not found"}, status=HTTPStatus.NOT_FOUND.value)
 
@@ -193,6 +217,7 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
         """
         Get the chatbot configuration.
         """
+        logger.info("%s - post()", self.formatted_class_name)
         data = self.config(request=request)
         return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 
@@ -201,6 +226,7 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
         """
         Get the chatbot configuration.
         """
+        logger.info("%s - get()", self.formatted_class_name)
         data = self.config(request=request)
         return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 
@@ -330,8 +356,10 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
                     self.user_profile.user,
                     name,
                 )
-            self.chatbot_helper = ChatBotHelper(request=request, name=name)
-            self.chatbot = self.chatbot_helper.chatbot if self.chatbot_helper.chatbot else None
+            self.chatbot = get_cached_chatbot_by_request(request=request)
+            if not self.chatbot:
+                self.chatbot_helper = ChatBotHelper(request=request, name=name)
+                self.chatbot = self.chatbot_helper.chatbot if self.chatbot_helper.chatbot else None
             if not self.chatbot:
                 raise ChatBot.DoesNotExist
         except ChatBot.DoesNotExist:
@@ -340,11 +368,17 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         except Exception as e:
             return SmarterHttpResponseServerError(request=request, error_message=str(e))
 
+        # the basic idea is to pass the names of the necessary cookies to the React app, and then
+        # it is supposed to find and read the cookies to get the chat session key, csrf token, etc.
         context = {
             "div_id": self.div_root_id,
             "app_loader_url": self.reactjs_loader_url,
             "chatbot_api_url": self.chatbot.url,
-            "toggle_metadata": False,
+            "toggle_metadata": True,
+            "csrf_cookie_name": settings.CSRF_COOKIE_NAME,
+            "smarter_session_cookie_name": SMARTER_CHAT_SESSION_KEY_NAME,  # this is the Smarter chat session, not the Django session.
+            "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
+            "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
         }
         return render(request=request, template_name=self.template_path, context=context)
 

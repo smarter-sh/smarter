@@ -16,7 +16,7 @@ from smarter.apps.account.views.authentication import (
 )
 from smarter.apps.chatapp.views import ChatConfigView
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatBotApiView
-from smarter.apps.chatbot.models import ChatBotHelper
+from smarter.apps.chatbot.models import get_cached_chatbot_by_request
 from smarter.apps.dashboard.admin import restricted_site
 from smarter.apps.dashboard.views.dashboard import ComingSoon
 from smarter.apps.docs.views.webserver import FaviconView, RobotsTxtView, SitemapXmlView
@@ -45,10 +45,10 @@ def root_redirector(request):
     3. otherwise to the Wagtail docs homepage.
     """
     # 1. check if the url is a chatbot endpoint
-    chatbot_helper = ChatBotHelper(request=request)
-    if chatbot_helper and chatbot_helper.chatbot:
+    chatbot = get_cached_chatbot_by_request(request=request)
+    if chatbot:
         view = DefaultChatBotApiView.as_view()
-        return view(request, chatbot_id=chatbot_helper.chatbot.id)
+        return view(request, chatbot_id=chatbot.id)
 
     # 2. check if the user is authenticated, if so redirect to the dashboard
     if request.user.is_authenticated:
@@ -62,10 +62,10 @@ def config_redirector(request):
     """
     Handles traffic sent to the config endpoints of the website.
     """
-    chatbot_helper = ChatBotHelper(request=request)
-    if chatbot_helper and chatbot_helper.chatbot:
+    chatbot = get_cached_chatbot_by_request(request=request)
+    if chatbot:
         view = ChatConfigView.as_view()
-        return view(request, chatbot_id=chatbot_helper.chatbot.id)
+        return view(request, chatbot_id=chatbot.id)
 
 
 urlpatterns = [

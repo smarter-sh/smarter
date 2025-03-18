@@ -9,8 +9,6 @@ from http import HTTPStatus
 
 from django.http import JsonResponse
 
-from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
-
 from .base import ChatBotApiBaseViewSet
 
 
@@ -47,6 +45,7 @@ class DefaultChatBotApiView(ChatBotApiBaseViewSet):
             ]
         }
         """
+        logger.info("%s - dispatch()", self.formatted_class_name)
         self._name = name
 
         try:
