@@ -114,6 +114,9 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
         if smarter_settings.environment == "local":
             logger.debug("%s._accept: environment is local. ignoring csrf checks", self.formatted_class_name)
             return None
+        if self.chatbot:
+            logger.info("%s ChatBot: %s is csrf exempt.", self.formatted_class_name, self.chatbot)
+            return None
         if self.chatbot and waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_SUPPRESS_FOR_CHATBOTS):
             logger.info(
                 "%s.process_view: %s is active",
