@@ -15,6 +15,7 @@ from django.shortcuts import render
 
 # from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 
 # from django.views.decorators.csrf import csrf_exempt
 from rest_framework.authentication import SessionAuthentication
@@ -141,6 +142,7 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
     def chatbot(self):
         return self._chatbot
 
+    @csrf_exempt
     def dispatch(self, request, *args, chatbot_id: int = None, **kwargs):
         name = kwargs.pop("name", None)
         SmarterRequestMixin.__init__(self, request, *args, **kwargs)
