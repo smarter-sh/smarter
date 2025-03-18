@@ -35,16 +35,23 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
     template tag.
     """
 
-    chatbot: ChatBot = None
+    _chatbot: ChatBot = None
+    request = None
 
-    @cached_property
+    @property
+    def chatbot(self) -> ChatBot:
+        if self._chatbot is None:
+            self._chatbot = get_cached_chatbot_by_request(request=self.request)
+        return self._chatbot
+
+    @property
     def CSRF_TRUSTED_ORIGINS(self) -> list[str]:
         """
         Return the list of trusted origins for CSRF.
         If the request is for a ChatBot, the ChatBot's URL is added to the list.
         """
         retval = settings.CSRF_TRUSTED_ORIGINS
-        if self.chatbot is not None:
+        if self.chatbot:
             retval += [self.chatbot.url]
         logger.info("%s.CSRF_TRUSTED_ORIGINS: %s", self.formatted_class_name, retval)
         return retval
@@ -71,15 +78,13 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
     def process_request(self, request):
         # Does this url point to a ChatBot?
         # ------------------------------------------------------
-        try:
-            self.chatbot = get_cached_chatbot_by_request(request=request)
-        # pylint: disable=broad-except
-        except Exception:
-            # this is not a ChatBot request
-            self.chatbot = None
+        self.request = request
+        if self.chatbot:
+            logger.info("%s ChatBot: %s is csrf exempt.", self.formatted_class_name, self.chatbot)
+            return None
 
         if self.chatbot and waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
-            logger.info("%s.process_request: csrf_middleware_logging is active", self.formatted_class_name)
+            logger.info("%s.process_request(): csrf_middleware_logging is active", self.formatted_class_name)
             logger.info("=" * 80)
             logger.info("%s ChatBot: %s", self.formatted_class_name, self.chatbot)
             for cookie in request.COOKIES:
@@ -101,14 +106,11 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
             )
             logger.info("=" * 80)
 
-        if self.chatbot:
-            logger.info("%s ChatBot: %s is csrf exempt.", self.formatted_class_name, self.chatbot)
-            return None
-
         # ------------------------------------------------------
         return super().process_request(request)
 
     def process_view(self, request, callback, callback_args, callback_kwargs):
+        self.request = request
         if smarter_settings.environment == "local":
             logger.debug("%s._accept: environment is local. ignoring csrf checks", self.formatted_class_name)
             return None
