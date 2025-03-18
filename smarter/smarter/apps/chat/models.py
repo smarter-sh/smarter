@@ -12,7 +12,6 @@ from rest_framework import serializers
 from smarter.apps.account.models import Account
 from smarter.apps.chatbot.models import (
     ChatBot,
-    ChatBotHelper,
     get_cached_chatbot_by_request,
 )
 from smarter.apps.plugin.models import PluginMeta

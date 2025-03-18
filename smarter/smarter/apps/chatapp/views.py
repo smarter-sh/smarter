@@ -29,6 +29,7 @@ from smarter.apps.chatbot.models import (
     ChatBotPlugin,
     ChatBotRequests,
     ChatBotRequestsSerializer,
+    get_cached_chatbot_by_request,
 )
 from smarter.apps.chatbot.serializers import ChatBotPluginSerializer, ChatBotSerializer
 from smarter.apps.plugin.models import (
@@ -148,9 +149,11 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
         SmarterRequestMixin.__init__(self, request, *args, **kwargs)
 
         try:
-            self.chatbot_helper = ChatBotHelper(request=request, chatbot_id=chatbot_id, name=name)
-            self._chatbot = self.chatbot_helper.chatbot
-            self.account = self.chatbot_helper.account
+            self._chatbot = get_cached_chatbot_by_request(request=request)
+            if not self._chatbot:
+                self.chatbot_helper = ChatBotHelper(request=request, chatbot_id=chatbot_id, name=name)
+                self._chatbot = self.chatbot_helper.chatbot
+                self.account = self.chatbot_helper.account
         except ChatBot.DoesNotExist:
             return JsonResponse({"error": "Not found"}, status=HTTPStatus.NOT_FOUND.value)
 
@@ -333,8 +336,10 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
                     self.user_profile.user,
                     name,
                 )
-            self.chatbot_helper = ChatBotHelper(request=request, name=name)
-            self.chatbot = self.chatbot_helper.chatbot if self.chatbot_helper.chatbot else None
+            self.chatbot = get_cached_chatbot_by_request(request=request)
+            if not self.chatbot:
+                self.chatbot_helper = ChatBotHelper(request=request, name=name)
+                self.chatbot = self.chatbot_helper.chatbot if self.chatbot_helper.chatbot else None
             if not self.chatbot:
                 raise ChatBot.DoesNotExist
         except ChatBot.DoesNotExist:
