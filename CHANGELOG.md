@@ -1,3 +1,12 @@
+## [0.10.15](https://github.com/smarter-sh/smarter/compare/v0.10.14...v0.10.15) (2025-03-18)
+
+
+### Bug Fixes
+
+* environment api domain is hosted from root domain ([fd4f930](https://github.com/smarter-sh/smarter/commit/fd4f9305b7fba4b58de7392d1f423385bb80a347))
+* parent domain should be root domain ([f54fb14](https://github.com/smarter-sh/smarter/commit/f54fb144756792442443a785a7534bbe3ddb95ba))
+* wrap the entire load process in a try block ([7509b7b](https://github.com/smarter-sh/smarter/commit/7509b7b99869df5797420321db2f4baa0836b0a3))
+
 ## [0.10.14](https://github.com/smarter-sh/smarter/compare/v0.10.13...v0.10.14) (2025-03-17)
 
 
