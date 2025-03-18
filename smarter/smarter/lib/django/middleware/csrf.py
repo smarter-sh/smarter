@@ -101,8 +101,12 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
             )
             logger.info("=" * 80)
 
+        if self.chatbot:
+            logger.info("%s ChatBot: %s is csrf exempt.", self.formatted_class_name, self.chatbot)
+            return None
+
         # ------------------------------------------------------
-        super().process_request(request)
+        return super().process_request(request)
 
     def process_view(self, request, callback, callback_args, callback_kwargs):
         if smarter_settings.environment == "local":
