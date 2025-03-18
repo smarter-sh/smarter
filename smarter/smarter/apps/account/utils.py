@@ -114,7 +114,7 @@ def get_cached_user_for_user_id(user_id: int) -> AbstractUser:
 @cache_results(timeout=CACHE_TIMEOUT)
 def get_cached_admin_user_for_account(account: Account) -> AbstractUser:
     """
-    Returns the account admin user for the given account.
+    Returns the account admin user for the given account. If the user does not exist, it will be created.
     """
     if not account:
         raise SmarterValueError("Account is required")

@@ -178,7 +178,7 @@ class SettingsDefaults:
 
     # defaults for this Python package
     ENVIRONMENT = os.environ.get("ENVIRONMENT", TFVARS.get("environment", SmarterEnvironments.LOCAL))
-    ROOT_DOMAIN = os.environ.get("ROOT_DOMAIN", TFVARS.get("root_domain", "example.com"))
+    ROOT_DOMAIN = os.environ.get("ROOT_DOMAIN", TFVARS.get("root_domain", "smarter.sh"))
     SHARED_RESOURCE_IDENTIFIER = os.environ.get(
         "SHARED_RESOURCE_IDENTIFIER", TFVARS.get("shared_resource_identifier", "smarter")
     )
@@ -565,7 +565,14 @@ class Settings(BaseSettings):
     @property
     def environment_api_domain(self) -> str:
         """Return the customer API domain name. ie api.alpha.platform.smarter.sh"""
-        return f"{SMARTER_API_SUBDOMAIN}.{self.environment_domain}"
+        if self.environment == SmarterEnvironments.PROD:
+            return f"{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
+        if self.environment in SmarterEnvironments.aws_environments:
+            return f"{self.environment}.{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
+        if self.environment == SmarterEnvironments.LOCAL:
+            return f"{SMARTER_API_SUBDOMAIN}.localhost:8000"
+        # default domain format
+        return f"{self.environment}.{SMARTER_API_SUBDOMAIN}.{self.root_domain}"
 
     @property
     def environment_api_url(self) -> str:
