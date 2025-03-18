@@ -14,7 +14,7 @@ from django.http import HttpResponseForbidden
 from django.middleware.csrf import CsrfViewMiddleware as DjangoCsrfViewMiddleware
 from django.utils.functional import cached_property
 
-from smarter.apps.chatbot.models import ChatBot, ChatBotHelper
+from smarter.apps.chatbot.models import ChatBot, get_cached_chatbot_by_request
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterWaffleSwitches
@@ -35,7 +35,6 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
     template tag.
     """
 
-    chatbot_helper: ChatBotHelper = None
     chatbot: ChatBot = None
 
     @cached_property
@@ -73,8 +72,7 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
         # Does this url point to a ChatBot?
         # ------------------------------------------------------
         try:
-            self.chatbot_helper = ChatBotHelper(request=request)
-            self.chatbot = self.chatbot_helper.chatbot if self.chatbot_helper else None
+            self.chatbot = get_cached_chatbot_by_request(request=request)
         # pylint: disable=broad-except
         except Exception:
             # this is not a ChatBot request
