@@ -126,7 +126,7 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
     to be authenticated. It works with any ChatBots but is aimed at chatbots running
     inside the web console in sandbox mode.
 
-    example: https://sales.3141-5926-5359.alpha.api.smarter.sh/chatbot/config/
+    example: https://smarter.3141-5926-5359.alpha.api.smarter.sh/config/
     """
 
     authentication_classes = (SmarterTokenAuthentication, SessionAuthentication)

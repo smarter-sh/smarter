@@ -25,7 +25,7 @@ from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterWaffleSwitches
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.llm import get_date_time_string
-from smarter.lib.cache import cache_results
+from smarter.lib.cache import cache_request, cache_results
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.validators import SmarterValidator
@@ -468,7 +468,7 @@ class ChatBotSerializer(serializers.ModelSerializer):
         self.Meta.fields += ["url_chatbot", "account"]
 
 
-CACHE_TIMEOUT = 60 * 5
+CACHE_TIMEOUT = 60 * 15
 
 
 @cache_results(timeout=CACHE_TIMEOUT)
@@ -896,3 +896,20 @@ class ChatBotHelper(SmarterRequestMixin):
         if retval.endswith("/config/"):
             retval = retval[:-8]
         return retval
+
+
+@cache_request(timeout=CACHE_TIMEOUT)
+def get_cached_chatbot_by_request(request: WSGIRequest) -> ChatBot:
+    """
+    Returns the chatbot from the cache if it exists, otherwise
+    it queries the database and caches the result.
+    """
+    chatbot: ChatBot = None
+
+    chatbot_helper = ChatBotHelper(request=request)
+    if chatbot_helper:
+        chatbot = chatbot_helper.chatbot
+    if chatbot:
+        logger.info("%s caching chatbot %s", formatted_text("get_cached_chatbot_by_request()"), chatbot)
+
+    return chatbot
