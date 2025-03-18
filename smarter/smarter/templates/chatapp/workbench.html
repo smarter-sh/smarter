@@ -10,9 +10,11 @@
     <div
       id="smarter-sh-v1-ui-chat-root"
       class="smarter-chat"
-      smarter-chatbot-api-url="http://openai.3141-5926-5359.api.localhost:8000/"
-      smarter-toggle-metadata="False"
-      style="height: 88vh;">
+      style="height: 88vh;"
+      smarter-chatbot-api-url="https://openai.3141-5926-5359.alpha.api.smarter.sh/"
+      smarter-toggle-metadata="True"
+      smarter-csrf-cookie-name="csrftoken"
+      smarter-session-cookie-name="session_key">
     </div>
   -->
   <div
@@ -20,7 +22,13 @@
     class="smarter-chat"
     style="height: 88vh;"
     smarter-chatbot-api-url="{{ chatbot_api_url }}"
-    smarter-toggle-metadata="{{ toggle_metadata }}">
+    smarter-toggle-metadata="{{ toggle_metadata }}"
+    smarter-csrf-cookie-name="{{ csrf_cookie_name }}"
+    smarter-session-cookie-name="{{ smarter_session_cookie_name }}"
+    smarter-cookie-domain="{{ cookie_domain }}"
+    django-csrftoken="{{ csrf_token }}"
+    django-session-cookie-name="{{ django_session_cookie_name }}"
+    >
   </div>
   <!--
     retrieve and inject the js/css artifacts of the react.js build into the DOM.
