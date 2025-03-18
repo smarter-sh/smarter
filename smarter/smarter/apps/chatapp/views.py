@@ -160,6 +160,7 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
 
     @csrf_exempt
     def dispatch(self, request, *args, chatbot_id: int = None, **kwargs):
+        logger.info("%s - dispatch()", self.formatted_class_name)
         name = kwargs.pop("name", None)
         SmarterRequestMixin.__init__(self, request, *args, **kwargs)
         logger.warning("%s authentication is disabled for this view.", self.formatted_class_name)
@@ -215,6 +216,7 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
         """
         Get the chatbot configuration.
         """
+        logger.info("%s - post()", self.formatted_class_name)
         data = self.config(request=request)
         return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 
@@ -223,6 +225,7 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
         """
         Get the chatbot configuration.
         """
+        logger.info("%s - get()", self.formatted_class_name)
         data = self.config(request=request)
         return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 

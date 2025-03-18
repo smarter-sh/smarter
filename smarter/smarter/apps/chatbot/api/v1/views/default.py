@@ -47,6 +47,7 @@ class DefaultChatBotApiView(ChatBotApiBaseViewSet):
             ]
         }
         """
+        logger.info("%s - dispatch()", self.formatted_class_name)
         self._name = name
 
         try:
