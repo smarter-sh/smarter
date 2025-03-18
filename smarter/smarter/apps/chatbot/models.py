@@ -910,6 +910,8 @@ def get_cached_chatbot_by_request(request: WSGIRequest) -> ChatBot:
     if chatbot_helper:
         chatbot = chatbot_helper.chatbot
     if chatbot:
-        logger.info("%s caching chatbot %s", formatted_text("get_cached_chatbot_by_request()"), chatbot)
+        logger.info(
+            "%s caching chatbot %s", formatted_text("get_cached_chatbot_by_request()"), request.build_absolute_uri()
+        )
 
     return chatbot

@@ -18,7 +18,7 @@ from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest
 from django.http.response import HttpResponseBase
 
-from smarter.apps.chatbot.models import ChatBot, ChatBotHelper
+from smarter.apps.chatbot.models import ChatBot, get_cached_chatbot_by_request
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.const import SmarterWaffleSwitches
 
@@ -34,7 +34,6 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
 
     _url: SplitResult = None
     _chatbot: ChatBot = None
-    helper: ChatBotHelper = None
     request: WSGIRequest = None
 
     def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
@@ -43,7 +42,6 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
             logger.info("%s.__call__() - url=%s", self.formatted_class_name, url)
         self._url = None
         self._chatbot = None
-        self.helper = None
         self.request = request
         return super().__call__(request)  # Ensure the response is returned
 
@@ -66,18 +64,16 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
                 logger.info("%s url: %s is an allowed origin", self.formatted_class_name, url.geturl())
             return None
 
-        # get the chatbot helper for the url and try to find the chatbot
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
             logger.info("%s instantiating ChatBotHelper() for url: %s", self.formatted_class_name, url.geturl())
-        self.helper = ChatBotHelper(self.request)
-        self._chatbot = self.helper.chatbot if self.helper.chatbot else None
+        self._chatbot = get_cached_chatbot_by_request(request=self.request)
 
         # If the chatbot is found, update the chatbot url
         # which ensures that we'll only be working with the
         # base url for the chatbot and that the protocol
         # will remain consistent.
-        if self.helper and self.helper.chatbot:
-            self._url = self.helper.chatbot.url
+        if self.chatbot:
+            self._url = self.chatbot.url
         else:
             self._url = url
 
