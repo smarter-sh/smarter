@@ -196,7 +196,7 @@ class Command(BaseCommand, AccountMixin):
                                 plugin = self.load_plugin(filespec=filespec)
                                 ChatBotPlugin.objects.get_or_create(chatbot=chatbot, plugin_meta=plugin.plugin_meta)
 
-                    deploy_default_api(chatbot_id=chatbot.id, with_domain_verification=False)
+                    deploy_default_api.delay(chatbot_id=chatbot.id, with_domain_verification=False)
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
