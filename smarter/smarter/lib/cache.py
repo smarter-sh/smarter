@@ -33,7 +33,9 @@ def cache_request(timeout=60 * 60):
         @wraps(func)
         def wrapper(request: WSGIRequest, *args, **kwargs):
             uri = urlparse(request.build_absolute_uri()).path
-            user_identifier = request.user.username if request.user and request.user.is_authenticated else "anonymous"
+            user_identifier = (
+                request.user.username if hasattr(request, "user") and request.user.is_authenticated else "anonymous"
+            )
             cache_key = f"{func.__name__}_{uri}_{user_identifier}"
             result = cache.get(cache_key)
             if result is None:
