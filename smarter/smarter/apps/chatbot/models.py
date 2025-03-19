@@ -606,7 +606,7 @@ class ChatBotHelper(SmarterRequestMixin):
             return self._chatbot_id
 
         # check SmarterRequestMixin for a chatbot_id derived from the  url
-        self._chatbot_id = super().chatbot_id
+        self._chatbot_id = super().smarter_request_chatbot_id
         if self._chatbot_id:
             return self._chatbot_id
 
@@ -640,8 +640,8 @@ class ChatBotHelper(SmarterRequestMixin):
         """
         Returns the ChatBot.name for the ChatBotHelper.
         """
-        if super().chatbot_name:
-            return super().chatbot_name
+        if super().smarter_request_chatbot_name:
+            return super().smarter_request_chatbot_name
 
         if self._name:
             return self.name
@@ -663,8 +663,8 @@ class ChatBotHelper(SmarterRequestMixin):
         if self._name:
             return self._name
 
-        if super().chatbot_name:
-            self._name = super().chatbot_name
+        if super().smarter_request_chatbot_name:
+            self._name = super().smarter_request_chatbot_name
             return self._name
 
         if self._chatbot:
