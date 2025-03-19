@@ -42,6 +42,7 @@ from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.common.exceptions import SmarterExceptionBase, SmarterValueError
 from smarter.common.helpers.url_helpers import clean_url
+from smarter.lib.cache import cache_results
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.views.error import (
@@ -83,7 +84,8 @@ class SmarterChatSession(SmarterRequestMixin, SmarterHelperMixin):
     _chatbot: ChatBot = None
 
     def __init__(self, request, chatbot: ChatBot = None):
-        super().__init__(request)
+        SmarterRequestMixin.__init__(self, request=request)
+        SmarterHelperMixin.__init__(self)
 
         self._url = self.clean_url(request.build_absolute_uri())
 
@@ -100,6 +102,12 @@ class SmarterChatSession(SmarterRequestMixin, SmarterHelperMixin):
 
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
             logger.info("%s - session established: %s", self.formatted_class_name, self.session_key)
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(session_key={self.session_key}, chatbot={self.chatbot})"
 
     @property
     def chatbot(self):
@@ -161,9 +169,9 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
         return self._chatbot_helper
 
     def dispatch(self, request, *args, chatbot_id: int = None, **kwargs):
-        logger.info("%s - dispatch()", self.formatted_class_name)
+        SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
+        logger.info("%s - dispatch() url=%s session=%s", self.formatted_class_name, self.url, self.session)
         name = kwargs.pop("name", None)
-        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
         logger.warning("%s authentication is disabled for this view.", self.formatted_class_name)
 
         try:
@@ -379,6 +387,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
             "smarter_session_cookie_name": SMARTER_CHAT_SESSION_KEY_NAME,  # this is the Smarter chat session, not the Django session.
             "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
             "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
+            "debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_REACTAPP_DEBUG_MODE),
         }
         return render(request=request, template_name=self.template_path, context=context)
 
@@ -407,14 +416,20 @@ class ChatAppListView(SmarterAuthenticatedNeverCachedWebView):
             for b in self.chatbot_helpers:
                 if b.chatbot and b.chatbot.id == chatbot_helper.chatbot.id:
                     return True
+            return
 
-        smarter_admin = get_cached_smarter_admin_user_profile()
-        self.chatbots = ChatBot.objects.filter(account=self.account)
+        @cache_results()
+        def get_chatbots_for_account(account) -> list[ChatBot]:
+            return ChatBot.objects.filter(account=account)
+
+        self.chatbots = get_chatbots_for_account(account=self.account)
 
         for chatbot in self.chatbots:
-            chatbot_helper = ChatBotHelper(request=request, name=chatbot.name, chatbot_id=chatbot.id)
+            logger.info("%s - adding chatbot=%s", self.formatted_class_name, chatbot)
+            chatbot_helper = ChatBotHelper(chatbot_id=chatbot.id)
             if not was_already_added(chatbot_helper):
                 self.chatbot_helpers.append(chatbot_helper)
 
+        smarter_admin = get_cached_smarter_admin_user_profile()
         context = {"smarter_admin": smarter_admin, "chatbot_helpers": self.chatbot_helpers}
         return render(request, template_name=self.template_path, context=context)
