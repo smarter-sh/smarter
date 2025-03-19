@@ -23,7 +23,7 @@ def cache_results(timeout=60 * 60):
     return decorator
 
 
-def cache_request(timeout=60 * 60):
+def cache_request(timeout=60 * 15):
     """
     Caches the result of a function based on the request URI and user identifier.
     Associates a Smarter user account number with the cache key if the user is authenticated.
