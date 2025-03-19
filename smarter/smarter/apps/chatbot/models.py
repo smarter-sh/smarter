@@ -468,10 +468,7 @@ class ChatBotSerializer(serializers.ModelSerializer):
         self.Meta.fields += ["url_chatbot", "account"]
 
 
-CACHE_TIMEOUT = 60 * 15
-
-
-@cache_results(timeout=CACHE_TIMEOUT)
+@cache_results()
 def get_cached_chatbot(chatbot_id: int = None, name: str = None, account: Account = None) -> ChatBot:
     """
     Returns the chatbot from the cache if it exists, otherwise
@@ -537,13 +534,18 @@ class ChatBotHelper(SmarterRequestMixin):
         :param url: The URL to parse.
         :param environment: The environment to use for the URL. (for unit testing only)
         """
+        SmarterRequestMixin.__init__(self, request=request)
         self._chatbot: ChatBot = None
         self._chatbot_custom_domain: ChatBotCustomDomain = None
         self._chatbot_requests: ChatBotRequests = None
-        self._chatbot_id: int = None
-        self._name: str = None
+        self._chatbot_id: int = chatbot_id
+        self._name: str = name
         self._err: str = None
-        super().__init__(request=request)
+
+        if self.chatbot:
+            self.helper_logger(f"__init__() initialized self.chatbot={self.chatbot} from chatbot_id")
+            self.log_dump()
+            return None
 
         if not self.is_chatbot and not name and not chatbot_id:
             # keep in mind that self.is_chatbot comes from SmartRequestMixin and is
@@ -560,15 +562,11 @@ class ChatBotHelper(SmarterRequestMixin):
             self.helper_logger(
                 f"__init__() url={ self.url } name={ name } chatbot_id={ chatbot_id } might be a chatbot. Proceeding with initializaation."
             )
-            self.helper_logger(f"__init__() to_json(): {json.dumps(self.to_json(), indent=4, sort_keys=True)}")
-
-        self._chatbot: ChatBot = None
-        self._chatbot_custom_domain: ChatBotCustomDomain = None
-        self._chatbot_requests: ChatBotRequests = None
 
         self.chatbot_id: int = chatbot_id
         if self.chatbot:
             self.helper_logger(f"__init__() initialized self.chatbot={self.chatbot} from chatbot_id")
+            self.log_dump()
             return None
 
         self._name: str = name
@@ -581,6 +579,7 @@ class ChatBotHelper(SmarterRequestMixin):
         self._chatbot = get_cached_chatbot(account=self.account, name=self.name)
         if self._chatbot:
             self.helper_logger(f"__init__() initialized self.chatbot={self.chatbot} from account and name")
+            self.log_dump()
             return None
 
         self.log_dump()
@@ -597,10 +596,6 @@ class ChatBotHelper(SmarterRequestMixin):
         Returns the ChatBot.id for the ChatBotHelper.
         """
 
-        # check SmarterRequestMixin for chatbot_id
-        if super().chatbot_id:
-            return super().chatbot_id
-
         # check for a value passed in
         if self._chatbot_id:
             return self._chatbot_id
@@ -608,6 +603,26 @@ class ChatBotHelper(SmarterRequestMixin):
         # check for a chatbot object
         if self._chatbot:
             self._chatbot_id = self.chatbot.id
+            return self._chatbot_id
+
+        # check SmarterRequestMixin for a chatbot_id derived from the  url
+        self._chatbot_id = super().chatbot_id
+        if self._chatbot_id:
+            return self._chatbot_id
+
+        if self.chatbot_name and self.account:
+            # possibilities:
+            # - http://localhost:8000/api/v1/cli/chat/example/
+            # - https://example.3141-5926-5359.api.smarter.sh/
+            # - https://alpha.platform.smarter.sh/chatbots/example/
+            # - http://localhost:8000/api/v1/chatbots/1/chat/
+            self._chatbot = ChatBot.objects.get(name=self.chatbot_name, account=self.account)
+            self._chatbot_id = self.chatbot.id
+            self.helper_logger(
+                f"chatbot_id() initialized self.chatbot_id={self.chatbot_id} from name={ self.chatbot_name } and account={ self.account }"
+            )
+            return self._chatbot_id
+
         return self._chatbot_id
 
     @chatbot_id.setter
@@ -628,8 +643,12 @@ class ChatBotHelper(SmarterRequestMixin):
         if super().chatbot_name:
             return super().chatbot_name
 
-        if self.name:
+        if self._name:
             return self.name
+
+        if self._chatbot:
+            self._name = self.chatbot.name
+            return self._name
 
     @property
     def name(self):
@@ -906,7 +925,7 @@ class ChatBotHelper(SmarterRequestMixin):
         return retval
 
 
-@cache_request(timeout=CACHE_TIMEOUT)
+@cache_request()
 def get_cached_chatbot_by_request(request: WSGIRequest) -> ChatBot:
     """
     Returns the chatbot from the cache if it exists, otherwise

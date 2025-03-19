@@ -12,7 +12,7 @@ from smarter.apps.plugin.models import PluginMeta
 from smarter.lib.cache import cache_results
 
 
-@cache_results(timeout=15 * 60)
+@cache_results()
 def get_pending_deployments(user):
     """
     Get the number of pending deployments for the current user
@@ -22,7 +22,7 @@ def get_pending_deployments(user):
     return chatbots
 
 
-@cache_results(timeout=15 * 60)
+@cache_results()
 def get_chatbots(user):
     """
     Get the number of chatbots for the current user
@@ -32,7 +32,7 @@ def get_chatbots(user):
     return chatbots
 
 
-@cache_results(timeout=15 * 60)
+@cache_results()
 def get_plugins(user):
     """
     Get the number of plugins for the current user
@@ -42,7 +42,7 @@ def get_plugins(user):
     return plugins
 
 
-@cache_results(timeout=15 * 60)
+@cache_results()
 def get_api_keys(user):
     """
     Get the number of API keys for the current user
@@ -52,7 +52,7 @@ def get_api_keys(user):
     return api_keys_count
 
 
-@cache_results(timeout=15 * 60)
+@cache_results()
 def get_custom_domains(user):
     """
     Get the number of custom domains for the current user
