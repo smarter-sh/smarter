@@ -126,7 +126,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         if hasattr(request, "user"):
             if request.user.is_authenticated:
                 self.user = request.user
-                self.helper_logger(f"SmarterRequestMixin - request.user={self.user}")
+                self.helper_logger(f"SmarterRequestMixin - request.user={self.user} is authenticated.")
             else:
                 self.helper_logger("SmarterRequestMixin - request.user is not authenticated.")
         else:
@@ -347,6 +347,8 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         """
         Generate a session_key based on a unique string and the current datetime.
         """
+        if not self.is_chatbot:
+            return None
         key_string = self.unique_client_string
         if key_string:
             session_key = hashlib.sha256(key_string.encode()).hexdigest()
@@ -358,11 +360,19 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         """
         Returns True if the url resolves to a chatbot.
         """
-        return self.qualified_request and (
-            self.is_chatbot_named_url
-            or self.is_chatbot_sandbox_url
-            or self.is_chatbot_smarter_api_url
-            or self.is_chatbot_cli_api_url
+
+        def envionment_root_domain() -> bool:
+            return self.parsed_url.netloc == smarter_settings.environment_domain and self.parsed_url.path == "/"
+
+        return (
+            self.qualified_request
+            and not envionment_root_domain()
+            and (
+                self.is_chatbot_named_url
+                or self.is_chatbot_sandbox_url
+                or self.is_chatbot_smarter_api_url
+                or self.is_chatbot_cli_api_url
+            )
         )
 
     @property
@@ -662,6 +672,8 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         """
         Extract the session key from the URL, the request body, or the request headers.
         """
+        if not self.is_chatbot:
+            return None
         session_key: str = None
 
         if self._url:
