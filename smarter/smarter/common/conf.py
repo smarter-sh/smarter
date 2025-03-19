@@ -516,14 +516,14 @@ class Settings(BaseSettings):
     def environment_cdn_domain(self) -> str:
         """Return the CDN domain."""
         if self.environment == SmarterEnvironments.LOCAL:
-            return f"cdn.{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
+            return f"cdn.{SmarterEnvironments.ALPHA}.{SMARTER_PLATFORM_SUBDOMAIN}.{self.root_domain}"
         return f"cdn.{self.environment_domain}"
 
     @property
     def environment_cdn_url(self) -> str:
         """Return the CDN URL."""
         if self.environment == SmarterEnvironments.LOCAL:
-            return SmarterValidator.urlify(self.environment_cdn_domain, environment=SmarterEnvironments.PROD)
+            return SmarterValidator.urlify(self.environment_cdn_domain, environment=SmarterEnvironments.ALPHA)
         return SmarterValidator.urlify(self.environment_cdn_domain, environment=self.environment)
 
     @property
