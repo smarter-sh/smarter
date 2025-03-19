@@ -407,14 +407,16 @@ class ChatAppListView(SmarterAuthenticatedNeverCachedWebView):
             for b in self.chatbot_helpers:
                 if b.chatbot and b.chatbot.id == chatbot_helper.chatbot.id:
                     return True
+            return False
 
-        smarter_admin = get_cached_smarter_admin_user_profile()
         self.chatbots = ChatBot.objects.filter(account=self.account)
 
         for chatbot in self.chatbots:
-            chatbot_helper = ChatBotHelper(request=request, name=chatbot.name, chatbot_id=chatbot.id)
+            logger.info("%s - adding chatbot=%s", self.formatted_class_name, chatbot)
+            chatbot_helper = ChatBotHelper(chatbot_id=chatbot.id)
             if not was_already_added(chatbot_helper):
                 self.chatbot_helpers.append(chatbot_helper)
 
+        smarter_admin = get_cached_smarter_admin_user_profile()
         context = {"smarter_admin": smarter_admin, "chatbot_helpers": self.chatbot_helpers}
         return render(request, template_name=self.template_path, context=context)
