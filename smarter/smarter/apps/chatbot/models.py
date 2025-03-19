@@ -521,7 +521,7 @@ class ChatBotHelper(SmarterRequestMixin):
 
     def __init__(
         self,
-        request: WSGIRequest,
+        request: WSGIRequest = None,
         name: str = None,
         chatbot_id: int = None,
     ):
