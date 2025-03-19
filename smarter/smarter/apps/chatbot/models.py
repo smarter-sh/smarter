@@ -481,9 +481,16 @@ def get_cached_chatbot(chatbot_id: int = None, name: str = None, account: Accoun
 
     if chatbot_id:
         chatbot = ChatBot.objects.get(id=chatbot_id)
+        logger.info("%s initialized ChatBot from chatbot_id %s", formatted_text("get_cached_chatbot()"), chatbot_id)
     else:
         if name and account:
             chatbot = ChatBot.objects.get(name=name, account=account)
+            logger.info(
+                "%s initialized ChatBot from name %s and account %s",
+                formatted_text("get_cached_chatbot()"),
+                name,
+                account,
+            )
     if chatbot:
         logger.info("%s caching chatbot %s", formatted_text("get_cached_chatbot()"), chatbot)
 
@@ -556,6 +563,10 @@ class ChatBotHelper(SmarterRequestMixin):
         self._chatbot_requests: ChatBotRequests = None
 
         self.chatbot_id: int = chatbot_id
+        if self.chatbot:
+            self.helper_logger(f"__init__() initialized self.chatbot={self.chatbot} from chatbot_id")
+            return None
+
         self._name: str = name
         self._err: str = None
 
@@ -637,11 +648,11 @@ class ChatBotHelper(SmarterRequestMixin):
             self._name = super().chatbot_name
             return self._name
 
+        if self.chatbot:
+            self._name = self.chatbot.name
+
         if not self.is_chatbot:
             return None
-
-        if self._chatbot:
-            self._name = self.chatbot.name
 
         if self.is_chatbot_named_url:
             # covers a case like http://example.api.localhost:8000/
