@@ -20,11 +20,10 @@ from .models import Account, UserProfile
 logger = logging.getLogger(__name__)
 User = get_user_model()
 
-CACHE_TIMEOUT = 60 * 5
 SMARTER_ACCOUNT_NUMBER_REGEX = r"\b\d{4}-\d{4}-\d{4}\b"
 
 
-@cache_results(timeout=CACHE_TIMEOUT)
+@cache_results()
 def get_cached_account(account_id: int = None, account_number: str = None) -> Account:
     """
     Returns the account for the given account_id or account_number.
@@ -49,7 +48,7 @@ def get_cached_smarter_account() -> Account:
     return account
 
 
-@cache_results(timeout=CACHE_TIMEOUT)
+@cache_results()
 def get_cached_default_account() -> Account:
     """
     Returns the default account.
@@ -64,7 +63,7 @@ def get_cached_default_account() -> Account:
     return account
 
 
-@cache_results(timeout=CACHE_TIMEOUT)
+@cache_results()
 def get_cached_account_for_user(user) -> Account:
     """
     Locates the account for a given user, or None if no account exists.
@@ -81,7 +80,7 @@ def get_cached_account_for_user(user) -> Account:
     return user_profile.account
 
 
-@cache_results(timeout=CACHE_TIMEOUT)
+@cache_results()
 def get_cached_user_profile(user: UserType, account: Account = None) -> UserProfile:
     """
     Locates the user_profile for a given user, or None.
@@ -98,7 +97,7 @@ def get_cached_user_profile(user: UserType, account: Account = None) -> UserProf
         pass
 
 
-@cache_results(timeout=CACHE_TIMEOUT)
+@cache_results()
 def get_cached_user_for_user_id(user_id: int) -> AbstractUser:
     """
     Returns the user for the given user_id.
@@ -111,7 +110,7 @@ def get_cached_user_for_user_id(user_id: int) -> AbstractUser:
         return None
 
 
-@cache_results(timeout=CACHE_TIMEOUT)
+@cache_results()
 def get_cached_admin_user_for_account(account: Account) -> AbstractUser:
     """
     Returns the account admin user for the given account. If the user does not exist, it will be created.
@@ -132,7 +131,7 @@ def get_cached_admin_user_for_account(account: Account) -> AbstractUser:
     return user_profile.user if user_profile else None
 
 
-@cache_results(timeout=CACHE_TIMEOUT)
+@cache_results()
 def get_cached_smarter_admin_user_profile() -> UserProfile:
     """
     Returns the smarter admin user.

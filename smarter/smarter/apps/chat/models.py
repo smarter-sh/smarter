@@ -152,7 +152,7 @@ class ChatHelper(SmarterRequestMixin):
 
     # FIX NOTE: remove session_key
     def __init__(self, request, session_key: str, chatbot: ChatBot = None) -> None:
-        super().__init__(request)
+        SmarterRequestMixin.__init__(self, request=request)
         self._chat: Chat = None
         self._chatbot: ChatBot = None
         self._clean_url: str = None
