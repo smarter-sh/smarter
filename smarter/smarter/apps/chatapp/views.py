@@ -379,6 +379,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
             "smarter_session_cookie_name": SMARTER_CHAT_SESSION_KEY_NAME,  # this is the Smarter chat session, not the Django session.
             "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
             "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
+            "debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_REACTAPP_DEBUG_MODE),
         }
         return render(request=request, template_name=self.template_path, context=context)
 
