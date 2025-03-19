@@ -127,9 +127,11 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         if hasattr(request, "user"):
             if request.user.is_authenticated:
                 self.user = request.user
-                self.helper_logger(f"SmarterRequestMixin - request.user={self.user} is authenticated.")
+                self.helper_logger(
+                    f"SmarterRequestMixin - request.user={self.user} is authenticated for url: {self.url}"
+                )
             else:
-                self.helper_logger("SmarterRequestMixin - request.user is not authenticated.")
+                self.helper_logger(f"SmarterRequestMixin - request.user is not authenticated for url: {self.url}")
         else:
             self.helper_logger("SmarterRequestMixin - 'WSGIRequest' object has no attribute 'user'")
         if self.is_chatbot_named_url:
@@ -139,6 +141,13 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             if self.account and not self._user:
                 self._user = get_cached_admin_user_for_account(account=self.account)
         self.eval_chatbot_url()
+
+        if self.is_chatbot:
+            self.helper_logger(
+                f"chatbot_name={self.smarter_request_chatbot_name} chatbot_id={self.smarter_request_chatbot_id}"
+            )
+        if self.is_config:
+            self.helper_logger("is_config=True")
 
     @property
     def smarter_request(self) -> WSGIRequest:
@@ -234,7 +243,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         self.helper_logger(f"@session_key.setter={self._session_key}")
 
     @cached_property
-    def chatbot_id(self) -> int:
+    def smarter_request_chatbot_id(self) -> int:
         """
         Extract the chatbot id from the URL.
         example: http://localhost:8000/api/v1/chatbots/<int:chatbot_id>/chat/config/
@@ -244,7 +253,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             return int(path_parts[4]) if len(path_parts) > 4 else None
 
     @cached_property
-    def chatbot_name(self) -> str:
+    def smarter_request_chatbot_name(self) -> str:
         """
         Extract the chatbot name from the URL.
         """
@@ -358,17 +367,29 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             return session_key
 
     @cached_property
+    def is_config(self) -> bool:
+        """
+        Returns True if the url resolves to a config endpoint.
+        """
+        if not self.url:
+            return False
+        if self.url_path_parts and self.url_path_parts[-1] == "config":
+            return True
+        return False
+
+    @cached_property
     def is_chatbot(self) -> bool:
         """
         Returns True if the url resolves to a chatbot.
         """
 
-        def envionment_root_domain() -> bool:
+        def environment_root_domain() -> bool:
             return self.parsed_url.netloc == smarter_settings.environment_domain and self.parsed_url.path == "/"
 
         return (
             self.qualified_request
-            and not envionment_root_domain()
+            and not environment_root_domain()
+            and not self.is_config
             and (
                 self.is_chatbot_named_url
                 or self.is_chatbot_sandbox_url
@@ -617,8 +638,8 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             "url": self.url,
             "session_key": self.session_key,
             "data": self.data,
-            "chatbot_id": self.chatbot_id,
-            "chatbot_name": self.chatbot_name,
+            "chatbot_id": self.smarter_request_chatbot_id,
+            "chatbot_name": self.smarter_request_chatbot_name,
             "is_smarter_api": self.is_smarter_api,
             "is_chatbot": self.is_chatbot,
             "is_chatbot_smarter_api_url": self.is_chatbot_smarter_api_url,
