@@ -378,18 +378,32 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         return False
 
     @cached_property
+    def is_dashboard(self) -> bool:
+        """
+        Returns True if the url resolves to a dashboard endpoint.
+        """
+        if not self.url:
+            return False
+        if self.url_path_parts and self.url_path_parts[-1] == "dashboard":
+            return True
+        return False
+
+    @cached_property
+    def is_environment_root_domain(self):
+        return self.parsed_url.netloc == smarter_settings.environment_domain and self.parsed_url.path == "/"
+
+    @cached_property
     def is_chatbot(self) -> bool:
         """
-        Returns True if the url resolves to a chatbot.
+        Returns True if the url resolves to a chatbot. Conditions are called in a lazy
+        sequence intended to avoid unnecessary processing.
         """
-
-        def environment_root_domain() -> bool:
-            return self.parsed_url.netloc == smarter_settings.environment_domain and self.parsed_url.path == "/"
 
         return (
             self.qualified_request
-            and not environment_root_domain()
+            and not self.is_environment_root_domain
             and not self.is_config
+            and not self.is_dashboard
             and (
                 self.is_chatbot_named_url
                 or self.is_chatbot_sandbox_url
