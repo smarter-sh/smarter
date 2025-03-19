@@ -544,6 +544,13 @@ class ChatBotHelper(SmarterRequestMixin):
         self._name: str = None
         self._err: str = None
         super().__init__(request=request)
+
+        if self.parsed_url.netloc == smarter_settings.environment_domain:
+            self.helper_logger(
+                f"__init__() { request.build_absolute_uri() } is the environment url. it is not a chatbot."
+            )
+            return None
+
         if self.is_chatbot:
             self.helper_logger(f"__init__() to_json(): {json.dumps(self.to_json(), indent=4, sort_keys=True)}")
         if not chatbot_id and not name and not self.is_chatbot:
