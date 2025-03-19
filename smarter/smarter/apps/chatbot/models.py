@@ -922,7 +922,7 @@ def get_cached_chatbot_by_request(request: WSGIRequest) -> ChatBot:
     chatbot: ChatBot = None
 
     chatbot_helper = ChatBotHelper(request=request)
-    if chatbot_helper:
+    if chatbot_helper.chatbot:
         chatbot = chatbot_helper.chatbot
     if chatbot:
         logger.info(
