@@ -545,19 +545,7 @@ class ChatBotHelper(SmarterRequestMixin):
         self._err: str = None
         super().__init__(request=request)
 
-        if not self.is_chatbot:
-            self.helper_logger(f"__init__() { self.url } is not a chatbot.")
-            return None
-
-        if self.parsed_url.netloc == smarter_settings.environment_domain and self.parsed_url.path == "/":
-            self.helper_logger(
-                f"__init__() { request.build_absolute_uri() } is the environment url. it is not a chatbot."
-            )
-            return None
-
-        if self.is_chatbot:
-            self.helper_logger(f"__init__() to_json(): {json.dumps(self.to_json(), indent=4, sort_keys=True)}")
-        if not chatbot_id and not name and not self.is_chatbot:
+        if not self.is_chatbot and not name and not chatbot_id:
             # keep in mind that self.is_chatbot comes from SmartRequestMixin and is
             # based on an analysis of the url format. we frequently get called
             # in cases where the url itself is not a chatbot url but we're still
@@ -565,9 +553,14 @@ class ChatBotHelper(SmarterRequestMixin):
             # and/or name.
             # example: http://localhost:8000/chatbots/ which yields a list of chatbots
             # but the url itself is not a chatbot url.
-            if isinstance(request, WSGIRequest):
-                self.helper_logger(f"__init__() { request.build_absolute_uri() } is not a chatbot.")
+            self.helper_logger(f"__init__() url={ self.url } name={ name } chatbot_id={ chatbot_id } is not a chatbot.")
             return None
+
+        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+            self.helper_logger(
+                f"__init__() url={ self.url } name={ name } chatbot_id={ chatbot_id } might be a chatbot. Proceeding with initializaation."
+            )
+            self.helper_logger(f"__init__() to_json(): {json.dumps(self.to_json(), indent=4, sort_keys=True)}")
 
         self._chatbot: ChatBot = None
         self._chatbot_custom_domain: ChatBotCustomDomain = None
