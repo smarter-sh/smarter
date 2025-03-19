@@ -6,9 +6,6 @@ from urllib.parse import urlparse
 from django.core.cache import cache
 from django.core.handlers.wsgi import WSGIRequest
 
-from smarter.apps.account.models import Account
-from smarter.apps.account.utils import get_cached_account_for_user
-
 
 def cache_results(timeout=60 * 60):
     def decorator(func):
@@ -37,9 +34,6 @@ def cache_request(timeout=60 * 60):
         def wrapper(request: WSGIRequest, *args, **kwargs):
             uri = urlparse(request.build_absolute_uri()).path
             user_identifier = request.user.username if request.user and request.user.is_authenticated else "anonymous"
-            account: Account = get_cached_account_for_user(request.user)
-            if account:
-                user_identifier = account.account_number
             cache_key = f"{func.__name__}_{uri}_{user_identifier}"
             result = cache.get(cache_key)
             if result is None:
