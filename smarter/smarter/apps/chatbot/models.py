@@ -647,12 +647,9 @@ class ChatBotHelper(SmarterRequestMixin):
         if self._chatbot:
             self._name = self.chatbot.name
 
-        if not self.is_chatbot:
-            return None
-
         if self.is_chatbot_named_url:
             # covers a case like http://example.api.localhost:8000/
-            pass
+            self._name = self.parsed_url.hostname.split(".")[0]
 
         if self.is_chatbot_sandbox_url:
             # covers a case like http://localhost:8000/chatbots/example/
