@@ -570,10 +570,6 @@ class ChatBotHelper(SmarterRequestMixin):
         self._name: str = name
         self._err: str = None
 
-        self.helper_logger(
-            f"__init__() chatbot={self.chatbot}, url={self.url}, name={self.name}, chatbot_id={self.chatbot_id} user: {self.user}, account: {self.account}"
-        )
-
         if not self._name and self.is_chatbot_sandbox_url:
             parsed_url = urlparse(self.url)
             self._name = parsed_url.path.split("/")[-2]
@@ -648,7 +644,7 @@ class ChatBotHelper(SmarterRequestMixin):
             self._name = super().chatbot_name
             return self._name
 
-        if self.chatbot:
+        if self._chatbot:
             self._name = self.chatbot.name
 
         if not self.is_chatbot:
