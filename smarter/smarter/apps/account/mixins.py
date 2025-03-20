@@ -128,6 +128,8 @@ class AccountMixin:
         Otherwise, initialize the account in which the user is contained.
         """
         self._user = user
+        if user:
+            logger.info("AccountMixin: setting user %s", user)
         if not self._user:
             # unset the user_profile if the user is unset
             self.user_profile = None

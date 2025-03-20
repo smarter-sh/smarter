@@ -431,10 +431,13 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         try:
             return self.handler(request, name, *args, **kwargs)
         except Exception as e:
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                e=APIV1CLIChatViewError(f"Internal error. {e}"),
-                thing=SmarterJournalThings(SmarterJournalThings.CHAT),
-                command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
-                status=HTTPStatus.INTERNAL_SERVER_ERROR,
-            )
+            try:
+                raise APIV1CLIChatViewError(str(e)) from e
+            except APIV1CLIChatViewError as api_error:
+                return SmarterJournaledJsonErrorResponse(
+                    request=request,
+                    e=api_error,
+                    thing=SmarterJournalThings(SmarterJournalThings.CHAT),
+                    command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
+                    status=HTTPStatus.INTERNAL_SERVER_ERROR,
+                )

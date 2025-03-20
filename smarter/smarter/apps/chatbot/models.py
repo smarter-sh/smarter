@@ -534,13 +534,13 @@ class ChatBotHelper(SmarterRequestMixin):
         :param url: The URL to parse.
         :param environment: The environment to use for the URL. (for unit testing only)
         """
-        SmarterRequestMixin.__init__(self, request=request)
         self._chatbot: ChatBot = None
         self._chatbot_custom_domain: ChatBotCustomDomain = None
         self._chatbot_requests: ChatBotRequests = None
         self._chatbot_id: int = chatbot_id
         self._name: str = name
         self._err: str = None
+        SmarterRequestMixin.__init__(self, request=request)
 
         if self.chatbot:
             self.helper_logger(f"__init__() initialized self.chatbot={self.chatbot} from chatbot_id")
@@ -586,6 +586,7 @@ class ChatBotHelper(SmarterRequestMixin):
         self.helper_warning(
             f"__init__() failed to initialize self.chatbot with url={self.url}, name={self.name}, chatbot_id={self.chatbot_id}"
         )
+        self.helper_logger(SmarterRequestMixin.dump(self))
 
     def __str__(self):
         return str(self.chatbot) if self.chatbot else "undefined"
@@ -694,7 +695,7 @@ class ChatBotHelper(SmarterRequestMixin):
 
         horizontal_line = "-" * (80 - 15)
         self.helper_logger(horizontal_line)
-        self.helper_logger(json.dumps(self.to_json()))
+        self.helper_logger(json.dumps(self.to_json(), indent=4))
         self.helper_logger(horizontal_line)
 
     def to_json(self):

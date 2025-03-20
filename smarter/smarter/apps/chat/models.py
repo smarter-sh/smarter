@@ -152,6 +152,8 @@ class ChatHelper(SmarterRequestMixin):
 
     # FIX NOTE: remove session_key
     def __init__(self, request, session_key: str, chatbot: ChatBot = None) -> None:
+        if not request:
+            raise SmarterValueError(f"{self.formatted_class_name} request is required")
         SmarterRequestMixin.__init__(self, request=request)
         self._chat: Chat = None
         self._chatbot: ChatBot = None
