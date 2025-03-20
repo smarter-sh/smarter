@@ -33,7 +33,6 @@ from smarter.apps.account.utils import (
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
-from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.url_helpers import session_key_from_url
 from smarter.lib.django.validators import SmarterValidator
 
@@ -120,6 +119,9 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         # validate, standardize and parse the request url string into a ParseResult.
         # Note that the setter and getter both work with strings
         # but we store the private instance variable _url as a ParseResult.
+        self.helper_logger(
+            f"SmarterRequestMixin - __init__() request: {request.build_absolute_uri() if request else None}"
+        )
         self.init(request=request)
 
         if request and hasattr(request, "user") and request.user and request.user.is_authenticated:
@@ -129,6 +131,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             self.helper_logger(
                 f"SmarterRequestMixin - request.user is missing or is not authenticated for url: {self.url}"
             )
+        self.session_key = self.get_session_key()
 
         if not request:
             logger.error("SmarterRequestMixin - request is None")
@@ -140,14 +143,13 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         if not self.qualified_request:
             return None
 
-        self.session_key = self.get_session_key()
-
         if self.is_chatbot_named_url:
             account_number = account_number_from_url(self.url)
             self.account = get_cached_account(account_number=account_number)
 
             if self.account and not self._user:
                 self._user = get_cached_admin_user_for_account(account=self.account)
+
         self.eval_chatbot_url()
 
         if self.is_chatbot:
@@ -644,8 +646,6 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         """
         Generate a session_key based on a unique string and the current datetime.
         """
-        if not self.is_chatbot:
-            return None
         key_string = self.unique_client_string
         if key_string:
             session_key = hashlib.sha256(key_string.encode()).hexdigest()
@@ -711,13 +711,14 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         Create a log entry
         """
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_REQUEST_MIXIN_LOGGING):
-            logger.info(f"{self.formatted_class_name}: {message}")
+            logger.info("%s: %s", self.formatted_class_name, message)
 
     def get_session_key(self) -> str:
         """
         Extract the session key from the URL, the request body, or the request headers.
         """
         if not self.smarter_request:
+            self.helper_logger("SmarterRequestMixin.get_session_key() - request is None")
             return None
         session_key: str = None
 
@@ -725,7 +726,11 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             # this is our expected case. we look for the session key in th parsed url.
             query_params = parse_qs(self._url.query)
             session_key = query_params.get("session_key", [None])[0] if query_params else None
+            session_key = session_key.strip() if isinstance(session_key, str) else None
             if session_key:
+                self.helper_logger(
+                    f"fSmarterRequestMixin.get_session_key() - session_key found in url: {session_key}",
+                )
                 return session_key
 
         # alternatively we look for the session key in the request body
@@ -735,7 +740,10 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             or self.data.get(SMARTER_CHAT_SESSION_KEY_NAME)
             or self.smarter_request.GET.get(SMARTER_CHAT_SESSION_KEY_NAME)
         )
+
+        session_key = session_key.strip() if isinstance(session_key, str) else None
         if session_key:
+            self.helper_logger(f"SmarterRequestMixin.get_session_key() - session_key found in url: {session_key}")
             return session_key
 
         # if we still don't have a session key, we generate a new one.
