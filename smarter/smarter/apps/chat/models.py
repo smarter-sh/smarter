@@ -152,9 +152,13 @@ class ChatHelper(SmarterRequestMixin):
 
     # FIX NOTE: remove session_key
     def __init__(self, request, session_key: str, chatbot: ChatBot = None) -> None:
+        if not request:
+            logger.error("ChatHelper - request object is missing.")
+        logger.info("%s - session_key: %s, chatbot: %s", self.formatted_class_name, session_key, chatbot)
         SmarterRequestMixin.__init__(self, request=request)
         self._chat: Chat = None
-        self._chatbot: ChatBot = None
+        self._chatbot: ChatBot = chatbot
+        self.session_key = session_key
         self._clean_url: str = None
 
         if not session_key and not chatbot:
@@ -163,7 +167,6 @@ class ChatHelper(SmarterRequestMixin):
             )
 
         if chatbot:
-            self._chatbot = chatbot
             self.account = chatbot.account
 
         self._chat = self.get_cached_chat()
@@ -227,6 +230,10 @@ class ChatHelper(SmarterRequestMixin):
         """
         Get the chat instance for the current request.
         """
+        if not self.smarter_request:
+            logger.error("%s - request object is required for ChatHelper.", self.formatted_class_name)
+            return None
+
         chat: Chat = cache.get(self.session_key)
         if chat:
             if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
