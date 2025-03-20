@@ -228,7 +228,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
                 (self._url.scheme, self._url.netloc, self._url.path, "", "")
             )
             return self._url_urlunparse_without_params
-        raise SmarterValueError("url is not set")
+        logger.error("SmarterRequestMixin - url is None")
 
     @property
     def parsed_url(self) -> ParseResult:
