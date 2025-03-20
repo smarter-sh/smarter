@@ -537,17 +537,21 @@ class ChatBotHelper(SmarterRequestMixin):
         self._chatbot: ChatBot = None
         self._chatbot_custom_domain: ChatBotCustomDomain = None
         self._chatbot_requests: ChatBotRequests = None
-        self._chatbot_id: int = chatbot_id
-        self._name: str = name
+        self._chatbot_id: int = None
+        self._name: str = None
         self._err: str = None
+
         SmarterRequestMixin.__init__(self, request=request)
 
+        self._chatbot_id: int = self._chatbot_id or chatbot_id or self.smarter_request_chatbot_id
+        self._name: str = self._name or name or self.smarter_request_chatbot_name
+
         if self.chatbot:
-            self.helper_logger(f"__init__() initialized self.chatbot={self.chatbot} from chatbot_id")
+            self.helper_logger(f"__init__() initialized self.chatbot={self.chatbot}")
             self.log_dump()
             return None
 
-        if not self.is_chatbot and not name and not chatbot_id:
+        if not self.is_chatbot and not self.name and not self.chatbot_id:
             # keep in mind that self.is_chatbot comes from SmartRequestMixin and is
             # based on an analysis of the url format. we frequently get called
             # in cases where the url itself is not a chatbot url but we're still
@@ -555,28 +559,17 @@ class ChatBotHelper(SmarterRequestMixin):
             # and/or name.
             # example: http://localhost:8000/chatbots/ which yields a list of chatbots
             # but the url itself is not a chatbot url.
-            self.helper_logger(f"__init__() url={ self.url } name={ name } chatbot_id={ chatbot_id } is not a chatbot.")
+            self.helper_logger(
+                f"__init__() url={ self.url } name={ self.name } chatbot_id={ self.chatbot_id } is not a chatbot."
+            )
             return None
 
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
             self.helper_logger(
-                f"__init__() url={ self.url } name={ name } chatbot_id={ chatbot_id } might be a chatbot. Proceeding with initializaation."
+                f"__init__() url={ self.url } name={ self.name } chatbot_id={ self.chatbot_id } user={ self.user } account={ self.account }."
             )
 
-        self.chatbot_id: int = chatbot_id
-        if self.chatbot:
-            self.helper_logger(f"__init__() initialized self.chatbot={self.chatbot} from chatbot_id")
-            self.log_dump()
-            return None
-
-        self._name: str = name
-        self._err: str = None
-
-        if not self._name and self.is_chatbot_sandbox_url:
-            parsed_url = urlparse(self.url)
-            self._name = parsed_url.path.split("/")[-2]
-
-        self._chatbot = get_cached_chatbot(account=self.account, name=self.name)
+        self._chatbot = self._chatbot or get_cached_chatbot(account=self.account, name=self.name)
         if self._chatbot:
             self.helper_logger(f"__init__() initialized self.chatbot={self.chatbot} from account and name")
             self.log_dump()
