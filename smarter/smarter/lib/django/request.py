@@ -104,6 +104,17 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
 
     # pylint: disable=W0613
     def __init__(self, request: WSGIRequest, *args, **kwargs):
+        # validate, standardize and parse the request url string into a ParseResult.
+        # Note that the setter and getter both work with strings
+        # but we store the private instance variable _url as a ParseResult.
+        url: str = None
+        self._url: ParseResult = None
+        self._timestamp: float = None
+        self._session_key: str = None
+        self._data: dict = None
+        self._url_urlunparse_without_params: str = None
+        self._smarter_request: WSGIRequest = None
+
         if not request:
             logger.error("SmarterRequestMixin - request is None")
             return None
