@@ -105,7 +105,8 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
     # pylint: disable=W0613
     def __init__(self, request: WSGIRequest, *args, **kwargs):
         if not request:
-            raise SmarterValueError("request is required")
+            logger.error("SmarterRequestMixin - request is None")
+            return None
         self._smarter_request = request
 
         # validate, standardize and parse the request url string into a ParseResult.
@@ -332,7 +333,9 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         try:
             self.helper_logger(f"SmarterRequestMixin request body={self.smarter_request.body}")
             self._data = json.loads(self.smarter_request.body) if self.smarter_request else {}
-        except json.JSONDecodeError:
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.error("SmarterRequestMixin - failed to parse request body: %s", e)
             self._data = {}
 
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
@@ -712,6 +715,8 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         """
         Extract the session key from the URL, the request body, or the request headers.
         """
+        if not self.smarter_request:
+            return None
         session_key: str = None
 
         if self._url:
