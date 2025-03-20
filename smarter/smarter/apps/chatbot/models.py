@@ -523,6 +523,14 @@ class ChatBotHelper(SmarterRequestMixin):
         "_err",
     )
 
+    def init_slots(self):
+        self._chatbot: ChatBot = None
+        self._chatbot_custom_domain: ChatBotCustomDomain = None
+        self._chatbot_requests: ChatBotRequests = None
+        self._chatbot_id: int = None
+        self._name: str = None
+        self._err: str = None
+
     def __init__(
         self,
         request: WSGIRequest = None,
@@ -534,13 +542,7 @@ class ChatBotHelper(SmarterRequestMixin):
         :param url: The URL to parse.
         :param environment: The environment to use for the URL. (for unit testing only)
         """
-        self._chatbot: ChatBot = None
-        self._chatbot_custom_domain: ChatBotCustomDomain = None
-        self._chatbot_requests: ChatBotRequests = None
-        self._chatbot_id: int = None
-        self._name: str = None
-        self._err: str = None
-
+        self.init_slots()
         SmarterRequestMixin.__init__(self, request=request)
 
         self._chatbot_id: int = self._chatbot_id or chatbot_id or self.smarter_request_chatbot_id
