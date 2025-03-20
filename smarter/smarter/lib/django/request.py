@@ -122,7 +122,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         # but we store the private instance variable _url as a ParseResult.
         self.init(request=request)
 
-        if request and request.user:
+        if request and hasattr(request, "user") and request.user:
             AccountMixin.__init__(self, user=request.user)
         else:
             AccountMixin.__init__(self)
