@@ -102,12 +102,17 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
 
     __slots__ = ("_smarter_request", "_timestamp", "_session_key", "_data", "_url", "_url_urlunparse_without_params")
 
-    def init(self):
-        self._smarter_request: WSGIRequest = None
+    def init(self, request: WSGIRequest):
+        self._smarter_request: WSGIRequest = request
         self._timestamp = datetime.now()
         self._session_key: str = None
         self._data: dict = None
-        self._url: ParseResult = None
+
+        # validate, standardize and parse the request url string into a ParseResult.
+        # Note that the setter and getter both work with strings
+        # but we store the private instance variable _url as a ParseResult.
+        url = request.build_absolute_uri() if request else "http://localhost:8000/"
+        self._url = urlparse(url)
         self._url_urlunparse_without_params: str = None
 
     # pylint: disable=W0613
@@ -115,39 +120,25 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         # validate, standardize and parse the request url string into a ParseResult.
         # Note that the setter and getter both work with strings
         # but we store the private instance variable _url as a ParseResult.
-        self.init()
+        self.init(request=request)
+
+        if request and request.user:
+            AccountMixin.__init__(self, user=request.user)
+        else:
+            AccountMixin.__init__(self)
+            self.helper_logger(
+                f"SmarterRequestMixin - request.user is missing or is not authenticated for url: {self.url}"
+            )
 
         if not request:
             logger.error("SmarterRequestMixin - request is None")
-            AccountMixin.__init__(self)
             return None
-        self._smarter_request = request
-
-        # validate, standardize and parse the request url string into a ParseResult.
-        # Note that the setter and getter both work with strings
-        # but we store the private instance variable _url as a ParseResult.
-        url = request.build_absolute_uri() if request else "http://localhost:8000/"
-        self._url = urlparse(url)
 
         self.helper_logger(f"url={self._url}")
 
         # lazy excuses to not do anything...
         if not self.qualified_request:
-            AccountMixin.__init__(self)
             return None
-
-        # be mindful that the request object may not have a user
-        if hasattr(request, "user"):
-            AccountMixin.__init__(self, user=request.user)
-            if request.user.is_authenticated:
-                self.helper_logger(
-                    f"SmarterRequestMixin - request.user={self.user} is authenticated for url: {self.url}"
-                )
-            else:
-                self.helper_logger(f"SmarterRequestMixin - request.user is not authenticated for url: {self.url}")
-        else:
-            AccountMixin.__init__(self)
-            self.helper_logger("SmarterRequestMixin - 'WSGIRequest' object has no attribute 'user'")
 
         self.session_key = self.get_session_key()
 
