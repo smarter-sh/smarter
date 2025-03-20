@@ -575,11 +575,10 @@ class ChatBotHelper(SmarterRequestMixin):
             self.log_dump()
             return None
 
-        self.log_dump()
         self.helper_warning(
-            f"__init__() failed to initialize self.chatbot with url={self.url}, name={self.name}, chatbot_id={self.chatbot_id}"
+            f"__init__() failed to initialize self.chatbot with url={ self.url } name={ self.name } chatbot_id={ self.chatbot_id } user={ self.user } account={ self.account }."
         )
-        self.helper_logger(SmarterRequestMixin.dump(self))
+        self.log_dump()
 
     def __str__(self):
         return str(self.chatbot) if self.chatbot else "undefined"
