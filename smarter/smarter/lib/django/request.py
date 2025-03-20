@@ -330,12 +330,13 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         if self._data:
             return self._data
         try:
+            self.helper_logger(f"SmarterRequestMixin request body={self.smarter_request.body}")
             self._data = json.loads(self.smarter_request.body) if self.smarter_request else {}
         except json.JSONDecodeError:
             self._data = {}
 
         if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
-            self.helper_logger(f"data={self._data}")
+            self.helper_logger(f"SmarterRequestMixin request body json={self._data}")
 
         return self._data
 

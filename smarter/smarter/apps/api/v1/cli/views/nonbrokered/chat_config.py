@@ -51,6 +51,7 @@ class ApiV1CliChatConfigApiView(ApiV1CliChatBaseApiView):
         :param name: Name of the chat
         :param uid: UID of the client, created from the machine mac address and the hostname
         """
+        logger.info("%s Chat config view for chat %s and client %s.", self.formatted_class_name, name, uid)
         response = ChatConfigView.as_view()(request, name=name)
 
         try:
