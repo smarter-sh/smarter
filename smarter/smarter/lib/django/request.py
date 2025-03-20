@@ -117,6 +117,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
 
         if not request:
             logger.error("SmarterRequestMixin - request is None")
+            AccountMixin.__init__(self)
             return None
         self._smarter_request = request
 
