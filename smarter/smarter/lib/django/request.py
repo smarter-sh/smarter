@@ -123,7 +123,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         # validate, standardize and parse the request url string into a ParseResult.
         # Note that the setter and getter both work with strings
         # but we store the private instance variable _url as a ParseResult.
-        url = request.build_absolute_uri()
+        url = request.build_absolute_uri() if request else "http://localhost:8000/"
         self._url: ParseResult = urlparse(url)
         self._timestamp = datetime.now()
         self._session_key: str = None
@@ -244,6 +244,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         """
         if self.parsed_url:
             return self.parsed_url.path.strip("/").split("/")
+        return [None, None, None, None]
 
     @property
     def session_key(self):
