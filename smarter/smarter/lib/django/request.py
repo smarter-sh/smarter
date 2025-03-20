@@ -260,9 +260,9 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         """
         if self.is_chatbot_smarter_api_url:
             path_parts = self.url_path_parts
-            return int(path_parts[4]) if len(path_parts) > 4 else None
+            return int(path_parts[3])
 
-    @property
+    @cached_property
     def smarter_request_chatbot_name(self) -> str:
         """
         Extract the chatbot name from the URL.
@@ -486,11 +486,11 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         example urls:
         - https://alpha.platform.smarter.sh/chatbots/example/
           https://<environment_domain>/chatbots/<name>
-          path_parts: ['', 'chatbots', 'example', '']
+          path_parts: ['chatbots', 'example']
 
         - https://alpha.platform.smarter.sh/chatbots/example/config/
           https://<environment_domain>/chatbots/<name>/config/
-          path_parts: ['', 'chatbots', 'example', 'config', '']
+          path_parts: ['chatbots', 'example', 'config']
         """
         if not self.qualified_request:
             return False
@@ -499,57 +499,44 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
 
         path_parts = self.url_path_parts
         # valid path_parts:
-        #   ['', 'chatbots', '<slug>']
-        #   ['', 'chatbots', '<slug>', '']
-        #   ['', 'chatbots', '<slug>', 'config']
-        #   ['', 'chatbots', '<slug>', 'config', '']
-        if not path_parts:
-            self.helper_logger(f"is_chatbot_sandbox_url() - not path_parts: {path_parts} for url: {self.url}")
-            return False
+        #   ['chatbots', '<slug>']
+        #   ['chatbots', '<slug>', 'config']
         if self.parsed_url.netloc != smarter_settings.environment_domain:
             self.helper_logger(
                 f"is_chatbot_sandbox_url() - netloc != smarter_settings.environment_domain: {self.parsed_url.netloc} for url: {self.url}"
             )
             return False
-        if len(path_parts) < 3:
-            self.helper_logger(f"is_chatbot_sandbox_url() - len(path_parts) < 3: {path_parts} for url: {self.url}")
+        if len(path_parts) < 2:
+            self.helper_logger(f"is_chatbot_sandbox_url() - len(path_parts) < 2: {path_parts} for url: {self.url}")
             return False
-        if path_parts[1] != "chatbots":
-            # expecting this form: ['', 'chatbots', '<slug>', 'config', '']
+        if path_parts[0] != "chatbots":
+            # expecting this form: ['chatbots', '<slug>', 'config']
             self.helper_logger(
-                f"is_chatbot_sandbox_url() - path_parts[1] != 'chatbots': {path_parts} for url: {self.url}"
+                f"is_chatbot_sandbox_url() - path_parts[0] != 'chatbots': {path_parts} for url: {self.url}"
             )
             return False
-        if not path_parts[2].isalpha():
-            # expecting <slug> to be alpha: ['', 'chatbots', '<slug>', 'config', '']
-            self.helper_logger(
-                f"is_chatbot_sandbox_url() - not path_parts[2].isalpha(): {path_parts} for url: {self.url}"
-            )
-            return False
-        if len(path_parts) > 5:
-            self.helper_logger(f"is_chatbot_sandbox_url() - len(path_parts) > 5: {path_parts} for url: {self.url}")
-            return False
-
-        if len(path_parts) == 3 and not path_parts[2].isalpha():
-            # expecting: ['', 'chatbots', '<slug>']
+        if not path_parts[1].isalpha():
+            # expecting <slug> to be alpha: ['chatbots', '<slug>', 'config']
             self.helper_logger(
                 f"is_chatbot_sandbox_url() - not path_parts[2].isalpha(): {path_parts} for url: {self.url}"
             )
             return False
+        if len(path_parts) > 3:
+            self.helper_logger(f"is_chatbot_sandbox_url() - len(path_parts) > 3: {path_parts} for url: {self.url}")
+            return False
 
-        if len(path_parts) == 4 and not path_parts[3] in ["config", ""]:
+        if len(path_parts) == 2 and not path_parts[1].isalpha():
+            # expecting: ['chatbots', '<slug>']
+            self.helper_logger(
+                f"is_chatbot_sandbox_url() - not path_parts[1].isalpha(): {path_parts} for url: {self.url}"
+            )
+            return False
+
+        if len(path_parts) == 3 and not self.is_config:
             # expecting either of:
-            # ['', 'chatbots', '<slug>', 'config']
-            # ['', 'chatbots', '<slug>', '']
-            self.helper_logger(
-                f"is_chatbot_sandbox_url() - not 'config' in path_parts[3]: {path_parts} for url: {self.url}"
-            )
-            return False
-        if len(path_parts) == 5 and path_parts[3] != "config":
-            # expecting: ['', 'chatbots', '<slug>', 'config', '']
-            self.helper_logger(
-                f"is_chatbot_sandbox_url() - not 'config' in path_parts[4]: {path_parts} for url: {self.url}"
-            )
+            # ['chatbots', '<slug>', 'config']
+            # ['chatbots', '<slug>']
+            self.helper_logger(f"is_chatbot_sandbox_url() - is not 'config' for url: {self.url}")
             return False
 
         return True
