@@ -19,7 +19,13 @@ from smarter.apps.chatbot.api.v1.views.default import DefaultChatBotApiView
 from smarter.apps.chatbot.models import get_cached_chatbot_by_request
 from smarter.apps.dashboard.admin import restricted_site
 from smarter.apps.dashboard.views.dashboard import ComingSoon
-from smarter.apps.docs.views.webserver import FaviconView, RobotsTxtView, SitemapXmlView
+from smarter.apps.docs.views.webserver import (
+    FaviconView,
+    HealthzView,
+    ReadinessView,
+    RobotsTxtView,
+    SitemapXmlView,
+)
 
 
 admin.site = restricted_site
@@ -76,6 +82,8 @@ urlpatterns = [
     path("favicon.ico", FaviconView.as_view(), name="favicon"),
     path("robots.txt", RobotsTxtView.as_view(), name="robots_txt"),
     path("sitemap.xml", SitemapXmlView.as_view(), name="sitemap_xml"),
+    path("healthz/", HealthzView.as_view(), name="healthz"),
+    path("readiness/", ReadinessView.as_view(), name="readiness"),
     # -----------------------------------
     path("api/", include("smarter.apps.api.urls")),
     path("chatbots/", include("smarter.apps.chatapp.urls")),
