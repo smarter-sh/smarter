@@ -5,10 +5,11 @@ import logging
 from typing import Type
 
 from django.core.handlers.wsgi import WSGIRequest
-from taggit.models import Tag
+from rest_framework import serializers
+from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Account
+from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
 from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
@@ -51,6 +52,23 @@ class SAMPluginBrokerError(SAMBrokerError):
     @property
     def get_formatted_err_message(self):
         return "Smarter API Plugin Manifest Broker Error"
+
+
+class PluginSerializer(ModelSerializer):
+    """Django ORM model serializer for get()"""
+
+    email = serializers.SerializerMethodField()
+
+    def get_email(self, obj):
+        if obj.author:
+            user_profile = UserProfile.objects.get(id=obj.author_id)
+            return user_profile.user.email if user_profile.user else None
+        return None
+
+    # pylint: disable=C0115
+    class Meta:
+        model = PluginMeta
+        fields = ["name", "plugin_class", "version", "email", "created_at", "updated_at"]
 
 
 class SAMPluginBroker(AbstractBroker, AccountMixin):
@@ -175,62 +193,52 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         data = Plugin.example_manifest(kwargs=kwargs)
         return self.json_response_ok(command=command, data=data)
 
-    # pylint: disable=W0221
-    def get_model_titles(self) -> list[dict[str, str]]:
-        titles = [
-            {"name": f, "type": str(t)}
-            for f, t in self.plugin.manifest.__annotations__.items()
-            if f != "class_identifier"
-        ]
-        return titles
-
     def get(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
-        name: str = self.params.get("name", None)
-        name = self.clean_cli_param(param=name, param_name="name", url=request.build_absolute_uri())
-        all_objects: bool = self.params.get("all_objects", False)
-        tags: str = self.params.get("tags", None)
+
         data = []
+        name = kwargs.get("name", None)
+        name = self.clean_cli_param(param=name, param_name="name", url=request.build_absolute_uri())
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
         if name:
-            plugins = PluginMeta.objects.filter(account=self.account, name=name)
+            chatbots = PluginMeta.objects.filter(account=self.account, name=name)
         else:
-            if all_objects:
-                plugins = PluginMeta.objects.filter(account=self.account)
-            else:
-                if tags:
-                    tags = Tag.objects.filter(name__in=tags)
-                    plugins = PluginMeta.objects.filter(account=self.account, tags__in=tags)[:MAX_RESULTS]
-                else:
-                    plugins = PluginMeta.objects.filter(account=self.account)[:MAX_RESULTS]
+            chatbots = PluginMeta.objects.filter(account=self.account)
+        logger.info(
+            "%s.get() found %s Plugins for account %s", self.formatted_class_name, chatbots.count(), self.account
+        )
 
-        logger.info("SAMPluginBroker().get() found %s Plugins for account %s", plugins.count(), self.account)
-
-        # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
-        for plugin_meta in plugins:
-            controller = PluginController(account=self.account, plugin_meta=plugin_meta)
+        # iterate over the QuerySet and use a serializer to create a model dump for each ChatBot
+        for chatbot in chatbots:
             try:
-                model_titles = controller.get_model_titles()
-                model_dump = controller.model_dump_json()
+                model_dump = PluginSerializer(chatbot).data
                 if not model_dump:
-                    raise SAMBrokerError(
-                        f"Plugin {plugin_meta.name} model dump failed", thing=self.kind, command=command
+                    raise SAMPluginBrokerError(
+                        f"Model dump failed for {self.kind} {chatbot.name}", thing=self.kind, command=command
                     )
-                data.append(model_dump)
+                camel_cased_model_dump = self.snake_to_camel(model_dump)
+                data.append(camel_cased_model_dump)
             except Exception as e:
-                raise SAMBrokerError(
-                    f"Plugin {plugin_meta.name} model dump failed", thing=self.kind, command=command
+                logger.error(
+                    "%s.get() failed to serialize %s %s",
+                    self.formatted_class_name,
+                    self.kind,
+                    chatbot.name,
+                    exc_info=True,
+                )
+                raise SAMPluginBrokerError(
+                    f"Failed to serialize {self.kind} {chatbot.name}", thing=self.kind, command=command
                 ) from e
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMMetadataKeys.NAME.value: name,
             SAMKeys.METADATA.value: {"count": len(data)},
-            SCLIResponseGet.KWARGS.value: self.params,
+            SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
-                SCLIResponseGetData.TITLES.value: model_titles,
+                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=PluginSerializer()),
                 SCLIResponseGetData.ITEMS.value: data,
             },
         }
