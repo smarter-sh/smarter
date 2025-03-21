@@ -35,7 +35,19 @@ spec:
         deploymentTimestamp: "{{ now | unixEpoch }}"
     spec:
       containers:
-        - env:
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: {{ .Values.deployment.containerPort }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: {{ .Values.deployment.containerPort }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        env:
             - name: ROOT_DOMAIN
               value: "{{ .Values.env.ROOT_DOMAIN }}"
             - name: AWS_REGION
@@ -119,18 +131,6 @@ spec:
           resources: {}
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
-      livenessProbe:
-        httpGet:
-          path: /healthz
-          port: {{ .Values.deployment.containerPort }}
-        initialDelaySeconds: 30
-        periodSeconds: 10
-      readinessProbe:
-        httpGet:
-          path: /readiness
-          port: {{ .Values.deployment.containerPort }}
-        initialDelaySeconds: 30
-        periodSeconds: 10
       dnsPolicy: ClusterFirst
       enableServiceLinks: true
       restartPolicy: Always
