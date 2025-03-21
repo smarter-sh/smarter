@@ -25,7 +25,7 @@ from smarter.common.const import SmarterWaffleSwitches
 
 logger = logging.getLogger(__name__)
 
-if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
     logger.info("Loading smarter.lib.django.middleware.cors.CorsMiddleware")
 
 
@@ -37,7 +37,7 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
     request: WSGIRequest = None
 
     def __call__(self, request: HttpRequest) -> HttpResponseBase | Awaitable[HttpResponseBase]:
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+        if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
             url = request.build_absolute_uri()
             logger.info("%s.__call__() - url=%s", self.formatted_class_name, url)
         self._url = None
@@ -60,11 +60,11 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
 
         url_string = url.geturl()
         if url_string in conf.CORS_ALLOWED_ORIGINS:
-            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
                 logger.info("%s url: %s is an allowed origin", self.formatted_class_name, url.geturl())
             return None
 
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+        if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
             logger.info("%s instantiating ChatBotHelper() for url: %s", self.formatted_class_name, url.geturl())
         self._chatbot = get_cached_chatbot_by_request(request=self.request)
 
@@ -77,7 +77,7 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
         else:
             self._url = url
 
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+        if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
             logger.info("%s.url() set url: %s", self.formatted_class_name, self._url.geturl() if self.url else None)
 
     @property
@@ -90,7 +90,7 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
         if self.chatbot is not None:
             url = self.url.geturl()
             retval.append(url)
-            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
                 logger.info("%s.CORS_ALLOWED_ORIGINS() added origin: %s", self.formatted_class_name, url)
         return retval
 
@@ -102,7 +102,7 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
     def origin_found_in_white_lists(self, origin: str, url: SplitResult) -> bool:
         self.url = url
         if self.chatbot is not None:
-            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
                 logger.info("%s.origin_found_in_white_lists() returning True: %s", self.formatted_class_name, url)
             return True
         return (
@@ -113,7 +113,7 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
 
     def regex_domain_match(self, origin: str) -> bool:
         if self.chatbot is not None:
-            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
                 logger.info("%s.regex_domain_match() returning True: %s", self.formatted_class_name, url)
             return True
         return any(re.match(domain_pattern, origin) for domain_pattern in self.CORS_ALLOWED_ORIGIN_REGEXES)
@@ -121,7 +121,7 @@ class CorsMiddleware(DjangoCorsMiddleware, SmarterHelperMixin):
     def _url_in_whitelist(self, url: SplitResult) -> bool:
         self.url = url
         if self.chatbot is not None:
-            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
                 logger.info("%s._url_in_whitelist() returning True: %s", self.formatted_class_name, url)
             return True
         origins = [urlsplit(o) for o in self.CORS_ALLOWED_ORIGINS]

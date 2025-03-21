@@ -90,7 +90,7 @@ def handle_plugin_called(sender, **kwargs):
     except (TypeError, json.JSONDecodeError):
         pass
 
-    if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+    if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING):
         logger.info(
             "%s - %s inquiry_type: %s inquiry_return: %s",
             formatted_text("plugin_called"),

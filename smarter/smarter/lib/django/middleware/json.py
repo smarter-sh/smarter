@@ -14,7 +14,7 @@ from smarter.common.const import SmarterWaffleSwitches
 
 logger = logging.getLogger(__name__)
 
-if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
     logger.info("Loading smarter.apps.chatbot.middleware.json.JsonErrorMiddleware")
 
 
