@@ -35,102 +35,102 @@ spec:
         deploymentTimestamp: "{{ now | unixEpoch }}"
     spec:
       containers:
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: {{ .Values.deployment.containerPort }}
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /readiness
-            port: {{ .Values.deployment.containerPort }}
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        env:
-            - name: ROOT_DOMAIN
-              value: "{{ .Values.env.ROOT_DOMAIN }}"
-            - name: AWS_REGION
-              value: "{{ .Values.env.AWS_REGION }}"
-            - name: AWS_ACCESS_KEY_ID
-              value: "{{ .Values.env.AWS_ACCESS_KEY_ID }}"
-            - name: AWS_SECRET_ACCESS_KEY
-              value: "{{ .Values.env.AWS_SECRET_ACCESS_KEY}}"
-            - name: ENVIRONMENT
-              value: "{{ .Values.env.ENVIRONMENT }}"
-            - name: DEBUG_MODE
-              value: "{{ .Values.env.DEBUG_MODE }}"
-            - name: DJANGO_SETTINGS_MODULE
-              value: "{{ .Values.env.DJANGO_SETTINGS_MODULE }}"
-            - name: DUMP_DEFAULTS
-              value: "{{ .Values.env.DUMP_DEFAULTS }}"
-            - name: MYSQL_HOST
-              value: "{{ .Values.env.MYSQL_HOST }}"
-            - name: MYSQL_PORT
-              value: "{{ .Values.env.MYSQL_PORT }}"
-            - name: MYSQL_DATABASE
-              value: "{{ .Values.env.MYSQL_DATABASE }}"
-            - name: MYSQL_USER
-              value: "{{ .Values.env.MYSQL_USER }}"
-            - name: MYSQL_PASSWORD
-              value: "{{ .Values.env.MYSQL_PASSWORD }}"
-            - name: GEMINI_API_KEY
-              value: "{{ .Values.env.GEMINI_API_KEY }}"
-            - name: LLAMA_API_KEY
-              value: "{{ .Values.env.LLAMA_API_KEY }}"
-            - name: MAILCHIMP_API_KEY
-              value: "{{ .Values.env.MAILCHIMP_API_KEY }}"
-            - name: MAILCHIMP_LIST_ID
-              value: "{{ .Values.env.MAILCHIMP_LIST_ID }}"
-            - name: OPENAI_API_KEY
-              value: "{{ .Values.env.OPENAI_API_KEY }}"
-            - name: PINECONE_API_KEY
-              value: "{{ .Values.env.PINECONE_API_KEY }}"
-            - name: PINECONE_ENVIRONMENT
-              value: "{{ .Values.env.PINECONE_ENVIRONMENT }}"
-            - name: GOOGLE_MAPS_API_KEY
-              value: "{{ .Values.env.GOOGLE_MAPS_API_KEY }}"
-            - name: SECRET_KEY
-              value: "{{ .Values.env.SECRET_KEY }}"
-            - name: SMTP_HOST
-              value: "{{ .Values.env.SMTP_HOST }}"
-            - name: SMTP_PORT
-              value: "{{ .Values.env.SMTP_PORT }}"
-            - name: SMTP_USE_SSL
-              value: "{{ .Values.env.SMTP_USE_SSL }}"
-            - name: SMTP_USE_TLS
-              value: "{{ .Values.env.SMTP_USE_TLS }}"
-            - name: SMTP_USERNAME
-              value: "{{ .Values.env.SMTP_USERNAME }}"
-            - name: SMTP_PASSWORD
-              value: "{{ .Values.env.SMTP_PASSWORD }}"
-            - name: CACHES_LOCATION
-              value: "{{ .Values.env.CACHES_LOCATION }}"
-            - name: CELERY_BROKER_URL
-              value: "{{ .Values.env.CELERY_BROKER_URL }}"
-            - name: CELERY_RESULT_BACKEND
-              value: "{{ .Values.env.CELERY_RESULT_BACKEND }}"
-            - name: SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
-              value: "{{ .Values.env.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY }}"
-            - name: SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
-              value: "{{ .Values.env.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET }}"
-            - name: SOCIAL_AUTH_GITHUB_KEY
-              value: "{{ .Values.env.SOCIAL_AUTH_GITHUB_KEY }}"
-            - name: SOCIAL_AUTH_GITHUB_SECRET
-              value: "{{ .Values.env.SOCIAL_AUTH_GITHUB_SECRET }}"
-            - name: SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY
-              value: "{{ .Values.env.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY }}"
-            - name: SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET
-              value: "{{ .Values.env.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET }}"
+        - name: {{ .Values.appName }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.deployment.containerPort }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: {{ .Values.deployment.containerPort }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
           imagePullPolicy: Always
-          name: {{ .Values.appName }}
           ports:
             - containerPort: {{ .Values.deployment.containerPort }}
               protocol: TCP
           resources: {}
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
+          env:
+              - name: ROOT_DOMAIN
+                value: "{{ .Values.env.ROOT_DOMAIN }}"
+              - name: AWS_REGION
+                value: "{{ .Values.env.AWS_REGION }}"
+              - name: AWS_ACCESS_KEY_ID
+                value: "{{ .Values.env.AWS_ACCESS_KEY_ID }}"
+              - name: AWS_SECRET_ACCESS_KEY
+                value: "{{ .Values.env.AWS_SECRET_ACCESS_KEY}}"
+              - name: ENVIRONMENT
+                value: "{{ .Values.env.ENVIRONMENT }}"
+              - name: DEBUG_MODE
+                value: "{{ .Values.env.DEBUG_MODE }}"
+              - name: DJANGO_SETTINGS_MODULE
+                value: "{{ .Values.env.DJANGO_SETTINGS_MODULE }}"
+              - name: DUMP_DEFAULTS
+                value: "{{ .Values.env.DUMP_DEFAULTS }}"
+              - name: MYSQL_HOST
+                value: "{{ .Values.env.MYSQL_HOST }}"
+              - name: MYSQL_PORT
+                value: "{{ .Values.env.MYSQL_PORT }}"
+              - name: MYSQL_DATABASE
+                value: "{{ .Values.env.MYSQL_DATABASE }}"
+              - name: MYSQL_USER
+                value: "{{ .Values.env.MYSQL_USER }}"
+              - name: MYSQL_PASSWORD
+                value: "{{ .Values.env.MYSQL_PASSWORD }}"
+              - name: GEMINI_API_KEY
+                value: "{{ .Values.env.GEMINI_API_KEY }}"
+              - name: LLAMA_API_KEY
+                value: "{{ .Values.env.LLAMA_API_KEY }}"
+              - name: MAILCHIMP_API_KEY
+                value: "{{ .Values.env.MAILCHIMP_API_KEY }}"
+              - name: MAILCHIMP_LIST_ID
+                value: "{{ .Values.env.MAILCHIMP_LIST_ID }}"
+              - name: OPENAI_API_KEY
+                value: "{{ .Values.env.OPENAI_API_KEY }}"
+              - name: PINECONE_API_KEY
+                value: "{{ .Values.env.PINECONE_API_KEY }}"
+              - name: PINECONE_ENVIRONMENT
+                value: "{{ .Values.env.PINECONE_ENVIRONMENT }}"
+              - name: GOOGLE_MAPS_API_KEY
+                value: "{{ .Values.env.GOOGLE_MAPS_API_KEY }}"
+              - name: SECRET_KEY
+                value: "{{ .Values.env.SECRET_KEY }}"
+              - name: SMTP_HOST
+                value: "{{ .Values.env.SMTP_HOST }}"
+              - name: SMTP_PORT
+                value: "{{ .Values.env.SMTP_PORT }}"
+              - name: SMTP_USE_SSL
+                value: "{{ .Values.env.SMTP_USE_SSL }}"
+              - name: SMTP_USE_TLS
+                value: "{{ .Values.env.SMTP_USE_TLS }}"
+              - name: SMTP_USERNAME
+                value: "{{ .Values.env.SMTP_USERNAME }}"
+              - name: SMTP_PASSWORD
+                value: "{{ .Values.env.SMTP_PASSWORD }}"
+              - name: CACHES_LOCATION
+                value: "{{ .Values.env.CACHES_LOCATION }}"
+              - name: CELERY_BROKER_URL
+                value: "{{ .Values.env.CELERY_BROKER_URL }}"
+              - name: CELERY_RESULT_BACKEND
+                value: "{{ .Values.env.CELERY_RESULT_BACKEND }}"
+              - name: SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
+                value: "{{ .Values.env.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY }}"
+              - name: SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
+                value: "{{ .Values.env.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET }}"
+              - name: SOCIAL_AUTH_GITHUB_KEY
+                value: "{{ .Values.env.SOCIAL_AUTH_GITHUB_KEY }}"
+              - name: SOCIAL_AUTH_GITHUB_SECRET
+                value: "{{ .Values.env.SOCIAL_AUTH_GITHUB_SECRET }}"
+              - name: SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY
+                value: "{{ .Values.env.SOCIAL_AUTH_LINKEDIN_OAUTH2_KEY }}"
+              - name: SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET
+                value: "{{ .Values.env.SOCIAL_AUTH_LINKEDIN_OAUTH2_SECRET }}"
       dnsPolicy: ClusterFirst
       enableServiceLinks: true
       restartPolicy: Always
