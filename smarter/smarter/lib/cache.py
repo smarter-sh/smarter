@@ -9,7 +9,7 @@ from django.core.cache import cache
 from django.core.handlers.wsgi import WSGIRequest
 
 from smarter.common.const import SMARTER_DEFAULT_CACHE_TIMEOUT, SmarterWaffleSwitches
-from smarter.common.helpers.console_helpers import formatted_text_green
+from smarter.common.helpers.console_helpers import formatted_text, formatted_text_green
 
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT):
                 result = func(*args, **kwargs)
                 cache.set(cache_key, result, timeout)
                 if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-                    logger.info("%s caching %s", formatted_text_green("cache_results()"), cache_key)
+                    logger.info("%s caching %s", formatted_text("cache_results()"), cache_key)
             return result
 
         return wrapper
@@ -57,7 +57,7 @@ def cache_request(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT):
                 result = func(request, *args, **kwargs)
                 cache.set(cache_key, result, timeout)
                 if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-                    logger.info("%s caching %s", formatted_text_green("cache_results()"), cache_key)
+                    logger.info("%s caching %s", formatted_text("cache_results()"), cache_key)
             return result
 
         return wrapper
