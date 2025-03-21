@@ -1,0 +1,100 @@
+{
+  "data": {
+      "apiVersion": "smarter.sh/v1",
+      "kind": "Chatbot",
+      "name": "",
+      "metadata": {
+          "count": 5
+      },
+      "kwargs": {
+          "asc": [
+              "false"
+          ],
+          "desc": [
+              "false"
+          ],
+          "i": [
+              "10"
+          ],
+          "name": [
+              ""
+          ]
+      },
+      "data": {
+          "titles": [
+              {
+                  "name": "name",
+                  "type": "CharField"
+              },
+              {
+                  "name": "url",
+                  "type": "ReadOnlyField"
+              },
+              {
+                  "name": "dnsVerificationStatus",
+                  "type": "ChoiceField"
+              },
+              {
+                  "name": "deployed",
+                  "type": "BooleanField"
+              },
+              {
+                  "name": "createdAt",
+                  "type": "DateTimeField"
+              },
+              {
+                  "name": "updatedAt",
+                  "type": "DateTimeField"
+              }
+          ],
+          "items": [
+              {
+                  "name": "openai",
+                  "url": "https://openai.4386-2072-3294.api.smarter.sh/",
+                  "dnsVerificationStatus": "Verified",
+                  "deployed": true,
+                  "createdAt": "2025-02-09T01:18:18.671104Z",
+                  "updatedAt": "2025-03-18T04:13:12.472912Z"
+              },
+              {
+                  "name": "example",
+                  "url": "https://example.4386-2072-3294.api.smarter.sh/",
+                  "dnsVerificationStatus": "Verified",
+                  "deployed": true,
+                  "createdAt": "2025-02-09T01:30:14.771533Z",
+                  "updatedAt": "2025-03-18T04:13:15.262850Z"
+              },
+              {
+                  "name": "smarter",
+                  "url": "https://smarter.4386-2072-3294.api.smarter.sh/",
+                  "dnsVerificationStatus": "Verified",
+                  "deployed": true,
+                  "createdAt": "2025-03-12T22:07:48.215068Z",
+                  "updatedAt": "2025-03-18T04:23:08.997992Z"
+              },
+              {
+                  "name": "metaai",
+                  "url": "https://metaai.4386-2072-3294.api.smarter.sh/",
+                  "dnsVerificationStatus": "Verified",
+                  "deployed": true,
+                  "createdAt": "2025-03-12T22:08:35.601034Z",
+                  "updatedAt": "2025-03-18T04:13:15.651274Z"
+              },
+              {
+                  "name": "googleai",
+                  "url": "https://googleai.4386-2072-3294.api.smarter.sh/",
+                  "dnsVerificationStatus": "Verified",
+                  "deployed": true,
+                  "createdAt": "2025-03-12T22:08:43.246198Z",
+                  "updatedAt": "2025-03-18T04:28:01.588800Z"
+              }
+          ]
+      }
+  },
+  "message": "Chatbots got successfully",
+  "api": "smarter.sh/v1",
+  "thing": "Chatbot",
+  "metadata": {
+      "key": "17f5466efc59e9c1aa9227cbb195b42bdf264cce0602d7a34ea1282f672376a4"
+  }
+}
