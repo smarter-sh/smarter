@@ -77,6 +77,7 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin):
         try:
             user, _ = request.auth.authenticate(request)
             if user:
+                request.user = user
                 login(request, user, backend="django.contrib.auth.backends.ModelBackend")
             else:
                 raise AuthenticationFailed(
