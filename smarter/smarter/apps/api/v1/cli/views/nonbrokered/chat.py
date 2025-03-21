@@ -4,6 +4,7 @@
 import hashlib
 import json
 import logging
+import re
 from http import HTTPStatus
 from typing import Tuple
 from urllib.parse import urlparse
@@ -20,6 +21,7 @@ from smarter.apps.chatbot.api.v1.views.default import DefaultChatBotApiView
 from smarter.apps.chatbot.models import ChatBot
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
+from smarter.common.exceptions import SmarterValueError
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,
@@ -63,7 +65,10 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         from the user. This will need to be added to a message list and sent
         to the chatbot.
         """
-        return self.data.get("prompt", None)
+        retval = self.data.get("prompt", None)
+        if not retval:
+            raise APIV1CLIChatViewError("Internal error. 'prompt' key is missing from the request body.")
+        return retval
 
     @property
     def new_session(self) -> bool:
@@ -128,6 +133,39 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         """The raw contents of the request body, assumed to be in json format."""
         return self._data or {}
 
+    def validate(self):
+        """
+        Validate the request body and url parameters. Note that we are not necessarily expecting a complete
+        set of messages. The message list + the prompt will be sent to the chatbot, which is responsible
+        for ensuring that the system prompt is included in the request.
+
+        example request body:
+        {
+            "session_key": "45089cdcbcbc2ded87da784afd0e368ddece23ca9fb61260cf43c58a708e05e1",
+            "messages": [
+                {
+                "role": "user",
+                "content": "hello world"
+                }
+            ],
+            "prompt": "who's your daddy?"
+        }
+        """
+        if not self.prompt:
+            raise APIV1CLIChatViewError("Internal error. 'prompt' key is missing from the request body.")
+        messages = self.data.get("messages", None)
+        if messages:
+            try:
+                messages = messages if isinstance(messages, list) else json.loads(messages)
+            except json.JSONDecodeError as e:
+                raise APIV1CLIChatViewError(f"Internal error. Failed to decode messages: {messages}") from e
+            if not isinstance(messages, list):
+                raise APIV1CLIChatViewError(f"Internal error. Messages must be a list: {messages}")
+        session_key = self.data.get(SMARTER_CHAT_SESSION_KEY_NAME, None)
+        if session_key:
+            if not re.match(r"^[a-f0-9]{64}$", session_key):
+                raise APIV1CLIChatViewError("Invalid session_key format. Must be a 64-character hexadecimal string.")
+
     def dispatch(self, request: HttpRequest, *args, **kwargs):
         """
         Base dispatch method for the Chat views. This method will attempt to
@@ -148,6 +186,7 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
 
         """
         self._name = kwargs.get("name")
+        logger.info("%s Chat view name: %s", self.formatted_class_name, self.name)
 
         try:
             # extract the body from the request body
@@ -188,6 +227,7 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
             # pylint: disable=W0212
             request._body = new_body.encode("utf-8")
 
+        self.validate()
         return super().dispatch(request, *args, **kwargs)
 
 
@@ -245,7 +285,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             except Chat.DoesNotExist:
                 return None
             try:
-                self._chat_history = ChatHistory.objects.filter(chat=chat).latest("created_at")
+                self._chat_history = ChatHistory.objects.filter(chat=chat).latest("id")
             except ChatHistory.DoesNotExist:
                 return None
         return self._chat_history
@@ -327,6 +367,8 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
 
     def handler(self, request, name, *args, **kwargs):
         # get the chat configuration for the ChatBot (name)
+        logger.info("%s handler() 1. name: %s", self.formatted_class_name, name)
+
         chat_config: HttpResponse = ChatConfigView.as_view()(request, name=name)
         if chat_config.status_code != 200:
             raise APIV1CLIChatViewError(
@@ -344,6 +386,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
                 f"Misconfigured. Failed to cache session key for chat config: {chat_config.content}"
             ) from e
 
+        logger.info("%s handler() 2. config: %s", self.formatted_class_name, json.dumps(self.chat_config, indent=4))
         # create a Smarter chatbot request body
         request_body = self.chat_request_body_factory(messages=self.messages)
 
@@ -353,6 +396,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         chat_response = json.loads(chat_response.content)
 
         response_data = chat_response.get(SmarterJournalApiResponseKeys.DATA)
+        logger.info("%s handler() 3. response_data: %s", self.formatted_class_name, json.dumps(response_data, indent=4))
         try:
             if not response_data:
                 raise APIV1CLIChatViewError(f"Internal error. Chat response data key is missing: {chat_response}")
@@ -381,6 +425,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         chat_response[SmarterJournalApiResponseKeys.DATA]["body"] = body_dict
 
         data = {SmarterJournalApiResponseKeys.DATA: {"request": request_body, "response": chat_response}}
+        logger.info("%s handler() 4. data: %s", self.formatted_class_name, json.dumps(data, indent=4))
         return SmarterJournaledJsonResponse(
             request=request,
             data=data,
@@ -433,7 +478,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         except Exception as e:
             return SmarterJournaledJsonErrorResponse(
                 request=request,
-                e=APIV1CLIChatViewError(f"Internal error. {e}"),
+                e=e,
                 thing=SmarterJournalThings(SmarterJournalThings.CHAT),
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
                 status=HTTPStatus.INTERNAL_SERVER_ERROR,

@@ -541,7 +541,7 @@ class AbstractBroker(ABC):
             retval[new_key] = new_value
         return retval
 
-    def clean_cli_param(self, param: str, param_name: str = "unknown", url: str = None) -> str:
+    def clean_cli_param(self, param, param_name: str = "unknown", url: str = None) -> str:
         """
         - Remove any leading or trailing whitespace from the param.
         - Ensure that the param is a string.
@@ -551,20 +551,27 @@ class AbstractBroker(ABC):
         class_name = formatted_text(class_name)
         retval = param.strip() if isinstance(param, str) else param
 
-        if not isinstance(param, str):
+        if isinstance(param, str):
+            param = param.strip()
+            if not param:
+                logger.warning(
+                    "%s param <%s> is an empty string, setting to None for url: %s", class_name, param_name, url
+                )
+                retval = None
+        else:
             logger.warning(
-                "%s param: <%s>. Expected str but got type: %s for url: %s", class_name, param_name, type(param), url
+                "%s param: <%s>. Expected str but got type: %s (%s) for url: %s",
+                class_name,
+                param_name,
+                type(param),
+                param,
+                url,
             )
-
-        if isinstance(param, list):
-            retval = param[0]
-            logger.warning(
-                "%s set param <%s> to first element of list: %s for url: %s", class_name, param_name, param, url
-            )
-
-        if isinstance(param, str) and param.strip() == "":
-            logger.warning("%s param <%s> is an empty string, setting to None for url: %s", class_name, param_name, url)
-            retval = None
+            if isinstance(param, list):
+                retval = param[0]
+                logger.warning(
+                    "%s set param <%s> to first element of list: %s for url: %s", class_name, param_name, param, url
+                )
 
         return retval
 

@@ -237,8 +237,8 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         self.plugins = ChatBotPlugin().plugins(chatbot=self.chatbot)
 
         try:
-            logger.info("%s.dispatch(): request.body=%s", self.formatted_class_name, request.body)
             self.data = json.loads(request.body)
+            logger.info("%s.dispatch(): request.body successfully converted to json", self.formatted_class_name)
         except json.JSONDecodeError:
             self.data = {}
 
