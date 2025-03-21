@@ -14,6 +14,7 @@ from requests import PreparedRequest
 from rest_framework.serializers import ModelSerializer
 
 from smarter.common.api import SmarterApiVersions
+from smarter.common.classes import SmarterHelperMixin
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.journal.enum import (
@@ -108,7 +109,7 @@ class SAMBrokerErrorNotFound(SAMBrokerError):
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes
-class AbstractBroker(ABC):
+class AbstractBroker(ABC, SmarterHelperMixin):
     """
     Smarter API Manifest Broker abstract base class. This class is responsible
     for:
