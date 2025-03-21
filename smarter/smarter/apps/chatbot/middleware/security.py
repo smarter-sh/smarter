@@ -22,7 +22,7 @@ from ..models import ChatBot, get_cached_chatbot_by_request
 
 logger = logging.getLogger(__name__)
 
-if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
     logger.info("Loading smarter.apps.chatbot.middleware.security.SecurityMiddleware")
 
 
@@ -48,7 +48,7 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         # ---------------------------------------------------------------------
         host = request.get_host()
         if host in SmarterValidator.LOCAL_HOSTS:
-            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
                 logger.info(
                     "%s %s found in SmarterValidator.LOCAL_HOSTS: %s",
                     self.formatted_class_name,
@@ -66,7 +66,7 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         # ---------------------------------------------------------------------
         for allowed_host in settings.SMARTER_ALLOWED_HOSTS:
             if fnmatch.fnmatch(host, allowed_host):
-                if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+                if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
                     logger.info(
                         "%s %s matched with settings.SMARTER_ALLOWED_HOSTS: %s",
                         self.formatted_class_name,
@@ -80,14 +80,14 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         #     to instantiate a ChatBotHelper object just to check if the host is a domain
         #     for a deployed ChatBot.
         # ---------------------------------------------------------------------
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+        if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
             logger.info("%s instantiating ChatBotHelper() for url: %s", self.formatted_class_name, url)
         chatbot: ChatBot = get_cached_chatbot_by_request(request=request)
         if chatbot is not None:
-            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
                 logger.info("%s ChatBotHelper() verified that %s is a chatbot.", self.formatted_class_name, url)
             return None
 
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+        if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
             logger.error("%s %s failed security tests.", self.formatted_class_name, url)
         return SmarterHttpResponseBadRequest(request=request, error_message="Bad Request (400) - Invalid Hostname.")

@@ -148,7 +148,7 @@ def handle_chatbot_called(sender, **kwargs):
     prefix = formatted_text(f"{module_prefix}.handle_chatbot_called()")
 
     chatbot: ChatBot = kwargs.get("chatbot")
-    if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+    if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
         logger.info("%s - %s", prefix, chatbot.hostname)
 
     request: HttpRequest = kwargs.get("request")

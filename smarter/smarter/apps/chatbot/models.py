@@ -3,7 +3,7 @@
 import json
 import logging
 from typing import List, Type
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin
 
 import waffle
 from django.core.cache import cache
@@ -22,7 +22,7 @@ from smarter.apps.account.utils import (
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SmarterWaffleSwitches
+from smarter.common.const import SMARTER_DEFAULT_CACHE_TIMEOUT, SmarterWaffleSwitches
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.llm import get_date_time_string
 from smarter.lib.cache import cache_request, cache_results
@@ -65,14 +65,15 @@ class ChatBotCustomDomain(TimestampedModel):
     @classmethod
     def get_verified_domains(cls):
         # Try to get the list from cache
-        cache_expiration = 5 * 60  # 5 minutes
         cache_key = "ChatBotCustomDomain_chatbot_verified_custom_domains"
         verified_domains = cache.get(cache_key)
 
         # If the list is not in cache, fetch it from the database
         if not verified_domains:
             verified_domains = list(cls.objects.filter(is_verified=True).values_list("domain_name", flat=True))
-            cache.set(key=cache_key, value=verified_domains, timeout=cache_expiration)
+            cache.set(key=cache_key, value=verified_domains, timeout=SMARTER_DEFAULT_CACHE_TIMEOUT)
+            if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+                logger.info("get_verified_domains() caching %s", cache_key)
 
         return verified_domains
 
@@ -478,18 +479,9 @@ def get_cached_chatbot(chatbot_id: int = None, name: str = None, account: Accoun
 
     if chatbot_id:
         chatbot = ChatBot.objects.get(id=chatbot_id)
-        logger.info("%s initialized ChatBot from chatbot_id %s", formatted_text("get_cached_chatbot()"), chatbot_id)
     else:
         if name and account:
             chatbot = ChatBot.objects.get(name=name, account=account)
-            logger.info(
-                "%s initialized ChatBot from name %s and account %s",
-                formatted_text("get_cached_chatbot()"),
-                name,
-                account,
-            )
-    if chatbot:
-        logger.info("%s caching chatbot %s", formatted_text("get_cached_chatbot()"), chatbot)
 
     return chatbot
 
@@ -566,7 +558,7 @@ class ChatBotHelper(SmarterRequestMixin):
             )
             return None
 
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
             self.helper_logger(
                 f"__init__() url={ self.url } name={ self.name } chatbot_id={ self.chatbot_id } user={ self.user } account={ self.account }."
             )
@@ -682,9 +674,7 @@ class ChatBotHelper(SmarterRequestMixin):
         return formatted_text(self.__class__.__name__)
 
     def log_dump(self):
-        if not self._chatbot and waffle.switch_is_active(
-            SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING
-        ):
+        if not self._chatbot and waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
             return None
 
         horizontal_line = "-" * (80 - 15)
@@ -900,7 +890,7 @@ class ChatBotHelper(SmarterRequestMixin):
         """
         Create a log entry
         """
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
             logger.info(f"{self.formatted_class_name}: {message}")
 
     def helper_warning(self, message: str):
@@ -931,9 +921,5 @@ def get_cached_chatbot_by_request(request: WSGIRequest) -> ChatBot:
     chatbot_helper = ChatBotHelper(request=request)
     if chatbot_helper.chatbot:
         chatbot = chatbot_helper.chatbot
-    if chatbot:
-        logger.info(
-            "%s caching chatbot %s", formatted_text("get_cached_chatbot_by_request()"), request.build_absolute_uri()
-        )
 
     return chatbot
