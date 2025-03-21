@@ -168,6 +168,17 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
             self._chatbot_helper = ChatBotHelper(request=self.request)
         return self._chatbot_helper
 
+    @chatbot_helper.setter
+    def chatbot_helper(self, value: ChatBotHelper):
+        self._chatbot_helper = value
+        if self._chatbot_helper:
+            self._chatbot = self.chatbot_helper.chatbot
+            self.account = self.chatbot_helper.account
+            logger.info("%s - chatbot_helper() setter chatbot=%s", self.formatted_class_name, self.chatbot)
+        else:
+            self._chatbot = None
+            logger.info("%s - chatbot_helper() setter chatbot is unset", self.formatted_class_name)
+
     def dispatch(self, request, *args, chatbot_id: int = None, **kwargs):
         SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
         logger.info("%s - dispatch() url=%s session=%s", self.formatted_class_name, self.url, self.session)
@@ -178,8 +189,6 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
             self._chatbot = get_cached_chatbot_by_request(request=request)
             if not self._chatbot:
                 self.chatbot_helper = ChatBotHelper(request=request, chatbot_id=chatbot_id, name=name)
-                self._chatbot = self.chatbot_helper.chatbot
-                self.account = self.chatbot_helper.account
         except ChatBot.DoesNotExist:
             return JsonResponse({"error": "Not found"}, status=HTTPStatus.NOT_FOUND.value)
 
@@ -264,9 +273,7 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
 
         # add chatbot_request_history and plugin_selector_history to history
         # these have to be added here due to circular import issues.
-        chatbot_requests_queryset = ChatBotRequests.objects.filter(session_key=self.session.session_key).order_by(
-            "-created_at"
-        )
+        chatbot_requests_queryset = ChatBotRequests.objects.filter(session_key=self.session.session_key).order_by("-id")
         chatbot_requests_serializer = ChatBotRequestsSerializer(chatbot_requests_queryset, many=True)
         history["chatbot_request_history"] = chatbot_requests_serializer.data
 
