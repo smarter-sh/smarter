@@ -339,8 +339,8 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         if self._data:
             return self._data
         try:
-            self.helper_logger(f"request body={self.smarter_request.body}")
             if self.smarter_request and self.smarter_request.body:
+                self.helper_logger(f"request body={self.smarter_request.body}")
                 body_str = self.smarter_request.body.decode("utf-8").strip()
                 self._data = json.loads(body_str) if body_str else {}
         # pylint: disable=broad-except
