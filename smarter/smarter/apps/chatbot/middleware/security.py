@@ -2,7 +2,6 @@
 
 import fnmatch
 import logging
-import os
 from urllib.parse import urlparse
 
 import waffle
