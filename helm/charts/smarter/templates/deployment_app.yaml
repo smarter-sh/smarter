@@ -10,6 +10,13 @@ metadata:
   name: {{ .Values.appName }}
   namespace: {{ .Values.namespace }}
 spec:
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "1"
   progressDeadlineSeconds: 600
   replicas: 2
   revisionHistoryLimit: 10

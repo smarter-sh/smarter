@@ -333,9 +333,11 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
             chatbots = ChatBot.objects.filter(account=self.account, name=name)
         else:
             chatbots = ChatBot.objects.filter(account=self.account)
-        logger.info("SAMChatbotBroker().get() found %s ChatBots for account %s", chatbots.count(), self.account)
+        logger.info(
+            "%s.get() found %s ChatBots for account %s", self.formatted_class_name, chatbots.count(), self.account
+        )
 
-        # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each ChatBot
+        # iterate over the QuerySet and use a serializer to create a model dump for each ChatBot
         for chatbot in chatbots:
             try:
                 model_dump = ChatBotSerializer(chatbot).data
@@ -346,6 +348,13 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 camel_cased_model_dump = self.snake_to_camel(model_dump)
                 data.append(camel_cased_model_dump)
             except Exception as e:
+                logger.error(
+                    "%s.get() failed to serialize %s %s",
+                    self.formatted_class_name,
+                    self.kind,
+                    chatbot.name,
+                    exc_info=True,
+                )
                 raise SAMChatbotBrokerError(
                     f"Failed to serialize {self.kind} {chatbot.name}", thing=self.kind, command=command
                 ) from e
