@@ -119,10 +119,8 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         # validate, standardize and parse the request url string into a ParseResult.
         # Note that the setter and getter both work with strings
         # but we store the private instance variable _url as a ParseResult.
-        self.helper_logger(
-            f"SmarterRequestMixin - __init__() request: {request.build_absolute_uri() if request else None}"
-        )
         self.init(request=request)
+        self.helper_logger(f"SmarterRequestMixin - __init__() request: {self.url}")
 
         if request and hasattr(request, "user") and request.user and request.user.is_authenticated:
             AccountMixin.__init__(self, user=request.user)
