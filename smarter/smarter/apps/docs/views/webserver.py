@@ -8,6 +8,7 @@ from datetime import datetime
 from django.http import FileResponse, HttpResponse
 from django.views import View
 
+from smarter.apps.chatbot.models import ChatBotHelper
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django.view_helpers import SmarterWebTxtView, SmarterWebXmlView
 
@@ -45,7 +46,12 @@ class HealthzView(View):
 
 
 class ReadinessView(View):
-    """View to serve the readiness endpoint"""
+    """
+    View to serve the readiness endpoint. Instantiate a ChatBotHelper object to
+    force readiness of platform. This is the most likely collection of Python
+    objects that will be used in the early stages of the application lifecycle.
+    """
 
     def get(self, request, *args, **kwargs):
+        ChatBotHelper(request=request)
         return HttpResponse("OK", content_type="text/plain")

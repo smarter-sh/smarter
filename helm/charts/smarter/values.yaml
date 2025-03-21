@@ -2,7 +2,7 @@ appName: smarter
 workerName: smarter-worker
 beatName: smarter-beat
 appJobName: smarter-job-db-init
-version: 0.7.0
+version: 0.7.1
 deployment:
   containerPort: 8000
 service:
@@ -19,10 +19,10 @@ redis:
   master:
     resources:
       requests:
-        memory: "256Mi"
+        memory: "512Mi"
         cpu: "500m"
       limits:
-        memory: "512Mi"
+        memory: "4Gi"
         cpu: "1"
     affinity:
       podAffinity:
