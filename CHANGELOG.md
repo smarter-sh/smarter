@@ -1,3 +1,14 @@
+## [0.10.16](https://github.com/smarter-sh/smarter/compare/v0.10.15...v0.10.16) (2025-03-19)
+
+
+### Bug Fixes
+
+* bug fix where environment url was initializing as a chatbot ([51273a8](https://github.com/smarter-sh/smarter/commit/51273a8b2cf99a01a2209b1618a5e13e388c60a5))
+* csrf exempt ApiV1CliChatApiView and ApiV1CliChatConfigApiView ([cb812f1](https://github.com/smarter-sh/smarter/commit/cb812f1efade9ae447c7663a3d678d1828c7ba73))
+* if there's no chatbot then return None ([31724a4](https://github.com/smarter-sh/smarter/commit/31724a45f303f9781d6177d9bcc0bcba901ac436))
+* remove authentication requirement ([6cff04e](https://github.com/smarter-sh/smarter/commit/6cff04ed20d9f6c6697593d4e4281de491502294))
+* request object sometimes is not set. use self.url ([5e981f4](https://github.com/smarter-sh/smarter/commit/5e981f497c367c5a8ebfc27dea135bd096c0a1cb))
+
 ## [0.10.15](https://github.com/smarter-sh/smarter/compare/v0.10.14...v0.10.15) (2025-03-18)
 
 
