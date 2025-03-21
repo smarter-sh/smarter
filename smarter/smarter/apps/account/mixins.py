@@ -82,6 +82,9 @@ class AccountMixin:
                 raise SmarterBusinessRuleViolation(
                     f"User {self._user} does not belong to the account {self._account.account_number}."
                 ) from e
+            except TypeError as e:
+                # TypeError: Field 'id' expected a number but got <SimpleLazyObject: <django.contrib.auth.models.AnonymousUser object at 0x70f8a5377c20>>.
+                logger.error("AccountMixin: account not set, user_profile not found: %s", str(e))
 
     @property
     def account_number(self) -> str:
@@ -128,6 +131,8 @@ class AccountMixin:
         Otherwise, initialize the account in which the user is contained.
         """
         self._user = user
+        if user:
+            logger.info("AccountMixin: setting user %s", user)
         if not self._user:
             # unset the user_profile if the user is unset
             self.user_profile = None
@@ -141,6 +146,9 @@ class AccountMixin:
                 raise SmarterBusinessRuleViolation(
                     f"User {self._user} does not belong to the account {self._account.account_number}."
                 ) from e
+            except TypeError as e:
+                # TypeError: Field 'id' expected a number but got <SimpleLazyObject: <django.contrib.auth.models.AnonymousUser object at 0x70f8a5377c20>>.
+                logger.error("AccountMixin: account not set, user_profile not found: %s", str(e))
         else:
             self._user_profile = None
 
