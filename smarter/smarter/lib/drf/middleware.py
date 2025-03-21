@@ -14,6 +14,7 @@ from rest_framework.authentication import get_authorization_header
 from rest_framework.exceptions import AuthenticationFailed
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.common.classes import SmarterHelperMixin
 from smarter.common.const import SmarterWaffleSwitches
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
@@ -26,11 +27,11 @@ from .token_authentication import (
 
 logger = logging.getLogger(__name__)
 
-if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
     logger.info("Loading smarter.lib.drf.middleware.SmarterTokenAuthenticationMiddleware")
 
 
-class SmarterTokenAuthenticationMiddleware(MiddlewareMixin):
+class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
     """
     authenticate requests via SmarterTokenAuthentication, a subclass of
     knox.auth TokenAuthentication tokens.
@@ -85,7 +86,7 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin):
                     " a user object. This can happen if the Authorization header"
                     " is malformed or is for another backend."
                 )
-            logger.info("%s() authenticated user %s", self.__class__.__name__, user)
+            logger.info("%s authenticated user %s", self.formatted_class_name, user)
         except AuthenticationFailed as auth_failed:
             try:
                 raise SmarterTokenAuthenticationError("Authentication failed.") from auth_failed
@@ -93,7 +94,7 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin):
                 auth = self.authorization_header.split()
                 auth_token = auth[1] if len(auth) > 1 else None
                 logger.warning(
-                    "%s() failed token authentication attempt using token %s", self.__class__.__name__, auth_token
+                    "%s failed token authentication attempt using token %s", self.formatted_class_name, auth_token
                 )
                 thing = SAMKinds.from_url(self.url())
                 command = SmarterJournalCliCommands.from_url(self.url())
