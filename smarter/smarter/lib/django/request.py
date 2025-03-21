@@ -33,6 +33,7 @@ from smarter.apps.account.utils import (
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.url_helpers import session_key_from_url
 from smarter.lib.django.validators import SmarterValidator
 
@@ -120,20 +121,18 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         # Note that the setter and getter both work with strings
         # but we store the private instance variable _url as a ParseResult.
         self.init(request=request)
-        self.helper_logger(f"SmarterRequestMixin - __init__() request: {self.url}")
+        self.helper_logger(f"__init__() request: {self.url}")
 
         if request and hasattr(request, "user") and request.user and request.user.is_authenticated:
             AccountMixin.__init__(self, user=request.user)
         else:
             AccountMixin.__init__(self)
-            self.helper_logger(
-                f"SmarterRequestMixin - request.user is missing or is not authenticated for url: {self.url}"
-            )
+            self.helper_logger(f"request.user is missing or is not authenticated for url: {self.url}")
         self.session_key = self.get_session_key()
 
         if not request:
-            logger.error("SmarterRequestMixin - request is None")
-            return None
+            logger.error("%s - request is None", self.formatted_class_name)
+            raise SmarterValueError("request is None")
 
         self.helper_logger(f"url={self._url}")
 
@@ -157,7 +156,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         if self.is_config:
             self.helper_logger("is_config=True")
 
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_REQUEST_MIXIN_LOGGING):
+        if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
             self.dump()
 
     @property
@@ -218,7 +217,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
                 (self._url.scheme, self._url.netloc, self._url.path, "", "")
             )
             return self._url_urlunparse_without_params
-        logger.error("SmarterRequestMixin - url is None")
+        logger.error("%s - url is None", self.formatted_class_name)
 
     @property
     def parsed_url(self) -> ParseResult:
@@ -286,14 +285,18 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         # 2.) example: http://localhost:8000/chatbots/<str:name>/config/
         if self.is_chatbot_sandbox_url:
             try:
-                retval = self.url_path_parts[2]
+                retval = self.url_path_parts[1]
                 self.helper_logger(
                     f"smarter_request_chatbot_name() - is_chatbot_sandbox_url=True path_parts={self.url_path_parts} chatbot_name={retval}"
                 )
                 return retval
             # pylint: disable=broad-except
             except Exception:
-                logger.warning("smarter_request_chatbot_name() - failed to extract chatbot name from url: %s", self.url)
+                logger.warning(
+                    "%s.smarter_request_chatbot_name() - failed to extract chatbot name from url: %s",
+                    self.formatted_class_name,
+                    self.url,
+                )
         # 3.) http://localhost:8000/api/v1/chatbots/<int:chatbot_id>
         # no name. nothing to do in this case.
         if self.is_chatbot_smarter_api_url:
@@ -312,7 +315,11 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
                 return retval
             # pylint: disable=broad-except
             except Exception:
-                logger.warning("smarter_request_chatbot_name() - failed to extract chatbot name from url: %s", self.url)
+                logger.warning(
+                    "%s.smarter_request_chatbot_name() - failed to extract chatbot name from url: %s",
+                    self.formatted_class_name,
+                    self.url,
+                )
 
         return None
 
@@ -333,15 +340,17 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         if self._data:
             return self._data
         try:
-            self.helper_logger(f"SmarterRequestMixin request body={self.smarter_request.body}")
-            self._data = json.loads(self.smarter_request.body) if self.smarter_request else {}
+            if self.smarter_request and self.smarter_request.body:
+                self.helper_logger(f"request body={self.smarter_request.body}")
+                body_str = self.smarter_request.body.decode("utf-8").strip()
+                self._data = json.loads(body_str) if body_str else {}
         # pylint: disable=broad-except
         except Exception as e:
-            logger.error("SmarterRequestMixin - failed to parse request body: %s", e)
-            self._data = {}
+            logger.warning("%s - failed to parse request body: %s", self.formatted_class_name, e)
 
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
-            self.helper_logger(f"SmarterRequestMixin request body json={self._data}")
+        self._data = self._data or {}
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
+            self.helper_logger(f"request body json={self._data}")
 
         return self._data
 
@@ -708,15 +717,15 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         """
         Create a log entry
         """
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_REQUEST_MIXIN_LOGGING):
-            logger.info("%s: %s", self.formatted_class_name, message)
+        if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
+            logger.info("%s %s", self.formatted_class_name, message)
 
     def get_session_key(self) -> str:
         """
         Extract the session key from the URL, the request body, or the request headers.
         """
         if not self.smarter_request:
-            self.helper_logger("SmarterRequestMixin.get_session_key() - request is None")
+            self.helper_logger("get_session_key() - request is None")
             return None
         session_key: str = None
 
@@ -727,7 +736,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             session_key = session_key.strip() if isinstance(session_key, str) else None
             if session_key:
                 self.helper_logger(
-                    f"fSmarterRequestMixin.get_session_key() - session_key found in url: {session_key}",
+                    f"get_session_key() - session_key found in url: {session_key}",
                 )
                 return session_key
 
@@ -741,7 +750,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
 
         session_key = session_key.strip() if isinstance(session_key, str) else None
         if session_key:
-            self.helper_logger(f"SmarterRequestMixin.get_session_key() - session_key found in url: {session_key}")
+            self.helper_logger(f"get_session_key() - session_key found in url: {session_key}")
             return session_key
 
         # if we still don't have a session key, we generate a new one.

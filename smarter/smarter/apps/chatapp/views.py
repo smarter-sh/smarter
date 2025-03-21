@@ -100,7 +100,7 @@ class SmarterChatSession(SmarterRequestMixin, SmarterHelperMixin):
         self._chat_helper = ChatHelper(request=request, session_key=self.session_key, chatbot=self.chatbot)
         self._chat = self._chat_helper.chat
 
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
             logger.info("%s - session established: %s", self.formatted_class_name, self.session_key)
 
     def __str__(self):
@@ -174,16 +174,20 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
         if self._chatbot_helper:
             self._chatbot = self.chatbot_helper.chatbot
             self.account = self.chatbot_helper.account
-            logger.info("%s - chatbot_helper() setter chatbot=%s", self.formatted_class_name, self.chatbot)
+            if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
+                logger.info("%s - chatbot_helper() setter chatbot=%s", self.formatted_class_name, self.chatbot)
         else:
             self._chatbot = None
-            logger.info("%s - chatbot_helper() setter chatbot is unset", self.formatted_class_name)
+            if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
+                logger.info("%s - chatbot_helper() setter chatbot is unset", self.formatted_class_name)
 
     def dispatch(self, request, *args, chatbot_id: int = None, **kwargs):
         SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
-        logger.info("%s - dispatch() url=%s session=%s", self.formatted_class_name, self.url, self.session)
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
+            logger.info("%s - dispatch() url=%s session=%s", self.formatted_class_name, self.url, self.session)
         name = kwargs.pop("name", None)
-        logger.warning("%s authentication is disabled for this view.", self.formatted_class_name)
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
+            logger.warning("%s authentication is disabled for this view.", self.formatted_class_name)
 
         try:
             self._chatbot = get_cached_chatbot_by_request(request=request)
@@ -206,7 +210,7 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
                     status=HTTPStatus.FORBIDDEN.value,
                 )
 
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
             logger.info(
                 "%s - chatbot=%s - chatbot_helper=%s", self.formatted_class_name, self.chatbot, self.chatbot_helper
             )
@@ -234,7 +238,8 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
         """
         Get the chatbot configuration.
         """
-        logger.info("%s - post()", self.formatted_class_name)
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
+            logger.info("%s - post()", self.formatted_class_name)
         data = self.config(request=request)
         return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 
@@ -243,7 +248,8 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
         """
         Get the chatbot configuration.
         """
-        logger.info("%s - get()", self.formatted_class_name)
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
+            logger.info("%s - get()", self.formatted_class_name)
         data = self.config(request=request)
         return SmarterJournaledJsonResponse(request=request, data=data, thing=self.thing, command=self.command)
 
@@ -287,7 +293,7 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
             "data": {
                 SMARTER_CHAT_SESSION_KEY_NAME: self.session.session_key,
                 "sandbox_mode": self.chatbot_helper.is_chatbot_sandbox_url,
-                "debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_REACTAPP_DEBUG_MODE),
+                "debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.REACTAPP_DEBUG_MODE),
                 "chatbot": chatbot_serializer.data,
                 "history": history,
                 "meta_data": self.chatbot_helper.to_json(),
@@ -362,7 +368,9 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
         self.url = request.build_absolute_uri()
 
         try:
-            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_REACTAPP_DEBUG_MODE):
+            if waffle.switch_is_active(SmarterWaffleSwitches.REACTAPP_DEBUG_MODE) or waffle.switch_is_active(
+                SmarterWaffleSwitches.CHATBOT_LOGGING
+            ):
                 logger.info(
                     "%s - url=%s, account=%s, user=%s, name=%s",
                     self.formatted_class_name,
@@ -394,7 +402,7 @@ class ChatAppWorkbenchView(SmarterAuthenticatedNeverCachedWebView):
             "smarter_session_cookie_name": SMARTER_CHAT_SESSION_KEY_NAME,  # this is the Smarter chat session, not the Django session.
             "django_session_cookie_name": settings.SESSION_COOKIE_NAME,  # this is the Django session.
             "cookie_domain": settings.SESSION_COOKIE_DOMAIN,
-            "debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_REACTAPP_DEBUG_MODE),
+            "debug_mode": waffle.switch_is_active(SmarterWaffleSwitches.REACTAPP_DEBUG_MODE),
         }
         return render(request=request, template_name=self.template_path, context=context)
 
@@ -432,8 +440,7 @@ class ChatAppListView(SmarterAuthenticatedNeverCachedWebView):
         self.chatbots = get_chatbots_for_account(account=self.account)
 
         for chatbot in self.chatbots:
-            logger.info("%s - adding chatbot=%s", self.formatted_class_name, chatbot)
-            chatbot_helper = ChatBotHelper(chatbot_id=chatbot.id)
+            chatbot_helper = ChatBotHelper(request=request, chatbot_id=chatbot.id)
             if not was_already_added(chatbot_helper):
                 self.chatbot_helpers.append(chatbot_helper)
 

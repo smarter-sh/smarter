@@ -28,4 +28,4 @@ class Command(BaseCommand):
             verify_switch(switch)
 
         if smarter_settings.environment == SmarterEnvironments.LOCAL:
-            call_command("waffle_switch", SmarterWaffleSwitches.SMARTER_WAFFLE_REACTAPP_DEBUG_MODE, "on")
+            call_command("waffle_switch", SmarterWaffleSwitches.REACTAPP_DEBUG_MODE, "on")

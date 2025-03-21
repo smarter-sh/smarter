@@ -1,3 +1,10 @@
+## [0.10.17](https://github.com/smarter-sh/smarter/compare/v0.10.16...v0.10.17) (2025-03-21)
+
+
+### Bug Fixes
+
+* session_key ([66cbe68](https://github.com/smarter-sh/smarter/commit/66cbe68bbb29e66579682cc3b0ce0716ed939588))
+
 ## [0.10.16](https://github.com/smarter-sh/smarter/compare/v0.10.15...v0.10.16) (2025-03-19)
 
 

@@ -127,7 +127,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         self._url = self._chatbot_helper.url
         self._user = self._chatbot_helper.user
         self._account = self._chatbot_helper.account
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING):
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_HELPER_LOGGING):
             logger.info(
                 "%s: %s initialized with url: %s id: %s",
                 self.formatted_class_name,
@@ -177,7 +177,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         """
         Create a log entry
         """
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
             logger.info(f"{self.formatted_class_name}: {message}")
 
     def dispatch(self, request: WSGIRequest, *args, name: str = None, **kwargs):
@@ -193,7 +193,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
             self._url = self.request.build_absolute_uri()
             self._url = SmarterValidator.urlify(self._url, environment=smarter_settings.environment)
         if not self.chatbot:
-            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
                 logger.error(
                     "Could not initialize ChatBotHelper url: %s, name: %s, user: %s, account: %s, id: %s",
                     self.url,
@@ -204,7 +204,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
                 )
             return JsonResponse({}, status=HTTPStatus.NOT_FOUND.value)
 
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
             logger.info("%s.dispatch() - url=%s", self.formatted_class_name, self.url)
             logger.info("%s.dispatch() - id=%s", self.formatted_class_name, self.chatbot_id)
             logger.info("%s.dispatch() - name=%s", self.formatted_class_name, self.name)
@@ -242,7 +242,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         except json.JSONDecodeError:
             self.data = {}
 
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
             logger.info("%s.dispatch(): account=%s", self.formatted_class_name, self.account)
             logger.info("%s.dispatch(): chatbot=%s", self.formatted_class_name, self.chatbot)
             logger.info("%s.dispatch(): user=%s", self.formatted_class_name, self.user)
@@ -257,7 +257,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         return super().dispatch(request, *args, **kwargs)
 
     def options(self, request, *args, **kwargs):
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
             logger.info("%s.options(): url=%s", self.formatted_class_name, self.chatbot_helper.url)
         response = Response()
         response["Access-Control-Allow-Origin"] = smarter_settings.environment_url
@@ -267,7 +267,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
 
     # pylint: disable=W0613
     def get(self, request, *args, name: str = None, **kwargs):
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
             url = self.chatbot_helper.url if self.chatbot_helper else request.build_absolute_uri()
             logger.info("%s.get(): url=%s", self.formatted_class_name, url)
             logger.info("%s.get(): headers=%s", self.formatted_class_name, request.META)
@@ -310,7 +310,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         `chatbot.hostname == chatbot.custom_domain or chatbot.default_host`
         """
 
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING):
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
             logger.info(
                 "%s.post() - provider=%s", self.formatted_class_name, self.chatbot.provider if self.chatbot else None
             )
