@@ -32,30 +32,6 @@ spec:
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
           command: ["celery", "-A", "smarter.smarter_celery.app", "worker", "--concurrency=4", "--loglevel=info", "-Q", "default_celery_task_queue", "-E"]
           imagePullPolicy: Always
-          livenessProbe:
-            exec:
-              command:
-                - "celery"
-                - "-A"
-                - "smarter.smarter_celery.app"
-                - "inspect"
-                - "ping"
-            initialDelaySeconds: 30
-            periodSeconds: 30
-            timeoutSeconds: 10
-            failureThreshold: 3
-          readinessProbe:
-            exec:
-              command:
-                - "celery"
-                - "-A"
-                - "smarter.smarter_celery.app"
-                - "inspect"
-                - "ping"
-            initialDelaySeconds: 90
-            periodSeconds: 30
-            timeoutSeconds: 30
-            failureThreshold: 3
           env:
             - name: ROOT_DOMAIN
               value: "{{ .Values.env.ROOT_DOMAIN }}"
