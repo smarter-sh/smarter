@@ -440,7 +440,7 @@ class ChatAppListView(SmarterAuthenticatedNeverCachedWebView):
         self.chatbots = get_chatbots_for_account(account=self.account)
 
         for chatbot in self.chatbots:
-            chatbot_helper = ChatBotHelper(chatbot_id=chatbot.id)
+            chatbot_helper = ChatBotHelper(request=request, chatbot_id=chatbot.id)
             if not was_already_added(chatbot_helper):
                 self.chatbot_helpers.append(chatbot_helper)
 

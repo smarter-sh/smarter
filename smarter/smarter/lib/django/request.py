@@ -33,6 +33,7 @@ from smarter.apps.account.utils import (
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.url_helpers import session_key_from_url
 from smarter.lib.django.validators import SmarterValidator
 
@@ -131,7 +132,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
 
         if not request:
             logger.error("%s - request is None", self.formatted_class_name)
-            return None
+            raise SmarterValueError("request is None")
 
         self.helper_logger(f"url={self._url}")
 
