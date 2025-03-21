@@ -9,6 +9,7 @@ from http import HTTPStatus
 from typing import Tuple
 from urllib.parse import urlparse
 
+import waffle
 from django.core.cache import cache
 from django.http import HttpRequest, HttpResponse
 from django.test import RequestFactory
@@ -20,8 +21,7 @@ from smarter.apps.chatapp.views import ChatConfigView
 from smarter.apps.chatbot.api.v1.views.default import DefaultChatBotApiView
 from smarter.apps.chatbot.models import ChatBot
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
-from smarter.common.exceptions import SmarterValueError
+from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,
@@ -36,6 +36,8 @@ from smarter.lib.manifest.enum import SCLIResponseGet
 from ..base import APIV1CLIViewError, CliBaseApiView
 
 
+# for establishing a lifetime for chat sessions. we create a session_key, then cache it
+# and reuse it until it eventually expires.
 CACHE_EXPIRATION = 24 * 60 * 60  # 24 hours
 
 logger = logging.getLogger(__name__)
@@ -217,6 +219,10 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         # and pass it along to the ChatConfigView.
         self._session_key = cache.get(self.cache_key)
         if self.session_key:
+            if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+                logger.info(
+                    "%s.handler() caching session_key for chat config: %s", self.formatted_class_name, self.session_key
+                )
             if self.data:
                 new_body = self.data.copy()
                 new_body[SMARTER_CHAT_SESSION_KEY_NAME] = self.session_key
@@ -367,7 +373,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
 
     def handler(self, request, name, *args, **kwargs):
         # get the chat configuration for the ChatBot (name)
-        logger.info("%s handler() 1. name: %s", self.formatted_class_name, name)
+        logger.info("%s.handler() 1. name: %s", self.formatted_class_name, name)
 
         chat_config: HttpResponse = ChatConfigView.as_view()(request, name=name)
         if chat_config.status_code != 200:
@@ -381,12 +387,16 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             self._chat_config = chat_config.get(SCLIResponseGet.DATA.value)
             self._session_key = self.chat_config.get(SMARTER_CHAT_SESSION_KEY_NAME)
             cache.set(key=self.cache_key, value=self.session_key, timeout=CACHE_EXPIRATION)
+            if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+                logger.info(
+                    "%s.handler() caching session_key for chat config: %s", self.formatted_class_name, self.session_key
+                )
         except json.JSONDecodeError as e:
             raise APIV1CLIViewError(
                 f"Misconfigured. Failed to cache session key for chat config: {chat_config.content}"
             ) from e
 
-        logger.info("%s handler() 2. config: %s", self.formatted_class_name, json.dumps(self.chat_config, indent=4))
+        logger.info("%s.handler() 2. config: %s", self.formatted_class_name, json.dumps(self.chat_config, indent=4))
         # create a Smarter chatbot request body
         request_body = self.chat_request_body_factory(messages=self.messages)
 
@@ -396,7 +406,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         chat_response = json.loads(chat_response.content)
 
         response_data = chat_response.get(SmarterJournalApiResponseKeys.DATA)
-        logger.info("%s handler() 3. response_data: %s", self.formatted_class_name, json.dumps(response_data, indent=4))
+        logger.info("%s.handler() 3. response_data: %s", self.formatted_class_name, json.dumps(response_data, indent=4))
         try:
             if not response_data:
                 raise APIV1CLIChatViewError(f"Internal error. Chat response data key is missing: {chat_response}")
@@ -425,7 +435,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         chat_response[SmarterJournalApiResponseKeys.DATA]["body"] = body_dict
 
         data = {SmarterJournalApiResponseKeys.DATA: {"request": request_body, "response": chat_response}}
-        logger.info("%s handler() 4. data: %s", self.formatted_class_name, json.dumps(data, indent=4))
+        logger.info("%s.handler() 4. data: %s", self.formatted_class_name, json.dumps(data, indent=4))
         return SmarterJournaledJsonResponse(
             request=request,
             data=data,
