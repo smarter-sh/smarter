@@ -22,7 +22,7 @@ from smarter.common.const import SmarterWaffleSwitches
 
 logger = logging.getLogger(__name__)
 
-if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
     logger.info("Loading smarter.apps.chatbot.middleware.csrf.CsrfViewMiddleware")
 
 
@@ -53,7 +53,8 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
         retval = settings.CSRF_TRUSTED_ORIGINS
         if self.chatbot:
             retval += [self.chatbot.url]
-        logger.info("%s.CSRF_TRUSTED_ORIGINS: %s", self.formatted_class_name, retval)
+        if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
+            logger.info("%s.CSRF_TRUSTED_ORIGINS: %s", self.formatted_class_name, retval)
         return retval
 
     @cached_property
@@ -80,10 +81,11 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
         # ------------------------------------------------------
         self.request = request
         if self.chatbot:
-            logger.info("%s ChatBot: %s is csrf exempt.", self.formatted_class_name, self.chatbot)
+            if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
+                logger.info("%s ChatBot: %s is csrf exempt.", self.formatted_class_name, self.chatbot)
             return None
 
-        if self.chatbot and waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING):
+        if self.chatbot and waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
             logger.info("%s.process_request(): csrf_middleware_logging is active", self.formatted_class_name)
             logger.info("=" * 80)
             logger.info("%s ChatBot: %s", self.formatted_class_name, self.chatbot)
@@ -114,18 +116,15 @@ class CsrfViewMiddleware(DjangoCsrfViewMiddleware, SmarterHelperMixin):
         if smarter_settings.environment == "local":
             logger.debug("%s._accept: environment is local. ignoring csrf checks", self.formatted_class_name)
             return None
-        if self.chatbot:
-            logger.info("%s ChatBot: %s is csrf exempt.", self.formatted_class_name, self.chatbot)
+        if self.chatbot and waffle.switch_is_active(SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_CHATBOTS):
+            if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
+                logger.info(
+                    "%s.process_view() %s waffle switch is active",
+                    self.formatted_class_name,
+                    SmarterWaffleSwitches.CSRF_SUPPRESS_FOR_CHATBOTS,
+                )
             return None
-        if self.chatbot and waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_SUPPRESS_FOR_CHATBOTS):
-            logger.info(
-                "%s.process_view: %s is active",
-                self.formatted_class_name,
-                SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_SUPPRESS_FOR_CHATBOTS,
-            )
-            response = super().process_view(request, callback, callback_args, callback_kwargs)
-            if isinstance(response, HttpResponseForbidden):
-                logger.error("%s CSRF validation failed", self.formatted_class_name)
-                return None
-            return response
-        return super().process_view(request, callback, callback_args, callback_kwargs)
+        response = super().process_view(request, callback, callback_args, callback_kwargs)
+        if isinstance(response, HttpResponseForbidden):
+            logger.error("%s CSRF validation failed", self.formatted_class_name)
+        return response

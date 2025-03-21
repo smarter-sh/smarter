@@ -33,30 +33,33 @@ SMARTER_DEFAULT_CACHE_TIMEOUT = 60 * 10  # 10 minutes
 class SmarterWaffleSwitches:
     """A class representing the fixed set of Waffle switches for the Smarter API."""
 
-    SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING = "chatbot_api_view_logging"
-    SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING = "chatbothelper_logging"
-    SMARTER_WAFFLE_SWITCH_REQUEST_MIXIN_LOGGING = "request_mixin_logging"
-    SMARTER_WAFFLE_SWITCH_CHAT_LOGGING = "chat_logging"
-    SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING = "csrf_middleware_logging"
-    SMARTER_WAFFLE_SWITCH_JOURNAL = "journal"
-    SMARTER_WAFFLE_SWITCH_SUPPRESS_FOR_CHATBOTS = "csrf_middleware_suppress_for_chatbots"
-    SMARTER_WAFFLE_SWITCH_CHATAPP_VIEW_LOGGING = "chatapp_view_logging"
-    SMARTER_WAFFLE_MANIFEST_LOGGING = "manifest_logging"
-    SMARTER_WAFFLE_REACTAPP_DEBUG_MODE = "reactapp_debug_mode"
+    CHATBOT_LOGGING = "chatbot_api_view_logging"
+    CHATBOT_HELPER_LOGGING = "chatbothelper_logging"
+    REQUEST_MIXIN_LOGGING = "request_mixin_logging"
+    CHAT_LOGGING = "chat_logging"
+    MIDDLEWARE_LOGGING = "csrf_middleware_logging"
+    JOURNAL = "journal"
+    CSRF_SUPPRESS_FOR_CHATBOTS = "csrf_middleware_suppress_for_chatbots"
+    CHATAPP_LOGGING = "chatapp_view_logging"
+    MANIFEST_LOGGING = "manifest_logging"
+    REACTAPP_DEBUG_MODE = "reactapp_debug_mode"
+    CACHE_LOGGING = "cache_logging"
 
     @property
     def all(self):
         """Return all switches."""
         return [
-            self.SMARTER_WAFFLE_SWITCH_CHATBOT_API_VIEW_LOGGING,
-            self.SMARTER_WAFFLE_SWITCH_CHATBOT_HELPER_LOGGING,
-            self.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING,
-            self.SMARTER_WAFFLE_SWITCH_MIDDLEWARE_LOGGING,
-            self.SMARTER_WAFFLE_SWITCH_JOURNAL,
-            self.SMARTER_WAFFLE_SWITCH_SUPPRESS_FOR_CHATBOTS,
-            self.SMARTER_WAFFLE_SWITCH_CHATAPP_VIEW_LOGGING,
-            self.SMARTER_WAFFLE_MANIFEST_LOGGING,
-            self.SMARTER_WAFFLE_REACTAPP_DEBUG_MODE,
+            self.CHATBOT_LOGGING,
+            self.CHATBOT_HELPER_LOGGING,
+            self.REQUEST_MIXIN_LOGGING,
+            self.CHAT_LOGGING,
+            self.MIDDLEWARE_LOGGING,
+            self.JOURNAL,
+            self.CSRF_SUPPRESS_FOR_CHATBOTS,
+            self.CHATAPP_LOGGING,
+            self.MANIFEST_LOGGING,
+            self.REACTAPP_DEBUG_MODE,
+            self.CACHE_LOGGING,
         ]
 
 

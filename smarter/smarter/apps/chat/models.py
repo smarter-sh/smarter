@@ -236,7 +236,9 @@ class ChatHelper(SmarterRequestMixin):
 
         chat: Chat = cache.get(self.session_key)
         if chat:
-            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING) or waffle.switch_is_active(
+                SmarterWaffleSwitches.CACHE_LOGGING
+            ):
                 logger.info(
                     "%s - retrieved cached Chat: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
                 )
@@ -245,7 +247,7 @@ class ChatHelper(SmarterRequestMixin):
         if self.session_key:
             try:
                 chat = Chat.objects.get(session_key=self.session_key)
-                if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+                if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING):
                     logger.info(
                         "%s - retrieved Chat instance: %s session_key: %s",
                         self.formatted_class_name,
@@ -269,7 +271,7 @@ class ChatHelper(SmarterRequestMixin):
                 user_agent=self.user_agent,
                 url=self.url,
             )
-            if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+            if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING):
                 logger.info(
                     "%s - created new Chat instance: %s session_key: %s",
                     self.formatted_class_name,
@@ -278,7 +280,9 @@ class ChatHelper(SmarterRequestMixin):
                 )
 
         cache.set(key=self.session_key, value=chat, timeout=settings.SMARTER_CHAT_CACHE_EXPIRATION or 300)
-        if waffle.switch_is_active(SmarterWaffleSwitches.SMARTER_WAFFLE_SWITCH_CHAT_LOGGING):
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING) or waffle.switch_is_active(
+            SmarterWaffleSwitches.CACHE_LOGGING
+        ):
             logger.info(
                 "%s - cached chat instance: %s session_key: %s", self.formatted_class_name, chat, chat.session_key
             )

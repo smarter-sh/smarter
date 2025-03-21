@@ -31,12 +31,10 @@ def get_cached_account(account_id: int = None, account_number: str = None) -> Ac
 
     if account_id:
         account = Account.objects.get(id=account_id)
-        logger.info("%s caching account %s", formatted_text("get_cached_account()"), account)
         return account
 
     if account_number:
         account = Account.objects.get(account_number=account_number)
-        logger.info("%s caching account %s", formatted_text("get_cached_account()"), account)
         return account
 
 
@@ -59,7 +57,6 @@ def get_cached_default_account() -> Account:
         raise SmarterConfigurationError("No default account found.") from e
     except Account.MultipleObjectsReturned as e:
         raise SmarterConfigurationError("Multiple default accounts found.") from e
-    logger.info("%s caching default account %s", formatted_text("get_cached_default_account()"), account)
     return account
 
 
@@ -72,9 +69,6 @@ def get_cached_account_for_user(user) -> Account:
         return None
     try:
         user_profile = UserProfile.objects.get(user=user)
-        logger.info(
-            "%s caching user profile for user %s", formatted_text("get_cached_account_for_user()"), user_profile
-        )
     except UserProfile.DoesNotExist:
         return None
     return user_profile.account
@@ -91,7 +85,6 @@ def get_cached_user_profile(user: UserType, account: Account = None) -> UserProf
         user_profile = (
             UserProfile.objects.get(user=user, account=account) if account else UserProfile.objects.get(user=user)
         )
-        logger.info("%s caching user profile for user %s", formatted_text("get_cached_user_profile()"), user_profile)
         return user_profile
     except UserProfile.DoesNotExist:
         pass
@@ -104,7 +97,6 @@ def get_cached_user_for_user_id(user_id: int) -> AbstractUser:
     """
     try:
         user = User.objects.get(id=user_id)
-        logger.info("%s caching user %s", formatted_text("get_cached_user_for_user_id()"), user)
         return user
     except User.DoesNotExist:
         return None
@@ -126,8 +118,6 @@ def get_cached_admin_user_for_account(account: Account) -> AbstractUser:
         admin_user = User.objects.create_user(username=account.account_number, email=random_email, is_staff=True)
         user_profile = UserProfile.objects.create(user=admin_user, account=account)
         logger.warning("%s created new admin user profile for user %s", console_prefix, user_profile)
-    else:
-        logger.info("%s caching user profile for user %s", console_prefix, user_profile)
     return user_profile.user if user_profile else None
 
 
@@ -141,11 +131,6 @@ def get_cached_smarter_admin_user_profile() -> UserProfile:
         UserProfile.objects.filter(account=smarter_account, user__is_superuser=True).order_by("pk").first()
     )
     staff_user_profile = UserProfile.objects.filter(account=smarter_account, user__is_staff=True).order_by("pk").first()
-    logger.info(
-        "%s caching user profile for user %s",
-        formatted_text("get_cached_smarter_admin_user_profile()"),
-        super_user_profile or staff_user_profile,
-    )
     return super_user_profile or staff_user_profile
 
 
