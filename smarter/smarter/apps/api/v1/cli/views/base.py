@@ -219,20 +219,6 @@ class CliBaseApiView(APIView, SmarterRequestMixin, AccountMixin, SmarterHelperMi
             return SmarterJournalCliCommands(_command)
         raise APIV1CLIViewError(f"Could not determine command from url: {self.url}")
 
-    @property
-    def url(self) -> str:
-        """
-        Get the full url of the request. Reconstructs the exact url of
-        the request. example url:
-
-        https://platform.smarter.sh/api/v1/cli/chat/config/example/?new_session=false&uid=Lawrences-Mac-Studio.local-c6%253A6b%253A2e%253A7a%253A3d%253A6c
-        """
-        return SmarterValidator.urlify(self.request.build_absolute_uri())
-
-    @property
-    def url_parsed(self) -> ParseResult:
-        return urlparse(self.url) if self.url else None
-
     # pylint: disable=too-many-return-statements,too-many-branches
     def dispatch(self, request, *args, **kwargs):
         """
