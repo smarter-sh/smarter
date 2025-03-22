@@ -74,7 +74,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     _prompt: str = None
 
     def __init__(self, **kwargs):
-        APIView.__init__(**kwargs)
+        APIView.__init__(self, **kwargs)
         self.request = kwargs.pop("request", None)
         SmarterRequestMixin.__init__(self, self.request)
 
