@@ -355,11 +355,10 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
 
     def chat_request_factory(self, request_body: dict) -> HttpRequest:
         factory = RequestFactory()
-        new_request = factory.post(self.url_parsed.path, data=request_body, content_type="application/json")
-
+        new_request = factory.post(self.parsed_url.path, data=request_body, content_type="application/json")
         new_request.META = self.request.META.copy()
-        new_request.META["HTTP_HOST"] = self.url_parsed.hostname
-        new_request.META["SERVER_PORT"] = self.url_parsed.port
+        new_request.META["HTTP_HOST"] = self.parsed_url.hostname
+        new_request.META["SERVER_PORT"] = self.parsed_url.port
         new_request.META["QUERY_STRING"] = ""
         new_request.user = self.request.user if self.request and self.request.user else None
         new_request.session = self.request.session if self.request and hasattr(self.request, "session") else None
