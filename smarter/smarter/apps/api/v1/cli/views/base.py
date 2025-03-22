@@ -19,6 +19,7 @@ from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterExceptionBase
+from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -47,7 +48,7 @@ class APIV1CLIViewError(SmarterExceptionBase):
 
 
 # pylint: disable=too-many-instance-attributes
-class CliBaseApiView(APIView, AccountMixin, SmarterHelperMixin):
+class CliBaseApiView(APIView, SmarterRequestMixin, AccountMixin, SmarterHelperMixin):
     """
     Smarter API command-line interface Base class API view. Handles
     common tasks for all /api/v1/cli views:
