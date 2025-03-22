@@ -48,7 +48,7 @@ class APIV1CLIViewError(SmarterExceptionBase):
 
 
 # pylint: disable=too-many-instance-attributes
-class CliBaseApiView(APIView, SmarterRequestMixin, AccountMixin, SmarterHelperMixin):
+class CliBaseApiView(APIView, SmarterRequestMixin):
     """
     Smarter API command-line interface Base class API view. Handles
     common tasks for all /api/v1/cli views:
@@ -75,11 +75,8 @@ class CliBaseApiView(APIView, SmarterRequestMixin, AccountMixin, SmarterHelperMi
 
     def __init__(self, **kwargs):
         self.request = kwargs.pop("request", None)
-        user = self.request.user if self.request and hasattr(self.request, "user") else None
         APIView.__init__(**kwargs)
         SmarterRequestMixin.__init__(self, self.request)
-        AccountMixin.__init__(self, user=user)
-        SmarterHelperMixin.__init__(self)
 
     @property
     def loader(self) -> SAMLoader:
