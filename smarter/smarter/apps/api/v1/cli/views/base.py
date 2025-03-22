@@ -73,6 +73,14 @@ class CliBaseApiView(APIView, SmarterRequestMixin, AccountMixin, SmarterHelperMi
     _params: dict[str, any] = None
     _prompt: str = None
 
+    def __init__(self, **kwargs):
+        self.request = kwargs.pop("request", None)
+        user = self.request.user if self.request and hasattr(self.request, "user") else None
+        APIView.__init__(**kwargs)
+        SmarterRequestMixin.__init__(self, self.request)
+        AccountMixin.__init__(self, user=user)
+        SmarterHelperMixin.__init__(self)
+
     @property
     def loader(self) -> SAMLoader:
         """

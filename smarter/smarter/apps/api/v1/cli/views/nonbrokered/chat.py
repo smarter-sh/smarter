@@ -487,10 +487,10 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         # validate the chatbot name, as this is the most likely point of failure
         try:
             ChatBot.objects.get(name=name, account=self.account)
-        except ChatBot.DoesNotExist:
+        except ChatBot.DoesNotExist as e:
             return SmarterJournaledJsonErrorResponse(
                 request=request,
-                e=APIV1CLIChatViewError(f"Chatbot {name} not found."),
+                e=e,
                 thing=SmarterJournalThings(SmarterJournalThings.CHAT),
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
                 status=HTTPStatus.NOT_FOUND,
