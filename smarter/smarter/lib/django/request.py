@@ -33,7 +33,6 @@ from smarter.apps.account.utils import (
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
-from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.url_helpers import session_key_from_url
 from smarter.lib.django.validators import SmarterValidator
 
@@ -103,13 +102,6 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
     __slots__ = ("_smarter_request", "_timestamp", "_session_key", "_data", "_url", "_url_urlunparse_without_params")
 
     def init(self, request: WSGIRequest):
-        self._smarter_request: WSGIRequest = request
-        self._timestamp = datetime.now()
-        self._session_key: str = None
-        self._data: dict = None
-        self._url = None
-        self._url_urlunparse_without_params = None
-
         # validate, standardize and parse the request url string into a ParseResult.
         # Note that the setter and getter both work with strings
         # but we store the private instance variable _url as a ParseResult.
@@ -121,26 +113,10 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         self._url = urlparse(url)
         self._url_urlunparse_without_params: str = None
 
-    # pylint: disable=W0613
-    def __init__(self, *args, **kwargs):
-        # validate, standardize and parse the request url string into a ParseResult.
-        # Note that the setter and getter both work with strings
-        # but we store the private instance variable _url as a ParseResult.
-        request: WSGIRequest = kwargs.get("request", None)
-        if not request and args:
-            request = args[0]
-        self.init(request=request)
-        if not request:
-            logger.warning("%s - request is None. Ditching.", self.formatted_class_name)
-            return None
+        self.helper_logger(f"init() request: {self.url}")
 
-        self.helper_logger(f"__init__() request: {self.url}")
-
-        if request and hasattr(request, "user") and request.user and request.user.is_authenticated:
+        if hasattr(request, "user") and request.user and request.user.is_authenticated:
             AccountMixin.__init__(self, user=request.user)
-        else:
-            AccountMixin.__init__(self)
-            self.helper_logger(f"request.user is missing or is not authenticated for url: {self.url}")
         self.session_key = self.get_session_key()
 
         self.helper_logger(f"url={self._url}")
@@ -167,6 +143,59 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
 
         if waffle.switch_is_active(SmarterWaffleSwitches.REQUEST_MIXIN_LOGGING):
             self.dump()
+
+        cached_properties = [
+            "qualified_request",
+            "url",
+            "url_path_parts",
+            "smarter_request_chatbot_id",
+            "smarter_request_chatbot_name",
+            "timestamp",
+            "data",
+            "unique_client_string",
+            "client_key",
+            "ip_address",
+            "user_agent",
+            "is_config",
+            "is_dashboard",
+            "is_environment_root_domain",
+            "is_smarter_api",
+            "is_chatbot_smarter_api_url",
+            "is_chatbot_cli_api_url",
+            "is_chatbot_named_url",
+            "is_chatbot_sandbox_url",
+            "is_default_domain",
+            "path",
+            "root_domain",
+            "subdomain",
+            "api_subdomain",
+            "domain",
+        ]
+        for prop in cached_properties:
+            if hasattr(self, prop):
+                delattr(self, prop)
+
+    # pylint: disable=W0613
+    def __init__(self, *args, **kwargs):
+        self._smarter_request: WSGIRequest = request
+        self._timestamp = datetime.now()
+        self._session_key: str = None
+        self._data: dict = None
+        self._url = None
+        self._url_urlunparse_without_params = None
+
+        # validate, standardize and parse the request url string into a ParseResult.
+        # Note that the setter and getter both work with strings
+        # but we store the private instance variable _url as a ParseResult.
+        request: WSGIRequest = kwargs.get("request", None)
+        if not request and args:
+            request = args[0]
+        if not request:
+            AccountMixin.__init__(self)
+            logger.warning("request.user is missing or is not authenticated for url: %s", self.url)
+            logger.warning("%s - request is None. Ditching.", self.formatted_class_name)
+            return None
+        self.init(request=request)
 
     @property
     def smarter_request(self) -> WSGIRequest:
