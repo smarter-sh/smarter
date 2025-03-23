@@ -172,8 +172,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             "domain",
         ]
         for prop in cached_properties:
-            if hasattr(self, prop):
-                delattr(self, prop)
+            self.__dict__.pop(prop, None)
 
     # pylint: disable=W0613
     def __init__(self, *args, **kwargs):
