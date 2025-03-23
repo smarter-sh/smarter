@@ -395,11 +395,14 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             chat_config: dict = json.loads(chat_config_content)
             self._chat_config = chat_config.get(SCLIResponseGet.DATA.value)
             self._session_key = self.chat_config.get(SMARTER_CHAT_SESSION_KEY_NAME)
-            cache.set(key=self.cache_key, value=self.session_key, timeout=CACHE_EXPIRATION)
-            if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-                logger.info(
-                    "%s.handler() caching session_key for chat config: %s", self.formatted_class_name, self.session_key
-                )
+            if self._cache_key:
+                cache.set(key=self.cache_key, value=self.session_key, timeout=CACHE_EXPIRATION)
+                if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+                    logger.info(
+                        "%s.handler() caching session_key for chat config: %s",
+                        self.formatted_class_name,
+                        self.session_key,
+                    )
         except json.JSONDecodeError as e:
             raise APIV1CLIViewError(
                 f"Misconfigured. Failed to cache session key for chat config: {chat_config.content}"
