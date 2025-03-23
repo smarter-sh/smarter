@@ -69,6 +69,10 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     _params: dict[str, any] = None
     _prompt: str = None
 
+    def __init__(self, **kwargs):
+        APIView.__init__(self, **kwargs)
+        SmarterRequestMixin.__init__(self, **kwargs)
+
     @property
     def loader(self) -> SAMLoader:
         """
