@@ -102,16 +102,25 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
     __slots__ = ("_smarter_request", "_timestamp", "_session_key", "_data", "_url", "_url_urlunparse_without_params")
 
     def init(self, request: WSGIRequest):
-        # validate, standardize and parse the request url string into a ParseResult.
-        # Note that the setter and getter both work with strings
-        # but we store the private instance variable _url as a ParseResult.
+        """
+        validate, standardize and parse the request url string into a ParseResult.
+        Note that the setter and getter both work with strings
+        but we store the private instance variable _url as a ParseResult.
+
+        note: this is separated from __init__ because SmarterRequestMixin is a
+        parent of Classes that do not necessarily initialize with a request object.
+        For example, Django Views do not pass a request object to the __init__ method.
+        """
+        if self._smarter_request:
+            # we've already been initialized. nothing to do.
+            return None
+
         if not request:
             logger.warning("%s - request is None", self.formatted_class_name)
             return None
 
         if hasattr(request, "user") and request.user and request.user.is_authenticated:
-            if self.user is None or self.user != request.user:
-                self.user = request.user
+            self.user = request.user
 
         self._smarter_request: WSGIRequest = request
         url = request.build_absolute_uri() if request else "http://localhost:8000/"
