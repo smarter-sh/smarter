@@ -177,7 +177,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
 
     # pylint: disable=W0613
     def __init__(self, *args, **kwargs):
-        self._smarter_request: WSGIRequest = request
+        self._smarter_request: WSGIRequest = None
         self._timestamp = datetime.now()
         self._session_key: str = None
         self._data: dict = None
