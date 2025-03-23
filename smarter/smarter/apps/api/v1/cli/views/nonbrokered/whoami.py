@@ -41,5 +41,4 @@ class ApiV1CliWhoamiApiView(CliBaseApiView):
 
     def post(self, request):
         """Get method for PluginManifestView."""
-        self.init(request=request)
         return self.whoami()

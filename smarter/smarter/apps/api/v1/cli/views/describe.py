@@ -42,5 +42,4 @@ The response from this endpoint is a JSON object containing the resource manifes
         Returns:
         Response: A JSON object containing the resource manifest.
         """
-        self.init(request=request)
         return self.broker.describe(request=request, kwargs=kwargs)

@@ -69,15 +69,6 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     _params: dict[str, any] = None
     _prompt: str = None
 
-    def init(self, request: WSGIRequest):
-        """
-        Initialize the CliBaseApiView for anything that needs
-        the request object, namely the SmarterRequestMixin.
-        """
-        SmarterRequestMixin.__init__(self, request)
-        user = request.user if hasattr(request, "user") else None
-        AccountMixin.__init__(self, user=user)
-
     @property
     def loader(self) -> SAMLoader:
         """
@@ -255,7 +246,10 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             It provides a service interface that 'brokers' the http request for the
             underlying object that provides the object-specific service (create, update, get, delete, etc).
         """
-        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
+
+        # this is a hacky way to get SmarterRequestMixin request object
+        # initialized.
+        super().init(request=request)
 
         # Manifest parsing and broker instantiation are lazy implementations.
         # So for now, we'll only set the private class variable _manifest_data
