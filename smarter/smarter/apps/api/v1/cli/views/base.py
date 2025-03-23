@@ -7,7 +7,6 @@ from http import HTTPStatus
 from typing import Type
 
 import yaml
-from django.core.handlers.wsgi import WSGIRequest
 from django.http import QueryDict
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -18,6 +17,7 @@ from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
 from smarter.common.exceptions import SmarterExceptionBase
 from smarter.lib.django.request import SmarterRequestMixin
+from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
@@ -211,13 +211,16 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         instance. For example, if the route is '/api/v1/cli/apply/', then
         the corresponding command will be SmarterJournalCliCommands.APPLY.
 
-        url: http://testserver/api/v1/cli/logs/Chatbot/?name=TestChatBot
+        url:
+         - http://testserver/api/v1/cli/logs/Chatbot/?name=TestChatBot
+         - http://testserver/api/v1/cli/apply
         """
-        match = re.search(r"/cli/([^/]+)/", self.url or "")
+        url = SmarterValidator.validate_url(self.url)
+        match = re.search(r"/cli/([^/]+)/", url or "")
         if match:
             _command = match.group(1)
             return SmarterJournalCliCommands(_command)
-        raise APIV1CLIViewError(f"Could not determine command from url: {self.url}")
+        raise APIV1CLIViewError(f"Could not determine command from url: {url}")
 
     # pylint: disable=too-many-return-statements,too-many-branches
     def dispatch(self, request, *args, **kwargs):
