@@ -178,7 +178,9 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
             distinguished from the manifest text based on the url path.
 
         """
-        self.init(request=request)
+        # calling this here in order to initialize the parent mixins.
+        super().dispatch(request, *args, **kwargs)
+
         self._name = kwargs.get("name")
         logger.info("%s Chat view name: %s", self.formatted_class_name, self.name)
 
