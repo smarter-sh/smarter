@@ -197,6 +197,8 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             return None
         if hasattr(request, "user") and request.user and request.user.is_authenticated:
             AccountMixin.__init__(self, user=request.user)
+        else:
+            AccountMixin.__init__(self)
         self.init(request=request)
 
     @property
