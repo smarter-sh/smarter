@@ -77,5 +77,4 @@ class ApiV1CliVersionApiView(CliBaseApiView):
             return JsonResponse(data={"error": str(e)}, status=HTTPStatus.BAD_REQUEST.value)
 
     def post(self, request):
-        self.init(request=request)
         return self.info()

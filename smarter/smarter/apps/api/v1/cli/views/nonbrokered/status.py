@@ -79,5 +79,4 @@ class ApiV1CliStatusApiView(CliBaseApiView):
 
     def post(self, request):
         """Get method for PluginManifestView."""
-        self.init(request=request)
         return self.status()

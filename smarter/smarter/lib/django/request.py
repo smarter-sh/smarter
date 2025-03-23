@@ -109,16 +109,15 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             logger.warning("%s - request is None", self.formatted_class_name)
             return None
 
+        if hasattr(request, "user") and request.user and request.user.is_authenticated:
+            self.user = request.user
+
         url = request.build_absolute_uri() if request else "http://localhost:8000/"
         self._url = urlparse(url)
         self._url_urlunparse_without_params: str = None
 
         self.helper_logger(f"init() request: {self.url}")
-
-        if hasattr(request, "user") and request.user and request.user.is_authenticated:
-            AccountMixin.__init__(self, user=request.user)
         self.session_key = self.get_session_key()
-
         self.helper_logger(f"url={self._url}")
 
         # lazy excuses to not do anything...
@@ -195,6 +194,8 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             logger.warning("request.user is missing or is not authenticated for url: %s", self.url)
             logger.warning("%s - request is None. Ditching.", self.formatted_class_name)
             return None
+        if hasattr(request, "user") and request.user and request.user.is_authenticated:
+            AccountMixin.__init__(self, user=request.user)
         self.init(request=request)
 
     @property
