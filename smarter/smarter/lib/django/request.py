@@ -258,6 +258,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             self._url_urlunparse_without_params = urlunsplit(
                 (self._url.scheme, self._url.netloc, self._url.path, "", "")
             )
+            self._url_urlunparse_without_params = SmarterValidator.validate_url(self._url_urlunparse_without_params)
             return self._url_urlunparse_without_params
         logger.error("%s - url is None", self.formatted_class_name)
 
