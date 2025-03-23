@@ -215,12 +215,11 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
          - http://testserver/api/v1/cli/logs/Chatbot/?name=TestChatBot
          - http://testserver/api/v1/cli/apply
         """
-        url = SmarterValidator.validate_url(self.url)
-        match = re.search(r"/cli/([^/]+)/", url or "")
+        match = re.search(r"/cli/([^/]+)/", self.url or "")
         if match:
             _command = match.group(1)
             return SmarterJournalCliCommands(_command)
-        raise APIV1CLIViewError(f"Could not determine command from url: {url}")
+        raise APIV1CLIViewError(f"Could not determine command from url: {self.url}")
 
     # pylint: disable=too-many-return-statements,too-many-branches
     def dispatch(self, request, *args, **kwargs):
