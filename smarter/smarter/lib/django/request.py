@@ -116,10 +116,13 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         self._url_urlunparse_without_params: str = None
 
     # pylint: disable=W0613
-    def __init__(self, request: WSGIRequest, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         # validate, standardize and parse the request url string into a ParseResult.
         # Note that the setter and getter both work with strings
         # but we store the private instance variable _url as a ParseResult.
+        request = kwargs.get("request", None)
+        if not request and args:
+            request = args[0]
         self.init(request=request)
         self.helper_logger(f"__init__() request: {self.url}")
 
