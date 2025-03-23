@@ -112,6 +112,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         if hasattr(request, "user") and request.user and request.user.is_authenticated:
             self.user = request.user
 
+        self._smarter_request: WSGIRequest = request
         url = request.build_absolute_uri() if request else "http://localhost:8000/"
         self._url = urlparse(url)
         self._url_urlunparse_without_params: str = None
