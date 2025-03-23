@@ -69,6 +69,15 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     _params: dict[str, any] = None
     _prompt: str = None
 
+    def init(self, request: WSGIRequest):
+        """
+        Initialize the CliBaseApiView for anything that needs
+        the request object, namely the SmarterRequestMixin.
+        """
+        SmarterRequestMixin.__init__(self, request)
+        user = request.user if hasattr(request, "user") else None
+        AccountMixin.__init__(self, user=user)
+
     @property
     def loader(self) -> SAMLoader:
         """

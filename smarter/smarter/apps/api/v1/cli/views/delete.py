@@ -42,4 +42,5 @@ The response from this endpoint is a JSON object.
         Returns:
         Response: A JSON object representing the result of the 'delete' operation.
         """
+        self.init(request=request)
         return self.broker.delete(request=request, kwargs=kwargs)

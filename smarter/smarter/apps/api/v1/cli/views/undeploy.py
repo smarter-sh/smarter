@@ -42,4 +42,5 @@ The response from this endpoint is a JSON object containing the results of the o
         Returns:
         Response: a JSON object containing the results of the operation.
         """
+        self.init(request=request)
         return self.broker.undeploy(request=request, kwargs=kwargs)

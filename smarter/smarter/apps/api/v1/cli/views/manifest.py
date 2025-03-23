@@ -23,6 +23,10 @@ class ApiV1CliManifestApiView(CliBaseApiView):
     authentication_classes = ()
     permission_classes = ()
 
+    def dispatch(self, request, *args, **kwargs):
+        self.init(request=request)
+        return super().dispatch(request, *args, **kwargs)
+
     @swagger_auto_schema(
         operation_description="""
 Executes the 'manifest' command for Smarter resources. The resource name is passed in the url query parameters.
