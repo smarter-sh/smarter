@@ -48,4 +48,5 @@ The response from this endpoint is a JSON object.
         Response: A JSON object representing the result of the 'get' operation.
         """
         logger.info("%s.post() %s", self.formatted_class_name, kwargs)
+        self.init(request=request)
         return self.broker.get(request=request, kwargs=kwargs)

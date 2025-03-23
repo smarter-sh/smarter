@@ -24,6 +24,10 @@ class ApiV1CliSchemaApiView(CliBaseApiView):
     authentication_classes = ()
     permission_classes = ()
 
+    def dispatch(self, request, *args, **kwargs):
+        self.init(request=request)
+        return super().dispatch(request, *args, **kwargs)
+
     @swagger_auto_schema(
         operation_description="""
 Executes the 'schema' command for all Smarter resources.  The resource name is passed in the url query parameters.

@@ -6,6 +6,7 @@ from http import HTTPStatus
 from django.http import JsonResponse
 
 from smarter.apps.account.serializers import AccountSerializer
+from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django.serializers import UserSerializer
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
@@ -25,6 +26,7 @@ class ApiV1CliWhoamiApiView(CliBaseApiView):
                 SmarterJournalApiResponseKeys.DATA: {
                     "user": UserSerializer(self.user_profile.user).data,
                     "account": AccountSerializer(self.user_profile.account).data,
+                    "environment": smarter_settings.environment,
                 }
             }
             return SmarterJournaledJsonResponse(
@@ -39,4 +41,5 @@ class ApiV1CliWhoamiApiView(CliBaseApiView):
 
     def post(self, request):
         """Get method for PluginManifestView."""
+        self.init(request=request)
         return self.whoami()
