@@ -69,10 +69,6 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     _params: dict[str, any] = None
     _prompt: str = None
 
-    def __init__(self, *args, **kwargs):
-        APIView.__init__(self, *args, **kwargs)
-        SmarterRequestMixin.__init__(self, *args, **kwargs)
-
     @property
     def loader(self) -> SAMLoader:
         """
@@ -250,6 +246,8 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             It provides a service interface that 'brokers' the http request for the
             underlying object that provides the object-specific service (create, update, get, delete, etc).
         """
+        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
+
         # Manifest parsing and broker instantiation are lazy implementations.
         # So for now, we'll only set the private class variable _manifest_data
         # from the request body, and then we'll leave it to the child views to

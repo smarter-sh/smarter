@@ -103,18 +103,20 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
     __slots__ = ("_smarter_request", "_timestamp", "_session_key", "_data", "_url", "_url_urlunparse_without_params")
 
     def init(self, request: WSGIRequest):
-        if not request:
-            logger.error("%s - request is None", self.formatted_class_name)
-            raise SmarterValueError("request is None")
-
         self._smarter_request: WSGIRequest = request
         self._timestamp = datetime.now()
         self._session_key: str = None
         self._data: dict = None
+        self._url = None
+        self._url_urlunparse_without_params = None
 
         # validate, standardize and parse the request url string into a ParseResult.
         # Note that the setter and getter both work with strings
         # but we store the private instance variable _url as a ParseResult.
+        if not request:
+            logger.warning("%s - request is None", self.formatted_class_name)
+            return None
+
         url = request.build_absolute_uri() if request else "http://localhost:8000/"
         self._url = urlparse(url)
         self._url_urlunparse_without_params: str = None
@@ -128,6 +130,10 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         if not request and args:
             request = args[0]
         self.init(request=request)
+        if not request:
+            logger.warning("%s - request is None. Ditching.", self.formatted_class_name)
+            return None
+
         self.helper_logger(f"__init__() request: {self.url}")
 
         if request and hasattr(request, "user") and request.user and request.user.is_authenticated:
