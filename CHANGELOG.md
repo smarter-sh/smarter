@@ -1,3 +1,11 @@
+## [0.10.18](https://github.com/smarter-sh/smarter/compare/v0.10.17...v0.10.18) (2025-03-21)
+
+
+### Bug Fixes
+
+* csrf exceptions for chatbots ([5a47e77](https://github.com/smarter-sh/smarter/commit/5a47e77693de415f073762b05a81bcf325925d06))
+* pass request object to ChatBotHelper ([62af264](https://github.com/smarter-sh/smarter/commit/62af264b21bfb61f0dcd65686cce34041bb06b6c))
+
 ## [0.10.17](https://github.com/smarter-sh/smarter/compare/v0.10.16...v0.10.17) (2025-03-21)
 
 
