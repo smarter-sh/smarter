@@ -304,7 +304,10 @@ class SmarterValidator:
 
     @staticmethod
     def urlify(url: str, scheme: str = None, environment: str = SmarterEnvironments.LOCAL) -> str:
-        """ensure that URL starts with http:// or https://"""
+        """
+        ensure that URL starts with http:// or https://
+        and ends with a trailing slash
+        """
         logger.debug("urlify %s, %s", url, scheme)
         if not url:
             return None
