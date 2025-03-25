@@ -401,6 +401,13 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                     setattr(self.chatbot, key, value)
                 self.chatbot.save()
             except Exception as e:
+                logger.error(
+                    "%s.apply() failed to save %s %s",
+                    self.formatted_class_name,
+                    self.kind,
+                    self.manifest.metadata.name,
+                    exc_info=True,
+                )
                 raise SAMChatbotBrokerError(
                     f"Failed to apply {self.kind} {self.manifest.metadata.name}", thing=self.kind, command=command
                 ) from e
@@ -411,6 +418,12 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 try:
                     api_key = SmarterAuthToken.objects.get(name=self.manifest.spec.apiKey, user=self.user)
                 except SmarterAuthToken.DoesNotExist as e:
+                    logger.error(
+                        "%s.apply() failed to find SmarterAuthToken %s",
+                        self.formatted_class_name,
+                        self.manifest.spec.apiKey,
+                        exc_info=True,
+                    )
                     raise SAMBrokerErrorNotFound(
                         f"API Key {self.manifest.spec.apiKey} not found", thing=self.kind, command=command
                     ) from e
@@ -435,6 +448,12 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                     try:
                         plugin = PluginMeta.objects.get(name=plugin_name, account=self.account)
                     except PluginMeta.DoesNotExist as e:
+                        logger.error(
+                            "%s.apply() failed to find PluginMeta %s",
+                            self.formatted_class_name,
+                            plugin_name,
+                            exc_info=True,
+                        )
                         raise SAMBrokerErrorNotFound(
                             f"Plugin {plugin_name} not found", thing=self.kind, command=command
                         ) from e
@@ -475,6 +494,13 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 data = self.django_orm_to_manifest_dict()
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
+                logger.error(
+                    "%s.describe() failed to describe %s %s",
+                    self.formatted_class_name,
+                    self.kind,
+                    self.manifest.metadata.name,
+                    exc_info=True,
+                )
                 raise SAMChatbotBrokerError(
                     f"Failed to describe {self.kind} {self.manifest.metadata.name}", thing=self.kind, command=command
                 ) from e
@@ -490,6 +516,13 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 self.chatbot.delete()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
+                logger.error(
+                    "%s.delete() failed to delete %s %s",
+                    self.formatted_class_name,
+                    self.kind,
+                    self.manifest.metadata.name,
+                    exc_info=True,
+                )
                 raise SAMChatbotBrokerError(
                     f"Failed to delete {self.kind} {self.manifest.metadata.name}", thing=self.kind, command=command
                 ) from e
@@ -506,6 +539,13 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 self.chatbot.save()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
+                logger.error(
+                    "%s.deploy() failed to deploy %s %s",
+                    self.formatted_class_name,
+                    self.kind,
+                    self.manifest.metadata.name,
+                    exc_info=True,
+                )
                 raise SAMChatbotBrokerError(
                     f"Failed to deploy {self.kind} {self.name}", thing=self.kind, command=command
                 ) from e
@@ -520,6 +560,13 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 self.chatbot.save()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
+                logger.error(
+                    "%s.undeploy() failed to undeploy %s %s",
+                    self.formatted_class_name,
+                    self.kind,
+                    self.manifest.metadata.name,
+                    exc_info=True,
+                )
                 raise SAMChatbotBrokerError(
                     f"Failed to undeploy {self.kind} {self.name}", thing=self.kind, command=command
                 ) from e
