@@ -2,6 +2,7 @@
 
 import logging
 
+from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib.django.user import UserType
 
@@ -17,7 +18,7 @@ from .utils import (
 logger = logging.getLogger(__name__)
 
 
-class AccountMixin:
+class AccountMixin(SmarterHelperMixin):
     """
     Provides the account and user properties. Leverages
     cached queries to reduce database overhead. Cache expiration is
@@ -84,7 +85,7 @@ class AccountMixin:
                 ) from e
             except TypeError as e:
                 # TypeError: Field 'id' expected a number but got <SimpleLazyObject: <django.contrib.auth.models.AnonymousUser object at 0x70f8a5377c20>>.
-                logger.error("AccountMixin: account not set, user_profile not found: %s", str(e))
+                logger.error("%s: account not set, user_profile not found: %s", self.formatted_class_name, str(e))
 
     @property
     def account_number(self) -> str:
@@ -120,7 +121,12 @@ class AccountMixin:
             # but we still need to identify a user, such as logging, creating billable charges,
             # and journaling.
             self._user = get_cached_admin_user_for_account(self._account)
-            logger.warning("AccountMixin: user not set, using admin user %s for account %s", self._user, self._account)
+            logger.warning(
+                "%s: user not set, using admin user %s for account %s",
+                self.formatted_class_name,
+                self._user,
+                self._account,
+            )
         return self._user
 
     @user.setter
@@ -132,7 +138,7 @@ class AccountMixin:
         """
         self._user = user
         if user:
-            logger.info("AccountMixin: setting user %s", user)
+            logger.info("%s: setting user %s", self.formatted_class_name, user)
         if not self._user:
             # unset the user_profile if the user is unset
             self.user_profile = None
@@ -148,7 +154,7 @@ class AccountMixin:
                 ) from e
             except TypeError as e:
                 # TypeError: Field 'id' expected a number but got <SimpleLazyObject: <django.contrib.auth.models.AnonymousUser object at 0x70f8a5377c20>>.
-                logger.error("AccountMixin: account not set, user_profile not found: %s", str(e))
+                logger.error("%s: account not set, user_profile not found: %s", self.formatted_class_name, str(e))
         else:
             self._user_profile = None
 
@@ -175,7 +181,12 @@ class AccountMixin:
         elif self.account:
             user = get_cached_admin_user_for_account(self.account)
             self._user_profile = get_cached_user_profile(user=user, account=self.account)
-            logger.warning("AccountMixin: user not set, using admin user %s for account %s", self._user, self._account)
+            logger.warning(
+                "%s: user not set, using admin user %s for account %s",
+                self.formatted_class_name,
+                self._user,
+                self._account,
+            )
         return self._user_profile
 
     @user_profile.setter
