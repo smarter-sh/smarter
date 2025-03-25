@@ -7,11 +7,11 @@ import logging
 import re
 from http import HTTPStatus
 from typing import Tuple
-from urllib.parse import urlparse
 
 import waffle
 from django.core.cache import cache
-from django.http import HttpRequest, HttpResponse
+from django.core.handlers.wsgi import WSGIRequest
+from django.http import HttpRequest, JsonResponse
 from django.test import RequestFactory
 from django.views.decorators.csrf import csrf_exempt
 
@@ -122,15 +122,6 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         self._cache_key = hash_string
 
     @property
-    def session_key(self) -> str:
-        """
-        The session_key identifying a chat session for a user/chatbot.
-        This is used to persist the chat history of session, so that the
-        same chat session can be continued indefinitely.
-        """
-        return self._session_key
-
-    @property
     def data(self) -> dict:
         """The raw contents of the request body, assumed to be in json format."""
         return self._data or {}
@@ -168,7 +159,7 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
             if not re.match(r"^[a-f0-9]{64}$", session_key):
                 raise APIV1CLIChatViewError("Invalid session_key format. Must be a 64-character hexadecimal string.")
 
-    def dispatch(self, request: HttpRequest, *args, **kwargs):
+    def dispatch(self, request: WSGIRequest, *args, **kwargs):
         """
         Base dispatch method for the Chat views. This method will attempt to
         extract the session_key from the request body. If the session_key is
@@ -187,6 +178,9 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
             distinguished from the manifest text based on the url path.
 
         """
+        # calling this here in order to initialize the parent mixins.
+        super().dispatch(request, *args, **kwargs)
+
         self._name = kwargs.get("name")
         logger.info("%s Chat view name: %s", self.formatted_class_name, self.name)
 
@@ -264,6 +258,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
     - smarter/apps/chatapp/data/response.json
     """
 
+    _chat: Chat = None
     _chat_config: dict = None
     _chat_history: ChatHistory = None
     _messages: list[dict] = None
@@ -284,132 +279,156 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         return self.chatbot_config.get("url_chatbot", None)
 
     @property
+    def chat(self) -> Chat:
+        """The chat object for the session_key."""
+        if self._chat:
+            return self._chat
+        if self.session_key:
+            self._chat = Chat.objects.get(session_key=self.session_key)
+
+    @property
     def chat_history(self) -> dict:
         if not self._chat_history:
-            try:
-                chat = Chat.objects.get(session_key=self.session_key)
-            except Chat.DoesNotExist:
-                return None
-            try:
-                self._chat_history = ChatHistory.objects.filter(chat=chat).latest("id")
-            except ChatHistory.DoesNotExist:
-                return None
+            if self.chat:
+                self._chat_history = ChatHistory.objects.filter(chat=self.chat).latest("id")
         return self._chat_history
 
     @property
     def messages(self) -> list[dict[str, str]]:
         """The message list for the chat."""
-        if not self._messages:
-            # the cli is forcing a new session, so disregard the chat history
-            # and create a new message list that includes the welcome message.
-            if self.new_session:
-                self._messages = self.new_message_list_factory()
+        if self._messages:
+            return self._messages
+
+        # the cli is forcing a new session, so disregard the chat history
+        # and create a new message list that includes the welcome message.
+        if self.new_session:
+            self._messages = self.new_message_list_factory()
+        else:
+            # try to get the messages from the chat history, is it exists
+            messages: list = self.data.get("messages") if self.data else None
+            if messages:
+                messages.append({"role": "user", "content": self.prompt})
             else:
-                # try to get the messages from the chat history, is it exists
-                request: dict = self.chat_history.request if self.chat_history else None
-                if request:
-                    self._messages: list[dict] = request.get("messages", [])
-                    self._messages.append({"role": "user", "content": self.prompt})
                 # otherwise, create a new message list
-                else:
-                    self._messages = self.new_message_list_factory()
+                self._messages = self.new_message_list_factory()
         return self._messages
 
     def new_message_list_factory(self) -> list[dict[str, str]]:
+
+        system_dict: dict = None
+        welcome_dict: dict = None
+        prompt_dict: dict = None
 
         system_role: str = self.chatbot_config.get(
             "default_system_role",
             self.chat_config.get("default_system_role", smarter_settings.llm_default_system_role),
         )
-        welcome_message: str = self.chatbot_config.get("app_welcome_message", "[MISSING WELCOME MESSAGE]")
-        app_assistant: str = self.chatbot_config.get("app_assistant", "[MISSING ASSISTANT NAME]")
-        example_prompts: list[str] = self.chatbot_config.get(
-            "app_example_prompts", ["example prompt 1", "example prompt 2", "example prompt 3"]
-        )
-        bullet_points = "\n".join(f"    - {prompt}" for prompt in example_prompts)
-        bullet_points = "Following are some example prompts:\n\n" + bullet_points + "\n\n"
-        intro = f"I'm {app_assistant}, how can I assist you today?"
-        return [
-            {
-                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
-                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: system_role,
-            },
-            {
+        system_dict = {
+            OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.SYSTEM_MESSAGE_KEY,
+            OpenAIMessageKeys.MESSAGE_CONTENT_KEY: system_role,
+        }
+        welcome_message: str = self.chatbot_config.get("app_welcome_message")
+        example_prompts: list[str] = self.chatbot_config.get("app_example_prompts")
+        if example_prompts and welcome_message:
+            app_assistant: str = self.chatbot_config.get("app_assistant", "a chatbot")
+            bullet_points = "\n".join(f"    - {prompt}" for prompt in example_prompts) if example_prompts else ""
+            bullet_points = "Following are some example prompts:\n\n" + bullet_points + "\n\n"
+            intro = f"I'm {app_assistant}, how can I assist you today?"
+            welcome_dict = {
                 OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY,
                 OpenAIMessageKeys.MESSAGE_CONTENT_KEY: f"{welcome_message}. {bullet_points}{intro}",
-            },
+            }
+
+        prompt_dict = (
             {
                 OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.USER_MESSAGE_KEY,
                 OpenAIMessageKeys.MESSAGE_CONTENT_KEY: self.prompt,
             },
-        ]
+        )
 
-    def chat_request_body_factory(self, messages: list) -> dict[str, any]:
-        return {SMARTER_CHAT_SESSION_KEY_NAME: self.session_key, "messages": messages}
+        retval = [system_dict]
+        if welcome_dict:
+            retval.extend(welcome_dict)
+        retval.extend(prompt_dict)
 
-    @classmethod
-    def chat_request_factory(cls, request: HttpRequest, url: str, body: dict) -> HttpRequest:
+        return retval
+
+    def chat_request_body_factory(self) -> dict[str, any]:
+        return {SMARTER_CHAT_SESSION_KEY_NAME: self.session_key, "messages": self.messages}
+
+    def chat_request_factory(self, request_body: dict) -> HttpRequest:
         factory = RequestFactory()
-        body_str = json.dumps(body) if body else ""
-
-        parsed_url = urlparse(url)
-        path = parsed_url.path
-        new_request = factory.post(path, data=body_str, content_type="application/json")
-
-        new_request.META = request.META.copy()
-        new_request.META["HTTP_HOST"] = parsed_url.hostname
-        new_request.META["SERVER_PORT"] = parsed_url.port
+        new_request = factory.post(self.parsed_url.path, data=request_body, content_type="application/json")
+        new_request.META = self.request.META.copy()
+        new_request.META["HTTP_HOST"] = self.parsed_url.hostname
+        new_request.META["SERVER_PORT"] = self.parsed_url.port
         new_request.META["QUERY_STRING"] = ""
-
-        new_request.user = request.user
-
-        if hasattr(request, "session"):
-            new_request.session = request.session
-        # pylint: disable=W0212
-        if hasattr(request, "_messages"):
-            new_request._messages = request._messages
+        new_request.user = self.request.user if self.request and self.request.user else None
+        new_request.session = self.request.session if self.request and hasattr(self.request, "session") else None
 
         return new_request
 
     def handler(self, request, name, *args, **kwargs):
         # get the chat configuration for the ChatBot (name)
-        logger.info("%s.handler() 1. name: %s", self.formatted_class_name, name)
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING):
+            logger.info(
+                "%s.handler() 1. name: %s url: %s data: %s session_key: %s, new session: %s",
+                self.formatted_class_name,
+                name,
+                self.url,
+                self.data,
+                self.session_key,
+                self.new_session,
+            )
 
-        chat_config: HttpResponse = ChatConfigView.as_view()(request, name=name)
+        chat_config: JsonResponse = ChatConfigView.as_view()(request, name=name)
         if chat_config.status_code != 200:
             raise APIV1CLIChatViewError(
-                f"Internal error. Failed to get chat config for chatbot: {name} {chat_config.content}"
+                f"Internal error. Failed to get chat config for chatbot: {name} {chat_config.get('content')}"
             )
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING):
+            logger.info("%s.handler() 2. chat_config: %s %s", self.formatted_class_name, chat_config, type(chat_config))
 
         try:
             # bootstrap our chat session configuration
-            chat_config: dict = json.loads(chat_config.content)
+            chat_config_content = chat_config.content.decode("utf-8")
+            chat_config: dict = json.loads(chat_config_content)
             self._chat_config = chat_config.get(SCLIResponseGet.DATA.value)
             self._session_key = self.chat_config.get(SMARTER_CHAT_SESSION_KEY_NAME)
-            cache.set(key=self.cache_key, value=self.session_key, timeout=CACHE_EXPIRATION)
-            if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-                logger.info(
-                    "%s.handler() caching session_key for chat config: %s", self.formatted_class_name, self.session_key
-                )
+            if self._cache_key:
+                cache.set(key=self.cache_key, value=self.session_key, timeout=CACHE_EXPIRATION)
+                if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+                    logger.info(
+                        "%s.handler() caching session_key for chat config: %s",
+                        self.formatted_class_name,
+                        self.session_key,
+                    )
         except json.JSONDecodeError as e:
             raise APIV1CLIViewError(
                 f"Misconfigured. Failed to cache session key for chat config: {chat_config.content}"
             ) from e
+        except TypeError as e:
+            raise APIV1CLIViewError(f"Internal error. Chat config 'content' is missing: {chat_config}") from e
 
-        logger.info("%s.handler() 2. config: %s", self.formatted_class_name, json.dumps(self.chat_config, indent=4))
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING):
+            logger.info("%s.handler() 3. config: %s", self.formatted_class_name, json.dumps(self.chat_config, indent=4))
+
         # create a Smarter chatbot request body
-        request_body = self.chat_request_body_factory(messages=self.messages)
+        request_body = self.chat_request_body_factory()
 
         # create a Smarter chatbot request and prompt the chatbot
-        chat_request = self.chat_request_factory(request=request, url=self.url_chatbot, body=request_body)
+        chat_request = self.chat_request_factory(request_body=request_body)
         chat_response = DefaultChatBotApiView.as_view()(request=chat_request, name=name)
         chat_response = json.loads(chat_response.content)
 
         response_data = chat_response.get(SmarterJournalApiResponseKeys.DATA)
-        logger.info("%s.handler() 3. response_data: %s", self.formatted_class_name, json.dumps(response_data, indent=4))
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING):
+            logger.info(
+                "%s.handler() 4. response_data: %s", self.formatted_class_name, json.dumps(response_data, indent=4)
+            )
         try:
             if not response_data:
-                raise APIV1CLIChatViewError(f"Internal error. Chat response data key is missing: {chat_response}")
+                raise APIV1CLIChatViewError(f"Internal error. Chat response key 'data' is missing: {chat_response}")
 
             response_body = response_data.get("body")
             if not response_body:
@@ -435,7 +454,8 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         chat_response[SmarterJournalApiResponseKeys.DATA]["body"] = body_dict
 
         data = {SmarterJournalApiResponseKeys.DATA: {"request": request_body, "response": chat_response}}
-        logger.info("%s.handler() 4. data: %s", self.formatted_class_name, json.dumps(data, indent=4))
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING):
+            logger.info("%s.handler() 5. data: %s", self.formatted_class_name, json.dumps(data, indent=4))
         return SmarterJournaledJsonResponse(
             request=request,
             data=data,
@@ -473,10 +493,10 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         # validate the chatbot name, as this is the most likely point of failure
         try:
             ChatBot.objects.get(name=name, account=self.account)
-        except ChatBot.DoesNotExist:
+        except ChatBot.DoesNotExist as e:
             return SmarterJournaledJsonErrorResponse(
                 request=request,
-                e=APIV1CLIChatViewError(f"Chatbot {name} not found."),
+                e=e,
                 thing=SmarterJournalThings(SmarterJournalThings.CHAT),
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
                 status=HTTPStatus.NOT_FOUND,
