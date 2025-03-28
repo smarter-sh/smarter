@@ -250,7 +250,9 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
             logger.info("%s.dispatch(): name=%s", self.formatted_class_name, self.name)
             logger.info("%s.dispatch(): data=%s", self.formatted_class_name, self.data)
             logger.info("%s.dispatch(): session_key=%s", self.formatted_class_name, self.session_key)
-            logger.info("%s.dispatch(): chat_helper=%s", self.formatted_class_name, self.chat_helper)
+            if self.session_key:
+                # avoid unnecessarily attempting to create a new chat session unless it is merited.
+                logger.info("%s.dispatch(): chat_helper=%s", self.formatted_class_name, self.chat_helper)
 
         chatbot_called.send(sender=self.__class__, chatbot=self.chatbot, request=request, args=args, kwargs=kwargs)
 
