@@ -44,7 +44,7 @@ spec:
               path: /healthz
               port: {{ .Values.deployment.containerPort }}
             initialDelaySeconds: 10
-            periodSeconds: 30
+            periodSeconds: 10
             timeoutSeconds: 20
             failureThreshold: 3
             successThreshold: 1
@@ -53,7 +53,7 @@ spec:
               path: /readiness
               port: {{ .Values.deployment.containerPort }}
             initialDelaySeconds: 10
-            periodSeconds: 60
+            periodSeconds: 20
             timeoutSeconds: 20
             failureThreshold: 3
             successThreshold: 1
