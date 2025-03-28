@@ -41,14 +41,19 @@ spec:
               path: /healthz
               port: {{ .Values.deployment.containerPort }}
             initialDelaySeconds: 10
-            periodSeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 20
+            failureThreshold: 3
+            successThreshold: 1
           readinessProbe:
             httpGet:
               path: /readiness
               port: {{ .Values.deployment.containerPort }}
             initialDelaySeconds: 10
-            periodSeconds: 15
-          image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
+            periodSeconds: 60
+            timeoutSeconds: 20
+            failureThreshold: 3
+            successThreshold: 1
           imagePullPolicy: Always
           ports:
             - containerPort: {{ .Values.deployment.containerPort }}
