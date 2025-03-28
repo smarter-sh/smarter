@@ -242,7 +242,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
         except json.JSONDecodeError:
             self.data = {}
 
-        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
+        if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING) and self.chatbot_helper.is_chatbot:
             logger.info("%s.dispatch(): account=%s", self.formatted_class_name, self.account)
             logger.info("%s.dispatch(): chatbot=%s", self.formatted_class_name, self.chatbot)
             logger.info("%s.dispatch(): user=%s", self.formatted_class_name, self.user)
@@ -250,11 +250,12 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
             logger.info("%s.dispatch(): name=%s", self.formatted_class_name, self.name)
             logger.info("%s.dispatch(): data=%s", self.formatted_class_name, self.data)
             logger.info("%s.dispatch(): session_key=%s", self.formatted_class_name, self.session_key)
-            if self.session_key:
+            if self.session_key and self.chatbot_helper.is_chatbot:
                 # avoid unnecessarily attempting to create a new chat session unless it is merited.
                 logger.info("%s.dispatch(): chat_helper=%s", self.formatted_class_name, self.chat_helper)
 
-        chatbot_called.send(sender=self.__class__, chatbot=self.chatbot, request=request, args=args, kwargs=kwargs)
+        if self.chatbot_helper.is_chatbot and self.chat_helper:
+            chatbot_called.send(sender=self.__class__, chatbot=self.chatbot, request=request, args=args, kwargs=kwargs)
 
         return super().dispatch(request, *args, **kwargs)
 
