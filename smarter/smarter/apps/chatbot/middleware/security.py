@@ -60,7 +60,21 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
         parsed_host = urlparse(url)
         host = parsed_host.hostname
 
-        # 2.) If the host is in the list of allowed hosts for
+        # 2.) readiness and liveness checks
+        # ---------------------------------------------------------------------
+        path_parts = list(filter(None, parsed_host.path.split("/")))
+        # if the entire path is healthz or readiness then we don't need to check
+        if len(path_parts) == 1 and path_parts[0] in ["healthz", "readiness"]:
+            if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
+                logger.info(
+                    "%s %s found in health/readiness check: %s",
+                    self.formatted_class_name,
+                    host,
+                    path_parts,
+                )
+            return None
+
+        # 3.) If the host is in the list of allowed hosts for
         #     our environment then allow it to pass through
         # ---------------------------------------------------------------------
         for allowed_host in settings.SMARTER_ALLOWED_HOSTS:
@@ -74,7 +88,7 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
                     )
                 return None
 
-        # 3.) If the host is a domain for a deployed ChatBot, allow it to pass through
+        # 4.) If the host is a domain for a deployed ChatBot, allow it to pass through
         #     FIX NOTE: this is ham fisted and should be refactored. we shouldn't need
         #     to instantiate a ChatBotHelper object just to check if the host is a domain
         #     for a deployed ChatBot.
