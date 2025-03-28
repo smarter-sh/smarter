@@ -58,7 +58,6 @@ spec:
           ports:
             - containerPort: {{ .Values.deployment.containerPort }}
               protocol: TCP
-          resources: {}
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
           env:
