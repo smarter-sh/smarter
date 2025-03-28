@@ -7,6 +7,7 @@ import waffle
 from django.conf import settings
 from django.core.cache import cache
 from django.db import models
+from django.db.utils import IntegrityError
 from rest_framework import serializers
 
 from smarter.apps.account.models import Account
@@ -16,7 +17,7 @@ from smarter.apps.chatbot.models import (
 )
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.const import SmarterWaffleSwitches
-from smarter.common.exceptions import SmarterValueError
+from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.request import SmarterRequestMixin
@@ -263,14 +264,18 @@ class ChatHelper(SmarterRequestMixin):
                     f"{self.formatted_class_name} ChatBot instance is required for creating a Chat object."
                 )
 
-            chat = Chat.objects.create(
-                session_key=self.session_key,
-                account=self.account,
-                chatbot=self.chatbot,
-                ip_address=self.ip_address,
-                user_agent=self.user_agent,
-                url=self.url,
-            )
+            try:
+                chat = Chat.objects.create(
+                    session_key=self.session_key,
+                    account=self.account,
+                    chatbot=self.chatbot,
+                    ip_address=self.ip_address,
+                    user_agent=self.user_agent,
+                    url=self.url,
+                )
+            except IntegrityError as e:
+                raise SmarterConfigurationError(f"{self.formatted_class_name} - IntegrityError: {str(e)}") from e
+
             if waffle.switch_is_active(SmarterWaffleSwitches.CHAT_LOGGING):
                 logger.info(
                     "%s - created new Chat instance: %s session_key: %s",
