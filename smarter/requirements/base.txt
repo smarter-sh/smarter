@@ -63,7 +63,7 @@ langchain-openai==0.2.12                # OpenAI plugin for Langchain
 pyyaml==6.0.2                           # YAML parser
 python-Levenshtein==0.26.1              # Levenshtein distance calculation for LLMs
 nltk==3.8.1                             # Natural Language Toolkit
-textblob==0.18.0.post0                  # Text processing library
+textblob==0.19.0                  # Text processing library
 
 # weather function calling feature
 # ------------
