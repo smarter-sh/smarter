@@ -10,13 +10,6 @@ metadata:
   name: {{ .Values.appName }}
   namespace: {{ .Values.namespace }}
 spec:
-  resources:
-    requests:
-      memory: "1Gi"
-      cpu: "500m"
-    limits:
-      memory: "2Gi"
-      cpu: "1"
   progressDeadlineSeconds: 600
   replicas: 2
   revisionHistoryLimit: 10
@@ -36,6 +29,16 @@ spec:
     spec:
       containers:
         - name: {{ .Values.appName }}
+          image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
+          command: ["gunicorn", "smarter.wsgi:application", "--bind", "0.0.0.0:{{ .Values.deployment.containerPort }}"]
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: "500m"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"
+              cpu: "1"
           livenessProbe:
             httpGet:
               path: /healthz
@@ -54,7 +57,6 @@ spec:
             timeoutSeconds: 20
             failureThreshold: 3
             successThreshold: 1
-          imagePullPolicy: Always
           ports:
             - containerPort: {{ .Values.deployment.containerPort }}
               protocol: TCP
