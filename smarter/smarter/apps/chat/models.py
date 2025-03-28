@@ -6,6 +6,7 @@ import logging
 import waffle
 from django.conf import settings
 from django.core.cache import cache
+from django.core.handlers.wsgi import WSGIRequest
 from django.db import models
 from django.db.utils import IntegrityError
 from rest_framework import serializers
@@ -152,7 +153,7 @@ class ChatHelper(SmarterRequestMixin):
     _clean_url: str = None
 
     # FIX NOTE: remove session_key
-    def __init__(self, request, session_key: str, chatbot: ChatBot = None) -> None:
+    def __init__(self, request: WSGIRequest, session_key: str, chatbot: ChatBot = None) -> None:
         if not request:
             logger.error("ChatHelper - request object is missing.")
         logger.info("%s - session_key: %s, chatbot: %s", self.formatted_class_name, session_key, chatbot)
@@ -170,7 +171,8 @@ class ChatHelper(SmarterRequestMixin):
         if chatbot:
             self.account = chatbot.account
 
-        self._chat = self.get_cached_chat()
+        if session_key:
+            self._chat = self.get_cached_chat()
 
     def __str__(self):
         return self.session_key
