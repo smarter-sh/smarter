@@ -1,3 +1,13 @@
+## [0.10.19](https://github.com/smarter-sh/smarter/compare/v0.10.18...v0.10.19) (2025-03-28)
+
+
+### Bug Fixes
+
+* add a SmarterConfigurationError to the stack trace ([19143d3](https://github.com/smarter-sh/smarter/commit/19143d3b6b25c98c85cc892b59011d16d7694c8b))
+* avoid unnecessarily attempting to create a new chat session unless we have a session_key ([1a4e86d](https://github.com/smarter-sh/smarter/commit/1a4e86d9d63962f3187e5ae63323065b5ee88630))
+* only log and send django signal if we know that this is a chatbot. ([3478390](https://github.com/smarter-sh/smarter/commit/3478390338fba4be3c8df24d3871b8a98ba85be3))
+* wait 10 seconds before attempting health check ([1c647f8](https://github.com/smarter-sh/smarter/commit/1c647f8873aeca9c25a77d83171088da2fd39a96))
+
 ## [0.10.18](https://github.com/smarter-sh/smarter/compare/v0.10.17...v0.10.18) (2025-03-21)
 
 
