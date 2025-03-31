@@ -30,4 +30,4 @@ redis:
         value: "smarter-platform"
         effect: NoSchedule
     nodeSelector:
-      lawrencemcdaniel.com/smarter: "smarter-platform"
+      environment: "smarter-platform"

@@ -33,7 +33,7 @@ spec:
           value: "smarter-platform"
           effect: NoSchedule
       nodeSelector:
-        lawrencemcdaniel.com/smarter: "smarter-platform"
+        environment: "smarter-platform"
       containers:
         - name: {{ .Values.workerName }}
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
