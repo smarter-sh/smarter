@@ -32,6 +32,8 @@ spec:
           operator: Equal
           value: "smarter-platform"
           effect: NoSchedule
+      nodeSelector:
+        lawrencemcdaniel.com/smarter: "smarter-platform"
       containers:
         - name: {{ .Values.appName }}
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
