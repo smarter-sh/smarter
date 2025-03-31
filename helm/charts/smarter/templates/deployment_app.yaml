@@ -27,6 +27,11 @@ spec:
         app.kubernetes.io/name: {{ .Values.appName }}
         deploymentTimestamp: "{{ now | unixEpoch }}"
     spec:
+      tolerations:
+        - key: "lawrencemcdaniel.com/smarter"
+          operator: Equal
+          value: "smarter-platform"
+          effect: NoSchedule
       containers:
         - name: {{ .Values.appName }}
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
