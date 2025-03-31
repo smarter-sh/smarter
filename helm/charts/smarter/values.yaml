@@ -23,6 +23,7 @@ redis:
       limits:
         memory: "1Gi"
         cpu: "500m"
+    affinity: {}
     tolerations:
       - key: "lawrencemcdaniel.com/smarter"
         operator: Equal
