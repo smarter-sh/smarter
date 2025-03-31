@@ -1,3 +1,10 @@
+## [0.10.20](https://github.com/smarter-sh/smarter/compare/v0.10.19...v0.10.20) (2025-03-28)
+
+
+### Bug Fixes
+
+* snuff out insert attempt to Chat when there is no session_key ([b2eae13](https://github.com/smarter-sh/smarter/commit/b2eae13ec317f3033794ba5a082cb94736d8c0fb))
+
 ## [0.10.19](https://github.com/smarter-sh/smarter/compare/v0.10.18...v0.10.19) (2025-03-28)
 
 
