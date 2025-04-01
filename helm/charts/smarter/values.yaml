@@ -18,11 +18,11 @@ redis:
   master:
     resources:
       requests:
-        memory: "128Mi"
-        cpu: "12m"
-      limits:
-        memory: "500m"
+        memory: "512Mi"
         cpu: "100m"
+      limits:
+        memory: "1Gi"
+        cpu: "512m"
     affinity: {}
     tolerations:
       - key: "lawrencemcdaniel.com/smarter"
