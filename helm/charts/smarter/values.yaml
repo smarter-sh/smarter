@@ -21,8 +21,8 @@ redis:
         memory: "128Mi"
         cpu: "12m"
       limits:
-        memory: "1Gi"
-        cpu: "500m"
+        memory: "500m"
+        cpu: "100m"
     affinity: {}
     tolerations:
       - key: "lawrencemcdaniel.com/smarter"
