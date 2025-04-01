@@ -40,7 +40,7 @@ django-filter==24.1                     # REST API filtering
 django-taggit==5.0.1                    # Smarter Plugin tagging
 django-rest-knox==5.0.2                 # Token authentication for REST APIs
 dj-stripe==2.9.0                        # Stripe card processing integration
-django-cors-headers==4.6.0              # Cross-origin resource sharing
+django-cors-headers==4.7.0              # Cross-origin resource sharing
 django-waffle==4.2.0                    # Feature flagging
 
 # for working with data
