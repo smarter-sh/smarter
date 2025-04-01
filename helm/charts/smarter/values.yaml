@@ -14,7 +14,7 @@ redis:
     redis:
       password: "smarter"
   replica:
-    replicaCount: 0
+    replicaCount: 1
   master:
     resources:
       requests:
