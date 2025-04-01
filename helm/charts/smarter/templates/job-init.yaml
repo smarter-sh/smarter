@@ -15,9 +15,23 @@ spec:
         app.kubernetes.io/name: "{{ .Values.appJobName }}"
         jobTimestamp: "{{ now | unixEpoch }}"
     spec:
+      tolerations:
+        - key: "lawrencemcdaniel.com/smarter"
+          operator: Equal
+          value: "smarter-platform"
+          effect: NoSchedule
+      nodeSelector:
+        environment: "smarter-platform"
       automountServiceAccountToken: true
       containers:
-        - args:
+        - resources:
+            requests:
+              memory: "500m"
+              cpu: "100m"
+            limits:
+              memory: "2Gi"
+              cpu: "1"
+          args:
             - |
               mysql -u "{{ .Values.env.MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.MYSQL_HOST }}" --port {{ .Values.env.MYSQL_PORT }} -e "CREATE DATABASE IF NOT EXISTS {{ .Values.env.MYSQL_DATABASE }};"
               mysql -u "{{ .Values.env.MYSQL_ROOT_USERNAME }}" --password="{{ .Values.env.MYSQL_ROOT_PASSWORD }}" --host "{{ .Values.env.MYSQL_HOST }}" --port {{ .Values.env.MYSQL_PORT }} -e "CREATE USER IF NOT EXISTS '{{ .Values.env.MYSQL_USER }}'@'%' IDENTIFIED BY '{{ .Values.env.MYSQL_PASSWORD }}';"
