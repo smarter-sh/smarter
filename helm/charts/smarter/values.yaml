@@ -13,9 +13,10 @@ redis:
   global:
     redis:
       password: "smarter"
-  replica:
-    replicaCount: 1
+  architecture: standalone
   master:
+    persistence:
+      enabled: true
     resources:
       requests:
         memory: "512Mi"
