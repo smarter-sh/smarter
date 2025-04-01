@@ -3,7 +3,7 @@ appVersion: 0.10.20
 name: smarter
 description: A Helm chart for deploying Querium Smarter API and web console
 type: application
-version: 0.7.2
+version: 0.7.3
 home: https://smarter.sh
 sources:
   - https://github.com/QueriumCorp/smarter
@@ -22,4 +22,4 @@ keywords:
   - smarter
   - plugins
 annotations:
-  "helm.sh/chart": "smarter-0.7.2"
+  "helm.sh/chart": "smarter-0.7.3"
