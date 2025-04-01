@@ -32,6 +32,8 @@ spec:
           operator: Equal
           value: "smarter-platform"
           effect: NoSchedule
+      nodeSelector:
+        environment: "smarter-platform"
       containers:
         - name: {{ .Values.workerName }}
           image: "{{ .Values.env.SMARTER_DOCKER_IMAGE }}"
@@ -40,7 +42,7 @@ spec:
           resources:
             requests:
               memory: "500m"
-              cpu: "250m"
+              cpu: "100m"
             limits:
               memory: "2Gi"
               cpu: "1"

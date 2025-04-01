@@ -2,52 +2,33 @@ appName: smarter
 workerName: smarter-worker
 beatName: smarter-beat
 appJobName: smarter-job-db-init
-version: 0.7.1
+version: 0.7.3
 deployment:
   containerPort: 8000
 service:
   port: 8000
   targetPort: 8000
-ingress:
 redis:
   fullnameOverride: "smarter-redis"
   global:
     redis:
       password: "smarter"
-  replica:
-    replicaCount: 0
+  architecture: standalone
   master:
+    persistence:
+      enabled: true
     resources:
       requests:
         memory: "512Mi"
-        cpu: "500m"
+        cpu: "100m"
       limits:
-        memory: "4Gi"
-        cpu: "1"
-    affinity:
-      podAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-                - key: app.kubernetes.io/name
-                  operator: In
-                  values:
-                    - redis
-            topologyKey: "kubernetes.io/hostname"
-      podAntiAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-                - key: "lawrencemcdaniel.com/wordpress-only"
-                  operator: Exists
-            topologyKey: "kubernetes.io/hostname"
-        preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 1
-            podAffinityTerm:
-              labelSelector:
-                matchExpressions:
-                  - key: "node-affinity"
-                    operator: In
-                    values:
-                      - "compatible"
-              topologyKey: "kubernetes.io/hostname"
+        memory: "1Gi"
+        cpu: "512m"
+    affinity: {}
+    tolerations:
+      - key: "lawrencemcdaniel.com/smarter"
+        operator: Equal
+        value: "smarter-platform"
+        effect: NoSchedule
+    nodeSelector:
+      environment: "smarter-platform"
