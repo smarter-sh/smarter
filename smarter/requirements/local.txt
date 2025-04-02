@@ -31,4 +31,4 @@ bandit==1.8.0
 pydocstringformatter==0.7.3
 tox==4.23.2
 codespell==2.4.1
-coverage==7.6.10
+coverage==7.8.0
