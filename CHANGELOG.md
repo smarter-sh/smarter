@@ -1,93 +1,85 @@
-## [0.10.20](https://github.com/smarter-sh/smarter/compare/v0.10.19...v0.10.20) (2025-03-28)
-
-
-### Bug Fixes
-
-* snuff out insert attempt to Chat when there is no session_key ([b2eae13](https://github.com/smarter-sh/smarter/commit/b2eae13ec317f3033794ba5a082cb94736d8c0fb))
-
-## [0.10.19](https://github.com/smarter-sh/smarter/compare/v0.10.18...v0.10.19) (2025-03-28)
-
-
-### Bug Fixes
-
-* add a SmarterConfigurationError to the stack trace ([19143d3](https://github.com/smarter-sh/smarter/commit/19143d3b6b25c98c85cc892b59011d16d7694c8b))
-* avoid unnecessarily attempting to create a new chat session unless we have a session_key ([1a4e86d](https://github.com/smarter-sh/smarter/commit/1a4e86d9d63962f3187e5ae63323065b5ee88630))
-* only log and send django signal if we know that this is a chatbot. ([3478390](https://github.com/smarter-sh/smarter/commit/3478390338fba4be3c8df24d3871b8a98ba85be3))
-* wait 10 seconds before attempting health check ([1c647f8](https://github.com/smarter-sh/smarter/commit/1c647f8873aeca9c25a77d83171088da2fd39a96))
-
-## [0.10.18](https://github.com/smarter-sh/smarter/compare/v0.10.17...v0.10.18) (2025-03-21)
-
-
-### Bug Fixes
-
-* csrf exceptions for chatbots ([5a47e77](https://github.com/smarter-sh/smarter/commit/5a47e77693de415f073762b05a81bcf325925d06))
-* pass request object to ChatBotHelper ([62af264](https://github.com/smarter-sh/smarter/commit/62af264b21bfb61f0dcd65686cce34041bb06b6c))
-
-## [0.10.17](https://github.com/smarter-sh/smarter/compare/v0.10.16...v0.10.17) (2025-03-21)
-
-
-### Bug Fixes
-
-* session_key ([66cbe68](https://github.com/smarter-sh/smarter/commit/66cbe68bbb29e66579682cc3b0ce0716ed939588))
-
-## [0.10.16](https://github.com/smarter-sh/smarter/compare/v0.10.15...v0.10.16) (2025-03-19)
-
-
-### Bug Fixes
-
-* bug fix where environment url was initializing as a chatbot ([51273a8](https://github.com/smarter-sh/smarter/commit/51273a8b2cf99a01a2209b1618a5e13e388c60a5))
-* csrf exempt ApiV1CliChatApiView and ApiV1CliChatConfigApiView ([cb812f1](https://github.com/smarter-sh/smarter/commit/cb812f1efade9ae447c7663a3d678d1828c7ba73))
-* if there's no chatbot then return None ([31724a4](https://github.com/smarter-sh/smarter/commit/31724a45f303f9781d6177d9bcc0bcba901ac436))
-* remove authentication requirement ([6cff04e](https://github.com/smarter-sh/smarter/commit/6cff04ed20d9f6c6697593d4e4281de491502294))
-* request object sometimes is not set. use self.url ([5e981f4](https://github.com/smarter-sh/smarter/commit/5e981f497c367c5a8ebfc27dea135bd096c0a1cb))
-
-## [0.10.15](https://github.com/smarter-sh/smarter/compare/v0.10.14...v0.10.15) (2025-03-18)
-
-
-### Bug Fixes
-
-* environment api domain is hosted from root domain ([fd4f930](https://github.com/smarter-sh/smarter/commit/fd4f9305b7fba4b58de7392d1f423385bb80a347))
-* parent domain should be root domain ([f54fb14](https://github.com/smarter-sh/smarter/commit/f54fb144756792442443a785a7534bbe3ddb95ba))
-* wrap the entire load process in a try block ([7509b7b](https://github.com/smarter-sh/smarter/commit/7509b7b99869df5797420321db2f4baa0836b0a3))
-
-## [0.10.14](https://github.com/smarter-sh/smarter/compare/v0.10.13...v0.10.14) (2025-03-17)
-
-
-### Bug Fixes
-
-* Add chatbot deploy, undeploy and delete signals and receivers. Add KubernetesHelper functions to delete ingress resources. Refactor chatbot task logging ([3c4a7db](https://github.com/smarter-sh/smarter/commit/3c4a7db8f22034035eab6f0b44a5ac51e1455e16))
-* add ChatBot.tls_certificate_issuance_status ([e771c22](https://github.com/smarter-sh/smarter/commit/e771c22bd7dfc40f5372f784d3a80f2c96657aa5))
-* add ChatBot.tls_certificate_issuance_status ([39bf944](https://github.com/smarter-sh/smarter/commit/39bf94455c3533df08a217ac0570a7eb435f8912))
-* add mysql root credentials ([08db79c](https://github.com/smarter-sh/smarter/commit/08db79c57c9498263472c04034db6be172908d95))
-* add verifications for ingress, certificate, secret ([07b655d](https://github.com/smarter-sh/smarter/commit/07b655d1b5386c254496303e2163bca60d8e0b13))
-* CSRF_TRUSTED_ORIGINS = [smarter_settings.environment_domain, smarter_settings.api_domain, smarter_settings.customer_api_domain] ([31541b0](https://github.com/smarter-sh/smarter/commit/31541b0d72947a847ab5bd16899aaa066c582458))
-* don't wait if the tls cert is already verified ([bc997ec](https://github.com/smarter-sh/smarter/commit/bc997ece515150b9b4241e1210d70ed734344e0a))
-* enable the dismiss button on the password reset confirmation modal ([3ac954b](https://github.com/smarter-sh/smarter/commit/3ac954b1f9dc05a9bb897660b10f82a6e8840200))
-* environment_api_domain should reside inside platform domain ([7ce6a8e](https://github.com/smarter-sh/smarter/commit/7ce6a8e5dc5d01d81923f2528faf77a3e09cd380))
-* exempt known benign file extensions ([dfaf2b5](https://github.com/smarter-sh/smarter/commit/dfaf2b54b821aa533a6f0f66027b62ea218d7319))
-* explicitly initialize AccountMixin() in __init__() ([46da800](https://github.com/smarter-sh/smarter/commit/46da800e92cddd2a3b86114afe645ed1845196bb))
-* namespace ([e5e4d8a](https://github.com/smarter-sh/smarter/commit/e5e4d8a8b9212599901ddfc8eba885678ae138a8))
-* only send deployment emails to primary point of contact for account ([d5ceba7](https://github.com/smarter-sh/smarter/commit/d5ceba71b64d4f2e8a11e9bed764396d8af9154f))
-* only wait if the tls cert is not yet verified ([99a9b2e](https://github.com/smarter-sh/smarter/commit/99a9b2e29fe84c198a138337b6b75bbb3e3df9f2))
-* override __call__() ([5d7b115](https://github.com/smarter-sh/smarter/commit/5d7b11510ee9c39fef5d1614f853c6a4f797ab08))
-* override __call__() ([4691899](https://github.com/smarter-sh/smarter/commit/46918990da1c82cc568a0155bddc47054c72b7b6))
-* split user creation from password update ([72a0b4e](https://github.com/smarter-sh/smarter/commit/72a0b4e8b8fcfa7b812ae210f6e4ac754a2cd0dd))
-* user is not longer 1:1 with user_profile ([862fa85](https://github.com/smarter-sh/smarter/commit/862fa851ff6367f48d791da1d61df55aad33e5f8))
-* user is not longer 1:1 with user_profile ([ba145f0](https://github.com/smarter-sh/smarter/commit/ba145f026155268a67f054ee008bed49d9d1f9af))
-
-## [0.10.13](https://github.com/smarter-sh/smarter/compare/v0.10.12...v0.10.13) (2025-02-14)
-
-
-### Bug Fixes
-
-* allow password reset urls ([f08e397](https://github.com/smarter-sh/smarter/commit/f08e397531bf2069ba8274691db94e786bedf62c))
-* allow password reset urls ([a70652d](https://github.com/smarter-sh/smarter/commit/a70652da9e09a425e57fe0e2dd2bc0f7b4aa4711))
-
 # Change Log
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.10.20](https://github.com/smarter-sh/smarter/compare/v0.10.19...v0.10.20) (2025-03-28)
+
+### Bug Fixes
+
+- snuff out insert attempt to Chat when there is no session_key ([b2eae13](https://github.com/smarter-sh/smarter/commit/b2eae13ec317f3033794ba5a082cb94736d8c0fb))
+
+## [0.10.19](https://github.com/smarter-sh/smarter/compare/v0.10.18...v0.10.19) (2025-03-28)
+
+### Bug Fixes
+
+- add a SmarterConfigurationError to the stack trace ([19143d3](https://github.com/smarter-sh/smarter/commit/19143d3b6b25c98c85cc892b59011d16d7694c8b))
+- avoid unnecessarily attempting to create a new chat session unless we have a session_key ([1a4e86d](https://github.com/smarter-sh/smarter/commit/1a4e86d9d63962f3187e5ae63323065b5ee88630))
+- only log and send django signal if we know that this is a chatbot. ([3478390](https://github.com/smarter-sh/smarter/commit/3478390338fba4be3c8df24d3871b8a98ba85be3))
+- wait 10 seconds before attempting health check ([1c647f8](https://github.com/smarter-sh/smarter/commit/1c647f8873aeca9c25a77d83171088da2fd39a96))
+
+## [0.10.18](https://github.com/smarter-sh/smarter/compare/v0.10.17...v0.10.18) (2025-03-21)
+
+### Bug Fixes
+
+- csrf exceptions for chatbots ([5a47e77](https://github.com/smarter-sh/smarter/commit/5a47e77693de415f073762b05a81bcf325925d06))
+- pass request object to ChatBotHelper ([62af264](https://github.com/smarter-sh/smarter/commit/62af264b21bfb61f0dcd65686cce34041bb06b6c))
+
+## [0.10.17](https://github.com/smarter-sh/smarter/compare/v0.10.16...v0.10.17) (2025-03-21)
+
+### Bug Fixes
+
+- session_key ([66cbe68](https://github.com/smarter-sh/smarter/commit/66cbe68bbb29e66579682cc3b0ce0716ed939588))
+
+## [0.10.16](https://github.com/smarter-sh/smarter/compare/v0.10.15...v0.10.16) (2025-03-19)
+
+### Bug Fixes
+
+- bug fix where environment url was initializing as a chatbot ([51273a8](https://github.com/smarter-sh/smarter/commit/51273a8b2cf99a01a2209b1618a5e13e388c60a5))
+- csrf exempt ApiV1CliChatApiView and ApiV1CliChatConfigApiView ([cb812f1](https://github.com/smarter-sh/smarter/commit/cb812f1efade9ae447c7663a3d678d1828c7ba73))
+- if there's no chatbot then return None ([31724a4](https://github.com/smarter-sh/smarter/commit/31724a45f303f9781d6177d9bcc0bcba901ac436))
+- remove authentication requirement ([6cff04e](https://github.com/smarter-sh/smarter/commit/6cff04ed20d9f6c6697593d4e4281de491502294))
+- request object sometimes is not set. use self.url ([5e981f4](https://github.com/smarter-sh/smarter/commit/5e981f497c367c5a8ebfc27dea135bd096c0a1cb))
+
+## [0.10.15](https://github.com/smarter-sh/smarter/compare/v0.10.14...v0.10.15) (2025-03-18)
+
+### Bug Fixes
+
+- environment api domain is hosted from root domain ([fd4f930](https://github.com/smarter-sh/smarter/commit/fd4f9305b7fba4b58de7392d1f423385bb80a347))
+- parent domain should be root domain ([f54fb14](https://github.com/smarter-sh/smarter/commit/f54fb144756792442443a785a7534bbe3ddb95ba))
+- wrap the entire load process in a try block ([7509b7b](https://github.com/smarter-sh/smarter/commit/7509b7b99869df5797420321db2f4baa0836b0a3))
+
+## [0.10.14](https://github.com/smarter-sh/smarter/compare/v0.10.13...v0.10.14) (2025-03-17)
+
+### Bug Fixes
+
+- Add chatbot deploy, undeploy and delete signals and receivers. Add KubernetesHelper functions to delete ingress resources. Refactor chatbot task logging ([3c4a7db](https://github.com/smarter-sh/smarter/commit/3c4a7db8f22034035eab6f0b44a5ac51e1455e16))
+- add ChatBot.tls_certificate_issuance_status ([e771c22](https://github.com/smarter-sh/smarter/commit/e771c22bd7dfc40f5372f784d3a80f2c96657aa5))
+- add ChatBot.tls_certificate_issuance_status ([39bf944](https://github.com/smarter-sh/smarter/commit/39bf94455c3533df08a217ac0570a7eb435f8912))
+- add mysql root credentials ([08db79c](https://github.com/smarter-sh/smarter/commit/08db79c57c9498263472c04034db6be172908d95))
+- add verifications for ingress, certificate, secret ([07b655d](https://github.com/smarter-sh/smarter/commit/07b655d1b5386c254496303e2163bca60d8e0b13))
+- CSRF_TRUSTED_ORIGINS = [smarter_settings.environment_domain, smarter_settings.api_domain, smarter_settings.customer_api_domain] ([31541b0](https://github.com/smarter-sh/smarter/commit/31541b0d72947a847ab5bd16899aaa066c582458))
+- don't wait if the tls cert is already verified ([bc997ec](https://github.com/smarter-sh/smarter/commit/bc997ece515150b9b4241e1210d70ed734344e0a))
+- enable the dismiss button on the password reset confirmation modal ([3ac954b](https://github.com/smarter-sh/smarter/commit/3ac954b1f9dc05a9bb897660b10f82a6e8840200))
+- environment_api_domain should reside inside platform domain ([7ce6a8e](https://github.com/smarter-sh/smarter/commit/7ce6a8e5dc5d01d81923f2528faf77a3e09cd380))
+- exempt known benign file extensions ([dfaf2b5](https://github.com/smarter-sh/smarter/commit/dfaf2b54b821aa533a6f0f66027b62ea218d7319))
+- explicitly initialize AccountMixin() in **init**() ([46da800](https://github.com/smarter-sh/smarter/commit/46da800e92cddd2a3b86114afe645ed1845196bb))
+- namespace ([e5e4d8a](https://github.com/smarter-sh/smarter/commit/e5e4d8a8b9212599901ddfc8eba885678ae138a8))
+- only send deployment emails to primary point of contact for account ([d5ceba7](https://github.com/smarter-sh/smarter/commit/d5ceba71b64d4f2e8a11e9bed764396d8af9154f))
+- only wait if the tls cert is not yet verified ([99a9b2e](https://github.com/smarter-sh/smarter/commit/99a9b2e29fe84c198a138337b6b75bbb3e3df9f2))
+- override **call**() ([5d7b115](https://github.com/smarter-sh/smarter/commit/5d7b11510ee9c39fef5d1614f853c6a4f797ab08))
+- override **call**() ([4691899](https://github.com/smarter-sh/smarter/commit/46918990da1c82cc568a0155bddc47054c72b7b6))
+- split user creation from password update ([72a0b4e](https://github.com/smarter-sh/smarter/commit/72a0b4e8b8fcfa7b812ae210f6e4ac754a2cd0dd))
+- user is not longer 1:1 with user_profile ([862fa85](https://github.com/smarter-sh/smarter/commit/862fa851ff6367f48d791da1d61df55aad33e5f8))
+- user is not longer 1:1 with user_profile ([ba145f0](https://github.com/smarter-sh/smarter/commit/ba145f026155268a67f054ee008bed49d9d1f9af))
+
+## [0.10.13](https://github.com/smarter-sh/smarter/compare/v0.10.12...v0.10.13) (2025-02-14)
+
+### Bug Fixes
+
+- allow password reset urls ([f08e397](https://github.com/smarter-sh/smarter/commit/f08e397531bf2069ba8274691db94e786bedf62c))
+- allow password reset urls ([a70652d](https://github.com/smarter-sh/smarter/commit/a70652da9e09a425e57fe0e2dd2bc0f7b4aa4711))
 
 ## [0.10.12](https://github.com/smarter-sh/smarter/compare/v0.10.11...v0.10.12) (2025-02-14)
 
