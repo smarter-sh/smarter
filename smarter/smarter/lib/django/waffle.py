@@ -1,6 +1,5 @@
+import waffle as waffle_orig
 from django.db.utils import OperationalError
-
-from smarter.lib.django import waffle as waffle_orig
 
 
 def switch_is_active(switch_name: str) -> bool:
