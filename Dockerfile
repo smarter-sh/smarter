@@ -95,7 +95,7 @@ ENV PATH="/home/smarter_user/venv/bin:$PATH"
 
 # Add all Python package dependencies
 RUN pip install --upgrade pip && \
-    pip install -r requirements/docker.txt
+    pip install --no-cache-dir -r requirements/docker.txt
 
 # Install Python dependencies for the local environment for cases where
 # we're going to run python unit tests in the Docker container.
