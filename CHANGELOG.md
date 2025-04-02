@@ -1,3 +1,10 @@
+## [0.10.21](https://github.com/smarter-sh/smarter/compare/v0.10.20...v0.10.21) (2025-04-02)
+
+
+### Bug Fixes
+
+* convert welcome_dict to a tuple so that it is iterable ([9c58011](https://github.com/smarter-sh/smarter/commit/9c58011c88131dad656239aa8240f19eb698a560))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
