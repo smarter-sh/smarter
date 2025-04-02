@@ -334,10 +334,12 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             bullet_points = "\n".join(f"    - {prompt}" for prompt in example_prompts) if example_prompts else ""
             bullet_points = "Following are some example prompts:\n\n" + bullet_points + "\n\n"
             intro = f"I'm {app_assistant}, how can I assist you today?"
-            welcome_dict = {
-                OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY,
-                OpenAIMessageKeys.MESSAGE_CONTENT_KEY: f"{welcome_message}. {bullet_points}{intro}",
-            }
+            welcome_dict = (
+                {
+                    OpenAIMessageKeys.MESSAGE_ROLE_KEY: OpenAIMessageKeys.ASSISTANT_MESSAGE_KEY,
+                    OpenAIMessageKeys.MESSAGE_CONTENT_KEY: f"{welcome_message}. {bullet_points}{intro}",
+                },
+            )
 
         prompt_dict = (
             {
