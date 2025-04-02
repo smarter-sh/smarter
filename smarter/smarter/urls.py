@@ -108,7 +108,7 @@ urlpatterns = [
     # stripe urls
     # see: https://dj-stripe.dev/dj-stripe/
     # -----------------------------------
-    path("stripe/", include("djstripe.urls", namespace="djstripe")),
+    # path("stripe/", include("djstripe.urls", namespace="djstripe")),
     # -----------------------------------
     # Smarter waitlist signup
     # -----------------------------------

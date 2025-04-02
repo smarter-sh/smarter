@@ -175,7 +175,7 @@ INSTALLED_APPS = [
     "wagtail_transfer",
     # Stripe
     # -------------------------------
-    "djstripe",
+    # "djstripe",
 ]
 
 MIDDLEWARE = [
