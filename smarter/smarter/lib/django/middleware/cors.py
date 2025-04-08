@@ -11,7 +11,6 @@ from collections.abc import Awaitable
 from typing import Pattern, Sequence
 from urllib.parse import SplitResult, urlparse, urlsplit
 
-import waffle
 from corsheaders.conf import conf
 from corsheaders.middleware import CorsMiddleware as DjangoCorsMiddleware
 from django.core.handlers.wsgi import WSGIRequest
@@ -21,6 +20,7 @@ from django.http.response import HttpResponseBase
 from smarter.apps.chatbot.models import ChatBot, get_cached_chatbot_by_request
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.const import SmarterWaffleSwitches
+from smarter.lib.django import waffle
 
 
 logger = logging.getLogger(__name__)

@@ -3,9 +3,7 @@
 import os
 from typing import ClassVar
 
-from pydantic import Field
-
-from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
+from smarter.apps.chat.manifest.models.chat.const import MANIFEST_KIND
 from smarter.lib.manifest.models import AbstractSAMSpecBase
 
 
