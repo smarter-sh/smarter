@@ -8,7 +8,6 @@ import logging
 from collections import defaultdict
 from urllib.parse import urlparse
 
-import waffle
 from django.conf import settings
 from django.http import HttpResponseForbidden
 from django.middleware.csrf import CsrfViewMiddleware as DjangoCsrfViewMiddleware
@@ -18,6 +17,7 @@ from smarter.apps.chatbot.models import ChatBot, get_cached_chatbot_by_request
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterWaffleSwitches
+from smarter.lib.django import waffle
 
 
 logger = logging.getLogger(__name__)

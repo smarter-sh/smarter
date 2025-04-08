@@ -4,13 +4,13 @@
 import json
 import logging
 
-import waffle
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.http import HttpRequest
 
 from smarter.common.const import SmarterWaffleSwitches
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib.django import waffle
 
 from .models import ChatBot
 from .signals import (

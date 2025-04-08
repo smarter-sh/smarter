@@ -11,7 +11,6 @@ There are a few objectives of this class:
 import logging
 from typing import Callable, Dict, List, Optional, Type
 
-import waffle
 from django.core.cache import cache
 
 from smarter.apps.chat.models import Chat
@@ -20,6 +19,7 @@ from smarter.common.classes import SmarterHelperMixin
 from smarter.common.const import SmarterWaffleSwitches
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib.django import waffle
 from smarter.lib.django.user import UserType
 
 from .base_classes import OpenAICompatibleChatProvider
