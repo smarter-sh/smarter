@@ -4,7 +4,7 @@ import os
 from typing import ClassVar
 
 # Chatbot
-from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
+from smarter.apps.chatbot.manifest.models.chatbot.const import MANIFEST_KIND
 from smarter.lib.manifest.models import AbstractSAMMetadataBase
 
 
