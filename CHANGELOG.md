@@ -1,3 +1,10 @@
+## [0.10.22](https://github.com/smarter-sh/smarter/compare/v0.10.21...v0.10.22) (2025-04-08)
+
+
+### Bug Fixes
+
+* MANIFEST_KIND ([bf3b62f](https://github.com/smarter-sh/smarter/commit/bf3b62f2adb0bc8b34564aea7dd7d3de8ad0db11))
+
 ## [0.10.21](https://github.com/smarter-sh/smarter/compare/v0.10.20...v0.10.21) (2025-04-02)
 
 
