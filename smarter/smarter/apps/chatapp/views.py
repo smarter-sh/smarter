@@ -7,7 +7,6 @@ import logging
 from http import HTTPStatus
 from urllib.parse import urljoin
 
-import waffle
 from django.conf import settings
 from django.db import models
 from django.http import JsonResponse
@@ -43,6 +42,7 @@ from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwi
 from smarter.common.exceptions import SmarterExceptionBase, SmarterValueError
 from smarter.common.helpers.url_helpers import clean_url
 from smarter.lib.cache import cache_results
+from smarter.lib.django import waffle
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.django.views.error import (

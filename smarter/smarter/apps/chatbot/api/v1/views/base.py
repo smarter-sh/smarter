@@ -5,7 +5,6 @@ import logging
 from http import HTTPStatus
 from typing import List
 
-import waffle
 from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpRequest, JsonResponse
 from django.utils.decorators import method_decorator
@@ -23,6 +22,7 @@ from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib.django import waffle
 from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.django.view_helpers import SmarterNeverCachedWebView

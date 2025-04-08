@@ -24,11 +24,18 @@ class SmarterBaseModel(BaseModel):
 class AbstractSAMMetadataBase(SmarterBaseModel, abc.ABC):
     """Pydantic Metadata base class. Expected to be subclassed by specific manifest classes."""
 
-    name: str = Field(..., description="The name of the manifest resource")
-    description: str = Field(..., description="The description of the manifest resource")
-    version: str = Field(..., description="The version of the manifest")
-    tags: Optional[List[str]] = Field(None, description="The tags of the manifest")
-    annotations: Optional[List[str]] = Field(None, description="The annotations of the manifest")
+    name: str = Field(..., description="The camelCase name of the manifest resource")
+    description: str = Field(
+        ..., description="The description for this resource. Be brief. Keep it under 255 characters."
+    )
+    version: str = Field(..., description="The semantic version of the manifest. Example: 0.1.0")
+    tags: Optional[List[str]] = Field(
+        None,
+        description="The tags of the manifest. These are fully functional but are not currently used. Example: ['tag1', 'tag2']",
+    )
+    annotations: Optional[List[str]] = Field(
+        None, description="The manifest annotations. These are fully functional but are not currently used."
+    )
 
     @field_validator("name")
     def validate_name(cls, v) -> str:

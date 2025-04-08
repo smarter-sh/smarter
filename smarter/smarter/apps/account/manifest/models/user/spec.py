@@ -5,7 +5,7 @@ from typing import ClassVar, Optional
 
 from pydantic import Field
 
-from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
+from smarter.apps.account.manifest.models.user.const import MANIFEST_KIND
 from smarter.lib.manifest.models import AbstractSAMSpecBase
 
 
