@@ -5,13 +5,13 @@ import logging
 import traceback
 from http import HTTPStatus
 
-import waffle
 from django.core.handlers.wsgi import WSGIRequest
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpRequest, JsonResponse
 
 from smarter.common.api import SmarterApiVersions
 from smarter.common.const import SmarterWaffleSwitches
+from smarter.lib.django import waffle
 from smarter.lib.django.http.serializers import (
     HttpAnonymousRequestSerializer,
     HttpAuthenticatedRequestSerializer,

@@ -5,11 +5,11 @@ that are also in JSON format.
 
 import logging
 
-import waffle
 from django.http import JsonResponse
 from django.utils.deprecation import MiddlewareMixin
 
 from smarter.common.const import SmarterWaffleSwitches
+from smarter.lib.django import waffle
 
 
 logger = logging.getLogger(__name__)

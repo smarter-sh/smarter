@@ -3,7 +3,6 @@
 
 import logging
 
-import waffle
 from django.conf import settings
 from django.core.cache import cache
 from django.core.handlers.wsgi import WSGIRequest
@@ -12,14 +11,12 @@ from django.db.utils import IntegrityError
 from rest_framework import serializers
 
 from smarter.apps.account.models import Account
-from smarter.apps.chatbot.models import (
-    ChatBot,
-    get_cached_chatbot_by_request,
-)
+from smarter.apps.chatbot.models import ChatBot, get_cached_chatbot_by_request
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.const import SmarterWaffleSwitches
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
+from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.request import SmarterRequestMixin
 
