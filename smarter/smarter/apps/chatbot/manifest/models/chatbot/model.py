@@ -4,7 +4,7 @@ from typing import ClassVar, Optional
 
 from pydantic import Field
 
-from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
+from smarter.apps.chatbot.manifest.models.chatbot.const import MANIFEST_KIND
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.models import AbstractSAMBase
 
