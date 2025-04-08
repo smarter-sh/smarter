@@ -4,29 +4,29 @@ import logging
 from functools import wraps
 from urllib.parse import urlparse
 
-import waffle
 from django.core.cache import cache
 from django.core.handlers.wsgi import WSGIRequest
 
 from smarter.common.const import SMARTER_DEFAULT_CACHE_TIMEOUT, SmarterWaffleSwitches
 from smarter.common.helpers.console_helpers import formatted_text, formatted_text_green
+from smarter.lib.django import waffle
 
 
 logger = logging.getLogger(__name__)
 
 
-def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT):
+def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             cache_key = f"{func.__name__}_{args}_{kwargs}"
             result = cache.get(cache_key)
-            if result and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+            if result and logging_enabled and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
                 logger.info("%s cache hit for %s", formatted_text_green("cache_results()"), cache_key)
             else:
                 result = func(*args, **kwargs)
                 cache.set(cache_key, result, timeout)
-                if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+                if logging_enabled and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
                     logger.info("%s caching %s", formatted_text("cache_results()"), cache_key)
             return result
 
@@ -35,7 +35,7 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT):
     return decorator
 
 
-def cache_request(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT):
+def cache_request(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
     """
     Caches the result of a function based on the request URI and user identifier.
     Associates a Smarter user account number with the cache key if the user is authenticated.
@@ -51,12 +51,12 @@ def cache_request(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT):
             )
             cache_key = f"{func.__name__}_{url}_{user_identifier}"
             result = cache.get(cache_key)
-            if result and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+            if result and logging_enabled and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
                 logger.info("%s cache hit for %s", formatted_text_green("cache_results()"), cache_key)
             else:
                 result = func(request, *args, **kwargs)
                 cache.set(cache_key, result, timeout)
-                if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+                if logging_enabled and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
                     logger.info("%s caching %s", formatted_text("cache_results()"), cache_key)
             return result
 
