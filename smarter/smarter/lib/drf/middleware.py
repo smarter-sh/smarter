@@ -6,7 +6,6 @@ knox.auth TokenAuthentication tokens.
 import logging
 from http import HTTPStatus
 
-import waffle
 from django.contrib.auth import login
 from django.utils.deprecation import MiddlewareMixin
 from knox.settings import knox_settings
@@ -16,6 +15,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.const import SmarterWaffleSwitches
+from smarter.lib.django import waffle
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
 
