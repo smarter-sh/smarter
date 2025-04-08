@@ -4,7 +4,6 @@
 import json
 import logging
 
-import waffle
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
@@ -12,6 +11,7 @@ from django.forms.models import model_to_dict
 from smarter.apps.account.utils import get_cached_user_profile
 from smarter.common.const import SmarterWaffleSwitches
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
+from smarter.lib.django import waffle
 
 from .models import (
     PluginDataStatic,
