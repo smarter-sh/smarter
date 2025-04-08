@@ -21,7 +21,6 @@ from functools import cached_property
 from urllib.parse import ParseResult, parse_qs, urlparse, urlunsplit
 
 import tldextract
-import waffle
 from django.core.handlers.wsgi import WSGIRequest
 
 from smarter.apps.account.mixins import AccountMixin
@@ -34,6 +33,7 @@ from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.common.helpers.url_helpers import session_key_from_url
+from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
 
 

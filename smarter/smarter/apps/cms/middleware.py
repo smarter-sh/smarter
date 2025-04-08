@@ -3,12 +3,12 @@
 
 import logging
 
-import waffle
 from bs4 import BeautifulSoup, Comment
 from django.http import FileResponse
 from django.utils.deprecation import MiddlewareMixin
 
 from smarter.common.const import SmarterWaffleSwitches
+from smarter.lib.django import waffle
 
 
 logger = logging.getLogger(__name__)

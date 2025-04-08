@@ -5,7 +5,6 @@ import logging
 from typing import List, Type
 from urllib.parse import urljoin
 
-import waffle
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.handlers.wsgi import WSGIRequest
@@ -26,6 +25,7 @@ from smarter.common.const import SMARTER_DEFAULT_CACHE_TIMEOUT, SmarterWaffleSwi
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.common.helpers.llm import get_date_time_string
 from smarter.lib.cache import cache_request, cache_results
+from smarter.lib.django import waffle
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.django.validators import SmarterValidator
