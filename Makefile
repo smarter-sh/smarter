@@ -68,7 +68,7 @@ lint:
 	make react-lint
 
 analyze:
-	cloc . --exclude-ext=svg,json,zip --fullpath --not-match-d=smarter/smarter/static/assets/ --vcs=git
+	cloc . --exclude-ext=svg,zip --fullpath --not-match-d=smarter/smarter/static/assets/ --vcs=git
 
 coverage:
 	docker exec smarter-app bash -c "coverage run manage.py test && coverage report -m && coverage html"
