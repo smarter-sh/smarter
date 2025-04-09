@@ -68,7 +68,7 @@
     "pk": 3,
     "fields": {
       "body": "[{\"id\": \"7a4a31f3-e0d5-44ef-93d6-ff67a6c1c6dc\", \"type\": \"html\", \"value\": \"<!--begin::CardBody-->\\r\\n<div class=\\\"card-body\\\" id=\\\"smarter-landing-page\\\">\\r\\n    <!--begin::Title-->\\r\\n    <h1 class=\\\"fs-2x text-gray-900 mb-6\\\">\\r\\n      The Smarter Platform\\r\\n  </h1>\\r\\n  <h2 class=\\\"mt-6 mb-6\\\">\\r\\n      Built for the evolving needs of generative AI prompt\\r\\n      engineers.\\r\\n  </h2>\\r\\n    <!--end::Title-->\\r\\n    <!--begin::Text-->\\r\\n    <p>\\r\\n      Smarter is a no-code platform for securely managing AI\\r\\n      resources and private data in the cloud, at scale.\\r\\n      It's the\\r\\n      smarter way to design, train, test, deploy and monitor\\r\\n      generative AI models. Smarter provides unified access\\r\\n      to a\\r\\n      broad range of large language models from the idustry's\\r\\n      best providers including OpenAI, Google, Meta, Azure\\r\\n      and\\r\\n      others. Smarter's plugin architecture allows you to\\r\\n      easily train models with proprietary data, while keeping\\r\\n      your\\r\\n      data private. And Smarter's manifest approach to\\r\\n      resource management simplifies the process of working\\r\\n      with\\r\\n      AI\\r\\n      resources in the cloud. Smarter's CLI, available for\\r\\n      Windows, macOS and Linux, allows you to easily interact\\r\\n      with\\r\\n      the platform from the command line, as well as from a\\r\\n      growing ecosystem of OEM tools.\\r\\n  </p>\\r\\n    <!--end::Text-->\\r\\n  </div>\\r\\n  <!--begin::Row-->\\r\\n  <div class=\\\"row g-10\\\">\\r\\n    <!--begin::Column-->\\r\\n    <div id=\\\"wrap\\\" class=\\\"wrap\\\">\\r\\n      <!--begin::Plugins-->\\r\\n      <div id=\\\"plugins\\\">\\r\\n        <img style=\\\"vertical-align: middle;\\\"\\r\\n            src=\\\"https://cdn.platform.smarter.sh/cms/img/plugin.svg\\\"\\r\\n            width=\\\"31.8px\\\" />\\r\\n        <h3 class=\\\"mt-6 mb-6\\\">\\r\\n            Plugins\\r\\n        </h3>\\r\\n        <!--begin::Text-->\\r\\n        <p>\\r\\n          Smarter plugins require no coding whatsoever nor\\r\\n          data\\r\\n          science experience, and they are\\r\\n          astonishingly powerful. Turn an ordinary large\\r\\n          language\\r\\n          model into a domain expert\\r\\n          in any subject in a matter of minutes. Plugins are\\r\\n          the\\r\\n          secret sauce that makes\\r\\n          Smarter so powerful. Add as many as you like to your\\r\\n          Chatbot, and tune them in real-time.\\r\\n          Your private data stays private, and your plugins\\r\\n          are\\r\\n          yours to keep.\\r\\n      </p>\\r\\n        <!--end::Text-->\\r\\n        <!-- begin::CTA -->\\r\\n        <a class=\\\"btn\\\" href=\\\"/docs/plugins/\\\"> About Plugins\\r\\n        </a>\\r\\n        <!-- end::CTA -->\\r\\n      </div>\\r\\n      <!--end::Plugins-->\\r\\n      <!--begin::Manifests-->\\r\\n      <div id=\\\"manifests\\\">\\r\\n        <img style=\\\"vertical-align: middle;\\\"\\r\\n        src=\\\"https://cdn.platform.smarter.sh/cms/img/outline.svg\\\"\\r\\n        width=\\\"31.8px\\\" />\\r\\n    <h3 class=\\\"mt-6 mb-6\\\">\\r\\n        Manifests\\r\\n    </h3>\\r\\n        <!--begin::Text-->\\r\\n        <p>\\r\\n          Smarter's manifest approach to resource management simplifies the process of working with AI resources in the\\r\\n          cloud.\\r\\n          A manifest is a human readable form written in YAML that describes your resources. It's a simple way to manage\\r\\n          users, models, plugins, chatbots, and more. Manifests are versioned, and can be shared across your team. They\\r\\n          can\\r\\n          be\\r\\n          used to create, update, and delete resources in the cloud.\\r\\n        </p>\\r\\n        <!--end::Text-->\\r\\n        <!-- begin::CTA -->\\r\\n        <a class=\\\"btn\\\" href=\\\"/docs/manifests/\\\">About Manifests\\r\\n        </a>\\r\\n        <!-- end::CTA -->\\r\\n      </div>\\r\\n      <!--end::Manifests-->\\r\\n    </div>\\r\\n    <!--end::Column-->\\r\\n  </div>\\r\\n  <!--end::Row-->\\r\\n    <!--begin::GetStarted-->\\r\\n    <div id=\\\"learn\\\">\\r\\n      <img style=\\\"vertical-align: middle;\\\"\\r\\n          src=\\\"https://cdn.platform.smarter.sh/cms/img/source-code-orange.svg\\\"\\r\\n          width=\\\"31.8\\\" />\\r\\n      <h3 class=\\\"mt-6 mb-6\\\">\\r\\n          Getting Started\\r\\n      </h3>\\r\\n      <div>\\r\\n      <p>\\r\\n        The best way to learn about Smarter is to dive in and start using it. Most new users are able to\\r\\n        complete the Smarter tutorial in less than an hour. The tutorial will walk you through the process\\r\\n        of creating and deploying a new Chatbot that's been trained on a fictitious consumer product.\\r\\n      </p>\\r\\n      <img\\r\\n      src=\\\"https://cdn.platform.smarter.sh/cms/img/abstract%20geometric%20shapes.svg\\\" />\\r\\n</div>\\r\\n<a class=\\\"btn\\\" href=\\\"/docs/learn/\\\">\\r\\n  Learn More\\r\\n</a>\\r\\n</div>\\r\\n    <!--end::GetStarted-->\\r\\n  <!--begin::Row-->\\r\\n  <div class=\\\"row g-10\\\">\\r\\n    <!--begin::Column-->\\r\\n    <div id=\\\"wrap\\\" class=\\\"wrap\\\">\\r\\n      <!--begin::Private-->\\r\\n      <div id=\\\"safe\\\">\\r\\n        <img style=\\\"vertical-align: middle;\\\"\\r\\n                  src=\\\"https://cdn.platform.smarter.sh/cms/img/system-information.svg\\\"\\r\\n                   width=\\\"31.8\\\" />\\r\\n           <h3 class=\\\"mt-6 mb-6\\\">\\r\\n                  Safe\\r\\n            </h3>\\r\\n        <p>\\r\\n          We take privacy seriously. Your data belongs to you. We don't look at it.\\r\\n          We don't share it with anyone. We don't sell it, and we don't use it to train models; not ours nor anyone\\r\\n          elses.\\r\\n          Moreover, you remain in complete control of your AI resources and your data at all times.\\r\\n        </p>\\r\\n        <a class=\\\"btn\\\" href=\\\"/docs/privacy/\\\">\\r\\n          Privacy\\r\\n      </a>\\r\\n      </div>\\r\\n      <!--end::Private-->\\r\\n      <!--begin::Simple-->\\r\\n      <div id=\\\"simple\\\">\\r\\n        <img style=\\\"vertical-align: middle;\\\"\\r\\n                    src=\\\"https://cdn.platform.smarter.sh/cms/img/registry-editor.svg\\\"\\r\\n                      width=\\\"31.8\\\" />\\r\\n                <h3 class=\\\"mt-6 mb-6\\\">\\r\\n                       Simple\\r\\n                </h3>\\r\\n        <p>\\r\\n          Smarter building blocks -- chatbots, plugins, and keys -- are powerful yet easy to understand.\\r\\n          You can work from anywhere, collaboratively, and store your work anywhere you like.\\r\\n        </p>\\r\\n        <a class=\\\"btn\\\" href=\\\"/docs/learn/\\\">\\r\\n          Learn\\r\\n      </a>\\r\\n      </div>\\r\\n      <!--end::Simple-->\\r\\n    </div>\\r\\n    <!--end::Column-->\\r\\n  </div>\\r\\n  <!--end::Row-->\\r\\n    <!--begin::Secure-->\\r\\n    <div id=\\\"secure\\\">\\r\\n      <img style=\\\"vertical-align: middle;\\\"\\r\\n          src=\\\"https://cdn.platform.smarter.sh/cms/img/test-passed.svg\\\"\\r\\n          width=\\\"31.8\\\" />\\r\\n      <h3 class=\\\"mt-6 mb-6\\\">\\r\\n          Secure\\r\\n      </h3>\\r\\n      <!--begin::Text-->\\r\\n      <p>\\r\\n        We take security seriously as well. We're experts at managing enterprise data for large\\r\\n        corporate, government and educational organizations. We follow cloud computing best\\r\\n        practices, and we're happy to share and discuss these with you.\\r\\n      </p>\\r\\n      <!--end::Text-->\\r\\n      <!-- begin::CTA -->\\r\\n      <a class=\\\"btn\\\" href=\\\"/docs/security/\\\">\\r\\n        Security\\r\\n    </a>\\r\\n      <!-- end::CTA -->\\r\\n      </div>\\r\\n    <!--end::Secure-->\\r\\n  <!--begin::Row-->\\r\\n  <div class=\\\"row g-10\\\">\\r\\n    <!--begin::Column-->\\r\\n    <div id=\\\"wrap\\\" class=\\\"wrap\\\">\\r\\n      <!--begin::Developers-->\\r\\n      <div id=\\\"developers\\\">\\r\\n        <img style=\\\"vertical-align: middle;\\\"\\r\\n                  src=\\\"https://cdn.platform.smarter.sh/cms/img/programming.svg\\\"\\r\\n                    width=\\\"31.8\\\" />\\r\\n               <h3 class=\\\"mt-6 mb-6\\\">\\r\\n                     Developers\\r\\n               </h3>\\r\\n        <!--begin::Text-->\\r\\n        <p>\\r\\n          Smarter is an extensible platform that is designed to be accessible, and easy to build on top of.\\r\\n          We've published complete documentation for our API, our JSON schemas, our manifests,\\r\\n          and our CLI, which is open sourced. Smarter offers developers and OEMs a\\r\\n          large market to sell into, and a welcoming ecosystem to help you get started. Take\\r\\n          a look at our developer documentation to learn more.\\r\\n        </p>\\r\\n        <!--end::Text-->\\r\\n        <a class=\\\"btn\\\" href=\\\"/docs/developers/\\\">\\r\\n             Developer\\r\\n             Documentation\\r\\n        </a>\\r\\n      </div>\\r\\n      <!--end::Developers-->\\r\\n      <!--begin::GetCertified-->\\r\\n      <div id=\\\"certified\\\">\\r\\n        <img style=\\\"vertical-align: middle;\\\"\\r\\n            src=\\\"https://cdn.platform.smarter.sh/cms/img/logbook.svg\\\"\\r\\n            width=\\\"31.8\\\" />\\r\\n        <h3 class=\\\"mt-6 mb-6\\\">\\r\\n            Get Certified\\r\\n        </h3>\\r\\n        <p>\\r\\n          Take your career to the next level by earning your certificate at Smarter University. With certification\\r\\n          tracks in\\r\\n          prompt engineering and\\r\\n          Smarter platform system administration you can become a Smarter expert in only three months, studying\\r\\n          part-time.\\r\\n        </p>\\r\\n        <a class=\\\"btn\\\" href=\\\"/docs/get-certified/\\\">\\r\\n          Smarter\\r\\n          University\\r\\n      </a>\\r\\n      </div>\\r\\n      <!--end::GetCertified-->\\r\\n    </div>\\r\\n    <!--end::Column-->\\r\\n  </div>\\r\\n  <!--end::Row-->\\r\\n    <!--begin::Administration-->\\r\\n    <div id=\\\"administration\\\">\\r\\n      <img style=\\\"vertical-align: middle;\\\"\\r\\n                 src=\\\"https://cdn.platform.smarter.sh/cms/img/control-panel.svg\\\"\\r\\n                   width=\\\"31.8\\\" />\\r\\n       <h3 class=\\\"mt-6 mb-6\\\">\\r\\n               Administration\\r\\n       </h3>\\r\\n      <!--begin::Text-->\\r\\n      <p>\\r\\n        Think of Smarter as the RedHat Linux of generative AI resource management.\\r\\n        It's designed for large organizations. Use it as a SaaS platform,\\r\\n        or install it on premise on your own servers. Either way, we're happy to\\r\\n        remain as hands-on or hands-off as you like. We offer customizable data retention policies,\\r\\n        cost & budget controls, and audit capabilities. We're happy to discuss your needs and\\r\\n        help you get started.\\r\\n      </p>\\r\\n      <!--end::Text-->\\r\\n      <!-- begin::CTA -->\\r\\n       <a class=\\\"btn\\\" href=\\\"/docs/administration/\\\">\\r\\n             Administration\\r\\n         </a>\\r\\n      <!-- end::CTA -->\\r\\n    </div>\\r\\n    <!--end::Administration-->\"}]",
-      "sidebar": "[{\"id\": \"5b1d5e5c-a98a-40ea-9807-5895c4f7637e\", \"type\": \"html_block\", \"value\": 4}, {\"id\": \"21331c09-60d8-4cbe-a9cf-860c30de239c\", \"type\": \"html_block\", \"value\": 7}, {\"id\": \"5310afe5-104c-4b80-9995-7a815d1094c6\", \"type\": \"html_block\", \"value\": 5}, {\"id\": \"91cd9cb1-b8b7-42e9-8d6e-2ccb48eb50b0\", \"type\": \"html_block\", \"value\": 6}, {\"id\": \"81edcd05-207d-4c3a-a7e5-29a72e42f53e\", \"type\": \"html_block\", \"value\": 2}, {\"id\": \"dd383f45-39d0-4a1f-be13-c47ce59ef715\", \"type\": \"html_block\", \"value\": 1}]"
+      "sidebar": "[{\"id\": \"5b1d5e5c-a98a-40ea-9807-5895c4f7637e\", \"type\": \"html_block\", \"value\": 4}, {\"id\": \"0245eace-0610-4f79-a828-11ea92b60d7c\", \"type\": \"html_block\", \"value\": 8}, {\"id\": \"21331c09-60d8-4cbe-a9cf-860c30de239c\", \"type\": \"html_block\", \"value\": 7}, {\"id\": \"5310afe5-104c-4b80-9995-7a815d1094c6\", \"type\": \"html_block\", \"value\": 5}, {\"id\": \"91cd9cb1-b8b7-42e9-8d6e-2ccb48eb50b0\", \"type\": \"html_block\", \"value\": 6}, {\"id\": \"81edcd05-207d-4c3a-a7e5-29a72e42f53e\", \"type\": \"html_block\", \"value\": 2}, {\"id\": \"dd383f45-39d0-4a1f-be13-c47ce59ef715\", \"type\": \"html_block\", \"value\": 1}]"
     }
   },
   {
@@ -1517,6 +1517,20 @@
     }
   },
   {
+    "model": "wagtailcore.referenceindex",
+    "pk": 69,
+    "fields": {
+      "content_type": 54,
+      "base_content_type": 1,
+      "object_id": "3",
+      "to_content_type": 55,
+      "to_object_id": "8",
+      "model_path": "sidebar.html_block",
+      "content_path": "sidebar.0245eace-0610-4f79-a828-11ea92b60d7c",
+      "content_path_hash": "156a2223-e82d-5134-b54f-1fe048cb5f96"
+    }
+  },
+  {
     "model": "wagtailcore.page",
     "pk": 1,
     "fields": {
@@ -1593,12 +1607,12 @@
       "numchild": 9,
       "translation_key": "d3040343-7bf4-452e-ac0d-e7fd9ea78d44",
       "locale": 1,
-      "latest_revision": 29,
+      "latest_revision": 48,
       "live": true,
       "has_unpublished_changes": false,
       "first_published_at": "2024-11-21T05:11:38.823Z",
-      "last_published_at": "2025-04-08T20:38:28.437Z",
-      "live_revision": 29,
+      "last_published_at": "2025-04-09T13:06:07.457Z",
+      "live_revision": 48,
       "go_live_at": null,
       "expire_at": null,
       "expired": false,
@@ -1614,7 +1628,7 @@
       "seo_title": "",
       "show_in_menus": false,
       "search_description": "",
-      "latest_revision_created_at": "2025-04-08T20:38:28.380Z",
+      "latest_revision_created_at": "2025-04-09T13:06:07.410Z",
       "alias_of": null
     }
   },
@@ -4132,6 +4146,53 @@
     }
   },
   {
+    "model": "wagtailcore.revision",
+    "pk": 48,
+    "fields": {
+      "content_type": 54,
+      "base_content_type": 1,
+      "object_id": "3",
+      "created_at": "2025-04-09T13:06:07.410Z",
+      "user": 1,
+      "object_str": "Docs",
+      "content": {
+        "pk": 3,
+        "body": "[{\"type\": \"html\", \"value\": \"<!--begin::CardBody-->\\r\\n<div class=\\\"card-body\\\" id=\\\"smarter-landing-page\\\">\\r\\n    <!--begin::Title-->\\r\\n    <h1 class=\\\"fs-2x text-gray-900 mb-6\\\">\\r\\n      The Smarter Platform\\r\\n  </h1>\\r\\n  <h2 class=\\\"mt-6 mb-6\\\">\\r\\n      Built for the evolving needs of generative AI prompt\\r\\n      engineers.\\r\\n  </h2>\\r\\n    <!--end::Title-->\\r\\n    <!--begin::Text-->\\r\\n    <p>\\r\\n      Smarter is a no-code platform for securely managing AI\\r\\n      resources and private data in the cloud, at scale.\\r\\n      It's the\\r\\n      smarter way to design, train, test, deploy and monitor\\r\\n      generative AI models. Smarter provides unified access\\r\\n      to a\\r\\n      broad range of large language models from the idustry's\\r\\n      best providers including OpenAI, Google, Meta, Azure\\r\\n      and\\r\\n      others. Smarter's plugin architecture allows you to\\r\\n      easily train models with proprietary data, while keeping\\r\\n      your\\r\\n      data private. And Smarter's manifest approach to\\r\\n      resource management simplifies the process of working\\r\\n      with\\r\\n      AI\\r\\n      resources in the cloud. Smarter's CLI, available for\\r\\n      Windows, macOS and Linux, allows you to easily interact\\r\\n      with\\r\\n      the platform from the command line, as well as from a\\r\\n      growing ecosystem of OEM tools.\\r\\n  </p>\\r\\n    <!--end::Text-->\\r\\n  </div>\\r\\n  <!--begin::Row-->\\r\\n  <div class=\\\"row g-10\\\">\\r\\n    <!--begin::Column-->\\r\\n    <div id=\\\"wrap\\\" class=\\\"wrap\\\">\\r\\n      <!--begin::Plugins-->\\r\\n      <div id=\\\"plugins\\\">\\r\\n        <img style=\\\"vertical-align: middle;\\\"\\r\\n            src=\\\"https://cdn.platform.smarter.sh/cms/img/plugin.svg\\\"\\r\\n            width=\\\"31.8px\\\" />\\r\\n        <h3 class=\\\"mt-6 mb-6\\\">\\r\\n            Plugins\\r\\n        </h3>\\r\\n        <!--begin::Text-->\\r\\n        <p>\\r\\n          Smarter plugins require no coding whatsoever nor\\r\\n          data\\r\\n          science experience, and they are\\r\\n          astonishingly powerful. Turn an ordinary large\\r\\n          language\\r\\n          model into a domain expert\\r\\n          in any subject in a matter of minutes. Plugins are\\r\\n          the\\r\\n          secret sauce that makes\\r\\n          Smarter so powerful. Add as many as you like to your\\r\\n          Chatbot, and tune them in real-time.\\r\\n          Your private data stays private, and your plugins\\r\\n          are\\r\\n          yours to keep.\\r\\n      </p>\\r\\n        <!--end::Text-->\\r\\n        <!-- begin::CTA -->\\r\\n        <a class=\\\"btn\\\" href=\\\"/docs/plugins/\\\"> About Plugins\\r\\n        </a>\\r\\n        <!-- end::CTA -->\\r\\n      </div>\\r\\n      <!--end::Plugins-->\\r\\n      <!--begin::Manifests-->\\r\\n      <div id=\\\"manifests\\\">\\r\\n        <img style=\\\"vertical-align: middle;\\\"\\r\\n        src=\\\"https://cdn.platform.smarter.sh/cms/img/outline.svg\\\"\\r\\n        width=\\\"31.8px\\\" />\\r\\n    <h3 class=\\\"mt-6 mb-6\\\">\\r\\n        Manifests\\r\\n    </h3>\\r\\n        <!--begin::Text-->\\r\\n        <p>\\r\\n          Smarter's manifest approach to resource management simplifies the process of working with AI resources in the\\r\\n          cloud.\\r\\n          A manifest is a human readable form written in YAML that describes your resources. It's a simple way to manage\\r\\n          users, models, plugins, chatbots, and more. Manifests are versioned, and can be shared across your team. They\\r\\n          can\\r\\n          be\\r\\n          used to create, update, and delete resources in the cloud.\\r\\n        </p>\\r\\n        <!--end::Text-->\\r\\n        <!-- begin::CTA -->\\r\\n        <a class=\\\"btn\\\" href=\\\"/docs/manifests/\\\">About Manifests\\r\\n        </a>\\r\\n        <!-- end::CTA -->\\r\\n      </div>\\r\\n      <!--end::Manifests-->\\r\\n    </div>\\r\\n    <!--end::Column-->\\r\\n  </div>\\r\\n  <!--end::Row-->\\r\\n    <!--begin::GetStarted-->\\r\\n    <div id=\\\"learn\\\">\\r\\n      <img style=\\\"vertical-align: middle;\\\"\\r\\n          src=\\\"https://cdn.platform.smarter.sh/cms/img/source-code-orange.svg\\\"\\r\\n          width=\\\"31.8\\\" />\\r\\n      <h3 class=\\\"mt-6 mb-6\\\">\\r\\n          Getting Started\\r\\n      </h3>\\r\\n      <div>\\r\\n      <p>\\r\\n        The best way to learn about Smarter is to dive in and start using it. Most new users are able to\\r\\n        complete the Smarter tutorial in less than an hour. The tutorial will walk you through the process\\r\\n        of creating and deploying a new Chatbot that's been trained on a fictitious consumer product.\\r\\n      </p>\\r\\n      <img\\r\\n      src=\\\"https://cdn.platform.smarter.sh/cms/img/abstract%20geometric%20shapes.svg\\\" />\\r\\n</div>\\r\\n<a class=\\\"btn\\\" href=\\\"/docs/learn/\\\">\\r\\n  Learn More\\r\\n</a>\\r\\n</div>\\r\\n    <!--end::GetStarted-->\\r\\n  <!--begin::Row-->\\r\\n  <div class=\\\"row g-10\\\">\\r\\n    <!--begin::Column-->\\r\\n    <div id=\\\"wrap\\\" class=\\\"wrap\\\">\\r\\n      <!--begin::Private-->\\r\\n      <div id=\\\"safe\\\">\\r\\n        <img style=\\\"vertical-align: middle;\\\"\\r\\n                  src=\\\"https://cdn.platform.smarter.sh/cms/img/system-information.svg\\\"\\r\\n                   width=\\\"31.8\\\" />\\r\\n           <h3 class=\\\"mt-6 mb-6\\\">\\r\\n                  Safe\\r\\n            </h3>\\r\\n        <p>\\r\\n          We take privacy seriously. Your data belongs to you. We don't look at it.\\r\\n          We don't share it with anyone. We don't sell it, and we don't use it to train models; not ours nor anyone\\r\\n          elses.\\r\\n          Moreover, you remain in complete control of your AI resources and your data at all times.\\r\\n        </p>\\r\\n        <a class=\\\"btn\\\" href=\\\"/docs/privacy/\\\">\\r\\n          Privacy\\r\\n      </a>\\r\\n      </div>\\r\\n      <!--end::Private-->\\r\\n      <!--begin::Simple-->\\r\\n      <div id=\\\"simple\\\">\\r\\n        <img style=\\\"vertical-align: middle;\\\"\\r\\n                    src=\\\"https://cdn.platform.smarter.sh/cms/img/registry-editor.svg\\\"\\r\\n                      width=\\\"31.8\\\" />\\r\\n                <h3 class=\\\"mt-6 mb-6\\\">\\r\\n                       Simple\\r\\n                </h3>\\r\\n        <p>\\r\\n          Smarter building blocks -- chatbots, plugins, and keys -- are powerful yet easy to understand.\\r\\n          You can work from anywhere, collaboratively, and store your work anywhere you like.\\r\\n        </p>\\r\\n        <a class=\\\"btn\\\" href=\\\"/docs/learn/\\\">\\r\\n          Learn\\r\\n      </a>\\r\\n      </div>\\r\\n      <!--end::Simple-->\\r\\n    </div>\\r\\n    <!--end::Column-->\\r\\n  </div>\\r\\n  <!--end::Row-->\\r\\n    <!--begin::Secure-->\\r\\n    <div id=\\\"secure\\\">\\r\\n      <img style=\\\"vertical-align: middle;\\\"\\r\\n          src=\\\"https://cdn.platform.smarter.sh/cms/img/test-passed.svg\\\"\\r\\n          width=\\\"31.8\\\" />\\r\\n      <h3 class=\\\"mt-6 mb-6\\\">\\r\\n          Secure\\r\\n      </h3>\\r\\n      <!--begin::Text-->\\r\\n      <p>\\r\\n        We take security seriously as well. We're experts at managing enterprise data for large\\r\\n        corporate, government and educational organizations. We follow cloud computing best\\r\\n        practices, and we're happy to share and discuss these with you.\\r\\n      </p>\\r\\n      <!--end::Text-->\\r\\n      <!-- begin::CTA -->\\r\\n      <a class=\\\"btn\\\" href=\\\"/docs/security/\\\">\\r\\n        Security\\r\\n    </a>\\r\\n      <!-- end::CTA -->\\r\\n      </div>\\r\\n    <!--end::Secure-->\\r\\n  <!--begin::Row-->\\r\\n  <div class=\\\"row g-10\\\">\\r\\n    <!--begin::Column-->\\r\\n    <div id=\\\"wrap\\\" class=\\\"wrap\\\">\\r\\n      <!--begin::Developers-->\\r\\n      <div id=\\\"developers\\\">\\r\\n        <img style=\\\"vertical-align: middle;\\\"\\r\\n                  src=\\\"https://cdn.platform.smarter.sh/cms/img/programming.svg\\\"\\r\\n                    width=\\\"31.8\\\" />\\r\\n               <h3 class=\\\"mt-6 mb-6\\\">\\r\\n                     Developers\\r\\n               </h3>\\r\\n        <!--begin::Text-->\\r\\n        <p>\\r\\n          Smarter is an extensible platform that is designed to be accessible, and easy to build on top of.\\r\\n          We've published complete documentation for our API, our JSON schemas, our manifests,\\r\\n          and our CLI, which is open sourced. Smarter offers developers and OEMs a\\r\\n          large market to sell into, and a welcoming ecosystem to help you get started. Take\\r\\n          a look at our developer documentation to learn more.\\r\\n        </p>\\r\\n        <!--end::Text-->\\r\\n        <a class=\\\"btn\\\" href=\\\"/docs/developers/\\\">\\r\\n             Developer\\r\\n             Documentation\\r\\n        </a>\\r\\n      </div>\\r\\n      <!--end::Developers-->\\r\\n      <!--begin::GetCertified-->\\r\\n      <div id=\\\"certified\\\">\\r\\n        <img style=\\\"vertical-align: middle;\\\"\\r\\n            src=\\\"https://cdn.platform.smarter.sh/cms/img/logbook.svg\\\"\\r\\n            width=\\\"31.8\\\" />\\r\\n        <h3 class=\\\"mt-6 mb-6\\\">\\r\\n            Get Certified\\r\\n        </h3>\\r\\n        <p>\\r\\n          Take your career to the next level by earning your certificate at Smarter University. With certification\\r\\n          tracks in\\r\\n          prompt engineering and\\r\\n          Smarter platform system administration you can become a Smarter expert in only three months, studying\\r\\n          part-time.\\r\\n        </p>\\r\\n        <a class=\\\"btn\\\" href=\\\"/docs/get-certified/\\\">\\r\\n          Smarter\\r\\n          University\\r\\n      </a>\\r\\n      </div>\\r\\n      <!--end::GetCertified-->\\r\\n    </div>\\r\\n    <!--end::Column-->\\r\\n  </div>\\r\\n  <!--end::Row-->\\r\\n    <!--begin::Administration-->\\r\\n    <div id=\\\"administration\\\">\\r\\n      <img style=\\\"vertical-align: middle;\\\"\\r\\n                 src=\\\"https://cdn.platform.smarter.sh/cms/img/control-panel.svg\\\"\\r\\n                   width=\\\"31.8\\\" />\\r\\n       <h3 class=\\\"mt-6 mb-6\\\">\\r\\n               Administration\\r\\n       </h3>\\r\\n      <!--begin::Text-->\\r\\n      <p>\\r\\n        Think of Smarter as the RedHat Linux of generative AI resource management.\\r\\n        It's designed for large organizations. Use it as a SaaS platform,\\r\\n        or install it on premise on your own servers. Either way, we're happy to\\r\\n        remain as hands-on or hands-off as you like. We offer customizable data retention policies,\\r\\n        cost & budget controls, and audit capabilities. We're happy to discuss your needs and\\r\\n        help you get started.\\r\\n      </p>\\r\\n      <!--end::Text-->\\r\\n      <!-- begin::CTA -->\\r\\n       <a class=\\\"btn\\\" href=\\\"/docs/administration/\\\">\\r\\n             Administration\\r\\n         </a>\\r\\n      <!-- end::CTA -->\\r\\n    </div>\\r\\n    <!--end::Administration-->\", \"id\": \"7a4a31f3-e0d5-44ef-93d6-ff67a6c1c6dc\"}]",
+        "live": true,
+        "path": "000100010001",
+        "slug": "docs",
+        "depth": 3,
+        "owner": 1,
+        "title": "Docs",
+        "locale": 1,
+        "locked": false,
+        "expired": false,
+        "sidebar": "[{\"type\": \"html_block\", \"value\": 4, \"id\": \"5b1d5e5c-a98a-40ea-9807-5895c4f7637e\"}, {\"type\": \"html_block\", \"value\": 8, \"id\": \"0245eace-0610-4f79-a828-11ea92b60d7c\"}, {\"type\": \"html_block\", \"value\": 7, \"id\": \"21331c09-60d8-4cbe-a9cf-860c30de239c\"}, {\"type\": \"html_block\", \"value\": 5, \"id\": \"5310afe5-104c-4b80-9995-7a815d1094c6\"}, {\"type\": \"html_block\", \"value\": 6, \"id\": \"91cd9cb1-b8b7-42e9-8d6e-2ccb48eb50b0\"}, {\"type\": \"html_block\", \"value\": 2, \"id\": \"81edcd05-207d-4c3a-a7e5-29a72e42f53e\"}, {\"type\": \"html_block\", \"value\": 1, \"id\": \"dd383f45-39d0-4a1f-be13-c47ce59ef715\"}]",
+        "alias_of": null,
+        "numchild": 9,
+        "url_path": "/home/docs/",
+        "expire_at": null,
+        "locked_at": null,
+        "locked_by": null,
+        "seo_title": "",
+        "go_live_at": null,
+        "draft_title": "Docs",
+        "content_type": 54,
+        "live_revision": 29,
+        "show_in_menus": false,
+        "latest_revision": 29,
+        "translation_key": "d3040343-7bf4-452e-ac0d-e7fd9ea78d44",
+        "last_published_at": "2025-04-08T20:38:28.437Z",
+        "first_published_at": "2024-11-21T05:11:38.823Z",
+        "search_description": "",
+        "wagtail_admin_comments": [],
+        "has_unpublished_changes": false,
+        "latest_revision_created_at": "2025-04-08T20:38:28.380Z"
+      },
+      "approved_go_live_at": null
+    }
+  },
+  {
     "model": "wagtailcore.grouppagepermission",
     "pk": 1,
     "fields": {
@@ -5781,6 +5842,40 @@
       "content_changed": true,
       "deleted": false,
       "page": 11
+    }
+  },
+  {
+    "model": "wagtailcore.pagelogentry",
+    "pk": 92,
+    "fields": {
+      "content_type": 54,
+      "label": "Docs",
+      "action": "wagtail.edit",
+      "data": {},
+      "timestamp": "2025-04-09T13:06:07.440Z",
+      "uuid": "0003dd4b-fa40-46c4-abe9-27ac3770da0d",
+      "user": 1,
+      "revision": 48,
+      "content_changed": true,
+      "deleted": false,
+      "page": 3
+    }
+  },
+  {
+    "model": "wagtailcore.pagelogentry",
+    "pk": 93,
+    "fields": {
+      "content_type": 54,
+      "label": "Docs",
+      "action": "wagtail.publish",
+      "data": {},
+      "timestamp": "2025-04-09T13:06:07.514Z",
+      "uuid": "0003dd4b-fa40-46c4-abe9-27ac3770da0d",
+      "user": 1,
+      "revision": 48,
+      "content_changed": true,
+      "deleted": false,
+      "page": 3
     }
   },
   {
