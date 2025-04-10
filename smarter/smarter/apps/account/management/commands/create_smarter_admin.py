@@ -60,6 +60,8 @@ class Command(BaseCommand):
 
             self.stdout.write(self.style.SUCCESS(f"Created superuser {username} {email} has been created."))
             self.stdout.write(self.style.SUCCESS(f"Password: {password}"))
+        else:
+            self.stdout.write(self.style.SUCCESS(f"User {username} updated."))
 
         user_profile, created = UserProfile.objects.get_or_create(user=user, account=account)
         if created:
