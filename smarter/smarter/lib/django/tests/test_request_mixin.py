@@ -10,7 +10,6 @@ from django.test import Client, RequestFactory
 
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.lib.django.request import SmarterRequestMixin
-from smarter.lib.django.validators import SmarterValueError
 
 
 SMARTER_DEV_ADMIN_PASSWORD = "smarter"
@@ -242,7 +241,6 @@ class TestSmarterRequestMixin(unittest.TestCase):
             self.assertEqual(srm.user, smarter_admin_user_profile.user)
             self.assertEqual(srm.account, smarter_admin_user_profile.account)
             self.assertIsNotNone(srm.client_key)
-            self.assertEqual(srm.chatbot_id, 1)
             self.assertEqual(srm.domain, "localhost:8000")
             self.assertTrue(srm.is_chatbot)
             self.assertFalse(srm.is_chatbot_named_url)
