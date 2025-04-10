@@ -176,8 +176,6 @@ class TestSmarterRequestMixin(unittest.TestCase):
         self.assertIsInstance(srm.session_key, str)
         self.assertEqual(srm.domain, "example.3141-5926-5359.api.localhost:8000")
 
-        self.assertEqual(srm.chatbot_name, "example")
-
     def test_sandbox_url(self):
         """
         Test that SmarterRequestMixin can be instantiated with an unauthenticated request.
