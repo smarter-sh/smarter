@@ -6,6 +6,7 @@ from http import HTTPStatus
 from uuid import UUID
 
 from django import forms, http
+from django.core.handlers.wsgi import WSGIRequest
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
@@ -38,7 +39,7 @@ class APIKeyBase(SmarterAdminWebView):
     account: Account = None
     user_profile: UserProfile = None
 
-    def dispatch(self, request, *args, **kwargs):
+    def dispatch(self, request: WSGIRequest, *args, **kwargs):
         self.user_profile = UserProfile.objects.get(user=request.user)
         self.account = self.user_profile.account
         return super().dispatch(request, *args, **kwargs)
@@ -49,7 +50,7 @@ class APIKeysView(APIKeyBase):
 
     template_path = "account/dashboard/api-keys.html"
 
-    def get(self, request):
+    def get(self, request: WSGIRequest):
         api_keys = SmarterAuthToken.objects.filter(user=self.user_profile.user).only(
             "user", "description", "created", "last_used_at", "is_active"
         )
@@ -66,7 +67,7 @@ class APIKeyView(APIKeyBase):
 
     template_path = "account/dashboard/api-key.html"
 
-    def _handle_create(self, request):
+    def _handle_create(self, request: WSGIRequest):
         new_api_key, token = SmarterAuthToken.objects.create(
             name="New API Key", user=request.user, description=f"New API key created by {request.user}"
         )
@@ -79,7 +80,7 @@ class APIKeyView(APIKeyBase):
         )
         return HttpResponseRedirect(url)
 
-    def _handle_multipart_form(self, request, key_id):
+    def _handle_multipart_form(self, request: WSGIRequest, key_id: str):
         try:
             apikey = SmarterAuthToken.objects.get(key_id=key_id)
         except SmarterAuthToken.DoesNotExist:
@@ -100,7 +101,7 @@ class APIKeyView(APIKeyBase):
             return http.JsonResponse(status=HTTPStatus.OK.value, data=apikey_form.data)
         return http.JsonResponse(status=HTTPStatus.BAD_REQUEST.value, data=apikey_form.errors)
 
-    def _handle_json(self, request, key_id):
+    def _handle_json(self, request: WSGIRequest, key_id: str):
         try:
             api_key = SmarterAuthToken.objects.get(key_id=key_id)
         except SmarterAuthToken.DoesNotExist:
@@ -127,7 +128,7 @@ class APIKeyView(APIKeyBase):
 
         return http.JsonResponse(status=HTTPStatus.OK.value, data={})
 
-    def _handle_write_request(self, request, key_id):
+    def _handle_write_request(self, request, key_id: str):
         if request.content_type == "multipart/form-data":
             return self._handle_multipart_form(request, key_id)
         if request.content_type == "application/json":
@@ -146,9 +147,8 @@ class APIKeyView(APIKeyBase):
         return str(uuid_obj) == uuid_to_test
 
     # pylint: disable=W0221
-    def get(self, request, key_id: str = None, new_api_key: str = None):
+    def get(self, request: WSGIRequest, key_id: str = None, new_api_key: str = None):
         """Get the api key. We also use this to create a new api key."""
-
         # in cases where we arrived here via api-keys/new/
         if key_id is None:
             return self._handle_create(request)
@@ -182,16 +182,14 @@ class APIKeyView(APIKeyBase):
         }
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
-    def post(self, request):
+    def post(self, request: WSGIRequest):
         return self._handle_create(request)
 
-    def patch(self, request, key_id):
-        logger.info("Received PATCH request: %s", request)
+    def patch(self, request: WSGIRequest, key_id: str):
 
         return self._handle_write_request(request, key_id)
 
-    def delete(self, request, key_id):
-        logger.info("Received DELETE request: %s", request)
+    def delete(self, request: WSGIRequest, key_id: str):
         try:
             apikey = SmarterAuthToken.objects.get(key_id=key_id)
         except SmarterAuthToken.DoesNotExist:
