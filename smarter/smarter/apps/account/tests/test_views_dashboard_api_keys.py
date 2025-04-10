@@ -156,7 +156,7 @@ class TestAPIKeys(unittest.TestCase):
         request = factory.get(url)
         request.user = self.user
 
-        response = APIKeyView.as_view()(request, key_id=self.api_key.key_id)
+        response = APIKeyView.as_view()(request=request, key_id=self.api_key.key_id)
         self.assertEqual(response.status_code, 200)
 
     def test_get_api_key_no_permissions(self):
@@ -171,7 +171,7 @@ class TestAPIKeys(unittest.TestCase):
         request = factory.get(url)
         request.user = self.non_staff_authenticated_user
 
-        response = APIKeyView.as_view()(request, key_id=self.api_key.key_id)
+        response = APIKeyView.as_view()(request=request, key_id=self.api_key.key_id)
 
         # should rediredt to login page since we're not staff
         self.assertEqual(response.status_code, 302)
@@ -184,7 +184,7 @@ class TestAPIKeys(unittest.TestCase):
         request = factory.get(url)
         request.user = self.user
 
-        response = APIKeyView.as_view()(request, key_id=nonexistent_api_key_id)
+        response = APIKeyView.as_view()(request=request, key_id=nonexistent_api_key_id)
         self.assertEqual(response.status_code, 404)
 
     def test_post_api_key_not_found(self):
@@ -196,7 +196,7 @@ class TestAPIKeys(unittest.TestCase):
         request = factory.post(url, data=data, content_type="application/json")
         request.user = self.user
 
-        response = APIKeyView.as_view()(request)
+        response = APIKeyView.as_view()(request=request)
         self.assertIn(response.status_code, [302, HTTPStatus.NOT_FOUND, HTTPStatus.BAD_REQUEST])
 
     def test_get_api_keys(self):
@@ -206,7 +206,7 @@ class TestAPIKeys(unittest.TestCase):
         request = factory.get(url)
         request.user = self.user
 
-        response = APIKeysView.as_view()(request)
+        response = APIKeysView.as_view()(request=request)
         self.assertEqual(response.status_code, 200)
 
     def test_delete_nonexistent_api_key(self):
@@ -217,5 +217,5 @@ class TestAPIKeys(unittest.TestCase):
         request = factory.delete(url)
         request.user = self.user
 
-        response = APIKeyView.as_view()(request, key_id=nonexistent_api_key_id)
+        response = APIKeyView.as_view()(request=request, key_id=nonexistent_api_key_id)
         self.assertEqual(response.status_code, 404)
