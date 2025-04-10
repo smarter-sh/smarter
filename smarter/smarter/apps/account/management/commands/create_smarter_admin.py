@@ -31,6 +31,7 @@ class Command(BaseCommand):
             account_number=SMARTER_ACCOUNT_NUMBER,
             company_name=SMARTER_COMPANY_NAME,
         )
+        account.is_default_account = True
         account.phone_number = "+1 (512) 833-6955"
         account.address1 = "1700 South Lamar Blvd"
         account.address2 = "Suite 338"
