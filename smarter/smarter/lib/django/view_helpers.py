@@ -19,7 +19,7 @@ from htmlmin.main import minify
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.common.classes import SmarterHelperMixin
-from smarter.lib.django.views.error import SmarterHttpResponseNotFound
+from smarter.lib.django.http.shortcuts import SmarterHttpResponseNotFound
 
 
 logger = logging.getLogger(__name__)
@@ -119,8 +119,8 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
 
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
-        if response.status_code > 299:
-            logger.info("SmarterAuthenticatedWebView.dispatch(): ERROR response=%s", response)
+        if response.status_code > 399:
+            logger.error("SmarterAuthenticatedWebView.dispatch(): ERROR response=%s", response)
             return response
 
         patch_vary_headers(response, ["Cookie"])

@@ -34,10 +34,10 @@ class DocsJsonSchemaAccountView(DocsJsonSchemaBaseView):
     kind = SAMKinds(SAMKinds.ACCOUNT)
 
 
-class DocsJsonSchemaApiConnectionView(DocsJsonSchemaBaseView):
-    """ApiConnection JSON Schema view"""
+# class DocsJsonSchemaApiConnectionView(DocsJsonSchemaBaseView):
+#     """ApiConnection JSON Schema view"""
 
-    kind = SAMKinds(SAMKinds.APICONNECTION)
+#     kind = SAMKinds(SAMKinds.APICONNECTION)
 
 
 class DocsJsonSchemaApiKeyView(DocsJsonSchemaBaseView):
