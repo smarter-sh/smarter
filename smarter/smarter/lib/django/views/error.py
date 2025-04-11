@@ -47,5 +47,5 @@ class SmarterHttpResponseNotFound(SmarterHttpResponseErrorBase):
 class SmarterHttpResponseServerError(SmarterHttpResponseErrorBase):
     def __init__(self, request, error_message: str = None, *args, **kwargs):
         self.template_file = "500.html"
-        self.status_code = 500
+        self.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
         super().__init__(request=request, error_message=error_message, *args, **kwargs)
