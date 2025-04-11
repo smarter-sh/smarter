@@ -68,7 +68,7 @@ lint:
 	make react-lint
 
 analyze:
-	cloc . --exclude-ext=svg,json,zip --fullpath --not-match-d=smarter/smarter/static/assets/ --vcs=git
+	cloc . --exclude-ext=svg,zip --fullpath --not-match-d=smarter/smarter/static/assets/ --vcs=git
 
 coverage:
 	docker exec smarter-app bash -c "coverage run manage.py test && coverage report -m && coverage html"
@@ -136,7 +136,7 @@ docker-collectstatic:
 
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "./manage.py test smarter.common.helpers.tests.test_k8s_helpers"
+	docker exec smarter-app bash -c "./manage.py test smarter.apps.chatbot.tests.test_chatbot_api_url_helper.TestChatBotApiUrlHelper.test_valid_url"
 
 docker-prune:
 	make docker-check && \
