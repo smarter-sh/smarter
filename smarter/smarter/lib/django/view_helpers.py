@@ -119,8 +119,8 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
 
     def dispatch(self, request, *args, **kwargs):
         response = super().dispatch(request, *args, **kwargs)
-        if response.status_code > 299:
-            logger.info("SmarterAuthenticatedWebView.dispatch(): ERROR response=%s", response)
+        if response.status_code > 399:
+            logger.error("SmarterAuthenticatedWebView.dispatch(): ERROR response=%s", response)
             return response
 
         patch_vary_headers(response, ["Cookie"])

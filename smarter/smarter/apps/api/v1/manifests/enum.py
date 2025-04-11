@@ -52,7 +52,7 @@ class SAMKinds(SmarterEnumAbstract):
     CHAT_TOOL_CALL = CHAT_TOOL_CALL_MANIFEST_KIND
     CHATBOT = CHATBOT_MANIFEST_KIND
     SQLCONNECTION = SQLCONNECTION_MANIFEST_KIND
-    APICONNECTION = "PluginDataApiConnection"
+    # APICONNECTION = "PluginDataApiConnection"
 
     @classmethod
     def all_slugs(cls):
