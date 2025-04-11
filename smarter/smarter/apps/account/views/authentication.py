@@ -5,6 +5,12 @@ from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
 
 from smarter.common.helpers.email_helpers import email_helper
+from smarter.lib.django.http.shortcuts import (
+    SmarterHttpResponseBadRequest,
+    SmarterHttpResponseForbidden,
+    SmarterHttpResponseNotFound,
+    SmarterHttpResponseServerError,
+)
 from smarter.lib.django.token_generators import (
     ExpiringTokenGenerator,
     TokenConversionError,
@@ -17,12 +23,6 @@ from smarter.lib.django.view_helpers import (
     SmarterAuthenticatedNeverCachedWebView,
     SmarterNeverCachedWebView,
     redirect_and_expire_cache,
-)
-from smarter.lib.django.views.error import (
-    SmarterHttpResponseBadRequest,
-    SmarterHttpResponseForbidden,
-    SmarterHttpResponseNotFound,
-    SmarterHttpResponseServerError,
 )
 
 

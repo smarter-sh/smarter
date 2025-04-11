@@ -10,11 +10,11 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 
 from smarter.apps.account.models import Account, UserProfile
-from smarter.lib.django.view_helpers import SmarterAdminWebView
-from smarter.lib.django.views.error import (
+from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseForbidden,
     SmarterHttpResponseNotFound,
 )
+from smarter.lib.django.view_helpers import SmarterAdminWebView
 from smarter.lib.drf.models import SmarterAuthToken
 
 
