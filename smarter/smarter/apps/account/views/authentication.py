@@ -2,11 +2,11 @@
 """Django Authentication views."""
 from django import forms
 from django.contrib.auth import authenticate, login, logout
-from django.http import HttpResponseBadRequest
 from django.urls import reverse
 
 from smarter.common.helpers.email_helpers import email_helper
-from smarter.lib.django.http.shortcuts import (  # SmarterHttpResponseBadRequest,        removing this bc it breaks. still troubleshooting.
+from smarter.lib.django.http.shortcuts import (
+    SmarterHttpResponseBadRequest,
     SmarterHttpResponseForbidden,
     SmarterHttpResponseNotFound,
     SmarterHttpResponseServerError,
@@ -59,7 +59,9 @@ class LoginView(SmarterNeverCachedWebView):
                 if authenticated_user is not None:
                     login(request, authenticated_user)
                     return redirect_and_expire_cache(path="/")
-                return HttpResponseBadRequest(content="Username and/or password do not match.")
+                return SmarterHttpResponseBadRequest(
+                    request=request, error_message="Username and/or password do not match."
+                )
             except User.DoesNotExist:
                 return SmarterHttpResponseForbidden(
                     request=request, error_message=f"Invalid login attempt. Unknown user {email}"
@@ -69,7 +71,7 @@ class LoginView(SmarterNeverCachedWebView):
                 return SmarterHttpResponseServerError(
                     request=request, error_message=f"An unknown error occurred {e.description}"
                 )
-        return HttpResponseBadRequest(content="Received invalid responses.")
+        return SmarterHttpResponseBadRequest(request=request, error_message="Received invalid responses.")
 
 
 class LogoutView(SmarterNeverCachedWebView):
@@ -160,7 +162,7 @@ class AccountActivateView(SmarterNeverCachedWebView):
                 request=request, error_message="Invalid password reset link. User does not exist."
             )
         except (TypeError, ValueError, OverflowError, TokenParseError, TokenConversionError, TokenIntegrityError) as e:
-            return HttpResponseBadRequest(content=str(e))
+            return SmarterHttpResponseBadRequest(request=request, error_message=str(e))
         except TokenExpiredError as e:
             return SmarterHttpResponseForbidden(request=request, error_message=str(e))
 
