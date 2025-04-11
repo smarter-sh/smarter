@@ -5,7 +5,8 @@ from http import HTTPStatus
 
 from django import forms
 from django.conf import settings
-from django.shortcuts import HttpResponse, redirect
+from django.http import HttpResponse
+from django.shortcuts import redirect
 
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.helpers.email_helpers import email_helper
