@@ -56,7 +56,7 @@ class Command(BaseCommand):
                 user_id = obj["fields"]["user"]
                 if not User.objects.filter(id=user_id).exists():
                     username = "wagtail_" + str(user_id)
-                    user = User.objects.create(
+                    user = User.objects.create_user(
                         id=user_id,
                         username=username,
                         email=username + "@smarter.sh",
