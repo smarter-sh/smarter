@@ -17,7 +17,7 @@ class TestAccount(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         username = "testuser_" + os.urandom(4).hex()
-        self.user = User.objects.create(username=username, password="12345")
+        self.user = User.objects.create_user(username=username, password="12345")
 
     def tearDown(self):
         """Clean up test fixtures."""

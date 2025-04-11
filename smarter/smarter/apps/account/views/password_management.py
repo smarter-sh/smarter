@@ -5,10 +5,16 @@ from http import HTTPStatus
 
 from django import forms
 from django.conf import settings
-from django.shortcuts import HttpResponse, redirect
+from django.http import HttpResponse
+from django.shortcuts import redirect
 
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.helpers.email_helpers import email_helper
+from smarter.lib.django.http.shortcuts import (
+    SmarterHttpResponseBadRequest,
+    SmarterHttpResponseForbidden,
+    SmarterHttpResponseNotFound,
+)
 from smarter.lib.django.token_generators import (
     ExpiringTokenGenerator,
     TokenConversionError,
@@ -18,11 +24,6 @@ from smarter.lib.django.token_generators import (
 )
 from smarter.lib.django.user import User, UserType
 from smarter.lib.django.view_helpers import SmarterNeverCachedWebView
-from smarter.lib.django.views.error import (
-    SmarterHttpResponseBadRequest,
-    SmarterHttpResponseForbidden,
-    SmarterHttpResponseNotFound,
-)
 
 
 logger = logging.getLogger(__name__)

@@ -26,13 +26,13 @@ RUN adduser --disabled-password --gecos '' smarter_user
 
 # create a data directory for the smarter_user that
 # the application can use to store data.
-RUN mkdir -p /data/.kube && \
-    touch /data/.kube/config && \
-    chown -R smarter_user:smarter_user /data && \
-    chmod -R 755 /data
+RUN mkdir -p /home/smarter_user/data/.kube && \
+    touch /home/smarter_user/data/.kube/config && \
+    chown -R smarter_user:smarter_user /home/smarter_user/data && \
+    chmod -R 755 /home/smarter_user/data
 
 # Set the KUBECONFIG environment variable
-ENV KUBECONFIG=/data/.kube/config
+ENV KUBECONFIG=/home/smarter_user/data/.kube/config
 
 # Setup our file system.
 # so that the Docker file system matches up with the local file system.

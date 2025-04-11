@@ -14,6 +14,10 @@
 {% endblock %}
 
 {% block docs_sidebar %}
+  {% include 'docs/base/sidebar/widget-cli.html' %}
+  {% include 'docs/base/sidebar/widget-vscode.html' %}
+  {% include 'docs/base/sidebar/widget-npm.html' %}
+  {% include 'docs/base/sidebar/widget-pypi.html' %}
   {% include 'docs/base/sidebar/waitlist.html' %}
   {% include 'docs/base/sidebar/careers.html' %}
   {% include 'docs/base/sidebar/stay-connected.html' %}
