@@ -59,6 +59,15 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
     _name: str = None
     _prompt: str = None
     _session_key: str = None
+    _is_config_view: bool = False
+
+    @property
+    def is_config_view(self) -> bool:
+        """
+        True if this is a config view, as opposed to the chat view
+        to which the config refers.
+        """
+        return self._is_config_view
 
     @property
     def prompt(self) -> str:
@@ -67,6 +76,9 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         from the user. This will need to be added to a message list and sent
         to the chatbot.
         """
+        if self.is_config_view:
+            # config views are not expected to have a prompt
+            return None
         retval = self.data.get("prompt", None)
         if not retval:
             raise APIV1CLIChatViewError("Internal error. 'prompt' key is missing from the request body.")
@@ -144,7 +156,7 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
             "prompt": "who's your daddy?"
         }
         """
-        if not self.prompt:
+        if not self.prompt and not self.is_config_view:
             raise APIV1CLIChatViewError("Internal error. 'prompt' key is missing from the request body.")
         messages = self.data.get("messages", None)
         if messages:

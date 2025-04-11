@@ -27,7 +27,7 @@ class Command(BaseCommand):
     """
     Django manage.py load_wagtail_data command. This module is used to load
     Wagtail CMS page and snippet content.
-    It loads to a JSON file using Django's loaddata command.
+    It loads from a JSON file using Django's loaddata command.
     """
 
     help = "Load Wagtail CMS page and snippet content to a JSON file."
@@ -56,7 +56,7 @@ class Command(BaseCommand):
                 user_id = obj["fields"]["user"]
                 if not User.objects.filter(id=user_id).exists():
                     username = "wagtail_" + str(user_id)
-                    user = User.objects.create(
+                    user = User.objects.create_user(
                         id=user_id,
                         username=username,
                         email=username + "@smarter.sh",
@@ -67,7 +67,7 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.SUCCESS(f"Added user {user.get_username()}"))
 
     def handle(self, *args, **options):
-        """Load Wagtail CMS page and snippet content to a JSON file."""
+        """Load Wagtail CMS page and snippet content from a JSON file."""
 
         # Delete existing revisions and pages except for the root page
         Revision.objects.all().delete()
