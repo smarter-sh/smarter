@@ -23,7 +23,7 @@ class TestUrls(unittest.TestCase):
         """Set up test fixtures."""
         self.client = None
         username = "testuser_" + os.urandom(4).hex()
-        self.user = User.objects.create(
+        self.user = User.objects.create_user(
             username=username, password="12345", is_staff=True, is_active=True, is_superuser=True
         )
         self.account = Account.objects.create(
