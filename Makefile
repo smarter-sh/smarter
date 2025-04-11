@@ -17,7 +17,7 @@ else
     $(shell cp ./doc/example-dot-env .env)
 endif
 
-.PHONY: init activate build run clean tear-down lint analyze coverage release pre-commit-init pre-commit-run python-init python-activate python-lint python-clean python-test react-init react-lint react-update react-run react-build docker-compose-install docker-init docker-build docker-run docker-collectstatic docker-test python-init python-lint python-clean keen-init keen-build keen-server react-clean react-init react-lint react-update react-run react-build help
+.PHONY: init activate build run clean tear-down lint analyze coverage release pre-commit-init pre-commit-run python-init python-activate python-lint python-clean python-test docker-compose-install docker-init docker-build docker-run docker-collectstatic docker-test python-init python-lint python-clean keen-init keen-build keen-server change-log help
 
 # Default target executed when no arguments are given to make.
 all: help
@@ -49,7 +49,6 @@ run:
 
 clean:
 	make python-clean
-	make react-clean
 	make terraform-clean
 	make docker-prune
 
@@ -65,7 +64,6 @@ tear-down:
 
 lint:
 	make python-lint
-	make react-lint
 
 analyze:
 	cloc . --exclude-ext=svg,zip --fullpath --not-match-d=smarter/smarter/static/assets/ --vcs=git
@@ -192,36 +190,6 @@ keen-server:
 	cd keen_v3.0.6/tools && \
 	gulp localhost
 
-# ---------------------------------------------------------
-# React app
-# ---------------------------------------------------------
-react-clean:
-	rm -rf node_modules
-	rm -rf react/node_modules
-	rm -rf react/dist
-
-react-init:
-	make react-clean
-	npm install
-	cd ./smarter/smarter/apps/chatapp/reactapp/ && npm install && npm init @eslint/config
-
-react-lint:
-	cd ./react && npm run lint
-	# npx prettier --write "./smarter/smarter/apps/chatapp/reactapp/src/**/*.{js,cjs,jsx,ts,tsx,json,css,scss,md}"
-
-react-update:
-	npm install -g npm
-	npm install -g npm-check-updates
-	ncu --upgrade --packageFile ./smarter/smarter/apps/chatapp/reactapp/package.json
-	npm update -g
-	npm install ./smarter/smarter/apps/chatapp/reactapp/
-
-react-run:
-	cd ./smarter/smarter/apps/chatapp/reactapp/ && npm run dev
-
-react-build:
-	cd ./smarter/smarter/apps/chatapp/reactapp/ && npm run build
-
 
 # -------------------------------------------------------------------------
 # AWS and deployment
@@ -230,6 +198,10 @@ helm-update:
 	cd helm/charts/smarter && \
 	helm dependency update
 
+
+change-log:
+	@echo "Generating changelog..."
+	npx conventional-changelog -p angular -i CHANGELOG.md -s
 
 ######################
 # HELP
@@ -267,11 +239,5 @@ help:
 	@echo 'keen-init              - Install gulp, yarn and dependencies for Keen'
 	@echo 'keen-build             - Build Keen app using gulp'
 	@echo 'keen-server            - Start local Keen web server using gulp'
-	@echo '<************************** React **************************>'
-	@echo 'react-clean            - Remove node_modules directories for React app'
-	@echo 'react-init             - Run npm install for React app'
-	@echo 'react-lint             - Run npm lint for React app'
-	@echo 'react-update           - Update npm packages for React app'
-	@echo 'react-run              - Run the React app in development mode'
-	@echo 'react-build            - Build the React app for production'
 	@echo '===================================================================='
+	@echo 'change-log             - update CHANGELOG.md file'
