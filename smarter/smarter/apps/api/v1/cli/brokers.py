@@ -53,7 +53,7 @@ class Brokers:
         SAMKinds.CHATBOT.value: SAMChatbotBroker,
         SAMKinds.PLUGIN.value: SAMPluginBroker,
         SAMKinds.SQLCONNECTION.value: SAMPluginDataSqlConnectionBroker,
-        SAMKinds.APICONNECTION.value: BrokerNotImplemented,
+        # SAMKinds.APICONNECTION.value: BrokerNotImplemented,
         SAMKinds.USER.value: SAMUserBroker,
     }
 
