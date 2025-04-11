@@ -32,7 +32,7 @@ class SmarterHttpResponseForbidden(SmarterHttpResponseErrorBase):
     def __init__(self, request, error_message: str = None, *args, **kwargs):
         error_message = error_message or "Awe shucks, you're not allowed to do that."
         self.template_file = "403.html"
-        # self.status_code = HTTPStatus.FORBIDDEN
+        self.status_code = HTTPStatus.FORBIDDEN
         super().__init__(request=request, error_message=error_message, *args, **kwargs)
 
 
@@ -40,6 +40,7 @@ class SmarterHttpResponseNotFound(SmarterHttpResponseErrorBase):
     def __init__(self, request, error_message: str = None, *args, **kwargs):
         error_message = error_message or "Oh no!!! We couldn't find that page."
         self.template_file = "404.html"
+        # mcdaniel: confirmed that this does not crash the server
         self.status_code = HTTPStatus.NOT_FOUND
         super().__init__(request=request, error_message=error_message, *args, **kwargs)
 
@@ -48,5 +49,6 @@ class SmarterHttpResponseServerError(SmarterHttpResponseErrorBase):
     def __init__(self, request, error_message: str = None, *args, **kwargs):
         error_message = error_message or "Ugh!!! Something went wrong on our end."
         self.template_file = "500.html"
+        # mcdaniel: confirmed that this does not crash the server
         self.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
         super().__init__(request=request, error_message=error_message, *args, **kwargs)
