@@ -24,7 +24,7 @@ class SmarterHttpResponseBadRequest(SmarterHttpResponseErrorBase):
     def __init__(self, request, error_message: str = None, *args, **kwargs):
         error_message = error_message or "Dohhhh, that's a bad request my friend."
         self.template_file = "400.html"
-        self.status_code = HTTPStatus.BAD_REQUEST
+        # self.status_code = HTTPStatus.BAD_REQUEST
         super().__init__(request=request, error_message=error_message, *args, **kwargs)
 
 
@@ -32,7 +32,7 @@ class SmarterHttpResponseForbidden(SmarterHttpResponseErrorBase):
     def __init__(self, request, error_message: str = None, *args, **kwargs):
         error_message = error_message or "Awe shucks, you're not allowed to do that."
         self.template_file = "403.html"
-        self.status_code = HTTPStatus.FORBIDDEN
+        # self.status_code = HTTPStatus.FORBIDDEN
         super().__init__(request=request, error_message=error_message, *args, **kwargs)
 
 
