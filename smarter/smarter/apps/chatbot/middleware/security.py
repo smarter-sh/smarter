@@ -5,13 +5,15 @@ import logging
 from urllib.parse import urlparse
 
 from django.conf import settings
+from django.http import HttpResponseBadRequest
 from django.middleware.security import SecurityMiddleware as DjangoSecurityMiddleware
 
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterWaffleSwitches
 from smarter.lib.django import waffle
-from smarter.lib.django.http.shortcuts import SmarterHttpResponseBadRequest
+
+# from smarter.lib.django.http.shortcuts import SmarterHttpResponseBadRequest
 from smarter.lib.django.validators import SmarterValidator
 
 from ..models import ChatBot, get_cached_chatbot_by_request
@@ -101,4 +103,4 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
 
         if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
             logger.error("%s %s failed security tests.", self.formatted_class_name, url)
-        return SmarterHttpResponseBadRequest(request=request, error_message="Bad Request (400) - Invalid Hostname.")
+        return HttpResponseBadRequest(content="Bad Request (400) - Invalid Hostname.")
