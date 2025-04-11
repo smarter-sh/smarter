@@ -5,10 +5,10 @@ import logging
 from urllib.parse import urlparse
 
 from django.conf import settings
+from django.core.handlers.wsgi import WSGIRequest
 from django.middleware.security import SecurityMiddleware as DjangoSecurityMiddleware
 
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterWaffleSwitches
 from smarter.lib.django import waffle
 from smarter.lib.django.http.shortcuts import SmarterHttpResponseBadRequest
@@ -39,7 +39,7 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
 
     """
 
-    def process_request(self, request):
+    def process_request(self, request: WSGIRequest):
 
         # 1.) If the request is from an internal ip address, allow it to pass through
         # these typically originate from health checks from load balancers.
@@ -57,7 +57,6 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
 
         # 2.) If the request is from a local host, allow it to pass through
         # ---------------------------------------------------------------------
-        host = request.get_host()
         if host in SmarterValidator.LOCAL_HOSTS:
             if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
                 logger.info(
@@ -68,13 +67,12 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
                 )
             return None
 
-        url = SmarterValidator.urlify(host, environment=smarter_settings.environment)
-        parsed_host = urlparse(url)
-        host = parsed_host.hostname
+        url = request.build_absolute_uri()
+        parsed_url = urlparse(url)
 
         # 3.) readiness and liveness checks
         # ---------------------------------------------------------------------
-        path_parts = list(filter(None, parsed_host.path.split("/")))
+        path_parts = list(filter(None, parsed_url.path.split("/")))
         # if the entire path is healthz or readiness then we don't need to check
         if len(path_parts) == 1 and path_parts[0] in ["healthz", "readiness"]:
             if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
@@ -113,6 +111,5 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
                 logger.info("%s ChatBotHelper() verified that %s is a chatbot.", self.formatted_class_name, url)
             return None
 
-        if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
-            logger.error("%s %s failed security tests.", self.formatted_class_name, url)
+        logger.error("%s %s failed security tests.", self.formatted_class_name, url)
         return SmarterHttpResponseBadRequest(request=request, error_message="Bad Request (400) - Invalid Hostname.")

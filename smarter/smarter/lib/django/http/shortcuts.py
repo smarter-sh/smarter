@@ -40,7 +40,6 @@ class SmarterHttpResponse(HttpResponse):
 
 class SmarterHttpResponseBadRequest(SmarterHttpResponse):
     def __init__(self, request: WSGIRequest, error_message: str = None, *args, **kwargs):
-        # WARNING: process of elimination asserts that this crashes the server.
         status_code: int = HTTPStatus.BAD_REQUEST.value
         error_message = error_message or "Dohhhh, that's a bad request my friend."
         template_file = "400.html"
