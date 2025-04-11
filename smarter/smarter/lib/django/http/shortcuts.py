@@ -13,7 +13,8 @@ from django.shortcuts import render
 
 class SmarterHttpResponse(HttpResponse):
     """
-    Smarter generic http response class.
+    Smarter generic http response class. Maps a smarter django template and custom
+    error message to the response.
     """
 
     status_code: int
