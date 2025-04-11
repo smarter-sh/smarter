@@ -35,10 +35,10 @@ class DocsExampleManifestAccountView(DocsExampleManifestBaseView):
     kind = SAMKinds(SAMKinds.ACCOUNT)
 
 
-class DocsExampleManifestApiConnectionView(DocsExampleManifestBaseView):
-    """ApiConnection JSON Schema view"""
+# class DocsExampleManifestApiConnectionView(DocsExampleManifestBaseView):
+#     """ApiConnection JSON Schema view"""
 
-    kind = SAMKinds(SAMKinds.APICONNECTION)
+#     kind = SAMKinds(SAMKinds.APICONNECTION)
 
 
 class DocsExampleManifestApiKeyView(DocsExampleManifestBaseView):
