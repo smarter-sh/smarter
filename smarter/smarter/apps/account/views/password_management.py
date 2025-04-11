@@ -5,12 +5,13 @@ from http import HTTPStatus
 
 from django import forms
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponse
 from django.shortcuts import redirect
 
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.helpers.email_helpers import email_helper
-from smarter.lib.django.http.shortcuts import (  # SmarterHttpResponseBadRequest, removing this bc it breaks. still troubleshooting.
+from smarter.lib.django.http.shortcuts import (
+    SmarterHttpResponseBadRequest,
     SmarterHttpResponseForbidden,
     SmarterHttpResponseNotFound,
 )
@@ -49,7 +50,7 @@ class PasswordResetRequestView(SmarterNeverCachedWebView):
     def post(self, request):
         form = PasswordResetRequestView.EmailForm(request.POST)
         if not form.is_valid():
-            return HttpResponseBadRequest(content="Email address is invalid.")
+            return SmarterHttpResponseBadRequest(request=request, error_message="Email address is invalid.")
         email = form.cleaned_data["email"]
         try:
             user = User.objects.get(email=email)
@@ -97,7 +98,7 @@ class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
                 request=request, error_message="Invalid password reset link. User does not exist."
             )
         except (TypeError, ValueError, OverflowError, TokenParseError, TokenConversionError, TokenIntegrityError) as e:
-            return HttpResponseBadRequest(content=str(e))
+            return SmarterHttpResponseBadRequest(request=request, error_message=str(e))
         except TokenExpiredError as e:
             return SmarterHttpResponseForbidden(request=request, error_message=str(e))
 
@@ -110,13 +111,13 @@ class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
         token = kwargs.get("token", None)
         form = PasswordResetView.NewPasswordForm(request.POST)
         if not form.is_valid():
-            return HttpResponseBadRequest(content="input form is invalid.")
+            return SmarterHttpResponseBadRequest(request=request, error_message="input form is invalid.")
 
         password = form.cleaned_data["password"]
         password_confirm = form.cleaned_data["password_confirm"]
 
         if password != password_confirm:
-            return HttpResponseBadRequest(content="Passwords do not match.")
+            return SmarterHttpResponseBadRequest(request=request, error_message="Passwords do not match.")
 
         try:
             user = self.expiring_token.decode_link(uidb64, token)
@@ -125,7 +126,7 @@ class PasswordResetView(SmarterNeverCachedWebView, SmarterHelperMixin):
                 request=request, error_message="Invalid password reset link. User does not exist."
             )
         except (TypeError, ValueError, OverflowError, TokenParseError, TokenConversionError, TokenIntegrityError) as e:
-            return HttpResponseBadRequest(content=str(e))
+            return SmarterHttpResponseBadRequest(request=request, error_message=str(e))
         except TokenExpiredError as e:
             return SmarterHttpResponseForbidden(request=request, error_message=str(e))
 
