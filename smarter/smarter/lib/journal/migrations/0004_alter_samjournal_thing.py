@@ -63,10 +63,10 @@ class Migration(migrations.Migration):
                         smarter.lib.journal.enum.SmarterJournalThings["SQLCONNECTION"],
                         smarter.lib.journal.enum.SmarterJournalThings["SQLCONNECTION"],
                     ),
-                    (
-                        smarter.lib.journal.enum.SmarterJournalThings["APICONNECTION"],
-                        smarter.lib.journal.enum.SmarterJournalThings["APICONNECTION"],
-                    ),
+                    # (
+                    #     smarter.lib.journal.enum.SmarterJournalThings["APICONNECTION"],
+                    #     smarter.lib.journal.enum.SmarterJournalThings["APICONNECTION"],
+                    # ),
                 ],
                 max_length=24,
                 null=True,

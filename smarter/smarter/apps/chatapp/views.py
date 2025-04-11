@@ -43,12 +43,12 @@ from smarter.common.exceptions import SmarterExceptionBase, SmarterValueError
 from smarter.common.helpers.url_helpers import clean_url
 from smarter.lib.cache import cache_results
 from smarter.lib.django import waffle
-from smarter.lib.django.request import SmarterRequestMixin
-from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
-from smarter.lib.django.views.error import (
+from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseNotFound,
     SmarterHttpResponseServerError,
 )
+from smarter.lib.django.request import SmarterRequestMixin
+from smarter.lib.django.view_helpers import SmarterAuthenticatedNeverCachedWebView
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
 from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
 from smarter.lib.journal.http import (

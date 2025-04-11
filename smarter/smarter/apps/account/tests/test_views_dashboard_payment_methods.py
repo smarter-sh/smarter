@@ -26,7 +26,7 @@ class TestPaymentMethods(unittest.TestCase):
 
         self.username = "testuser_" + os.urandom(4).hex()
         self.password = "12345"
-        self.user = User.objects.create(username=self.username, is_staff=True, is_active=True, is_superuser=True)
+        self.user = User.objects.create_user(username=self.username, is_staff=True, is_active=True, is_superuser=True)
         self.user.set_password(self.password)
         self.user.save()
         self.authenticated_user = authenticate(username=self.username, password=self.password)

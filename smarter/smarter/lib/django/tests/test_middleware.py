@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from django.test import RequestFactory
 
 from smarter.apps.account.mixins import AccountMixin
-from smarter.lib.django.middleware import BlockSensitiveFilesMiddleware
+from smarter.lib.django.middleware.sensitive_files import BlockSensitiveFilesMiddleware
 
 
 class TestBlockSensitiveFilesMiddleware(unittest.TestCase, AccountMixin):
