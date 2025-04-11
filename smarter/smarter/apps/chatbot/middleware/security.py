@@ -11,8 +11,8 @@ from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterWaffleSwitches
 from smarter.lib.django import waffle
+from smarter.lib.django.http.shortcuts import SmarterHttpResponseBadRequest
 from smarter.lib.django.validators import SmarterValidator
-from smarter.lib.django.views.error import SmarterHttpResponseBadRequest
 
 from ..models import ChatBot, get_cached_chatbot_by_request
 

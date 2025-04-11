@@ -19,7 +19,7 @@ from htmlmin.main import minify
 
 from smarter.apps.account.models import Account, UserProfile
 from smarter.common.classes import SmarterHelperMixin
-from smarter.lib.django.views.error import SmarterHttpResponseNotFound
+from smarter.lib.django.http.shortcuts import SmarterHttpResponseNotFound
 
 
 logger = logging.getLogger(__name__)
