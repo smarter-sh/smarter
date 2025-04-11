@@ -6,6 +6,8 @@ import hashlib
 import random
 import unittest
 
+from django.contrib.auth import authenticate
+from django.contrib.sessions.middleware import SessionMiddleware
 from django.core.handlers.wsgi import WSGIRequest
 from django.test import RequestFactory
 
@@ -58,6 +60,14 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
     def test_valid_url(self):
         """Test a url for the chatbot we created."""
         request: WSGIRequest = self.wsgi_request_factory.get(self.chatbot.url, SERVER_NAME="api.localhost:8000")
+        user = authenticate(username=self.user, password="12345")
+        if user is None:
+            self.fail("Authentication failed")
+        request.user = user
+        middleware = SessionMiddleware(lambda request: None)
+        middleware.process_request(request)
+        request.session.save()
+
         helper = ChatBotHelper(request=request, chatbot_id=self.chatbot.id)
 
         self.assertTrue(

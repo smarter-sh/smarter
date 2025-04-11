@@ -31,6 +31,7 @@ class Command(BaseCommand):
             account_number=SMARTER_ACCOUNT_NUMBER,
             company_name=SMARTER_COMPANY_NAME,
         )
+        account.is_default_account = True
         account.phone_number = "+1 (512) 833-6955"
         account.address1 = "1700 South Lamar Blvd"
         account.address2 = "Suite 338"
@@ -59,6 +60,8 @@ class Command(BaseCommand):
 
             self.stdout.write(self.style.SUCCESS(f"Created superuser {username} {email} has been created."))
             self.stdout.write(self.style.SUCCESS(f"Password: {password}"))
+        else:
+            self.stdout.write(self.style.SUCCESS(f"User {username} updated."))
 
         user_profile, created = UserProfile.objects.get_or_create(user=user, account=account)
         if created:

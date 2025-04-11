@@ -28,7 +28,7 @@ class TestAPIKeys(unittest.TestCase):
         self.username = "testuser_" + os.urandom(4).hex()
         self.password = "12345"
 
-        self.user = User.objects.create(username=self.username, is_staff=True, is_active=True, is_superuser=True)
+        self.user = User.objects.create_user(username=self.username, is_staff=True, is_active=True, is_superuser=True)
         self.user.set_password(self.password)
         self.user.save()
         self.authenticated_user = authenticate(username=self.username, password=self.password)
@@ -50,7 +50,7 @@ class TestAPIKeys(unittest.TestCase):
             is_test=True,
         )
         self.api_key = self.create_api_key()
-        self.non_staff_user = User.objects.create(
+        self.non_staff_user = User.objects.create_user(
             username="nonstaff_user_" + os.urandom(4).hex(),
             is_staff=False,
             is_active=True,

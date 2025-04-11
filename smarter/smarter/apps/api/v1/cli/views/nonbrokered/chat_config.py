@@ -41,6 +41,10 @@ class ApiV1CliChatConfigApiView(ApiV1CliChatBaseApiView):
     this request.
     """
 
+    def dispatch(self, request, *args, **kwargs):
+        self._is_config_view = True
+        return super().dispatch(request, *args, **kwargs)
+
     @csrf_exempt
     def post(self, request: HttpRequest, name: str, uid: str, *args, **kwargs):
         """

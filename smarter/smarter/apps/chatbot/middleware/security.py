@@ -5,14 +5,14 @@ import logging
 from urllib.parse import urlparse
 
 from django.conf import settings
+from django.core.handlers.wsgi import WSGIRequest
 from django.middleware.security import SecurityMiddleware as DjangoSecurityMiddleware
 
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SmarterWaffleSwitches
 from smarter.lib.django import waffle
+from smarter.lib.django.http.shortcuts import SmarterHttpResponseBadRequest
 from smarter.lib.django.validators import SmarterValidator
-from smarter.lib.django.views.error import SmarterHttpResponseBadRequest
 
 from ..models import ChatBot, get_cached_chatbot_by_request
 
@@ -39,11 +39,24 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
 
     """
 
-    def process_request(self, request):
+    def process_request(self, request: WSGIRequest):
 
-        # 1.) If the request is from a local host, allow it to pass through
+        # 1.) If the request is from an internal ip address, allow it to pass through
+        # these typically originate from health checks from load balancers.
         # ---------------------------------------------------------------------
         host = request.get_host()
+        internal_ip_prefixes = ["192.168."]
+        if any(host.startswith(prefix) for prefix in internal_ip_prefixes):
+            if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
+                logger.info(
+                    "%s %s identified as an internal IP address, allowing request.",
+                    self.formatted_class_name,
+                    host,
+                )
+            return None
+
+        # 2.) If the request is from a local host, allow it to pass through
+        # ---------------------------------------------------------------------
         if host in SmarterValidator.LOCAL_HOSTS:
             if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
                 logger.info(
@@ -54,13 +67,12 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
                 )
             return None
 
-        url = SmarterValidator.urlify(host, environment=smarter_settings.environment)
-        parsed_host = urlparse(url)
-        host = parsed_host.hostname
+        url = request.build_absolute_uri()
+        parsed_url = urlparse(url)
 
-        # 2.) readiness and liveness checks
+        # 3.) readiness and liveness checks
         # ---------------------------------------------------------------------
-        path_parts = list(filter(None, parsed_host.path.split("/")))
+        path_parts = list(filter(None, parsed_url.path.split("/")))
         # if the entire path is healthz or readiness then we don't need to check
         if len(path_parts) == 1 and path_parts[0] in ["healthz", "readiness"]:
             if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
@@ -72,7 +84,7 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
                 )
             return None
 
-        # 3.) If the host is in the list of allowed hosts for
+        # 4.) If the host is in the list of allowed hosts for
         #     our environment then allow it to pass through
         # ---------------------------------------------------------------------
         for allowed_host in settings.SMARTER_ALLOWED_HOSTS:
@@ -86,7 +98,7 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
                     )
                 return None
 
-        # 4.) If the host is a domain for a deployed ChatBot, allow it to pass through
+        # 5.) If the host is a domain for a deployed ChatBot, allow it to pass through
         #     FIX NOTE: this is ham fisted and should be refactored. we shouldn't need
         #     to instantiate a ChatBotHelper object just to check if the host is a domain
         #     for a deployed ChatBot.
@@ -99,6 +111,5 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
                 logger.info("%s ChatBotHelper() verified that %s is a chatbot.", self.formatted_class_name, url)
             return None
 
-        if waffle.switch_is_active(SmarterWaffleSwitches.MIDDLEWARE_LOGGING):
-            logger.error("%s %s failed security tests.", self.formatted_class_name, url)
+        logger.error("%s %s failed security tests.", self.formatted_class_name, url)
         return SmarterHttpResponseBadRequest(request=request, error_message="Bad Request (400) - Invalid Hostname.")
