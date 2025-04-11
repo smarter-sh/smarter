@@ -33,14 +33,14 @@ SMARTER_DEFAULT_CACHE_TIMEOUT = 60 * 5  # 5 minutes
 class SmarterWaffleSwitches:
     """A class representing the fixed set of Waffle switches for the Smarter API."""
 
-    CHATBOT_LOGGING = "chatbot_api_view_logging"
+    CHATBOT_LOGGING = "chatbot_logging"
     CHATBOT_HELPER_LOGGING = "chatbothelper_logging"
     REQUEST_MIXIN_LOGGING = "request_mixin_logging"
     CHAT_LOGGING = "chat_logging"
-    MIDDLEWARE_LOGGING = "csrf_middleware_logging"
+    MIDDLEWARE_LOGGING = "middleware_logging"
     JOURNAL = "journal"
     CSRF_SUPPRESS_FOR_CHATBOTS = "csrf_middleware_suppress_for_chatbots"
-    CHATAPP_LOGGING = "chatapp_view_logging"
+    CHATAPP_LOGGING = "chatapp_logging"
     MANIFEST_LOGGING = "manifest_logging"
     REACTAPP_DEBUG_MODE = "reactapp_debug_mode"
     CACHE_LOGGING = "cache_logging"

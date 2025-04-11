@@ -79,7 +79,11 @@ def get_cached_user_profile(user: UserType, account: Account = None) -> UserProf
     """
     Locates the user_profile for a given user, or None.
     """
-    if not user.is_authenticated:
+    try:
+        if not user.is_authenticated:
+            return None
+    except AttributeError:
+        # Handle case where user is not an instance of User
         return None
     try:
         user_profile = (

@@ -20,7 +20,11 @@ class BlockSensitiveFilesMiddleware(MiddlewareMixin, SmarterHelperMixin):
         self.get_response = get_response
 
         # allow password reset links
-        self.allowed_patterns = [re.compile(r"^/dashboard/account/password-reset-link/[^/]+/[^/]+/$")]
+        self.allowed_patterns = [
+            re.compile(r"^/dashboard/account/password-reset-link/[^/]+/[^/]+/$"),
+            re.compile(r"^/docs/json-schema/sqlconnection/$"),
+            re.compile(r"^/docs/manifest/sqlconnection/$"),
+        ]
         self.sensitive_files = {
             ".env",
             "config.php",
