@@ -10,56 +10,82 @@ from smarter.apps.account.utils import get_cached_account_for_user
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
 from smarter.apps.plugin.models import PluginMeta
 from smarter.lib.cache import cache_results
+from smarter.lib.django.user import get_resolved_user
 
 
-@cache_results()
 def get_pending_deployments(user):
     """
     Get the number of pending deployments for the current user
     """
-    account = get_cached_account_for_user(user)
-    chatbots = ChatBot.objects.filter(account=account, deployed=False).count()
-    return chatbots
+    # pylint: disable=W0212
+    resolved_user = get_resolved_user(user)
+
+    @cache_results()
+    def _get_pending_deployments(resolved_user):
+        account = get_cached_account_for_user(resolved_user)
+        return ChatBot.objects.filter(account=account, deployed=False).count() or 0
+
+    return _get_pending_deployments(resolved_user)
 
 
-@cache_results()
 def get_chatbots(user):
     """
     Get the number of chatbots for the current user
     """
-    account = get_cached_account_for_user(user)
-    chatbots = ChatBot.objects.filter(account=account).count()
-    return chatbots
+    # pylint: disable=W0212
+    resolved_user = get_resolved_user(user)
+
+    @cache_results()
+    def _get_chatbots(resolved_user):
+        account = get_cached_account_for_user(resolved_user)
+        return ChatBot.objects.filter(account=account).count() or 0
+
+    return _get_chatbots(resolved_user)
 
 
-@cache_results()
 def get_plugins(user):
     """
     Get the number of plugins for the current user
     """
-    account = get_cached_account_for_user(user)
-    plugins = PluginMeta.objects.filter(account=account).count()
-    return plugins
+    # pylint: disable=W0212
+    resolved_user = get_resolved_user(user)
+
+    @cache_results()
+    def _get_plugins(resolved_user):
+        account = get_cached_account_for_user(resolved_user)
+        return PluginMeta.objects.filter(account=account).count() or 0
+
+    return _get_plugins(resolved_user)
 
 
-@cache_results()
 def get_api_keys(user):
     """
     Get the number of API keys for the current user
     """
-    account = get_cached_account_for_user(user)
-    api_keys_count = ChatBotAPIKey.objects.filter(chatbot__account=account).count()
-    return api_keys_count
+    # pylint: disable=W0212
+    resolved_user = get_resolved_user(user)
+
+    @cache_results()
+    def _get_api_keys(resolved_user):
+        account = get_cached_account_for_user(resolved_user)
+        return ChatBotAPIKey.objects.filter(chatbot__account=account).count() or 0
+
+    return _get_api_keys(resolved_user)
 
 
-@cache_results()
 def get_custom_domains(user):
     """
     Get the number of custom domains for the current user
     """
-    account = get_cached_account_for_user(user)
-    custom_domains = ChatBotCustomDomain.objects.filter(chatbot__account=account).count()
-    return custom_domains
+    # pylint: disable=W0212
+    resolved_user = get_resolved_user(user)
+
+    @cache_results()
+    def _get_custom_domains(resolved_user):
+        account = get_cached_account_for_user(resolved_user)
+        return ChatBotCustomDomain.objects.filter(chatbot__account=account).count() or 0
+
+    return _get_custom_domains(resolved_user)
 
 
 def base(request):

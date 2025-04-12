@@ -11,7 +11,7 @@ from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.cache import cache_results
-from smarter.lib.django.user import UserType
+from smarter.lib.django.user import UserType, get_resolved_user
 from smarter.lib.django.validators import SmarterValidator
 
 from .models import Account, UserProfile
@@ -89,15 +89,19 @@ def get_cached_user_profile(user: UserType, account: Account = None) -> UserProf
         return None
 
     @cache_results()
-    def _get_user_profile(user, account):
+    def _get_user_profile(resolved_user, account):
         try:
             return (
-                UserProfile.objects.get(user=user, account=account) if account else UserProfile.objects.get(user=user)
+                UserProfile.objects.get(user=resolved_user, account=account)
+                if account
+                else UserProfile.objects.get(user=resolved_user)
             )
         except UserProfile.DoesNotExist:
             return None
 
-    return _get_user_profile(user, account)
+    # pylint: disable=W0212
+    resolved_user = get_resolved_user(user)
+    return _get_user_profile(resolved_user, account)
 
 
 @cache_results()
