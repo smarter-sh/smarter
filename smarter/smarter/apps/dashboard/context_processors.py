@@ -32,7 +32,6 @@ def get_chatbots(user):
     """
     Get the number of chatbots for the current user
     """
-    # pylint: disable=W0212
     resolved_user = get_resolved_user(user)
 
     @cache_results()
@@ -47,7 +46,6 @@ def get_plugins(user):
     """
     Get the number of plugins for the current user
     """
-    # pylint: disable=W0212
     resolved_user = get_resolved_user(user)
 
     @cache_results()
@@ -62,7 +60,6 @@ def get_api_keys(user):
     """
     Get the number of API keys for the current user
     """
-    # pylint: disable=W0212
     resolved_user = get_resolved_user(user)
 
     @cache_results()
@@ -77,7 +74,6 @@ def get_custom_domains(user):
     """
     Get the number of custom domains for the current user
     """
-    # pylint: disable=W0212
     resolved_user = get_resolved_user(user)
 
     @cache_results()
