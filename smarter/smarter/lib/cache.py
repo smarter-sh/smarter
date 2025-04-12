@@ -21,6 +21,9 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
+            # Generate a cache key based on the function name and arguments, noting that
+            # some arguments may be mutable and lead to cache misses. to mitigate
+            # this, we use pickle to serialize the arguments and generate a hash.
             key_data = pickle.dumps((func.__name__, args, kwargs))
             cache_key = func.__name__ + "()_" + hashlib.sha256(key_data).hexdigest()[:16]
 
