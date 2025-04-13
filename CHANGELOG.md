@@ -1,3 +1,23 @@
+## [0.10.23](https://github.com/smarter-sh/smarter/compare/v0.10.22...v0.10.23) (2025-04-11)
+
+
+### Bug Fixes
+
+* allow internal ip address to pass ([a5b4c09](https://github.com/smarter-sh/smarter/commit/a5b4c09fe63e0d651e2142a3128ab8ca44c278eb))
+* authenticate the request ([cf44aa4](https://github.com/smarter-sh/smarter/commit/cf44aa41091d4f4ba271063349496fa7dff2901d))
+* broken import for BlockSensitiveFilesMiddleware ([eca10cf](https://github.com/smarter-sh/smarter/commit/eca10cfa488401cd09b19fff9dd6e31a74f0d41f))
+* broken import for BlockSensitiveFilesMiddleware ([57f226f](https://github.com/smarter-sh/smarter/commit/57f226f297c314c93e5f575d81f2d4fa3358d8e3))
+* chatbot_id and chatbot_name are removed ([1d8ada5](https://github.com/smarter-sh/smarter/commit/1d8ada570308fe292f45c0fc119716fe10275f4b))
+* chatbot_id was removed ([93feac2](https://github.com/smarter-sh/smarter/commit/93feac27137f8807c40588fcc12c14019b3d0db8))
+* chatbot_name was removed ([730a944](https://github.com/smarter-sh/smarter/commit/730a94460c5eb2b8af4c240bdfd8c408a1e40243))
+* config view does not require an input prompt ([6e1ca0e](https://github.com/smarter-sh/smarter/commit/6e1ca0e7b461f5c9c7773154d0139322e481ece3))
+* don't import HTTPStatus ([1308526](https://github.com/smarter-sh/smarter/commit/1308526c24ebc880cdcbaf627b77ce140ba05ac9))
+* handle case where user is not an instance of User ([1f070a3](https://github.com/smarter-sh/smarter/commit/1f070a3cb4234b79029e096915bea18190f46e9f))
+* handle case where user is not an instance of User ([03e593d](https://github.com/smarter-sh/smarter/commit/03e593d8f62f7a7ff168ecfcf26606424547338d))
+* reposition .kube to /home/smarter_user/data/.kube ([d92fb41](https://github.com/smarter-sh/smarter/commit/d92fb41d23e1115184597377ea70450e26a14dbb))
+* smarter is the default account ([123f17f](https://github.com/smarter-sh/smarter/commit/123f17f9a6b1f945637cd80b06797361c8b39691))
+* smarter is the default account ([00f9a64](https://github.com/smarter-sh/smarter/commit/00f9a6468d4e1c64665cdb475d08f4ca5cb0eafd))
+
 # Change Log
 
 All notable changes to this project will be documented in this file.
