@@ -10,78 +10,52 @@ from smarter.apps.account.utils import get_cached_account_for_user
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey, ChatBotCustomDomain
 from smarter.apps.plugin.models import PluginMeta
 from smarter.lib.cache import cache_results
-from smarter.lib.django.user import get_resolved_user
+from smarter.lib.django.user import UserType, get_resolved_user
 
 
-def get_pending_deployments(user):
+@cache_results()
+def get_pending_deployments(user: UserType) -> int:
     """
     Get the number of pending deployments for the current user
     """
-    # pylint: disable=W0212
-    resolved_user = get_resolved_user(user)
-
-    @cache_results()
-    def _get_pending_deployments(resolved_user):
-        account = get_cached_account_for_user(resolved_user)
-        return ChatBot.objects.filter(account=account, deployed=False).count() or 0
-
-    return _get_pending_deployments(resolved_user)
+    account = get_cached_account_for_user(user)
+    return ChatBot.objects.filter(account=account, deployed=False).count() or 0
 
 
-def get_chatbots(user):
+@cache_results()
+def get_chatbots(user: UserType) -> int:
     """
     Get the number of chatbots for the current user
     """
-    resolved_user = get_resolved_user(user)
-
-    @cache_results()
-    def _get_chatbots(resolved_user):
-        account = get_cached_account_for_user(resolved_user)
-        return ChatBot.objects.filter(account=account).count() or 0
-
-    return _get_chatbots(resolved_user)
+    account = get_cached_account_for_user(user)
+    return ChatBot.objects.filter(account=account).count() or 0
 
 
-def get_plugins(user):
+@cache_results()
+def get_plugins(user: UserType) -> int:
     """
     Get the number of plugins for the current user
     """
-    resolved_user = get_resolved_user(user)
-
-    @cache_results()
-    def _get_plugins(resolved_user):
-        account = get_cached_account_for_user(resolved_user)
-        return PluginMeta.objects.filter(account=account).count() or 0
-
-    return _get_plugins(resolved_user)
+    account = get_cached_account_for_user(user)
+    return PluginMeta.objects.filter(account=account).count() or 0
 
 
-def get_api_keys(user):
+@cache_results()
+def get_api_keys(user: UserType) -> int:
     """
     Get the number of API keys for the current user
     """
-    resolved_user = get_resolved_user(user)
-
-    @cache_results()
-    def _get_api_keys(resolved_user):
-        account = get_cached_account_for_user(resolved_user)
-        return ChatBotAPIKey.objects.filter(chatbot__account=account).count() or 0
-
-    return _get_api_keys(resolved_user)
+    account = get_cached_account_for_user(user)
+    return ChatBotAPIKey.objects.filter(chatbot__account=account).count() or 0
 
 
-def get_custom_domains(user):
+@cache_results()
+def get_custom_domains(user: UserType) -> int:
     """
     Get the number of custom domains for the current user
     """
-    resolved_user = get_resolved_user(user)
-
-    @cache_results()
-    def _get_custom_domains(resolved_user):
-        account = get_cached_account_for_user(resolved_user)
-        return ChatBotCustomDomain.objects.filter(chatbot__account=account).count() or 0
-
-    return _get_custom_domains(resolved_user)
+    account = get_cached_account_for_user(user)
+    return ChatBotCustomDomain.objects.filter(chatbot__account=account).count() or 0
 
 
 def base(request):
@@ -95,6 +69,7 @@ def base(request):
     is_superuser = False
     is_staff = False
     user = request.user
+    resolved_user = get_resolved_user(user)
     if user.is_authenticated:
         try:
             user_email = request.user.email
@@ -115,11 +90,11 @@ def base(request):
             "smarter_version": "v" + __version__,
             "current_year": current_year,
             "product_description": "Smarter is an enterprise class plugin-based chat solution.",
-            "my_resources_pending_deployments": get_pending_deployments(user),
-            "my_resources_chatbots": get_chatbots(user),
-            "my_resources_plugins": get_plugins(user),
-            "my_resources_api_keys": get_api_keys(user),
-            "my_resources_custom_domains": get_custom_domains(user),
+            "my_resources_pending_deployments": get_pending_deployments(user=resolved_user),
+            "my_resources_chatbots": get_chatbots(user=resolved_user),
+            "my_resources_plugins": get_plugins(user=resolved_user),
+            "my_resources_api_keys": get_api_keys(user=resolved_user),
+            "my_resources_custom_domains": get_custom_domains(user=resolved_user),
         }
     }
     return context

@@ -21,15 +21,14 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            # Generate a cache key based on the function name and arguments, noting that
-            # some arguments may be mutable and lead to cache misses. to mitigate
-            # this, we use pickle to serialize the arguments and generate a hash.
-            key_data = pickle.dumps((func.__name__, args, kwargs))
-            cache_key = func.__name__ + "()_" + hashlib.sha256(key_data).hexdigest()[:16]
+            sorted_kwargs = tuple(sorted(kwargs.items()))
+            key_data = pickle.dumps((func.__name__, args, sorted_kwargs))
+            cache_key = f"{func.__module__}.{func.__name__}()_" + hashlib.sha256(key_data).hexdigest()[:32]
 
             result = cache.get(cache_key)
-            if result and logging_enabled and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-                logger.info("%s cache hit for %s", formatted_text_green("cache_results()"), cache_key)
+            if result is not None:
+                if logging_enabled and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+                    logger.info("%s cache hit for %s", formatted_text_green("cache_results()"), cache_key)
             else:
                 result = func(*args, **kwargs)
                 cache.set(cache_key, result, timeout)
