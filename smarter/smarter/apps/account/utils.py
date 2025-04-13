@@ -11,7 +11,7 @@ from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
 from smarter.common.helpers.console_helpers import formatted_text
 from smarter.lib.cache import cache_results
-from smarter.lib.django.user import UserType
+from smarter.lib.django.user import UserType, get_resolved_user
 from smarter.lib.django.validators import SmarterValidator
 
 from .models import Account, UserProfile
@@ -60,21 +60,24 @@ def get_cached_default_account() -> Account:
     return account
 
 
-@cache_results()
 def get_cached_account_for_user(user) -> Account:
     """
     Locates the account for a given user, or None if no account exists.
     """
     if isinstance(user, AnonymousUser):
         return None
-    try:
-        user_profile = UserProfile.objects.get(user=user)
-    except UserProfile.DoesNotExist:
-        return None
-    return user_profile.account
+
+    @cache_results()
+    def _get_account(user):
+        try:
+            user_profile = UserProfile.objects.get(user=user)
+        except UserProfile.DoesNotExist:
+            return None
+        return user_profile.account
+
+    return _get_account(user)
 
 
-@cache_results()
 def get_cached_user_profile(user: UserType, account: Account = None) -> UserProfile:
     """
     Locates the user_profile for a given user, or None.
@@ -83,15 +86,22 @@ def get_cached_user_profile(user: UserType, account: Account = None) -> UserProf
         if not user.is_authenticated:
             return None
     except AttributeError:
-        # Handle case where user is not an instance of User
         return None
-    try:
-        user_profile = (
-            UserProfile.objects.get(user=user, account=account) if account else UserProfile.objects.get(user=user)
-        )
-        return user_profile
-    except UserProfile.DoesNotExist:
-        pass
+
+    @cache_results()
+    def _get_user_profile(resolved_user, account):
+        try:
+            return (
+                UserProfile.objects.get(user=resolved_user, account=account)
+                if account
+                else UserProfile.objects.get(user=resolved_user)
+            )
+        except UserProfile.DoesNotExist:
+            return None
+
+    # pylint: disable=W0212
+    resolved_user = get_resolved_user(user)
+    return _get_user_profile(resolved_user, account)
 
 
 @cache_results()

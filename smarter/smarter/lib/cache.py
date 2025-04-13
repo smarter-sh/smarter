@@ -1,6 +1,8 @@
 """chatbot utils"""
 
+import hashlib
 import logging
+import pickle
 from functools import wraps
 from urllib.parse import urlparse
 
@@ -19,10 +21,14 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            cache_key = f"{func.__name__}_{args}_{kwargs}"
+            sorted_kwargs = tuple(sorted(kwargs.items()))
+            key_data = pickle.dumps((func.__name__, args, sorted_kwargs))
+            cache_key = f"{func.__module__}.{func.__name__}()_" + hashlib.sha256(key_data).hexdigest()[:32]
+
             result = cache.get(cache_key)
-            if result and logging_enabled and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
-                logger.info("%s cache hit for %s", formatted_text_green("cache_results()"), cache_key)
+            if result is not None:
+                if logging_enabled and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+                    logger.info("%s cache hit for %s", formatted_text_green("cache_results()"), cache_key)
             else:
                 result = func(*args, **kwargs)
                 cache.set(cache_key, result, timeout)
