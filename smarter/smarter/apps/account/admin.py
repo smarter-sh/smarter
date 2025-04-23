@@ -214,7 +214,7 @@ class SecretAdmin(RestrictedModelAdmin):
     def save_model(self, request: WSGIRequest, obj: Secret, form: SecretAdminForm, change):
         value = form.cleaned_data.get("value")
         if value:
-            obj.set_secret(value=value)
+            obj.encrypted_value = Secret.encrypt(value=value)
         super().save_model(request, obj, form, change)
 
     def get_queryset(self, request: WSGIRequest):
