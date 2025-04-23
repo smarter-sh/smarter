@@ -463,7 +463,7 @@ class Secret(TimestampedModel):
         else:
             secret_edited.send(sender=self.__class__, secret=self)
 
-    def get_secret(self, update_last_accessed=True):
+    def get_secret(self, update_last_accessed=True) -> str:
         """
         Decrypts and returns the original value of the secret. Optionally updates the `last_accessed` timestamp.
         """
@@ -479,7 +479,17 @@ class Secret(TimestampedModel):
         except Exception as e:
             raise SmarterValueError(f"Failed to decrypt the secret: {str(e)}") from e
 
-    def set_secret(self, value: str):
+    def is_expired(self) -> bool:
+        """
+        Checks if the secret has expired based on the `expires_at` timestamp.
+        """
+        return self.expires_at and timezone.now() > self.expires_at
+
+    def __str__(self):
+        return str(self.name)
+
+    @classmethod
+    def encrypt(cls, value: str) -> bytes:
         """
         Encrypts the provided value and stores it in the `encrypted_value` field.
         Clears the transient `value` field after encryption to avoid re-encryption issues.
@@ -487,16 +497,12 @@ class Secret(TimestampedModel):
         if not value or not isinstance(value, str):
             raise SmarterValueError("Value must be a non-empty string")
 
-        fernet = self.get_fernet()
-        self.encrypted_value = fernet.encrypt(value.encode())
+        fernet = cls.get_fernet()
+        retval = fernet.encrypt(value.encode())
+        return retval
 
-    def is_expired(self):
-        """
-        Checks if the secret has expired based on the `expires_at` timestamp.
-        """
-        return self.expires_at and timezone.now() > self.expires_at
-
-    def get_fernet(self) -> Fernet:
+    @classmethod
+    def get_fernet(cls) -> Fernet:
         """
         Returns a Fernet object for encryption and decryption.
         """
@@ -507,6 +513,3 @@ class Secret(TimestampedModel):
             )
         fernet = Fernet(encryption_key)
         return fernet
-
-    def __str__(self):
-        return str(self.name)
