@@ -14,7 +14,10 @@ from smarter.lib.cache import cache_results
 from smarter.lib.django.user import UserType, get_resolved_user
 
 
-@cache_results()
+CACHE_TIMEOUT = 60  # 1 minute
+
+
+@cache_results(timeout=CACHE_TIMEOUT)
 def get_pending_deployments(user: UserType) -> int:
     """
     Get the number of pending deployments for the current user
@@ -23,7 +26,7 @@ def get_pending_deployments(user: UserType) -> int:
     return ChatBot.objects.filter(account=account, deployed=False).count() or 0
 
 
-@cache_results()
+@cache_results(timeout=CACHE_TIMEOUT)
 def get_chatbots(user: UserType) -> int:
     """
     Get the number of chatbots for the current user
@@ -32,7 +35,7 @@ def get_chatbots(user: UserType) -> int:
     return ChatBot.objects.filter(account=account).count() or 0
 
 
-@cache_results()
+@cache_results(timeout=CACHE_TIMEOUT)
 def get_plugins(user: UserType) -> int:
     """
     Get the number of plugins for the current user
@@ -41,7 +44,7 @@ def get_plugins(user: UserType) -> int:
     return PluginMeta.objects.filter(account=account).count() or 0
 
 
-@cache_results()
+@cache_results(timeout=CACHE_TIMEOUT)
 def get_api_keys(user: UserType) -> int:
     """
     Get the number of API keys for the current user
@@ -50,7 +53,7 @@ def get_api_keys(user: UserType) -> int:
     return ChatBotAPIKey.objects.filter(chatbot__account=account).count() or 0
 
 
-@cache_results()
+@cache_results(timeout=CACHE_TIMEOUT)
 def get_custom_domains(user: UserType) -> int:
     """
     Get the number of custom domains for the current user
@@ -59,7 +62,7 @@ def get_custom_domains(user: UserType) -> int:
     return ChatBotCustomDomain.objects.filter(chatbot__account=account).count() or 0
 
 
-def base(request: WSGIRequest):
+def base(request: WSGIRequest) -> dict:
     """
     Base context processor for all templates that inherit
     from base.html, which renders the dashboard layout
@@ -67,8 +70,8 @@ def base(request: WSGIRequest):
     user = request.user
     resolved_user = get_resolved_user(user)
 
-    @cache_results()
-    def get_cached_context(user: UserType):
+    @cache_results(timeout=CACHE_TIMEOUT)
+    def get_cached_context(user: UserType) -> dict:
         current_year = datetime.now().year
         user_email = "anonymous@mail.edu"
         username = "anonymous"
@@ -107,7 +110,7 @@ def base(request: WSGIRequest):
     return context
 
 
-def branding(request: WSGIRequest):
+def branding(request: WSGIRequest) -> dict:
     """
     Branding context processor for all templates that inherit
     from base.html, which renders the dashboard layout
@@ -132,6 +135,6 @@ def branding(request: WSGIRequest):
     return context
 
 
-def cache_buster(request):
+def cache_buster(request) -> dict:
     """For local development, prevent browser caching of static assets."""
     return {"cache_buster": "v=" + str(time.time())}
