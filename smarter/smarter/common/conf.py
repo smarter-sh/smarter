@@ -475,6 +475,8 @@ class Settings(BaseSettings):
     stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY, env="STRIPE_LIVE_SECRET_KEY")
     stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY, env="STRIPE_TEST_SECRET_KEY")
 
+    # WARNING: DO NOT CHANGE THE SECRET KEY ONCE SET AND DEPLOYED. THIS KEY
+    # IS USED TO ENCRYPT USER SENSITIVE DATA IN account.Secrets
     secret_key: Optional[str] = Field(SettingsDefaults.SECRET_KEY, env="SECRET_KEY")
 
     smtp_sender: Optional[str] = Field(SettingsDefaults.SMTP_SENDER, env="SMTP_SENDER")
