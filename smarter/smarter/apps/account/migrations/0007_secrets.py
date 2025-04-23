@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name="Secrets",
+            name="Secret",
             fields=[
                 (
                     "id",
@@ -24,6 +24,8 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
+                ("created_at", models.DateTimeField(auto_now_add=True, null=True)),
+                ("updated_at", models.DateTimeField(auto_now=True, null=True)),
                 (
                     "last_accessed",
                     models.DateTimeField(
@@ -71,7 +73,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 "verbose_name": "Secret",
-                "verbose_name_plural": "Secrets",
+                "verbose_name_plural": "Secret",
                 "unique_together": {("user_profile", "name")},
             },
         ),
