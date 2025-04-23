@@ -22,6 +22,7 @@ configuration values. This is useful for debugging and logging.
 # ------------------------------------------------
 
 # python stuff
+import base64
 import logging
 import os  # library for interacting with the operating system
 import platform  # library to view information about the server host this module runs on
@@ -203,6 +204,7 @@ class SettingsDefaults:
         "AWS_EKS_CLUSTER_NAME", TFVARS.get("aws_eks_cluster_name", "apps-hosting-service")
     )
     AWS_RDS_DB_INSTANCE_IDENTIFIER = os.environ.get("AWS_RDS_DB_INSTANCE_IDENTIFIER", "apps-hosting-service")
+    FERNET_ENCRYPTION_KEY = os.environ.get("FERNET_ENCRYPTION_KEY", None)
 
     GOOGLE_MAPS_API_KEY: str = os.environ.get(
         "GOOGLE_MAPS_API_KEY",
@@ -399,6 +401,10 @@ class Settings(BaseSettings):
         SettingsDefaults.ENVIRONMENT,
         env="ENVIRONMENT",
     )
+    fernet_encryption_key: Optional[str] = Field(
+        SettingsDefaults.FERNET_ENCRYPTION_KEY,
+        env="FERNET_ENCRYPTION_KEY",
+    )
     local_hosts: Optional[List[str]] = Field(
         SettingsDefaults.LOCAL_HOSTS,
         env="LOCAL_HOSTS",
@@ -475,8 +481,6 @@ class Settings(BaseSettings):
     stripe_live_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_LIVE_SECRET_KEY, env="STRIPE_LIVE_SECRET_KEY")
     stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY, env="STRIPE_TEST_SECRET_KEY")
 
-    # WARNING: DO NOT CHANGE THE SECRET KEY ONCE SET AND DEPLOYED. THIS KEY
-    # IS USED TO ENCRYPT USER SENSITIVE DATA IN account.Secrets
     secret_key: Optional[str] = Field(SettingsDefaults.SECRET_KEY, env="SECRET_KEY")
 
     smtp_sender: Optional[str] = Field(SettingsDefaults.SMTP_SENDER, env="SMTP_SENDER")
@@ -739,6 +743,24 @@ class Settings(BaseSettings):
         """Validate environment"""
         if v in [None, ""]:
             return SettingsDefaults.ENVIRONMENT
+        return v
+
+    @field_validator("fernet_encryption_key")
+    def validate_fernet_encryption_key(cls, v) -> str:
+        """Validate fernet_encryption_key"""
+
+        if v in [None, ""]:
+            return SettingsDefaults.FERNET_ENCRYPTION_KEY
+
+        try:
+            # Decode the key using URL-safe base64
+            decoded_key = base64.urlsafe_b64decode(v)
+            # Ensure the decoded key is exactly 32 bytes
+            if len(decoded_key) != 32:
+                raise ValueError("Fernet key must be exactly 32 bytes when decoded.")
+        except (ValueError, base64.binascii.Error) as e:
+            raise SmarterValueError(f"Invalid Fernet encryption key: {e}") from e
+
         return v
 
     @field_validator("local_hosts")

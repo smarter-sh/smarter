@@ -24,7 +24,12 @@ from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
 
-from .signals import new_charge_created, new_user_created
+from .signals import (
+    new_charge_created,
+    new_secret_created,
+    new_user_created,
+    secret_edited,
+)
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -399,13 +404,13 @@ class DailyBillingRecord(TimestampedModel):
         )
 
 
-class Secrets(models.Model):
+class Secret(TimestampedModel):
     """
-    Secrets model for securely storing and managing sensitive account-level information.
+    Secret model for securely storing and managing sensitive account-level information.
 
     Usage:
         - Create a new secret:
-            secret = Secrets(
+            secret = Secret(
                 name="API Key",
                 user_profile=user_profile_instance,
                 value="my-sensitive-api-key"
@@ -413,7 +418,7 @@ class Secrets(models.Model):
             secret.save()
 
         - Retrieve and decrypt a secret:
-            retrieved_secret = Secrets.objects.get(id=secret.id)
+            retrieved_secret = Secret.objects.get(id=secret.id)
             decrypted_value = retrieved_secret.get_secret()
 
     Note:
@@ -427,7 +432,7 @@ class Secrets(models.Model):
         unique_together = ("user_profile", "name")
 
     last_accessed = models.DateTimeField(
-        blank=True, null=True, help_text="Timestamp of the last time the secret was accessed."
+        blank=True, editable=False, null=True, help_text="Timestamp of the last time the secret was accessed."
     )
     expires_at = models.DateTimeField(
         blank=True,
@@ -443,35 +448,47 @@ class Secrets(models.Model):
     name = models.CharField(max_length=255, help_text="Name of the secret, used for identification purposes.")
     description = models.TextField(blank=True, null=True, help_text="Optional description of the secret.")
     encrypted_value = models.BinaryField(help_text="Read-only encrypted representation of the secret's value.")
-    value: str = None
 
     def save(self, *args, **kwargs):
         """
         Encrypts the `value` field and saves the encrypted data to the `encrypted_value` field.
         Validates that `name` and `value` are non-empty and that `value` is a string.
         """
-        if not self.name or not self.value:
+        is_new = self.pk is None
+        if not self.name or not self.encrypted_value:
             raise SmarterValueError("Name and value cannot be empty")
-        if not isinstance(self.value, str):
-            raise SmarterValueError("Value must be a string")
-        fernet = self.get_fernet()
-        self.encrypted_value = fernet.encrypt(self.value.encode())
         super().save(*args, **kwargs)
+        if is_new:
+            new_secret_created.send(sender=self.__class__, secret=self)
+        else:
+            secret_edited.send(sender=self.__class__, secret=self)
 
-    def get_secret(self):
+    def get_secret(self, update_last_accessed=True):
         """
-        Decrypts and returns the original value of the secret. Updates the `last_accessed` timestamp
-        and logs the access event.
+        Decrypts and returns the original value of the secret. Optionally updates the `last_accessed` timestamp.
         """
         try:
-            self.last_accessed = timezone.now()
-            self.save(update_fields=["last_accessed"])
+            if update_last_accessed:
+                self.last_accessed = timezone.now()
+                self.save(update_fields=["last_accessed"])
             logger.info("Secret '%s' accessed by user %s", self.name, self.user_profile.user.username)
             fernet = self.get_fernet()
-            return fernet.decrypt(self.encrypted_value).decode()
+            if self.encrypted_value:
+                return fernet.decrypt(self.encrypted_value).decode()
+            return None
         except Exception as e:
-            logger.error("Failed to decrypt secret '%s': %s", self.name, str(e))
-            raise SmarterValueError("Failed to decrypt the secret") from e
+            raise SmarterValueError(f"Failed to decrypt the secret: {str(e)}") from e
+
+    def set_secret(self, value: str):
+        """
+        Encrypts the provided value and stores it in the `encrypted_value` field.
+        Clears the transient `value` field after encryption to avoid re-encryption issues.
+        """
+        if not value or not isinstance(value, str):
+            raise SmarterValueError("Value must be a non-empty string")
+
+        fernet = self.get_fernet()
+        self.encrypted_value = fernet.encrypt(value.encode())
 
     def is_expired(self):
         """
@@ -483,12 +500,11 @@ class Secrets(models.Model):
         """
         Returns a Fernet object for encryption and decryption.
         """
-        try:
-            encryption_key = smarter_settings.secret_key.encode()
-        except AttributeError as e:
+        encryption_key = smarter_settings.fernet_encryption_key
+        if not encryption_key:
             raise SmarterConfigurationError(
-                "Encryption key not found in settings. Please set smarter.common.conf.settings.secret_key"
-            ) from e
+                "Encryption key not found in settings. Please set smarter.common.conf.settings.fernet_encryption_key"
+            )
         fernet = Fernet(encryption_key)
         return fernet
 
