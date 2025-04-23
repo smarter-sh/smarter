@@ -1,8 +1,6 @@
 # pylint: disable=C0115,W0212
 """Account admin."""
 
-import logging
-
 from django import forms
 from django.contrib import admin
 from django.core.handlers.wsgi import WSGIRequest
@@ -18,9 +16,6 @@ from .models import (
     Secret,
     UserProfile,
 )
-
-
-logger = logging.getLogger(__name__)
 
 
 @admin.register(Account)
@@ -150,7 +145,6 @@ class SecretAdminForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        logger.info("Initializing SecretAdminForm with instance: %s", self.instance)
         if self.instance and self.instance.pk:
             try:
                 instance: Secret = self.instance
@@ -163,19 +157,10 @@ class SecretAdminForm(forms.ModelForm):
         cleaned_data = super().clean()
         if "value" not in cleaned_data:
             raise forms.ValidationError("The 'value' field is required.")
-            # cleaned_data["value"] = self.data.get("value", "")
         return cleaned_data
-
-    def order_fields(self, field_order):
-        super().order_fields(field_order)
-        if "value" not in self.fields:
-            raise ValueError("The 'value' field is missing from the form.")
-        else:
-            logger.info("The 'value' field is present in the form.")
 
     def get_initial_for_field(self, field, field_name):
         if field_name == "value":
-            logger.info("Getting initial value for 'value' field.")
             instance: Secret = self.instance
             return instance.get_secret(update_last_accessed=False) if self.instance and self.instance.pk else ""
         return super().get_initial_for_field(field, field_name)
@@ -206,10 +191,6 @@ class SecretAdmin(RestrictedModelAdmin):
         "value",
     )
     list_display = ("user_profile", "name", "description", "created_at", "updated_at", "last_accessed", "expires_at")
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        logger.info("Initializing SecretAdmin")
 
     def save_model(self, request: WSGIRequest, obj: Secret, form: SecretAdminForm, change):
         value = form.cleaned_data.get("value")
