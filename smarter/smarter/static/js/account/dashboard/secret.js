@@ -37,12 +37,12 @@ var KTAccountSecret = (function () {
               plugins: {
                   trigger: new FormValidation.plugins.Trigger(),
                   saveButton: new FormValidation.plugins.SubmitButton(),
-                  //defaultSubmit: new FormValidation.plugins.DefaultSubmit(), // Uncomment this line to enable normal button submit after form validation
-                  bootstrap: new FormValidation.plugins.Bootstrap5({
-                      rowSelector: '.fv-row',
-                      eleInvalidClass: '',
-                      eleValidClass: ''
-                  })
+                  defaultSubmit: new FormValidation.plugins.DefaultSubmit(), // Uncomment this line to enable normal button submit after form validation
+                  // bootstrap: new FormValidation.plugins.Bootstrap5({
+                  //     rowSelector: '.fv-row',
+                  //     eleInvalidClass: '',
+                  //     eleValidClass: ''
+                  // })
               }
           }
       );
@@ -141,7 +141,7 @@ var KTAccountSecret = (function () {
               console.log(pair[0]+ ', '+ pair[1]);
             }
 
-            const url = "/account/dashboard/secrets/" + primaryKey + "/";
+            const url = primaryKey ? "/account/dashboard/secrets/" + primaryKey + "/" : "/account/dashboard/secrets/new/";
             const context = {
               headers: {
                 "Content-Type": "application/json",
