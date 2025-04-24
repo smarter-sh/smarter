@@ -11,6 +11,7 @@ from cryptography.fernet import Fernet
 
 # django stuff
 from django.conf import settings
+from django.core.handlers.wsgi import WSGIRequest
 from django.core.validators import RegexValidator
 from django.db import models
 from django.template.loader import render_to_string
@@ -484,6 +485,17 @@ class Secret(TimestampedModel):
         Checks if the secret has expired based on the `expires_at` timestamp.
         """
         return self.expires_at and timezone.now() > self.expires_at
+
+    def has_permissions(self, request: WSGIRequest) -> bool:
+        """Determine if the authenticated user has permissions to manage this key."""
+        if not hasattr(request, "user"):
+            return False
+        user = request.user
+        if not hasattr(user, "is_authenticated") or not user.is_authenticated:
+            return False
+        if not hasattr(user, "is_staff") or not hasattr(user, "is_superuser"):
+            return False
+        return user.is_staff or user.is_superuser
 
     def __str__(self):
         return str(self.name)
