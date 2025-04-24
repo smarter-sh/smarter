@@ -70,6 +70,4 @@ urlpatterns = [
     path("secrets/", SecretsView.as_view(), name="account_secrets"),
     path("secrets/new/", SecretView.as_view(), name="account_secret_new"),
     path("secrets/<int:secret_id>/", SecretView.as_view(), name="account_secret"),
-    # FIX NOTE: delete this??????
-    path("secrets/<int:secret_id>/<str:new_secret>/", SecretView.as_view(), name="account_new_secret"),
 ]
