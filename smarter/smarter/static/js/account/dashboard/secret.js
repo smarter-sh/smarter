@@ -117,7 +117,6 @@ var KTAccountSecret = (function () {
 
   var handleForm = function () {
     saveButton.on('click', function (e) {
-      console.log('save button clicked');
       primaryKey = form.getAttribute('data-primary-key');
 
       e.preventDefault();
@@ -181,7 +180,6 @@ var KTAccountSecret = (function () {
     });
 
     cancelButton.on('click', function (e) {
-      console.log('cancel button clicked');
       window.location.href = '/account/dashboard/secrets/';
     });
 }

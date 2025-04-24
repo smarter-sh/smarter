@@ -118,23 +118,18 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
     user_profile: UserProfile = None
 
     def dispatch(self, request, *args, **kwargs):
-        response = super().dispatch(request, *args, **kwargs)
-        if response.status_code > 399:
-            logger.error("SmarterAuthenticatedWebView.dispatch(): ERROR response=%s", response)
-            return response
-
-        patch_vary_headers(response, ["Cookie"])
 
         try:
             self.user_profile = UserProfile.objects.get(user=request.user)
+            self.account = self.user_profile.account
         except UserProfile.DoesNotExist:
             if not request.user.is_authenticated:
                 return redirect_and_expire_cache(path="/login/")
             logger.error("SmarterAuthenticatedWebView.dispatch(): UserProfile.DoesNotExist")
             return SmarterHttpResponseNotFound(request=request, error_message="User profile not found")
 
-        self.account = self.user_profile.account
-
+        response = super().dispatch(request, *args, **kwargs)
+        patch_vary_headers(response, ["Cookie"])
         return response
 
 
