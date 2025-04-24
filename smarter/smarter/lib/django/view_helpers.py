@@ -119,6 +119,8 @@ class SmarterAuthenticatedWebView(SmarterWebHtmlView):
 
     def dispatch(self, request, *args, **kwargs):
 
+        logger.info("SmarterAuthenticatedWebView.dispatch() user: %s", self.user_profile)
+
         try:
             self.user_profile = UserProfile.objects.get(user=request.user)
             self.account = self.user_profile.account

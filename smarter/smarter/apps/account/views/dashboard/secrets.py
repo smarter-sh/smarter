@@ -11,7 +11,7 @@ from django.core.handlers.wsgi import WSGIRequest
 
 # our stuff
 from smarter.apps.account.admin import SecretAdminForm as SecretForm
-from smarter.apps.account.models import Secret, UserProfile
+from smarter.apps.account.models import Secret
 from smarter.lib.django.http.shortcuts import (
     SmarterHttpResponseForbidden,
     SmarterHttpResponseNotFound,
@@ -22,16 +22,13 @@ from smarter.lib.django.view_helpers import SmarterAdminWebView
 logger = logging.getLogger(__name__)
 
 
-class SecretBase(SmarterAdminWebView):
-    """Base class for Secret views."""
-
-
-class SecretsView(SecretBase):
+class SecretsView(SmarterAdminWebView):
     """View for the Secrets for user's account."""
 
     template_path = "account/dashboard/secrets.html"
 
     def get(self, request: WSGIRequest):
+        logger.info("SecretsView.get() user: %s", self.user_profile)
         secrets = Secret.objects.filter(user_profile=self.user_profile).only(
             "id", "name", "description", "created_at", "updated_at", "last_accessed", "expires_at"
         )
@@ -43,7 +40,7 @@ class SecretsView(SecretBase):
         return self.clean_http_response(request, template_path=self.template_path, context=context)
 
 
-class SecretView(SecretBase):
+class SecretView(SmarterAdminWebView):
     """detail View for secret management."""
 
     template_path = "account/dashboard/secret.html"
@@ -105,6 +102,11 @@ class SecretView(SecretBase):
 
     def dispatch(self, request: WSGIRequest, *args, **kwargs):
 
+        response = super().dispatch(request, *args, **kwargs)
+        if response.status_code > 299:
+            return response
+        logger.info("SecretView.dispatch() user: %s", self.user_profile)
+
         secret_id: int = kwargs.get("secret_id")
         if secret_id:
             logger.info("SecretView.dispatch() secret_id: %s", secret_id)
@@ -118,7 +120,8 @@ class SecretView(SecretBase):
                 )
         else:
             logger.info("SecretView.dispatch() with no secret_id")
-        return super().dispatch(request, *args, **kwargs)
+
+        return response
 
     def get(self, request: WSGIRequest, secret_id: int = None):
 
