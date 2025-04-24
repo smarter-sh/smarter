@@ -149,6 +149,7 @@ class SecretAdminForm(forms.ModelForm):
             try:
                 instance: Secret = self.instance
                 self.fields["value"].initial = instance.get_secret(update_last_accessed=False)
+            # pylint: disable=broad-except
             except Exception:
                 self.fields["value"].initial = None
 
