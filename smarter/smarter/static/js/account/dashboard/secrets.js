@@ -6,7 +6,8 @@ var KTAccountSecrets = function () {
     var sandboxCheckBox;
     var sandboxLabel;
     var sandboxNotice;
-    var buttonsSecretDelete;
+    var buttonSecretDelete;
+    var buttonSecretEdit;
     var primaryKey;
 
     function handleDelete(button) {
@@ -52,109 +53,26 @@ var KTAccountSecrets = function () {
 
     }
 
-    function handleAction(action, button) {
+    function handleEdit(button) {
 
-      button.attr("data-kt-indicator", "on");
-      button.prop("disabled", true);
       primaryKey = button.data('record-id');
       const url = "/account/dashboard/secrets/" + primaryKey + "/";
-
-      const csrfToken = getSmarterCsrfToken();
-      const context = {
-        headers: {
-          'Content-Type': 'application/json',
-          "X-CSRFToken": csrfToken,
-        }
-      }
-
-      console.log('context', context);
-
-      let jsonBody = {
-        'action': action
-      }
-
-      axios
-      .patch(url, jsonBody, context)
-      .then(function (response) {
-        if (response) {
-          console.log('response', response);
-          window.location.reload();
-        }
-      })
-      .catch(function (error) {
-        Swal.fire({
-          text: JSON.stringify(error.response.data),
-          icon: "error",
-          buttonsStyling: false,
-          confirmButtonText: "Dismiss",
-          customClass: {
-            confirmButton: "btn btn-primary",
-          },
-        });
-      })
-      .then(() => {
-        button.removeAttr("data-kt-indicator");
-        button.prop("disabled", false);
-      });
-
+      window.location.href = url;
     }
 
     // Private functions
-    var initSecretCopy = function() {
-        KTUtil.each(document.querySelectorAll('#kt_secrets_table [data-action="copy"]'), function(button) {
-            var tr = button.closest('tr');
-            var license = KTUtil.find(tr, '[data-bs-target="license"]');
-
-            var clipboard = new ClipboardJS(button, {
-                target: license,
-                text: function() {
-                    return license.innerHTML;
-                }
-            });
-
-            clipboard.on('success', function(e) {
-                // Icons
-                var copyIcon = button.querySelector('.ki-copy');
-                var checkIcon = button.querySelector('.ki-check');
-
-                // exit if check icon is already shown
-                if (checkIcon) {
-                   return;
-                }
-
-                // Create check icon
-                checkIcon = document.createElement('i');
-                checkIcon.classList.add('ki-solid');
-                checkIcon.classList.add('ki-check');
-                checkIcon.classList.add('fs-2');
-
-                // Append check icon
-                button.appendChild(checkIcon);
-
-                // Highlight target
-                license.classList.add('text-success');
-
-                // Hide copy icon
-                copyIcon.classList.add('d-none');
-
-                // Set 3 seconds timeout to hide the check icon and show copy icon back
-                setTimeout(function() {
-                    // Remove check icon
-                    copyIcon.classList.remove('d-none');
-                    // Show check icon back
-                    button.removeChild(checkIcon);
-
-                    // Remove highlight
-                    license.classList.remove('text-success');
-                }, 3000);
-            });
-        });
-    }
     var initSecretDelete = function() {
-      buttonsSecretDelete.click(function() {
+      buttonSecretDelete.click(function() {
         var recordId = $(this).data('record-id');
-        console.log('buttonsSecretDelete clicked', 'Record ID:', recordId);
+        console.log('buttonSecretDelete clicked', 'Record ID:', recordId);
         handleDelete($(this));
+      });
+    }
+    var initSecretEdit = function() {
+      buttonSecretEdit.click(function() {
+        var recordId = $(this).data('record-id');
+        console.log('buttonSecretEdit clicked', 'Record ID:', recordId);
+        handleEdit($(this));
       });
     }
 
@@ -164,7 +82,8 @@ var KTAccountSecrets = function () {
           sandboxCheckBox = $('#input_sandbox_mode_checkbox');
           sandboxLabel = $('#label_sandbox_mode');
           sandboxNotice = $('#notice_sandbox_mode');
-          buttonsSecretDelete = $('.button_secret_delete');
+          buttonSecretDelete = $('.button_secret_delete');
+          buttonSecretEdit = $('.button_secret_edit');
 
           sandboxCheckBox.click(function() {
             var sandboxMode = sandboxCheckBox.is(':checked');
@@ -179,7 +98,7 @@ var KTAccountSecrets = function () {
 
           });
 
-          initSecretCopy();
+          initSecretEdit();
           initSecretDelete();
         }
     }
