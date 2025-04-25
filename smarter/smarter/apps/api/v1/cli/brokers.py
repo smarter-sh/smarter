@@ -19,6 +19,7 @@ from typing import Dict, Type
 from urllib.parse import urlparse
 
 from smarter.apps.account.manifest.brokers.account import SAMAccountBroker
+from smarter.apps.account.manifest.brokers.secret import SAMSecretBroker
 from smarter.apps.account.manifest.brokers.user import SAMUserBroker
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.chat.manifest.brokers.chat import SAMChatBroker
@@ -55,6 +56,7 @@ class Brokers:
         SAMKinds.SQLCONNECTION.value: SAMPluginDataSqlConnectionBroker,
         # SAMKinds.APICONNECTION.value: BrokerNotImplemented,
         SAMKinds.USER.value: SAMUserBroker,
+        SAMKinds.SECRET.value: SAMSecretBroker,
     }
 
     @classmethod

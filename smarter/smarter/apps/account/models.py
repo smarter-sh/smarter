@@ -446,7 +446,9 @@ class Secret(TimestampedModel):
         related_name="secrets",
         help_text="Reference to the UserProfile associated with this secret.",
     )
-    name = models.CharField(max_length=255, help_text="Name of the secret, used for identification purposes.")
+    name = models.CharField(
+        max_length=255, help_text="Name of the secret in camelCase, e.g., 'apiKey', no special characters."
+    )
     description = models.TextField(blank=True, null=True, help_text="Optional description of the secret.")
     encrypted_value = models.BinaryField(help_text="Read-only encrypted representation of the secret's value.")
 
