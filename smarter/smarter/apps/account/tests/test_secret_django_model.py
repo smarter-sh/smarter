@@ -14,7 +14,7 @@ from smarter.common.exceptions import SmarterConfigurationError, SmarterValueErr
 from smarter.lib.django.user import User
 
 
-class TestSmarterSecret(unittest.TestCase):
+class TestSmarterSecretDjangoModel(unittest.TestCase):
     """Test Secret."""
 
     def setUp(self):
