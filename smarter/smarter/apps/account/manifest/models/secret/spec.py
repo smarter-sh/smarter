@@ -20,11 +20,11 @@ class SAMSecretSpecConfig(AbstractSAMSpecBase):
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".configuration"
 
     value: str = Field(
-        None,
+        ...,
         description=(f"{class_identifier}.value[str]. Required. The unencrypted value of the {MANIFEST_KIND}."),
     )
     expiration_date: Optional[date] = Field(
-        None,
+        default=None,
         description=(f"{class_identifier}.expiration_date[str]. Optional. The expiration date of the {MANIFEST_KIND}."),
     )
 
