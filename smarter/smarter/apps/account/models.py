@@ -498,7 +498,7 @@ class Secret(TimestampedModel):
         return user.is_staff or user.is_superuser
 
     def __str__(self):
-        return str(self.name)
+        return str(self.name) or "no name" + " - " + str(self.user_profile) or "no user profile"
 
     @classmethod
     def encrypt(cls, value: str) -> bytes:
