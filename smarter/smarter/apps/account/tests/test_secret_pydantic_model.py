@@ -6,6 +6,8 @@ import os
 import random
 import unittest
 
+from pydantic_core import ValidationError
+
 from smarter.apps.account.manifest.models.secret.model import SAMSecret
 from smarter.apps.account.models import Account, UserProfile
 from smarter.common.utils import dict_is_contained_in
@@ -69,7 +71,7 @@ class TestSmarterSecretPydanticModel(unittest.TestCase):
         except Account.DoesNotExist:
             pass
 
-    def test_manifest_initalization(self):
+    def test_manifest_initalization_good(self):
 
         filespec = self.get_data_full_filepath("secret-good.yaml")
         loader = SAMLoader(file_path=filespec)
@@ -81,3 +83,15 @@ class TestSmarterSecretPydanticModel(unittest.TestCase):
 
         # assert that everything in content is in round_trip_dict
         # self.assertTrue(dict_is_contained_in(content, round_trip_dict))
+
+    def test_manifest_initalization_bad(self):
+
+        filespec = self.get_data_full_filepath("secret-bad.yaml")
+        loader = SAMLoader(file_path=filespec)
+
+        with self.assertRaises(ValidationError) as context:
+            SAMSecret(**loader.pydantic_model_dump())
+
+        self.assertIn("1 validation error for SAMSecret", str(context.exception))
+        self.assertIn("spec.config.value", str(context.exception))
+        self.assertIn("Field required [type=missing", str(context.exception))
