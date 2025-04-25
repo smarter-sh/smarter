@@ -66,13 +66,13 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
     - using the manifest to initialize the corresponding Pydantic model
 
     This Broker class interacts with the collection of Django ORM models that
-    represent the Smarter API User manifests. The Broker class is responsible
+    represent the Smarter API Secret manifests. The Broker class is responsible
     for creating, updating, deleting and querying the Django ORM models, as well
     as transforming the Django ORM models into Pydantic models for serialization
     and deserialization.
     """
 
-    # override the base abstract manifest model with the User model
+    # override the base abstract manifest model with the Secret model
     _manifest: SAMSecret = None
     _pydantic_model: typing.Type[SAMSecret] = SAMSecret
 
@@ -109,14 +109,6 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
             url=url,
         )
         AccountMixin.__init__(self, account=account, user=request.user)
-        username: str = self.params.get("username", self.user.username if self.user else None)
-        if username:
-            try:
-                self.user = User.objects.get(username=username)
-            except User.DoesNotExist as e:
-                raise SAMBrokerErrorNotFound(
-                    f"Failed to load {self.kind} {username}. Not found", thing=self.kind
-                ) from e
 
     @property
     def secret(self) -> Secret:
@@ -134,7 +126,7 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
 
     def manifest_to_django_orm(self) -> dict:
         """
-        Transform the Smarter API User manifest into a Django ORM model.
+        Transform the Smarter API Secret manifest into a Django ORM model.
         """
         config_dump = self.manifest.spec.config.model_dump()
         config_dump = self.camel_to_snake(config_dump)
@@ -143,7 +135,7 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
     def django_orm_to_manifest_dict(self) -> dict:
         """
         Transform the Django ORM model into a Pydantic readable
-        Smarter API User manifest dict.
+        Smarter API Secret manifest dict.
         """
         secret_dict = model_to_dict(self.secret)
         secret_dict = self.snake_to_camel(secret_dict)
@@ -183,7 +175,7 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
     def manifest(self) -> SAMSecret:
         """
         SAMSecret() is a Pydantic model
-        that is used to represent the Smarter API User manifest. The Pydantic
+        that is used to represent the Smarter API Secret manifest. The Pydantic
         model is initialized with the data from the manifest loader, which is
         generally passed to the model constructor as **data. However, this top-level
         manifest model has to be explicitly initialized, whereas its child models
@@ -219,11 +211,11 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {
-                SAMSecretMetadataKeys.NAME.value: "ExampleUser",
-                SAMSecretMetadataKeys.DESCRIPTION.value: "an example user manifest for the Smarter API User",
+                SAMSecretMetadataKeys.NAME.value: "ExampleSecret",
+                SAMSecretMetadataKeys.DESCRIPTION.value: "an example secret manifest for the Smarter API Secret",
                 SAMSecretMetadataKeys.VERSION.value: "1.0.0",
                 SAMSecretMetadataKeys.ACCOUNT_NUMBER.value: self.account.account_number,
-                "username": "ExampleUser",
+                SAMSecretMetadataKeys.USERNAME.value: "admin",
             },
             SAMKeys.SPEC.value: {
                 SAMSecretSpecKeys.CONFIG.value: {
