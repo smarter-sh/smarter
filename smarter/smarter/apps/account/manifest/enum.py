@@ -1,7 +1,6 @@
 """Smarter API PLugin Manifest - enumerated datatypes."""
 
 from smarter.common.enum import SmarterEnumAbstract
-from smarter.lib.manifest.enum import SAMMetadataKeys, SmarterEnumAbstract
 
 
 ###############################################################################
@@ -28,9 +27,14 @@ class SAMSecretSpecKeys(SmarterEnumAbstract):
     EXPIRATION_DATE = "expiration_date"
 
 
-class SAMSecretMetadataKeys(SAMMetadataKeys):
+class SAMSecretMetadataKeys(SmarterEnumAbstract):
     """Smarter API Secret Metadata keys enumeration."""
 
+    NAME = "name"
+    DESCRIPTION = "description"
+    VERSION = "version"
+    TAGS = "tags"
+    ANNOTATIONS = "annotations"
     USERNAME = "username"
     ACCOUNT_NUMBER = "account_number"
 

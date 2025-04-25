@@ -22,6 +22,6 @@ class SAMSecretMetadata(AbstractSAMMetadataBase):
     name: str = Field(
         ...,
         description=(
-            f"{class_identifier}.name[str]. Required. The name of the secret. Hyphenated lowercase, no spaces nor special characters."
+            f"{class_identifier}.name[str]. Required. The name of the secret. camelCase, no spaces, no special characters."
         ),
     )
