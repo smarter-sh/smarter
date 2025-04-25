@@ -23,9 +23,9 @@ class SAMSecretSpecConfig(AbstractSAMSpecBase):
         ...,
         description=(f"{class_identifier}.value[str]. Required. The unencrypted value of the {MANIFEST_KIND}."),
     )
-    expiration_date: Optional[date] = Field(
+    expirationDate: Optional[date] = Field(
         default=None,
-        description=(f"{class_identifier}.expiration_date[str]. Optional. The expiration date of the {MANIFEST_KIND}."),
+        description=(f"{class_identifier}.expirationDate[str]. Optional. The expiration date of the {MANIFEST_KIND}."),
     )
 
 
