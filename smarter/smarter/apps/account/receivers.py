@@ -84,17 +84,19 @@ def secret_post_save(sender, instance, created, **kwargs):
     """Signal receiver for created/saved of Secret model."""
     if created:
         logger.info(
-            "%s Secret post_save signal received. instance: %s, created: %s",
+            "%s Secret post_save signal received. instance: %s, id: %s created: %s",
             formatted_text("secret_post_save()"),
             instance,
+            instance.id,
             created,
         )
         secret_created.send(sender=Secret, secret=instance)
     else:
         logger.info(
-            "%s Secret post_save signal received. instance: %s, created: %s",
+            "%s Secret post_save signal received. instance: %s, id: %s created: %s",
             formatted_text("secret_post_save()"),
             instance,
+            instance.id,
             created,
         )
         secret_edited.send(sender=Secret, secret=instance)
@@ -104,7 +106,7 @@ def secret_post_save(sender, instance, created, **kwargs):
 def secret_created_receiver(sender, secret, **kwargs):
     """Signal receiver for secret_created signal."""
     logger.info(
-        "%s New secret created signal received. instance: %s",
+        "%s secret_created signal received. instance: %s",
         formatted_text("secret_created_receiver()"),
         secret,
     )
@@ -114,7 +116,7 @@ def secret_created_receiver(sender, secret, **kwargs):
 def secret_edited_receiver(sender, secret, **kwargs):
     """Signal receiver for secret_edited signal."""
     logger.info(
-        "%s Secret edited signal received. instance: %s",
+        "%s secret_edited signal received. instance: %s",
         formatted_text("secret_edited_receiver()"),
         secret,
     )

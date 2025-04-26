@@ -35,15 +35,18 @@ def mortal_user_factory(account: Account = None) -> tuple[UserType, Account, Use
 
 def admin_user_teardown(user: UserType, account: Account, user_profile: UserProfile):
     try:
-        user_profile.delete()
+        if user_profile:
+            user_profile.delete()
     except UserProfile.DoesNotExist:
         pass
     try:
-        user.delete()
+        if user:
+            user.delete()
     except User.DoesNotExist:
         pass
     try:
-        account.delete()
+        if account:
+            account.delete()
     except Account.DoesNotExist:
         pass
 

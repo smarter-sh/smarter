@@ -8,54 +8,26 @@ from datetime import datetime, timedelta
 
 from django.utils.timezone import now
 
-from smarter.apps.account.models import Account, Secret, UserProfile
+from smarter.apps.account.models import Secret
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
-from smarter.lib.django.user import User
+
+from .factories import admin_user_factory, admin_user_teardown, mortal_user_factory
 
 
 class TestSmarterSecretDjangoModel(unittest.TestCase):
     """Test Secret."""
 
     def setUp(self):
+
         self.hash_suffix = "_" + hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()
 
-        self.account = Account.objects.create(
-            company_name="TestCompany" + self.hash_suffix,
-            phone_number="1234567890",
-            address1="123 Test St",
-            address2="Apt 1",
-            city="Test City",
-            state="TX",
-            postal_code="12345",
-        )
-        non_admin_username = "non_admin_testuser" + self.hash_suffix
-        self.non_admin_user = User.objects.create_user(username=non_admin_username, password="12345")
-        self.non_admin_user_profile = UserProfile.objects.create(user=self.non_admin_user, account=self.account)
-
-        admin_username = "admin_testuser" + self.hash_suffix
-        self.admin_user = User.objects.create_user(
-            username=admin_username, password="12345", is_staff=True, is_superuser=True
-        )
-        self.user_profile = UserProfile.objects.create(user=self.admin_user, account=self.account)
+        self.admin_user, self.account, self.user_profile = admin_user_factory()
+        self.non_admin_user, _, self.non_admin_user_profile = mortal_user_factory(account=self.account)
 
     def tearDown(self):
-        try:
-            self.non_admin_user_profile.delete()
-        except UserProfile.DoesNotExist:
-            pass
-        try:
-            self.non_admin_user.delete()
-        except User.DoesNotExist:
-            pass
-        try:
-            self.admin_user.delete()
-        except User.DoesNotExist:
-            pass
-        try:
-            self.account.delete()
-        except Account.DoesNotExist:
-            pass
+        admin_user_teardown(user=self.admin_user, account=None, user_profile=self.user_profile)
+        admin_user_teardown(user=self.non_admin_user, account=self.account, user_profile=self.non_admin_user_profile)
 
     def test_create_secret(self):
         """Test create secret and that encryption and decryption work."""

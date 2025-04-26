@@ -1,4 +1,4 @@
-"""A Model class for working with Secret manifests and the Secret Django ORM."""
+"""A class for working with Secret manifests and the Secret Django ORM."""
 
 # python stuff
 import json
@@ -14,10 +14,11 @@ from rest_framework import serializers
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterExceptionBase
-from smarter.lib.manifest.enum import SAMKeys
+from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 
+from .manifest.enum import SAMSecretSpecKeys, SAMSecretStatusKeys
 from .manifest.models.secret.const import MANIFEST_KIND
 
 # account stuff
@@ -30,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 SMARTER_API_MANIFEST_COMPATIBILITY = [SmarterApiVersions.V1]
 SMARTER_API_MANIFEST_DEFAULT_VERSION = SmarterApiVersions.V1
+READ_ONLY_FIELDS = ["id", "user_profile", "last_accessed", "created_at", "modified_at"]
 
 
 class SmarterSecretManagerError(SmarterExceptionBase):
@@ -50,15 +52,15 @@ class SecretManager(SmarterHelperMixin):
     """A class for working with secrets."""
 
     _name: str = None
-    _api_version: str = SMARTER_API_MANIFEST_DEFAULT_VERSION
+    _api_version: str = None
     _manifest: SAMSecret = None
-    _params: dict = None
     _secret: Secret = None
     _secret_serializer: SecretSerializer = None
+    _user_profile: UserProfile = None
 
     def __init__(
         self,
-        user_profile: UserProfile = None,
+        user_profile: UserProfile,
         name: str = None,
         api_version: str = None,
         manifest: SAMSecret = None,
@@ -68,6 +70,7 @@ class SecretManager(SmarterHelperMixin):
     ):
         """
         Options for initialization are:
+        - name: name of the secret, for initializing the Django ORM model.
         - Pydantic model created by a manifest broker (preferred method).
         - django model secret id.
         - yaml manifest or json representation of a yaml manifest
@@ -79,9 +82,11 @@ class SecretManager(SmarterHelperMixin):
                 f"Received name: {bool(name)} data: {bool(data)}, manifest: {bool(manifest)}, "
                 f"secret_id: {bool(secret_id)}, secret: {bool(secret)}."
             )
+        self._user_profile = user_profile
+        if not self._user_profile:
+            raise SmarterSecretManagerError("User profile is not set.")
         self._name = name or self._name
         self.api_version = api_version or self.api_version
-        self._user_profile = user_profile
 
         #######################################################################
         # identifiers for existing secrets
@@ -98,6 +103,7 @@ class SecretManager(SmarterHelperMixin):
         if manifest:
             # we received a Pydantic model from a manifest broker.
             self._manifest = manifest
+            self.api_version = manifest.apiVersion
 
         if data:
             # we received a yaml or json string representation of a manifest.
@@ -126,27 +132,34 @@ class SecretManager(SmarterHelperMixin):
     ###########################################################################
     # class methods
     ###########################################################################
+    # pylint: disable=W0613
     @classmethod
     def example_manifest(cls, kwargs: dict = None) -> dict:
-        raise NotImplementedError()
+        return {
+            SAMKeys.APIVERSION.value: SMARTER_API_MANIFEST_DEFAULT_VERSION,
+            SAMKeys.KIND.value: MANIFEST_KIND,
+            SAMKeys.METADATA.value: {
+                SAMMetadataKeys.DESCRIPTION.value: "A secret for testing purposes",
+                SAMMetadataKeys.NAME.value: "TestSecret",
+                SAMMetadataKeys.TAGS.value: [],
+                SAMMetadataKeys.VERSION.value: "0.1.0",
+            },
+            SAMKeys.SPEC.value: {
+                SAMSecretSpecKeys.CONFIG.value: {
+                    SAMSecretSpecKeys.VALUE.value: "test-password",
+                    SAMSecretSpecKeys.EXPIRATION_DATE.value: "2026-12-31",
+                }
+            },
+        }
 
     ###########################################################################
     # class instance properties
     ###########################################################################
     @property
-    def params(self) -> dict:
-        """Return the secret parameters."""
-        return self._params
-
-    @params.setter
-    def params(self, value: dict):
-        """Set the secret parameters."""
-        logger.info("Setting secret parameters: %s", value)
-        self._params = value
-
-    @property
     def api_version(self) -> str:
         """Return the api version of the secret."""
+        if not self._api_version:
+            self._api_version = self.manifest.apiVersion if self.manifest else SMARTER_API_MANIFEST_DEFAULT_VERSION
         return self._api_version
 
     @api_version.setter
@@ -160,7 +173,7 @@ class SecretManager(SmarterHelperMixin):
 
     @property
     def kind(self) -> str:
-        """Return the kind of the secret."""
+        """Return the kind of manifest."""
         return MANIFEST_KIND
 
     @property
@@ -173,6 +186,74 @@ class SecretManager(SmarterHelperMixin):
         return self._manifest
 
     @property
+    def value(self) -> str:
+        """Return the secret value."""
+        if self.manifest:
+            return self.manifest.spec.config.value
+        if self.secret:
+            return self.secret.get_secret(update_last_accessed=False)
+        return None
+
+    @property
+    def encrypted_value(self) -> bytes:
+        """Return the encrypted secret value."""
+        if self.manifest:
+            return Secret.encrypt(value=self.value)
+        if self.secret:
+            return self.secret.encrypted_value
+        return None
+
+    @property
+    def description(self) -> str:
+        """Return the secret description."""
+        if self.manifest:
+            return self.manifest.metadata.description
+        if self.secret:
+            return self.secret.description
+        return None
+
+    @property
+    def created_at(self) -> str:
+        """Return the created date."""
+        if self.secret:
+            return self.secret.created_at.isoformat() if self.secret.created_at else None
+        return None
+
+    @property
+    def updated_at(self) -> str:
+        """Return the updated date."""
+        if self.secret:
+            return self.secret.updated_at.isoformat() if self.secret.updated_at else None
+        return None
+
+    @property
+    def last_accessed(self) -> str:
+        """Return the last accessed date."""
+        retval = None
+        if self.manifest:
+            retval = (
+                self.manifest.status.lastAccessed.isoformat()
+                if self.manifest.status and self.manifest.status.lastAccessed
+                else None
+            )
+        if self.secret:
+            retval = self.secret.last_accessed.isoformat() if self.secret.last_accessed else None
+        return retval
+
+    @property
+    def expires_at(self) -> str:
+        """Return the expiration date in the format, YYYY-MM-DD"""
+        if self.manifest:
+            return (
+                self.manifest.spec.config.expirationDate.isoformat()
+                if self.manifest.spec.config.expirationDate
+                else None
+            )
+        if self.secret:
+            return self.secret.expires_at.date().isoformat() if self.secret.expires_at else None
+        return None
+
+    @property
     def id(self) -> int:
         """Return the id of the secret."""
         if self.secret:
@@ -182,6 +263,11 @@ class SecretManager(SmarterHelperMixin):
     @id.setter
     def id(self, value: int):
         """Set the id of the secret."""
+        self._name = None
+        self._secret_serializer = None
+        if not value:
+            self._secret = None
+            return
         try:
             self._secret = Secret.objects.get(pk=value)
         except Secret.DoesNotExist as e:
@@ -192,13 +278,21 @@ class SecretManager(SmarterHelperMixin):
         """Return the secret meta."""
         if self._secret:
             return self._secret
-        self._secret = Secret.objects.filter(user_profile=self.user_profile, name=self.name).first()
+        try:
+            self._secret = Secret.objects.get(user_profile=self.user_profile, name=self.name)
+        except Secret.DoesNotExist:
+            logger.warning(
+                "%s.secret() Secret %s does not exist for user_profile %s.",
+                self.formatted_class_name,
+                self.name,
+                self.user_profile,
+            )
         return self._secret
 
     @property
     def secret_serializer(self) -> SecretSerializer:
         """Return the secret meta serializer."""
-        if not self._secret_serializer:
+        if self.secret and not self._secret_serializer:
 
             self._secret_serializer = SecretSerializer(self.secret)
         return self._secret_serializer
@@ -209,16 +303,14 @@ class SecretManager(SmarterHelperMixin):
         if not self.manifest:
             return None
 
-        encrypted_value = Secret.encrypt(value=self.manifest.spec.config.value)
-
         return {
             "id": self.id,
             "user_profile": self.user_profile,
             "name": self.name,
-            "description": self.manifest.metadata.description,
-            "last_accessed": self.manifest.status.lastAccessed if self.manifest.status else None,
-            "expires_at": self.manifest.spec.config.expirationDate,
-            "encrypted_value": encrypted_value,
+            "description": self.description,
+            "last_accessed": self.last_accessed,
+            "expires_at": self.expires_at,
+            "encrypted_value": self.encrypted_value,
         }
 
     @property
@@ -236,8 +328,10 @@ class SecretManager(SmarterHelperMixin):
             return self._name
         if self.manifest:
             self._name = self.manifest.metadata.name
-        if self.secret:
-            self._name = self.secret.name
+            self._secret = None
+        else:
+            if self.secret:
+                self._name = self.secret.name
         return self._name
 
     @property
@@ -303,19 +397,28 @@ class SecretManager(SmarterHelperMixin):
         """Create a secret from either yaml or a dictionary."""
 
         if not self.manifest:
-            raise SmarterSecretManagerError("Secret manifest is not set.")
+            logger.warning("%s.create() Secret manifest is not set.", self.formatted_class_name)
+            return False
 
         secret_data = self.secret_django_model
+        if not secret_data:
+            logger.warning("%s.create() Secret data is not set.", self.formatted_class_name)
+            return False
 
         if self.secret:
             self.id = self.secret.id
-            logger.info("Secret %s already exists. Updating secret %s.", secret_data["name"], self.secret.id)
+            logger.info(
+                "%s.create() Secret %s already exists. Updating secret %s instead.",
+                self.formatted_class_name,
+                secret_data["name"],
+                self.secret.id,
+            )
             return self.update()
 
         secret = Secret.objects.create(**secret_data)
         self.id = secret.id
         secret_created.send(sender=self.__class__, secret=self)
-        logger.debug("Created secret %s: %s.", self.secret.name, self.secret.id)
+        logger.info("%s.create() secret %s: %s.", self.formatted_class_name, self.name, self.id)
 
         return True
 
@@ -323,20 +426,21 @@ class SecretManager(SmarterHelperMixin):
         """Update a secret."""
 
         if not self.manifest:
-            raise SmarterSecretManagerError("Secret manifest is not set.")
+            logger.warning("%s.update() Secret manifest is not set.", self.formatted_class_name)
+            return False
 
         secret_django_model = self.secret_django_model
         if not secret_django_model:
-            raise SmarterSecretManagerError(
-                f"Secret {self.name} for account {self.user_profile.account.account_number} does not exist."
-            )
+            logger.warning("%s.update() Secret Django model is not set.", self.formatted_class_name)
+            return False
 
         for attr, value in secret_django_model.items():
-            setattr(self._secret, attr, value)
+            if attr not in READ_ONLY_FIELDS:
+                setattr(self._secret, attr, value)
         self.secret.save()
         secret_edited.send(sender=self.__class__, secret=self)
         self.id = self.secret.id
-        logger.debug("Updated secret %s: %s.", self.name, self.id)
+        logger.info("%s.update() secret %s: %s.", self.formatted_class_name, self.name, self.id)
 
         return True
 
@@ -348,7 +452,7 @@ class SecretManager(SmarterHelperMixin):
 
         self.secret.save()
         secret_edited.send(sender=self.__class__, secret=self)
-        logger.debug("Saved secret %s: %s.", self.name, self.id)
+        logger.info("%s.save()) secret %s: %s.", self.formatted_class_name, self.name, self.id)
         return True
 
     def delete(self):
@@ -363,14 +467,12 @@ class SecretManager(SmarterHelperMixin):
         self._secret = None
         self._secret_serializer = None
         secret_deleted.send(sender=self.__class__, secret_id=secret_id, secret_name=secret_name)
-        logger.debug("Deleted secret %s: %s.", secret_id, secret_name)
+        logger.info("%s.delete() secret %s: %s.", self.formatted_class_name, secret_id, secret_name)
         return True
 
     def to_json(self, version: str = "v1") -> dict:
         """
-        Serialize a secret in JSON format that is importable by Pydantic. This
-        is used to create a Pydantic model from a Django ORM model, for purposes
-        of rendering a Secret manifest for the Smarter API.
+        Serialize a secret in JSON format that is importable by Pydantic.
         """
         if not self.ready:
             return None
@@ -378,24 +480,26 @@ class SecretManager(SmarterHelperMixin):
         # data = {**self.secret_serializer.data, "id": self.secret.id}
         if version == "v1":
             retval = {
-                "apiVersion": self.api_version,
-                "kind": self.kind,
-                "metadata": {
-                    "name": self.name,
-                    "description": self.secret.description,
+                SAMKeys.APIVERSION.value: self.api_version,
+                SAMKeys.KIND.value: self.kind,
+                SAMKeys.METADATA.value: {
+                    SAMMetadataKeys.NAME.value: self.name,
+                    SAMMetadataKeys.DESCRIPTION.value: self.description,
                 },
-                "spec": {
-                    "config": {
-                        "value": self.secret.encrypted_value,
-                        "expirationDate": self.secret.expires_at.isoformat(),
+                SAMKeys.SPEC.value: {
+                    SAMSecretSpecKeys.CONFIG.value: {
+                        SAMSecretSpecKeys.VALUE.value: (
+                            self.encrypted_value.decode("utf-8") if self.encrypted_value else None
+                        ),
+                        SAMSecretSpecKeys.EXPIRATION_DATE.value: self.expires_at,
                     },
                 },
-                "status": {
-                    "accountNumber": self.user_profile.account.account_number,
-                    "username": self.user_profile.user.get_username(),
-                    "created": self.secret.created_at.isoformat(),
-                    "modified": self.secret.updated_at.isoformat(),
-                    "lastAccessed": self.secret.last_accessed.isoformat() if self.secret.last_accessed else None,
+                SAMKeys.STATUS.value: {
+                    SAMSecretStatusKeys.ACCOUNT_NUMBER.value: self.user_profile.account.account_number,
+                    SAMSecretStatusKeys.USERNAME.value: self.user_profile.user.get_username(),
+                    SAMSecretStatusKeys.CREATED.value: self.created_at,
+                    SAMSecretStatusKeys.UPDATED.value: self.updated_at,
+                    SAMSecretStatusKeys.LAST_ACCESSED.value: self.last_accessed,
                 },
             }
             return json.loads(json.dumps(retval))
