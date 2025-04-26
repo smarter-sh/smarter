@@ -19,7 +19,7 @@ class SAMSecretStatus(AbstractSAMStatusBase):
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
-    account_number: str = Field(
+    accountNumber: str = Field(
         None,
         description=f"{class_identifier}.account_number: The account owner of this {MANIFEST_KIND}. Read only.",
     )
@@ -39,7 +39,7 @@ class SAMSecretStatus(AbstractSAMStatusBase):
         description=f"{class_identifier}.modified: The date in which this {MANIFEST_KIND} was most recently changed. Read only.",
     )
 
-    last_accessed: datetime = Field(
+    lastAccessed: datetime = Field(
         None,
         description=f"{class_identifier}.last_accessed: The date in which this {MANIFEST_KIND} was most recently accessed. Read only.",
     )

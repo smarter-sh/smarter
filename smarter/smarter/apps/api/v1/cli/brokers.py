@@ -35,7 +35,7 @@ from smarter.apps.plugin.manifest.brokers.sql_connection import (
 )
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib.drf.manifest.brokers.auth_token import SAMSmarterAuthTokenBroker
-from smarter.lib.manifest.broker import AbstractBroker, BrokerNotImplemented
+from smarter.lib.manifest.broker import AbstractBroker  # BrokerNotImplemented
 
 
 logger = logging.getLogger(__name__)

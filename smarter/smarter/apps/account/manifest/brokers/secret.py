@@ -1,6 +1,8 @@
 # pylint: disable=W0718
 """Smarter API User Manifest handler"""
 
+import logging
+import traceback
 import typing
 from datetime import datetime
 
@@ -18,6 +20,7 @@ from smarter.apps.account.manifest.models.secret.const import MANIFEST_KIND
 from smarter.apps.account.manifest.models.secret.model import SAMSecret
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account, Secret
+from smarter.apps.account.secret import SecretManager
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.django.user import get_user_model
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -39,6 +42,7 @@ from smarter.lib.manifest.loader import SAMLoader
 
 User = get_user_model()
 MAX_RESULTS = 1000
+logger = logging.getLogger(__name__)
 
 
 class SecretSerializer(serializers.ModelSerializer):
@@ -75,6 +79,7 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
     # override the base abstract manifest model with the Secret model
     _manifest: SAMSecret = None
     _pydantic_model: typing.Type[SAMSecret] = SAMSecret
+    _secret_manager: SecretManager = None
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -111,18 +116,22 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
         AccountMixin.__init__(self, account=account, user=request.user)
 
     @property
+    def secret_manager(self) -> SecretManager:
+        """
+        Return the SecretManager instance for this manifest.
+        """
+        if not self._secret_manager:
+            self._secret_manager = SecretManager(
+                name=self.name, api_version=self.api_version, user_profile=self.user_profile, manifest=self.manifest
+            )
+        return self._secret_manager
+
+    @property
     def secret(self) -> Secret:
         """
         Return the Secret model instance for this manifest.
         """
-        if self.user:
-            try:
-                return Secret.objects.get(user_profile=self.user_profile, name=self.name)
-            except Secret.DoesNotExist as e:
-                raise SAMBrokerErrorNotFound(
-                    f"Failed to load {self.kind} {self.user_profile}. Not found", thing=self.kind
-                ) from e
-        return None
+        return self.secret_manager.secret
 
     def manifest_to_django_orm(self) -> dict:
         """
@@ -137,31 +146,58 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
         Transform the Django ORM model into a Pydantic readable
         Smarter API Secret manifest dict.
         """
-        secret_dict = model_to_dict(self.secret)
-        secret_dict = self.snake_to_camel(secret_dict)
-        secret_dict.pop("id")
+        if not self.secret:
+            logger.warning("%s.django_orm_to_manifest_dict() called with no secret", self.formatted_class_name)
+            return None
+        secret_dict: dict = None
 
-        data = {
-            SAMKeys.APIVERSION.value: self.api_version,
-            SAMKeys.KIND.value: self.kind,
-            SAMKeys.METADATA.value: {
-                SAMSecretMetadataKeys.NAME.value: self.name,
-                SAMSecretMetadataKeys.DESCRIPTION.value: self.manifest.metadata.description,
-                SAMSecretMetadataKeys.VERSION.value: "1.0.0",
-                SAMSecretMetadataKeys.USERNAME.value: self.user.username,
-                SAMSecretMetadataKeys.ACCOUNT_NUMBER.value: self.account.account_number,
-            },
-            SAMKeys.SPEC.value: {
-                SAMSecretSpecKeys.CONFIG.value: secret_dict,
-            },
-            SAMKeys.STATUS.value: {
-                SAMSecretStatusKeys.ACCOUNT_NUMBER.value: self.account_number,
-                SAMSecretStatusKeys.USERNAME.value: self.user.username,
-                SAMSecretStatusKeys.CREATED.value: self.secret.created_at,
-                SAMSecretStatusKeys.UPDATED.value: self.secret.updated_at,
-                SAMSecretStatusKeys.LAST_ACCESSED.value: self.secret.last_accessed,
-            },
-        }
+        try:
+            secret_dict = model_to_dict(self.secret)
+            secret_dict = self.snake_to_camel(secret_dict)
+            secret_dict.pop("id")
+        except Exception as e:
+            raise SAMSecretBrokerError(
+                f"Failed to serialize {self.kind} {self.secret} into camelCased Python dict",
+                thing=self.kind,
+                stack_trace=traceback.format_exc(),
+            ) from e
+
+        try:
+            data = {
+                SAMKeys.APIVERSION.value: self.api_version,
+                SAMKeys.KIND.value: self.kind,
+                SAMKeys.METADATA.value: {
+                    SAMSecretMetadataKeys.NAME.value: secret_dict.get(SAMSecretMetadataKeys.NAME.value),
+                    SAMSecretMetadataKeys.DESCRIPTION.value: secret_dict.get(SAMSecretMetadataKeys.DESCRIPTION.value),
+                    SAMSecretMetadataKeys.VERSION.value: "1.0.0",
+                    SAMSecretMetadataKeys.USERNAME.value: self.user.username,
+                    SAMSecretMetadataKeys.ACCOUNT_NUMBER.value: self.account.account_number,
+                },
+                SAMKeys.SPEC.value: {
+                    SAMSecretSpecKeys.CONFIG.value: {
+                        SAMSecretSpecKeys.VALUE.value: secret_dict.get("encrypted_value"),
+                        SAMSecretSpecKeys.DESCRIPTION.value: secret_dict.get(SAMSecretSpecKeys.DESCRIPTION.value),
+                        SAMSecretSpecKeys.EXPIRATION_DATE.value: secret_dict.get(
+                            SAMSecretSpecKeys.EXPIRATION_DATE.value
+                        ),
+                    }
+                },
+                SAMKeys.STATUS.value: {
+                    SAMSecretStatusKeys.ACCOUNT_NUMBER.value: self.account_number,
+                    SAMSecretStatusKeys.USERNAME.value: self.user.username,
+                    SAMSecretStatusKeys.CREATED.value: self.secret.created_at.isoformat(),
+                    SAMSecretStatusKeys.UPDATED.value: self.secret.updated_at.isoformat(),
+                    SAMSecretStatusKeys.LAST_ACCESSED.value: (
+                        self.secret.last_accessed.isoformat() if self.secret.last_accessed else None
+                    ),
+                },
+            }
+        except Exception as e:
+            raise SAMSecretBrokerError(
+                f"Failed to transform {self.kind} {self.secret} into manifest dict",
+                thing=self.kind,
+                stack_trace=traceback.format_exc(),
+            ) from e
         return data
 
     ###########################################################################
@@ -214,14 +250,14 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
                 SAMSecretMetadataKeys.NAME.value: "ExampleSecret",
                 SAMSecretMetadataKeys.DESCRIPTION.value: "an example secret manifest for the Smarter API Secret",
                 SAMSecretMetadataKeys.VERSION.value: "1.0.0",
-                SAMSecretMetadataKeys.ACCOUNT_NUMBER.value: self.account.account_number,
+                "accountNumber": self.account.account_number,
                 SAMSecretMetadataKeys.USERNAME.value: "admin",
             },
             SAMKeys.SPEC.value: {
                 SAMSecretSpecKeys.CONFIG.value: {
                     SAMSecretSpecKeys.VALUE.value: "top-secret-value",
                     SAMSecretSpecKeys.DESCRIPTION.value: "salesforce.com api key",
-                    SAMSecretSpecKeys.EXPIRATION_DATE.value: expiration_date_string,
+                    "expirationDate": expiration_date_string,
                 },
             },
         }
@@ -245,7 +281,10 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
                 data.append(camel_cased_model_dump)
             except Exception as e:
                 raise SAMSecretBrokerError(
-                    f"Model dump failed for {self.kind} {secret}", thing=self.kind, command=command
+                    f"Model dump failed for {self.kind} {secret}",
+                    thing=self.kind,
+                    command=command,
+                    stack_trace=traceback.format_exc(),
                 ) from e
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
@@ -272,19 +311,22 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
         super().apply(request, kwargs)
         command = self.apply.__name__
         command = SmarterJournalCliCommands(command)
-        readonly_fields = ["id", "user_profile", "last_accessed", "created_at", "updated_at"]
+
         try:
-            data = self.manifest_to_django_orm()
-            for field in readonly_fields:
-                data.pop(field, None)
-            for key, value in data.items():
-                setattr(self.secret, key, value)
-            self.secret.save()
+            self.secret_manager.create()
         except Exception as e:
-            raise SAMSecretBrokerError(
-                f"Failed to apply {self.kind} {self.secret}", thing=self.kind, command=command
-            ) from e
-        return self.json_response_ok(command=command, data={})
+            return self.json_response_err(command=command, e=e)
+
+        if self.secret_manager.ready:
+            try:
+                self.secret_manager.save()
+            except Exception as e:
+                return self.json_response_err(command=command, e=e)
+            return self.json_response_ok(command=command, data={})
+        try:
+            raise SAMBrokerErrorNotReady(f"Secret {self.name} not ready", thing=self.kind, command=command)
+        except SAMBrokerErrorNotReady as err:
+            return self.json_response_err(command=command, e=err)
 
     def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
@@ -294,23 +336,33 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
     def describe(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
+        param_name = request.GET.get("name", None)
+        kwarg_name = kwargs.get("name", None)
+        secret_name = param_name or kwarg_name or self.name
+        self._name = secret_name
 
-        try:
-            self.secret = Secret.objects.get(user_profile=self.user_profile, name=self.name)
-        except Secret.DoesNotExist as e:
+        self._secret_manager = SecretManager(name=secret_name, user_profile=self.user_profile)
+        if not self.secret_manager.secret:
             raise SAMBrokerErrorNotFound(
-                f"Failed to describe {self.kind} {self.name}-{self.user_profile}. Not found",
+                f"Failed to describe {self.kind} {secret_name} belonging to {self.user_profile}. Not found",
                 thing=self.kind,
                 command=command,
-            ) from e
+            )
+
+        logger.info(f"Describing {self.kind} {secret_name} belonging to {self.user_profile}")
 
         if self.secret:
             try:
+                logger.info("calling self.django_orm_to_manifest_dict()")
                 data = self.django_orm_to_manifest_dict()
+                logger.info("returning self.json_response_ok(command=command, data=data)")
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
                 raise SAMSecretBrokerError(
-                    f"Failed to describe {self.kind} {self.secret}", thing=self.kind, command=command
+                    f"Failed to describe {self.kind} {self.secret}",
+                    thing=self.kind,
+                    command=command,
+                    stack_trace=traceback.format_exc(),
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 
@@ -323,7 +375,10 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 raise SAMSecretBrokerError(
-                    f"Failed to delete {self.kind} {self.secret}", thing=self.kind, command=command
+                    f"Failed to delete {self.kind} {self.secret}",
+                    thing=self.kind,
+                    command=command,
+                    stack_trace=traceback.format_exc(),
                 ) from e
         raise SAMBrokerErrorNotReady(f"{self.kind} not ready", thing=self.kind, command=command)
 

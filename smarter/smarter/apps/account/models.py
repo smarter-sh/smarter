@@ -27,8 +27,8 @@ from smarter.lib.django.validators import SmarterValidator
 
 from .signals import (
     new_charge_created,
-    new_secret_created,
     new_user_created,
+    secret_created,
     secret_edited,
 )
 
@@ -462,7 +462,7 @@ class Secret(TimestampedModel):
             raise SmarterValueError("Name and value cannot be empty")
         super().save(*args, **kwargs)
         if is_new:
-            new_secret_created.send(sender=self.__class__, secret=self)
+            secret_created.send(sender=self.__class__, secret=self)
         else:
             secret_edited.send(sender=self.__class__, secret=self)
 
