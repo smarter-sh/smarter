@@ -1,6 +1,8 @@
 # pylint: disable=wrong-import-position
 """Test Secret Manager."""
 
+import json
+import logging
 import os
 import unittest
 
@@ -16,6 +18,7 @@ from .factories import admin_user_factory, admin_user_teardown, mortal_user_fact
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
+logger = logging.getLogger(__name__)
 
 
 class TestSmarterSecretManager(unittest.TestCase):
@@ -25,12 +28,17 @@ class TestSmarterSecretManager(unittest.TestCase):
         return os.path.join(HERE, "data", filename)
 
     @classmethod
-    def setUp(cls):
+    def setUpClass(cls):
+        """
+        Set up the test class with a single account, and admin and non-admin users.
+        using the class setup so that we retain the same user_profile for each test,
+        which is needed so that the django Secret model can be queried.
+        """
         cls.admin_user, cls.account, cls.user_profile = admin_user_factory()
         cls.non_admin_user, _, cls.non_admin_user_profile = mortal_user_factory(account=cls.account)
 
     @classmethod
-    def tearDown(cls):
+    def tearDownClass(cls):
         admin_user_teardown(user=cls.admin_user, account=None, user_profile=cls.user_profile)
         admin_user_teardown(user=cls.non_admin_user, account=cls.account, user_profile=cls.non_admin_user_profile)
 
@@ -38,6 +46,7 @@ class TestSmarterSecretManager(unittest.TestCase):
         """
         Test that the SecretManager can be initialized without any secret data.
         """
+        logger.info("test_manager_01_empty()")
         with self.assertRaises(SmarterSecretManagerError):
             SecretManager(self.user_profile)
 
@@ -46,6 +55,7 @@ class TestSmarterSecretManager(unittest.TestCase):
         Test that the example manifest method returns a dictionary
         from a call to the SecretManager class method.
         """
+        logger.info("test_manager_02_example_manifest()")
         example_manifest = SecretManager.example_manifest()
         self.assertIsInstance(example_manifest, dict)
 
@@ -53,6 +63,7 @@ class TestSmarterSecretManager(unittest.TestCase):
         """
         Test initialization of the SecretManager with a good manifest file.
         """
+        logger.info("test_manager_03_manifest_load()")
 
         filespec = self.get_data_full_filepath("secret-good.yaml")
         loader = SAMLoader(file_path=filespec)
@@ -98,6 +109,7 @@ class TestSmarterSecretManager(unittest.TestCase):
         """
         Test creating a Django model instance from the SecretManager.
         """
+        logger.info("test_manager_04_create_instance()")
         filespec = self.get_data_full_filepath("secret-good.yaml")
         loader = SAMLoader(file_path=filespec)
         manifest = SAMSecret(**loader.pydantic_model_dump())
@@ -145,6 +157,7 @@ class TestSmarterSecretManager(unittest.TestCase):
         """
         Test initializing from manifest for an existing secret.
         """
+        logger.info("test_manager_05_initialize()")
         filespec = self.get_data_full_filepath("secret-good.yaml")
         loader = SAMLoader(file_path=filespec)
         manifest = SAMSecret(**loader.pydantic_model_dump())
@@ -157,6 +170,7 @@ class TestSmarterSecretManager(unittest.TestCase):
         """
         Test updating the secret value.
         """
+        logger.info("test_manager_06_update()")
         filespec = self.get_data_full_filepath("secret-good-update.yaml")
         loader = SAMLoader(file_path=filespec)
         manifest = SAMSecret(**loader.pydantic_model_dump())
@@ -174,8 +188,8 @@ class TestSmarterSecretManager(unittest.TestCase):
             "Secret name should match the manifest metadata name",
         )
         self.assertEqual(
-            secret_manager.secret.encrypted_value,
-            secret_manager.encrypted_value,
+            secret_manager.secret.get_secret(update_last_accessed=False),
+            secret_manager.value,
             "Secret value should match the manifest value",
         )
         self.assertEqual(
@@ -194,12 +208,12 @@ class TestSmarterSecretManager(unittest.TestCase):
             "Secret description should match the manifest metadata description",
         )
         self.assertEqual(
-            secret_manager.secret.expires_at,
+            secret_manager.secret.expires_at.date().isoformat(),
             secret_manager.expires_at,
             "Secret expires_at should match the manifest expires_at",
         )
         self.assertEqual(
-            secret_manager.secret.expires_at,
+            secret_manager.secret.expires_at.date(),
             secret_manager.manifest.spec.config.expirationDate,
             "Secret expires_at should match the manifest spec config expirationDate",
         )
@@ -208,6 +222,7 @@ class TestSmarterSecretManager(unittest.TestCase):
         """
         Test updating the last accessed time.
         """
+        logger.info("test_manager_07_update_last_accessed()")
         filespec = self.get_data_full_filepath("secret-good-update.yaml")
         loader = SAMLoader(file_path=filespec)
         manifest = SAMSecret(**loader.pydantic_model_dump())
@@ -231,6 +246,10 @@ class TestSmarterSecretManager(unittest.TestCase):
         self.assertEqual(last_updated_before, last_updated_after, "Last accessed time should not be updated")
 
     def test_manager_08_initialze_by_name(self):
+        """
+        Test initializing the SecretManager with a name.
+        """
+        logger.info("test_manager_08_initialze_by_name()")
 
         secret_manager = SecretManager(name="TestSecret", user_profile=self.user_profile)
         self.assertIsInstance(secret_manager, SecretManager)
@@ -239,7 +258,14 @@ class TestSmarterSecretManager(unittest.TestCase):
         self.assertIsInstance(secret_manager.secret, Secret)
 
     def test_manager_09_initialize_by_id(self):
+        """
+        Test initializing the SecretManager with an ID.
+        """
+        logger.info("test_manager_09_initialize_by_id()")
         secret_manager = SecretManager(name="TestSecret", user_profile=self.user_profile)
+        self.assertIsInstance(secret_manager, SecretManager)
+        self.assertTrue(secret_manager.ready, "Secret manager should be ready")
+        self.assertIsInstance(secret_manager.secret, Secret)
         secret_id = secret_manager.secret.id
 
         secret_manager = SecretManager(secret_id=secret_id, user_profile=self.user_profile)
@@ -249,6 +275,10 @@ class TestSmarterSecretManager(unittest.TestCase):
         self.assertIsInstance(secret_manager.secret, Secret)
 
     def test_manager_10_initialize_by_secret_instance(self):
+        """
+        Test initializing the SecretManager with a Secret instance.
+        """
+        logger.info("test_manager_10_initialize_by_secret_instance()")
         secret_manager = SecretManager(name="TestSecret", user_profile=self.user_profile)
         self.assertIsInstance(secret_manager, SecretManager)
         secret = secret_manager.secret
@@ -261,18 +291,30 @@ class TestSmarterSecretManager(unittest.TestCase):
         self.assertIsInstance(secret_manager.secret, Secret)
 
     def test_manager_11_initialize_by_secret_serializer(self):
+        """
+        Test initializing the SecretManager with a Secret serializer.
+        """
+        logger.info("test_manager_11_initialize_by_secret_serializer()")
         secret_manager = SecretManager(name="TestSecret", user_profile=self.user_profile)
         self.assertIsInstance(secret_manager, SecretManager)
-        secret_dict = secret_manager.secret_serializer.data
-        self.assertIsInstance(secret_dict, dict)
-
-        secret_manager = SecretManager(data=secret_dict, user_profile=self.user_profile)
-        self.assertIsInstance(secret_manager, SecretManager)
-        self.assertEqual(secret_manager.secret.id, secret_dict["id"])
         self.assertTrue(secret_manager.ready, "Secret manager should be ready")
         self.assertIsInstance(secret_manager.secret, Secret)
+        secret_dict = secret_manager.to_json()
+        self.assertIsInstance(secret_dict, dict, msg="Secret serializer data should be a dictionary:")
+        logger.info(
+            "test_manager_11_initialize_by_secret_serializer() secret_dict: %s", json.dumps(secret_dict, indent=4)
+        )
+        secret_manager = SecretManager(data=secret_dict, user_profile=self.user_profile)
+        self.assertIsInstance(secret_manager, SecretManager)
+        self.assertIsInstance(secret_manager.secret, Secret)
+        self.assertEqual(secret_manager.secret.id, secret_manager.id)
+        self.assertTrue(secret_manager.ready, "Secret manager should be ready")
 
     def test_manager_12_initialize_by_different_user_profile(self):
+        """
+        Test initializing the SecretManager with a different user profile.
+        """
+        logger.info("test_manager_12_initialize_by_different_user_profile()")
         secret_manager = SecretManager(name="TestSecret", user_profile=self.non_admin_user_profile)
         self.assertIsInstance(secret_manager, SecretManager)
         self.assertFalse(secret_manager.ready, "Secret manager should not be ready")
@@ -282,6 +324,7 @@ class TestSmarterSecretManager(unittest.TestCase):
         """
         Test deleting the secret.
         """
+        logger.info("test_manager_13_delete()")
         secret_manager = SecretManager(name="TestSecret", user_profile=self.user_profile)
         self.assertIsInstance(secret_manager, SecretManager)
         self.assertTrue(secret_manager.ready, "Secret manager should be ready")
@@ -289,5 +332,5 @@ class TestSmarterSecretManager(unittest.TestCase):
         self.assertTrue(secret_manager.delete())
 
         self.assertIsNone(secret_manager.secret, "Secret should be None after deletion")
-        self.assertIsNone(secret_manager.secret_serializer.data, "Secret serializer should be None after deletion")
+        self.assertIsNone(secret_manager.secret_serializer, "Secret serializer should be None after deletion")
         self.assertFalse(secret_manager.ready, "Secret manager should not be ready after deletion")
