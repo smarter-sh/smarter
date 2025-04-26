@@ -27,7 +27,7 @@ class TestSmarterSecretPydanticModel(unittest.TestCase):
     def get_manifest_data(self, filename: str) -> dict:
         """Get the manifest data from the file."""
         filepath = self.get_data_full_filepath(filename)
-        with open(filepath) as file:
+        with open(file=filepath, encoding="utf-8") as file:
             data = file.read()
         return data
 
