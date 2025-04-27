@@ -28,20 +28,20 @@ class TestDocsManifests(ApiV1TestBase):
             response_body, status = self.get_response(path=url)
             self.assertEqual(status, HTTPStatus.OK.value)
 
+            # Verify high-level structure
             self.assertIsInstance(response_body, dict)
 
-        # Verify high-level structure
-        self.assertIn(SmarterJournalApiResponseKeys.DATA, response_body)
-        self.assertIsInstance(response_body[SmarterJournalApiResponseKeys.DATA], dict)
+            self.assertIn(SmarterJournalApiResponseKeys.DATA, response_body)
+            self.assertIsInstance(response_body[SmarterJournalApiResponseKeys.DATA], dict)
 
-        self.assertIn(SmarterJournalApiResponseKeys.MESSAGE, response_body)
-        self.assertIsInstance(response_body[SmarterJournalApiResponseKeys.MESSAGE], str)
+            self.assertIn(SmarterJournalApiResponseKeys.MESSAGE, response_body)
+            self.assertIsInstance(response_body[SmarterJournalApiResponseKeys.MESSAGE], str)
 
-        self.assertIn(SmarterJournalApiResponseKeys.API, response_body)
-        self.assertIsInstance(response_body[SmarterJournalApiResponseKeys.API], str)
+            self.assertIn(SmarterJournalApiResponseKeys.API, response_body)
+            self.assertIsInstance(response_body[SmarterJournalApiResponseKeys.API], str)
 
-        self.assertIn(SmarterJournalApiResponseKeys.THING, response_body)
-        self.assertIsInstance(response_body[SmarterJournalApiResponseKeys.THING], str)
+            self.assertIn(SmarterJournalApiResponseKeys.THING, response_body)
+            self.assertIsInstance(response_body[SmarterJournalApiResponseKeys.THING], str)
 
-        self.assertIn(SmarterJournalApiResponseKeys.METADATA, response_body)
-        self.assertIsInstance(response_body[SmarterJournalApiResponseKeys.METADATA], dict)
+            self.assertIn(SmarterJournalApiResponseKeys.METADATA, response_body)
+            self.assertIsInstance(response_body[SmarterJournalApiResponseKeys.METADATA], dict)
