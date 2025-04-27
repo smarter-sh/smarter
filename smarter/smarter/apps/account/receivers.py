@@ -9,7 +9,8 @@ from django.dispatch import receiver
 
 from smarter.common.helpers.console_helpers import formatted_text
 
-from .models import Account, Charge, DailyBillingRecord, UserProfile
+from .models import Account, Charge, DailyBillingRecord, Secret, UserProfile
+from .signals import secret_created, secret_edited
 from .utils import get_cached_default_account, get_cached_user_profile
 
 
@@ -76,3 +77,48 @@ def daily_billing_record_post_save(sender, instance, created, **kwargs):
             instance,
             created,
         )
+
+
+@receiver(post_save, sender=Secret)
+def secret_post_save(sender, instance, created, **kwargs):
+    """Signal receiver for created/saved of Secret model."""
+    if created:
+        logger.info(
+            "%s Secret post_save signal received. instance: %s, id: %s created: %s",
+            formatted_text("secret_post_save()"),
+            instance,
+            instance.id,
+            created,
+        )
+        secret_created.send(sender=Secret, secret=instance)
+    else:
+        logger.info(
+            "%s Secret post_save signal received. instance: %s, id: %s created: %s",
+            formatted_text("secret_post_save()"),
+            instance,
+            instance.id,
+            created,
+        )
+        secret_edited.send(sender=Secret, secret=instance)
+
+
+@receiver(secret_created)
+def secret_created_receiver(sender, secret, **kwargs):
+    """Signal receiver for secret_created signal."""
+    logger.info(
+        "%s secret_created signal received. instance: %s id: %s",
+        formatted_text("secret_created_receiver()"),
+        secret,
+        secret.id,
+    )
+
+
+@receiver(secret_edited)
+def secret_edited_receiver(sender, secret, **kwargs):
+    """Signal receiver for secret_edited signal."""
+    logger.info(
+        "%s secret_edited signal received. instance: %s, id: %s",
+        formatted_text("secret_edited_receiver()"),
+        secret,
+        secret.id,
+    )

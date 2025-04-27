@@ -33,6 +33,7 @@ from .views.json_schema import (  # DocsJsonSchemaApiConnectionView,
     DocsJsonSchemaChatToolCallView,
     DocsJsonSchemaChatView,
     DocsJsonSchemaPluginView,
+    DocsJsonSchemaSecretView,
     DocsJsonSchemaSqlConnectionView,
     DocsJsonSchemaUserView,
 )
@@ -45,6 +46,7 @@ from .views.manifest import (  # DocsExampleManifestApiConnectionView,
     DocsExampleManifestChatToolCallView,
     DocsExampleManifestChatView,
     DocsExampleManifestPluginView,
+    DocsExampleManifestSecretView,
     DocsExampleManifestSqlConnectionView,
     DocsExampleManifestUserView,
 )
@@ -127,6 +129,7 @@ urlpatterns = [
         name=json_schema_name(SAMKinds.SQLCONNECTION),
     ),
     path(json_schema_path(SAMKinds.USER), DocsJsonSchemaUserView.as_view(), name=json_schema_name(SAMKinds.USER)),
+    path(json_schema_path(SAMKinds.SECRET), DocsJsonSchemaSecretView.as_view(), name=json_schema_name(SAMKinds.SECRET)),
     # -------------------------------------------------------------------------
     # example manifests
     # -------------------------------------------------------------------------
@@ -165,6 +168,7 @@ urlpatterns = [
         name=manifest_name(SAMKinds.SQLCONNECTION),
     ),
     path(manifest_path(SAMKinds.USER), DocsExampleManifestUserView.as_view(), name=manifest_name(SAMKinds.USER)),
+    path(manifest_path(SAMKinds.SECRET), DocsExampleManifestSecretView.as_view(), name=manifest_name(SAMKinds.SECRET)),
     # -------------------------------------------------------------------------
     # manifests landing page
     # -------------------------------------------------------------------------

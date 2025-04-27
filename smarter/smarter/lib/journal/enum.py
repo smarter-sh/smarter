@@ -72,6 +72,7 @@ class SmarterJournalThings(SmarterEnumAbstract):
     CHATBOT = "Chatbot"
     SQLCONNECTION = "SqlConnection"
     # APICONNECTION = "ApiConnection"
+    SECRET = "Secret"
 
     @classmethod
     def choices(cls) -> list[(str, str)]:
@@ -89,6 +90,7 @@ class SmarterJournalThings(SmarterEnumAbstract):
             (cls.CHATBOT, cls.CHATBOT),
             (cls.SQLCONNECTION, cls.SQLCONNECTION),
             # (cls.APICONNECTION, cls.APICONNECTION),
+            (cls.SECRET, cls.SECRET),
         ]
 
 

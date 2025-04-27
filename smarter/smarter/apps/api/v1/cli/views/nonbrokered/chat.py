@@ -5,6 +5,7 @@ import hashlib
 import json
 import logging
 import re
+import traceback
 from http import HTTPStatus
 from typing import Tuple
 
@@ -460,6 +461,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
                 thing=SmarterJournalThings(SmarterJournalThings.CHAT),
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
                 status=HTTPStatus.INTERNAL_SERVER_ERROR,
+                stack_trace=traceback.format_exc(),
             )
 
         # unescape the chat response body so that it looks
@@ -514,6 +516,7 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
                 thing=SmarterJournalThings(SmarterJournalThings.CHAT),
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
                 status=HTTPStatus.NOT_FOUND,
+                stack_trace=traceback.format_exc(),
             )
 
         # pylint: disable=W0718
@@ -526,4 +529,5 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
                 thing=SmarterJournalThings(SmarterJournalThings.CHAT),
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
                 status=HTTPStatus.INTERNAL_SERVER_ERROR,
+                stack_trace=traceback.format_exc(),
             )

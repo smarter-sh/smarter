@@ -6,6 +6,7 @@ var KTProfileGeneral = (function () {
   var shortcutSelect;
   var shortcutOptionUser;
   var shortcutOptionApiKey;
+  var shortcutOptionSecret;
   var shortcutOptionPaymentMethod;
   var shortcutLink;
 
@@ -49,6 +50,9 @@ var KTProfileGeneral = (function () {
       if (selectedOption === "payment_method") {
         newHref = "/account/dashboard/payment-methods/new/";
       }
+      if (selectedOption === "secret") {
+        newHref = "/account/dashboard/secrets/new/";
+      }
       shortcutLink.href = newHref;
     });
   };
@@ -60,6 +64,7 @@ var KTProfileGeneral = (function () {
       shortcutSelect = document.querySelector("#shortcut_select");
       shortcutOptionUser = document.querySelector("#shortcut_option_user");
       shortcutOptionApiKey = document.querySelector("#shortcut_option_api_key");
+      shortcutOptionSecret = document.querySelector("#shortcut_option_secret");
       shortcutOptionPaymentMethod = document.querySelector(
         "#shortcut_option_payment_method",
       );
