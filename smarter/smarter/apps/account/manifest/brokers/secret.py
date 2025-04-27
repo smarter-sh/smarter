@@ -18,9 +18,9 @@ from smarter.apps.account.manifest.enum import (
 )
 from smarter.apps.account.manifest.models.secret.const import MANIFEST_KIND
 from smarter.apps.account.manifest.models.secret.model import SAMSecret
+from smarter.apps.account.manifest.transformers.secret import SecretTransformer
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account, Secret
-from smarter.apps.account.secret import SecretManager
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.django.user import get_user_model
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -79,7 +79,7 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
     # override the base abstract manifest model with the Secret model
     _manifest: SAMSecret = None
     _pydantic_model: typing.Type[SAMSecret] = SAMSecret
-    _secret_manager: SecretManager = None
+    _secret_transformer: SecretTransformer = None
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -116,22 +116,22 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
         AccountMixin.__init__(self, account=account, user=request.user)
 
     @property
-    def secret_manager(self) -> SecretManager:
+    def secret_transformer(self) -> SecretTransformer:
         """
-        Return the SecretManager instance for this manifest.
+        Return the SecretTransformer instance for this manifest.
         """
-        if not self._secret_manager:
-            self._secret_manager = SecretManager(
+        if not self._secret_transformer:
+            self._secret_transformer = SecretTransformer(
                 name=self.name, api_version=self.api_version, user_profile=self.user_profile, manifest=self.manifest
             )
-        return self._secret_manager
+        return self._secret_transformer
 
     @property
     def secret(self) -> Secret:
         """
         Return the Secret model instance for this manifest.
         """
-        return self.secret_manager.secret
+        return self.secret_transformer.secret
 
     def manifest_to_django_orm(self) -> dict:
         """
@@ -313,13 +313,13 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
         command = SmarterJournalCliCommands(command)
 
         try:
-            self.secret_manager.create()
+            self.secret_transformer.create()
         except Exception as e:
             return self.json_response_err(command=command, e=e)
 
-        if self.secret_manager.ready:
+        if self.secret_transformer.ready:
             try:
-                self.secret_manager.save()
+                self.secret_transformer.save()
             except Exception as e:
                 return self.json_response_err(command=command, e=e)
             return self.json_response_ok(command=command, data={})
@@ -341,8 +341,8 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
         secret_name = param_name or kwarg_name or self.name
         self._name = secret_name
 
-        self._secret_manager = SecretManager(name=secret_name, user_profile=self.user_profile)
-        if not self.secret_manager.secret:
+        self._secret_transformer = SecretTransformer(name=secret_name, user_profile=self.user_profile)
+        if not self.secret_transformer.secret:
             raise SAMBrokerErrorNotFound(
                 f"Failed to describe {self.kind} {secret_name} belonging to {self.user_profile}. Not found",
                 thing=self.kind,

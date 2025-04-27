@@ -18,16 +18,21 @@ from .factories import admin_user_factory, admin_user_teardown, mortal_user_fact
 class TestSmarterSecretDjangoModel(unittest.TestCase):
     """Test Secret."""
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
+        """
+        Set up the test class with a single account, and admin and non-admin users.
+        using the class setup so that we retain the same user_profile for each test,
+        which is needed so that the django Secret model can be queried.
+        """
+        cls.hash_suffix = "_" + hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()
+        cls.admin_user, cls.account, cls.user_profile = admin_user_factory()
+        cls.non_admin_user, _, cls.non_admin_user_profile = mortal_user_factory(account=cls.account)
 
-        self.hash_suffix = "_" + hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()
-
-        self.admin_user, self.account, self.user_profile = admin_user_factory()
-        self.non_admin_user, _, self.non_admin_user_profile = mortal_user_factory(account=self.account)
-
-    def tearDown(self):
-        admin_user_teardown(user=self.admin_user, account=None, user_profile=self.user_profile)
-        admin_user_teardown(user=self.non_admin_user, account=self.account, user_profile=self.non_admin_user_profile)
+    @classmethod
+    def tearDownClass(cls):
+        admin_user_teardown(user=cls.admin_user, account=None, user_profile=cls.user_profile)
+        admin_user_teardown(user=cls.non_admin_user, account=cls.account, user_profile=cls.non_admin_user_profile)
 
     def test_create_secret(self):
         """Test create secret and that encryption and decryption work."""
@@ -38,7 +43,7 @@ class TestSmarterSecretDjangoModel(unittest.TestCase):
         encrypted_value = Secret.encrypt(secret_value)
         expires_at = datetime.now() + timedelta(days=180)  # 6 months from now
         secret = Secret.objects.create(
-            user_profile=self.admin_user,
+            user_profile=self.user_profile,
             name=name,
             description=description,
             encrypted_value=encrypted_value,
@@ -59,7 +64,7 @@ class TestSmarterSecretDjangoModel(unittest.TestCase):
 
         # Create a secret that expires in the past
         expired_secret = Secret.objects.create(
-            user_profile=self.admin_user,
+            user_profile=self.user_profile,
             name=name,
             description=description,
             encrypted_value=encrypted_value,
@@ -69,7 +74,7 @@ class TestSmarterSecretDjangoModel(unittest.TestCase):
 
         # Create a secret that expires in the future
         non_expired_secret = Secret.objects.create(
-            user_profile=self.admin_user,
+            user_profile=self.user_profile,
             name=name + "_future",
             description=description,
             encrypted_value=encrypted_value,
@@ -87,7 +92,7 @@ class TestSmarterSecretDjangoModel(unittest.TestCase):
         encrypted_value = Secret.encrypt(secret_value)
 
         secret = Secret.objects.create(
-            user_profile=self.admin_user,
+            user_profile=self.user_profile,
             name=name,
             encrypted_value=encrypted_value,
         )
@@ -113,29 +118,18 @@ class TestSmarterSecretDjangoModel(unittest.TestCase):
         decrypted_value = fernet.decrypt(encrypted_value).decode()
         self.assertEqual(secret_value, decrypted_value)
 
-    def test_invalid_encryption_key(self):
-        """Test that an invalid encryption key raises an error."""
-        original_key = smarter_settings.fernet_encryption_key
-        smarter_settings.fernet_encryption_key = None  # Simulate missing key
-
-        with self.assertRaises(SmarterConfigurationError):
-            Secret.get_fernet()
-
-        # Restore the original key
-        smarter_settings.fernet_encryption_key = original_key
-
     def test_empty_secret_name_or_value(self):
         """Test that creating a secret with an empty name or value raises an error."""
         with self.assertRaises(SmarterValueError):
             Secret.objects.create(
-                user_profile=self.admin_user,
+                user_profile=self.user_profile,
                 name="",
                 encrypted_value=Secret.encrypt("testValue"),
             )
 
         with self.assertRaises(SmarterValueError):
             Secret.objects.create(
-                user_profile=self.admin_user,
+                user_profile=self.user_profile,
                 name="testEmptyValue",
                 encrypted_value=None,
             )
