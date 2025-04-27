@@ -4,6 +4,7 @@ knox.auth TokenAuthentication tokens.
 """
 
 import logging
+import traceback
 from http import HTTPStatus
 
 from django.contrib.auth import login
@@ -99,7 +100,12 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
                 thing = SAMKinds.from_url(self.url())
                 command = SmarterJournalCliCommands.from_url(self.url())
                 return SmarterJournaledJsonErrorResponse(
-                    request=request, e=e, thing=thing, command=command, status=HTTPStatus.UNAUTHORIZED
+                    request=request,
+                    e=e,
+                    thing=thing,
+                    command=command,
+                    status=HTTPStatus.UNAUTHORIZED,
+                    stack_trace=traceback.format_exc(),
                 )
 
         return self.get_response(request)

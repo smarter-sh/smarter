@@ -51,6 +51,7 @@
                         class="form-select form-select-sm bg-body border-body w-175px">
 												<option id="shortcut_option_user" value="user" selected="selected">New User</option>
 												<option id="shortcut_option_api_key" value="api_key">New API Key</option>
+												<option id="shortcut_option_secret" value="secret">New Secret</option>
 												<option id="shortcut_option_payment_method" value="payment_method">New Payment Method</option>
 											</select>
                       <!-- TO DO: make this dynamic based on drop-down selection -->
@@ -80,46 +81,51 @@
 									<div id="kt_user_profile_nav" class="rounded bg-gray-200 d-flex flex-stack flex-wrap mb-9 p-2" data-kt-sticky="true" data-kt-sticky-name="sticky-profile-navs" data-kt-sticky-offset="{default: false, lg: '200px'}" data-kt-sticky-width="{target: '#kt_app_content_container'}" data-kt-sticky-left="auto" data-kt-sticky-top="70px" data-kt-sticky-animation="false" data-kt-sticky-zindex="95">
 										<!--begin::Nav-->
 										<ul class="nav flex-wrap border-transparent">
-											<!--begin::Nav item-->
+											<!--begin::Nav item Overview-->
 											<li class="nav-item my-1">
 												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/overview/">Overview</a>
 											</li>
-											<!--end::Nav item-->
-											<!--begin::Nav item-->
+											<!--end::Nav item Overview-->
+											<!--begin::Nav item Settings-->
 											<li class="nav-item my-1">
 												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/settings/">Settings</a>
 											</li>
-											<!--end::Nav item-->
-											<!--begin::Nav item-->
+											<!--end::Nav item Settings-->
+											<!--begin::Nav item Users-->
 											<li class="nav-item my-1">
 												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/users/">Users</a>
 											</li>
-											<!--end::Nav item-->
-											<!--begin::Nav item-->
+											<!--end::Nav item Users-->
+											<!--begin::Nav item Activity-->
 											<li class="nav-item my-1">
 												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/activity/">Activity</a>
 											</li>
-											<!--end::Nav item-->
-											<!--begin::Nav item-->
+											<!--end::Nav item Activity-->
+											<!--begin::Nav item Billing-->
 											<li class="nav-item my-1">
 												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/billing/">Billing</a>
 											</li>
-											<!--end::Nav item-->
-											<!--begin::Nav item-->
+											<!--end::Nav item Billing-->
+											<!--begin::Nav item Statements-->
 											<li class="nav-item my-1">
 												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/statements/">Statements</a>
 											</li>
-											<!--end::Nav item-->
-											<!--begin::Nav item-->
+											<!--end::Nav item Statements-->
+											<!--begin::Nav item API Keys-->
 											<li class="nav-item my-1">
 												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/api-keys/">API Keys</a>
 											</li>
-											<!--end::Nav item-->
-											<!--begin::Nav item-->
+											<!--end::Nav item API Keys-->
+											<!--begin::Nav item Secrets-->
+											<li class="nav-item my-1">
+												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/secrets/">Secrets</a>
+											</li>
+											<!--end::Nav item Secrets-->
+											<!--begin::Nav item Logs-->
 											<li class="nav-item my-1">
 												<a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1" href="/dashboard/account/dashboard/logs/">Logs</a>
 											</li>
-											<!--end::Nav item-->
+											<!--end::Nav item Logs-->
 										</ul>
 										<!--end::Nav-->
 									</div>

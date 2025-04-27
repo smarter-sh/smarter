@@ -2,6 +2,7 @@
 """ChatBot api/v1/chatbots base view, for invoking a ChatBot."""
 import json
 import logging
+import traceback
 from http import HTTPStatus
 from typing import List
 
@@ -336,6 +337,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
                 thing=SmarterJournalThings(SmarterJournalThings.CHATBOT),
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
                 status=HTTPStatus.NOT_FOUND.value,
+                stack_trace=traceback.format_exc(),
             )
         handler = chat_providers.get_handler(provider=self.chatbot.provider)
         if not self.chat_helper:
@@ -346,6 +348,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
                 thing=SmarterJournalThings(SmarterJournalThings.CHATBOT),
                 command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
                 status=HTTPStatus.NOT_FOUND.value,
+                stack_trace=traceback.format_exc(),
             )
         response = handler(chat=self.chat_helper.chat, data=self.data, plugins=self.plugins, user=self.user)
         response = {

@@ -6,6 +6,9 @@ from urllib.parse import urlparse
 from smarter.apps.account.manifest.models.account.const import (
     MANIFEST_KIND as ACCOUNT_MANIFEST_KIND,
 )
+from smarter.apps.account.manifest.models.secret.const import (
+    MANIFEST_KIND as SECRET_MANIFEST_KIND,
+)
 from smarter.apps.account.manifest.models.user.const import (
     MANIFEST_KIND as USER_MANIFEST_KIND,
 )
@@ -53,6 +56,7 @@ class SAMKinds(SmarterEnumAbstract):
     CHATBOT = CHATBOT_MANIFEST_KIND
     SQLCONNECTION = SQLCONNECTION_MANIFEST_KIND
     # APICONNECTION = "PluginDataApiConnection"
+    SECRET = SECRET_MANIFEST_KIND
 
     @classmethod
     def all_slugs(cls):
