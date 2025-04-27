@@ -9,6 +9,7 @@ import requests
 import yaml
 
 from smarter.common.api import SmarterApiVersions
+from smarter.common.classes import SmarterHelperMixin
 
 from .enum import SAMDataFormats, SAMKeys, SAMMetadataKeys, SAMSpecificationKeyOptions
 from .exceptions import SAMExceptionBase
@@ -73,7 +74,7 @@ def validate_key(key: str, key_value: Any, spec: Any):
             raise SAMLoaderError(f"Invalid value for key {key}. Expected {spec} but got {key_value}")
 
 
-class SAMLoader:
+class SAMLoader(SmarterHelperMixin):
     """
     Smarter API Manifest Loader base class.
     """
@@ -247,7 +248,8 @@ class SAMLoader:
 
         # top-level validations of the manifest itself.
         if not self.raw_data:
-            raise SAMLoaderError("Received empty or invalid data.")
+            logger.warning("%s.validate_manifest() Received empty or invalid data.", self.formatted_class_name)
+            return None
         if not self.data_format:
             raise SAMLoaderError("Invalid data format. Supported formats: json, yaml")
         # recursively validate the json representation of the manifest data

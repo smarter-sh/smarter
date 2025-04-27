@@ -64,7 +64,7 @@ A brokered entity consists of the following:
 - [Kind registration](../smarter/smarter/apps/api/v1/manifests/enum.py)
 - [Broker registration](../smarter/smarter/apps/api/v1/cli/brokers.py). The Broker class implements an enumeration of all resource `Kinds`.
 - [Json Schema docs view](../smarter/smarter/apps/docs/views/json_schema.py). Json schemas describe the Pydantic data model for the brokered resource. These are used for data-driven apps and services, such as the VS Code extension for Smarter manifests
-- [Manifest docs view](../smarter/smarter/apps/docs/views/manifest.py)
+- [Manifest docs view](../smarter/smarter/apps/docs/views/manifest.py). All brokers implement an `example_manifest()` method which, intuitively, generates a valid example Smarter yaml manifest for the `Kind` of resource.
 
 #### Code samples
 
