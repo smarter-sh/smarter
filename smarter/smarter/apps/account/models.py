@@ -486,7 +486,10 @@ class Secret(TimestampedModel):
         """
         Checks if the secret has expired based on the `expires_at` timestamp.
         """
-        return self.expires_at and timezone.now() > self.expires_at
+        if not self.expires_at:
+            return False
+        expiration = timezone.make_aware(self.expires_at) if timezone.is_naive(self.expires_at) else self.expires_at
+        return timezone.now() > expiration
 
     def has_permissions(self, request: WSGIRequest) -> bool:
         """Determine if the authenticated user has permissions to manage this key."""

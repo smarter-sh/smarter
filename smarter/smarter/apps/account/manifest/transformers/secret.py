@@ -10,21 +10,24 @@ import yaml
 # 3rd party stuff
 from rest_framework import serializers
 
+from smarter.apps.account.manifest.enum import SAMSecretSpecKeys, SAMSecretStatusKeys
+from smarter.apps.account.manifest.models.secret.const import MANIFEST_KIND
+
 # smarter stuff
+from smarter.apps.account.manifest.models.secret.model import SAMSecret
+from smarter.apps.account.models import Secret, UserProfile
+from smarter.apps.account.signals import (
+    secret_created,
+    secret_deleted,
+    secret_edited,
+    secret_ready,
+)
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterExceptionBase
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
-
-from .manifest.enum import SAMSecretSpecKeys, SAMSecretStatusKeys
-from .manifest.models.secret.const import MANIFEST_KIND
-
-# account stuff
-from .manifest.models.secret.model import SAMSecret
-from .models import Secret, UserProfile
-from .signals import secret_created, secret_deleted, secret_edited, secret_ready
 
 
 logger = logging.getLogger(__name__)
@@ -34,7 +37,7 @@ SMARTER_API_MANIFEST_DEFAULT_VERSION = SmarterApiVersions.V1
 READ_ONLY_FIELDS = ["id", "user_profile", "last_accessed", "created_at", "modified_at"]
 
 
-class SmarterSecretManagerError(SmarterExceptionBase):
+class SmarterSecretTransformerError(SmarterExceptionBase):
     """Base exception for Smarter API Secret handling."""
 
 
@@ -48,7 +51,7 @@ class SecretSerializer(serializers.ModelSerializer):
         read_only_fields = ("user_profile", "last_accessed", "created_at", "modified_at")
 
 
-class SecretManager(SmarterHelperMixin):
+class SecretTransformer(SmarterHelperMixin):
     """A class for working with secrets."""
 
     _name: str = None
@@ -77,14 +80,14 @@ class SecretManager(SmarterHelperMixin):
         see ./tests/data/secret-good.yaml for an example.
         """
         if sum([bool(name), bool(data), bool(manifest), bool(secret_id), bool(secret)]) == 0:
-            raise SmarterSecretManagerError(
+            raise SmarterSecretTransformerError(
                 f"Must specify at least one of: name, manifest, data, secret_id, or secret. "
                 f"Received name: {bool(name)} data: {bool(data)}, manifest: {bool(manifest)}, "
                 f"secret_id: {bool(secret_id)}, secret: {bool(secret)}."
             )
         self._user_profile = user_profile
         if not self._user_profile:
-            raise SmarterSecretManagerError("User profile is not set.")
+            raise SmarterSecretTransformerError("User profile is not set.")
         self._name = name or self._name
         self.api_version = api_version or self.api_version
 
@@ -292,7 +295,7 @@ class SecretManager(SmarterHelperMixin):
         try:
             self._secret = Secret.objects.get(pk=value)
         except Secret.DoesNotExist as e:
-            raise SmarterSecretManagerError("Secret.DoesNotExist") from e
+            raise SmarterSecretTransformerError("Secret.DoesNotExist") from e
 
     @property
     def secret(self) -> Secret:
@@ -358,7 +361,7 @@ class SecretManager(SmarterHelperMixin):
     @property
     # pylint: disable=too-many-return-statements
     def ready(self) -> bool:
-        """Return whether SecretManager is ready."""
+        """Return whether SecretTransformer is ready."""
 
         if not self.user_profile:
             logger.warning("%s.ready() User profile is not set.", self.formatted_class_name)
@@ -404,7 +407,7 @@ class SecretManager(SmarterHelperMixin):
 
         if self.is_valid_yaml(yaml_string):
             return yaml.safe_load(yaml_string)
-        raise SmarterSecretManagerError("Invalid data: must be a dictionary or valid YAML.")
+        raise SmarterSecretTransformerError("Invalid data: must be a dictionary or valid YAML.")
 
     def is_valid_yaml(self, data) -> bool:
         """Validate a yaml string."""
@@ -528,4 +531,4 @@ class SecretManager(SmarterHelperMixin):
                 },
             }
             return json.loads(json.dumps(retval))
-        raise SmarterSecretManagerError(f"Invalid version: {version}")
+        raise SmarterSecretTransformerError(f"Invalid version: {version}")

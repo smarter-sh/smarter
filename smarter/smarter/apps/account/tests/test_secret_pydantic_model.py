@@ -21,13 +21,20 @@ class TestSmarterSecretPydanticModel(unittest.TestCase):
     def get_data_full_filepath(self, filename: str) -> str:
         return os.path.join(HERE, "data", filename)
 
-    def setUp(self):
-        self.admin_user, self.account, self.user_profile = admin_user_factory()
-        self.non_admin_user, _, self.non_admin_user_profile = mortal_user_factory(account=self.account)
+    @classmethod
+    def setUpClass(cls):
+        """
+        Set up the test class with a single account, and admin and non-admin users.
+        using the class setup so that we retain the same user_profile for each test,
+        which is needed so that the django Secret model can be queried.
+        """
+        cls.admin_user, cls.account, cls.user_profile = admin_user_factory()
+        cls.non_admin_user, _, cls.non_admin_user_profile = mortal_user_factory(account=cls.account)
 
-    def tearDown(self):
-        admin_user_teardown(user=self.admin_user, account=None, user_profile=self.user_profile)
-        admin_user_teardown(user=self.non_admin_user, account=self.account, user_profile=self.non_admin_user_profile)
+    @classmethod
+    def tearDownClass(cls):
+        admin_user_teardown(user=cls.admin_user, account=None, user_profile=cls.user_profile)
+        admin_user_teardown(user=cls.non_admin_user, account=cls.account, user_profile=cls.non_admin_user_profile)
 
     def test_manifest_initalization_good(self):
         """
@@ -87,5 +94,5 @@ class TestSmarterSecretPydanticModel(unittest.TestCase):
 
         # Assert that the exception message contains the expected details
         self.assertIn("1 validation error for SAMSecret", str(context.exception))
-        self.assertIn("spec.config.expiration_date", str(context.exception))
+        self.assertIn("spec.config.expirationDate", str(context.exception))
         self.assertIn("Input should be a valid date or datetime", str(context.exception))
