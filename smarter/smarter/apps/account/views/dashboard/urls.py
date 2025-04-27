@@ -20,6 +20,7 @@ from smarter.apps.account.views.dashboard.dashboard import (
     OverviewView,
     StatementsView,
 )
+from smarter.apps.account.views.dashboard.secrets import SecretsView, SecretView
 from smarter.apps.account.views.dashboard.settings import SettingsView
 from smarter.apps.account.views.dashboard.users import UsersView, UserView
 
@@ -64,4 +65,9 @@ urlpatterns = [
     path("api-keys/new/", APIKeyView.as_view(), name="account_api_key_new"),
     path("api-keys/<str:key_id>/", APIKeyView.as_view(), name="account_api_key"),
     path("api-keys/<str:key_id>/<str:new_api_key>/", APIKeyView.as_view(), name="account_new_api_key"),
+    # secrets
+    # -------------------------------------------
+    path("secrets/", SecretsView.as_view(), name="account_secrets"),
+    path("secrets/new/", SecretView.as_view(), name="account_secret_new"),
+    path("secrets/<int:secret_id>/", SecretView.as_view(), name="account_secret"),
 ]

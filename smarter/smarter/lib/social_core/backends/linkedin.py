@@ -7,6 +7,7 @@ LinkedIn OAuth1 and OAuth2 backend, docs at:
 import datetime
 import logging
 from calendar import timegm
+from datetime import timezone
 
 from social_core.backends.oauth import BaseOAuth2
 from social_core.backends.open_id_connect import OpenIdConnectAuth
@@ -34,7 +35,7 @@ class LinkedinOpenIdConnect(OpenIdConnectAuth):
     def validate_claims(self, id_token):
         """Copy of the regular validate_claims method without the nonce validation."""
 
-        utc_timestamp = timegm(datetime.datetime.utcnow().utctimetuple())
+        utc_timestamp = timegm(datetime.datetime.now(timezone.utc).utctimetuple())
 
         if "nbf" in id_token and utc_timestamp < id_token["nbf"]:
             raise AuthTokenError(self, "Incorrect id_token: nbf")

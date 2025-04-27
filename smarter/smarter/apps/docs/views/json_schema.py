@@ -91,4 +91,10 @@ class DocsJsonSchemaSqlConnectionView(DocsJsonSchemaBaseView):
 class DocsJsonSchemaUserView(DocsJsonSchemaBaseView):
     """User JSON Schema view"""
 
-    kind = SAMKinds(SAMKinds.USER)
+    kind = SAMKinds(SAMKinds.SECRET)
+
+
+class DocsJsonSchemaSecretView(DocsJsonSchemaBaseView):
+    """Secret JSON Schema view"""
+
+    kind = SAMKinds(SAMKinds.SECRET)
