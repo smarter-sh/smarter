@@ -9,7 +9,8 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
 from smarter.__version__ import __version__
-from smarter.apps.account.models import Account, PaymentMethod, UserProfile
+from smarter.apps.account.admin import SecretAdmin
+from smarter.apps.account.models import Account, PaymentMethod, Secret, UserProfile
 from smarter.apps.chat.admin import (
     ChatAdmin,
     ChatHistoryAdmin,
@@ -135,6 +136,7 @@ restricted_site.register(User, RestrictedUserAdmin)
 restricted_site.register(SmarterAuthToken, SmarterAuthTokenAdmin)
 restricted_site.register(PaymentMethod, RestrictedModelAdmin)
 restricted_site.register(EmailContactList, EmailContactListAdmin)
+restricted_site.register(Secret, SecretAdmin)
 
 # Chat Models
 restricted_site.register(Chat, ChatAdmin)

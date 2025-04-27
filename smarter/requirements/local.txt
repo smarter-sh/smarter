@@ -10,6 +10,9 @@
 
 -r base.txt
 
+pip-tools
+
+
 # tests
 # ------------
 pytest==8.3.4

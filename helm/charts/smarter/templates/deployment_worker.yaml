@@ -63,6 +63,8 @@ spec:
               value: "{{ .Values.env.DJANGO_SETTINGS_MODULE }}"
             - name: DUMP_DEFAULTS
               value: "{{ .Values.env.DUMP_DEFAULTS }}"
+            - name: FERNET_ENCRYPTION_KEY
+              value: "{{ .Values.env.FERNET_ENCRYPTION_KEY }}"
             - name: MYSQL_HOST
               value: "{{ .Values.env.MYSQL_HOST }}"
             - name: MYSQL_PORT

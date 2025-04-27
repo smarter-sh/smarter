@@ -48,12 +48,18 @@ class SAMBrokerError(SAMExceptionBase):
 
     thing: SmarterJournalThings = None
     command: SmarterJournalCliCommands = None
+    stack_trace: str = None
 
     def __init__(
-        self, message: str = None, thing: SmarterJournalThings = None, command: SmarterJournalCliCommands = None
+        self,
+        message: str = None,
+        thing: SmarterJournalThings = None,
+        command: SmarterJournalCliCommands = None,
+        stack_trace: str = None,
     ):
         self.thing = thing
         self.command = command
+        self.stack_trace = stack_trace
         super().__init__(message)
 
     @property
