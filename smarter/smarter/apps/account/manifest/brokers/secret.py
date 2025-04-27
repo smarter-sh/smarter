@@ -4,7 +4,7 @@
 import logging
 import traceback
 import typing
-from datetime import datetime
+from datetime import datetime, timezone
 
 from dateutil.relativedelta import relativedelta
 from django.forms.models import model_to_dict
@@ -22,6 +22,7 @@ from smarter.apps.account.manifest.transformers.secret import SecretTransformer
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account, Secret
 from smarter.common.api import SmarterApiVersions
+from smarter.common.const import SMARTER_ACCOUNT_NUMBER
 from smarter.lib.django.user import get_user_model
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
@@ -240,9 +241,9 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
     def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
-        current_date = datetime.utcnow()
+        current_date = datetime.now(timezone.utc)
         expiration_date = current_date + relativedelta(months=6)
-        expiration_date_string = expiration_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+        expiration_date_string = expiration_date.date().isoformat()
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -250,14 +251,16 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
                 SAMSecretMetadataKeys.NAME.value: "ExampleSecret",
                 SAMSecretMetadataKeys.DESCRIPTION.value: "an example secret manifest for the Smarter API Secret",
                 SAMSecretMetadataKeys.VERSION.value: "1.0.0",
-                "accountNumber": self.account.account_number,
+                SAMSecretMetadataKeys.ACCOUNT_NUMBER.value: SMARTER_ACCOUNT_NUMBER,
                 SAMSecretMetadataKeys.USERNAME.value: "admin",
+                SAMSecretMetadataKeys.TAGS.value: ["example", "secret"],
+                SAMSecretMetadataKeys.ANNOTATIONS.value: [],
             },
             SAMKeys.SPEC.value: {
                 SAMSecretSpecKeys.CONFIG.value: {
-                    SAMSecretSpecKeys.VALUE.value: "top-secret-value",
+                    SAMSecretSpecKeys.VALUE.value: "<** your unencrypted credential value **>",
                     SAMSecretSpecKeys.DESCRIPTION.value: "salesforce.com api key",
-                    "expirationDate": expiration_date_string,
+                    SAMSecretSpecKeys.EXPIRATION_DATE.value: expiration_date_string,
                 },
             },
         }

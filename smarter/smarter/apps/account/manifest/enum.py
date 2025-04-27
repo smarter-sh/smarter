@@ -36,14 +36,14 @@ class SAMSecretMetadataKeys(SmarterEnumAbstract):
     TAGS = "tags"
     ANNOTATIONS = "annotations"
     USERNAME = "username"
-    ACCOUNT_NUMBER = "account_number"
+    ACCOUNT_NUMBER = "accountNumber"
 
 
 class SAMSecretStatusKeys(SmarterEnumAbstract):
     """Smarter API Secret Metadata keys enumeration."""
 
     USERNAME = "username"
-    ACCOUNT_NUMBER = "account_number"
-    CREATED = "created_at"
-    UPDATED = "updated_at"
-    LAST_ACCESSED = "last_accessed"
+    ACCOUNT_NUMBER = "accountNumber"
+    CREATED = "created"
+    UPDATED = "updated"
+    LAST_ACCESSED = "lastAccessed"
