@@ -21,6 +21,7 @@ PYTHONPATH=./venv:./smarter
 SMTP_SENDER=local.platform.smarter.sh
 SMTP_PASSWORD=SET-ME-PLEASE
 SMTP_USERNAME=SET-ME-PLEASE
+SMTP_FROM_EMAIL=no-reply@smarter.sh
 
 # Api Keys
 # - https://aistudio.google.com/app/apikey
@@ -83,3 +84,6 @@ SMARTER_LOGIN_URL=https://alpha.platform.smarter.sh/login/
 SMARTER_ADMIN_PASSWORD=SET-ME-PLEASE
 SMARTER_ADMIN_USERNAME=admin
 SMARTER_DOCKER_IMAGE=SET-ME-PLEASE
+
+# see: https://fernetkeygen.com/
+FERNET_ENCRYPTION_KEY=pVoqultGK2owVMRN7oZ6fiUv7-IZnS3FLvEj7Zc-Xao=

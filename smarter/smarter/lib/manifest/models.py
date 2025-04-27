@@ -117,8 +117,9 @@ class AbstractSAMBase(SmarterBaseModel, abc.ABC):
     )
     spec: AbstractSAMSpecBase = Field(..., description="spec[obj]: Required. The manifest specification.")
     status: Optional[AbstractSAMStatusBase] = Field(
-        None,
+        default=None,
         description="status[obj]: Optional. Read-only. The run-time state of the resource described by the manifest.",
+        exclude=True,
     )
 
     @field_validator("apiVersion")

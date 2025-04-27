@@ -187,6 +187,7 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
         thing: SmarterJournalThings = None,
         command: SmarterJournalCliCommands = None,
         json_dumps_params=None,
+        stack_trace: str = "No stack trace available.",
         **kwargs,
     ):
         status = kwargs.get("status", None)
@@ -208,11 +209,6 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
             if isinstance(e, dict) and hasattr(e, "__context__")
             else "thing=" + str(thing) + ", command=" + str(command)
         )
-        try:
-            stack_trace = "".join(traceback.format_exception(type(e), e, e.__traceback__))
-        # pylint: disable=broad-except
-        except Exception:
-            stack_trace = "No stack trace available."
         data = {}
         data[SmarterJournalApiResponseKeys.ERROR] = {
             SmarterJournalApiResponseErrorKeys.ERROR_CLASS: error_class,

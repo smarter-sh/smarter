@@ -4,6 +4,7 @@ information about how the React app is integrated into the Django app.
 """
 
 import logging
+import traceback
 from http import HTTPStatus
 from urllib.parse import urljoin
 
@@ -208,6 +209,7 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
                     command=None,
                     e=e,
                     status=HTTPStatus.FORBIDDEN.value,
+                    stack_trace=traceback.format_exc(),
                 )
 
         if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
