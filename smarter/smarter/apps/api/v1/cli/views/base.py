@@ -3,6 +3,7 @@
 import json
 import logging
 import re
+import traceback
 from http import HTTPStatus
 from typing import Type
 
@@ -17,7 +18,6 @@ from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
 from smarter.common.exceptions import SmarterExceptionBase
 from smarter.lib.django.request import SmarterRequestMixin
-from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
@@ -284,6 +284,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                         command=self.command,
                         e=ex,
                         status=HTTPStatus.BAD_REQUEST.value,
+                        stack_trace=traceback.format_exc(),
                     )
 
         try:
@@ -297,6 +298,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 command=self.command,
                 e=e,
                 status=HTTPStatus.FORBIDDEN.value,
+                stack_trace=traceback.format_exc(),
             )
         # Parse the query string parameters from the request into a dictionary.
         # This is used to pass additional parameters to the child view's post method.
@@ -313,6 +315,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                         command=self.command,
                         e=e,
                         status=HTTPStatus.FORBIDDEN.value,
+                        stack_trace=traceback.format_exc(),
                     )
 
         user_agent = request.headers.get("User-Agent", "")
@@ -331,6 +334,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                         f"Unsupported manifest kind: {self.manifest_kind}. should be one of {SAMKinds.all_values()}"
                     ),
                     status=HTTPStatus.BAD_REQUEST.value,
+                    stack_trace=traceback.format_exc(),
                 )
 
         # generic exception handler that simply ensures that in all cases
@@ -349,6 +353,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 command=self.command,
                 e=not_implemented_error.get_formatted_err_message,
                 status=HTTPStatus.NOT_IMPLEMENTED.value,
+                stack_trace=traceback.format_exc(),
             )
         except SAMBrokerErrorNotReady as not_ready_error:
             return SmarterJournaledJsonErrorResponse(
@@ -357,6 +362,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 command=self.command,
                 e=not_ready_error.get_formatted_err_message,
                 status=HTTPStatus.SERVICE_UNAVAILABLE.value,
+                stack_trace=traceback.format_exc(),
             )
         except SAMBrokerErrorNotFound as not_found_error:
             return SmarterJournaledJsonErrorResponse(
@@ -365,6 +371,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 command=self.command,
                 e=not_found_error.get_formatted_err_message,
                 status=HTTPStatus.NOT_FOUND.value,
+                stack_trace=traceback.format_exc(),
             )
         except SAMBrokerReadOnlyError as read_only_error:
             return SmarterJournaledJsonErrorResponse(
@@ -373,6 +380,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 command=self.command,
                 e=read_only_error.get_formatted_err_message,
                 status=HTTPStatus.METHOD_NOT_ALLOWED.value,
+                stack_trace=traceback.format_exc(),
             )
         except SAMBrokerError as broker_error:
             return SmarterJournaledJsonErrorResponse(
@@ -381,6 +389,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 command=self.command,
                 e=broker_error.get_formatted_err_message,
                 status=HTTPStatus.BAD_REQUEST.value,
+                stack_trace=traceback.format_exc(),
             )
         # pylint: disable=broad-except
         except Exception as e:
@@ -390,4 +399,5 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 command=self.command,
                 e=e,
                 status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
+                stack_trace=traceback.format_exc(),
             )

@@ -22,6 +22,7 @@ configuration values. This is useful for debugging and logging.
 # ------------------------------------------------
 
 # python stuff
+import base64
 import logging
 import os  # library for interacting with the operating system
 import platform  # library to view information about the server host this module runs on
@@ -203,6 +204,7 @@ class SettingsDefaults:
         "AWS_EKS_CLUSTER_NAME", TFVARS.get("aws_eks_cluster_name", "apps-hosting-service")
     )
     AWS_RDS_DB_INSTANCE_IDENTIFIER = os.environ.get("AWS_RDS_DB_INSTANCE_IDENTIFIER", "apps-hosting-service")
+    FERNET_ENCRYPTION_KEY = os.environ.get("FERNET_ENCRYPTION_KEY", None)
 
     GOOGLE_MAPS_API_KEY: str = os.environ.get(
         "GOOGLE_MAPS_API_KEY",
@@ -268,7 +270,7 @@ class SettingsDefaults:
     SECRET_KEY = os.getenv("SECRET_KEY")
 
     SMTP_SENDER = os.environ.get("SMTP_SENDER", None)
-    SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", None)
+    SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", "no-reply@smarter.sh")
     SMTP_HOST = os.environ.get("SMTP_HOST", "email-smtp.us-east-2.amazonaws.com")
     SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
     SMTP_USE_SSL = bool(os.environ.get("SMTP_USE_SSL", False))
@@ -398,6 +400,10 @@ class Settings(BaseSettings):
     environment: Optional[str] = Field(
         SettingsDefaults.ENVIRONMENT,
         env="ENVIRONMENT",
+    )
+    fernet_encryption_key: Optional[str] = Field(
+        SettingsDefaults.FERNET_ENCRYPTION_KEY,
+        env="FERNET_ENCRYPTION_KEY",
     )
     local_hosts: Optional[List[str]] = Field(
         SettingsDefaults.LOCAL_HOSTS,
@@ -737,6 +743,24 @@ class Settings(BaseSettings):
         """Validate environment"""
         if v in [None, ""]:
             return SettingsDefaults.ENVIRONMENT
+        return v
+
+    @field_validator("fernet_encryption_key")
+    def validate_fernet_encryption_key(cls, v) -> str:
+        """Validate fernet_encryption_key"""
+
+        if v in [None, ""]:
+            return SettingsDefaults.FERNET_ENCRYPTION_KEY
+
+        try:
+            # Decode the key using URL-safe base64
+            decoded_key = base64.urlsafe_b64decode(v)
+            # Ensure the decoded key is exactly 32 bytes
+            if len(decoded_key) != 32:
+                raise ValueError("Fernet key must be exactly 32 bytes when decoded.")
+        except (ValueError, base64.binascii.Error) as e:
+            raise SmarterValueError(f"Invalid Fernet encryption key: {e}") from e
+
         return v
 
     @field_validator("local_hosts")
