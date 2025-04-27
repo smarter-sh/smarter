@@ -40,8 +40,9 @@ class SAMPlugin(AbstractSAMBase):
         description=f"{class_identifier}.{SAMKeys.SPEC.value}[obj]: Required, the {MANIFEST_KIND} specification.",
     )
     status: Optional[SAMPluginStatus] = Field(
-        ...,
+        default=None,
         description=f"{class_identifier}.{SAMKeys.STATUS.value}[obj]: Optional, Read-only. Stateful status information about the {MANIFEST_KIND}.",
+        exclude=True,
     )
 
     @model_validator(mode="after")
