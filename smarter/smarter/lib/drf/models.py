@@ -56,7 +56,11 @@ class SmarterAuthToken(AuthToken, TimestampedModel):
 
     def has_permissions(self, user) -> bool:
         """Determine if the authenticated user has permissions to manage this key."""
-        return user.is_staff
+        if not hasattr(user, "is_authenticated") or not user.is_authenticated:
+            return False
+        if not hasattr(user, "is_staff") or not hasattr(user, "is_superuser"):
+            return False
+        return user.is_staff or user.is_superuser
 
     def activate(self):
         """Activate the API key."""
