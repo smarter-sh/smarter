@@ -269,7 +269,9 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             )
             self._url_urlunparse_without_params = SmarterValidator.urlify(self._url_urlunparse_without_params)
             return self._url_urlunparse_without_params
-        logger.error("%s - url is None", self.formatted_class_name)
+        logger.warning(
+            "%s.url() - property was accessed prior to url being set. Returning None", self.formatted_class_name
+        )
 
     @property
     def parsed_url(self) -> ParseResult:

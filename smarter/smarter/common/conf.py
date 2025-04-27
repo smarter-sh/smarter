@@ -496,6 +496,13 @@ class Settings(BaseSettings):
     stripe_test_secret_key: Optional[str] = Field(SettingsDefaults.STRIPE_TEST_SECRET_KEY, env="STRIPE_TEST_SECRET_KEY")
 
     @property
+    def protocol(self) -> str:
+        """Return the protocol"""
+        if self.environment in SmarterEnvironments.aws_environments:
+            return "https"
+        return "http"
+
+    @property
     def data_directory(self) -> str:
         """Data directory"""
         return "/home/smarter_user/data"
