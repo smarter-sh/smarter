@@ -93,3 +93,9 @@ class DocsExampleManifestUserView(DocsExampleManifestBaseView):
     """User JSON Schema view"""
 
     kind = SAMKinds(SAMKinds.USER)
+
+
+class DocsExampleManifestSecretView(DocsExampleManifestBaseView):
+    """Secret JSON Schema view"""
+
+    kind = SAMKinds(SAMKinds.SECRET)
