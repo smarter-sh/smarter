@@ -7,6 +7,7 @@ from http import HTTPStatus
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.common.conf import settings as smarter_settings
+from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 
 
 logger = logging.getLogger(__name__)
@@ -31,20 +32,20 @@ class TestDocsManifests(ApiV1TestBase):
             self.assertIsInstance(response_body, dict)
 
             # Verify high-level structure
-            self.assertIn("data", response_body)
-            self.assertIsInstance(response_body["data"], dict)
+            self.assertIn(SmarterJournalApiResponseKeys.DATA, response_body)
+            self.assertIsInstance(response_body[SmarterJournalApiResponseKeys.DATA], dict)
 
-            self.assertIn("message", response_body)
-            self.assertIsInstance(response_body["message"], str)
+            self.assertIn(SmarterJournalApiResponseKeys.MESSAGE, response_body)
+            self.assertIsInstance(response_body[SmarterJournalApiResponseKeys.MESSAGE], str)
 
-            self.assertIn("api", response_body)
-            self.assertIsInstance(response_body["api"], str)
+            self.assertIn(SmarterJournalApiResponseKeys.API, response_body)
+            self.assertIsInstance(response_body[SmarterJournalApiResponseKeys.API], str)
 
-            self.assertIn("thing", response_body)
-            self.assertIsInstance(response_body["thing"], str)
+            self.assertIn(SmarterJournalApiResponseKeys.THING, response_body)
+            self.assertIsInstance(response_body[SmarterJournalApiResponseKeys.THING], str)
 
-            self.assertIn("metadata", response_body)
-            self.assertIsInstance(response_body["metadata"], dict)
+            self.assertIn(SmarterJournalApiResponseKeys.METADATA, response_body)
+            self.assertIsInstance(response_body[SmarterJournalApiResponseKeys.METADATA], dict)
 
         except json.JSONDecodeError:
             self.fail("Response body is not valid JSON")
