@@ -270,7 +270,7 @@ class SettingsDefaults:
     SECRET_KEY = os.getenv("SECRET_KEY")
 
     SMTP_SENDER = os.environ.get("SMTP_SENDER", None)
-    SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", None)
+    SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", "no-reply@smarter.sh")
     SMTP_HOST = os.environ.get("SMTP_HOST", "email-smtp.us-east-2.amazonaws.com")
     SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
     SMTP_USE_SSL = bool(os.environ.get("SMTP_USE_SSL", False))
