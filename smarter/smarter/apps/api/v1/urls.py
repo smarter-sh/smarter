@@ -30,7 +30,7 @@ urlpatterns = [
     # /api/v1/cli/ is used for the command-line interface
     path("cli/", include("smarter.apps.api.v1.cli.urls")),
     # /api/v1/cli/tests is used for unit tests
-    path("tests/", include("smarter.apps.api.v1.cli.tests.urls")),
+    path("tests/", include("smarter.apps.api.v1.tests.urls")),
 ]
 
 # for backward compatibility prior to 0.7.2

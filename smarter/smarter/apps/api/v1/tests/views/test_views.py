@@ -16,11 +16,19 @@ from smarter.lib.drf.views.token_authentication_helpers import (
 
 
 logger = logging.getLogger(__name__)
-faux_data = {
+faux_dict = {
     "message": "This is a test JSON response. This data is static, and it is not real.",
     "status": "success",
     "data": {"id": 1, "name": "Test User", "email": "testuser@example.com"},
 }
+faux_list = [
+    {
+        "id": i,
+        **faux_dict,
+        "message": f"This is a test JSON response for item {i}. This data is static, and it is not real.",
+    }
+    for i in range(1, 6)
+]
 
 
 class TestJsonDictView(SmarterUnauthenticatedAPIView):
@@ -28,16 +36,20 @@ class TestJsonDictView(SmarterUnauthenticatedAPIView):
 
     def get(self, request, *args, **kwargs):
         """Handle GET requests and return a faux JSON dictionary."""
-        return Response(faux_data, status=status.HTTP_200_OK)
+        return Response(faux_dict, status=status.HTTP_200_OK)
 
 
 class TestJsonListView(SmarterUnauthenticatedAPIListView):
     """Returns a list of JSON dicts for testing purposes."""
 
+    def get_queryset(self):
+        """Provide a faux queryset for the view."""
+        return faux_list
+
     def get(self, request, *args, **kwargs):
         """Handle GET requests and return a faux JSON list."""
-        faux_list = [faux_data] * 5  # Create a list of identical faux data
-        return Response(faux_list, status=status.HTTP_200_OK)
+        queryset = self.get_queryset()  # Use the faux queryset
+        return Response(queryset, status=status.HTTP_200_OK)
 
 
 class TestJsonDictViewAuthenticated(SmarterAuthenticatedAPIView):
@@ -45,13 +57,17 @@ class TestJsonDictViewAuthenticated(SmarterAuthenticatedAPIView):
 
     def get(self, request, *args, **kwargs):
         """Handle GET requests and return a faux JSON dictionary."""
-        return Response(faux_data, status=status.HTTP_200_OK)
+        return Response(faux_dict, status=status.HTTP_200_OK)
 
 
 class TestJsonListViewAuthenticated(SmarterAuthenticatedListAPIView):
     """Returns a list of JSON dicts for testing purposes."""
 
+    def get_queryset(self):
+        """Provide a faux queryset for the view."""
+        return faux_list
+
     def get(self, request, *args, **kwargs):
         """Handle GET requests and return a faux JSON list."""
-        faux_list = [faux_data] * 5  # Create a list of identical faux data
-        return Response(faux_list, status=status.HTTP_200_OK)
+        queryset = self.get_queryset()  # Use the faux queryset
+        return Response(queryset, status=status.HTTP_200_OK)
