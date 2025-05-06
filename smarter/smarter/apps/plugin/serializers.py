@@ -8,6 +8,8 @@ from smarter.apps.account.serializers import (
     UserProfileSerializer,
 )
 from smarter.apps.plugin.models import (
+    PluginDataApi,
+    PluginDataApiConnection,
     PluginDataSql,
     PluginDataSqlConnection,
     PluginDataStatic,
@@ -112,7 +114,7 @@ class PluginDataStaticSerializer(serializers.ModelSerializer):
 
 
 class PluginDataSqlConnectionSerializer(serializers.ModelSerializer):
-    """PluginDataSql model serializer."""
+    """PluginDataSqlConnection model serializer."""
 
     # pylint: disable=missing-class-docstring
     class Meta:
@@ -160,6 +162,74 @@ class PluginDataSqlSerializer(serializers.ModelSerializer):
             "sql_query",
             "test_values",
             "limit",
+        ]
+
+    def to_representation(self, instance):
+        """Convert `username` to `userName`."""
+        representation = super().to_representation(instance)
+        new_representation = {}
+        for key in representation.keys():
+            new_key = "".join(word.capitalize() for word in key.split("_"))
+            new_key = new_key[0].lower() + new_key[1:]
+            if isinstance(representation[key], str):
+                new_representation[new_key] = representation[key].strip()
+            else:
+                new_representation[new_key] = representation[key]
+        return new_representation
+
+
+class PluginDataApiConnectionSerializer(serializers.ModelSerializer):
+    """PluginDataApiConnection model serializer."""
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = PluginDataApiConnection
+        fields = [
+            "name",
+            "description",
+            "url",
+            "headers",
+            "params",
+            "data",
+            "auth_type",
+            "username",
+            "password",
+        ]
+
+    def to_representation(self, instance):
+        """Convert `username` to `userName`."""
+        representation = super().to_representation(instance)
+        new_representation = {}
+        for key in representation.keys():
+            new_key = "".join(word.capitalize() for word in key.split("_"))
+            new_key = new_key[0].lower() + new_key[1:]
+            if isinstance(representation[key], str):
+                new_representation[new_key] = representation[key].strip()
+            else:
+                new_representation[new_key] = representation[key]
+        return new_representation
+
+
+class PluginDataApiSerializer(serializers.ModelSerializer):
+    """PluginDataApi model serializer."""
+
+    connection = serializers.SlugRelatedField(slug_field="name", queryset=PluginDataApiConnection.objects.all())
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = PluginDataApi
+        fields = [
+            "connection",
+            "description",
+            "parameters",
+            "url",
+            "method",
+            "headers",
+            "params",
+            "data",
+            "auth_type",
+            "username",
+            "password",
         ]
 
     def to_representation(self, instance):

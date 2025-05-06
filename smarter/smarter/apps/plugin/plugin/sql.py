@@ -19,7 +19,6 @@ from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
 from ..manifest.models.plugin.const import MANIFEST_KIND
-from ..models import PluginDataSql
 from .base import PluginBase
 
 
