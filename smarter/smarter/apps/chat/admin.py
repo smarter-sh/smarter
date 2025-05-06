@@ -2,6 +2,7 @@
 """Django admin configuration for the chat app."""
 
 from smarter.apps.account.models import UserProfile
+from smarter.apps.account.utils import get_cached_account_for_user
 from smarter.lib.django.admin import RestrictedModelAdmin
 
 from .models import Chat, ChatPluginUsage, ChatToolCall
@@ -21,8 +22,8 @@ class ChatAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
-            return qs.filter(account=user_profile.account)
+            account = get_cached_account_for_user(user=request.user)
+            return qs.filter(account=account)
         except UserProfile.DoesNotExist:
             return qs.none()
 
@@ -42,8 +43,8 @@ class ChatHistoryAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
-            return qs.filter(chat__account=user_profile.account)
+            account = get_cached_account_for_user(user=request.user)
+            return qs.filter(chat__account=account)
         except UserProfile.DoesNotExist:
             return qs.none()
 
@@ -62,8 +63,8 @@ class ChatPluginUsageAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
-            return qs.filter(chat__account=user_profile.account)
+            account = get_cached_account_for_user(user=request.user)
+            return qs.filter(chat__account=account)
         except UserProfile.DoesNotExist:
             return qs.none()
 
@@ -82,7 +83,7 @@ class ChatToolCallHistoryAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
-            return qs.filter(chat__account=user_profile.account)
+            account = get_cached_account_for_user(user=request.user)
+            return qs.filter(chat__account=account)
         except UserProfile.DoesNotExist:
             return qs.none()
