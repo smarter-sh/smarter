@@ -1,6 +1,8 @@
 # pylint: disable=missing-docstring,missing-module-docstring,missing-class-docstring,missing-function-docstring
 # pylint: disable=C0114,C0115
 """PluginMeta app models."""
+
+# python stuff
 import json
 import logging
 import re
@@ -8,9 +10,13 @@ from abc import abstractmethod
 from functools import lru_cache
 from http import HTTPStatus
 from typing import Any, Union
+from urllib.parse import urljoin
 
+# 3rd party stuff
 import requests
 import yaml
+
+# django stuff
 from django.contrib.auth.hashers import check_password, make_password
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import DatabaseError, models
@@ -19,6 +25,7 @@ from django.db.utils import ConnectionHandler
 from rest_framework import serializers
 from taggit.managers import TaggableManager
 
+# smarter stuff
 from smarter.apps.account.models import Account, Secret, UserProfile
 from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterValueError
@@ -415,6 +422,11 @@ class PluginDataSql(PluginDataBase):
         def all(cls) -> list:
             return [cls.INT, cls.FLOAT, cls.STR, cls.BOOL, cls.LIST, cls.DICT, cls.NULL]
 
+    name = models.CharField(
+        help_text="The name of the SQL connection, camelCase, without spaces. Example: 'HRDatabase', 'SalesDatabase', 'InventoryDatabase'.",
+        max_length=255,
+        validators=[validate_no_spaces],
+    )
     connection = models.ForeignKey(PluginDataSqlConnection, on_delete=models.CASCADE, related_name="plugin_data_sql")
     parameters = models.JSONField(
         help_text="A JSON dict containing parameter names and data types. Example: {'unit': {'type': 'string', 'enum': ['Celsius', 'Fahrenheit'], 'description': 'The temperature unit to use. Infer this from the user's location.'}}",
@@ -747,6 +759,11 @@ class PluginDataApi(PluginDataBase):
         blank=True,
         null=True,
     )
+
+    @property
+    def url(self) -> str:
+        """Return the full URL for the API endpoint."""
+        return urljoin(self.connection.root_domain, self.endpoint)
 
     def data(self, params: dict = None) -> dict:
         return {

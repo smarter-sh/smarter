@@ -38,12 +38,16 @@ from smarter.apps.chatbot.models import (
 )
 from smarter.apps.plugin.admin import (
     PluginAdmin,
+    PluginDataApiAdmin,
     PluginDataApiConnectionAdmin,
+    PluginDataSqlAdmin,
     PluginDataSqlConnectionAdmin,
     PluginSelectionHistoryAdmin,
 )
 from smarter.apps.plugin.models import (
+    PluginDataApi,
     PluginDataApiConnection,
+    PluginDataSql,
     PluginDataSqlConnection,
     PluginMeta,
     PluginSelectorHistory,
@@ -160,6 +164,9 @@ restricted_site.register(PluginMeta, PluginAdmin)
 restricted_site.register(PluginDataSqlConnection, PluginDataSqlConnectionAdmin)
 restricted_site.register(PluginSelectorHistory, PluginSelectionHistoryAdmin)
 restricted_site.register(PluginDataApiConnection, PluginDataApiConnectionAdmin)
+restricted_site.register(PluginDataApi, PluginDataApiAdmin)
+restricted_site.register(PluginDataSql, PluginDataSqlAdmin)
+
 
 # Journal Models
 restricted_site.register(SAMJournal, SAMJournalAdmin)

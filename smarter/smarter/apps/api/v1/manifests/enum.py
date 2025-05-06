@@ -27,6 +27,9 @@ from smarter.apps.chat.manifest.models.chat_tool_call.const import (
 from smarter.apps.chatbot.manifest.models.chatbot.const import (
     MANIFEST_KIND as CHATBOT_MANIFEST_KIND,
 )
+from smarter.apps.plugin.manifest.models.api_connection.const import (
+    MANIFEST_KIND as API_CONNECTION_MANIFEST_KIND,
+)
 from smarter.apps.plugin.manifest.models.plugin.const import (
     MANIFEST_KIND as PLUGIN_MANIFEST_KIND,
 )
@@ -55,7 +58,7 @@ class SAMKinds(SmarterEnumAbstract):
     CHAT_TOOL_CALL = CHAT_TOOL_CALL_MANIFEST_KIND
     CHATBOT = CHATBOT_MANIFEST_KIND
     SQLCONNECTION = SQLCONNECTION_MANIFEST_KIND
-    APICONNECTION = "PluginDataApiConnection"
+    APICONNECTION = API_CONNECTION_MANIFEST_KIND
     SECRET = SECRET_MANIFEST_KIND
 
     @classmethod
