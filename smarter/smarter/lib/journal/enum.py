@@ -71,7 +71,7 @@ class SmarterJournalThings(SmarterEnumAbstract):
     CHAT_TOOL_CALL = "ChatToolCall"
     CHATBOT = "Chatbot"
     SQLCONNECTION = "SqlConnection"
-    # APICONNECTION = "ApiConnection"
+    APICONNECTION = "ApiConnection"
     SECRET = "Secret"
 
     @classmethod

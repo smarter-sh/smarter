@@ -49,6 +49,38 @@ class SmarterValidator:
     VALID_CLEAN_STRING_WITH_SPACES = r"^[\w\-\.~:\/\?#\[\]@!$&'()*+,;= %]+$"
 
     @staticmethod
+    def validate_semantic_version(version: str) -> None:
+        """Validate semantic version format (e.g., 1.12.1)"""
+        if not re.match(SmarterValidator.VALID_SEMANTIC_VERSION, version):
+            raise SmarterValueError(f"Invalid semantic version {version}")
+
+    @staticmethod
+    def is_valid_semantic_version(version: str) -> bool:
+        """Check if the semantic version is valid"""
+        try:
+            SmarterValidator.validate_semantic_version(version)
+            return True
+        except SmarterValueError:
+            return False
+
+    @staticmethod
+    def validate_is_not_none(value: str) -> None:
+        """Validate that the value is not None"""
+        if value is None:
+            raise SmarterValueError("Value cannot be None")
+        if not value:
+            raise SmarterValueError("Value cannot be empty")
+
+    @staticmethod
+    def is_not_none(value: str) -> bool:
+        """Check if the value is not None"""
+        try:
+            SmarterValidator.validate_is_not_none(value)
+            return True
+        except SmarterValueError:
+            return False
+
+    @staticmethod
     def validate_session_key(session_key: str) -> None:
         """Validate session key format"""
         if not re.match(SmarterValidator.VALID_SESSION_KEY, session_key):
