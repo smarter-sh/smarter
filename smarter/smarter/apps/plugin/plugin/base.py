@@ -1,5 +1,6 @@
 """A Compound Model class for managing plugins."""
 
+# python stuff
 import copy
 import json
 import logging
@@ -7,17 +8,17 @@ import re
 from abc import ABC, abstractmethod
 from typing import Any, Type, Union
 
+# 3rd party stuff
 import yaml
 from django.db import transaction
 from rest_framework import serializers
 
+# smarter stuff
 from smarter.apps.account.manifest.models.user_profile import UserProfileModel
 from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.chat.providers.const import OpenAIMessageKeys
 from smarter.common.api import SmarterApiVersions
-
-# FIX NOTE: these imports need to be parameterized by version.
 from smarter.common.exceptions import SmarterExceptionBase, SmarterValueError
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import UserType
@@ -25,6 +26,7 @@ from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 
+# plugin stuff
 from ..manifest.enum import SAMPluginSpecSelectorKeyDirectiveValues
 from ..manifest.models.plugin.const import MANIFEST_KIND
 from ..manifest.models.plugin.model import SAMPlugin
