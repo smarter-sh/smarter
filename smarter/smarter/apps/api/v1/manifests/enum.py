@@ -55,7 +55,7 @@ class SAMKinds(SmarterEnumAbstract):
     CHAT_TOOL_CALL = CHAT_TOOL_CALL_MANIFEST_KIND
     CHATBOT = CHATBOT_MANIFEST_KIND
     SQLCONNECTION = SQLCONNECTION_MANIFEST_KIND
-    # APICONNECTION = "PluginDataApiConnection"
+    APICONNECTION = "PluginDataApiConnection"
     SECRET = SECRET_MANIFEST_KIND
 
     @classmethod

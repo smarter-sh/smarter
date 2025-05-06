@@ -33,11 +33,7 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
 )
-from smarter.lib.manifest.enum import (
-    SAMKeys,
-    SCLIResponseGet,
-    SCLIResponseGetData,
-)
+from smarter.lib.manifest.enum import SAMKeys, SCLIResponseGet, SCLIResponseGetData
 from smarter.lib.manifest.loader import SAMLoader
 
 

@@ -25,12 +25,7 @@ from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import User, UserType
 from smarter.lib.django.validators import SmarterValidator
 
-from .signals import (
-    new_charge_created,
-    new_user_created,
-    secret_created,
-    secret_edited,
-)
+from .signals import new_charge_created, new_user_created, secret_created, secret_edited
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))

@@ -19,7 +19,7 @@ from django.db.utils import ConnectionHandler
 from rest_framework import serializers
 from taggit.managers import TaggableManager
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account, Secret, UserProfile
 from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.model_helpers import TimestampedModel
@@ -307,6 +307,11 @@ class PluginDataSqlConnection(TimestampedModel):
         max_length=255,
         choices=DBMS_CHOICES,
     )
+    timeout = models.IntegerField(
+        help_text="The timeout for the database connection in seconds. Default is 30 seconds.",
+        default=30,
+        validators=[MinValueValidator(1)],
+    )
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="plugin_data_sql_connections")
     description = models.TextField(
         help_text="A brief description of the connection. Be verbose, but not too verbose.",
@@ -355,7 +360,7 @@ class PluginDataSqlConnection(TimestampedModel):
         }
         try:
             connection_handler = ConnectionHandler(databases)
-            connection = connection_handler["default"]
+            connection: BaseDatabaseWrapper = connection_handler["default"]
             connection.ensure_connection()
             return connection
         except DatabaseError as e:
@@ -377,7 +382,7 @@ class PluginDataSqlConnection(TimestampedModel):
             "https": f"https://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}",
         }
         try:
-            response = requests.get("http://www.google.com", proxies=proxy_dict, timeout=30)
+            response = requests.get("http://www.google.com", proxies=proxy_dict, timeout=self.timeout)
             return response.status_code in [HTTPStatus.OK, HTTPStatus.PERMANENT_REDIRECT]
         except requests.exceptions.RequestException as e:
             logger.error("proxy test connection failed: %s", e)
@@ -592,6 +597,267 @@ class PluginDataSql(PluginDataBase):
         """Return a dict by executing the query with the provided params."""
         logger.info("PluginDataSql.sanitized_return_data called. - %s", params)
         return self.execute_query(params)
+
+    def save(self, *args, **kwargs):
+        """Override the save method to validate the field dicts."""
+        self.validate()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return str(self.plugin.account.account_number + " - " + self.plugin.name)
+
+
+class PluginDataApiConnection(TimestampedModel):
+    """
+    PluginData Api Connection model.
+    This model is used to store the connection details for a Rest API remote data source
+    for a Smarter Plugin.
+    """
+
+    AUTH_METHOD_CHOICES = [
+        ("none", "None"),
+        ("basic", "Basic Auth"),
+        ("token", "Token Auth"),
+        ("oauth", "OAuth"),
+    ]
+
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="plugin_data_api_connections")
+    name = models.CharField(
+        help_text="The name of the API connection, camelCase, without spaces. Example: 'weatherApi', 'stockApi'.",
+        max_length=255,
+        validators=[validate_no_spaces],
+    )
+    description = models.TextField(
+        help_text="A brief description of the API connection. Be verbose, but not too verbose.",
+    )
+    root_domain = models.URLField(
+        help_text="The root domain of the API. Example: 'https://api.example.com'.",
+    )
+    api_key = models.ForeignKey(
+        Secret,
+        on_delete=models.CASCADE,
+        related_name="plugin_data_api_connections",
+        help_text="The API key for authentication, if required.",
+        blank=True,
+        null=True,
+    )
+    auth_method = models.CharField(
+        help_text="The authentication method to use. Example: 'Basic Auth', 'Token Auth'.",
+        max_length=50,
+        choices=AUTH_METHOD_CHOICES,
+        default="none",
+    )
+    timeout = models.IntegerField(
+        help_text="The timeout for the API request in seconds. Default is 30 seconds.",
+        default=30,
+        validators=[MinValueValidator(1)],
+    )
+    version = models.CharField(max_length=255, default="1.0.0")
+
+    # Proxy fields
+    proxy_host = models.CharField(max_length=255, blank=True, null=True)
+    proxy_port = models.IntegerField(blank=True, null=True)
+    proxy_username = models.CharField(max_length=255, blank=True, null=True)
+    proxy_password = models.CharField(max_length=255, blank=True, null=True)
+
+    def set_proxy_password(self, raw_password):
+        self.proxy_password = make_password(raw_password)
+        self.save()
+
+    def check_proxy_password(self, raw_password):
+        return check_password(raw_password, self.proxy_password)
+
+    def test_proxy(self) -> bool:
+        proxy_dict = {
+            "http": f"http://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}",
+            "https": f"https://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}",
+        }
+        try:
+            response = requests.get("http://www.google.com", proxies=proxy_dict, timeout=self.timeout)
+            return response.status_code in [HTTPStatus.OK, HTTPStatus.PERMANENT_REDIRECT]
+        except requests.exceptions.RequestException as e:
+            logger.error("proxy test connection failed: %s", e)
+            return False
+
+    def test_connection(self) -> bool:
+        """Test the API connection by making a simple GET request to the root domain."""
+        headers = {}
+        if self.auth_method == "basic" and self.api_key:
+            headers["Authorization"] = f"Basic {self.api_key}"
+        elif self.auth_method == "token" and self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+
+        try:
+            response = requests.get(self.root_domain, headers=headers, timeout=self.timeout)
+            return response.status_code in [HTTPStatus.OK, HTTPStatus.PERMANENT_REDIRECT]
+        except requests.exceptions.RequestException as e:
+            logger.error("API test connection failed: %s", e)
+            return False
+
+    def get_connection_string(self):
+        """Return the connection string."""
+        return f"{self.root_domain} (Auth: {self.auth_method})"
+
+    def validate(self) -> bool:
+        """Validate the API connection."""
+        return self.test_connection()
+
+    def __str__(self) -> str:
+        return self.name + " - " + self.get_connection_string()
+
+
+class PluginDataApi(PluginDataBase):
+    """
+    PluginDataApi model.
+
+    This model is used to store the connection endpoint details for a REST API remote data source.
+    """
+
+    connection = models.ForeignKey(
+        PluginDataApiConnection,
+        on_delete=models.CASCADE,
+        related_name="plugin_data_api",
+        help_text="The API connection associated with this plugin.",
+    )
+    endpoint = models.CharField(
+        max_length=255,
+        help_text="The endpoint path for the API. Example: '/v1/weather'.",
+    )
+    parameters = models.JSONField(
+        help_text="A JSON dict containing parameter names and data types. Example: {'city': {'type': 'string', 'description': 'City name'}}",
+        default=dict,
+        blank=True,
+        null=True,
+    )
+    headers = models.JSONField(
+        help_text="A JSON dict containing headers to be sent with the API request. Example: {'Authorization': 'Bearer <token>'}",
+        default=dict,
+        blank=True,
+        null=True,
+    )
+    body = models.JSONField(
+        help_text="A JSON dict containing the body of the API request, if applicable.",
+        default=dict,
+        blank=True,
+        null=True,
+    )
+    test_values = models.JSONField(
+        help_text="A JSON dict containing test values for each parameter. Example: {'city': 'San Francisco'}",
+        default=dict,
+        blank=True,
+        null=True,
+    )
+
+    def data(self, params: dict = None) -> dict:
+        return {
+            "parameters": self.parameters,
+            "endpoint": self.endpoint,
+            "headers": self.headers,
+            "body": self.body,
+        }
+
+    def validate_parameter(self, param) -> dict:
+        """
+        Validate a parameter dict. The structure of the parameter dict is:
+        {
+            "type": "string",
+            "description": "City name",
+            "required": True
+        }
+        """
+        try:
+            param_type = param["type"]
+            param_description = param["description"]
+            param_required = param.get("required", False)
+        except KeyError as e:
+            raise SmarterValueError(
+                f"{self.plugin.name} PluginApi custom_tool() error: missing required parameter key: {e}"
+            ) from e
+
+        if param_type not in PluginDataSql.DataTypes.all():
+            raise SmarterValueError(
+                f"{self.plugin.name} PluginApi custom_tool() error: invalid parameter type: {param_type}. Valid types are: {PluginDataSql.DataTypes.all()}"
+            )
+
+        if not isinstance(param_required, bool):
+            raise SmarterValueError(
+                f"{self.plugin.name} PluginApi custom_tool() error: invalid parameter required: {param_required}. Must be a boolean."
+            )
+
+        if not isinstance(param_description, str):
+            raise SmarterValueError(
+                f"{self.plugin.name} PluginApi custom_tool() error: invalid parameter description: {param_description}. Must be a string."
+            )
+
+    def validate_params(self, params: dict) -> bool:
+        """Validate the input params against self.parameters."""
+        for key in params.keys():
+            if key not in self.parameters.keys():
+                raise SmarterValueError(f"API parameter '{key}' not found in parameters.")
+
+        for key, value in params.items():
+            # Ensure self.parameters is a dictionary
+            parameters = self.parameters or {}
+            if not isinstance(parameters, dict):
+                try:
+                    # Attempt to parse parameters as a JSON string if it's not a dict
+                    parameters = json.loads(parameters)
+                except (TypeError, json.JSONDecodeError) as e:
+                    raise SmarterValueError("Parameters must be a valid dictionary or JSON-serializable.") from e
+
+            if key not in parameters:
+                raise SmarterValueError(f"Parameter '{key}' not found in parameters.")
+
+            param_type = parameters[key].get("type")
+
+            if param_type == "int" and not isinstance(value, int):
+                raise SmarterValueError(f"Parameter '{key}' must be an integer.")
+            if param_type == "str" and not isinstance(value, str):
+                raise SmarterValueError(f"Parameter '{key}' must be a string.")
+            if param_type == "float" and not isinstance(value, float):
+                raise SmarterValueError(f"Parameter '{key}' must be a float.")
+            if param_type == "bool" and not isinstance(value, bool):
+                raise SmarterValueError(f"Parameter '{key}' must be a boolean.")
+            if param_type == "list" and not isinstance(value, list):
+                raise SmarterValueError(f"Parameter '{key}' must be a list.")
+            if param_type == "dict" and not isinstance(value, dict):
+                raise SmarterValueError(f"Parameter '{key}' must be a dict.")
+            if param_type == "null" and value is not None:
+                raise SmarterValueError(f"Parameter '{key}' must be null.")
+        return True
+
+    def prepare_request(self, params: dict) -> dict:
+        """Prepare the API request by merging parameters, headers, and body."""
+        params = params or {}
+        self.validate_params(params)
+
+        request_data = {
+            "url": f"{self.connection.root_domain}{self.endpoint}",
+            "headers": self.headers or {},
+            "params": params,
+            "json": self.body or {},
+        }
+        return request_data
+
+    def execute_request(self, params: dict) -> Union[dict, bool]:
+        """Execute the API request and return the results."""
+        request_data = self.prepare_request(params)
+        try:
+            response = requests.get(**request_data, timeout=self.connection.timeout)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            logger.error("API request failed: %s", e)
+            return False
+
+    def test(self) -> Union[dict, bool]:
+        """Test the API request using the test_values in the record."""
+        return self.execute_request(self.test_values)
+
+    def sanitized_return_data(self, params: dict = None) -> dict:
+        """Return a dict by executing the API request with the provided params."""
+        logger.info("PluginDataApi.sanitized_return_data called. - %s", params)
+        return self.execute_request(params)
 
     def save(self, *args, **kwargs):
         """Override the save method to validate the field dicts."""

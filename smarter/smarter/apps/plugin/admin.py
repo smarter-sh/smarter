@@ -5,9 +5,15 @@ import re
 from django.contrib import admin
 
 from smarter.apps.account.models import UserProfile
+from smarter.apps.account.utils import get_cached_account_for_user
 from smarter.lib.django.admin import RestrictedModelAdmin
 
-from .models import PluginDataStatic, PluginPrompt, PluginSelector
+from .models import (
+    PluginDataApiConnection,
+    PluginDataStatic,
+    PluginPrompt,
+    PluginSelector,
+)
 
 
 # Register your models here.
@@ -69,8 +75,8 @@ class PluginAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
-            return qs.filter(account=user_profile.account)
+            account = get_cached_account_for_user(user=request.user)
+            return qs.filter(account=account)
         except UserProfile.DoesNotExist:
             return qs.none()
 
@@ -99,8 +105,8 @@ class PluginDataSqlConnectionAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
-            return qs.filter(account=user_profile.account)
+            account = get_cached_account_for_user(user=request.user)
+            return qs.filter(account=account)
         except UserProfile.DoesNotExist:
             return qs.none()
 
@@ -129,8 +135,36 @@ class PluginSelectionHistoryAdmin(RestrictedModelAdmin):
         if request.user.is_superuser:
             return qs
         try:
-            user_profile = UserProfile.objects.get(user=request.user)
-            plugins = PluginSelector.objects.filter(plugin__account=user_profile.account)
+            account = get_cached_account_for_user(user=request.user)
+            plugins = PluginSelector.objects.filter(plugin__account=account)
             return qs.filter(plugin_selector__in=plugins)
+        except UserProfile.DoesNotExist:
+            return qs.none()
+
+
+class PluginDataApiConnectionAdmin(RestrictedModelAdmin):
+    """Plugin Data API Connection model admin."""
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+    list_display = (
+        "created_at",
+        "account",
+        "name",
+        "root_domain",
+        "api_key",
+        "updated_at",
+    )
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        try:
+            account = get_cached_account_for_user(user=request.user)
+            return qs.filter(account=account)
         except UserProfile.DoesNotExist:
             return qs.none()
