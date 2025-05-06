@@ -3,4 +3,4 @@
 from smarter.lib.journal.enum import SmarterJournalThings
 
 
-MANIFEST_KIND = SmarterJournalThings.SQLCONNECTION.value
+MANIFEST_KIND = SmarterJournalThings.PLUGIN_DATA_SQL_CONNECTION.value

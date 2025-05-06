@@ -32,7 +32,7 @@ class ApiConnection(SmarterBaseModel):
         ...,
         description="A brief description of the API connection. Be verbose, but not too verbose.",
     )
-    root_domain: str = Field(
+    base_url: str = Field(
         ...,
         description="The root domain of the API. Example: 'https://api.example.com'.",
     )
@@ -49,12 +49,12 @@ class ApiConnection(SmarterBaseModel):
         description="The timeout for the API request in seconds. Default is 30 seconds.",
         ge=1,
     )
-    version: str = Field(
-        "1.0.0",
-        description="The version of the API connection.",
-    )
 
     # Proxy fields
+    proxy_protocol: Optional[str] = Field(
+        None,
+        description="The protocol of the proxy connection. Example: 'http', 'https'.",
+    )
     proxy_host: Optional[str] = Field(
         None,
         description="The remote host of the proxy connection.",
@@ -84,7 +84,7 @@ class ApiConnection(SmarterBaseModel):
             return v
         raise SAMValidationError("Description cannot be None.")
 
-    @field_validator("root_domain")
+    @field_validator("base_url")
     def validate_root_domain(cls, v):
         if SmarterValidator.is_valid_domain(v):
             return v
@@ -107,13 +107,11 @@ class ApiConnection(SmarterBaseModel):
             raise SAMValidationError("Timeout must be greater than or equal to 1.")
         return v
 
-    @field_validator("version")
-    def validate_version(cls, v):
-        if SmarterValidator.is_valid_semantic_version(v):
-            return v
-        raise SAMValidationError(
-            f"Invalid version: {v}. Must be a valid semantic version. example: 1.0.0, 2.1.0, 3.2.1-alpha, 4.0.0-beta+exp.sha.5114f85"
-        )
+    @field_validator("proxy_protocol")
+    def validate_proxy_protocol(cls, v):
+        if v is not None and v not in ["http", "https"]:
+            raise SAMValidationError("Proxy protocol must be 'http' or 'https'.")
+        return v
 
     @field_validator("proxy_host")
     def validate_proxy_host(cls, v):

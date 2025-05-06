@@ -167,7 +167,7 @@ class PluginDataApiConnectionAdmin(RestrictedModelAdmin):
         "created_at",
         "account",
         "name",
-        "root_domain",
+        "base_url",
         "api_key",
         "updated_at",
     )
@@ -197,7 +197,7 @@ class PluginDataApiAdmin(RestrictedModelAdmin):
         "created_at",
         "account",
         "name",
-        "root_domain",
+        "connection",
         "url",
         "updated_at",
     )

@@ -77,12 +77,12 @@ class Migration(migrations.Migration):
                                 smarter.lib.journal.enum.SmarterJournalThings["CHATBOT"],
                             ),
                             (
-                                smarter.lib.journal.enum.SmarterJournalThings["SQLCONNECTION"],
-                                smarter.lib.journal.enum.SmarterJournalThings["SQLCONNECTION"],
+                                smarter.lib.journal.enum.SmarterJournalThings["PLUGIN_DATA_SQL_CONNECTION"],
+                                smarter.lib.journal.enum.SmarterJournalThings["PLUGIN_DATA_SQL_CONNECTION"],
                             ),
                             # (
-                            #     smarter.lib.journal.enum.SmarterJournalThings["APICONNECTION"],
-                            #     smarter.lib.journal.enum.SmarterJournalThings["APICONNECTION"],
+                            #     smarter.lib.journal.enum.SmarterJournalThings["PLUGIN_DATA_API_CONNECTION"],
+                            #     smarter.lib.journal.enum.SmarterJournalThings["PLUGIN_DATA_API_CONNECTION"],
                             # ),
                         ],
                         max_length=24,

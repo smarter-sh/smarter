@@ -24,9 +24,11 @@ from .views.developer import (
     DeveloperDocsTwelveFactorView,
     DeveloperDocsWeatherFunctionView,
 )
-from .views.json_schema import (  # DocsJsonSchemaApiConnectionView,
+from .views.json_schema import (
     DocsJsonSchemaAccountView,
+    DocsJsonSchemaApiConnectionView,
     DocsJsonSchemaApiKeyView,
+    DocsJsonSchemaApiView,
     DocsJsonSchemaChatBotView,
     DocsJsonSchemaChatHistoryView,
     DocsJsonSchemaChatPluginUsageView,
@@ -35,11 +37,14 @@ from .views.json_schema import (  # DocsJsonSchemaApiConnectionView,
     DocsJsonSchemaPluginView,
     DocsJsonSchemaSecretView,
     DocsJsonSchemaSqlConnectionView,
+    DocsJsonSchemaSqlView,
     DocsJsonSchemaUserView,
 )
-from .views.manifest import (  # DocsExampleManifestApiConnectionView,
+from .views.manifest import (
     DocsExampleManifestAccountView,
+    DocsExampleManifestApiConnectionView,
     DocsExampleManifestApiKeyView,
+    DocsExampleManifestApiView,
     DocsExampleManifestChatBotView,
     DocsExampleManifestChatHistoryView,
     DocsExampleManifestChatPluginUsageView,
@@ -48,6 +53,7 @@ from .views.manifest import (  # DocsExampleManifestApiConnectionView,
     DocsExampleManifestPluginView,
     DocsExampleManifestSecretView,
     DocsExampleManifestSqlConnectionView,
+    DocsExampleManifestSqlView,
     DocsExampleManifestUserView,
 )
 from .views.views import JsonSchemasView, ManifestsView
@@ -97,11 +103,6 @@ urlpatterns = [
     path(
         json_schema_path(SAMKinds.ACCOUNT), DocsJsonSchemaAccountView.as_view(), name=json_schema_name(SAMKinds.ACCOUNT)
     ),
-    # path(
-    #     json_schema_path(SAMKinds.APICONNECTION),
-    #     DocsJsonSchemaApiConnectionView.as_view(),
-    #     name=json_schema_name(SAMKinds.APICONNECTION),
-    # ),
     path(json_schema_path(SAMKinds.APIKEY), DocsJsonSchemaApiKeyView.as_view(), name=json_schema_name(SAMKinds.APIKEY)),
     path(json_schema_path(SAMKinds.CHAT), DocsJsonSchemaChatView.as_view(), name=json_schema_name(SAMKinds.CHAT)),
     path(
@@ -124,9 +125,24 @@ urlpatterns = [
     ),
     path(json_schema_path(SAMKinds.PLUGIN), DocsJsonSchemaPluginView.as_view(), name=json_schema_name(SAMKinds.PLUGIN)),
     path(
-        json_schema_path(SAMKinds.SQLCONNECTION),
+        json_schema_path(SAMKinds.PLUGIN_DATA_API_CONNECTION),
+        DocsJsonSchemaApiConnectionView.as_view(),
+        name=json_schema_name(SAMKinds.PLUGIN_DATA_API_CONNECTION),
+    ),
+    path(
+        json_schema_path(SAMKinds.PLUGIN_DATA_API),
+        DocsJsonSchemaApiView.as_view(),
+        name=json_schema_name(SAMKinds.PLUGIN_DATA_API),
+    ),
+    path(
+        json_schema_path(SAMKinds.PLUGIN_DATA_SQL_CONNECTION),
         DocsJsonSchemaSqlConnectionView.as_view(),
-        name=json_schema_name(SAMKinds.SQLCONNECTION),
+        name=json_schema_name(SAMKinds.PLUGIN_DATA_SQL_CONNECTION),
+    ),
+    path(
+        json_schema_path(SAMKinds.PLUGIN_DATA_SQL),
+        DocsJsonSchemaSqlView.as_view(),
+        name=json_schema_name(SAMKinds.PLUGIN_DATA_SQL),
     ),
     path(json_schema_path(SAMKinds.USER), DocsJsonSchemaUserView.as_view(), name=json_schema_name(SAMKinds.USER)),
     path(json_schema_path(SAMKinds.SECRET), DocsJsonSchemaSecretView.as_view(), name=json_schema_name(SAMKinds.SECRET)),
@@ -136,11 +152,6 @@ urlpatterns = [
     path(
         manifest_path(SAMKinds.ACCOUNT), DocsExampleManifestAccountView.as_view(), name=manifest_name(SAMKinds.ACCOUNT)
     ),
-    # path(
-    #     manifest_path(SAMKinds.APICONNECTION),
-    #     DocsExampleManifestApiConnectionView.as_view(),
-    #     name=manifest_name(SAMKinds.APICONNECTION),
-    # ),
     path(manifest_path(SAMKinds.APIKEY), DocsExampleManifestApiKeyView.as_view(), name=manifest_name(SAMKinds.APIKEY)),
     path(manifest_path(SAMKinds.CHAT), DocsExampleManifestChatView.as_view(), name=manifest_name(SAMKinds.CHAT)),
     path(
@@ -163,9 +174,24 @@ urlpatterns = [
     ),
     path(manifest_path(SAMKinds.PLUGIN), DocsExampleManifestPluginView.as_view(), name=manifest_name(SAMKinds.PLUGIN)),
     path(
-        manifest_path(SAMKinds.SQLCONNECTION),
+        manifest_path(SAMKinds.PLUGIN_DATA_SQL_CONNECTION),
         DocsExampleManifestSqlConnectionView.as_view(),
-        name=manifest_name(SAMKinds.SQLCONNECTION),
+        name=manifest_name(SAMKinds.PLUGIN_DATA_SQL_CONNECTION),
+    ),
+    path(
+        manifest_path(SAMKinds.PLUGIN_DATA_SQL),
+        DocsExampleManifestSqlView.as_view(),
+        name=manifest_name(SAMKinds.PLUGIN_DATA_SQL),
+    ),
+    path(
+        manifest_path(SAMKinds.PLUGIN_DATA_API_CONNECTION),
+        DocsExampleManifestApiConnectionView.as_view(),
+        name=manifest_name(SAMKinds.PLUGIN_DATA_API_CONNECTION),
+    ),
+    path(
+        manifest_path(SAMKinds.PLUGIN_DATA_API),
+        DocsExampleManifestApiView.as_view(),
+        name=manifest_name(SAMKinds.PLUGIN_DATA_API),
     ),
     path(manifest_path(SAMKinds.USER), DocsExampleManifestUserView.as_view(), name=manifest_name(SAMKinds.USER)),
     path(manifest_path(SAMKinds.SECRET), DocsExampleManifestSecretView.as_view(), name=manifest_name(SAMKinds.SECRET)),

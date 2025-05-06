@@ -335,6 +335,12 @@ class PluginDataSqlConnection(TimestampedModel):
     )
 
     # Proxy fields
+    proxy_protocol = models.CharField(
+        max_length=10,
+        choices=[("http", "HTTP"), ("https", "HTTPS"), ("socks", "SOCKS")],
+        default="http",
+        help_text="The protocol to use for the proxy connection.",
+    )
     proxy_host = models.CharField(max_length=255, blank=True, null=True)
     proxy_port = models.IntegerField(blank=True, null=True)
     proxy_username = models.CharField(max_length=255, blank=True, null=True)
@@ -385,8 +391,7 @@ class PluginDataSqlConnection(TimestampedModel):
 
     def test_proxy(self) -> bool:
         proxy_dict = {
-            "http": f"http://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}",
-            "https": f"https://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}",
+            self.proxy_protocol: f"{self.proxy_protocol}://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}",
         }
         try:
             response = requests.get("http://www.google.com", proxies=proxy_dict, timeout=self.timeout)
@@ -642,7 +647,7 @@ class PluginDataApiConnection(TimestampedModel):
     description = models.TextField(
         help_text="A brief description of the API connection. Be verbose, but not too verbose.",
     )
-    root_domain = models.URLField(
+    base_url = models.URLField(
         help_text="The root domain of the API. Example: 'https://api.example.com'.",
     )
     api_key = models.ForeignKey(
@@ -664,9 +669,13 @@ class PluginDataApiConnection(TimestampedModel):
         default=30,
         validators=[MinValueValidator(1)],
     )
-    version = models.CharField(max_length=255, default="1.0.0")
-
     # Proxy fields
+    proxy_protocol = models.CharField(
+        max_length=10,
+        choices=[("http", "HTTP"), ("https", "HTTPS"), ("socks", "SOCKS")],
+        default="http",
+        help_text="The protocol to use for the proxy connection.",
+    )
     proxy_host = models.CharField(max_length=255, blank=True, null=True)
     proxy_port = models.IntegerField(blank=True, null=True)
     proxy_username = models.CharField(max_length=255, blank=True, null=True)
@@ -681,8 +690,7 @@ class PluginDataApiConnection(TimestampedModel):
 
     def test_proxy(self) -> bool:
         proxy_dict = {
-            "http": f"http://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}",
-            "https": f"https://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}",
+            self.proxy_protocol: f"{self.proxy_protocol}://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}",
         }
         try:
             response = requests.get("http://www.google.com", proxies=proxy_dict, timeout=self.timeout)
@@ -700,7 +708,7 @@ class PluginDataApiConnection(TimestampedModel):
             headers["Authorization"] = f"Bearer {self.api_key}"
 
         try:
-            response = requests.get(self.root_domain, headers=headers, timeout=self.timeout)
+            response = requests.get(self.base_url, headers=headers, timeout=self.timeout)
             return response.status_code in [HTTPStatus.OK, HTTPStatus.PERMANENT_REDIRECT]
         except requests.exceptions.RequestException as e:
             logger.error("API test connection failed: %s", e)
@@ -708,7 +716,7 @@ class PluginDataApiConnection(TimestampedModel):
 
     def get_connection_string(self):
         """Return the connection string."""
-        return f"{self.root_domain} (Auth: {self.auth_method})"
+        return f"{self.base_url} (Auth: {self.auth_method})"
 
     def validate(self) -> bool:
         """Validate the API connection."""
@@ -763,7 +771,7 @@ class PluginDataApi(PluginDataBase):
     @property
     def url(self) -> str:
         """Return the full URL for the API endpoint."""
-        return urljoin(self.connection.root_domain, self.endpoint)
+        return urljoin(self.connection.base_url, self.endpoint)
 
     def data(self, params: dict = None) -> dict:
         return {
@@ -849,7 +857,7 @@ class PluginDataApi(PluginDataBase):
         self.validate_params(params)
 
         request_data = {
-            "url": f"{self.connection.root_domain}{self.endpoint}",
+            "url": f"{self.connection.base_url}{self.endpoint}",
             "headers": self.headers or {},
             "params": params,
             "json": self.body or {},

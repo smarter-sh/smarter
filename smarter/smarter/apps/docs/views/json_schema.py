@@ -34,10 +34,16 @@ class DocsJsonSchemaAccountView(DocsJsonSchemaBaseView):
     kind = SAMKinds(SAMKinds.ACCOUNT)
 
 
-# class DocsJsonSchemaApiConnectionView(DocsJsonSchemaBaseView):
-#     """ApiConnection JSON Schema view"""
+class DocsJsonSchemaApiConnectionView(DocsJsonSchemaBaseView):
+    """ApiConnection JSON Schema view"""
 
-#     kind = SAMKinds(SAMKinds.APICONNECTION)
+    kind = SAMKinds(SAMKinds.PLUGIN_DATA_API_CONNECTION)
+
+
+class DocsJsonSchemaApiView(DocsJsonSchemaBaseView):
+    """Plugin Data Api JSON Schema view"""
+
+    kind = SAMKinds(SAMKinds.PLUGIN_DATA_API)
 
 
 class DocsJsonSchemaApiKeyView(DocsJsonSchemaBaseView):
@@ -85,7 +91,13 @@ class DocsJsonSchemaPluginView(DocsJsonSchemaBaseView):
 class DocsJsonSchemaSqlConnectionView(DocsJsonSchemaBaseView):
     """SqlConnection JSON Schema view"""
 
-    kind = SAMKinds(SAMKinds.SQLCONNECTION)
+    kind = SAMKinds(SAMKinds.PLUGIN_DATA_SQL_CONNECTION)
+
+
+class DocsJsonSchemaSqlView(DocsJsonSchemaBaseView):
+    """Plugin Data Sql JSON Schema view"""
+
+    kind = SAMKinds(SAMKinds.PLUGIN_DATA_SQL)
 
 
 class DocsJsonSchemaUserView(DocsJsonSchemaBaseView):

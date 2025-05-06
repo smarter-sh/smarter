@@ -35,10 +35,16 @@ class DocsExampleManifestAccountView(DocsExampleManifestBaseView):
     kind = SAMKinds(SAMKinds.ACCOUNT)
 
 
-# class DocsExampleManifestApiConnectionView(DocsExampleManifestBaseView):
-#     """ApiConnection JSON Schema view"""
+class DocsExampleManifestApiConnectionView(DocsExampleManifestBaseView):
+    """ApiConnection JSON Schema view"""
 
-#     kind = SAMKinds(SAMKinds.APICONNECTION)
+    kind = SAMKinds(SAMKinds.PLUGIN_DATA_API_CONNECTION)
+
+
+class DocsExampleManifestApiView(DocsExampleManifestBaseView):
+    """Plugin Data Api JSON Schema view"""
+
+    kind = SAMKinds(SAMKinds.PLUGIN_DATA_API)
 
 
 class DocsExampleManifestApiKeyView(DocsExampleManifestBaseView):
@@ -86,7 +92,13 @@ class DocsExampleManifestPluginView(DocsExampleManifestBaseView):
 class DocsExampleManifestSqlConnectionView(DocsExampleManifestBaseView):
     """SqlConnection JSON Schema view"""
 
-    kind = SAMKinds(SAMKinds.SQLCONNECTION)
+    kind = SAMKinds(SAMKinds.PLUGIN_DATA_SQL_CONNECTION)
+
+
+class DocsExampleManifestSqlView(DocsExampleManifestBaseView):
+    """Plugin Data Sql JSON Schema view"""
+
+    kind = SAMKinds(SAMKinds.PLUGIN_DATA_SQL)
 
 
 class DocsExampleManifestUserView(DocsExampleManifestBaseView):

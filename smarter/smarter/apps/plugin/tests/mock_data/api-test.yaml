@@ -1,0 +1,30 @@
+---
+apiVersion: smarter.sh/v1
+kind: Plugin
+metadata:
+  name: ApiTest
+  pluginClass: api
+  description: Get additional information about the admin account of the Smarter platform.
+  version: 0.1.0
+  tags:
+    - api
+    - test
+spec:
+  selector:
+    directive: always
+  prompt:
+    provider: openai
+    systemRole: >
+      You are a helpful assistant for the Smarter platform. You can provide information about the test api.
+    model: gpt-4-turbo
+    temperature: 0.0
+    maxTokens: 256
+  data:
+    description: retrieve a list from the test api.
+    apiData:
+      connection: testApiConnection
+      sqlQuery: >
+        SELECT * FROM auth_user WHERE username = 'admin';
+      parameters:
+      testValues:
+      limit: 1
