@@ -48,7 +48,7 @@ class TestJsonListView(SmarterUnauthenticatedAPIListView):
 
     def get(self, request, *args, **kwargs):
         """Handle GET requests and return a faux JSON list."""
-        queryset = self.get_queryset()  # Use the faux queryset
+        queryset = self.get_queryset()
         return Response(queryset, status=status.HTTP_200_OK)
 
 
@@ -69,5 +69,5 @@ class TestJsonListViewAuthenticated(SmarterAuthenticatedListAPIView):
 
     def get(self, request, *args, **kwargs):
         """Handle GET requests and return a faux JSON list."""
-        queryset = self.get_queryset()  # Use the faux queryset
+        queryset = self.get_queryset()
         return Response(queryset, status=status.HTTP_200_OK)

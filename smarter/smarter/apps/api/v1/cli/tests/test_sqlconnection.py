@@ -16,7 +16,7 @@ from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
 
-KIND = SAMKinds.SQLCONNECTION.value
+KIND = SAMKinds.PLUGIN_DATA_SQL_CONNECTION.value
 
 
 class TestApiCliV1SqlConnection(ApiV1TestBase):
@@ -66,7 +66,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         self.assertIn(SmarterJournalApiResponseKeys.DATA, response.keys())
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
-        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.SQLCONNECTION.value)
+        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.PLUGIN_DATA_SQL_CONNECTION.value)
 
         # validate the metadata
         self.assertIn(SmarterJournalApiResponseKeys.METADATA, data.keys())
@@ -214,7 +214,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         self.assertIn(SmarterJournalApiResponseKeys.DATA, response.keys())
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
-        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.SQLCONNECTION.value)
+        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.PLUGIN_DATA_SQL_CONNECTION.value)
 
         # validate the metadata
         self.assertIn(SmarterJournalApiResponseKeys.METADATA, data.keys())

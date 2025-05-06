@@ -7,6 +7,7 @@ TODO: add `import validators` and study this library to see what can be removed 
       see https://python-validators.github.io/validators/
 """
 
+import json
 import logging
 import re
 import warnings
@@ -47,6 +48,27 @@ class SmarterValidator:
     )
     VALID_CLEAN_STRING = r"^[\w\-\.~:\/\?#\[\]@!$&'()*+,;=%]+$"
     VALID_CLEAN_STRING_WITH_SPACES = r"^[\w\-\.~:\/\?#\[\]@!$&'()*+,;= %]+$"
+
+    @staticmethod
+    def validate_json(value: str) -> None:
+        """Validate JSON format"""
+        try:
+            if not isinstance(value, str):
+                raise SmarterValueError("Value must be a string")
+            if not value.strip():
+                return
+            json.loads(value)
+        except (ValueError, TypeError) as e:
+            raise SmarterValueError(f"Invalid JSON value {value}") from e
+
+    @staticmethod
+    def is_valid_json(value: str) -> bool:
+        """Check if the value is valid JSON"""
+        try:
+            SmarterValidator.validate_json(value)
+            return True
+        except SmarterValueError:
+            return False
 
     @staticmethod
     def validate_semantic_version(version: str) -> None:

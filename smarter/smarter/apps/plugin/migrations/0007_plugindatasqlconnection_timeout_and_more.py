@@ -54,7 +54,7 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "root_domain",
+                    "base_url",
                     models.URLField(help_text="The root domain of the API. Example: 'https://api.example.com'."),
                 ),
                 (

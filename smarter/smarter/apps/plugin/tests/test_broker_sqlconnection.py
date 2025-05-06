@@ -58,7 +58,8 @@ class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
         self.assertIsInstance(content, dict)
         self.assertIn("message", content.keys())
         self.assertEqual(
-            content["message"], f"{SmarterJournalThings.SQLCONNECTION.value} testConnection applied successfully"
+            content["message"],
+            f"{SmarterJournalThings.PLUGIN_DATA_SQL_CONNECTION.value} testConnection applied successfully",
         )
 
     def test_sqlconnection_broker_describe(self):
@@ -109,7 +110,8 @@ class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
         self.assertIsInstance(content, dict)
         self.assertIn("message", content.keys())
         self.assertEqual(
-            content["message"], f"{SmarterJournalThings.SQLCONNECTION.value} testConnection deleted successfully"
+            content["message"],
+            f"{SmarterJournalThings.PLUGIN_DATA_SQL_CONNECTION.value} testConnection deleted successfully",
         )
 
     def test_sqlconnection_broker_deploy(self):

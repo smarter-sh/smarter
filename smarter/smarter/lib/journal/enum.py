@@ -61,6 +61,10 @@ class SmarterJournalThings(SmarterEnumAbstract):
     """
 
     PLUGIN = "Plugin"
+    PLUGIN_DATA_API = "PluginDataApi"
+    PLUGIN_DATA_API_CONNECTION = "ApiConnection"
+    PLUGIN_DATA_SQL = "PluginDataSql"
+    PLUGIN_DATA_SQL_CONNECTION = "SqlConnection"
     ACCOUNT = "Account"
     APIKEY = "SmarterAuthToken"
     USER = "User"
@@ -70,8 +74,6 @@ class SmarterJournalThings(SmarterEnumAbstract):
     CHAT_PLUGIN_USAGE = "ChatPluginUsage"
     CHAT_TOOL_CALL = "ChatToolCall"
     CHATBOT = "Chatbot"
-    SQLCONNECTION = "SqlConnection"
-    APICONNECTION = "ApiConnection"
     SECRET = "Secret"
 
     @classmethod
@@ -79,6 +81,10 @@ class SmarterJournalThings(SmarterEnumAbstract):
         """Django model choices for SmarterJournalThings."""
         return [
             (cls.PLUGIN, cls.PLUGIN),
+            (cls.PLUGIN_DATA_API, cls.PLUGIN_DATA_API),
+            (cls.PLUGIN_DATA_API_CONNECTION, cls.PLUGIN_DATA_API_CONNECTION),
+            (cls.PLUGIN_DATA_SQL, cls.PLUGIN_DATA_SQL),
+            (cls.PLUGIN_DATA_SQL_CONNECTION, cls.PLUGIN_DATA_SQL_CONNECTION),
             (cls.ACCOUNT, cls.ACCOUNT),
             (cls.APIKEY, cls.APIKEY),
             (cls.USER, cls.USER),
@@ -88,8 +94,6 @@ class SmarterJournalThings(SmarterEnumAbstract):
             (cls.CHAT_PLUGIN_USAGE, cls.CHAT_PLUGIN_USAGE),
             (cls.CHAT_TOOL_CALL, cls.CHAT_TOOL_CALL),
             (cls.CHATBOT, cls.CHATBOT),
-            (cls.SQLCONNECTION, cls.SQLCONNECTION),
-            # (cls.APICONNECTION, cls.APICONNECTION),
             (cls.SECRET, cls.SECRET),
         ]
 
