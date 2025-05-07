@@ -72,11 +72,11 @@ class SqlConnection(SmarterBaseModel):
         description="The known_hosts file content for verifying SSH connections.",
     )
     pool_size: int = Field(
-        None,
+        5,
         description="The size of the connection pool.",
     )
     max_overflow: int = Field(
-        None,
+        10,
         description="The maximum number of connections to allow beyond the pool size.",
     )
     authentication_method: str = Field(
@@ -167,10 +167,10 @@ class SqlConnection(SmarterBaseModel):
 
     @field_validator("authentication_method")
     def validate_authentication_method(cls, v) -> str:
-        if v in SqlConnectionORM.DBMSAuthenticationMethods.choices():
+        if v in SqlConnectionORM.DBMSAuthenticationMethods.all_values():
             return v
         raise SAMValidationError(
-            f"Invalid authentication method: {v}. Must be one of {SqlConnectionORM.DBMSAuthenticationMethods.choices()}"
+            f"Invalid authentication method: {v}. Must be one of {SqlConnectionORM.DBMSAuthenticationMethods.all_values()}"
         )
 
     @field_validator("use_ssl")
