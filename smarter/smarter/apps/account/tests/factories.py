@@ -13,6 +13,11 @@ from smarter.lib.django.user import User, UserType
 logger = logging.getLogger(__name__)
 
 
+def generate_hash_suffix() -> str:
+    """Generate a unique hash suffix for test data."""
+    return "_" + hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:16]
+
+
 def admin_user_factory(account: Account = None) -> tuple[UserType, Account, UserProfile]:
     hashed_slug = hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:16]
     username = f"testAdminUser_{hashed_slug}"

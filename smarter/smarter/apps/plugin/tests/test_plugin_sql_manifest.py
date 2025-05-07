@@ -11,7 +11,7 @@ from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
 from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
 from smarter.apps.plugin.manifest.models.sql_connection.model import (
-    SAMPluginDataSqlConnection,
+    SAMSqlConnection,
 )
 from smarter.apps.plugin.models import SqlConnection
 from smarter.common.api import SmarterApiVersions
@@ -46,8 +46,8 @@ class TestPluginDataSql(unittest.TestCase):
         # 2. initialize a SAMLoader object with the manifest raw data
         self.connection_loader = SAMLoader(manifest=connection_manifest)
 
-        # 3. create a SAMPluginDataSqlConnection pydantic model from the loader
-        self.connection_model = SAMPluginDataSqlConnection(**self.connection_loader.pydantic_model_dump())
+        # 3. create a SAMSqlConnection pydantic model from the loader
+        self.connection_model = SAMSqlConnection(**self.connection_loader.pydantic_model_dump())
 
         # 4. create the connection record
         model_dump = self.connection_model.spec.connection.model_dump()
