@@ -19,6 +19,7 @@ dnspython==2.7.0                        # DNS toolkit for Python
 inflect==7.4.0                          # Pluralization and singularization
 htmlmin==0.1.12                         # HTML minification, for browser performance optimization
 mysqlclient==2.2.7                      # MySQL client
+paramiko==3.5.1                         # SSH2 protocol library
 requests==2.32.3                        # HTTP requests library
 requests-cache==1.2.1                   # HTTP requests caching
 retry-requests==2.0.0                   # HTTP requests retry

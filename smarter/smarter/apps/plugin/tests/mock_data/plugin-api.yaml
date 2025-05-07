@@ -1,6 +1,6 @@
 ---
 apiVersion: smarter.sh/v1
-kind: Plugin
+kind: ApiPlugin
 metadata:
   name: ApiTest
   pluginClass: api
