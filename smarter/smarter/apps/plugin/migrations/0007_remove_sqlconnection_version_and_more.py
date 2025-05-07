@@ -16,9 +16,80 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name="sqlconnection",
-            name="version",
+        migrations.RunSQL(
+            sql="DROP TABLE IF EXISTS plugin_sqlconnection;",
+            reverse_sql="CREATE TABLE plugin_sqlconnection (id SERIAL PRIMARY KEY);",
+        ),
+        migrations.CreateModel(
+            name="SqlConnection",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True, null=True)),
+                ("updated_at", models.DateTimeField(auto_now=True, null=True)),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="The name of the connection, without spaces. Example: 'HRDatabase', 'SalesDatabase', 'InventoryDatabase'.",
+                        max_length=255,
+                        validators=[smarter.apps.plugin.models.validate_no_spaces],
+                    ),
+                ),
+                (
+                    "db_engine",
+                    models.CharField(
+                        choices=[
+                            ("django.db.backends.mysql", "MySQL"),
+                            ("django.db.backends.postgresql", "PostgreSQL"),
+                            ("django.db.backends.sqlite3", "SQLite3"),
+                            ("django.db.backends.oracle", "Oracle"),
+                            ("django.db.backends.mssql", "MS SQL Server"),
+                            ("django.db.backends.sybase", "Sybase"),
+                        ],
+                        help_text="The type of database management system. Example: 'MySQL', 'PostgreSQL', 'MS SQL Server', 'Oracle'.",
+                        max_length=255,
+                    ),
+                ),
+                (
+                    "description",
+                    models.TextField(
+                        help_text="A brief description of the connection. Be verbose, but not too verbose."
+                    ),
+                ),
+                ("hostname", models.CharField(max_length=255)),
+                ("port", models.IntegerField()),
+                ("database", models.CharField(max_length=255)),
+                ("username", models.CharField(max_length=255)),
+                ("password", models.CharField(blank=True, max_length=255, null=True)),
+                ("proxy_host", models.CharField(blank=True, max_length=255, null=True)),
+                ("proxy_port", models.IntegerField(blank=True, null=True)),
+                (
+                    "proxy_username",
+                    models.CharField(blank=True, max_length=255, null=True),
+                ),
+                (
+                    "proxy_password",
+                    models.CharField(blank=True, max_length=255, null=True),
+                ),
+                (
+                    "account",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="plugin_data_sql_connections",
+                        to="account.account",
+                    ),
+                ),
+            ],
+            options={
+                "abstract": False,
+            },
         ),
         migrations.AddField(
             model_name="sqlconnection",
@@ -200,6 +271,10 @@ class Migration(migrations.Migration):
                 to="account.secret",
             ),
         ),
+        migrations.RunSQL(
+            sql="DROP TABLE IF EXISTS plugin_apiconnection;",
+            reverse_sql="CREATE TABLE plugin_apiconnection (id SERIAL PRIMARY KEY);",
+        ),
         migrations.CreateModel(
             name="ApiConnection",
             fields=[
@@ -308,6 +383,10 @@ class Migration(migrations.Migration):
                 "abstract": False,
             },
         ),
+        migrations.RunSQL(
+            sql="DROP TABLE IF EXISTS plugin_plugindataapi;",
+            reverse_sql="CREATE TABLE plugin_plugindataapi (id SERIAL PRIMARY KEY);",
+        ),
         migrations.CreateModel(
             name="PluginDataApi",
             fields=[
@@ -380,6 +459,10 @@ class Migration(migrations.Migration):
             },
             bases=("plugin.plugindatabase",),
         ),
+        migrations.RunSQL(
+            sql="DROP TABLE IF EXISTS plugin_plugindatasql;",
+            reverse_sql="CREATE TABLE plugin_plugindatasql (id SERIAL PRIMARY KEY);",
+        ),
         migrations.CreateModel(
             name="PluginDataSql",
             fields=[
@@ -450,7 +533,8 @@ class Migration(migrations.Migration):
             },
             bases=("plugin.plugindatabase",),
         ),
-        migrations.DeleteModel(
-            name="PluginSql",
+        migrations.RunSQL(
+            sql="DROP TABLE IF EXISTS plugin_plugindatasqlconnection;",
+            reverse_sql="CREATE TABLE plugin_plugindatasqlconnection (id SERIAL PRIMARY KEY);",
         ),
     ]

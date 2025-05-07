@@ -3,7 +3,7 @@ apiVersion: smarter.sh/v1
 kind: SqlConnection
 metadata:
   name: testSqlConnection
-  description: points to the local Docker mysql dev database
+  description: points to the Django mysql database
   version: 0.1.0
 spec:
   connection:
@@ -14,6 +14,8 @@ spec:
     password: smarter
     database: smarter
     timeout: 30
+    use_ssl: true
+    ssl_cert: /path/to/cert.pem
+    ssl_key: /path/to/key.pem
+    ssl_ca: /path/to/ca.pem
     authentication_method: tcpip
-    pool_size: 15
-    max_overflow: 20

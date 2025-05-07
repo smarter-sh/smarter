@@ -10,10 +10,10 @@ from django.test import Client
 
 from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
 from smarter.apps.plugin.manifest.brokers.sql_connection import (
-    SAMPluginDataSqlConnectionBroker,
+    SAMSqlConnectionBroker,
 )
 from smarter.apps.plugin.manifest.models.sql_connection.model import (
-    SAMPluginDataSqlConnection,
+    SAMSqlConnection,
 )
 from smarter.common.utils import dict_is_contained_in
 from smarter.lib.journal.enum import SmarterJournalThings
@@ -27,7 +27,7 @@ from .factories import create_generic_request
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
-class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
+class TestSAMSqlConnectionBroker(unittest.TestCase):
     """Test SAM SqlConnection Broker"""
 
     @classmethod
@@ -41,9 +41,7 @@ class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
         config_path = os.path.join(HERE, "mock_data/sql-connection.yaml")
         connection_manifest = get_readonly_yaml_file(config_path)
 
-        cls.broker = SAMPluginDataSqlConnectionBroker(
-            request=cls.request, account=cls.account, manifest=connection_manifest
-        )
+        cls.broker = SAMSqlConnectionBroker(request=cls.request, account=cls.account, manifest=connection_manifest)
 
     @classmethod
     def tearDownClass(cls):
@@ -91,7 +89,7 @@ class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
         loader = SAMLoader(manifest=manifest)
 
         # create a pydantic model from the loader
-        pydantic_model = SAMPluginDataSqlConnection(**loader.pydantic_model_dump())
+        pydantic_model = SAMSqlConnection(**loader.pydantic_model_dump())
 
         # dump the pydantic model to a dictionary
         round_trip_dict = pydantic_model.model_dump()

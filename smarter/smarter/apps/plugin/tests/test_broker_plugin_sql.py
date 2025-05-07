@@ -11,7 +11,7 @@ from django.test import Client
 from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
 from smarter.apps.plugin.manifest.brokers.plugin import SAMPluginBroker
 from smarter.apps.plugin.manifest.brokers.sql_connection import (
-    SAMPluginDataSqlConnectionBroker,
+    SAMSqlConnectionBroker,
 )
 from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
 from smarter.lib.journal.enum import SmarterJournalThings
@@ -42,7 +42,7 @@ class TestSAMPluginSql(unittest.TestCase):
         # create a sql connection
         config_path = os.path.join(HERE, "mock_data/sql-connection.yaml")
         connection_manifest = get_readonly_yaml_file(config_path)
-        cls.connection_broker = SAMPluginDataSqlConnectionBroker(
+        cls.connection_broker = SAMSqlConnectionBroker(
             request=cls.request, account=cls.account, manifest=connection_manifest
         )
         cls.connection_broker.apply(request=cls.request, kwargs=cls.kwargs)

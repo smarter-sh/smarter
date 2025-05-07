@@ -89,7 +89,7 @@ class Sql(SmarterBaseModel):
         return v
 
 
-class SAMPluginDataSqlConnectionSpec(AbstractSAMSpecBase):
+class SAMPluginSqlSpec(AbstractSAMSpecBase):
     """Smarter API Sql Connection Manifest SqlConnection.spec"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER

@@ -9,8 +9,7 @@ from datetime import datetime, timedelta
 from django.utils.timezone import now
 
 from smarter.apps.account.models import Secret
-from smarter.common.conf import settings as smarter_settings
-from smarter.common.exceptions import SmarterConfigurationError, SmarterValueError
+from smarter.common.exceptions import SmarterValueError
 
 from .factories import admin_user_factory, admin_user_teardown, mortal_user_factory
 

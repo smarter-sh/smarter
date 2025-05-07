@@ -28,13 +28,13 @@ from smarter.lib.manifest.enum import (
 from smarter.lib.manifest.loader import SAMLoader
 
 from ..models.sql_connection.const import MANIFEST_KIND
-from ..models.sql_connection.model import SAMPluginDataSqlConnection
+from ..models.sql_connection.model import SAMSqlConnection
 
 
 MAX_RESULTS = 1000
 
 
-class SAMPluginDataSqlConnectionBrokerError(SAMBrokerError):
+class SAMSqlConnectionBrokerError(SAMBrokerError):
     """Base exception for Smarter API Plugin Broker handling."""
 
     @property
@@ -42,7 +42,7 @@ class SAMPluginDataSqlConnectionBrokerError(SAMBrokerError):
         return "Smarter API SqlConnection Manifest Broker Error"
 
 
-class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
+class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
     """
     Smarter API Plugin Manifest Broker.This class is responsible for
     - loading, validating and parsing the Smarter Api yaml Plugin manifests
@@ -53,8 +53,8 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
     """
 
     # override the base abstract manifest model with the Plugin model
-    _manifest: SAMPluginDataSqlConnection = None
-    _pydantic_model: Type[SAMPluginDataSqlConnection] = SAMPluginDataSqlConnection
+    _manifest: SAMSqlConnection = None
+    _pydantic_model: Type[SAMSqlConnection] = SAMSqlConnection
     _sql_connection: SqlConnection = None
 
     # pylint: disable=too-many-arguments
@@ -102,9 +102,9 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> SAMPluginDataSqlConnection:
+    def manifest(self) -> SAMSqlConnection:
         """
-        SAMPluginDataSqlConnection() is a Pydantic model
+        SAMSqlConnection() is a Pydantic model
         that is used to represent the Smarter API Plugin manifest. The Pydantic
         model is initialized with the data from the manifest loader, which is
         generally passed to the model constructor as **data. However, this top-level
@@ -115,7 +115,7 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
         if self._manifest:
             return self._manifest
         if self.loader:
-            self._manifest = SAMPluginDataSqlConnection(
+            self._manifest = SAMSqlConnection(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
                 metadata=self.loader.manifest_metadata,
@@ -200,12 +200,12 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
             try:
                 model_dump = SqlConnectionSerializer(sql_connection).data
                 if not model_dump:
-                    raise SAMPluginDataSqlConnectionBrokerError(
+                    raise SAMSqlConnectionBrokerError(
                         f"Model dump failed for {self.kind} {sql_connection.name}", thing=self.kind, command=command
                     )
                 data.append(model_dump)
             except Exception as e:
-                raise SAMPluginDataSqlConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
+                raise SAMSqlConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -241,7 +241,7 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
                 setattr(self.sql_connection, key, value)
             self.sql_connection.save()
         except Exception as e:
-            raise SAMPluginDataSqlConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
+            raise SAMSqlConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         return self.json_response_ok(command=command, data={})
 
     def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
@@ -278,7 +278,7 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
 
                 return self.json_response_ok(command=command, data=retval)
             except Exception as e:
-                raise SAMPluginDataSqlConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
+                raise SAMSqlConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         raise SAMBrokerErrorNotReady(message="No connection found", thing=self.kind, command=command)
 
     def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
@@ -289,7 +289,7 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
                 self.sql_connection.delete()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
-                raise SAMPluginDataSqlConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
+                raise SAMSqlConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         raise SAMBrokerErrorNotReady(message="No connection found", thing=self.kind, command=command)
 
     def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:

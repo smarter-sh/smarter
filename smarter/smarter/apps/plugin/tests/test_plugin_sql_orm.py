@@ -6,7 +6,7 @@ import unittest
 from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
 from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
 from smarter.apps.plugin.manifest.models.sql_connection.model import (
-    SAMPluginDataSqlConnection,
+    SAMSqlConnection,
 )
 from smarter.apps.plugin.models import PluginDataSql, PluginMeta, SqlConnection
 from smarter.common.exceptions import SmarterValueError
@@ -19,7 +19,7 @@ from .factories import plugin_meta_factory
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
-class TestPluginDataSqlConnection(unittest.TestCase):
+class TestPluginSql(unittest.TestCase):
     """Test PluginDataSql Django ORM - validators and sql preparation"""
 
     def setUp(self):
@@ -39,8 +39,8 @@ class TestPluginDataSqlConnection(unittest.TestCase):
         # 2. initialize a SAMLoader object with the manifest raw data
         self.loader = SAMLoader(manifest=manifest)
 
-        # 3. create a SAMPluginDataSqlConnection pydantic model from the loader
-        self.model = SAMPluginDataSqlConnection(**self.loader.pydantic_model_dump())
+        # 3. create a SAMSqlConnection pydantic model from the loader
+        self.model = SAMSqlConnection(**self.loader.pydantic_model_dump())
 
         model_dump = self.model.spec.connection.model_dump()
         model_dump["account"] = self.account

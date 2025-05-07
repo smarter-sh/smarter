@@ -15,9 +15,8 @@ from socket import socket
 from typing import Any, Union
 from urllib.parse import urljoin
 
-import paramiko
-
 # 3rd party stuff
+import paramiko
 import requests
 import yaml
 
@@ -35,6 +34,7 @@ from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.model_helpers import TimestampedModel
 
+# plugin stuff
 from .manifest.enum import SAMPluginMetadataClassValues
 from .manifest.models.sql_connection.enum import DbEngines
 
@@ -42,6 +42,12 @@ from .manifest.models.sql_connection.enum import DbEngines
 logger = logging.getLogger(__name__)
 
 SMARTER_PLUGIN_MAX_DATA_RESULTS = 50
+
+
+def validate_no_spaces(value):
+    """Validate that the string does not contain spaces."""
+    if " " in value:
+        raise SmarterValueError("Value must not contain spaces.")
 
 
 def validate_camel_case(value):
