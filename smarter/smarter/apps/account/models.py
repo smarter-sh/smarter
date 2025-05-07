@@ -454,7 +454,9 @@ class Secret(TimestampedModel):
         """
         is_new = self.pk is None
         if not self.name or not self.encrypted_value:
-            raise SmarterValueError("Name and value cannot be empty")
+            raise SmarterValueError(
+                f"Name and encrypted_value are required fields. Got name: {self.name}, encrypted_value: {self.encrypted_value}"
+            )
         super().save(*args, **kwargs)
         if is_new:
             secret_created.send(sender=self.__class__, secret=self)
@@ -503,7 +505,7 @@ class Secret(TimestampedModel):
     @classmethod
     def encrypt(cls, value: str) -> bytes:
         """
-        Encrypts the provided value and stores it in the `encrypted_value` field.
+        Encrypts the provided value.
         Clears the transient `value` field after encryption to avoid re-encryption issues.
         """
         if not value or not isinstance(value, str):

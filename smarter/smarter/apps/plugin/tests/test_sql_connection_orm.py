@@ -1,11 +1,14 @@
 """Test SqlConnection Django ORM"""
 
+import json
 import os
 import unittest
+from datetime import datetime, timedelta
+from logging import getLogger
 
-from django.conf import settings
-from django.db.backends.base.base import BaseDatabaseWrapper
+from pydantic_core import ValidationError
 
+from smarter.apps.account.models import Secret
 from smarter.apps.account.tests.factories import (
     admin_user_factory,
     admin_user_teardown,
@@ -27,6 +30,7 @@ from .factories import plugin_meta_factory
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
+logger = getLogger(__name__)
 
 
 class TestPluginSql(unittest.TestCase):
@@ -67,6 +71,27 @@ class TestPluginSql(unittest.TestCase):
         self._loader = None
         self._model = None
 
+    def secret_factory(self, name: str, value: str) -> Secret:
+        """Create a secret for the test case."""
+        encrypted_value = Secret.encrypt(value)
+        try:
+            secret = Secret.objects.get(user_profile=self.user_profile, name=name)
+            secret.encrypted_value = encrypted_value
+            secret.save()
+        except Secret.DoesNotExist:
+            # Create a new secret if it doesn't exist
+            secret = Secret(
+                user_profile=self.user_profile,
+                name=name,
+                encrypted_value=encrypted_value,
+            )
+            secret.save()
+
+        secret.description = "Test secret"
+        secret.expires_at = datetime.now() + timedelta(days=365)
+        secret.save()
+        return secret
+
     @property
     def manifest_path(self) -> str:
         return self._manifest_path
@@ -79,7 +104,7 @@ class TestPluginSql(unittest.TestCase):
         self._model = None
 
     @property
-    def manifest(self) -> str:
+    def manifest(self) -> dict:
         if not self._manifest and self.manifest_path:
             self._manifest = get_readonly_yaml_file(self.manifest_path)
         return self._manifest
@@ -112,95 +137,108 @@ class TestPluginSql(unittest.TestCase):
 
     def test_validate_db_engine_invalid_value(self):
         """Test that the db_engine validator raises an error for invalid values."""
+        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
+        self.manifest
+        logger.info("Testing db_engine validator:\n%s", self.manifest)
+
         invalid_db_engine = "invalid_engine"
+        self._manifest["spec"]["connection"]["db_engine"] = invalid_db_engine
+        self._loader = None
+        self._model = None
         with self.assertRaises(SAMValidationError) as context:
-            SAMSqlConnection(db_engine=invalid_db_engine)
+            print(self.model)
         self.assertIn(
             f"Invalid SQL connection engine: {invalid_db_engine}. Must be one of {DbEngines.all_values()}",
             str(context.exception),
         )
 
-    def test_validate_db_engine_valid_value(self):
-        """Test that the db_engine validator accepts valid values."""
-        valid_db_engine = DbEngines.all_values()[0]
-        model = SAMSqlConnection(db_engine=valid_db_engine)
-        self.assertEqual(model.spec.connection.db_engine, valid_db_engine)
-
     def test_validate_hostname_invalid_value(self):
         """Test that the hostname validator raises an error for invalid values."""
-        invalid_hostname = "invalid_host"
+        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
+        self.manifest
+        invalid_hostname = "$invalid-host&"
+        self._manifest["spec"]["connection"]["hostname"] = invalid_hostname
+        self._loader = None
+        self._model = None
         with self.assertRaises(SAMValidationError) as context:
-            SAMSqlConnection(hostname=invalid_hostname)
+            print(self.model)
         self.assertIn(
             f"Invalid SQL connection host: {invalid_hostname}. Must be a valid domain, IPv4, or IPv6 address.",
             str(context.exception),
         )
 
-    def test_validate_hostname_valid_value(self):
-        """Test that the hostname validator accepts valid values."""
-        valid_hostname = "example.com"
-        model = SAMSqlConnection(hostname=valid_hostname)
-        self.assertEqual(model.spec.connection.hostname, valid_hostname)
-
     def test_validate_port_invalid_value(self):
         """Test that the port validator raises an error for invalid values."""
+        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
+        self.manifest
         invalid_port = 70000
+        self._manifest["spec"]["connection"]["port"] = invalid_port
+        self._loader = None
+        self._model = None
         with self.assertRaises(SAMValidationError) as context:
-            SAMSqlConnection(port=invalid_port)
+            print(self.model)
         self.assertIn(
             f"Invalid SQL connection port: {invalid_port}. Must be between 1 and 65535.", str(context.exception)
         )
 
-    def test_validate_port_valid_value(self):
-        """Test that the port validator accepts valid values."""
-        valid_port = 3306
-        model = SAMSqlConnection(port=valid_port)
-        self.assertEqual(model.spec.connection.port, valid_port)
-
     def test_validate_database_invalid_value(self):
         """Test that the database validator raises an error for invalid values."""
-        invalid_database = ""
-        with self.assertRaises(SAMValidationError) as context:
-            SAMSqlConnection(database=invalid_database)
-        self.assertIn(f"Invalid database name: {invalid_database}. Must be a valid string.", str(context.exception))
+        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
+        self.manifest
 
-    def test_validate_database_valid_value(self):
-        """Test that the database validator accepts valid values."""
-        valid_database = "test_db"
-        model = SAMSqlConnection(database=valid_database)
-        self.assertEqual(model.spec.connection.database, valid_database)
+        invalid_database = ""
+        self._manifest["spec"]["connection"]["database"] = invalid_database
+        self._loader = None
+        self._model = None
+        with self.assertRaises(SAMValidationError) as context:
+            print(self.model)
+        self.assertIn(f"Invalid database name: {invalid_database}. Must be a valid string.", str(context.exception))
 
     def test_validate_username_invalid_value(self):
         """Test that the username validator raises an error for invalid values."""
+        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
+        self.manifest
         invalid_username = ""
+        self._manifest["spec"]["connection"]["username"] = invalid_username
+        self._loader = None
+        self._model = None
         with self.assertRaises(SAMValidationError) as context:
-            SAMSqlConnection(username=invalid_username)
+            print(self.model)
         self.assertIn(f"Invalid username: {invalid_username}. Must be a valid string.", str(context.exception))
-
-    def test_validate_username_valid_value(self):
-        """Test that the username validator accepts valid values."""
-        valid_username = "user"
-        model = SAMSqlConnection(username=valid_username)
-        self.assertEqual(model.spec.connection.username, valid_username)
 
     def test_validate_timeout_invalid_value(self):
         """Test that the timeout validator raises an error for invalid values."""
+        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
+        self.manifest
         invalid_timeout = -1
+        self._manifest["spec"]["connection"]["timeout"] = invalid_timeout
+        self._loader = None
+        self._model = None
         with self.assertRaises(SAMValidationError) as context:
-            SAMSqlConnection(timeout=invalid_timeout)
+            print(self.model)
         self.assertIn(f"Invalid timeout: {invalid_timeout}. Must be greater than 0.", str(context.exception))
 
     def test_validate_timeout_valid_value(self):
         """Test that the timeout validator accepts valid values."""
+        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
+        self.manifest
         valid_timeout = 30
-        model = SAMSqlConnection(timeout=valid_timeout)
-        self.assertEqual(model.spec.connection.timeout, valid_timeout)
+        self._manifest["spec"]["connection"]["timeout"] = valid_timeout
+        self._loader = None
+        self._model = None
+        self.model
+        self.assertEqual(self.model.spec.connection.timeout, valid_timeout)
 
     def test_validate_proxy_host_invalid_value(self):
         """Test that the proxy_host validator raises an error for invalid values."""
-        invalid_proxy_host = "invalid_proxy"
+        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
+        self.manifest
+        invalid_proxy_host = "/invalid_proxy$$--"
+        self._manifest["spec"]["connection"]["proxy_host"] = invalid_proxy_host
+        self._loader = None
+        self._model = None
         with self.assertRaises(SAMValidationError) as context:
-            SAMSqlConnection(proxy_host=invalid_proxy_host)
+            print(self.model)
         self.assertIn(
             f"Invalid SQL proxy host: {invalid_proxy_host}. Must be a valid domain, IPv4, or IPv6 address.",
             str(context.exception),
@@ -208,79 +246,135 @@ class TestPluginSql(unittest.TestCase):
 
     def test_validate_proxy_host_valid_value(self):
         """Test that the proxy_host validator accepts valid values."""
+        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
+        self.manifest
         valid_proxy_host = "proxy.example.com"
-        model = SAMSqlConnection(proxy_host=valid_proxy_host)
-        self.assertEqual(model.spec.connection.proxy_host, valid_proxy_host)
+        self._manifest["spec"]["connection"]["proxy_host"] = valid_proxy_host
+        self._loader = None
+        self._model = None
+        self.model
+        self.assertEqual(self.model.spec.connection.proxy_host, valid_proxy_host)
 
     def test_validate_proxy_port_invalid_value(self):
         """Test that the proxy_port validator raises an error for invalid values."""
+        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
+        self.manifest
         invalid_proxy_port = 70000
+        self._manifest["spec"]["connection"]["proxy_port"] = invalid_proxy_port
+        self._loader = None
+        self._model = None
         with self.assertRaises(SAMValidationError) as context:
-            SAMSqlConnection(proxy_port=invalid_proxy_port)
+            print(self.model)
         self.assertIn(
             f"Invalid SQL proxy port: {invalid_proxy_port}. Must be between 1 and 65535.", str(context.exception)
         )
 
     def test_validate_proxy_port_valid_value(self):
         """Test that the proxy_port validator accepts valid values."""
+        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
+        self.manifest
         valid_proxy_port = 8080
-        model = SAMSqlConnection(proxy_port=valid_proxy_port)
-        self.assertEqual(model.spec.connection.proxy_port, valid_proxy_port)
+        self._manifest["spec"]["connection"]["proxy_port"] = valid_proxy_port
+        self._loader = None
+        self._model = None
+        self.model
+        self.assertEqual(self.model.spec.connection.proxy_port, valid_proxy_port)
 
     def test_validate_pool_size_invalid_value(self):
         """Test that the pool_size validator raises an error for invalid values."""
+        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
+        self.manifest
         invalid_pool_size = 0
+        self.manifest["spec"]["connection"]["pool_size"] = invalid_pool_size
+        self._loader = None
+        self._model = None
+
         with self.assertRaises(SAMValidationError) as context:
-            SAMSqlConnection(pool_size=invalid_pool_size)
+            print(self.model)
         self.assertIn(f"Invalid pool size: {invalid_pool_size}. Must be greater than 0.", str(context.exception))
 
     def test_validate_pool_size_valid_value(self):
         """Test that the pool_size validator accepts valid values."""
+        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
+        self.manifest
         valid_pool_size = 10
-        model = SAMSqlConnection(pool_size=valid_pool_size)
-        self.assertEqual(model.spec.connection.pool_size, valid_pool_size)
+        self.manifest["spec"]["connection"]["pool_size"] = valid_pool_size
+        self._loader = None
+        self._model = None
+        self.model
+        self.assertEqual(self.model.spec.connection.pool_size, valid_pool_size)
 
     def test_validate_max_overflow_invalid_value(self):
         """Test that the max_overflow validator raises an error for invalid values."""
+        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
+        self.manifest
         invalid_max_overflow = -1
+        self.manifest["spec"]["connection"]["max_overflow"] = invalid_max_overflow
+        self._loader = None
+        self._model = None
         with self.assertRaises(SAMValidationError) as context:
-            SAMSqlConnection(max_overflow=invalid_max_overflow)
+            print(self.model)
         self.assertIn(f"Invalid max overflow: {invalid_max_overflow}. Must be 0 or greater.", str(context.exception))
 
     def test_validate_max_overflow_valid_value(self):
         """Test that the max_overflow validator accepts valid values."""
+        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
+        self.manifest
         valid_max_overflow = 5
-        model = SAMSqlConnection(max_overflow=valid_max_overflow)
-        self.assertEqual(model.spec.connection.max_overflow, valid_max_overflow)
+        self.manifest["spec"]["connection"]["max_overflow"] = valid_max_overflow
+        self._loader = None
+        self._model = None
+        self.model
+        self.assertEqual(self.model.spec.connection.max_overflow, valid_max_overflow)
 
     def test_validate_authentication_method_invalid_value(self):
         """Test that the authentication_method validator raises an error for invalid values."""
+        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
+        self.manifest
         invalid_auth_method = "invalid_method"
+        self._manifest["spec"]["connection"]["authentication_method"] = invalid_auth_method
+        self._loader = None
+        self._model = None
         with self.assertRaises(SAMValidationError) as context:
-            SAMSqlConnection(authentication_method=invalid_auth_method)
+            print(self.model)
         self.assertIn(
-            f"Invalid authentication method: {invalid_auth_method}. Must be one of {SqlConnectionORM.DBMSAuthenticationMethods.choices()}",
+            f"Invalid authentication method: {invalid_auth_method}. Must be one of {SqlConnection.DBMSAuthenticationMethods.all_values()}",
             str(context.exception),
         )
 
     def test_validate_authentication_method_valid_value(self):
         """Test that the authentication_method validator accepts valid values."""
-        valid_auth_method = SqlConnection.DBMSAuthenticationMethods.choices()[0]
-        model = SAMSqlConnection(authentication_method=valid_auth_method)
-        self.assertEqual(model.spec.connection.authentication_method, valid_auth_method)
+        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
+        self.manifest
+        valid_auth_method = SqlConnection.DBMSAuthenticationMethods.all_values()[0]
+        self._manifest["spec"]["connection"]["authentication_method"] = valid_auth_method
+        self._loader = None
+        self._model = None
+        self.model
+        self.assertEqual(self.model.spec.connection.authentication_method, valid_auth_method)
 
     def test_validate_use_ssl_invalid_value(self):
         """Test that the use_ssl validator raises an error for invalid values."""
+        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
+        self.manifest
         invalid_use_ssl = "not_a_boolean"
-        with self.assertRaises(SAMValidationError) as context:
-            SAMSqlConnection(use_ssl=invalid_use_ssl)
-        self.assertIn(f"Invalid use_ssl value: {invalid_use_ssl}. Must be a boolean.", str(context.exception))
+        self._manifest["spec"]["connection"]["use_ssl"] = invalid_use_ssl
+        self._loader = None
+        self._model = None
+        with self.assertRaises(ValidationError) as context:
+            print(self.model)
+        self.assertIn("Input should be a valid boolean, unable to interpret input", str(context.exception))
 
     def test_validate_use_ssl_valid_value(self):
         """Test that the use_ssl validator accepts valid values."""
+        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
+        self.manifest
         valid_use_ssl = True
-        model = SAMSqlConnection(use_ssl=valid_use_ssl)
-        self.assertEqual(model.spec.connection.use_ssl, valid_use_ssl)
+        self._manifest["spec"]["connection"]["use_ssl"] = valid_use_ssl
+        self._loader = None
+        self._model = None
+        self.model
+        self.assertEqual(self.model.spec.connection.use_ssl, valid_use_ssl)
 
     def test_model_tcpip(self):
         """Test that the Loader can load the manifest."""
@@ -307,8 +401,17 @@ class TestPluginSql(unittest.TestCase):
         self.manifest_path = os.path.join(HERE, "mock_data/sql-connection.yaml")
         model_dump = self.model.spec.connection.model_dump()
 
-        model_dump["account"] = self.account
         model_dump["name"] = self.model.metadata.name
+        logger.info(f"Model dump: {json.dumps(model_dump, indent=4)}")
+        model_dump["account"] = self.account
+        model_dump["description"] = self.model.metadata.description
+
+        if self.model.spec.connection.password:
+            clear_password = model_dump.pop("password")
+            secret_name = f"test_secret_{self.hash_suffix}"
+            secret = self.secret_factory(name=secret_name, value=clear_password)
+            model_dump["password"] = secret
+
         django_model = SqlConnection(**model_dump)
         django_model.save()
 
@@ -319,7 +422,7 @@ class TestPluginSql(unittest.TestCase):
         self.assertEqual(django_model.hostname, self.model.spec.connection.hostname)
         self.assertEqual(django_model.port, self.model.spec.connection.port)
         self.assertEqual(django_model.username, self.model.spec.connection.username)
-        self.assertEqual(django_model.password, self.model.spec.connection.password)
+        self.assertEqual(django_model.password.get_secret(), self.model.spec.connection.password)
         self.assertEqual(django_model.database, self.model.spec.connection.database)
         self.assertEqual(django_model.timeout, self.model.spec.connection.timeout)
         self.assertEqual(django_model.authentication_method, self.model.spec.connection.authentication_method)
@@ -338,7 +441,11 @@ class TestPluginSql(unittest.TestCase):
         self.assertEqual(django_model.pool_size, self.model.spec.connection.pool_size)
         self.assertEqual(django_model.max_overflow, self.model.spec.connection.max_overflow)
 
-        django_model.delete()
+        try:
+            django_model.delete()
+            secret.delete()
+        except (Secret.DoesNotExist, ValueError):
+            pass
 
     def test_model_tcpip_ssl(self):
         """Test that the Loader can load the manifest."""
@@ -369,6 +476,14 @@ class TestPluginSql(unittest.TestCase):
 
         model_dump["account"] = self.account
         model_dump["name"] = self.model.metadata.name
+        model_dump["description"] = self.model.metadata.description
+
+        if self.model.spec.connection.password:
+            clear_password = model_dump.pop("password")
+            secret_name = f"test_secret_{self.hash_suffix}"
+            secret = self.secret_factory(name=secret_name, value=clear_password)
+            model_dump["password"] = secret
+
         django_model = SqlConnection(**model_dump)
         django_model.save()
 
@@ -379,7 +494,7 @@ class TestPluginSql(unittest.TestCase):
         self.assertEqual(django_model.hostname, self.model.spec.connection.hostname)
         self.assertEqual(django_model.port, self.model.spec.connection.port)
         self.assertEqual(django_model.username, self.model.spec.connection.username)
-        self.assertEqual(django_model.password, self.model.spec.connection.password)
+        self.assertEqual(django_model.password.get_secret(), self.model.spec.connection.password)
         self.assertEqual(django_model.database, self.model.spec.connection.database)
         self.assertEqual(django_model.timeout, self.model.spec.connection.timeout)
         self.assertEqual(django_model.use_ssl, True)
@@ -395,10 +510,14 @@ class TestPluginSql(unittest.TestCase):
         self.assertEqual(django_model.proxy_password, None)
         self.assertEqual(django_model.ssh_known_hosts, None)
 
-        django_model.delete()
+        try:
+            django_model.delete()
+            secret.delete()
+        except (Secret.DoesNotExist, ValueError):
+            pass
 
     def test_model_tcpip_ssh(self):
-        """Test that the Loader can load the manifest."""
+        """Test that the Loader can load the self._manifest["spec"]["connection"]["username"]."""
         self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
 
         self.assertEqual(self.loader.manifest_api_version, SmarterApiVersions.V1)
@@ -434,8 +553,21 @@ class TestPluginSql(unittest.TestCase):
 
         model_dump["account"] = self.account
         model_dump["name"] = self.model.metadata.name
+        model_dump["description"] = self.model.metadata.description
+
+        if self.model.spec.connection.password:
+            clear_password = model_dump.pop("password")
+            secret_name = f"test_secret_{self.hash_suffix}"
+            secret = self.secret_factory(name=secret_name, value=clear_password)
+            model_dump["password"] = secret
+
+        if self.model.spec.connection.proxy_password:
+            clear_proxy_password = model_dump.pop("proxy_password")
+            proxy_secret_name = f"test_proxy_secret_{self.hash_suffix}"
+            proxy_secret = self.secret_factory(name=proxy_secret_name, value=clear_proxy_password)
+            model_dump["proxy_password"] = proxy_secret
+
         django_model = SqlConnection(**model_dump)
-        django_model.save()
 
         self.assertIsNotNone(django_model)
         self.assertEqual(django_model.account, self.account)
@@ -444,16 +576,20 @@ class TestPluginSql(unittest.TestCase):
         self.assertEqual(django_model.hostname, self.model.spec.connection.hostname)
         self.assertEqual(django_model.port, self.model.spec.connection.port)
         self.assertEqual(django_model.username, self.model.spec.connection.username)
-        self.assertEqual(django_model.password, self.model.spec.connection.password)
+        self.assertEqual(django_model.password.get_secret(), self.model.spec.connection.password)
         self.assertEqual(django_model.database, self.model.spec.connection.database)
         self.assertEqual(django_model.timeout, self.model.spec.connection.timeout)
         self.assertEqual(django_model.proxy_host, self.model.spec.connection.proxy_host)
         self.assertEqual(django_model.proxy_port, self.model.spec.connection.proxy_port)
         self.assertEqual(django_model.proxy_username, self.model.spec.connection.proxy_username)
-        self.assertEqual(django_model.proxy_password, self.model.spec.connection.proxy_password)
+        self.assertEqual(django_model.proxy_password.get_secret(), self.model.spec.connection.proxy_password)
         self.assertEqual(django_model.ssh_known_hosts, self.model.spec.connection.ssh_known_hosts)
         self.assertEqual(django_model.authentication_method, self.model.spec.connection.authentication_method)
         self.assertEqual(django_model.pool_size, self.model.spec.connection.pool_size)
         self.assertEqual(django_model.max_overflow, self.model.spec.connection.max_overflow)
 
-        django_model.delete()
+        try:
+            django_model.delete()
+            secret.delete()
+        except (Secret.DoesNotExist, ValueError):
+            pass

@@ -46,7 +46,7 @@ class SmarterValidator:
     VALID_URL_FRIENDLY_STRING = (
         r"^((http|https)\:\/\/)?[a-zA-Z0-9\.\/\?\:@\-_=#]+\.([a-zA-Z]){2,6}([a-zA-Z0-9\.\&\/\?\:@\-_=#])*$"
     )
-    VALID_CLEAN_STRING = r"^[\w\-\.~:\/\?#\[\]@!$&'()*+,;=%]+$"
+    VALID_CLEAN_STRING = r"^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z0-9-]{1,63})*$"
     VALID_CLEAN_STRING_WITH_SPACES = r"^[\w\-\.~:\/\?#\[\]@!$&'()*+,;= %]+$"
 
     @staticmethod

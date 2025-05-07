@@ -338,6 +338,10 @@ class SqlConnection(TimestampedModel):
         def choices(cls):
             return [(method.value, method.name.replace("_", " ").title()) for method in cls]
 
+        @classmethod
+        def all_values(cls):
+            return [method.value for method in cls]
+
     DBMS_DEFAULT_TIMEOUT = 30
     DBMS_CHOICES = [
         (DbEngines.MYSQL.value, "MySQL"),
@@ -363,25 +367,30 @@ class SqlConnection(TimestampedModel):
         default=DbEngines.MYSQL.value,
         max_length=255,
         choices=DBMS_CHOICES,
+        blank=True,
+        null=True,
     )
     authentication_method = models.CharField(
         help_text="The authentication method to use for the connection. Example: 'Standard TCP/IP', 'Standard TCP/IP over SSH', 'LDAP User/Password'.",
         max_length=255,
         choices=DBMSAuthenticationMethods.choices(),
-        default="none",
+        default=DBMSAuthenticationMethods.TCPIP.value,
     )
     timeout = models.IntegerField(
         help_text="The timeout for the database connection in seconds. Default is 30 seconds.",
         default=DBMS_DEFAULT_TIMEOUT,
         validators=[MinValueValidator(1)],
+        blank=True,
     )
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="sql_connections_account")
     description = models.TextField(
-        help_text="A brief description of the connection. Be verbose, but not too verbose.",
+        help_text="A brief description of the connection. Be verbose, but not too verbose.", blank=True, null=True
     )
 
     # SSL/TLS fields
-    use_ssl = models.BooleanField(default=False, help_text="Whether to use SSL/TLS for the connection.")
+    use_ssl = models.BooleanField(
+        default=False, help_text="Whether to use SSL/TLS for the connection.", blank=True, null=True
+    )
     ssl_cert = models.TextField(blank=True, null=True, help_text="The SSL certificate for the connection, if required.")
     ssl_key = models.TextField(blank=True, null=True, help_text="The SSL key for the connection, if required.")
     ssl_ca = models.TextField(
@@ -392,7 +401,9 @@ class SqlConnection(TimestampedModel):
     hostname = models.CharField(
         max_length=255, help_text="The remote host of the SQL connection. Should be a valid internet domain name."
     )
-    port = models.IntegerField(default=3306, help_text="The port of the SQL connection. example: 3306 for MySQL.")
+    port = models.IntegerField(
+        default=3306, help_text="The port of the SQL connection. example: 3306 for MySQL.", blank=True, null=True
+    )
     database = models.CharField(max_length=255, help_text="The name of the database to connect to.")
     username = models.CharField(max_length=255, blank=True, null=True, help_text="The database username.")
     password = models.ForeignKey(
@@ -403,9 +414,13 @@ class SqlConnection(TimestampedModel):
         blank=True,
         null=True,
     )
-    pool_size = models.IntegerField(default=5, help_text="The size of the connection pool.")
+    pool_size = models.IntegerField(default=5, help_text="The size of the connection pool.", blank=True, null=True)
     max_overflow = models.IntegerField(
-        default=10, help_text="The maximum number of connections to allow beyond the pool size."
+        default=10,
+        help_text="The maximum number of connections to allow beyond the pool size.",
+        validators=[MinValueValidator(1)],
+        blank=True,
+        null=True,
     )
 
     # Proxy fields
@@ -414,6 +429,8 @@ class SqlConnection(TimestampedModel):
         choices=[("http", "HTTP"), ("https", "HTTPS"), ("socks", "SOCKS")],
         default="http",
         help_text="The protocol to use for the proxy connection.",
+        blank=True,
+        null=True,
     )
     proxy_host = models.CharField(
         max_length=255,
