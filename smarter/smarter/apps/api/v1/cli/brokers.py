@@ -52,9 +52,9 @@ class Brokers:
         SAMKinds.CHAT_PLUGIN_USAGE.value: SAMChatPluginUsageBroker,
         SAMKinds.CHAT_TOOL_CALL.value: SAMChatToolCallBroker,
         SAMKinds.CHATBOT.value: SAMChatbotBroker,
-        SAMKinds.PLUGIN.value: SAMPluginBroker,
-        SAMKinds.PLUGIN_DATA_SQL_CONNECTION.value: SAMPluginDataSqlConnectionBroker,
-        # SAMKinds.PLUGIN_DATA_API_CONNECTION.value: BrokerNotImplemented,
+        SAMKinds.PLUGIN_STATIC.value: SAMPluginBroker,
+        SAMKinds.SQL_CONNECTION.value: SAMPluginDataSqlConnectionBroker,
+        # SAMKinds.API_CONNECTION.value: BrokerNotImplemented,
         SAMKinds.USER.value: SAMUserBroker,
         SAMKinds.SECRET.value: SAMSecretBroker,
     }

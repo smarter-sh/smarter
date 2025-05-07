@@ -17,7 +17,7 @@ MODULE_IDENTIFIER = MANIFEST_KIND
 
 
 class SAMPluginDataSqlConnection(AbstractSAMBase):
-    """Smarter API Manifest - Plugin Data SQL Connection Model"""
+    """Smarter API Manifest - PluginSql Connection Model"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 

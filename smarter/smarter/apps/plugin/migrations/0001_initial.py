@@ -76,7 +76,7 @@ class Migration(migrations.Migration):
             bases=("plugin.plugindatabase",),
         ),
         migrations.CreateModel(
-            name="PluginDataSqlConnection",
+            name="SqlConnection",
             fields=[
                 (
                     "id",
@@ -177,8 +177,8 @@ class Migration(migrations.Migration):
                     models.CharField(
                         choices=[
                             ("static", "PluginStatic"),
-                            ("sql", "PluginDataSql"),
-                            ("api", "PluginDataSqlConnection"),
+                            ("sql", "PluginSql"),
+                            ("api", "SqlConnection"),
                         ],
                         default="PluginMeta",
                         help_text="The class name of the plugin",
@@ -377,7 +377,7 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name="PluginDataSql",
+            name="PluginSql",
             fields=[
                 (
                     "plugindatabase_ptr",

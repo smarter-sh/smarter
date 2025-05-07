@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.CreateModel(
-            name="PluginDataApiConnection",
+            name="ApiConnection",
             fields=[
                 (
                     "id",
@@ -115,7 +115,7 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name="PluginDataApi",
+            name="PluginApi",
             fields=[
                 (
                     "plugindatabase_ptr",

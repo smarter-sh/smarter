@@ -16,8 +16,8 @@ from .status import SAMPluginDataApiConnectionStatus
 MODULE_IDENTIFIER = MANIFEST_KIND
 
 
-class SAMPluginDataApiConnection(AbstractSAMBase):
-    """Smarter API Manifest - Plugin Data SQL Connection Model"""
+class SAMPluginApi(AbstractSAMBase):
+    """Smarter API Manifest - PluginSql Connection Model"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 

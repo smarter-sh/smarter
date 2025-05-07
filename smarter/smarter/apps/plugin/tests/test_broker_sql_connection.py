@@ -1,4 +1,4 @@
-"""Test SAM PluginDataSqlConnection Broker"""
+"""Test SAM SqlConnection Broker"""
 
 import json
 import os
@@ -28,7 +28,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
-    """Test SAM PluginDataSqlConnection Broker"""
+    """Test SAM SqlConnection Broker"""
 
     @classmethod
     def setUpClass(cls):
@@ -59,7 +59,7 @@ class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
         self.assertIn("message", content.keys())
         self.assertEqual(
             content["message"],
-            f"{SmarterJournalThings.PLUGIN_DATA_SQL_CONNECTION.value} testConnection applied successfully",
+            f"{SmarterJournalThings.SQL_CONNECTION.value} testConnection applied successfully",
         )
 
     def test_sqlconnection_broker_describe(self):
@@ -111,7 +111,7 @@ class TestSAMPluginDataSqlConnectionBroker(unittest.TestCase):
         self.assertIn("message", content.keys())
         self.assertEqual(
             content["message"],
-            f"{SmarterJournalThings.PLUGIN_DATA_SQL_CONNECTION.value} testConnection deleted successfully",
+            f"{SmarterJournalThings.SQL_CONNECTION.value} testConnection deleted successfully",
         )
 
     def test_sqlconnection_broker_deploy(self):

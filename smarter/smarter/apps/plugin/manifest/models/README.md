@@ -1,5 +1,7 @@
 # Pydantic models for Plugin manifests
 
 - Plugin
-- PluginDataSqlConnection
+- PluginApi
+- PluginSql
+- SqlConnection
 - PluginDataHttpRequest

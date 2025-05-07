@@ -96,7 +96,7 @@ class PluginMeta(TimestampedModel):  # pragma: no cover
     PLUGIN_CLASSES = [
         (SAMPluginMetadataClassValues.STATIC.value, "PluginStatic"),
         (SAMPluginMetadataClassValues.SQL.value, "PluginDataSql"),
-        (SAMPluginMetadataClassValues.API.value, "PluginDataSqlConnection"),
+        (SAMPluginMetadataClassValues.API.value, "SqlConnection"),
     ]
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="plugin_meta")
@@ -293,7 +293,7 @@ class PluginDataStatic(PluginDataBase):
         verbose_name_plural = "Plugin Static Data"
 
 
-class PluginDataSqlConnection(TimestampedModel):
+class SqlConnection(TimestampedModel):
     """PluginDataSql Connection model."""
 
     DBMS_CHOICES = [
@@ -394,7 +394,7 @@ class PluginDataSqlConnection(TimestampedModel):
             self.proxy_protocol: f"{self.proxy_protocol}://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}",
         }
         try:
-            response = requests.get("http://www.google.com", proxies=proxy_dict, timeout=self.timeout)
+            response = requests.get("https://www.google.com", proxies=proxy_dict, timeout=self.timeout)
             return response.status_code in [HTTPStatus.OK, HTTPStatus.PERMANENT_REDIRECT]
         except requests.exceptions.RequestException as e:
             logger.error("proxy test connection failed: %s", e)
@@ -432,7 +432,7 @@ class PluginDataSql(PluginDataBase):
         max_length=255,
         validators=[validate_no_spaces],
     )
-    connection = models.ForeignKey(PluginDataSqlConnection, on_delete=models.CASCADE, related_name="plugin_data_sql")
+    connection = models.ForeignKey(SqlConnection, on_delete=models.CASCADE, related_name="plugin_data_sql")
     parameters = models.JSONField(
         help_text="A JSON dict containing parameter names and data types. Example: {'unit': {'type': 'string', 'enum': ['Celsius', 'Fahrenheit'], 'description': 'The temperature unit to use. Infer this from the user's location.'}}",
         default=dict,
@@ -484,27 +484,27 @@ class PluginDataSql(PluginDataBase):
             param_required = param["required"] if "required" in param else False
         except KeyError as e:
             raise SmarterValueError(
-                f"{self.name} PluginSql custom_tool() error: missing required parameter key: {e}"
+                f"{self.name} {self.__class__.__name__} custom_tool() error: missing required parameter key: {e}"
             ) from e
 
         if param_type not in PluginDataSql.DataTypes.all():
             raise SmarterValueError(
-                f"{self.plugin.name} PluginSql custom_tool() error: invalid parameter type: {param_type}. Valid types are: {PluginDataSql.DataTypes.all()}"
+                f"{self.plugin.name} {self.__class__.__name__} custom_tool() error: invalid parameter type: {param_type}. Valid types are: {PluginDataSql.DataTypes.all()}"
             )
 
         if param_enum and not isinstance(param_enum, list):
             raise SmarterValueError(
-                f"{self.plugin.name} PluginSql custom_tool() error: invalid parameter enum: {param_enum}. Must be a list."
+                f"{self.plugin.name} {self.__class__.__name__} custom_tool() error: invalid parameter enum: {param_enum}. Must be a list."
             )
 
         if not isinstance(param_required, bool):
             raise SmarterValueError(
-                f"{self.plugin.name} PluginSql custom_tool() error: invalid parameter required: {param_required}. Must be a boolean."
+                f"{self.plugin.name} {self.__class__.__name__} custom_tool() error: invalid parameter required: {param_required}. Must be a boolean."
             )
 
         if not isinstance(param_description, str):
             raise SmarterValueError(
-                f"{self.plugin.name} PluginSql custom_tool() error: invalid parameter description: {param_description}. Must be a string."
+                f"{self.plugin.name} {self.__class__.__name__} custom_tool() error: invalid parameter description: {param_description}. Must be a string."
             )
 
     def validate_test_values(self) -> bool:
@@ -519,7 +519,9 @@ class PluginDataSql(PluginDataBase):
             return True
 
         if not isinstance(self.test_values, dict):
-            raise SmarterValueError(f"{self.name} PluginSql custom_tool() error: test_values must be a dict.")
+            raise SmarterValueError(
+                f"{self.name} {self.__class__.__name__} custom_tool() error: test_values must be a dict."
+            )
 
         # pylint: disable=E1136
         for key, value in self.test_values.items():
@@ -612,7 +614,7 @@ class PluginDataSql(PluginDataBase):
 
     def sanitized_return_data(self, params: dict = None) -> dict:
         """Return a dict by executing the query with the provided params."""
-        logger.info("PluginDataSql.sanitized_return_data called. - %s", params)
+        logger.info("{self.__class__.__name__}.sanitized_return_data called. - %s", params)
         return self.execute_query(params)
 
     def save(self, *args, **kwargs):
@@ -624,7 +626,7 @@ class PluginDataSql(PluginDataBase):
         return str(self.plugin.account.account_number + " - " + self.plugin.name)
 
 
-class PluginDataApiConnection(TimestampedModel):
+class ApiConnection(TimestampedModel):
     """
     PluginData Api Connection model.
     This model is used to store the connection details for a Rest API remote data source
@@ -693,7 +695,7 @@ class PluginDataApiConnection(TimestampedModel):
             self.proxy_protocol: f"{self.proxy_protocol}://{self.proxy_username}:{self.proxy_password}@{self.proxy_host}:{self.proxy_port}",
         }
         try:
-            response = requests.get("http://www.google.com", proxies=proxy_dict, timeout=self.timeout)
+            response = requests.get("https://www.google.com", proxies=proxy_dict, timeout=self.timeout)
             return response.status_code in [HTTPStatus.OK, HTTPStatus.PERMANENT_REDIRECT]
         except requests.exceptions.RequestException as e:
             logger.error("proxy test connection failed: %s", e)
@@ -734,7 +736,7 @@ class PluginDataApi(PluginDataBase):
     """
 
     connection = models.ForeignKey(
-        PluginDataApiConnection,
+        ApiConnection,
         on_delete=models.CASCADE,
         related_name="plugin_data_api",
         help_text="The API connection associated with this plugin.",
@@ -796,22 +798,22 @@ class PluginDataApi(PluginDataBase):
             param_required = param.get("required", False)
         except KeyError as e:
             raise SmarterValueError(
-                f"{self.plugin.name} PluginApi custom_tool() error: missing required parameter key: {e}"
+                f"{self.plugin.name} {self.__class__.__name__} custom_tool() error: missing required parameter key: {e}"
             ) from e
 
         if param_type not in PluginDataSql.DataTypes.all():
             raise SmarterValueError(
-                f"{self.plugin.name} PluginApi custom_tool() error: invalid parameter type: {param_type}. Valid types are: {PluginDataSql.DataTypes.all()}"
+                f"{self.plugin.name} {self.__class__.__name__} custom_tool() error: invalid parameter type: {param_type}. Valid types are: {PluginDataSql.DataTypes.all()}"
             )
 
         if not isinstance(param_required, bool):
             raise SmarterValueError(
-                f"{self.plugin.name} PluginApi custom_tool() error: invalid parameter required: {param_required}. Must be a boolean."
+                f"{self.plugin.name} {self.__class__.__name__} custom_tool() error: invalid parameter required: {param_required}. Must be a boolean."
             )
 
         if not isinstance(param_description, str):
             raise SmarterValueError(
-                f"{self.plugin.name} PluginApi custom_tool() error: invalid parameter description: {param_description}. Must be a string."
+                f"{self.plugin.name} {self.__class__.__name__} custom_tool() error: invalid parameter description: {param_description}. Must be a string."
             )
 
     def validate_params(self, params: dict) -> bool:
@@ -881,7 +883,7 @@ class PluginDataApi(PluginDataBase):
 
     def sanitized_return_data(self, params: dict = None) -> dict:
         """Return a dict by executing the API request with the provided params."""
-        logger.info("PluginDataApi.sanitized_return_data called. - %s", params)
+        logger.info("{self.__class__.__name__}.sanitized_return_data called. - %s", params)
         return self.execute_request(params)
 
     def save(self, *args, **kwargs):

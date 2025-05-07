@@ -28,10 +28,10 @@ from smarter.apps.plugin.plugin.base import SmarterPluginError
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.apps.plugin.plugin.utils import PluginExamples
 from smarter.apps.plugin.serializers import (
-    PluginDataStaticSerializer,
     PluginMetaSerializer,
     PluginPromptSerializer,
     PluginSelectorSerializer,
+    PluginStaticSerializer,
 )
 from smarter.apps.plugin.signals import (
     plugin_called,
@@ -134,7 +134,7 @@ class TestPlugin(unittest.TestCase):
         self.assertIsInstance(plugin.plugin_selector, PluginSelector)
         self.assertIsInstance(plugin.plugin_prompt, PluginPrompt)
         self.assertIsInstance(plugin.plugin_data, PluginDataStatic)
-        self.assertIsInstance(plugin.plugin_data_serializer, PluginDataStaticSerializer)
+        self.assertIsInstance(plugin.plugin_data_serializer, PluginStaticSerializer)
         self.assertIsInstance(plugin.plugin_meta_serializer, PluginMetaSerializer)
         self.assertIsInstance(plugin.plugin_prompt_serializer, PluginPromptSerializer)
         self.assertIsInstance(plugin.plugin_selector_serializer, PluginSelectorSerializer)

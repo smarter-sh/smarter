@@ -3,4 +3,4 @@
 from smarter.lib.journal.enum import SmarterJournalThings
 
 
-MANIFEST_KIND = SmarterJournalThings.PLUGIN_DATA_SQL.value
+MANIFEST_KIND = SmarterJournalThings.PLUGIN_SQL.value

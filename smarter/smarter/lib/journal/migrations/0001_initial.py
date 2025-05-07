@@ -37,8 +37,8 @@ class Migration(migrations.Migration):
                     models.CharField(
                         choices=[
                             (
-                                smarter.lib.journal.enum.SmarterJournalThings["PLUGIN"],
-                                smarter.lib.journal.enum.SmarterJournalThings["PLUGIN"],
+                                smarter.lib.journal.enum.SmarterJournalThings["PLUGIN_STATIC"],
+                                smarter.lib.journal.enum.SmarterJournalThings["PLUGIN_STATIC"],
                             ),
                             (
                                 smarter.lib.journal.enum.SmarterJournalThings["ACCOUNT"],
@@ -77,12 +77,12 @@ class Migration(migrations.Migration):
                                 smarter.lib.journal.enum.SmarterJournalThings["CHATBOT"],
                             ),
                             (
-                                smarter.lib.journal.enum.SmarterJournalThings["PLUGIN_DATA_SQL_CONNECTION"],
-                                smarter.lib.journal.enum.SmarterJournalThings["PLUGIN_DATA_SQL_CONNECTION"],
+                                smarter.lib.journal.enum.SmarterJournalThings["SQL_CONNECTION"],
+                                smarter.lib.journal.enum.SmarterJournalThings["SQL_CONNECTION"],
                             ),
                             # (
-                            #     smarter.lib.journal.enum.SmarterJournalThings["PLUGIN_DATA_API_CONNECTION"],
-                            #     smarter.lib.journal.enum.SmarterJournalThings["PLUGIN_DATA_API_CONNECTION"],
+                            #     smarter.lib.journal.enum.SmarterJournalThings["API_CONNECTION"],
+                            #     smarter.lib.journal.enum.SmarterJournalThings["API_CONNECTION"],
                             # ),
                         ],
                         max_length=24,

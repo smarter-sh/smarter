@@ -10,13 +10,13 @@ from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.apps.plugin.manifest.models.sql_connection.enum import DbEngines
-from smarter.apps.plugin.models import PluginDataSqlConnection
+from smarter.apps.plugin.models import SqlConnection
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
 
-KIND = SAMKinds.PLUGIN_DATA_SQL_CONNECTION.value
+KIND = SAMKinds.SQL_CONNECTION.value
 
 
 class TestApiCliV1SqlConnection(ApiV1TestBase):
@@ -31,7 +31,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
     Account.
     """
 
-    sqlconnection: PluginDataSqlConnection = None
+    sqlconnection: SqlConnection = None
 
     def setUp(self):
         super().setUp()
@@ -45,7 +45,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
             self.sqlconnection.delete()
 
     def sqlconnection_factory(self):
-        sqlconnection = PluginDataSqlConnection.objects.create(
+        sqlconnection = SqlConnection.objects.create(
             name=self.name,
             db_engine=DbEngines.MYSQL.value,
             account=self.account,
@@ -66,7 +66,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         self.assertIn(SmarterJournalApiResponseKeys.DATA, response.keys())
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
-        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.PLUGIN_DATA_SQL_CONNECTION.value)
+        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.SQL_CONNECTION.value)
 
         # validate the metadata
         self.assertIn(SmarterJournalApiResponseKeys.METADATA, data.keys())
@@ -214,7 +214,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         self.assertIn(SmarterJournalApiResponseKeys.DATA, response.keys())
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
-        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.PLUGIN_DATA_SQL_CONNECTION.value)
+        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.SQL_CONNECTION.value)
 
         # validate the metadata
         self.assertIn(SmarterJournalApiResponseKeys.METADATA, data.keys())
@@ -282,7 +282,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
 
         # verify the sqlconnection was deleted
         try:
-            PluginDataSqlConnection.objects.get(name=self.name)
-            self.fail("PluginDataSqlConnection was not deleted")
-        except PluginDataSqlConnection.DoesNotExist:
+            SqlConnection.objects.get(name=self.name)
+            self.fail("SqlConnection was not deleted")
+        except SqlConnection.DoesNotExist:
             pass

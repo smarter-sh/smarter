@@ -1,5 +1,5 @@
 # pylint: disable=W0718
-"""Smarter API Plugin Manifest handler"""
+"""Smarter Sql Plugin Manifest handler"""
 
 from typing import Type
 
@@ -8,8 +8,8 @@ from django.http import HttpRequest
 
 from smarter.apps.account.mixins import Account, AccountMixin
 from smarter.apps.plugin.manifest.models.sql_connection.enum import DbEngines
-from smarter.apps.plugin.models import PluginDataSqlConnection
-from smarter.apps.plugin.serializers import PluginDataSqlConnectionSerializer
+from smarter.apps.plugin.models import SqlConnection
+from smarter.apps.plugin.serializers import SqlConnectionSerializer
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
@@ -39,7 +39,7 @@ class SAMPluginDataSqlConnectionBrokerError(SAMBrokerError):
 
     @property
     def get_formatted_err_message(self):
-        return "Smarter API PluginDataSqlConnection Manifest Broker Error"
+        return "Smarter API SqlConnection Manifest Broker Error"
 
 
 class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
@@ -55,7 +55,7 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
     # override the base abstract manifest model with the Plugin model
     _manifest: SAMPluginDataSqlConnection = None
     _pydantic_model: Type[SAMPluginDataSqlConnection] = SAMPluginDataSqlConnection
-    _sql_connection: PluginDataSqlConnection = None
+    _sql_connection: SqlConnection = None
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -94,8 +94,8 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
     # Smarter abstract property implementations
     ###########################################################################
     @property
-    def model_class(self) -> PluginDataSqlConnection:
-        return PluginDataSqlConnection
+    def model_class(self) -> SqlConnection:
+        return SqlConnection
 
     @property
     def kind(self) -> str:
@@ -136,20 +136,20 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
         return config_dump
 
     @property
-    def sql_connection(self) -> PluginDataSqlConnection:
+    def sql_connection(self) -> SqlConnection:
         if self._sql_connection:
             return self._sql_connection
 
         try:
-            self._sql_connection = PluginDataSqlConnection.objects.get(account=self.account, name=self.name)
-        except PluginDataSqlConnection.DoesNotExist:
+            self._sql_connection = SqlConnection.objects.get(account=self.account, name=self.name)
+        except SqlConnection.DoesNotExist:
             if self.manifest:
                 model_dump = self.manifest.spec.connection.model_dump()
                 model_dump["account"] = self.account
                 model_dump["name"] = self.manifest.metadata.name
                 model_dump["version"] = self.manifest.metadata.version
                 model_dump["description"] = self.manifest.metadata.description
-                self._sql_connection = PluginDataSqlConnection(**model_dump)
+                self._sql_connection = SqlConnection(**model_dump)
                 self._sql_connection.save()
 
         return self._sql_connection
@@ -189,16 +189,16 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
         name: str = kwargs.get("name", None)
         data = []
 
-        # generate a QuerySet of PluginDataSqlConnection objects that match our search criteria
+        # generate a QuerySet of SqlConnection objects that match our search criteria
         if name:
-            sql_connections = PluginDataSqlConnection.objects.filter(account=self.account, name=name)
+            sql_connections = SqlConnection.objects.filter(account=self.account, name=name)
         else:
-            sql_connections = PluginDataSqlConnection.objects.filter(account=self.account)
+            sql_connections = SqlConnection.objects.filter(account=self.account)
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for sql_connection in sql_connections:
             try:
-                model_dump = PluginDataSqlConnectionSerializer(sql_connection).data
+                model_dump = SqlConnectionSerializer(sql_connection).data
                 if not model_dump:
                     raise SAMPluginDataSqlConnectionBrokerError(
                         f"Model dump failed for {self.kind} {sql_connection.name}", thing=self.kind, command=command
@@ -213,7 +213,7 @@ class SAMPluginDataSqlConnectionBroker(AbstractBroker, AccountMixin):
             SAMKeys.METADATA.value: {"count": len(data)},
             SCLIResponseGet.KWARGS.value: kwargs,
             SCLIResponseGet.DATA.value: {
-                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=PluginDataSqlConnectionSerializer()),
+                SCLIResponseGetData.TITLES.value: self.get_model_titles(serializer=SqlConnectionSerializer()),
                 SCLIResponseGetData.ITEMS.value: data,
             },
         }

@@ -37,20 +37,20 @@ from smarter.apps.chatbot.models import (
     ChatBotRequests,
 )
 from smarter.apps.plugin.admin import (
+    ApiConnectionAdmin,
     PluginAdmin,
-    PluginDataApiAdmin,
-    PluginDataApiConnectionAdmin,
-    PluginDataSqlAdmin,
-    PluginDataSqlConnectionAdmin,
+    PluginApiAdmin,
     PluginSelectionHistoryAdmin,
+    PluginSqlAdmin,
+    SqlConnectionAdmin,
 )
 from smarter.apps.plugin.models import (
+    ApiConnection,
     PluginDataApi,
-    PluginDataApiConnection,
     PluginDataSql,
-    PluginDataSqlConnection,
     PluginMeta,
     PluginSelectorHistory,
+    SqlConnection,
 )
 from smarter.lib.django.admin import RestrictedModelAdmin, SuperUserOnlyModelAdmin
 from smarter.lib.django.user import User
@@ -161,11 +161,11 @@ restricted_site.register(ChatBotRequests, ChatBotRequestsAdmin)
 
 # Plugin Models
 restricted_site.register(PluginMeta, PluginAdmin)
-restricted_site.register(PluginDataSqlConnection, PluginDataSqlConnectionAdmin)
+restricted_site.register(SqlConnection, SqlConnectionAdmin)
 restricted_site.register(PluginSelectorHistory, PluginSelectionHistoryAdmin)
-restricted_site.register(PluginDataApiConnection, PluginDataApiConnectionAdmin)
-restricted_site.register(PluginDataApi, PluginDataApiAdmin)
-restricted_site.register(PluginDataSql, PluginDataSqlAdmin)
+restricted_site.register(ApiConnection, ApiConnectionAdmin)
+restricted_site.register(PluginDataApi, PluginApiAdmin)
+restricted_site.register(PluginDataSql, PluginSqlAdmin)
 
 
 # Journal Models

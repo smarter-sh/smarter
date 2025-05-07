@@ -9,15 +9,15 @@ from smarter.apps.account.utils import get_cached_account_for_user
 from smarter.lib.django.admin import RestrictedModelAdmin
 
 from .models import (
+    ApiConnection,
     PluginDataApi,
-    PluginDataApiConnection,
     PluginDataSql,
-    PluginDataSqlConnection,
     PluginDataStatic,
     PluginMeta,
     PluginPrompt,
     PluginSelector,
     PluginSelectorHistory,
+    SqlConnection,
 )
 
 
@@ -121,10 +121,10 @@ class PluginSelectionHistoryAdmin(RestrictedModelAdmin):
             return qs.none()
 
 
-class PluginDataSqlConnectionAdmin(RestrictedModelAdmin):
-    """Plugin Data SQL Connection model admin."""
+class SqlConnectionAdmin(RestrictedModelAdmin):
+    """PluginDataSql Connection model admin."""
 
-    model = PluginDataApiConnection
+    model = SqlConnection
 
     readonly_fields = (
         "created_at",
@@ -153,10 +153,10 @@ class PluginDataSqlConnectionAdmin(RestrictedModelAdmin):
             return qs.none()
 
 
-class PluginDataApiConnectionAdmin(RestrictedModelAdmin):
-    """Plugin Data API Connection model admin."""
+class ApiConnectionAdmin(RestrictedModelAdmin):
+    """PluginDataApi Connection model admin."""
 
-    model = PluginDataApiConnection
+    model = ApiConnection
 
     readonly_fields = (
         "created_at",
@@ -183,8 +183,8 @@ class PluginDataApiConnectionAdmin(RestrictedModelAdmin):
             return qs.none()
 
 
-class PluginDataApiAdmin(RestrictedModelAdmin):
-    """Plugin Data API model admin."""
+class PluginApiAdmin(RestrictedModelAdmin):
+    """PluginDataApi model admin."""
 
     model = PluginDataApi
 
@@ -213,8 +213,8 @@ class PluginDataApiAdmin(RestrictedModelAdmin):
             return qs.none()
 
 
-class PluginDataSqlAdmin(RestrictedModelAdmin):
-    """Plugin Data SQL model admin."""
+class PluginSqlAdmin(RestrictedModelAdmin):
+    """PluginDataSql model admin."""
 
     model = PluginDataSql
 

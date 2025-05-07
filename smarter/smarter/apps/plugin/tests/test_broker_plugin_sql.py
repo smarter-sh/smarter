@@ -60,7 +60,7 @@ class TestSAMPluginSql(unittest.TestCase):
 
     def test_plugin_broker_apply(self):
         """Test that the Broker can apply the manifest."""
-        thing = SmarterJournalThings(SmarterJournalThings.PLUGIN)
+        thing = SmarterJournalThings(SmarterJournalThings.PLUGIN_STATIC)
         retval = self.plugin_broker.apply(request=self.request, kwargs=self.kwargs)
         self.assertEqual(retval.status_code, HTTPStatus.OK)
         content = json.loads(retval.content.decode())
@@ -103,12 +103,12 @@ class TestSAMPluginSql(unittest.TestCase):
         pydantic_model.model_dump()
 
         # assert that everything in content is in round_trip_dict
-        print("FIX NOTE: CANNOT ROUND-TRIP THE PLUGIN MANIFEST")
+        print("FIX NOTE: CANNOT ROUND-TRIP THE PLUGIN_STATIC MANIFEST")
         # self.assertTrue(dict_is_contained_in(content, round_trip_dict))
 
     def test_plugin_broker_delete(self):
         """Test that the Broker can delete the object."""
-        thing = SmarterJournalThings(SmarterJournalThings.PLUGIN)
+        thing = SmarterJournalThings(SmarterJournalThings.PLUGIN_STATIC)
         retval = self.plugin_broker.apply(request=self.request, kwargs=self.kwargs)
         self.assertEqual(retval.status_code, HTTPStatus.OK)
 

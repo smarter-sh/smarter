@@ -8,14 +8,14 @@ from smarter.apps.account.serializers import (
     UserProfileSerializer,
 )
 from smarter.apps.plugin.models import (
+    ApiConnection,
     PluginDataApi,
-    PluginDataApiConnection,
     PluginDataSql,
-    PluginDataSqlConnection,
     PluginDataStatic,
     PluginMeta,
     PluginPrompt,
     PluginSelector,
+    SqlConnection,
 )
 
 
@@ -91,7 +91,7 @@ class PluginPromptSerializer(serializers.ModelSerializer):
         return new_representation
 
 
-class PluginDataStaticSerializer(serializers.ModelSerializer):
+class PluginStaticSerializer(serializers.ModelSerializer):
     """PluginDataStatic model serializer."""
 
     # pylint: disable=missing-class-docstring
@@ -113,12 +113,12 @@ class PluginDataStaticSerializer(serializers.ModelSerializer):
         return new_representation
 
 
-class PluginDataSqlConnectionSerializer(serializers.ModelSerializer):
-    """PluginDataSqlConnection model serializer."""
+class SqlConnectionSerializer(serializers.ModelSerializer):
+    """SqlConnection model serializer."""
 
     # pylint: disable=missing-class-docstring
     class Meta:
-        model = PluginDataSqlConnection
+        model = SqlConnection
         fields = [
             "name",
             "description",
@@ -127,6 +127,7 @@ class PluginDataSqlConnectionSerializer(serializers.ModelSerializer):
             "database",
             "username",
             "password",
+            "proxy_protocol",
             "proxy_host",
             "proxy_port",
             "proxy_username",
@@ -147,10 +148,10 @@ class PluginDataSqlConnectionSerializer(serializers.ModelSerializer):
         return new_representation
 
 
-class PluginDataSqlSerializer(serializers.ModelSerializer):
+class PluginSqlSerializer(serializers.ModelSerializer):
     """PluginDataSql model serializer."""
 
-    connection = serializers.SlugRelatedField(slug_field="name", queryset=PluginDataSqlConnection.objects.all())
+    connection = serializers.SlugRelatedField(slug_field="name", queryset=SqlConnection.objects.all())
 
     # pylint: disable=missing-class-docstring
     class Meta:
@@ -178,12 +179,12 @@ class PluginDataSqlSerializer(serializers.ModelSerializer):
         return new_representation
 
 
-class PluginDataApiConnectionSerializer(serializers.ModelSerializer):
-    """PluginDataApiConnection model serializer."""
+class ApiConnectionSerializer(serializers.ModelSerializer):
+    """ApiConnection model serializer."""
 
     # pylint: disable=missing-class-docstring
     class Meta:
-        model = PluginDataApiConnection
+        model = ApiConnection
         fields = [
             "name",
             "description",
@@ -210,10 +211,10 @@ class PluginDataApiConnectionSerializer(serializers.ModelSerializer):
         return new_representation
 
 
-class PluginDataApiSerializer(serializers.ModelSerializer):
+class PluginApiSerializer(serializers.ModelSerializer):
     """PluginDataApi model serializer."""
 
-    connection = serializers.SlugRelatedField(slug_field="name", queryset=PluginDataApiConnection.objects.all())
+    connection = serializers.SlugRelatedField(slug_field="name", queryset=ApiConnection.objects.all())
 
     # pylint: disable=missing-class-docstring
     class Meta:
