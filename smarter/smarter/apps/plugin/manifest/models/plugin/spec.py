@@ -17,7 +17,7 @@ from smarter.apps.plugin.manifest.enum import (
     SAMPluginSpecSelectorKeyDirectiveValues,
     SAMPluginSpecSelectorKeys,
 )
-from smarter.apps.plugin.manifest.models.http_request.model import HttpRequest
+from smarter.apps.plugin.manifest.models.api.model import SAMPluginApi
 from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
 from smarter.common.conf import SettingsDefaults
 from smarter.lib.django.validators import SmarterValidator
@@ -257,7 +257,7 @@ class SAMPluginSpecData(BaseModel):
             f"the class is '{SAMPluginMetadataClassValues.SQL.value}'"
         ),
     )
-    apiData: Optional[HttpRequest] = Field(
+    apiData: Optional[SAMPluginApi] = Field(
         None,
         description=(
             f"{class_identifier}.apiData[obj]: The rest API connection and endpoint to use for the {MANIFEST_KIND} "

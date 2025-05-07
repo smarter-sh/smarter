@@ -11,8 +11,8 @@ from smarter.apps.plugin.manifest.enum import (
     SAMPluginSpecPromptKeys,
     SAMPluginSpecSelectorKeys,
 )
-from smarter.apps.plugin.models import PluginDataSql, PluginDataSqlConnection
-from smarter.apps.plugin.serializers import PluginDataSqlSerializer
+from smarter.apps.plugin.models import PluginDataSql, SqlConnection
+from smarter.apps.plugin.serializers import PluginSqlSerializer
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterConfigurationError
@@ -30,7 +30,7 @@ class PluginSql(PluginBase):
 
     _metadata_class = SAMPluginMetadataClass.SQL_DATA.value
     _plugin_data: PluginDataSql = None
-    _plugin_data_serializer: PluginDataSqlSerializer = None
+    _plugin_data_serializer: PluginSqlSerializer = None
 
     @property
     def plugin_data(self) -> PluginDataSql:
@@ -43,16 +43,16 @@ class PluginSql(PluginBase):
         return PluginDataSql
 
     @property
-    def plugin_data_serializer(self) -> PluginDataSqlSerializer:
+    def plugin_data_serializer(self) -> PluginSqlSerializer:
         """Return the plugin data serializer."""
         if not self._plugin_data_serializer:
-            self._plugin_data_serializer = PluginDataSqlSerializer(self.plugin_data)
+            self._plugin_data_serializer = PluginSqlSerializer(self.plugin_data)
         return self._plugin_data_serializer
 
     @property
-    def plugin_data_serializer_class(self) -> PluginDataSqlSerializer:
+    def plugin_data_serializer_class(self) -> PluginSqlSerializer:
         """Return the plugin data serializer class."""
-        return PluginDataSqlSerializer
+        return PluginSqlSerializer
 
     @property
     def plugin_data_django_model(self) -> dict:
@@ -63,7 +63,7 @@ class PluginSql(PluginBase):
             return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
 
         # recast the Pydantic model to the PluginDataSql Django ORM model
-        plugin_data_sqlconnection = PluginDataSqlConnection.objects.get(
+        plugin_data_sqlconnection = SqlConnection.objects.get(
             account=self.user_profile.account, name=self.manifest.spec.data.sqlData.connection
         )
         sql_data = self.manifest.spec.data.sqlData.model_dump()
@@ -86,17 +86,17 @@ class PluginSql(PluginBase):
                 param_description = param["description"]
             except KeyError as e:
                 raise SmarterConfigurationError(
-                    f"{self.name} PluginSql custom_tool() error: missing required parameter key: {e}"
+                    f"{self.name} PluginDataSql custom_tool() error: missing required parameter key: {e}"
                 ) from e
 
             if param_type not in PluginDataSql.DataTypes.all():
                 raise SmarterConfigurationError(
-                    f"{self.name} PluginSql custom_tool() error: invalid parameter type: {param_type}"
+                    f"{self.name} PluginDataSql custom_tool() error: invalid parameter type: {param_type}"
                 )
 
             if param_enum and not isinstance(param_enum, list):
                 raise SmarterConfigurationError(
-                    f"{self.name} PluginSql custom_tool() error: invalid parameter enum: {param_enum}. Must be a list."
+                    f"{self.name} PluginDataSql custom_tool() error: invalid parameter enum: {param_enum}. Must be a list."
                 )
 
             return {
@@ -164,4 +164,4 @@ class PluginSql(PluginBase):
     def create(self):
         super().create()
 
-        logger.info("PluginSql.create() called.")
+        logger.info("PluginDataSql.create() called.")

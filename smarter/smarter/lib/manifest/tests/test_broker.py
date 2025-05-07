@@ -55,7 +55,7 @@ class TestAbstractBrokerClass(unittest.TestCase, AccountMixin):
             request=request,
             account=self.account,
             manifest=self.good_manifest_text,
-            kind=SmarterJournalThings.PLUGIN.value,
+            kind=SmarterJournalThings.PLUGIN_STATIC.value,
         )
 
     @classmethod
@@ -72,7 +72,9 @@ class TestAbstractBrokerClass(unittest.TestCase, AccountMixin):
         # 58-61,
         try:
             raise SAMBrokerError(
-                message="Test error message", thing=SmarterJournalThings.PLUGIN, command=SmarterJournalCliCommands.APPLY
+                message="Test error message",
+                thing=SmarterJournalThings.PLUGIN_STATIC,
+                command=SmarterJournalCliCommands.APPLY,
             )
         except SAMBrokerError as e:
             msg = e.get_formatted_err_message
@@ -82,7 +84,9 @@ class TestAbstractBrokerClass(unittest.TestCase, AccountMixin):
         # 69-72,
         try:
             raise SAMBrokerReadOnlyError(
-                message="Test error message", thing=SmarterJournalThings.PLUGIN, command=SmarterJournalCliCommands.APPLY
+                message="Test error message",
+                thing=SmarterJournalThings.PLUGIN_STATIC,
+                command=SmarterJournalCliCommands.APPLY,
             )
         except SAMBrokerReadOnlyError as e:
             msg = e.get_formatted_err_message
@@ -91,7 +95,9 @@ class TestAbstractBrokerClass(unittest.TestCase, AccountMixin):
     def test_SAMBrokerErrorNotImplemented(self) -> None:
         try:
             raise SAMBrokerErrorNotImplemented(
-                message="Test error message", thing=SmarterJournalThings.PLUGIN, command=SmarterJournalCliCommands.APPLY
+                message="Test error message",
+                thing=SmarterJournalThings.PLUGIN_STATIC,
+                command=SmarterJournalCliCommands.APPLY,
             )
         except SAMBrokerErrorNotImplemented as e:
             msg = e.get_formatted_err_message
@@ -103,7 +109,9 @@ class TestAbstractBrokerClass(unittest.TestCase, AccountMixin):
         # 91-94,
         try:
             raise SAMBrokerErrorNotReady(
-                message="Test error message", thing=SmarterJournalThings.PLUGIN, command=SmarterJournalCliCommands.APPLY
+                message="Test error message",
+                thing=SmarterJournalThings.PLUGIN_STATIC,
+                command=SmarterJournalCliCommands.APPLY,
             )
         except SAMBrokerErrorNotReady as e:
             msg = e.get_formatted_err_message
@@ -113,7 +121,9 @@ class TestAbstractBrokerClass(unittest.TestCase, AccountMixin):
         # 102-105,
         try:
             raise SAMBrokerErrorNotFound(
-                message="Test error message", thing=SmarterJournalThings.PLUGIN, command=SmarterJournalCliCommands.APPLY
+                message="Test error message",
+                thing=SmarterJournalThings.PLUGIN_STATIC,
+                command=SmarterJournalCliCommands.APPLY,
             )
         except SAMBrokerErrorNotFound as e:
             msg = e.get_formatted_err_message
@@ -129,7 +139,7 @@ class TestAbstractBrokerClass(unittest.TestCase, AccountMixin):
 
     def test_kind(self):
         # 219,
-        self.assertEqual(self.broker.kind, SmarterJournalThings.PLUGIN.value)
+        self.assertEqual(self.broker.kind, SmarterJournalThings.PLUGIN_STATIC.value)
 
     def test_str_(self) -> None:
         # 248,
@@ -274,7 +284,9 @@ class TestAbstractBrokerClass(unittest.TestCase, AccountMixin):
         # 460,
         try:
             raise SAMBrokerReadOnlyError(
-                message="Test error message", thing=SmarterJournalThings.PLUGIN, command=SmarterJournalCliCommands.APPLY
+                message="Test error message",
+                thing=SmarterJournalThings.PLUGIN_STATIC,
+                command=SmarterJournalCliCommands.APPLY,
             )
         except SAMBrokerReadOnlyError as e:
             response = self.broker.json_response_err(command=SmarterJournalCliCommands.APPLY, e=e)

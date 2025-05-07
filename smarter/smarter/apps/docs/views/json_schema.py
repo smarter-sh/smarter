@@ -37,13 +37,13 @@ class DocsJsonSchemaAccountView(DocsJsonSchemaBaseView):
 class DocsJsonSchemaApiConnectionView(DocsJsonSchemaBaseView):
     """ApiConnection JSON Schema view"""
 
-    kind = SAMKinds(SAMKinds.PLUGIN_DATA_API_CONNECTION)
+    kind = SAMKinds(SAMKinds.API_CONNECTION)
 
 
 class DocsJsonSchemaApiView(DocsJsonSchemaBaseView):
-    """Plugin Data Api JSON Schema view"""
+    """Plugin Api JSON Schema view"""
 
-    kind = SAMKinds(SAMKinds.PLUGIN_DATA_API)
+    kind = SAMKinds(SAMKinds.PLUGIN_API)
 
 
 class DocsJsonSchemaApiKeyView(DocsJsonSchemaBaseView):
@@ -85,19 +85,19 @@ class DocsJsonSchemaChatBotView(DocsJsonSchemaBaseView):
 class DocsJsonSchemaPluginView(DocsJsonSchemaBaseView):
     """Plugin JSON Schema view"""
 
-    kind = SAMKinds(SAMKinds.PLUGIN)
+    kind = SAMKinds(SAMKinds.PLUGIN_STATIC)
 
 
 class DocsJsonSchemaSqlConnectionView(DocsJsonSchemaBaseView):
     """SqlConnection JSON Schema view"""
 
-    kind = SAMKinds(SAMKinds.PLUGIN_DATA_SQL_CONNECTION)
+    kind = SAMKinds(SAMKinds.SQL_CONNECTION)
 
 
 class DocsJsonSchemaSqlView(DocsJsonSchemaBaseView):
-    """Plugin Data Sql JSON Schema view"""
+    """Plugin Sql JSON Schema view"""
 
-    kind = SAMKinds(SAMKinds.PLUGIN_DATA_SQL)
+    kind = SAMKinds(SAMKinds.PLUGIN_SQL)
 
 
 class DocsJsonSchemaUserView(DocsJsonSchemaBaseView):

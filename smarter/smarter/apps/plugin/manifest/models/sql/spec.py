@@ -7,7 +7,7 @@ from typing import Any, ClassVar, Dict, Optional
 from pydantic import Field, field_validator
 
 from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
-from smarter.apps.plugin.models import PluginDataSqlConnection
+from smarter.apps.plugin.models import SqlConnection
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBaseModel
@@ -27,7 +27,7 @@ class Sql(SmarterBaseModel):
         max_length=255,
         description="The name of the SQL connection, camelCase, without spaces. Example: 'HRDatabase', 'SalesDatabase', 'InventoryDatabase'.",
     )
-    connection: PluginDataSqlConnection = Field(
+    connection: SqlConnection = Field(
         ...,
         description="The API connection associated with this plugin.",
     )
@@ -58,8 +58,8 @@ class Sql(SmarterBaseModel):
 
     @field_validator("connection")
     def validate_connection(cls, v):
-        if not isinstance(v, PluginDataSqlConnection):
-            raise SAMValidationError("Connection must be a valid PluginDataSqlConnection instance.")
+        if not isinstance(v, SqlConnection):
+            raise SAMValidationError("Connection must be a valid SqlConnection instance.")
         return v
 
     @field_validator("parameters")

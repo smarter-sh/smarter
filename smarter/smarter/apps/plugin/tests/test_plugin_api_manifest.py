@@ -1,5 +1,5 @@
 """
-Test SAM Plugin manifest using PluginDataApi
+Test SAM Plugin manifest using PluginApi
 Test cases for the PluginDataAPI Manifest.
 
 http://localhost:8000/api/v1/tests/unauthenticated/dict/
@@ -21,7 +21,7 @@ from smarter.apps.plugin.manifest.models.api_connection.model import (
 )
 from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
-from smarter.apps.plugin.models import PluginDataApiConnection
+from smarter.apps.plugin.models import ApiConnection
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.unittest.utils import get_readonly_yaml_file
@@ -34,7 +34,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 # pylint: disable=too-many-instance-attributes
 class TestPluginDataSql(unittest.TestCase):
-    """Test SAM Plugin manifest using PluginDataSql"""
+    """Test SAM Plugin manifest using PluginSql"""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -45,7 +45,7 @@ class TestPluginDataSql(unittest.TestCase):
             plugin_class=SAMPluginMetadataClassValues.SQL.value, account=self.account, user_profile=self.user_profile
         )
 
-        # setup an instance of PluginDataApiConnection() - a Django model
+        # setup an instance of ApiConnection() - a Django model
         # ---------------------------------------------------------------------
         # 1. load the yaml manifest file
         config_path = os.path.join(HERE, "mock_data/api-connection.yaml")
@@ -61,13 +61,13 @@ class TestPluginDataSql(unittest.TestCase):
         model_dump = self.connection_model.spec.connection.model_dump()
         model_dump["account"] = self.account
         model_dump["name"] = self.connection_model.metadata.name
-        self.plugin_datasql_connection = PluginDataApiConnection(**model_dump)
+        self.plugin_datasql_connection = ApiConnection(**model_dump)
         self.plugin_datasql_connection.save()
 
         # setup an instance of PluginSql() - a Python class descended from PluginBase()
         # ---------------------------------------------------------------------
         # 1. load the yaml manifest file
-        config_path = os.path.join(HERE, "mock_data/api-test.yaml")
+        config_path = os.path.join(HERE, "mock_data/plugin-data-api.yaml")
         with open(config_path, encoding="utf-8") as file:
             plugin_manifest = yaml.safe_load(file)
 
@@ -79,7 +79,7 @@ class TestPluginDataSql(unittest.TestCase):
 
         cnx = self.connection_loader.manifest_spec["connection"]
         cnx["account"] = self.account
-        self.connection = PluginDataApiConnection(**cnx)
+        self.connection = ApiConnection(**cnx)
 
         # 4. use the PluginController to resolve which kind of Plugin to instantiate
         controller = PluginController(account=self.account, manifest=self.sam_plugin)
@@ -90,12 +90,12 @@ class TestPluginDataSql(unittest.TestCase):
         """Tear down test fixtures."""
         try:
             self.plugin_datasql_connection.delete()
-        except PluginDataApiConnection.DoesNotExist:
+        except ApiConnection.DoesNotExist:
             pass
         self.plugin.delete()
         try:
             self.connection.delete()
-        except (PluginDataApiConnection.DoesNotExist, ValueError):
+        except (ApiConnection.DoesNotExist, ValueError):
             pass
         admin_user_teardown(self.user, self.account, self.user_profile)
 

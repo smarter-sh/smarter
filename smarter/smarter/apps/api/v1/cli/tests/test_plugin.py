@@ -16,7 +16,7 @@ from smarter.common.const import PYTHON_ROOT
 from smarter.lib.manifest.enum import SAMKeys, SCLIResponseGet, SCLIResponseGetData
 
 
-KIND = SAMKinds.PLUGIN.value
+KIND = SAMKinds.PLUGIN_STATIC.value
 
 
 class TestApiV1CliPlugin(ApiV1TestBase):
@@ -59,7 +59,7 @@ class TestApiV1CliPlugin(ApiV1TestBase):
         data = response[SCLIResponseGet.DATA.value]
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
-        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.PLUGIN.value)
+        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.PLUGIN_STATIC.value)
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
 
     def test_valid_manifest(self):
@@ -82,7 +82,7 @@ class TestApiV1CliPlugin(ApiV1TestBase):
 
         data = response[SCLIResponseGet.DATA.value]
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
-        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.PLUGIN.value)
+        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.PLUGIN_STATIC.value)
         self.assertIsInstance(data.get(SAMKeys.METADATA.value, None), dict)
         self.assertEqual(data.get(SAMKeys.METADATA.value, {}).get("name", None), self.name)
 
@@ -93,7 +93,7 @@ class TestApiV1CliPlugin(ApiV1TestBase):
         response = response["data"]
         self.assertIsInstance(response[SCLIResponseGet.DATA.value][SCLIResponseGetData.TITLES.value], list)
         self.assertIsInstance(response[SCLIResponseGet.DATA.value][SCLIResponseGetData.ITEMS.value], list)
-        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.PLUGIN.value)
+        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.PLUGIN_STATIC.value)
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
 
         path = f"{reverse(ApiV1CliReverseViews.delete, kwargs=self.kwargs)}"

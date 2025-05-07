@@ -8,11 +8,7 @@ from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
 from smarter.apps.plugin.manifest.models.sql_connection.model import (
     SAMPluginDataSqlConnection,
 )
-from smarter.apps.plugin.models import (
-    PluginDataSql,
-    PluginDataSqlConnection,
-    PluginMeta,
-)
+from smarter.apps.plugin.models import PluginDataSql, PluginMeta, SqlConnection
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.unittest.utils import get_readonly_yaml_file
@@ -34,7 +30,7 @@ class TestPluginDataSqlConnection(unittest.TestCase):
             plugin_class=SAMPluginMetadataClassValues.SQL.value, account=self.account, user_profile=self.user_profile
         )
 
-        # setup an instance of PluginDataSqlConnection() - a Django model
+        # setup an instance of SqlConnection() - a Django model
         # ---------------------------------------------------------------------
         # 1. load the yaml manifest file
         config_path = os.path.join(HERE, "mock_data/sql-connection.yaml")
@@ -49,14 +45,14 @@ class TestPluginDataSqlConnection(unittest.TestCase):
         model_dump = self.model.spec.connection.model_dump()
         model_dump["account"] = self.account
         model_dump["name"] = self.model.metadata.name
-        self.plugindata_sqlconnection = PluginDataSqlConnection(**model_dump)
+        self.plugindata_sqlconnection = SqlConnection(**model_dump)
         self.plugindata_sqlconnection.save()
 
     def tearDown(self):
         """Tear down test fixtures."""
         try:
             self.plugindata_sqlconnection.delete()
-        except PluginDataSqlConnection.DoesNotExist:
+        except SqlConnection.DoesNotExist:
             pass
         try:
             self.meta_data.delete()

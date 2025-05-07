@@ -7,7 +7,7 @@ from typing import ClassVar, Optional
 from pydantic import Field, field_validator
 
 from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
-from smarter.apps.plugin.models import PluginDataApiConnection
+from smarter.apps.plugin.models import ApiConnection
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBaseModel
@@ -22,7 +22,7 @@ SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 class Api(SmarterBaseModel):
     """Smarter API - generic API Connection class."""
 
-    connection: PluginDataApiConnection = Field(
+    connection: ApiConnection = Field(
         ...,
         description="The API connection associated with this plugin.",
     )
@@ -50,7 +50,7 @@ class Api(SmarterBaseModel):
 
     @field_validator("connection")
     def validate_connection(cls, v):
-        if not isinstance(v, PluginDataApiConnection):
+        if not isinstance(v, ApiConnection):
             raise SAMValidationError("Connection must be a valid Api instance.")
         return v
 

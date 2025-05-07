@@ -1,4 +1,4 @@
-"""Test SAM Plugin manifest using PluginDataSql"""
+"""Test SAM Plugin manifest using PluginSql"""
 
 import os
 import unittest
@@ -13,7 +13,7 @@ from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
 from smarter.apps.plugin.manifest.models.sql_connection.model import (
     SAMPluginDataSqlConnection,
 )
-from smarter.apps.plugin.models import PluginDataSqlConnection
+from smarter.apps.plugin.models import SqlConnection
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.unittest.utils import get_readonly_yaml_file
@@ -26,7 +26,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 # pylint: disable=too-many-instance-attributes
 class TestPluginDataSql(unittest.TestCase):
-    """Test SAM Plugin manifest using PluginDataSql"""
+    """Test SAM Plugin manifest using PluginSql"""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -37,10 +37,10 @@ class TestPluginDataSql(unittest.TestCase):
             plugin_class=SAMPluginMetadataClassValues.SQL.value, account=self.account, user_profile=self.user_profile
         )
 
-        # setup an instance of PluginDataSqlConnection() - a Django model
+        # setup an instance of SqlConnection() - a Django model
         # ---------------------------------------------------------------------
         # 1. load the yaml manifest file
-        config_path = os.path.join(HERE, "mock_data/sql-connection.yaml")
+        config_path = os.path.join(HERE, "mock_data/plugin-data-sql.yaml")
         connection_manifest = get_readonly_yaml_file(config_path)
 
         # 2. initialize a SAMLoader object with the manifest raw data
@@ -53,7 +53,7 @@ class TestPluginDataSql(unittest.TestCase):
         model_dump = self.connection_model.spec.connection.model_dump()
         model_dump["account"] = self.account
         model_dump["name"] = self.connection_model.metadata.name
-        self.plugin_datasql_connection = PluginDataSqlConnection(**model_dump)
+        self.plugin_datasql_connection = SqlConnection(**model_dump)
         self.plugin_datasql_connection.save()
 
         # setup an instance of PluginSql() - a Python class descended from PluginBase()
@@ -71,7 +71,7 @@ class TestPluginDataSql(unittest.TestCase):
 
         cnx = self.connection_loader.manifest_spec["connection"]
         cnx["account"] = self.account
-        self.connection = PluginDataSqlConnection(**cnx)
+        self.connection = SqlConnection(**cnx)
 
         # 4. use the PluginController to resolve which kind of Plugin to instantiate
         controller = PluginController(account=self.account, manifest=self.sam_plugin)
@@ -82,12 +82,12 @@ class TestPluginDataSql(unittest.TestCase):
         """Tear down test fixtures."""
         try:
             self.plugin_datasql_connection.delete()
-        except PluginDataSqlConnection.DoesNotExist:
+        except SqlConnection.DoesNotExist:
             pass
         self.plugin.delete()
         try:
             self.connection.delete()
-        except (PluginDataSqlConnection.DoesNotExist, ValueError):
+        except (SqlConnection.DoesNotExist, ValueError):
             pass
         admin_user_teardown(self.user, self.account, self.user_profile)
 

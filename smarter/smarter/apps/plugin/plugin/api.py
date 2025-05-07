@@ -1,9 +1,17 @@
 """A Plugin that uses a REST API to retrieve its return data"""
 
+# python stuff
 import logging
 import re
 
-from smarter.apps.plugin.manifest.enum import (
+# smarter stuff
+from smarter.common.api import SmarterApiVersions
+from smarter.common.conf import SettingsDefaults
+from smarter.common.exceptions import SmarterConfigurationError
+from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
+
+# smarter plugin stuff
+from ..manifest.enum import (
     SAMPluginMetadataClass,
     SAMPluginMetadataClassValues,
     SAMPluginMetadataKeys,
@@ -11,14 +19,9 @@ from smarter.apps.plugin.manifest.enum import (
     SAMPluginSpecPromptKeys,
     SAMPluginSpecSelectorKeys,
 )
-from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
-from smarter.apps.plugin.models import PluginDataApi, PluginDataApiConnection
-from smarter.apps.plugin.serializers import PluginDataApiSerializer
-from smarter.common.api import SmarterApiVersions
-from smarter.common.conf import SettingsDefaults
-from smarter.common.exceptions import SmarterConfigurationError
-from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
-
+from ..manifest.models.plugin.const import MANIFEST_KIND
+from ..models import ApiConnection, PluginDataApi
+from ..serializers import PluginApiSerializer
 from .base import PluginBase
 
 
@@ -30,7 +33,7 @@ class PluginApi(PluginBase):
 
     _metadata_class = SAMPluginMetadataClass.SQL_DATA.value
     _plugin_data: PluginDataApi = None
-    _plugin_data_serializer: PluginDataApiSerializer = None
+    _plugin_data_serializer: PluginApiSerializer = None
 
     @property
     def plugin_data(self) -> PluginDataApi:
@@ -43,16 +46,16 @@ class PluginApi(PluginBase):
         return PluginDataApi
 
     @property
-    def plugin_data_serializer(self) -> PluginDataApiSerializer:
+    def plugin_data_serializer(self) -> PluginApiSerializer:
         """Return the plugin data serializer."""
         if not self._plugin_data_serializer:
-            self._plugin_data_serializer = PluginDataApiSerializer(self.plugin_data)
+            self._plugin_data_serializer = PluginApiSerializer(self.plugin_data)
         return self._plugin_data_serializer
 
     @property
-    def plugin_data_serializer_class(self) -> PluginDataApiSerializer:
+    def plugin_data_serializer_class(self) -> PluginApiSerializer:
         """Return the plugin data serializer class."""
-        return PluginDataApiSerializer
+        return PluginApiSerializer
 
     @property
     def plugin_data_django_model(self) -> dict:
@@ -63,12 +66,12 @@ class PluginApi(PluginBase):
             return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
 
         # recast the Pydantic model to the PluginDataApi Django ORM model
-        plugin_data_apiconnection = PluginDataApiConnection.objects.get(
+        api_connection = ApiConnection.objects.get(
             account=self.user_profile.account, name=self.manifest.spec.data.sqlData.connection
         )
         api_data = self.manifest.spec.data.sqlData.model_dump()
         api_data = {camel_to_snake(key): value for key, value in api_data.items()}
-        api_data["connection"] = plugin_data_apiconnection
+        api_data["connection"] = api_connection
         return {
             "plugin": self.plugin_meta,
             "description": self.manifest.spec.data.description,
@@ -86,17 +89,17 @@ class PluginApi(PluginBase):
                 param_description = param["description"]
             except KeyError as e:
                 raise SmarterConfigurationError(
-                    f"{self.name} PluginApi custom_tool() error: missing required parameter key: {e}"
+                    f"{self.name} PluginDataApi custom_tool() error: missing required parameter key: {e}"
                 ) from e
 
             if param_type not in PluginDataApi.DataTypes.all():
                 raise SmarterConfigurationError(
-                    f"{self.name} PluginApi custom_tool() error: invalid parameter type: {param_type}"
+                    f"{self.name} PluginDataApi custom_tool() error: invalid parameter type: {param_type}"
                 )
 
             if param_enum and not isinstance(param_enum, list):
                 raise SmarterConfigurationError(
-                    f"{self.name} PluginApi custom_tool() error: invalid parameter enum: {param_enum}. Must be a list."
+                    f"{self.name} PluginDataApi custom_tool() error: invalid parameter enum: {param_enum}. Must be a list."
                 )
 
             return {
@@ -165,4 +168,4 @@ class PluginApi(PluginBase):
     def create(self):
         super().create()
 
-        logger.info("PluginApi.create() called.")
+        logger.info("PluginDataApi.create() called.")

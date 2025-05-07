@@ -605,7 +605,7 @@ A refactor of the Django chatbot app.
 
 ## [0.2.0](https://github.com/QueriumCorp/smarter/compare/v0.1.2...v0.2.0) (2024-05-16)
 
-Introduces remote Sql server integration to the Plugin class. New Django ORMs PluginDataSql and PluginDataSqlConnection have been added for persinsting remote sql server connections, and parameterized sql queries. SAMPluginDataSqlConnectionBroker is added to fully integrate these models to /api/v1/cli.
+Introduces remote Sql server integration to the Plugin class. New Django ORMs PluginSql and SqlConnection have been added for persinsting remote sql server connections, and parameterized sql queries. SAMPluginDataSqlConnectionBroker is added to fully integrate these models to /api/v1/cli.
 
 ### Features
 

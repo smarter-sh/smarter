@@ -12,7 +12,7 @@ from smarter.apps.plugin.manifest.enum import (
     SmartApiPluginSpecDataKeys,
 )
 from smarter.apps.plugin.models import PluginDataStatic
-from smarter.apps.plugin.serializers import PluginDataStaticSerializer
+from smarter.apps.plugin.serializers import PluginStaticSerializer
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
@@ -29,7 +29,7 @@ class PluginStatic(PluginBase):
 
     _metadata_class = SAMPluginMetadataClass.STATIC_DATA.value
     _plugin_data: PluginDataStatic = None
-    _plugin_data_serializer: PluginDataStaticSerializer = None
+    _plugin_data_serializer: PluginStaticSerializer = None
 
     @property
     def plugin_data(self) -> PluginDataStatic:
@@ -42,16 +42,16 @@ class PluginStatic(PluginBase):
         return PluginDataStatic
 
     @property
-    def plugin_data_serializer(self) -> PluginDataStaticSerializer:
+    def plugin_data_serializer(self) -> PluginStaticSerializer:
         """Return the plugin data serializer."""
         if not self._plugin_data_serializer:
-            self._plugin_data_serializer = PluginDataStaticSerializer(self.plugin_data)
+            self._plugin_data_serializer = PluginStaticSerializer(self.plugin_data)
         return self._plugin_data_serializer
 
     @property
-    def plugin_data_serializer_class(self) -> PluginDataStaticSerializer:
+    def plugin_data_serializer_class(self) -> PluginStaticSerializer:
         """Return the plugin data serializer class."""
-        return PluginDataStaticSerializer
+        return PluginStaticSerializer
 
     @property
     def plugin_data_django_model(self) -> dict:

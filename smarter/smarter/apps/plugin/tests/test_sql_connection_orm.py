@@ -1,4 +1,4 @@
-"""Test PluginDataSqlConnection Django ORM"""
+"""Test SqlConnection Django ORM"""
 
 import os
 import unittest
@@ -11,7 +11,7 @@ from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
 from smarter.apps.plugin.manifest.models.sql_connection.model import (
     SAMPluginDataSqlConnection,
 )
-from smarter.apps.plugin.models import PluginDataSqlConnection, PluginMeta
+from smarter.apps.plugin.models import PluginMeta, SqlConnection
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.unittest.utils import get_readonly_yaml_file
@@ -23,7 +23,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 class TestPluginDataSqlConnection(unittest.TestCase):
-    """Test PluginDataSqlConnection Django ORM"""
+    """Test SqlConnection Django ORM"""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -33,7 +33,7 @@ class TestPluginDataSqlConnection(unittest.TestCase):
             plugin_class=SAMPluginMetadataClassValues.SQL.value, account=self.account, user_profile=self.user_profile
         )
 
-        # setup an instance of PluginDataSqlConnection() - a Django model
+        # setup an instance of SqlConnection() - a Django model
         # ---------------------------------------------------------------------
         # 1. load the yaml manifest file
         config_path = os.path.join(HERE, "mock_data/sql-connection.yaml")
@@ -68,7 +68,7 @@ class TestPluginDataSqlConnection(unittest.TestCase):
     def test_manifest(self):
         """Test that the Loader can load the manifest."""
         self.assertEqual(self.loader.manifest_api_version, SmarterApiVersions.V1)
-        self.assertEqual(self.loader.manifest_kind, "PluginDataSqlConnection")
+        self.assertEqual(self.loader.manifest_kind, "SqlConnection")
         self.assertIsNotNone(self.loader.manifest_metadata)
         self.assertIsNotNone(self.loader.manifest_spec)
 
@@ -76,7 +76,7 @@ class TestPluginDataSqlConnection(unittest.TestCase):
         """Test that the Pydantic model populates from the manifest."""
         self.assertIsNotNone(self.model)
         self.assertEqual(self.model.apiVersion, SmarterApiVersions.V1)
-        self.assertEqual(self.model.kind, "PluginDataSqlConnection")
+        self.assertEqual(self.model.kind, "SqlConnection")
         self.assertIsNotNone(self.model.metadata)
         self.assertIsNotNone(self.model.spec)
 
@@ -86,7 +86,7 @@ class TestPluginDataSqlConnection(unittest.TestCase):
 
         model_dump["account"] = self.account
         model_dump["name"] = self.model.metadata.name
-        django_model = PluginDataSqlConnection(**model_dump)
+        django_model = SqlConnection(**model_dump)
         django_model.save()
 
         self.assertIsNotNone(django_model)
@@ -104,7 +104,7 @@ class TestPluginDataSqlConnection(unittest.TestCase):
     def test_plugin_datasql_connection_methods(self):
         """use the local dev db settings to Test the Django model properties and built-in functions."""
 
-        cnx = PluginDataSqlConnection(
+        cnx = SqlConnection(
             account=self.account,
             name="Local Development Database",
             db_engine=settings.DATABASES["default"]["ENGINE"],
