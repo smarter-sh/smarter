@@ -1,6 +1,6 @@
 ---
 apiVersion: smarter.sh/v1
-kind: Plugin
+kind: SqlPlugin
 metadata:
   name: SqlTest
   pluginClass: sql

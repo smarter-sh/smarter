@@ -9,15 +9,17 @@ import re
 from abc import abstractmethod
 from functools import lru_cache
 from http import HTTPStatus
+from socket import socket
 from typing import Any, Union
 from urllib.parse import urljoin
+
+import paramiko
 
 # 3rd party stuff
 import requests
 import yaml
 
 # django stuff
-from django.contrib.auth.hashers import check_password, make_password
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import DatabaseError, models
 from django.db.backends.base.base import BaseDatabaseWrapper
@@ -99,7 +101,7 @@ class PluginMeta(TimestampedModel):  # pragma: no cover
         (SAMPluginMetadataClassValues.API.value, "SqlConnection"),
     ]
 
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="plugin_meta")
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="plugin_meta_account")
     name = models.CharField(
         help_text="The name of the plugin. Example: 'HR Policy Update' or 'Public Relation Talking Points'.",
         max_length=255,
@@ -111,7 +113,7 @@ class PluginMeta(TimestampedModel):  # pragma: no cover
         choices=PLUGIN_CLASSES, help_text="The class name of the plugin", max_length=255, default="PluginMeta"
     )
     version = models.CharField(max_length=255, default="1.0.0")
-    author = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="plugin_meta")
+    author = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name="plugin_meta_author")
     tags = TaggableManager(blank=True)
 
     def __str__(self):
@@ -130,7 +132,7 @@ class PluginMeta(TimestampedModel):  # pragma: no cover
 class PluginSelector(TimestampedModel):  # pragma: no cover
     """PluginSelector model."""
 
-    plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_selector")
+    plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_selector_plugin")
     directive = models.CharField(
         help_text="The selection strategy to use for this plugin.", max_length=255, default="search_terms"
     )
@@ -157,7 +159,7 @@ class PluginSelectorHistory(TimestampedModel):  # pragma: no cover
     """PluginSelectorHistory model."""
 
     plugin_selector = models.ForeignKey(
-        PluginSelector, on_delete=models.CASCADE, related_name="plugin_selector_history"
+        PluginSelector, on_delete=models.CASCADE, related_name="plugin_selector_history_plugin_selector"
     )
     search_term = models.CharField(max_length=255, blank=True, null=True, default="")
     messages = models.JSONField(help_text="The user prompt messages.", default=list, blank=True, null=True)
@@ -182,7 +184,7 @@ class PluginSelectorHistorySerializer(serializers.ModelSerializer):
 class PluginPrompt(TimestampedModel):  # pragma: no cover
     """PluginPrompt model."""
 
-    plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_prompt")
+    plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_prompt_plugin")
     provider = models.TextField(
         help_text="The name of the LLM provider for the plugin. Example: 'openai'.",
         null=True,
@@ -216,7 +218,7 @@ class PluginPrompt(TimestampedModel):  # pragma: no cover
 class PluginDataBase(TimestampedModel):  # pragma: no cover
     """PluginDataBase model."""
 
-    plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_data_base")
+    plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_data_base_plugin")
 
     description = models.TextField(
         help_text="A brief description of what this plugin returns. Be verbose, but not too verbose.",
@@ -296,6 +298,7 @@ class PluginDataStatic(PluginDataBase):
 class SqlConnection(TimestampedModel):
     """PluginDataSql Connection model."""
 
+    DBMS_DEFAULT_TIMEOUT = 30
     DBMS_CHOICES = [
         (DbEngines.MYSQL.value, "MySQL"),
         (DbEngines.POSTGRES.value, "PostgreSQL"),
@@ -303,6 +306,12 @@ class SqlConnection(TimestampedModel):
         (DbEngines.ORACLE.value, "Oracle"),
         (DbEngines.MSSQL.value, "MS SQL Server"),
         (DbEngines.SYBASE.value, "Sybase"),
+    ]
+    DBMS_AUTHENITCATION_METHODS = [
+        ("none", "None"),
+        ("tcpip", "Standard TCP/IP"),
+        ("tcpip_ssh", "Standard TCP/IP over SSH"),
+        ("ldap_user_pwd", "LDAP User/Password"),
     ]
     name = models.CharField(
         help_text="The name of the connection, without spaces. Example: 'HRDatabase', 'SalesDatabase', 'InventoryDatabase'.",
@@ -314,24 +323,46 @@ class SqlConnection(TimestampedModel):
         max_length=255,
         choices=DBMS_CHOICES,
     )
+    authentication_method = models.CharField(
+        help_text="The authentication method to use for the connection. Example: 'Standard TCP/IP', 'Standard TCP/IP over SSH', 'LDAP User/Password'.",
+        max_length=255,
+        choices=DBMS_AUTHENITCATION_METHODS,
+        default="none",
+    )
     timeout = models.IntegerField(
         help_text="The timeout for the database connection in seconds. Default is 30 seconds.",
-        default=30,
+        default=DBMS_DEFAULT_TIMEOUT,
         validators=[MinValueValidator(1)],
     )
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="plugin_data_sql_connections")
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="sql_connections_account")
     description = models.TextField(
         help_text="A brief description of the connection. Be verbose, but not too verbose.",
     )
-    version = models.CharField(max_length=255, default="1.0.0")
+
+    # SSL/TLS fields
+    use_ssl = models.BooleanField(default=False, help_text="Whether to use SSL/TLS for the connection.")
+    ssl_cert = models.TextField(blank=True, null=True, help_text="The SSL certificate for the connection, if required.")
+    ssl_key = models.TextField(blank=True, null=True, help_text="The SSL key for the connection, if required.")
+    ssl_ca = models.TextField(
+        blank=True, null=True, help_text="The Certificate Authority (CA) certificate for verifying the server."
+    )
+
+    # connection fields
     hostname = models.CharField(max_length=255)
     port = models.IntegerField()
     database = models.CharField(max_length=255)
     username = models.CharField(max_length=255)
-    password = models.CharField(
-        max_length=255,
+    password = models.ForeignKey(
+        Secret,
+        on_delete=models.CASCADE,
+        related_name="sql_connections_password",
+        help_text="The API key for authentication, if required.",
         blank=True,
         null=True,
+    )
+    pool_size = models.IntegerField(default=5, help_text="The size of the connection pool.")
+    max_overflow = models.IntegerField(
+        default=10, help_text="The maximum number of connections to allow beyond the pool size."
     )
 
     # Proxy fields
@@ -344,41 +375,135 @@ class SqlConnection(TimestampedModel):
     proxy_host = models.CharField(max_length=255, blank=True, null=True)
     proxy_port = models.IntegerField(blank=True, null=True)
     proxy_username = models.CharField(max_length=255, blank=True, null=True)
-    proxy_password = models.CharField(max_length=255, blank=True, null=True)
+    proxy_password = models.ForeignKey(
+        Secret,
+        on_delete=models.CASCADE,
+        related_name="sql_connections_proxy_password",
+        help_text="The API key for authentication, if required.",
+        blank=True,
+        null=True,
+    )
 
-    def set_password(self, raw_password):
-        self.password = make_password(raw_password)
-        self.save()
-
-    def check_password(self, raw_password):
-        return check_password(raw_password, self.password)
-
-    def set_proxy_password(self, raw_password):
-        self.proxy_password = make_password(raw_password)
-        self.save()
-
-    def check_proxy_password(self, raw_password):
-        return check_password(raw_password, self.proxy_password)
-
-    def connect(self) -> Union[BaseDatabaseWrapper, bool]:
-        databases = {
-            "default": {
-                "ENGINE": self.db_engine,
-                "NAME": self.database,
-                "USER": self.username,
-                "PASSWORD": self.password,
-                "HOST": self.hostname,
-                "PORT": str(self.port),
-            }
+    @property
+    def db_options(self) -> dict:
+        """Return the database connection options."""
+        retval = {
+            "pool_size": self.pool_size,
+            "max_overflow": self.max_overflow,
+            "ssl": (
+                {
+                    "ca": self.ssl_ca,
+                    "cert": self.ssl_cert,
+                    "key": self.ssl_key,
+                }
+                if self.use_ssl
+                else {}
+            ),
         }
+        if self.authentication_method == "ldap_user_pwd":
+            retval["authentication"] = "LDAP"
+        return retval
+
+    @property
+    def django_databases(self) -> dict:
+        """Return the database connection settings for Django."""
+        return {
+            "ENGINE": self.db_engine,
+            "NAME": self.database,
+            "USER": self.username,
+            "PASSWORD": self.password.get_secret() if self.password else None,
+            "HOST": self.hostname,
+            "PORT": str(self.port),
+            "OPTIONS": self.db_options,
+        }
+
+    def connect_tcpip(self) -> Union[BaseDatabaseWrapper, bool]:
+        """
+        Establish a database connection using Standard TCP/IP.
+        """
         try:
-            connection_handler = ConnectionHandler(databases)
+            connection_handler = ConnectionHandler(self.django_databases)
             connection: BaseDatabaseWrapper = connection_handler["default"]
             connection.ensure_connection()
             return connection
         except DatabaseError as e:
             logger.error("db test connection failed: %s", e)
             return False
+
+    def connect_tcpip_ssh(self) -> Union[BaseDatabaseWrapper, bool]:
+        """
+        Establish a database connection using Standard TCP/IP over SSH with Paramiko.
+        """
+
+        try:
+            # Create an SSH client
+            # FIX NOTE: need a way to deal with known_hosts that Bandit will accept.
+            #           what follows generally will not work for customers.
+            ssh_client = paramiko.SSHClient()
+            ssh_client.load_system_host_keys()
+            ssh_client.set_missing_host_key_policy(paramiko.RejectPolicy())
+
+            # Connect to the SSH server
+            ssh_client.connect(
+                hostname=self.hostname,
+                port=self.port,
+                username=self.proxy_username,
+                password=self.proxy_password.get_secret() if self.proxy_password else None,
+                timeout=self.timeout,
+            )
+
+            # Open a local port forwarding channel
+            transport = ssh_client.get_transport()
+            local_socket = socket()
+            local_socket.bind(("127.0.0.1", 0))  # Bind to an available local port
+            local_socket.listen(1)
+            local_port = local_socket.getsockname()[1]
+
+            # Forward the remote database port to the local port
+            transport.request_port_forward("127.0.0.1", local_port, self.hostname, self.port)
+
+            connection_handler = ConnectionHandler(self.django_databases)
+            connection: BaseDatabaseWrapper = connection_handler["default"]
+            connection.ensure_connection()
+
+            # Close the SSH connection after ensuring the database connection
+            ssh_client.close()
+            return connection
+
+        # pylint: disable=W0718
+        except Exception as e:
+            logger.error("TCP/IP over SSH connection failed: %s", e)
+            return False
+
+    def connect_ldap_user_pwd(self) -> Union[BaseDatabaseWrapper, bool]:
+        """
+        Establish a database connection using LDAP User/Password authentication.
+        """
+        try:
+            # Example: Customize the connection string for LDAP authentication
+            databases = self.django_databases
+            connection_handler = ConnectionHandler(databases)
+            connection: BaseDatabaseWrapper = connection_handler["default"]
+            connection.ensure_connection()
+            return connection
+        # pylint: disable=W0718
+        except Exception as e:
+            logger.error("LDAP User/Password connection failed: %s", e)
+            return False
+
+    def connect(self) -> Union[BaseDatabaseWrapper, bool]:
+        """
+        Establish a database connection based on the authentication method.
+        """
+        if self.authentication_method == "none":
+            return self.connect_tcpip()
+        elif self.authentication_method == "tcpip":
+            return self.connect_tcpip()
+        elif self.authentication_method == "tcpip_ssh":
+            return self.connect_tcpip_ssh()
+        elif self.authentication_method == "ldap_user_pwd":
+            return self.connect_ldap_user_pwd()
+        raise SmarterValueError(f"Unsupported authentication method: {self.authentication_method}")
 
     def execute_query(self, sql: str) -> Union[list[tuple[Any, ...]], bool]:
         connection = self.connect()
@@ -432,7 +557,7 @@ class PluginDataSql(PluginDataBase):
         max_length=255,
         validators=[validate_no_spaces],
     )
-    connection = models.ForeignKey(SqlConnection, on_delete=models.CASCADE, related_name="plugin_data_sql")
+    connection = models.ForeignKey(SqlConnection, on_delete=models.CASCADE, related_name="plugin_data_sql_connection")
     parameters = models.JSONField(
         help_text="A JSON dict containing parameter names and data types. Example: {'unit': {'type': 'string', 'enum': ['Celsius', 'Fahrenheit'], 'description': 'The temperature unit to use. Infer this from the user's location.'}}",
         default=dict,
@@ -640,7 +765,7 @@ class ApiConnection(TimestampedModel):
         ("oauth", "OAuth"),
     ]
 
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="plugin_data_api_connections")
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="api_connections_account")
     name = models.CharField(
         help_text="The name of the API connection, camelCase, without spaces. Example: 'weatherApi', 'stockApi'.",
         max_length=255,
@@ -655,7 +780,7 @@ class ApiConnection(TimestampedModel):
     api_key = models.ForeignKey(
         Secret,
         on_delete=models.CASCADE,
-        related_name="plugin_data_api_connections",
+        related_name="api_connections_api_key",
         help_text="The API key for authentication, if required.",
         blank=True,
         null=True,
@@ -681,14 +806,14 @@ class ApiConnection(TimestampedModel):
     proxy_host = models.CharField(max_length=255, blank=True, null=True)
     proxy_port = models.IntegerField(blank=True, null=True)
     proxy_username = models.CharField(max_length=255, blank=True, null=True)
-    proxy_password = models.CharField(max_length=255, blank=True, null=True)
-
-    def set_proxy_password(self, raw_password):
-        self.proxy_password = make_password(raw_password)
-        self.save()
-
-    def check_proxy_password(self, raw_password):
-        return check_password(raw_password, self.proxy_password)
+    proxy_password = models.ForeignKey(
+        Secret,
+        on_delete=models.CASCADE,
+        related_name="api_connections_proxy_password",
+        help_text="The proxy password for authentication, if required.",
+        blank=True,
+        null=True,
+    )
 
     def test_proxy(self) -> bool:
         proxy_dict = {
@@ -738,7 +863,7 @@ class PluginDataApi(PluginDataBase):
     connection = models.ForeignKey(
         ApiConnection,
         on_delete=models.CASCADE,
-        related_name="plugin_data_api",
+        related_name="plugin_data_api_connection",
         help_text="The API connection associated with this plugin.",
     )
     endpoint = models.CharField(

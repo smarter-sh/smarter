@@ -38,16 +38,14 @@ from smarter.apps.chatbot.models import (
 )
 from smarter.apps.plugin.admin import (
     ApiConnectionAdmin,
-    PluginAdmin,
     PluginApiAdmin,
     PluginSelectionHistoryAdmin,
     PluginSqlAdmin,
+    PluginStaticAdmin,
     SqlConnectionAdmin,
 )
 from smarter.apps.plugin.models import (
     ApiConnection,
-    PluginDataApi,
-    PluginDataSql,
     PluginMeta,
     PluginSelectorHistory,
     SqlConnection,
@@ -159,13 +157,35 @@ restricted_site.register(ChatBotPlugin, ChatBotPluginAdmin)
 restricted_site.register(ChatBotFunctions, ChatBotFunctionsAdmin)
 restricted_site.register(ChatBotRequests, ChatBotRequestsAdmin)
 
+
 # Plugin Models
-restricted_site.register(PluginMeta, PluginAdmin)
+class PluginMetaStatic(PluginMeta):
+    class Meta:
+        proxy = True
+        verbose_name = "Plugin Meta (Static)"
+        verbose_name_plural = "Plugin Meta (Static)"
+
+
+class PluginMetaApi(PluginMeta):
+    class Meta:
+        proxy = True
+        verbose_name = "Plugin Meta (API)"
+        verbose_name_plural = "Plugin Meta (API)"
+
+
+class PluginMetaSql(PluginMeta):
+    class Meta:
+        proxy = True
+        verbose_name = "Plugin Meta (SQL)"
+        verbose_name_plural = "Plugin Meta (SQL)"
+
+
+restricted_site.register(PluginMetaStatic, PluginStaticAdmin)
+restricted_site.register(PluginMetaApi, PluginApiAdmin)
+restricted_site.register(PluginMetaSql, PluginSqlAdmin)
 restricted_site.register(SqlConnection, SqlConnectionAdmin)
 restricted_site.register(PluginSelectorHistory, PluginSelectionHistoryAdmin)
 restricted_site.register(ApiConnection, ApiConnectionAdmin)
-restricted_site.register(PluginDataApi, PluginApiAdmin)
-restricted_site.register(PluginDataSql, PluginSqlAdmin)
 
 
 # Journal Models
