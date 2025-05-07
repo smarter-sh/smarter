@@ -3,10 +3,12 @@
 """PluginMeta app models."""
 
 # python stuff
+import io
 import json
 import logging
 import re
 from abc import abstractmethod
+from enum import Enum
 from functools import lru_cache
 from http import HTTPStatus
 from socket import socket
@@ -42,9 +44,10 @@ logger = logging.getLogger(__name__)
 SMARTER_PLUGIN_MAX_DATA_RESULTS = 50
 
 
-def validate_no_spaces(value):  # pragma: no cover
-    if re.search(r"\s", value):
-        raise SmarterValueError("The name should not include spaces.")
+def validate_camel_case(value):
+    """Validate that the string is in camelCase."""
+    if not re.match(r"^[a-z]+(?:[A-Z][a-z0-9]*)*$", value):
+        raise SmarterValueError("Value must be in camelCase format.")
 
 
 def dict_key_cleaner(key: str) -> str:  # pragma: no cover
@@ -105,6 +108,7 @@ class PluginMeta(TimestampedModel):  # pragma: no cover
     name = models.CharField(
         help_text="The name of the plugin. Example: 'HR Policy Update' or 'Public Relation Talking Points'.",
         max_length=255,
+        validators=[validate_camel_case],
     )
     description = models.TextField(
         help_text="A brief description of the plugin. Be verbose, but not too verbose.",
@@ -298,6 +302,36 @@ class PluginDataStatic(PluginDataBase):
 class SqlConnection(TimestampedModel):
     """PluginDataSql Connection model."""
 
+    _connection: BaseDatabaseWrapper = None
+
+    def __del__(self):
+        """Close the database connection when the object instance is destroyed."""
+        self.close()
+
+    class ParamikoUpdateKnownHostsPolicy(paramiko.MissingHostKeyPolicy):
+        def __init__(self, sql_connection: "SqlConnection"):
+            self.sql_connection = sql_connection
+
+        def missing_host_key(self, client, hostname, key):
+            # Add the new host key to the known_hosts field
+            new_entry = f"{hostname} {key.get_name()} {key.get_base64()}\n"
+            if self.sql_connection.known_hosts:
+                self.sql_connection.known_hosts += new_entry
+            else:
+                self.sql_connection.known_hosts = new_entry
+            self.sql_connection.save()
+            logger.warning("Unknown host key for %s. Key added to known_hosts.", hostname)
+
+    class DBMSAuthenticationMethods(Enum):
+        NONE = "none"
+        TCPIP = "tcpip"
+        TCPIP_SSH = "tcpip_ssh"
+        LDAP_USER_PWD = "ldap_user_pwd"
+
+        @classmethod
+        def choices(cls):
+            return [(method.value, method.name.replace("_", " ").title()) for method in cls]
+
     DBMS_DEFAULT_TIMEOUT = 30
     DBMS_CHOICES = [
         (DbEngines.MYSQL.value, "MySQL"),
@@ -308,25 +342,26 @@ class SqlConnection(TimestampedModel):
         (DbEngines.SYBASE.value, "Sybase"),
     ]
     DBMS_AUTHENITCATION_METHODS = [
-        ("none", "None"),
-        ("tcpip", "Standard TCP/IP"),
-        ("tcpip_ssh", "Standard TCP/IP over SSH"),
-        ("ldap_user_pwd", "LDAP User/Password"),
+        (DBMSAuthenticationMethods.NONE.value, "None"),
+        (DBMSAuthenticationMethods.TCPIP.value, "Standard TCP/IP"),
+        (DBMSAuthenticationMethods.TCPIP_SSH.value, "Standard TCP/IP over SSH"),
+        (DBMSAuthenticationMethods.LDAP_USER_PWD.value, "LDAP User/Password"),
     ]
     name = models.CharField(
         help_text="The name of the connection, without spaces. Example: 'HRDatabase', 'SalesDatabase', 'InventoryDatabase'.",
         max_length=255,
-        validators=[validate_no_spaces],
+        validators=[validate_camel_case],
     )
     db_engine = models.CharField(
         help_text="The type of database management system. Example: 'MySQL', 'PostgreSQL', 'MS SQL Server', 'Oracle'.",
+        default=DbEngines.MYSQL.value,
         max_length=255,
         choices=DBMS_CHOICES,
     )
     authentication_method = models.CharField(
         help_text="The authentication method to use for the connection. Example: 'Standard TCP/IP', 'Standard TCP/IP over SSH', 'LDAP User/Password'.",
         max_length=255,
-        choices=DBMS_AUTHENITCATION_METHODS,
+        choices=DBMSAuthenticationMethods.choices(),
         default="none",
     )
     timeout = models.IntegerField(
@@ -348,15 +383,17 @@ class SqlConnection(TimestampedModel):
     )
 
     # connection fields
-    hostname = models.CharField(max_length=255)
-    port = models.IntegerField()
-    database = models.CharField(max_length=255)
-    username = models.CharField(max_length=255)
+    hostname = models.CharField(
+        max_length=255, help_text="The remote host of the SQL connection. Should be a valid internet domain name."
+    )
+    port = models.IntegerField(default=3306, help_text="The port of the SQL connection. example: 3306 for MySQL.")
+    database = models.CharField(max_length=255, help_text="The name of the database to connect to.")
+    username = models.CharField(max_length=255, blank=True, null=True, help_text="The database username.")
     password = models.ForeignKey(
         Secret,
         on_delete=models.CASCADE,
         related_name="sql_connections_password",
-        help_text="The API key for authentication, if required.",
+        help_text="The password for authentication, if required.",
         blank=True,
         null=True,
     )
@@ -372,9 +409,16 @@ class SqlConnection(TimestampedModel):
         default="http",
         help_text="The protocol to use for the proxy connection.",
     )
-    proxy_host = models.CharField(max_length=255, blank=True, null=True)
-    proxy_port = models.IntegerField(blank=True, null=True)
-    proxy_username = models.CharField(max_length=255, blank=True, null=True)
+    proxy_host = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="The remote host of the SQL proxy connection. Should be a valid internet domain name.",
+    )
+    proxy_port = models.IntegerField(blank=True, null=True, help_text="The port of the SQL proxy connection.")
+    proxy_username = models.CharField(
+        max_length=255, blank=True, null=True, help_text="The username for the proxy connection."
+    )
     proxy_password = models.ForeignKey(
         Secret,
         on_delete=models.CASCADE,
@@ -383,6 +427,17 @@ class SqlConnection(TimestampedModel):
         blank=True,
         null=True,
     )
+    ssh_known_hosts = models.TextField(
+        blank=True,
+        null=True,
+        help_text="The known_hosts file content for verifying SSH connections. Usually comes from ~/.ssh/known_hosts.",
+    )
+
+    @property
+    def connection(self) -> BaseDatabaseWrapper:
+        if not self._connection:
+            self._connection = self.connect()
+        return self._connection
 
     @property
     def db_options(self) -> dict:
@@ -436,14 +491,16 @@ class SqlConnection(TimestampedModel):
         """
 
         try:
-            # Create an SSH client
-            # FIX NOTE: need a way to deal with known_hosts that Bandit will accept.
-            #           what follows generally will not work for customers.
             ssh_client = paramiko.SSHClient()
-            ssh_client.load_system_host_keys()
-            ssh_client.set_missing_host_key_policy(paramiko.RejectPolicy())
+            if self.ssh_known_hosts:
+                known_hosts_file = io.StringIO(self.ssh_known_hosts)
+                ssh_client.load_host_keys(known_hosts_file)
+            else:
+                ssh_client.load_system_host_keys()
 
-            # Connect to the SSH server
+            ssh_client.load_system_host_keys()
+            ssh_client.set_missing_host_key_policy(SqlConnection.ParamikoUpdateKnownHostsPolicy(self))
+
             ssh_client.connect(
                 hostname=self.hostname,
                 port=self.port,
@@ -495,20 +552,34 @@ class SqlConnection(TimestampedModel):
         """
         Establish a database connection based on the authentication method.
         """
-        if self.authentication_method == "none":
+        if self.authentication_method == SqlConnection.DBMSAuthenticationMethods.NONE.value:
             return self.connect_tcpip()
-        elif self.authentication_method == "tcpip":
+        elif self.authentication_method == SqlConnection.DBMSAuthenticationMethods.TCPIP.value:
             return self.connect_tcpip()
-        elif self.authentication_method == "tcpip_ssh":
+        elif self.authentication_method == SqlConnection.DBMSAuthenticationMethods.TCPIP_SSH.value:
             return self.connect_tcpip_ssh()
-        elif self.authentication_method == "ldap_user_pwd":
+        elif self.authentication_method == SqlConnection.DBMSAuthenticationMethods.LDAP_USER_PWD.value:
             return self.connect_ldap_user_pwd()
-        raise SmarterValueError(f"Unsupported authentication method: {self.authentication_method}")
+        else:
+            raise SmarterValueError(f"Unsupported authentication method: {self.authentication_method}")
 
-    def execute_query(self, sql: str) -> Union[list[tuple[Any, ...]], bool]:
+    def close(self):
+        """Close the database connection."""
+        if self._connection:
+            try:
+                self._connection.close()
+            # pylint: disable=W0718
+            except Exception as e:
+                logger.error("Failed to close the database connection: %s", e)
+            self._connection = None
+
+    def execute_query(self, sql: str, limit: int = None) -> Union[list[tuple[Any, ...]], bool]:
         connection = self.connect()
         if not connection:
             return False
+        if limit is not None:
+            sql = sql.rstrip(";")  # Remove any trailing semicolon
+            sql += f" LIMIT {limit};"
         with connection.cursor() as cursor:
             cursor.execute(sql)
             rows = cursor.fetchall()
@@ -555,7 +626,7 @@ class PluginDataSql(PluginDataBase):
     name = models.CharField(
         help_text="The name of the SQL connection, camelCase, without spaces. Example: 'HRDatabase', 'SalesDatabase', 'InventoryDatabase'.",
         max_length=255,
-        validators=[validate_no_spaces],
+        validators=[validate_camel_case],
     )
     connection = models.ForeignKey(SqlConnection, on_delete=models.CASCADE, related_name="plugin_data_sql_connection")
     parameters = models.JSONField(
@@ -575,7 +646,6 @@ class PluginDataSql(PluginDataBase):
     )
     limit = models.IntegerField(
         help_text="The maximum number of rows to return from the query.",
-        default=100,
         validators=[MinValueValidator(0)],
         blank=True,
         null=True,
@@ -731,7 +801,7 @@ class PluginDataSql(PluginDataBase):
     def execute_query(self, params: dict) -> Union[list, bool]:
         """Execute the SQL query and return the results."""
         sql = self.prepare_sql(params)
-        return self.connection.execute_query(sql)
+        return self.connection.execute_query(sql, self.limit)
 
     def test(self) -> Union[list, bool]:
         """Test the SQL query using the test_values in the record."""
@@ -769,7 +839,7 @@ class ApiConnection(TimestampedModel):
     name = models.CharField(
         help_text="The name of the API connection, camelCase, without spaces. Example: 'weatherApi', 'stockApi'.",
         max_length=255,
-        validators=[validate_no_spaces],
+        validators=[validate_camel_case],
     )
     description = models.TextField(
         help_text="A brief description of the API connection. Be verbose, but not too verbose.",
