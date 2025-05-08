@@ -9,7 +9,7 @@ from pydantic_core import ValidationError
 from smarter.apps.account.manifest.models.secret.model import SAMSecret
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 
-from .factories import admin_user_factory, admin_user_teardown, mortal_user_factory
+from .factories import admin_user_factory, factory_account_teardown, mortal_user_factory
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -33,8 +33,8 @@ class TestSmarterSecretPydanticModel(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        admin_user_teardown(user=cls.admin_user, account=None, user_profile=cls.user_profile)
-        admin_user_teardown(user=cls.non_admin_user, account=cls.account, user_profile=cls.non_admin_user_profile)
+        factory_account_teardown(user=cls.admin_user, account=None, user_profile=cls.user_profile)
+        factory_account_teardown(user=cls.non_admin_user, account=cls.account, user_profile=cls.non_admin_user_profile)
 
     def test_manifest_initalization_good(self):
         """

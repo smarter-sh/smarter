@@ -7,7 +7,10 @@ import random
 import time
 import unittest
 
-from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
+from smarter.apps.account.tests.factories import (
+    admin_user_factory,
+    factory_account_teardown,
+)
 from smarter.apps.chatbot.models import ChatBot, ChatBotCustomDomain
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.aws_helpers import aws_helper
@@ -45,7 +48,7 @@ class TestChatBotTasks(unittest.TestCase):
         except ChatBotCustomDomain.DoesNotExist:
             pass
         self.chatbot.delete()
-        admin_user_teardown(self.user, self.account, self.user_profile)
+        factory_account_teardown(self.user, self.account, self.user_profile)
 
         self.hosted_zone = aws_helper.route53.get_hosted_zone(domain_name=self.domain_name)
         if self.hosted_zone:

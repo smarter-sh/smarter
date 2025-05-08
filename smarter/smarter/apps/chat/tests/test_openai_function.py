@@ -14,7 +14,10 @@ from time import sleep
 
 from django.test import Client
 
-from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
+from smarter.apps.account.tests.factories import (
+    admin_user_factory,
+    factory_account_teardown,
+)
 from smarter.apps.chat.providers.const import OpenAIMessageKeys
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.plugin.nlp import does_refer_to
@@ -117,7 +120,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
 
     def tearDown(self):
         """Tear down test fixtures."""
-        admin_user_teardown(user=self.user, account=self.account, user_profile=self.user_profile)
+        factory_account_teardown(user=self.user, account=self.account, user_profile=self.user_profile)
         self.chat.delete()
         self.chatbot.delete()
 

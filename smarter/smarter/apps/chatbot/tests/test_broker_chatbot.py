@@ -10,7 +10,10 @@ import yaml
 from django.http import JsonResponse
 from django.test import Client
 
-from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
+from smarter.apps.account.tests.factories import (
+    admin_user_factory,
+    factory_account_teardown,
+)
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
 from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
 from smarter.apps.plugin.utils import add_example_plugins
@@ -54,7 +57,7 @@ class TestSAMChatbotBroker(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """Tear down test fixtures."""
-        admin_user_teardown(cls.user, cls.account, cls.user_profile)
+        factory_account_teardown(cls.user, cls.account, cls.user_profile)
 
     def test_chatbot_broker_apply(self):
         """Test that the Broker can apply the manifest."""

@@ -19,8 +19,8 @@ MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 
 
-class Api(SmarterBaseModel):
-    """Smarter API - generic API Connection class."""
+class ApiData(SmarterBaseModel):
+    """Smarter API - apiData class."""
 
     connection: ApiConnection = Field(
         ...,
@@ -51,7 +51,7 @@ class Api(SmarterBaseModel):
     @field_validator("connection")
     def validate_connection(cls, v):
         if not isinstance(v, ApiConnection):
-            raise SAMValidationError("Connection must be a valid Api instance.")
+            raise SAMValidationError("Connection must be a valid ApiData instance.")
         return v
 
     @field_validator("endpoint")
@@ -88,10 +88,10 @@ class Api(SmarterBaseModel):
 
 
 class SAMApiConnectionSpec(AbstractSAMSpecBase):
-    """Smarter API Api Connection Manifest ApiConnection.spec"""
+    """Smarter API Manifest ApiConnection.spec"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
-    connection: Api = Field(
+    connection: ApiData = Field(
         ..., description=f"{class_identifier}.selector[obj]: the selector logic to use for the {MANIFEST_KIND}"
     )

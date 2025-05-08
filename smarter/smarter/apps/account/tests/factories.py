@@ -48,12 +48,12 @@ def mortal_user_factory(account: Account = None) -> tuple[UserType, Account, Use
     return user, account, user_profile
 
 
-def admin_user_teardown(user: UserType, account: Account, user_profile: UserProfile):
+def factory_account_teardown(user: UserType, account: Account, user_profile: UserProfile):
     try:
         if user_profile:
             lbl = str(user_profile)
             user_profile.delete()
-            logger.info("admin_user_teardown() Deleted user profile for %s", lbl)
+            logger.info("factory_account_teardown() Deleted user profile for %s", lbl)
 
     except UserProfile.DoesNotExist:
         pass
@@ -61,14 +61,14 @@ def admin_user_teardown(user: UserType, account: Account, user_profile: UserProf
         if user:
             lbl = str(user)
             user.delete()
-            logger.info("admin_user_teardown() Deleted user: %s", lbl)
+            logger.info("factory_account_teardown() Deleted user: %s", lbl)
     except User.DoesNotExist:
         pass
     try:
         if account:
             lbl = str(account)
             account.delete()
-            logger.info("admin_user_teardown() Deleted account: %s", lbl)
+            logger.info("factory_account_teardown() Deleted account: %s", lbl)
     except Account.DoesNotExist:
         pass
 
