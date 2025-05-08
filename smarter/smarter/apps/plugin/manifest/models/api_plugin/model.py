@@ -20,8 +20,8 @@ from .spec import SAMApiPluginSpec
 MODULE_IDENTIFIER = MANIFEST_KIND
 
 
-class SAMPluginApi(AbstractSAMBase):
-    """Smarter API Manifest - PluginSql Connection Model"""
+class SAMApiPlugin(AbstractSAMBase):
+    """Smarter API Manifest - PluginApi Model"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 

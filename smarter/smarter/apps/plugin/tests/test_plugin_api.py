@@ -12,7 +12,7 @@ import os
 
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
-from smarter.apps.plugin.manifest.models.api_plugin.model import SAMPluginApi
+from smarter.apps.plugin.manifest.models.api_plugin.model import SAMApiPlugin
 from smarter.apps.plugin.models import ApiConnection
 from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.manifest.loader import SAMLoader
@@ -29,7 +29,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 class TestPluginApi(TestPluginBase, ManifestTestsMixin):
     """Test SAM manifest using PluginApi"""
 
-    _model: SAMPluginApi = None
+    _model: SAMApiPlugin = None
     connection_loader: SAMLoader
     connection_manifest_path: str = None
     connection_manifest: dict = None
@@ -37,10 +37,10 @@ class TestPluginApi(TestPluginBase, ManifestTestsMixin):
     connection_django_model: ApiConnection = None
 
     @property
-    def model(self) -> SAMPluginApi:
-        # override to create a SAMPluginApi pydantic model from the loader
+    def model(self) -> SAMApiPlugin:
+        # override to create a SAMApiPlugin pydantic model from the loader
         if not self._model and self.loader:
-            self._model = SAMPluginApi(**self.loader.pydantic_model_dump())
+            self._model = SAMApiPlugin(**self.loader.pydantic_model_dump())
         return self._model
 
     @classmethod
