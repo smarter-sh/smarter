@@ -23,15 +23,6 @@ SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 class ApiConnection(SmarterBaseModel):
     """Smarter API - generic API Connection class."""
 
-    name: str = Field(
-        ...,
-        max_length=255,
-        description="The name of the API connection, camelCase, without spaces. Example: 'weatherApi', 'stockApi'.",
-    )
-    description: str = Field(
-        ...,
-        description="A brief description of the API connection. Be verbose, but not too verbose.",
-    )
     base_url: str = Field(
         ...,
         description="The root domain of the API. Example: 'https://api.example.com'.",
@@ -72,23 +63,11 @@ class ApiConnection(SmarterBaseModel):
         description="The password for the proxy connection.",
     )
 
-    @field_validator("name")
-    def validate_name(cls, v):
-        if SmarterValidator.is_valid_cleanstring(v):
-            return v
-        raise SAMValidationError(f"Invalid Api connection name: {v}. Must be a valid cleanstring.")
-
-    @field_validator("description")
-    def validate_description(cls, v):
-        if SmarterValidator.is_not_none(v):
-            return v
-        raise SAMValidationError("Description cannot be None.")
-
     @field_validator("base_url")
     def validate_root_domain(cls, v):
-        if SmarterValidator.is_valid_domain(v):
+        if SmarterValidator.is_valid_url(v):
             return v
-        raise SAMValidationError(f"Invalid root domain: {v}. Must be a valid domain.")
+        raise SAMValidationError(f"Invalid root domain or protocol: {v}. Must be a valid domain on http or https.")
 
     @field_validator("api_key")
     def validate_api_key(cls, v):
@@ -109,26 +88,27 @@ class ApiConnection(SmarterBaseModel):
 
     @field_validator("proxy_protocol")
     def validate_proxy_protocol(cls, v):
-        if v is not None and v not in ["http", "https"]:
-            raise SAMValidationError("Proxy protocol must be 'http' or 'https'.")
+        valid_protocols = ["http", "https"]
+        if v is not None and v not in valid_protocols:
+            raise SAMValidationError(f"Invalid protocol {v}. Proxy protocol must be in {valid_protocols}")
         return v
 
     @field_validator("proxy_host")
     def validate_proxy_host(cls, v):
-        if SmarterValidator.is_valid_url(v):
-            return v
-        raise SAMValidationError(f"Invalid proxy host: {v}. Must be a valid URL.")
+        if v is not None and not SmarterValidator.is_valid_domain(v):
+            raise SAMValidationError(f"Invalid proxy host: {v}. Must be a valid URL.")
+        return v
 
     @field_validator("proxy_port")
     def validate_proxy_port(cls, v):
         if v is not None and (v < 1 or v > 65535):
-            raise SAMValidationError("Proxy port must be between 1 and 65535.")
+            raise SAMValidationError(f"Invalid proxy host: {v}. Must be between 1 and 65535.")
         return v
 
     @field_validator("proxy_username")
     def validate_proxy_username(cls, v):
-        if not SmarterValidator.is_valid_cleanstring(v):
-            raise SAMValidationError("Proxy username cannot be an empty string.")
+        if v is not None and not SmarterValidator.is_valid_cleanstring(v):
+            raise SAMValidationError("Proxy username cannot contain illegal characters.")
         return v
 
     @field_validator("proxy_password")
@@ -136,7 +116,7 @@ class ApiConnection(SmarterBaseModel):
         return v
 
 
-class SAMPluginDataApiConnectionSpec(AbstractSAMSpecBase):
+class SAMApiConnectionSpec(AbstractSAMSpecBase):
     """Smarter API Api Connection Manifest ApiConnection.spec"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER

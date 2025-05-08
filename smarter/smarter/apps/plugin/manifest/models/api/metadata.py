@@ -14,7 +14,7 @@ filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 
 
-class SAMPluginDataApiConnectionMetadata(AbstractSAMMetadataBase):
+class SAMApiConnectionMetadata(AbstractSAMMetadataBase):
     """Smarter API Plugin Manifest - Metadata class."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER

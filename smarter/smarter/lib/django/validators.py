@@ -148,6 +148,7 @@ class SmarterValidator:
     @staticmethod
     def validate_url(url: str) -> None:
         """Validate URL format"""
+        valid_protocols = ["http", "https"]
         if not url:
             raise SmarterValueError(f"Invalid url {url}")
         try:
@@ -156,16 +157,21 @@ class SmarterValidator:
         except TypeError:
             pass
         try:
-            validator = URLValidator()
+            validator = URLValidator(schemes=valid_protocols)
             validator(url)
         except ValidationError as e:
+            parsed = urlparse(url)
+            if parsed.scheme not in valid_protocols:
+                raise SmarterValueError(f"Invalid url protocol {parsed.scheme}") from e
             parsed = urlparse(url)
             if all([parsed.scheme, parsed.netloc]) or url.startswith("localhost"):
                 return
             if SmarterValidator.is_valid_ip(url):
                 return
             if validators.url(url):
-                return
+                parsed = urlparse(url)
+                if parsed.scheme in valid_protocols:
+                    return
             raise SmarterValueError(f"Invalid url {url}") from e
 
     @staticmethod

@@ -87,7 +87,7 @@ class Api(SmarterBaseModel):
         return v
 
 
-class SAMPluginDataApiConnectionSpec(AbstractSAMSpecBase):
+class SAMApiConnectionSpec(AbstractSAMSpecBase):
     """Smarter API Api Connection Manifest ApiConnection.spec"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER

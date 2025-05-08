@@ -2,13 +2,11 @@
 apiVersion: smarter.sh/v1
 kind: ApiConnection
 metadata:
-  name: testConnection
-  description: points to smarter api host
-  version: 0.1.0
+  name: testApiConnection
+  description: points to smarter api localhost
+  version: 0.1.1
 spec:
   connection:
-    name: weatherApi
-    description: A connection for the smarter test api end points
     base_url: http://localhost:8000/
     api_key: 12345-abcde-67890-fghij
     auth_method: token
