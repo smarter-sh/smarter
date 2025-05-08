@@ -8,7 +8,10 @@ from http import HTTPStatus
 import yaml
 from django.test import Client
 
-from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
+from smarter.apps.account.tests.factories import (
+    admin_user_factory,
+    factory_account_teardown,
+)
 from smarter.apps.plugin.manifest.brokers.sql_connection import (
     SAMSqlConnectionBroker,
 )
@@ -46,7 +49,7 @@ class TestSAMSqlConnectionBroker(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """Tear down test fixtures."""
-        admin_user_teardown(cls.user, cls.account, cls.user_profile)
+        factory_account_teardown(cls.user, cls.account, cls.user_profile)
 
     def test_sqlconnection_broker_apply(self):
         """Test that the Broker can apply the manifest."""

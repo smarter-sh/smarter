@@ -11,7 +11,10 @@ from django.contrib.sessions.middleware import SessionMiddleware
 from django.core.handlers.wsgi import WSGIRequest
 from django.test import RequestFactory
 
-from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
+from smarter.apps.account.tests.factories import (
+    admin_user_factory,
+    factory_account_teardown,
+)
 from smarter.apps.chatbot.models import ChatBot, ChatBotCustomDomain, ChatBotHelper
 from smarter.common.conf import settings as smarter_settings
 
@@ -55,7 +58,7 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
         self.chatbot.delete()
         self.custom_chatbot.delete()
         self.custom_domain.delete()
-        admin_user_teardown(user=self.user, account=self.account, user_profile=self.user_profile)
+        factory_account_teardown(user=self.user, account=self.account, user_profile=self.user_profile)
 
     def test_valid_url(self):
         """Test a url for the chatbot we created."""

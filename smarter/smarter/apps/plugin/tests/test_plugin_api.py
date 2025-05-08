@@ -1,164 +1,115 @@
-# pylint: disable=wrong-import-position
-# pylint: disable=R0801,W0613,R0902
-"""Test plugin API."""
+"""
+Test SAM Plugin manifest using PluginApi
+Test cases for the PluginDataAPI Manifest.
 
-# python stuff
+http://localhost:8000/api/v1/tests/unauthenticated/dict/
+http://localhost:8000/api/v1/tests/unauthenticated/list/
+http://localhost:8000/api/v1/tests/authenticated/dict/
+http://localhost:8000/api/v1/tests/authenticated/list/
+"""
+
 import os
-import unittest
-from urllib.parse import urlparse
 
-from django.http import (
-    HttpResponsePermanentRedirect,
-    HttpResponseRedirect,
-    JsonResponse,
+from smarter.apps.plugin.manifest.controller import PluginController
+from smarter.apps.plugin.manifest.models.api_connection.model import (
+    SAMApiConnection,
 )
-from django.test import Client
-
-from smarter.apps.account.tests.factories import (
-    admin_user_factory,
-    admin_user_teardown,
-    mortal_user_factory,
-)
+from smarter.apps.plugin.manifest.models.plugin_api.model import SAMPluginApi
+from smarter.apps.plugin.models import ApiConnection
+from smarter.lib.journal.enum import SmarterJournalThings
+from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.unittest.utils import get_readonly_yaml_file
 
-from ..plugin.static import PluginStatic
-from .test_setup import get_test_file_path
+from .base_classes import ManifestTestsMixin, TestPluginBase
+from .factories import secret_factory
 
 
-class TestPluginAPI(unittest.TestCase):
-    """Test PluginStatic API."""
+HERE = os.path.abspath(os.path.dirname(__file__))
 
-    API_BASE = "/api/v1/plugins/"
+
+# pylint: disable=too-many-instance-attributes
+class TestPluginApi(TestPluginBase, ManifestTestsMixin):
+    """Test SAM manifest using PluginApi"""
+
+    _model: SAMPluginApi = None
+    connection_loader: SAMLoader
+    connection_manifest_path: str = None
+    connection_manifest: dict = None
+    connection_model: SAMApiConnection
+    connection_django_model: ApiConnection = None
 
     @property
-    def api_base(self):
-        """Return the API base."""
-        return self.API_BASE
+    def model(self) -> SAMPluginApi:
+        # override to create a SAMPluginApi pydantic model from the loader
+        if not self._model and self.loader:
+            self._model = SAMPluginApi(**self.loader.pydantic_model_dump())
+        return self._model
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         """Set up test fixtures."""
-        plugin_path = get_test_file_path("everlasting-gobstopper.yaml")
-        self.plugin_yaml = get_readonly_yaml_file(plugin_path)
+        super().setUpClass()
 
-        plugin_path = get_test_file_path("everlasting-gobstopper-modified.yaml")
-        self.plugin_yaml_modified = get_readonly_yaml_file(plugin_path)
+        # setup an instance of ApiConnection() - a Django model
+        # ---------------------------------------------------------------------
+        # 1.) create an ApiConnection manifest
+        connection_manifest_filename = "api-connection.yaml"
+        connection_manifest_path = os.path.join(HERE, "mock_data", connection_manifest_filename)
+        connection_manifest = get_readonly_yaml_file(connection_manifest_path)
+        connection_loader = SAMLoader(manifest=connection_manifest)
+        connection_model = SAMApiConnection(**connection_loader.pydantic_model_dump())
 
-        self.admin_user, self.account, self.admin_user_profile = admin_user_factory()
-        self.mortal_user, _, self.mortal_user_profile = mortal_user_factory(self.account)
+        # 2.) transform the manifest for a django model
+        # ---------------------------------------------------------------------
+        connection_model_dump = connection_model.spec.connection.model_dump()
+        connection_model_dump["account"] = cls.account
+        connection_model_dump["name"] = connection_model.metadata.name
+        connection_model_dump["description"] = connection_model.metadata.description
 
-    def tearDown(self):
-        """Clean up test fixtures."""
-        self.mortal_user_profile.delete()
-        self.mortal_user.delete()
-        admin_user_teardown(self.admin_user, self.account, self.admin_user_profile)
+        if connection_model.spec.connection.api_key:
+            clear_api_key = connection_model_dump.pop("api_key")
+            secret_name = f"test_secret_{cls.hash_suffix}"
+            secret = secret_factory(user_profile=cls.user_profile, name=secret_name, value=clear_api_key)
+            connection_model_dump["api_key"] = secret
 
-    # pylint: disable=broad-exception-caught
-    def test_create(self):
-        """
-        Test that we can create a plugin using the PluginStatic.
-        /api/v1/plugins/upload/
-        """
-        client = Client()
-        client.force_login(self.admin_user)
-
-        response = client.post(path=self.api_base + "upload/", data=self.plugin_yaml, content_type="application/x-yaml")
-
-        # verify that we are redirected to the new plugin
-        self.assertIn(type(response), [HttpResponseRedirect, HttpResponsePermanentRedirect, JsonResponse])
-        self.assertIn(response.status_code, [301, 302])
-
-        url = response.url
-        parsed_url = urlparse(url)
-        last_slug = parsed_url.path.split("/")[-2]
-        plugin_id = int(last_slug)
-        plugin = PluginStatic(plugin_id=plugin_id)
-        self.assertEqual(plugin.ready, True)
-
-    def test_update(self):
-        """
-        Test that we can update a plugin using the PluginStatic.
-        /api/v1/plugins/upload
-        """
-        client = Client()
-        client.force_login(self.admin_user)
-
-        response = client.post(
-            path=self.api_base + "upload/", data=self.plugin_yaml_modified, content_type="application/x-yaml"
-        )
-        # verify that we are redirected to the new plugin
-        self.assertIn(type(response), [HttpResponseRedirect, HttpResponsePermanentRedirect, JsonResponse])
-        self.assertIn(response.status_code, [301, 302])
-
-        url = response.url
-        parsed_url = urlparse(url)
-        last_slug = parsed_url.path.split("/")[-2]
-        plugin_id = int(last_slug)
-
-        plugin = PluginStatic(plugin_id=plugin_id)
-        self.assertEqual(plugin.ready, True)
-
-        plugin.refresh()
-        self.assertEqual(plugin.ready, True)
-        self.assertEqual(plugin.plugin_meta.description, "MODIFIED")
-        self.assertEqual(plugin.plugin_data.description, "MODIFIED")
-        self.assertEqual(plugin.plugin_data.static_data, {"returnData": "MODIFIED"})
-
-    def test_delete(self):
-        """
-        Test that we can delete a plugin using the PluginStatic.
-        /api/v1/plugins/<pk:int>/
-        """
-        client = Client()
-        client.force_login(self.admin_user)
-
-        # create a plugin, so that we can delete it
-        response = client.post(path=self.api_base + "upload/", data=self.plugin_yaml, content_type="application/x-yaml")
-        # verify that we are redirected to the new plugin
-        self.assertIn(type(response), [HttpResponseRedirect, HttpResponsePermanentRedirect])
-        self.assertIn(response.status_code, [301, 302])
-
-        url = response.url
-        parsed_url = urlparse(url)
-        last_slug = parsed_url.path.split("/")[-2]
-        plugin_id = int(last_slug)
-        plugin = PluginStatic(plugin_id=plugin_id)
-        self.assertEqual(plugin.ready, True)
-
-        # delete the plugin using the api endpoint
-        response = client.delete(
-            path=self.api_base + str(plugin.id) + "/",
-        )
-        self.assertIn(response.status_code, [301, 302])
-
-        url = response.url
-        parsed_url = urlparse(url)
-        normalized_api_base = os.path.normpath(self.api_base.lower())
-        normalized_parsed_path = os.path.normpath(parsed_url.path.lower())
-
-        self.assertEqual(normalized_api_base, normalized_parsed_path)
-
-    # pylint: disable=too-many-statements
-    def test_validation_permissions(self):
-        """Test that the PluginStatic raises an error when given bad data."""
-
-        client = Client()
-        client.force_login(self.mortal_user)
-        try:
-            client.post(path=self.api_base + "upload/", data=self.plugin_yaml, content_type="application/x-yaml")
-        except Exception as e:
-            self.assertIsInstance(e, PermissionError)
-
-        plugin_id = -1
-
-        try:
-            client.delete(
-                path=self.api_base + str(plugin_id) + "/",
+        if connection_model.spec.connection.proxy_password:
+            clear_proxy_password = connection_model_dump.pop("proxy_password")
+            proxy_secret_name = f"test_proxy_secret_{cls.hash_suffix}"
+            proxy_secret = secret_factory(
+                user_profile=cls.user_profile, name=proxy_secret_name, value=clear_proxy_password
             )
-        except Exception as e:
-            self.assertIsInstance(e, PermissionError)
+            connection_model_dump["proxy_password"] = proxy_secret
 
-    def test_validation_bad_data(self):
-        """Test that the PluginStatic raises an error when given bad data."""
+        # 2.) initialize all of our class variables
+        # ---------------------------------------------------------------------
+        cls.connection_loader = connection_loader
+        cls.connection_manifest_path = connection_manifest_path
+        cls.connection_manifest = connection_manifest
+        cls.connection_model = connection_model
+        cls.connection_django_model = ApiConnection(**connection_model_dump)
+        cls.connection_django_model.save()
 
-    def test_clone(self):
-        """Test that we can clone a plugin using the PluginStatic."""
+    @classmethod
+    def tearDownClass(cls):
+        """Tear down test fixtures."""
+        super().tearDownClass()
+
+        try:
+            cls.connection_django_model.delete()
+        except (ApiConnection.DoesNotExist, ValueError):
+            pass
+
+        cls.connection_loader = None
+        cls.connection_manifest_path = None
+        cls.connection_manifest = None
+        cls.connection_model = None
+
+    def test_api_connection(self):
+        """Test the ApiConnection itself, lest we get ahead of ourselves"""
+        self.assertIsInstance(self.connection_django_model, ApiConnection)
+        self.assertIsInstance(self.connection_model, SAMApiConnection)
+        self.assertIsInstance(self.connection_loader, SAMLoader)
+        self.assertIsInstance(self.connection_manifest, dict)
+        self.assertIsInstance(self.connection_manifest_path, str)
+
+        self.assertEqual(self.connection_model.kind, SmarterJournalThings.API_CONNECTION.value)

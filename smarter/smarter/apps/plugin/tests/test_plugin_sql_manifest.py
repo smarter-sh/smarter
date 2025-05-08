@@ -5,7 +5,10 @@ import unittest
 
 import yaml
 
-from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
+from smarter.apps.account.tests.factories import (
+    admin_user_factory,
+    factory_account_teardown,
+)
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
 from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
@@ -89,7 +92,7 @@ class TestPluginDataSql(unittest.TestCase):
             self.connection.delete()
         except (SqlConnection.DoesNotExist, ValueError):
             pass
-        admin_user_teardown(self.user, self.account, self.user_profile)
+        factory_account_teardown(self.user, self.account, self.user_profile)
 
     def properties_factory(self) -> dict:
         return {

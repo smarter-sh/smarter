@@ -10,7 +10,10 @@ from time import sleep
 from pydantic_core import ValidationError as PydanticValidationError
 
 from smarter.apps.account.models import UserProfile
-from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
+from smarter.apps.account.tests.factories import (
+    admin_user_factory,
+    factory_account_teardown,
+)
 from smarter.apps.chat.providers.const import OpenAIMessageKeys
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginSpecKeys,
@@ -109,7 +112,7 @@ class TestPlugin(unittest.TestCase):
 
     def tearDown(self):
         """Clean up test fixtures."""
-        admin_user_teardown(self.user, self.account, self.user_profile)
+        factory_account_teardown(self.user, self.account, self.user_profile)
 
     # pylint: disable=broad-exception-caught
     def test_create(self):

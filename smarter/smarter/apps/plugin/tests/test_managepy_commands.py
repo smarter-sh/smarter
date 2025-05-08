@@ -4,7 +4,10 @@ import unittest
 
 from django.core.management import call_command
 
-from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
+from smarter.apps.account.tests.factories import (
+    admin_user_factory,
+    factory_account_teardown,
+)
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 
 
@@ -19,7 +22,7 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
 
     def tearDown(self):
         """Clean up test fixtures."""
-        admin_user_teardown(self.user, self.account, self.user_profile)
+        factory_account_teardown(self.user, self.account, self.user_profile)
 
     def test_create_plugin(self):
 

@@ -7,7 +7,10 @@ import unittest
 from django.core.handlers.wsgi import WSGIRequest
 from django.test import Client, RequestFactory
 
-from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
+from smarter.apps.account.tests.factories import (
+    admin_user_factory,
+    factory_account_teardown,
+)
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.lib.unittest.utils import get_readonly_yaml_file
@@ -63,7 +66,7 @@ class TestChatBotApiBaseViewSet(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """Tear down test fixtures."""
-        admin_user_teardown(cls.user, cls.account, cls.user_profile)
+        factory_account_teardown(cls.user, cls.account, cls.user_profile)
         cls.broker.delete(request=cls.request, kwargs=cls.kwargs)
 
     def test_base_class_properties(self):

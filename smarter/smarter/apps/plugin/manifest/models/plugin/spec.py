@@ -17,8 +17,8 @@ from smarter.apps.plugin.manifest.enum import (
     SAMPluginSpecSelectorKeyDirectiveValues,
     SAMPluginSpecSelectorKeys,
 )
-from smarter.apps.plugin.manifest.models.api.model import SAMPluginApi
 from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
+from smarter.apps.plugin.manifest.models.plugin_api.model import SAMPluginApi
 from smarter.common.conf import SettingsDefaults
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError

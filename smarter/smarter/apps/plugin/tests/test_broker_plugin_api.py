@@ -1,0 +1,164 @@
+# pylint: disable=wrong-import-position
+# pylint: disable=R0801,W0613,R0902
+"""Test plugin API."""
+
+# python stuff
+import os
+import unittest
+from urllib.parse import urlparse
+
+from django.http import (
+    HttpResponsePermanentRedirect,
+    HttpResponseRedirect,
+    JsonResponse,
+)
+from django.test import Client
+
+from smarter.apps.account.tests.factories import (
+    admin_user_factory,
+    factory_account_teardown,
+    mortal_user_factory,
+)
+from smarter.lib.unittest.utils import get_readonly_yaml_file
+
+from ..plugin.static import PluginStatic
+from .test_setup import get_test_file_path
+
+
+class TestPluginAPI(unittest.TestCase):
+    """Test PluginStatic API."""
+
+    API_BASE = "/api/v1/plugins/"
+
+    @property
+    def api_base(self):
+        """Return the API base."""
+        return self.API_BASE
+
+    def setUp(self):
+        """Set up test fixtures."""
+        plugin_path = get_test_file_path("everlasting-gobstopper.yaml")
+        self.plugin_yaml = get_readonly_yaml_file(plugin_path)
+
+        plugin_path = get_test_file_path("everlasting-gobstopper-modified.yaml")
+        self.plugin_yaml_modified = get_readonly_yaml_file(plugin_path)
+
+        self.admin_user, self.account, self.admin_user_profile = admin_user_factory()
+        self.mortal_user, _, self.mortal_user_profile = mortal_user_factory(self.account)
+
+    def tearDown(self):
+        """Clean up test fixtures."""
+        self.mortal_user_profile.delete()
+        self.mortal_user.delete()
+        factory_account_teardown(self.admin_user, self.account, self.admin_user_profile)
+
+    # pylint: disable=broad-exception-caught
+    def test_create(self):
+        """
+        Test that we can create a plugin using the PluginStatic.
+        /api/v1/plugins/upload/
+        """
+        client = Client()
+        client.force_login(self.admin_user)
+
+        response = client.post(path=self.api_base + "upload/", data=self.plugin_yaml, content_type="application/x-yaml")
+
+        # verify that we are redirected to the new plugin
+        self.assertIn(type(response), [HttpResponseRedirect, HttpResponsePermanentRedirect, JsonResponse])
+        self.assertIn(response.status_code, [301, 302])
+
+        url = response.url
+        parsed_url = urlparse(url)
+        last_slug = parsed_url.path.split("/")[-2]
+        plugin_id = int(last_slug)
+        plugin = PluginStatic(plugin_id=plugin_id)
+        self.assertEqual(plugin.ready, True)
+
+    def test_update(self):
+        """
+        Test that we can update a plugin using the PluginStatic.
+        /api/v1/plugins/upload
+        """
+        client = Client()
+        client.force_login(self.admin_user)
+
+        response = client.post(
+            path=self.api_base + "upload/", data=self.plugin_yaml_modified, content_type="application/x-yaml"
+        )
+        # verify that we are redirected to the new plugin
+        self.assertIn(type(response), [HttpResponseRedirect, HttpResponsePermanentRedirect, JsonResponse])
+        self.assertIn(response.status_code, [301, 302])
+
+        url = response.url
+        parsed_url = urlparse(url)
+        last_slug = parsed_url.path.split("/")[-2]
+        plugin_id = int(last_slug)
+
+        plugin = PluginStatic(plugin_id=plugin_id)
+        self.assertEqual(plugin.ready, True)
+
+        plugin.refresh()
+        self.assertEqual(plugin.ready, True)
+        self.assertEqual(plugin.plugin_meta.description, "MODIFIED")
+        self.assertEqual(plugin.plugin_data.description, "MODIFIED")
+        self.assertEqual(plugin.plugin_data.static_data, {"returnData": "MODIFIED"})
+
+    def test_delete(self):
+        """
+        Test that we can delete a plugin using the PluginStatic.
+        /api/v1/plugins/<pk:int>/
+        """
+        client = Client()
+        client.force_login(self.admin_user)
+
+        # create a plugin, so that we can delete it
+        response = client.post(path=self.api_base + "upload/", data=self.plugin_yaml, content_type="application/x-yaml")
+        # verify that we are redirected to the new plugin
+        self.assertIn(type(response), [HttpResponseRedirect, HttpResponsePermanentRedirect])
+        self.assertIn(response.status_code, [301, 302])
+
+        url = response.url
+        parsed_url = urlparse(url)
+        last_slug = parsed_url.path.split("/")[-2]
+        plugin_id = int(last_slug)
+        plugin = PluginStatic(plugin_id=plugin_id)
+        self.assertEqual(plugin.ready, True)
+
+        # delete the plugin using the api endpoint
+        response = client.delete(
+            path=self.api_base + str(plugin.id) + "/",
+        )
+        self.assertIn(response.status_code, [301, 302])
+
+        url = response.url
+        parsed_url = urlparse(url)
+        normalized_api_base = os.path.normpath(self.api_base.lower())
+        normalized_parsed_path = os.path.normpath(parsed_url.path.lower())
+
+        self.assertEqual(normalized_api_base, normalized_parsed_path)
+
+    # pylint: disable=too-many-statements
+    def test_validation_permissions(self):
+        """Test that the PluginStatic raises an error when given bad data."""
+
+        client = Client()
+        client.force_login(self.mortal_user)
+        try:
+            client.post(path=self.api_base + "upload/", data=self.plugin_yaml, content_type="application/x-yaml")
+        except Exception as e:
+            self.assertIsInstance(e, PermissionError)
+
+        plugin_id = -1
+
+        try:
+            client.delete(
+                path=self.api_base + str(plugin_id) + "/",
+            )
+        except Exception as e:
+            self.assertIsInstance(e, PermissionError)
+
+    def test_validation_bad_data(self):
+        """Test that the PluginStatic raises an error when given bad data."""
+
+    def test_clone(self):
+        """Test that we can clone a plugin using the PluginStatic."""

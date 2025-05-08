@@ -17,7 +17,7 @@ from smarter.apps.account.manifest.transformers.secret import (
 from smarter.apps.account.models import Secret, UserProfile
 from smarter.lib.manifest.loader import SAMLoader
 
-from .factories import admin_user_factory, admin_user_teardown, mortal_user_factory
+from .factories import admin_user_factory, factory_account_teardown, mortal_user_factory
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -42,8 +42,8 @@ class TestSmarterSecretTransformer(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        admin_user_teardown(user=cls.admin_user, account=None, user_profile=cls.user_profile)
-        admin_user_teardown(user=cls.non_admin_user, account=cls.account, user_profile=cls.non_admin_user_profile)
+        factory_account_teardown(user=cls.admin_user, account=None, user_profile=cls.user_profile)
+        factory_account_teardown(user=cls.non_admin_user, account=cls.account, user_profile=cls.non_admin_user_profile)
 
     def test_manager_01_empty(self):
         """

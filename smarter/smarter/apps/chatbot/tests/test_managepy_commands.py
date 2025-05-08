@@ -9,7 +9,10 @@ import unittest
 from django.core.management import call_command
 
 from smarter.apps.account.models import Account
-from smarter.apps.account.tests.factories import admin_user_factory, admin_user_teardown
+from smarter.apps.account.tests.factories import (
+    admin_user_factory,
+    factory_account_teardown,
+)
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey
 from smarter.apps.chatbot.signals import (
     chatbot_dns_failed,
@@ -71,7 +74,7 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
 
     def tearDown(self):
         """Clean up test fixtures."""
-        admin_user_teardown(self.user, self.account, self.user_profile)
+        factory_account_teardown(self.user, self.account, self.user_profile)
 
     def test_add_api_key(self):
         """Test add_api_key command."""

@@ -9,7 +9,7 @@ from django.urls import reverse
 
 # our stuff
 from smarter.apps.account.tests.factories import (
-    admin_user_teardown,
+    factory_account_teardown,
     mortal_user_factory,
 )
 from smarter.apps.api.v1.manifests.enum import SAMKinds
@@ -31,7 +31,7 @@ class TestApiDocsManifests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """Tear down test fixtures."""
-        admin_user_teardown(cls.user, cls.account, cls.user_profile)
+        factory_account_teardown(cls.user, cls.account, cls.user_profile)
 
     def test_get_unauthenticated_manifests(self):
         """
