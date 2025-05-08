@@ -12,7 +12,7 @@ import os
 
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
-from smarter.apps.plugin.manifest.models.plugin_api.model import SAMPluginApi
+from smarter.apps.plugin.manifest.models.api_plugin.model import SAMPluginApi
 from smarter.apps.plugin.models import ApiConnection
 from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.manifest.loader import SAMLoader
