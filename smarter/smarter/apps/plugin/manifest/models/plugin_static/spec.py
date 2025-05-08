@@ -17,7 +17,7 @@ from smarter.apps.plugin.manifest.enum import (
     SAMPluginStaticMetadataClass,
     SAMPluginStaticMetadataClassValues,
 )
-from smarter.apps.plugin.manifest.models.plugin_api.model import SAMPluginApi
+from smarter.apps.plugin.manifest.models.api_plugin.model import SAMPluginApi
 from smarter.apps.plugin.manifest.models.plugin_static.const import MANIFEST_KIND
 from smarter.common.conf import SettingsDefaults
 from smarter.lib.django.validators import SmarterValidator
