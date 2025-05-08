@@ -71,7 +71,7 @@ class TestBase(unittest.TestCase):
     _manifest: dict = None
     _loader: SAMLoader = None
     _model: AbstractSAMBase = (
-        None  # any of SAMApiConnection, SAMSqlConnection, SAMPluginStatic, SAMPluginApi, SAMPluginSql
+        None  # any of SAMApiConnection, SAMSqlConnection, SAMPluginStatic, SAMApiPlugin, SAMPluginSql
     )
 
     @classmethod
