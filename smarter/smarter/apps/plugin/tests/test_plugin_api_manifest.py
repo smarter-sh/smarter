@@ -17,7 +17,7 @@ from smarter.apps.account.tests.factories import admin_user_factory, admin_user_
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
 from smarter.apps.plugin.manifest.models.api_connection.model import (
-    SAMPluginDataApiConnection,
+    SAMApiConnection,
 )
 from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
@@ -54,8 +54,8 @@ class TestPluginDataSql(unittest.TestCase):
         # 2. initialize a SAMLoader object with the manifest raw data
         self.connection_loader = SAMLoader(manifest=connection_manifest)
 
-        # 3. create a SAMPluginDataApiConnection pydantic model from the loader
-        self.connection_model = SAMPluginDataApiConnection(**self.connection_loader.pydantic_model_dump())
+        # 3. create a SAMApiConnection pydantic model from the loader
+        self.connection_model = SAMApiConnection(**self.connection_loader.pydantic_model_dump())
 
         # 4. create the connection record
         model_dump = self.connection_model.spec.connection.model_dump()

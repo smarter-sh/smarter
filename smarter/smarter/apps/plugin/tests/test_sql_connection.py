@@ -1,120 +1,31 @@
-"""Test SqlConnection Django ORM"""
+"""Test SqlConnection Django ORM and Manifest Loader."""
 
-import json
-import os
-import unittest
-from datetime import datetime, timedelta
+# pylint: disable=W0104
+
 from logging import getLogger
 
 from pydantic_core import ValidationError
 
 from smarter.apps.account.models import Secret
-from smarter.apps.account.tests.factories import (
-    admin_user_factory,
-    admin_user_teardown,
-    generate_hash_suffix,
-    mortal_user_factory,
-)
-from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
 from smarter.apps.plugin.manifest.models.sql_connection.enum import DbEngines
 from smarter.apps.plugin.manifest.models.sql_connection.model import (
     SAMSqlConnection,
 )
-from smarter.apps.plugin.models import PluginMeta, SqlConnection
+from smarter.apps.plugin.models import SqlConnection
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.manifest.exceptions import SAMValidationError
-from smarter.lib.manifest.loader import SAMLoader
-from smarter.lib.unittest.utils import get_readonly_yaml_file
 
-from .factories import plugin_meta_factory
+from .base_classes import TestConnectionBase
+from .factories import secret_factory
 
 
-HERE = os.path.abspath(os.path.dirname(__file__))
 logger = getLogger(__name__)
 
 
-class TestPluginSql(unittest.TestCase):
-    """Test SqlConnection Django ORM"""
+class TestSqlConnection(TestConnectionBase):
+    """Test SqlConnection Django ORM and Manifest Loader"""
 
-    _manifest_path: str = None
-    _manifest: str = None
-    _loader: SAMLoader = None
     _model: SAMSqlConnection = None
-
-    @classmethod
-    def setUpClass(cls):
-        """
-        Set up the test class with a single account, and admin and non-admin users.
-        using the class setup so that we retain the same user_profile for each test,
-        which is needed so that the django Secret model can be queried.
-        """
-        cls.hash_suffix = generate_hash_suffix()
-        cls.admin_user, cls.account, cls.user_profile = admin_user_factory()
-        cls.non_admin_user, _, cls.non_admin_user_profile = mortal_user_factory(account=cls.account)
-        cls.meta_data = plugin_meta_factory(
-            plugin_class=SAMPluginMetadataClassValues.SQL.value, account=cls.account, user_profile=cls.user_profile
-        )
-
-    @classmethod
-    def tearDownClass(cls):
-        admin_user_teardown(user=cls.admin_user, account=None, user_profile=cls.user_profile)
-        admin_user_teardown(user=cls.non_admin_user, account=cls.account, user_profile=cls.non_admin_user_profile)
-        try:
-            cls.meta_data.delete()
-        except PluginMeta.DoesNotExist:
-            pass
-
-    def setUp(self):
-        """Set up the test case with a single account, and admin and non-admin users."""
-        self._manifest = None
-        self._manifest_path = None
-        self._loader = None
-        self._model = None
-
-    def secret_factory(self, name: str, value: str) -> Secret:
-        """Create a secret for the test case."""
-        encrypted_value = Secret.encrypt(value)
-        try:
-            secret = Secret.objects.get(user_profile=self.user_profile, name=name)
-            secret.encrypted_value = encrypted_value
-            secret.save()
-        except Secret.DoesNotExist:
-            # Create a new secret if it doesn't exist
-            secret = Secret(
-                user_profile=self.user_profile,
-                name=name,
-                encrypted_value=encrypted_value,
-            )
-            secret.save()
-
-        secret.description = "Test secret"
-        secret.expires_at = datetime.now() + timedelta(days=365)
-        secret.save()
-        return secret
-
-    @property
-    def manifest_path(self) -> str:
-        return self._manifest_path
-
-    @manifest_path.setter
-    def manifest_path(self, value: str):
-        self._manifest_path = value
-        self._manifest = None
-        self._loader = None
-        self._model = None
-
-    @property
-    def manifest(self) -> dict:
-        if not self._manifest and self.manifest_path:
-            self._manifest = get_readonly_yaml_file(self.manifest_path)
-        return self._manifest
-
-    @property
-    def loader(self) -> SAMLoader:
-        # initialize a SAMLoader object with the manifest raw data
-        if not self._loader and self.manifest:
-            self._loader = SAMLoader(manifest=self.manifest)
-        return self._loader
 
     @property
     def model(self) -> SAMSqlConnection:
@@ -137,8 +48,7 @@ class TestPluginSql(unittest.TestCase):
 
     def test_validate_db_engine_invalid_value(self):
         """Test that the db_engine validator raises an error for invalid values."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
-        self.manifest
+        self.load_manifest(filename="sql-connection-ssh.yaml")
         logger.info("Testing db_engine validator:\n%s", self.manifest)
 
         invalid_db_engine = "invalid_engine"
@@ -154,8 +64,7 @@ class TestPluginSql(unittest.TestCase):
 
     def test_validate_hostname_invalid_value(self):
         """Test that the hostname validator raises an error for invalid values."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
-        self.manifest
+        self.load_manifest(filename="sql-connection-ssh.yaml")
         invalid_hostname = "$invalid-host&"
         self._manifest["spec"]["connection"]["hostname"] = invalid_hostname
         self._loader = None
@@ -169,8 +78,7 @@ class TestPluginSql(unittest.TestCase):
 
     def test_validate_port_invalid_value(self):
         """Test that the port validator raises an error for invalid values."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
-        self.manifest
+        self.load_manifest(filename="sql-connection-ssh.yaml")
         invalid_port = 70000
         self._manifest["spec"]["connection"]["port"] = invalid_port
         self._loader = None
@@ -183,8 +91,7 @@ class TestPluginSql(unittest.TestCase):
 
     def test_validate_database_invalid_value(self):
         """Test that the database validator raises an error for invalid values."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
-        self.manifest
+        self.load_manifest(filename="sql-connection-ssh.yaml")
 
         invalid_database = ""
         self._manifest["spec"]["connection"]["database"] = invalid_database
@@ -196,8 +103,7 @@ class TestPluginSql(unittest.TestCase):
 
     def test_validate_username_invalid_value(self):
         """Test that the username validator raises an error for invalid values."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
-        self.manifest
+        self.load_manifest(filename="sql-connection-ssh.yaml")
         invalid_username = ""
         self._manifest["spec"]["connection"]["username"] = invalid_username
         self._loader = None
@@ -208,8 +114,7 @@ class TestPluginSql(unittest.TestCase):
 
     def test_validate_timeout_invalid_value(self):
         """Test that the timeout validator raises an error for invalid values."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
-        self.manifest
+        self.load_manifest(filename="sql-connection-ssh.yaml")
         invalid_timeout = -1
         self._manifest["spec"]["connection"]["timeout"] = invalid_timeout
         self._loader = None
@@ -220,8 +125,7 @@ class TestPluginSql(unittest.TestCase):
 
     def test_validate_timeout_valid_value(self):
         """Test that the timeout validator accepts valid values."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
-        self.manifest
+        self.load_manifest(filename="sql-connection-ssh.yaml")
         valid_timeout = 30
         self._manifest["spec"]["connection"]["timeout"] = valid_timeout
         self._loader = None
@@ -231,8 +135,7 @@ class TestPluginSql(unittest.TestCase):
 
     def test_validate_proxy_host_invalid_value(self):
         """Test that the proxy_host validator raises an error for invalid values."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
-        self.manifest
+        self.load_manifest(filename="sql-connection-ssh.yaml")
         invalid_proxy_host = "/invalid_proxy$$--"
         self._manifest["spec"]["connection"]["proxy_host"] = invalid_proxy_host
         self._loader = None
@@ -246,8 +149,7 @@ class TestPluginSql(unittest.TestCase):
 
     def test_validate_proxy_host_valid_value(self):
         """Test that the proxy_host validator accepts valid values."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
-        self.manifest
+        self.load_manifest(filename="sql-connection-ssh.yaml")
         valid_proxy_host = "proxy.example.com"
         self._manifest["spec"]["connection"]["proxy_host"] = valid_proxy_host
         self._loader = None
@@ -257,8 +159,7 @@ class TestPluginSql(unittest.TestCase):
 
     def test_validate_proxy_port_invalid_value(self):
         """Test that the proxy_port validator raises an error for invalid values."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
-        self.manifest
+        self.load_manifest(filename="sql-connection-ssh.yaml")
         invalid_proxy_port = 70000
         self._manifest["spec"]["connection"]["proxy_port"] = invalid_proxy_port
         self._loader = None
@@ -271,8 +172,7 @@ class TestPluginSql(unittest.TestCase):
 
     def test_validate_proxy_port_valid_value(self):
         """Test that the proxy_port validator accepts valid values."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
-        self.manifest
+        self.load_manifest(filename="sql-connection-ssh.yaml")
         valid_proxy_port = 8080
         self._manifest["spec"]["connection"]["proxy_port"] = valid_proxy_port
         self._loader = None
@@ -282,8 +182,7 @@ class TestPluginSql(unittest.TestCase):
 
     def test_validate_pool_size_invalid_value(self):
         """Test that the pool_size validator raises an error for invalid values."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
-        self.manifest
+        self.load_manifest(filename="sql-connection-ssh.yaml")
         invalid_pool_size = 0
         self.manifest["spec"]["connection"]["pool_size"] = invalid_pool_size
         self._loader = None
@@ -295,8 +194,7 @@ class TestPluginSql(unittest.TestCase):
 
     def test_validate_pool_size_valid_value(self):
         """Test that the pool_size validator accepts valid values."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
-        self.manifest
+        self.load_manifest(filename="sql-connection-ssh.yaml")
         valid_pool_size = 10
         self.manifest["spec"]["connection"]["pool_size"] = valid_pool_size
         self._loader = None
@@ -306,8 +204,7 @@ class TestPluginSql(unittest.TestCase):
 
     def test_validate_max_overflow_invalid_value(self):
         """Test that the max_overflow validator raises an error for invalid values."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
-        self.manifest
+        self.load_manifest(filename="sql-connection-ssh.yaml")
         invalid_max_overflow = -1
         self.manifest["spec"]["connection"]["max_overflow"] = invalid_max_overflow
         self._loader = None
@@ -318,8 +215,7 @@ class TestPluginSql(unittest.TestCase):
 
     def test_validate_max_overflow_valid_value(self):
         """Test that the max_overflow validator accepts valid values."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
-        self.manifest
+        self.load_manifest(filename="sql-connection-ssh.yaml")
         valid_max_overflow = 5
         self.manifest["spec"]["connection"]["max_overflow"] = valid_max_overflow
         self._loader = None
@@ -329,8 +225,7 @@ class TestPluginSql(unittest.TestCase):
 
     def test_validate_authentication_method_invalid_value(self):
         """Test that the authentication_method validator raises an error for invalid values."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
-        self.manifest
+        self.load_manifest(filename="sql-connection-ssh.yaml")
         invalid_auth_method = "invalid_method"
         self._manifest["spec"]["connection"]["authentication_method"] = invalid_auth_method
         self._loader = None
@@ -344,8 +239,7 @@ class TestPluginSql(unittest.TestCase):
 
     def test_validate_authentication_method_valid_value(self):
         """Test that the authentication_method validator accepts valid values."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
-        self.manifest
+        self.load_manifest(filename="sql-connection-ssh.yaml")
         valid_auth_method = SqlConnection.DBMSAuthenticationMethods.all_values()[0]
         self._manifest["spec"]["connection"]["authentication_method"] = valid_auth_method
         self._loader = None
@@ -355,8 +249,7 @@ class TestPluginSql(unittest.TestCase):
 
     def test_validate_use_ssl_invalid_value(self):
         """Test that the use_ssl validator raises an error for invalid values."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
-        self.manifest
+        self.load_manifest(filename="sql-connection-ssh.yaml")
         invalid_use_ssl = "not_a_boolean"
         self._manifest["spec"]["connection"]["use_ssl"] = invalid_use_ssl
         self._loader = None
@@ -367,8 +260,7 @@ class TestPluginSql(unittest.TestCase):
 
     def test_validate_use_ssl_valid_value(self):
         """Test that the use_ssl validator accepts valid values."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
-        self.manifest
+        self.load_manifest(filename="sql-connection-ssh.yaml")
         valid_use_ssl = True
         self._manifest["spec"]["connection"]["use_ssl"] = valid_use_ssl
         self._loader = None
@@ -378,7 +270,7 @@ class TestPluginSql(unittest.TestCase):
 
     def test_model_tcpip(self):
         """Test that the Loader can load the manifest."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection.yaml")
+        self.load_manifest(filename="sql-connection.yaml")
 
         self.assertEqual(self.loader.manifest_api_version, SmarterApiVersions.V1)
         self.assertEqual(self.loader.manifest_kind, "SqlConnection")
@@ -398,18 +290,17 @@ class TestPluginSql(unittest.TestCase):
 
     def test_django_orm_tcpip(self):
         """Test that the Django model can be initialized from the Pydantic model."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection.yaml")
+        self.load_manifest(filename="sql-connection.yaml")
         model_dump = self.model.spec.connection.model_dump()
 
         model_dump["name"] = self.model.metadata.name
-        logger.info(f"Model dump: {json.dumps(model_dump, indent=4)}")
         model_dump["account"] = self.account
         model_dump["description"] = self.model.metadata.description
 
         if self.model.spec.connection.password:
             clear_password = model_dump.pop("password")
             secret_name = f"test_secret_{self.hash_suffix}"
-            secret = self.secret_factory(name=secret_name, value=clear_password)
+            secret = secret_factory(user_profile=self.user_profile, name=secret_name, value=clear_password)
             model_dump["password"] = secret
 
         django_model = SqlConnection(**model_dump)
@@ -449,7 +340,7 @@ class TestPluginSql(unittest.TestCase):
 
     def test_model_tcpip_ssl(self):
         """Test that the Loader can load the manifest."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssl.yaml")
+        self.load_manifest(filename="sql-connection-ssl.yaml")
 
         self.assertEqual(self.loader.manifest_api_version, SmarterApiVersions.V1)
         self.assertEqual(self.loader.manifest_kind, "SqlConnection")
@@ -471,7 +362,7 @@ class TestPluginSql(unittest.TestCase):
 
     def test_django_orm_tcpip_ssl(self):
         """Test that the Django model can be initialized from the Pydantic model."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssl.yaml")
+        self.load_manifest(filename="sql-connection-ssl.yaml")
         model_dump = self.model.spec.connection.model_dump()
 
         model_dump["account"] = self.account
@@ -481,7 +372,7 @@ class TestPluginSql(unittest.TestCase):
         if self.model.spec.connection.password:
             clear_password = model_dump.pop("password")
             secret_name = f"test_secret_{self.hash_suffix}"
-            secret = self.secret_factory(name=secret_name, value=clear_password)
+            secret = secret_factory(user_profile=self.user_profile, name=secret_name, value=clear_password)
             model_dump["password"] = secret
 
         django_model = SqlConnection(**model_dump)
@@ -518,7 +409,7 @@ class TestPluginSql(unittest.TestCase):
 
     def test_model_tcpip_ssh(self):
         """Test that the Loader can load the self._manifest["spec"]["connection"]["username"]."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
+        self.load_manifest(filename="sql-connection-ssh.yaml")
 
         self.assertEqual(self.loader.manifest_api_version, SmarterApiVersions.V1)
         self.assertEqual(self.loader.manifest_kind, "SqlConnection")
@@ -548,7 +439,7 @@ class TestPluginSql(unittest.TestCase):
 
     def test_django_orm_tcpip_ssh(self):
         """Test that the Django model can be initialized from the Pydantic model."""
-        self.manifest_path = os.path.join(HERE, "mock_data/sql-connection-ssh.yaml")
+        self.load_manifest(filename="sql-connection-ssh.yaml")
         model_dump = self.model.spec.connection.model_dump()
 
         model_dump["account"] = self.account
@@ -558,13 +449,15 @@ class TestPluginSql(unittest.TestCase):
         if self.model.spec.connection.password:
             clear_password = model_dump.pop("password")
             secret_name = f"test_secret_{self.hash_suffix}"
-            secret = self.secret_factory(name=secret_name, value=clear_password)
+            secret = secret_factory(user_profile=self.user_profile, name=secret_name, value=clear_password)
             model_dump["password"] = secret
 
         if self.model.spec.connection.proxy_password:
             clear_proxy_password = model_dump.pop("proxy_password")
             proxy_secret_name = f"test_proxy_secret_{self.hash_suffix}"
-            proxy_secret = self.secret_factory(name=proxy_secret_name, value=clear_proxy_password)
+            proxy_secret = secret_factory(
+                user_profile=self.user_profile, name=proxy_secret_name, value=clear_proxy_password
+            )
             model_dump["proxy_password"] = proxy_secret
 
         django_model = SqlConnection(**model_dump)
