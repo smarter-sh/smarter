@@ -6,11 +6,12 @@ from typing import Any, ClassVar, Dict, Optional
 
 from pydantic import Field, field_validator
 
-from smarter.apps.plugin.manifest.models.sql_plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.models import SqlConnection
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBaseModel
+
+from .const import MANIFEST_KIND
 
 
 logger = logging.getLogger(__name__)
@@ -19,7 +20,7 @@ MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 
 
-class Sql(SmarterBaseModel):
+class SqlData(SmarterBaseModel):
     """Smarter API - generic API Connection class."""
 
     name: str = Field(
@@ -90,10 +91,15 @@ class Sql(SmarterBaseModel):
 
 
 class SAMPluginSqlSpec(AbstractSAMSpecBase):
-    """Smarter API Sql Connection Manifest SqlConnection.spec"""
+    """Smarter API SqlData Connection Manifest SqlConnection.spec"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
-    connection: Sql = Field(
-        ..., description=f"{class_identifier}.selector[obj]: the selector logic to use for the {MANIFEST_KIND}"
+    connection: str = Field(
+        ...,
+        description=f"{class_identifier}.selector[obj]: the name of an existing SqlConnector to use for the {MANIFEST_KIND}",
+    )
+
+    sql_data: SqlData = Field(
+        ..., description=f"{class_identifier}.selector[obj]: the SqlData to use for the {MANIFEST_KIND}"
     )

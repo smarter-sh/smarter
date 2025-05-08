@@ -87,11 +87,16 @@ class ApiData(SmarterBaseModel):
         return v
 
 
-class SAMApiConnectionSpec(AbstractSAMSpecBase):
+class SAMApiPluginSpec(AbstractSAMSpecBase):
     """Smarter API Manifest ApiConnection.spec"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
-    connection: ApiData = Field(
-        ..., description=f"{class_identifier}.selector[obj]: the selector logic to use for the {MANIFEST_KIND}"
+    connection: str = Field(
+        ...,
+        description=f"{class_identifier}.selector[obj]: the name of an existing SqlConnector to use for the {MANIFEST_KIND}",
+    )
+
+    api_data: ApiData = Field(
+        ..., description=f"{class_identifier}.selector[obj]: the ApiData to use for the {MANIFEST_KIND}"
     )

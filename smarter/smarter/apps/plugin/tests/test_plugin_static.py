@@ -16,10 +16,10 @@ from smarter.apps.account.tests.factories import (
 )
 from smarter.apps.chat.providers.const import OpenAIMessageKeys
 from smarter.apps.plugin.manifest.enum import (
+    SAMPluginCommonSpecPromptKeys,
+    SAMPluginCommonSpecSelectorKeyDirectiveValues,
+    SAMPluginCommonSpecSelectorKeys,
     SAMPluginSpecKeys,
-    SAMPluginSpecPromptKeys,
-    SAMPluginSpecSelectorKeyDirectiveValues,
-    SAMPluginSpecSelectorKeys,
 )
 from smarter.apps.plugin.models import (
     PluginDataStatic,
@@ -145,27 +145,35 @@ class TestPlugin(unittest.TestCase):
         self.assertEqual(plugin.plugin_meta.name, self.data[SAMKeys.METADATA.value]["name"])
         self.assertEqual(
             plugin.plugin_selector.directive,
-            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][SAMPluginSpecSelectorKeys.DIRECTIVE.value],
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
+                SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value
+            ],
         )
         self.assertEqual(
             plugin.plugin_prompt.provider,
-            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.PROVIDER.value],
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginCommonSpecPromptKeys.PROVIDER.value],
         )
         self.assertEqual(
             plugin.plugin_prompt.system_role,
-            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.SYSTEMROLE.value],
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value
+            ],
         )
         self.assertEqual(
             plugin.plugin_prompt.model,
-            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.MODEL.value],
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginCommonSpecPromptKeys.MODEL.value],
         )
         self.assertEqual(
             plugin.plugin_prompt.temperature,
-            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.TEMPERATURE.value],
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.TEMPERATURE.value
+            ],
         )
         self.assertEqual(
             plugin.plugin_prompt.max_tokens,
-            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.MAXTOKENS.value],
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.MAXTOKENS.value
+            ],
         )
         self.assertEqual(
             plugin.plugin_data.description, self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.DATA.value]["description"]
@@ -190,37 +198,49 @@ class TestPlugin(unittest.TestCase):
         self.assertEqual(to_json[SAMKeys.METADATA.value]["name"], self.data[SAMKeys.METADATA.value]["name"])
         self.assertEqual(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
-                SAMPluginSpecSelectorKeys.DIRECTIVE.value
+                SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value
             ].strip(),
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
-                SAMPluginSpecSelectorKeys.DIRECTIVE.value
-            ].strip(),
-        )
-        self.assertEqual(
-            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.PROVIDER.value].strip(),
-            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
-                SAMPluginSpecPromptKeys.PROVIDER.value
+                SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value
             ].strip(),
         )
         self.assertEqual(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
-                SAMPluginSpecPromptKeys.SYSTEMROLE.value
+                SAMPluginCommonSpecPromptKeys.PROVIDER.value
             ].strip(),
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
-                SAMPluginSpecPromptKeys.SYSTEMROLE.value
+                SAMPluginCommonSpecPromptKeys.PROVIDER.value
             ].strip(),
         )
         self.assertEqual(
-            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.MODEL.value].strip(),
-            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.MODEL.value].strip(),
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value
+            ].strip(),
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value
+            ].strip(),
         )
         self.assertEqual(
-            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.TEMPERATURE.value],
-            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.TEMPERATURE.value],
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.MODEL.value
+            ].strip(),
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.MODEL.value
+            ].strip(),
         )
         self.assertEqual(
-            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.MAXTOKENS.value],
-            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.MAXTOKENS.value],
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.TEMPERATURE.value
+            ],
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.TEMPERATURE.value
+            ],
+        )
+        self.assertEqual(
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginCommonSpecPromptKeys.MAXTOKENS.value],
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.MAXTOKENS.value
+            ],
         )
 
     def test_delete(self):
@@ -305,32 +325,36 @@ class TestPlugin(unittest.TestCase):
         """Test that the PluginStatic raises an error when given bad data."""
 
         bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value].pop(SAMPluginSpecSelectorKeys.DIRECTIVE.value)
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value].pop(
+            SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value
+        )
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginSpecPromptKeys.PROVIDER.value)
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginCommonSpecPromptKeys.PROVIDER.value)
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginSpecPromptKeys.SYSTEMROLE.value)
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value)
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginSpecPromptKeys.MODEL.value)
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginCommonSpecPromptKeys.MODEL.value)
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginSpecPromptKeys.TEMPERATURE.value)
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(
+            SAMPluginCommonSpecPromptKeys.TEMPERATURE.value
+        )
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
-        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginSpecPromptKeys.MAXTOKENS.value)
+        bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value].pop(SAMPluginCommonSpecPromptKeys.MAXTOKENS.value)
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
@@ -353,21 +377,21 @@ class TestPlugin(unittest.TestCase):
 
         bad_data = self.data.copy()
         bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
-            SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS.value
+            SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value
         ] = "not a list"
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
         bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
-            SAMPluginSpecPromptKeys.TEMPERATURE.value
+            SAMPluginCommonSpecPromptKeys.TEMPERATURE.value
         ] = "not a float"
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
 
         bad_data = self.data.copy()
         bad_data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
-            SAMPluginSpecPromptKeys.MAXTOKENS.value
+            SAMPluginCommonSpecPromptKeys.MAXTOKENS.value
         ] = "not an int"
         with self.assertRaises(PydanticValidationError):
             PluginStatic(data=bad_data)
@@ -428,37 +452,49 @@ class TestPlugin(unittest.TestCase):
         self.assertEqual(to_json[SAMKeys.METADATA.value]["name"], self.data[SAMKeys.METADATA.value]["name"])
         self.assertEqual(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
-                SAMPluginSpecSelectorKeys.DIRECTIVE.value
+                SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value
             ].strip(),
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
-                SAMPluginSpecSelectorKeys.DIRECTIVE.value
-            ].strip(),
-        )
-        self.assertEqual(
-            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.PROVIDER.value].strip(),
-            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
-                SAMPluginSpecPromptKeys.PROVIDER.value
+                SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value
             ].strip(),
         )
         self.assertEqual(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
-                SAMPluginSpecPromptKeys.SYSTEMROLE.value
+                SAMPluginCommonSpecPromptKeys.PROVIDER.value
             ].strip(),
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
-                SAMPluginSpecPromptKeys.SYSTEMROLE.value
+                SAMPluginCommonSpecPromptKeys.PROVIDER.value
             ].strip(),
         )
         self.assertEqual(
-            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.MODEL.value].strip(),
-            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.MODEL.value].strip(),
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value
+            ].strip(),
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value
+            ].strip(),
         )
         self.assertEqual(
-            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.TEMPERATURE.value],
-            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.TEMPERATURE.value],
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.MODEL.value
+            ].strip(),
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.MODEL.value
+            ].strip(),
         )
         self.assertEqual(
-            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.MAXTOKENS.value],
-            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginSpecPromptKeys.MAXTOKENS.value],
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.TEMPERATURE.value
+            ],
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.TEMPERATURE.value
+            ],
+        )
+        self.assertEqual(
+            to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][SAMPluginCommonSpecPromptKeys.MAXTOKENS.value],
+            self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.PROMPT.value][
+                SAMPluginCommonSpecPromptKeys.MAXTOKENS.value
+            ],
         )
 
     def test_plugin_called_signal(self):

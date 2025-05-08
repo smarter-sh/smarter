@@ -6,7 +6,7 @@ from smarter.lib.manifest.enum import SmarterEnumAbstract
 ###############################################################################
 # Enums for describing possible manifest key values
 ###############################################################################
-class SAMPluginStaticMetadataClassValues(SmarterEnumAbstract):
+class SAMPluginCommonMetadataClassValues(SmarterEnumAbstract):
     """Smarter API Plugin Metadata Class keys enumeration."""
 
     # a plugin that returns a static json response contained inside the plugin manifest
@@ -21,7 +21,7 @@ class SAMPluginStaticMetadataClassValues(SmarterEnumAbstract):
     SQL = "sql"
 
 
-class SAMPluginSpecSelectorKeyDirectiveValues(SmarterEnumAbstract):
+class SAMPluginCommonSpecSelectorKeyDirectiveValues(SmarterEnumAbstract):
     """Smarter API Plugin Spec Selector keys enumeration."""
 
     # Smarter handler applied key word search
@@ -60,14 +60,14 @@ class SAMPluginSpecKeys(SmarterEnumAbstract):
     DATA = "data"
 
 
-class SAMPluginSpecSelectorKeys(SmarterEnumAbstract):
+class SAMPluginCommonSpecSelectorKeys(SmarterEnumAbstract):
     """Smarter API Plugin Spec Selector keys enumeration."""
 
     DIRECTIVE = "directive"
     SEARCHTERMS = "searchTerms"
 
 
-class SAMPluginSpecPromptKeys(SmarterEnumAbstract):
+class SAMPluginCommonSpecPromptKeys(SmarterEnumAbstract):
     """Smarter API Plugin Spec Prompt keys enumeration."""
 
     PROVIDER = "provider"

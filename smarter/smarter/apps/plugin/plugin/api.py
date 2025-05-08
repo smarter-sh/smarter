@@ -12,14 +12,14 @@ from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
 # smarter plugin stuff
 from ..manifest.enum import (
+    SAMPluginCommonMetadataClassValues,
+    SAMPluginCommonSpecPromptKeys,
+    SAMPluginCommonSpecSelectorKeys,
     SAMPluginSpecKeys,
-    SAMPluginSpecPromptKeys,
-    SAMPluginSpecSelectorKeys,
     SAMPluginStaticMetadataClass,
-    SAMPluginStaticMetadataClassValues,
     SAMPluginStaticMetadataKeys,
 )
-from ..manifest.models.plugin_static.const import MANIFEST_KIND
+from ..manifest.models.static_plugin.const import MANIFEST_KIND
 from ..models import ApiConnection, PluginDataApi
 from ..serializers import PluginApiSerializer
 from .base import PluginBase
@@ -134,22 +134,22 @@ class PluginApi(PluginBase):
             SAMKeys.KIND.value: MANIFEST_KIND,
             SAMKeys.METADATA.value: {
                 SAMMetadataKeys.name: "ApiExample",
-                SAMPluginStaticMetadataKeys.PLUGIN_CLASS.value: SAMPluginStaticMetadataClassValues.SQL.value,
+                SAMPluginStaticMetadataKeys.PLUGIN_CLASS.value: SAMPluginCommonMetadataClassValues.SQL.value,
                 SAMMetadataKeys.DESCRIPTION.value: "Get additional information about the admin account of the Smarter platform.",
                 SAMMetadataKeys.VERSION.value: "0.1.0",
                 SAMMetadataKeys.TAGS.value: ["example.com", "api", "rest-api"],
             },
             SAMKeys.SPEC.value: {
                 SAMPluginSpecKeys.SELECTOR.value: {
-                    SAMPluginSpecSelectorKeys.DIRECTIVE.value: SAMPluginSpecSelectorKeys.SEARCHTERMS.value,
-                    SAMPluginSpecSelectorKeys.SEARCHTERMS.value: ["admin", "Smarter platform", "admin account"],
+                    SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value: SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value,
+                    SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value: ["admin", "Smarter platform", "admin account"],
                 },
                 SAMPluginSpecKeys.PROMPT.value: {
-                    SAMPluginSpecPromptKeys.PROVIDER.value: SettingsDefaults.LLM_DEFAULT_PROVIDER,
-                    SAMPluginSpecPromptKeys.SYSTEMROLE.value: "You are a helpful assistant for Smarter platform. You can provide information about the admin account of the Smarter platform.\n",
-                    SAMPluginSpecPromptKeys.MODEL.value: SettingsDefaults.LLM_DEFAULT_MODEL,
-                    SAMPluginSpecPromptKeys.TEMPERATURE.value: SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
-                    SAMPluginSpecPromptKeys.MAXTOKENS.value: SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
+                    SAMPluginCommonSpecPromptKeys.PROVIDER.value: SettingsDefaults.LLM_DEFAULT_PROVIDER,
+                    SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value: "You are a helpful assistant for Smarter platform. You can provide information about the admin account of the Smarter platform.\n",
+                    SAMPluginCommonSpecPromptKeys.MODEL.value: SettingsDefaults.LLM_DEFAULT_MODEL,
+                    SAMPluginCommonSpecPromptKeys.TEMPERATURE.value: SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
+                    SAMPluginCommonSpecPromptKeys.MAXTOKENS.value: SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
                 },
                 SAMPluginSpecKeys.DATA.value: {
                     "description": "Query the Django User model to retrieve detailed account information about the admin account for the Smarter platform .",

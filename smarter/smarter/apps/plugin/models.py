@@ -35,7 +35,7 @@ from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.model_helpers import TimestampedModel
 
 # plugin stuff
-from .manifest.enum import SAMPluginStaticMetadataClassValues
+from .manifest.enum import SAMPluginCommonMetadataClassValues
 from .manifest.models.sql_connection.enum import DbEngines
 
 
@@ -105,9 +105,9 @@ class PluginMeta(TimestampedModel):  # pragma: no cover
     """PluginMeta model."""
 
     PLUGIN_CLASSES = [
-        (SAMPluginStaticMetadataClassValues.STATIC.value, SAMPluginStaticMetadataClassValues.STATIC.value),
-        (SAMPluginStaticMetadataClassValues.SQL.value, SAMPluginStaticMetadataClassValues.SQL.value),
-        (SAMPluginStaticMetadataClassValues.API.value, SAMPluginStaticMetadataClassValues.API.value),
+        (SAMPluginCommonMetadataClassValues.STATIC.value, SAMPluginCommonMetadataClassValues.STATIC.value),
+        (SAMPluginCommonMetadataClassValues.SQL.value, SAMPluginCommonMetadataClassValues.SQL.value),
+        (SAMPluginCommonMetadataClassValues.API.value, SAMPluginCommonMetadataClassValues.API.value),
     ]
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="plugin_meta_account")

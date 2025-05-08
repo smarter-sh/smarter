@@ -11,9 +11,9 @@ from rest_framework.serializers import ModelSerializer
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.manifest.controller import PluginController
-from smarter.apps.plugin.manifest.enum import SAMPluginStaticMetadataClassValues
-from smarter.apps.plugin.manifest.models.plugin_static.const import MANIFEST_KIND
-from smarter.apps.plugin.manifest.models.plugin_static.model import SAMPlugin
+from smarter.apps.plugin.manifest.enum import SAMPluginCommonMetadataClassValues
+from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
+from smarter.apps.plugin.manifest.models.static_plugin.model import SAMPluginStatic
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.plugin.sql import PluginSql
@@ -39,8 +39,8 @@ from smarter.lib.manifest.loader import SAMLoader
 MAX_RESULTS = 1000
 
 PluginMap: dict[str, PluginBase] = {
-    SAMPluginStaticMetadataClassValues.STATIC.value: PluginStatic,
-    SAMPluginStaticMetadataClassValues.SQL.value: PluginSql,
+    SAMPluginCommonMetadataClassValues.STATIC.value: PluginStatic,
+    SAMPluginCommonMetadataClassValues.SQL.value: PluginSql,
 }
 
 logger = logging.getLogger(__name__)
@@ -82,8 +82,8 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     """
 
     # override the base abstract manifest model with the Plugin model
-    _manifest: SAMPlugin = None
-    _pydantic_model: Type[SAMPlugin] = SAMPlugin
+    _manifest: SAMPluginStatic = None
+    _pydantic_model: Type[SAMPluginStatic] = SAMPluginStatic
     _plugin: PluginBase = None
     _plugin_meta: PluginMeta = None
 
@@ -154,9 +154,9 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> SAMPlugin:
+    def manifest(self) -> SAMPluginStatic:
         """
-        SAMPlugin() is a Pydantic model
+        SAMPluginStatic() is a Pydantic model
         that is used to represent the Smarter API Plugin manifest. The Pydantic
         model is initialized with the data from the manifest loader, which is
         generally passed to the model constructor as **data. However, this top-level
@@ -167,7 +167,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         if self._manifest:
             return self._manifest
         if self.loader:
-            self._manifest = SAMPlugin(
+            self._manifest = SAMPluginStatic(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
                 metadata=self.loader.manifest_metadata,
@@ -182,7 +182,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     def example_manifest(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
-        plugin_class: str = self.params.get("plugin_class", SAMPluginStaticMetadataClassValues.STATIC.value)
+        plugin_class: str = self.params.get("plugin_class", SAMPluginCommonMetadataClassValues.STATIC.value)
         try:
             Plugin = PluginMap[plugin_class]
         except KeyError as e:
