@@ -6,17 +6,17 @@ from typing import ClassVar, Optional
 from pydantic import Field, model_validator
 
 from smarter.apps.plugin.manifest.enum import (
-    SAMPluginMetadataClass,
-    SAMPluginMetadataClassValues,
-    SAMPluginMetadataKeys,
     SAMPluginSpecKeys,
+    SAMPluginStaticMetadataClass,
+    SAMPluginStaticMetadataClassValues,
+    SAMPluginStaticMetadataKeys,
 )
-from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
+from smarter.apps.plugin.manifest.models.plugin_static.const import MANIFEST_KIND
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMBase
 
-from .metadata import SAMPluginMetadata
+from .metadata import SAMPluginStaticMetadata
 from .spec import SAMPluginSpec
 from .status import SAMPluginStatus
 
@@ -31,7 +31,7 @@ class SAMPlugin(AbstractSAMBase):
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
-    metadata: SAMPluginMetadata = Field(
+    metadata: SAMPluginStaticMetadata = Field(
         ...,
         description=f"{class_identifier}.{SAMKeys.METADATA.value}[obj]: Required, the {MANIFEST_KIND} metadata.",
     )
@@ -52,19 +52,22 @@ class SAMPlugin(AbstractSAMBase):
 
         # Validate that the correct Plugin.spec.data is present when the Plugin.metadata.pluginClass is 'static', 'sql', or 'api'
         # example error message: "Plugin.spec.data.staticData is required when Plugin.metadata.pluginClass is 'static'"
-        if self.metadata.pluginClass == SAMPluginMetadataClassValues.STATIC.value and not self.spec.data.staticData:
+        if (
+            self.metadata.pluginClass == SAMPluginStaticMetadataClassValues.STATIC.value
+            and not self.spec.data.staticData
+        ):
             raise SAMValidationError(
-                f"{err_desc_model_name}.{SAMPluginMetadataClass.STATIC_DATA.value} is required when {self.kind}.{SAMPluginMetadataKeys.PLUGIN_CLASS.value} is '{SAMPluginMetadataClassValues.STATIC.value}'"
+                f"{err_desc_model_name}.{SAMPluginStaticMetadataClass.STATIC_DATA.value} is required when {self.kind}.{SAMPluginStaticMetadataKeys.PLUGIN_CLASS.value} is '{SAMPluginStaticMetadataClassValues.STATIC.value}'"
             )
 
-        if self.metadata.pluginClass == SAMPluginMetadataClassValues.SQL.value and not self.spec.data.sqlData:
+        if self.metadata.pluginClass == SAMPluginStaticMetadataClassValues.SQL.value and not self.spec.data.sqlData:
             raise SAMValidationError(
-                f"{err_desc_model_name}.{SAMPluginMetadataClass.SQL_DATA.value} is required when {self.kind}.{SAMPluginMetadataKeys.PLUGIN_CLASS.value} is '{SAMPluginMetadataClassValues.SQL.value}'"
+                f"{err_desc_model_name}.{SAMPluginStaticMetadataClass.SQL_DATA.value} is required when {self.kind}.{SAMPluginStaticMetadataKeys.PLUGIN_CLASS.value} is '{SAMPluginStaticMetadataClassValues.SQL.value}'"
             )
 
-        if self.metadata.pluginClass == SAMPluginMetadataClassValues.API.value and not self.spec.data.apiData:
+        if self.metadata.pluginClass == SAMPluginStaticMetadataClassValues.API.value and not self.spec.data.apiData:
             raise SAMValidationError(
-                f"{err_desc_model_name}.{SAMPluginMetadataClass.API_DATA.value} is required when {self.kind}.{SAMPluginMetadataKeys.PLUGIN_CLASS.value} is '{SAMPluginMetadataClassValues.API.value}'"
+                f"{err_desc_model_name}.{SAMPluginStaticMetadataClass.API_DATA.value} is required when {self.kind}.{SAMPluginStaticMetadataKeys.PLUGIN_CLASS.value} is '{SAMPluginStaticMetadataClassValues.API.value}'"
             )
 
         return self

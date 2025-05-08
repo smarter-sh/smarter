@@ -28,8 +28,8 @@ from smarter.lib.manifest.loader import SAMLoader
 
 # plugin stuff
 from ..manifest.enum import SAMPluginSpecSelectorKeyDirectiveValues
-from ..manifest.models.plugin.const import MANIFEST_KIND
-from ..manifest.models.plugin.model import SAMPlugin
+from ..manifest.models.plugin_static.const import MANIFEST_KIND
+from ..manifest.models.plugin_static.model import SAMPlugin
 from ..models import PluginDataBase, PluginMeta, PluginPrompt, PluginSelector
 from ..nlp import does_refer_to
 from ..serializers import (

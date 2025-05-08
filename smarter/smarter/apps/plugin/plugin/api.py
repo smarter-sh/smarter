@@ -12,14 +12,14 @@ from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
 # smarter plugin stuff
 from ..manifest.enum import (
-    SAMPluginMetadataClass,
-    SAMPluginMetadataClassValues,
-    SAMPluginMetadataKeys,
     SAMPluginSpecKeys,
     SAMPluginSpecPromptKeys,
     SAMPluginSpecSelectorKeys,
+    SAMPluginStaticMetadataClass,
+    SAMPluginStaticMetadataClassValues,
+    SAMPluginStaticMetadataKeys,
 )
-from ..manifest.models.plugin.const import MANIFEST_KIND
+from ..manifest.models.plugin_static.const import MANIFEST_KIND
 from ..models import ApiConnection, PluginDataApi
 from ..serializers import PluginApiSerializer
 from .base import PluginBase
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 class PluginApi(PluginBase):
     """A Plugin that uses an http request to a REST API to retrieve its return data"""
 
-    _metadata_class = SAMPluginMetadataClass.SQL_DATA.value
+    _metadata_class = SAMPluginStaticMetadataClass.SQL_DATA.value
     _plugin_data: PluginDataApi = None
     _plugin_data_serializer: PluginApiSerializer = None
 
@@ -134,7 +134,7 @@ class PluginApi(PluginBase):
             SAMKeys.KIND.value: MANIFEST_KIND,
             SAMKeys.METADATA.value: {
                 SAMMetadataKeys.name: "ApiExample",
-                SAMPluginMetadataKeys.PLUGIN_CLASS.value: SAMPluginMetadataClassValues.SQL.value,
+                SAMPluginStaticMetadataKeys.PLUGIN_CLASS.value: SAMPluginStaticMetadataClassValues.SQL.value,
                 SAMMetadataKeys.DESCRIPTION.value: "Get additional information about the admin account of the Smarter platform.",
                 SAMMetadataKeys.VERSION.value: "0.1.0",
                 SAMMetadataKeys.TAGS.value: ["example.com", "api", "rest-api"],
@@ -153,7 +153,7 @@ class PluginApi(PluginBase):
                 },
                 SAMPluginSpecKeys.DATA.value: {
                     "description": "Query the Django User model to retrieve detailed account information about the admin account for the Smarter platform .",
-                    SAMPluginMetadataClass.API_DATA.value: {
+                    SAMPluginStaticMetadataClass.API_DATA.value: {
                         "connection": "exampleConnection",
                         "endpoint": "/api/v1/example-endpoint/",
                         "parameters": None,

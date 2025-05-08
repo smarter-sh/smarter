@@ -6,7 +6,7 @@ from smarter.lib.manifest.enum import SmarterEnumAbstract
 ###############################################################################
 # Enums for describing possible manifest key values
 ###############################################################################
-class SAMPluginMetadataClassValues(SmarterEnumAbstract):
+class SAMPluginStaticMetadataClassValues(SmarterEnumAbstract):
     """Smarter API Plugin Metadata Class keys enumeration."""
 
     # a plugin that returns a static json response contained inside the plugin manifest
@@ -38,13 +38,13 @@ class SAMPluginSpecSelectorKeyDirectiveValues(SmarterEnumAbstract):
 ###############################################################################
 # Enums for manifest keys in error handlers and other on-screen messages
 ###############################################################################
-class SAMPluginMetadataKeys(SmarterEnumAbstract):
+class SAMPluginStaticMetadataKeys(SmarterEnumAbstract):
     """Smarter API Plugin Metadata keys enumeration."""
 
     PLUGIN_CLASS = "pluginClass"
 
 
-class SAMPluginMetadataClass(SmarterEnumAbstract):
+class SAMPluginStaticMetadataClass(SmarterEnumAbstract):
     """Smarter API Plugin Metadata Class keys enumeration."""
 
     STATIC_DATA = "staticData"

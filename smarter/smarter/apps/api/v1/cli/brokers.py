@@ -30,9 +30,7 @@ from smarter.apps.chat.manifest.brokers.chat_plugin_usage import (
 from smarter.apps.chat.manifest.brokers.chat_tool_call import SAMChatToolCallBroker
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
 from smarter.apps.plugin.manifest.brokers.plugin import SAMPluginBroker
-from smarter.apps.plugin.manifest.brokers.sql_connection import (
-    SAMSqlConnectionBroker,
-)
+from smarter.apps.plugin.manifest.brokers.sql_connection import SAMSqlConnectionBroker
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib.drf.manifest.brokers.auth_token import SAMSmarterAuthTokenBroker
 from smarter.lib.manifest.broker import AbstractBroker  # BrokerNotImplemented

@@ -6,7 +6,7 @@ from typing import Any, ClassVar, Dict, Optional
 
 from pydantic import Field, field_validator
 
-from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
+from smarter.apps.plugin.manifest.models.plugin_sql.const import MANIFEST_KIND
 from smarter.apps.plugin.models import SqlConnection
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError

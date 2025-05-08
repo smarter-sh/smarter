@@ -106,7 +106,7 @@ class Migration(migrations.Migration):
                         choices=[
                             ("static", "PluginStatic"),
                             ("sql", "PluginSql"),
-                            ("api", "SqlConnection"),
+                            ("api", "PluginApi"),
                         ],
                         default="PluginMeta",
                         help_text="The class name of the plugin",

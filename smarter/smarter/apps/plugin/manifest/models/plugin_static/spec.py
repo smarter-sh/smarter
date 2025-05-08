@@ -10,15 +10,15 @@ from sqlparse.exceptions import SQLParseError
 
 from smarter.apps.chat.providers.const import VALID_CHAT_COMPLETION_MODELS
 from smarter.apps.plugin.manifest.enum import (
-    SAMPluginMetadataClass,
-    SAMPluginMetadataClassValues,
     SAMPluginSpecKeys,
     SAMPluginSpecPromptKeys,
     SAMPluginSpecSelectorKeyDirectiveValues,
     SAMPluginSpecSelectorKeys,
+    SAMPluginStaticMetadataClass,
+    SAMPluginStaticMetadataClassValues,
 )
-from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.plugin_api.model import SAMPluginApi
+from smarter.apps.plugin.manifest.models.plugin_static.const import MANIFEST_KIND
 from smarter.common.conf import SettingsDefaults
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
@@ -223,7 +223,7 @@ class SAMPluginSpecDataSql(BaseModel):
         try:
             sql_parse(v)
         except SQLParseError as e:
-            err_desc_sql_name = SAMPluginMetadataClass.SQL_DATA.value
+            err_desc_sql_name = SAMPluginStaticMetadataClass.SQL_DATA.value
             raise SAMValidationError(
                 f"Invalid SQL syntax found in {cls.class_identifier}.{err_desc_sql_name}: {v}. {e}"
             ) from e
@@ -246,7 +246,7 @@ class SAMPluginSpecData(BaseModel):
         None,
         description=(
             f"{class_identifier}.staticData[obj]: The static data returned by the {MANIFEST_KIND} when the "
-            f"class is '{SAMPluginMetadataClassValues.STATIC.value}'. LLM's are adept at understanding the context of "
+            f"class is '{SAMPluginStaticMetadataClassValues.STATIC.value}'. LLM's are adept at understanding the context of "
             "json data structures. Try to provide granular and specific data elements."
         ),
     )
@@ -254,14 +254,14 @@ class SAMPluginSpecData(BaseModel):
         None,
         description=(
             f"{class_identifier}.sqlData[obj]: The SQL connection and query to use for the {MANIFEST_KIND} return data when "
-            f"the class is '{SAMPluginMetadataClassValues.SQL.value}'"
+            f"the class is '{SAMPluginStaticMetadataClassValues.SQL.value}'"
         ),
     )
     apiData: Optional[SAMPluginApi] = Field(
         None,
         description=(
             f"{class_identifier}.apiData[obj]: The rest API connection and endpoint to use for the {MANIFEST_KIND} "
-            f"return data when the class is '{SAMPluginMetadataClassValues.API.value}'"
+            f"return data when the class is '{SAMPluginStaticMetadataClassValues.API.value}'"
         ),
     )
 
@@ -275,9 +275,9 @@ class SAMPluginSpecData(BaseModel):
         }
 
         if total_set != 1:
-            static_name = SAMPluginMetadataClass.STATIC_DATA.value
-            sql_name = SAMPluginMetadataClass.SQL_DATA.value
-            api_name = SAMPluginMetadataClass.API_DATA.value
+            static_name = SAMPluginStaticMetadataClass.STATIC_DATA.value
+            sql_name = SAMPluginStaticMetadataClass.SQL_DATA.value
+            api_name = SAMPluginStaticMetadataClass.API_DATA.value
 
             raise SAMValidationError(
                 f"One and only one of {self.class_identifier}.{static_name}, {self.class_identifier}.{sql_name}, or {self.class_identifier}.{api_name} must be provided. Received data for the following: {set_fields}"
@@ -302,6 +302,6 @@ class SAMPluginSpec(AbstractSAMSpecBase):
         ...,
         description=(
             f"{class_identifier}.data[obj]: the json data returned by the {MANIFEST_KIND}. "
-            f"This should be one of the following kinds: {SAMPluginMetadataClassValues.all_values()}"
+            f"This should be one of the following kinds: {SAMPluginStaticMetadataClassValues.all_values()}"
         ),
     )

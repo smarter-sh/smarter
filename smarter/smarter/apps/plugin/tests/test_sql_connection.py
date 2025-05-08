@@ -8,9 +8,7 @@ from pydantic_core import ValidationError
 
 from smarter.apps.account.models import Secret
 from smarter.apps.plugin.manifest.models.sql_connection.enum import DbEngines
-from smarter.apps.plugin.manifest.models.sql_connection.model import (
-    SAMSqlConnection,
-)
+from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
 from smarter.apps.plugin.models import SqlConnection
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.manifest.exceptions import SAMValidationError

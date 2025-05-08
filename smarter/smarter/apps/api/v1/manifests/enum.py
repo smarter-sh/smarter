@@ -30,14 +30,14 @@ from smarter.apps.chatbot.manifest.models.chatbot.const import (
 from smarter.apps.plugin.manifest.models.api_connection.const import (
     MANIFEST_KIND as APICONNECTION_MANIFEST_KIND,
 )
-from smarter.apps.plugin.manifest.models.plugin.const import (
-    MANIFEST_KIND as PLUGIN_MANIFEST_KIND,
-)
 from smarter.apps.plugin.manifest.models.plugin_api.const import (
     MANIFEST_KIND as PLUGIN_API_MANIFEST_KIND,
 )
 from smarter.apps.plugin.manifest.models.plugin_sql.const import (
     MANIFEST_KIND as PLUGIN_SQL_MANIFEST_KIND,
+)
+from smarter.apps.plugin.manifest.models.plugin_static.const import (
+    MANIFEST_KIND as PLUGIN_MANIFEST_KIND,
 )
 from smarter.apps.plugin.manifest.models.sql_connection.const import (
     MANIFEST_KIND as SQLCONNECTION_MANIFEST_KIND,

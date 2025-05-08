@@ -9,8 +9,8 @@ from django.http import HttpRequest
 from smarter.apps.account.manifest.enum import SAMUserSpecKeys
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
-from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
+from smarter.apps.plugin.manifest.models.plugin_static.const import MANIFEST_KIND
+from smarter.apps.plugin.manifest.models.plugin_static.model import SAMPlugin
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.django.user import UserType
 from smarter.lib.journal.enum import SmarterJournalCliCommands
