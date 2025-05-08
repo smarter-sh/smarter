@@ -16,6 +16,7 @@ from smarter.common.api import SmarterApiVersions
 from smarter.lib.manifest.exceptions import SAMValidationError
 
 from .base_classes import TestConnectionBase
+from .factories import secret_factory
 
 
 logger = getLogger(__name__)
@@ -254,3 +255,47 @@ class TestApiConnection(TestConnectionBase):
         self._loader = None
         self._model = None
         self.model
+
+    def test_django_orm(self):
+        """Test that the Django model can be initialized from the Pydantic model."""
+        self.load_manifest(filename="api-connection.yaml")
+        model_dump = self.model.spec.connection.model_dump()
+
+        model_dump["account"] = self.account
+        model_dump["name"] = self.model.metadata.name
+        model_dump["description"] = self.model.metadata.description
+
+        if self.model.spec.connection.api_key:
+            clear_api_key = model_dump.pop("api_key")
+            secret_name = f"test_secret_{self.hash_suffix}"
+            secret = secret_factory(user_profile=self.user_profile, name=secret_name, value=clear_api_key)
+            model_dump["api_key"] = secret
+
+        if self.model.spec.connection.proxy_password:
+            clear_proxy_password = model_dump.pop("proxy_password")
+            proxy_secret_name = f"test_proxy_secret_{self.hash_suffix}"
+            proxy_secret = secret_factory(
+                user_profile=self.user_profile, name=proxy_secret_name, value=clear_proxy_password
+            )
+            model_dump["proxy_password"] = proxy_secret
+
+        django_model = ApiConnection(**model_dump)
+        django_model.save()
+
+        self.assertIsNotNone(django_model)
+        self.assertEqual(django_model.account, self.account)
+        self.assertEqual(django_model.name, self.model.metadata.name)
+        self.assertEqual(django_model.base_url, self.model.spec.connection.base_url)
+        self.assertEqual(django_model.api_key.get_secret(), self.model.spec.connection.api_key)
+        self.assertEqual(django_model.auth_method, self.model.spec.connection.auth_method)
+        self.assertEqual(django_model.timeout, self.model.spec.connection.timeout)
+        self.assertEqual(django_model.proxy_protocol, self.model.spec.connection.proxy_protocol)
+        self.assertEqual(django_model.proxy_host, self.model.spec.connection.proxy_host)
+        self.assertEqual(django_model.proxy_port, self.model.spec.connection.proxy_port)
+        self.assertEqual(django_model.proxy_username, self.model.spec.connection.proxy_username)
+        self.assertEqual(django_model.proxy_password.get_secret(), self.model.spec.connection.proxy_password)
+        try:
+            django_model.delete()
+            secret.delete()
+        except (Secret.DoesNotExist, ValueError):
+            pass
