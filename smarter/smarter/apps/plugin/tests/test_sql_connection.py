@@ -461,6 +461,7 @@ class TestSqlConnection(TestConnectionBase):
             model_dump["proxy_password"] = proxy_secret
 
         django_model = SqlConnection(**model_dump)
+        django_model.save()
 
         self.assertIsNotNone(django_model)
         self.assertEqual(django_model.account, self.account)
