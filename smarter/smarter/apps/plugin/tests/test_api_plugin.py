@@ -10,11 +10,14 @@ http://localhost:8000/api/v1/tests/authenticated/list/
 
 import os
 
-from smarter.apps.plugin.manifest.controller import PluginController
+from pydantic_core import ValidationError
+
+# from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
 from smarter.apps.plugin.manifest.models.api_plugin.model import SAMApiPlugin
 from smarter.apps.plugin.models import ApiConnection
 from smarter.lib.journal.enum import SmarterJournalThings
+from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.unittest.utils import get_readonly_yaml_file
 
@@ -111,3 +114,18 @@ class TestPluginApi(TestPluginBase, ManifestTestsMixin):
         self.assertIsInstance(self.connection_manifest_path, str)
 
         self.assertEqual(self.connection_model.kind, SmarterJournalThings.API_CONNECTION.value)
+
+    def test_validate_api_connection_invalid_value(self):
+        """Test that the timeout validator raises an error for negative values."""
+        self.load_manifest(filename="api-plugin.yaml")
+
+        invalid_connection_string = "this $couldn't possibly be a valid connection name"
+        self._manifest["spec"]["connection"] = invalid_connection_string
+        self._loader = None
+        self._model = None
+        with self.assertRaises(SAMValidationError) as context:
+            print(self.model)
+        self.assertIn(
+            "Endpoint must be a valid cleanstring",
+            str(context.exception),
+        )

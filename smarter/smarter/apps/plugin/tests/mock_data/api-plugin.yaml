@@ -1,0 +1,62 @@
+---
+apiVersion: smarter.sh/v1
+kind: ApiPlugin
+metadata:
+  name: ApiTest
+  pluginClass: api
+  description: Get additional information about the admin account of the Smarter platform.
+  version: 0.1.0
+  tags:
+    - api
+    - test
+spec:
+  selector:
+    directive: always
+  prompt:
+    provider: openai
+    systemRole: >
+      You are a helpful assistant for the Smarter platform. You can provide information about the test api.
+    model: gpt-4-turbo
+    temperature: 0.0
+    maxTokens: 256
+  connection: testApiConnection
+  apiData:
+    endpoint: /api/v1/tests/unauthenticated/list/
+    parameters:
+      - name: test
+        type: string
+        description: The test to run.
+        required: true
+        default: test
+      - name: limit
+        type: integer
+        description: The maximum number of results to return.
+        required: false
+    headers:
+      - name: Authorization
+        type: string
+        description: The authorization token to use for the request.
+        required: true
+        default: Bearer testToken
+      - name: Content-Type
+        type: string
+        description: The content type of the request.
+        required: true
+        default: application/json
+    body:
+      - name: test
+        type: string
+        description: The test to run.
+        required: true
+        default: test
+      - name: test2
+        type: string
+        description: The second test to run.
+        required: false
+        default: test2
+    testValues:
+      - name: test
+        value: test
+      - name: limit
+        value: 1
+    limit: 10
