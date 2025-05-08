@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account
 from smarter.apps.plugin.manifest.controller import PluginController
-from smarter.apps.plugin.manifest.models.plugin_static.model import SAMPlugin
+from smarter.apps.plugin.manifest.models.static_plugin.model import SAMPluginStatic
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.manifest.loader import SAMLoader
 
@@ -29,7 +29,7 @@ class Command(BaseCommand):
             api_version=SmarterApiVersions.V1,
             file_path=file_path,
         )
-        manifest = SAMPlugin(**loader.pydantic_model_dump())
+        manifest = SAMPluginStatic(**loader.pydantic_model_dump())
         controller = PluginController(account=account, manifest=manifest)
         plugin = controller.obj
 

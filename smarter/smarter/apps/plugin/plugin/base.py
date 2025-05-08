@@ -27,9 +27,9 @@ from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 
 # plugin stuff
-from ..manifest.enum import SAMPluginSpecSelectorKeyDirectiveValues
-from ..manifest.models.plugin_static.const import MANIFEST_KIND
-from ..manifest.models.plugin_static.model import SAMPlugin
+from ..manifest.enum import SAMPluginCommonSpecSelectorKeyDirectiveValues
+from ..manifest.models.static_plugin.const import MANIFEST_KIND
+from ..manifest.models.static_plugin.model import SAMPluginStatic
 from ..models import PluginDataBase, PluginMeta, PluginPrompt, PluginSelector
 from ..nlp import does_refer_to
 from ..serializers import (
@@ -65,8 +65,8 @@ class PluginBase(ABC):
 
     _api_version: str = SMARTER_API_MANIFEST_DEFAULT_VERSION
     _metadata_class: str = None
-    _manifest: SAMPlugin = None
-    _pydantic_model: Type[SAMPlugin] = SAMPlugin
+    _manifest: SAMPluginStatic = None
+    _pydantic_model: Type[SAMPluginStatic] = SAMPluginStatic
 
     _plugin_meta: PluginMeta = None
     _plugin_selector: PluginSelector = None
@@ -91,7 +91,7 @@ class PluginBase(ABC):
         user_profile: UserProfile = None,
         selected: bool = False,
         api_version: str = None,
-        manifest: SAMPlugin = None,
+        manifest: SAMPluginStatic = None,
         plugin_id: int = None,
         plugin_meta: PluginMeta = None,
         data: Union[dict, str] = None,
@@ -142,7 +142,7 @@ class PluginBase(ABC):
                 kind=self.kind,
                 manifest=data,
             )
-            self._manifest = SAMPlugin(**loader.pydantic_model_dump())
+            self._manifest = SAMPluginStatic(**loader.pydantic_model_dump())
             self.create()
 
         if self.ready:
@@ -243,12 +243,12 @@ class PluginBase(ABC):
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> SAMPlugin:
+    def manifest(self) -> SAMPluginStatic:
         """Return the Pydandic model of the plugin."""
         if not self._manifest and self.ready:
             # if we don't have a manifest but we do have Django ORM data then
             # we can work backwards to the Pydantic model
-            self._manifest = SAMPlugin(**self.to_json())
+            self._manifest = SAMPluginStatic(**self.to_json())
         return self._manifest
 
     @property
@@ -486,7 +486,7 @@ class PluginBase(ABC):
         if self._selected:
             return True
 
-        if self.plugin_selector.directive == SAMPluginSpecSelectorKeyDirectiveValues.ALWAYS.value:
+        if self.plugin_selector.directive == SAMPluginCommonSpecSelectorKeyDirectiveValues.ALWAYS.value:
             self._selected = True
             return self._selected
 

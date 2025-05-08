@@ -4,7 +4,7 @@
 import os
 import unittest
 
-from smarter.apps.plugin.manifest.models.plugin_static.const import MANIFEST_KIND
+from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
 from smarter.common.const import PYTHON_ROOT
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.unittest.utils import get_readonly_yaml_file

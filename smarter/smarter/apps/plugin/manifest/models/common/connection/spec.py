@@ -5,24 +5,19 @@ import re
 from typing import ClassVar, List, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
-from sqlparse import parse as sql_parse
-from sqlparse.exceptions import SQLParseError
 
 from smarter.apps.chat.providers.const import VALID_CHAT_COMPLETION_MODELS
 from smarter.apps.plugin.manifest.enum import (
-    SAMPluginSpecKeys,
-    SAMPluginSpecPromptKeys,
-    SAMPluginSpecSelectorKeyDirectiveValues,
-    SAMPluginSpecSelectorKeys,
-    SAMPluginStaticMetadataClass,
-    SAMPluginStaticMetadataClassValues,
+    SAMPluginCommonSpecPromptKeys,
+    SAMPluginCommonSpecSelectorKeyDirectiveValues,
+    SAMPluginCommonSpecSelectorKeys,
 )
-from smarter.apps.plugin.manifest.models.api_plugin.model import SAMPluginApi
-from smarter.apps.plugin.manifest.models.plugin_static.const import MANIFEST_KIND
 from smarter.common.conf import SettingsDefaults
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMSpecBase
+
+from .const import MANIFEST_KIND
 
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
@@ -30,7 +25,7 @@ MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 8192  # this is actually the overall max token count for OpenAI chatGPT-4
 
 
-class SAMPluginSpecSelector(BaseModel):
+class SAMPluginCommonSpecSelector(BaseModel):
     """Smarter API Plugin Manifest - Spec - Selector class."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".selector"
@@ -39,14 +34,14 @@ class SAMPluginSpecSelector(BaseModel):
         ...,
         description=(
             f"{class_identifier}.directive[str]: Required. the kind of selector directive to use for the {MANIFEST_KIND}. "
-            f"Must be one of: {SAMPluginSpecSelectorKeyDirectiveValues.all_values()}"
+            f"Must be one of: {SAMPluginCommonSpecSelectorKeyDirectiveValues.all_values()}"
         ),
     )
     searchTerms: Optional[List[str]] = Field(
         None,
         description=(
             f"{class_identifier}.searchTerms[list]. Optional. The keyword search terms to use when the "
-            f"{MANIFEST_KIND} directive is '{SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS.value}'. "
+            f"{MANIFEST_KIND} directive is '{SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value}'. "
             "Keywords are most effective when constrained to 1 or 2 words "
             "each and lists are limited to a few dozen items."
         ),
@@ -54,10 +49,10 @@ class SAMPluginSpecSelector(BaseModel):
 
     @field_validator("directive")
     def validate_directive(cls, v) -> str:
-        if v not in SAMPluginSpecSelectorKeyDirectiveValues.all_values():
+        if v not in SAMPluginCommonSpecSelectorKeyDirectiveValues.all_values():
             raise SAMValidationError(
-                f"Invalid value found in {cls.class_identifier}.{SAMPluginSpecSelectorKeys.DIRECTIVE.value}: '{v}'. "
-                f"Must be one of {SAMPluginSpecSelectorKeyDirectiveValues.all_values()}. "
+                f"Invalid value found in {cls.class_identifier}.{SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value}: '{v}'. "
+                f"Must be one of {SAMPluginCommonSpecSelectorKeyDirectiveValues.all_values()}. "
                 "These values are case-sensitive and camelCase."
             )
         return v
@@ -74,18 +69,24 @@ class SAMPluginSpecSelector(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def validate_business_rules(self) -> "SAMPluginSpecSelector":
-        err_desc_searchTerms_name = SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS.value
-        directive_name = SAMPluginSpecSelectorKeys.DIRECTIVE.value
+    def validate_business_rules(self) -> "SAMPluginCommonSpecSelector":
+        err_desc_searchTerms_name = SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value
+        directive_name = SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value
 
         # 1. searchTerms is required when directive is 'searchTerms'
-        if self.directive == SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS.value and self.searchTerms is None:
+        if (
+            self.directive == SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value
+            and self.searchTerms is None
+        ):
             raise SAMValidationError(
                 f"{self.class_identifier}.{err_desc_searchTerms_name} is required when {self.class_identifier}.{directive_name} is '{err_desc_searchTerms_name}'"
             )
 
         # 2. searchTerms is not allowed when directive is 'always'
-        if self.directive != SAMPluginSpecSelectorKeyDirectiveValues.SEARCHTERMS.value and self.searchTerms is not None:
+        if (
+            self.directive != SAMPluginCommonSpecSelectorKeyDirectiveValues.SEARCHTERMS.value
+            and self.searchTerms is not None
+        ):
             raise SAMValidationError(
                 f"found {self.class_identifier}.{directive_name} of '{self.directive}' but {self.class_identifier}.{err_desc_searchTerms_name} is only used when {self.class_identifier}.{directive_name} is '{err_desc_searchTerms_name}'"
             )
@@ -93,7 +94,7 @@ class SAMPluginSpecSelector(BaseModel):
         return self
 
 
-class SAMPluginSpecPrompt(BaseModel):
+class SAMPluginCommonSpecPrompt(BaseModel):
     """Smarter API Plugin Manifest - Spec - Prompt class."""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".prompt"
@@ -153,7 +154,7 @@ class SAMPluginSpecPrompt(BaseModel):
         # FIX NOTE: This is a placeholder for the actual valid providers
         VALID_PROVIDERS = [SettingsDefaults.LLM_DEFAULT_PROVIDER]
         if v not in VALID_PROVIDERS:
-            err_desc_me_name = SAMPluginSpecPromptKeys.PROVIDER.value
+            err_desc_me_name = SAMPluginCommonSpecPromptKeys.PROVIDER.value
 
             raise SAMValidationError(
                 f"{cls.class_identifier}.{err_desc_me_name} not found in list of valid providers {VALID_PROVIDERS}"
@@ -165,7 +166,7 @@ class SAMPluginSpecPrompt(BaseModel):
     def validate_systemrole(cls, v) -> str:
         if re.match(SmarterValidator.VALID_CLEAN_STRING_WITH_SPACES, v):
             return v
-        err_desc_me_name = SAMPluginSpecPromptKeys.SYSTEMROLE.value
+        err_desc_me_name = SAMPluginCommonSpecPromptKeys.SYSTEMROLE.value
 
         if len(v) > SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH:  # replace MAX_LENGTH with your maximum length
             raise SAMValidationError(
@@ -180,128 +181,21 @@ class SAMPluginSpecPrompt(BaseModel):
             return cls.DEFAULT_MODEL
         if v in VALID_CHAT_COMPLETION_MODELS:
             return v
-        err_desc_me_name = SAMPluginSpecPromptKeys.MODEL.value
+        err_desc_me_name = SAMPluginCommonSpecPromptKeys.MODEL.value
         raise SAMValidationError(
             f"Invalid value found in {cls.err_desc_manifest_kind}.{err_desc_me_name}: '{v}'. Must be one of {VALID_CHAT_COMPLETION_MODELS}"
         )
 
 
-class SAMPluginSpecDataSql(BaseModel):
-    """Smarter API Plugin Manifest Plugin.spec.data.sqlData"""
-
-    class_identifier: ClassVar[str] = MODULE_IDENTIFIER + ".data.sqlData"
-
-    connection: str = Field(..., description=f"{class_identifier}.connection[obj]: an sql server connection")
-    parameters: Optional[dict] = Field(
-        None,
-        description=(
-            f"{class_identifier}.parameters[obj]: a dictionary of parameters to use in the SQL query. "
-            "Example: {'company_id': 'int'}"
-        ),
-    )
-    sqlQuery: str = Field(
-        ...,
-        description=f"{class_identifier}.sql[str]: a valid SQL query. Example: 'SELECT * FROM customers WHERE id = 100;'",  # nosec
-    )
-    testValues: Optional[dict] = Field(
-        None,
-        description=(
-            f"{class_identifier}.test_values[obj]: a dictionary of test values to use in the SQL query. "
-            "Example: {'company_id': 100}"
-        ),
-    )
-    limit: Optional[int] = Field(
-        None,
-        description=(
-            f"{class_identifier}.limit[int]: an optional limit to the number of rows returned by the SQL query. "
-            "Example: 100"
-        ),
-    )
-
-    @field_validator("sqlQuery")
-    def validate_sql(cls, v) -> str:
-        try:
-            sql_parse(v)
-        except SQLParseError as e:
-            err_desc_sql_name = SAMPluginStaticMetadataClass.SQL_DATA.value
-            raise SAMValidationError(
-                f"Invalid SQL syntax found in {cls.class_identifier}.{err_desc_sql_name}: {v}. {e}"
-            ) from e
-        return v
-
-
-class SAMPluginSpecData(BaseModel):
-    """Smarter API Plugin Manifest Plugin.spec.data"""
-
-    class_identifier: ClassVar[str] = f"{MODULE_IDENTIFIER}.{SAMPluginSpecKeys.DATA.value}"
-
-    description: str = Field(
-        ...,
-        description=(
-            f"{class_identifier}.description[str]: A narrative description of the {MANIFEST_KIND} features "
-            "that is provided to the LLM as part of a tool_chain dict"
-        ),
-    )
-    staticData: Optional[dict] = Field(
-        None,
-        description=(
-            f"{class_identifier}.staticData[obj]: The static data returned by the {MANIFEST_KIND} when the "
-            f"class is '{SAMPluginStaticMetadataClassValues.STATIC.value}'. LLM's are adept at understanding the context of "
-            "json data structures. Try to provide granular and specific data elements."
-        ),
-    )
-    sqlData: Optional[SAMPluginSpecDataSql] = Field(
-        None,
-        description=(
-            f"{class_identifier}.sqlData[obj]: The SQL connection and query to use for the {MANIFEST_KIND} return data when "
-            f"the class is '{SAMPluginStaticMetadataClassValues.SQL.value}'"
-        ),
-    )
-    apiData: Optional[SAMPluginApi] = Field(
-        None,
-        description=(
-            f"{class_identifier}.apiData[obj]: The rest API connection and endpoint to use for the {MANIFEST_KIND} "
-            f"return data when the class is '{SAMPluginStaticMetadataClassValues.API.value}'"
-        ),
-    )
-
-    @model_validator(mode="after")
-    def validate_business_rules(self) -> "SAMPluginSpecData":
-        total_set = bool(self.staticData) + bool(self.sqlData) + bool(self.apiData)
-        set_fields = {
-            "staticData": bool(self.staticData),
-            "sqlData": bool(self.sqlData),
-            "apiData": bool(self.apiData),
-        }
-
-        if total_set != 1:
-            static_name = SAMPluginStaticMetadataClass.STATIC_DATA.value
-            sql_name = SAMPluginStaticMetadataClass.SQL_DATA.value
-            api_name = SAMPluginStaticMetadataClass.API_DATA.value
-
-            raise SAMValidationError(
-                f"One and only one of {self.class_identifier}.{static_name}, {self.class_identifier}.{sql_name}, or {self.class_identifier}.{api_name} must be provided. Received data for the following: {set_fields}"
-            )
-
-        return self
-
-
-class SAMPluginSpec(AbstractSAMSpecBase):
+class SAMPluginCommonSpec(AbstractSAMSpecBase):
     """Smarter API Plugin Manifest Plugin.spec"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
-    selector: SAMPluginSpecSelector = Field(
+    selector: SAMPluginCommonSpecSelector = Field(
         ..., description=f"{class_identifier}.selector[obj]: the selector logic to use for the {MANIFEST_KIND}"
     )
-    prompt: SAMPluginSpecPrompt = Field(
+    prompt: SAMPluginCommonSpecPrompt = Field(
         ...,
         description=f"{class_identifier}.prompt[obj]: the LLM prompt engineering to apply to the {MANIFEST_KIND}",
-    )
-    data: SAMPluginSpecData = Field(
-        ...,
-        description=(
-            f"{class_identifier}.data[obj]: the json data returned by the {MANIFEST_KIND}. "
-            f"This should be one of the following kinds: {SAMPluginStaticMetadataClassValues.all_values()}"
-        ),
     )

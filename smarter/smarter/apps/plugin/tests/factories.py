@@ -11,7 +11,7 @@ from smarter.apps.account.utils import (
 )
 from smarter.common.exceptions import SmarterValueError
 
-from ..manifest.enum import SAMPluginStaticMetadataClassValues
+from ..manifest.enum import SAMPluginCommonMetadataClassValues
 from ..models import PluginMeta
 
 
@@ -43,9 +43,9 @@ def plugin_meta_factory(plugin_class: str, account: Account, user_profile: UserP
         user = get_cached_admin_user_for_account(account=account)
         user_profile = get_cached_user_profile(user=user)
 
-    if not plugin_class in SAMPluginStaticMetadataClassValues.all_values():
+    if not plugin_class in SAMPluginCommonMetadataClassValues.all_values():
         raise SmarterValueError(
-            f"Invalid plugin class: {plugin_class}. should be one of {SAMPluginStaticMetadataClassValues.all_values()}"
+            f"Invalid plugin class: {plugin_class}. should be one of {SAMPluginCommonMetadataClassValues.all_values()}"
         )
 
     meta_data = PluginMeta(

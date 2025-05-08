@@ -14,7 +14,7 @@ from smarter.apps.account.tests.factories import (
 )
 from smarter.apps.plugin.manifest.brokers.plugin import SAMPluginBroker
 from smarter.apps.plugin.manifest.brokers.sql_connection import SAMSqlConnectionBroker
-from smarter.apps.plugin.manifest.models.plugin_static.model import SAMPlugin
+from smarter.apps.plugin.manifest.models.sql_plugin.model import SAMSqlPlugin
 from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.manifest.broker import SAMBrokerErrorNotImplemented
 
@@ -97,7 +97,7 @@ class TestSAMPluginSql(unittest.TestCase):
         # load the yaml manifest into a SAMLoader object
         loader = SAMLoader(manifest=manifest)
         # create a pydantic model from the loader
-        pydantic_model = SAMPlugin(**loader.pydantic_model_dump())
+        pydantic_model = SAMSqlPlugin(**loader.pydantic_model_dump())
 
         # dump the pydantic model to a dictionary
         # round_trip_dict = pydantic_model.model_dump()

@@ -16,11 +16,11 @@ from ..plugin.api import PluginApi
 from ..plugin.base import PluginBase
 from ..plugin.sql import PluginSql
 from ..plugin.static import PluginStatic
-from .enum import SAMPluginStaticMetadataClassValues
+from .enum import SAMPluginCommonMetadataClassValues
 
 # plugin manifest
-from .models.plugin_static.const import MANIFEST_KIND
-from .models.plugin_static.model import SAMPlugin
+from .models.static_plugin.const import MANIFEST_KIND
+from .models.static_plugin.model import SAMPluginStatic
 
 
 class SAMPluginControllerError(SAMExceptionBase):
@@ -30,12 +30,12 @@ class SAMPluginControllerError(SAMExceptionBase):
 class PluginController(AbstractController):
     """Helper class to map to/from Pydantic manifest model, Plugin and Django ORM models."""
 
-    _manifest: SAMPlugin = None
-    _pydantic_model: Type[SAMPlugin] = SAMPlugin
+    _manifest: SAMPluginStatic = None
+    _pydantic_model: Type[SAMPluginStatic] = SAMPluginStatic
     _plugin: PluginBase = None
     _plugin_meta: PluginMeta = None
 
-    def __init__(self, account: Account, manifest: SAMPlugin = None, plugin_meta: PluginMeta = None):
+    def __init__(self, account: Account, manifest: SAMPluginStatic = None, plugin_meta: PluginMeta = None):
         super().__init__(account=account)
         if (bool(manifest) and bool(plugin_meta)) or (not bool(manifest) and not bool(plugin_meta)):
             raise SAMPluginControllerError(
@@ -55,7 +55,7 @@ class PluginController(AbstractController):
     # Abstract property implementations
     ###########################################################################
     @property
-    def manifest(self) -> SAMPlugin:
+    def manifest(self) -> SAMPluginStatic:
         return self._manifest
 
     @property
@@ -83,9 +83,9 @@ class PluginController(AbstractController):
     @property
     def map(self) -> Dict[str, Type[PluginBase]]:
         return {
-            SAMPluginStaticMetadataClassValues.API.value: PluginApi,
-            SAMPluginStaticMetadataClassValues.SQL.value: PluginSql,
-            SAMPluginStaticMetadataClassValues.STATIC.value: PluginStatic,
+            SAMPluginCommonMetadataClassValues.API.value: PluginApi,
+            SAMPluginCommonMetadataClassValues.SQL.value: PluginSql,
+            SAMPluginCommonMetadataClassValues.STATIC.value: PluginStatic,
         }
 
     @property

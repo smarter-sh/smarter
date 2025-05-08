@@ -33,14 +33,14 @@ from smarter.apps.plugin.manifest.models.api_connection.const import (
 from smarter.apps.plugin.manifest.models.api_plugin.const import (
     MANIFEST_KIND as PLUGIN_API_MANIFEST_KIND,
 )
-from smarter.apps.plugin.manifest.models.plugin_static.const import (
-    MANIFEST_KIND as PLUGIN_MANIFEST_KIND,
-)
 from smarter.apps.plugin.manifest.models.sql_connection.const import (
     MANIFEST_KIND as SQLCONNECTION_MANIFEST_KIND,
 )
 from smarter.apps.plugin.manifest.models.sql_plugin.const import (
     MANIFEST_KIND as PLUGIN_SQL_MANIFEST_KIND,
+)
+from smarter.apps.plugin.manifest.models.static_plugin.const import (
+    MANIFEST_KIND as PLUGIN_MANIFEST_KIND,
 )
 from smarter.lib.drf.manifest.models.auth_token.const import (
     MANIFEST_KIND as AUTH_TOKEN_MANIFEST_KIND,
