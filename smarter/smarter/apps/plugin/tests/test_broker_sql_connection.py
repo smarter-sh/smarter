@@ -12,12 +12,8 @@ from smarter.apps.account.tests.factories import (
     admin_user_factory,
     factory_account_teardown,
 )
-from smarter.apps.plugin.manifest.brokers.sql_connection import (
-    SAMSqlConnectionBroker,
-)
-from smarter.apps.plugin.manifest.models.sql_connection.model import (
-    SAMSqlConnection,
-)
+from smarter.apps.plugin.manifest.brokers.sql_connection import SAMSqlConnectionBroker
+from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
 from smarter.common.utils import dict_is_contained_in
 from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.manifest.broker import SAMBrokerErrorNotImplemented

@@ -11,9 +11,9 @@ from rest_framework.serializers import ModelSerializer
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.manifest.controller import PluginController
-from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
-from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
-from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
+from smarter.apps.plugin.manifest.enum import SAMPluginStaticMetadataClassValues
+from smarter.apps.plugin.manifest.models.plugin_static.const import MANIFEST_KIND
+from smarter.apps.plugin.manifest.models.plugin_static.model import SAMPlugin
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.plugin.sql import PluginSql
@@ -39,8 +39,8 @@ from smarter.lib.manifest.loader import SAMLoader
 MAX_RESULTS = 1000
 
 PluginMap: dict[str, PluginBase] = {
-    SAMPluginMetadataClassValues.STATIC.value: PluginStatic,
-    SAMPluginMetadataClassValues.SQL.value: PluginSql,
+    SAMPluginStaticMetadataClassValues.STATIC.value: PluginStatic,
+    SAMPluginStaticMetadataClassValues.SQL.value: PluginSql,
 }
 
 logger = logging.getLogger(__name__)
@@ -182,7 +182,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
     def example_manifest(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
-        plugin_class: str = self.params.get("plugin_class", SAMPluginMetadataClassValues.STATIC.value)
+        plugin_class: str = self.params.get("plugin_class", SAMPluginStaticMetadataClassValues.STATIC.value)
         try:
             Plugin = PluginMap[plugin_class]
         except KeyError as e:

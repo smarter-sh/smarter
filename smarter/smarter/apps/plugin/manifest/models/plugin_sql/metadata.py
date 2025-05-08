@@ -6,7 +6,7 @@ from typing import ClassVar, Optional
 from pydantic import Field
 
 # Plugin
-from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
+from smarter.apps.plugin.manifest.models.plugin_sql.const import MANIFEST_KIND
 from smarter.lib.manifest.models import AbstractSAMMetadataBase
 
 

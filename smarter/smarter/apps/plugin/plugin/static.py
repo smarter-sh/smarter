@@ -3,12 +3,12 @@
 import logging
 
 from smarter.apps.plugin.manifest.enum import (
-    SAMPluginMetadataClass,
-    SAMPluginMetadataClassValues,
-    SAMPluginMetadataKeys,
     SAMPluginSpecKeys,
     SAMPluginSpecPromptKeys,
     SAMPluginSpecSelectorKeys,
+    SAMPluginStaticMetadataClass,
+    SAMPluginStaticMetadataClassValues,
+    SAMPluginStaticMetadataKeys,
     SmartApiPluginSpecDataKeys,
 )
 from smarter.apps.plugin.models import PluginDataStatic
@@ -17,7 +17,7 @@ from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
-from ..manifest.models.plugin.const import MANIFEST_KIND
+from ..manifest.models.plugin_static.const import MANIFEST_KIND
 from .base import PluginBase
 
 
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 class PluginStatic(PluginBase):
     """A PLugin that returns a static json object stored in the Plugin itself."""
 
-    _metadata_class = SAMPluginMetadataClass.STATIC_DATA.value
+    _metadata_class = SAMPluginStaticMetadataClass.STATIC_DATA.value
     _plugin_data: PluginDataStatic = None
     _plugin_data_serializer: PluginStaticSerializer = None
 
@@ -93,7 +93,7 @@ class PluginStatic(PluginBase):
             SAMKeys.KIND.value: MANIFEST_KIND,
             SAMKeys.METADATA.value: {
                 SAMMetadataKeys.NAME.value: "EverlastingGobstopper",
-                SAMPluginMetadataKeys.PLUGIN_CLASS.value: SAMPluginMetadataClassValues.STATIC.value,
+                SAMPluginStaticMetadataKeys.PLUGIN_CLASS.value: SAMPluginStaticMetadataClassValues.STATIC.value,
                 SAMMetadataKeys.DESCRIPTION.value: "Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
                 SAMMetadataKeys.VERSION.value: "0.1.0",
                 SAMMetadataKeys.TAGS.value: ["candy", "treats", "chocolate", "Gobstoppers", "Willy Wonka"],

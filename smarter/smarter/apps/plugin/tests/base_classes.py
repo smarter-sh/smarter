@@ -14,7 +14,7 @@ from smarter.apps.account.tests.factories import (
     generate_hash_suffix,
     mortal_user_factory,
 )
-from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
+from smarter.apps.plugin.manifest.enum import SAMPluginStaticMetadataClassValues
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.manifest.loader import SAMLoader
@@ -141,7 +141,9 @@ class TestConnectionBase(TestBase):
         """
         super().setUpClass()
         cls.meta_data = plugin_meta_factory(
-            plugin_class=SAMPluginMetadataClassValues.SQL.value, account=cls.account, user_profile=cls.user_profile
+            plugin_class=SAMPluginStaticMetadataClassValues.SQL.value,
+            account=cls.account,
+            user_profile=cls.user_profile,
         )
 
     @classmethod

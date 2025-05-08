@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account
 from smarter.apps.plugin.manifest.controller import PluginController
-from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
+from smarter.apps.plugin.manifest.models.plugin_static.model import SAMPlugin
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.manifest.loader import SAMLoader
 

@@ -3,7 +3,7 @@
 import os
 from typing import ClassVar
 
-from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
+from smarter.apps.plugin.manifest.models.api_connection.const import MANIFEST_KIND
 from smarter.lib.manifest.models import AbstractSAMStatusBase
 
 

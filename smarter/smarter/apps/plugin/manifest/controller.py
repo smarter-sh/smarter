@@ -16,11 +16,11 @@ from ..plugin.api import PluginApi
 from ..plugin.base import PluginBase
 from ..plugin.sql import PluginSql
 from ..plugin.static import PluginStatic
-from .enum import SAMPluginMetadataClassValues
+from .enum import SAMPluginStaticMetadataClassValues
 
 # plugin manifest
-from .models.plugin.const import MANIFEST_KIND
-from .models.plugin.model import SAMPlugin
+from .models.plugin_static.const import MANIFEST_KIND
+from .models.plugin_static.model import SAMPlugin
 
 
 class SAMPluginControllerError(SAMExceptionBase):
@@ -83,9 +83,9 @@ class PluginController(AbstractController):
     @property
     def map(self) -> Dict[str, Type[PluginBase]]:
         return {
-            SAMPluginMetadataClassValues.API.value: PluginApi,
-            SAMPluginMetadataClassValues.SQL.value: PluginSql,
-            SAMPluginMetadataClassValues.STATIC.value: PluginStatic,
+            SAMPluginStaticMetadataClassValues.API.value: PluginApi,
+            SAMPluginStaticMetadataClassValues.SQL.value: PluginSql,
+            SAMPluginStaticMetadataClassValues.STATIC.value: PluginStatic,
         }
 
     @property

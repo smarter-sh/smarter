@@ -6,7 +6,7 @@ import unittest
 
 from smarter.apps.account.models import Account
 from smarter.apps.plugin.manifest.brokers.plugin import SAMPluginBroker
-from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
+from smarter.apps.plugin.manifest.models.plugin_static.const import MANIFEST_KIND
 from smarter.common.const import PYTHON_ROOT
 
 from .factories import create_generic_request

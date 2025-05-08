@@ -10,12 +10,10 @@ from smarter.apps.account.tests.factories import (
     factory_account_teardown,
 )
 from smarter.apps.plugin.manifest.controller import PluginController
-from smarter.apps.plugin.manifest.enum import SAMPluginMetadataClassValues
-from smarter.apps.plugin.manifest.models.plugin.const import MANIFEST_KIND
-from smarter.apps.plugin.manifest.models.plugin.model import SAMPlugin
-from smarter.apps.plugin.manifest.models.sql_connection.model import (
-    SAMSqlConnection,
-)
+from smarter.apps.plugin.manifest.enum import SAMPluginStaticMetadataClassValues
+from smarter.apps.plugin.manifest.models.plugin_static.const import MANIFEST_KIND
+from smarter.apps.plugin.manifest.models.plugin_static.model import SAMPlugin
+from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
 from smarter.apps.plugin.models import SqlConnection
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.manifest.loader import SAMLoader
@@ -37,7 +35,9 @@ class TestPluginDataSql(unittest.TestCase):
         # ---------------------------------------------------------------------
         self.user, self.account, self.user_profile = admin_user_factory()
         self.meta_data = plugin_meta_factory(
-            plugin_class=SAMPluginMetadataClassValues.SQL.value, account=self.account, user_profile=self.user_profile
+            plugin_class=SAMPluginStaticMetadataClassValues.SQL.value,
+            account=self.account,
+            user_profile=self.user_profile,
         )
 
         # setup an instance of SqlConnection() - a Django model
