@@ -47,6 +47,10 @@ class ApiData(SmarterBaseModel):
         default_factory=dict,
         description="A JSON dict containing test values for each parameter. Example: {'city': 'San Francisco'}",
     )
+    limit: Optional[int] = Field(
+        default=100,
+        description="The maximum number of records to return from the API. Default is 100.",
+    )
 
     @field_validator("connection")
     def validate_connection(cls, v):
@@ -97,6 +101,6 @@ class SAMApiPluginSpec(AbstractSAMSpecBase):
         description=f"{class_identifier}.selector[obj]: the name of an existing SqlConnector to use for the {MANIFEST_KIND}",
     )
 
-    api_data: ApiData = Field(
+    apiData: ApiData = Field(
         ..., description=f"{class_identifier}.selector[obj]: the ApiData to use for the {MANIFEST_KIND}"
     )

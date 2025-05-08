@@ -987,6 +987,12 @@ class PluginDataApi(PluginDataBase):
         blank=True,
         null=True,
     )
+    limit = models.IntegerField(
+        help_text="The maximum number of rows to return from the API response.",
+        validators=[MinValueValidator(0)],
+        blank=True,
+        null=True,
+    )
 
     @property
     def url(self) -> str:

@@ -10,7 +10,6 @@ from smarter.apps.account.models import Secret
 from smarter.apps.plugin.manifest.models.api_connection.enum import AuthMethods
 from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
 from smarter.apps.plugin.models import ApiConnection
-from smarter.common.api import SmarterApiVersions
 from smarter.lib.manifest.exceptions import SAMValidationError
 
 from .base_classes import TestConnectionBase
