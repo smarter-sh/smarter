@@ -13,9 +13,9 @@ import os
 from pydantic_core import ValidationError
 
 # from smarter.apps.plugin.manifest.controller import PluginController
-from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
-from smarter.apps.plugin.manifest.models.api_plugin.model import SAMApiPlugin
-from smarter.apps.plugin.models import ApiConnection
+from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
+from smarter.apps.plugin.manifest.models.sql_plugin.model import SAMSqlPlugin
+from smarter.apps.plugin.models import SqlConnection
 from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
@@ -29,21 +29,21 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 # pylint: disable=too-many-instance-attributes
-class TestApiPlugin(TestPluginBase, ManifestTestsMixin):
+class TestSqlPlugin(TestPluginBase, ManifestTestsMixin):
     """Test SAM manifest using PluginApi"""
 
-    _model: SAMApiPlugin = None
+    _model: SAMSqlPlugin = None
     connection_loader: SAMLoader
     connection_manifest_path: str = None
     connection_manifest: dict = None
-    connection_model: SAMApiConnection
-    connection_django_model: ApiConnection = None
+    connection_model: SAMSqlConnection
+    connection_django_model: SqlConnection = None
 
     @property
-    def model(self) -> SAMApiPlugin:
-        # override to create a SAMApiPlugin pydantic model from the loader
+    def model(self) -> SAMSqlPlugin:
+        # override to create a SAMSqlPlugin pydantic model from the loader
         if not self._model and self.loader:
-            self._model = SAMApiPlugin(**self.loader.pydantic_model_dump())
+            self._model = SAMSqlPlugin(**self.loader.pydantic_model_dump())
         return self._model
 
     @classmethod
@@ -51,14 +51,14 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin):
         """Set up test fixtures."""
         super().setUpClass()
 
-        # setup an instance of ApiConnection() - a Django model
+        # setup an instance of SqlConnection() - a Django model
         # ---------------------------------------------------------------------
-        # 1.) create an ApiConnection manifest
-        connection_manifest_filename = "api-connection.yaml"
+        # 1.) create an SqlConnection manifest
+        connection_manifest_filename = "sql-connection.yaml"
         connection_manifest_path = os.path.join(HERE, "mock_data", connection_manifest_filename)
         connection_manifest = get_readonly_yaml_file(connection_manifest_path)
         connection_loader = SAMLoader(manifest=connection_manifest)
-        connection_model = SAMApiConnection(**connection_loader.pydantic_model_dump())
+        connection_model = SAMSqlConnection(**connection_loader.pydantic_model_dump())
 
         # 2.) transform the manifest for a django model
         # ---------------------------------------------------------------------
@@ -67,11 +67,11 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin):
         connection_model_dump["name"] = connection_model.metadata.name
         connection_model_dump["description"] = connection_model.metadata.description
 
-        if connection_model.spec.connection.api_key:
-            clear_api_key = connection_model_dump.pop("api_key")
+        if connection_model.spec.connection.password:
+            clear_password = connection_model_dump.pop("password")
             secret_name = f"test_secret_{cls.hash_suffix}"
-            secret = secret_factory(user_profile=cls.user_profile, name=secret_name, value=clear_api_key)
-            connection_model_dump["api_key"] = secret
+            secret = secret_factory(user_profile=cls.user_profile, name=secret_name, value=clear_password)
+            connection_model_dump["password"] = secret
 
         if connection_model.spec.connection.proxy_password:
             clear_proxy_password = connection_model_dump.pop("proxy_password")
@@ -87,7 +87,7 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin):
         cls.connection_manifest_path = connection_manifest_path
         cls.connection_manifest = connection_manifest
         cls.connection_model = connection_model
-        cls.connection_django_model = ApiConnection(**connection_model_dump)
+        cls.connection_django_model = SqlConnection(**connection_model_dump)
         cls.connection_django_model.save()
 
     @classmethod
@@ -97,7 +97,7 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin):
 
         try:
             cls.connection_django_model.delete()
-        except (ApiConnection.DoesNotExist, ValueError):
+        except (SqlConnection.DoesNotExist, ValueError):
             pass
 
         cls.connection_loader = None
@@ -105,19 +105,19 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin):
         cls.connection_manifest = None
         cls.connection_model = None
 
-    def test_api_connection(self):
-        """Test the ApiConnection itself, lest we get ahead of ourselves"""
-        self.assertIsInstance(self.connection_django_model, ApiConnection)
-        self.assertIsInstance(self.connection_model, SAMApiConnection)
+    def test_sql_connection(self):
+        """Test the SqlConnection itself, lest we get ahead of ourselves"""
+        self.assertIsInstance(self.connection_django_model, SqlConnection)
+        self.assertIsInstance(self.connection_model, SAMSqlConnection)
         self.assertIsInstance(self.connection_loader, SAMLoader)
         self.assertIsInstance(self.connection_manifest, dict)
         self.assertIsInstance(self.connection_manifest_path, str)
 
-        self.assertEqual(self.connection_model.kind, SmarterJournalThings.API_CONNECTION.value)
+        self.assertEqual(self.connection_model.kind, SmarterJournalThings.SQL_CONNECTION.value)
 
     def test_validate_api_connection_invalid_value(self):
         """Test that the timeout validator raises an error for negative values."""
-        self.load_manifest(filename="api-plugin.yaml")
+        self.load_manifest(filename="sql-plugin.yaml")
 
         invalid_connection_string = "this $couldn't possibly be a valid connection name"
         self._manifest["spec"]["connection"] = invalid_connection_string
@@ -126,6 +126,6 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin):
         with self.assertRaises(SAMValidationError) as context:
             print(self.model)
         self.assertIn(
-            "Endpoint must be a valid cleanstring",
+            "connection must be a valid cleanstring with no illegal characters",
             str(context.exception),
         )

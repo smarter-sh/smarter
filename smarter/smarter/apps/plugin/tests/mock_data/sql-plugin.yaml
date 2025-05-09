@@ -1,0 +1,47 @@
+---
+apiVersion: smarter.sh/v1
+kind: SqlPlugin
+metadata:
+  name: SqlTest
+  pluginClass: sql
+  description: Query the Django User model to retrieve detailed account information about the admin account for the Smarter platform.
+  version: 0.1.0
+  tags:
+    - db
+    - sql
+    - database
+spec:
+  selector:
+    directive: searchTerms
+    searchTerms:
+      - admin
+      - Smarter platform
+      - admin account
+  prompt:
+    provider: openai
+    systemRole: >
+      You are a helpful assistant for Smarter platform. You can provide information about the admin account of the Smarter platform.
+    model: gpt-4-turbo
+    temperature: 0.0
+    maxTokens: 256
+  connection: testConnection
+  sqlData:
+    sqlQuery: >
+      SELECT * FROM auth_user WHERE username = '{username}';
+    parameters:
+      - name: username
+        type: string
+        description: The username to query.
+        required: true
+        default: admin
+      - name: limit
+        type: integer
+        description: The maximum number of results to return.
+        default: 10
+        required: false
+    testValues:
+      - name: username
+        value: admin
+      - name: limit
+        value: 10
+    limit: 10
