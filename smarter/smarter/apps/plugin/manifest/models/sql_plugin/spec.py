@@ -2,10 +2,11 @@
 
 import logging
 import os
-from typing import Any, ClassVar, Dict, List, Optional
+from enum import Enum
+from typing import Any, ClassVar, List, Optional
 
 import sqlparse
-from pydantic import Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlparse.exceptions import SQLParseError
 
 from smarter.lib.django.validators import SmarterValidator
@@ -21,6 +22,44 @@ MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 
 
+class ParameterType(str, Enum):
+    """Enum for parameter types."""
+
+    STRING = "string"
+    INTEGER = "integer"
+    FLOAT = "float"
+    BOOLEAN = "boolean"
+
+
+class Parameter(BaseModel):
+    """Parameter class for SQL Data."""
+
+    name: str = Field(..., description="The name of the parameter.")
+    type: ParameterType = Field(..., description="The data type of the parameter (e.g., string, integer).")
+    description: Optional[str] = Field(default=None, description="A description of the parameter.")
+    required: bool = Field(default=False, description="Whether the parameter is required.")
+    enum: Optional[List[str]] = Field(
+        default=None,
+        description="A list of allowed values for the parameter. Example: ['Celsius', 'Fahrenheit']",
+    )
+    default: Optional[str] = Field(None, description="The default value of the parameter, if any.")
+
+    @model_validator(mode="after")
+    def validate_enum_and_default(cls, values: dict[str, Any]) -> dict[str, Any]:
+        enum = values.get("enum")
+        default = values.get("default")
+        if enum and default and default not in enum:
+            raise ValueError(f"The default value '{default}' must be one of the allowed enum values: {enum}")
+        return values
+
+
+class TestValue(BaseModel):
+    """TestValue class for SQL Data."""
+
+    name: str = Field(..., description="The name of the parameter being tested.")
+    value: Any = Field(..., description="The test value for the parameter.")
+
+
 class SqlData(SmarterBaseModel):
     """Smarter API - generic API Connection class."""
 
@@ -28,12 +67,12 @@ class SqlData(SmarterBaseModel):
         ...,
         description="The SQL query that this plugin will execute when invoked by the user prompt.",
     )
-    parameters: Optional[List[Dict[str, Any]]] = Field(
-        default_factory=dict,
+    parameters: Optional[List[Parameter]] = Field(
+        default=None,
         description="A JSON dict containing parameter names and data types. Example: {'unit': {'type': 'string', 'enum': ['Celsius', 'Fahrenheit'], 'description': 'The temperature unit to use.'}}",
     )
-    testValues: Optional[List[Dict[str, Any]]] = Field(
-        default_factory=dict,
+    testValues: Optional[List[TestValue]] = Field(
+        default=None,
         description="A JSON dict containing test values for each parameter. Example: {'product_id': 1234}.",
     )
     limit: Optional[int] = Field(

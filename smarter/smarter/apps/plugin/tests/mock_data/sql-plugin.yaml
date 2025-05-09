@@ -37,8 +37,8 @@ spec:
       - name: limit
         type: integer
         description: The maximum number of results to return.
-        default: 10
         required: false
+        default: 10
     testValues:
       - name: username
         value: admin
