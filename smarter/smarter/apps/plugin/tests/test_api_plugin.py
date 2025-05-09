@@ -395,6 +395,30 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin):
         django_model.endpoint = "/api/v1/tests/unauthenticated/list/"
         django_model.save()
 
+        django_model.body = "definitely not valid json"
+        with self.assertRaises(SmarterValueError) as context:
+            django_model.save()
+        self.assertIn(
+            "body must be a dict or a list but got: <class 'str'>",
+            str(context.exception),
+        )
+
+        django_model.headers = "this isn't even json, let alone a valid Pydantic model"
+        with self.assertRaises(SmarterValueError) as context:
+            django_model.save()
+        self.assertIn(
+            "headers must be a list of dictionaries but got: <class 'str'>",
+            str(context.exception),
+        )
+
+        django_model.url_params = "this isn't even json, let alone a valid Pydantic model"
+        with self.assertRaises(SmarterValueError) as context:
+            django_model.save()
+        self.assertIn(
+            "url_params must be a list of dictionaries but got: <class 'str'>",
+            str(context.exception),
+        )
+
         try:
             django_model.delete()
         except (PluginDataApi.DoesNotExist, ValueError):
