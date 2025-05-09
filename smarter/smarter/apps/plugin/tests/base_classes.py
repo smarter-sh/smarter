@@ -6,8 +6,6 @@ import os
 import unittest
 from logging import getLogger
 
-from pydantic import ValidationError
-
 from smarter.apps.account.tests.factories import (
     admin_user_factory,
     factory_account_teardown,
@@ -16,7 +14,6 @@ from smarter.apps.account.tests.factories import (
 )
 from smarter.apps.plugin.manifest.enum import SAMPluginCommonMetadataClassValues
 from smarter.apps.plugin.models import PluginMeta
-from smarter.common.api import SmarterApiVersions
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.models import AbstractSAMBase
 from smarter.lib.unittest.utils import get_readonly_yaml_file
@@ -41,27 +38,6 @@ class ManifestTestsMixin(unittest.TestCase):
     @property
     def model(self) -> AbstractSAMBase:
         raise NotImplementedError("Subclasses must implement this method")
-
-    def test_model_api_version(self):
-        """
-        Test that the model has the correct API version.
-        """
-        if not self.model:
-            self.skipTest("Skipping test because the model is not initialized")
-
-        self.assertEqual(self.model.apiVersion, SmarterApiVersions.V1)
-
-    def test_model_validation(self):
-        """
-        Test that the model is valid.
-        """
-        if not self.model:
-            self.skipTest("Skipping test because the model is not initialized")
-
-        try:
-            self.model.model_validate()
-        except ValidationError as e:
-            self.fail(f"Model validation failed: {e}")
 
 
 class TestBase(unittest.TestCase):

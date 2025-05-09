@@ -12,10 +12,13 @@ import os
 
 from pydantic_core import ValidationError
 
+from smarter.apps.plugin.manifest.enum import SAMPluginCommonMetadataClassValues
+
 # from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
 from smarter.apps.plugin.manifest.models.sql_plugin.model import SAMSqlPlugin
-from smarter.apps.plugin.models import SqlConnection
+from smarter.apps.plugin.models import PluginDataSql, PluginMeta, SqlConnection
+from smarter.common.utils import camel_to_snake_dict
 from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
@@ -33,6 +36,7 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin):
     """Test SAM manifest using PluginApi"""
 
     _model: SAMSqlPlugin = None
+    plugin_meta: PluginMeta = None
     connection_loader: SAMLoader
     connection_manifest_path: str = None
     connection_manifest: dict = None
@@ -104,6 +108,15 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin):
         cls.connection_manifest_path = None
         cls.connection_manifest = None
         cls.connection_model = None
+
+    def tearDown(self):
+        """Tear down test fixtures."""
+        super().tearDown()
+
+        try:
+            self.plugin_meta.delete()
+        except (SqlConnection.DoesNotExist, AttributeError, ValueError):
+            pass
 
     def test_sql_connection(self):
         """Test the SqlConnection itself, lest we get ahead of ourselves"""
@@ -193,3 +206,51 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin):
             "Input should be a valid string [type=string_type, input_value=10, input_type=int]",
             str(context.exception),
         )
+
+    def test_django_orm(self):
+        """Test that the Django model can be initialized from the Pydantic model."""
+        self.load_manifest(filename="sql-plugin.yaml")
+
+        self.plugin_meta = PluginMeta(
+            account=self.account,
+            name=self.model.metadata.name,
+            description=self.model.metadata.description,
+            plugin_class=SAMPluginCommonMetadataClassValues.SQL.value,
+            author=self.user_profile,
+            version="1.0.0",
+        )
+        self.plugin_meta.save()
+
+        model_dump = self.model.spec.sqlData.model_dump()
+        model_dump["connection"] = self.connection_django_model
+        model_dump["plugin"] = self.plugin_meta
+        model_dump = camel_to_snake_dict(model_dump)
+
+        django_model = PluginDataSql(**model_dump)
+        django_model.save()
+
+        self.assertIsNotNone(django_model)
+        self.assertIsInstance(django_model, PluginDataSql)
+
+        self.assertEqual(django_model.plugin.account, self.account)
+        self.assertEqual(django_model.plugin.name, self.model.metadata.name)
+        self.assertEqual(django_model.plugin.description, self.model.metadata.description)
+        self.assertEqual(django_model.plugin.plugin_class, SAMPluginCommonMetadataClassValues.SQL.value)
+
+        self.assertEqual(django_model.connection, self.connection_django_model)
+
+        pydantic_parameters = [param.model_dump() for param in self.model.spec.sqlData.parameters or []]
+        django_parameters = django_model.parameters or []
+        self.assertEqual(pydantic_parameters, django_parameters)
+
+        self.assertEqual(django_model.sql_query, self.model.spec.sqlData.sqlQuery)
+        self.assertEqual(django_model.limit, self.model.spec.sqlData.limit)
+
+        pydantic_test_values = [param.model_dump() for param in self.model.spec.sqlData.testValues or []]
+        django_test_values = django_model.test_values or []
+        self.assertEqual(pydantic_test_values, django_test_values)
+
+        try:
+            django_model.delete()
+        except (PluginDataSql.DoesNotExist, ValueError):
+            pass

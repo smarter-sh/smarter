@@ -6,6 +6,21 @@ from typing import Any, List, Optional
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 
+class TestValue(BaseModel):
+    """TestValue class for SqlPlugin and ApiPlugin test values."""
+
+    name: str = Field(..., description="The name of the parameter being tested.")
+    value: Any = Field(..., description="The test value for the parameter.")
+
+    @field_validator("value")
+    def validate_value(cls, v) -> str:
+        if isinstance(v, str):
+            return v
+        if v is None:
+            return v
+        return str(v)
+
+
 class ParameterType(str, Enum):
     """Enum for parameter types."""
 
@@ -33,6 +48,14 @@ class Parameter(BaseModel):
         description="A list of allowed values for the parameter. Example: ['Celsius', 'Fahrenheit']",
     )
     default: Optional[str] = Field(None, description="The default value of the parameter, if any.")
+
+    @field_validator("default")
+    def validate_default(cls, v):
+        if v is None:
+            return v
+        if isinstance(v, str):
+            return v
+        return str(v)
 
     @model_validator(mode="after")
     def validate_enum_and_default(self):
