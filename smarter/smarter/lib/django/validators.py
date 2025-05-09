@@ -48,7 +48,7 @@ class SmarterValidator:
     )
     VALID_CLEAN_STRING = r"^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z0-9-]{1,63})*$"
     VALID_CLEAN_STRING_WITH_SPACES = r"^[\w\-\.~:\/\?#\[\]@!$&'()*+,;= %]+$"
-    VALID_URL_ENDPOINT = r"^/[a-zA-Z0-9/_-]+/$"
+    VALID_URL_ENDPOINT = r"^/[a-zA-Z0-9/_\-\{\}]+/$"  # NOTE: this allows placeholders like {id} in the url
 
     @staticmethod
     def validate_json(value: str) -> None:

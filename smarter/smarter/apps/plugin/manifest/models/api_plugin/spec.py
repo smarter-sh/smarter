@@ -2,7 +2,7 @@
 
 import logging
 import os
-from typing import ClassVar, List, Optional, Union
+from typing import Any, ClassVar, List, Optional, Union
 
 from pydantic import Field, field_validator
 
@@ -41,7 +41,7 @@ class ApiData(SmarterBaseModel):
         default=None,
         description="A list of JSON dict containing headers to be sent with the API request. Example: {'Authorization': 'Bearer <token>'}",
     )
-    body: Optional[Union[dict, list]] = Field(
+    body: Optional[Union[dict[str, Any], list[Any]]] = Field(
         default=None,
         description="Any valid JSON object containing the body of the API request, if applicable.",
     )
@@ -49,7 +49,7 @@ class ApiData(SmarterBaseModel):
         default=None,
         description="A JSON dict containing parameter names and data types. Example: {'city': {'type': 'string', 'description': 'City name'}}",
     )
-    test_values: Optional[TestValue] = Field(
+    test_values: Optional[List[TestValue]] = Field(
         default=None,
         description="A JSON dict containing test values for each parameter. Example: {'city': 'San Francisco'}",
     )
