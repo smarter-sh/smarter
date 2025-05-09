@@ -1094,6 +1094,8 @@ class PluginDataApi(PluginDataBase):
         """
         if self.body is None:
             return None
+        if not isinstance(self.body, dict) and not isinstance(self.body, list):
+            raise SmarterValueError(f"body must be a dict or a list but got: {type(self.body)}")
 
     def validate_test_values(self) -> None:
         """Validate the test values format."""
