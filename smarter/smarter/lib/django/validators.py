@@ -48,6 +48,7 @@ class SmarterValidator:
     )
     VALID_CLEAN_STRING = r"^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z0-9-]{1,63})*$"
     VALID_CLEAN_STRING_WITH_SPACES = r"^[\w\-\.~:\/\?#\[\]@!$&'()*+,;= %]+$"
+    VALID_URL_ENDPOINT = r"^/[a-zA-Z0-9/_-]+/$"
 
     @staticmethod
     def validate_json(value: str) -> None:
@@ -202,9 +203,45 @@ class SmarterValidator:
         if not re.match(SmarterValidator.VALID_CLEAN_STRING, v):
             raise SmarterValueError(f"Invalid clean string {v}")
 
+    @staticmethod
+    def validate_http_request_header_key(key: str) -> None:
+        """
+        Validate HTTP request header key format
+        HTTP header name must be ASCII and cannot contain special characters like ()<>@,;:\"/[]?={} \t
+        """
+        if not key.isascii() or not re.match(r"^[!#$%&'*+\-.^_`|~0-9a-zA-Z]+$", key):
+            raise SmarterValueError("Header name contains invalid characters or is not ASCII.")
+
+    @staticmethod
+    def validate_http_request_header_value(value: str) -> None:
+        """
+        Validate HTTP request header value format
+        HTTP header value must not contain control characters like \n or \r
+        """
+        if not re.match(r"^[\t\x20-\x7E\x80-\xFF]*$", value):
+            raise SmarterValueError("Header value contains invalid characters (e.g., control characters).")
+
     # --------------------------------------------------------------------------
     # boolean helpers
     # --------------------------------------------------------------------------
+    @staticmethod
+    def is_valid_http_request_header_key(key: str) -> bool:
+        """Check if HTTP request header key is valid"""
+        try:
+            SmarterValidator.validate_http_request_header_key(key)
+            return True
+        except SmarterValueError:
+            return False
+
+    @staticmethod
+    def is_valid_http_request_header_value(value: str) -> bool:
+        """Check if HTTP request header value is valid"""
+        try:
+            SmarterValidator.validate_http_request_header_value(value)
+            return True
+        except SmarterValueError:
+            return False
+
     @staticmethod
     def is_valid_session_key(session_key: str) -> bool:
         try:
@@ -289,9 +326,31 @@ class SmarterValidator:
         except SmarterValueError:
             return False
 
+    @staticmethod
+    def is_valid_url_endpoint(url: str) -> bool:
+        """
+        Check if the URL is valid and ends with a trailing slash.
+        example: /api/v1/tests/unauthenticated/list/
+        """
+        try:
+            SmarterValidator.validate_url_endpoint(url)
+            return True
+        except SmarterValueError:
+            return False
+
     # --------------------------------------------------------------------------
     # list helpers
     # --------------------------------------------------------------------------
+    @staticmethod
+    def validate_url_endpoint(url: str) -> None:
+        """Validate URL endpoint format"""
+        if not url.startswith("/"):
+            raise SmarterValueError(f"Invalid URL endpoint {url} should start with a leading slash")
+        if not url.endswith("/"):
+            raise SmarterValueError(f"Invalid URL endpoint {url}, should end with a trailing slash")
+        if not re.match(SmarterValidator.VALID_URL_ENDPOINT, url):
+            raise SmarterValueError("URL endpoint contains invalid characters.")
+
     @staticmethod
     def validate_list_of_account_numbers(account_numbers: list) -> None:
         """Validate list of account numbers"""

@@ -1033,12 +1033,8 @@ class PluginDataApi(PluginDataBase):
 
     def validate_endpoint(self) -> None:
         """Validate the endpoint format."""
-        if not SmarterValidator.is_valid_cleanstring(self.endpoint):
+        if not SmarterValidator.is_valid_url_endpoint(self.endpoint):
             raise SmarterValueError("Endpoint must be a valid cleanstring.")
-        if not self.endpoint.startswith("/"):
-            raise SmarterValueError("Endpoint must start with a '/'.")
-        if not self.endpoint.endswith("/"):
-            self.endpoint += "/"
 
     def validate_url_params(self) -> None:
         """Validate the URL parameters format."""

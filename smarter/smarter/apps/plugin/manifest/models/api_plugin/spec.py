@@ -59,13 +59,8 @@ class ApiData(SmarterBaseModel):
 
     @field_validator("endpoint")
     def validate_endpoint(cls, v):
-        if not SmarterValidator.is_valid_cleanstring(v):
+        if not SmarterValidator.is_valid_url_endpoint(v):
             raise SAMValidationError("Endpoint must be a valid cleanstring.")
-        v = str(v)
-        if not v.startswith("/"):
-            raise SAMValidationError("Endpoint must start with a '/'.")
-        if not v.endswith("/"):
-            v += "/"
         return v
 
 
