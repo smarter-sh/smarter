@@ -29,7 +29,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 # pylint: disable=too-many-instance-attributes
-class TestPluginApi(TestPluginBase, ManifestTestsMixin):
+class TestApiPlugin(TestPluginBase, ManifestTestsMixin):
     """Test SAM manifest using PluginApi"""
 
     _model: SAMApiPlugin = None

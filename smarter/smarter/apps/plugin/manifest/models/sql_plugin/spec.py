@@ -2,11 +2,10 @@
 
 import logging
 import os
-from typing import Any, ClassVar, Dict, Optional
+from typing import Any, ClassVar, Dict, List, Optional
 
 from pydantic import Field, field_validator
 
-from smarter.apps.plugin.models import SqlConnection
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBaseModel
@@ -23,24 +22,15 @@ SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 class SqlData(SmarterBaseModel):
     """Smarter API - generic API Connection class."""
 
-    name: str = Field(
-        ...,
-        max_length=255,
-        description="The name of the SQL connection, camelCase, without spaces. Example: 'HRDatabase', 'SalesDatabase', 'InventoryDatabase'.",
-    )
-    connection: SqlConnection = Field(
-        ...,
-        description="The API connection associated with this plugin.",
-    )
-    parameters: Optional[Dict[str, Any]] = Field(
-        default_factory=dict,
-        description="A JSON dict containing parameter names and data types. Example: {'unit': {'type': 'string', 'enum': ['Celsius', 'Fahrenheit'], 'description': 'The temperature unit to use.'}}",
-    )
-    sql_query: str = Field(
+    sqlQuery: str = Field(
         ...,
         description="The SQL query that this plugin will execute when invoked by the user prompt.",
     )
-    test_values: Optional[Dict[str, Any]] = Field(
+    parameters: Optional[List[Dict[str, Any]]] = Field(
+        default_factory=dict,
+        description="A JSON dict containing parameter names and data types. Example: {'unit': {'type': 'string', 'enum': ['Celsius', 'Fahrenheit'], 'description': 'The temperature unit to use.'}}",
+    )
+    testValues: Optional[List[Dict[str, Any]]] = Field(
         default_factory=dict,
         description="A JSON dict containing test values for each parameter. Example: {'product_id': 1234}.",
     )
@@ -48,38 +38,6 @@ class SqlData(SmarterBaseModel):
         default=100,
         description="The maximum number of rows to return from the query. Must be a non-negative integer.",
     )
-
-    @field_validator("name")
-    def validate_name(cls, v):
-        if not SmarterValidator.is_valid_cleanstring(v):
-            raise SAMValidationError("Name must be a valid cleanstring.")
-        if " " in v:
-            raise SAMValidationError("Name must not contain spaces.")
-        return v
-
-    @field_validator("connection")
-    def validate_connection(cls, v):
-        if not isinstance(v, SqlConnection):
-            raise SAMValidationError("Connection must be a valid SqlConnection instance.")
-        return v
-
-    @field_validator("parameters")
-    def validate_parameters(cls, v):
-        if not SmarterValidator.is_valid_json(v):
-            raise SAMValidationError("Parameters must be a valid JSON object.")
-        return v
-
-    @field_validator("test_values")
-    def validate_test_values(cls, v):
-        if not SmarterValidator.is_valid_json(v):
-            raise SAMValidationError("Test values must be a valid JSON object.")
-        return v
-
-    @field_validator("sql_query")
-    def validate_sql_query(cls, v):
-        if not v.strip():
-            raise SAMValidationError("SQL query cannot be empty.")
-        return v
 
     @field_validator("limit")
     def validate_limit(cls, v):
@@ -100,6 +58,12 @@ class SAMSqlPluginSpec(AbstractSAMSpecBase):
         description=f"{class_identifier}.selector[obj]: the name of an existing SqlConnector to use for the {MANIFEST_KIND}",
     )
 
-    sql_data: SqlData = Field(
+    sqlData: SqlData = Field(
         ..., description=f"{class_identifier}.selector[obj]: the SqlData to use for the {MANIFEST_KIND}"
     )
+
+    @field_validator("connection")
+    def validate_limit(cls, v):
+        if not SmarterValidator.is_valid_cleanstring(v):
+            raise SAMValidationError("connection must be a valid cleanstring with no illegal characters.")
+        return v
