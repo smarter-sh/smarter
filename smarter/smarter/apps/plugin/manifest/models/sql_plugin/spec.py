@@ -2,13 +2,11 @@
 
 import logging
 import os
-from enum import Enum
 from typing import Any, ClassVar, List, Optional
 
-import sqlparse
-from pydantic import BaseModel, Field, field_validator, model_validator
-from sqlparse.exceptions import SQLParseError
+from pydantic import BaseModel, Field, field_validator
 
+from smarter.apps.plugin.manifest.models.common import Parameter
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBaseModel
@@ -20,37 +18,6 @@ logger = logging.getLogger(__name__)
 filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
-
-
-class ParameterType(str, Enum):
-    """Enum for parameter types."""
-
-    STRING = "string"
-    INTEGER = "integer"
-    FLOAT = "float"
-    BOOLEAN = "boolean"
-
-
-class Parameter(BaseModel):
-    """Parameter class for SQL Data."""
-
-    name: str = Field(..., description="The name of the parameter.")
-    type: ParameterType = Field(..., description="The data type of the parameter (e.g., string, integer).")
-    description: Optional[str] = Field(default=None, description="A description of the parameter.")
-    required: bool = Field(default=False, description="Whether the parameter is required.")
-    enum: Optional[List[str]] = Field(
-        default=None,
-        description="A list of allowed values for the parameter. Example: ['Celsius', 'Fahrenheit']",
-    )
-    default: Optional[str] = Field(None, description="The default value of the parameter, if any.")
-
-    @model_validator(mode="after")
-    def validate_enum_and_default(cls, values: dict[str, Any]) -> dict[str, Any]:
-        enum = values.get("enum")
-        default = values.get("default")
-        if enum and default and default not in enum:
-            raise ValueError(f"The default value '{default}' must be one of the allowed enum values: {enum}")
-        return values
 
 
 class TestValue(BaseModel):
@@ -77,28 +44,9 @@ class SqlData(SmarterBaseModel):
     )
     limit: Optional[int] = Field(
         default=100,
+        gt=0,
         description="The maximum number of rows to return from the query. Must be a non-negative integer.",
     )
-
-    @field_validator("sqlQuery")
-    def validate_sql_query(cls, v):
-        if not v:
-            raise SAMValidationError("sqlQuery must be a non-empty string.")
-        if not isinstance(v, str):
-            raise SAMValidationError("sqlQuery must be a string.")
-        try:
-            sqlparse.parse(v)
-        except SQLParseError as e:
-            raise SAMValidationError(f"sqlQuery is not valid ANSI SQL: {e}") from e
-        return v
-
-    @field_validator("limit")
-    def validate_limit(cls, v):
-        if not v:
-            return 100
-        if not isinstance(v, int) or v < 0:
-            raise SAMValidationError("Limit must be a non-negative integer.")
-        return v
 
 
 class SAMSqlPluginSpec(AbstractSAMSpecBase):

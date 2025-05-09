@@ -134,19 +134,15 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin):
         """Test that the sqlQuery validator raises an error for invalid SQL syntax."""
         self.load_manifest(filename="sql-plugin.yaml")
 
-        invalid_sql_query = "SELECT * xFROMx auth_user WHERE username = ;"
-        self._manifest["spec"]["sqlData"] = {
-            "sqlQuery": invalid_sql_query,
-            "parameters": [
-                {"name": "username", "type": "string", "description": "The username to query.", "required": True},
-            ],
-        }
+        invalid_sql_query = None
+        self._manifest["spec"]["sqlData"]["sqlQuery"] = invalid_sql_query
         self._loader = None
         self._model = None
-        with self.assertRaises(SAMValidationError) as context:
+        with self.assertRaises(ValidationError) as context:
+            # spec.sqlData.sqlQuery
             print(self.model)
         self.assertIn(
-            "sqlQuery must be a valid SQL statement",
+            "Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]",
             str(context.exception),
         )
 
@@ -155,18 +151,21 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin):
         self.load_manifest(filename="sql-plugin.yaml")
 
         invalid_parameters = [
-            {"name": "username", "type": "invalid_type", "description": "The username to query.", "required": True},
+            {
+                "name": "limit",
+                "description": "The maximum number of results to return.",
+            },
         ]
-        self._manifest["spec"]["sqlData"] = {
-            "sqlQuery": "SELECT * FROM auth_user WHERE username = '{username}';",
-            "parameters": invalid_parameters,
-        }
+
+        self._manifest["spec"]["sqlData"]["parameters"] = invalid_parameters
         self._loader = None
         self._model = None
-        with self.assertRaises(SAMValidationError) as context:
+        with self.assertRaises(ValidationError) as context:
+            # spec.sqlData.parameters.0.type
+            #   Field required [type=missing, input_value={'name': 'limit', 'descri... of results to return.'}, input_type=dict]
             print(self.model)
         self.assertIn(
-            "parameters must have valid types (e.g., string, integer)",
+            "Field required [type=missing, input_value={'name': 'limit'",
             str(context.exception),
         )
 
@@ -178,7 +177,7 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin):
             "sqlQuery": "SELECT * FROM auth_user WHERE username = '{username}';",
             "parameters": [
                 {
-                    "name": "limit",
+                    "name": "bad_parameter",
                     "type": "integer",
                     "description": "The maximum number of results to return.",
                     "default": 10,
@@ -187,9 +186,10 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin):
         }
         self._loader = None
         self._model = None
-        with self.assertRaises(SAMValidationError) as context:
+        with self.assertRaises(ValidationError) as context:
+            # spec.sqlData.parameters.0.default
             print(self.model)
         self.assertIn(
-            "Missing required parameter: username",
+            "Input should be a valid string [type=string_type, input_value=10, input_type=int]",
             str(context.exception),
         )

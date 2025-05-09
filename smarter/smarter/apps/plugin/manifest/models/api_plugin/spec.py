@@ -2,11 +2,12 @@
 
 import logging
 import os
-from typing import ClassVar, Optional
+from typing import ClassVar, List, Optional
 
 from pydantic import Field, field_validator
 
 from smarter.apps.plugin.manifest.models.api_plugin.const import MANIFEST_KIND
+from smarter.apps.plugin.manifest.models.common import Parameter
 from smarter.apps.plugin.models import ApiConnection
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
@@ -31,7 +32,7 @@ class ApiData(SmarterBaseModel):
         max_length=255,
         description="The endpoint path for the API. Example: '/v1/weather'.",
     )
-    parameters: Optional[dict] = Field(
+    parameters: Optional[List[Parameter]] = Field(
         default_factory=dict,
         description="A JSON dict containing parameter names and data types. Example: {'city': {'type': 'string', 'description': 'City name'}}",
     )
