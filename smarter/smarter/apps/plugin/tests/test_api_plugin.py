@@ -105,7 +105,7 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin):
         cls.connection_manifest = None
         cls.connection_model = None
 
-    def test_api_connection(self):
+    def test_connection(self):
         """Test the ApiConnection itself, lest we get ahead of ourselves"""
         self.assertIsInstance(self.connection_django_model, ApiConnection)
         self.assertIsInstance(self.connection_model, SAMApiConnection)
@@ -115,7 +115,13 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin):
 
         self.assertEqual(self.connection_model.kind, SmarterJournalThings.API_CONNECTION.value)
 
-    def test_validate_api_connection_invalid_value(self):
+    def test_valid_api_plugin(self):
+        """Test that the timeout validator raises an error for negative values."""
+        self.load_manifest(filename="api-plugin.yaml")
+        # pylint: disable=W0104
+        self.model
+
+    def test_validate_connection_invalid_value(self):
         """Test that the timeout validator raises an error for negative values."""
         self.load_manifest(filename="api-plugin.yaml")
 
@@ -127,5 +133,114 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin):
             print(self.model)
         self.assertIn(
             "Endpoint must be a valid cleanstring",
+            str(context.exception),
+        )
+
+    def test_validate_connection_invalid_type(self):
+        """Test that the timeout validator raises an error for negative values."""
+        self.load_manifest(filename="api-plugin.yaml")
+
+        invalid_connection_string = 1234567890
+        self._manifest["spec"]["connection"] = invalid_connection_string
+        self._loader = None
+        self._model = None
+        with self.assertRaises(SAMValidationError) as context:
+            print(self.model)
+        self.assertIn(
+            "Endpoint must be a valid cleanstring",
+            str(context.exception),
+        )
+
+    def test_validate_endpoint_invalid(self):
+        """Test that the timeout validator raises an error for negative values."""
+        self.load_manifest(filename="api-plugin.yaml")
+
+        invalid_endpoint = "not a good endpoint"
+        self._manifest["spec"]["endpoint"] = invalid_endpoint
+        self._loader = None
+        self._model = None
+        with self.assertRaises(SAMValidationError) as context:
+            print(self.model)
+        self.assertIn(
+            "Endpoint must be a valid cleanstring",
+            str(context.exception),
+        )
+
+    def test_validate_endpoint_invalid_type(self):
+        """Test that the timeout validator raises an error for negative values."""
+        self.load_manifest(filename="api-plugin.yaml")
+
+        invalid_endpoint = 1234567890
+        self._manifest["spec"]["endpoint"] = invalid_endpoint
+        self._loader = None
+        self._model = None
+        with self.assertRaises(SAMValidationError) as context:
+            print(self.model)
+        self.assertIn(
+            "Endpoint must be a valid cleanstring",
+            str(context.exception),
+        )
+
+    def test_validate_parameters_invalid(self):
+        """Test that the timeout validator raises an error for negative values."""
+        self.load_manifest(filename="api-plugin.yaml")
+
+        invalid_parameters = [
+            {
+                "name": "limit",
+                "description": "The maximum number of results to return.",
+            },
+        ]
+
+        self._manifest["spec"]["apiData"]["parameters"] = invalid_parameters
+        self._loader = None
+        self._model = None
+        with self.assertRaises(ValidationError) as context:
+            # spec.apiData.parameters.0.type
+            #   Field required [type=missing, input_value={'name': 'limit', 'descri... of results to return.'}, input_type=dict]
+            print(self.model)
+        self.assertIn(
+            "Field required [type=missing, input_value={'name': 'limit'",
+            str(context.exception),
+        )
+
+    def test_validate_headers_invalid(self):
+        """Test that the timeout validator raises an error for negative values."""
+        self.load_manifest(filename="api-plugin.yaml")
+
+        invalid_headers = [
+            {
+                "name": "Authorization",
+                "wrong_key": "The authorization header.",
+            },
+        ]
+
+        self._manifest["spec"]["apiData"]["headers"] = invalid_headers
+        self._loader = None
+        self._model = None
+        with self.assertRaises(ValidationError) as context:
+            # spec.apiData.headers.0.type
+            #   Field required [type=missing, input_value={'name': 'Authorization', 'descri... of results to return.'}, input_type=dict]
+            print(self.model)
+        self.assertIn(
+            "Field required [type=missing, input_value={'name': 'Authorization'",
+            str(context.exception),
+        )
+
+    def test_validate_body_invalid(self):
+        """Test that the timeout validator raises an error for negative values."""
+        self.load_manifest(filename="api-plugin.yaml")
+
+        invalid_body = "not valid json"
+
+        self._manifest["spec"]["apiData"]["body"] = invalid_body
+        self._loader = None
+        self._model = None
+        with self.assertRaises(ValidationError) as context:
+            # spec.apiData.body.0.type
+            #   Field required [type=missing, input_value={'name': 'Authorization', 'descri... of results to return.'}, input_type=dict]
+            print(self.model)
+        self.assertIn(
+            "Field required [type=missing, input_value={'name': 'Authorization'",
             str(context.exception),
         )
