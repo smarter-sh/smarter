@@ -129,3 +129,67 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin):
             "connection must be a valid cleanstring with no illegal characters",
             str(context.exception),
         )
+
+    def test_validate_api_sql_query_invalid_value(self):
+        """Test that the sqlQuery validator raises an error for invalid SQL syntax."""
+        self.load_manifest(filename="sql-plugin.yaml")
+
+        invalid_sql_query = "SELECT * xFROMx auth_user WHERE username = ;"
+        self._manifest["spec"]["sqlData"] = {
+            "sqlQuery": invalid_sql_query,
+            "parameters": [
+                {"name": "username", "type": "string", "description": "The username to query.", "required": True},
+            ],
+        }
+        self._loader = None
+        self._model = None
+        with self.assertRaises(SAMValidationError) as context:
+            print(self.model)
+        self.assertIn(
+            "sqlQuery must be a valid SQL statement",
+            str(context.exception),
+        )
+
+    def test_validate_api_sql_parameters_invalid_type(self):
+        """Test that the parameters validator raises an error for invalid parameter types."""
+        self.load_manifest(filename="sql-plugin.yaml")
+
+        invalid_parameters = [
+            {"name": "username", "type": "invalid_type", "description": "The username to query.", "required": True},
+        ]
+        self._manifest["spec"]["sqlData"] = {
+            "sqlQuery": "SELECT * FROM auth_user WHERE username = '{username}';",
+            "parameters": invalid_parameters,
+        }
+        self._loader = None
+        self._model = None
+        with self.assertRaises(SAMValidationError) as context:
+            print(self.model)
+        self.assertIn(
+            "parameters must have valid types (e.g., string, integer)",
+            str(context.exception),
+        )
+
+    def test_validate_api_sql_parameters_missing_required(self):
+        """Test that the parameters validator raises an error for missing required parameters."""
+        self.load_manifest(filename="sql-plugin.yaml")
+
+        self._manifest["spec"]["sqlData"] = {
+            "sqlQuery": "SELECT * FROM auth_user WHERE username = '{username}';",
+            "parameters": [
+                {
+                    "name": "limit",
+                    "type": "integer",
+                    "description": "The maximum number of results to return.",
+                    "default": 10,
+                },
+            ],
+        }
+        self._loader = None
+        self._model = None
+        with self.assertRaises(SAMValidationError) as context:
+            print(self.model)
+        self.assertIn(
+            "Missing required parameter: username",
+            str(context.exception),
+        )

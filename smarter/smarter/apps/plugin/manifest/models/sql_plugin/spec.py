@@ -4,7 +4,9 @@ import logging
 import os
 from typing import Any, ClassVar, Dict, List, Optional
 
+import sqlparse
 from pydantic import Field, field_validator
+from sqlparse.exceptions import SQLParseError
 
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
@@ -38,6 +40,18 @@ class SqlData(SmarterBaseModel):
         default=100,
         description="The maximum number of rows to return from the query. Must be a non-negative integer.",
     )
+
+    @field_validator("sqlQuery")
+    def validate_sql_query(cls, v):
+        if not v:
+            raise SAMValidationError("sqlQuery must be a non-empty string.")
+        if not isinstance(v, str):
+            raise SAMValidationError("sqlQuery must be a string.")
+        try:
+            sqlparse.parse(v)
+        except SQLParseError as e:
+            raise SAMValidationError(f"sqlQuery is not valid ANSI SQL: {e}") from e
+        return v
 
     @field_validator("limit")
     def validate_limit(cls, v):
