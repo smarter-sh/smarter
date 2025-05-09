@@ -5,6 +5,54 @@ from typing import Any, List, Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from smarter.lib.django.validators import SmarterValidator
+
+
+class UrlParam(BaseModel):
+    """
+    Model for storing url param k-v pairs.
+    """
+
+    key: str = Field(..., description="The key (ie 'name') of the url param.")
+    value: str = Field(..., description="The value for the key.")
+
+    @field_validator("key")
+    def validate_name(cls, v):
+        v = str(v)
+        if not SmarterValidator.is_valid_cleanstring(v):
+            raise ValueError("Key must be a valid cleanstring.")
+        return v
+
+    @field_validator("value")
+    def validate_value(cls, v):
+        v = str(v)
+        if not SmarterValidator.is_valid_cleanstring(v):
+            raise ValueError("Value must be a valid cleanstring.")
+        return v
+
+
+class RequestHeader(BaseModel):
+    """
+    Model for storing HTTP request headers.
+    """
+
+    name: str = Field(..., description="The name of the HTTP header.")
+    value: str = Field(..., description="The value of the HTTP header.")
+
+    @field_validator("name")
+    def validate_name(cls, v):
+        v = str(v)
+        if not SmarterValidator.is_valid_cleanstring(v):
+            raise ValueError("Name must be a valid cleanstring.")
+        return v
+
+    @field_validator("value")
+    def validate_value(cls, v):
+        v = str(v)
+        if not SmarterValidator.is_valid_cleanstring(v):
+            raise ValueError("Value must be a valid cleanstring.")
+        return v
+
 
 class TestValue(BaseModel):
     """TestValue class for SqlPlugin and ApiPlugin test values."""

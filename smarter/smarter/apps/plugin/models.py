@@ -35,11 +35,12 @@ from smarter.apps.account.models import Account, Secret, UserProfile
 from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.model_helpers import TimestampedModel
+from smarter.lib.django.validators import SmarterValidator
 
 from .manifest.enum import SAMPluginCommonMetadataClassValues
 
 # plugin stuff
-from .manifest.models.common import Parameter, TestValue
+from .manifest.models.common import Parameter, RequestHeader, TestValue, UrlParam
 from .manifest.models.sql_connection.enum import DbEngines
 
 
@@ -628,6 +629,7 @@ class SqlConnection(TimestampedModel):
         return f"{self.db_engine}://{self.username}@{self.hostname}:{self.port}/{self.database}"
 
     def validate(self) -> bool:
+        super().validate()
         return isinstance(self.connect(), BaseDatabaseWrapper)
 
     def __str__(self) -> str:
@@ -778,6 +780,7 @@ class PluginDataSql(PluginDataBase):
                 raise SmarterValueError(f"Placeholder '{placeholder}' is not defined in parameters.")
 
     def validate(self) -> bool:
+        super().validate()
         self.validate_parameters()
         self.validate_test_values()
         self.validate_all_parameters_in_test_values()
@@ -926,6 +929,7 @@ class ApiConnection(TimestampedModel):
 
     def validate(self) -> bool:
         """Validate the API connection."""
+        super().validate()
         return self.test_connection()
 
     def __str__(self) -> str:
@@ -949,27 +953,28 @@ class PluginDataApi(PluginDataBase):
         max_length=255,
         help_text="The endpoint path for the API. Example: '/v1/weather'.",
     )
+    url_params = models.JSONField(
+        help_text="A JSON dict containing URL parameters. Example: {'city': 'San Francisco', 'state': 'CA'}",
+        blank=True,
+        null=True,
+    )
     parameters = models.JSONField(
         help_text="A JSON dict containing parameter names and data types. Example: {'city': {'type': 'string', 'description': 'City name'}}",
-        default=dict,
         blank=True,
         null=True,
     )
     headers = models.JSONField(
         help_text="A JSON dict containing headers to be sent with the API request. Example: {'Authorization': 'Bearer <token>'}",
-        default=dict,
         blank=True,
         null=True,
     )
     body = models.JSONField(
         help_text="A JSON dict containing the body of the API request, if applicable.",
-        default=dict,
         blank=True,
         null=True,
     )
     test_values = models.JSONField(
         help_text="A JSON dict containing test values for each parameter. Example: {'city': 'San Francisco'}",
-        default=dict,
         blank=True,
         null=True,
     )
@@ -1025,6 +1030,125 @@ class PluginDataApi(PluginDataBase):
         """Return a dict by executing the API request with the provided params."""
         logger.info("{self.__class__.__name__}.sanitized_return_data called. - %s", params)
         return self.execute_request(params)
+
+    def validate_endpoint(self) -> None:
+        """Validate the endpoint format."""
+        if not SmarterValidator.is_valid_cleanstring(self.endpoint):
+            raise SmarterValueError("Endpoint must be a valid cleanstring.")
+        if not self.endpoint.startswith("/"):
+            raise SmarterValueError("Endpoint must start with a '/'.")
+        if not self.endpoint.endswith("/"):
+            self.endpoint += "/"
+
+    def validate_url_params(self) -> None:
+        """Validate the URL parameters format."""
+        if self.url_params is None:
+            return None
+        if not isinstance(self.url_params, list):
+            raise SmarterValueError(f"url_params must be a list of dictionaries but got: {type(self.url_params)}")
+
+        # pylint: disable=E1133
+        for url_param in self.url_params:
+            try:
+                # pylint: disable=E1134
+                UrlParam(**url_param)
+            except (ValidationError, SmarterValueError) as e:
+                raise SmarterValueError(
+                    f"Invalid url_param structure. Should match the Pydantic model structure, UrlParam: {e}"
+                ) from e
+
+    def validate_parameters(self) -> None:
+        """Validate the parameters format."""
+        if self.parameters is None:
+            return None
+        if not isinstance(self.parameters, list):
+            raise SmarterValueError(f"parameters must be a list of dictionaries but got: {type(self.parameters)}")
+
+        # pylint: disable=E1133
+        for param_dict in self.parameters:
+            try:
+                # pylint: disable=E1134
+                Parameter(**param_dict)
+            except (ValidationError, SmarterValueError) as e:
+                raise SmarterValueError(
+                    f"Invalid parameter structure. Should match the Pydantic model structure, Parameter {e}"
+                ) from e
+
+    def validate_headers(self) -> None:
+        """Validate the headers format."""
+        if self.headers is None:
+            return None
+        if not isinstance(self.headers, list):
+            raise SmarterValueError(f"headers must be a list of dictionaries but got: {type(self.headers)}")
+
+        # pylint: disable=E1133
+        for header_dict in self.headers:
+            try:
+                # pylint: disable=E1134
+                RequestHeader(**header_dict)
+            except (ValidationError, SmarterValueError) as e:
+                raise SmarterValueError(
+                    f"Invalid header structure. Should match the Pydantic model structure, RequestHeader {e}"
+                ) from e
+
+    def validate_body(self) -> None:
+        """
+        Validate the body format. Currently nothing to do here.
+        """
+        if self.body is None:
+            return None
+
+    def validate_test_values(self) -> None:
+        """Validate the test values format."""
+        if self.test_values is None:
+            return None
+        if not isinstance(self.test_values, list):
+            raise SmarterValueError(f"test_values must be a list of dictionaries but got: {type(self.test_values)}")
+
+        # pylint: disable=E1133
+        for test_value in self.test_values:
+            try:
+                # pylint: disable=E1134
+                TestValue(**test_value)
+            except (ValidationError, SmarterValueError) as e:
+                raise SmarterValueError(
+                    f"Invalid test value structure. Should match the Pydantic model structure, TestValue {e}"
+                ) from e
+
+    def validate_all_parameters_in_test_values(self) -> None:
+        """
+        Validate if all parameters are present in the test values.
+        """
+        if self.parameters is None or self.test_values is None:
+            return None
+
+        # pylint: disable=E1133
+        for param_dict in self.parameters:
+            param_name = param_dict.get("name")
+            if not any(test_value.get("name") == param_name for test_value in self.test_values):
+                raise SmarterValueError(f"Test value for parameter '{param_name}' is missing.")
+
+    def validate_all_placeholders_in_parameters(self) -> None:
+        """
+        Validate that all placeholders in the SQL query string are present in the parameters.
+        """
+        placeholders = re.findall(r"{(.*?)}", self.endpoint)
+        for placeholder in placeholders:
+            # pylint: disable=E1133
+            if self.parameters is None or not any(param.get("name") == placeholder for param in self.parameters):
+                raise SmarterValueError(f"Placeholder '{placeholder}' is not defined in parameters.")
+
+    def validate(self) -> bool:
+        super().validate()
+        self.validate_endpoint()
+        self.validate_url_params()
+        self.validate_parameters()
+        self.validate_headers()
+        self.validate_body()
+        self.validate_test_values()
+        self.validate_all_parameters_in_test_values()
+        self.validate_all_placeholders_in_parameters()
+        return True
 
     def save(self, *args, **kwargs):
         """Override the save method to validate the field dicts."""
