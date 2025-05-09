@@ -18,6 +18,7 @@ from smarter.apps.plugin.manifest.enum import SAMPluginCommonMetadataClassValues
 from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
 from smarter.apps.plugin.manifest.models.sql_plugin.model import SAMSqlPlugin
 from smarter.apps.plugin.models import PluginDataSql, PluginMeta, SqlConnection
+from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import camel_to_snake_dict
 from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.manifest.exceptions import SAMValidationError
@@ -249,6 +250,97 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin):
         pydantic_test_values = [param.model_dump() for param in self.model.spec.sqlData.testValues or []]
         django_test_values = django_model.test_values or []
         self.assertEqual(pydantic_test_values, django_test_values)
+
+        # try some invalid values
+        # ---------------------------------------------------------------------
+        django_model.parameters = "this isn't even json, let alone a valid Pydantic model"
+        with self.assertRaises(SmarterValueError) as context:
+            django_model.save()
+        self.assertIn(
+            "parameters must be a list of dictionaries but got: <class 'str'>",
+            str(context.exception),
+        )
+
+        # this should work
+        django_model.parameters = [
+            {
+                "name": "username",
+                "type": "string",
+                "description": "The username to query.",
+                "required": True,
+                "default": "admin",
+            }
+        ]
+        django_model.save()
+
+        django_model.parameters = [
+            {
+                # "name": "username",
+                "type": "string",
+                "description": "The username to query.",
+                "required": True,
+                "default": "admin",
+            }
+        ]
+        with self.assertRaises(SmarterValueError) as context:
+            django_model.save()
+        self.assertIn(
+            "Invalid parameter structure",
+            str(context.exception),
+        )
+        self.assertIn(
+            "Field required [type=missing, input_value",
+            str(context.exception),
+        )
+
+        # this works.
+        # FIX NOTE: TO DISCUSS.
+        django_model.parameters = [
+            {
+                "name": "username",
+                "type": "string",
+                "description": "The username to query.",
+                "required": True,
+                "default": "admin",
+                "well": "how did i get here?",  # not part of the Pydantic model
+            }
+        ]
+        django_model.save()
+
+        django_model.parameters = [
+            {
+                "name": "username",
+                "type": "string",
+                "description": "The username to query.",
+                "required": True,
+                "default": "admin",
+            }
+        ]
+        django_model.test_values = [
+            {
+                "name": "not_the_username",
+                "value": "blah",
+            }
+        ]
+        with self.assertRaises(SmarterValueError) as context:
+            django_model.save()
+        self.assertIn(
+            "Test value for parameter 'username' is missing",
+            str(context.exception),
+        )
+
+        django_model.parameters = None
+        with self.assertRaises(SmarterValueError) as context:
+            django_model.save()
+        self.assertIn(
+            "Placeholder 'username' is not defined in parameters",
+            str(context.exception),
+        )
+
+        # this should work
+        django_model.parameters = None
+        django_model.sql_query = "SELECT * FROM auth_user;"
+        django_model.save()
 
         try:
             django_model.delete()

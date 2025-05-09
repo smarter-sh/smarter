@@ -755,9 +755,33 @@ class PluginDataSql(PluginDataBase):
             except (ValidationError, SmarterValueError) as e:
                 raise SmarterValueError(f"Invalid test value structure: {e}") from e
 
+    def validate_all_parameters_in_test_values(self) -> None:
+        """
+        Validate if all parameters are present in the test values.
+        """
+        if self.parameters is None or self.test_values is None:
+            return None
+
+        # pylint: disable=E1133
+        for param_dict in self.parameters:
+            param_name = param_dict.get("name")
+            if not any(test_value.get("name") == param_name for test_value in self.test_values):
+                raise SmarterValueError(f"Test value for parameter '{param_name}' is missing.")
+
+    def valdate_all_placeholders_in_parameters(self) -> None:
+        """
+        Validate that all placeholders in the SQL query string are present in the parameters.
+        """
+        placeholders = re.findall(r"{(.*?)}", self.sql_query)
+        for placeholder in placeholders:
+            if self.parameters is None or not any(param.get("name") == placeholder for param in self.parameters):
+                raise SmarterValueError(f"Placeholder '{placeholder}' is not defined in parameters.")
+
     def validate(self) -> bool:
         self.validate_parameters()
         self.validate_test_values()
+        self.validate_all_parameters_in_test_values()
+        self.valdate_all_placeholders_in_parameters()
 
         return True
 
