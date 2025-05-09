@@ -132,7 +132,7 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin):
         with self.assertRaises(SAMValidationError) as context:
             print(self.model)
         self.assertIn(
-            "Endpoint must be a valid cleanstring",
+            "Connection must be a valid cleanstring",
             str(context.exception),
         )
 
@@ -144,10 +144,10 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin):
         self._manifest["spec"]["connection"] = invalid_connection_string
         self._loader = None
         self._model = None
-        with self.assertRaises(SAMValidationError) as context:
+        with self.assertRaises(ValidationError) as context:
             print(self.model)
         self.assertIn(
-            "Endpoint must be a valid cleanstring",
+            "Input should be a valid string ",
             str(context.exception),
         )
 
@@ -156,13 +156,13 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin):
         self.load_manifest(filename="api-plugin.yaml")
 
         invalid_endpoint = "not a good endpoint"
-        self._manifest["spec"]["endpoint"] = invalid_endpoint
+        self._manifest["spec"]["apiData"]["endpoint"] = invalid_endpoint
         self._loader = None
         self._model = None
         with self.assertRaises(SAMValidationError) as context:
             print(self.model)
         self.assertIn(
-            "Endpoint must be a valid cleanstring",
+            "URL endpoint 'not a good endpoint' contains invalid characters",
             str(context.exception),
         )
 
@@ -171,13 +171,13 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin):
         self.load_manifest(filename="api-plugin.yaml")
 
         invalid_endpoint = 1234567890
-        self._manifest["spec"]["endpoint"] = invalid_endpoint
+        self._manifest["spec"]["apiData"]["endpoint"] = invalid_endpoint
         self._loader = None
         self._model = None
-        with self.assertRaises(SAMValidationError) as context:
+        with self.assertRaises(ValidationError) as context:
             print(self.model)
         self.assertIn(
-            "Endpoint must be a valid cleanstring",
+            "Input should be a valid string",
             str(context.exception),
         )
 
@@ -241,6 +241,6 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin):
             #   Field required [type=missing, input_value={'name': 'Authorization', 'descri... of results to return.'}, input_type=dict]
             print(self.model)
         self.assertIn(
-            "Field required [type=missing, input_value={'name': 'Authorization'",
+            "Input should be a valid dictionary",
             str(context.exception),
         )

@@ -13,6 +13,7 @@ from smarter.apps.plugin.manifest.models.common import (
     TestValue,
     UrlParam,
 )
+from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBaseModel
@@ -59,8 +60,10 @@ class ApiData(SmarterBaseModel):
 
     @field_validator("endpoint")
     def validate_endpoint(cls, v):
-        if not SmarterValidator.is_valid_url_endpoint(v):
-            raise SAMValidationError("Endpoint must be a valid cleanstring.")
+        try:
+            SmarterValidator.validate_url_endpoint(v)
+        except (SAMValidationError, SmarterValueError) as e:
+            raise SAMValidationError(f"Invalid endpoint: {e}") from e
         return v
 
 
@@ -77,3 +80,9 @@ class SAMApiPluginSpec(AbstractSAMSpecBase):
     apiData: ApiData = Field(
         ..., description=f"{class_identifier}.selector[obj]: the ApiData to use for the {MANIFEST_KIND}"
     )
+
+    @field_validator("connection")
+    def validate_connection(cls, v):
+        if not SmarterValidator.is_valid_cleanstring(v):
+            raise SAMValidationError("Connection must be a valid cleanstring.")
+        return v

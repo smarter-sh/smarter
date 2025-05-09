@@ -344,12 +344,12 @@ class SmarterValidator:
     @staticmethod
     def validate_url_endpoint(url: str) -> None:
         """Validate URL endpoint format"""
-        if not url.startswith("/"):
-            raise SmarterValueError(f"Invalid URL endpoint {url} should start with a leading slash")
-        if not url.endswith("/"):
-            raise SmarterValueError(f"Invalid URL endpoint {url}, should end with a trailing slash")
         if not re.match(SmarterValidator.VALID_URL_ENDPOINT, url):
-            raise SmarterValueError("URL endpoint contains invalid characters.")
+            raise SmarterValueError(f"URL endpoint '{url}' contains invalid characters.")
+        if not url.startswith("/"):
+            raise SmarterValueError(f"Invalid URL endpoint '{url}'. Should start with a leading slash")
+        if not url.endswith("/"):
+            raise SmarterValueError(f"Invalid URL endpoint '{url}'. Should end with a trailing slash")
 
     @staticmethod
     def validate_list_of_account_numbers(account_numbers: list) -> None:
