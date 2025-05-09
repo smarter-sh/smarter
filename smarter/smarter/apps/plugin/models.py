@@ -15,7 +15,6 @@ from socket import socket
 from typing import Any, Union
 from urllib.parse import urljoin
 
-# 3rd party stuff
 import paramiko
 import requests
 import yaml
@@ -25,6 +24,9 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import DatabaseError, models
 from django.db.backends.base.base import BaseDatabaseWrapper
 from django.db.utils import ConnectionHandler
+
+# 3rd party stuff
+from pydantic import ValidationError
 from rest_framework import serializers
 from taggit.managers import TaggableManager
 
@@ -34,8 +36,10 @@ from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.model_helpers import TimestampedModel
 
-# plugin stuff
 from .manifest.enum import SAMPluginCommonMetadataClassValues
+
+# plugin stuff
+from .manifest.models.common import Parameter, TestValue
 from .manifest.models.sql_connection.enum import DbEngines
 
 
@@ -646,11 +650,6 @@ class PluginDataSql(PluginDataBase):
         def all(cls) -> list:
             return [cls.INT, cls.FLOAT, cls.STR, cls.BOOL, cls.LIST, cls.DICT, cls.NULL]
 
-    name = models.CharField(
-        help_text="The name of the SQL connection, camelCase, without spaces. Example: 'HRDatabase', 'SalesDatabase', 'InventoryDatabase'.",
-        max_length=255,
-        validators=[validate_camel_case],
-    )
     connection = models.ForeignKey(SqlConnection, on_delete=models.CASCADE, related_name="plugin_data_sql_connection")
     parameters = models.JSONField(
         help_text="A JSON dict containing parameter names and data types. Example: {'unit': {'type': 'string', 'enum': ['Celsius', 'Fahrenheit'], 'description': 'The temperature unit to use. Infer this from the user's location.'}}",
@@ -680,123 +679,86 @@ class PluginDataSql(PluginDataBase):
             "sql_query": self.prepare_sql(params=params),
         }
 
-    def validate_parameter(self, param) -> dict:
+    def are_test_values_pydantic(self) -> bool:
+        pass
+
+    def validate_parameters(self) -> None:
         """
-        Validate a parameter dict. The overall structure of the parameter dict is:
-         "properties": {
-            "location": {
-              "type": "string",
-              "description": "The city and state, e.g., San Francisco, CA"
-            },
-            "unit": {
-              "type": "string",
-              "enum": ["Celsius", "Fahrenheit"],
-              "description": "The temperature unit to use. Infer this from the user's location."
-            }
-          }
+        Validate if the structure of self.parameters matches the expected Json representation
+        by attempting to instantiate each item in the list as a Pydantic Parameter model.
+            "parameters": [
+                {
+                "name": "username",
+                "type": "string",
+                "description": "The username to query.",
+                "required": true,
+                "default": "admin"
+                },
+                {
+                "name": "unit",
+                "type": "string",
+                "enum": [
+                    "Celsius",
+                    "Fahrenheit"
+                ],
+                "description": "The temperature unit to use.",
+                "required": false,
+                "default": "Celsius"
+                }
+            ],
+
         """
-        try:
-            param_type = param["type"]
-            param_enum = param["enum"] if "enum" in param else None
-            param_description = param["description"]
-            param_required = param["required"] if "required" in param else False
-        except KeyError as e:
-            raise SmarterValueError(
-                f"{self.name} {self.__class__.__name__} custom_tool() error: missing required parameter key: {e}"
-            ) from e
+        if self.parameters is None:
+            return None
+        if not isinstance(self.parameters, list):
+            if isinstance(self.parameters, dict):
+                self.parameters = [self.parameters]
+                logger.warning(
+                    "PluginDataSql().parameters was a dict. converted to a list: %s", json.dumps(self.parameters)
+                )
+            else:
+                raise SmarterValueError(f"parameters must be a list of dictionaries but got: {type(self.parameters)}")
 
-        if param_type not in PluginDataSql.DataTypes.all():
-            raise SmarterValueError(
-                f"{self.plugin.name} {self.__class__.__name__} custom_tool() error: invalid parameter type: {param_type}. Valid types are: {PluginDataSql.DataTypes.all()}"
-            )
+        # pylint: disable=E1133
+        for param_dict in self.parameters:
+            try:
+                # pylint: disable=E1134
+                Parameter(**param_dict)
+            except (ValidationError, SmarterValueError) as e:
+                raise SmarterValueError(f"Invalid parameter structure: {e}") from e
 
-        if param_enum and not isinstance(param_enum, list):
-            raise SmarterValueError(
-                f"{self.plugin.name} {self.__class__.__name__} custom_tool() error: invalid parameter enum: {param_enum}. Must be a list."
-            )
-
-        if not isinstance(param_required, bool):
-            raise SmarterValueError(
-                f"{self.plugin.name} {self.__class__.__name__} custom_tool() error: invalid parameter required: {param_required}. Must be a boolean."
-            )
-
-        if not isinstance(param_description, str):
-            raise SmarterValueError(
-                f"{self.plugin.name} {self.__class__.__name__} custom_tool() error: invalid parameter description: {param_description}. Must be a string."
-            )
-
-    def validate_test_values(self) -> bool:
+    def validate_test_values(self) -> None:
         """
-        Validate the test values. The overall structure of the test values is:
-        {
-            "key1": "value 1",
-            "key2": "value 2"
-        }
+        Validate if the structure of self.test_values matches the expected Json representation
+        by attempting to instantiate each item in the list as a Pydantic TestValue model.
+
+            "testValues": [
+                {
+                "name": "username",
+                "value": "admin"
+                },
+                {
+                "name": "unit",
+                "value": "Celsius"
+                }
+            ]
         """
-        if not self.test_values:
-            return True
+        if self.test_values is None:
+            return None
+        if not isinstance(self.test_values, list):
+            raise SmarterValueError(f"test_values must be a list of dictionaries but got: {type(self.test_values)}")
 
-        if not isinstance(self.test_values, dict):
-            raise SmarterValueError(
-                f"{self.name} {self.__class__.__name__} custom_tool() error: test_values must be a dict."
-            )
-
-        # pylint: disable=E1136
-        for key, value in self.test_values.items():
-            if key not in self.parameters.keys():
-                raise SmarterValueError(f"Sql parameter '{key}' not found in parameters.")
-            if self.parameters[key]["type"] == "int" and not isinstance(value, int):
-                raise SmarterValueError(f"Parameter '{key}' must be an integer.")
-            if self.parameters[key]["type"] == "str" and not isinstance(value, str):
-                raise SmarterValueError(f"Parameter '{key}' must be a string.")
-            if self.parameters[key]["type"] == "float" and not isinstance(value, float):
-                raise SmarterValueError(f"Parameter '{key}' must be a float.")
-            if self.parameters[key]["type"] == "bool" and not isinstance(value, bool):
-                raise SmarterValueError(f"Parameter '{key}' must be a boolean.")
-            if self.parameters[key]["type"] == "list" and not isinstance(value, list):
-                raise SmarterValueError(f"Parameter '{key}' must be a list.")
-            if self.parameters[key]["type"] == "dict" and not isinstance(value, dict):
-                raise SmarterValueError(f"Parameter '{key}' must be a dict.")
-            if self.parameters[key]["type"] == "null" and value is not None:
-                raise SmarterValueError(f"Parameter '{key}' must be null.")
-
-            enums = self.parameters[key].get("enum")
-            if enums and value not in enums:
-                raise SmarterValueError(f"Parameter '{key}' must be one of {enums}.")
-        return True
-
-    def validate_params(self, params: dict) -> bool:
-        """validate the input params against self.parameters."""
-        for key in params.keys():
-            if key not in self.parameters.keys():
-                raise SmarterValueError(f"Sql parameter '{key}' not found in parameters.")
-
-        # pylint: disable=E1136
-        for key, value in params.items():
-            if key not in self.parameters.keys():
-                raise SmarterValueError(f"Sql parameter '{key}' is not valid for this plugin.")
-            if self.parameters[key]["type"] == "int" and not isinstance(value, int):
-                raise SmarterValueError(f"Parameter '{key}' must be an integer.")
-            if self.parameters[key]["type"] == "str" and not isinstance(value, str):
-                raise SmarterValueError(f"Parameter '{key}' must be a string.")
-            if self.parameters[key]["type"] == "float" and not isinstance(value, float):
-                raise SmarterValueError(f"Parameter '{key}' must be a float.")
-            if self.parameters[key]["type"] == "bool" and not isinstance(value, bool):
-                raise SmarterValueError(f"Parameter '{key}' must be a boolean.")
-            if self.parameters[key]["type"] == "list" and not isinstance(value, list):
-                raise SmarterValueError(f"Parameter '{key}' must be a list.")
-            if self.parameters[key]["type"] == "dict" and not isinstance(value, dict):
-                raise SmarterValueError(f"Parameter '{key}' must be a dict.")
-            if self.parameters[key]["type"] == "null" and value is not None:
-                raise SmarterValueError(f"Parameter '{key}' must be null.")
-        return True
+        # pylint: disable=E1133
+        for test_value in self.test_values:
+            try:
+                TestValue(**test_value)
+            except (ValidationError, SmarterValueError) as e:
+                raise SmarterValueError(f"Invalid test value structure: {e}") from e
 
     def validate(self) -> bool:
-        if not self.parameters:
-            return True
-        for _, value in self.parameters.items():
-            self.validate_parameter(value)
-            self.validate_test_values()
+        self.validate_parameters()
+        self.validate_test_values()
+
         return True
 
     def prepare_sql(self, params: dict) -> str:
@@ -1006,76 +968,6 @@ class PluginDataApi(PluginDataBase):
             "headers": self.headers,
             "body": self.body,
         }
-
-    def validate_parameter(self, param) -> dict:
-        """
-        Validate a parameter dict. The structure of the parameter dict is:
-        {
-            "type": "string",
-            "description": "City name",
-            "required": True
-        }
-        """
-        try:
-            param_type = param["type"]
-            param_description = param["description"]
-            param_required = param.get("required", False)
-        except KeyError as e:
-            raise SmarterValueError(
-                f"{self.plugin.name} {self.__class__.__name__} custom_tool() error: missing required parameter key: {e}"
-            ) from e
-
-        if param_type not in PluginDataSql.DataTypes.all():
-            raise SmarterValueError(
-                f"{self.plugin.name} {self.__class__.__name__} custom_tool() error: invalid parameter type: {param_type}. Valid types are: {PluginDataSql.DataTypes.all()}"
-            )
-
-        if not isinstance(param_required, bool):
-            raise SmarterValueError(
-                f"{self.plugin.name} {self.__class__.__name__} custom_tool() error: invalid parameter required: {param_required}. Must be a boolean."
-            )
-
-        if not isinstance(param_description, str):
-            raise SmarterValueError(
-                f"{self.plugin.name} {self.__class__.__name__} custom_tool() error: invalid parameter description: {param_description}. Must be a string."
-            )
-
-    def validate_params(self, params: dict) -> bool:
-        """Validate the input params against self.parameters."""
-        for key in params.keys():
-            if key not in self.parameters.keys():
-                raise SmarterValueError(f"API parameter '{key}' not found in parameters.")
-
-        for key, value in params.items():
-            # Ensure self.parameters is a dictionary
-            parameters = self.parameters or {}
-            if not isinstance(parameters, dict):
-                try:
-                    # Attempt to parse parameters as a JSON string if it's not a dict
-                    parameters = json.loads(parameters)
-                except (TypeError, json.JSONDecodeError) as e:
-                    raise SmarterValueError("Parameters must be a valid dictionary or JSON-serializable.") from e
-
-            if key not in parameters:
-                raise SmarterValueError(f"Parameter '{key}' not found in parameters.")
-
-            param_type = parameters[key].get("type")
-
-            if param_type == "int" and not isinstance(value, int):
-                raise SmarterValueError(f"Parameter '{key}' must be an integer.")
-            if param_type == "str" and not isinstance(value, str):
-                raise SmarterValueError(f"Parameter '{key}' must be a string.")
-            if param_type == "float" and not isinstance(value, float):
-                raise SmarterValueError(f"Parameter '{key}' must be a float.")
-            if param_type == "bool" and not isinstance(value, bool):
-                raise SmarterValueError(f"Parameter '{key}' must be a boolean.")
-            if param_type == "list" and not isinstance(value, list):
-                raise SmarterValueError(f"Parameter '{key}' must be a list.")
-            if param_type == "dict" and not isinstance(value, dict):
-                raise SmarterValueError(f"Parameter '{key}' must be a dict.")
-            if param_type == "null" and value is not None:
-                raise SmarterValueError(f"Parameter '{key}' must be null.")
-        return True
 
     def prepare_request(self, params: dict) -> dict:
         """Prepare the API request by merging parameters, headers, and body."""

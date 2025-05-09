@@ -2,11 +2,11 @@
 
 import logging
 import os
-from typing import Any, ClassVar, List, Optional
+from typing import ClassVar, List, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import Field, field_validator
 
-from smarter.apps.plugin.manifest.models.common import Parameter
+from smarter.apps.plugin.manifest.models.common import Parameter, TestValue
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBaseModel
@@ -18,13 +18,6 @@ logger = logging.getLogger(__name__)
 filename = os.path.splitext(os.path.basename(__file__))[0]
 MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
-
-
-class TestValue(BaseModel):
-    """TestValue class for SQL Data."""
-
-    name: str = Field(..., description="The name of the parameter being tested.")
-    value: Any = Field(..., description="The test value for the parameter.")
 
 
 class SqlData(SmarterBaseModel):

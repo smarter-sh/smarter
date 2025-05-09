@@ -3,6 +3,7 @@
 """Utility functions for the OpenAI Lambda functions"""
 import json  # library for interacting with JSON data https://www.json.org/json-en.html
 import logging
+import re
 from datetime import datetime
 
 from pydantic import SecretStr
@@ -21,6 +22,27 @@ class DateTimeEncoder(json.JSONEncoder):
             return "*** REDACTED ***"
 
         return super().default(o)
+
+
+def camel_to_snake(name):
+    name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
+
+
+def camel_to_snake_dict(dictionary: dict) -> dict:
+    """Converts camelCase dict keys to snake_case."""
+
+    def convert(name: str):
+        s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+        return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+
+    retval = {}
+    for key, value in dictionary.items():
+        if isinstance(value, dict):
+            value = camel_to_snake_dict(value)
+        new_key = convert(key)
+        retval[new_key] = value
+    return retval
 
 
 def recursive_sort_dict(d):

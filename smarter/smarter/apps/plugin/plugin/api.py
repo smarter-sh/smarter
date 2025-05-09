@@ -8,6 +8,7 @@ import re
 from smarter.common.api import SmarterApiVersions
 from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterConfigurationError
+from smarter.common.utils import camel_to_snake
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
 # smarter plugin stuff
@@ -60,10 +61,6 @@ class PluginApi(PluginBase):
     @property
     def plugin_data_django_model(self) -> dict:
         """Return the plugin data definition as a json object."""
-
-        def camel_to_snake(name):
-            name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-            return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
 
         # recast the Pydantic model to the PluginDataApi Django ORM model
         api_connection = ApiConnection.objects.get(
