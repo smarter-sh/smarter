@@ -12,10 +12,14 @@ import os
 
 from pydantic_core import ValidationError
 
+from smarter.apps.plugin.manifest.enum import SAMPluginCommonMetadataClassValues
+
 # from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
 from smarter.apps.plugin.manifest.models.api_plugin.model import SAMApiPlugin
-from smarter.apps.plugin.models import ApiConnection
+from smarter.apps.plugin.models import ApiConnection, PluginDataApi, PluginMeta
+from smarter.common.exceptions import SmarterValueError
+from smarter.common.utils import camel_to_snake_dict
 from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
@@ -33,6 +37,7 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin):
     """Test SAM manifest using PluginApi"""
 
     _model: SAMApiPlugin = None
+    plugin_meta: PluginMeta = None
     connection_loader: SAMLoader
     connection_manifest_path: str = None
     connection_manifest: dict = None
@@ -244,3 +249,153 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin):
             "Input should be a valid dictionary",
             str(context.exception),
         )
+
+    def test_django_orm(self):
+        """Test that the Django model can be initialized from the Pydantic model."""
+        self.load_manifest(filename="api-plugin.yaml")
+
+        self.plugin_meta = PluginMeta(
+            account=self.account,
+            name=self.model.metadata.name,
+            description=self.model.metadata.description,
+            plugin_class=SAMPluginCommonMetadataClassValues.API.value,
+            author=self.user_profile,
+            version="1.0.0",
+        )
+        self.plugin_meta.save()
+
+        model_dump = self.model.spec.apiData.model_dump()
+        model_dump["connection"] = self.connection_django_model
+        model_dump["plugin"] = self.plugin_meta
+        model_dump["description"] = self.model.metadata.description
+        model_dump = camel_to_snake_dict(model_dump)
+
+        django_model = PluginDataApi(**model_dump)
+        django_model.save()
+
+        self.assertIsNotNone(django_model)
+        self.assertIsInstance(django_model, PluginDataApi)
+
+        self.assertEqual(django_model.plugin.account, self.account)
+        self.assertEqual(django_model.plugin.name, self.model.metadata.name)
+        self.assertEqual(django_model.plugin.description, self.model.metadata.description)
+        self.assertEqual(django_model.plugin.plugin_class, SAMPluginCommonMetadataClassValues.API.value)
+
+        self.assertEqual(django_model.connection, self.connection_django_model)
+        self.assertEqual(django_model.endpoint, self.model.spec.apiData.endpoint)
+
+        pydantic_url_params = [param.model_dump() for param in self.model.spec.apiData.url_params or []]
+        django_url_params = django_model.url_params or []
+        self.assertEqual(pydantic_url_params, django_url_params)
+
+        pydantic_headers = [header.model_dump() for header in self.model.spec.apiData.headers or []]
+        django_headers = django_model.headers or []
+        self.assertEqual(pydantic_headers, django_headers)
+
+        pydantic_body = self.model.spec.apiData.body or {}
+        django_body = django_model.body or {}
+        self.assertEqual(pydantic_body, django_body)
+
+        pydantic_parameters = [param.model_dump() for param in self.model.spec.apiData.parameters or []]
+        django_parameters = django_model.parameters or []
+        self.assertEqual(pydantic_parameters, django_parameters)
+
+        pydantic_test_values = [test_value.model_dump() for test_value in self.model.spec.apiData.test_values or []]
+        django_test_values = django_model.test_values or []
+        self.assertEqual(pydantic_test_values, django_test_values)
+
+        # try some invalid values
+        # ---------------------------------------------------------------------
+        django_model.parameters = "this isn't even json, let alone a valid Pydantic model"
+        with self.assertRaises(SmarterValueError) as context:
+            django_model.save()
+        self.assertIn(
+            "parameters must be a list of dictionaries but got: <class 'str'>",
+            str(context.exception),
+        )
+
+        # this should work
+        django_model.parameters = [
+            {
+                "name": "username",
+                "type": "string",
+                "description": "The username to query.",
+                "required": True,
+                "default": "admin",
+            }
+        ]
+        django_model.save()
+
+        django_model.parameters = [
+            {
+                # "name": "username",
+                "type": "string",
+                "description": "The username to query.",
+                "required": True,
+                "default": "admin",
+            }
+        ]
+        with self.assertRaises(SmarterValueError) as context:
+            django_model.save()
+        self.assertIn(
+            "Invalid parameter structure",
+            str(context.exception),
+        )
+        self.assertIn(
+            "Field required [type=missing, input_value",
+            str(context.exception),
+        )
+
+        # this works.
+        # FIX NOTE: TO DISCUSS.
+        django_model.parameters = [
+            {
+                "name": "username",
+                "type": "string",
+                "description": "The username to query.",
+                "required": True,
+                "default": "admin",
+                "well": "how did i get here?",  # not part of the Pydantic model
+            }
+        ]
+        django_model.save()
+
+        django_model.parameters = [
+            {
+                "name": "username",
+                "type": "string",
+                "description": "The username to query.",
+                "required": True,
+                "default": "admin",
+            }
+        ]
+        django_model.test_values = [
+            {
+                "name": "not_the_username",
+                "value": "blah",
+            }
+        ]
+        with self.assertRaises(SmarterValueError) as context:
+            django_model.save()
+        self.assertIn(
+            "Test value for parameter 'username' is missing",
+            str(context.exception),
+        )
+
+        django_model.parameters = None
+        with self.assertRaises(SmarterValueError) as context:
+            django_model.save()
+        self.assertIn(
+            "Placeholder 'username' is not defined in parameters",
+            str(context.exception),
+        )
+
+        # this should work
+        django_model.parameters = None
+        django_model.endpoint = "/api/v1/tests/unauthenticated/list/"
+        django_model.save()
+
+        try:
+            django_model.delete()
+        except (PluginDataApi.DoesNotExist, ValueError):
+            pass

@@ -775,8 +775,9 @@ class PluginDataSql(PluginDataBase):
         Validate that all placeholders in the SQL query string are present in the parameters.
         """
         placeholders = re.findall(r"{(.*?)}", self.sql_query)
+        parameters = self.parameters or []
         for placeholder in placeholders:
-            if self.parameters is None or not any(param.get("name") == placeholder for param in self.parameters):
+            if self.parameters is None or not any(param.get("name") == placeholder for param in parameters):
                 raise SmarterValueError(f"Placeholder '{placeholder}' is not defined in parameters.")
 
     def validate(self) -> bool:
@@ -1129,10 +1130,11 @@ class PluginDataApi(PluginDataBase):
         Validate that all placeholders in the SQL query string are present in the parameters.
         """
         placeholders = re.findall(r"{(.*?)}", self.endpoint)
+        parameters = self.parameters or []
         for placeholder in placeholders:
             # pylint: disable=E1133
-            if self.parameters is None or not any(param.get("name") == placeholder for param in self.parameters):
-                raise SmarterValueError(f"Placeholder '{placeholder}' is not defined in parameters.")
+            if self.parameters is None or not any(param.get("name") == placeholder for param in parameters):
+                raise SmarterValueError(f"Placeholder '{placeholder}' is not defined in parameters: {self.parameters}")
 
     def validate(self) -> bool:
         super().validate()

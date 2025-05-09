@@ -21,13 +21,13 @@ spec:
     maxTokens: 256
   connection: testApiConnection
   apiData:
-    endpoint: /api/v1/tests/unauthenticated/list/
+    endpoint: /api/v1/tests/unauthenticated/list/{username}/
     parameters:
-      - name: test
+      - name: username
         type: string
-        description: The test to run.
+        description: a valid django username.
         required: true
-        default: test
+        default: admin
       - name: limit
         type: integer
         description: The maximum number of results to return.
@@ -65,8 +65,8 @@ spec:
         required: false
         default: test2
     testValues:
-      - name: test
-        value: test
+      - name: username
+        value: admin
       - name: limit
         value: 1
     limit: 10
