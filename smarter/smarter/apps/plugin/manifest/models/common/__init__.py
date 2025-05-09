@@ -1,10 +1,11 @@
 """Smarter API Manifest - Plugin.spec"""
 
 from enum import Enum
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.validators import SmarterValidator
 
 
@@ -14,7 +15,7 @@ class UrlParam(BaseModel):
     """
 
     key: str = Field(..., description="The key (ie 'name') of the url param.")
-    value: str = Field(..., description="The value for the key.")
+    value: Union[str, int, float, bool] = Field(..., description="The value for the key.")
 
     @field_validator("key")
     def validate_name(cls, v):
@@ -37,20 +38,22 @@ class RequestHeader(BaseModel):
     """
 
     name: str = Field(..., description="The name of the HTTP header.")
-    value: str = Field(..., description="The value of the HTTP header.")
+    value: Union[str, int, float, bool] = Field(..., description="The value of the HTTP header.")
 
     @field_validator("name")
     def validate_name(cls, v):
         v = str(v)
-        if not SmarterValidator.is_valid_cleanstring(v):
-            raise ValueError("Name must be a valid cleanstring.")
+
+        if not SmarterValidator.is_valid_http_request_header_key(v):
+            raise SmarterValueError("Header name contains invalid characters or is not ASCII.")
         return v
 
     @field_validator("value")
     def validate_value(cls, v):
         v = str(v)
-        if not SmarterValidator.is_valid_cleanstring(v):
-            raise ValueError("Value must be a valid cleanstring.")
+
+        if not SmarterValidator.is_valid_http_request_header_value(v):
+            raise SmarterValueError("Header value contains invalid characters (e.g., control characters).")
         return v
 
 

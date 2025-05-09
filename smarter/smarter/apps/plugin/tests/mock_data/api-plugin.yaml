@@ -34,15 +34,25 @@ spec:
         required: false
     headers:
       - name: Authorization
-        type: string
-        description: The authorization token to use for the request.
-        required: true
-        default: Bearer testToken
+        value: Bearer testToken
       - name: Content-Type
-        type: string
-        description: The content type of the request.
-        required: true
-        default: application/json
+        value: application/json
+      - name: Accept
+        value: application/json
+      - name: X-Request-ID
+        value: testRequestId
+      - name: X-Client-ID
+        value: testClientId
+      - name: Content-Length
+        value: 550
+      - name: Content-Encoding
+        value: gzip
+      - name: Accept-Encoding
+        value: gzip, deflate
+      - name: Accept-Language
+        value: en-US,en;q=0.9
+      - name: User-Agent
+        value: testUserAgent
     body:
       - name: test
         type: string
