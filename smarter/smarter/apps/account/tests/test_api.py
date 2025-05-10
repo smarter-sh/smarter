@@ -1,43 +1,20 @@
 # pylint: disable=wrong-import-position
 """Test API end points."""
 
-# python stuff
-import os
-import unittest
-
 from django.test import Client
 from django.urls import reverse
 
 # our stuff
-from smarter.lib.django.user import User, UserType
+from ..models import PaymentMethod
+from .mixins import TestAccountMixin
 
-from ..models import Account, PaymentMethod, UserProfile
 
-
-class TestUrls(unittest.TestCase):
+class TestUrls(TestAccountMixin):
     """Test Account API end points."""
-
-    user: UserType
 
     def setUp(self):
         """Set up test fixtures."""
-        username = "testuser_" + os.urandom(4).hex()
-        self.user = User.objects.create_user(
-            username=username, password="12345", is_staff=True, is_active=True, is_superuser=True
-        )
-        self.account = Account.objects.create(
-            company_name="Test Company",
-            phone_number="1234567890",
-            address1="123 Test St",
-            address2="Apt 1",
-            city="Test City",
-            state="TX",
-        )
-        self.user_profile = UserProfile.objects.create(
-            user=self.user,
-            account=self.account,
-            is_test=True,
-        )
+        super().setUp()
         self.payment_method = PaymentMethod.objects.create(
             account=self.account,
             name="Test Payment Method",
@@ -49,13 +26,14 @@ class TestUrls(unittest.TestCase):
             is_default=True,
         )
         self.client = Client()
-        self.client.force_login(self.user)
+        self.client.force_login(self.non_admin_user)
 
     def tearDown(self):
-        """Clean up test fixtures."""
-        self.user.delete()
-        self.account.delete()
-        self.user_profile.delete()
+        super().tearDown()
+
+        self.client.logout()
+        self.client = None
+        self.payment_method.delete()
 
     def test_account_view(self):
         """test that we can see the account view and that it matches the account data."""
@@ -85,19 +63,19 @@ class TestUrls(unittest.TestCase):
         json_data = response.json()
         self.assertIsInstance(json_data, list)
         for user in json_data:
-            if user.get("username") == self.user.username:
-                self.assertEqual(user.get("email"), self.user.email)
+            if user.get("username") == self.non_admin_user.username:
+                self.assertEqual(user.get("email"), self.non_admin_user.email)
                 break
 
     def test_account_users_index_view(self):
         """test that we can see an account from inside the list view and that it matches the account data."""
-        response = self.client.get(reverse("account_user_view", args=[str(self.user.id)]))
+        response = self.client.get(reverse("account_user_view", args=[str(self.non_admin_user.id)]))
 
         self.assertEqual(response.status_code, 200)
         json_data = response.json()
         self.assertIsInstance(json_data, dict)
-        self.assertEqual(json_data.get("email"), self.user.email)
-        self.assertEqual(json_data.get("username"), self.user.username)
+        self.assertEqual(json_data.get("email"), self.non_admin_user.email)
+        self.assertEqual(json_data.get("username"), self.non_admin_user.username)
 
     def test_account_payment_methods(self):
         """test that we can see the payment methods associated with an account."""
