@@ -3,7 +3,6 @@
 
 # python stuff
 import os
-import unittest
 from http import HTTPStatus
 from urllib.parse import urlparse
 
@@ -12,48 +11,25 @@ from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.test import RequestFactory
 
 # our stuff
+from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib.django.user import User
 
-from ..models import Account, UserProfile
 from ..views.dashboard.users import UsersView, UserView
 
 
 # pylint: disable=R0902
-class TestAPIKeys(unittest.TestCase):
+class TestAPIKeys(TestAccountMixin):
     """Test User manager."""
 
     def setUp(self):
         """Set up test fixtures."""
+        super().setUp()
         self.base_url = "/account/dashboard/users/"
-        self.username = "testuser_" + os.urandom(4).hex()
+        self.username = self.non_admin_user.username
         self.password = "12345"
 
-        self.user = User.objects.create_user(username=self.username, is_staff=True, is_active=True, is_superuser=True)
-        self.user.set_password(self.password)
-        self.user.save()
         self.authenticated_user = authenticate(username=self.username, password=self.password)
         self.assertIsNotNone(self.authenticated_user)
-
-        self.account = Account.objects.create(
-            company_name="Test Company",
-            phone_number="1234567890",
-            address1="123 Test St",
-            address2="Apt 1",
-            city="Test City",
-            state="TX",
-            postal_code="12345",
-        )
-        self.user_profile = UserProfile.objects.create(
-            user=self.user,
-            account=self.account,
-            is_test=True,
-        )
-
-    def tearDown(self):
-        """Clean up test fixtures."""
-        self.user_profile.delete()
-        self.user.delete()
-        self.account.delete()
 
     # pylint: disable=too-many-locals
     def test_user(self):
@@ -70,7 +46,7 @@ class TestAPIKeys(unittest.TestCase):
             "email": "mail@mail.com",
         }
         request = factory.post(url, data=data)
-        request.user = self.user
+        request.user = self.non_admin_user
 
         response = UserView.as_view()(request)
         self.assertIsInstance(response, HttpResponseRedirect)
@@ -92,7 +68,7 @@ class TestAPIKeys(unittest.TestCase):
         # test that get the user view
         url = self.base_url + user_id + "/"
         request = factory.get(url)
-        request.user = self.user
+        request.user = self.non_admin_user
         response = UserView.as_view()(request, user_id=user_id)
         self.assertTrue(response.status_code, HTTPStatus.OK)
         self.assertIsInstance(response, HttpResponse)
@@ -100,7 +76,7 @@ class TestAPIKeys(unittest.TestCase):
         # test that we can update the user
         data["first_name"] = "Updated"
         request = factory.patch(url, data=data)
-        request.user = self.user
+        request.user = self.non_admin_user
         response = UserView.as_view()(request, user_id=user_id)
         self.assertIsInstance(response, JsonResponse)
 
@@ -111,7 +87,7 @@ class TestAPIKeys(unittest.TestCase):
 
         # test that we can delete the user
         request = factory.delete(url)
-        request.user = self.user
+        request.user = self.non_admin_user
         response = UserView.as_view()(request, user_id=user_id)
         self.assertIsInstance(response, JsonResponse)
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -120,7 +96,7 @@ class TestAPIKeys(unittest.TestCase):
         """Test that we can get the users view."""
         factory = RequestFactory()
         request = factory.get(self.base_url)
-        request.user = self.user
+        request.user = self.non_admin_user
         response = UsersView.as_view()(request)
         self.assertIsInstance(response, HttpResponse)
         self.assertEqual(response.status_code, HTTPStatus.OK)

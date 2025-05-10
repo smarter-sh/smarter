@@ -2,11 +2,10 @@
 """Test TestSAM."""
 
 import os
-import unittest
 
 import yaml
 
-from smarter.apps.account.models import Account
+from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
 from smarter.common.api import SmarterApiVersions
@@ -15,23 +14,15 @@ from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 
 
-class TestSAMLoader(unittest.TestCase):
+class TestSAMLoader(TestAccountMixin):
     """Test TestSAM"""
 
     def setUp(self):
         """Set up test fixtures."""
+        super().setUp()
         self.path = os.path.join(PYTHON_ROOT, "smarter", "apps", "api", "v1", "manifests", "tests", "data")
         self.good_manifest_path = os.path.join(self.path, "good-manifest.yaml")
         self.invalid_file_format = os.path.join(self.path, "invalid-file-format.yaml")
-        self.account = Account.objects.create(
-            company_name="Test Company",
-            phone_number="1234567890",
-            address1="123 Test St",
-            address2="Apt 1",
-            city="Test City",
-            state="TX",
-            postal_code="12345",
-        )
 
     def test_valid_manifest(self):
         """Test valid file path and that we can instantiate with errors"""

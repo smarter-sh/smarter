@@ -2,41 +2,19 @@
 # pylint: disable=R0801,E1101
 """Test lambda_openai_v2 function."""
 
-# python stuff
-import os
-import sys
-import unittest
-from pathlib import Path
-
-from smarter.lib.django.user import User
-from smarter.lib.unittest.utils import get_readonly_yaml_file
-
-
-HERE = os.path.abspath(os.path.dirname(__file__))
-PROJECT_ROOT = str(Path(HERE).parent.parent)
-PYTHON_ROOT = str(Path(PROJECT_ROOT).parent)
-if PYTHON_ROOT not in sys.path:
-    sys.path.append(PYTHON_ROOT)  # noqa: E402
-
-
-from smarter.apps.account.models import Account, UserProfile
-
-# pylint: disable=no-name-in-module
+from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.plugin.plugin.static import StaticPlugin
+from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 from .test_setup import get_test_file_path
 
 
-class TestStaticPlugin(unittest.TestCase):
+class TestStaticPlugin(TestAccountMixin):
     """Test Plugin."""
 
     def setUp(self):
         """Set up test fixtures."""
-        username = "testuser_" + os.urandom(4).hex()
-        self.user = User.objects.create_user(username=username, password="12345")
-        self.account = Account.objects.create(company_name="Test Account")
-        self.user_profile = UserProfile.objects.create(user=self.user, account=self.account, is_test=True)
-
+        super().setUp()
         config_path = get_test_file_path("plugins/everlasting-gobstopper.yaml")
         plugin_json = get_readonly_yaml_file(config_path)
         plugin_json["user_profile"] = self.user_profile
@@ -45,9 +23,7 @@ class TestStaticPlugin(unittest.TestCase):
 
     def tearDown(self):
         """Tear down test fixtures."""
-        self.user_profile.delete()
-        self.user.delete()
-        self.account.delete()
+        super().tearDown()
         self.plugin.delete()
 
     # pylint: disable=broad-exception-caught
