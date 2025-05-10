@@ -13,12 +13,12 @@ from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
 # smarter plugin stuff
 from ..manifest.enum import (
+    SAMPluginCommonMetadataClass,
     SAMPluginCommonMetadataClassValues,
+    SAMPluginCommonMetadataKeys,
     SAMPluginCommonSpecPromptKeys,
     SAMPluginCommonSpecSelectorKeys,
     SAMPluginSpecKeys,
-    SAMPluginStaticMetadataClass,
-    SAMPluginStaticMetadataKeys,
 )
 from ..manifest.models.static_plugin.const import MANIFEST_KIND
 from ..models import ApiConnection, PluginDataApi
@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 class PluginApi(PluginBase):
     """A Plugin that uses an http request to a REST API to retrieve its return data"""
 
-    _metadata_class = SAMPluginStaticMetadataClass.SQL_DATA.value
+    _metadata_class = SAMPluginCommonMetadataClass.SQL_DATA.value
     _plugin_data: PluginDataApi = None
     _plugin_data_serializer: PluginApiSerializer = None
 
@@ -131,7 +131,7 @@ class PluginApi(PluginBase):
             SAMKeys.KIND.value: MANIFEST_KIND,
             SAMKeys.METADATA.value: {
                 SAMMetadataKeys.name: "ApiExample",
-                SAMPluginStaticMetadataKeys.PLUGIN_CLASS.value: SAMPluginCommonMetadataClassValues.SQL.value,
+                SAMPluginCommonMetadataKeys.PLUGIN_CLASS.value: SAMPluginCommonMetadataClassValues.SQL.value,
                 SAMMetadataKeys.DESCRIPTION.value: "Get additional information about the admin account of the Smarter platform.",
                 SAMMetadataKeys.VERSION.value: "0.1.0",
                 SAMMetadataKeys.TAGS.value: ["example.com", "api", "rest-api"],
@@ -150,7 +150,7 @@ class PluginApi(PluginBase):
                 },
                 SAMPluginSpecKeys.DATA.value: {
                     "description": "Query the Django User model to retrieve detailed account information about the admin account for the Smarter platform .",
-                    SAMPluginStaticMetadataClass.API_DATA.value: {
+                    SAMPluginCommonMetadataClass.API_DATA.value: {
                         "connection": "exampleConnection",
                         "endpoint": "/api/v1/example-endpoint/",
                         "parameters": None,

@@ -60,7 +60,7 @@ class SmarterJournalThings(SmarterEnumAbstract):
     a SmarterJournalThings value can passed as a strongly typed object.
     """
 
-    PLUGIN_STATIC = "Plugin"
+    STATIC_PLUGIN = "Plugin"
     PLUGIN_API = "ApiPlugin"
     PLUGIN_SQL = "SqlPlugin"
     API_CONNECTION = "ApiConnection"
@@ -80,7 +80,7 @@ class SmarterJournalThings(SmarterEnumAbstract):
     def choices(cls) -> list[(str, str)]:
         """Django model choices for SmarterJournalThings."""
         return [
-            (cls.PLUGIN_STATIC, cls.PLUGIN_STATIC),
+            (cls.STATIC_PLUGIN, cls.STATIC_PLUGIN),
             (cls.PLUGIN_API, cls.PLUGIN_API),
             (cls.PLUGIN_SQL, cls.PLUGIN_SQL),
             (cls.API_CONNECTION, cls.API_CONNECTION),

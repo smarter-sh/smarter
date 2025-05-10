@@ -12,8 +12,8 @@ from smarter.apps.account.tests.factories import (
     admin_user_factory,
     factory_account_teardown,
 )
-from smarter.apps.plugin.manifest.brokers.plugin import SAMPluginBroker
 from smarter.apps.plugin.manifest.brokers.sql_connection import SAMSqlConnectionBroker
+from smarter.apps.plugin.manifest.brokers.sql_plugin import SAMSqlPluginBroker
 from smarter.apps.plugin.manifest.models.sql_plugin.model import SAMSqlPlugin
 from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.manifest.broker import SAMBrokerErrorNotImplemented
@@ -51,7 +51,7 @@ class TestSAMPluginSql(unittest.TestCase):
         # create a plugin broker
         config_path = os.path.join(HERE, "mock_data/sql-test.yaml")
         plugin_manifest = get_readonly_yaml_file(config_path)
-        cls.plugin_broker = SAMPluginBroker(request=cls.request, account=cls.account, manifest=plugin_manifest)
+        cls.plugin_broker = SAMStaticPluginBroker(request=cls.request, account=cls.account, manifest=plugin_manifest)
 
     @classmethod
     def tearDownClass(cls):
@@ -61,7 +61,7 @@ class TestSAMPluginSql(unittest.TestCase):
 
     def test_plugin_broker_apply(self):
         """Test that the Broker can apply the manifest."""
-        thing = SmarterJournalThings(SmarterJournalThings.PLUGIN_STATIC)
+        thing = SmarterJournalThings(SmarterJournalThings.STATIC_PLUGIN)
         retval = self.plugin_broker.apply(request=self.request, kwargs=self.kwargs)
         self.assertEqual(retval.status_code, HTTPStatus.OK)
         content = json.loads(retval.content.decode())
@@ -104,12 +104,12 @@ class TestSAMPluginSql(unittest.TestCase):
         pydantic_model.model_dump()
 
         # assert that everything in content is in round_trip_dict
-        print("FIX NOTE: CANNOT ROUND-TRIP THE PLUGIN_STATIC MANIFEST")
+        print("FIX NOTE: CANNOT ROUND-TRIP THE STATIC_PLUGIN MANIFEST")
         # self.assertTrue(dict_is_contained_in(content, round_trip_dict))
 
     def test_plugin_broker_delete(self):
         """Test that the Broker can delete the object."""
-        thing = SmarterJournalThings(SmarterJournalThings.PLUGIN_STATIC)
+        thing = SmarterJournalThings(SmarterJournalThings.STATIC_PLUGIN)
         retval = self.plugin_broker.apply(request=self.request, kwargs=self.kwargs)
         self.assertEqual(retval.status_code, HTTPStatus.OK)
 

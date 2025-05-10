@@ -419,6 +419,14 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin):
             str(context.exception),
         )
 
+        # this should work
+        django_model.body = None
+        django_model.headers = None
+        django_model.url_params = None
+        django_model.test_values = None
+        django_model.parameters = None
+        django_model.save()
+
         try:
             django_model.delete()
         except (PluginDataApi.DoesNotExist, ValueError):

@@ -38,13 +38,13 @@ class SAMPluginCommonSpecSelectorKeyDirectiveValues(SmarterEnumAbstract):
 ###############################################################################
 # Enums for manifest keys in error handlers and other on-screen messages
 ###############################################################################
-class SAMPluginStaticMetadataKeys(SmarterEnumAbstract):
+class SAMPluginCommonMetadataKeys(SmarterEnumAbstract):
     """Smarter API Plugin Metadata keys enumeration."""
 
     PLUGIN_CLASS = "pluginClass"
 
 
-class SAMPluginStaticMetadataClass(SmarterEnumAbstract):
+class SAMPluginCommonMetadataClass(SmarterEnumAbstract):
     """Smarter API Plugin Metadata Class keys enumeration."""
 
     STATIC_DATA = "staticData"
@@ -77,8 +77,35 @@ class SAMPluginCommonSpecPromptKeys(SmarterEnumAbstract):
     MAXTOKENS = "maxTokens"
 
 
-class SmartApiPluginSpecDataKeys(SmarterEnumAbstract):
+class SAMStaticPluginSpecDataKeys(SmarterEnumAbstract):
     """Smarter API Plugin Spec Data keys enumeration."""
 
     DESCRIPTION = "description"
     STATIC_DATA = "staticData"
+
+
+class SAMApiConnectionSpecKeys(SmarterEnumAbstract):
+    """Smarter API Plugin Spec Data keys enumeration."""
+
+    CONNECTION = "connection"
+
+
+class SAMApiConnectionSpecConnectionKeys(SmarterEnumAbstract):
+    """Smarter API Plugin Spec Data keys enumeration."""
+
+    BASE_URL = "base_url"
+    API_KEY = "api_key"
+    AUTH_METHOD = "auth_method"
+    TIMEOUT = "timeout"
+    PROXY_PROTOCOL = "proxy_protocol"
+    PROXY_HOST = "proxy_host"
+    PROXY_PORT = "proxy_port"
+    PROXY_USERNAME = "proxy_username"
+    PROXY_PASSWORD = "proxy_password"
+
+
+class SAMApiConnectionStatusKeys(SmarterEnumAbstract):
+    """Smarter API Plugin Spec Data keys enumeration."""
+
+    CONNECTION_STRING = "connection_string"
+    IS_VALID = "is_valid"

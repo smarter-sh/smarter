@@ -5,7 +5,7 @@ import os
 import unittest
 
 from smarter.apps.account.models import Account
-from smarter.apps.plugin.manifest.brokers.plugin import SAMPluginBroker
+from smarter.apps.plugin.manifest.brokers.static_plugin import SAMStaticPluginBroker
 from smarter.common.const import PYTHON_ROOT
 
 from .factories import create_generic_request
@@ -26,4 +26,4 @@ class TestSAMPluginBroker(unittest.TestCase):
     def test_valid_manifest(self):
         """Test valid file path and that we can instantiate without errors"""
 
-        SAMPluginBroker(request=self.request, account=self.account, file_path=self.good_manifest_path)
+        SAMStaticPluginBroker(request=self.request, account=self.account, file_path=self.good_manifest_path)

@@ -124,9 +124,9 @@ urlpatterns = [
         json_schema_path(SAMKinds.CHATBOT), DocsJsonSchemaChatBotView.as_view(), name=json_schema_name(SAMKinds.CHATBOT)
     ),
     path(
-        json_schema_path(SAMKinds.PLUGIN_STATIC),
+        json_schema_path(SAMKinds.STATIC_PLUGIN),
         DocsJsonSchemaPluginView.as_view(),
-        name=json_schema_name(SAMKinds.PLUGIN_STATIC),
+        name=json_schema_name(SAMKinds.STATIC_PLUGIN),
     ),
     path(
         json_schema_path(SAMKinds.API_CONNECTION),
@@ -177,9 +177,9 @@ urlpatterns = [
         manifest_path(SAMKinds.CHATBOT), DocsExampleManifestChatBotView.as_view(), name=manifest_name(SAMKinds.CHATBOT)
     ),
     path(
-        manifest_path(SAMKinds.PLUGIN_STATIC),
+        manifest_path(SAMKinds.STATIC_PLUGIN),
         DocsExampleManifestPluginView.as_view(),
-        name=manifest_name(SAMKinds.PLUGIN_STATIC),
+        name=manifest_name(SAMKinds.STATIC_PLUGIN),
     ),
     path(
         manifest_path(SAMKinds.SQL_CONNECTION),
