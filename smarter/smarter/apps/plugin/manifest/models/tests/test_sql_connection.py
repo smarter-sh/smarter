@@ -10,11 +10,10 @@ from smarter.apps.account.models import Secret
 from smarter.apps.plugin.manifest.models.sql_connection.enum import DbEngines
 from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
 from smarter.apps.plugin.models import SqlConnection
+from smarter.apps.plugin.tests.base_classes import TestConnectionBase
+from smarter.apps.plugin.tests.factories import secret_factory
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.manifest.exceptions import SAMValidationError
-
-from .base_classes import TestConnectionBase
-from .factories import secret_factory
 
 
 logger = getLogger(__name__)

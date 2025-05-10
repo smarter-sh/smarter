@@ -1,18 +1,12 @@
 """Smarter API Plugin Manifest"""
 
-from typing import ClassVar, Optional
+from typing import ClassVar
 
 from pydantic import Field
 
 from smarter.apps.plugin.manifest.models.api_plugin.const import MANIFEST_KIND
-from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
-    SAMPluginCommonMetadata,
-)
-from smarter.apps.plugin.manifest.models.common.plugin.status import (
-    SAMPluginCommonStatus,
-)
+from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCommon
 from smarter.lib.manifest.enum import SAMKeys
-from smarter.lib.manifest.models import AbstractSAMBase
 
 from .spec import SAMApiPluginSpec
 
@@ -20,21 +14,12 @@ from .spec import SAMApiPluginSpec
 MODULE_IDENTIFIER = MANIFEST_KIND
 
 
-class SAMApiPlugin(AbstractSAMBase):
+class SAMApiPlugin(SAMPluginCommon):
     """Smarter API Manifest - ApiPlugin Model"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 
-    metadata: SAMPluginCommonMetadata = Field(
-        ...,
-        description=f"{class_identifier}.{SAMKeys.METADATA.value}[obj]: Required, the {MANIFEST_KIND} metadata.",
-    )
     spec: SAMApiPluginSpec = Field(
         ...,
         description=f"{class_identifier}.{SAMKeys.SPEC.value}[obj]: Required, the {MANIFEST_KIND} specification.",
-    )
-    status: Optional[SAMPluginCommonStatus] = Field(
-        default=None,
-        description=f"{class_identifier}.{SAMKeys.STATUS.value}[obj]: Optional, Read-only. Stateful status information about the {MANIFEST_KIND}.",
-        exclude=True,
     )
