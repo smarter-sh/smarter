@@ -1,11 +1,14 @@
 """Test base classes for the plugin API tests."""
 
 import os
-import unittest
 
 from django.test import Client
 
-from smarter.apps.plugin.tests.base_classes import TestConnectionBase, TestPluginBase
+from smarter.apps.plugin.tests.base_classes import (
+    TestBase,
+    TestConnectionBase,
+    TestPluginBase,
+)
 
 from .factories import create_generic_request
 
@@ -14,7 +17,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 # pylint: disable=W0223
-class TestSAMBrokerMixin(unittest.TestCase):
+class TestSAMBrokerMixin(TestBase):
     """Test SAMStaticPluginBrokerBase"""
 
     @property

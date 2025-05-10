@@ -33,4 +33,5 @@ class TestSAMStaticPluginBroker(TestSAMPluginBrokerBase):
     def test_broker_with_valid_manifest(self):
         """Test valid file path and that we can instantiate without errors"""
 
-        SAMStaticPluginBroker(request=self.request, account=self.account, file_path=self.good_manifest_path)
+        broker = SAMStaticPluginBroker(request=self.request, account=self.account, file_path=self.good_manifest_path)
+        self.assertIsInstance(broker, SAMStaticPluginBroker)
