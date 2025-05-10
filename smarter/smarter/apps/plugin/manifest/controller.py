@@ -103,7 +103,7 @@ class PluginController(AbstractController):
             self._plugin = Plugin(plugin_meta=self.plugin_meta, user_profile=self.user_profile)
             self._manifest = self._plugin.manifest
         elif self.manifest:
-            Plugin = self.map[self.manifest.metadata.pluginClass]
+            Plugin = self.map[self.manifest.metadata.plugin_class]
             self._plugin = Plugin(manifest=self.manifest, user_profile=self.user_profile)
         return self._plugin
 
