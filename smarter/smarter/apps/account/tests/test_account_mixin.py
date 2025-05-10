@@ -31,8 +31,6 @@ class TestAccountMixin(unittest.TestCase):
         cls._admin_user = get_cached_admin_user_for_account(cls._account)
         cls._other_user, cls._other_account, cls._other_user_profile = mortal_user_factory()
 
-        instance = cls()
-
     @classmethod
     def tearDownClass(cls) -> None:
         instance = cls()
