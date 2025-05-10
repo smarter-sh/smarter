@@ -53,7 +53,7 @@ from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes
-class TestPlugin(unittest.TestCase):
+class TestStaticPlugin(unittest.TestCase):
     """Test plugin."""
 
     data: dict

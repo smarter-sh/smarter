@@ -2,7 +2,7 @@
 Helper class to map to/from Pydantic manifest model, Plugin and Django ORM models.
 """
 
-from typing import Dict, Type
+from typing import Dict, Type, Union
 
 from smarter.apps.account.models import Account
 
@@ -17,6 +17,8 @@ from ..plugin.base import PluginBase
 from ..plugin.sql import SqlPlugin
 from ..plugin.static import StaticPlugin
 from .enum import SAMPluginCommonMetadataClassValues
+from .models.api_plugin.model import SAMApiPlugin
+from .models.sql_plugin.model import SAMSqlPlugin
 
 # plugin manifest
 from .models.static_plugin.const import MANIFEST_KIND
@@ -30,12 +32,16 @@ class SAMPluginControllerError(SAMExceptionBase):
 class PluginController(AbstractController):
     """Helper class to map to/from Pydantic manifest model, Plugin and Django ORM models."""
 
-    _manifest: SAMStaticPlugin = None
-    _pydantic_model: Type[SAMStaticPlugin] = SAMStaticPlugin
+    _manifest: Union[SAMStaticPlugin, SAMSqlPlugin, SAMApiPlugin] = None
     _plugin: PluginBase = None
     _plugin_meta: PluginMeta = None
 
-    def __init__(self, account: Account, manifest: SAMStaticPlugin = None, plugin_meta: PluginMeta = None):
+    def __init__(
+        self,
+        account: Account,
+        manifest: Union[SAMStaticPlugin, SAMSqlPlugin, SAMApiPlugin] = None,
+        plugin_meta: PluginMeta = None,
+    ):
         super().__init__(account=account)
         if (bool(manifest) and bool(plugin_meta)) or (not bool(manifest) and not bool(plugin_meta)):
             raise SAMPluginControllerError(
@@ -55,7 +61,7 @@ class PluginController(AbstractController):
     # Abstract property implementations
     ###########################################################################
     @property
-    def manifest(self) -> SAMStaticPlugin:
+    def manifest(self) -> Union[SAMStaticPlugin, SAMSqlPlugin, SAMApiPlugin]:
         return self._manifest
 
     @property

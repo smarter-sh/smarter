@@ -18,14 +18,13 @@ from smarter.apps.plugin.manifest.enum import SAMPluginCommonMetadataClassValues
 from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
 from smarter.apps.plugin.manifest.models.api_plugin.model import SAMApiPlugin
 from smarter.apps.plugin.models import ApiConnection, PluginDataApi, PluginMeta
+from smarter.apps.plugin.tests.base_classes import ManifestTestsMixin, TestPluginBase
+from smarter.apps.plugin.tests.mixins import ApiConnectionTestMixin
 from smarter.common.exceptions import SmarterValueError
 from smarter.common.utils import camel_to_snake_dict
 from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
-
-from .base_classes import ManifestTestsMixin, TestPluginBase
-from .mixins import ApiConnectionTestMixin
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))

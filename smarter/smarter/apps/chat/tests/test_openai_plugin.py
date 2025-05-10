@@ -27,7 +27,7 @@ from smarter.apps.plugin.plugin.static import StaticPlugin
 from .test_setup import get_test_file_path
 
 
-class TestPlugin(unittest.TestCase):
+class TestStaticPlugin(unittest.TestCase):
     """Test Plugin."""
 
     def setUp(self):

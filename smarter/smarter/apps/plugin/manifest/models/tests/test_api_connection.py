@@ -1,7 +1,5 @@
 """Test ApiConnection Django ORM and Manifest Loader."""
 
-# pylint: disable=W0104
-
 from logging import getLogger
 
 from pydantic_core import ValidationError
@@ -10,10 +8,9 @@ from smarter.apps.account.models import Secret
 from smarter.apps.plugin.manifest.models.api_connection.enum import AuthMethods
 from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
 from smarter.apps.plugin.models import ApiConnection
+from smarter.apps.plugin.tests.base_classes import TestConnectionBase
+from smarter.apps.plugin.tests.factories import secret_factory
 from smarter.lib.manifest.exceptions import SAMValidationError
-
-from .base_classes import TestConnectionBase
-from .factories import secret_factory
 
 
 logger = getLogger(__name__)
@@ -88,7 +85,7 @@ class TestApiConnection(TestConnectionBase):
         self._manifest["spec"]["connection"]["timeout"] = invalid_timeout
         self._loader = None
         self._model = None
-        self.model
+        self.assertIsNotNone(self.model)
 
     def test_validate_auth_method_invalid_value(self):
         """Test that the auth_method validator raises an error for invalid values."""
@@ -144,7 +141,7 @@ class TestApiConnection(TestConnectionBase):
         self._manifest["spec"]["connection"]["proxy_port"] = invalid_proxy_port
         self._loader = None
         self._model = None
-        self.model
+        self.assertIsNotNone(self.model)
 
     def test_validate_proxy_username_empty_value(self):
         """Test that the proxy_username validator allows empty values."""
@@ -154,7 +151,7 @@ class TestApiConnection(TestConnectionBase):
         self._manifest["spec"]["connection"]["proxy_username"] = invalid_proxy_password
         self._loader = None
         self._model = None
-        self.model
+        self.assertIsNotNone(self.model)
 
     def test_validate_proxy_password_empty_value(self):
         """Test that the proxy_password validator allows empty values."""
@@ -164,7 +161,7 @@ class TestApiConnection(TestConnectionBase):
         self._manifest["spec"]["connection"]["proxy_password"] = invalid_proxy_password
         self._loader = None
         self._model = None
-        self.model
+        self.assertIsNotNone(self.model)
 
     def test_validate_base_url_invalid_protocol(self):
         """Test that the base_url validator raises an error for unsupported protocols."""
@@ -235,7 +232,7 @@ class TestApiConnection(TestConnectionBase):
         self._manifest["spec"]["connection"]["proxy_host"] = invalid_proxy_host
         self._loader = None
         self._model = None
-        self.model
+        self.assertIsNotNone(self.model)
 
     def test_validate_proxy_port_out_of_range(self):
         """Test that the proxy_port validator raises an error for out-of-range values."""
@@ -260,7 +257,7 @@ class TestApiConnection(TestConnectionBase):
         self._manifest["spec"]["connection"]["api_key"] = invalid_api_key
         self._loader = None
         self._model = None
-        self.model
+        self.assertIsNotNone(self.model)
 
     def test_validate_api_key_empty_value(self):
         """Test that the api_key validator allows an empty string."""
@@ -270,7 +267,7 @@ class TestApiConnection(TestConnectionBase):
         self._manifest["spec"]["connection"]["api_key"] = invalid_api_key
         self._loader = None
         self._model = None
-        self.model
+        self.assertIsNotNone(self.model)
 
     def test_django_orm(self):
         """Test that the Django model can be initialized from the Pydantic model."""

@@ -1,28 +1,21 @@
 """Tests for manage.py create_plugin."""
 
-import unittest
-
 from django.core.management import call_command
 
-from smarter.apps.account.tests.factories import (
-    admin_user_factory,
-    factory_account_teardown,
-)
+from smarter.apps.plugin.tests.base_classes import TestBase
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 
 
-class ManageCommandCreatePluginTestCase(unittest.TestCase):
+class ManageCommandCreatePluginTestCase(TestBase):
     """Tests for manage.py create_plugin."""
+
+    # part of the abstract base class but not used for these tests
+    model = None
 
     def setUp(self):
         """Set up test fixtures."""
         self.file_path = get_test_file_path("everlasting-gobstopper.yaml")
         self.plugin_name = "MYEverlastingSUPERDUPERGobstopper"
-        self.user, self.account, self.user_profile = admin_user_factory()
-
-    def tearDown(self):
-        """Clean up test fixtures."""
-        factory_account_teardown(self.user, self.account, self.user_profile)
 
     def test_create_plugin(self):
 
@@ -53,7 +46,7 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
 
     def test_add_plugin_examples(self):
 
-        call_command("add_plugin_examples", f"{self.user.get_username()}")
+        call_command("add_plugin_examples", f"{self.admin_user.get_username()}")
 
     def test_get_plugins(self):
 
