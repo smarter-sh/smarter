@@ -2,15 +2,9 @@
 """Test Chatbot tasks."""
 
 # python stuff
-import hashlib
-import random
 import time
-import unittest
 
-from smarter.apps.account.tests.factories import (
-    admin_user_factory,
-    factory_account_teardown,
-)
+from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.models import ChatBot, ChatBotCustomDomain
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.aws_helpers import aws_helper
@@ -24,31 +18,30 @@ from ..tasks import (  # register_custom_domain,; verify_custom_domain,
 )
 
 
-class TestChatBotTasks(unittest.TestCase):
+class TestChatBotTasks(TestAccountMixin):
     """Test Chatbot tasks"""
 
     def setUp(self):
         """Set up test fixtures."""
-        hashed_slug = hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:16]
-        self.domain_name = f"{hashed_slug}.{aws_helper.aws.environment_api_domain}"
+        super().setUp()
+        self.domain_name = f"{self.hash_suffix}.{aws_helper.aws.environment_api_domain}"
         self.hosted_zone = aws_helper.route53.get_hosted_zone(domain_name=self.domain_name)
         if self.hosted_zone:
             aws_helper.route53.delete_hosted_zone(domain_name=self.domain_name)
-        self.user, self.account, self.user_profile = admin_user_factory()
 
         self.chatbot = ChatBot.objects.create(
             account=self.account,
-            name=f"{hashed_slug}",
+            name=f"TestChatBotTasks-{self.hash_suffix}",
         )
 
     def tearDown(self):
         """Clean up test fixtures."""
+        super().tearDown()
         try:
             ChatBotCustomDomain.objects.get(account_id=self.account.id).delete()
         except ChatBotCustomDomain.DoesNotExist:
             pass
         self.chatbot.delete()
-        factory_account_teardown(self.user, self.account, self.user_profile)
 
         self.hosted_zone = aws_helper.route53.get_hosted_zone(domain_name=self.domain_name)
         if self.hosted_zone:

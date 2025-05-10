@@ -2,13 +2,11 @@
 
 import json
 import os
-import unittest
 
 from django.test import RequestFactory
 from rest_framework.test import force_authenticate
 
-from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.tests.factories import admin_user_factory
+from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.common.const import PYTHON_ROOT
 from smarter.lib.journal.enum import SmarterJournalCliCommands, SmarterJournalThings
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
@@ -26,7 +24,7 @@ from .abstractbroker_test_class import SAMTestBroker
 
 
 # pylint: disable=too-many-public-methods
-class TestAbstractBrokerClass(unittest.TestCase, AccountMixin):
+class TestAbstractBrokerClass(TestAccountMixin):
     """
     Test abstract Broker class coverage gaps.
     531
@@ -39,7 +37,7 @@ class TestAbstractBrokerClass(unittest.TestCase, AccountMixin):
     @classmethod
     def setUpClass(cls) -> None:
         """Set up test fixtures."""
-        cls._user, cls._account, cls._user_profile = admin_user_factory()
+        super().setUpClass()
         path = os.path.join(PYTHON_ROOT, "smarter", "apps", "api", "v1", "cli", "tests", "data")
         cls.good_manifest_path = os.path.join(path, "good-plugin-manifest.yaml")
 
@@ -47,9 +45,11 @@ class TestAbstractBrokerClass(unittest.TestCase, AccountMixin):
             cls.good_manifest_text = file.read()
 
     def setUp(self):
+        """Set up test fixtures."""
+        super().setUp()
         factory = RequestFactory()
         request = factory.get("/")
-        force_authenticate(request, user=self.user)
+        force_authenticate(request, user=self.admin_user)
 
         self.broker = SAMTestBroker(
             request=request,
@@ -57,16 +57,6 @@ class TestAbstractBrokerClass(unittest.TestCase, AccountMixin):
             manifest=self.good_manifest_text,
             kind=SmarterJournalThings.STATIC_PLUGIN.value,
         )
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        instance = cls()
-        if instance.user_profile:
-            instance.user_profile.delete()
-        if instance.user:
-            instance.user.delete()
-        if instance.account:
-            instance.account.delete()
 
     def test_SAMBrokerError(self) -> None:
         # 58-61,

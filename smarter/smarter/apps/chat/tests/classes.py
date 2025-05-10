@@ -8,17 +8,13 @@ import os
 import secrets
 import sys
 import time
-import unittest
 from pathlib import Path
 from time import sleep
 from typing import Any, Callable
 
 from django.test import Client
 
-from smarter.apps.account.tests.factories import (
-    admin_user_factory,
-    factory_account_teardown,
-)
+from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chat.providers.const import OpenAIMessageKeys
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.plugin.nlp import does_refer_to
@@ -26,7 +22,7 @@ from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
 from smarter.lib.unittest.utils import get_readonly_yaml_file
 
-from ..models import Chat, ChatHistory, ChatPluginUsage, ChatToolCall
+from ..models import Chat, ChatPluginUsage
 from ..providers.providers import chat_providers
 from ..signals import (
     chat_completion_response,
@@ -45,7 +41,7 @@ if PYTHON_ROOT not in sys.path:
 CELERY_WAIT = 1
 
 
-class ProviderBaseClass(unittest.TestCase):
+class ProviderBaseClass(TestAccountMixin):
     """Test Index Lambda function."""
 
     _provider: str = None
@@ -75,7 +71,7 @@ class ProviderBaseClass(unittest.TestCase):
     def init(self):
         self._provider = None
         self.handler = None
-        self.user = None
+        self.admin_user = None
         self.account = None
         self.user_profile = None
         self.plugin = None
@@ -138,11 +134,10 @@ class ProviderBaseClass(unittest.TestCase):
 
     def setUp(self):
         """Internal test fixture setup, called from child class setUp()"""
+        super().setUp()
         self.init()
 
-        print("Setting up user, account, and user_profile")
-        self.user, self.account, self.user_profile = admin_user_factory()
-        print(f"user: {self.user}, account: {self.account}, user_profile: {self.user_profile}")
+        print(f"user: {self.admin_user}, account: {self.account}, user_profile: {self.user_profile}")
 
         config_path = get_test_file_path("plugins/everlasting-gobstopper.yaml")
         plugin_data = get_readonly_yaml_file(config_path)
@@ -160,7 +155,7 @@ class ProviderBaseClass(unittest.TestCase):
         print(f"provider {self.provider} is setup")
 
         self.client = Client()
-        self.client.force_login(self.user)
+        self.client.force_login(self.admin_user)
 
         self.chat = Chat.objects.create(
             session_key=secrets.token_hex(32),
@@ -173,6 +168,7 @@ class ProviderBaseClass(unittest.TestCase):
 
     def tearDown(self):
         """Tear down test fixtures."""
+        super().tearDown()
         if self.chat:
             chat = self.chat  # to mitigate a race condition where the test
             # may delete the chat before these models are deleted
@@ -186,7 +182,6 @@ class ProviderBaseClass(unittest.TestCase):
             self.plugin.delete()
         self.plugins = None
         self.handler = None
-        factory_account_teardown(user=self.user, account=self.account, user_profile=self.user_profile)
 
     def chatbot_factory(self, provider: str = "openai"):
         chatbot = ChatBot.objects.create(
@@ -273,11 +268,11 @@ class ProviderBaseClass(unittest.TestCase):
 
         def false_assertion(content: str):
             messages = list_factory(content)
-            self.assertFalse(self.plugin.selected(self.user, messages=messages))
+            self.assertFalse(self.plugin.selected(self.admin_user, messages=messages))
 
         def true_assertion(content: str):
             messages = list_factory(content)
-            self.assertTrue(self.plugin.selected(self.user, messages=messages))
+            self.assertTrue(self.plugin.selected(self.admin_user, messages=messages))
 
         # false cases
         false_assertion("when was leisure suit larry released?")
@@ -308,7 +303,9 @@ class ProviderBaseClass(unittest.TestCase):
         event_about_gobstoppers = get_test_file("json/prompt_about_everlasting_gobstoppers.json")
 
         try:
-            response = self.handler(chat=self.chat, data=event_about_gobstoppers, plugins=self.plugins, user=self.user)
+            response = self.handler(
+                chat=self.chat, data=event_about_gobstoppers, plugins=self.plugins, user=self.admin_user
+            )
             sleep(1)
         except Exception as error:
             self.fail(f"handler() raised {error}")
@@ -323,7 +320,7 @@ class ProviderBaseClass(unittest.TestCase):
                 print("assertFalse key:", key, "value:", value)
                 # self.assertFalse(value)
 
-        # assert that Chat has one or more records for self.user
+        # assert that Chat has one or more records for self.admin_user
         chat_histories = Chat.objects.filter().first()
         self.assertIsNotNone(chat_histories)
 
@@ -335,7 +332,7 @@ class ProviderBaseClass(unittest.TestCase):
         # give celery time to process the chat completion
         time.sleep(CELERY_WAIT)  # Pause execution for 1 second
 
-        # assert that ChatPluginUsage has one or more records for self.user
+        # assert that ChatPluginUsage has one or more records for self.admin_user
         plugin_selection_histories = ChatPluginUsage.objects.filter(chat=self.chat).first()
         if not plugin_selection_histories:
             print("ChatPluginUsage.objects.first() is None. llm did not call the plugin.")
@@ -348,7 +345,9 @@ class ProviderBaseClass(unittest.TestCase):
         event_about_weather = get_test_file("json/prompt_about_weather.json")
 
         try:
-            response = self.handler(chat=self.chat, plugins=self.plugins, user=self.user, data=event_about_weather)
+            response = self.handler(
+                chat=self.chat, plugins=self.plugins, user=self.admin_user, data=event_about_weather
+            )
         except Exception as error:
             self.fail(f"handler() raised {error}")
         self.check_response(response)
@@ -359,7 +358,9 @@ class ProviderBaseClass(unittest.TestCase):
         event_about_recipes = get_test_file("json/prompt_about_recipes.json")
 
         try:
-            response = self.handler(chat=self.chat, plugins=self.plugins, user=self.user, data=event_about_recipes)
+            response = self.handler(
+                chat=self.chat, plugins=self.plugins, user=self.admin_user, data=event_about_recipes
+            )
         except Exception as error:
             self.fail(f"handler() raised {error}")
         self.check_response(response)

@@ -2,39 +2,23 @@
 """Test Secret."""
 
 import os
-import unittest
 
 from pydantic_core import ValidationError
 
 from smarter.apps.account.manifest.models.secret.model import SAMSecret
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 
-from .factories import admin_user_factory, factory_account_teardown, mortal_user_factory
+from .mixins import TestAccountMixin
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
-class TestSmarterSecretPydanticModel(unittest.TestCase):
+class TestSmarterSecretPydanticModel(TestAccountMixin):
     """Test Secret."""
 
     def get_data_full_filepath(self, filename: str) -> str:
         return os.path.join(HERE, "data", filename)
-
-    @classmethod
-    def setUpClass(cls):
-        """
-        Set up the test class with a single account, and admin and non-admin users.
-        using the class setup so that we retain the same user_profile for each test,
-        which is needed so that the django Secret model can be queried.
-        """
-        cls.admin_user, cls.account, cls.user_profile = admin_user_factory()
-        cls.non_admin_user, _, cls.non_admin_user_profile = mortal_user_factory(account=cls.account)
-
-    @classmethod
-    def tearDownClass(cls):
-        factory_account_teardown(user=cls.admin_user, account=None, user_profile=cls.user_profile)
-        factory_account_teardown(user=cls.non_admin_user, account=cls.account, user_profile=cls.non_admin_user_profile)
 
     def test_manifest_initalization_good(self):
         """

@@ -2,15 +2,11 @@
 
 import json
 import os
-import unittest
 
 from django.core.handlers.wsgi import WSGIRequest
 from django.test import Client, RequestFactory
 
-from smarter.apps.account.tests.factories import (
-    admin_user_factory,
-    factory_account_teardown,
-)
+from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
 from smarter.apps.plugin.utils import add_example_plugins
 from smarter.lib.unittest.utils import get_readonly_yaml_file
@@ -22,7 +18,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 # pylint: disable=too-many-instance-attributes
-class TestChatBotApiBaseViewSet(unittest.TestCase):
+class TestChatBotApiBaseViewSet(TestAccountMixin):
     """Test SAM Chatbot Broker"""
 
     # pylint: disable=W0212
@@ -48,8 +44,7 @@ class TestChatBotApiBaseViewSet(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Set up test fixtures."""
-        cls.user, cls.account, cls.user_profile = admin_user_factory()
-
+        super().setUpClass()
         config_path = os.path.join(HERE, "data/chatbot.yaml")
         cls.manifest = get_readonly_yaml_file(config_path)
         cls.broker = SAMChatbotBroker(request=None, account=cls.account, manifest=cls.manifest)
@@ -66,7 +61,7 @@ class TestChatBotApiBaseViewSet(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """Tear down test fixtures."""
-        factory_account_teardown(cls.user, cls.account, cls.user_profile)
+        super().tearDownClass()
         cls.broker.delete(request=cls.request, kwargs=cls.kwargs)
 
     def test_base_class_properties(self):
@@ -76,6 +71,6 @@ class TestChatBotApiBaseViewSet(unittest.TestCase):
         base_class.dispatch(self.request, name=self.broker.chatbot.name)
 
         self.assertEqual(base_class.chatbot_helper.account_number, self.account.account_number)
-        self.assertEqual(base_class.chatbot_helper.user, self.user)
+        self.assertEqual(base_class.chatbot_helper.user, self.admin_user)
         self.assertEqual(base_class.chatbot_helper.user_profile, self.user_profile)
         self.assertEqual(base_class.chatbot_helper.chatbot, self.broker.chatbot)

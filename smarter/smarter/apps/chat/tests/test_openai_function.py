@@ -1,23 +1,18 @@
 # pylint: disable=W0613,W0718
 """Test lambda_openai_v2 function."""
 
-import json
 import os
 
 # python stuff
 import secrets
 import sys
 import time
-import unittest
 from pathlib import Path
 from time import sleep
 
 from django.test import Client
 
-from smarter.apps.account.tests.factories import (
-    admin_user_factory,
-    factory_account_teardown,
-)
+from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chat.providers.const import OpenAIMessageKeys
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.plugin.nlp import does_refer_to
@@ -47,7 +42,7 @@ handler = chat_providers.openai_handler
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes
-class TestOpenaiFunctionCalling(unittest.TestCase):
+class TestOpenaiFunctionCalling(TestAccountMixin):
     """Test Index Lambda function."""
 
     _plugin_called = False
@@ -96,8 +91,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        self.user, self.account, self.user_profile = admin_user_factory()
-
+        super().setUp()
         config_path = get_test_file_path("plugins/everlasting-gobstopper.yaml")
         plugin_data = get_readonly_yaml_file(config_path)
 
@@ -107,7 +101,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         self.chatbot = self.chatbot_factory()
 
         self.client = Client()
-        self.client.force_login(self.user)
+        self.client.force_login(self.admin_user)
 
         self.chat = Chat.objects.create(
             session_key=secrets.token_hex(32),
@@ -120,7 +114,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
 
     def tearDown(self):
         """Tear down test fixtures."""
-        factory_account_teardown(user=self.user, account=self.account, user_profile=self.user_profile)
+        super().tearDown()
         self.chat.delete()
         self.chatbot.delete()
 
@@ -208,11 +202,11 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
 
         def false_assertion(content: str):
             messages = list_factory(content)
-            self.assertFalse(self.plugin.selected(self.user, messages=messages))
+            self.assertFalse(self.plugin.selected(self.admin_user, messages=messages))
 
         def true_assertion(content: str):
             messages = list_factory(content)
-            self.assertTrue(self.plugin.selected(self.user, messages=messages))
+            self.assertTrue(self.plugin.selected(self.admin_user, messages=messages))
 
         # false cases
         false_assertion("when was leisure suit larry released?")
@@ -243,7 +237,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         event_about_gobstoppers = get_test_file("json/prompt_about_everlasting_gobstoppers.json")
 
         try:
-            response = handler(chat=self.chat, data=event_about_gobstoppers, plugins=self.plugins, user=self.user)
+            response = handler(chat=self.chat, data=event_about_gobstoppers, plugins=self.plugins, user=self.admin_user)
             sleep(1)
         except Exception as error:
             self.fail(f"handler() raised {error}")
@@ -258,7 +252,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
                 print("assertFalse key:", key, "value:", value)
                 # self.assertFalse(value)
 
-        # assert that Chat has one or more records for self.user
+        # assert that Chat has one or more records for self.admin_user
         chat_histories = Chat.objects.filter().first()
         self.assertIsNotNone(chat_histories)
 
@@ -269,7 +263,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         # give celery time to process the chat completion
         time.sleep(CELERY_WAIT)  # Pause execution for 1 second
 
-        # assert that ChatPluginUsage has one or more records for self.user
+        # assert that ChatPluginUsage has one or more records for self.admin_user
         plugin_selection_histories = ChatPluginUsage.objects.first()
         if plugin_selection_histories:
             self.assertIsNotNone(plugin_selection_histories)
@@ -282,7 +276,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         event_about_weather = get_test_file("json/prompt_about_weather.json")
 
         try:
-            response = handler(chat=self.chat, plugins=self.plugins, user=self.user, data=event_about_weather)
+            response = handler(chat=self.chat, plugins=self.plugins, user=self.admin_user, data=event_about_weather)
         except Exception as error:
             self.fail(f"handler() raised {error}")
         self.check_response(response)
@@ -293,7 +287,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         event_about_recipes = get_test_file("json/prompt_about_recipes.json")
 
         try:
-            response = handler(chat=self.chat, plugins=self.plugins, user=self.user, data=event_about_recipes)
+            response = handler(chat=self.chat, plugins=self.plugins, user=self.admin_user, data=event_about_recipes)
         except Exception as error:
             self.fail(f"handler() raised {error}")
         self.check_response(response)

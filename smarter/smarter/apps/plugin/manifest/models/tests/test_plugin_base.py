@@ -3,16 +3,12 @@
 
 # python stuff
 import json
-import unittest
 from time import sleep
 
 from pydantic_core import ValidationError as PydanticValidationError
 
 from smarter.apps.account.models import UserProfile
-from smarter.apps.account.tests.factories import (
-    admin_user_factory,
-    factory_account_teardown,
-)
+from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chat.providers.const import OpenAIMessageKeys
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonSpecPromptKeys,
@@ -52,7 +48,7 @@ from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes
-class TestPluginBase(unittest.TestCase):
+class TestPluginBase(TestAccountMixin):
     """Test plugin base class."""
 
     data: dict
@@ -105,13 +101,9 @@ class TestPluginBase(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
+        super().setUp()
         config_path = get_test_file_path("everlasting-gobstopper.yaml")
         self.data = get_readonly_yaml_file(config_path)
-        self.user, self.account, self.user_profile = admin_user_factory()
-
-    def tearDown(self):
-        """Clean up test fixtures."""
-        factory_account_teardown(self.user, self.account, self.user_profile)
 
     # pylint: disable=broad-exception-caught
     def test_create(self):
@@ -523,7 +515,7 @@ class TestPluginBase(unittest.TestCase):
         ]
 
         plugin = StaticPlugin(data=self.data)
-        plugin.selected(user=self.user, messages=messages)
+        plugin.selected(user=self.admin_user, messages=messages)
         self.assertTrue(self.signals["plugin_selected"])
 
         sleep(1)

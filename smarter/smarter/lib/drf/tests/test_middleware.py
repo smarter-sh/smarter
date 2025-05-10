@@ -1,57 +1,43 @@
 """Test SmarterTokenAuthenticationMiddleware."""
 
-import unittest
 from http import HTTPStatus
 from unittest.mock import patch
 
 from django.http import HttpResponse
 from django.test import Client, RequestFactory
 
-from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.tests.factories import admin_user_factory
-from smarter.lib.django.user import User
+from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib.drf.middleware import SmarterTokenAuthenticationMiddleware
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.drf.token_authentication import SmarterTokenAuthenticationError
 
 
-class TestSmarterTokenAuthenticationMiddleware(unittest.TestCase, AccountMixin):
+class TestSmarterTokenAuthenticationMiddleware(TestAccountMixin):
     """Test SmarterTokenAuthenticationMiddleware."""
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls._user, cls._account, cls._user_profile = admin_user_factory()
-
+        super().setUpClass()
         instance = cls()
 
         cls.token_record, cls.token_key = SmarterAuthToken.objects.create(
-            name=instance.user.username,
-            user=instance.user,
-            description=instance.user.username,
+            name=instance.admin_user.username,
+            user=instance.admin_user,
+            description=instance.admin_user.username,
         )
 
     @classmethod
     def tearDownClass(cls) -> None:
+        super().tearDownClass()
         instance = cls()
-        try:
-            instance.user_profile.delete()
-        except UserProfile.DoesNotExist:
-            pass
-        try:
-            instance.user.delete()
-        except User.DoesNotExist:
-            pass
-        try:
-            instance.account.delete()
-        except Account.DoesNotExist:
-            pass
         try:
             instance.token_record.delete()
         except SmarterAuthToken.DoesNotExist:
             pass
 
     def setUp(self):
+        """Set up test fixtures."""
+        super().setUp()
         self.middleware = SmarterTokenAuthenticationMiddleware(lambda req: HttpResponse())
         self.factory = RequestFactory()
 
