@@ -23,77 +23,47 @@ from smarter.common.utils import camel_to_snake_dict
 from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
-from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 from .base_classes import ManifestTestsMixin, TestPluginBase
-from .factories import secret_factory
+from .mixins import SqlConnectionTestMixin
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
-# pylint: disable=too-many-instance-attributes
-class TestSqlPlugin(TestPluginBase, ManifestTestsMixin):
+class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin):
     """Test SAM manifest using ApiPlugin"""
 
     _model: SAMSqlPlugin = None
     plugin_meta: PluginMeta = None
-    connection_loader: SAMLoader
-    connection_manifest_path: str = None
-    connection_manifest: dict = None
-    connection_model: SAMSqlConnection
-    connection_django_model: SqlConnection = None
+
+    @property
+    def connection_loader(self) -> SAMLoader:
+        """Provide connection_loader from SqlConnectionTestMixin."""
+        return self.__class__.connection_loader
+
+    @property
+    def connection_manifest(self) -> dict:
+        """Provide connection_manifest from SqlConnectionTestMixin."""
+        return self.__class__.connection_manifest
+
+    @property
+    def connection_manifest_path(self) -> str:
+        """Provide connection_manifest_path from SqlConnectionTestMixin."""
+        return self.__class__.connection_manifest_path
+
+    @property
+    def connection_model(self) -> SAMSqlConnection:
+        """Provide connection_model from SqlConnectionTestMixin."""
+        return self.__class__.connection_model
 
     @property
     def model(self) -> SAMSqlPlugin:
         # override to create a SAMSqlPlugin pydantic model from the loader
         if not self._model and self.loader:
             self._model = SAMSqlPlugin(**self.loader.pydantic_model_dump())
+            self.assertIsNotNone(self._model)
         return self._model
-
-    @classmethod
-    def setUpClass(cls):
-        """Set up test fixtures."""
-        super().setUpClass()
-
-        # setup an instance of SqlConnection() - a Django model
-        # ---------------------------------------------------------------------
-        # 1.) create an SqlConnection manifest
-        connection_manifest_filename = "sql-connection.yaml"
-        connection_manifest_path = os.path.join(HERE, "mock_data", connection_manifest_filename)
-        connection_manifest = get_readonly_yaml_file(connection_manifest_path)
-        connection_loader = SAMLoader(manifest=connection_manifest)
-        connection_model = SAMSqlConnection(**connection_loader.pydantic_model_dump())
-
-        # 2.) transform the manifest for a django model
-        # ---------------------------------------------------------------------
-        connection_model_dump = connection_model.spec.connection.model_dump()
-        connection_model_dump["account"] = cls.account
-        connection_model_dump["name"] = connection_model.metadata.name
-        connection_model_dump["description"] = connection_model.metadata.description
-
-        if connection_model.spec.connection.password:
-            clear_password = connection_model_dump.pop("password")
-            secret_name = f"test_secret_{cls.hash_suffix}"
-            secret = secret_factory(user_profile=cls.user_profile, name=secret_name, value=clear_password)
-            connection_model_dump["password"] = secret
-
-        if connection_model.spec.connection.proxy_password:
-            clear_proxy_password = connection_model_dump.pop("proxy_password")
-            proxy_secret_name = f"test_proxy_secret_{cls.hash_suffix}"
-            proxy_secret = secret_factory(
-                user_profile=cls.user_profile, name=proxy_secret_name, value=clear_proxy_password
-            )
-            connection_model_dump["proxy_password"] = proxy_secret
-
-        # 2.) initialize all of our class variables
-        # ---------------------------------------------------------------------
-        cls.connection_loader = connection_loader
-        cls.connection_manifest_path = connection_manifest_path
-        cls.connection_manifest = connection_manifest
-        cls.connection_model = connection_model
-        cls.connection_django_model = SqlConnection(**connection_model_dump)
-        cls.connection_django_model.save()
 
     @classmethod
     def tearDownClass(cls):
@@ -104,11 +74,6 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin):
             cls.connection_django_model.delete()
         except (SqlConnection.DoesNotExist, ValueError):
             pass
-
-        cls.connection_loader = None
-        cls.connection_manifest_path = None
-        cls.connection_manifest = None
-        cls.connection_model = None
 
     def tearDown(self):
         """Tear down test fixtures."""

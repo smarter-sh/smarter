@@ -30,6 +30,7 @@ class TestSqlConnection(TestConnectionBase):
         # create a SAMSqlConnection pydantic model from the loader
         if not self._model and self.loader:
             self._model = SAMSqlConnection(**self.loader.pydantic_model_dump())
+            self.assertIsNotNone(self._model)
         return self._model
 
     def properties_factory(self) -> dict:

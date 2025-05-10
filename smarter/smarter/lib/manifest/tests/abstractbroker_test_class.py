@@ -10,7 +10,7 @@ from smarter.apps.account.manifest.enum import SAMUserSpecKeys
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
-from smarter.apps.plugin.manifest.models.static_plugin.model import SAMPluginStatic
+from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.django.user import UserType
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -41,8 +41,8 @@ class SAMTestBroker(AbstractBroker, AccountMixin):
     # override the base abstract manifest model with the User model
     # FIX NOTE: We shouldn't be using an implementation of the actual
     #           manifest model here. We should be using a test model.
-    _manifest: SAMPluginStatic = None
-    _pydantic_model: typing.Type[SAMPluginStatic] = SAMPluginStatic
+    _manifest: SAMStaticPlugin = None
+    _pydantic_model: typing.Type[SAMStaticPlugin] = SAMStaticPlugin
     _user: UserType = None
     _username: str = None
 
@@ -139,9 +139,9 @@ class SAMTestBroker(AbstractBroker, AccountMixin):
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> SAMPluginStatic:  # FIX NOTE: This should be a test model
+    def manifest(self) -> SAMStaticPlugin:  # FIX NOTE: This should be a test model
         """
-        SAMPluginStatic() is a Pydantic model
+        SAMStaticPlugin() is a Pydantic model
         that is used to represent the Smarter API User manifest. The Pydantic
         model is initialized with the data from the manifest loader, which is
         generally passed to the model constructor as **data. However, this top-level
@@ -152,7 +152,7 @@ class SAMTestBroker(AbstractBroker, AccountMixin):
         if self._manifest:
             return self._manifest
         if self.loader:
-            self._manifest = SAMPluginStatic(
+            self._manifest = SAMStaticPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
                 metadata=self.loader.manifest_metadata,

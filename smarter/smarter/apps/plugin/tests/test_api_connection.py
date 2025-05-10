@@ -29,7 +29,26 @@ class TestApiConnection(TestConnectionBase):
         # override to create a SAMApiConnection pydantic model from the loader
         if not self._model and self.loader:
             self._model = SAMApiConnection(**self.loader.pydantic_model_dump())
+            self.assertIsNotNone(self._model)
         return self._model
+
+    def test_valid_manifest(self):
+        """
+        Test valid file path and that we can instantiate without errors
+        """
+        self.load_manifest(filename="api-connection.yaml")
+        self.assertIsNotNone(self.model)
+        self.assertEqual(self.model.metadata.name, "testApiConnection")
+        self.assertEqual(self.model.metadata.description, "points to smarter api localhost")
+        self.assertEqual(self.model.spec.connection.base_url, "http://localhost:8000/")
+        self.assertEqual(self.model.spec.connection.api_key, "12345-abcde-67890-fghij")
+        self.assertEqual(self.model.spec.connection.timeout, 10)
+        self.assertEqual(self.model.spec.connection.auth_method, AuthMethods.TOKEN)
+        self.assertEqual(self.model.spec.connection.proxy_protocol, "http")
+        self.assertEqual(self.model.spec.connection.proxy_host, "proxy.example.com")
+        self.assertEqual(self.model.spec.connection.proxy_port, 8080)
+        self.assertEqual(self.model.spec.connection.proxy_username, "proxyUser")
+        self.assertEqual(self.model.spec.connection.proxy_password, "proxyPass")
 
     def test_validate_base_url_invalid_value(self):
         """Test that the base_url validator raises an error for invalid values."""

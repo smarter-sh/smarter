@@ -20,7 +20,7 @@ from .enum import SAMPluginCommonMetadataClassValues
 
 # plugin manifest
 from .models.static_plugin.const import MANIFEST_KIND
-from .models.static_plugin.model import SAMPluginStatic
+from .models.static_plugin.model import SAMStaticPlugin
 
 
 class SAMPluginControllerError(SAMExceptionBase):
@@ -30,12 +30,12 @@ class SAMPluginControllerError(SAMExceptionBase):
 class PluginController(AbstractController):
     """Helper class to map to/from Pydantic manifest model, Plugin and Django ORM models."""
 
-    _manifest: SAMPluginStatic = None
-    _pydantic_model: Type[SAMPluginStatic] = SAMPluginStatic
+    _manifest: SAMStaticPlugin = None
+    _pydantic_model: Type[SAMStaticPlugin] = SAMStaticPlugin
     _plugin: PluginBase = None
     _plugin_meta: PluginMeta = None
 
-    def __init__(self, account: Account, manifest: SAMPluginStatic = None, plugin_meta: PluginMeta = None):
+    def __init__(self, account: Account, manifest: SAMStaticPlugin = None, plugin_meta: PluginMeta = None):
         super().__init__(account=account)
         if (bool(manifest) and bool(plugin_meta)) or (not bool(manifest) and not bool(plugin_meta)):
             raise SAMPluginControllerError(
@@ -55,7 +55,7 @@ class PluginController(AbstractController):
     # Abstract property implementations
     ###########################################################################
     @property
-    def manifest(self) -> SAMPluginStatic:
+    def manifest(self) -> SAMStaticPlugin:
         return self._manifest
 
     @property

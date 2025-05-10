@@ -10,7 +10,7 @@ from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
-from smarter.apps.plugin.manifest.models.static_plugin.model import SAMPluginStatic
+from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.plugin.static import StaticPlugin
@@ -48,8 +48,8 @@ class SAMStaticPluginBroker(AbstractBroker, AccountMixin):
     """
 
     # override the base abstract manifest model with the StaticPlugin model
-    _manifest: SAMPluginStatic = None
-    _pydantic_model: Type[SAMPluginStatic] = SAMPluginStatic
+    _manifest: SAMStaticPlugin = None
+    _pydantic_model: Type[SAMStaticPlugin] = SAMStaticPlugin
     _plugin: PluginBase = None
     _plugin_meta: PluginMeta = None
 
@@ -120,9 +120,9 @@ class SAMStaticPluginBroker(AbstractBroker, AccountMixin):
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> SAMPluginStatic:
+    def manifest(self) -> SAMStaticPlugin:
         """
-        SAMPluginStatic() is a Pydantic model
+        SAMStaticPlugin() is a Pydantic model
         that is used to represent the Smarter API StaticPlugin manifest. The Pydantic
         model is initialized with the data from the manifest loader, which is
         generally passed to the model constructor as **data. However, this top-level
@@ -133,7 +133,7 @@ class SAMStaticPluginBroker(AbstractBroker, AccountMixin):
         if self._manifest:
             return self._manifest
         if self.loader:
-            self._manifest = SAMPluginStatic(
+            self._manifest = SAMStaticPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
                 metadata=self.loader.manifest_metadata,

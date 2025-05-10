@@ -30,7 +30,7 @@ MODULE_IDENTIFIER = MANIFEST_KIND
 logger = logging.getLogger(__name__)
 
 
-class SAMPluginStatic(AbstractSAMBase):
+class SAMStaticPlugin(AbstractSAMBase):
     """Smarter API Manifest - Plugin"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
@@ -50,7 +50,7 @@ class SAMPluginStatic(AbstractSAMBase):
     )
 
     @model_validator(mode="after")
-    def validate_business_rules(self) -> "SAMPluginStatic":
+    def validate_business_rules(self) -> "SAMStaticPlugin":
         """Plugin-level business rule validations"""
         err_desc_model_name = f"{self.kind}.{SAMKeys.SPEC.value}.{SAMPluginSpecKeys.DATA.value}"
 

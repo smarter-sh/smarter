@@ -29,7 +29,7 @@ from smarter.lib.manifest.loader import SAMLoader
 # plugin stuff
 from ..manifest.enum import SAMPluginCommonSpecSelectorKeyDirectiveValues
 from ..manifest.models.static_plugin.const import MANIFEST_KIND
-from ..manifest.models.static_plugin.model import SAMPluginStatic
+from ..manifest.models.static_plugin.model import SAMStaticPlugin
 from ..models import PluginDataBase, PluginMeta, PluginPrompt, PluginSelector
 from ..nlp import does_refer_to
 from ..serializers import (
@@ -65,8 +65,8 @@ class PluginBase(ABC):
 
     _api_version: str = SMARTER_API_MANIFEST_DEFAULT_VERSION
     _metadata_class: str = None
-    _manifest: SAMPluginStatic = None
-    _pydantic_model: Type[SAMPluginStatic] = SAMPluginStatic
+    _manifest: SAMStaticPlugin = None
+    _pydantic_model: Type[SAMStaticPlugin] = SAMStaticPlugin
 
     _plugin_meta: PluginMeta = None
     _plugin_selector: PluginSelector = None
@@ -91,7 +91,7 @@ class PluginBase(ABC):
         user_profile: UserProfile = None,
         selected: bool = False,
         api_version: str = None,
-        manifest: SAMPluginStatic = None,
+        manifest: SAMStaticPlugin = None,
         plugin_id: int = None,
         plugin_meta: PluginMeta = None,
         data: Union[dict, str] = None,
@@ -142,7 +142,7 @@ class PluginBase(ABC):
                 kind=self.kind,
                 manifest=data,
             )
-            self._manifest = SAMPluginStatic(**loader.pydantic_model_dump())
+            self._manifest = SAMStaticPlugin(**loader.pydantic_model_dump())
             self.create()
 
         if self.ready:
@@ -243,12 +243,12 @@ class PluginBase(ABC):
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> SAMPluginStatic:
+    def manifest(self) -> SAMStaticPlugin:
         """Return the Pydandic model of the plugin."""
         if not self._manifest and self.ready:
             # if we don't have a manifest but we do have Django ORM data then
             # we can work backwards to the Pydantic model
-            self._manifest = SAMPluginStatic(**self.to_json())
+            self._manifest = SAMStaticPlugin(**self.to_json())
         return self._manifest
 
     @property
