@@ -18,7 +18,7 @@ from smarter.apps.account.utils import get_cached_admin_user_for_account
 from smarter.apps.api.v1.cli.views.apply import ApiV1CliApplyApiView
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.chatbot.tasks import deploy_default_api
-from smarter.apps.plugin.plugin.static import PluginStatic
+from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.user import User
@@ -97,7 +97,7 @@ class Command(BaseCommand, AccountMixin):
         else:
             raise SmarterValueError("Could not read the file.")
 
-        plugin = PluginStatic(data=data, user_profile=self.user_profile)
+        plugin = StaticPlugin(data=data, user_profile=self.user_profile)
         return plugin
 
     def apply_manifest(self, manifest_data: str) -> HttpResponse:

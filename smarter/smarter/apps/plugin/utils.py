@@ -6,7 +6,7 @@ import yaml
 
 from smarter.apps.account.models import UserProfile
 
-from .plugin.static import PluginStatic
+from .plugin.static import StaticPlugin
 from .plugin.utils import PluginExamples
 
 
@@ -23,7 +23,7 @@ def add_example_plugins(user_profile: UserProfile) -> bool:
     for plugin in plugin_examples.plugins:
         data = plugin.to_yaml()
         data = yaml.safe_load(data)
-        PluginStatic(user_profile=user_profile, data=data)
+        StaticPlugin(user_profile=user_profile, data=data)
 
 
 def get_plugin_examples_by_name() -> list[str]:

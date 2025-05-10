@@ -19,7 +19,7 @@ from smarter.apps.account.utils import (
     get_cached_user_profile,
 )
 from smarter.apps.plugin.models import PluginMeta
-from smarter.apps.plugin.plugin.static import PluginStatic
+from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_DEFAULT_CACHE_TIMEOUT, SmarterWaffleSwitches
 from smarter.common.helpers.console_helpers import formatted_text
@@ -368,12 +368,12 @@ class ChatBotPlugin(TimestampedModel):
         return f"{str(self.chatbot.url)} - {str(self.plugin_meta.name)}"
 
     @property
-    def plugin(self) -> PluginStatic:
+    def plugin(self) -> StaticPlugin:
         if not self.chatbot:
             return None
         admin_user = UserProfile.admin_for_account(self.chatbot.account)
         user_profile = get_cached_user_profile(admin_user)
-        return PluginStatic(plugin_meta=self.plugin_meta, user_profile=user_profile)
+        return StaticPlugin(plugin_meta=self.plugin_meta, user_profile=user_profile)
 
     @classmethod
     def load(cls: Type["ChatBotPlugin"], chatbot: ChatBot, data) -> "ChatBotPlugin":
@@ -382,11 +382,11 @@ class ChatBotPlugin(TimestampedModel):
             return None
         admin_user = UserProfile.admin_for_account(chatbot.account)
         user_profile = get_cached_user_profile(admin_user)
-        plugin = PluginStatic(data=data, user_profile=user_profile)
+        plugin = StaticPlugin(data=data, user_profile=user_profile)
         return cls.objects.create(chatbot=chatbot, plugin_meta=plugin.meta)
 
     @classmethod
-    def plugins(cls, chatbot: ChatBot) -> List[PluginStatic]:
+    def plugins(cls, chatbot: ChatBot) -> List[StaticPlugin]:
         if not chatbot:
             return []
         chatbot_plugins = cls.objects.filter(chatbot=chatbot)
@@ -394,7 +394,7 @@ class ChatBotPlugin(TimestampedModel):
         user_profile = get_cached_user_profile(admin_user)
         retval = []
         for chatbot_plugin in chatbot_plugins:
-            retval.append(PluginStatic(plugin_meta=chatbot_plugin.plugin_meta, user_profile=user_profile))
+            retval.append(StaticPlugin(plugin_meta=chatbot_plugin.plugin_meta, user_profile=user_profile))
         return retval
 
     @classmethod

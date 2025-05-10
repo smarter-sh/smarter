@@ -43,7 +43,7 @@ from smarter.apps.chat.signals import (
     chat_response_failure,
     chat_started,
 )
-from smarter.apps.plugin.plugin.static import PluginStatic
+from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.apps.plugin.serializers import PluginMetaSerializer
 from smarter.common.exceptions import (
     SmarterConfigurationError,
@@ -184,7 +184,7 @@ class ChatProviderBase(ProviderDbMixin):
     _api_key: str
 
     data: dict
-    plugins: Optional[List[PluginStatic]]
+    plugins: Optional[List[StaticPlugin]]
 
     model: str
     temperature: float
@@ -592,7 +592,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             function_name=function_name, function_args=function_args, request=request, response=response
         )
 
-    def handle_plugin_called(self, plugin: PluginStatic) -> None:
+    def handle_plugin_called(self, plugin: StaticPlugin) -> None:
         logger.info("%s %s - %s", self.formatted_class_name, formatted_text("handle_plugin_called()"), plugin.name)
         chat_completion_plugin_called.send(
             sender=self.handler,
@@ -612,7 +612,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             logger.warning("process_tool_call() - tool_call is empty. Skipping.")
             return
         serialized_tool_call = {}
-        plugin: PluginStatic = None
+        plugin: StaticPlugin = None
         function_name = tool_call.function.name
         function_to_call = self.available_functions[function_name]
         function_args = json.loads(tool_call.function.arguments)
@@ -632,7 +632,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             # function_to_call, assigned above. but just to play it safe,
             # we're directly invoking the plugin's function_calling_plugin() method.
             plugin_id = int(function_name[-4:])
-            plugin = PluginStatic(plugin_id=plugin_id, user_profile=self.user_profile)
+            plugin = StaticPlugin(plugin_id=plugin_id, user_profile=self.user_profile)
             plugin.params = function_args
             function_response = plugin.function_calling_plugin(inquiry_type=function_args.get("inquiry_type"))
             serialized_tool_call[InternalKeys.SMARTER_PLUGIN_KEY] = PluginMetaSerializer(plugin.plugin_meta).data
@@ -646,7 +646,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
         )
         self.serialized_tool_calls.append(serialized_tool_call)
 
-    def handle_plugin_selected(self, plugin: PluginStatic) -> None:
+    def handle_plugin_selected(self, plugin: StaticPlugin) -> None:
         # does the prompt have anything to do with any of the search terms defined in a plugin?
         # FIX NOTE: need to decide on how to resolve which of many plugin values sets to use for model, temperature, max_tokens
         logger.info("%s %s", self.formatted_class_name, formatted_text("handle_plugin_selected()"))
@@ -690,7 +690,7 @@ class OpenAICompatibleChatProvider(ChatProviderBase):
             "input_text": self.input_text,
         }
 
-    def handler(self, chat: Chat, data: dict, plugins: list[PluginStatic], user: UserType) -> dict:
+    def handler(self, chat: Chat, data: dict, plugins: list[StaticPlugin], user: UserType) -> dict:
         """
         Chat prompt handler. Responsible for processing incoming requests and
         invoking the appropriate OpenAI API endpoint based on the contents of

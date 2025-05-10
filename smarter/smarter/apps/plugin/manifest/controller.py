@@ -12,10 +12,10 @@ from smarter.lib.manifest.exceptions import SAMExceptionBase
 
 # plugin
 from ..models import PluginMeta
-from ..plugin.api import PluginApi
+from ..plugin.api import ApiPlugin
 from ..plugin.base import PluginBase
 from ..plugin.sql import PluginSql
-from ..plugin.static import PluginStatic
+from ..plugin.static import StaticPlugin
 from .enum import SAMPluginCommonMetadataClassValues
 
 # plugin manifest
@@ -83,9 +83,9 @@ class PluginController(AbstractController):
     @property
     def map(self) -> Dict[str, Type[PluginBase]]:
         return {
-            SAMPluginCommonMetadataClassValues.API.value: PluginApi,
+            SAMPluginCommonMetadataClassValues.API.value: ApiPlugin,
             SAMPluginCommonMetadataClassValues.SQL.value: PluginSql,
-            SAMPluginCommonMetadataClassValues.STATIC.value: PluginStatic,
+            SAMPluginCommonMetadataClassValues.STATIC.value: StaticPlugin,
         }
 
     @property

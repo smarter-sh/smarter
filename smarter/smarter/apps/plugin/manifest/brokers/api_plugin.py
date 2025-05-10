@@ -1,5 +1,5 @@
 # pylint: disable=W0718
-"""Smarter API StaticPlugin Manifest handler"""
+"""Smarter API ApiPlugin Manifest handler"""
 
 import logging
 from typing import Type
@@ -11,11 +11,11 @@ from rest_framework.serializers import ModelSerializer
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.manifest.controller import PluginController
-from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
-from smarter.apps.plugin.manifest.models.static_plugin.model import SAMPluginStatic
+from smarter.apps.plugin.manifest.models.api_plugin.const import MANIFEST_KIND
+from smarter.apps.plugin.manifest.models.api_plugin.model import SAMApiPlugin
 from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.plugin.plugin.api import ApiPlugin
 from smarter.apps.plugin.plugin.base import PluginBase
-from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
@@ -51,7 +51,7 @@ class PluginSerializer(ModelSerializer):
 
     email = serializers.SerializerMethodField()
 
-    def get_email(self, obj):
+    def get_email(self, obj: PluginMeta):
         if obj.author:
             user_profile = UserProfile.objects.get(id=obj.author_id)
             return user_profile.user.email if user_profile.user else None
@@ -63,7 +63,7 @@ class PluginSerializer(ModelSerializer):
         fields = ["name", "plugin_class", "version", "email", "created_at", "updated_at"]
 
 
-class SAMStaticPluginBroker(AbstractBroker, AccountMixin):
+class SAMApiPluginBroker(AbstractBroker, AccountMixin):
     """
     Smarter API Plugin Manifest Broker.This class is responsible for
     - loading, validating and parsing the Smarter Api yaml Plugin manifests
@@ -74,8 +74,8 @@ class SAMStaticPluginBroker(AbstractBroker, AccountMixin):
     """
 
     # override the base abstract manifest model with the Plugin model
-    _manifest: SAMPluginStatic = None
-    _pydantic_model: Type[SAMPluginStatic] = SAMPluginStatic
+    _manifest: SAMApiPlugin = None
+    _pydantic_model: Type[SAMApiPlugin] = SAMApiPlugin
     _plugin: PluginBase = None
     _plugin_meta: PluginMeta = None
 
@@ -146,9 +146,9 @@ class SAMStaticPluginBroker(AbstractBroker, AccountMixin):
         return MANIFEST_KIND
 
     @property
-    def manifest(self) -> SAMPluginStatic:
+    def manifest(self) -> SAMApiPlugin:
         """
-        SAMPluginStatic() is a Pydantic model
+        SAMApiPlugin() is a Pydantic model
         that is used to represent the Smarter API Plugin manifest. The Pydantic
         model is initialized with the data from the manifest loader, which is
         generally passed to the model constructor as **data. However, this top-level
@@ -159,7 +159,7 @@ class SAMStaticPluginBroker(AbstractBroker, AccountMixin):
         if self._manifest:
             return self._manifest
         if self.loader:
-            self._manifest = SAMPluginStatic(
+            self._manifest = SAMApiPlugin(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
                 metadata=self.loader.manifest_metadata,
@@ -174,7 +174,7 @@ class SAMStaticPluginBroker(AbstractBroker, AccountMixin):
     def example_manifest(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
-        Plugin = StaticPlugin
+        Plugin = ApiPlugin
 
         data = Plugin.example_manifest(kwargs=kwargs)
         return self.json_response_ok(command=command, data=data)
@@ -262,7 +262,7 @@ class SAMStaticPluginBroker(AbstractBroker, AccountMixin):
         self.set_and_verify_name_param(command=command)
         if self.plugin.ready:
             try:
-                data = self.plugin.to_json()
+                data: dict = self.plugin.to_json()
                 data[SAMKeys.METADATA].pop(SAMMetadataKeys.ACCOUNT)
                 data[SAMKeys.METADATA].pop(SAMMetadataKeys.AUTHOR)
                 return self.json_response_ok(command=command, data=data)

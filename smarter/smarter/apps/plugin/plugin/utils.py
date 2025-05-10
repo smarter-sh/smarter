@@ -12,7 +12,7 @@ from smarter.apps.plugin.models import PluginMeta
 from smarter.common.const import PYTHON_ROOT
 from smarter.lib.django.user import UserType
 
-from .static import PluginStatic
+from .static import StaticPlugin
 
 
 logger = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ class Plugins:
     """A class for working with multiple plugins."""
 
     account: Account = None
-    plugins: list[PluginStatic] = []
+    plugins: list[StaticPlugin] = []
 
     def __init__(self, user: UserType = None, account: Account = None):
 
@@ -31,7 +31,7 @@ class Plugins:
             self.account = account or UserProfile.objects.get(user=user).account
 
             for plugin in PluginMeta.objects.filter(account=self.account):
-                self.plugins.append(PluginStatic(plugin_id=plugin.id))
+                self.plugins.append(StaticPlugin(plugin_id=plugin.id))
 
     @property
     def data(self) -> list[dict]:
