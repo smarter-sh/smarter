@@ -6,10 +6,10 @@ from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.api_plugin.model import SAMApiPlugin
 from smarter.apps.plugin.manifest.models.sql_plugin.model import SAMSqlPlugin
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
-from smarter.apps.plugin.tests.base_classes import TestBase
+from smarter.apps.plugin.tests.base_classes import TestPluginClassBase
 
 
-class TestPluginController(TestBase):
+class TestPluginController(TestPluginClassBase):
     """Test Plugin manifest controller"""
 
     model: Union[SAMApiPlugin, SAMSqlPlugin, SAMStaticPlugin] = None
