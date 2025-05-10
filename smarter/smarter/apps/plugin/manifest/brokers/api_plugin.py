@@ -34,21 +34,20 @@ from smarter.lib.manifest.loader import SAMLoader
 from . import PluginSerializer, SAMPluginBrokerError
 
 
-MAX_RESULTS = 1000
 logger = logging.getLogger(__name__)
 
 
 class SAMApiPluginBroker(AbstractBroker, AccountMixin):
     """
-    Smarter API Plugin Manifest Broker.This class is responsible for
-    - loading, validating and parsing the Smarter Api yaml Plugin manifests
+    Smarter API ApiPlugin Manifest Broker.This class is responsible for
+    - loading, validating and parsing the Smarter Api yaml ApiPlugin manifests
     - using the manifest to initialize the corresponding Pydantic model
 
-    The Plugin object provides the generic services for the Plugin, such as
+    The ApiPlugin object provides the generic services for the ApiPlugin, such as
     instantiation, create, update, delete, etc.
     """
 
-    # override the base abstract manifest model with the Plugin model
+    # override the base abstract manifest model with the ApiPlugin model
     _manifest: SAMApiPlugin = None
     _pydantic_model: Type[SAMApiPlugin] = SAMApiPlugin
     _plugin: PluginBase = None
@@ -124,7 +123,7 @@ class SAMApiPluginBroker(AbstractBroker, AccountMixin):
     def manifest(self) -> SAMApiPlugin:
         """
         SAMApiPlugin() is a Pydantic model
-        that is used to represent the Smarter API Plugin manifest. The Pydantic
+        that is used to represent the Smarter API ApiPlugin manifest. The Pydantic
         model is initialized with the data from the manifest loader, which is
         generally passed to the model constructor as **data. However, this top-level
         manifest model has to be explicitly initialized, whereas its child models
@@ -149,9 +148,7 @@ class SAMApiPluginBroker(AbstractBroker, AccountMixin):
     def example_manifest(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
-        Plugin = ApiPlugin
-
-        data = Plugin.example_manifest(kwargs=kwargs)
+        data = ApiPlugin.example_manifest(kwargs=kwargs)
         return self.json_response_ok(command=command, data=data)
 
     def get(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
@@ -168,7 +165,7 @@ class SAMApiPluginBroker(AbstractBroker, AccountMixin):
         else:
             chatbots = PluginMeta.objects.filter(account=self.account)
         logger.info(
-            "%s.get() found %s Plugins for account %s", self.formatted_class_name, chatbots.count(), self.account
+            "%s.get() found %s ApiPlugins for account %s", self.formatted_class_name, chatbots.count(), self.account
         )
 
         # iterate over the QuerySet and use a serializer to create a model dump for each ChatBot
@@ -227,7 +224,9 @@ class SAMApiPluginBroker(AbstractBroker, AccountMixin):
                 return self.json_response_err(command=command, e=e)
             return self.json_response_ok(command=command, data={})
         try:
-            raise SAMBrokerErrorNotReady(f"Plugin {self.plugin_meta.name} not ready", thing=self.kind, command=command)
+            raise SAMBrokerErrorNotReady(
+                f"ApiPlugin {self.plugin_meta.name} not ready", thing=self.kind, command=command
+            )
         except SAMBrokerErrorNotReady as err:
             return self.json_response_err(command=command, e=err)
 
@@ -243,9 +242,9 @@ class SAMApiPluginBroker(AbstractBroker, AccountMixin):
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
                 raise SAMBrokerError(
-                    f"Plugin {self.plugin_meta.name} describe failed", thing=self.kind, command=command
+                    f"ApiPlugin {self.plugin_meta.name} describe failed", thing=self.kind, command=command
                 ) from e
-        raise SAMBrokerErrorNotReady(f"Plugin {self.plugin_meta.name} not ready", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotReady(f"ApiPlugin {self.plugin_meta.name} not ready", thing=self.kind, command=command)
 
     def chat(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
@@ -262,9 +261,9 @@ class SAMApiPluginBroker(AbstractBroker, AccountMixin):
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 raise SAMBrokerError(
-                    f"Plugin {self.plugin_meta.name} delete failed", thing=self.kind, command=command
+                    f"ApiPlugin {self.plugin_meta.name} delete failed", thing=self.kind, command=command
                 ) from e
-        raise SAMBrokerErrorNotReady(f"Plugin {self.plugin_meta.name} not ready", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotReady(f"ApiPlugin {self.plugin_meta.name} not ready", thing=self.kind, command=command)
 
     def deploy(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__

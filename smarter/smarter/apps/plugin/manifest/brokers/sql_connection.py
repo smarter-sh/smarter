@@ -1,5 +1,5 @@
 # pylint: disable=W0718
-"""Smarter Sql Plugin Manifest handler"""
+"""Smarter Api SqlConnection Manifest handler"""
 
 from typing import Type
 
@@ -41,15 +41,15 @@ from . import SAMConnectionBrokerError
 
 class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
     """
-    Smarter API Plugin Manifest Broker.This class is responsible for
-    - loading, validating and parsing the Smarter Api yaml Plugin manifests
+    Smarter API SqlConnection Manifest Broker.This class is responsible for
+    - loading, validating and parsing the Smarter Api yaml SqlConnection manifests
     - using the manifest to initialize the corresponding Pydantic model
 
-    The Plugin object provides the generic services for the Plugin, such as
+    The SqlConnection object provides the generic services for the SqlConnection, such as
     instantiation, create, update, delete, etc.
     """
 
-    # override the base abstract manifest model with the Plugin model
+    # override the base abstract manifest model with the SqlConnection model
     _manifest: SAMSqlConnection = None
     _pydantic_model: Type[SAMSqlConnection] = SAMSqlConnection
     _sql_connection: SqlConnection = None
@@ -102,7 +102,7 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
     def manifest(self) -> SAMSqlConnection:
         """
         SAMSqlConnection() is a Pydantic model
-        that is used to represent the Smarter API Plugin manifest. The Pydantic
+        that is used to represent the Smarter API SqlConnection manifest. The Pydantic
         model is initialized with the data from the manifest loader, which is
         generally passed to the model constructor as **data. However, this top-level
         manifest model has to be explicitly initialized, whereas its child models
@@ -211,7 +211,7 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
         else:
             sql_connections = SqlConnection.objects.filter(account=self.account)
 
-        # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
+        # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each SqlConnection
         for sql_connection in sql_connections:
             try:
                 model_dump = SqlConnectionSerializer(sql_connection).data
