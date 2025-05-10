@@ -1,9 +1,10 @@
 # pylint: disable=wrong-import-position
 """Test SmarterAuthToken."""
 
-from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib.drf.models import SmarterAuthToken
+
+from .mixins import TestAccountMixin
 
 
 class TestSmarterAuthToken(TestAccountMixin):

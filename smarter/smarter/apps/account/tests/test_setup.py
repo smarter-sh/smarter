@@ -5,15 +5,9 @@
 # python stuff
 import json
 import os
-import sys
-from pathlib import Path
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-PROJECT_ROOT = str(Path(HERE).parent.parent.parent.parent)
-
-
-sys.path.append(PROJECT_ROOT)  # noqa: E402
 
 
 def get_test_file(filename: str):

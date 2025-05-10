@@ -24,13 +24,13 @@ class TestAccount(TestAccountMixin):
         )
 
         profile = UserProfile.objects.create(
-            user=self.user,
+            user=self.non_admin_user,
             account=account,
             is_test=True,
         )
 
         self.assertEqual(profile.account, account)
-        self.assertEqual(profile.user, self.user)
+        self.assertEqual(profile.user, self.non_admin_user)
 
         profile.delete()
         account.delete()
