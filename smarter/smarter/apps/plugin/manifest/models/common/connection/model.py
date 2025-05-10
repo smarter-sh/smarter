@@ -1,6 +1,6 @@
 """Smarter API Plugin Manifest"""
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import ClassVar, Optional
 
 from pydantic import Field
@@ -20,7 +20,7 @@ from .const import MANIFEST_KIND
 MODULE_IDENTIFIER = MANIFEST_KIND
 
 
-class SAMConnectionCommon(AbstractSAMBase, ABC):
+class SAMConnectionCommon(AbstractSAMBase):
     """Smarter API Manifest - Common Connection Base Model"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
