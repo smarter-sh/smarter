@@ -30,7 +30,9 @@ from smarter.apps.chat.manifest.brokers.chat_plugin_usage import (
 from smarter.apps.chat.manifest.brokers.chat_tool_call import SAMChatToolCallBroker
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
 from smarter.apps.plugin.manifest.brokers.api_connection import SAMApiConnectionBroker
+from smarter.apps.plugin.manifest.brokers.api_plugin import SAMApiPluginBroker
 from smarter.apps.plugin.manifest.brokers.sql_connection import SAMSqlConnectionBroker
+from smarter.apps.plugin.manifest.brokers.sql_plugin import SAMSqlPluginBroker
 from smarter.apps.plugin.manifest.brokers.static_plugin import SAMStaticPluginBroker
 from smarter.common.exceptions import SmarterConfigurationError
 from smarter.lib.drf.manifest.brokers.auth_token import SAMSmarterAuthTokenBroker
@@ -52,6 +54,8 @@ class Brokers:
         SAMKinds.CHAT_TOOL_CALL.value: SAMChatToolCallBroker,
         SAMKinds.CHATBOT.value: SAMChatbotBroker,
         SAMKinds.STATIC_PLUGIN.value: SAMStaticPluginBroker,
+        SAMKinds.API_PLUGIN.value: SAMApiPluginBroker,
+        SAMKinds.SQL_PLUGIN.value: SAMSqlPluginBroker,
         SAMKinds.SQL_CONNECTION.value: SAMSqlConnectionBroker,
         SAMKinds.API_CONNECTION.value: SAMApiConnectionBroker,
         SAMKinds.USER.value: SAMUserBroker,

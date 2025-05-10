@@ -43,7 +43,7 @@ class DocsJsonSchemaApiConnectionView(DocsJsonSchemaBaseView):
 class DocsJsonSchemaApiView(DocsJsonSchemaBaseView):
     """Plugin Api JSON Schema view"""
 
-    kind = SAMKinds(SAMKinds.PLUGIN_API)
+    kind = SAMKinds(SAMKinds.API_PLUGIN)
 
 
 class DocsJsonSchemaApiKeyView(DocsJsonSchemaBaseView):
@@ -97,7 +97,7 @@ class DocsJsonSchemaSqlConnectionView(DocsJsonSchemaBaseView):
 class DocsJsonSchemaSqlView(DocsJsonSchemaBaseView):
     """Plugin Sql JSON Schema view"""
 
-    kind = SAMKinds(SAMKinds.PLUGIN_SQL)
+    kind = SAMKinds(SAMKinds.SQL_PLUGIN)
 
 
 class DocsJsonSchemaUserView(DocsJsonSchemaBaseView):

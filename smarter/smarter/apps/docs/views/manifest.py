@@ -44,7 +44,7 @@ class DocsExampleManifestApiConnectionView(DocsExampleManifestBaseView):
 class DocsExampleManifestApiView(DocsExampleManifestBaseView):
     """Plugin Api JSON Schema view"""
 
-    kind = SAMKinds(SAMKinds.PLUGIN_API)
+    kind = SAMKinds(SAMKinds.API_PLUGIN)
 
 
 class DocsExampleManifestApiKeyView(DocsExampleManifestBaseView):
@@ -98,7 +98,7 @@ class DocsExampleManifestSqlConnectionView(DocsExampleManifestBaseView):
 class DocsExampleManifestSqlView(DocsExampleManifestBaseView):
     """Plugin Sql JSON Schema view"""
 
-    kind = SAMKinds(SAMKinds.PLUGIN_SQL)
+    kind = SAMKinds(SAMKinds.SQL_PLUGIN)
 
 
 class DocsExampleManifestUserView(DocsExampleManifestBaseView):

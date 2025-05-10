@@ -2,7 +2,6 @@
 
 # python stuff
 import logging
-import re
 
 # smarter stuff
 from smarter.common.api import SmarterApiVersions

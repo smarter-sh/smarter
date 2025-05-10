@@ -24,12 +24,12 @@ class Migration(migrations.Migration):
                         smarter.lib.journal.enum.SmarterJournalThings["STATIC_PLUGIN"],
                     ),
                     (
-                        smarter.lib.journal.enum.SmarterJournalThings["PLUGIN_API"],
-                        smarter.lib.journal.enum.SmarterJournalThings["PLUGIN_API"],
+                        smarter.lib.journal.enum.SmarterJournalThings["API_PLUGIN"],
+                        smarter.lib.journal.enum.SmarterJournalThings["API_PLUGIN"],
                     ),
                     (
-                        smarter.lib.journal.enum.SmarterJournalThings["PLUGIN_SQL"],
-                        smarter.lib.journal.enum.SmarterJournalThings["PLUGIN_SQL"],
+                        smarter.lib.journal.enum.SmarterJournalThings["SQL_PLUGIN"],
+                        smarter.lib.journal.enum.SmarterJournalThings["SQL_PLUGIN"],
                     ),
                     (
                         smarter.lib.journal.enum.SmarterJournalThings["API_CONNECTION"],
