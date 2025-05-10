@@ -13,8 +13,6 @@ import os
 from pydantic_core import ValidationError
 
 from smarter.apps.plugin.manifest.enum import SAMPluginCommonMetadataClassValues
-
-# from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
 from smarter.apps.plugin.manifest.models.sql_plugin.model import SAMSqlPlugin
 from smarter.apps.plugin.models import PluginDataSql, PluginMeta, SqlConnection

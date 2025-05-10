@@ -1,6 +1,5 @@
-# pylint: disable=wrong-import-position
 # pylint: disable=R0801,W0613
-"""Test providers."""
+"""Test plugin base class."""
 
 # python stuff
 import json
@@ -53,8 +52,8 @@ from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes
-class TestStaticPlugin(unittest.TestCase):
-    """Test plugin."""
+class TestPluginBase(unittest.TestCase):
+    """Test plugin base class."""
 
     data: dict
     user_profile: UserProfile

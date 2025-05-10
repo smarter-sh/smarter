@@ -32,4 +32,5 @@ class TestSAMSqlConnectionBroker(TestSAMConnectionBrokerBase):
     def test_broker_with_valid_manifest(self):
         """Test valid file path and that we can instantiate without errors"""
 
-        SAMSqlConnectionBroker(request=self.request, account=self.account, file_path=self.good_manifest_path)
+        broker = SAMSqlConnectionBroker(request=self.request, account=self.account, file_path=self.good_manifest_path)
+        self.assertIsInstance(broker, SAMSqlConnectionBroker)
