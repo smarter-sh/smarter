@@ -61,8 +61,8 @@ class SmarterJournalThings(SmarterEnumAbstract):
     """
 
     STATIC_PLUGIN = "Plugin"
-    PLUGIN_API = "ApiPlugin"
-    PLUGIN_SQL = "SqlPlugin"
+    API_PLUGIN = "ApiPlugin"
+    SQL_PLUGIN = "SqlPlugin"
     API_CONNECTION = "ApiConnection"
     SQL_CONNECTION = "SqlConnection"
     ACCOUNT = "Account"
@@ -81,8 +81,8 @@ class SmarterJournalThings(SmarterEnumAbstract):
         """Django model choices for SmarterJournalThings."""
         return [
             (cls.STATIC_PLUGIN, cls.STATIC_PLUGIN),
-            (cls.PLUGIN_API, cls.PLUGIN_API),
-            (cls.PLUGIN_SQL, cls.PLUGIN_SQL),
+            (cls.API_PLUGIN, cls.API_PLUGIN),
+            (cls.SQL_PLUGIN, cls.SQL_PLUGIN),
             (cls.API_CONNECTION, cls.API_CONNECTION),
             (cls.SQL_CONNECTION, cls.SQL_CONNECTION),
             (cls.ACCOUNT, cls.ACCOUNT),

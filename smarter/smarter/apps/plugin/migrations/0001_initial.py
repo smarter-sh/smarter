@@ -105,7 +105,7 @@ class Migration(migrations.Migration):
                     models.CharField(
                         choices=[
                             ("static", "StaticPlugin"),
-                            ("sql", "PluginSql"),
+                            ("sql", "SqlPlugin"),
                             ("api", "ApiPlugin"),
                         ],
                         default="PluginMeta",

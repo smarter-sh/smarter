@@ -31,16 +31,16 @@ from smarter.apps.plugin.manifest.models.api_connection.const import (
     MANIFEST_KIND as APICONNECTION_MANIFEST_KIND,
 )
 from smarter.apps.plugin.manifest.models.api_plugin.const import (
-    MANIFEST_KIND as PLUGIN_API_MANIFEST_KIND,
+    MANIFEST_KIND as APIPLUGIN_MANIFEST_KIND,
 )
 from smarter.apps.plugin.manifest.models.sql_connection.const import (
     MANIFEST_KIND as SQLCONNECTION_MANIFEST_KIND,
 )
 from smarter.apps.plugin.manifest.models.sql_plugin.const import (
-    MANIFEST_KIND as PLUGIN_SQL_MANIFEST_KIND,
+    MANIFEST_KIND as SQLPLUGIN_MANIFEST_KIND,
 )
 from smarter.apps.plugin.manifest.models.static_plugin.const import (
-    MANIFEST_KIND as PLUGIN_MANIFEST_KIND,
+    MANIFEST_KIND as STATICPLUGIN_MANIFEST_KIND,
 )
 from smarter.lib.drf.manifest.models.auth_token.const import (
     MANIFEST_KIND as AUTH_TOKEN_MANIFEST_KIND,
@@ -54,9 +54,9 @@ logger = logging.getLogger(__name__)
 class SAMKinds(SmarterEnumAbstract):
     """Smarter manifest kinds enumeration."""
 
-    STATIC_PLUGIN = PLUGIN_MANIFEST_KIND
-    PLUGIN_API = PLUGIN_API_MANIFEST_KIND
-    PLUGIN_SQL = PLUGIN_SQL_MANIFEST_KIND
+    STATIC_PLUGIN = STATICPLUGIN_MANIFEST_KIND
+    API_PLUGIN = APIPLUGIN_MANIFEST_KIND
+    SQL_PLUGIN = SQLPLUGIN_MANIFEST_KIND
     API_CONNECTION = APICONNECTION_MANIFEST_KIND
     SQL_CONNECTION = SQLCONNECTION_MANIFEST_KIND
     ACCOUNT = ACCOUNT_MANIFEST_KIND

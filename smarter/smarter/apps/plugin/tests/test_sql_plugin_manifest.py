@@ -1,4 +1,4 @@
-"""Test SAM Plugin manifest using PluginSql"""
+"""Test SAM Plugin manifest using SqlPlugin"""
 
 import os
 import unittest
@@ -27,7 +27,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 # pylint: disable=too-many-instance-attributes
 class TestPluginDataSql(unittest.TestCase):
-    """Test SAM Plugin manifest using PluginSql"""
+    """Test SAM Plugin manifest using SqlPlugin"""
 
     def setUp(self):
         """Set up test fixtures."""
@@ -59,7 +59,7 @@ class TestPluginDataSql(unittest.TestCase):
         self.plugin_datasql_connection = SqlConnection(**model_dump)
         self.plugin_datasql_connection.save()
 
-        # setup an instance of PluginSql() - a Python class descended from PluginBase()
+        # setup an instance of SqlPlugin() - a Python class descended from PluginBase()
         # ---------------------------------------------------------------------
         # 1. load the yaml manifest file
         config_path = os.path.join(HERE, "mock_data/sql-test.yaml")

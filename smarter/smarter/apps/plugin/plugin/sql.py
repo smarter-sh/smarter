@@ -1,7 +1,6 @@
 """A PLugin that uses a remote SQL database server to retrieve its return data"""
 
 import logging
-import re
 
 from smarter.apps.plugin.manifest.enum import (
     SAMPluginCommonMetadataClass,
@@ -26,7 +25,7 @@ from .base import PluginBase
 logger = logging.getLogger(__name__)
 
 
-class PluginSql(PluginBase):
+class SqlPlugin(PluginBase):
     """A PLugin that uses an SQL query executed on a remote SQL database server to retrieve its return data"""
 
     _metadata_class = SAMPluginCommonMetadataClass.SQL_DATA.value
