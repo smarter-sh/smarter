@@ -225,7 +225,7 @@ class SAMStaticPluginBroker(AbstractBroker, AccountMixin):
             return self.json_response_ok(command=command, data={})
         try:
             raise SAMBrokerErrorNotReady(
-                f"StaticPlugin {self.plugin_meta.name} not ready", thing=self.kind, command=command
+                f"{self.formatted_class_name} {self.plugin_meta.name} not ready", thing=self.kind, command=command
             )
         except SAMBrokerErrorNotReady as err:
             return self.json_response_err(command=command, e=err)
@@ -242,10 +242,12 @@ class SAMStaticPluginBroker(AbstractBroker, AccountMixin):
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
                 raise SAMBrokerError(
-                    f"StaticPlugin {self.plugin_meta.name} describe failed", thing=self.kind, command=command
+                    f"{self.formatted_class_name} {self.plugin_meta.name} describe failed",
+                    thing=self.kind,
+                    command=command,
                 ) from e
         raise SAMBrokerErrorNotReady(
-            f"StaticPlugin {self.plugin_meta.name} not ready", thing=self.kind, command=command
+            f"{self.formatted_class_name} {self.plugin_meta.name} not ready", thing=self.kind, command=command
         )
 
     def chat(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
@@ -263,10 +265,12 @@ class SAMStaticPluginBroker(AbstractBroker, AccountMixin):
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 raise SAMBrokerError(
-                    f"StaticPlugin {self.plugin_meta.name} delete failed", thing=self.kind, command=command
+                    f"{self.formatted_class_name} {self.plugin_meta.name} delete failed",
+                    thing=self.kind,
+                    command=command,
                 ) from e
         raise SAMBrokerErrorNotReady(
-            f"StaticPlugin {self.plugin_meta.name} not ready", thing=self.kind, command=command
+            f"{self.formatted_class_name} {self.plugin_meta.name} not ready", thing=self.kind, command=command
         )
 
     def deploy(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
