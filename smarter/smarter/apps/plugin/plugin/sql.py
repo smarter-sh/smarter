@@ -4,12 +4,12 @@ import logging
 import re
 
 from smarter.apps.plugin.manifest.enum import (
+    SAMPluginCommonMetadataClass,
     SAMPluginCommonMetadataClassValues,
+    SAMPluginCommonMetadataKeys,
     SAMPluginCommonSpecPromptKeys,
     SAMPluginCommonSpecSelectorKeys,
     SAMPluginSpecKeys,
-    SAMPluginStaticMetadataClass,
-    SAMPluginStaticMetadataKeys,
 )
 from smarter.apps.plugin.models import PluginDataSql, SqlConnection
 from smarter.apps.plugin.serializers import PluginSqlSerializer
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 class PluginSql(PluginBase):
     """A PLugin that uses an SQL query executed on a remote SQL database server to retrieve its return data"""
 
-    _metadata_class = SAMPluginStaticMetadataClass.SQL_DATA.value
+    _metadata_class = SAMPluginCommonMetadataClass.SQL_DATA.value
     _plugin_data: PluginDataSql = None
     _plugin_data_serializer: PluginSqlSerializer = None
 
@@ -128,7 +128,7 @@ class PluginSql(PluginBase):
             SAMKeys.KIND.value: MANIFEST_KIND,
             SAMKeys.METADATA.value: {
                 SAMMetadataKeys.name: "SqlExample",
-                SAMPluginStaticMetadataKeys.PLUGIN_CLASS.value: SAMPluginCommonMetadataClassValues.SQL.value,
+                SAMPluginCommonMetadataKeys.PLUGIN_CLASS.value: SAMPluginCommonMetadataClassValues.SQL.value,
                 SAMMetadataKeys.DESCRIPTION.value: "Get additional information about the admin account of the Smarter platform.",
                 SAMMetadataKeys.VERSION.value: "0.1.0",
                 SAMMetadataKeys.TAGS.value: ["db", "sql", "database"],
@@ -147,7 +147,7 @@ class PluginSql(PluginBase):
                 },
                 SAMPluginSpecKeys.DATA.value: {
                     "description": "Query the Django User model to retrieve detailed account information about the admin account for the Smarter platform .",
-                    SAMPluginStaticMetadataClass.SQL_DATA.value: {
+                    SAMPluginCommonMetadataClass.SQL_DATA.value: {
                         "connection": "exampleConnection",
                         "sqlQuery": "SELECT * FROM auth_user WHERE username = 'admin';\n",
                         "parameters": None,

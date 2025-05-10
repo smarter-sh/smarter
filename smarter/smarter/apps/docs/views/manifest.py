@@ -86,7 +86,7 @@ class DocsExampleManifestChatBotView(DocsExampleManifestBaseView):
 class DocsExampleManifestPluginView(DocsExampleManifestBaseView):
     """Plugin JSON Schema view"""
 
-    kind = SAMKinds(SAMKinds.PLUGIN_STATIC)
+    kind = SAMKinds(SAMKinds.STATIC_PLUGIN)
 
 
 class DocsExampleManifestSqlConnectionView(DocsExampleManifestBaseView):

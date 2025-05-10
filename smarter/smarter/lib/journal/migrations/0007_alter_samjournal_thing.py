@@ -20,8 +20,8 @@ class Migration(migrations.Migration):
                 blank=True,
                 choices=[
                     (
-                        smarter.lib.journal.enum.SmarterJournalThings["PLUGIN_STATIC"],
-                        smarter.lib.journal.enum.SmarterJournalThings["PLUGIN_STATIC"],
+                        smarter.lib.journal.enum.SmarterJournalThings["STATIC_PLUGIN"],
+                        smarter.lib.journal.enum.SmarterJournalThings["STATIC_PLUGIN"],
                     ),
                     (
                         smarter.lib.journal.enum.SmarterJournalThings["PLUGIN_API"],

@@ -37,8 +37,8 @@ class Migration(migrations.Migration):
                     models.CharField(
                         choices=[
                             (
-                                smarter.lib.journal.enum.SmarterJournalThings["PLUGIN_STATIC"],
-                                smarter.lib.journal.enum.SmarterJournalThings["PLUGIN_STATIC"],
+                                smarter.lib.journal.enum.SmarterJournalThings["STATIC_PLUGIN"],
+                                smarter.lib.journal.enum.SmarterJournalThings["STATIC_PLUGIN"],
                             ),
                             (
                                 smarter.lib.journal.enum.SmarterJournalThings["ACCOUNT"],

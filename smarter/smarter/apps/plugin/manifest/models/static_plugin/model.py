@@ -6,10 +6,10 @@ from typing import ClassVar, Optional
 from pydantic import Field, model_validator
 
 from smarter.apps.plugin.manifest.enum import (
+    SAMPluginCommonMetadataClass,
     SAMPluginCommonMetadataClassValues,
+    SAMPluginCommonMetadataKeys,
     SAMPluginSpecKeys,
-    SAMPluginStaticMetadataClass,
-    SAMPluginStaticMetadataKeys,
 )
 from smarter.apps.plugin.manifest.models.common.plugin.metadata import (
     SAMPluginCommonMetadata,
@@ -61,17 +61,17 @@ class SAMPluginStatic(AbstractSAMBase):
             and not self.spec.data.staticData
         ):
             raise SAMValidationError(
-                f"{err_desc_model_name}.{SAMPluginStaticMetadataClass.STATIC_DATA.value} is required when {self.kind}.{SAMPluginStaticMetadataKeys.PLUGIN_CLASS.value} is '{SAMPluginCommonMetadataClassValues.STATIC.value}'"
+                f"{err_desc_model_name}.{SAMPluginCommonMetadataClass.STATIC_DATA.value} is required when {self.kind}.{SAMPluginCommonMetadataKeys.PLUGIN_CLASS.value} is '{SAMPluginCommonMetadataClassValues.STATIC.value}'"
             )
 
         if self.metadata.pluginClass == SAMPluginCommonMetadataClassValues.SQL.value and not self.spec.data.sqlData:
             raise SAMValidationError(
-                f"{err_desc_model_name}.{SAMPluginStaticMetadataClass.SQL_DATA.value} is required when {self.kind}.{SAMPluginStaticMetadataKeys.PLUGIN_CLASS.value} is '{SAMPluginCommonMetadataClassValues.SQL.value}'"
+                f"{err_desc_model_name}.{SAMPluginCommonMetadataClass.SQL_DATA.value} is required when {self.kind}.{SAMPluginCommonMetadataKeys.PLUGIN_CLASS.value} is '{SAMPluginCommonMetadataClassValues.SQL.value}'"
             )
 
         if self.metadata.pluginClass == SAMPluginCommonMetadataClassValues.API.value and not self.spec.data.apiData:
             raise SAMValidationError(
-                f"{err_desc_model_name}.{SAMPluginStaticMetadataClass.API_DATA.value} is required when {self.kind}.{SAMPluginStaticMetadataKeys.PLUGIN_CLASS.value} is '{SAMPluginCommonMetadataClassValues.API.value}'"
+                f"{err_desc_model_name}.{SAMPluginCommonMetadataClass.API_DATA.value} is required when {self.kind}.{SAMPluginCommonMetadataKeys.PLUGIN_CLASS.value} is '{SAMPluginCommonMetadataClassValues.API.value}'"
             )
 
         return self

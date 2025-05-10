@@ -54,7 +54,7 @@ logger = logging.getLogger(__name__)
 class SAMKinds(SmarterEnumAbstract):
     """Smarter manifest kinds enumeration."""
 
-    PLUGIN_STATIC = PLUGIN_MANIFEST_KIND
+    STATIC_PLUGIN = PLUGIN_MANIFEST_KIND
     PLUGIN_API = PLUGIN_API_MANIFEST_KIND
     PLUGIN_SQL = PLUGIN_SQL_MANIFEST_KIND
     API_CONNECTION = APICONNECTION_MANIFEST_KIND

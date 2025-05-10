@@ -16,7 +16,6 @@ from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIN
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMPluginStatic
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.base import PluginBase
-from smarter.apps.plugin.plugin.sql import PluginSql
 from smarter.apps.plugin.plugin.static import PluginStatic
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.journal.enum import SmarterJournalCliCommands
@@ -37,12 +36,6 @@ from smarter.lib.manifest.loader import SAMLoader
 
 
 MAX_RESULTS = 1000
-
-PluginMap: dict[str, PluginBase] = {
-    SAMPluginCommonMetadataClassValues.STATIC.value: PluginStatic,
-    SAMPluginCommonMetadataClassValues.SQL.value: PluginSql,
-}
-
 logger = logging.getLogger(__name__)
 
 
@@ -71,7 +64,7 @@ class PluginSerializer(ModelSerializer):
         fields = ["name", "plugin_class", "version", "email", "created_at", "updated_at"]
 
 
-class SAMPluginBroker(AbstractBroker, AccountMixin):
+class SAMStaticPluginBroker(AbstractBroker, AccountMixin):
     """
     Smarter API Plugin Manifest Broker.This class is responsible for
     - loading, validating and parsing the Smarter Api yaml Plugin manifests
@@ -183,12 +176,7 @@ class SAMPluginBroker(AbstractBroker, AccountMixin):
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
         plugin_class: str = self.params.get("plugin_class", SAMPluginCommonMetadataClassValues.STATIC.value)
-        try:
-            Plugin = PluginMap[plugin_class]
-        except KeyError as e:
-            raise SAMPluginBrokerError(
-                f"Plugin class {plugin_class} not found", thing=self.kind, command=command
-            ) from e
+        Plugin = PluginStatic
 
         data = Plugin.example_manifest(kwargs=kwargs)
         return self.json_response_ok(command=command, data=data)
