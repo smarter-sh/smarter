@@ -29,7 +29,7 @@ from .base import PluginBase
 logger = logging.getLogger(__name__)
 
 
-class PluginApi(PluginBase):
+class ApiPlugin(PluginBase):
     """A Plugin that uses an http request to a REST API to retrieve its return data"""
 
     _metadata_class = SAMPluginCommonMetadataClass.SQL_DATA.value

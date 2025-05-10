@@ -21,7 +21,7 @@ from smarter.apps.account.tests.factories import (
 from smarter.apps.chat.providers.const import OpenAIMessageKeys
 from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.plugin.nlp import does_refer_to
-from smarter.apps.plugin.plugin.static import PluginStatic
+from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
 from smarter.lib.unittest.utils import get_readonly_yaml_file
 
@@ -101,7 +101,7 @@ class TestOpenaiFunctionCalling(unittest.TestCase):
         config_path = get_test_file_path("plugins/everlasting-gobstopper.yaml")
         plugin_data = get_readonly_yaml_file(config_path)
 
-        self.plugin = PluginStatic(user_profile=self.user_profile, data=plugin_data)
+        self.plugin = StaticPlugin(user_profile=self.user_profile, data=plugin_data)
         self.plugins = [self.plugin]
 
         self.chatbot = self.chatbot_factory()

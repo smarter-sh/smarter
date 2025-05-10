@@ -22,7 +22,7 @@ if PYTHON_ROOT not in sys.path:
 from smarter.apps.account.models import Account, UserProfile
 
 # pylint: disable=no-name-in-module
-from smarter.apps.plugin.plugin.static import PluginStatic
+from smarter.apps.plugin.plugin.static import StaticPlugin
 
 from .test_setup import get_test_file_path
 
@@ -41,7 +41,7 @@ class TestPlugin(unittest.TestCase):
         plugin_json = get_readonly_yaml_file(config_path)
         plugin_json["user_profile"] = self.user_profile
 
-        self.plugin = PluginStatic(data=plugin_json)
+        self.plugin = StaticPlugin(data=plugin_json)
 
     def tearDown(self):
         """Tear down test fixtures."""

@@ -1,5 +1,5 @@
 """
-Test SAM Plugin manifest using PluginApi
+Test SAM Plugin manifest using ApiPlugin
 Test cases for the PluginDataAPI Manifest.
 
 http://localhost:8000/api/v1/tests/unauthenticated/dict/
@@ -34,7 +34,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 # pylint: disable=too-many-instance-attributes
 class TestSqlPlugin(TestPluginBase, ManifestTestsMixin):
-    """Test SAM manifest using PluginApi"""
+    """Test SAM manifest using ApiPlugin"""
 
     _model: SAMSqlPlugin = None
     plugin_meta: PluginMeta = None

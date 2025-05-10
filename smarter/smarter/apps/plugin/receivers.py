@@ -20,7 +20,7 @@ from .models import (
     PluginSelector,
     PluginSelectorHistory,
 )
-from .plugin.static import PluginStatic
+from .plugin.static import StaticPlugin
 from .signals import (
     plugin_called,
     plugin_cloned,
@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 def handle_plugin_created(sender, **kwargs):
     """Handle plugin created signal."""
 
-    plugin: PluginStatic = kwargs.get("plugin")
+    plugin: StaticPlugin = kwargs.get("plugin")
     logger.info(
         "%s - account: %s - user: %s - name: %s",
         formatted_text("plugin_created"),
@@ -55,7 +55,7 @@ def handle_plugin_cloned(sender, **kwargs):
     """Handle plugin cloned signal."""
 
     plugin_id = kwargs.get("plugin_id")
-    plugin = PluginStatic(plugin_id=plugin_id)
+    plugin = StaticPlugin(plugin_id=plugin_id)
     logger.info("%s - %s", formatted_text("plugin_cloned"), plugin.name)
 
 

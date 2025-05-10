@@ -104,9 +104,9 @@ class Migration(migrations.Migration):
                     "plugin_class",
                     models.CharField(
                         choices=[
-                            ("static", "PluginStatic"),
+                            ("static", "StaticPlugin"),
                             ("sql", "PluginSql"),
-                            ("api", "PluginApi"),
+                            ("api", "ApiPlugin"),
                         ],
                         default="PluginMeta",
                         help_text="The class name of the plugin",

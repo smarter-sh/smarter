@@ -21,7 +21,7 @@ MODULE_IDENTIFIER = MANIFEST_KIND
 
 
 class SAMApiPlugin(AbstractSAMBase):
-    """Smarter API Manifest - PluginApi Model"""
+    """Smarter API Manifest - ApiPlugin Model"""
 
     class_identifier: ClassVar[str] = MODULE_IDENTIFIER
 

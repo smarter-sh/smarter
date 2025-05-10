@@ -24,7 +24,7 @@ from .base import PluginBase
 logger = logging.getLogger(__name__)
 
 
-class PluginStatic(PluginBase):
+class StaticPlugin(PluginBase):
     """A PLugin that returns a static json object stored in the Plugin itself."""
 
     _metadata_class = SAMPluginCommonMetadataClass.STATIC_DATA.value

@@ -19,7 +19,7 @@ from smarter.apps.chatbot.exceptions import SmarterChatBotException
 from smarter.apps.chatbot.models import ChatBot, ChatBotHelper, ChatBotPlugin
 from smarter.apps.chatbot.serializers import ChatBotSerializer
 from smarter.apps.chatbot.signals import chatbot_called
-from smarter.apps.plugin.plugin.static import PluginStatic
+from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.common.helpers.console_helpers import formatted_text
@@ -61,7 +61,7 @@ class ChatBotApiBaseViewSet(SmarterNeverCachedWebView, AccountMixin):
     data: dict = {}
     request: HttpRequest = None
     http_method_names: list[str] = ["get", "post", "options"]
-    plugins: List[PluginStatic] = None
+    plugins: List[StaticPlugin] = None
 
     @property
     def session_key(self):

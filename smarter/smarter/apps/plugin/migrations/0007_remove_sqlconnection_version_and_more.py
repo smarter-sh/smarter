@@ -202,7 +202,7 @@ class Migration(migrations.Migration):
             name="plugin_class",
             field=models.CharField(
                 choices=[
-                    ("static", "PluginStatic"),
+                    ("static", "StaticPlugin"),
                     ("sql", "PluginDataSql"),
                     ("api", "SqlConnection"),
                 ],

@@ -1,5 +1,5 @@
 # pylint: disable=W0718
-"""Smarter API Plugin Manifest handler"""
+"""Smarter API StaticPlugin Manifest handler"""
 
 import logging
 from typing import Type
@@ -11,12 +11,11 @@ from rest_framework.serializers import ModelSerializer
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.plugin.manifest.controller import PluginController
-from smarter.apps.plugin.manifest.enum import SAMPluginCommonMetadataClassValues
 from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMPluginStatic
 from smarter.apps.plugin.models import PluginMeta
 from smarter.apps.plugin.plugin.base import PluginBase
-from smarter.apps.plugin.plugin.static import PluginStatic
+from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
@@ -175,8 +174,7 @@ class SAMStaticPluginBroker(AbstractBroker, AccountMixin):
     def example_manifest(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
-        plugin_class: str = self.params.get("plugin_class", SAMPluginCommonMetadataClassValues.STATIC.value)
-        Plugin = PluginStatic
+        Plugin = StaticPlugin
 
         data = Plugin.example_manifest(kwargs=kwargs)
         return self.json_response_ok(command=command, data=data)
@@ -265,8 +263,8 @@ class SAMStaticPluginBroker(AbstractBroker, AccountMixin):
         if self.plugin.ready:
             try:
                 data = self.plugin.to_json()
-                data["metadata"].pop("account")
-                data["metadata"].pop("author")
+                data[SAMKeys.METADATA].pop(SAMMetadataKeys.ACCOUNT)
+                data[SAMKeys.METADATA].pop(SAMMetadataKeys.AUTHOR)
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
                 raise SAMBrokerError(
