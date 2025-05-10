@@ -1,0 +1,19 @@
+---
+apiVersion: smarter.sh/v1
+kind: SqlConnection
+metadata:
+  name: testSqlConnection
+  description: points to the local Docker mysql dev database
+  version: 0.1.0
+spec:
+  connection:
+    db_engine: django.db.backends.mysql
+    hostname: smarter-mysql
+    port: 3306
+    username: smarter
+    password: smarter
+    database: smarter
+    timeout: 30
+    authentication_method: tcpip
+    pool_size: 15
+    max_overflow: 20

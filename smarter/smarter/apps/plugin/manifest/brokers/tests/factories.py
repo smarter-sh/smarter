@@ -3,7 +3,7 @@
 import requests
 
 
-def create_generic_request():
+def create_generic_request() -> requests.PreparedRequest:
     url = "http://example.com"
     headers = {"Content-Type": "application/json"}
     data = {}

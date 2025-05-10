@@ -47,7 +47,7 @@ class TestBase(unittest.TestCase):
     _manifest: dict = None
     _loader: SAMLoader = None
     _model: AbstractSAMBase = (
-        None  # any of SAMApiConnection, SAMSqlConnection, SAMPluginStatic, SAMApiPlugin, SAMPluginSql
+        None  # any of SAMApiConnection, SAMSqlConnection, SAMStaticPlugin, SAMApiPlugin, SAMPluginSql
     )
 
     @classmethod
@@ -88,6 +88,7 @@ class TestBase(unittest.TestCase):
     def manifest(self) -> dict:
         if not self._manifest and self.manifest_path:
             self._manifest = get_readonly_yaml_file(self.manifest_path)
+            self.assertIsNotNone(self._manifest)
         return self._manifest
 
     @property
@@ -95,6 +96,7 @@ class TestBase(unittest.TestCase):
         # initialize a SAMLoader object with the manifest raw data
         if not self._loader and self.manifest:
             self._loader = SAMLoader(manifest=self.manifest)
+            self.assertIsNotNone(self._loader)
         return self._loader
 
     @property
@@ -103,7 +105,7 @@ class TestBase(unittest.TestCase):
 
     def load_manifest(self, filename: str) -> None:
         self.manifest_path = os.path.join(HERE, "mock_data", filename)
-        self.manifest
+        self.assertIsNotNone(self.manifest)
 
 
 class TestConnectionBase(TestBase):
@@ -138,6 +140,7 @@ class TestConnectionBase(TestBase):
 class TestPluginBase(TestBase):
     """Base class for testing connection models."""
 
+    plugin_meta: PluginMeta = None
     _connection_manifest_path: str = None
     _connection_manifest: str = None
     _connection_loader: SAMLoader = None

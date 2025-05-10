@@ -1,0 +1,72 @@
+---
+apiVersion: smarter.sh/v1
+kind: ApiPlugin
+metadata:
+  name: ApiTest
+  pluginClass: api
+  description: Get additional information about the admin account of the Smarter platform.
+  version: 0.1.0
+  tags:
+    - api
+    - test
+spec:
+  selector:
+    directive: always
+  prompt:
+    provider: openai
+    systemRole: >
+      You are a helpful assistant for the Smarter platform. You can provide information about the test api.
+    model: gpt-4-turbo
+    temperature: 0.0
+    maxTokens: 256
+  connection: testApiConnection
+  apiData:
+    endpoint: /api/v1/tests/unauthenticated/list/{username}/
+    parameters:
+      - name: username
+        type: string
+        description: a valid django username.
+        required: true
+        default: admin
+      - name: limit
+        type: integer
+        description: The maximum number of results to return.
+        required: false
+    headers:
+      - name: Authorization
+        value: Bearer testToken
+      - name: Content-Type
+        value: application/json
+      - name: Accept
+        value: application/json
+      - name: X-Request-ID
+        value: testRequestId
+      - name: X-Client-ID
+        value: testClientId
+      - name: Content-Length
+        value: 550
+      - name: Content-Encoding
+        value: gzip
+      - name: Accept-Encoding
+        value: gzip, deflate
+      - name: Accept-Language
+        value: en-US,en;q=0.9
+      - name: User-Agent
+        value: testUserAgent
+    body:
+      - name: test
+        type: string
+        description: The test to run.
+        required: true
+        default: test
+      - name: test2
+        type: string
+        description: The second test to run.
+        required: false
+        default: test2
+    testValues:
+      - name: username
+        value: admin
+      - name: limit
+        value: 1
+    limit: 10
