@@ -1,27 +1,14 @@
 # pylint: disable=wrong-import-position
 """Test User."""
 
-# python stuff
-import os
-import unittest
-
 # our stuff
-from smarter.lib.django.user import User
+from smarter.apps.account.tests.mixins import TestAccountMixin
 
 from ..models import Account, UserProfile
 
 
-class TestAccount(unittest.TestCase):
+class TestAccount(TestAccountMixin):
     """Test Account model"""
-
-    def setUp(self):
-        """Set up test fixtures."""
-        username = "testuser_" + os.urandom(4).hex()
-        self.user = User.objects.create_user(username=username, password="12345")
-
-    def tearDown(self):
-        """Clean up test fixtures."""
-        self.user.delete()
 
     def test_create(self):
         """Test that we can create an account."""
@@ -71,6 +58,3 @@ class TestAccount(unittest.TestCase):
         self.assertEqual(account_to_update.account_number, account.account_number)
 
         account.delete()
-
-    def test_account_with_profile(self):
-        """Test that we can create an account and associate a user_profile."""
