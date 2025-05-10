@@ -84,6 +84,9 @@ class SAMStaticPluginSpecDataKeys(SmarterEnumAbstract):
     STATIC_DATA = "staticData"
 
 
+###############################################################################
+# ApiConnection Spec keys
+###############################################################################
 class SAMApiConnectionSpecKeys(SmarterEnumAbstract):
     """Smarter API Plugin Spec Data keys enumeration."""
 
@@ -105,6 +108,49 @@ class SAMApiConnectionSpecConnectionKeys(SmarterEnumAbstract):
 
 
 class SAMApiConnectionStatusKeys(SmarterEnumAbstract):
+    """Smarter API Plugin Spec Data keys enumeration."""
+
+    CONNECTION_STRING = "connection_string"
+    IS_VALID = "is_valid"
+
+
+###############################################################################
+# SqlConnection Spec keys
+###############################################################################
+class SAMSqlConnectionSpecKeys(SmarterEnumAbstract):
+    """Smarter API Plugin Spec Data keys enumeration."""
+
+    CONNECTION = "connection"
+
+
+class SAMSqlConnectionSpecConnectionKeys(SmarterEnumAbstract):
+    """Smarter API Plugin Spec Data keys enumeration."""
+
+    DB_ENGINE = "db_engine"
+    AUTHENTICATION_METHOD = "authentication_method"
+    TIMEOUT = "timeout"
+    ACCOUNT = "account"
+    DESCRIPTION = "description"
+    USE_SSL = "use_ssl"
+    SSL_CERT = "ssl_cert"
+    SSL_KEY = "ssl_key"
+    SSL_CA = "ssl_ca"
+    HOSTNAME = "hostname"
+    PORT = "port"
+    DATABASE = "database"
+    USERNAME = "username"
+    PASSWORD = "password"
+    POOL_SIZE = "pool_size"
+    MAX_OVERFLOW = "max_overflow"
+    PROXY_PROTOCOL = "proxy_protocol"
+    PROXY_HOST = "proxy_host"
+    PROXY_PORT = "proxy_port"
+    PROXY_USERNAME = "proxy_username"
+    PROXY_PASSWORD = "proxy_password"
+    SSH_KNOWN_HOSTS = "ssh_known_hosts"
+
+
+class SAMSqlConnectionStatusKeys(SmarterEnumAbstract):
     """Smarter API Plugin Spec Data keys enumeration."""
 
     CONNECTION_STRING = "connection_string"
