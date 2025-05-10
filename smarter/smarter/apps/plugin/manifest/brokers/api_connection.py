@@ -132,9 +132,9 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
         """
         config_dump = self.manifest.spec.connection.model_dump()
         config_dump = self.camel_to_snake(config_dump)
-        config_dump["name"] = self.manifest.metadata.name
-        config_dump["description"] = self.manifest.metadata.description
-        config_dump["version"] = self.manifest.metadata.version
+        config_dump[SAMMetadataKeys.NAME] = self.manifest.metadata.name
+        config_dump[SAMMetadataKeys.DESCRIPTION] = self.manifest.metadata.description
+        config_dump[SAMMetadataKeys.VERSION] = self.manifest.metadata.version
         return config_dump
 
     @property
@@ -147,10 +147,10 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
         except ApiConnection.DoesNotExist:
             if self.manifest:
                 model_dump = self.manifest.spec.connection.model_dump()
-                model_dump["account"] = self.account
-                model_dump["name"] = self.manifest.metadata.name
-                model_dump["version"] = self.manifest.metadata.version
-                model_dump["description"] = self.manifest.metadata.description
+                model_dump[SAMMetadataKeys.ACCOUNT] = self.account
+                model_dump[SAMMetadataKeys.NAME] = self.manifest.metadata.name
+                model_dump[SAMMetadataKeys.VERSION] = self.manifest.metadata.version
+                model_dump[SAMMetadataKeys.DESCRIPTION] = self.manifest.metadata.description
                 self._api_connection = ApiConnection(**model_dump)
                 self._api_connection.save()
 
@@ -193,7 +193,7 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
     def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
-        name: str = kwargs.get("name", None)
+        name: str = kwargs.get(SAMMetadataKeys.NAME, None)
         data = []
 
         # generate a QuerySet of ApiConnection objects that match our search criteria
@@ -270,10 +270,10 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
             try:
                 data = model_to_dict(self.api_connection)
                 data.pop("id")
-                data.pop("account")
-                data.pop("name")
-                data.pop("version")
-                data.pop("description")
+                data.pop(SAMMetadataKeys.ACCOUNT)
+                data.pop(SAMMetadataKeys.NAME)
+                data.pop(SAMMetadataKeys.VERSION)
+                data.pop(SAMMetadataKeys.DESCRIPTION)
                 retval = {
                     SAMKeys.APIVERSION: self.api_version,
                     SAMKeys.KIND: self.kind,

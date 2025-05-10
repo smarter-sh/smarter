@@ -41,7 +41,7 @@ from .manifest.enum import SAMPluginCommonMetadataClassValues
 
 # plugin stuff
 from .manifest.models.common import Parameter, RequestHeader, TestValue, UrlParam
-from .manifest.models.sql_connection.enum import DbEngines
+from .manifest.models.sql_connection.enum import DbEngines, DBMSAuthenticationMethods
 
 
 logger = logging.getLogger(__name__)
@@ -333,28 +333,14 @@ class SqlConnection(TimestampedModel):
             self.sql_connection.save()
             logger.warning("Unknown host key for %s. Key added to known_hosts.", hostname)
 
-    class DBMSAuthenticationMethods(Enum):
-        NONE = "none"
-        TCPIP = "tcpip"
-        TCPIP_SSH = "tcpip_ssh"
-        LDAP_USER_PWD = "ldap_user_pwd"
-
-        @classmethod
-        def choices(cls):
-            return [(method.value, method.name.replace("_", " ").title()) for method in cls]
-
-        @classmethod
-        def all_values(cls):
-            return [method.value for method in cls]
-
     DBMS_DEFAULT_TIMEOUT = 30
     DBMS_CHOICES = [
-        (DbEngines.MYSQL.value, "MySQL"),
-        (DbEngines.POSTGRES.value, "PostgreSQL"),
-        (DbEngines.SQLITE.value, "SQLite3"),
-        (DbEngines.ORACLE.value, "Oracle"),
-        (DbEngines.MSSQL.value, "MS SQL Server"),
-        (DbEngines.SYBASE.value, "Sybase"),
+        (DbEngines.MYSQL.value, DbEngines.MYSQL.value),
+        (DbEngines.POSTGRES.value, DbEngines.POSTGRES.value),
+        (DbEngines.SQLITE.value, DbEngines.SQLITE.value),
+        (DbEngines.ORACLE.value, DbEngines.ORACLE.value),
+        (DbEngines.MSSQL.value, DbEngines.MSSQL.value),
+        (DbEngines.SYBASE.value, DbEngines.SYBASE.value),
     ]
     DBMS_AUTHENITCATION_METHODS = [
         (DBMSAuthenticationMethods.NONE.value, "None"),

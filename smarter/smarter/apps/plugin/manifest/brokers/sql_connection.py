@@ -7,7 +7,15 @@ from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
 from smarter.apps.account.mixins import Account, AccountMixin
-from smarter.apps.plugin.manifest.models.sql_connection.enum import DbEngines
+from smarter.apps.plugin.manifest.enum import (
+    SAMSqlConnectionSpecConnectionKeys,
+    SAMSqlConnectionSpecKeys,
+    SAMSqlConnectionStatusKeys,
+)
+from smarter.apps.plugin.manifest.models.sql_connection.enum import (
+    DbEngines,
+    DBMSAuthenticationMethods,
+)
 from smarter.apps.plugin.models import SqlConnection
 from smarter.apps.plugin.serializers import SqlConnectionSerializer
 from smarter.common.api import SmarterApiVersions
@@ -145,36 +153,55 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
         except SqlConnection.DoesNotExist:
             if self.manifest:
                 model_dump = self.manifest.spec.connection.model_dump()
-                model_dump["account"] = self.account
-                model_dump["name"] = self.manifest.metadata.name
-                model_dump["version"] = self.manifest.metadata.version
-                model_dump["description"] = self.manifest.metadata.description
+                model_dump[SAMMetadataKeys.ACCOUNT] = self.account
+                model_dump[SAMMetadataKeys.NAME] = self.manifest.metadata.name
+                model_dump[SAMMetadataKeys.VERSION] = self.manifest.metadata.version
+                model_dump[SAMMetadataKeys.DESCRIPTION] = self.manifest.metadata.description
                 self._sql_connection = SqlConnection(**model_dump)
                 self._sql_connection.save()
 
         return self._sql_connection
 
     def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
+        """
+        Return an example manifest for the SqlConnection model.
+        """
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
         choices = ", ".join(DbEngines.all_values())
 
         data = {
-            "apiVersion": self.api_version,
-            "kind": self.kind,
-            "metadata": {
-                "name": "exampleConnection",
-                "description": f"points to the Django mysql database. db_engine choices: {choices}",
-                "version": "0.1.0",
+            SAMKeys.APIVERSION: self.api_version,
+            SAMKeys.KIND: self.kind,
+            SAMKeys.METADATA: {
+                SAMMetadataKeys.NAME: "exampleConnection",
+                SAMMetadataKeys.DESCRIPTION: f"Example database connection. db_engines: {choices}. authentication methods: {DBMSAuthenticationMethods.all_values()}",
+                SAMMetadataKeys.VERSION: "0.1.0",
             },
-            "spec": {
-                "connection": {
-                    "db_engine": DbEngines.MYSQL.value,
-                    "hostname": "smarter-mysql",
-                    "port": 3306,
-                    "username": "smarter",
-                    "password": "smarter",
-                    "database": "smarter",
+            SAMKeys.SPEC: {
+                SAMSqlConnectionSpecKeys.CONNECTION: {
+                    SAMSqlConnectionSpecConnectionKeys.DB_ENGINE: DbEngines.MYSQL,
+                    SAMSqlConnectionSpecConnectionKeys.AUTHENTICATION_METHOD: DBMSAuthenticationMethods.TCPIP,
+                    SAMSqlConnectionSpecConnectionKeys.TIMEOUT: 30,
+                    SAMSqlConnectionSpecConnectionKeys.ACCOUNT: self.account.account_number,
+                    SAMSqlConnectionSpecConnectionKeys.DESCRIPTION: "example database connection",
+                    SAMSqlConnectionSpecConnectionKeys.USE_SSL: False,
+                    SAMSqlConnectionSpecConnectionKeys.SSL_CERT: "",
+                    SAMSqlConnectionSpecConnectionKeys.SSL_KEY: "",
+                    SAMSqlConnectionSpecConnectionKeys.SSL_CA: "",
+                    SAMSqlConnectionSpecConnectionKeys.HOSTNAME: "localhost",
+                    SAMSqlConnectionSpecConnectionKeys.PORT: 3306,
+                    SAMSqlConnectionSpecConnectionKeys.DATABASE: "example_db",
+                    SAMSqlConnectionSpecConnectionKeys.USERNAME: "example_user",
+                    SAMSqlConnectionSpecConnectionKeys.PASSWORD: "example_password",
+                    SAMSqlConnectionSpecConnectionKeys.POOL_SIZE: 5,
+                    SAMSqlConnectionSpecConnectionKeys.MAX_OVERFLOW: 10,
+                    SAMSqlConnectionSpecConnectionKeys.PROXY_PROTOCOL: "https",
+                    SAMSqlConnectionSpecConnectionKeys.PROXY_HOST: "proxy.example.com",
+                    SAMSqlConnectionSpecConnectionKeys.PROXY_PORT: 8080,
+                    SAMSqlConnectionSpecConnectionKeys.PROXY_USERNAME: "proxy_user",
+                    SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD: "proxy_password",
+                    SAMSqlConnectionSpecConnectionKeys.SSH_KNOWN_HOSTS: "",
                 }
             },
         }
@@ -253,26 +280,32 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
         """Return a JSON response with the manifest data."""
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
+        is_valid = False
+        try:
+            is_valid = self.sql_connection.validate()
+        except Exception:
+            pass
+
         if self.sql_connection:
             try:
                 data = model_to_dict(self.sql_connection)
                 data.pop("id")
-                data.pop("account")
-                data.pop("name")
-                data.pop("version")
-                data.pop("description")
+                data.pop(SAMMetadataKeys.ACCOUNT)
+                data.pop(SAMMetadataKeys.NAME)
+                data.pop(SAMMetadataKeys.DESCRIPTION)
+                data.pop(SAMMetadataKeys.VERSION)
                 retval = {
-                    "apiVersion": self.api_version,
-                    "kind": self.kind,
-                    "metadata": {
-                        "name": self.sql_connection.name,
-                        "description": self.sql_connection.description,
-                        "version": self.sql_connection.version,
+                    SAMKeys.APIVERSION: self.api_version,
+                    SAMKeys.KIND: self.kind,
+                    SAMKeys.METADATA: {
+                        SAMMetadataKeys.NAME: self.sql_connection.name,
+                        SAMMetadataKeys.DESCRIPTION: self.sql_connection.description,
+                        SAMMetadataKeys.VERSION: self.sql_connection.version,
                     },
-                    "spec": {"connection": data},
-                    "status": {
-                        "connection_string": self.sql_connection.get_connection_string(),
-                        "is_valid": self.sql_connection.validate(),
+                    SAMKeys.SPEC: {SAMSqlConnectionSpecKeys.CONNECTION: data},
+                    SAMKeys.STATUS: {
+                        SAMSqlConnectionStatusKeys.CONNECTION_STRING: self.sql_connection.get_connection_string(),
+                        SAMSqlConnectionStatusKeys.IS_VALID: is_valid,
                     },
                 }
 
