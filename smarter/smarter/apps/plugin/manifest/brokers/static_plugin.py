@@ -5,11 +5,9 @@ import logging
 from typing import Type
 
 from django.core.handlers.wsgi import WSGIRequest
-from rest_framework import serializers
-from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account
 from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMPluginStatic
@@ -33,34 +31,10 @@ from smarter.lib.manifest.enum import (
 )
 from smarter.lib.manifest.loader import SAMLoader
 
+from . import PluginSerializer, SAMPluginBrokerError
 
-MAX_RESULTS = 1000
+
 logger = logging.getLogger(__name__)
-
-
-class SAMPluginBrokerError(SAMBrokerError):
-    """Base exception for Smarter API Plugin Broker handling."""
-
-    @property
-    def get_formatted_err_message(self):
-        return "Smarter API Plugin Manifest Broker Error"
-
-
-class PluginSerializer(ModelSerializer):
-    """Django ORM model serializer for get()"""
-
-    email = serializers.SerializerMethodField()
-
-    def get_email(self, obj):
-        if obj.author:
-            user_profile = UserProfile.objects.get(id=obj.author_id)
-            return user_profile.user.email if user_profile.user else None
-        return None
-
-    # pylint: disable=C0115
-    class Meta:
-        model = PluginMeta
-        fields = ["name", "plugin_class", "version", "email", "created_at", "updated_at"]
 
 
 class SAMStaticPluginBroker(AbstractBroker, AccountMixin):

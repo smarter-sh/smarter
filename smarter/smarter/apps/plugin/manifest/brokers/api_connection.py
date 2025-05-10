@@ -20,7 +20,6 @@ from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
     AbstractBroker,
-    SAMBrokerError,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
 )
@@ -34,14 +33,7 @@ from smarter.lib.manifest.loader import SAMLoader
 
 from ..models.api_connection.const import MANIFEST_KIND
 from ..models.api_connection.model import SAMApiConnection
-
-
-class SAMApiConnectionBrokerError(SAMBrokerError):
-    """Base exception for Smarter API Plugin Broker handling."""
-
-    @property
-    def get_formatted_err_message(self):
-        return "Smarter API ApiConnection Manifest Broker Error"
+from . import SAMConnectionBrokerError
 
 
 class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
@@ -207,12 +199,12 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
             try:
                 model_dump = ApiConnectionSerializer(api_connection).data
                 if not model_dump:
-                    raise SAMApiConnectionBrokerError(
+                    raise SAMConnectionBrokerError(
                         f"Model dump failed for {self.kind} {api_connection.name}", thing=self.kind, command=command
                     )
                 data.append(model_dump)
             except Exception as e:
-                raise SAMApiConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
+                raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -248,7 +240,7 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
                 setattr(self.api_connection, key, value)
             self.api_connection.save()
         except Exception as e:
-            raise SAMApiConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
+            raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         return self.json_response_ok(command=command, data={})
 
     def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
@@ -291,7 +283,7 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
 
                 return self.json_response_ok(command=command, data=retval)
             except Exception as e:
-                raise SAMApiConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
+                raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         raise SAMBrokerErrorNotReady(message="No connection found", thing=self.kind, command=command)
 
     def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
@@ -302,7 +294,7 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
                 self.api_connection.delete()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
-                raise SAMApiConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
+                raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         raise SAMBrokerErrorNotReady(message="No connection found", thing=self.kind, command=command)
 
     def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:

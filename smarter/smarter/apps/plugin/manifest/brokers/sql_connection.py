@@ -23,7 +23,6 @@ from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
     AbstractBroker,
-    SAMBrokerError,
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
 )
@@ -37,17 +36,7 @@ from smarter.lib.manifest.loader import SAMLoader
 
 from ..models.sql_connection.const import MANIFEST_KIND
 from ..models.sql_connection.model import SAMSqlConnection
-
-
-MAX_RESULTS = 1000
-
-
-class SAMSqlConnectionBrokerError(SAMBrokerError):
-    """Base exception for Smarter API Plugin Broker handling."""
-
-    @property
-    def get_formatted_err_message(self):
-        return "Smarter API SqlConnection Manifest Broker Error"
+from . import SAMConnectionBrokerError
 
 
 class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
@@ -138,9 +127,9 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
         """
         config_dump = self.manifest.spec.connection.model_dump()
         config_dump = self.camel_to_snake(config_dump)
-        config_dump["name"] = self.manifest.metadata.name
-        config_dump["description"] = self.manifest.metadata.description
-        config_dump["version"] = self.manifest.metadata.version
+        config_dump[SAMMetadataKeys.NAME] = self.manifest.metadata.name
+        config_dump[SAMMetadataKeys.DESCRIPTION] = self.manifest.metadata.description
+        config_dump[SAMMetadataKeys.VERSION] = self.manifest.metadata.version
         return config_dump
 
     @property
@@ -227,12 +216,12 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
             try:
                 model_dump = SqlConnectionSerializer(sql_connection).data
                 if not model_dump:
-                    raise SAMSqlConnectionBrokerError(
+                    raise SAMConnectionBrokerError(
                         f"Model dump failed for {self.kind} {sql_connection.name}", thing=self.kind, command=command
                     )
                 data.append(model_dump)
             except Exception as e:
-                raise SAMSqlConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
+                raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         data = {
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
@@ -268,7 +257,7 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
                 setattr(self.sql_connection, key, value)
             self.sql_connection.save()
         except Exception as e:
-            raise SAMSqlConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
+            raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         return self.json_response_ok(command=command, data={})
 
     def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
@@ -311,7 +300,7 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
 
                 return self.json_response_ok(command=command, data=retval)
             except Exception as e:
-                raise SAMSqlConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
+                raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         raise SAMBrokerErrorNotReady(message="No connection found", thing=self.kind, command=command)
 
     def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
@@ -322,7 +311,7 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
                 self.sql_connection.delete()
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
-                raise SAMSqlConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
+                raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
         raise SAMBrokerErrorNotReady(message="No connection found", thing=self.kind, command=command)
 
     def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
