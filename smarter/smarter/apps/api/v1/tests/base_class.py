@@ -8,49 +8,33 @@ ensure that:
 """
 
 import json
-import unittest
 
 from django.test import Client
 
-from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Account, UserProfile
-from smarter.apps.account.tests.factories import admin_user_factory
-from smarter.lib.django.user import User
+from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib.drf.models import SmarterAuthToken
 
 
-class ApiV1TestBase(unittest.TestCase, AccountMixin):
+class ApiV1TestBase(TestAccountMixin):
     """Test api/v1/ base class."""
 
     name: str = None
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls._user, cls._account, cls._user_profile = admin_user_factory()
-
+        super().setUpClass()
         instance = cls()
 
         cls.token_record, cls.token_key = SmarterAuthToken.objects.create(
-            name=instance.user.username,
-            user=instance.user,
-            description=instance.user.username,
+            name=instance.admin_user.username,
+            user=instance.admin_user,
+            description=instance.admin_user.username,
         )
 
     @classmethod
     def tearDownClass(cls) -> None:
+        super().tearDownClass()
         instance = cls()
-        try:
-            instance.user_profile.delete()
-        except UserProfile.DoesNotExist:
-            pass
-        try:
-            instance.user.delete()
-        except User.DoesNotExist:
-            pass
-        try:
-            instance.account.delete()
-        except Account.DoesNotExist:
-            pass
         try:
             instance.token_record.delete()
         except SmarterAuthToken.DoesNotExist:

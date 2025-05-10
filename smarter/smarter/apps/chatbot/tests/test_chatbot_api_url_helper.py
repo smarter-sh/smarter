@@ -1,38 +1,28 @@
 # pylint: disable=wrong-import-position
 """Test ChatBotHelper."""
 
-# python stuff
-import hashlib
-import random
-import unittest
-
 from django.contrib.auth import authenticate
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.core.handlers.wsgi import WSGIRequest
 from django.test import RequestFactory
 
-from smarter.apps.account.tests.factories import (
-    admin_user_factory,
-    factory_account_teardown,
-)
+from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.models import ChatBot, ChatBotCustomDomain, ChatBotHelper
 from smarter.common.conf import settings as smarter_settings
 
 
 # pylint: disable=too-many-instance-attributes
-class TestChatBotApiUrlHelper(unittest.TestCase):
+class TestChatBotApiUrlHelper(TestAccountMixin):
     """Test ChatBotHelper"""
 
     def setUp(self):
         """Set up test fixtures."""
-        hashed_slug = hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:16]
-        self.domain_name = f"{hashed_slug}.{smarter_settings.environment_api_domain}"
-
-        self.user, self.account, self.user_profile = admin_user_factory()
+        super().setUp()
+        self.domain_name = f"{self.hash_suffix}.{smarter_settings.environment_api_domain}"
 
         self.chatbot = ChatBot.objects.create(
             account=self.account,
-            name=f"{hashed_slug}",
+            name=f"{self.hash_suffix}",
             deployed=True,
         )
 
@@ -46,7 +36,7 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
 
         self.custom_chatbot = ChatBot.objects.create(
             account=self.account,
-            name=f"custom-{hashed_slug}",
+            name=f"custom-{self.hash_suffix}",
             custom_domain=self.custom_domain,
             deployed=True,
         )
@@ -55,18 +45,27 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
 
     def tearDown(self):
         """Clean up test fixtures."""
-        self.chatbot.delete()
-        self.custom_chatbot.delete()
-        self.custom_domain.delete()
-        factory_account_teardown(user=self.user, account=self.account, user_profile=self.user_profile)
+        super().tearDown()
+        try:
+            self.chatbot.delete()
+        except ChatBot.DoesNotExist:
+            pass
+        try:
+            self.custom_chatbot.delete()
+        except ChatBot.DoesNotExist:
+            pass
+        try:
+            self.custom_domain.delete()
+        except ChatBotCustomDomain.DoesNotExist:
+            pass
 
     def test_valid_url(self):
         """Test a url for the chatbot we created."""
         request: WSGIRequest = self.wsgi_request_factory.get(self.chatbot.url, SERVER_NAME="api.localhost:8000")
-        user = authenticate(username=self.user, password="12345")
+        user = authenticate(username=self.admin_user, password="12345")
         if user is None:
             self.fail("Authentication failed")
-        request.user = user
+        request.admin_user = user
         middleware = SessionMiddleware(lambda request: None)
         middleware.process_request(request)
         request.session.save()
@@ -75,7 +74,7 @@ class TestChatBotApiUrlHelper(unittest.TestCase):
 
         self.assertTrue(
             helper.is_valid,
-            f"Expected a chatbot helper to be valid, but got {helper.is_valid} for url {self.chatbot.url} -- helper: {helper}, user: {helper.user}, profile: {helper.user_profile}",
+            f"Expected a chatbot helper to be valid, but got {helper.is_valid} for url {self.chatbot.url} -- helper: {helper}, user: {helper.admin_user}, profile: {helper.user_profile}",
         )
         self.assertTrue(helper.account == self.account)
         self.assertTrue(

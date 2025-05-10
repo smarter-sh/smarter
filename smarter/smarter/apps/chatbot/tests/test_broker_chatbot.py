@@ -2,7 +2,6 @@
 
 import json
 import os
-import unittest
 from http import HTTPStatus
 
 import requests
@@ -10,10 +9,7 @@ import yaml
 from django.http import JsonResponse
 from django.test import Client
 
-from smarter.apps.account.tests.factories import (
-    admin_user_factory,
-    factory_account_teardown,
-)
+from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
 from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
 from smarter.apps.plugin.utils import add_example_plugins
@@ -27,7 +23,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 # pylint: disable=too-many-instance-attributes
-class TestSAMChatbotBroker(unittest.TestCase):
+class TestSAMChatbotBroker(TestAccountMixin):
     """Test SAM Chatbot Broker"""
 
     @classmethod
@@ -44,7 +40,7 @@ class TestSAMChatbotBroker(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Set up test fixtures."""
-        cls.user, cls.account, cls.user_profile = admin_user_factory()
+        super().setUpClass()
         cls.request = cls.create_generic_request()
 
         config_path = os.path.join(HERE, "data/chatbot.yaml")
@@ -53,11 +49,6 @@ class TestSAMChatbotBroker(unittest.TestCase):
         cls.client = Client()
         cls.kwargs = {}
         add_example_plugins(user_profile=cls.user_profile)
-
-    @classmethod
-    def tearDownClass(cls):
-        """Tear down test fixtures."""
-        factory_account_teardown(cls.user, cls.account, cls.user_profile)
 
     def test_chatbot_broker_apply(self):
         """Test that the Broker can apply the manifest."""

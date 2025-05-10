@@ -4,15 +4,11 @@
 import hashlib
 import random
 import time
-import unittest
 
 from django.core.management import call_command
 
 from smarter.apps.account.models import Account
-from smarter.apps.account.tests.factories import (
-    admin_user_factory,
-    factory_account_teardown,
-)
+from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.models import ChatBot, ChatBotAPIKey
 from smarter.apps.chatbot.signals import (
     chatbot_dns_failed,
@@ -27,7 +23,7 @@ from smarter.lib.drf.models import SmarterAuthToken
 
 
 # pylint: disable=too-many-instance-attributes
-class ManageCommandCreatePluginTestCase(unittest.TestCase):
+class ManageCommandCreatePluginTestCase(TestAccountMixin):
     """Tests for manage.py create_plugin."""
 
     _chatbot_dns_verification_status_changed = False
@@ -58,23 +54,18 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
 
     def setUp(self):
         """Set up test fixtures."""
-        hashed_slug = hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:16]
-        self.user, self.account, self.user_profile = admin_user_factory()
+        super().setUp()
         self.auth_token, self.secret_key = SmarterAuthToken.objects.create(
-            name="testKey", user=self.user, description="unit test"
+            name="testKey", user=self.admin_user, description="unit test"
         )
         self.chatbot = ChatBot.objects.create(
             account=self.account,
-            name=f"{hashed_slug}",
+            name=f"{self.hash_suffix}",
         )
         self._chatbot_dns_verification_status_changed = False
         self._chatbot_dns_failed = False
         self._chatbot_dns_verification_initiated = False
         self._chatbot_dns_verified = False
-
-    def tearDown(self):
-        """Clean up test fixtures."""
-        factory_account_teardown(self.user, self.account, self.user_profile)
 
     def test_add_api_key(self):
         """Test add_api_key command."""
@@ -223,7 +214,7 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
             "--url",
             "https://github.com/QueriumCorp/smarter-demo",
             "--username",
-            self.user.get_username(),
+            self.admin_user.get_username(),
         )
 
     def test_load_from_github_v2(self):
@@ -236,7 +227,7 @@ class ManageCommandCreatePluginTestCase(unittest.TestCase):
             "--url",
             "https://github.com/smarter-sh/examples",
             "--username",
-            self.user.get_username(),
+            self.admin_user.get_username(),
             "--repo_version",
             "2",
         )

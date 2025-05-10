@@ -1,41 +1,27 @@
 # pylint: disable=wrong-import-position
 """Test API end points."""
 
-# python stuff
-import unittest
-
 from django.test import Client
 
 # our stuff
-from smarter.apps.account.tests.factories import (
-    admin_user_factory,
-    factory_account_teardown,
-)
-from smarter.lib.django.user import UserType
-
-from ..models import PluginMeta
-from ..utils import add_example_plugins
+from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.plugin.models import PluginMeta
+from smarter.apps.plugin.utils import add_example_plugins
 
 
-class TestPluginUrls(unittest.TestCase):
+class TestPluginUrls(TestAccountMixin):
     """Test Account API end points."""
-
-    user: UserType
 
     def setUp(self):
         """Set up test fixtures."""
-        self.user, self.account, self.user_profile = admin_user_factory()
+        super().setUp()
         add_example_plugins(user_profile=self.user_profile)
         self.client = Client()
-        self.client.force_login(self.user)
-
-    def tearDown(self):
-        """Clean up test fixtures."""
-        factory_account_teardown(self.user, self.account, self.user_profile)
+        self.client.force_login(self.admin_user)
 
     def test_account_users_add_plugins_view(self):
         """test that we can add example plugins using the api end point."""
-        response = self.client.post("/api/v1/plugins/add-example-plugins/" + str(self.user.id) + "/")
+        response = self.client.post("/api/v1/plugins/add-example-plugins/" + str(self.admin_user.id) + "/")
 
         # we should have been redirected to a list of the plugins for the user
         self.assertEqual(response.status_code, 302)
