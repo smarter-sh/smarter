@@ -2,11 +2,11 @@
 
 from django.core.management import call_command
 
-from smarter.apps.plugin.tests.base_classes import TestBase
+from smarter.apps.plugin.tests.base_classes import TestPluginClassBase
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 
 
-class ManageCommandCreatePluginTestCase(TestBase):
+class ManageCommandCreatePluginTestCase(TestPluginClassBase):
     """Tests for manage.py create_plugin."""
 
     # part of the abstract base class but not used for these tests

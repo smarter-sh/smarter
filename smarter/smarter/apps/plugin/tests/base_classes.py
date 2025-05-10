@@ -23,20 +23,12 @@ logger = getLogger(__name__)
 class ManifestTestsMixin(unittest.TestCase):
     """Mixin class for high level SAM pydantic model tests."""
 
-    def setUp(self):
-        super().setUp()
-        try:
-            self.model
-        except NotImplementedError:
-            self.skipTest("Skipping test because the child class is not fully initialized")
-        super().setUp()
-
     @property
     def model(self) -> AbstractSAMBase:
         raise NotImplementedError("Subclasses must implement this method")
 
 
-class TestBase(TestAccountMixin):
+class TestPluginClassBase(TestAccountMixin):
     """Base class for testing all plugin and connection models."""
 
     _manifest_path: str = None
@@ -89,7 +81,7 @@ class TestBase(TestAccountMixin):
         self.assertIsNotNone(self.manifest)
 
 
-class TestConnectionBase(TestBase):
+class TestConnectionBase(TestPluginClassBase):
     """Base class for testing connection models."""
 
     @classmethod
@@ -118,7 +110,7 @@ class TestConnectionBase(TestBase):
         raise NotImplementedError("Subclasses must implement this method")
 
 
-class TestPluginBase(TestBase):
+class TestPluginBase(TestPluginClassBase):
     """Base class for testing connection models."""
 
     plugin_meta: PluginMeta = None

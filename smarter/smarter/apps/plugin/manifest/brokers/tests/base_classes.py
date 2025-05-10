@@ -5,9 +5,9 @@ import os
 from django.test import Client
 
 from smarter.apps.plugin.tests.base_classes import (
-    TestBase,
     TestConnectionBase,
     TestPluginBase,
+    TestPluginClassBase,
 )
 
 from .factories import create_generic_request
@@ -17,7 +17,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 # pylint: disable=W0223
-class TestSAMBrokerMixin(TestBase):
+class TestSAMBrokerMixin(TestPluginClassBase):
     """Test SAMStaticPluginBrokerBase"""
 
     @property
