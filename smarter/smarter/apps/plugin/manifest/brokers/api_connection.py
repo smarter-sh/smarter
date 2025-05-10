@@ -1,5 +1,5 @@
 # pylint: disable=W0718
-"""Smarter Api Plugin Manifest handler"""
+"""Smarter Api ApiConnection Manifest handler"""
 
 from typing import Type
 
@@ -38,15 +38,15 @@ from . import SAMConnectionBrokerError
 
 class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
     """
-    Smarter API Plugin Manifest Broker.This class is responsible for
-    - loading, validating and parsing the Smarter Api yaml Plugin manifests
+    Smarter API ApiConnection Manifest Broker.This class is responsible for
+    - loading, validating and parsing the Smarter Api yaml ApiConnection manifests
     - using the manifest to initialize the corresponding Pydantic model
 
-    The Plugin object provides the generic services for the Plugin, such as
+    The ApiConnection object provides the generic services for the ApiConnection, such as
     instantiation, create, update, delete, etc.
     """
 
-    # override the base abstract manifest model with the Plugin model
+    # override the base abstract manifest model with the ApiConnection model
     _manifest: SAMApiConnection = None
     _pydantic_model: Type[SAMApiConnection] = SAMApiConnection
     _api_connection: ApiConnection = None
@@ -99,7 +99,7 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
     def manifest(self) -> SAMApiConnection:
         """
         SAMApiConnection() is a Pydantic model
-        that is used to represent the Smarter API Plugin manifest. The Pydantic
+        that is used to represent the Smarter API ApiConnection manifest. The Pydantic
         model is initialized with the data from the manifest loader, which is
         generally passed to the model constructor as **data. However, this top-level
         manifest model has to be explicitly initialized, whereas its child models
@@ -194,7 +194,7 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
         else:
             api_connections = ApiConnection.objects.filter(account=self.account)
 
-        # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
+        # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each ApiConnection
         for api_connection in api_connections:
             try:
                 model_dump = ApiConnectionSerializer(api_connection).data

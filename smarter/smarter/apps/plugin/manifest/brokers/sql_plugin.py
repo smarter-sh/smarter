@@ -148,9 +148,7 @@ class SAMSqlPluginBroker(AbstractBroker, AccountMixin):
     def example_manifest(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.example_manifest.__name__
         command = SmarterJournalCliCommands(command)
-        Plugin = SqlPlugin
-
-        data = Plugin.example_manifest(kwargs=kwargs)
+        data = SqlPlugin.example_manifest(kwargs=kwargs)
         return self.json_response_ok(command=command, data=data)
 
     def get(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
@@ -167,7 +165,7 @@ class SAMSqlPluginBroker(AbstractBroker, AccountMixin):
         else:
             chatbots = PluginMeta.objects.filter(account=self.account)
         logger.info(
-            "%s.get() found %s Plugins for account %s", self.formatted_class_name, chatbots.count(), self.account
+            "%s.get() found %s SqlPlugins for account %s", self.formatted_class_name, chatbots.count(), self.account
         )
 
         # iterate over the QuerySet and use a serializer to create a model dump for each ChatBot
