@@ -314,7 +314,7 @@ class PluginBase(ABC):
             "account": self.user_profile.account,
             "name": self.manifest.metadata.name,
             "description": self.manifest.metadata.description,
-            "plugin_class": self.manifest.metadata.plugin_class,
+            "plugin_class": self.manifest.metadata.pluginClass,
             "version": self.manifest.metadata.version,
             "author": self.user_profile,
             "tags": self.manifest.metadata.tags,

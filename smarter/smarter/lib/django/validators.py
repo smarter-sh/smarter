@@ -49,6 +49,90 @@ class SmarterValidator:
     VALID_CLEAN_STRING = r"^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z0-9-]{1,63})*$"
     VALID_CLEAN_STRING_WITH_SPACES = r"^[\w\-\.~:\/\?#\[\]@!$&'()*+,;= %]+$"
     VALID_URL_ENDPOINT = r"^/[a-zA-Z0-9/_\-\{\}]+/$"  # NOTE: this allows placeholders like {id} in the url
+    VALID_CAMEL_CASE = r"^[a-zA-Z0-9]+(?:[A-Z][a-z0-9]+)*$"
+    VALID_SNAKE_CASE = r"^[a-z0-9]+(?:_[a-z0-9]+)*$"
+    VALID_PASCAL_CASE = r"^[A-Z][a-z0-9]+(?:[A-Z][a-z0-9]+)*$"
+
+    @staticmethod
+    def validate_camel_case(value: str) -> None:
+        """Validate camel case format"""
+        if not re.match(SmarterValidator.VALID_CAMEL_CASE, value):
+            raise SmarterValueError(f"Invalid camel case {value}")
+        if not value:
+            raise SmarterValueError("Value cannot be empty")
+        if not value[0].islower():
+            raise SmarterValueError(f"Value must start with a lowercase letter: {value}")
+        if not value[0].isalpha():
+            raise SmarterValueError(f"Value must start with a letter: {value}")
+        if not value[1:].islower():
+            raise SmarterValueError(f"Value must be in camel case format: {value}")
+        if not value[1:].isalnum():
+            raise SmarterValueError(f"Value must be in camel case format: {value}")
+        if not value[1:].isalpha():
+            raise SmarterValueError(f"Value must be in camel case format: {value}")
+
+    @staticmethod
+    def is_valid_camel_case(value: str) -> bool:
+        """Check if the value is valid camel case"""
+        try:
+            SmarterValidator.validate_camel_case(value)
+            return True
+        except SmarterValueError:
+            return False
+
+    @staticmethod
+    def validate_snake_case(value: str) -> None:
+        """Validate snake case format"""
+        if not re.match(SmarterValidator.VALID_SNAKE_CASE, value):
+            raise SmarterValueError(f"Invalid snake case {value}")
+        if not value:
+            raise SmarterValueError("Value cannot be empty")
+        if not value[0].islower():
+            raise SmarterValueError(f"Value must start with a lowercase letter: {value}")
+        if not value[0].isalpha():
+            raise SmarterValueError(f"Value must start with a letter: {value}")
+        if not value[1:].islower():
+            raise SmarterValueError(f"Value must be in snake case format: {value}")
+        if not value[1:].isalnum():
+            raise SmarterValueError(f"Value must be in snake case format: {value}")
+        if not value[1:].isalpha():
+            raise SmarterValueError(f"Value must be in snake case format: {value}")
+
+    @staticmethod
+    def is_valid_snake_case(value: str) -> bool:
+        """Check if the value is valid snake case"""
+        try:
+            SmarterValidator.validate_snake_case(value)
+            return True
+        except SmarterValueError:
+            return False
+
+    @staticmethod
+    def validate_pascal_case(value: str) -> None:
+        """Validate pascal case format"""
+        if not re.match(SmarterValidator.VALID_PASCAL_CASE, value):
+            raise SmarterValueError(f"Invalid pascal case {value}")
+        if not value:
+            raise SmarterValueError("Value cannot be empty")
+        if not value[0].isupper():
+            raise SmarterValueError(f"Value must start with an uppercase letter: {value}")
+        if not value[0].isalpha():
+            raise SmarterValueError(f"Value must start with a letter: {value}")
+        if not value[1:].islower():
+            raise SmarterValueError(f"Value must be in pascal case format: {value}")
+        if not value[1:].isalnum():
+            raise SmarterValueError(f"Value must be in pascal case format: {value}")
+        if not value[1:].isalpha():
+            raise SmarterValueError(f"Value must be in pascal case format: {value}")
+
+    @staticmethod
+    def is_valid_pascal_case(value: str) -> bool:
+        """Check if the value is valid pascal case"""
+        try:
+            SmarterValidator.validate_pascal_case(value)
+            return True
+        except SmarterValueError:
+            return False
 
     @staticmethod
     def validate_json(value: str) -> None:

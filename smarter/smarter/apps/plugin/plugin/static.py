@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 class StaticPlugin(PluginBase):
     """A PLugin that returns a static json object stored in the Plugin itself."""
 
-    _metadata_class = SAMPluginCommonMetadataClass.STATIC_DATA.value
+    _metadata_class = SAMPluginCommonMetadataClass.STATIC.value
     _plugin_data: PluginDataStatic = None
     _plugin_data_serializer: PluginStaticSerializer = None
 
@@ -117,7 +117,7 @@ class StaticPlugin(PluginBase):
                 },
                 SAMPluginSpecKeys.DATA.value: {
                     SAMStaticPluginSpecDataKeys.DESCRIPTION.value: "Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
-                    SAMStaticPluginSpecDataKeys.STATIC_DATA.value: {
+                    SAMStaticPluginSpecDataKeys.STATIC.value: {
                         "contact": [
                             {"name": "Willy Wonka"},
                             {"title": "Founder and CEO"},

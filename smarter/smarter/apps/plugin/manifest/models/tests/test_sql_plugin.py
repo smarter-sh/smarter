@@ -69,7 +69,7 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin):
 
         try:
             cls.connection_django_model.delete()
-        except (SqlConnection.DoesNotExist, ValueError):
+        except (SqlConnection.DoesNotExist, ValueError, AttributeError):
             pass
 
     def tearDown(self):

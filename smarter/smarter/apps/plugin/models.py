@@ -8,7 +8,6 @@ import json
 import logging
 import re
 from abc import abstractmethod
-from enum import Enum
 from functools import lru_cache
 from http import HTTPStatus
 from socket import socket
@@ -18,6 +17,7 @@ from urllib.parse import urljoin
 import paramiko
 import requests
 import yaml
+from django.core.exceptions import ImproperlyConfigured
 
 # django stuff
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -34,6 +34,7 @@ from taggit.managers import TaggableManager
 from smarter.apps.account.models import Account, Secret, UserProfile
 from smarter.common.conf import SettingsDefaults
 from smarter.common.exceptions import SmarterValueError
+from smarter.common.utils import camel_to_snake
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.validators import SmarterValidator
 
@@ -52,13 +53,19 @@ SMARTER_PLUGIN_MAX_DATA_RESULTS = 50
 def validate_no_spaces(value):
     """Validate that the string does not contain spaces."""
     if " " in value:
-        raise SmarterValueError("Value must not contain spaces.")
+        raise SmarterValueError(f"Value must not contain spaces: {value}")
 
 
 def validate_camel_case(value):
     """Validate that the string is in camelCase."""
     if not re.match(r"^[a-z]+(?:[A-Z][a-z0-9]*)*$", value):
-        raise SmarterValueError("Value must be in camelCase format.")
+        raise SmarterValueError(f"Value must be in camelCase format: {value}")
+
+
+def validate_snake_case(value):
+    """Validate that the string is in snake_case."""
+    if not re.match(r"^[a-z]+(?:_[a-z0-9]+)*$", value):
+        raise SmarterValueError(f"Value must be in snake_case format: {value}")
 
 
 def dict_key_cleaner(key: str) -> str:  # pragma: no cover
@@ -119,7 +126,7 @@ class PluginMeta(TimestampedModel):  # pragma: no cover
     name = models.CharField(
         help_text="The name of the plugin. Example: 'HR Policy Update' or 'Public Relation Talking Points'.",
         max_length=255,
-        validators=[validate_camel_case],
+        validators=[validate_snake_case, validate_no_spaces],
     )
     description = models.TextField(
         help_text="A brief description of the plugin. Be verbose, but not too verbose.",
@@ -133,6 +140,19 @@ class PluginMeta(TimestampedModel):  # pragma: no cover
 
     def __str__(self):
         return str(self.name) or ""
+
+    def save(self, *args, **kwargs):
+        """Override the save method to validate the field dicts."""
+        if not SmarterValidator.is_valid_snake_case(self.name):
+            snake_case_name = camel_to_snake(self.name)
+            logger.warning(
+                "PluginMeta.save(): name %s was not in snake_case. Converted to snake_case: %s",
+                self.name,
+                snake_case_name,
+            )
+            self.name = snake_case_name
+        self.validate()
+        super().save(*args, **kwargs)
 
     # pylint: disable=missing-class-docstring
     class Meta:
@@ -351,7 +371,7 @@ class SqlConnection(TimestampedModel):
     name = models.CharField(
         help_text="The name of the connection, without spaces. Example: 'HRDatabase', 'SalesDatabase', 'InventoryDatabase'.",
         max_length=255,
-        validators=[validate_camel_case],
+        validators=[validate_snake_case, validate_no_spaces],
     )
     db_engine = models.CharField(
         help_text="The type of database management system. Example: 'MySQL', 'PostgreSQL', 'MS SQL Server', 'Oracle'.",
@@ -495,7 +515,7 @@ class SqlConnection(TimestampedModel):
             connection: BaseDatabaseWrapper = connection_handler["default"]
             connection.ensure_connection()
             return connection
-        except DatabaseError as e:
+        except (DatabaseError, ImproperlyConfigured) as e:
             logger.error("db test connection failed: %s", e)
             return False
 
@@ -566,13 +586,13 @@ class SqlConnection(TimestampedModel):
         """
         Establish a database connection based on the authentication method.
         """
-        if self.authentication_method == SqlConnection.DBMSAuthenticationMethods.NONE.value:
+        if self.authentication_method == DBMSAuthenticationMethods.NONE.value:
             return self.connect_tcpip()
-        elif self.authentication_method == SqlConnection.DBMSAuthenticationMethods.TCPIP.value:
+        elif self.authentication_method == DBMSAuthenticationMethods.TCPIP.value:
             return self.connect_tcpip()
-        elif self.authentication_method == SqlConnection.DBMSAuthenticationMethods.TCPIP_SSH.value:
+        elif self.authentication_method == DBMSAuthenticationMethods.TCPIP_SSH.value:
             return self.connect_tcpip_ssh()
-        elif self.authentication_method == SqlConnection.DBMSAuthenticationMethods.LDAP_USER_PWD.value:
+        elif self.authentication_method == DBMSAuthenticationMethods.LDAP_USER_PWD.value:
             return self.connect_ldap_user_pwd()
         else:
             raise SmarterValueError(f"Unsupported authentication method: {self.authentication_method}")
@@ -617,6 +637,19 @@ class SqlConnection(TimestampedModel):
     def validate(self) -> bool:
         super().validate()
         return isinstance(self.connect(), BaseDatabaseWrapper)
+
+    def save(self, *args, **kwargs):
+        """Override the save method to validate the field dicts."""
+        if not SmarterValidator.is_valid_snake_case(self.name):
+            snake_case_name = camel_to_snake(self.name)
+            logger.warning(
+                "SqlConnection.save(): name %s was not in snake_case. Converted to snake_case: %s",
+                self.name,
+                snake_case_name,
+            )
+            self.name = snake_case_name
+        self.validate()
+        super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return self.name + " - " + self.get_connection_string()
@@ -838,7 +871,7 @@ class ApiConnection(TimestampedModel):
     name = models.CharField(
         help_text="The name of the API connection, camelCase, without spaces. Example: 'weatherApi', 'stockApi'.",
         max_length=255,
-        validators=[validate_camel_case],
+        validators=[validate_snake_case, validate_no_spaces],
     )
     description = models.TextField(
         help_text="A brief description of the API connection. Be verbose, but not too verbose.",
@@ -914,6 +947,19 @@ class ApiConnection(TimestampedModel):
         """Return the connection string."""
         return f"{self.base_url} (Auth: {self.auth_method})"
 
+    def save(self, *args, **kwargs):
+        """Override the save method to validate the field dicts."""
+        if not SmarterValidator.is_valid_snake_case(self.name):
+            snake_case_name = camel_to_snake(self.name)
+            logger.warning(
+                "ApiConnection.save(): name %s was not in snake_case. Converted to snake_case: %s",
+                self.name,
+                snake_case_name,
+            )
+            self.name = snake_case_name
+        self.validate()
+        super().save(*args, **kwargs)
+
     def validate(self) -> bool:
         """Validate the API connection."""
         super().validate()
@@ -988,7 +1034,7 @@ class PluginDataApi(PluginDataBase):
     def prepare_request(self, params: dict) -> dict:
         """Prepare the API request by merging parameters, headers, and body."""
         params = params or {}
-        self.validate_params(params)
+        self.validate_url_params()
 
         request_data = {
             "url": f"{self.connection.base_url}{self.endpoint}",

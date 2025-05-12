@@ -2,16 +2,22 @@
 
 import abc
 import re
+from logging import getLogger
 from typing import List, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from smarter.common.api import SmarterApiVersions
+from smarter.common.classes import SmarterHelperMixin
+from smarter.common.utils import camel_to_snake
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
 
 
-class SmarterBaseModel(BaseModel):
+logger = getLogger(__name__)
+
+
+class SmarterBaseModel(BaseModel, SmarterHelperMixin):
     """Smarter API Base Pydantic Model."""
 
     model_config = ConfigDict(
@@ -47,6 +53,15 @@ class AbstractSAMMetadataBase(SmarterBaseModel, abc.ABC):
             raise SAMValidationError(
                 f"Invalid name: {v}. Ensure that you do not include characters that are not URL friendly."
             )
+        if not SmarterValidator.is_valid_snake_case(v):
+            snake_case_name = camel_to_snake(v)
+            logger.warning(
+                "%s.name '%s' is not in snake_case. Converting to snake_case: %s. Please use snake_case for names.",
+                cls.__name__,
+                v,
+                snake_case_name,
+            )
+            v = snake_case_name
         return v
 
     @field_validator("description")
@@ -137,3 +152,6 @@ class AbstractSAMBase(SmarterBaseModel, abc.ABC):
         if isinstance(v, dict):
             return AbstractSAMMetadataBase(**v)
         return v
+
+    def __str__(self) -> str:
+        return f"{self.formatted_class_name}(apiVersion={self.apiVersion}, kind={self.kind})"

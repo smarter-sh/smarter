@@ -104,7 +104,7 @@ class SAMApiPluginBroker(AbstractBroker, AccountMixin):
     def plugin(self) -> PluginBase:
         """
         PluginController() is a helper class to map the manifest model
-        metadata.plugin_class to an instance of the the correct plugin class.
+        metadata.pluginClass to an instance of the the correct plugin class.
         """
         if self._plugin:
             return self._plugin

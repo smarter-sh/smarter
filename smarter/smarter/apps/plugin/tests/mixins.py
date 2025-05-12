@@ -4,6 +4,7 @@ Test mixins for the plugin module.
 
 import os
 import unittest
+from logging import getLogger
 
 from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
 from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
@@ -15,6 +16,7 @@ from .factories import secret_factory
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
+logger = getLogger(__name__)
 
 
 class ApiConnectionTestMixin(unittest.TestCase):
@@ -71,6 +73,11 @@ class ApiConnectionTestMixin(unittest.TestCase):
         cls.connection_model = connection_model
         cls.connection_django_model = ApiConnection(**connection_model_dump)
         cls.connection_django_model.save()
+
+        logger.info("connection_manifest_path initialized: %s", str(connection_manifest_path))
+        logger.info("connection_loader initialized: %s", str(connection_loader))
+        logger.info("connection_model initialized: %s", str(connection_model))
+        logger.info("connection_django_model initialized: %s", str(cls.connection_django_model))
 
     @classmethod
     def tearDownClass(cls):

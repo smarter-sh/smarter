@@ -13,8 +13,6 @@ import os
 from pydantic_core import ValidationError
 
 from smarter.apps.plugin.manifest.enum import SAMPluginCommonMetadataClassValues
-
-# from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
 from smarter.apps.plugin.manifest.models.api_plugin.model import SAMApiPlugin
 from smarter.apps.plugin.models import ApiConnection, PluginDataApi, PluginMeta
@@ -71,21 +69,29 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin):
 
         try:
             cls.connection_django_model.delete()
-        except (ApiConnection.DoesNotExist, ValueError):
+        except (ApiConnection.DoesNotExist, ValueError, AttributeError):
             pass
 
-    def test_connection(self):
-        """Test the ApiConnection itself, lest we get ahead of ourselves"""
-        self.assertIsInstance(self.connection_django_model, ApiConnection)
-        self.assertIsInstance(self.connection_model, SAMApiConnection)
-        self.assertIsInstance(self.connection_loader, SAMLoader)
-        self.assertIsInstance(self.connection_manifest, dict)
+    def test_00_api_connection_mixin(self):
+        """
+        Test the ApiConnection itself, lest we get ahead of ourselves
+        cls.connection_loader = connection_loader
+        cls.connection_manifest_path = connection_manifest_path
+        cls.connection_manifest = connection_manifest
+        cls.connection_model = connection_model
+        cls.connection_django_model = ApiConnection(**connection_model_dump)
+
+        """
         self.assertIsInstance(self.connection_manifest_path, str)
+        self.assertIsInstance(self.connection_manifest, dict)
+        self.assertIsInstance(self.connection_loader, SAMLoader)
+        self.assertIsInstance(self.connection_model, SAMApiConnection)
+        self.assertIsInstance(self.connection_django_model, ApiConnection)
 
         self.assertEqual(self.connection_model.kind, SmarterJournalThings.API_CONNECTION.value)
 
-    def test_valid_api_plugin(self):
-        """Test that the timeout validator raises an error for negative values."""
+    def test_01_valid_api_plugin(self):
+        """Test that we can load a valid manifest."""
         self.load_manifest(filename="api-plugin.yaml")
         # pylint: disable=W0104
         self.model
