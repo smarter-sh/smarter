@@ -7,12 +7,16 @@ from logging import getLogger
 from pydantic_core import ValidationError
 
 from smarter.apps.account.models import Secret
-from smarter.apps.plugin.manifest.models.sql_connection.enum import DbEngines
+from smarter.apps.plugin.manifest.models.sql_connection.enum import (
+    DbEngines,
+    DBMSAuthenticationMethods,
+)
 from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
 from smarter.apps.plugin.models import SqlConnection
 from smarter.apps.plugin.tests.base_classes import TestConnectionBase
 from smarter.apps.plugin.tests.factories import secret_factory
 from smarter.common.api import SmarterApiVersions
+from smarter.common.utils import camel_to_snake
 from smarter.lib.manifest.exceptions import SAMValidationError
 
 
@@ -231,14 +235,14 @@ class TestSqlConnection(TestConnectionBase):
         with self.assertRaises(SAMValidationError) as context:
             print(self.model)
         self.assertIn(
-            f"Invalid authentication method: {invalid_auth_method}. Must be one of {SqlConnection.DBMSAuthenticationMethods.all_values()}",
+            f"Invalid authentication method: {invalid_auth_method}. Must be one of {DBMSAuthenticationMethods.all_values()}",
             str(context.exception),
         )
 
     def test_validate_authentication_method_valid_value(self):
         """Test that the authentication_method validator accepts valid values."""
         self.load_manifest(filename="sql-connection-ssh.yaml")
-        valid_auth_method = SqlConnection.DBMSAuthenticationMethods.all_values()[0]
+        valid_auth_method = DBMSAuthenticationMethods.all_values()[0]
         self._manifest["spec"]["connection"]["authentication_method"] = valid_auth_method
         self._loader = None
         self._model = None
@@ -306,7 +310,10 @@ class TestSqlConnection(TestConnectionBase):
 
         self.assertIsNotNone(django_model)
         self.assertEqual(django_model.account, self.account)
-        self.assertEqual(django_model.name, self.model.metadata.name)
+
+        snake_case_name = camel_to_snake(self.model.metadata.name)
+        self.assertEqual(django_model.name, snake_case_name)
+
         self.assertEqual(django_model.db_engine, self.model.spec.connection.db_engine)
         self.assertEqual(django_model.hostname, self.model.spec.connection.hostname)
         self.assertEqual(django_model.port, self.model.spec.connection.port)
@@ -378,7 +385,10 @@ class TestSqlConnection(TestConnectionBase):
 
         self.assertIsNotNone(django_model)
         self.assertEqual(django_model.account, self.account)
-        self.assertEqual(django_model.name, self.model.metadata.name)
+
+        snake_case_name = camel_to_snake(self.model.metadata.name)
+        self.assertEqual(django_model.name, snake_case_name)
+
         self.assertEqual(django_model.db_engine, self.model.spec.connection.db_engine)
         self.assertEqual(django_model.hostname, self.model.spec.connection.hostname)
         self.assertEqual(django_model.port, self.model.spec.connection.port)
@@ -463,7 +473,10 @@ class TestSqlConnection(TestConnectionBase):
 
         self.assertIsNotNone(django_model)
         self.assertEqual(django_model.account, self.account)
-        self.assertEqual(django_model.name, self.model.metadata.name)
+
+        snake_case_name = camel_to_snake(self.model.metadata.name)
+        self.assertEqual(django_model.name, snake_case_name)
+
         self.assertEqual(django_model.db_engine, self.model.spec.connection.db_engine)
         self.assertEqual(django_model.hostname, self.model.spec.connection.hostname)
         self.assertEqual(django_model.port, self.model.spec.connection.port)

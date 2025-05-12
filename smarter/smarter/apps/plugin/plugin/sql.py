@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 class SqlPlugin(PluginBase):
     """A PLugin that uses an SQL query executed on a remote SQL database server to retrieve its return data"""
 
-    _metadata_class = SAMPluginCommonMetadataClass.SQL_DATA.value
+    _metadata_class = SAMPluginCommonMetadataClass.SQL.value
     _plugin_data: PluginDataSql = None
     _plugin_data_serializer: PluginSqlSerializer = None
 
@@ -146,7 +146,7 @@ class SqlPlugin(PluginBase):
                 },
                 SAMPluginSpecKeys.DATA.value: {
                     "description": "Query the Django User model to retrieve detailed account information about the admin account for the Smarter platform .",
-                    SAMPluginCommonMetadataClass.SQL_DATA.value: {
+                    SAMPluginCommonMetadataClass.SQL.value: {
                         "connection": "exampleConnection",
                         "sqlQuery": "SELECT * FROM auth_user WHERE username = 'admin';\n",
                         "parameters": None,

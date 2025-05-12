@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 class ApiPlugin(PluginBase):
     """A Plugin that uses an http request to a REST API to retrieve its return data"""
 
-    _metadata_class = SAMPluginCommonMetadataClass.SQL_DATA.value
+    _metadata_class = SAMPluginCommonMetadataClass.SQL.value
     _plugin_data: PluginDataApi = None
     _plugin_data_serializer: PluginApiSerializer = None
 
@@ -149,7 +149,7 @@ class ApiPlugin(PluginBase):
                 },
                 SAMPluginSpecKeys.DATA.value: {
                     "description": "Query the Django User model to retrieve detailed account information about the admin account for the Smarter platform .",
-                    SAMPluginCommonMetadataClass.API_DATA.value: {
+                    SAMPluginCommonMetadataClass.API.value: {
                         "connection": "exampleConnection",
                         "endpoint": "/api/v1/example-endpoint/",
                         "parameters": None,

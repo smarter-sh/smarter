@@ -10,6 +10,7 @@ from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConne
 from smarter.apps.plugin.models import ApiConnection
 from smarter.apps.plugin.tests.base_classes import TestConnectionBase
 from smarter.apps.plugin.tests.factories import secret_factory
+from smarter.common.utils import camel_to_snake
 from smarter.lib.manifest.exceptions import SAMValidationError
 
 
@@ -35,12 +36,15 @@ class TestApiConnection(TestConnectionBase):
         """
         self.load_manifest(filename="api-connection.yaml")
         self.assertIsNotNone(self.model)
-        self.assertEqual(self.model.metadata.name, "testApiConnection")
+
+        snake_case_name = camel_to_snake(self.model.metadata.name)
+        self.assertEqual(self.model.metadata.name, snake_case_name)
+
         self.assertEqual(self.model.metadata.description, "points to smarter api localhost")
         self.assertEqual(self.model.spec.connection.base_url, "http://localhost:8000/")
         self.assertEqual(self.model.spec.connection.api_key, "12345-abcde-67890-fghij")
         self.assertEqual(self.model.spec.connection.timeout, 10)
-        self.assertEqual(self.model.spec.connection.auth_method, AuthMethods.TOKEN)
+        self.assertEqual(self.model.spec.connection.auth_method, AuthMethods.TOKEN.value)
         self.assertEqual(self.model.spec.connection.proxy_protocol, "http")
         self.assertEqual(self.model.spec.connection.proxy_host, "proxy.example.com")
         self.assertEqual(self.model.spec.connection.proxy_port, 8080)
@@ -297,7 +301,10 @@ class TestApiConnection(TestConnectionBase):
 
         self.assertIsNotNone(django_model)
         self.assertEqual(django_model.account, self.account)
-        self.assertEqual(django_model.name, self.model.metadata.name)
+
+        snake_case_name = camel_to_snake(self.model.metadata.name)
+        self.assertEqual(django_model.name, snake_case_name)
+
         self.assertEqual(django_model.base_url, self.model.spec.connection.base_url)
         self.assertEqual(django_model.api_key.get_secret(), self.model.spec.connection.api_key)
         self.assertEqual(django_model.auth_method, self.model.spec.connection.auth_method)

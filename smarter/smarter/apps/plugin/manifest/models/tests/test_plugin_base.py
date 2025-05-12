@@ -42,6 +42,7 @@ from smarter.apps.plugin.signals import (
 )
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
 from smarter.apps.plugin.utils import add_example_plugins
+from smarter.common.utils import camel_to_snake
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.loader import SAMLoaderError
 from smarter.lib.unittest.utils import get_readonly_yaml_file
@@ -133,7 +134,9 @@ class TestPluginBase(TestAccountMixin):
         self.assertIsInstance(plugin.plugin_prompt_serializer, PluginPromptSerializer)
         self.assertIsInstance(plugin.plugin_selector_serializer, PluginSelectorSerializer)
 
-        self.assertEqual(plugin.plugin_meta.name, self.data[SAMKeys.METADATA.value]["name"])
+        snake_case_name = camel_to_snake(self.data[SAMKeys.METADATA.value]["name"])
+        self.assertEqual(plugin.plugin_meta.name, snake_case_name)
+
         self.assertEqual(
             plugin.plugin_selector.directive,
             self.data[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
@@ -186,7 +189,12 @@ class TestPluginBase(TestAccountMixin):
         self.assertTrue(self.signals["plugin_ready"])
 
         self.assertIsInstance(to_json, dict)
-        self.assertEqual(to_json[SAMKeys.METADATA.value]["name"], self.data[SAMKeys.METADATA.value]["name"])
+
+        # ensure that we can go from json output to a string and back to json without error
+        # taking into account that the PluginMeta name will always save in snake_case format.
+        snake_case_name = camel_to_snake(self.data[SAMKeys.METADATA.value]["name"])
+        self.assertEqual(to_json[SAMKeys.METADATA.value]["name"], snake_case_name)
+
         self.assertEqual(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
                 SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value
@@ -440,7 +448,10 @@ class TestPluginBase(TestAccountMixin):
 
         # ensure that the json output still matches the original data
         self.assertIsInstance(to_json, dict)
-        self.assertEqual(to_json[SAMKeys.METADATA.value]["name"], self.data[SAMKeys.METADATA.value]["name"])
+
+        snake_case_name = camel_to_snake(self.data[SAMKeys.METADATA.value]["name"])
+        self.assertEqual(to_json[SAMKeys.METADATA.value]["name"], snake_case_name)
+
         self.assertEqual(
             to_json[SAMKeys.SPEC.value][SAMPluginSpecKeys.SELECTOR.value][
                 SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value

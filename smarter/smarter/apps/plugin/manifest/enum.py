@@ -41,15 +41,15 @@ class SAMPluginCommonSpecSelectorKeyDirectiveValues(SmarterEnumAbstract):
 class SAMPluginCommonMetadataKeys(SmarterEnumAbstract):
     """Smarter API Plugin Metadata keys enumeration."""
 
-    PLUGIN_CLASS = "plugin_lass"
+    PLUGIN_CLASS = "pluginClass"
 
 
 class SAMPluginCommonMetadataClass(SmarterEnumAbstract):
     """Smarter API Plugin Metadata Class keys enumeration."""
 
-    STATIC_DATA = "staticData"
-    API_DATA = "apiData"
-    SQL_DATA = "sqlData"
+    STATIC = "static"
+    API = "api"
+    SQL = "sql"
 
 
 class SAMPluginSpecKeys(SmarterEnumAbstract):
@@ -81,7 +81,7 @@ class SAMStaticPluginSpecDataKeys(SmarterEnumAbstract):
     """Smarter API Plugin Spec Data keys enumeration."""
 
     DESCRIPTION = "description"
-    STATIC_DATA = "staticData"
+    STATIC = "staticData"
 
 
 ###############################################################################

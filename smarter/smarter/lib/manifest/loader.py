@@ -142,6 +142,9 @@ class SAMLoader(SmarterHelperMixin):
         # of the manifest.
         self.validate_manifest()
 
+    def __str__(self):
+        return self.formatted_class_name + f"({self.manifest_api_version}, {self.manifest_kind})"
+
     # -------------------------------------------------------------------------
     # data setters and getters. Sort out whether we received JSON or YAML data
     # -------------------------------------------------------------------------

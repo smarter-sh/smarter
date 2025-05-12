@@ -25,8 +25,38 @@ class DateTimeEncoder(json.JSONEncoder):
 
 
 def camel_to_snake(name):
-    name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
-    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
+    """
+    Converts camelCase or poorly formatted names to snake_case.
+    examples:
+        camel_to_snake("camelCase") -> "camel_case"
+        camel_to_snake("CamelCase") -> "camel_case"
+        camel_to_snake("Camel Case") -> "camel_case"
+        camel_to_snake("camel case") -> "camel_case"
+        camel_to_snake("camelCaseWithSpaces") -> "camel_case_with_spaces"
+        camel_to_snake("CamelCaseWithSpaces") -> "camel_case_with_spaces"
+        camel_to_snake("Camel Case With Spaces") -> "camel_case_with_spaces"
+        camel_to_snake("MYEverlastingSUPERDUPERGobstopper") -> "my_everlasting_superduper_gobstopper"
+    Args:
+        name (str): The name to convert.
+    Returns:
+        str: The converted name in snake_case.
+    """
+    name = str(name or "")
+    name = name.replace(" ", "_").replace("-", "_")
+
+    # Split lowercase-uppercase boundary
+    name = re.sub(r"(.)([A-Z][a-z]+)", r"\1_\2", name)
+
+    # Handle consecutive uppercase letters followed by lowercase letters
+    name = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", name)
+
+    # Reduce multiple underscores to a single underscore
+    name = re.sub(r"_+", "_", name)
+
+    # Remove non-alphanumeric characters except underscores
+    name = re.sub(r"[^\w]", "", name)
+
+    return name.lower()
 
 
 def camel_to_snake_dict(dictionary: dict) -> dict:

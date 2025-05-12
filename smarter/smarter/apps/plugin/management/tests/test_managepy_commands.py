@@ -15,7 +15,7 @@ class ManageCommandCreatePluginTestCase(TestPluginClassBase):
     def setUp(self):
         """Set up test fixtures."""
         self.file_path = get_test_file_path("everlasting-gobstopper.yaml")
-        self.plugin_name = "MYEverlastingSUPERDUPERGobstopper"
+        self.plugin_name = "MYEverlastingSUPER-DUPERGobstopper"
 
     def test_create_plugin(self):
 
