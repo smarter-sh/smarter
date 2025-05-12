@@ -3,9 +3,9 @@ Test mixins for the plugin module.
 """
 
 import os
-import unittest
 from logging import getLogger
 
+from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
 from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
 from smarter.apps.plugin.models import ApiConnection, SqlConnection
@@ -19,7 +19,14 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 logger = getLogger(__name__)
 
 
-class ApiConnectionTestMixin(unittest.TestCase):
+class ConnectionTextMixinBase(TestAccountMixin):
+    """
+    A base mixin class for testing connections.
+    adds account plus an admin and non-admin user to the test case.
+    """
+
+
+class ApiConnectionTestMixin(ConnectionTextMixinBase):
     """
     A mixin class that adds ApiConnection class setUpClass and
     tearDownClass methods."""
@@ -34,6 +41,7 @@ class ApiConnectionTestMixin(unittest.TestCase):
     def setUpClass(cls):
         """Set up test fixtures."""
         super().setUpClass()
+        logger.info("Setting up ApiConnectionTestMixin")
 
         # setup an instance of ApiConnection() - a Django model
         # ---------------------------------------------------------------------
@@ -75,6 +83,7 @@ class ApiConnectionTestMixin(unittest.TestCase):
         cls.connection_django_model.save()
 
         logger.info("connection_manifest_path initialized: %s", str(connection_manifest_path))
+        logger.info("connection_manifest initialized: %s", str(connection_manifest))
         logger.info("connection_loader initialized: %s", str(connection_loader))
         logger.info("connection_model initialized: %s", str(connection_model))
         logger.info("connection_django_model initialized: %s", str(cls.connection_django_model))
@@ -83,14 +92,21 @@ class ApiConnectionTestMixin(unittest.TestCase):
     def tearDownClass(cls):
         """Tear down test fixtures."""
         super().tearDownClass()
+        logger.info("Tearing down ApiConnectionTestMixin")
 
-        cls.connection_loader = None
         cls.connection_manifest_path = None
         cls.connection_manifest = None
+        cls.connection_loader = None
         cls.connection_model = None
+        try:
+            cls.connection_django_model.delete()
+        # pylint: disable=W0718
+        except Exception:
+            pass
+        cls.connection_django_model = None
 
 
-class SqlConnectionTestMixin(unittest.TestCase):
+class SqlConnectionTestMixin(ConnectionTextMixinBase):
     """
     A mixin class that adds SqlConnection class setUpClass and
     tearDownClass methods.
@@ -145,3 +161,26 @@ class SqlConnectionTestMixin(unittest.TestCase):
         cls.connection_model = connection_model
         cls.connection_django_model = SqlConnection(**connection_model_dump)
         cls.connection_django_model.save()
+
+        logger.info("connection_manifest_path initialized: %s", str(connection_manifest_path))
+        logger.info("connection_manifest initialized: %s", str(connection_manifest))
+        logger.info("connection_loader initialized: %s", str(connection_loader))
+        logger.info("connection_model initialized: %s", str(connection_model))
+        logger.info("connection_django_model initialized: %s", str(cls.connection_django_model))
+
+    @classmethod
+    def tearDownClass(cls):
+        """Tear down test fixtures."""
+        super().tearDownClass()
+        logger.info("Tearing down ApiConnectionTestMixin")
+
+        cls.connection_manifest_path = None
+        cls.connection_manifest = None
+        cls.connection_loader = None
+        cls.connection_model = None
+        try:
+            cls.connection_django_model.delete()
+        # pylint: disable=W0718
+        except Exception:
+            pass
+        cls.connection_django_model = None

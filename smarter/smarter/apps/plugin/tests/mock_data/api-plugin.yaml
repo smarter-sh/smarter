@@ -64,7 +64,7 @@ spec:
         description: The second test to run.
         required: false
         default: test2
-    testValues:
+    test_values:
       - name: username
         value: admin
       - name: limit

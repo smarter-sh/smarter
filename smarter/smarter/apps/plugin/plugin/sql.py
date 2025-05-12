@@ -148,9 +148,9 @@ class SqlPlugin(PluginBase):
                     "description": "Query the Django User model to retrieve detailed account information about the admin account for the Smarter platform .",
                     SAMPluginCommonMetadataClass.SQL.value: {
                         "connection": "exampleConnection",
-                        "sqlQuery": "SELECT * FROM auth_user WHERE username = 'admin';\n",
+                        "sql_query": "SELECT * FROM auth_user WHERE username = 'admin';\n",
                         "parameters": None,
-                        "testValues": None,
+                        "test_values": None,
                         "limit": 1,
                     },
                 },

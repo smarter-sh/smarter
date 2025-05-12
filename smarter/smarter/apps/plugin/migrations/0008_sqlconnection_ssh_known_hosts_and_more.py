@@ -5,7 +5,7 @@ import django.core.validators
 import django.db.models.deletion
 from django.db import migrations, models
 
-import smarter.apps.plugin.models
+from smarter.lib.django.validators import SmarterValidator
 
 
 class Migration(migrations.Migration):
@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 help_text="The name of the API connection, camelCase, without spaces. Example: 'weatherApi', 'stockApi'.",
                 max_length=255,
-                validators=[smarter.apps.plugin.models.validate_camel_case],
+                validators=[SmarterValidator.validate_snake_case],
             ),
         ),
         migrations.AlterField(
@@ -50,7 +50,7 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 help_text="The name of the SQL connection, camelCase, without spaces. Example: 'HRDatabase', 'SalesDatabase', 'InventoryDatabase'.",
                 max_length=255,
-                validators=[smarter.apps.plugin.models.validate_camel_case],
+                validators=[SmarterValidator.validate_snake_case],
             ),
         ),
         migrations.AlterField(
@@ -59,7 +59,7 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 help_text="The name of the plugin. Example: 'HR Policy Update' or 'Public Relation Talking Points'.",
                 max_length=255,
-                validators=[smarter.apps.plugin.models.validate_camel_case],
+                validators=[SmarterValidator.validate_snake_case],
             ),
         ),
         migrations.AlterField(
@@ -113,7 +113,7 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 help_text="The name of the connection, without spaces. Example: 'HRDatabase', 'SalesDatabase', 'InventoryDatabase'.",
                 max_length=255,
-                validators=[smarter.apps.plugin.models.validate_camel_case],
+                validators=[SmarterValidator.validate_snake_case],
             ),
         ),
         migrations.AlterField(
