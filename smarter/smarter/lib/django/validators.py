@@ -91,12 +91,6 @@ class SmarterValidator:
             raise SmarterValueError(f"Value must start with a lowercase letter: {value}")
         if not value[0].isalpha():
             raise SmarterValueError(f"Value must start with a letter: {value}")
-        if not value[1:].islower():
-            raise SmarterValueError(f"Value must be in snake case format: {value}")
-        if not value[1:].isalnum():
-            raise SmarterValueError(f"Value must be in snake case format: {value}")
-        if not value[1:].isalpha():
-            raise SmarterValueError(f"Value must be in snake case format: {value}")
 
     @staticmethod
     def is_valid_snake_case(value: str) -> bool:

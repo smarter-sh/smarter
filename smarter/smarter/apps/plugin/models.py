@@ -56,18 +56,6 @@ def validate_no_spaces(value):
         raise SmarterValueError(f"Value must not contain spaces: {value}")
 
 
-def validate_camel_case(value):
-    """Validate that the string is in camelCase."""
-    if not re.match(r"^[a-z]+(?:[A-Z][a-z0-9]*)*$", value):
-        raise SmarterValueError(f"Value must be in camelCase format: {value}")
-
-
-def validate_snake_case(value):
-    """Validate that the string is in snake_case."""
-    if not re.match(r"^[a-z]+(?:_[a-z0-9]+)*$", value):
-        raise SmarterValueError(f"Value must be in snake_case format: {value}")
-
-
 def dict_key_cleaner(key: str) -> str:  # pragma: no cover
     """Clean a key by replacing spaces with underscores."""
     return str(key).replace("\n", "").replace("\r", "").replace("\t", "").replace(" ", "_")
@@ -126,7 +114,7 @@ class PluginMeta(TimestampedModel):  # pragma: no cover
     name = models.CharField(
         help_text="The name of the plugin. Example: 'HR Policy Update' or 'Public Relation Talking Points'.",
         max_length=255,
-        validators=[validate_snake_case, validate_no_spaces],
+        validators=[SmarterValidator.validate_snake_case, validate_no_spaces],
     )
     description = models.TextField(
         help_text="A brief description of the plugin. Be verbose, but not too verbose.",
@@ -371,7 +359,7 @@ class SqlConnection(TimestampedModel):
     name = models.CharField(
         help_text="The name of the connection, without spaces. Example: 'HRDatabase', 'SalesDatabase', 'InventoryDatabase'.",
         max_length=255,
-        validators=[validate_snake_case, validate_no_spaces],
+        validators=[SmarterValidator.validate_snake_case, validate_no_spaces],
     )
     db_engine = models.CharField(
         help_text="The type of database management system. Example: 'MySQL', 'PostgreSQL', 'MS SQL Server', 'Oracle'.",
@@ -871,7 +859,7 @@ class ApiConnection(TimestampedModel):
     name = models.CharField(
         help_text="The name of the API connection, camelCase, without spaces. Example: 'weatherApi', 'stockApi'.",
         max_length=255,
-        validators=[validate_snake_case, validate_no_spaces],
+        validators=[SmarterValidator.validate_snake_case, validate_no_spaces],
     )
     description = models.TextField(
         help_text="A brief description of the API connection. Be verbose, but not too verbose.",
