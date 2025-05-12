@@ -8,9 +8,11 @@ http://localhost:8000/api/v1/tests/authenticated/dict/
 http://localhost:8000/api/v1/tests/authenticated/list/
 """
 
-import os
+import json
+from logging import getLogger
 
-from pydantic_core import ValidationError
+from django.core.exceptions import ValidationError as DjangoValidationError
+from pydantic_core import ValidationError as PydanticValidationError
 
 from smarter.apps.plugin.manifest.enum import SAMPluginCommonMetadataClassValues
 from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
@@ -25,7 +27,7 @@ from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 
 
-HERE = os.path.abspath(os.path.dirname(__file__))
+logger = getLogger(__name__)
 
 
 class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin):
@@ -35,26 +37,6 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin):
     plugin_meta: PluginMeta = None
 
     @property
-    def connection_loader(self) -> SAMLoader:
-        """Provide connection_loader from SqlConnectionTestMixin."""
-        return self.__class__.connection_loader
-
-    @property
-    def connection_manifest(self) -> dict:
-        """Provide connection_manifest from SqlConnectionTestMixin."""
-        return self.__class__.connection_manifest
-
-    @property
-    def connection_manifest_path(self) -> str:
-        """Provide connection_manifest_path from SqlConnectionTestMixin."""
-        return self.__class__.connection_manifest_path
-
-    @property
-    def connection_model(self) -> SAMSqlConnection:
-        """Provide connection_model from SqlConnectionTestMixin."""
-        return self.__class__.connection_model
-
-    @property
     def model(self) -> SAMSqlPlugin:
         # override to create a SAMSqlPlugin pydantic model from the loader
         if not self._model and self.loader:
@@ -62,26 +44,7 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin):
             self.assertIsNotNone(self._model)
         return self._model
 
-    @classmethod
-    def tearDownClass(cls):
-        """Tear down test fixtures."""
-        super().tearDownClass()
-
-        try:
-            cls.connection_django_model.delete()
-        except (SqlConnection.DoesNotExist, ValueError, AttributeError):
-            pass
-
-    def tearDown(self):
-        """Tear down test fixtures."""
-        super().tearDown()
-
-        try:
-            self.plugin_meta.delete()
-        except (SqlConnection.DoesNotExist, AttributeError, ValueError):
-            pass
-
-    def test_sql_connection(self):
+    def test_00_sql_connection_mixin(self):
         """Test the SqlConnection itself, lest we get ahead of ourselves"""
         self.assertIsInstance(self.connection_django_model, SqlConnection)
         self.assertIsInstance(self.connection_model, SAMSqlConnection)
@@ -107,15 +70,15 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin):
         )
 
     def test_validate_api_sql_query_invalid_value(self):
-        """Test that the sqlQuery validator raises an error for invalid SQL syntax."""
+        """Test that the sql_query validator raises an error for invalid SQL syntax."""
         self.load_manifest(filename="sql-plugin.yaml")
 
         invalid_sql_query = None
-        self._manifest["spec"]["sqlData"]["sqlQuery"] = invalid_sql_query
+        self._manifest["spec"]["sqlData"]["sql_query"] = invalid_sql_query
         self._loader = None
         self._model = None
-        with self.assertRaises(ValidationError) as context:
-            # spec.sqlData.sqlQuery
+        with self.assertRaises(PydanticValidationError) as context:
+            # spec.sqlData.sql_query
             print(self.model)
         self.assertIn(
             "Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]",
@@ -136,7 +99,7 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin):
         self._manifest["spec"]["sqlData"]["parameters"] = invalid_parameters
         self._loader = None
         self._model = None
-        with self.assertRaises(ValidationError) as context:
+        with self.assertRaises(PydanticValidationError) as context:
             # spec.sqlData.parameters.0.type
             #   Field required [type=missing, input_value={'name': 'limit', 'descri... of results to return.'}, input_type=dict]
             print(self.model)
@@ -150,7 +113,7 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin):
         self.load_manifest(filename="sql-plugin.yaml")
 
         self._manifest["spec"]["sqlData"] = {
-            "sqlQuery": "SELECT * FROM auth_user WHERE username = '{username}';",
+            "sql_query": "SELECT * FROM auth_user WHERE username = '{username}';",
             "parameters": [
                 {
                     "name": "bad_parameter",
@@ -162,7 +125,7 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin):
         }
         self._loader = None
         self._model = None
-        with self.assertRaises(ValidationError) as context:
+        with self.assertRaises(PydanticValidationError) as context:
             # spec.sqlData.parameters.0.default
             print(self.model)
         self.assertIn(
@@ -184,13 +147,23 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin):
         )
         self.plugin_meta.save()
 
-        model_dump = self.model.spec.sqlData.model_dump()
+        model_dump_orig = self.model.spec.sqlData.model_dump()
+        model_dump = model_dump_orig.copy()
+
+        self.assertIsNotNone(self.connection_django_model, "connection_django_model is None")
+
         model_dump["connection"] = self.connection_django_model
         model_dump["plugin"] = self.plugin_meta
+        model_dump["description"] = self.model.metadata.description
         model_dump = camel_to_snake_dict(model_dump)
 
         django_model = PluginDataSql(**model_dump)
-        django_model.save()
+        try:
+            django_model.save()
+        except DjangoValidationError as e:
+            logger.error(
+                "django core ValidationError: %s\nmodel dump: %s", str(e), json.dumps(model_dump_orig, indent=4)
+            )
 
         self.assertIsNotNone(django_model)
         self.assertIsInstance(django_model, PluginDataSql)
@@ -206,10 +179,10 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin):
         django_parameters = django_model.parameters or []
         self.assertEqual(pydantic_parameters, django_parameters)
 
-        self.assertEqual(django_model.sql_query, self.model.spec.sqlData.sqlQuery)
+        self.assertEqual(django_model.sql_query, self.model.spec.sqlData.sql_query)
         self.assertEqual(django_model.limit, self.model.spec.sqlData.limit)
 
-        pydantic_test_values = [param.model_dump() for param in self.model.spec.sqlData.testValues or []]
+        pydantic_test_values = [param.model_dump() for param in self.model.spec.sqlData.test_values or []]
         django_test_values = django_model.test_values or []
         self.assertEqual(pydantic_test_values, django_test_values)
 

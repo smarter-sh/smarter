@@ -741,7 +741,7 @@ class PluginDataSql(PluginDataBase):
         Validate if the structure of self.test_values matches the expected Json representation
         by attempting to instantiate each item in the list as a Pydantic TestValue model.
 
-            "testValues": [
+            "test_values": [
                 {
                 "name": "username",
                 "value": "admin"

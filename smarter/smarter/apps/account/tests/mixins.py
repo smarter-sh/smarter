@@ -22,17 +22,20 @@ class TestAccountMixin(unittest.TestCase):
         using the class setup so that we retain the same user_profile for each test,
         which is needed so that the django Secret model can be queried.
         """
+        super().setUpClass()
         cls.hash_suffix = generate_hash_suffix()
         cls.admin_user, cls.account, cls.user_profile = admin_user_factory()
         cls.non_admin_user, _, cls.non_admin_user_profile = mortal_user_factory(account=cls.account)
 
     @classmethod
     def tearDownClass(cls):
+        super().tearDownClass()
         factory_account_teardown(user=cls.admin_user, account=None, user_profile=cls.user_profile)
         factory_account_teardown(user=cls.non_admin_user, account=cls.account, user_profile=cls.non_admin_user_profile)
 
     def setUp(self):
         """We use different manifest test data depending on the test case."""
+        super().setUp()
         self._manifest = None
         self._manifest_path = None
         self._loader = None

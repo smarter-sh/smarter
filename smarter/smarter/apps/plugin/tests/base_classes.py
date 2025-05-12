@@ -7,13 +7,14 @@ import unittest
 from logging import getLogger
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
-from smarter.apps.plugin.manifest.enum import SAMPluginCommonMetadataClassValues
+from smarter.apps.plugin.manifest.models.common.connection.model import (
+    SAMConnectionCommon,
+)
+from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCommon
 from smarter.apps.plugin.models import PluginMeta
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.models import AbstractSAMBase
 from smarter.lib.unittest.utils import get_readonly_yaml_file
-
-from .factories import plugin_meta_factory
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -84,29 +85,8 @@ class TestPluginClassBase(TestAccountMixin):
 class TestConnectionBase(TestPluginClassBase):
     """Base class for testing connection models."""
 
-    @classmethod
-    def setUpClass(cls):
-        """
-        setup a generic plugin meta data object for the test class.
-        This is used to test the connection models.
-        """
-        super().setUpClass()
-        cls.meta_data = plugin_meta_factory(
-            plugin_class=SAMPluginCommonMetadataClassValues.SQL.value,
-            account=cls.account,
-            user_profile=cls.user_profile,
-        )
-
-    @classmethod
-    def tearDownClass(cls):
-        super().tearDownClass()
-        try:
-            cls.meta_data.delete()
-        except PluginMeta.DoesNotExist:
-            pass
-
     @property
-    def model(self) -> AbstractSAMBase:
+    def model(self) -> SAMConnectionCommon:
         raise NotImplementedError("Subclasses must implement this method")
 
 
@@ -117,10 +97,10 @@ class TestPluginBase(TestPluginClassBase):
     _connection_manifest_path: str = None
     _connection_manifest: str = None
     _connection_loader: SAMLoader = None
-    _connection_model: AbstractSAMBase = None  # any of SAMApiConnection, SAMSqlConnection
+    _connection_model: SAMConnectionCommon = None  # any of SAMApiConnection, SAMSqlConnection
 
     @property
-    def model(self) -> AbstractSAMBase:
+    def model(self) -> SAMPluginCommon:
         raise NotImplementedError("Subclasses must implement this method")
 
     @property
@@ -136,5 +116,5 @@ class TestPluginBase(TestPluginClassBase):
         raise NotImplementedError("Subclasses must implement this method")
 
     @property
-    def connection_model(self) -> AbstractSAMBase:
+    def connection_model(self) -> SAMConnectionCommon:
         raise NotImplementedError("Subclasses must implement this method")

@@ -23,7 +23,7 @@ SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 class SqlData(SmarterBaseModel):
     """Smarter API - generic API Connection class."""
 
-    sqlQuery: str = Field(
+    sql_query: str = Field(
         ...,
         description="The SQL query that this plugin will execute when invoked by the user prompt.",
     )
@@ -31,7 +31,7 @@ class SqlData(SmarterBaseModel):
         default=None,
         description="A JSON dict containing parameter names and data types. Example: {'unit': {'type': 'string', 'enum': ['Celsius', 'Fahrenheit'], 'description': 'The temperature unit to use.'}}",
     )
-    testValues: Optional[List[TestValue]] = Field(
+    test_values: Optional[List[TestValue]] = Field(
         default=None,
         description="A JSON dict containing test values for each parameter. Example: {'product_id': 1234}.",
     )

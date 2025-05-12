@@ -25,34 +25,11 @@ from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 
 
-HERE = os.path.abspath(os.path.dirname(__file__))
-
-
 class TestApiPlugin(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin):
     """Test SAM manifest using ApiPlugin"""
 
     _model: SAMApiPlugin = None
     plugin_meta: PluginMeta = None
-
-    @property
-    def connection_loader(self) -> SAMLoader:
-        """Provide connection_loader from ApiConnectionTestMixin."""
-        return self.__class__.connection_loader
-
-    @property
-    def connection_manifest(self) -> dict:
-        """Provide connection_manifest from ApiConnectionTestMixin."""
-        return self.__class__.connection_manifest
-
-    @property
-    def connection_manifest_path(self) -> str:
-        """Provide connection_manifest_path from ApiConnectionTestMixin."""
-        return self.__class__.connection_manifest_path
-
-    @property
-    def connection_model(self) -> SAMApiConnection:
-        """Provide connection_model from ApiConnectionTestMixin."""
-        return self.__class__.connection_model
 
     @property
     def model(self) -> SAMApiPlugin:
@@ -62,31 +39,15 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin):
             self.assertIsNotNone(self._model)
         return self._model
 
-    @classmethod
-    def tearDownClass(cls):
-        """Tear down test fixtures."""
-        super().tearDownClass()
-
-        try:
-            cls.connection_django_model.delete()
-        except (ApiConnection.DoesNotExist, ValueError, AttributeError):
-            pass
-
     def test_00_api_connection_mixin(self):
         """
         Test the ApiConnection itself, lest we get ahead of ourselves
-        cls.connection_loader = connection_loader
-        cls.connection_manifest_path = connection_manifest_path
-        cls.connection_manifest = connection_manifest
-        cls.connection_model = connection_model
-        cls.connection_django_model = ApiConnection(**connection_model_dump)
-
         """
-        self.assertIsInstance(self.connection_manifest_path, str)
-        self.assertIsInstance(self.connection_manifest, dict)
-        self.assertIsInstance(self.connection_loader, SAMLoader)
-        self.assertIsInstance(self.connection_model, SAMApiConnection)
         self.assertIsInstance(self.connection_django_model, ApiConnection)
+        self.assertIsInstance(self.connection_model, SAMApiConnection)
+        self.assertIsInstance(self.connection_loader, SAMLoader)
+        self.assertIsInstance(self.connection_manifest, dict)
+        self.assertIsInstance(self.connection_manifest_path, str)
 
         self.assertEqual(self.connection_model.kind, SmarterJournalThings.API_CONNECTION.value)
 
