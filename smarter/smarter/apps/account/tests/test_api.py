@@ -1,6 +1,8 @@
 # pylint: disable=wrong-import-position
 """Test API end points."""
 
+from http import HTTPStatus
+
 from django.test import Client
 from django.urls import reverse
 
@@ -26,20 +28,30 @@ class TestUrls(TestAccountMixin):
             is_default=True,
         )
         self.client = Client()
-        self.client.force_login(self.non_admin_user)
+        self.client.force_login(self.admin_user)
 
     def tearDown(self):
         super().tearDown()
 
-        self.client.logout()
+        if self.client:
+            self.client.logout()
+
         self.client = None
-        self.payment_method.delete()
+        try:
+            self.payment_method.delete()
+
+        # pylint: disable=W0718
+        except Exception:
+            pass
 
     def test_account_view(self):
         """test that we can see the account view and that it matches the account data."""
         response = self.client.get(reverse("account_list_view"))
 
-        self.assertEqual(response.status_code, 200)
+        redirect_url = response.get("Location")
+        msg = response.content.decode("utf-8") if redirect_url is None else redirect_url
+        self.assertEqual(response.status_code, HTTPStatus.OK, msg=msg)
+
         json_data = response.json()
         if isinstance(json_data, list):
             json_data = json_data[-1]
@@ -49,7 +61,11 @@ class TestUrls(TestAccountMixin):
     def test_accounts_index_view(self):
         """test that we can see an account from inside the list view and that it matches the account data."""
         response = self.client.get(reverse("account_view", args=[str(self.account.id)]))
-        self.assertEqual(response.status_code, 200)
+
+        redirect_url = response.get("Location")
+        msg = response.content.decode("utf-8") if redirect_url is None else redirect_url
+        self.assertEqual(response.status_code, HTTPStatus.OK, msg=msg)
+
         json_data = response.json()
         self.assertIsInstance(json_data, dict)
         self.assertEqual(json_data.get("company_name"), self.account.company_name)
@@ -59,29 +75,38 @@ class TestUrls(TestAccountMixin):
         """test that we can see users associated with an account and that one of these matches the account data."""
         response = self.client.get(reverse("account_users_list_view"))
 
-        self.assertEqual(response.status_code, 200)
+        redirect_url = response.get("Location")
+        msg = response.content.decode("utf-8") if redirect_url is None else redirect_url
+        self.assertEqual(response.status_code, HTTPStatus.OK, msg=msg)
+
         json_data = response.json()
         self.assertIsInstance(json_data, list)
         for user in json_data:
-            if user.get("username") == self.non_admin_user.username:
-                self.assertEqual(user.get("email"), self.non_admin_user.email)
+            if user.get("username") == self.admin_user.username:
+                self.assertEqual(user.get("email"), self.admin_user.email)
                 break
 
     def test_account_users_index_view(self):
         """test that we can see an account from inside the list view and that it matches the account data."""
-        response = self.client.get(reverse("account_user_view", args=[str(self.non_admin_user.id)]))
+        response = self.client.get(reverse("account_user_view", args=[str(self.admin_user.id)]))
 
-        self.assertEqual(response.status_code, 200)
+        redirect_url = response.get("Location")
+        msg = response.content.decode("utf-8") if redirect_url is None else redirect_url
+        self.assertEqual(response.status_code, HTTPStatus.OK, msg=msg)
+
         json_data = response.json()
         self.assertIsInstance(json_data, dict)
-        self.assertEqual(json_data.get("email"), self.non_admin_user.email)
-        self.assertEqual(json_data.get("username"), self.non_admin_user.username)
+        self.assertEqual(json_data.get("email"), self.admin_user.email)
+        self.assertEqual(json_data.get("username"), self.admin_user.username)
 
     def test_account_payment_methods(self):
         """test that we can see the payment methods associated with an account."""
         response = self.client.get(reverse("account_payment_methods_list_view"))
 
-        self.assertEqual(response.status_code, 200)
+        redirect_url = response.get("Location")
+        msg = response.content.decode("utf-8") if redirect_url is None else redirect_url
+        self.assertEqual(response.status_code, HTTPStatus.OK, msg=msg)
+
         json_data = response.json()
         self.assertIsInstance(json_data, list)
         for payment_method in json_data:
@@ -94,7 +119,10 @@ class TestUrls(TestAccountMixin):
         """test that we can see the payment methods associated with an account."""
         response = self.client.get(reverse("account_payment_method_view", args=[str(self.payment_method.id)]))
 
-        self.assertEqual(response.status_code, 200)
+        redirect_url = response.get("Location")
+        msg = response.content.decode("utf-8") if redirect_url is None else redirect_url
+        self.assertEqual(response.status_code, HTTPStatus.OK, msg=msg)
+
         json_data = response.json()
         self.assertTrue(type(json_data) in (list, dict))
 

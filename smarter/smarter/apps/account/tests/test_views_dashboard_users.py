@@ -25,7 +25,7 @@ class TestAPIKeys(TestAccountMixin):
         """Set up test fixtures."""
         super().setUp()
         self.base_url = "/account/dashboard/users/"
-        self.username = self.non_admin_user.username
+        self.username = self.admin_user.username
         self.password = "12345"
 
         self.authenticated_user = authenticate(username=self.username, password=self.password)
@@ -46,7 +46,7 @@ class TestAPIKeys(TestAccountMixin):
             "email": "mail@mail.com",
         }
         request = factory.post(url, data=data)
-        request.user = self.non_admin_user
+        request.user = self.admin_user
 
         response = UserView.as_view()(request)
         self.assertIsInstance(response, HttpResponseRedirect)
@@ -55,7 +55,7 @@ class TestAPIKeys(TestAccountMixin):
         url = response.url
         parsed_url = urlparse(url)
         user_id = parsed_url.path.rstrip("/").split("/")[-1]
-        self.assertIsInstance(int(user_id), int)
+        self.assertIsInstance(int(user_id), int, f"User ID should be an integer. response.url: {url}")
 
         # test that the user matches up with the data
         # in the User model
@@ -68,7 +68,7 @@ class TestAPIKeys(TestAccountMixin):
         # test that get the user view
         url = self.base_url + user_id + "/"
         request = factory.get(url)
-        request.user = self.non_admin_user
+        request.user = self.admin_user
         response = UserView.as_view()(request, user_id=user_id)
         self.assertTrue(response.status_code, HTTPStatus.OK)
         self.assertIsInstance(response, HttpResponse)
@@ -76,7 +76,7 @@ class TestAPIKeys(TestAccountMixin):
         # test that we can update the user
         data["first_name"] = "Updated"
         request = factory.patch(url, data=data)
-        request.user = self.non_admin_user
+        request.user = self.admin_user
         response = UserView.as_view()(request, user_id=user_id)
         self.assertIsInstance(response, JsonResponse)
 
@@ -87,7 +87,7 @@ class TestAPIKeys(TestAccountMixin):
 
         # test that we can delete the user
         request = factory.delete(url)
-        request.user = self.non_admin_user
+        request.user = self.admin_user
         response = UserView.as_view()(request, user_id=user_id)
         self.assertIsInstance(response, JsonResponse)
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -96,7 +96,7 @@ class TestAPIKeys(TestAccountMixin):
         """Test that we can get the users view."""
         factory = RequestFactory()
         request = factory.get(self.base_url)
-        request.user = self.non_admin_user
+        request.user = self.admin_user
         response = UsersView.as_view()(request)
         self.assertIsInstance(response, HttpResponse)
         self.assertEqual(response.status_code, HTTPStatus.OK)

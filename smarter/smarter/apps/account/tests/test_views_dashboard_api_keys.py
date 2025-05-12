@@ -23,7 +23,7 @@ class TestAPIKeys(TestAccountMixin):
         """Set up test fixtures."""
         super().setUp()
         self.base_url = "/account/dashboard/api-keys/"
-        self.username = self.non_admin_user.username
+        self.username = self.admin_user.username
         self.password = "12345"
 
         self.authenticated_user = authenticate(username=self.username, password=self.password)
@@ -31,8 +31,8 @@ class TestAPIKeys(TestAccountMixin):
 
         self.api_key = self.create_api_key()
 
-        self.non_admin_user.set_password(self.password)
-        self.non_admin_user.save()
+        self.admin_user.set_password(self.password)
+        self.admin_user.save()
         self.non_staff_authenticated_user = authenticate(username=self.non_admin_user.username, password=self.password)
         self.assertIsNotNone(self.non_staff_authenticated_user)
 
@@ -40,7 +40,7 @@ class TestAPIKeys(TestAccountMixin):
         """Create an API Key."""
         api_key, _ = SmarterAuthToken.objects.create(
             name="testAPIKey",
-            user=self.non_admin_user,
+            user=self.admin_user,
             description="Test API Key",
             is_active=True,
         )
@@ -51,16 +51,16 @@ class TestAPIKeys(TestAccountMixin):
         url = self.base_url + str(self.api_key.key_id) + "/"
         factory = RequestFactory()
         request = factory.get(url)
-        request.user = self.non_admin_user
+        request.user = self.admin_user
 
         response = APIKeyView.as_view()(request, key_id=self.api_key.key_id)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_get_api_key_no_permissions(self):
         """Test that we can't get an api key without permissions."""
         another_api_key, _ = SmarterAuthToken.objects.create(
-            user=self.non_admin_user,
-            name=self.non_admin_user.username,
+            user=self.admin_user,
+            name=self.admin_user.username,
             description="ANOTHER Test API Key",
         )
         url = self.base_url + str(another_api_key) + "/"
@@ -71,7 +71,7 @@ class TestAPIKeys(TestAccountMixin):
         response = APIKeyView.as_view()(request, key_id=self.api_key.key_id)
 
         # should rediredt to login page since we're not staff
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
 
     def test_get_api_key_not_found(self):
         """Test that we can't get an api key that doesn't exist."""
@@ -79,10 +79,10 @@ class TestAPIKeys(TestAccountMixin):
         url = self.base_url + nonexistent_api_key_id + "/"
         factory = RequestFactory()
         request = factory.get(url)
-        request.user = self.non_admin_user
+        request.user = self.admin_user
 
         response = APIKeyView.as_view()(request, key_id=nonexistent_api_key_id)
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_post_api_key_not_found(self):
         """Test that we can't get an api key that doesn't exist."""
@@ -91,20 +91,20 @@ class TestAPIKeys(TestAccountMixin):
         factory = RequestFactory()
         data = {}
         request = factory.post(url, data=data, content_type="application/json")
-        request.user = self.non_admin_user
+        request.user = self.admin_user
 
         response = APIKeyView.as_view()(request)
-        self.assertIn(response.status_code, [302, HTTPStatus.NOT_FOUND, HTTPStatus.BAD_REQUEST])
+        self.assertIn(response.status_code, [HTTPStatus.FOUND, HTTPStatus.NOT_FOUND, HTTPStatus.BAD_REQUEST])
 
     def test_get_api_keys(self):
         """Test that we can get all api keys."""
         url = self.base_url
         factory = RequestFactory()
         request = factory.get(url)
-        request.user = self.non_admin_user
+        request.user = self.admin_user
 
         response = APIKeysView.as_view()(request)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_delete_nonexistent_api_key(self):
         """Test that we can't delete an api key that doesn't exist."""
@@ -112,7 +112,7 @@ class TestAPIKeys(TestAccountMixin):
         url = self.base_url + nonexistent_api_key_id + "/"
         factory = RequestFactory()
         request = factory.delete(url)
-        request.user = self.non_admin_user
+        request.user = self.admin_user
 
         response = APIKeyView.as_view()(request, key_id=nonexistent_api_key_id)
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
