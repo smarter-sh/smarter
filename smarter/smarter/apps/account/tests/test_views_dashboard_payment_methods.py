@@ -76,7 +76,7 @@ class TestPaymentMethods(TestAccountMixin):
     def test_payment_methods_view(self):
         """Test that we can get the payment methods view."""
         client = Client()
-        client.force_login(self.non_admin_user)
+        client.force_login(self.admin_user)
 
         response = client.get(self.base_url)
         self.assertEqual(response.status_code, 200)

@@ -11,7 +11,7 @@ from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBaseModel
 
-from .enum import DbEngines
+from .enum import DbEngines, DBMSAuthenticationMethods
 
 
 filename = os.path.splitext(os.path.basename(__file__))[0]
@@ -80,7 +80,7 @@ class SqlConnection(SmarterBaseModel):
         description="The maximum number of connections to allow beyond the pool size.",
     )
     authentication_method: str = Field(
-        SqlConnectionORM.DBMSAuthenticationMethods.NONE.value,
+        DBMSAuthenticationMethods.NONE.value,
         description="The authentication method to use for the connection. Example: 'Standard TCP/IP', 'Standard TCP/IP over SSH', 'LDAP User/Password'.",
     )
 
@@ -167,10 +167,10 @@ class SqlConnection(SmarterBaseModel):
 
     @field_validator("authentication_method")
     def validate_authentication_method(cls, v) -> str:
-        if v in SqlConnectionORM.DBMSAuthenticationMethods.all_values():
+        if v in DBMSAuthenticationMethods.all_values():
             return v
         raise SAMValidationError(
-            f"Invalid authentication method: {v}. Must be one of {SqlConnectionORM.DBMSAuthenticationMethods.all_values()}"
+            f"Invalid authentication method: {v}. Must be one of {DBMSAuthenticationMethods.all_values()}"
         )
 
     @field_validator("use_ssl")
