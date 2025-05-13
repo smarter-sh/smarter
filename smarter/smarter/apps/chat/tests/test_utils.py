@@ -5,8 +5,9 @@
 import json
 import os
 import sys
-import unittest
 from pathlib import Path
+
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -31,7 +32,7 @@ from smarter.apps.chat.providers.utils import (  # noqa: E402
 from ..tests.test_setup import get_test_file  # noqa: E402
 
 
-class TestUtils(unittest.TestCase):
+class TestUtils(SmarterTestBase):
     """Test utils."""
 
     # Get the directory of the current script

@@ -1,8 +1,6 @@
 """Unit test class."""
 
-# pylint: disable=W0104
-
-import unittest
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .factories import (
     admin_user_factory,
@@ -12,7 +10,7 @@ from .factories import (
 )
 
 
-class TestAccountMixin(unittest.TestCase):
+class TestAccountMixin(SmarterTestBase):
     """A mixin that adds class-level account and user creation/destruction."""
 
     @classmethod

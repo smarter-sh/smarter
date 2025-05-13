@@ -1,14 +1,14 @@
 # pylint: disable=wrong-import-position
 """Test STMPT Email Helper."""
 
-# python stuff
-import unittest
 
 # our stuff
+from smarter.lib.unittest.base_classes import SmarterTestBase
+
 from ..helpers.email_helpers import email_helper
 
 
-class TestSMTPEmail(unittest.TestCase):
+class TestSMTPEmail(SmarterTestBase):
     """Test STMPT Email Helper."""
 
     def setUp(self):

@@ -4,17 +4,17 @@
 # python stuff
 import hashlib
 import random
-import unittest
 
 from django.test import RequestFactory
 
 # our stuff
 from smarter.lib.django.user import User
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from ...lib.django.token_generators import ExpiringTokenGenerator
 
 
-class TestExpiringTokens(unittest.TestCase):
+class TestExpiringTokens(SmarterTestBase):
     """Test url token generators."""
 
     def setUp(self):

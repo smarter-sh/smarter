@@ -10,19 +10,19 @@ WARNINGS:
 # python stuff
 import os
 import time
-import unittest
 from string import Template
 
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
 from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.common.helpers.k8s_helpers import kubernetes_helper
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 
-class Testk8sHelpers(unittest.TestCase):
+class Testk8sHelpers(SmarterTestBase):
     """Test Account model"""
 
     def setUp(self):

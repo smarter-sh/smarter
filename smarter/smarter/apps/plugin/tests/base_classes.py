@@ -3,7 +3,6 @@
 # pylint: disable=W0104
 
 import os
-import unittest
 from logging import getLogger
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
@@ -14,6 +13,7 @@ from smarter.apps.plugin.manifest.models.common.plugin.model import SAMPluginCom
 from smarter.apps.plugin.models import PluginMeta
 from smarter.lib.manifest.loader import SAMLoader
 from smarter.lib.manifest.models import AbstractSAMBase
+from smarter.lib.unittest.base_classes import SmarterTestBase
 from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 
@@ -21,7 +21,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 logger = getLogger(__name__)
 
 
-class ManifestTestsMixin(unittest.TestCase):
+class ManifestTestsMixin(SmarterTestBase):
     """Mixin class for high level SAM pydantic model tests."""
 
     @property

@@ -9,7 +9,6 @@ from waffle.models import Switch
 
 from smarter.apps.account.models import Secret
 from smarter.apps.account.tests.factories import factory_secret_teardown, secret_factory
-from smarter.apps.plugin.manifest.brokers import SAMConnectionBrokerError
 from smarter.apps.plugin.manifest.brokers.api_connection import SAMApiConnectionBroker
 from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
 from smarter.apps.plugin.models import ApiConnection

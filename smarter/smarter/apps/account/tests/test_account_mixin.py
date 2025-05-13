@@ -7,8 +7,6 @@ ensure that:
 - we are authenticating our http requests properly and consistently.
 """
 
-import unittest
-
 from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.account.models import Account, UserProfile
 from smarter.apps.account.tests.factories import mortal_user_factory
@@ -18,9 +16,10 @@ from smarter.apps.account.utils import (
 )
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib.django.user import User
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
-class TestAccountMixin(unittest.TestCase):
+class TestAccountMixin(SmarterTestBase):
     """Test AccountMixin."""
 
     name: str = None

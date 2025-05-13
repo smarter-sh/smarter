@@ -4,18 +4,16 @@
 import hashlib
 import random
 
-# python stuff
-import unittest
-
 from django.test import RequestFactory
 
 # our stuff
 from smarter.lib.django.user import User
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from ..context_processors import branding
 
 
-class TestContext(unittest.TestCase):
+class TestContext(SmarterTestBase):
     """Test global context processor."""
 
     def setUp(self):

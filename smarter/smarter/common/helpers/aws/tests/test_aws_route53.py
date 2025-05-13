@@ -5,8 +5,9 @@
 # python stuff
 import os
 import sys
-import unittest
 from pathlib import Path
+
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -18,7 +19,7 @@ if PYTHON_ROOT not in sys.path:
 from smarter.common.helpers.aws_helpers import aws_helper  # noqa: E402
 
 
-class TestAWSRoute53(unittest.TestCase):
+class TestAWSRoute53(SmarterTestBase):
     """Test AWS Route53 helper functions."""
 
     def setUp(self):

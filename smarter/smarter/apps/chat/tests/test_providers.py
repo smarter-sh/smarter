@@ -1,7 +1,6 @@
 # pylint: disable=W0613,W0718
 """Test chat provider OpenAI."""
 
-import unittest
 from typing import Callable
 
 from smarter.apps.chat.providers.googleai.classes import GoogleAIChatProvider
@@ -15,13 +14,16 @@ from smarter.apps.chat.providers.metaai.const import (
 from smarter.apps.chat.providers.openai.classes import (
     PROVIDER_NAME as OPENAI_PROVIDER_NAME,
 )
-from smarter.apps.chat.providers.openai.classes import OpenAIChatProvider
+from smarter.apps.chat.providers.openai.classes import (
+    OpenAIChatProvider,
+)
 from smarter.apps.chat.providers.providers import chat_providers
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from .classes import ProviderBaseClass
 
 
-class TestChatProviders(unittest.TestCase):
+class TestChatProviders(SmarterTestBase):
     """Test chat provider base class."""
 
     def test_providers(self):
