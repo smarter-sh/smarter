@@ -8,11 +8,11 @@ metadata:
 spec:
   connection:
     base_url: http://localhost:8000/
-    api_key: 12345-abcde-67890-fghij
+    api_key: test-api-key
     auth_method: token
     timeout: 10
     proxy_protocol: http
     proxy_host: proxy.example.com
     proxy_port: 8080
     proxy_username: proxyUser
-    proxy_password: proxyPass
+    proxy_password: test-proxy-password

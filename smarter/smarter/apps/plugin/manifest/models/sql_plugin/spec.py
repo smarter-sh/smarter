@@ -9,7 +9,7 @@ from pydantic import Field, field_validator
 from smarter.apps.plugin.manifest.models.common import Parameter, TestValue
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
-from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBaseModel
+from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBasePydanticModel
 
 from .const import MANIFEST_KIND
 
@@ -20,7 +20,7 @@ MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 
 
-class SqlData(SmarterBaseModel):
+class SqlData(SmarterBasePydanticModel):
     """Smarter API - generic API Connection class."""
 
     sql_query: str = Field(

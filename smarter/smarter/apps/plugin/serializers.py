@@ -5,6 +5,7 @@ from taggit.models import Tag
 
 from smarter.apps.account.serializers import (
     AccountMiniSerializer,
+    SecretSerializer,
     UserProfileSerializer,
 )
 from smarter.apps.plugin.models import (
@@ -43,16 +44,6 @@ class PluginMetaSerializer(serializers.ModelSerializer):
         model = PluginMeta
         fields = ["name", "account", "description", "plugin_class", "version", "author", "tags"]
 
-    def to_representation(self, instance):
-        """Convert `username` to `userName`."""
-        representation = super().to_representation(instance)
-        new_representation = {}
-        for key in representation.keys():
-            new_key = "".join(word.capitalize() for word in key.split("_"))
-            new_key = new_key[0].lower() + new_key[1:]
-            new_representation[new_key] = representation[key]
-        return new_representation
-
 
 class PluginSelectorSerializer(serializers.ModelSerializer):
     """PluginSelector model serializer."""
@@ -77,19 +68,6 @@ class PluginPromptSerializer(serializers.ModelSerializer):
         model = PluginPrompt
         fields = ["provider", "system_role", "model", "temperature", "max_tokens"]
 
-    def to_representation(self, instance):
-        """Convert `username` to `userName`."""
-        representation = super().to_representation(instance)
-        new_representation = {}
-        for key in representation.keys():
-            new_key = "".join(word.capitalize() for word in key.split("_"))
-            new_key = new_key[0].lower() + new_key[1:]
-            if isinstance(representation[key], str):
-                new_representation[new_key] = representation[key].strip()
-            else:
-                new_representation[new_key] = representation[key]
-        return new_representation
-
 
 class PluginStaticSerializer(serializers.ModelSerializer):
     """PluginDataStatic model serializer."""
@@ -98,19 +76,6 @@ class PluginStaticSerializer(serializers.ModelSerializer):
     class Meta:
         model = PluginDataStatic
         fields = ["description", "static_data"]
-
-    def to_representation(self, instance):
-        """Convert `username` to `userName`."""
-        representation = super().to_representation(instance)
-        new_representation = {}
-        for key in representation.keys():
-            new_key = "".join(word.capitalize() for word in key.split("_"))
-            new_key = new_key[0].lower() + new_key[1:]
-            if isinstance(representation[key], str):
-                new_representation[new_key] = representation[key].strip()
-            else:
-                new_representation[new_key] = representation[key]
-        return new_representation
 
 
 class SqlConnectionSerializer(serializers.ModelSerializer):
@@ -134,19 +99,6 @@ class SqlConnectionSerializer(serializers.ModelSerializer):
             "proxy_password",
         ]
 
-    def to_representation(self, instance):
-        """Convert `username` to `userName`."""
-        representation = super().to_representation(instance)
-        new_representation = {}
-        for key in representation.keys():
-            new_key = "".join(word.capitalize() for word in key.split("_"))
-            new_key = new_key[0].lower() + new_key[1:]
-            if isinstance(representation[key], str):
-                new_representation[new_key] = representation[key].strip()
-            else:
-                new_representation[new_key] = representation[key]
-        return new_representation
-
 
 class PluginSqlSerializer(serializers.ModelSerializer):
     """PluginDataSql model serializer."""
@@ -165,50 +117,31 @@ class PluginSqlSerializer(serializers.ModelSerializer):
             "limit",
         ]
 
-    def to_representation(self, instance):
-        """Convert `username` to `userName`."""
-        representation = super().to_representation(instance)
-        new_representation = {}
-        for key in representation.keys():
-            new_key = "".join(word.capitalize() for word in key.split("_"))
-            new_key = new_key[0].lower() + new_key[1:]
-            if isinstance(representation[key], str):
-                new_representation[new_key] = representation[key].strip()
-            else:
-                new_representation[new_key] = representation[key]
-        return new_representation
-
 
 class ApiConnectionSerializer(serializers.ModelSerializer):
     """ApiConnection model serializer."""
+
+    account = AccountMiniSerializer(read_only=True)
+    api_key = SecretSerializer(read_only=True)
+    proxy_password = SecretSerializer(read_only=True)
 
     # pylint: disable=missing-class-docstring
     class Meta:
         model = ApiConnection
         fields = [
+            "account",
             "name",
             "description",
-            "url",
-            "headers",
-            "params",
-            "data",
-            "auth_type",
-            "username",
-            "password",
+            "base_url",
+            "api_key",
+            "auth_method",
+            "timeout",
+            "proxy_protocol",
+            "proxy_host",
+            "proxy_port",
+            "proxy_username",
+            "proxy_password",
         ]
-
-    def to_representation(self, instance):
-        """Convert `username` to `userName`."""
-        representation = super().to_representation(instance)
-        new_representation = {}
-        for key in representation.keys():
-            new_key = "".join(word.capitalize() for word in key.split("_"))
-            new_key = new_key[0].lower() + new_key[1:]
-            if isinstance(representation[key], str):
-                new_representation[new_key] = representation[key].strip()
-            else:
-                new_representation[new_key] = representation[key]
-        return new_representation
 
 
 class PluginApiSerializer(serializers.ModelSerializer):

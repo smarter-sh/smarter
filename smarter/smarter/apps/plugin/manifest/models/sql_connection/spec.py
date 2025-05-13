@@ -9,7 +9,7 @@ from smarter.apps.plugin.manifest.models.sql_connection.const import MANIFEST_KI
 from smarter.apps.plugin.models import SqlConnection as SqlConnectionORM
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
-from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBaseModel
+from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBasePydanticModel
 
 from .enum import DbEngines, DBMSAuthenticationMethods
 
@@ -19,7 +19,7 @@ MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 
 
-class SqlConnection(SmarterBaseModel):
+class SqlConnection(SmarterBasePydanticModel):
     """Smarter API - generic SQL Connection class."""
 
     db_engine: str = Field(
