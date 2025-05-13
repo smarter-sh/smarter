@@ -8,7 +8,8 @@ import os
 
 # python stuff
 import sys
-import unittest
+
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
 PYTHON_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
@@ -20,7 +21,7 @@ from smarter.common.helpers.aws.exceptions import AWSNotReadyError
 
 
 # pylint: disable=too-many-public-methods
-class TestAWSConfiguration(unittest.TestCase):
+class TestAWSConfiguration(SmarterTestBase):
     """Test configuration."""
 
     # Get the directory of the current script

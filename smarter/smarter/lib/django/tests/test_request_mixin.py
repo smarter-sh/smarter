@@ -1,6 +1,5 @@
 """Test SmarterRequestMixin."""
 
-import unittest
 import uuid
 from datetime import datetime
 from urllib.parse import ParseResult
@@ -12,12 +11,13 @@ from django.test import Client, RequestFactory
 
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.lib.django.request import SmarterRequestMixin
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
 SMARTER_DEV_ADMIN_PASSWORD = "smarter"
 
 
-class TestSmarterRequestMixin(unittest.TestCase):
+class TestSmarterRequestMixin(SmarterTestBase):
     """
     Test SmarterRequestMixin.
     example urls:

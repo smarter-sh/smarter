@@ -6,8 +6,9 @@
 import json
 import os
 import sys
-import unittest
 from pathlib import Path
+
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
@@ -20,7 +21,7 @@ if PYTHON_ROOT not in sys.path:
 from ..functions.function_weather import get_current_weather, weather_tool_factory
 
 
-class TestLambdaOpenaiFunctionWeather(unittest.TestCase):
+class TestLambdaOpenaiFunctionWeather(SmarterTestBase):
     """Test OpenAI Function Weather."""
 
     def setUp(self):

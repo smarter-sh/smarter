@@ -3,15 +3,15 @@
 
 # python stuff
 import os
-import unittest
 
 # our stuff
 from smarter.lib.django.user import User
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from ..models import Account, UserProfile
 
 
-class TestAccount(unittest.TestCase):
+class TestAccount(SmarterTestBase):
     """Test Account model"""
 
     def setUp(self):

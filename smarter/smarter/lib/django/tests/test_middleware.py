@@ -1,6 +1,5 @@
 """Test BlockSensitiveFilesMiddleware."""
 
-import unittest
 from http import HTTPStatus
 
 from django.http import HttpResponse
@@ -8,9 +7,10 @@ from django.test import RequestFactory
 
 from smarter.apps.account.mixins import AccountMixin
 from smarter.lib.django.middleware.sensitive_files import BlockSensitiveFilesMiddleware
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
-class TestBlockSensitiveFilesMiddleware(unittest.TestCase, AccountMixin):
+class TestBlockSensitiveFilesMiddleware(SmarterTestBase, AccountMixin):
     """Test BlockSensitiveFilesMiddleware."""
 
     def setUp(self):

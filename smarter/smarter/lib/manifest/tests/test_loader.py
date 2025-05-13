@@ -1,16 +1,16 @@
 """Test SAMLoader"""
 
 import os
-import unittest
 
 import yaml
 
 from smarter.common.const import PYTHON_ROOT
 from smarter.lib.manifest.enum import SAMDataFormats, SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
-class TestManifestLoader(unittest.TestCase):
+class TestManifestLoader(SmarterTestBase):
     """Test SAMLoader"""
 
     def setUp(self):

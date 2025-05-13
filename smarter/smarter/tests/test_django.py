@@ -1,15 +1,14 @@
 # pylint: disable=wrong-import-position
 """Test User."""
 
-# python stuff
-import unittest
-
 import django
 from django.conf import settings
 from django.utils.version import get_main_version
 
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
-class TestDjango(unittest.TestCase):
+
+class TestDjango(SmarterTestBase):
     """Test Account model"""
 
     def setUp(self):

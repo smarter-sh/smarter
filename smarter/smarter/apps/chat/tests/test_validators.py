@@ -4,7 +4,8 @@
 # python stuff
 import os
 import sys
-import unittest
+
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
 PYTHON_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
@@ -27,7 +28,7 @@ from ..providers.const import OpenAIEndPoint, OpenAIObjectTypes  # noqa: E402
 from ..tests.test_setup import get_test_file  # noqa: E402
 
 
-class TestValidators(unittest.TestCase):
+class TestValidators(SmarterTestBase):
     """Test validators."""
 
     # Get the directory of the current script
