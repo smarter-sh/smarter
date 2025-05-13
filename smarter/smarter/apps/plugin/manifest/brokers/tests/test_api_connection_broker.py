@@ -8,7 +8,7 @@ from django.http import HttpRequest
 from waffle.models import Switch
 
 from smarter.apps.account.models import Secret
-from smarter.apps.account.tests.factories import secret_factory
+from smarter.apps.account.tests.factories import factory_secret_teardown, secret_factory
 from smarter.apps.plugin.manifest.brokers import SAMConnectionBrokerError
 from smarter.apps.plugin.manifest.brokers.api_connection import SAMApiConnectionBroker
 from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
@@ -61,13 +61,20 @@ class TestSAMApiConnectionBroker(TestSAMConnectionBrokerBase):
     @classmethod
     def tearDownClass(cls):
         super().tearDownClass()
-        try:
-            cls.api_key.delete()
-        except Secret.DoesNotExist:
-            pass
+
+        # clean up the api_key secret
+        factory_secret_teardown(secret=cls.api_key)
         cls.api_key = None
         cls.api_key_name = None
         cls.api_key_value = None
+
+        # clean up the proxy_password secret
+        factory_secret_teardown(secret=cls.proxy_password)
+        cls.proxy_password = None
+        cls.proxy_password_name = None
+        cls.proxy_password_value = None
+
+        # clean up everything else
         cls.good_manifest_path = None
         cls._model = None
         cls.request = None
@@ -141,8 +148,11 @@ class TestSAMApiConnectionBroker(TestSAMConnectionBrokerBase):
         response = broker.apply(request=self.request, kwargs={})
         self.assertIsInstance(response, SmarterJournaledJsonResponse)
         self.assertEqual(response.status_code, 200)
-        print("apply() response content:")
-        print(response.content)
+        response_bytes_value = response.content
+        response_json_string = response_bytes_value.decode("utf-8")
+        response_json = json.loads(response_json_string)
+        self.assertIn("ApiConnection test_api_connection applied successfully", response_json["message"])
+        self.assertEqual(response_json["thing"], "ApiConnection")
 
         with self.assertRaises(SAMBrokerErrorNotImplemented):
             broker.chat(request=self.request, kwargs={})
@@ -157,6 +167,8 @@ class TestSAMApiConnectionBroker(TestSAMConnectionBrokerBase):
         response_json_string = response_bytes_value.decode("utf-8")
         response_json = json.loads(response_json_string)
         self.assertIsInstance(response_json, dict)
+        self.assertIsInstance(response_json["data"], dict)
+        self.assertEqual(response_json["thing"], "ApiConnection")
 
         # brokered delete() request
         response = broker.delete(request=self.request, kwargs={})
