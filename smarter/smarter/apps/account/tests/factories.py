@@ -6,7 +6,7 @@ import random
 import uuid
 from datetime import datetime
 
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account, Secret, UserProfile
 from smarter.lib.django.user import User, UserType
 
 
@@ -116,3 +116,43 @@ def payment_method_factory():
         "card_expiration_year": random.randint(datetime.now().year, datetime.now().year + 7),
         "card_cvc": random.randint(100, 999),
     }
+
+
+def secret_factory(
+    user_profile: UserProfile, name: str, description: str, value: str, expiration: datetime = None
+) -> Secret:
+    """
+    Create a Secret object for testing.
+
+    Args:
+        user_profile (UserProfile): The UserProfile associated with the secret.
+        name (str): The name of the secret.
+        description (str): A description of the secret.
+        value (str): The value of the secret.
+
+    Returns:
+        Secret: The created Secret object.
+    """
+    encrypted_value = Secret.encrypt(value)
+    secret = Secret.objects.create(
+        user_profile=user_profile,
+        name=name,
+        description=description,
+        encrypted_value=encrypted_value,
+        expires_at=expiration,
+    )
+    logger.info("secret_factory() Created secret: %s", secret)
+    return secret
+
+
+def factory_secret_teardown(secret: Secret):
+    try:
+        if secret:
+            lbl = str(secret)
+            secret.delete()
+            logger.info("factory_secret_teardown() Deleted secret: %s", lbl)
+    except Secret.DoesNotExist:
+        pass
+    except Exception as e:
+        logger.error("factory_secret_teardown() Error deleting secret: %s", e)
+        raise

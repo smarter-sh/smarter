@@ -5,6 +5,7 @@ import logging
 import re
 import typing
 from abc import ABC, abstractmethod
+from datetime import datetime
 from http import HTTPStatus
 from urllib.parse import parse_qs, urlparse
 
@@ -13,6 +14,7 @@ from django.http import HttpRequest, QueryDict
 from requests import PreparedRequest
 from rest_framework.serializers import ModelSerializer
 
+from smarter.apps.account.models import Secret, UserProfile
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.helpers.console_helpers import formatted_text
@@ -370,6 +372,55 @@ class AbstractBroker(ABC, SmarterHelperMixin):
         data = model.model_json_schema()
 
         return self.json_response_ok(command=command, data=data)
+
+    ###########################################################################
+    # Smarter object helpers
+    ###########################################################################
+    def get_or_create_secret(
+        self,
+        user_profile: UserProfile,
+        name: str,
+        value: str = None,
+        description: str = None,
+        expiration: datetime = None,
+    ) -> Secret:
+        """
+        Get or create a Smarter Secret in the database. This is used to store
+        secrets that are passed in the manifest.
+        """
+        secret: Secret = None
+        try:
+            secret = Secret.objects.get(name=name, user_profile=user_profile)
+        except Secret.DoesNotExist as e:
+
+            if not value:
+                raise SAMBrokerError(
+                    message=f"Secret {name} not found and no value was provided provided",
+                    thing=self.thing,
+                    command=SmarterJournalCliCommands.GET,
+                ) from e
+
+            if not user_profile:
+                raise SAMBrokerError(
+                    message=f"Secret {name} not found and no user_profile was provided provided",
+                    thing=self.thing,
+                    command=SmarterJournalCliCommands.GET,
+                ) from e
+
+            if not description:
+                description = f"[auto generated] Secret {name} for {user_profile.user.username}"
+
+            encrypted_value = Secret.encrypt(value)
+
+            secret = Secret.objects.create(
+                user_profile=user_profile,
+                name=name,
+                description=description,
+                encrypted_value=encrypted_value,
+                expires_at=expiration,
+            )
+
+        return secret
 
     ###########################################################################
     # http json response helpers

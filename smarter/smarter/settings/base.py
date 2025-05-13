@@ -460,6 +460,7 @@ SMTP_USE_SSL = smarter_settings.smtp_use_ssl
 SMTP_USE_TLS = smarter_settings.smtp_use_tls
 SMTP_USERNAME = smarter_settings.smtp_username
 
+WAFFLE_CREATE_MISSING_SWITCHES = True
 
 # Wagtail settings
 # This is the human-readable name of your Wagtail install

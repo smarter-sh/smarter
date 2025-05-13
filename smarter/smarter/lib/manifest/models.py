@@ -17,7 +17,7 @@ from smarter.lib.manifest.exceptions import SAMValidationError
 logger = getLogger(__name__)
 
 
-class SmarterBaseModel(BaseModel, SmarterHelperMixin):
+class SmarterBasePydanticModel(BaseModel, SmarterHelperMixin):
     """Smarter API Base Pydantic Model."""
 
     model_config = ConfigDict(
@@ -27,7 +27,7 @@ class SmarterBaseModel(BaseModel, SmarterHelperMixin):
     )
 
 
-class AbstractSAMMetadataBase(SmarterBaseModel, abc.ABC):
+class AbstractSAMMetadataBase(SmarterBasePydanticModel, abc.ABC):
     """Pydantic Metadata base class. Expected to be subclassed by specific manifest classes."""
 
     name: str = Field(..., description="The camelCase name of the manifest resource")
@@ -101,15 +101,15 @@ class AbstractSAMMetadataBase(SmarterBaseModel, abc.ABC):
         return v
 
 
-class AbstractSAMSpecBase(SmarterBaseModel, abc.ABC):
+class AbstractSAMSpecBase(SmarterBasePydanticModel, abc.ABC):
     """Pydantic Spec base class. Expected to be subclassed by specific manifest classes."""
 
 
-class AbstractSAMStatusBase(SmarterBaseModel, abc.ABC):
+class AbstractSAMStatusBase(SmarterBasePydanticModel, abc.ABC):
     """Pydantic Status base class. Expected to be subclassed by specific manifest classes."""
 
 
-class AbstractSAMBase(SmarterBaseModel, abc.ABC):
+class AbstractSAMBase(SmarterBasePydanticModel, abc.ABC):
     """
     Pydantic Smarter API Manifest ("SAM") base class. This is a base class
     for all Smarter API manifests. It provides methods for validating the

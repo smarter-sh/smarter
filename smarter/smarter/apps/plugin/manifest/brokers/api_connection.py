@@ -83,6 +83,8 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
             file_path=file_path,
             url=url,
         )
+        user = request.user if request and hasattr(request, "user") else None
+        AccountMixin.__init__(self, account=account, user=user)
 
     ###########################################################################
     # Smarter abstract property implementations
@@ -124,9 +126,9 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
         """
         config_dump = self.manifest.spec.connection.model_dump()
         config_dump = self.camel_to_snake(config_dump)
-        config_dump[SAMMetadataKeys.NAME] = self.manifest.metadata.name
-        config_dump[SAMMetadataKeys.DESCRIPTION] = self.manifest.metadata.description
-        config_dump[SAMMetadataKeys.VERSION] = self.manifest.metadata.version
+        config_dump[SAMMetadataKeys.NAME.value] = self.manifest.metadata.name
+        config_dump[SAMMetadataKeys.DESCRIPTION.value] = self.manifest.metadata.description
+        config_dump[SAMMetadataKeys.VERSION.value] = self.manifest.metadata.version
         return config_dump
 
     @property
@@ -139,10 +141,25 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
         except ApiConnection.DoesNotExist:
             if self.manifest:
                 model_dump = self.manifest.spec.connection.model_dump()
-                model_dump[SAMMetadataKeys.ACCOUNT] = self.account
-                model_dump[SAMMetadataKeys.NAME] = self.manifest.metadata.name
-                model_dump[SAMMetadataKeys.VERSION] = self.manifest.metadata.version
-                model_dump[SAMMetadataKeys.DESCRIPTION] = self.manifest.metadata.description
+                model_dump[SAMMetadataKeys.ACCOUNT.value] = self.account
+                model_dump[SAMMetadataKeys.NAME.value] = self.manifest.metadata.name
+                model_dump[SAMMetadataKeys.DESCRIPTION.value] = self.manifest.metadata.description
+
+                # retrieve the api_key Secret
+                api_key = self.get_or_create_secret(
+                    user_profile=self.user_profile, name=self.manifest.spec.connection.api_key
+                )
+
+                # retrieve the proxy_username Secret, if it exists
+                if self.manifest.spec.connection.proxy_password:
+                    proxy_password = self.get_or_create_secret(
+                        user_profile=self.user_profile,
+                        name=self.manifest.spec.connection.proxy_password,
+                    )
+                    model_dump[SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value] = proxy_password
+
+                model_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = api_key
+
                 self._api_connection = ApiConnection(**model_dump)
                 self._api_connection.save()
 
@@ -156,24 +173,24 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
         command = SmarterJournalCliCommands(command)
 
         data = {
-            SAMKeys.APIVERSION: self.api_version,
-            SAMKeys.KIND: self.kind,
-            SAMKeys.METADATA: {
-                SAMMetadataKeys.NAME: "exampleConnection",
-                SAMMetadataKeys.DESCRIPTION: f"Example {self.kind} using any of the following authentication methods: {AuthMethods.all_values()}",
-                SAMMetadataKeys.VERSION: "0.1.0",
+            SAMKeys.APIVERSION.value: self.api_version,
+            SAMKeys.KIND.value: self.kind,
+            SAMKeys.METADATA.value: {
+                SAMMetadataKeys.NAME.value: "exampleConnection",
+                SAMMetadataKeys.DESCRIPTION.value: f"Example {self.kind} using any of the following authentication methods: {AuthMethods.all_values()}",
+                SAMMetadataKeys.VERSION.value: "0.1.0",
             },
-            SAMKeys.SPEC: {
-                SAMApiConnectionSpecKeys.CONNECTION: {
-                    SAMApiConnectionSpecConnectionKeys.BASE_URL: "http://localhost:8000/",
-                    SAMApiConnectionSpecConnectionKeys.API_KEY: "12345-abcde-67890-fghij",
-                    SAMApiConnectionSpecConnectionKeys.AUTH_METHOD: "token",
-                    SAMApiConnectionSpecConnectionKeys.TIMEOUT: 30,
-                    SAMApiConnectionSpecConnectionKeys.PROXY_PROTOCOL: "http",
-                    SAMApiConnectionSpecConnectionKeys.PROXY_HOST: "proxy.example.com",
-                    SAMApiConnectionSpecConnectionKeys.PROXY_PORT: 8080,
-                    SAMApiConnectionSpecConnectionKeys.PROXY_USERNAME: "proxyuser",
-                    SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD: "proxypass",
+            SAMKeys.SPEC.value: {
+                SAMApiConnectionSpecKeys.CONNECTION.value: {
+                    SAMApiConnectionSpecConnectionKeys.BASE_URL.value: "http://localhost:8000/",
+                    SAMApiConnectionSpecConnectionKeys.API_KEY.value: "12345-abcde-67890-fghij",
+                    SAMApiConnectionSpecConnectionKeys.AUTH_METHOD.value: "token",
+                    SAMApiConnectionSpecConnectionKeys.TIMEOUT.value: 30,
+                    SAMApiConnectionSpecConnectionKeys.PROXY_PROTOCOL.value: "http",
+                    SAMApiConnectionSpecConnectionKeys.PROXY_HOST.value: "proxy.example.com",
+                    SAMApiConnectionSpecConnectionKeys.PROXY_PORT.value: 8080,
+                    SAMApiConnectionSpecConnectionKeys.PROXY_USERNAME.value: "proxyuser",
+                    SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value: "proxypass",
                 }
             },
         }
@@ -262,22 +279,22 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
             try:
                 data = model_to_dict(self.api_connection)
                 data.pop("id")
-                data.pop(SAMMetadataKeys.ACCOUNT)
-                data.pop(SAMMetadataKeys.NAME)
-                data.pop(SAMMetadataKeys.VERSION)
-                data.pop(SAMMetadataKeys.DESCRIPTION)
+                data.pop(SAMMetadataKeys.ACCOUNT.value)
+                data.pop(SAMMetadataKeys.NAME.value)
+                data.pop(SAMMetadataKeys.VERSION.value)
+                data.pop(SAMMetadataKeys.DESCRIPTION.value)
                 retval = {
-                    SAMKeys.APIVERSION: self.api_version,
-                    SAMKeys.KIND: self.kind,
-                    SAMKeys.METADATA: {
-                        SAMMetadataKeys.NAME: self.api_connection.name,
-                        SAMMetadataKeys.DESCRIPTION: self.api_connection.description,
-                        SAMMetadataKeys.VERSION: self.manifest.metadata.version,
+                    SAMKeys.APIVERSION.value: self.api_version,
+                    SAMKeys.KIND.value: self.kind,
+                    SAMKeys.METADATA.value: {
+                        SAMMetadataKeys.NAME.value: self.api_connection.name,
+                        SAMMetadataKeys.DESCRIPTION.value: self.api_connection.description,
+                        SAMMetadataKeys.VERSION.value: self.manifest.metadata.version,
                     },
-                    SAMKeys.SPEC: {SAMApiConnectionSpecKeys.CONNECTION: data},
-                    SAMKeys.STATUS: {
-                        SAMApiConnectionStatusKeys.CONNECTION_STRING: self.api_connection.get_connection_string(),
-                        SAMApiConnectionStatusKeys.IS_VALID: is_valid,
+                    SAMKeys.SPEC.value: {SAMApiConnectionSpecKeys.CONNECTION.value: data},
+                    SAMKeys.STATUS.value: {
+                        SAMApiConnectionStatusKeys.CONNECTION_STRING.value: self.api_connection.get_connection_string(),
+                        SAMApiConnectionStatusKeys.IS_VALID.value: is_valid,
                     },
                 }
 

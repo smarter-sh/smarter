@@ -2,7 +2,7 @@
 
 from rest_framework import serializers
 
-from smarter.apps.account.models import Account, PaymentMethod, UserProfile
+from smarter.apps.account.models import Account, PaymentMethod, Secret, UserProfile
 from smarter.lib.django.serializers import UserMiniSerializer
 
 
@@ -46,3 +46,22 @@ class PaymentMethodSerializer(serializers.ModelSerializer):
     class Meta:
         model = PaymentMethod
         fields = "__all__"
+
+
+class SecretSerializer(serializers.ModelSerializer):
+    """Serializer for the Secret model."""
+
+    user_profile = UserProfileSerializer()
+
+    # pylint: disable=missing-class-docstring
+    class Meta:
+        model = Secret
+        fields = (
+            "id",
+            "name",
+            "description",
+            "last_accessed",
+            "expires_at",
+            "user_profile",
+        )
+        read_only_fields = fields

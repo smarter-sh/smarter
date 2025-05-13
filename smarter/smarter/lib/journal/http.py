@@ -2,7 +2,6 @@
 """Smarter API Manifest Abstract Broker class."""
 
 import logging
-import traceback
 from http import HTTPStatus
 
 from django.core.handlers.wsgi import WSGIRequest

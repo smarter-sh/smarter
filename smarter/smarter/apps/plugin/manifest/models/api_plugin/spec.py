@@ -16,7 +16,7 @@ from smarter.apps.plugin.manifest.models.common import (
 from smarter.common.exceptions import SmarterValueError
 from smarter.lib.django.validators import SmarterValidator
 from smarter.lib.manifest.exceptions import SAMValidationError
-from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBaseModel
+from smarter.lib.manifest.models import AbstractSAMSpecBase, SmarterBasePydanticModel
 
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ MODULE_IDENTIFIER = f"{MANIFEST_KIND}.{filename}"
 SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 
 
-class ApiData(SmarterBaseModel):
+class ApiData(SmarterBasePydanticModel):
     """Smarter API - apiData class."""
 
     endpoint: str = Field(
