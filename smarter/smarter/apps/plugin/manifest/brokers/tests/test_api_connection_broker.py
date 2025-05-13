@@ -9,6 +9,7 @@ from waffle.models import Switch
 
 from smarter.apps.account.models import Secret
 from smarter.apps.account.tests.factories import secret_factory
+from smarter.apps.plugin.manifest.brokers import SAMConnectionBrokerError
 from smarter.apps.plugin.manifest.brokers.api_connection import SAMApiConnectionBroker
 from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
 from smarter.apps.plugin.models import ApiConnection
@@ -16,6 +17,7 @@ from smarter.common.const import SmarterWaffleSwitches
 from smarter.lib.django import waffle
 from smarter.lib.journal.enum import SmarterJournalThings
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
+from smarter.lib.manifest.broker import SAMBrokerErrorNotImplemented
 
 from .base_classes import TestSAMConnectionBrokerBase
 
@@ -134,3 +136,43 @@ class TestSAMApiConnectionBroker(TestSAMConnectionBrokerBase):
         response_json = json.loads(response_json_string)
 
         self.assertIsInstance(response_json, dict)
+
+        # brokered apply() request
+        response = broker.apply(request=self.request, kwargs={})
+        self.assertIsInstance(response, SmarterJournaledJsonResponse)
+        self.assertEqual(response.status_code, 200)
+        print("apply() response content:")
+        print(response.content)
+
+        with self.assertRaises(SAMBrokerErrorNotImplemented):
+            broker.chat(request=self.request, kwargs={})
+
+        # brokered describe() request
+        response = broker.describe(request=self.request, kwargs={})
+        self.assertIsInstance(response, SmarterJournaledJsonResponse)
+        self.assertEqual(response.status_code, 200)
+        print("describe() response content:")
+        print(response.content)
+        response_bytes_value = response.content
+        response_json_string = response_bytes_value.decode("utf-8")
+        response_json = json.loads(response_json_string)
+        self.assertIsInstance(response_json, dict)
+
+        # brokered delete() request
+        response = broker.delete(request=self.request, kwargs={})
+        self.assertIsInstance(response, SmarterJournaledJsonResponse)
+        self.assertEqual(response.status_code, 200)
+        response_bytes_value = response.content
+        response_json_string = response_bytes_value.decode("utf-8")
+        response_json = json.loads(response_json_string)
+        self.assertIn("ApiConnection test_api_connection deleted successfully", response_json["message"])
+        self.assertEqual(response_json["thing"], "ApiConnection")
+
+        with self.assertRaises(SAMBrokerErrorNotImplemented):
+            broker.deploy(request=self.request, kwargs={})
+
+        with self.assertRaises(SAMBrokerErrorNotImplemented):
+            broker.undeploy(request=self.request, kwargs={})
+
+        with self.assertRaises(SAMBrokerErrorNotImplemented):
+            broker.logs(request=self.request, kwargs={})
