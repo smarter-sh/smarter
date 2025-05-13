@@ -1,6 +1,8 @@
 # pylint: disable=W0718
 """Smarter Api ApiConnection Manifest handler"""
 
+import json
+from logging import getLogger
 from typing import Type
 
 from django.forms.models import model_to_dict
@@ -34,6 +36,9 @@ from smarter.lib.manifest.loader import SAMLoader
 from ..models.api_connection.const import MANIFEST_KIND
 from ..models.api_connection.model import SAMApiConnection
 from . import SAMConnectionBrokerError
+
+
+logger = getLogger(__name__)
 
 
 class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
@@ -128,7 +133,18 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
         config_dump = self.camel_to_snake(config_dump)
         config_dump[SAMMetadataKeys.NAME.value] = self.manifest.metadata.name
         config_dump[SAMMetadataKeys.DESCRIPTION.value] = self.manifest.metadata.description
-        config_dump[SAMMetadataKeys.VERSION.value] = self.manifest.metadata.version
+
+        # retrieve the api_key Secret
+        config_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = self.get_or_create_secret(
+            user_profile=self.user_profile, name=config_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value]
+        )
+
+        # retrieve the proxy_username Secret, if it exists
+        if config_dump.get(SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value):
+            config_dump[SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value] = self.get_or_create_secret(
+                user_profile=self.user_profile,
+                name=config_dump[SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value],
+            )
         return config_dump
 
     @property
@@ -149,6 +165,7 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
                 api_key = self.get_or_create_secret(
                     user_profile=self.user_profile, name=self.manifest.spec.connection.api_key
                 )
+                model_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = api_key
 
                 # retrieve the proxy_username Secret, if it exists
                 if self.manifest.spec.connection.proxy_password:
@@ -157,8 +174,6 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
                         name=self.manifest.spec.connection.proxy_password,
                     )
                     model_dump[SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value] = proxy_password
-
-                model_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = api_key
 
                 self._api_connection = ApiConnection(**model_dump)
                 self._api_connection.save()
@@ -281,7 +296,6 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
                 data.pop("id")
                 data.pop(SAMMetadataKeys.ACCOUNT.value)
                 data.pop(SAMMetadataKeys.NAME.value)
-                data.pop(SAMMetadataKeys.VERSION.value)
                 data.pop(SAMMetadataKeys.DESCRIPTION.value)
                 retval = {
                     SAMKeys.APIVERSION.value: self.api_version,
