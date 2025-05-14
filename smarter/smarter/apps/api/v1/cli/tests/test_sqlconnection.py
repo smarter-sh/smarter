@@ -36,7 +36,6 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
     def setUp(self):
         super().setUp()
         self.kwargs = {SAMKeys.KIND.value: KIND}
-        self.name = "TestSqlConnection"
         self.query_params = urlencode({"name": self.name})
 
     def tearDown(self):

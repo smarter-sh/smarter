@@ -13,10 +13,9 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
 from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
 from smarter.apps.plugin.utils import add_example_plugins
-from smarter.common.utils import dict_is_contained_in
+from smarter.common.utils import dict_is_contained_in, get_readonly_yaml_file
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.loader import SAMLoader
-from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))

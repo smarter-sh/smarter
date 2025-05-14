@@ -26,10 +26,8 @@ class TestApiV1CliPlugin(ApiV1TestBase):
         super().setUp()
         self.path = os.path.join(PYTHON_ROOT, "smarter/apps/api/v1/cli/tests/data")
         self.good_manifest_path = os.path.join(self.path, "good-plugin-manifest.yaml")
-        with open(self.good_manifest_path, encoding="utf-8") as file:
-            self.good_manifest_text = file.read()
+        self.good_manifest_text = self.get_readonly_yaml_file(self.good_manifest_path)
         self.kwargs = {SAMKeys.KIND.value: KIND}
-        self.name = "CliTestPlugin"
         self.query_params = urlencode({"name": self.name})
 
     def test_deploy(self):
@@ -71,7 +69,7 @@ class TestApiV1CliPlugin(ApiV1TestBase):
 
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
-        self.assertEqual(response["message"], "Plugin CliTestPlugin applied successfully")
+        self.assertEqual(response["message"], f"Plugin {self.name} applied successfully")
 
         # invoke the describe endpoint to verify that the Plugin was created
         path = f"{reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)}"
@@ -101,6 +99,6 @@ class TestApiV1CliPlugin(ApiV1TestBase):
         response, status = self.get_response(path=url_with_query_params)
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
-        self.assertEqual(response["message"], "Plugin CliTestPlugin deleted successfully")
+        self.assertEqual(response["message"], f"Plugin {self.name} deleted successfully")
         with self.assertRaises(PluginMeta.DoesNotExist):
             PluginMeta.objects.get(name=self.name, account=self.account)

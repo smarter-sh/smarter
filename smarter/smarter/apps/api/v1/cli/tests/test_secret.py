@@ -6,7 +6,6 @@ import string
 from http import HTTPStatus
 from urllib.parse import urlencode
 
-import yaml
 from django.urls import reverse
 
 from smarter.apps.account.models import Secret
@@ -50,7 +49,6 @@ class TestApiCliV1Secret(ApiV1TestBase):
         with open(self.good_manifest_path, encoding="utf-8") as file:
             self.good_manifest_text = file.read()
         self.kwargs = {SAMKeys.KIND.value: KIND}
-        self.name = "TestSecret"
         self.query_params = urlencode({"name": self.name})
 
         self.secret_description = "test description of the secret"
@@ -116,7 +114,7 @@ class TestApiCliV1Secret(ApiV1TestBase):
 
         self.assertEqual(status, HTTPStatus.OK, msg=f"path={path} response={response}")
         self.assertIsInstance(response, dict)
-        self.assertEqual(response["message"], "Secret TestSecret applied successfully")
+        self.assertEqual(response["message"], f"Secret {self.name} applied successfully")
 
     def test_03_describe(self):
         """
@@ -151,7 +149,7 @@ class TestApiCliV1Secret(ApiV1TestBase):
         response, status = self.get_response(path=url_with_query_params)
         self.assertEqual(status, HTTPStatus.OK, msg=f"path={path} response={response}")
         self.assertIsInstance(response, dict)
-        self.assertEqual(response["message"], "Secret TestSecret deleted successfully")
+        self.assertEqual(response["message"], f"Secret {self.name} deleted successfully")
         with self.assertRaises(Secret.DoesNotExist):
             Secret.objects.get(name=self.name, user_profile=self.user_profile)
 

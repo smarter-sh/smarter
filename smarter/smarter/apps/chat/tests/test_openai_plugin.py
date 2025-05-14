@@ -4,7 +4,7 @@
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.plugin.plugin.static import StaticPlugin
-from smarter.lib.unittest.utils import get_readonly_yaml_file
+from smarter.common.utils import get_readonly_yaml_file
 
 from .test_setup import get_test_file_path
 

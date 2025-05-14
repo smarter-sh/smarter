@@ -18,8 +18,6 @@ from smarter.lib.drf.models import SmarterAuthToken
 class ApiV1TestBase(TestAccountMixin):
     """Test api/v1/ base class."""
 
-    name: str = None
-
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()

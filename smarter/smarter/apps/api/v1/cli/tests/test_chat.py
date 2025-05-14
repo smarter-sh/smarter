@@ -1,7 +1,5 @@
 """Test Api v1 CLI non-brokered chat command"""
 
-import hashlib
-import os
 from http import HTTPStatus
 from urllib.parse import urlencode
 
@@ -33,12 +31,9 @@ class TestApiCliV1Chat(ApiV1TestBase):
 
     def setUp(self):
         super().setUp()
-        self.name = "TestChatBot"
         self.kwargs = {"name": self.name}
 
-        random_bytes = os.urandom(32)
-        uid = hashlib.sha256(random_bytes).hexdigest()
-        self.query_params = urlencode({"uid": uid})
+        self.query_params = urlencode({"uid": self.uid})
 
         self.chatbot = self.chatbot_factory()
 

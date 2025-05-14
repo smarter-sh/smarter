@@ -6,6 +6,7 @@ import csv
 import hashlib
 import json
 import logging
+import os
 import random
 import unittest
 from typing import Union
@@ -27,8 +28,13 @@ class SmarterTestBase(unittest.TestCase):
         super().setUpClass()
         cls.hash_suffix = SmarterTestBase.generate_hash_suffix()
         cls.name = "test_" + cls.hash_suffix
+
+        random_bytes = os.urandom(32)
+        cls.uid = hashlib.sha256(random_bytes).hexdigest()
+
         logger.info("Setting up test class with hash suffix: %s", cls.hash_suffix)
         logger.info("Setting up test class with name: %s", cls.name)
+        logger.info("Setting up test class with uid: %s", cls.uid)
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -36,6 +42,7 @@ class SmarterTestBase(unittest.TestCase):
         super().tearDownClass()
         cls.hash_suffix = None
         cls.name = None
+        cls.uid = None
 
     @classmethod
     def get_readonly_yaml_file(cls, file_path) -> dict:

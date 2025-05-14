@@ -1,8 +1,6 @@
 # pylint: disable=wrong-import-position
 """Test Account payment methods."""
 
-import os
-
 from django.contrib.auth import authenticate
 from django.test import Client
 from django.urls import reverse
@@ -31,7 +29,7 @@ class TestPaymentMethods(TestAccountMixin):
         """Create a payment method."""
         return PaymentMethod.objects.create(
             account=self.account,
-            name="Test Payment Method" + os.urandom(4).hex(),
+            name=self.name,
             stripe_id="1234567890",
             card_type="visa",
             card_last_4="1234",
@@ -44,7 +42,7 @@ class TestPaymentMethods(TestAccountMixin):
         """Test that we can create an account."""
         payment_method = PaymentMethod.objects.create(
             account=self.account,
-            name="Test Payment Method",
+            name=self.name,
             stripe_id="1234567890",
             card_type="visa",
             card_last_4="1234",
@@ -59,7 +57,7 @@ class TestPaymentMethods(TestAccountMixin):
         """Test that we can update an account."""
         payment_method = PaymentMethod.objects.create(
             account=self.account,
-            name="Test Payment Method",
+            name=self.name,
             stripe_id="1234567890",
             card_type="visa",
             card_last_4="1234",
@@ -67,7 +65,7 @@ class TestPaymentMethods(TestAccountMixin):
             card_exp_year="2024",
             is_default=True,
         )
-        payment_method.name = "Updated Payment Method"
+        payment_method.name = self.name + "_updated"
         payment_method.save()
 
         self.assertEqual(payment_method.name, "Updated Payment Method")
