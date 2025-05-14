@@ -27,10 +27,8 @@ class SmarterTestBase(unittest.TestCase):
         """Set up the test class."""
         super().setUpClass()
         cls.hash_suffix = SmarterTestBase.generate_hash_suffix()
-        cls.name = "test_" + cls.hash_suffix
-
-        random_bytes = os.urandom(32)
-        cls.uid = hashlib.sha256(random_bytes).hexdigest()
+        cls.name = "test" + cls.hash_suffix
+        cls.uid = SmarterTestBase.generate_uid()
 
         logger.info("Setting up test class with hash suffix: %s", cls.hash_suffix)
         logger.info("Setting up test class with name: %s", cls.name)
@@ -43,6 +41,12 @@ class SmarterTestBase(unittest.TestCase):
         cls.hash_suffix = None
         cls.name = None
         cls.uid = None
+
+    @classmethod
+    def generate_uid(cls) -> str:
+        """Generate a unique identifier for the test."""
+        random_bytes = os.urandom(32)
+        return hashlib.sha256(random_bytes).hexdigest()
 
     @classmethod
     def get_readonly_yaml_file(cls, file_path) -> dict:
@@ -61,6 +65,6 @@ class SmarterTestBase(unittest.TestCase):
             return json.load(file)
 
     @staticmethod
-    def generate_hash_suffix() -> str:
+    def generate_hash_suffix(length: int = 16) -> str:
         """Generate a unique hash suffix for test data."""
-        return "_" + hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:16]
+        return "_" + hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:length]

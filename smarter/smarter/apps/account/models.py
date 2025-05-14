@@ -310,7 +310,7 @@ class PaymentMethod(TimestampedModel):
     is_default = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.card_type + " " + self.card_last_4
+        return str(self.card_type) + " " + str(self.card_last_4)
 
 
 class LLMPrices(TimestampedModel):

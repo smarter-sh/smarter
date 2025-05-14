@@ -6,8 +6,9 @@ import random
 import uuid
 from datetime import datetime
 
-from smarter.apps.account.models import Account, Secret, UserProfile
+from smarter.apps.account.models import Account, PaymentMethod, Secret, UserProfile
 from smarter.lib.django.user import User, UserType
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
 logger = logging.getLogger(__name__)
@@ -83,34 +84,34 @@ def billing_address_factory():
     }
 
 
-def payment_method_factory():
+def payment_method_factory(account: Account):
+    """ """
 
-    def generate_card_number(card_type: str = "visa"):
-        if card_type == "visa":
-            return "4" + "".join(random.choices("0123456789", k=15))
-        if card_type == "mastercard":
-            return "5" + "".join(random.choices("0123456789", k=15))
-        if card_type == "american-express":
-            return "3" + "".join(random.choices("0123456789", k=14))
-        return "-".join(["".join(random.choices("0123456789", k=4)) for _ in range(4)])
+    payment_method = PaymentMethod.objects.create(
+        account=account,
+        name="TestPaymentMethod" + SmarterTestBase.generate_hash_suffix(),
+        stripe_id="test-stripe-id",
+        card_type="test_card_type",
+        card_last_4=random.randint(1000, 9999),
+        card_exp_month=random.randint(1, 12),
+        card_exp_year=random.randint(datetime.now().year, datetime.now().year + 7),
+        is_default=True,
+    )
+    logger.info("payment_method_factory() Created payment method: %s", payment_method.name)
+    return payment_method
 
-    def mask_card(card_number):
-        return "ending " + str(card_number)[-4:]
 
-    card_type = random.choice(["visa", "mastercard", "american-express"])
-    card_number = generate_card_number(card_type)
-    card_masked = mask_card(card_number)
-    return {
-        "id": str(uuid.uuid4()),
-        "is_primary": True,
-        "card_type": card_type,
-        "card_name": "John Doe",
-        "card_number": card_number,
-        "card_masked": card_masked,
-        "card_expiration_month": 12,
-        "card_expiration_year": random.randint(datetime.now().year, datetime.now().year + 7),
-        "card_cvc": random.randint(100, 999),
-    }
+def payment_method_factory_teardown(payment_method: PaymentMethod):
+    try:
+        if payment_method:
+            lbl = str(payment_method)
+            payment_method.delete()
+            logger.info("payment_method_factory_teardown() Deleted payment method: %s", lbl)
+    except PaymentMethod.DoesNotExist:
+        pass
+    except Exception as e:
+        logger.error("payment_method_factory_teardown() Error deleting payment method: %s", e)
+        raise
 
 
 def secret_factory(
