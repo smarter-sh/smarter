@@ -9,8 +9,8 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
 from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
 from smarter.apps.plugin.models import ApiConnection, SqlConnection
+from smarter.common.utils import get_readonly_yaml_file
 from smarter.lib.manifest.loader import SAMLoader
-from smarter.lib.unittest.utils import get_readonly_yaml_file
 
 from .factories import secret_factory
 

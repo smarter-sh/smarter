@@ -40,9 +40,7 @@ class TestAbstractBrokerClass(TestAccountMixin):
         super().setUpClass()
         path = os.path.join(PYTHON_ROOT, "smarter", "apps", "api", "v1", "cli", "tests", "data")
         cls.good_manifest_path = os.path.join(path, "good-plugin-manifest.yaml")
-
-        with open(cls.good_manifest_path, encoding="utf-8") as file:
-            cls.good_manifest_text = file.read()
+        cls.good_manifest_text = cls.get_readonly_yaml_file(cls.good_manifest_path)
 
     def setUp(self):
         """Set up test fixtures."""

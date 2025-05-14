@@ -9,7 +9,7 @@ from django.test import Client, RequestFactory
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
 from smarter.apps.plugin.utils import add_example_plugins
-from smarter.lib.unittest.utils import get_readonly_yaml_file
+from smarter.common.utils import get_readonly_yaml_file
 
 from ..base import ChatBotApiBaseViewSet
 

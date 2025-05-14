@@ -7,8 +7,8 @@ from http import HTTPStatus
 from django import forms, http
 
 from smarter.apps.account.models import Account, UserProfile
+from smarter.common.utils import get_readonly_csv_file
 from smarter.lib.django.view_helpers import SmarterAdminWebView
-from smarter.lib.unittest.utils import get_readonly_csv_file
 
 
 logger = logging.getLogger(__name__)

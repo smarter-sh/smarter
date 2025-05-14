@@ -17,14 +17,13 @@ class TestSmarterSecretDjangoModel(TestAccountMixin):
     def test_create_secret(self):
         """Test create secret and that encryption and decryption work."""
 
-        name = "testSecret" + self.hash_suffix
         description = "testSecret" + self.hash_suffix
         secret_value = "testSecretValue" + self.hash_suffix
         encrypted_value = Secret.encrypt(secret_value)
         expires_at = datetime.now() + timedelta(days=180)  # 6 months from now
         secret = Secret.objects.create(
             user_profile=self.user_profile,
-            name=name,
+            name=self.name,
             description=description,
             encrypted_value=encrypted_value,
             expires_at=expires_at,
@@ -37,7 +36,6 @@ class TestSmarterSecretDjangoModel(TestAccountMixin):
 
     def test_secret_expiration(self):
         """Test that the is_expired method correctly identifies expired and non-expired secrets."""
-        name = "testExpiredSecret" + self.hash_suffix
         description = "testExpiredSecret" + self.hash_suffix
         secret_value = "testExpiredSecretValue" + self.hash_suffix
         encrypted_value = Secret.encrypt(secret_value)
@@ -45,7 +43,7 @@ class TestSmarterSecretDjangoModel(TestAccountMixin):
         # Create a secret that expires in the past
         expired_secret = Secret.objects.create(
             user_profile=self.user_profile,
-            name=name,
+            name=self.name + "_expired",
             description=description,
             encrypted_value=encrypted_value,
             expires_at=now() - timedelta(days=1),  # Expired yesterday
@@ -55,7 +53,7 @@ class TestSmarterSecretDjangoModel(TestAccountMixin):
         # Create a secret that expires in the future
         non_expired_secret = Secret.objects.create(
             user_profile=self.user_profile,
-            name=name + "_future",
+            name=self.name + "_future",
             description=description,
             encrypted_value=encrypted_value,
             expires_at=now() + timedelta(days=1),  # Expires tomorrow

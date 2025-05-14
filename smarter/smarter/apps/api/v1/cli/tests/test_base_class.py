@@ -30,7 +30,7 @@ class TestApiCliV1BaseClass(ApiV1TestBase):
     def setUp(self):
         super().setUp()
         self.kwargs = {SAMKeys.KIND.value: SAMKinds.ACCOUNT.value}
-        self.query_params = urlencode({"username": self.user.username})
+        self.query_params = urlencode({"username": self.non_admin_user.username})
         self.public_path = reverse(ApiV1CliReverseViews.example_manifest, kwargs=self.kwargs)
         self.private_path = reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)
 
@@ -50,7 +50,7 @@ class TestApiCliV1BaseClass(ApiV1TestBase):
         elif missing_key:
             response = client.post(path=path, data=None, content_type="application/json", **headers_missing_key)
         elif session_authentication:
-            client.force_login(user=self.user)
+            client.force_login(user=self.non_admin_user)
             response = client.post(path=path, data=None, content_type="application/json")
 
         if response is None:

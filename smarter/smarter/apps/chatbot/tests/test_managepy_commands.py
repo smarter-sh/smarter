@@ -1,8 +1,6 @@
 # pylint: disable=W0613
 """Tests for manage.py create_plugin."""
 
-import hashlib
-import random
 import time
 
 from django.core.management import call_command

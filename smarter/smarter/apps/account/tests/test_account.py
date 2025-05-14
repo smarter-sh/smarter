@@ -1,9 +1,6 @@
 # pylint: disable=wrong-import-position
 """Test Account."""
 
-# python stuff
-import os
-
 # our stuff
 from smarter.lib.django.user import User
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -16,7 +13,7 @@ class TestAccount(SmarterTestBase):
 
     def setUp(self):
         """Set up test fixtures."""
-        username = "testuser_" + os.urandom(4).hex()
+        username = self.name
         self.user = User.objects.create_user(username=username, password="12345")
         self.company_name = "Test Company"
 

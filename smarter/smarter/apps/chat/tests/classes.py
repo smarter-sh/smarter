@@ -20,7 +20,7 @@ from smarter.apps.chatbot.models import ChatBot, ChatBotPlugin
 from smarter.apps.plugin.nlp import does_refer_to
 from smarter.apps.plugin.plugin.static import StaticPlugin
 from smarter.apps.plugin.signals import plugin_called, plugin_selected
-from smarter.lib.unittest.utils import get_readonly_yaml_file
+from smarter.common.utils import get_readonly_yaml_file
 
 from ..models import Chat, ChatPluginUsage
 from ..providers.providers import chat_providers

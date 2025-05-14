@@ -1,15 +1,28 @@
 # pylint: disable=duplicate-code
 # pylint: disable=E1101
 """Utility functions for the OpenAI Lambda functions"""
+import csv
 import json  # library for interacting with JSON data https://www.json.org/json-en.html
 import logging
 import re
 from datetime import datetime
 
+import yaml
 from pydantic import SecretStr
 
 
 logger = logging.getLogger(__name__)
+
+
+def get_readonly_yaml_file(file_path) -> dict:
+    with open(file_path, encoding="utf-8") as file:
+        return yaml.safe_load(file)
+
+
+def get_readonly_csv_file(file_path):
+    with open(file_path, encoding="utf-8") as file:
+        reader = csv.DictReader(file)
+        return list(reader)
 
 
 class DateTimeEncoder(json.JSONEncoder):

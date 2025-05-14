@@ -22,8 +22,6 @@ from smarter.lib.unittest.base_classes import SmarterTestBase
 class TestAccountMixin(SmarterTestBase):
     """Test AccountMixin."""
 
-    name: str = None
-
     @classmethod
     def setUpClass(cls) -> None:
         cls._user, cls._account, cls._user_profile = mortal_user_factory()

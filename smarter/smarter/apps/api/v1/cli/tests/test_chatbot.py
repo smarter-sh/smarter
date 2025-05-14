@@ -35,7 +35,6 @@ class TestApiCliV1ChatBot(ApiV1TestBase):
     def setUp(self):
         super().setUp()
         self.kwargs = {SAMKeys.KIND.value: KIND}
-        self.name = "TestChatBot"
         self.query_params = urlencode({"name": self.name})
 
     def tearDown(self):

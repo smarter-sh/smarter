@@ -27,8 +27,6 @@ class Testk8sHelpers(SmarterTestBase):
 
     def setUp(self):
         """Set up test fixtures."""
-        # a reusable bs randomized name for these tests.
-        self.name = "ty7xlk2i-unit-test"
         self.environment = SmarterEnvironments.ALPHA
         self.api_domain = f"{self.environment}.api.{smarter_settings.root_domain}"
         self.cluster_issuer = self.api_domain

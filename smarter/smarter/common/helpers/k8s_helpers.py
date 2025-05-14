@@ -8,7 +8,7 @@ import time
 from typing import Tuple
 
 from smarter.common.helpers.console_helpers import formatted_text
-from smarter.lib.unittest.utils import get_readonly_yaml_file
+from smarter.common.utils import get_readonly_yaml_file
 
 from ..classes import Singleton, SmarterHelperMixin
 from ..conf import settings as smarter_settings

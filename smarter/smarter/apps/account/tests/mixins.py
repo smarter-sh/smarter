@@ -2,12 +2,7 @@
 
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-from .factories import (
-    admin_user_factory,
-    factory_account_teardown,
-    generate_hash_suffix,
-    mortal_user_factory,
-)
+from .factories import admin_user_factory, factory_account_teardown, mortal_user_factory
 
 
 class TestAccountMixin(SmarterTestBase):
@@ -21,7 +16,6 @@ class TestAccountMixin(SmarterTestBase):
         which is needed so that the django Secret model can be queried.
         """
         super().setUpClass()
-        cls.hash_suffix = generate_hash_suffix()
         cls.admin_user, cls.account, cls.user_profile = admin_user_factory()
         cls.non_admin_user, _, cls.non_admin_user_profile = mortal_user_factory(account=cls.account)
 
