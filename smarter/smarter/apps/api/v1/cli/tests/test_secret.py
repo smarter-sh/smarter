@@ -46,8 +46,7 @@ class TestApiCliV1Secret(ApiV1TestBase):
 
         self.path = os.path.join(PYTHON_ROOT, "smarter/apps/api/v1/cli/tests/data")
         self.good_manifest_path = os.path.join(self.path, "good-secret.yaml")
-        with open(self.good_manifest_path, encoding="utf-8") as file:
-            self.good_manifest_text = file.read()
+        self.good_manifest_text = self.get_readonly_yaml_file(self.good_manifest_path)
         self.kwargs = {SAMKeys.KIND.value: KIND}
         self.query_params = urlencode({"name": self.name})
 
@@ -78,7 +77,7 @@ class TestApiCliV1Secret(ApiV1TestBase):
         config = spec["config"]
         config_fields = [
             "value",
-            "expirationDate",
+            "expiration_date",
         ]
         for field in config_fields:
             assert field in config.keys(), f"{field} not found in config keys"

@@ -68,7 +68,7 @@ class TestPaymentMethods(TestAccountMixin):
         payment_method.name = self.name + "_updated"
         payment_method.save()
 
-        self.assertEqual(payment_method.name, "Updated Payment Method")
+        self.assertEqual(payment_method.name, self.name + "_updated")
         payment_method.delete()
 
     def test_payment_methods_view(self):

@@ -88,7 +88,8 @@ class SecretTransformer(SmarterHelperMixin):
         self._user_profile = user_profile
         if not self._user_profile:
             raise SmarterSecretTransformerError("User profile is not set.")
-        self._name = name or self._name
+        if name:
+            self.name = name
         self.api_version = api_version or self.api_version
 
         #######################################################################
@@ -256,8 +257,8 @@ class SecretTransformer(SmarterHelperMixin):
         retval = None
         if self._manifest:
             retval = (
-                self.manifest.status.lastAccessed.isoformat()
-                if self._manifest.status and self.manifest.status.lastAccessed
+                self.manifest.status.last_accessed.isoformat()
+                if self._manifest.status and self.manifest.status.last_accessed
                 else None
             )
         if self.secret:
@@ -269,8 +270,8 @@ class SecretTransformer(SmarterHelperMixin):
         """Return the expiration date in the format, YYYY-MM-DD"""
         if self._manifest:
             return (
-                self.manifest.spec.config.expirationDate.isoformat()
-                if self._manifest.spec.config.expirationDate
+                self.manifest.spec.config.expiration_date.isoformat()
+                if self._manifest.spec.config.expiration_date
                 else None
             )
         if self.secret:
@@ -358,6 +359,45 @@ class SecretTransformer(SmarterHelperMixin):
                 self._name = self.secret.name
         return self._name
 
+    @name.setter
+    def name(self, value: str):
+        """Set the name of the secret."""
+        if not value:
+            self._name = None
+            self._secret = None
+            return
+        if self._manifest:
+            if self._manifest.metadata.name != value:
+                raise SmarterSecretTransformerError(
+                    f"Cannot set name of secret to {value} when manifest is set to {self._manifest.metadata.name}."
+                )
+        if self._secret:
+            if self._secret.name != value:
+                raise SmarterSecretTransformerError(
+                    f"Cannot set name of secret to {value} when secret is set to {self._secret.name}."
+                )
+        else:
+            try:
+                self._secret = Secret.objects.get(user_profile=self.user_profile, name=value)
+                logger.info(
+                    "%s.name() Secret %s initialized for user_profile %s.",
+                    self.formatted_class_name,
+                    value,
+                    self.user_profile,
+                )
+            except Secret.DoesNotExist as e:
+                logger.warning(
+                    "%s.name() Secret %s does not exist for user_profile %s.",
+                    self.formatted_class_name,
+                    value,
+                    self.user_profile,
+                )
+                raise SmarterSecretTransformerError(
+                    f"No secret name {value} found for user_profile {self.user_profile}."
+                ) from e
+
+        self._name = value
+
     @property
     # pylint: disable=too-many-return-statements
     def ready(self) -> bool:
@@ -379,6 +419,9 @@ class SecretTransformer(SmarterHelperMixin):
             if self.secret:
                 return True
 
+        logger.error(
+            "%s.ready() Not in a ready state: No manifest nor secret instance found. ", self.formatted_class_name
+        )
         return False
 
     @property
