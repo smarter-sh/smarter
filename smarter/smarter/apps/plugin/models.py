@@ -50,18 +50,18 @@ logger = logging.getLogger(__name__)
 SMARTER_PLUGIN_MAX_DATA_RESULTS = 50
 
 
-def validate_no_spaces(value):
+def validate_no_spaces(value) -> None:
     """Validate that the string does not contain spaces."""
     if " " in value:
         raise SmarterValueError(f"Value must not contain spaces: {value}")
 
 
-def dict_key_cleaner(key: str) -> str:  # pragma: no cover
+def dict_key_cleaner(key: str) -> str:
     """Clean a key by replacing spaces with underscores."""
     return str(key).replace("\n", "").replace("\r", "").replace("\t", "").replace(" ", "_")
 
 
-def dict_keys_to_list(data: dict, keys=None) -> list[str]:  # pragma: no cover
+def dict_keys_to_list(data: dict, keys=None) -> list[str]:
     """recursive function to extract all keys from a nested dictionary."""
     if keys is None:
         keys = []
@@ -72,7 +72,7 @@ def dict_keys_to_list(data: dict, keys=None) -> list[str]:  # pragma: no cover
     return keys
 
 
-def list_of_dicts_to_list(data: list[dict]) -> list[str]:  # pragma: no cover
+def list_of_dicts_to_list(data: list[dict]) -> list[str]:
     """Convert a list of dictionaries into a single dict with keys extracted
     from the first key in the first dict."""
     if not data or not isinstance(data[0], dict):
@@ -87,7 +87,7 @@ def list_of_dicts_to_list(data: list[dict]) -> list[str]:  # pragma: no cover
     return retval
 
 
-def list_of_dicts_to_dict(data: list[dict]) -> dict:  # pragma: no cover
+def list_of_dicts_to_dict(data: list[dict]) -> dict:
     """Convert a list of dictionaries into a single dict with keys extracted
     from the first key in the first dict."""
     if not data or not isinstance(data[0], dict):
@@ -101,8 +101,33 @@ def list_of_dicts_to_dict(data: list[dict]) -> dict:  # pragma: no cover
     return retval
 
 
-class PluginMeta(TimestampedModel):  # pragma: no cover
-    """PluginMeta model."""
+class PluginMeta(TimestampedModel):
+    """
+    Stores metadata for a Smarter plugin.
+
+    This model contains core information about a plugin, including its name, description,
+    class type (static, SQL, or API), version, author, and associated tags. Each plugin
+    is linked to an account and an author profile. The model enforces unique plugin names
+    per account and validates that the plugin name is in snake_case format.
+
+    Fields:
+        account (ForeignKey): The account that owns this plugin.
+        name (CharField): The unique name of the plugin (snake_case, no spaces).
+        description (TextField): A brief description of the plugin.
+        plugin_class (CharField): The class/type of the plugin (static, SQL, or API).
+        version (CharField): The version of the plugin.
+        author (ForeignKey): The user profile of the plugin's author.
+        tags (TaggableManager): Tags for categorizing the plugin.
+
+    Methods:
+        save(): Validates and saves the plugin metadata.
+        __str__(): Returns the plugin name as a string.
+
+    Meta:
+        unique_together: Ensures each plugin name is unique per account.
+        verbose_name: "Plugin"
+        verbose_name_plural: "Plugins"
+    """
 
     PLUGIN_CLASSES = [
         (SAMPluginCommonMetadataClassValues.STATIC.value, SAMPluginCommonMetadataClassValues.STATIC.value),
@@ -152,8 +177,24 @@ class PluginMeta(TimestampedModel):  # pragma: no cover
         verbose_name_plural = "Plugins"
 
 
-class PluginSelector(TimestampedModel):  # pragma: no cover
-    """PluginSelector model."""
+class PluginSelector(TimestampedModel):
+    """
+    Stores plugin selection strategies for a Smarter plugin.
+
+    This model defines Smarter chat prompt selection strategy for a plugin. That is,
+    whether or not a plugin is included in the prompt sent to the LLM.
+    Each PluginSelector is linked to a PluginMeta instance and specifies a directive
+    (such as 'search_terms') and a set of search terms in JSON format. If any of the
+    search terms are detected in the user prompt, Smarter will prioritize loading this plugin.
+
+    Fields:
+        plugin (OneToOneField): The plugin this selector is associated with.
+        directive (CharField): The selection strategy to use (e.g., 'search_terms').
+        search_terms (JSONField): List of terms that trigger this plugin.
+
+    Methods:
+        __str__(): Returns a string representation of the selector, including the directive and search terms.
+    """
 
     plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_selector_plugin")
     directive = models.CharField(
@@ -178,8 +219,26 @@ class PluginSelectorSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class PluginSelectorHistory(TimestampedModel):  # pragma: no cover
-    """PluginSelectorHistory model."""
+class PluginSelectorHistory(TimestampedModel):
+    """
+    Stores the history of plugin selector activations.
+
+    This model persists each Plugin selection, including the search term
+    that caused the activation, the user prompt messages, and the session key. It is useful
+    for auditing, analytics, and understanding how plugins are selected in response to user input.
+
+    Fields:
+        plugin_selector (ForeignKey): The PluginSelector instance that was triggered.
+        search_term (CharField): The search term that matched and triggered the selector.
+        messages (JSONField): The user prompt messages at the time of activation.
+        session_key (CharField): The session key associated with the activation.
+
+    Methods:
+        __str__(): Returns a string representation including the plugin name and search term.
+
+    Meta:
+        verbose_name_plural: "Plugin Selector History"
+    """
 
     plugin_selector = models.ForeignKey(
         PluginSelector, on_delete=models.CASCADE, related_name="plugin_selector_history_plugin_selector"
@@ -196,6 +255,16 @@ class PluginSelectorHistory(TimestampedModel):  # pragma: no cover
 
 
 class PluginSelectorHistorySerializer(serializers.ModelSerializer):
+    """
+    Serializer for the PluginSelectorHistory model.
+
+    Serializes all fields of PluginSelectorHistory, including a nested representation
+    of the related PluginSelector.
+
+    Fields:
+        plugin_selector (PluginSelectorSerializer): Nested serializer for the related PluginSelector.
+        All other fields from PluginSelectorHistory.
+    """
 
     plugin_selector = PluginSelectorSerializer()
 
@@ -204,8 +273,14 @@ class PluginSelectorHistorySerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class PluginPrompt(TimestampedModel):  # pragma: no cover
-    """PluginPrompt model."""
+class PluginPrompt(TimestampedModel):
+    """
+    Stores LLM prompt model configuration for a Smarter plugin.
+
+    This model defines the prompt settings for a plugin, including the LLM provider,
+    system role, model, temperature, and maximum tokens. Each PluginPrompt is linked
+    to a PluginMeta instance and customizes how the plugin interacts with the LLM.
+    """
 
     plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_prompt_plugin")
     provider = models.TextField(
@@ -238,8 +313,8 @@ class PluginPrompt(TimestampedModel):  # pragma: no cover
         return str(self.plugin.name)
 
 
-class PluginDataBase(TimestampedModel):  # pragma: no cover
-    """PluginDataBase model."""
+class PluginDataBase(TimestampedModel):
+    """PluginData base model."""
 
     plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_data_base_plugin")
 
@@ -247,17 +322,27 @@ class PluginDataBase(TimestampedModel):  # pragma: no cover
         help_text="A brief description of what this plugin returns. Be verbose, but not too verbose.",
     )
 
+    @abstractmethod
     def sanitized_return_data(self, params: dict = None) -> dict:
         """Returns a dict of custom data return results."""
         raise NotImplementedError
 
     @abstractmethod
     def data(self, params: dict = None) -> dict:
+        """Returns a dict of custom data return results."""
         raise NotImplementedError
 
 
 class PluginDataStatic(PluginDataBase):
-    """PluginDataStatic model."""
+    """
+    Stores the configuration and static data set for a Smarter plugin
+    which is based on static data.
+
+    This model is used for plugins that return static (predefined) data.
+    The static_data field holds the JSON data that will be returned to the LLM
+    when the plugin is invoked. The model provides methods for returning sanitized
+    data and extracting keys from the static data.
+    """
 
     static_data = models.JSONField(
         help_text="The JSON data that this plugin returns to OpenAI API when invoked by the user prompt.", default=dict
@@ -319,7 +404,14 @@ class PluginDataStatic(PluginDataBase):
 
 
 class SqlConnection(TimestampedModel):
-    """PluginDataSql Connection model."""
+    """
+    Stores SQL connection configuration for a Smarter plugin.
+
+    This model defines the connection details for a SQL database used by a plugin,
+    including database engine, authentication method, host, port, credentials, SSL/TLS,
+    and proxy settings. It provides methods for establishing connections using various
+    authentication methods (TCP/IP, SSH, LDAP), executing queries, and validating the connection.
+    """
 
     _connection: BaseDatabaseWrapper = None
 
@@ -644,7 +736,14 @@ class SqlConnection(TimestampedModel):
 
 
 class PluginDataSql(PluginDataBase):
-    """PluginDataSql model."""
+    """
+    Stores SQL-based data configuration for a Smarter plugin.
+
+    This model is used for plugins that return data by executing SQL queries.
+    It defines the SQL connection, query, parameters, test values, and result limits.
+    The model provides methods for validating parameter and test value structures,
+    preparing SQL queries with parameters, and executing queries.
+    """
 
     class DataTypes:
         INT = "int"
@@ -843,9 +942,12 @@ class PluginDataSql(PluginDataBase):
 
 class ApiConnection(TimestampedModel):
     """
-    PluginData Api Connection model.
-    This model is used to store the connection details for a Rest API remote data source
-    for a Smarter Plugin.
+    Stores API connection configuration for a Smarter plugin.
+
+    This model defines the connection details for a remote API used by a plugin,
+    including authentication method, base URL, credentials, timeout, and proxy settings.
+    It provides methods for testing the API and proxy connections, and for validating
+    the configuration.
     """
 
     AUTH_METHOD_CHOICES = [
@@ -959,9 +1061,12 @@ class ApiConnection(TimestampedModel):
 
 class PluginDataApi(PluginDataBase):
     """
-    PluginDataApi model.
+    Stores API-based data configuration for a Smarter plugin.
 
     This model is used to store the connection endpoint details for a REST API remote data source.
+    It defines the API connection, endpoint, parameters, headers, body, test values, and result limits.
+    The model provides methods for preparing and executing API requests, as well as validating
+    the structure of parameters, headers, and test values.
     """
 
     connection = models.ForeignKey(
