@@ -109,24 +109,6 @@ class PluginMeta(TimestampedModel):
     class type (static, SQL, or API), version, author, and associated tags. Each plugin
     is linked to an account and an author profile. The model enforces unique plugin names
     per account and validates that the plugin name is in snake_case format.
-
-    Fields:
-        account (ForeignKey): The account that owns this plugin.
-        name (CharField): The unique name of the plugin (snake_case, no spaces).
-        description (TextField): A brief description of the plugin.
-        plugin_class (CharField): The class/type of the plugin (static, SQL, or API).
-        version (CharField): The version of the plugin.
-        author (ForeignKey): The user profile of the plugin's author.
-        tags (TaggableManager): Tags for categorizing the plugin.
-
-    Methods:
-        save(): Validates and saves the plugin metadata.
-        __str__(): Returns the plugin name as a string.
-
-    Meta:
-        unique_together: Ensures each plugin name is unique per account.
-        verbose_name: "Plugin"
-        verbose_name_plural: "Plugins"
     """
 
     PLUGIN_CLASSES = [
@@ -187,13 +169,6 @@ class PluginSelector(TimestampedModel):
     (such as 'search_terms') and a set of search terms in JSON format. If any of the
     search terms are detected in the user prompt, Smarter will prioritize loading this plugin.
 
-    Fields:
-        plugin (OneToOneField): The plugin this selector is associated with.
-        directive (CharField): The selection strategy to use (e.g., 'search_terms').
-        search_terms (JSONField): List of terms that trigger this plugin.
-
-    Methods:
-        __str__(): Returns a string representation of the selector, including the directive and search terms.
     """
 
     plugin = models.OneToOneField(PluginMeta, on_delete=models.CASCADE, related_name="plugin_selector_plugin")
@@ -226,18 +201,6 @@ class PluginSelectorHistory(TimestampedModel):
     This model persists each Plugin selection, including the search term
     that caused the activation, the user prompt messages, and the session key. It is useful
     for auditing, analytics, and understanding how plugins are selected in response to user input.
-
-    Fields:
-        plugin_selector (ForeignKey): The PluginSelector instance that was triggered.
-        search_term (CharField): The search term that matched and triggered the selector.
-        messages (JSONField): The user prompt messages at the time of activation.
-        session_key (CharField): The session key associated with the activation.
-
-    Methods:
-        __str__(): Returns a string representation including the plugin name and search term.
-
-    Meta:
-        verbose_name_plural: "Plugin Selector History"
     """
 
     plugin_selector = models.ForeignKey(
@@ -260,10 +223,6 @@ class PluginSelectorHistorySerializer(serializers.ModelSerializer):
 
     Serializes all fields of PluginSelectorHistory, including a nested representation
     of the related PluginSelector.
-
-    Fields:
-        plugin_selector (PluginSelectorSerializer): Nested serializer for the related PluginSelector.
-        All other fields from PluginSelectorHistory.
     """
 
     plugin_selector = PluginSelectorSerializer()
