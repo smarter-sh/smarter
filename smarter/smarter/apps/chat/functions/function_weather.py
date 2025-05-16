@@ -20,6 +20,7 @@ to avoid repeated API calls, and to retry failed API calls.
 """
 
 import json
+from logging import getLogger
 
 import googlemaps
 import openmeteo_requests
@@ -30,14 +31,17 @@ from retry_requests import retry
 from smarter.common.conf import settings
 
 
+logger = getLogger(__name__)
+
+
 # Google Maps API key
 gmaps = None
 try:
     gmaps = googlemaps.Client(key=settings.google_maps_api_key.get_secret_value())
 # pylint: disable=broad-exception-caught
 except ValueError as value_error:
-    print(
-        f"Could not initialize Google Maps API. Setup the Google Geolocation API service: https://developers.google.com/maps/documentation/geolocation/overview. {value_error}"
+    logger.error(
+        "Could not initialize Google Maps API. Setup the Google Geolocation API service: https://developers.google.com/maps/documentation/geolocation/overview. Add your GOOGLE_MAPS_API_KEY to .env: %s"
     )
 
 # Make sure all required weather variables are listed here
@@ -50,7 +54,7 @@ openmeteo = openmeteo_requests.Client(session=WEATHER_API_RETRY_SESSION)
 
 
 # pylint: disable=too-many-locals
-def get_current_weather(location, unit="METRIC"):
+def get_current_weather(location, unit="METRIC") -> str:
     """Get the current weather in a given location as a 24-hour forecast"""
     if gmaps is None:
         retval = {
@@ -70,12 +74,12 @@ def get_current_weather(location, unit="METRIC"):
         latitude = geocode_result[0]["geometry"]["location"]["lat"] or 0
         longitude = geocode_result[0]["geometry"]["location"]["lng"] or 0
         address = geocode_result[0]["formatted_address"]
-        print(f"Getting weather for {address} ({latitude}, {longitude})")
+        logger.info("get_current_weather() gmaps returned geocodes for %s (%s, %s)", address, latitude, longitude)
     except googlemaps.exceptions.ApiError as api_error:
-        print(f"Google Maps API error getting geo coordinates for {location}: {api_error}")
+        logger.error("Google Maps API error getting geo coordinates for %s: %s", location, api_error)
     # pylint: disable=broad-exception-caught
     except Exception as e:
-        print(f"An unexpected error occurred while getting geo coordinates for {location}: {e}")
+        logger.error("An unexpected error occurred while getting geo coordinates for %s: %s", location, e)
 
     params = {
         "latitude": latitude,
@@ -107,10 +111,11 @@ def get_current_weather(location, unit="METRIC"):
     hourly_dataframe = pd.DataFrame(data=hourly_data).head(24)  # Only return the first 24 hours
     hourly_dataframe["date"] = hourly_dataframe["date"].dt.strftime("%Y-%m-%d %H:%M")
     hourly_json = hourly_dataframe.to_json(orient="records")
+    logger.info("get_current_weather() openmeteo returned weather data for %s (%s, %s)", address, latitude, longitude)
     return json.dumps(hourly_json)
 
 
-def weather_tool_factory():
+def weather_tool_factory() -> dict:
     """Return a list of tools that can be called by the OpenAI API"""
     tool = {
         "type": "function",
