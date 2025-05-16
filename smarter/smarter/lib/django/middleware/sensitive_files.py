@@ -19,12 +19,13 @@ class BlockSensitiveFilesMiddleware(MiddlewareMixin, SmarterHelperMixin):
         super().__init__(get_response)
         self.get_response = get_response
 
-        # allow password reset links
+        # grant amnesty for specific patterns
         self.allowed_patterns = [
             re.compile(r"^/dashboard/account/password-reset-link/[^/]+/[^/]+/$"),
             re.compile(r"^/docs/json-schema/sqlconnection/$"),
             re.compile(r"^/api/v1/cli/schema/sqlconnection/$"),
             re.compile(r"^/docs/manifest/sqlconnection/$"),
+            re.compile(r"^/admin/journal/samjournal(/.*)?$"),
         ]
         self.sensitive_files = {
             ".env",
