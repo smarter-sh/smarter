@@ -1,9 +1,6 @@
 # pylint: disable=wrong-import-position
 """Test User."""
 
-# python stuff
-import unittest
-
 from django.test import Client
 from django.urls import reverse
 
