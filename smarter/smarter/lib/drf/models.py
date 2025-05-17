@@ -17,7 +17,6 @@ from smarter.lib.django.model_helpers import TimestampedModel
 class SmarterAuthTokenManager(AuthTokenManager):
     """API Key manager."""
 
-    # pylint: disable=too-many-arguments
     def create(self, user, expiry=None, name: str = None, description: str = None, is_active: bool = True, **kwargs):
         auth_token, token = super().create(user, expiry=expiry, **kwargs)
         auth_token.name = name
