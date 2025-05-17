@@ -1,10 +1,11 @@
 """Test SmarterTokenAuthenticationMiddleware."""
 
 from http import HTTPStatus
-from unittest.mock import patch
+from unittest.mock import MagicMock, Mock, patch
 
 from django.http import HttpResponse
 from django.test import Client, RequestFactory
+from rest_framework.exceptions import AuthenticationFailed
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib.drf.middleware import SmarterTokenAuthenticationMiddleware
@@ -40,6 +41,10 @@ class TestSmarterTokenAuthenticationMiddleware(TestAccountMixin):
         super().setUp()
         self.middleware = SmarterTokenAuthenticationMiddleware(lambda req: HttpResponse())
         self.factory = RequestFactory()
+        self.get_response = Mock()
+        self.request = Mock()
+        self.request.build_absolute_uri.return_value = "http://testserver/api/"
+        self.request.auth = None
 
     def test_valid_token_authorization_header(self):
         """Test that the middleware authenticates a valid today."""
@@ -62,3 +67,70 @@ class TestSmarterTokenAuthenticationMiddleware(TestAccountMixin):
         request = self.factory.get("/", HTTP_AUTHORIZATION="Token abc123")
         with self.assertRaises(SmarterTokenAuthenticationError):
             self.middleware(request)
+
+    @patch("smarter.lib.drf.middleware.get_authorization_header")
+    @patch("smarter.lib.drf.middleware.knox_settings")
+    def test_is_token_auth_true(self, mock_knox_settings, mock_get_auth_header):
+        mock_knox_settings.AUTH_HEADER_PREFIX = b"Token"
+        self.middleware.authorization_header = b"Token sometoken"
+        result = self.middleware.is_token_auth(self.request)
+        self.assertTrue(result)
+
+    @patch("smarter.lib.drf.middleware.get_authorization_header")
+    @patch("smarter.lib.drf.middleware.knox_settings")
+    def test_is_token_auth_false(self, mock_knox_settings, mock_get_auth_header):
+        mock_knox_settings.AUTH_HEADER_PREFIX = b"Token"
+        self.middleware.authorization_header = b"Bearer sometoken"
+        result = self.middleware.is_token_auth(self.request)
+        self.assertFalse(result)
+
+    @patch("smarter.lib.drf.middleware.get_authorization_header")
+    def test_call_not_token_auth(self, mock_get_auth_header):
+        mock_get_auth_header.return_value = b"Bearer sometoken"
+        self.middleware.is_token_auth = Mock(return_value=False)
+        response = self.middleware(self.request)
+        self.get_response.assert_called_with(self.request)
+        self.assertEqual(response, self.get_response.return_value)
+
+    @patch("smarter.lib.drf.middleware.get_authorization_header")
+    def test_call_already_authenticated(self, mock_get_auth_header):
+        mock_get_auth_header.return_value = b"Token sometoken"
+        self.middleware.is_token_auth = Mock(return_value=True)
+        self.request.auth = True
+        response = self.middleware(self.request)
+        self.get_response.assert_called_with(self.request)
+        self.assertEqual(response, self.get_response.return_value)
+
+    @patch("smarter.lib.drf.middleware.login")
+    @patch("smarter.lib.drf.middleware.get_authorization_header")
+    @patch("smarter.lib.drf.middleware.SmarterTokenAuthentication")
+    def test_call_successful_auth(self, mock_auth_class, mock_get_auth_header, mock_login):
+        mock_get_auth_header.return_value = b"Token sometoken"
+        self.middleware.is_token_auth = Mock(return_value=True)
+        self.request.auth = None
+        mock_auth_instance = MagicMock()
+        mock_auth_instance.authenticate.return_value = ("user", "token")
+        mock_auth_class.return_value = mock_auth_instance
+
+        response = self.middleware(self.request)
+        self.assertEqual(response, self.get_response.return_value)
+        self.assertEqual(self.request.user, "user")
+        mock_login.assert_called_with(self.request, "user", backend="django.contrib.auth.backends.ModelBackend")
+
+    @patch("smarter.lib.drf.middleware.logger")
+    @patch("smarter.lib.drf.middleware.SmarterJournaledJsonErrorResponse")
+    @patch("smarter.lib.drf.middleware.SmarterTokenAuthentication")
+    @patch("smarter.lib.drf.middleware.get_authorization_header")
+    def test_call_authentication_failed(self, mock_get_auth_header, mock_auth_class, mock_error_response, mock_logger):
+        mock_get_auth_header.return_value = b"Token sometoken"
+        self.middleware.is_token_auth = Mock(return_value=True)
+        self.request.auth = None
+        mock_auth_instance = MagicMock()
+        mock_auth_instance.authenticate.side_effect = AuthenticationFailed("fail")
+        mock_auth_class.return_value = mock_auth_instance
+        mock_error_response.return_value = "error_response"
+
+        response = self.middleware(self.request)
+        self.assertEqual(response, "error_response")
+        mock_error_response.assert_called()
+        mock_logger.warning.assert_called()

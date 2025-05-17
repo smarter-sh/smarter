@@ -11,11 +11,12 @@ WARNINGS:
 import os
 import time
 from string import Template
+from unittest.mock import MagicMock, patch
 
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
 from smarter.common.helpers.aws_helpers import aws_helper
-from smarter.common.helpers.k8s_helpers import kubernetes_helper
+from smarter.common.helpers.k8s_helpers import KubernetesHelper, kubernetes_helper
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
@@ -34,6 +35,10 @@ class Testk8sHelpers(SmarterTestBase):
         self.hostname = f"{self.name}.{self.account_number}.{self.cluster_issuer}"
         self.namespace = f"{smarter_settings.platform_name}-platform-{self.environment}"
 
+        self.helper = KubernetesHelper()
+        self.helper._configured = False
+        self.helper._kubeconfig = {"apiVersion": "v1"}
+
         # get-or-create the top-level api domain: alpha.api.smarter.sh
         aws_helper.route53.create_domain_a_record(
             hostname=self.api_domain, api_host_domain=smarter_settings.root_domain
@@ -47,6 +52,78 @@ class Testk8sHelpers(SmarterTestBase):
 
     def tearDown(self):
         """Clean up test fixtures."""
+
+    @patch("smarter.common.helpers.k8s_helpers.smarter_settings")
+    @patch("smarter.common.helpers.k8s_helpers.formatted_text")
+    @patch("smarter.common.helpers.k8s_helpers.logger")
+    @patch("smarter.common.helpers.k8s_helpers.subprocess.Popen")
+    def test_apply_manifest_success(self, mock_popen, mock_logger, mock_formatted_text, mock_settings):
+        mock_settings.aws_eks_cluster_name = "test"
+        process = MagicMock()
+        process.communicate.return_value = (b"", b"")
+        process.returncode = 0
+        mock_popen.return_value.__enter__.return_value = process
+        self.helper._configured = True
+        self.helper.apply_manifest("apiVersion: v1\nkind: Pod\n")
+        process.communicate.assert_called()
+
+    @patch("smarter.common.helpers.k8s_helpers.smarter_settings")
+    @patch("smarter.common.helpers.k8s_helpers.formatted_text")
+    @patch("smarter.common.helpers.k8s_helpers.logger")
+    @patch("smarter.common.helpers.k8s_helpers.subprocess.Popen")
+    def test_apply_manifest_failure(self, mock_popen, mock_logger, mock_formatted_text, mock_settings):
+        mock_settings.aws_eks_cluster_name = "test"
+        process = MagicMock()
+        process.communicate.return_value = (b"", b"error")
+        process.returncode = 1
+        mock_popen.return_value.__enter__.return_value = process
+        self.helper._configured = True
+        with self.assertRaises(Exception):
+            self.helper.apply_manifest("apiVersion: v1\nkind: Pod\n")
+
+    @patch("smarter.common.helpers.k8s_helpers.smarter_settings")
+    @patch("smarter.common.helpers.k8s_helpers.formatted_text")
+    @patch("smarter.common.helpers.k8s_helpers.logger")
+    @patch("smarter.common.helpers.k8s_helpers.subprocess.check_output")
+    def test_verify_ingress_success(self, mock_check_output, mock_logger, mock_formatted_text, mock_settings):
+        mock_settings.aws_eks_cluster_name = "test"
+        mock_check_output.return_value = b'{"kind": "Ingress"}'
+        self.helper._configured = True
+        result = self.helper.verify_ingress("ingress", "ns")
+        self.assertTrue(result)
+
+    @patch("smarter.common.helpers.k8s_helpers.smarter_settings")
+    @patch("smarter.common.helpers.k8s_helpers.formatted_text")
+    @patch("smarter.common.helpers.k8s_helpers.logger")
+    @patch("smarter.common.helpers.k8s_helpers.subprocess.check_output")
+    def test_verify_ingress_not_found(self, mock_check_output, mock_logger, mock_formatted_text, mock_settings):
+        mock_settings.aws_eks_cluster_name = "test"
+        mock_check_output.side_effect = Exception()
+        self.helper._configured = True
+        result = self.helper.verify_ingress("ingress", "ns")
+        self.assertFalse(result)
+
+    @patch("smarter.common.helpers.k8s_helpers.smarter_settings")
+    @patch("smarter.common.helpers.k8s_helpers.formatted_text")
+    @patch("smarter.common.helpers.k8s_helpers.logger")
+    @patch("smarter.common.helpers.k8s_helpers.subprocess.check_output")
+    def test_verify_secret_success(self, mock_check_output, mock_logger, mock_formatted_text, mock_settings):
+        mock_settings.aws_eks_cluster_name = "test"
+        mock_check_output.return_value = b'{"kind": "Secret"}'
+        self.helper._configured = True
+        result = self.helper.verify_secret("secret", "ns")
+        self.assertTrue(result)
+
+    @patch("smarter.common.helpers.k8s_helpers.smarter_settings")
+    @patch("smarter.common.helpers.k8s_helpers.formatted_text")
+    @patch("smarter.common.helpers.k8s_helpers.logger")
+    @patch("smarter.common.helpers.k8s_helpers.subprocess.check_output")
+    def test_verify_secret_not_found(self, mock_check_output, mock_logger, mock_formatted_text, mock_settings):
+        mock_settings.aws_eks_cluster_name = "test"
+        mock_check_output.side_effect = Exception()
+        self.helper._configured = True
+        result = self.helper.verify_secret("secret", "ns")
+        self.assertFalse(result)
 
     def test_kubeconfig(self):
         """Test kubeconfig property."""
@@ -111,23 +188,3 @@ class Testk8sHelpers(SmarterTestBase):
         time.sleep(10)
         output = kubernetes_helper.verify_ingress(self.hostname, self.namespace)
         self.assertTrue(output)
-
-    # def test_verify_ingress_resources(self):
-    #     """Test verify_ingress_resources method."""
-
-    #     ingress_verified, certificate_verified, secret_verified = kubernetes_helper.verify_ingress_resources(
-    #         self.hostname, self.namespace
-    #     )
-    #     self.assertTrue(ingress_verified)
-    #     self.assertTrue(certificate_verified)
-    #     self.assertTrue(secret_verified)
-
-    # def test_delete_ingress_resources(self):
-    #     """Test delete_ingress_resources method."""
-
-    #     ingress_deleted, certificate_deleted, secret_deleted = kubernetes_helper.delete_ingress_resources(
-    #         self.hostname, self.namespace
-    #     )
-    #     self.assertTrue(ingress_deleted)
-    #     self.assertTrue(certificate_deleted)
-    #     self.assertTrue(secret_deleted)
