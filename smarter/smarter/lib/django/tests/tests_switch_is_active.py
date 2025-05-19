@@ -10,8 +10,8 @@ from .. import waffle
 class TestSwitchIsActive(SmarterTestBase):
     """Test the switch_is_active function."""
 
-    @patch("smarter.smarter.lib.django.waffle.waffle_orig")
-    @patch("smarter.smarter.lib.django.waffle.cache")
+    @patch("smarter.lib.django.waffle.waffle_orig")
+    @patch("smarter.lib.django.waffle.cache")
     def test_switch_is_active_true(self, mock_cache: MagicMock, mock_waffle_orig: MagicMock):
         # Simulate cache miss, then switch is active
         mock_cache.get.return_value = None
@@ -23,8 +23,8 @@ class TestSwitchIsActive(SmarterTestBase):
         self.assertTrue(result)
         mock_cache.set.assert_called()
 
-    @patch("smarter.smarter.lib.django.waffle.waffle_orig")
-    @patch("smarter.smarter.lib.django.waffle.cache")
+    @patch("smarter.lib.django.waffle.waffle_orig")
+    @patch("smarter.lib.django.waffle.cache")
     def test_switch_is_active_false(self, mock_cache: MagicMock, mock_waffle_orig: MagicMock):
         # Simulate cache miss, then switch is inactive
         mock_cache.get.return_value = None
@@ -36,8 +36,8 @@ class TestSwitchIsActive(SmarterTestBase):
         self.assertFalse(result)
         mock_cache.set.assert_called()
 
-    @patch("smarter.smarter.lib.django.waffle.waffle_orig")
-    @patch("smarter.smarter.lib.django.waffle.cache")
+    @patch("smarter.lib.django.waffle.waffle_orig")
+    @patch("smarter.lib.django.waffle.cache")
     def test_switch_is_active_operational_error(self, mock_cache: MagicMock, mock_waffle_orig: MagicMock):
         # Simulate OperationalError
         mock_cache.get.return_value = None
@@ -47,7 +47,7 @@ class TestSwitchIsActive(SmarterTestBase):
         self.assertFalse(result)
         mock_cache.set.assert_called()
 
-    @patch("smarter.smarter.lib.django.waffle.cache")
+    @patch("smarter.lib.django.waffle.cache")
     def test_switch_is_active_cache_hit(self, mock_cache: MagicMock):
         # Simulate cache hit
         mock_cache.get.return_value = True

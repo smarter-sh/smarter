@@ -28,6 +28,7 @@ class TestHttpAnonymousRequestSerializer(SmarterTestBase):
     """Test the HttpAnonymousRequestSerializer class."""
 
     def setUp(self):
+        super().setUp()
         self.request = MagicMock()
         self.request.build_absolute_uri.return_value = "http://testserver/foo"
         self.obj = MagicMock()

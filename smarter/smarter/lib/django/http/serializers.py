@@ -32,17 +32,24 @@ class HttpAnonymousRequestSerializer(serializers.Serializer):
 
     # pylint: disable=missing-class-docstring
     class Meta:
-        fields = [
-            "url",
-            "method",
-            "GET",
-            "POST",
-            "COOKIES",
-            "META",
-            "path",
-            "encoding",
-            "content_type",
-        ]
+        fields = "__all__"
+        extra_kwargs = {
+            "url": {"required": False},
+            "method": {"required": False},
+            "GET": {"required": False},
+            "POST": {"required": False},
+            "COOKIES": {"required": False},
+            "META": {"required": False},
+            "path": {"required": False},
+            "encoding": {"required": False},
+            "content_type": {"required": False},
+        }
+        model = HttpRequest
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret["url"] = self.get_url(instance)
+        return ret
 
     def get_url(self, obj):
         if obj and hasattr(obj, "request") and obj.request:
@@ -51,7 +58,7 @@ class HttpAnonymousRequestSerializer(serializers.Serializer):
         return None
 
     def create(self, validated_data):
-        return HttpRequest(**validated_data)
+        return validated_data
 
     def update(self, instance, validated_data):
         for attr, value in validated_data.items():
@@ -66,7 +73,12 @@ class HttpAuthenticatedRequestSerializer(HttpAnonymousRequestSerializer):
 
     # pylint: disable=missing-class-docstring
     class Meta:
-        fields = HttpAnonymousRequestSerializer.Meta.fields + ["user"]
+        fields = "__all__"
+        read_only_fields = fields
+        extra_kwargs = {
+            "user": {"required": False},
+        }
+        model = HttpRequest
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)

@@ -24,12 +24,14 @@ class TestAccountMixin(SmarterTestBase):
 
     @classmethod
     def setUpClass(cls) -> None:
+        super().setUpClass()
         cls._user, cls._account, cls._user_profile = mortal_user_factory()
         cls._admin_user = get_cached_admin_user_for_account(cls._account)
         cls._other_user, cls._other_account, cls._other_user_profile = mortal_user_factory()
 
     @classmethod
     def tearDownClass(cls) -> None:
+        super().tearDownClass()
         instance = cls()
         # tear down the user, account, and user_profile
         try:

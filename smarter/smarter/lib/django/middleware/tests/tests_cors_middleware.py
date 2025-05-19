@@ -5,6 +5,10 @@
 from unittest.mock import MagicMock, PropertyMock, patch
 from urllib.parse import urlsplit
 
+from smarter.apps.account.tests.factories import (
+    admin_user_factory,
+    factory_account_teardown,
+)
 from smarter.lib.django.middleware.cors import CorsMiddleware
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
@@ -12,7 +16,18 @@ from smarter.lib.unittest.base_classes import SmarterTestBase
 class TestCorsMiddleware(SmarterTestBase):
     """Test the CorsMiddleware class."""
 
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.user, cls.account, cls.user_profile = admin_user_factory()
+
+    @classmethod
+    def tearDownClass(cls):
+        factory_account_teardown(user=cls.user, account=cls.account, user_profile=cls.user_profile)
+        super().tearDownClass()
+
     def setUp(self):
+        super().setUp()
         self.middleware = CorsMiddleware(get_response=MagicMock())
         self.request = MagicMock()
         self.request.build_absolute_uri.return_value = "https://example.com/foo"
@@ -28,17 +43,31 @@ class TestCorsMiddleware(SmarterTestBase):
             except Exception:
                 pass  # DjangoCorsMiddleware.__call__ expects more setup
 
-    @patch("smarter.lib.django.middleware.cors.conf")
-    @patch("smarter.lib.django.middleware.cors.waffle")
-    @patch("smarter.lib.django.middleware.cors.get_cached_chatbot_by_request")
-    def test_url_setter_and_chatbot(self, mock_get_chatbot, mock_waffle, mock_conf):
-        mock_waffle.switch_is_active.return_value = False
-        mock_conf.CORS_ALLOWED_ORIGINS = []
-        mock_get_chatbot.return_value = MagicMock(url=self.split_url)
-        self.middleware.request = self.request
-        self.middleware.url = self.split_url
-        self.assertIsNotNone(self.middleware._chatbot)
-        self.assertEqual(self.middleware._url, self.split_url)
+    def test_url_setter_and_chatbot(self):
+        split_url = urlsplit("https://example.com")
+        request = MagicMock()
+        middleware = CorsMiddleware(get_response=MagicMock())
+
+        with (
+            patch("smarter.lib.django.middleware.cors.conf") as mock_conf,
+            patch("smarter.lib.django.middleware.cors.waffle") as mock_waffle,
+            patch("smarter.lib.django.middleware.cors.get_cached_chatbot_by_request") as mock_get_chatbot,
+        ):
+
+            mock_waffle.switch_is_active.return_value = False
+            mock_conf.CORS_ALLOWED_ORIGINS = []
+            mock_get_chatbot.return_value = MagicMock(url=split_url)
+
+            middleware.request = request
+            self.user.is_authenticated = True
+            middleware.request.user = self.user
+            middleware.url = split_url
+
+            # The url property returns urlparse(self._url.geturl()), which is equivalent to split_url
+            self.assertEqual(middleware.url.geturl(), split_url.geturl())
+            # The chatbot property should return the mocked chatbot
+            self.assertIsNotNone(middleware.chatbot)
+            self.assertEqual(middleware.chatbot.url, split_url)
 
     @patch("smarter.lib.django.middleware.cors.conf")
     def test_CORS_ALLOWED_ORIGINS_with_chatbot(self, mock_conf):

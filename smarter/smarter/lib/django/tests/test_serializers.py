@@ -20,16 +20,29 @@ class TestUserSerializers(SmarterTestBase):
 
     @classmethod
     def tearDownClass(cls):
-        factory_account_teardown(cls.admin_user, cls.account, cls.user_profile)
-        factory_account_teardown(cls.mortal_user, cls.account, cls.user_profile)
-        super().tearDownClass()
+        try:
+            factory_account_teardown(cls.admin_user, cls.account, cls.user_profile)
+            factory_account_teardown(cls.mortal_user, cls.account, cls.user_profile)
+        # pylint: disable=W0718
+        except Exception:
+            pass
+        finally:
+            super().tearDownClass()
 
     def test_user_serializer_fields(self):
-        serializer = UserSerializer(instance=self.user)
+        serializer = UserSerializer(instance=self.admin_user)
+        data = serializer.data
+        self.assertIsInstance(data, dict)
+
+        serializer = UserSerializer(instance=self.mortal_user)
         data = serializer.data
         self.assertIsInstance(data, dict)
 
     def test_user_mini_serializer_fields(self):
-        serializer = UserMiniSerializer(instance=self.user)
+        serializer = UserMiniSerializer(instance=self.admin_user)
+        data = serializer.data
+        self.assertIsInstance(data, dict)
+
+        serializer = UserMiniSerializer(instance=self.mortal_user)
         data = serializer.data
         self.assertIsInstance(data, dict)

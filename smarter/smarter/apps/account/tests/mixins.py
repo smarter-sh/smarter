@@ -21,9 +21,16 @@ class TestAccountMixin(SmarterTestBase):
 
     @classmethod
     def tearDownClass(cls):
-        super().tearDownClass()
-        factory_account_teardown(user=cls.admin_user, account=None, user_profile=cls.user_profile)
-        factory_account_teardown(user=cls.non_admin_user, account=cls.account, user_profile=cls.non_admin_user_profile)
+        try:
+            factory_account_teardown(user=cls.admin_user, account=None, user_profile=cls.user_profile)
+            factory_account_teardown(
+                user=cls.non_admin_user, account=cls.account, user_profile=cls.non_admin_user_profile
+            )
+        # pylint: disable=W0718
+        except Exception:
+            pass
+        finally:
+            super().tearDownClass()
 
     def setUp(self):
         """We use different manifest test data depending on the test case."""

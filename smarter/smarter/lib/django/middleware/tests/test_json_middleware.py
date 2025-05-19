@@ -1,5 +1,6 @@
 """test JsonErrorMiddleware class"""
 
+import json
 from unittest.mock import MagicMock
 
 from django.http import HttpResponse, JsonResponse
@@ -12,6 +13,7 @@ class TestJsonErrorMiddleware(SmarterTestBase):
     """Test the JsonErrorMiddleware class."""
 
     def setUp(self):
+        super().setUp()
         self.middleware = JsonErrorMiddleware(get_response=MagicMock())
 
     def test_process_response_non_json_accept(self):
@@ -35,7 +37,8 @@ class TestJsonErrorMiddleware(SmarterTestBase):
         result = self.middleware.process_response(request, response)
         self.assertIsInstance(result, JsonResponse)
         self.assertEqual(result.status_code, 404)
-        self.assertEqual(result.json(), {"error": {"status_code": 404, "message": "Not Found"}})
+        result_json = json.loads(result.content.decode("utf-8"))
+        self.assertEqual(result_json, {"error": {"status_code": 404, "message": "Not Found"}})
 
     def test_process_response_json_accept_error_already_json(self):
         request = MagicMock()

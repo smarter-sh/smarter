@@ -12,6 +12,7 @@ class TestCsrfViewMiddleware(SmarterTestBase):
     """Test the CsrfViewMiddleware class."""
 
     def setUp(self):
+        super().setUp()
         self.get_response = MagicMock()
         self.middleware = CsrfViewMiddleware(self.get_response)
         self.request = MagicMock()

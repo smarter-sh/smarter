@@ -11,6 +11,7 @@ class TestSmarterAuthTokenSerializer(SmarterTestBase):
     """Test the SmarterAuthTokenSerializer class."""
 
     def setUp(self):
+        super().setUp()
         # Create a mock SmarterAuthToken instance with some fields
         self.mock_instance = Mock()
         self.mock_instance.id = 1

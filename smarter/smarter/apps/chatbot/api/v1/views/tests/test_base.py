@@ -61,8 +61,13 @@ class TestChatBotApiBaseViewSet(TestAccountMixin):
     @classmethod
     def tearDownClass(cls):
         """Tear down test fixtures."""
-        super().tearDownClass()
-        cls.broker.delete(request=cls.request, kwargs=cls.kwargs)
+        try:
+            cls.broker.delete(request=cls.request, kwargs=cls.kwargs)
+        # pylint: disable=W0718
+        except Exception:
+            pass
+        finally:
+            super().tearDownClass()
 
     def test_base_class_properties(self):
         base_class = ChatBotApiBaseViewSet()

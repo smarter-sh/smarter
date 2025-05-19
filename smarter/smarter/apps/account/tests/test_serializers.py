@@ -33,11 +33,16 @@ class TestSerializers(TestAccountMixin):
     @classmethod
     def tearDownClass(cls):
         """Tear down test data after the test case."""
-        super().tearDownClass()
-        factory_secret_teardown(secret=cls.secret)
-        cls.secret = None
-        payment_method_factory_teardown(payment_method=cls.payment_method)
-        cls.payment_method = None
+        try:
+            factory_secret_teardown(secret=cls.secret)
+            cls.secret = None
+            payment_method_factory_teardown(payment_method=cls.payment_method)
+            cls.payment_method = None
+        # pylint: disable=W0718
+        except Exception:
+            pass
+        finally:
+            super().tearDownClass()
 
     def test_account_serializer(self):
         """Test the AccountSerializer."""

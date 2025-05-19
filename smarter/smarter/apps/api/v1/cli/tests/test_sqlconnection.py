@@ -39,9 +39,9 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         self.query_params = urlencode({"name": self.name})
 
     def tearDown(self):
-        super().tearDown()
         if self.sqlconnection:
             self.sqlconnection.delete()
+        super().tearDown()
 
     def sqlconnection_factory(self):
         sqlconnection = SqlConnection.objects.create(

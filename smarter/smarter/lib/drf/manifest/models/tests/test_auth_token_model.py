@@ -15,6 +15,7 @@ class TestSAMSmarterAuthToken(SmarterTestBase):
     """Test SAMSmarterAuthToken model class"""
 
     def setUp(self):
+        super().setUp()
         self.metadata = SAMSmarterAuthTokenMetadata()
         self.spec = SAMSmarterAuthTokenSpec()
         self.status = SAMSmarterAuthTokenStatus()

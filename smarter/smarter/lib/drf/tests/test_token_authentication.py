@@ -16,6 +16,7 @@ class TestSmarterTokenAuthentication(SmarterTestBase):
     """Test the SmarterTokenAuthentication class."""
 
     def setUp(self):
+        super().setUp()
         self.auth = SmarterTokenAuthentication()
         self.token = "sometoken"
         self.user = Mock()

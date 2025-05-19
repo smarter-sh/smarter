@@ -24,9 +24,6 @@ from ..functions.function_weather import get_current_weather, weather_tool_facto
 class TestLambdaOpenaiFunctionWeather(SmarterTestBase):
     """Test OpenAI Function Weather."""
 
-    def setUp(self):
-        """Set up test fixtures."""
-
     # pylint: disable=broad-exception-caught
     def test_get_current_weather(self):
         """Test default return value of get_current_weather()"""

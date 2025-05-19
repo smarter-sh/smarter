@@ -91,7 +91,6 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
     @classmethod
     def tearDownClass(cls):
         """Tear down test fixtures."""
-        super().tearDownClass()
         logger.info("Tearing down ApiConnectionTestMixin")
 
         cls.connection_manifest_path = None
@@ -104,6 +103,8 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
         except Exception:
             pass
         cls.connection_django_model = None
+
+        super().tearDownClass()
 
 
 class SqlConnectionTestMixin(ConnectionTextMixinBase):
@@ -171,7 +172,6 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
     @classmethod
     def tearDownClass(cls):
         """Tear down test fixtures."""
-        super().tearDownClass()
         logger.info("Tearing down ApiConnectionTestMixin")
 
         cls.connection_manifest_path = None
@@ -184,3 +184,4 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
         except Exception:
             pass
         cls.connection_django_model = None
+        super().tearDownClass()

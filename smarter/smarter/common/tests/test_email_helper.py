@@ -11,12 +11,6 @@ from ..helpers.email_helpers import email_helper
 class TestSMTPEmail(SmarterTestBase):
     """Test STMPT Email Helper."""
 
-    def setUp(self):
-        """Set up test fixtures."""
-
-    def tearDown(self):
-        """Clean up test fixtures."""
-
     def test_email_send(self):
         """test that we can send an email."""
 

@@ -1,5 +1,6 @@
 """Test the SmarterJournaledJsonResponse class."""
 
+import json
 from http import HTTPStatus
 from unittest.mock import Mock, patch
 
@@ -18,6 +19,12 @@ class TestSmarterJournaledJsonResponse(SmarterTestBase):
         mock_request = Mock()
         mock_request.user.is_authenticated = True
         mock_request.build_absolute_uri.return_value = "http://testserver/api/"
+        mock_request.build_absolute_uri.return_value = "http://testserver/api/"
+        mock_request.META = {}
+        mock_request.GET = {}
+        mock_request.POST = {}
+        mock_request.COOKIES = {}
+        mock_request.headers = {}
         mock_journal = Mock()
         mock_journal.key = "journal-key"
         mock_samjournal.objects.create.return_value = mock_journal
@@ -43,6 +50,11 @@ class TestSmarterJournaledJsonResponse(SmarterTestBase):
         mock_request = Mock()
         mock_request.user.is_authenticated = False
         mock_request.build_absolute_uri.return_value = "http://testserver/api/"
+        mock_request.META = {}
+        mock_request.GET = {}
+        mock_request.POST = {}
+        mock_request.COOKIES = {}
+        mock_request.headers = {}
         mock_journal = Mock()
         mock_journal.key = "journal-key"
         mock_samjournal.objects.create.return_value = mock_journal
@@ -67,6 +79,12 @@ class TestSmarterJournaledJsonResponse(SmarterTestBase):
         mock_request = Mock()
         mock_request.user.is_authenticated = True
         mock_request.build_absolute_uri.return_value = "http://testserver/api/"
+        mock_request.build_absolute_uri.return_value = "http://testserver/api/"
+        mock_request.META = {}
+        mock_request.GET = {}
+        mock_request.POST = {}
+        mock_request.COOKIES = {}
+        mock_request.headers = {}
         data = {}
         resp = SmarterJournaledJsonResponse(
             request=mock_request,
@@ -76,9 +94,10 @@ class TestSmarterJournaledJsonResponse(SmarterTestBase):
             status=HTTPStatus.OK,
         )
         self.assertEqual(resp.status_code, HTTPStatus.OK)
-        self.assertIn("api", resp.data)
-        self.assertIn("thing", resp.data)
-        self.assertIn("metadata", resp.data)
+        response_json = json.loads(resp.content.decode("utf-8"))
+        self.assertIn("api", response_json)
+        self.assertIn("thing", response_json)
+        self.assertIn("metadata", response_json)
 
 
 class TestSmarterJournaledJsonErrorResponse(SmarterTestBase):
@@ -86,6 +105,12 @@ class TestSmarterJournaledJsonErrorResponse(SmarterTestBase):
     def test_error_response(self, mock_logger):
         mock_request = Mock()
         mock_request.build_absolute_uri.return_value = "http://testserver/api/"
+        mock_request.build_absolute_uri.return_value = "http://testserver/api/"
+        mock_request.META = {}
+        mock_request.GET = {}
+        mock_request.POST = {}
+        mock_request.COOKIES = {}
+        mock_request.headers = {}
         exc = Exception("fail")
         resp = SmarterJournaledJsonErrorResponse(
             request=mock_request,

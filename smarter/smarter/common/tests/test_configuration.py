@@ -40,6 +40,7 @@ class TestConfiguration(SmarterTestBase):
     here = os.path.dirname(os.path.abspath(__file__))
 
     def setUp(self):
+        super().setUp()
         # Save current environment variables
         self.saved_env = dict(os.environ)
 
@@ -47,6 +48,7 @@ class TestConfiguration(SmarterTestBase):
         # Restore environment variables
         os.environ.clear()
         os.environ.update(self.saved_env)
+        super().tearDown()
 
     def env_path(self, filename):
         """Return the path to the .env file."""

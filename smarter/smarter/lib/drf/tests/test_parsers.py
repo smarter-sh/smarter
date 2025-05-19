@@ -13,6 +13,7 @@ class TestYAMLParser(SmarterTestBase):
     """Test the YAMLParser class."""
 
     def setUp(self):
+        super().setUp()
         self.parser = YAMLParser()
 
     def test_parse_valid_yaml(self):

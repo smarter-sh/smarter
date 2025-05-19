@@ -1,14 +1,16 @@
 """Test SmarterRequestMixin."""
 
-import uuid
 from datetime import datetime
 from urllib.parse import ParseResult
 
 from django.contrib.auth import authenticate
-from django.contrib.auth.models import User
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import Client, RequestFactory
 
+from smarter.apps.account.tests.factories import (
+    admin_user_factory,
+    factory_account_teardown,
+)
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.lib.django.request import SmarterRequestMixin
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -40,14 +42,27 @@ class TestSmarterRequestMixin(SmarterTestBase):
 
     """
 
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.user, cls.account, cls.user_profile = admin_user_factory()
+
+    @classmethod
+    def tearDownClass(cls):
+        # Clean up shared resources here
+        # Example: del cls.shared_resource
+        try:
+            factory_account_teardown(user=cls.user, account=cls.account, user_profile=cls.user_profile)
+        # pylint: disable=W0718
+        except Exception:
+            pass
+        finally:
+            super().tearDownClass()
+
     def setUp(self):
+        super().setUp()
         self.client = Client()
         self.wsgi_request_factory = RequestFactory()
-        random_username = f"testuser_{uuid.uuid4().hex[:8]}"
-        self.user = User.objects.create_user(username=random_username, password="12345")
-
-    def tearDown(self):
-        self.user.delete()
 
     def get_smarter_request_mixin(self, url: str) -> SmarterRequestMixin:
         request_factory = RequestFactory()

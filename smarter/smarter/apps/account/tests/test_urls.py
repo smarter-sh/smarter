@@ -17,10 +17,10 @@ class TestUrls(TestAccountMixin):
         self.client = Client()
 
     def tearDown(self):
-        super().tearDown()
 
         self.client.logout()
         self.client = None
+        super().tearDown()
 
     def test_account_view(self):
         """test that we can see the account view and that it matches the account data."""

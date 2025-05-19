@@ -11,11 +11,13 @@ class TestRedis(SmarterTestBase):
 
     def setUp(self):
         """Set up test fixtures."""
+        super().setUp()
         self.cache = caches["default"]
 
     def tearDown(self):
         """Clean up test fixtures."""
         self.cache.clear()
+        super().tearDown()
 
     def test_redis_is_available(self):
         """Test that Redis cache is reachable."""

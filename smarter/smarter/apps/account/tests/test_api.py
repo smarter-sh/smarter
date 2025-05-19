@@ -31,7 +31,6 @@ class TestUrls(TestAccountMixin):
         self.client.force_login(self.admin_user)
 
     def tearDown(self):
-        super().tearDown()
 
         if self.client:
             self.client.logout()
@@ -43,6 +42,8 @@ class TestUrls(TestAccountMixin):
         # pylint: disable=W0718
         except Exception:
             pass
+
+        super().tearDown()
 
     def test_account_view(self):
         """test that we can see the account view and that it matches the account data."""

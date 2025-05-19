@@ -168,7 +168,6 @@ class ProviderBaseClass(TestAccountMixin):
 
     def tearDown(self):
         """Tear down test fixtures."""
-        super().tearDown()
         if self.chat:
             chat = self.chat  # to mitigate a race condition where the test
             # may delete the chat before these models are deleted
@@ -182,6 +181,7 @@ class ProviderBaseClass(TestAccountMixin):
             self.plugin.delete()
         self.plugins = None
         self.handler = None
+        super().tearDown()
 
     def chatbot_factory(self, provider: str = "openai"):
         chatbot = ChatBot.objects.create(

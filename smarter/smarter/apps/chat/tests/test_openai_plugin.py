@@ -23,8 +23,8 @@ class TestStaticPlugin(TestAccountMixin):
 
     def tearDown(self):
         """Tear down test fixtures."""
-        super().tearDown()
         self.plugin.delete()
+        super().tearDown()
 
     # pylint: disable=broad-exception-caught
     def test_get_additional_info(self):

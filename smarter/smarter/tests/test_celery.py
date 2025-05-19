@@ -13,12 +13,6 @@ from smarter.smarter_celery import app
 class TestCelery(SmarterTestBase):
     """Test Account model"""
 
-    def setUp(self):
-        """Set up test fixtures."""
-
-    def tearDown(self):
-        """Clean up test fixtures."""
-
     def test_celery_is_running(self):
         """Test that Celery is running."""
         try:

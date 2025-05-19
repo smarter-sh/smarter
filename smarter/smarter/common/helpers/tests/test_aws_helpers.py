@@ -11,6 +11,7 @@ class TestAWSInfrastructureConfig(SmarterTestBase):
     """Test AWSInfrastructureConfig class."""
 
     def setUp(self):
+        super().setUp()
         # Clear singleton instance for each test
         AWSInfrastructureConfig._instances = {}
 

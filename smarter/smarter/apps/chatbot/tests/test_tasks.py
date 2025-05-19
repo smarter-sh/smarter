@@ -36,7 +36,6 @@ class TestChatBotTasks(TestAccountMixin):
 
     def tearDown(self):
         """Clean up test fixtures."""
-        super().tearDown()
         try:
             ChatBotCustomDomain.objects.get(account_id=self.account.id).delete()
         except ChatBotCustomDomain.DoesNotExist:
@@ -49,6 +48,7 @@ class TestChatBotTasks(TestAccountMixin):
         certificate_arn = aws_helper.acm.get_certificate_arn(domain_name=self.domain_name)
         if certificate_arn:
             aws_helper.acm.delete_certificate(certificate_arn=certificate_arn)
+        super().tearDown()
 
     def test_create_hosted_zone(self):
         self.hosted_zone = aws_helper.route53.get_hosted_zone_id_for_domain(domain_name=self.domain_name)

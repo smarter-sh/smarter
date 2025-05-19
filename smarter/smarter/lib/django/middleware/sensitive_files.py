@@ -1,5 +1,6 @@
 """This module is used to suppress DisallowedHost exception and return HttpResponseForbidden instead."""
 
+import fnmatch
 import logging
 import re
 
@@ -113,9 +114,16 @@ class BlockSensitiveFilesMiddleware(MiddlewareMixin, SmarterHelperMixin):
                 logger.info("%s amnesty granted to: %s", self.formatted_class_name, request.path)
                 return self.get_response(request)
 
-        if any(sensitive_file in request.path for sensitive_file in self.sensitive_files):
-            logger.warning("%s Blocked request for sensitive file: %s", self.formatted_class_name, request.path)
-            return HttpResponseForbidden(
-                "Your request has been blocked by Smarter. Contact support@smarter.sh for assistance."
-            )
+        # Check for sensitive files using glob patterns
+        path_basename = request_path.rsplit("/", 1)[-1]
+        for sensitive_file in self.sensitive_files:
+            if (
+                fnmatch.fnmatch(path_basename, sensitive_file)
+                or fnmatch.fnmatch(request_path, sensitive_file)
+                or sensitive_file in request_path  # fallback for legacy entries
+            ):
+                logger.warning("%s Blocked request for sensitive file: %s", self.formatted_class_name, request.path)
+                return HttpResponseForbidden(
+                    "Your request has been blocked by Smarter. Contact support@smarter.sh for assistance."
+                )
         return self.get_response(request)

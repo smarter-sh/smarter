@@ -39,9 +39,9 @@ class TestApiCliV1ChatConfig(ApiV1TestBase):
         self.chatbot = self.chatbot_factory()
 
     def tearDown(self):
-        super().tearDown()
         if self.chatbot:
             self.chatbot.delete()
+        super().tearDown()
 
     def chatbot_factory(self):
         chatbot = ChatBot.objects.create(
