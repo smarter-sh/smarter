@@ -2,13 +2,20 @@
 
 import uuid
 from datetime import datetime, timedelta
+from logging import getLogger
 
 from django.db import models
 from django.utils import timezone
+from knox import crypto
 from knox.models import AuthToken, AuthTokenManager
+from knox.settings import CONSTANTS
 
 from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib.django.model_helpers import TimestampedModel
+from smarter.lib.django.user import UserType
+
+
+logger = getLogger(__name__)
 
 
 ###############################################################################
@@ -19,16 +26,36 @@ class SmarterAuthTokenManager(AuthTokenManager):
 
     def create(
         self,
-        user,
+        user: UserType,
         expiry=None,
         prefix=None,
         name: str = None,
         description: str = None,
         is_active: bool = True,
         **kwargs,
-    ):
-        auth_token, token = super().create(
-            user, expiry=expiry, prefix=prefix or "", name=name, description=description, is_active=is_active, **kwargs
+    ) -> tuple["SmarterAuthToken", str]:
+        prefix = prefix or ""
+        token = prefix + crypto.create_token_string()
+        token_key = token[: CONSTANTS.TOKEN_KEY_LENGTH]
+        digest = crypto.hash_token(token)
+        if expiry is not None:
+            expiry = timezone.now() + expiry
+
+        auth_token = self.model(
+            token_key=token_key,
+            digest=digest,
+            user=user,
+            expiry=expiry,
+            name=name,
+            description=description,
+            is_active=is_active,
+            **kwargs,
+        )
+        logger.info(
+            "Creating API Key for user %s with token %s and expiry %s",
+            user,
+            token_key,
+            expiry,
         )
         auth_token.save()
         return auth_token, token

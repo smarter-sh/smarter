@@ -70,7 +70,7 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
         if not self.is_token_auth(request):
             # we're not using token authentication, no need to do anything
             return self.get_response(request)
-        if hasattr(request, "auth"):
+        if getattr(request, "auth", None) is not None:
             # we've already authenticated the request
             # with some other middleware, no need to do anything
             return self.get_response(request)
