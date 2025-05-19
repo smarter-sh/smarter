@@ -7,10 +7,7 @@ from django.utils.http import urlsafe_base64_encode
 
 from smarter.lib.django.token_generators import (
     ExpiringTokenGenerator,
-    TokenConversionError,
-    TokenExpiredError,
-    TokenIntegrityError,
-    TokenParseError,
+    SmarterTokenError,
 )
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
@@ -19,6 +16,7 @@ class TestExpiringTokenGenerator(SmarterTestBase):
     """Test the ExpiringTokenGenerator class."""
 
     def setUp(self):
+        super().setUp()
         self.token_gen = ExpiringTokenGenerator(expiration=100)
         self.user = MagicMock()
         self.user.pk = 123
@@ -96,20 +94,20 @@ class TestExpiringTokenGenerator(SmarterTestBase):
     @patch.object(ExpiringTokenGenerator, "check_token")
     def test_validate_integrity_error(self, mock_check_token):
         mock_check_token.return_value = False
-        with self.assertRaises(TokenIntegrityError):
+        with self.assertRaises(SmarterTokenError):
             self.token_gen.validate(self.user, "badtoken")
 
     @patch.object(ExpiringTokenGenerator, "check_token")
     def test_validate_parse_error(self, mock_check_token):
         mock_check_token.return_value = True
-        with self.assertRaises(TokenParseError):
+        with self.assertRaises(SmarterTokenError):
             self.token_gen.validate(self.user, "bad-token-without-dash")
 
     @patch.object(ExpiringTokenGenerator, "check_token")
     def test_validate_conversion_error(self, mock_check_token):
         mock_check_token.return_value = True
         # base36_to_int will fail for non-base36
-        with self.assertRaises(TokenConversionError):
+        with self.assertRaises(SmarterTokenError):
             self.token_gen.validate(self.user, "bad!-abcdef")
 
     @patch.object(ExpiringTokenGenerator, "check_token")
@@ -119,7 +117,7 @@ class TestExpiringTokenGenerator(SmarterTestBase):
         mock_get_timestamp.return_value = 2082845001
         # token timestamp = 100, adjusted = 2082844900, now = 2082845001, diff = 101 > expiration=100
         token = "2s-abcdef"
-        with self.assertRaises(TokenExpiredError):
+        with self.assertRaises(SmarterTokenError):
             self.token_gen.validate(self.user, token)
 
     def test_user_to_uidb64_real(self):

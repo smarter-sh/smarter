@@ -17,8 +17,18 @@ logger = logging.getLogger(__name__)
 def admin_user_factory(account: Account = None) -> tuple[UserType, Account, UserProfile]:
     hashed_slug = hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:16]
     username = f"testAdminUser_{hashed_slug}"
+    email = f"test-{hashed_slug}@mail.com"
+    first_name = f"TestAdminFirstName_{hashed_slug}"
+    last_name = f"TestAdminLastName_{hashed_slug}"
     user = User.objects.create_user(
-        username=username, password="12345", is_active=True, is_staff=True, is_superuser=True
+        email=email,
+        first_name=first_name,
+        last_name=last_name,
+        username=username,
+        password="12345",
+        is_active=True,
+        is_staff=True,
+        is_superuser=True,
     )
     logger.info("admin_user_factory() Created admin user: %s", username)
     account = account or Account.objects.create(company_name=f"TestAccount_{hashed_slug}", phone_number="123-456-789")
@@ -32,8 +42,18 @@ def admin_user_factory(account: Account = None) -> tuple[UserType, Account, User
 def mortal_user_factory(account: Account = None) -> tuple[UserType, Account, UserProfile]:
     hashed_slug = hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:16]
     username = f"testMortalUser_{hashed_slug}"
+    email = f"test-{hashed_slug}@mail.com"
+    first_name = f"TestMortalFirstName_{hashed_slug}"
+    last_name = f"TestMortalLastName_{hashed_slug}"
     user = User.objects.create_user(
-        username=username, password="12345", is_active=True, is_staff=False, is_superuser=False
+        email=email,
+        first_name=first_name,
+        last_name=last_name,
+        username=username,
+        password="12345",
+        is_active=True,
+        is_staff=False,
+        is_superuser=False,
     )
     logger.info("mortal_user_factory() Created mortal user: %s", username)
     account = account or Account.objects.create(company_name=f"TestAccount_{hashed_slug}", phone_number="123-456-789")

@@ -114,9 +114,9 @@ class TestOpenaiFunctionCalling(TestAccountMixin):
 
     def tearDown(self):
         """Tear down test fixtures."""
-        super().tearDown()
         self.chat.delete()
         self.chatbot.delete()
+        super().tearDown()
 
     def chatbot_factory(self):
         chatbot = ChatBot.objects.create(

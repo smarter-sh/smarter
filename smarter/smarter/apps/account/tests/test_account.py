@@ -1,6 +1,9 @@
 # pylint: disable=wrong-import-position
 """Test Account."""
 
+import hashlib
+import random
+
 # our stuff
 from smarter.lib.django.user import User
 from smarter.lib.unittest.base_classes import SmarterTestBase
@@ -13,14 +16,22 @@ class TestAccount(SmarterTestBase):
 
     def setUp(self):
         """Set up test fixtures."""
+        super().setUp()
+        hashed_slug = hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:16]
         username = self.name
-        self.user = User.objects.create_user(username=username, password="12345")
+        email = f"test-{hashed_slug}@mail.com"
+        first_name = f"TestAdminFirstName_{hashed_slug}"
+        last_name = f"TestAdminLastName_{hashed_slug}"
+        self.user = User.objects.create_user(
+            email=email, first_name=first_name, last_name=last_name, username=username, password="12345"
+        )
         self.company_name = "Test Company"
 
     def tearDown(self):
         """Clean up test fixtures."""
         self.user.delete()
         Account.objects.filter(company_name=self.company_name).delete()
+        super().tearDown()
 
     def test_create(self):
         """Test that we can create an account."""

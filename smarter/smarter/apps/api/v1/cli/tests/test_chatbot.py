@@ -38,9 +38,9 @@ class TestApiCliV1ChatBot(ApiV1TestBase):
         self.query_params = urlencode({"name": self.name})
 
     def tearDown(self):
-        super().tearDown()
         if self.chatbot:
             self.chatbot.delete()
+        super().tearDown()
 
     def chatbot_factory(self):
         chatbot = ChatBot.objects.create(

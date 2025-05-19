@@ -24,6 +24,7 @@ class TestAWSRoute53(SmarterTestBase):
 
     def setUp(self):
         """Setup the test."""
+        super().setUp()
         self.root_domain = aws_helper.aws.root_domain
         self.root_hosted_zone = aws_helper.route53.get_hosted_zone(self.root_domain)
         self.root_hosted_zone_id = aws_helper.route53.get_hosted_zone_id(self.root_hosted_zone)

@@ -14,6 +14,7 @@ class TestBlockSensitiveFilesMiddleware(SmarterTestBase, AccountMixin):
     """Test BlockSensitiveFilesMiddleware."""
 
     def setUp(self):
+        super().setUp()
         self.middleware = BlockSensitiveFilesMiddleware(lambda req: HttpResponse())
         self.factory = RequestFactory()
 
@@ -26,4 +27,8 @@ class TestBlockSensitiveFilesMiddleware(SmarterTestBase, AccountMixin):
         for sensitive_file in self.middleware.sensitive_files:
             request = self.factory.get("/" + sensitive_file)
             response = self.middleware(request)
-            self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+            self.assertEqual(
+                response.status_code,
+                HTTPStatus.FORBIDDEN,
+                f"Expected 403 for {sensitive_file}, got {response.status_code}",
+            )

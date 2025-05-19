@@ -16,6 +16,7 @@ class TestSmarterHttpResponses(SmarterTestBase):
     """Test SmarterHttpResponse classes."""
 
     def setUp(self):
+        super().setUp()
         self.request = MagicMock()
 
     @patch("smarter.lib.django.http.shortcuts.render")

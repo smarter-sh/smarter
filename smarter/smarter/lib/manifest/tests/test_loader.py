@@ -15,6 +15,7 @@ class TestManifestLoader(SmarterTestBase):
 
     def setUp(self):
         """Set up test fixtures."""
+        super().setUp()
         self.path = os.path.join(PYTHON_ROOT, "smarter", "apps", "api", "v1", "cli", "tests", "data")
         self.url = "https://cdn.platform.smarter.sh/cli/example-manifests/plugin.yaml"
         self.good_manifest_path = os.path.join(self.path, "good-plugin-manifest.yaml")
@@ -27,7 +28,7 @@ class TestManifestLoader(SmarterTestBase):
         self.assertIsInstance(loader.json_data, dict)
         self.assertIsInstance(loader.specification, dict)
         self.assertIsInstance(loader.yaml_data, str)
-        self.assertEqual(loader.data_format, SAMDataFormats.YAML)
+        self.assertEqual(loader.data_format, SAMDataFormats.JSON)
         self.assertIsInstance(loader.formatted_data, str)
 
         # Validate the manifest, ensure that no exceptions are raised

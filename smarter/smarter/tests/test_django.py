@@ -11,12 +11,6 @@ from smarter.lib.unittest.base_classes import SmarterTestBase
 class TestDjango(SmarterTestBase):
     """Test Account model"""
 
-    def setUp(self):
-        """Set up test fixtures."""
-
-    def tearDown(self):
-        """Clean up test fixtures."""
-
     def test_django_is_installed(self):
         """Test that Celery is running."""
         self.assertIsNotNone(django)

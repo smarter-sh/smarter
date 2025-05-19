@@ -40,9 +40,6 @@ class TestUtils(SmarterTestBase):
     request = get_test_file("json/passthrough_openai_v2_request.json")
     response = get_test_file("json/passthrough_openai_v2_response.json")
 
-    def setUp(self):
-        """Set up test fixtures."""
-
     def test_http_response_factory(self):
         """Test test_http_response_factory."""
         retval = http_response_factory(200, self.response)

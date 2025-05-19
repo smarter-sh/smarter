@@ -59,24 +59,29 @@ class TestSAMApiConnectionBroker(TestSAMConnectionBrokerBase):
 
     @classmethod
     def tearDownClass(cls):
-        super().tearDownClass()
 
-        # clean up the api_key secret
-        factory_secret_teardown(secret=cls.api_key)
-        cls.api_key = None
-        cls.api_key_name = None
-        cls.api_key_value = None
+        try:
+            # clean up the api_key secret
+            factory_secret_teardown(secret=cls.api_key)
+            cls.api_key = None
+            cls.api_key_name = None
+            cls.api_key_value = None
 
-        # clean up the proxy_password secret
-        factory_secret_teardown(secret=cls.proxy_password)
-        cls.proxy_password = None
-        cls.proxy_password_name = None
-        cls.proxy_password_value = None
+            # clean up the proxy_password secret
+            factory_secret_teardown(secret=cls.proxy_password)
+            cls.proxy_password = None
+            cls.proxy_password_name = None
+            cls.proxy_password_value = None
 
-        # clean up everything else
-        cls.good_manifest_path = None
-        cls._model = None
-        cls.request = None
+            # clean up everything else
+            cls.good_manifest_path = None
+            cls._model = None
+            cls.request = None
+        # pylint: disable=W0718
+        except Exception:
+            pass
+        finally:
+            super().tearDownClass()
 
     def setUp(self):
         """Set up test fixtures."""
@@ -93,7 +98,6 @@ class TestSAMApiConnectionBroker(TestSAMConnectionBrokerBase):
 
     def tearDown(self):
         """Tear down test fixtures."""
-        super().tearDown()
         # restore the waffle switch to its original state
         if self.waffle_setting:
             switch = Switch.objects.get(name=SmarterWaffleSwitches.JOURNAL)
@@ -101,6 +105,7 @@ class TestSAMApiConnectionBroker(TestSAMConnectionBrokerBase):
             switch.save()
         self.request = None
         self._model = None
+        super().tearDown()
 
     @property
     def model(self) -> SAMApiConnection:

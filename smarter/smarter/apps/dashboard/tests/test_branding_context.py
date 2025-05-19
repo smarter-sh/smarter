@@ -1,13 +1,14 @@
 # pylint: disable=wrong-import-position
 """Test global context processor."""
 
-import hashlib
-import random
 
 from django.test import RequestFactory
 
 # our stuff
-from smarter.lib.django.user import User
+from smarter.apps.account.tests.factories import (
+    admin_user_factory,
+    factory_account_teardown,
+)
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from ..context_processors import branding
@@ -18,12 +19,13 @@ class TestContext(SmarterTestBase):
 
     def setUp(self):
         """Set up test fixtures."""
-        username = "testuser" + hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()
-        self.user = User.objects.create_user(username=username, password="12345")
+        super().setUp()
+        self.user, self.account, self.user_profile = admin_user_factory()
 
     def tearDown(self):
         """Clean up test fixtures."""
-        self.user.delete()
+        factory_account_teardown(self.user, self.account, self.user_profile)
+        super().tearDown()
 
     def test_context(self):
         """test that we can instantiate the context."""

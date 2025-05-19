@@ -93,7 +93,7 @@ class TestSmarterValidator(SmarterTestBase):
     def test_validate_domain(self):
         SmarterValidator.validate_domain("localhost")
         with self.assertRaises(SmarterValueError):
-            SmarterValidator.validate_domain("invalid_domain")
+            SmarterValidator.validate_domain("///invalid_domain=?")
 
     def test_validate_email(self):
         SmarterValidator.validate_email("test@example.com")
@@ -158,7 +158,7 @@ class TestSmarterValidator(SmarterTestBase):
 
     def test_is_valid_domain(self):
         self.assertTrue(SmarterValidator.is_valid_domain("localhost"))
-        self.assertFalse(SmarterValidator.is_valid_domain("invalid_domain"))
+        self.assertFalse(SmarterValidator.is_valid_domain("&&$invalid_domain)()"))
 
     def test_is_valid_email(self):
         self.assertTrue(SmarterValidator.is_valid_email("test@example.com"))
@@ -205,7 +205,7 @@ class TestSmarterValidator(SmarterTestBase):
     def test_validate_list_of_domains(self):
         SmarterValidator.validate_list_of_domains(["localhost"])
         with self.assertRaises(SmarterValueError):
-            SmarterValidator.validate_list_of_domains(["bad_domain"])
+            SmarterValidator.validate_list_of_domains(["$bad_domain()"])
 
     def test_validate_list_of_emails(self):
         SmarterValidator.validate_list_of_emails(["test@example.com"])

@@ -19,8 +19,8 @@ class TestPluginController(TestPluginClassBase):
         self.model = None
 
     def tearDown(self):
-        super().tearDown()
         self.model = None
+        super().tearDown()
 
     def test_controller_static_plugin(self):
         """

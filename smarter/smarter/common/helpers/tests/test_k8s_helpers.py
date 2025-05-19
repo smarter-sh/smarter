@@ -28,6 +28,7 @@ class Testk8sHelpers(SmarterTestBase):
 
     def setUp(self):
         """Set up test fixtures."""
+        super().setUp()
         self.environment = SmarterEnvironments.ALPHA
         self.api_domain = f"{self.environment}.api.{smarter_settings.root_domain}"
         self.cluster_issuer = self.api_domain
@@ -49,9 +50,6 @@ class Testk8sHelpers(SmarterTestBase):
         # verify the DNS records. First time usage takes 15+ minutes to propagate
         # assuming you're not inside the aws vpc. Subsequent runs are near-immediate.
         aws_helper.route53.verify_dns_record(self.hostname)
-
-    def tearDown(self):
-        """Clean up test fixtures."""
 
     @patch("smarter.common.helpers.k8s_helpers.smarter_settings")
     @patch("smarter.common.helpers.k8s_helpers.formatted_text")

@@ -56,10 +56,9 @@ class TestSAMBrokerMixin(TestPluginClassBase):
 
     def tearDown(self):
         """Clean up test fixtures."""
-        super().tearDown()
-
         self.request = None
         self.client = None
+        super().tearDown()
 
     def valid_manifest_self_check(self):
         """

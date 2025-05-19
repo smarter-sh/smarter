@@ -45,7 +45,6 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
 
     def tearDown(self):
         """Clean up test fixtures."""
-        super().tearDown()
         try:
             self.chatbot.delete()
         except ChatBot.DoesNotExist:
@@ -58,6 +57,7 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
             self.custom_domain.delete()
         except ChatBotCustomDomain.DoesNotExist:
             pass
+        super().tearDown()
 
     def test_valid_url(self):
         """Test a url for the chatbot we created."""

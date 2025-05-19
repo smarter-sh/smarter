@@ -251,7 +251,11 @@ class UserProfile(TimestampedModel):
     def add_to_account_contacts(self, is_primary: bool = False):
         """Add the user to the account contact list."""
         account_contact, _ = AccountContact.objects.get_or_create(
-            account=self.account, email=self.user.email, is_test=self.is_test
+            account=self.account,
+            email=self.user.email,
+            is_test=self.is_test,
+            first_name=self.user.first_name,
+            last_name=self.user.last_name,
         )
         if account_contact.is_primary != is_primary:
             account_contact.is_primary = is_primary

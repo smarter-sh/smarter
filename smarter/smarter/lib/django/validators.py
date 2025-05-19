@@ -64,8 +64,6 @@ class SmarterValidator:
             raise SmarterValueError(f"Value must start with a lowercase letter: {value}")
         if not value[0].isalpha():
             raise SmarterValueError(f"Value must start with a letter: {value}")
-        if not value[1:].islower():
-            raise SmarterValueError(f"Value must be in camel case format: {value}")
         if not value[1:].isalnum():
             raise SmarterValueError(f"Value must be in camel case format: {value}")
         if not value[1:].isalpha():
@@ -196,11 +194,9 @@ class SmarterValidator:
     @staticmethod
     def validate_domain(domain: str) -> None:
         """Validate domain format"""
-        try:
-            if domain not in SmarterValidator.LOCAL_HOSTS + [None, ""]:
-                SmarterValidator.validate_url("http://" + domain)
-        except SmarterValueError as e:
-            raise SmarterValueError(f"Invalid domain {domain}") from e
+        if domain not in SmarterValidator.LOCAL_HOSTS + [None, ""]:
+            SmarterValidator.validate_hostname(domain.split(":")[0])
+            SmarterValidator.validate_url("http://" + domain)
 
     @staticmethod
     def validate_email(email: str) -> None:
@@ -223,6 +219,11 @@ class SmarterValidator:
         """Validate port format"""
         if not re.match(SmarterValidator.VALID_PORT_PATTERN, port):
             raise SmarterValueError(f"Invalid port {port}")
+        if not port.isdigit():
+            raise SmarterValueError(f"Port must be numeric: {port}")
+        port_num = int(port)
+        if not (0 <= port_num <= 65535):
+            raise SmarterValueError(f"Port out of range (0-65535): {port}")
 
     @staticmethod
     def validate_url(url: str) -> None:
@@ -238,11 +239,13 @@ class SmarterValidator:
         try:
             validator = URLValidator(schemes=valid_protocols)
             validator(url)
+            parsed = urlparse(url)
+            if parsed.hostname:
+                SmarterValidator.validate_hostname(parsed.hostname)
         except ValidationError as e:
             parsed = urlparse(url)
             if parsed.scheme not in valid_protocols:
                 raise SmarterValueError(f"Invalid url protocol {parsed.scheme}") from e
-            parsed = urlparse(url)
             if all([parsed.scheme, parsed.netloc]) or url.startswith("localhost"):
                 return
             if SmarterValidator.is_valid_ip(url):

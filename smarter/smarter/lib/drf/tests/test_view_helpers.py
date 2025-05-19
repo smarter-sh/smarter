@@ -13,6 +13,7 @@ class TestUnauthenticatedPermissionClass(SmarterTestBase):
     """Test the UnauthenticatedPermissionClass class."""
 
     def setUp(self):
+        super().setUp()
         self.permission = UnauthenticatedPermissionClass()
         self.request = Mock()
         self.view = Mock(spec=APIView)
