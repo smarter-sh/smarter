@@ -59,7 +59,20 @@ class SmarterView(View, SmarterHelperMixin):
     def render_clean_html(self, request: WSGIRequest, template_path, context=None):
         """Render a template as a string, with comments removed and minified."""
         context = context or self.context
-        response = render(request=request, template_name=template_path, context=context)
+        response = None
+        try:
+            response = render(request=request, template_name=template_path, context=context)
+        # pylint: disable=W0718
+        except Exception as e:
+            logger.error(
+                "%s.render_clean_html(): %s, %s. error: %s",
+                self.formatted_class_name,
+                request.build_absolute_uri(),
+                template_path,
+                e,
+            )
+            return HttpResponse(status=500)
+
         html = response.content.decode(response.charset)
         html_no_comments = self.remove_comments(html=html)
         minified_html = self.minify_html(html=html_no_comments)

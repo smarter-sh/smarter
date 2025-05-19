@@ -45,7 +45,7 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
     def is_token_auth(self, request) -> bool:
         """Check if the request is for knox token authentication."""
         auth = self.authorization_header.split()
-        prefix = knox_settings.AUTH_HEADER_PREFIX.encode()
+        prefix = knox_settings.AUTH_HEADER_PREFIX
 
         if not auth:
             return False

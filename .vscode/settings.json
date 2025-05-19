@@ -16,8 +16,5 @@
     "**/dist": true,
     "**/keen_v3.0.6": true,
     "**/staticfiles": true
-  },
-  "github.copilot.enable": {
-    "*": false
   }
 }

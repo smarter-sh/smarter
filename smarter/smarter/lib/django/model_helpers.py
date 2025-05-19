@@ -1,5 +1,6 @@
 """Common model utils."""
 
+from django.core.exceptions import ValidationError
 from django.db import models
 
 
@@ -15,11 +16,17 @@ class TimestampedModel(models.Model):
 
     def validate(self):
         """Validate the model."""
+        # this breaks on SmarterAuthToken.objects.create()
         self.full_clean()
 
     def save(self, *args, **kwargs):
         """Override save to validate before saving."""
-        self.validate()
+        try:
+            self.validate()
+        except ValidationError as e:
+            raise ValidationError(
+                f"TimestampedModel().save() validation error: {e} | args={args} kwargs={kwargs} | model={self.__class__.__name__} | field_values={self.__dict__}"
+            ) from e
         super().save(*args, **kwargs)
 
     def __str__(self):

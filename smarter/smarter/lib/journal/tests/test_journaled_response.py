@@ -38,10 +38,11 @@ class TestSmarterJournaledJsonResponse(SmarterTestBase):
             status=HTTPStatus.CREATED,
         )
         self.assertEqual(resp.status_code, HTTPStatus.CREATED)
-        self.assertIn("api", resp.data)
-        self.assertIn("thing", resp.data)
-        self.assertIn("metadata", resp.data)
-        self.assertEqual(resp.data["metadata"]["key"], "journal-key")
+        data = json.loads(resp.content.decode("utf-8"))
+        self.assertIn("api", data)
+        self.assertIn("thing", data)
+        self.assertIn("metadata", data)
+        self.assertEqual(data["metadata"]["key"], "journal-key")
 
     @patch("smarter.lib.journal.http.waffle")
     @patch("smarter.lib.journal.http.SAMJournal")
@@ -68,10 +69,11 @@ class TestSmarterJournaledJsonResponse(SmarterTestBase):
             status=HTTPStatus.OK,
         )
         self.assertEqual(resp.status_code, HTTPStatus.OK)
-        self.assertIn("api", resp.data)
-        self.assertIn("thing", resp.data)
-        self.assertIn("metadata", resp.data)
-        self.assertEqual(resp.data["metadata"]["key"], "journal-key")
+        data = json.loads(resp.content.decode("utf-8"))
+        self.assertIn("api", data)
+        self.assertIn("thing", data)
+        self.assertIn("metadata", data)
+        self.assertEqual(data["metadata"]["key"], "journal-key")
 
     @patch("smarter.lib.journal.http.waffle")
     def test_response_waffle_inactive(self, mock_waffle):
@@ -101,6 +103,8 @@ class TestSmarterJournaledJsonResponse(SmarterTestBase):
 
 
 class TestSmarterJournaledJsonErrorResponse(SmarterTestBase):
+    """Test the SmarterJournaledJsonErrorResponse class."""
+
     @patch("smarter.lib.journal.http.logger")
     def test_error_response(self, mock_logger):
         mock_request = Mock()
@@ -121,7 +125,10 @@ class TestSmarterJournaledJsonErrorResponse(SmarterTestBase):
             stack_trace="trace",
         )
         self.assertEqual(resp.status_code, HTTPStatus.UNAUTHORIZED)
-        self.assertIn("error", resp.data)
-        self.assertIn("stack_trace", resp.data["error"])
-        self.assertEqual(resp.data["error"]["status"], str(HTTPStatus.UNAUTHORIZED))
+        data = json.loads(resp.content.decode("utf-8"))
+        # {'errorClass': 'Exception', 'stacktrace': 'trace', 'description': '', 'status': '401', 'args': 'url=http://testserver/api/', 'cause': 'Python Exception', 'context': 'thing=thing, command=command'}
+        self.assertIn("error", data)
+        self.assertIn("stacktrace", data["error"])
+        self.assertIn("errorClass", data["error"])
+        self.assertEqual(data["error"]["status"], str(HTTPStatus.UNAUTHORIZED))
         mock_logger.error.assert_called()
