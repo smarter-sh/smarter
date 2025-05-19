@@ -7,19 +7,15 @@ from django.contrib.auth import authenticate
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import Client, RequestFactory
 
-from smarter.apps.account.tests.factories import (
-    admin_user_factory,
-    factory_account_teardown,
-)
+from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.lib.django.request import SmarterRequestMixin
-from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
 SMARTER_DEV_ADMIN_PASSWORD = "smarter"
 
 
-class TestSmarterRequestMixin(SmarterTestBase):
+class TestSmarterRequestMixin(TestAccountMixin):
     """
     Test SmarterRequestMixin.
     example urls:
@@ -42,27 +38,19 @@ class TestSmarterRequestMixin(SmarterTestBase):
 
     """
 
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.user, cls.account, cls.user_profile = admin_user_factory()
-
-    @classmethod
-    def tearDownClass(cls):
-        # Clean up shared resources here
-        # Example: del cls.shared_resource
-        try:
-            factory_account_teardown(user=cls.user, account=cls.account, user_profile=cls.user_profile)
-        # pylint: disable=W0718
-        except Exception:
-            pass
-        finally:
-            super().tearDownClass()
-
     def setUp(self):
         super().setUp()
         self.client = Client()
         self.wsgi_request_factory = RequestFactory()
+
+    def tearDown(self):
+        try:
+            self.client.logout()
+            self.client = None
+            self.wsgi_request_factory = None
+        # pylint: disable=W0718
+        except Exception:
+            pass
 
     def get_smarter_request_mixin(self, url: str) -> SmarterRequestMixin:
         request_factory = RequestFactory()
@@ -112,7 +100,7 @@ class TestSmarterRequestMixin(SmarterTestBase):
         """
         Test that SmarterRequestMixin can be instantiated with an authenticated request.
         """
-        self.client.login(username=self.user.username, password="12345")
+        self.client.login(username=self.admin_user.username, password="12345")
         response = self.client.get("/")
         request = response.wsgi_request
 
@@ -123,7 +111,7 @@ class TestSmarterRequestMixin(SmarterTestBase):
         """
         Test that SmarterRequestMixin request object is read-only.
         """
-        self.client.login(username=self.user.username, password="12345")
+        self.client.login(username=self.admin_user.username, password="12345")
         response = self.client.get("/")
         request = response.wsgi_request
 

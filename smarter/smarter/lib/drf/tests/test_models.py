@@ -3,12 +3,16 @@
 from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
 
-from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.apps.account.tests.mixins import TestAccountMixin
 
 from ..models import SmarterAuthToken, SmarterAuthTokenManager
 
 
-class TestSmarterAuthTokenManager(SmarterTestBase):
+class TestBase(TestAccountMixin):
+    """Base class for tests"""
+
+
+class TestSmarterAuthTokenManager(TestBase):
     """Test the SmarterAuthTokenManager class."""
 
     @patch("smarter.lib.drf.models.AuthTokenManager.create")
@@ -27,14 +31,13 @@ class TestSmarterAuthTokenManager(SmarterTestBase):
         auth_token.save.assert_called_once()
 
 
-class TestSmarterAuthToken(SmarterTestBase):
+class TestSmarterAuthToken(TestBase):
     """Test the SmarterAuthToken class."""
 
     def setUp(self):
         super().setUp()
-        self.user = Mock(is_staff=True)
         self.token = SmarterAuthToken()
-        self.token.user = self.user
+        self.token.user = self.admin_user
         self.token.created = None
         self.token.is_active = True
         self.token.last_used_at = None

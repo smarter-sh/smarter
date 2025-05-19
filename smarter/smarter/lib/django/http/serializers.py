@@ -57,10 +57,13 @@ class HttpAnonymousRequestSerializer(serializers.Serializer):
             return _url
         return None
 
-    def create(self, validated_data):
-        return validated_data
+    def create(self, validated_data) -> HttpRequest:
+        req = HttpRequest()
+        for attr, value in validated_data.items():
+            setattr(req, attr, value)
+        return req
 
-    def update(self, instance, validated_data):
+    def update(self, instance: HttpRequest, validated_data):
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         return instance

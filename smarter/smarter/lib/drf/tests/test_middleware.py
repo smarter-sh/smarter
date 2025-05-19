@@ -1,50 +1,54 @@
 """Test SmarterTokenAuthenticationMiddleware."""
 
 from http import HTTPStatus
+from logging import getLogger
 from unittest.mock import MagicMock, Mock, patch
 
 from django.http import HttpResponse
 from django.test import Client, RequestFactory
 from rest_framework.exceptions import AuthenticationFailed
 
-from smarter.apps.account.tests.mixins import TestAccountMixin
+from smarter.apps.account.tests.factories import (
+    admin_user_factory,
+    factory_account_teardown,
+)
 from smarter.lib.drf.middleware import SmarterTokenAuthenticationMiddleware
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.drf.token_authentication import SmarterTokenAuthenticationError
+from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
-class TestSmarterTokenAuthenticationMiddleware(TestAccountMixin):
+logger = getLogger(__name__)
+
+
+class TestSmarterTokenAuthenticationMiddleware(SmarterTestBase):
     """Test SmarterTokenAuthenticationMiddleware."""
 
-    @classmethod
-    def setUpClass(cls) -> None:
-        super().setUpClass()
-        instance = cls()
-
-        cls.token_record, cls.token_key = SmarterAuthToken.objects.create(
-            name=instance.admin_user.username,
-            user=instance.admin_user,
-            description=instance.admin_user.username,
-        )
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        super().tearDownClass()
-        instance = cls()
-        try:
-            instance.token_record.delete()
-        except SmarterAuthToken.DoesNotExist:
-            pass
-
-    def setUp(self):
-        """Set up test fixtures."""
+    def setUp(self) -> None:
         super().setUp()
+
+        self.admin_user, self.account, self.user_profile = admin_user_factory()
+        logger.info("TestSmarterTokenAuthenticationMiddleware() Setting up test class with name: %s", self.name)
+
+        self.token_record, self.token_key = SmarterAuthToken.objects.create(
+            name=self.name,
+            user=self.admin_user,
+            description="TestSmarterTokenAuthenticationMiddleware() test description",
+        )
         self.middleware = SmarterTokenAuthenticationMiddleware(lambda req: HttpResponse())
         self.factory = RequestFactory()
         self.get_response = Mock()
         self.request = Mock()
         self.request.build_absolute_uri.return_value = "http://testserver/api/"
         self.request.auth = None
+
+    def tearDown(self) -> None:
+        try:
+            factory_account_teardown(user=self.admin_user, account=self.account, user_profile=self.user_profile)
+            self.token_record.delete()
+        except SmarterAuthToken.DoesNotExist:
+            pass
+        super().tearDown()
 
     def test_valid_token_authorization_header(self):
         """Test that the middleware authenticates a valid today."""

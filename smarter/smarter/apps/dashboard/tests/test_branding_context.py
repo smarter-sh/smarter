@@ -5,27 +5,13 @@
 from django.test import RequestFactory
 
 # our stuff
-from smarter.apps.account.tests.factories import (
-    admin_user_factory,
-    factory_account_teardown,
-)
-from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.apps.account.tests.mixins import TestAccountMixin
 
 from ..context_processors import branding
 
 
-class TestContext(SmarterTestBase):
+class TestContext(TestAccountMixin):
     """Test global context processor."""
-
-    def setUp(self):
-        """Set up test fixtures."""
-        super().setUp()
-        self.user, self.account, self.user_profile = admin_user_factory()
-
-    def tearDown(self):
-        """Clean up test fixtures."""
-        factory_account_teardown(self.user, self.account, self.user_profile)
-        super().tearDown()
 
     def test_context(self):
         """test that we can instantiate the context."""

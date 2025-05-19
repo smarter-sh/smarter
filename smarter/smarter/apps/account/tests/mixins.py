@@ -39,3 +39,11 @@ class TestAccountMixin(SmarterTestBase):
         self._manifest_path = None
         self._loader = None
         self._model = None
+
+    def tearDown(self):
+        """We use different manifest test data depending on the test case."""
+        self._manifest = None
+        self._manifest_path = None
+        self._loader = None
+        self._model = None
+        super().tearDown()

@@ -1,13 +1,17 @@
 """Test SAMLoader"""
 
+import logging
 import os
 
 import yaml
 
-from smarter.common.const import PYTHON_ROOT
 from smarter.lib.manifest.enum import SAMDataFormats, SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader, SAMLoaderError
 from smarter.lib.unittest.base_classes import SmarterTestBase
+
+
+HERE = os.path.abspath(os.path.dirname(__file__))
+logger = logging.getLogger(__name__)
 
 
 class TestManifestLoader(SmarterTestBase):
@@ -16,11 +20,10 @@ class TestManifestLoader(SmarterTestBase):
     def setUp(self):
         """Set up test fixtures."""
         super().setUp()
-        self.path = os.path.join(PYTHON_ROOT, "smarter", "apps", "api", "v1", "cli", "tests", "data")
-        self.url = "https://cdn.platform.smarter.sh/cli/example-manifests/plugin.yaml"
+        self.path = os.path.join(HERE, "data")
         self.good_manifest_path = os.path.join(self.path, "good-plugin-manifest.yaml")
-
         self.good_manifest_text = self.get_readonly_yaml_file(self.good_manifest_path)
+        self.url = "https://cdn.platform.smarter.sh/cli/example-manifests/plugin.yaml"
 
     def test_valid_manifest(self):
         """Test that we can load a valid manifest"""
@@ -80,7 +83,11 @@ class TestManifestLoader(SmarterTestBase):
         """Test that we can load a valid manifest"""
 
         def test_missing(element: str):
-            loader = SAMLoader(manifest=self.good_manifest_text)
+            try:
+                loader = SAMLoader(manifest=self.good_manifest_text)
+            except SAMLoaderError as e:
+                logger.error("Failed to load manifest: %s", self.good_manifest_text)
+                self.fail(f"Failed to load manifest: {e}")
             json_data = loader.json_data
             del json_data[element]
 
@@ -90,4 +97,5 @@ class TestManifestLoader(SmarterTestBase):
                 SAMLoader(manifest=yaml_data)
 
         for element in [SAMKeys.METADATA.value, SAMKeys.SPEC.value]:
+            self.good_manifest_text = self.get_readonly_yaml_file(self.good_manifest_path)
             test_missing(element)

@@ -2,14 +2,19 @@
 
 from unittest.mock import Mock, patch
 
+from django.contrib.auth.models import AnonymousUser
 from django.core.handlers.wsgi import WSGIRequest
 
-from smarter.lib.unittest.base_classes import SmarterTestBase
+from smarter.apps.account.tests.mixins import TestAccountMixin
 
 from ..cache import cache_request, cache_results
 
 
-class TestCacheResults(SmarterTestBase):
+class TestBase(TestAccountMixin):
+    """Base class for tests"""
+
+
+class TestCacheResults(TestBase):
     """Test the cache_results decorator."""
 
     @patch("smarter.lib.cache.cache")
@@ -44,13 +49,13 @@ class TestCacheResults(SmarterTestBase):
         mock_logger.info.assert_called()
 
 
-class TestCacheRequest(SmarterTestBase):
+class TestCacheRequest(TestBase):
     """test cache_request decorator"""
 
     @patch("smarter.lib.cache.cache")
     @patch("smarter.lib.cache.waffle")
     @patch("smarter.lib.cache.logger")
-    def test_cache_request_hit_authenticated(self, mock_logger, mock_waffle, mock_cache):
+    def test_cache_request_hit_authenticated_admin(self, mock_logger, mock_waffle, mock_cache):
         mock_waffle.switch_is_active.return_value = True
         mock_cache.get.return_value = "cached"
 
@@ -60,8 +65,22 @@ class TestCacheRequest(SmarterTestBase):
 
         request = Mock(spec=WSGIRequest)
         request.build_absolute_uri.return_value = "http://testserver/api/"
-        request.user.is_authenticated = True
-        request.user.username = "bob"
+        request.user = self.admin_user
+        result = func(request)
+        self.assertEqual(result, "cached")
+        mock_logger.info.assert_called()
+
+    def test_cache_request_hit_authenticated_mortal(self, mock_logger, mock_waffle, mock_cache):
+        mock_waffle.switch_is_active.return_value = True
+        mock_cache.get.return_value = "cached"
+
+        @cache_request(logging_enabled=True)
+        def func(request):
+            return "computed"
+
+        request = Mock(spec=WSGIRequest)
+        request.build_absolute_uri.return_value = "http://testserver/api/"
+        request.user = self.non_admin_user
         result = func(request)
         self.assertEqual(result, "cached")
         mock_logger.info.assert_called()
@@ -79,7 +98,7 @@ class TestCacheRequest(SmarterTestBase):
 
         request = Mock(spec=WSGIRequest)
         request.build_absolute_uri.return_value = "http://testserver/api/"
-        request.user.is_authenticated = False
+        request.user = AnonymousUser()
         result = func(request)
         self.assertEqual(result, "computed")
         mock_cache.set.assert_called()

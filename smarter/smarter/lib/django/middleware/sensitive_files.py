@@ -117,6 +117,7 @@ class BlockSensitiveFilesMiddleware(MiddlewareMixin, SmarterHelperMixin):
         # Check for sensitive files using glob patterns
         path_basename = request_path.rsplit("/", 1)[-1]
         for sensitive_file in self.sensitive_files:
+            sensitive_file = sensitive_file.lower()
             if (
                 fnmatch.fnmatch(path_basename, sensitive_file)
                 or fnmatch.fnmatch(request_path, sensitive_file)

@@ -17,11 +17,19 @@ from smarter.lib.django.model_helpers import TimestampedModel
 class SmarterAuthTokenManager(AuthTokenManager):
     """API Key manager."""
 
-    def create(self, user, expiry=None, name: str = None, description: str = None, is_active: bool = True, **kwargs):
-        auth_token, token = super().create(user, expiry=expiry, **kwargs)
-        auth_token.name = name
-        auth_token.description = description
-        auth_token.is_active = is_active
+    def create(
+        self,
+        user,
+        expiry=None,
+        prefix=None,
+        name: str = None,
+        description: str = None,
+        is_active: bool = True,
+        **kwargs,
+    ):
+        auth_token, token = super().create(
+            user, expiry=expiry, prefix=prefix or "", name=name, description=description, is_active=is_active, **kwargs
+        )
         auth_token.save()
         return auth_token, token
 
