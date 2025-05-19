@@ -70,6 +70,9 @@ class TestCacheRequest(TestBase):
         self.assertEqual(result, "cached")
         mock_logger.info.assert_called()
 
+    @patch("smarter.lib.cache.cache")
+    @patch("smarter.lib.cache.waffle")
+    @patch("smarter.lib.cache.logger")
     def test_cache_request_hit_authenticated_mortal(self, mock_logger, mock_waffle, mock_cache):
         mock_waffle.switch_is_active.return_value = True
         mock_cache.get.return_value = "cached"

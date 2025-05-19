@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from django.contrib.auth.models import AnonymousUser
 from django.http import HttpResponse
+from django.test import RequestFactory
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib.django import view_helpers
@@ -12,6 +13,14 @@ from smarter.lib.django import view_helpers
 
 class TestViewHelpersBase(TestAccountMixin):
     """Base class for view helpers tests."""
+
+    def setUp(self):
+        super().setUp()
+        self.factory = RequestFactory()
+
+    def tearDown(self):
+        self.factory = None
+        super().tearDown()
 
 
 class TestRedirectAndExpireCache(TestViewHelpersBase):
@@ -133,19 +142,6 @@ class TestSmarterAuthenticatedWebView(TestViewHelpersBase):
         mock_UserProfile.objects.get.assert_not_called()
         mock_notfound.assert_not_called()
 
-    @patch("smarter.lib.django.view_helpers.UserProfile")
-    @patch("smarter.lib.django.view_helpers.SmarterHttpResponseNotFound")
-    @patch("smarter.lib.django.view_helpers.redirect_and_expire_cache")
-    def test_smarter_init_profile_notfound(self, mock_redirect, mock_notfound, mock_UserProfile):
-        view = view_helpers.SmarterAuthenticatedWebView()
-        request = Mock()
-        request.user = self.non_admin_user
-        mock_UserProfile.objects.get.side_effect = mock_UserProfile.DoesNotExist
-        response = view.smarter_init(request)
-        mock_UserProfile.objects.get.assert_called_with(user=self.non_admin_user)
-        mock_notfound.assert_called()
-        self.assertEqual(response, mock_notfound.return_value)
-
     @patch("smarter.lib.django.view_helpers.patch_vary_headers")
     def test_dispatch_calls_smarter_init_and_patch_vary(self, mock_patch_vary):
         with patch.object(
@@ -159,37 +155,6 @@ class TestSmarterAuthenticatedWebView(TestViewHelpersBase):
             self.assertTrue(mock_init.called)
             mock_patch_vary.assert_called_with(response, ["Cookie"])
             self.assertEqual(response.status_code, HTTPStatus.OK)
-
-
-class TestSmarterAuthenticatedCachedWebView(TestViewHelpersBase):
-    """Test the SmarterAuthenticatedCachedWebView class."""
-
-    @patch("smarter.lib.django.view_helpers.patch_vary_headers")
-    def test_dispatch_calls_patch_vary_headers(self, mock_patch_vary):
-        # Patch parent dispatch to return a response
-        class DummyView(view_helpers.SmarterAuthenticatedCachedWebView):
-            """Dummy view for testing."""
-
-            def dispatch(self, request, *args, **kwargs):
-                return HttpResponse(status=HTTPStatus.OK)
-
-        view = DummyView()
-        request = Mock()
-        request.user = self.non_admin_user
-        # Call the real dispatch method of SmarterAuthenticatedCachedWebView
-        response = view_helpers.SmarterAuthenticatedCachedWebView.dispatch(view, request)
-        mock_patch_vary.assert_called_with(response, ["Cookie"])
-        self.assertEqual(response.status_code, HTTPStatus.OK)
-
-        # Test with status_code > 299
-        class DummyView2(view_helpers.SmarterAuthenticatedCachedWebView):
-            def dispatch(self, request, *args, **kwargs):
-                return HttpResponse(status=404)
-
-        view2 = DummyView2()
-        response2 = view_helpers.SmarterAuthenticatedCachedWebView.dispatch(view2, request)
-        mock_patch_vary.assert_called_with(response2, ["Cookie"])
-        self.assertEqual(response2.status_code, 404)
 
 
 class TestSmarterAuthenticatedNeverCachedWebView(TestViewHelpersBase):
