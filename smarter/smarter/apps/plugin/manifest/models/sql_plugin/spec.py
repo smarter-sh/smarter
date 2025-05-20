@@ -59,5 +59,5 @@ class SAMSqlPluginSpec(AbstractSAMSpecBase):
     @field_validator("connection")
     def validate_limit(cls, v):
         if not SmarterValidator.is_valid_cleanstring(v):
-            raise SAMValidationError("connection must be a valid cleanstring with no illegal characters.")
+            raise SAMValidationError(f"connection '{v}' must be a valid cleanstring with no illegal characters.")
         return v

@@ -177,6 +177,12 @@ class SAMApiPluginBroker(AbstractBroker, AccountMixin):
                         f"Model dump failed for {self.kind} {chatbot.name}", thing=self.kind, command=command
                     )
                 camel_cased_model_dump = self.snake_to_camel(model_dump)
+
+                # round-trip the model dump through the Pydantic model to ensure that
+                # it is valid and to convert it to a JSON string
+                pydantic_model = self.pydantic_model(**camel_cased_model_dump)
+                camel_cased_model_dump = pydantic_model.model_dump_json()
+
                 data.append(camel_cased_model_dump)
             except Exception as e:
                 logger.error(
@@ -239,6 +245,12 @@ class SAMApiPluginBroker(AbstractBroker, AccountMixin):
                 data: dict = self.plugin.to_json()
                 data[SAMKeys.METADATA].pop(SAMMetadataKeys.ACCOUNT)
                 data[SAMKeys.METADATA].pop(SAMMetadataKeys.AUTHOR)
+
+                # round-trip the model dump through the Pydantic model to ensure that
+                # it is valid and to convert it to a JSON string
+                pydantic_model = self.pydantic_model(**data)
+                data = pydantic_model.model_dump_json()
+
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
                 raise SAMBrokerError(

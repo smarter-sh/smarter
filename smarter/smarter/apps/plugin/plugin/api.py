@@ -19,6 +19,8 @@ from ..manifest.enum import (
     SAMPluginCommonSpecSelectorKeys,
     SAMPluginSpecKeys,
 )
+from ..manifest.models.api_plugin.enum import SAMApiPluginSpecApiData
+from ..manifest.models.api_plugin.model import SAMApiPlugin
 from ..manifest.models.static_plugin.const import MANIFEST_KIND
 from ..models import ApiConnection, PluginDataApi
 from ..serializers import PluginApiSerializer
@@ -31,9 +33,18 @@ logger = logging.getLogger(__name__)
 class ApiPlugin(PluginBase):
     """A Plugin that uses an http request to a REST API to retrieve its return data"""
 
-    _metadata_class = SAMPluginCommonMetadataClass.SQL.value
+    _metadata_class = SAMPluginCommonMetadataClass.API.value
     _plugin_data: PluginDataApi = None
     _plugin_data_serializer: PluginApiSerializer = None
+
+    @property
+    def manifest(self) -> SAMApiPlugin:
+        """Return the Pydandic model of the plugin."""
+        if not self._manifest and self.ready:
+            # if we don't have a manifest but we do have Django ORM data then
+            # we can work backwards to the Pydantic model
+            self._manifest = SAMApiPlugin(**self.to_json())
+        return self._manifest
 
     @property
     def plugin_data(self) -> PluginDataApi:
@@ -63,7 +74,7 @@ class ApiPlugin(PluginBase):
 
         # recast the Pydantic model to the PluginDataApi Django ORM model
         api_connection = ApiConnection.objects.get(
-            account=self.user_profile.account, name=self.manifest.spec.data.sqlData.connection
+            account=self.user_profile.account, name=self.manifest.spec.connection
         )
         api_data = self.manifest.spec.data.sqlData.model_dump()
         api_data = {camel_to_snake(key): value for key, value in api_data.items()}
@@ -125,12 +136,13 @@ class ApiPlugin(PluginBase):
 
     @classmethod
     def example_manifest(cls, kwargs: dict = None) -> dict:
-        return {
+
+        api_plugin = {
             SAMKeys.APIVERSION.value: SmarterApiVersions.V1,
             SAMKeys.KIND.value: MANIFEST_KIND,
             SAMKeys.METADATA.value: {
-                SAMMetadataKeys.name: "ApiExample",
-                SAMPluginCommonMetadataKeys.PLUGIN_CLASS.value: SAMPluginCommonMetadataClassValues.SQL.value,
+                SAMMetadataKeys.NAME.value: "api_example",
+                SAMPluginCommonMetadataKeys.PLUGIN_CLASS.value: SAMPluginCommonMetadataClassValues.API.value,
                 SAMMetadataKeys.DESCRIPTION.value: "Get additional information about the admin account of the Smarter platform.",
                 SAMMetadataKeys.VERSION.value: "0.1.0",
                 SAMMetadataKeys.TAGS.value: ["example.com", "api", "rest-api"],
@@ -138,7 +150,11 @@ class ApiPlugin(PluginBase):
             SAMKeys.SPEC.value: {
                 SAMPluginSpecKeys.SELECTOR.value: {
                     SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value: SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value,
-                    SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value: ["admin", "Smarter platform", "admin account"],
+                    SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value: [
+                        "admin",
+                        "Smarter",
+                        "account",
+                    ],
                 },
                 SAMPluginSpecKeys.PROMPT.value: {
                     SAMPluginCommonSpecPromptKeys.PROVIDER.value: SettingsDefaults.LLM_DEFAULT_PROVIDER,
@@ -147,19 +163,40 @@ class ApiPlugin(PluginBase):
                     SAMPluginCommonSpecPromptKeys.TEMPERATURE.value: SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
                     SAMPluginCommonSpecPromptKeys.MAXTOKENS.value: SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
                 },
-                SAMPluginSpecKeys.DATA.value: {
+                SAMPluginSpecKeys.CONNECTION.value: "example_connection",
+                SAMPluginSpecKeys.API_DATA.value: {
                     "description": "Query the Django User model to retrieve detailed account information about the admin account for the Smarter platform .",
-                    SAMPluginCommonMetadataClass.API.value: {
-                        "connection": "exampleConnection",
-                        "endpoint": "/api/v1/example-endpoint/",
-                        "parameters": None,
-                        "headers": None,
-                        "body": "{'key1': 'value1', 'key2': 'value2'}",
-                        "test_values": "",
-                    },
+                    SAMApiPluginSpecApiData.ENDPOINT.value: "/api/v1/example-endpoint/",
+                    SAMApiPluginSpecApiData.PARAMETERS.value: None,
+                    SAMApiPluginSpecApiData.HEADERS.value: None,
+                    SAMApiPluginSpecApiData.BODY.value: [
+                        {
+                            "name": "test",
+                            "type": "string",
+                            "description": "The test to run.",
+                            "required": True,
+                            "default": "test",
+                        },
+                        {
+                            "name": "test2",
+                            "type": "string",
+                            "description": "The second test to run.",
+                            "required": False,
+                            "default": "test2",
+                        },
+                    ],
+                    SAMApiPluginSpecApiData.TEST_VALUES.value: [
+                        {"name": "username", "value": "admin"},
+                        {"name": "limit", "value": 1},
+                    ],
+                    SAMApiPluginSpecApiData.LIMIT.value: 10,
                 },
             },
         }
+        # recast the Python dict to the Pydantic model
+        # in order to validate our output
+        pydantic_model = SAMApiPlugin(**api_plugin)
+        return pydantic_model.model_dump_json()
 
     def create(self):
         super().create()

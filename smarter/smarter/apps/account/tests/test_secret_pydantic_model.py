@@ -31,7 +31,7 @@ class TestSmarterSecretPydanticModel(TestAccountMixin):
 
         # dump the pydantic model to a dictionary
         # round_trip_dict = pydantic_model.model_dump()
-        pydantic_model.model_dump()
+        pydantic_model.model_dump_json()
 
         # assert that everything in content is in round_trip_dict
         # self.assertTrue(dict_is_contained_in(content, round_trip_dict))

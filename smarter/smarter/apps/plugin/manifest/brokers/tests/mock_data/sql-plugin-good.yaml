@@ -42,7 +42,7 @@ spec:
         description: The temperature unit to use.
         required: false
         default: Celsius
-    test_values:
+    testValues:
       - name: username
         value: admin
       - name: unit

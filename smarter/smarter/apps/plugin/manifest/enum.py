@@ -58,6 +58,9 @@ class SAMPluginSpecKeys(SmarterEnumAbstract):
     SELECTOR = "selector"
     PROMPT = "prompt"
     DATA = "data"
+    API_DATA = "apiData"
+    SQL_DATA = "sqlData"
+    CONNECTION = "connection"
 
 
 class SAMPluginCommonSpecSelectorKeys(SmarterEnumAbstract):

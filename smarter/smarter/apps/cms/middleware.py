@@ -29,8 +29,10 @@ class HTMLMinifyMiddleware(MiddlewareMixin):
             "attachment; filename=sitemap.xml",
         ]:
             return response
-        if hasattr(response, "content") and response.content in ["robots.txt", "favicon.ico", "sitemap.xml"]:
-            return response.content
+        if hasattr(response, "content"):
+            content_str = response.content.decode("utf-8") if isinstance(response.content, bytes) else response.content
+            if content_str in ["robots.txt", "favicon.ico", "sitemap.xml"]:
+                return response.content
         if "text/html" in response["Content-Type"]:
             soup = BeautifulSoup(response.content, "lxml")
 

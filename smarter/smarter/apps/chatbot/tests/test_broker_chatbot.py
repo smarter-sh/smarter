@@ -97,7 +97,7 @@ class TestSAMChatbotBroker(TestAccountMixin):
         pydantic_model = SAMChatbot(**loader.pydantic_model_dump())
 
         # dump the pydantic model to a dictionary
-        round_trip_dict = pydantic_model.model_dump()
+        round_trip_dict = pydantic_model.model_dump_json()
 
         # assert that everything in content is in round_trip_dict
         self.assertTrue(dict_is_subset(content, round_trip_dict))

@@ -1,7 +1,6 @@
 # pylint: disable=W0718
 """Smarter Api ApiConnection Manifest handler"""
 
-import json
 from logging import getLogger
 from typing import Type
 
@@ -209,6 +208,9 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
                 }
             },
         }
+        # validate our results by round-tripping the data through the Pydantic model
+        pydantic_model = self.pydantic_model(**data)
+        data = pydantic_model.model_dump_json()
         return self.json_response_ok(command=command, data=data)
 
     ###########################################################################
@@ -311,7 +313,9 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
                         SAMApiConnectionStatusKeys.IS_VALID.value: is_valid,
                     },
                 }
-
+                # validate our results by round-tripping the data through the Pydantic model
+                pydantic_model = self.pydantic_model(**retval)
+                data = pydantic_model.model_dump_json()
                 return self.json_response_ok(command=command, data=retval)
             except Exception as e:
                 raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
