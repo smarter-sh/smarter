@@ -27,7 +27,10 @@ from smarter.lib.manifest.exceptions import SAMValidationError
 from smarter.lib.manifest.loader import SAMLoader
 
 # plugin stuff
-from ..manifest.enum import SAMPluginCommonSpecSelectorKeyDirectiveValues
+from ..manifest.enum import (
+    SAMPluginCommonSpecSelectorKeyDirectiveValues,
+    SAMPluginSpecKeys,
+)
 from ..manifest.models.static_plugin.const import MANIFEST_KIND
 from ..manifest.models.static_plugin.model import SAMStaticPlugin
 from ..models import PluginDataBase, PluginMeta, PluginPrompt, PluginSelector
@@ -786,18 +789,18 @@ class PluginBase(ABC):
         if self.ready:
             if version == "v1":
                 retval = {
-                    "apiVersion": self.api_version,
-                    "kind": self.kind,
-                    "metadata": self.plugin_meta_serializer.data,
-                    "spec": {
-                        "selector": self.plugin_selector_serializer.data,
-                        "prompt": self.plugin_prompt_serializer.data,
-                        "data": {
+                    SAMKeys.APIVERSION.value: self.api_version,
+                    SAMKeys.KIND.value: self.kind,
+                    SAMKeys.METADATA.value: self.plugin_meta_serializer.data,
+                    SAMKeys.SPEC.value: {
+                        SAMPluginSpecKeys.SELECTOR.value: self.plugin_selector_serializer.data,
+                        SAMPluginSpecKeys.PROMPT.value: self.plugin_prompt_serializer.data,
+                        SAMPluginSpecKeys.DATA.value: {
                             "description": description,
                             f"{self.metadata_class}": self.plugin_data_serializer.data,
                         },
                     },
-                    "status": {
+                    SAMKeys.STATUS.value: {
                         "account_number": self.user_profile.account.account_number,
                         "username": self.user_profile.user.get_username(),
                         "created": self.plugin_meta.created_at.isoformat(),

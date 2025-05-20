@@ -18,6 +18,7 @@ from smarter.apps.plugin.models import (
     PluginSelector,
     SqlConnection,
 )
+from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 
 
 class TagListSerializerField(serializers.ListField):
@@ -32,7 +33,7 @@ class TagListSerializerField(serializers.ListField):
         return [Tag.objects.get_or_create(name=name)[0] for name in data]
 
 
-class PluginMetaSerializer(serializers.ModelSerializer):
+class PluginMetaSerializer(SmarterCamelCaseSerializer):
     """PluginMeta model serializer."""
 
     tags = TagListSerializerField()
@@ -45,7 +46,7 @@ class PluginMetaSerializer(serializers.ModelSerializer):
         fields = ["name", "account", "description", "plugin_class", "version", "author", "tags"]
 
 
-class PluginSelectorSerializer(serializers.ModelSerializer):
+class PluginSelectorSerializer(SmarterCamelCaseSerializer):
     """PluginSelector model serializer."""
 
     # pylint: disable=missing-class-docstring
@@ -53,14 +54,8 @@ class PluginSelectorSerializer(serializers.ModelSerializer):
         model = PluginSelector
         fields = ["directive", "search_terms"]
 
-    def to_representation(self, instance):
-        """Convert `username` to `userName`."""
-        representation = super().to_representation(instance)
-        representation["searchTerms"] = representation.pop("search_terms")
-        return representation
 
-
-class PluginPromptSerializer(serializers.ModelSerializer):
+class PluginPromptSerializer(SmarterCamelCaseSerializer):
     """PluginPrompt model serializer."""
 
     # pylint: disable=missing-class-docstring
@@ -69,7 +64,7 @@ class PluginPromptSerializer(serializers.ModelSerializer):
         fields = ["provider", "system_role", "model", "temperature", "max_tokens"]
 
 
-class PluginStaticSerializer(serializers.ModelSerializer):
+class PluginStaticSerializer(SmarterCamelCaseSerializer):
     """PluginDataStatic model serializer."""
 
     # pylint: disable=missing-class-docstring
@@ -78,7 +73,7 @@ class PluginStaticSerializer(serializers.ModelSerializer):
         fields = ["description", "static_data"]
 
 
-class SqlConnectionSerializer(serializers.ModelSerializer):
+class SqlConnectionSerializer(SmarterCamelCaseSerializer):
     """SqlConnection model serializer."""
 
     # pylint: disable=missing-class-docstring
@@ -100,7 +95,7 @@ class SqlConnectionSerializer(serializers.ModelSerializer):
         ]
 
 
-class PluginSqlSerializer(serializers.ModelSerializer):
+class PluginSqlSerializer(SmarterCamelCaseSerializer):
     """PluginDataSql model serializer."""
 
     connection = serializers.SlugRelatedField(slug_field="name", queryset=SqlConnection.objects.all())
@@ -118,7 +113,7 @@ class PluginSqlSerializer(serializers.ModelSerializer):
         ]
 
 
-class ApiConnectionSerializer(serializers.ModelSerializer):
+class ApiConnectionSerializer(SmarterCamelCaseSerializer):
     """ApiConnection model serializer."""
 
     account = AccountMiniSerializer(read_only=True)
@@ -144,7 +139,7 @@ class ApiConnectionSerializer(serializers.ModelSerializer):
         ]
 
 
-class PluginApiSerializer(serializers.ModelSerializer):
+class PluginApiSerializer(SmarterCamelCaseSerializer):
     """PluginDataApi model serializer."""
 
     connection = serializers.SlugRelatedField(slug_field="name", queryset=ApiConnection.objects.all())
@@ -165,16 +160,3 @@ class PluginApiSerializer(serializers.ModelSerializer):
             "username",
             "password",
         ]
-
-    def to_representation(self, instance):
-        """Convert `username` to `userName`."""
-        representation = super().to_representation(instance)
-        new_representation = {}
-        for key in representation.keys():
-            new_key = "".join(word.capitalize() for word in key.split("_"))
-            new_key = new_key[0].lower() + new_key[1:]
-            if isinstance(representation[key], str):
-                new_representation[new_key] = representation[key].strip()
-            else:
-                new_representation[new_key] = representation[key]
-        return new_representation
