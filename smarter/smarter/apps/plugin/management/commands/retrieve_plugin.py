@@ -1,5 +1,7 @@
 """This module retrieves the json representation of a plugin."""
 
+import sys
+
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account
@@ -27,13 +29,14 @@ class Command(BaseCommand):
         try:
             account = Account.objects.get(account_number=account_number)
         except Account.DoesNotExist:
-            self.stdout.write(self.style.ERROR(f"Account {account_number} does not exist."))
-            return
+            self.stdout.write(self.style.ERROR(f"manage.py retrieve_plugin: Account {account_number} does not exist."))
+            sys.exit(1)
 
         try:
             plugin_meta = PluginMeta.objects.get(name=options["name"], account=account)
         except PluginMeta.DoesNotExist:
-            self.stdout.write(self.style.ERROR(f"Plugin {name} does not exist."))
+            self.stdout.write(self.style.ERROR(f"manage.py retrieve_plugin: Plugin {name} does not exist."))
+            sys.exit(1)
 
         controller = PluginController(account=account, plugin_meta=plugin_meta)
         plugin = controller.obj

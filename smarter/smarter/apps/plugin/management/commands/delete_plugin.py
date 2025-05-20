@@ -1,5 +1,7 @@
 """This module deletes a plugin using manage.py on the command line."""
 
+import sys
+
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account
@@ -28,12 +30,13 @@ class Command(BaseCommand):
             account = Account.objects.get(account_number=account_number)
         except Account.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"Account {account_number} does not exist."))
-            return
+            sys.exit(1)
 
         try:
             plugin_meta = PluginMeta.objects.get(name=options["name"], account_id=account.id)
         except PluginMeta.DoesNotExist:
             self.stdout.write(self.style.ERROR(f"Plugin {name} does not exist."))
+            sys.exit(1)
 
         controller = PluginController(account=account, plugin_meta=plugin_meta)
         plugin = controller.obj
