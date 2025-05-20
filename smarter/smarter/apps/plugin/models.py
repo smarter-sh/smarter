@@ -915,6 +915,7 @@ class ApiConnection(TimestampedModel):
         ("token", "Token Auth"),
         ("oauth", "OAuth"),
     ]
+    PROXY_PROTOCOL_CHOICES = [("http", "HTTP"), ("https", "HTTPS"), ("socks", "SOCKS")]
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="api_connections_account")
     name = models.CharField(
@@ -950,7 +951,7 @@ class ApiConnection(TimestampedModel):
     # Proxy fields
     proxy_protocol = models.CharField(
         max_length=10,
-        choices=[("http", "HTTP"), ("https", "HTTPS"), ("socks", "SOCKS")],
+        choices=PROXY_PROTOCOL_CHOICES,
         default="http",
         help_text="The protocol to use for the proxy connection.",
     )
