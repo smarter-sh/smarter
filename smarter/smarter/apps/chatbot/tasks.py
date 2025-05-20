@@ -179,7 +179,13 @@ def create_custom_domain_dns_record(
             ],
         }
     """
-    custom_domain = ChatBotCustomDomain.objects.get(id=chatbot_custom_domain_id)
+    try:
+        custom_domain = ChatBotCustomDomain.objects.get(id=chatbot_custom_domain_id)
+    except ChatBotCustomDomain.DoesNotExist as e:
+        err = f"ChatBotCustomDomain {chatbot_custom_domain_id} not found."
+        logger.error(err)
+        raise ChatBotCustomDomainNotFound(err) from e
+
     record, _ = aws_helper.route53.get_or_create_dns_record(
         hosted_zone_id=custom_domain.aws_hosted_zone_id,
         record_name=record_name,
@@ -187,14 +193,26 @@ def create_custom_domain_dns_record(
         record_value=record_value,
         record_ttl=record_ttl,
     )
-    dns_record, _ = ChatBotCustomDomainDNS.objects.get_or_create(
-        custom_domain=custom_domain,
-        record_name=record["Name"],
-        record_type=record["Type"],
-    )
-    dns_record.record_value = record["ResourceRecords"]
-    dns_record.record_ttl = record["TTL"]
-    dns_record.save()
+    try:
+        # note: we cannot use the get_or_create method here because
+        # of validation errors that are raised if record_value is
+        # not present.
+        dns_record = ChatBotCustomDomainDNS.objects.get(
+            custom_domain=custom_domain,
+            record_name=record["Name"],
+            record_type=record["Type"],
+        )
+        dns_record.record_value = (record["ResourceRecords"],)
+        dns_record.record_ttl = (record["TTL"],)
+        dns_record.save()
+    except ChatBotCustomDomainDNS.DoesNotExist:
+        dns_record = ChatBotCustomDomainDNS(
+            custom_domain=custom_domain,
+            record_name=record["Name"],
+            record_type=record["Type"],
+            record_value=record["ResourceRecords"],
+            record_ttl=record["TTL"],
+        )
 
 
 # ------------------------------------------------------------------------------

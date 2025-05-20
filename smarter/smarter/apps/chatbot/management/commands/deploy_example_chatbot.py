@@ -54,7 +54,7 @@ class Command(BaseCommand):
             return
 
         for plugin_meta in PluginMeta.objects.filter(account=user_profile.account):
-            if plugin_meta.name in ["EverlastingGobstopper", "ExampleConfiguration"]:
+            if plugin_meta.name in ["everlasting_gobstopper", "example_configuration"]:
                 if not ChatBotPlugin.objects.filter(chatbot=chatbot, plugin_meta=plugin_meta).exists():
                     ChatBotPlugin.objects.create(chatbot=chatbot, plugin_meta=plugin_meta)
 

@@ -58,12 +58,26 @@ class ManageCommandCreatePluginTestCase(TestAccountMixin):
         )
         self.chatbot = ChatBot.objects.create(
             account=self.account,
-            name=f"{self.hash_suffix}",
+            name=f"manage_command_create_plugin_test_case{self.hash_suffix}",
         )
         self._chatbot_dns_verification_status_changed = False
         self._chatbot_dns_failed = False
         self._chatbot_dns_verification_initiated = False
         self._chatbot_dns_verified = False
+
+    def tearDown(self):
+        """Clean up test fixtures."""
+        try:
+            if self.chatbot is not None:
+                self.chatbot.delete()
+        except ChatBot.DoesNotExist:
+            pass
+        try:
+            if self.auth_token is not None:
+                self.auth_token.delete()
+        except SmarterAuthToken.DoesNotExist:
+            pass
+        super().tearDown()
 
     def test_add_api_key(self):
         """Test add_api_key command."""

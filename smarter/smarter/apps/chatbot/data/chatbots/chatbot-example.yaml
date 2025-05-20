@@ -35,5 +35,5 @@ spec:
     subdomain: null
   functions: []
   plugins:
-  - EverlastingGobstopper
-  - ExampleConfiguration
+  - everlasting_gobstopper
+  - example_configuration

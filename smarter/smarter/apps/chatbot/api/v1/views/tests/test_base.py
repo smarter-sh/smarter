@@ -50,9 +50,9 @@ class TestChatBotApiBaseViewSet(TestAccountMixin):
         cls.broker = SAMChatbotBroker(request=None, account=cls.account, manifest=cls.manifest)
         cls.request: WSGIRequest = cls.create_generic_request(url=cls.broker.chatbot.url_chatbot)
 
-        cls.request.user = cls.user
+        cls.request.user = cls.admin_user
         cls.client = Client()
-        cls.client.force_login(cls.user)
+        cls.client.force_login(cls.admin_user)
         cls.kwargs = {}
         add_example_plugins(user_profile=cls.user_profile)
 

@@ -2,10 +2,10 @@
 """Smarter API SqlPlugin Manifest handler"""
 
 from rest_framework import serializers
-from rest_framework.serializers import ModelSerializer
 
 from smarter.apps.account.models import UserProfile
 from smarter.apps.plugin.models import PluginMeta
+from smarter.lib.drf.serializers import SmarterCamelCaseSerializer
 from smarter.lib.manifest.broker import SAMBrokerError
 
 
@@ -17,7 +17,7 @@ class SAMPluginBrokerError(SAMBrokerError):
         return "Smarter API Plugin Manifest Broker Error"
 
 
-class PluginSerializer(ModelSerializer):
+class PluginSerializer(SmarterCamelCaseSerializer):
     """Django ORM model serializer for get()"""
 
     email = serializers.SerializerMethodField()

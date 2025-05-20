@@ -3,15 +3,14 @@ Project level base classes for unit tests.
 """
 
 import csv
-import hashlib
 import json
 import logging
-import os
-import random
 import unittest
 from typing import Union
 
 import yaml
+
+from smarter.common.utils import hash_factory
 
 
 logger = logging.getLogger(__name__)
@@ -45,8 +44,7 @@ class SmarterTestBase(unittest.TestCase):
     @classmethod
     def generate_uid(cls) -> str:
         """Generate a unique identifier for the test."""
-        random_bytes = os.urandom(32)
-        return hashlib.sha256(random_bytes).hexdigest()
+        return hash_factory(length=64)
 
     @classmethod
     def get_readonly_yaml_file(cls, file_path) -> dict:
@@ -67,4 +65,4 @@ class SmarterTestBase(unittest.TestCase):
     @staticmethod
     def generate_hash_suffix(length: int = 16) -> str:
         """Generate a unique hash suffix for test data."""
-        return "_" + hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:length]
+        return "_" + hash_factory(length=length)

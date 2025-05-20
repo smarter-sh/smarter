@@ -1,12 +1,12 @@
 """Dict factories for testing views."""
 
-import hashlib
 import logging
 import random
 import uuid
 from datetime import datetime
 
 from smarter.apps.account.models import Account, PaymentMethod, Secret, UserProfile
+from smarter.common.utils import hash_factory
 from smarter.lib.django.user import User, UserType
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 def admin_user_factory(account: Account = None) -> tuple[UserType, Account, UserProfile]:
-    hashed_slug = hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:16]
+    hashed_slug = hash_factory()
     username = f"testAdminUser_{hashed_slug}"
     email = f"test-{hashed_slug}@mail.com"
     first_name = f"TestAdminFirstName_{hashed_slug}"
@@ -31,7 +31,9 @@ def admin_user_factory(account: Account = None) -> tuple[UserType, Account, User
         is_superuser=True,
     )
     logger.info("admin_user_factory() Created admin user: %s", username)
-    account = account or Account.objects.create(company_name=f"TestAccount_{hashed_slug}", phone_number="123-456-789")
+    account = account or Account.objects.create(
+        company_name=f"TestAccount_AdminUser_{hashed_slug}", phone_number="123-456-789"
+    )
     logger.info("admin_user_factory() Created account: %s", account.id)
     user_profile = UserProfile.objects.create(user=user, account=account, is_test=True)
     logger.info("admin_user_factory() Created user profile %s", user_profile)
@@ -40,7 +42,7 @@ def admin_user_factory(account: Account = None) -> tuple[UserType, Account, User
 
 
 def mortal_user_factory(account: Account = None) -> tuple[UserType, Account, UserProfile]:
-    hashed_slug = hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:16]
+    hashed_slug = hash_factory()
     username = f"testMortalUser_{hashed_slug}"
     email = f"test-{hashed_slug}@mail.com"
     first_name = f"TestMortalFirstName_{hashed_slug}"
@@ -56,7 +58,9 @@ def mortal_user_factory(account: Account = None) -> tuple[UserType, Account, Use
         is_superuser=False,
     )
     logger.info("mortal_user_factory() Created mortal user: %s", username)
-    account = account or Account.objects.create(company_name=f"TestAccount_{hashed_slug}", phone_number="123-456-789")
+    account = account or Account.objects.create(
+        company_name=f"TestAccount_MortalUser_{hashed_slug}", phone_number="123-456-789"
+    )
     logger.info("mortal_user_factory() Created/set account: %s", account.id)
     user_profile = UserProfile.objects.create(user=user, account=account, is_test=True)
     logger.info("mortal_user_factory() Created user profile %s", user_profile)
