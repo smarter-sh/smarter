@@ -2,7 +2,7 @@
 apiVersion: smarter.sh/v1
 kind: SqlConnection
 metadata:
-  name: testSqlConnection
+  name: test_sql_connection
   description: points to the Django mysql database
   version: 0.1.0
 spec:

@@ -2,7 +2,7 @@
 apiVersion: smarter.sh/v1
 kind: SqlPlugin
 metadata:
-  name: SqlTest
+  name: sql_test
   pluginClass: sql
   description: Query the Django User model to retrieve detailed account information about the admin account for the Smarter platform.
   version: 0.1.0
