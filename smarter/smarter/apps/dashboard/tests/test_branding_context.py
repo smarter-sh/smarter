@@ -17,7 +17,7 @@ class TestContext(TestAccountMixin):
         """test that we can instantiate the context."""
         rf = RequestFactory()
         request = rf.get("/")
-        request.user = self.user
+        request.user = self.non_admin_user
         test_context = branding(request=request)
 
         self.assertIn("branding", test_context)

@@ -33,6 +33,7 @@ class TestDocsUrls(SmarterTestBase):
 
     def tearDown(self) -> None:
         self.client.logout()
+        self.client = None
         super().tearDown()
 
     @classmethod
@@ -307,5 +308,3 @@ class TestDocsUrls(SmarterTestBase):
         """Test url for secret manifest."""
         url = reverse(f"{namespace}:{manifest_name(SAMKinds.SECRET)}")
         self.process_url(url)
-
-    # ...existing code...
