@@ -1,5 +1,7 @@
 """A module for interacting with Kubernetes clusters."""
 
+# pylint: disable=W0613
+
 import json
 import logging
 import os
@@ -23,6 +25,12 @@ class KubernetesHelper(SmarterHelperMixin, metaclass=Singleton):
 
     _kubeconfig: dict = None
     _configured: bool = False
+
+    def __init__(self, kubeconfig: dict = None, configured: bool = False, **kwargs):
+        super().__init__()
+        default_kubeconfig = {"apiVersion": "v1"}
+        self._configured = configured
+        self._kubeconfig = kubeconfig or default_kubeconfig
 
     @property
     def configured(self) -> bool:
