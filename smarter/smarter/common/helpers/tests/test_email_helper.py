@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
-from ..email_helpers import EmailHelper
+from ..email_helpers import EmailHelper, EmailHelperException
 
 
 class TestEmailHelper(SmarterTestBase):
@@ -74,5 +74,5 @@ class TestEmailHelper(SmarterTestBase):
         mock_settings.SMARTER_EMAIL_ADMIN = "admin@example.com"
         smtp_instance = mock_smtp.return_value.__enter__.return_value
         smtp_instance.sendmail.side_effect = Exception("fail")
-        EmailHelper.send_email("subject", "body", ["a@example.com"])
-        mock_logger.error.assert_called()
+        with self.assertRaises(EmailHelperException):
+            EmailHelper.send_email("subject", "body", ["a@example.com"])

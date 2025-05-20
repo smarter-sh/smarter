@@ -8,12 +8,17 @@ from typing import List, Union
 
 from django.conf import settings
 
+from smarter.common.exceptions import SmarterExceptionBase
 from smarter.lib.django.validators import SmarterValidator
 
 from ..classes import Singleton
 
 
 logger = logging.getLogger(__name__)
+
+
+class EmailHelperException(SmarterExceptionBase):
+    """Base class for Email helper exceptions."""
 
 
 class EmailHelper(metaclass=Singleton):
@@ -23,6 +28,11 @@ class EmailHelper(metaclass=Singleton):
         """Convert to a list and filter out any invalid email addresses."""
         if isinstance(emails, str):
             mailto_list = [emails]
+        elif isinstance(emails, list):
+            mailto_list = emails
+        else:
+            logger.warning("invalid email address list provided: %s", emails)
+            return None
 
         valid_emails = [email for email in mailto_list if SmarterValidator.is_valid_email(email)]
 
@@ -83,6 +93,12 @@ class EmailHelper(metaclass=Singleton):
             logger.error(
                 "smtp error while attempting to send email. error: %s from: %s to. %s", e, msg["From"], msg["To"]
             )
+            raise EmailHelperException("Error sending email") from e
+        except Exception as e:
+            logger.error(
+                "unexpected error while attempting to send email. error: %s from: %s to. %s", e, msg["From"], msg["To"]
+            )
+            raise EmailHelperException("Error sending email") from e
 
 
 email_helper = EmailHelper()
