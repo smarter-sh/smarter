@@ -18,6 +18,8 @@ from smarter.common.exceptions import SmarterConfigurationError
 from smarter.common.utils import camel_to_snake
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
+from ..manifest.models.sql_plugin.enum import SAMSqlPluginSpecSqlData
+from ..manifest.models.sql_plugin.model import SAMSqlPlugin
 from ..manifest.models.static_plugin.const import MANIFEST_KIND
 from .base import PluginBase
 
@@ -31,6 +33,15 @@ class SqlPlugin(PluginBase):
     _metadata_class = SAMPluginCommonMetadataClass.SQL.value
     _plugin_data: PluginDataSql = None
     _plugin_data_serializer: PluginSqlSerializer = None
+
+    @property
+    def manifest(self) -> SAMSqlPlugin:
+        """Return the Pydandic model of the plugin."""
+        if not self._manifest and self.ready:
+            # if we don't have a manifest but we do have Django ORM data then
+            # we can work backwards to the Pydantic model
+            self._manifest = SAMSqlPlugin(**self.to_json())
+        return self._manifest
 
     @property
     def plugin_data(self) -> PluginDataSql:
@@ -122,7 +133,7 @@ class SqlPlugin(PluginBase):
 
     @classmethod
     def example_manifest(cls, kwargs: dict = None) -> dict:
-        return {
+        sql_plugin = {
             SAMKeys.APIVERSION.value: SmarterApiVersions.V1,
             SAMKeys.KIND.value: MANIFEST_KIND,
             SAMKeys.METADATA.value: {
@@ -135,7 +146,11 @@ class SqlPlugin(PluginBase):
             SAMKeys.SPEC.value: {
                 SAMPluginSpecKeys.SELECTOR.value: {
                     SAMPluginCommonSpecSelectorKeys.DIRECTIVE.value: SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value,
-                    SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value: ["admin", "Smarter platform", "admin account"],
+                    SAMPluginCommonSpecSelectorKeys.SEARCHTERMS.value: [
+                        "smarter",
+                        "users",
+                        "admin",
+                    ],
                 },
                 SAMPluginSpecKeys.PROMPT.value: {
                     SAMPluginCommonSpecPromptKeys.PROVIDER.value: SettingsDefaults.LLM_DEFAULT_PROVIDER,
@@ -144,18 +159,39 @@ class SqlPlugin(PluginBase):
                     SAMPluginCommonSpecPromptKeys.TEMPERATURE.value: SettingsDefaults.LLM_DEFAULT_TEMPERATURE,
                     SAMPluginCommonSpecPromptKeys.MAXTOKENS.value: SettingsDefaults.LLM_DEFAULT_MAX_TOKENS,
                 },
-                SAMPluginSpecKeys.DATA.value: {
+                SAMPluginSpecKeys.CONNECTION.value: "example_connection",
+                SAMPluginSpecKeys.SQL_DATA.value: {
                     "description": "Query the Django User model to retrieve detailed account information about the admin account for the Smarter platform .",
-                    SAMPluginCommonMetadataClass.SQL.value: {
-                        "connection": "exampleConnection",
-                        "sql_query": "SELECT * FROM auth_user WHERE username = 'admin';\n",
-                        "parameters": None,
-                        "test_values": None,
-                        "limit": 1,
-                    },
+                    SAMSqlPluginSpecSqlData.SQL_QUERY.value: "SELECT * FROM auth_user WHERE username = '{username}';\n",
+                    SAMSqlPluginSpecSqlData.PARAMETERS.value: [
+                        {
+                            "name": "username",
+                            "type": "string",
+                            "description": "The username to query.",
+                            "required": True,
+                            "default": "admin",
+                        },
+                        {
+                            "name": "unit",
+                            "type": "string",
+                            "enum": ["Celsius", "Fahrenheit"],
+                            "description": "The temperature unit to use.",
+                            "required": False,
+                            "default": "Celsius",
+                        },
+                    ],
+                    SAMSqlPluginSpecSqlData.TEST_VALUES.value: [
+                        {"name": "username", "value": "admin"},
+                        {"name": "unit", "value": "Celsius"},
+                    ],
+                    SAMSqlPluginSpecSqlData.LIMIT.value: 1,
                 },
             },
         }
+        # recast the Python dict to the Pydantic model
+        # in order to validate our output
+        pydantic_model = SAMSqlPlugin(**sql_plugin)
+        return pydantic_model.model_dump_json()
 
     def create(self):
         super().create()

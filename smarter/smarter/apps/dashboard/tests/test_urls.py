@@ -18,6 +18,13 @@ class TestDashboard(TestAccountMixin):
         self.client = Client()
         self.client.force_login(self.non_admin_user)
 
+    def tearDown(self):
+        """Tear down test fixtures."""
+        if self.client is not None:
+            self.client.logout()
+        self.client = None
+        return super().tearDown()
+
     def test_dashboard(self):
         """Test dashboard root view."""
         response = self.client.get("")

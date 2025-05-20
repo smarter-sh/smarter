@@ -176,6 +176,12 @@ class SAMSqlPluginBroker(AbstractBroker, AccountMixin):
                     raise SAMPluginBrokerError(
                         f"Model dump failed for {self.kind} {chatbot.name}", thing=self.kind, command=command
                     )
+
+                # round-trip the model dump through the Pydantic model to ensure that
+                # it is valid and to serialize it to JSON
+                pydantic_model = self.pydantic_model(**model_dump)
+                model_dump = pydantic_model.model_dump_json()
+
                 data.append(model_dump)
             except Exception as e:
                 logger.error(
@@ -238,6 +244,12 @@ class SAMSqlPluginBroker(AbstractBroker, AccountMixin):
                 data: dict = self.plugin.to_json()
                 data[SAMKeys.METADATA].pop(SAMMetadataKeys.ACCOUNT)
                 data[SAMKeys.METADATA].pop(SAMMetadataKeys.AUTHOR)
+
+                # round-trip the model dump through the Pydantic model to ensure that
+                # it is valid and to serialize it to JSON
+                pydantic_model = self.pydantic_model(**data)
+                data = pydantic_model.model_dump_json()
+
                 return self.json_response_ok(command=command, data=data)
             except Exception as e:
                 raise SAMBrokerError(

@@ -2,7 +2,7 @@
 """Views for unit tests."""
 import logging
 
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.response import Response
 
 from smarter.lib.drf.view_helpers import (
@@ -31,6 +31,13 @@ faux_list = [
 ]
 
 
+class FauxDictSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    message = serializers.CharField()
+    status = serializers.CharField()
+    data = serializers.DictField()
+
+
 class TestJsonDictView(SmarterUnauthenticatedAPIView):
     """Returns a JSON dict for testing purposes."""
 
@@ -41,6 +48,8 @@ class TestJsonDictView(SmarterUnauthenticatedAPIView):
 
 class TestJsonListView(SmarterUnauthenticatedAPIListView):
     """Returns a list of JSON dicts for testing purposes."""
+
+    serializer_class = FauxDictSerializer
 
     def get_queryset(self):
         """Provide a faux queryset for the view."""
@@ -62,6 +71,8 @@ class TestJsonDictViewAuthenticated(SmarterAuthenticatedAPIView):
 
 class TestJsonListViewAuthenticated(SmarterAuthenticatedListAPIView):
     """Returns a list of JSON dicts for testing purposes."""
+
+    serializer_class = FauxDictSerializer
 
     def get_queryset(self):
         """Provide a faux queryset for the view."""

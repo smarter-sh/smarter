@@ -264,13 +264,17 @@ class ChatHelper(SmarterRequestMixin):
                 )
 
             try:
+                # modify the unit test server URL
+                # to a more Django friendly URL.
+                django_friendly_url = self.url or ""
+                django_friendly_url = django_friendly_url.replace("http://testserver/", "http://testserver.local/")
                 chat = Chat.objects.create(
                     session_key=self.session_key,
                     account=self.account,
                     chatbot=self.chatbot,
                     ip_address=self.ip_address,
                     user_agent=self.user_agent,
-                    url=self.url,
+                    url=django_friendly_url,
                 )
             except IntegrityError as e:
                 raise SmarterConfigurationError(f"{self.formatted_class_name} - IntegrityError: {str(e)}") from e

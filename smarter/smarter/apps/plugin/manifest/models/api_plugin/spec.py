@@ -84,5 +84,5 @@ class SAMApiPluginSpec(AbstractSAMSpecBase):
     @field_validator("connection")
     def validate_connection(cls, v):
         if not SmarterValidator.is_valid_cleanstring(v):
-            raise SAMValidationError("Connection must be a valid cleanstring.")
+            raise SAMValidationError(f"Connection, '{v}' must be a valid cleanstring.")
         return v

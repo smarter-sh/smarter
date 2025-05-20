@@ -18,7 +18,8 @@ class TestUrls(TestAccountMixin):
 
     def tearDown(self):
 
-        self.client.logout()
+        if self.client is not None:
+            self.client.logout()
         self.client = None
         super().tearDown()
 
