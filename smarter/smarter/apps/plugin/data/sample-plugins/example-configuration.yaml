@@ -6,7 +6,7 @@ kind: Plugin
 # Each of these fields is required.
 # ------------------------------------------------------------
 metadata:
-  name: ExampleConfiguration
+  name: example_configuration
   pluginClass: static
   description: The example plugin. This is a 'hello world' style plugin. This is an example plugin to integrate with OpenAI API Function Calling additional information plugin_data, in this module.
   version: 0.2.0

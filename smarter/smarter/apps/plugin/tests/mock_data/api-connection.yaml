@@ -2,7 +2,7 @@
 apiVersion: smarter.sh/v1
 kind: ApiConnection
 metadata:
-  name: testApiConnection
+  name: test_api_connection
   description: points to smarter api localhost
   version: 0.1.1
 spec:

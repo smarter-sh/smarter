@@ -2,7 +2,7 @@
 apiVersion: smarter.sh/v1
 kind: ApiPlugin
 metadata:
-  name: ApiTest
+  name: api_test
   pluginClass: api
   description: Get additional information about the admin account of the Smarter platform.
   version: 0.1.0

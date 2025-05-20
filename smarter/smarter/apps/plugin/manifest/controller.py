@@ -2,6 +2,7 @@
 Helper class to map to/from Pydantic manifest model, Plugin and Django ORM models.
 """
 
+from logging import getLogger
 from typing import Dict, Type, Union
 
 from smarter.apps.account.models import Account
@@ -17,12 +18,18 @@ from ..plugin.base import PluginBase
 from ..plugin.sql import SqlPlugin
 from ..plugin.static import StaticPlugin
 from .enum import SAMPluginCommonMetadataClassValues
+from .models.api_plugin.const import MANIFEST_KIND as API_MANIFEST_KIND
 from .models.api_plugin.model import SAMApiPlugin
+from .models.sql_plugin.const import MANIFEST_KIND as SQL_MANIFEST_KIND
 from .models.sql_plugin.model import SAMSqlPlugin
 
 # plugin manifest
-from .models.static_plugin.const import MANIFEST_KIND
+from .models.static_plugin.const import MANIFEST_KIND as STATIC_MANIFEST_KIND
 from .models.static_plugin.model import SAMStaticPlugin
+
+
+VALID_MANIFEST_KINDS = [STATIC_MANIFEST_KIND, SQL_MANIFEST_KIND, API_MANIFEST_KIND]
+logger = getLogger(__name__)
 
 
 class SAMPluginControllerError(SAMExceptionBase):
@@ -47,14 +54,18 @@ class PluginController(AbstractController):
             raise SAMPluginControllerError(
                 f"One and only one of manifest or plugin_meta should be provided. Received? manifest: {bool(manifest)}, plugin_meta: {bool(plugin_meta)}."
             )
-        # self._account = account
+        if manifest and not isinstance(manifest, (SAMStaticPlugin, SAMSqlPlugin, SAMApiPlugin)):
+            raise SAMPluginControllerError(
+                f"Manifest should be one of {SAMStaticPlugin}, {SAMSqlPlugin}, {SAMApiPlugin}. Received? {type(manifest)}."
+            )
         self._manifest = manifest
+
         self._plugin_meta = plugin_meta
 
         if self.manifest:
-            if self.manifest.kind != MANIFEST_KIND:
+            if self.manifest.kind not in VALID_MANIFEST_KINDS:
                 raise SAMPluginControllerError(
-                    f"Manifest kind {self.manifest.kind} does not match expected kind {MANIFEST_KIND}."
+                    f"Manifest kind {self.manifest.kind} should be one of: {VALID_MANIFEST_KINDS}."
                 )
 
     ###########################################################################
