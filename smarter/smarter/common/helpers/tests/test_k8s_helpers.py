@@ -7,8 +7,10 @@ WARNINGS:
 - leaving the DNS resources in place permanently as it takes 15+ minutes to propagate
 """
 
-# python stuff
 import os
+
+# python stuff
+import subprocess
 import time
 from string import Template
 from unittest.mock import MagicMock, patch
@@ -33,12 +35,9 @@ class Testk8sHelpers(SmarterTestBase):
         self.api_domain = f"{self.environment}.api.{smarter_settings.root_domain}"
         self.cluster_issuer = self.api_domain
         self.account_number = SMARTER_ACCOUNT_NUMBER
-        self.hostname = f"{self.name}.{self.account_number}.{self.cluster_issuer}"
+        self.hostname = f"test-k8s-helpers.{self.account_number}.{self.cluster_issuer}"
         self.namespace = f"{smarter_settings.platform_name}-platform-{self.environment}"
-
         self.helper = KubernetesHelper()
-        self.helper._configured = False
-        self.helper._kubeconfig = {"apiVersion": "v1"}
 
         # get-or-create the top-level api domain: alpha.api.smarter.sh
         aws_helper.route53.create_domain_a_record(
@@ -96,7 +95,7 @@ class Testk8sHelpers(SmarterTestBase):
     @patch("smarter.common.helpers.k8s_helpers.subprocess.check_output")
     def test_verify_ingress_not_found(self, mock_check_output, mock_logger, mock_formatted_text, mock_settings):
         mock_settings.aws_eks_cluster_name = "test"
-        mock_check_output.side_effect = Exception()
+        mock_check_output.side_effect = subprocess.CalledProcessError(1, "cmd")
         self.helper._configured = True
         result = self.helper.verify_ingress("ingress", "ns")
         self.assertFalse(result)
@@ -118,7 +117,7 @@ class Testk8sHelpers(SmarterTestBase):
     @patch("smarter.common.helpers.k8s_helpers.subprocess.check_output")
     def test_verify_secret_not_found(self, mock_check_output, mock_logger, mock_formatted_text, mock_settings):
         mock_settings.aws_eks_cluster_name = "test"
-        mock_check_output.side_effect = Exception()
+        mock_check_output.side_effect = subprocess.CalledProcessError(1, "cmd")
         self.helper._configured = True
         result = self.helper.verify_secret("secret", "ns")
         self.assertFalse(result)
