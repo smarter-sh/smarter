@@ -33,6 +33,7 @@ from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.common.helpers.url_helpers import session_key_from_url
+from smarter.common.utils import hash_factory
 from smarter.lib.django import waffle
 from smarter.lib.django.validators import SmarterValidator
 
@@ -709,7 +710,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         """
         key_string = self.unique_client_string
         if key_string:
-            session_key = hashlib.sha256(key_string.encode()).hexdigest()
+            session_key = hash_factory(length=64)
             self.helper_logger(f"Generated new session key: {session_key}")
             return session_key
 

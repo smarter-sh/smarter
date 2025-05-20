@@ -115,6 +115,7 @@ class ChatBot(TimestampedModel):
 
     class Meta:
         verbose_name_plural = "ChatBots"
+        unique_together = ("account", "name")
 
     class Modes:
         """ChatBot API Modes"""

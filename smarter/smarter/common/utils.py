@@ -2,8 +2,10 @@
 # pylint: disable=E1101
 """Utility functions for the OpenAI Lambda functions"""
 import csv
+import hashlib
 import json  # library for interacting with JSON data https://www.json.org/json-en.html
 import logging
+import random
 import re
 from datetime import datetime
 
@@ -12,6 +14,17 @@ from pydantic import SecretStr
 
 
 logger = logging.getLogger(__name__)
+
+
+def hash_factory(length: int = 16) -> str:
+    """
+    Generates a random hash of the specified length.
+    Args:
+        length (int): The length of the hash to generate.
+    Returns:
+        str: A random hash of the specified length.
+    """
+    return hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:length]
 
 
 def get_readonly_yaml_file(file_path) -> dict:
@@ -107,3 +120,21 @@ def dict_is_contained_in(dict1, dict2):
                 print(f"value {value} is not present in the model dict: ")
                 return False
     return True
+
+
+def dict_is_subset(small, big):
+    """
+    Recursively check that all items in dict 'small' exist in dict 'big'.
+    """
+    if isinstance(small, dict) and isinstance(big, dict):
+        for k, v in small.items():
+            if k not in big:
+                return False
+            if not dict_is_subset(v, big[k]):
+                return False
+        return True
+    elif isinstance(small, list) and isinstance(big, list):
+        # Check that all items in 'small' are in 'big' (order matters)
+        return all(any(dict_is_subset(sv, bv) for bv in big) if isinstance(sv, dict) else sv in big for sv in small)
+    else:
+        return small == big

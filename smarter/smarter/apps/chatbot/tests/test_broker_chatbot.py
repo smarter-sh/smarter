@@ -3,6 +3,7 @@
 import json
 import os
 from http import HTTPStatus
+from logging import getLogger
 
 import requests
 import yaml
@@ -13,12 +14,17 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.chatbot.manifest.brokers.chatbot import SAMChatbotBroker
 from smarter.apps.chatbot.manifest.models.chatbot.model import SAMChatbot
 from smarter.apps.plugin.utils import add_example_plugins
-from smarter.common.utils import dict_is_contained_in, get_readonly_yaml_file
+from smarter.common.utils import (
+    dict_is_contained_in,
+    dict_is_subset,
+    get_readonly_yaml_file,
+)
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.loader import SAMLoader
 
 
 HERE = os.path.abspath(os.path.dirname(__file__))
+logger = getLogger(__name__)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -56,7 +62,7 @@ class TestSAMChatbotBroker(TestAccountMixin):
         self.assertEqual(retval.status_code, HTTPStatus.OK)
         self.assertIsInstance(content, dict)
         self.assertIn("message", content.keys())
-        self.assertEqual(content["message"], "Chatbot TestChatbot applied successfully")
+        self.assertEqual(content["message"], f"Chatbot {self.broker.chatbot.name} applied successfully")
 
     def test_chatbot_broker_describe(self):
         """
@@ -94,7 +100,7 @@ class TestSAMChatbotBroker(TestAccountMixin):
         round_trip_dict = pydantic_model.model_dump()
 
         # assert that everything in content is in round_trip_dict
-        self.assertTrue(dict_is_contained_in(content, round_trip_dict))
+        self.assertTrue(dict_is_subset(content, round_trip_dict))
 
     def test_chatbot_broker_delete(self):
         """Test that the Broker can delete the object."""
@@ -106,7 +112,7 @@ class TestSAMChatbotBroker(TestAccountMixin):
         content = json.loads(retval.content.decode())
         self.assertIsInstance(content, dict)
         self.assertIn("message", content.keys())
-        self.assertEqual(content["message"], "Chatbot TestChatbot deleted successfully")
+        self.assertEqual(content["message"], f"Chatbot {self.broker.chatbot.name} deleted successfully")
 
     def test_chatbot_broker_deploy(self):
         """Test that the Broker does not implement a deploy() method."""
@@ -116,7 +122,7 @@ class TestSAMChatbotBroker(TestAccountMixin):
         content = json.loads(retval.content.decode())
         self.assertIsInstance(content, dict)
         self.assertIn("message", content.keys())
-        self.assertEqual(content["message"], "Chatbot TestChatbot deployed successfully")
+        self.assertEqual(content["message"], f"Chatbot {self.broker.chatbot.name} deployed successfully")
 
     def test_chatbot_broker_logs(self):
         """Test that the Broker can generate log data."""
@@ -126,7 +132,7 @@ class TestSAMChatbotBroker(TestAccountMixin):
         content = json.loads(retval.content.decode())
         self.assertIsInstance(content, dict)
         self.assertIn("message", content.keys())
-        self.assertEqual(content["message"], "Chatbot TestChatbot successfully retrieved logs")
+        self.assertEqual(content["message"], f"Chatbot {self.broker.chatbot.name} successfully retrieved logs")
 
     def test_example_manifest(self):
         """Test that the example manifest is valid."""

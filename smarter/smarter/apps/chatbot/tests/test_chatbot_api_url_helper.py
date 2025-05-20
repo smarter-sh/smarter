@@ -74,9 +74,9 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
 
         self.assertTrue(
             helper.is_valid,
-            f"Expected a chatbot helper to be valid, but got {helper.is_valid} for url {self.chatbot.url} -- helper: {helper}, user: {helper.admin_user}, profile: {helper.user_profile}",
+            f"Expected a chatbot helper to be valid, but got {helper.is_valid} for url {self.chatbot.url} -- helper: {helper}, user: {helper.user}, profile: {helper.user_profile}",
         )
-        self.assertTrue(helper.account == self.account)
+        self.assertTrue(helper.account == self.account, f"Expected {self.account}, but got {helper.account}")
         self.assertTrue(
             helper.chatbot.url == self.chatbot.url, f"Expected {self.chatbot.url}, but got {helper.chatbot.url}"
         )

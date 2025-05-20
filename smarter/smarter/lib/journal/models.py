@@ -1,10 +1,8 @@
 """This module contains the Django models for SAM."""
 
-import hashlib
-import uuid
-
 from django.db import models
 
+from smarter.common.utils import hash_factory
 from smarter.lib.django.user import User
 
 from .enum import SmarterJournalCliCommands, SmarterJournalThings
@@ -24,5 +22,5 @@ class SAMJournal(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.key:
-            self.key = hashlib.sha256(str(uuid.uuid4()).encode()).hexdigest()
+            self.key = hash_factory(length=64)
         super().save(*args, **kwargs)

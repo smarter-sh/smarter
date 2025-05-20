@@ -1,8 +1,7 @@
 # pylint: disable=wrong-import-position
 """Test Account."""
 
-import hashlib
-import random
+from smarter.common.utils import hash_factory
 
 # our stuff
 from smarter.lib.django.user import User
@@ -17,7 +16,7 @@ class TestAccount(SmarterTestBase):
     def setUp(self):
         """Set up test fixtures."""
         super().setUp()
-        hashed_slug = hashlib.sha256(str(random.getrandbits(256)).encode("utf-8")).hexdigest()[:16]
+        hashed_slug = hash_factory()
         username = self.name
         email = f"test-{hashed_slug}@mail.com"
         first_name = f"TestAdminFirstName_{hashed_slug}"

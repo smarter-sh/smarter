@@ -176,8 +176,7 @@ class SAMSqlPluginBroker(AbstractBroker, AccountMixin):
                     raise SAMPluginBrokerError(
                         f"Model dump failed for {self.kind} {chatbot.name}", thing=self.kind, command=command
                     )
-                camel_cased_model_dump = self.snake_to_camel(model_dump)
-                data.append(camel_cased_model_dump)
+                data.append(model_dump)
             except Exception as e:
                 logger.error(
                     "%s.get() failed to serialize %s %s",
