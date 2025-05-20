@@ -4,6 +4,7 @@ from django.urls import path, re_path
 
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 
+from .const import namespace
 from .openapi import schema_view
 from .utils import json_schema_name, json_schema_path, manifest_name, manifest_path
 from .views.developer import (
@@ -59,6 +60,7 @@ from .views.manifest import (
 from .views.views import JsonSchemasView, ManifestsView
 
 
+app_name = namespace
 urlpatterns = [
     # -------------------------------------------------------------------------
     # Developers docs rendered from markdown in /data/doc/ in the Dockeer container

@@ -254,8 +254,8 @@ class UserProfile(TimestampedModel):
             account=self.account,
             email=self.user.email,
             is_test=self.is_test,
-            first_name=self.user.first_name,
-            last_name=self.user.last_name,
+            first_name=self.user.first_name or "account",
+            last_name=self.user.last_name or "contact",
         )
         if account_contact.is_primary != is_primary:
             account_contact.is_primary = is_primary
