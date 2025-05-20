@@ -801,7 +801,8 @@ class PluginBase(ABC):
                         },
                     },
                     SAMKeys.STATUS.value: {
-                        "account_number": self.user_profile.account.account_number,
+                        "id": self.plugin_meta.id,
+                        "accountNumber": self.user_profile.account.account_number,
                         "username": self.user_profile.user.get_username(),
                         "created": self.plugin_meta.created_at.isoformat(),
                         "modified": self.plugin_meta.updated_at.isoformat(),

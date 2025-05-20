@@ -12,7 +12,7 @@ from smarter.lib.manifest.loader import SAMLoader
 
 # pylint: disable=E1101
 class Command(BaseCommand):
-    """Django manage.py create_plugin command. This command is used to create a plugin from a yaml import file."""
+    """Django manage.py update_plugin command. This command is used to update a plugin from a yaml import file."""
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
@@ -20,7 +20,7 @@ class Command(BaseCommand):
         parser.add_argument("plugin_file_path", type=str, help="The path to the plugin YAML file")
 
     def handle(self, *args, **options):
-        """create the plugin."""
+        """update the plugin."""
         account_number = options["account_number"]
         file_path = options["plugin_file_path"]
 

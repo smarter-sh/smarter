@@ -1,6 +1,8 @@
 # pylint: disable=W0613
 """This module is used to create a new plugin using manage.py"""
 
+import sys
+
 from django.core.management.base import BaseCommand
 
 from smarter.apps.account.models import Account
@@ -28,7 +30,12 @@ class Command(BaseCommand):
         account_number = options["account_number"]
         file_path = options["file_path"]
 
-        account = Account.objects.get(account_number=account_number)
+        try:
+            account = Account.objects.get(account_number=account_number)
+        except Account.DoesNotExist:
+            self.stdout.write(self.style.ERROR(f"manage.py create_plugin: Account {account_number} does not exist."))
+            sys.exit(1)
+
         loader = SAMLoader(
             api_version=SmarterApiVersions.V1,
             file_path=file_path,
