@@ -82,6 +82,7 @@ class TestSAMBrokerMixin(TestPluginClassBase):
         """
         client = Client()
         headers = {"HTTP_AUTHORIZATION": f"Token {self.token_key}"}
+        response_json = None
 
         if manifest:
             response = client.post(path=path, data=manifest, content_type="application/json", **headers)
@@ -90,7 +91,31 @@ class TestSAMBrokerMixin(TestPluginClassBase):
         else:
             response = client.post(path=path, content_type="application/json", data=None, **headers)
         response_content = response.content.decode("utf-8")
-        response_json = json.loads(response_content)
+        try:
+            response_json = json.loads(response_content)
+        except json.JSONDecodeError:
+            # If the response is not JSON, return the raw content
+            response_json = response_content
+        if isinstance(response_json, str):
+            # If the response is a string, try to parse it as JSON
+            try:
+                response_json = json.loads(response_json)
+            except json.JSONDecodeError:
+                # If it still fails, return the string as is
+                pass
+        if isinstance(response_json, dict):
+            # If the response is a dictionary, check for the "error" key
+            if "error" in response_json:
+                # If the error key is present, raise an exception with the error message
+                # pylint: disable=W0719
+                raise Exception(f"Error in response: {response_json['error']}")
+        elif isinstance(response_json, list):
+            # If the response is a list, check if it contains any dictionaries
+            for item in response_json:
+                if isinstance(item, dict) and "error" in item:
+                    # If any dictionary in the list has an "error" key, raise an exception
+                    # pylint: disable=W0719
+                    raise Exception(f"Error in response: {item['error']}")
         return response_json, response.status_code
 
 

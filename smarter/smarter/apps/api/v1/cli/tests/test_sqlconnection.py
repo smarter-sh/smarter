@@ -6,6 +6,8 @@ from urllib.parse import urlencode
 import yaml
 from django.urls import reverse
 
+from smarter.apps.account.models import Secret
+from smarter.apps.account.tests.factories import secret_factory
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
@@ -37,13 +39,28 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         super().setUp()
         self.kwargs = {SAMKeys.KIND.value: KIND}
         self.query_params = urlencode({"name": self.name})
+        self.password: Secret = None
 
     def tearDown(self):
-        if self.sqlconnection:
-            self.sqlconnection.delete()
+        if self.sqlconnection is not None:
+            try:
+                self.sqlconnection.delete()
+            except SqlConnection.DoesNotExist:
+                pass
+        if self.password is not None:
+            try:
+                self.password.delete()
+            except Secret.DoesNotExist:
+                pass
         super().tearDown()
 
     def sqlconnection_factory(self):
+        self.password = secret_factory(
+            user_profile=self.user_profile,
+            name=self.name,
+            description="test password",
+            value="test",
+        )
         sqlconnection = SqlConnection.objects.create(
             name=self.name,
             db_engine=DbEngines.MYSQL.value,
@@ -53,7 +70,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
             port=5432,
             database=self.name,
             username="test",
-            password="test",
+            password=self.password,
         )
         return sqlconnection
 
