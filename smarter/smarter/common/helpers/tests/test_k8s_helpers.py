@@ -18,7 +18,11 @@ from unittest.mock import MagicMock, patch
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SmarterEnvironments
 from smarter.common.helpers.aws_helpers import aws_helper
-from smarter.common.helpers.k8s_helpers import KubernetesHelper, kubernetes_helper
+from smarter.common.helpers.k8s_helpers import (
+    KubernetesHelper,
+    KubernetesHelperException,
+    kubernetes_helper,
+)
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 
@@ -185,3 +189,24 @@ class Testk8sHelpers(SmarterTestBase):
         time.sleep(10)
         output = kubernetes_helper.verify_ingress(self.hostname, self.namespace)
         self.assertTrue(output)
+
+    def test_apply_illegal_host_name(self):
+        """
+        Test that we can apply a manifest that creates
+        a new ingress with a certificate and secret.
+        """
+        bad_hostname = f"test_k8s_helpers.{self.account_number}.{self.cluster_issuer}"
+        ingress_values = {
+            "cluster_issuer": self.cluster_issuer,
+            "environment_namespace": self.namespace,
+            "domain": bad_hostname,
+            "service_name": smarter_settings.platform_name,
+        }
+
+        # create and apply the ingress manifest
+        template_path = os.path.join(HERE, "./data/ingress.yaml.tpl")
+        with open(template_path, encoding="utf-8") as ingress_template:
+            template = Template(ingress_template.read())
+            manifest = template.substitute(ingress_values)
+        with self.assertRaises(KubernetesHelperException):
+            kubernetes_helper.apply_manifest(manifest)
