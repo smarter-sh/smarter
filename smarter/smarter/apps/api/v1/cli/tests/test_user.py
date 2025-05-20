@@ -32,7 +32,7 @@ class TestApiCliV1User(ApiV1TestBase):
     def setUp(self):
         super().setUp()
         self.kwargs = {SAMKeys.KIND.value: KIND}
-        self.query_params = urlencode({"username": self.user.username})
+        self.query_params = urlencode({"username": self.admin_user.username})
 
     def validate_response(self, response: dict) -> None:
         # validate the response and status are both good
@@ -200,8 +200,8 @@ class TestApiCliV1User(ApiV1TestBase):
         self.assertIsInstance(response, dict)
 
         # verify that user is active
-        self.user.refresh_from_db()
-        self.assertTrue(self.user.is_active)
+        self.admin_user.refresh_from_db()
+        self.assertTrue(self.admin_user.is_active)
 
     def test_undeploy(self) -> None:
         """Test undeploy command"""
@@ -214,13 +214,13 @@ class TestApiCliV1User(ApiV1TestBase):
         self.assertIsInstance(response, dict)
 
         # verify that user is not active
-        self.user.refresh_from_db()
-        self.assertFalse(self.user.is_active)
+        self.admin_user.refresh_from_db()
+        self.assertFalse(self.admin_user.is_active)
 
         # reactivate the user
-        self.user.is_active = True
-        self.user.save()
-        self.user.refresh_from_db()
+        self.admin_user.is_active = True
+        self.admin_user.save()
+        self.admin_user.refresh_from_db()
 
     def test_logs(self) -> None:
         """Test logs command"""
