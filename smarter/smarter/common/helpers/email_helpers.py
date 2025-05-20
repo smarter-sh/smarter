@@ -8,6 +8,7 @@ from typing import List, Union
 
 from django.conf import settings
 
+from smarter.common.conf import settings as smarter_settings
 from smarter.common.exceptions import SmarterExceptionBase
 from smarter.lib.django.validators import SmarterValidator
 
@@ -66,7 +67,7 @@ class EmailHelper(metaclass=Singleton):
 
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
-        msg["From"] = from_email or settings.SMTP_FROM_EMAIL
+        msg["From"] = from_email or smarter_settings.smtp_from_email
         msg["To"] = ", ".join(mail_to)
         msg["Bcc"] = settings.SMARTER_EMAIL_ADMIN
 
@@ -74,10 +75,10 @@ class EmailHelper(metaclass=Singleton):
         msg.attach(part2)
 
         try:
-            with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
-                if settings.SMTP_USE_TLS:
+            with smtplib.SMTP(smarter_settings.smtp_host, smarter_settings.smtp_port) as server:
+                if smarter_settings.smtp_use_tls:
                     server.starttls()
-                server.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
+                server.login(smarter_settings.smtp_username, smarter_settings.smtp_password)
                 server.sendmail(msg["From"], [msg["To"]], msg.as_string())
                 logger.info("smtp email sent to %s: %s", to, subject)
         except (

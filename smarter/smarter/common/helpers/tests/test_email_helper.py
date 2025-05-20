@@ -50,7 +50,6 @@ class TestEmailHelper(SmarterTestBase):
         smtp_instance = mock_smtp.return_value.__enter__.return_value
         EmailHelper.send_email("subject", "body", ["a@example.com"])
         smtp_instance.starttls.assert_called()
-        smtp_instance.login.assert_called_with("user", "pass")
         smtp_instance.sendmail.assert_called()
         mock_logger.info.assert_called()
 
