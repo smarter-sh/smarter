@@ -1,8 +1,10 @@
 # pylint: disable=R0801,W0613
 """Test plugin base class."""
 
-# python stuff
 import json
+
+# python stuff
+from logging import getLogger
 from time import sleep
 
 from pydantic_core import ValidationError as PydanticValidationError
@@ -45,6 +47,9 @@ from smarter.apps.plugin.utils import add_example_plugins
 from smarter.common.utils import camel_to_snake, get_readonly_yaml_file
 from smarter.lib.manifest.enum import SAMKeys
 from smarter.lib.manifest.loader import SAMLoaderError
+
+
+logger = getLogger(__name__)
 
 
 # pylint: disable=too-many-public-methods,too-many-instance-attributes
@@ -182,6 +187,8 @@ class TestPluginBase(TestAccountMixin):
 
         plugin = StaticPlugin(user_profile=self.user_profile, data=self.data)
         to_json = plugin.to_json()
+        logger.info("TestPluginBase().test_to_json() data: %s", self.data)
+        logger.info("TestPluginBase().test_to_json() to_json: %s", to_json)
 
         # verify that signal was sent
         self.assertTrue(self.signals["plugin_created"])
