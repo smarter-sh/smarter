@@ -7,6 +7,7 @@ from django.urls import reverse
 # our stuff
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.api.v1.manifests.enum import SAMKinds
+from smarter.apps.docs.const import namespace
 
 
 ALL_KINDS = SAMKinds.singular_slugs()
@@ -29,7 +30,7 @@ class TestApiDocsJsonSchemas(TestAccountMixin):
         """
 
         for kind in ALL_KINDS:
-            reverse_name = f"api_docs_json_schema_{kind}".lower()
+            reverse_name = f"{namespace}:api_docs_json_schema_{kind}".lower()
             url = reverse(reverse_name)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200, response)
@@ -42,7 +43,7 @@ class TestApiDocsJsonSchemas(TestAccountMixin):
         """
         self.client.force_login(self.non_admin_user)
         for kind in ALL_KINDS:
-            reverse_name = f"api_docs_json_schema_{kind}".lower()
+            reverse_name = f"{namespace}:api_docs_json_schema_{kind}".lower()
             url = reverse(reverse_name)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200, response)

@@ -2,9 +2,11 @@
 
 from django.apps import AppConfig
 
+from .const import namespace
+
 
 class ApiConfig(AppConfig):
     """AdminConfig class. This class is used to configure the Smarter docs app."""
 
     default_auto_field = "django.db.models.BigAutoField"
-    name = "smarter.apps.docs"
+    name = f"smarter.apps.{namespace}"
