@@ -96,7 +96,7 @@ urlpatterns = [
     #
     # Wagtail root
     # -----------------------------------
-    path("docs/", include("smarter.apps.docs.urls")),
+    path("docs/", include("smarter.apps.docs.urls", namespace="docs")),
     # -----------------------------------
     #
     # shortcuts for authentication views

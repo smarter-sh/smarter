@@ -65,6 +65,10 @@ def mortal_user_factory(account: Account = None) -> tuple[UserType, Account, Use
 
 
 def factory_account_teardown(user: UserType, account: Account, user_profile: UserProfile):
+    if user and account and not user_profile:
+        user_profile = UserProfile.objects.get(user=user, account=account)
+    elif user and not user_profile:
+        user_profile = UserProfile.objects.filter(user=user).first()
     try:
         if user_profile:
             lbl = str(user_profile)
