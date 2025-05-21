@@ -211,10 +211,15 @@ class AccountContact(TimestampedModel):
             logger.error("No primary contact found for account %s", account)
 
     def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
         if self.is_primary:
-            # ensure that only one primary contact exists
-            AccountContact.objects.filter(account=self.account, is_primary=True).update(is_primary=False)
+            # Check for another primary contact for this account (excluding self if updating)
+            qs = AccountContact.objects.filter(account=self.account, is_primary=True)
+            if self.pk:
+                qs = qs.exclude(pk=self.pk)
+            if qs.exists():
+                raise SmarterValueError("There is already a primary contact for this account.")
+
+        super().save(*args, **kwargs)
         if not self.welcomed:
             self.send_welcome_email()
             self.welcomed = True
