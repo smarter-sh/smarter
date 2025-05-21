@@ -16,7 +16,6 @@ from .utils import (
     get_cached_account,
     get_cached_account_for_user,
     get_cached_admin_user_for_account,
-    get_cached_smarter_account,
     get_cached_user_profile,
 )
 
@@ -52,36 +51,53 @@ class AccountMixin(SmarterHelperMixin):
         self._user: UserType = None
         self._user_profile: UserProfile = None
 
-        # set the user first, as it can be used to set the account when the account is not provided.
-        self._user = user or request.user if request and hasattr(request, "user") else None
-        self._account = get_cached_account(account_number=account_number) if account_number else account
-
-        if not self.user or self.user.is_anonymous:
-            # if the user is anonymous, then we need to set the account
-            # to the admin user for the account.
-            if self._account:
-                self._user = get_cached_admin_user_for_account(self.account)
-                logger.warning(
-                    "%s: user not set, using admin user %s for account %s",
-                    self.formatted_class_name,
-                    self._user,
-                    self._account,
-                )
+        # evaluate these in reverse order, so that the first one wins.
+        if request is not None:
+            logger.info("%s: received request %s", self.formatted_class_name, request.build_absolute_uri())
+            if hasattr(request, "user"):
+                self._user = request.user
+                logger.info("%s: received request user %s", self.formatted_class_name, self._user)
+                self._account = get_cached_account_for_user(self._user)
+                if self._account:
+                    logger.info("%s: set account to %s", self.formatted_class_name, self._account)
             else:
-                logger.warning(
-                    "%s: could not fully initialize. user: %s,  account: %s",
-                    self.formatted_class_name,
-                    self._user,
-                    self._account,
-                )
-            return None
-        if self._user and not self._account:
-            self._account = get_cached_account_for_user(self._user)
+                logger.warning("%s: did not find a user in the request object", self.formatted_class_name)
+        if account_number is not None:
+            logger.info("%s: received account_number %s", self.formatted_class_name, account_number)
+            self._account = get_cached_account(account_number=account_number) if account_number else account
+        if account is not None:
+            logger.info("%s: received account %s", self.formatted_class_name, account)
+            self._account = account
+        if user is not None:
+            self._user = user
+            logger.info("%s: received user %s", self.formatted_class_name, user)
+            self._account = get_cached_account_for_user(user)
+            if self._account:
+                logger.info("%s: set account to %s", self.formatted_class_name, self._account)
 
-        if not self._account or not self._user:
-            raise SmarterConfigurationError(
-                f"AccountMixin could not properly initialize. Account: {self._account}, User: {self._user}"
+        if self._user and self._account:
+            logger.info(
+                "%s: is fully initialized with user %s and account %s",
+                self.formatted_class_name,
+                self._user,
+                self._account,
             )
+        else:
+            logger.warning(
+                "%s: is not fully initialized: user %s, account %s",
+                self.formatted_class_name,
+                self._user,
+                self._account,
+            )
+
+    @property
+    def formatted_class_name(self) -> str:
+        """
+        Returns the class name in a formatted string
+        along with the name of this mixin.
+        """
+        child_class = super().formatted_class_name
+        return f"{child_class} -> AccountMixin()"
 
     @property
     def account(self) -> Account:

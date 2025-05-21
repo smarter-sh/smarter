@@ -18,7 +18,7 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
     def setUp(self):
         """Set up test fixtures."""
         super().setUp()
-        self.domain_name = f"{self.hash_suffix}.{smarter_settings.environment_api_domain}"
+        self.domain_name = f"test-bot-{self.hash_suffix}.{smarter_settings.environment_api_domain}"
 
         self.chatbot = ChatBot.objects.create(
             account=self.account,
@@ -36,7 +36,7 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
 
         self.custom_chatbot = ChatBot.objects.create(
             account=self.account,
-            name=f"custom-{self.hash_suffix}",
+            name=f"test-custom-{self.hash_suffix}",
             custom_domain=self.custom_domain,
             deployed=True,
         )
@@ -65,7 +65,7 @@ class TestChatBotApiUrlHelper(TestAccountMixin):
         user = authenticate(username=self.admin_user, password="12345")
         if user is None:
             self.fail("Authentication failed")
-        request.admin_user = user
+        request.user = user
         middleware = SessionMiddleware(lambda request: None)
         middleware.process_request(request)
         request.session.save()
