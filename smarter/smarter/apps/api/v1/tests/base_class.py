@@ -8,11 +8,15 @@ ensure that:
 """
 
 import json
+from logging import getLogger
 
 from django.test import Client
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.lib.drf.models import SmarterAuthToken
+
+
+logger = getLogger(__name__)
 
 
 class ApiV1TestBase(TestAccountMixin):
@@ -31,26 +35,29 @@ class ApiV1TestBase(TestAccountMixin):
 
     @classmethod
     def tearDownClass(cls) -> None:
-        super().tearDownClass()
         instance = cls()
         try:
             instance.token_record.delete()
         except SmarterAuthToken.DoesNotExist:
             pass
+        super().tearDownClass()
 
     def get_response(self, path, manifest: str = None, data: dict = None) -> tuple[dict[str, any], int]:
         """
         Prepare and get a response from an api/v1/ endpoint.
         """
         client = Client()
-        headers = {"HTTP_AUTHORIZATION": f"Token {self.token_key}"}
+        headers = {"Authorization": f"Token {self.token_key}"}
 
         if manifest:
-            response = client.post(path=path, data=manifest, content_type="application/json", **headers)
+            logger.info("ApiV1TestBase.get_response() with manifest: %s", manifest)
+            response = client.post(path=path, data=manifest, content_type="application/json", headers=headers)
         elif data:
-            response = client.post(path=path, data=data, content_type="application/json", **headers)
+            logger.info("ApiV1TestBase.get_response() with data: %s", data)
+            response = client.post(path=path, data=data, content_type="application/json", headers=headers)
         else:
-            response = client.post(path=path, content_type="application/json", data=None, **headers)
+            logger.info("ApiV1TestBase.get_response() with no data or manifest. headers: %s", headers)
+            response = client.post(path=path, content_type="application/json", data=None, headers=headers)
         response_content = response.content.decode("utf-8")
         response_json = json.loads(response_content)
         return response_json, response.status_code

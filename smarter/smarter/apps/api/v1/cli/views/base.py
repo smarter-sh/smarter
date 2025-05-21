@@ -9,10 +9,10 @@ from typing import Type
 
 import yaml
 from django.http import QueryDict
+from rest_framework.exceptions import NotAuthenticated
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
-from smarter.apps.account.mixins import AccountMixin
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
@@ -44,7 +44,14 @@ class APIV1CLIViewError(SmarterExceptionBase):
         return "Smarter api v1 command-line interface error"
 
 
-# pylint: disable=too-many-instance-attributes
+class SmarterAPIV1CLIViewErrorNotAuthenticated(APIV1CLIViewError):
+    """Error class for not authenticated errors."""
+
+    @property
+    def get_formatted_err_message(self):
+        return "Smarter api v1 command-line interface error: not authenticated"
+
+
 class CliBaseApiView(APIView, SmarterRequestMixin):
     """
     Smarter API command-line interface Base class API view. Handles
@@ -70,7 +77,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     _prompt: str = None
 
     def __init__(self, *args, **kwargs):
-        APIView.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         SmarterRequestMixin.__init__(self, *args, **kwargs)
 
     @property
@@ -221,41 +228,25 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             return SmarterJournalCliCommands(_command)
         raise APIV1CLIViewError(f"Could not determine command from url: {self.url}")
 
-    # pylint: disable=too-many-return-statements,too-many-branches
-    def dispatch(self, request, *args, **kwargs):
-        """
-        Dispatch method for the CliBaseApiView. We want to take care of as
-        much housekeeping as possible in the base class. This includes
-        setting following attributes:
+    def initial(self, request, *args, **kwargs):
+        logger.info("CliBaseApiView().initial()")
 
-        - manifest_name: the name identifier of the manifest could be passed
-            from insider the raw manifest data, or it could be passed as part of a url.
-
-        - manifest: the http request body might contain raw manifest text
-            in yaml or json format. The manifest text is passed to the SAMLoader that will load,
-            and partially validate and parse the manifest. This is then used to
-            fully initialize a Pydantic manifest model. The Pydantic manifest
-            model will be passed to a AbstractBroker for the manifest 'kind', which
-            implements the broker service pattern for the underlying object.
-
-        - kind: the kind of the manifest is used to identify the broker that will
-
-        - user/account: the user, account and user_profile are all derived from the
-            authenticated user in the Django request object.
-
-        - command: the command is derived from the request path. The command is
-            used to determine the type of operation that the view should perform.
-            For example, if the url path is '/api/v1/cli/apply/', then the command
-            will be SmarterJournalCliCommands.APPLY.
-
-        - broker: the broker is a class that implements the broker service pattern.
-            It provides a service interface that 'brokers' the http request for the
-            underlying object that provides the object-specific service (create, update, get, delete, etc).
-        """
+        try:
+            super().initial(request, *args, **kwargs)
+        except NotAuthenticated as e:
+            auth_header = request.headers.get("Authorization")
+            logger.error(
+                "CliBaseApiView().initial() - NotAuthenticated: %s, auth_header: %s",
+                e,
+                auth_header,
+            )
+            raise SmarterAPIV1CLIViewErrorNotAuthenticated(
+                "Smarter api v1 command-line interface error: not authenticated"
+            ) from e
 
         # this is a hacky way to get SmarterRequestMixin request object
         # initialized.
-        super().init(request=request)
+        self.init(request=request)
 
         # Manifest parsing and broker instantiation are lazy implementations.
         # So for now, we'll only set the private class variable _manifest_data
@@ -287,36 +278,9 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                         stack_trace=traceback.format_exc(),
                     )
 
-        try:
-            AccountMixin.__init__(self, user=request.user)
-            if self.user.is_authenticated and not self.user_profile:
-                raise APIV1CLIViewError("Could not find account for user.")
-        except SmarterExceptionBase as e:
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                thing=self.manifest_kind,
-                command=self.command,
-                e=e,
-                status=HTTPStatus.FORBIDDEN.value,
-                stack_trace=traceback.format_exc(),
-            )
         # Parse the query string parameters from the request into a dictionary.
         # This is used to pass additional parameters to the child view's post method.
         self._manifest_name = self.params.get("name", None)
-
-        if self.authentication_classes and self.permission_classes:
-            if not request.user.is_authenticated:
-                try:
-                    raise APIV1CLIViewError("Unauthorized access attempted.")
-                except APIV1CLIViewError as e:
-                    return SmarterJournaledJsonErrorResponse(
-                        request=request,
-                        thing=self.manifest_kind,
-                        command=self.command,
-                        e=e,
-                        status=HTTPStatus.FORBIDDEN.value,
-                        stack_trace=traceback.format_exc(),
-                    )
 
         user_agent = request.headers.get("User-Agent", "")
         if "Go-http-client" not in user_agent:
@@ -337,6 +301,37 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                     stack_trace=traceback.format_exc(),
                 )
 
+    # pylint: disable=too-many-return-statements,too-many-branches
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Dispatch method for the CliBaseApiView. We want to take care of as
+        much housekeeping as possible in the base class. This includes
+        setting following attributes:
+
+        - manifest_name: the name identifier of the manifest could be passed
+            from insider the raw manifest data, or it could be passed as part of a url.
+
+        - manifest: the http request body might contain raw manifest text
+            in yaml or json format. The manifest text is passed to the SAMLoader that will load,
+            and partially validate and parse the manifest. This is then used to
+            fully initialize a Pydantic manifest model. The Pydantic manifest
+            model will be passed to a AbstractBroker for the manifest 'kind', which
+            implements the broker service pattern for the underlying object.
+
+        - kind: the kind of the manifest is used to identify the broker that will
+
+        - user/account: the user, account and user_profile are all derived from the
+            authenticated user in the Django request object.
+
+        - command: the command is derived from the request path. The command is
+            used to determine the type of operation that the view should perform.
+            For example, if the url path is '/api/v1/cli/apply/', then the command
+            will be SmarterJournalCliCommands.APPLY.
+
+        - broker: the broker is a class that implements the broker service pattern.
+            It provides a service interface that 'brokers' the http request for the
+            underlying object that provides the object-specific service (create, update, get, delete, etc).
+        """
         # generic exception handler that simply ensures that in all cases
         # the response is a JsonResponse with a status code.
         #
@@ -345,7 +340,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         # to the super class dispatch method, and the parameters are passed
         # to the child view's post method.
         try:
-            return super().dispatch(request, *args, **{**self.params, **kwargs})
+            response = super().dispatch(request, *args, **kwargs)
         except SAMBrokerErrorNotImplemented as not_implemented_error:
             return SmarterJournaledJsonErrorResponse(
                 request=request,
@@ -401,3 +396,5 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
                 stack_trace=traceback.format_exc(),
             )
+
+        return response

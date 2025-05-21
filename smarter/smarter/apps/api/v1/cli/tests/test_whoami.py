@@ -1,6 +1,7 @@
 """Test Api v1 CLI non-brokered whoami command"""
 
 from http import HTTPStatus
+from logging import getLogger
 
 from django.urls import reverse
 
@@ -12,6 +13,9 @@ from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
     SmarterJournalCliCommands,
 )
+
+
+logger = getLogger(__name__)
 
 
 class TestApiCliV1Whoami(ApiV1TestBase):
@@ -37,6 +41,7 @@ class TestApiCliV1Whoami(ApiV1TestBase):
         """Test whoami command"""
 
         path = reverse(ApiV1CliReverseViews.whoami, kwargs=None)
+        logger.info("TestApiCliV1Whoami().test_whoami() Testing whoami command at path: %s", path)
         response, status = self.get_response(path=path)
         self.assertEqual(status, HTTPStatus.OK)
         self.validate_response(response)

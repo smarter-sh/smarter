@@ -26,7 +26,7 @@ class BlockSensitiveFilesMiddleware(MiddlewareMixin, SmarterHelperMixin):
             re.compile(r"^/api/v1/cli(/.*)?$"),
             re.compile(r"^/admin/journal(/.*)?$"),
             re.compile(r"^/docs/manifest(/.*)?$"),
-            re.compile(r"^/docs/json-schemas(/.*)?$"),
+            re.compile(r"^/docs/json-schema(/.*)?$"),
         ]
         self.sensitive_files = {
             ".env",

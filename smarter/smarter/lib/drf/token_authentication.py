@@ -6,6 +6,7 @@ from django.utils import timezone
 from knox.auth import TokenAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
+from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterExceptionBase
 
 from .models import SmarterAuthToken
@@ -22,7 +23,7 @@ class SmarterTokenAuthenticationError(SmarterExceptionBase):
         return "Smarter Token Authentication error"
 
 
-class SmarterTokenAuthentication(TokenAuthentication):
+class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
     """
     Custom token authentication for smarter.
     This is used to authenticate API keys. It is a subclass of the default knox
@@ -34,6 +35,9 @@ class SmarterTokenAuthentication(TokenAuthentication):
     def authenticate_credentials(self, token):
         # authenticate the user using the normal token authentication
         # this will raise an AuthenticationFailed exception if the token is invalid
+
+        masked_token = f"{'*' * (len(token) - 8)}{token[-8:]}" if len(token) > 8 else token
+        logger.info("%s.authenticate_credentials() - %s", self.formatted_class_name, masked_token)
         user, auth_token = super().authenticate_credentials(token)
 
         # next, we need to ensure that the token is active, otherwise
