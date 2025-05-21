@@ -88,8 +88,7 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
             file_path=file_path,
             url=url,
         )
-        user = request.user if request and hasattr(request, "user") else None
-        AccountMixin.__init__(self, account=account, user=user)
+        AccountMixin.__init__(self, account=account, user=request.user, request=request)
 
     ###########################################################################
     # Smarter abstract property implementations
@@ -115,7 +114,7 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
         """
         if self._manifest:
             return self._manifest
-        if self.loader:
+        if self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = SAMApiConnection(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,

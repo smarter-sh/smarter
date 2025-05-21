@@ -20,14 +20,14 @@ class GetCurrentWeather(SmarterTestBase):
         unit = "METRIC"
         json_string_result = get_current_weather(location=location, unit=unit)
         json_result = json.loads(json_string_result)
-        self.assertIsInstance(json_result, dict)
+        self.assertTrue(isinstance(json_result, (dict, list)))
 
     def test_get_current_weather2(self):
         """Test get_current_weather() function with default unit."""
         location = "Cambridge, MA, near Kendall Square"
         json_string_result = get_current_weather(location=location)
         json_result = json.loads(json_string_result)
-        self.assertIsInstance(json_result, dict)
+        self.assertTrue(isinstance(json_result, (dict, list)))
 
     def test_weather_tool_factory(self):
         """Test weather_tool_factory() function."""

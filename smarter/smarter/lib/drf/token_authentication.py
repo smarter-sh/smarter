@@ -8,8 +8,14 @@ from rest_framework.exceptions import AuthenticationFailed
 
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterExceptionBase
+from smarter.common.utils import mask_string
 
 from .models import SmarterAuthToken
+from .signals import (
+    smarter_token_authentication_failure,
+    smarter_token_authentication_request,
+    smarter_token_authentication_success,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -35,8 +41,13 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
     def authenticate_credentials(self, token):
         # authenticate the user using the normal token authentication
         # this will raise an AuthenticationFailed exception if the token is invalid
-
-        masked_token = f"{'*' * (len(token) - 8)}{token[-8:]}" if len(token) > 8 else token
+        if not isinstance(token, bytes):
+            raise AuthenticationFailed("Invalid token type. Expected bytess", 401)
+        masked_token = mask_string(string=token)
+        smarter_token_authentication_request.send(
+            sender=self.__class__,
+            token=masked_token,
+        )
         logger.info("%s.authenticate_credentials() - %s", self.formatted_class_name, masked_token)
         user, auth_token = super().authenticate_credentials(token)
 
@@ -45,6 +56,11 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
         # raised by the default token authentication
         smarter_auth_token = SmarterAuthToken.objects.get(token_key=auth_token.token_key)
         if not smarter_auth_token.is_active:
+            smarter_token_authentication_failure.send(
+                sender=self.__class__,
+                user=user,
+                token=masked_token,
+            )
             raise AuthenticationFailed("Api key is not activated.", 401)
 
         # update the last used time for the token
@@ -53,4 +69,9 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
 
         # if the token is active, we can return the user and token as a tuple
         # exactly as the default token authentication does.
+        smarter_token_authentication_success.send(
+            sender=self.__class__,
+            user=user,
+            token=masked_token,
+        )
         return (user, smarter_auth_token)

@@ -30,11 +30,11 @@ class TestApiCliV1UserDelete(ApiV1TestBase):
     def setUp(self):
         super().setUp()
         self.kwargs = {SAMKeys.KIND.value: KIND}
-        self.query_params = urlencode({"username": self.user.username})
+        self.query_params = urlencode({"username": self.non_admin_user.username})
 
     def test_delete(self) -> None:
         """Test delete command."""
-        username = self.user.username
+        username = self.non_admin_user.username
         path = reverse(ApiV1CliReverseViews.delete, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)

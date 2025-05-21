@@ -1,6 +1,7 @@
 # pylint: disable=W0613
 """Smarter API Manifest Abstract Broker class."""
 
+import json
 import logging
 from http import HTTPStatus
 
@@ -134,12 +135,13 @@ class SmarterJournaledJsonResponse(JsonResponse):
                 request_data = anonymous_serialized_request(request)
 
             try:
+                serializable_data = json.loads(json.dumps(data, cls=DjangoJSONEncoder))
                 journal = SAMJournal.objects.create(
                     user=user,
                     thing=thing,
                     command=command,
                     request=request_data,
-                    response=data,
+                    response=serializable_data,
                     status_code=status,
                 )
                 data[SmarterJournalApiResponseKeys.METADATA] = {

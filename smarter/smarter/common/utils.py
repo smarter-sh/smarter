@@ -145,3 +145,39 @@ def dict_is_subset(small, big) -> bool:
         return True
     else:
         return small == big
+
+
+def mask_string(string: str, mask_char: str = "*", mask_length: int = 4, string_length: int = 8) -> str:
+    """
+    Mask a string by replacing all but the last 'mask_length' characters with 'mask_char'.
+    Args:
+        string (str): The string to mask.
+        mask_char (str): The character to use for masking.
+        mask_length (int): The number of characters to leave unmasked at the end.
+    Returns:
+        str: The masked string.
+    """
+    if isinstance(string, bytes):
+        string = string.decode("utf-8")
+    if not isinstance(string, str):
+        raise TypeError("string must be a string")
+    if len(string) <= mask_length:
+        return string
+    if mask_length < 0:
+        raise ValueError("mask_length must be greater than or equal to 0")
+    if string_length < 0:
+        raise ValueError("string_length must be greater than or equal to 0")
+    if mask_length > len(string):
+        raise ValueError("mask_length must be less than or equal to the length of the string")
+    if string_length > len(string):
+        string_length = len(string)
+    if mask_length > string_length:
+        mask_length = string_length
+
+    masked_string = (
+        f"{f'{mask_char}' * (len(string) - mask_length)}{string[-mask_length:]}"
+        if len(string) > mask_length
+        else string
+    )
+    masked_string = masked_string[-string_length:] if len(masked_string) > string_length else masked_string
+    return masked_string

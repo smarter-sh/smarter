@@ -110,6 +110,7 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
             file_path=file_path,
             url=url,
         )
+        AccountMixin.__init__(self, account=account, user=request.user, request=request)
 
     @property
     def chat_object(self) -> Chat:

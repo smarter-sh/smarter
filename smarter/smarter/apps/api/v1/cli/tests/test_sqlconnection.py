@@ -11,7 +11,10 @@ from smarter.apps.account.tests.factories import secret_factory
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
-from smarter.apps.plugin.manifest.models.sql_connection.enum import DbEngines
+from smarter.apps.plugin.manifest.models.sql_connection.enum import (
+    DbEngines,
+    DBMSAuthenticationMethods,
+)
 from smarter.apps.plugin.models import SqlConnection
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
@@ -55,6 +58,9 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         super().tearDown()
 
     def sqlconnection_factory(self):
+        """
+        Create a sqlconnection for testing purposes.
+        """
         self.password = secret_factory(
             user_profile=self.user_profile,
             name=self.name,
@@ -64,13 +70,24 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         sqlconnection = SqlConnection.objects.create(
             name=self.name,
             db_engine=DbEngines.MYSQL.value,
+            authentication_method=DBMSAuthenticationMethods.TCPIP.value,
+            timeout=300,
             account=self.account,
-            version="1.0.0",
+            description="test sqlconnection - " + self.hash_suffix,
             hostname="localhost",
             port=5432,
             database=self.name,
             username="test",
             password=self.password,
+            use_ssl=False,
+            pool_size=5,
+            max_overflow=10,
+            proxy_protocol="http",
+            proxy_host="localhost",
+            proxy_port=8080,
+            proxy_username="proxyuser",
+            proxy_password=self.password,
+            ssh_known_hosts="localhost",
         )
         return sqlconnection
 
