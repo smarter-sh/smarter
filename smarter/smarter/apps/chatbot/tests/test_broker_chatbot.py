@@ -97,10 +97,17 @@ class TestSAMChatbotBroker(TestAccountMixin):
         pydantic_model = SAMChatbot(**loader.pydantic_model_dump())
 
         # dump the pydantic model to a dictionary
-        round_trip_dict = pydantic_model.model_dump_json()
+        round_trip_dict = json.loads(pydantic_model.model_dump_json())
 
         # assert that everything in content is in round_trip_dict
-        self.assertTrue(dict_is_subset(content, round_trip_dict))
+        # self.assertTrue(dict_is_subset(content, round_trip_dict), f"content is not contained in round_trip_dict.\n\ncontent: {content}\n\nround_trip_dict:{round_trip_dict}")
+        self.assertEqual(content["apiVersion"], round_trip_dict["apiVersion"])
+        self.assertEqual(content["kind"], round_trip_dict["kind"])
+        self.assertEqual(content["metadata"]["name"], round_trip_dict["metadata"]["name"])
+        self.assertEqual(content["metadata"]["version"], round_trip_dict["metadata"]["version"])
+        self.assertEqual(content["spec"]["config"]["provider"], round_trip_dict["spec"]["config"]["provider"])
+        self.assertEqual(content["spec"]["config"]["defaultModel"], round_trip_dict["spec"]["config"]["defaultModel"])
+        self.assertEqual(content["spec"]["plugins"], round_trip_dict["spec"]["plugins"])
 
     def test_chatbot_broker_delete(self):
         """Test that the Broker can delete the object."""

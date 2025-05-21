@@ -5,8 +5,13 @@ import string
 
 from django.core.management.base import BaseCommand
 
-from smarter.apps.account.models import Account, UserProfile
-from smarter.common.const import SMARTER_ACCOUNT_NUMBER, SMARTER_COMPANY_NAME
+from smarter.apps.account.models import Account, AccountContact, UserProfile
+from smarter.common.const import (
+    SMARTER_ACCOUNT_NUMBER,
+    SMARTER_COMPANY_NAME,
+    SMARTER_CUSTOMER_SUPPORT_EMAIL,
+    SMARTER_CUSTOMER_SUPPORT_PHONE,
+)
 from smarter.lib.django.user import User
 from smarter.lib.drf.models import SmarterAuthToken
 
@@ -68,6 +73,27 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.SUCCESS(
                     f"Created user profile for {user_profile.user.username} {user_profile.user.email}, account {user_profile.account.account_number} {user_profile.account.company_name}"
+                )
+            )
+
+        account_contact: AccountContact = None
+        try:
+            account_contact = AccountContact.objects.get(
+                account=account,
+                is_primary=True,
+            )
+        except AccountContact.DoesNotExist:
+            account_contact = AccountContact(
+                account=account,
+                first_name="Smarter",
+                last_name="Admin",
+                email=SMARTER_CUSTOMER_SUPPORT_EMAIL,
+                phone=SMARTER_CUSTOMER_SUPPORT_PHONE,
+                is_primary=True,
+            )
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Created account contact for {account_contact.first_name} {account_contact.last_name}, account {account_contact.account.account_number} {account_contact.account.company_name}"
                 )
             )
 

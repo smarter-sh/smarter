@@ -16,7 +16,7 @@ from django.conf import settings
 
 from smarter.apps.account.models import Account, AccountContact
 from smarter.common.conf import settings as smarter_settings
-from smarter.common.const import SMARTER_CUSTOMER_SUPPORT, SmarterEnvironments
+from smarter.common.const import SMARTER_CUSTOMER_SUPPORT_EMAIL, SmarterEnvironments
 from smarter.common.helpers.aws.exceptions import (
     AWSACMCertificateNotFound,
     AWSACMVerificationNotFound,
@@ -283,7 +283,7 @@ def verify_custom_domain(
                 subject = f"Domain Verification for {domain_name} Successful"
                 body = f"""Your domain {domain_name} has been verified.\n\n
                 Your custom domain is now active and ready to use with your ChatBot.
-                If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT}."""
+                If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT_EMAIL}."""
                 try:
                     account = ChatBotCustomDomain.objects.get(aws_hosted_zone_id=hosted_zone_id).account
                     AccountContact.send_email_to_account(account=account, subject=subject, body=body)
@@ -312,7 +312,7 @@ def verify_custom_domain(
     subject = f"Domain Verification Failure for {domain_name}"
     body = f"""We were unable to verify your domain {domain_name}.\n\n
     We made {max_attempts} attempts over a period of {HOURS} hours to verify the domain.
-    If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT}."""
+    If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT_EMAIL}."""
     account = ChatBotCustomDomain.objects.get(hosted_zone_id=hosted_zone_id).account
     AccountContact.send_email_to_account(account=account, subject=subject, body=body)
 
@@ -495,7 +495,7 @@ def deploy_default_api(chatbot_id: int, with_domain_verification: bool = True):
             f"Your chatbot, {chatbot.name}, has been deployed to {chatbot.url}. "
             f"It is now activated and able to respond to prompts.\n\n"
             f"If you also created a custom domain for your chatbot then you'll be separately notified once it has been verified. "
-            f"If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT}."
+            f"If you have any questions, please contact us at {SMARTER_CUSTOMER_SUPPORT_EMAIL}."
         )
         AccountContact.send_email_to_primary_contact(account=chatbot.account, subject=subject, body=body)
 
@@ -565,6 +565,7 @@ def undeploy_default_api(chatbot_id: int):
         logger.error("%s Chatbot %s not found.", prefix, chatbot_id)
 
     chatbot.deployed = False
+    chatbot.dns_verification_status = chatbot.DnsVerificationStatusChoices.NOT_VERIFIED
     chatbot.save()
 
 

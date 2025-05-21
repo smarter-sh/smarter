@@ -18,7 +18,8 @@ SMARTER_API_SUBDOMAIN = "api"
 SMARTER_PLATFORM_SUBDOMAIN = "platform"
 SMARTER_COMPANY_NAME = "Smarter"
 SMARTER_EXAMPLE_CHATBOT_NAME = "example"
-SMARTER_CUSTOMER_SUPPORT = "support@smarter.sh"
+SMARTER_CUSTOMER_SUPPORT_EMAIL = "support@smarter.sh"
+SMARTER_CUSTOMER_SUPPORT_PHONE = "+1 (512) 833-6955"
 
 # The following are used in the React app
 # to store the chatbot chat session key and debug mode settings

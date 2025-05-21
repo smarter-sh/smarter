@@ -542,6 +542,7 @@ class ChatBotHelper(SmarterRequestMixin):
         self._name: str = self._name or name or self.smarter_request_chatbot_name
 
         if self.chatbot:
+            self.account = self.chatbot.account
             self.helper_logger(f"__init__() initialized self.chatbot={self.chatbot}")
             self.log_dump()
             return None
