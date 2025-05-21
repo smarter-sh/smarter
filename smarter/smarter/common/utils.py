@@ -122,7 +122,7 @@ def dict_is_contained_in(dict1, dict2):
     return True
 
 
-def dict_is_subset(small, big):
+def dict_is_subset(small, big) -> bool:
     """
     Recursively check that all items in dict 'small' exist in dict 'big'.
     """
@@ -134,7 +134,14 @@ def dict_is_subset(small, big):
                 return False
         return True
     elif isinstance(small, list) and isinstance(big, list):
-        # Check that all items in 'small' are in 'big' (order matters)
-        return all(any(dict_is_subset(sv, bv) for bv in big) if isinstance(sv, dict) else sv in big for sv in small)
+        # Check that all items in 'small' are in 'big' (order does NOT matter)
+        for sv in small:
+            if isinstance(sv, dict):
+                if not any(dict_is_subset(sv, bv) for bv in big if isinstance(bv, dict)):
+                    return False
+            else:
+                if sv not in big:
+                    return False
+        return True
     else:
         return small == big

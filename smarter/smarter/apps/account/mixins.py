@@ -5,14 +5,12 @@ import logging
 from django.core.handlers.wsgi import WSGIRequest
 
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.exceptions import (
-    SmarterBusinessRuleViolation,
-    SmarterConfigurationError,
-)
+from smarter.common.exceptions import SmarterBusinessRuleViolation
 from smarter.lib.django.user import UserType
 
 from .models import Account, UserProfile
 from .utils import (
+    account_number_from_url,
     get_cached_account,
     get_cached_account_for_user,
     get_cached_admin_user_for_account,
@@ -62,6 +60,26 @@ class AccountMixin(SmarterHelperMixin):
                     logger.info("%s: set account to %s", self.formatted_class_name, self._account)
             else:
                 logger.warning("%s: did not find a user in the request object", self.formatted_class_name)
+            if not self._account:
+                # if the account is not set, then try to get it from the request
+                # by parsing the URL.
+                url = request.build_absolute_uri()
+                account_number = account_number_from_url(url)
+                if account_number:
+                    logger.info(
+                        "%s: located account number %s from the request url %s",
+                        self.formatted_class_name,
+                        account_number,
+                        url,
+                    )
+                    self._account = get_cached_account(account_number=account_number)
+                    if self._account:
+                        logger.info("%s: set account to %s", self.formatted_class_name, self._account)
+                else:
+                    logger.warning(
+                        "%s: unable to locate an account number from the request url %s", self.formatted_class_name, url
+                    )
+
         if account_number is not None:
             logger.info("%s: received account_number %s", self.formatted_class_name, account_number)
             self._account = get_cached_account(account_number=account_number) if account_number else account
@@ -153,7 +171,7 @@ class AccountMixin(SmarterHelperMixin):
             self._account = None
             self._user_profile = None
             return
-        self._account = get_cached_account(account_number=account_number)
+        self.account = get_cached_account(account_number=account_number)
 
     @property
     def user(self) -> UserType:
@@ -189,9 +207,10 @@ class AccountMixin(SmarterHelperMixin):
         self._user = user
         if user:
             logger.info("%s: setting user %s", self.formatted_class_name, user)
-        if not self._user:
-            # unset the user_profile if the user is unset
-            self.user_profile = None
+        else:
+            # unset the user_profile and account if the user is unset
+            self._user_profile = None
+            self._account = None
             return
         if self._account:
             # If the account is already set, then we need to check if the user is part of the account
