@@ -11,7 +11,6 @@ known url patterns for Smarter chatbots. key features include:
 - logging.
 """
 
-import hashlib
 import json
 import logging
 import re
@@ -112,6 +111,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         parent of Classes that do not necessarily initialize with a request object.
         For example, Django Views do not pass a request object to the __init__ method.
         """
+        logger.info("SmarterRequestMixin.init() - %s", request.build_absolute_uri())
         if self._smarter_request:
             # we've already been initialized. nothing to do.
             return None
@@ -187,6 +187,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
 
     # pylint: disable=W0613
     def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._smarter_request: WSGIRequest = None
         self._timestamp = datetime.now()
         self._session_key: str = None
@@ -202,7 +203,6 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             request = args[0]
         if not request:
             AccountMixin.__init__(self)
-            logger.warning("request.user is missing or is not authenticated for url: %s", self.url)
             logger.warning("%s - request is None. Ditching.", self.formatted_class_name)
             return None
         if hasattr(request, "user") and request.user and request.user.is_authenticated:

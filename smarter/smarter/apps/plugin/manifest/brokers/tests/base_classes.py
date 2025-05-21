@@ -81,7 +81,7 @@ class TestSAMBrokerMixin(TestPluginClassBase):
         Prepare and get a response from an api/v1/ endpoint.
         """
         client = Client()
-        headers = {"HTTP_AUTHORIZATION": f"Token {self.token_key}"}
+        headers = {"Authorization": f"Token {self.token_key}"}
         response_json = None
 
         if manifest:

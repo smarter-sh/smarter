@@ -2,6 +2,8 @@
 
 import logging
 
+from django.core.handlers.wsgi import WSGIRequest
+
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import (
     SmarterBusinessRuleViolation,
@@ -44,13 +46,14 @@ class AccountMixin(SmarterHelperMixin):
         user: UserType = None,
         account: Account = None,
         account_number: str = None,
+        request: WSGIRequest = None,
     ):
         self._account: Account = None
         self._user: UserType = None
         self._user_profile: UserProfile = None
 
         # set the user first, as it can be used to set the account when the account is not provided.
-        self._user = user
+        self._user = user or request.user if request and hasattr(request, "user") else None
         self._account = get_cached_account(account_number=account_number) if account_number else account
 
         if not self.user or self.user.is_anonymous:
@@ -65,12 +68,8 @@ class AccountMixin(SmarterHelperMixin):
                     self._account,
                 )
             else:
-                # if the user is anonymous and the account is not set, then we need to set the account
-                # to the default account.
-                self._account = get_cached_smarter_account()
-                self._user = get_cached_admin_user_for_account(self.account)
                 logger.warning(
-                    "%s: user not set, using admin user %s for default account %s",
+                    "%s: could not fully initialize. user: %s,  account: %s",
                     self.formatted_class_name,
                     self._user,
                     self._account,

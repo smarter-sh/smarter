@@ -86,21 +86,25 @@ class SAMKinds(SmarterEnumAbstract):
         """
         Extract the manifest kind from a URL.
         example: http://localhost:8000/api/v1/cli/example_manifest/Account/
-                 http://platform.smarter.sh/api/v1/cli/whoami/
+                http://platform.smarter.sh/api/v1/cli/whoami/
         """
+        if isinstance(url, bytes):
+            url = url.decode("utf-8")
         parsed_url = urlparse(url)
-        if parsed_url:
-            slugs = parsed_url.path.split("/")
-            if not "api" in slugs:
-                return None
-            if "whoami" in slugs:
-                return None
-            if "status" in slugs:
-                return None
-            if "version" in slugs:
-                return None
-            for slug in slugs:
-                this_slug = str(slug).lower()
-                if this_slug in cls.all_slugs():
-                    return this_slug
+        path = parsed_url.path
+        if isinstance(path, bytes):
+            path = path.decode("utf-8")
+        slugs = path.split("/")
+        if not "api" in slugs:
+            return None
+        if "whoami" in slugs:
+            return None
+        if "status" in slugs:
+            return None
+        if "version" in slugs:
+            return None
+        for slug in slugs:
+            this_slug = str(slug).lower()
+            if this_slug in cls.all_slugs():
+                return this_slug
         logger.warning("SAMKinds.from_url() could not extract manifest kind from URL: %s", url)
