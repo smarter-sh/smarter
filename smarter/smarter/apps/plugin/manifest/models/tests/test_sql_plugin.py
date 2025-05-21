@@ -65,20 +65,20 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin):
         with self.assertRaises(SAMValidationError) as context:
             print(self.model)
         self.assertIn(
-            "connection must be a valid cleanstring with no illegal characters",
+            "must be a valid cleanstring with no illegal characters",
             str(context.exception),
         )
 
     def test_validate_api_sql_query_invalid_value(self):
-        """Test that the sql_query validator raises an error for invalid SQL syntax."""
+        """Test that the sqlQuery validator raises an error for invalid SQL syntax."""
         self.load_manifest(filename="sql-plugin.yaml")
 
         invalid_sql_query = None
-        self._manifest["spec"]["sqlData"]["sql_query"] = invalid_sql_query
+        self._manifest["spec"]["sqlData"]["sqlQuery"] = invalid_sql_query
         self._loader = None
         self._model = None
         with self.assertRaises(PydanticValidationError) as context:
-            # spec.sqlData.sql_query
+            # spec.sqlData.sqlQuery
             print(self.model)
         self.assertIn(
             "Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]",
@@ -113,7 +113,7 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin):
         self.load_manifest(filename="sql-plugin.yaml")
 
         self._manifest["spec"]["sqlData"] = {
-            "sql_query": "SELECT * FROM auth_user WHERE username = '{username}';",
+            "sqlQuery": "SELECT * FROM auth_user WHERE username = '{username}';",
             "parameters": [
                 {
                     "name": "bad_parameter",
@@ -179,7 +179,7 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin):
         django_parameters = django_model.parameters or []
         self.assertEqual(pydantic_parameters, django_parameters)
 
-        self.assertEqual(django_model.sql_query, self.model.spec.sqlData.sql_query)
+        self.assertEqual(django_model.sql_query, self.model.spec.sqlData.sqlQuery)
         self.assertEqual(django_model.limit, self.model.spec.sqlData.limit)
 
         pydantic_test_values = [param.model_dump() for param in self.model.spec.sqlData.test_values or []]

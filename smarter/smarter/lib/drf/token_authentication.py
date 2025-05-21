@@ -45,7 +45,7 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
         # raised by the default token authentication
         smarter_auth_token = SmarterAuthToken.objects.get(token_key=auth_token.token_key)
         if not smarter_auth_token.is_active:
-            raise AuthenticationFailed
+            raise AuthenticationFailed("Api key is not activated.", 401)
 
         # update the last used time for the token
         smarter_auth_token.last_used_at = timezone.now()

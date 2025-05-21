@@ -235,13 +235,15 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             super().initial(request, *args, **kwargs)
         except NotAuthenticated as e:
             auth_header = request.headers.get("Authorization")
-            logger.error(
-                "CliBaseApiView().initial() - NotAuthenticated: %s, auth_header: %s",
-                e,
-                auth_header,
-            )
+            if auth_header:
+                logger.error(
+                    "CliBaseApiView().initial() - Authorization header contains an invalid, inactive or malformed token: %s",
+                    e,
+                )
+            else:
+                logger.error("CliBaseApiView().initial() - Authorization header is missing: %s", e)
             raise SmarterAPIV1CLIViewErrorNotAuthenticated(
-                "Smarter api v1 command-line interface error: not authenticated"
+                "Smarter api v1 command-line interface error: authentication failed"
             ) from e
 
         # this is a hacky way to get SmarterRequestMixin request object

@@ -65,4 +65,4 @@ class SmarterTestBase(unittest.TestCase):
     @staticmethod
     def generate_hash_suffix(length: int = 16) -> str:
         """Generate a unique hash suffix for test data."""
-        return "_" + hash_factory(length=length)
+        return hash_factory(length=length)
