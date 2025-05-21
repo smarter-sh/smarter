@@ -23,10 +23,10 @@ class BlockSensitiveFilesMiddleware(MiddlewareMixin, SmarterHelperMixin):
         # grant amnesty for specific patterns
         self.allowed_patterns = [
             re.compile(r"^/dashboard/account/password-reset-link/[^/]+/[^/]+/$"),
-            re.compile(r"^/docs/json-schema/sqlconnection/$"),
-            re.compile(r"^/api/v1/cli/schema/sqlconnection/$"),
-            re.compile(r"^/docs/manifest/sqlconnection/$"),
-            re.compile(r"^/admin/journal/samjournal(/.*)?$"),
+            re.compile(r"^/api/v1/cli(/.*)?$"),
+            re.compile(r"^/admin/journal(/.*)?$"),
+            re.compile(r"^/docs/manifest(/.*)?$"),
+            re.compile(r"^/docs/json-schemas(/.*)?$"),
         ]
         self.sensitive_files = {
             ".env",

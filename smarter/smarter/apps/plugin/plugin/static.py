@@ -1,5 +1,6 @@
 """A PLugin that returns a static json object stored in the Plugin itself."""
 
+import json
 import logging
 
 from smarter.apps.plugin.manifest.enum import (
@@ -18,6 +19,7 @@ from smarter.common.conf import SettingsDefaults
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
 from ..manifest.models.static_plugin.const import MANIFEST_KIND
+from ..manifest.models.static_plugin.model import SAMStaticPlugin
 from .base import PluginBase
 
 
@@ -30,6 +32,15 @@ class StaticPlugin(PluginBase):
     _metadata_class = SAMPluginCommonMetadataClass.STATIC.value
     _plugin_data: PluginDataStatic = None
     _plugin_data_serializer: PluginStaticSerializer = None
+
+    @property
+    def manifest(self) -> SAMStaticPlugin:
+        """Return the Pydandic model of the plugin."""
+        if not self._manifest and self.ready:
+            # if we don't have a manifest but we do have Django ORM data then
+            # we can work backwards to the Pydantic model
+            self._manifest = SAMStaticPlugin(**self.to_json())
+        return self._manifest
 
     @property
     def plugin_data(self) -> PluginDataStatic:
@@ -88,7 +99,7 @@ class StaticPlugin(PluginBase):
 
     @classmethod
     def example_manifest(cls, kwargs: dict = None) -> dict:
-        return {
+        static_plugin = {
             SAMKeys.APIVERSION.value: SmarterApiVersions.V1,
             SAMKeys.KIND.value: MANIFEST_KIND,
             SAMKeys.METADATA.value: {
@@ -150,3 +161,8 @@ class StaticPlugin(PluginBase):
                 },
             },
         }
+
+        # recast the Python dict to the Pydantic model
+        # in order to validate our output
+        pydantic_model = SAMStaticPlugin(**static_plugin)
+        return json.loads(pydantic_model.model_dump_json())

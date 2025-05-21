@@ -1,6 +1,7 @@
 # pylint: disable=W0718
 """Smarter Api ApiConnection Manifest handler"""
 
+import json
 from logging import getLogger
 from typing import Type
 
@@ -190,7 +191,7 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: "exampleConnection",
+                SAMMetadataKeys.NAME.value: "example_connection",
                 SAMMetadataKeys.DESCRIPTION.value: f"Example {self.kind} using any of the following authentication methods: {AuthMethods.all_values()}",
                 SAMMetadataKeys.VERSION.value: "0.1.0",
             },
@@ -210,7 +211,7 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
         }
         # validate our results by round-tripping the data through the Pydantic model
         pydantic_model = self.pydantic_model(**data)
-        data = pydantic_model.model_dump_json()
+        data = json.loads(pydantic_model.model_dump_json())
         return self.json_response_ok(command=command, data=data)
 
     ###########################################################################

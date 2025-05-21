@@ -1,6 +1,7 @@
 """A Plugin that uses a REST API to retrieve its return data"""
 
 # python stuff
+import json
 import logging
 
 # smarter stuff
@@ -196,7 +197,7 @@ class ApiPlugin(PluginBase):
         # recast the Python dict to the Pydantic model
         # in order to validate our output
         pydantic_model = SAMApiPlugin(**api_plugin)
-        return pydantic_model.model_dump_json()
+        return json.loads(pydantic_model.model_dump_json())
 
     def create(self):
         super().create()

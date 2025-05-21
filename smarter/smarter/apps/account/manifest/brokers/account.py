@@ -196,7 +196,7 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: "ExampleAccount",
+                SAMMetadataKeys.NAME.value: "Example_account",
                 SAMMetadataKeys.DESCRIPTION.value: "an example Account manifest",
                 SAMMetadataKeys.VERSION.value: "1.0.0",
                 "accountNumber": self.account.account_number if self.account else None or "1234-5678-9012",

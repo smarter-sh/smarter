@@ -244,7 +244,7 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {
-                SAMSecretMetadataKeys.NAME.value: "ExampleSecret",
+                SAMSecretMetadataKeys.NAME.value: "example_secret",
                 SAMSecretMetadataKeys.DESCRIPTION.value: "an example secret manifest for the Smarter API Secret",
                 SAMSecretMetadataKeys.VERSION.value: "1.0.0",
                 SAMSecretMetadataKeys.ACCOUNT_NUMBER.value: SMARTER_ACCOUNT_NUMBER,
