@@ -9,8 +9,14 @@ from django.dispatch import receiver
 from smarter.common.helpers.console_helpers import formatted_text
 
 from .models import SmarterAuthToken
+from .signals import (
+    smarter_token_authentication_failure,
+    smarter_token_authentication_request,
+    smarter_token_authentication_success,
+)
 
 
+module_prefix = "smarter.lib.drf.receivers"
 logger = logging.getLogger(__name__)
 
 
@@ -19,15 +25,52 @@ def smarter_auth_token_save(sender, instance, created, **kwargs):
     """Signal receiver for created/saved of SmarterAuthToken model."""
     if created:
         logger.info(
-            "%s SmarterAuthToken post_save signal received. instance: %s, created: %s",
+            "%s.%s SmarterAuthToken post_save signal received. instance: %s, created: %s",
+            module_prefix,
             formatted_text("smarter_auth_token_save()"),
             instance,
             created,
         )
     else:
         logger.info(
-            "%s SmarterAuthToken post_save signal received. instance: %s, created: %s",
+            "%s.%s SmarterAuthToken post_save signal received. instance: %s, created: %s",
+            module_prefix,
             formatted_text("smarter_auth_token_save()"),
             instance,
             created,
         )
+
+
+@receiver(smarter_token_authentication_request)
+def authentication_request_receiver(sender, token, **kwargs):
+    """Signal receiver for authentication request."""
+    logger.info(
+        "%s smarter_token_authentication_request signal received. sender: %s, token: %s",
+        formatted_text(f"{module_prefix}.authentication_request_receiver()"),
+        sender,
+        token,
+    )
+
+
+@receiver(smarter_token_authentication_success)
+def authorization_granted_receiver(sender, user, token, **kwargs):
+    """Signal receiver for authorization granted."""
+    logger.info(
+        "%s smarter_token_authentication_success signal received. sender: %s, user: %s, token: %s",
+        formatted_text(f"{module_prefix}.authorization_granted_receiver()"),
+        sender,
+        user,
+        token,
+    )
+
+
+@receiver(smarter_token_authentication_failure)
+def authorization_denied_receiver(sender, user, token, **kwargs):
+    """Signal receiver for authorization denied."""
+    logger.info(
+        "%s smarter_token_authentication_failure signal received. sender: %s, user: %s, token: %s",
+        formatted_text(f"{module_prefix}.authorization_denied_receiver()"),
+        sender,
+        user,
+        token,
+    )

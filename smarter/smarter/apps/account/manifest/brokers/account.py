@@ -104,7 +104,7 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
             file_path=file_path,
             url=url,
         )
-        AccountMixin.__init__(self, account=account, user=request.user)
+        AccountMixin.__init__(self, account=account, user=request.user, request=request)
 
     def manifest_to_django_orm(self) -> dict:
         """
@@ -167,7 +167,7 @@ class SAMAccountBroker(AbstractBroker, AccountMixin):
         """
         if self._manifest:
             return self._manifest
-        if self.loader:
+        if self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = SAMAccount(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,

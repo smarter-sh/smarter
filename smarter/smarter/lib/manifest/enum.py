@@ -23,6 +23,7 @@ class SAMDataFormats(SmarterEnumAbstract):
 
     JSON = "json"
     YAML = "yaml"
+    UNKNOWN = "unknown"
 
 
 class SAMSpecificationKeyOptions(SmarterEnumAbstract):

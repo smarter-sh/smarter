@@ -176,6 +176,8 @@ class SAMLoader(SmarterHelperMixin):
     def data_format(self) -> SAMDataFormats:
         if self._data_format:
             return self._data_format
+        if not self.raw_data:
+            return SAMDataFormats.UNKNOWN
         if isinstance(self.raw_data, dict):
             # we are a json dict
             self._data_format = SAMDataFormats.JSON
@@ -192,6 +194,8 @@ class SAMLoader(SmarterHelperMixin):
                     self._data_format = SAMDataFormats.YAML
                 except yaml.YAMLError as e:
                     raise SAMLoaderError("Invalid data format. Supported formats: json, yaml") from e
+        if not self._data_format:
+            return SAMDataFormats.UNKNOWN
         return self._data_format
 
     @property
@@ -219,7 +223,7 @@ class SAMLoader(SmarterHelperMixin):
     def get_key(self, key) -> any:
         try:
             return self.json_data[key]
-        except KeyError:
+        except (KeyError, TypeError):
             return None
 
     def validate_manifest(self):
@@ -253,7 +257,7 @@ class SAMLoader(SmarterHelperMixin):
         if not self.raw_data:
             logger.warning("%s.validate_manifest() Received empty or invalid data.", self.formatted_class_name)
             return None
-        if not self.data_format:
+        if not self.data_format in [SAMDataFormats.JSON, SAMDataFormats.YAML]:
             raise SAMLoaderError("Invalid data format. Supported formats: json, yaml")
         # recursively validate the json representation of the manifest data
         recursive_validator()

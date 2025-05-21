@@ -78,17 +78,7 @@ class SAMTestBroker(AbstractBroker, AccountMixin):
             file_path=file_path,
             url=url,
         )
-        self._username: str = self.params.get("username", None)
-        if self._username:
-            try:
-                self._user = None
-                self._user_profile = UserProfile.objects.get(user=self.user, account=self.account)
-            except UserProfile.DoesNotExist as e:
-                raise SAMBrokerErrorNotFound(
-                    message=f"{self.kind} {self._username} not found in your account.",
-                    thing=self.kind,
-                    command=SmarterJournalCliCommands.GET,
-                ) from e
+        AccountMixin.__init__(self, account=account, user=request.user, request=request)
 
     @property
     def username(self) -> str:

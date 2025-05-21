@@ -16,10 +16,16 @@ from rest_framework.exceptions import AuthenticationFailed
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.const import SmarterWaffleSwitches
+from smarter.common.utils import mask_string
 from smarter.lib.django import waffle
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
 
+from .signals import (
+    smarter_token_authentication_failure,
+    smarter_token_authentication_request,
+    smarter_token_authentication_success,
+)
 from .token_authentication import (
     SmarterTokenAuthentication,
     SmarterTokenAuthenticationError,
@@ -40,18 +46,29 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
 
     authorization_header = None
     request = None
+    masked_token: str = None
 
     # pylint: disable=unused-argument
     def is_token_auth(self, request) -> bool:
         """Check if the request is for knox token authentication."""
+        # auth=[b'Token', b'd9d56ff4-- A 64-CHARACTER TOKEN --c8176']
         auth = self.authorization_header.split()
-        prefix = knox_settings.AUTH_HEADER_PREFIX
+        auth = [a.decode() if isinstance(a, bytes) else a for a in auth]
+        prefix = str(knox_settings.AUTH_HEADER_PREFIX)
 
         if not auth:
             return False
-        if auth[0].lower() != prefix.lower():
+
+        # Ensure auth[0] is a string for comparison
+        # prefix=Token
+        # auth=['Token', 'd9d56ff4-- A 64-CHARACTER TOKEN --c8176']
+        auth_prefix = auth[0]
+        if auth_prefix.lower() != prefix.lower():
             # Authorization header is possibly for another backend
             return False
+
+        token = auth[1]
+        self.masked_token = mask_string(string=token)
         return True
 
     def url(self) -> str:
@@ -75,12 +92,21 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
             # with some other middleware, no need to do anything
             return self.get_response(request)
 
+        smarter_token_authentication_request.send(
+            sender=self.__class__,
+            token=self.masked_token,
+        )
         request.auth = SmarterTokenAuthentication()
         try:
             user, _ = request.auth.authenticate(request)
             if user:
                 request.user = user
                 login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+                smarter_token_authentication_success.send(
+                    sender=self.__class__,
+                    user=user,
+                    token="i'm from middleware",
+                )
             else:
                 raise AuthenticationFailed(
                     "SmarterTokenAuthentication.authenticate() did not return"
@@ -89,6 +115,11 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
                 )
             logger.info("%s authenticated user %s", self.formatted_class_name, user)
         except AuthenticationFailed as auth_failed:
+            smarter_token_authentication_failure.send(
+                sender=self.__class__,
+                user=None,
+                token="i'm from middleware",
+            )
             try:
                 raise SmarterTokenAuthenticationError("Authentication failed.") from auth_failed
             except SmarterTokenAuthenticationError as e:

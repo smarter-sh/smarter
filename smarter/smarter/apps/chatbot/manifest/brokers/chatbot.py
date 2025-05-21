@@ -116,6 +116,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
             file_path=file_path,
             url=url,
         )
+        AccountMixin.__init__(self, account=account, user=request.user, request=request)
         self._name = self.params.get("name", None)
 
     @property
@@ -252,7 +253,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         """
         if self._manifest:
             return self._manifest
-        if self.loader:
+        if self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = SAMChatbot(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,

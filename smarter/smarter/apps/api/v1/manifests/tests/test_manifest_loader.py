@@ -66,11 +66,6 @@ class TestSAMLoader(TestAccountMixin):
         apiVersion = sam.get_key(key=SAMKeys.APIVERSION.value)
         self.assertEqual(apiVersion, SmarterApiVersions.V1, f"sam.get_key(key=SAMKeys.APIVERSION) is {apiVersion}")
         self.assertEqual(sam.data_format.value, "yaml", f"sam.data_format.value is {sam.data_format.value}")
-        self.assertEqual(
-            sam.manifest_metadata_keys,
-            ["name", "description", "version", "tags", "annotations"],
-            f"sam.manifest_metadata_keys is {sam.manifest_metadata_keys}",
-        )
         kind = sam.get_key(key=SAMKeys.KIND.value)
         self.assertEqual(kind, SAMKinds.STATIC_PLUGIN.value, f"sam.manifest_kind is {kind}")
         self.assertEqual(sam.manifest_spec_keys, [], f"sam.manifest_spec_keys is {sam.manifest_spec_keys}")

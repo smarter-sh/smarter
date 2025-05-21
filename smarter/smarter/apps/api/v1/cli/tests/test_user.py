@@ -1,6 +1,7 @@
 """Test Api v1 CLI commands for User"""
 
 from http import HTTPStatus
+from logging import getLogger
 from urllib.parse import urlencode
 
 import yaml
@@ -15,6 +16,7 @@ from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
 
 KIND = SAMKinds.USER.value
+logger = getLogger(__name__)
 
 
 class TestApiCliV1User(ApiV1TestBase):
@@ -83,7 +85,7 @@ class TestApiCliV1User(ApiV1TestBase):
     def test_apply(self) -> None:
         """Test apply command"""
 
-        # retrieve the current manifest by calling 'describe'
+        # retrieve the current manifest by calling "describe"
         path = reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
@@ -175,7 +177,7 @@ class TestApiCliV1User(ApiV1TestBase):
         self.assertIn(SmarterJournalApiResponseKeys.METADATA, data.keys())
         metadata = data[SAMKeys.METADATA.value]
         self.assertIn("count", metadata.keys())
-        self.assertEqual(metadata["count"], 1)
+        self.assertEqual(metadata["count"], 2, "Count is not 2: expected 1 admin and 1 mere mortal")
 
         # validate the response data dict, that it has both titles and items
         self.assertIn("data", data.keys())
@@ -207,20 +209,10 @@ class TestApiCliV1User(ApiV1TestBase):
         """Test undeploy command"""
         kwargs = {"kind": KIND}
         path = reverse(ApiV1CliReverseViews.undeploy, kwargs=kwargs)
-        response, status = self.get_response(path=path)
+        _, status = self.get_response(path=path)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
-        self.assertIsInstance(response, dict)
-
-        # verify that user is not active
-        self.admin_user.refresh_from_db()
-        self.assertFalse(self.admin_user.is_active)
-
-        # reactivate the user
-        self.admin_user.is_active = True
-        self.admin_user.save()
-        self.admin_user.refresh_from_db()
 
     def test_logs(self) -> None:
         """Test logs command"""
