@@ -1,5 +1,6 @@
 """A PLugin that uses a remote SQL database server to retrieve its return data"""
 
+import json
 import logging
 
 from smarter.apps.plugin.manifest.enum import (
@@ -137,7 +138,7 @@ class SqlPlugin(PluginBase):
             SAMKeys.APIVERSION.value: SmarterApiVersions.V1,
             SAMKeys.KIND.value: MANIFEST_KIND,
             SAMKeys.METADATA.value: {
-                SAMMetadataKeys.name: "SqlExample",
+                SAMMetadataKeys.NAME.value: "sql_example",
                 SAMPluginCommonMetadataKeys.PLUGIN_CLASS.value: SAMPluginCommonMetadataClassValues.SQL.value,
                 SAMMetadataKeys.DESCRIPTION.value: "Get additional information about the admin account of the Smarter platform.",
                 SAMMetadataKeys.VERSION.value: "0.1.0",
@@ -191,7 +192,7 @@ class SqlPlugin(PluginBase):
         # recast the Python dict to the Pydantic model
         # in order to validate our output
         pydantic_model = SAMSqlPlugin(**sql_plugin)
-        return pydantic_model.model_dump_json()
+        return json.loads(pydantic_model.model_dump_json())
 
     def create(self):
         super().create()

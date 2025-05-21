@@ -3,7 +3,10 @@
 import logging
 
 from smarter.common.classes import SmarterHelperMixin
-from smarter.common.exceptions import SmarterBusinessRuleViolation
+from smarter.common.exceptions import (
+    SmarterBusinessRuleViolation,
+    SmarterConfigurationError,
+)
 from smarter.lib.django.user import UserType
 
 from .models import Account, UserProfile
@@ -11,6 +14,7 @@ from .utils import (
     get_cached_account,
     get_cached_account_for_user,
     get_cached_admin_user_for_account,
+    get_cached_smarter_account,
     get_cached_user_profile,
 )
 
@@ -48,6 +52,37 @@ class AccountMixin(SmarterHelperMixin):
         # set the user first, as it can be used to set the account when the account is not provided.
         self._user = user
         self._account = get_cached_account(account_number=account_number) if account_number else account
+
+        if not self.user or self.user.is_anonymous:
+            # if the user is anonymous, then we need to set the account
+            # to the admin user for the account.
+            if self._account:
+                self._user = get_cached_admin_user_for_account(self.account)
+                logger.warning(
+                    "%s: user not set, using admin user %s for account %s",
+                    self.formatted_class_name,
+                    self._user,
+                    self._account,
+                )
+            else:
+                # if the user is anonymous and the account is not set, then we need to set the account
+                # to the default account.
+                self._account = get_cached_smarter_account()
+                self._user = get_cached_admin_user_for_account(self.account)
+                logger.warning(
+                    "%s: user not set, using admin user %s for default account %s",
+                    self.formatted_class_name,
+                    self._user,
+                    self._account,
+                )
+            return None
+        if self._user and not self._account:
+            self._account = get_cached_account_for_user(self._user)
+
+        if not self._account or not self._user:
+            raise SmarterConfigurationError(
+                f"AccountMixin could not properly initialize. Account: {self._account}, User: {self._user}"
+            )
 
     @property
     def account(self) -> Account:

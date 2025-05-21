@@ -1,6 +1,7 @@
 # pylint: disable=W0718
 """Smarter Api SqlConnection Manifest handler"""
 
+import json
 from typing import Type
 
 from django.forms.models import model_to_dict
@@ -86,6 +87,8 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
             file_path=file_path,
             url=url,
         )
+        user = request.user if request and hasattr(request, "user") else None
+        AccountMixin.__init__(self, account=account, user=user)
 
     ###########################################################################
     # Smarter abstract property implementations
@@ -163,7 +166,7 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: "exampleConnection",
+                SAMMetadataKeys.NAME.value: "example_connection",
                 SAMMetadataKeys.DESCRIPTION.value: f"Example database connection. db_engines: {choices}. authentication methods: {DBMSAuthenticationMethods.all_values()}",
                 SAMMetadataKeys.VERSION.value: "0.1.0",
             },
@@ -194,6 +197,8 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
                 }
             },
         }
+        pydantic_model = self.pydantic_model(**data)
+        data = json.loads(pydantic_model.model_dump_json())
         return self.json_response_ok(command=command, data=data)
 
     ###########################################################################

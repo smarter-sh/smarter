@@ -201,10 +201,10 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: "ExampleUser",
+                SAMMetadataKeys.NAME.value: "example_user",
                 SAMMetadataKeys.DESCRIPTION.value: "an example user manifest for the Smarter API User",
                 SAMMetadataKeys.VERSION.value: "1.0.0",
-                "username": "ExampleUser",
+                "username": "example_user",
             },
             SAMKeys.SPEC.value: {
                 SAMUserSpecKeys.CONFIG.value: {
