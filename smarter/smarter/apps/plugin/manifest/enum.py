@@ -99,7 +99,7 @@ class SAMApiConnectionSpecKeys(SmarterEnumAbstract):
 class SAMApiConnectionSpecConnectionKeys(SmarterEnumAbstract):
     """Smarter API Plugin Spec Data keys enumeration."""
 
-    BASE_URL = "base_url"
+    BASE_URL = "baseUrl"
     API_KEY = "apiKey"
     AUTH_METHOD = "authMethod"
     TIMEOUT = "timeout"

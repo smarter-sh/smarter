@@ -41,7 +41,7 @@ class TestApiConnection(TestConnectionBase):
         self.assertEqual(self.model.metadata.name, snake_case_name)
 
         self.assertEqual(self.model.metadata.description, "points to smarter api localhost")
-        self.assertEqual(self.model.spec.connection.base_url, "http://localhost:8000/")
+        self.assertEqual(self.model.spec.connection.baseUrl, "http://localhost:8000/")
         self.assertEqual(self.model.spec.connection.apiKey, "12345-abcde-67890-fghij")
         self.assertEqual(self.model.spec.connection.timeout, 10)
         self.assertEqual(self.model.spec.connection.authMethod, AuthMethods.TOKEN.value)
@@ -52,11 +52,11 @@ class TestApiConnection(TestConnectionBase):
         self.assertEqual(self.model.spec.connection.proxyPassword, "proxyPass")
 
     def test_validate_base_url_invalid_value(self):
-        """Test that the base_url validator raises an error for invalid values."""
+        """Test that the baseUrl validator raises an error for invalid values."""
         self.load_manifest(filename="api-connection.yaml")
 
         invalid_base_url = "not-a-valid-url"
-        self._manifest["spec"]["connection"]["base_url"] = invalid_base_url
+        self._manifest["spec"]["connection"]["baseUrl"] = invalid_base_url
         self._loader = None
         self._model = None
         with self.assertRaises(SAMValidationError) as context:
@@ -108,11 +108,11 @@ class TestApiConnection(TestConnectionBase):
         )
 
     def test_validate_base_url_null_value(self):
-        """Test that the base_url validator raises an error for null values."""
+        """Test that the baseUrl validator raises an error for null values."""
         self.load_manifest(filename="api-connection.yaml")
 
         invalid_base_url = None
-        self._manifest["spec"]["connection"]["base_url"] = invalid_base_url
+        self._manifest["spec"]["connection"]["baseUrl"] = invalid_base_url
         self._loader = None
         self._model = None
         with self.assertRaises(ValidationError) as context:
@@ -168,11 +168,11 @@ class TestApiConnection(TestConnectionBase):
         self.assertIsNotNone(self.model)
 
     def test_validate_base_url_invalid_protocol(self):
-        """Test that the base_url validator raises an error for unsupported protocols."""
+        """Test that the baseUrl validator raises an error for unsupported protocols."""
         self.load_manifest(filename="api-connection.yaml")
 
         invalid_base_url = "ftp://example.com"
-        self._manifest["spec"]["connection"]["base_url"] = invalid_base_url
+        self._manifest["spec"]["connection"]["baseUrl"] = invalid_base_url
         self._loader = None
         self._model = None
         with self.assertRaises(SAMValidationError) as context:
@@ -305,8 +305,8 @@ class TestApiConnection(TestConnectionBase):
         snake_case_name = camel_to_snake(self.model.metadata.name)
         self.assertEqual(django_model.name, snake_case_name)
 
-        self.assertEqual(django_model.base_url, self.model.spec.connection.base_url)
-        self.assertEqual(django_model.apiKey.get_secret(), self.model.spec.connection.apiKey)
+        self.assertEqual(django_model.base_url, self.model.spec.connection.baseUrl)
+        self.assertEqual(django_model.api_key.get_secret(), self.model.spec.connection.apiKey)
         self.assertEqual(django_model.auth_method, self.model.spec.connection.authMethod)
         self.assertEqual(django_model.timeout, self.model.spec.connection.timeout)
         self.assertEqual(django_model.proxy_protocol, self.model.spec.connection.proxyProtocol)

@@ -23,7 +23,7 @@ SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 class ApiConnection(SmarterBasePydanticModel):
     """Smarter API - generic API Connection class."""
 
-    base_url: str = Field(
+    baseUrl: str = Field(
         ...,
         description="The root domain of the API. Example: 'https://api.example.com'.",
     )
@@ -63,7 +63,7 @@ class ApiConnection(SmarterBasePydanticModel):
         description="The password for the proxy connection.",
     )
 
-    @field_validator("base_url")
+    @field_validator("baseUrl")
     def validate_root_domain(cls, v):
         if SmarterValidator.is_valid_url(v):
             return v
