@@ -41,12 +41,17 @@ class ApiV1CliChatConfigApiView(ApiV1CliChatBaseApiView):
     this request.
     """
 
-    def dispatch(self, request, *args, **kwargs):
-        self._is_config_view = True
-        return super().dispatch(request, *args, **kwargs)
+    def setup(self, request: HttpRequest, *args, **kwargs):
+        """
+        Setup the view. This is called before dispatch() and is used to
+        set up the view for the request.
+        """
+        super().setup(request, *args, **kwargs)
+        self._is_config_view = False
+        logger.info("ApiV1CliChatConfigApiView.setup() - %s", self.formatted_class_name)
 
     @csrf_exempt
-    def post(self, request: HttpRequest, name: str, uid: str, *args, **kwargs):
+    def post(self, request: HttpRequest, name: str, *args, **kwargs):
         """
         Api v1 post method for chat config view. Returns the configuration
         dict used to configure the React chat component.
@@ -55,6 +60,7 @@ class ApiV1CliChatConfigApiView(ApiV1CliChatBaseApiView):
         :param name: Name of the chat
         :param uid: UID of the client, created from the machine mac address and the hostname
         """
+        uid: str = request.POST.get("uid", None)
         logger.info("%s Chat config view for chat %s and client %s.", self.formatted_class_name, name, uid)
         response = ChatConfigView.as_view()(request, name=name)
 
