@@ -28,6 +28,7 @@ class TestManifestLoader(SmarterTestBase):
     def test_valid_manifest(self):
         """Test that we can load a valid manifest"""
         loader = SAMLoader(manifest=self.good_manifest_text)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         self.assertIsInstance(loader.json_data, dict)
         self.assertIsInstance(loader.specification, dict)
         self.assertIsInstance(loader.yaml_data, str)
@@ -50,6 +51,7 @@ class TestManifestLoader(SmarterTestBase):
     def init_from_filepath(self):
         filepath = self.path + "/good-plugin-manifest.yaml"
         loader = SAMLoader(manifest=filepath)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         loader.validate_manifest()
         self.assertIsInstance(loader.json_data, dict)
         self.assertIsInstance(loader.specification, dict)
@@ -59,6 +61,7 @@ class TestManifestLoader(SmarterTestBase):
 
     def init_from_url(self):
         loader = SAMLoader(manifest=self.url)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         loader.validate_manifest()
         self.assertIsInstance(loader.json_data, dict)
         self.assertIsInstance(loader.specification, dict)
@@ -68,6 +71,7 @@ class TestManifestLoader(SmarterTestBase):
 
     def test_getkey(self):
         loader = SAMLoader(manifest=self.good_manifest_text)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         self.assertEqual(loader.get_key(SAMKeys.METADATA.value), loader.manifest_metadata)
         self.assertEqual(loader.get_key(SAMKeys.SPEC.value), loader.manifest_spec)
         self.assertEqual(loader.get_key(SAMKeys.STATUS.value), loader.manifest_status)
@@ -88,6 +92,7 @@ class TestManifestLoader(SmarterTestBase):
             except SAMLoaderError as e:
                 logger.error("Failed to load manifest: %s", self.good_manifest_text)
                 self.fail(f"Failed to load manifest: {e}")
+            self.assertTrue(loader.ready, msg="loader is not ready")
             json_data = loader.json_data
             del json_data[element]
 

@@ -169,6 +169,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
 
         # load the manifest from the yaml file
         loader = SAMLoader(file_path="smarter/lib/drf/tests/data/auth-token.yaml")
+        self.assertTrue(loader.ready, msg="loader is not ready")
 
         # use the manifest to creata a new sqlconnection Pydantic model
         manifest = SAMSmarterAuthToken(**loader.pydantic_model_dump())

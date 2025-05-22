@@ -174,13 +174,15 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
                     SAMSecretMetadataKeys.VERSION.value: "1.0.0",
                     SAMSecretMetadataKeys.USERNAME.value: self.user.username,
                     SAMSecretMetadataKeys.ACCOUNT_NUMBER.value: self.account.account_number,
+                    SAMSecretMetadataKeys.TAGS.value: secret_dict.get(SAMSecretMetadataKeys.TAGS.value),
+                    SAMSecretMetadataKeys.ANNOTATIONS.value: secret_dict.get(SAMSecretMetadataKeys.ANNOTATIONS.value),
                 },
                 SAMKeys.SPEC.value: {
                     SAMSecretSpecKeys.CONFIG.value: {
-                        SAMSecretSpecKeys.VALUE.value: secret_dict.get("encrypted_value"),
+                        SAMSecretSpecKeys.VALUE.value: self.secret.get_secret(),
                         SAMSecretSpecKeys.DESCRIPTION.value: secret_dict.get(SAMSecretSpecKeys.DESCRIPTION.value),
-                        SAMSecretSpecKeys.EXPIRATION_DATE.value: secret_dict.get(
-                            SAMSecretSpecKeys.EXPIRATION_DATE.value
+                        SAMSecretSpecKeys.EXPIRATION_DATE.value: (
+                            self.secret.expires_at.isoformat() if self.secret.expires_at else None
                         ),
                     }
                 },
@@ -331,7 +333,7 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
                 self.secret_transformer.save()
             except Exception as e:
                 return self.json_response_err(command=command, e=e)
-            return self.json_response_ok(command=command, data={})
+            return self.json_response_ok(command=command, data=self.secret_transformer.to_json())
         try:
             raise SAMBrokerErrorNotReady(f"Secret {self.name} not ready", thing=self.kind, command=command)
         except SAMBrokerErrorNotReady as err:
@@ -357,8 +359,6 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
                 thing=self.kind,
                 command=command,
             )
-
-        logger.info(f"Describing {self.kind} {secret_name} belonging to {self.user_profile}")
 
         if self.secret:
             try:

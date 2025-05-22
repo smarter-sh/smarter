@@ -50,6 +50,7 @@ class TestSmarterSecretTransformer(TestAccountMixin):
         """
         filespec = self.get_data_full_filepath("secret-good.yaml")
         loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         manifest = SAMSecret(**loader.pydantic_model_dump())
 
         secret_transformer = SecretTransformer(manifest=manifest, user_profile=self.user_profile)
@@ -96,6 +97,7 @@ class TestSmarterSecretTransformer(TestAccountMixin):
         """
         filespec = self.get_data_full_filepath("secret-good.yaml")
         loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         manifest = SAMSecret(**loader.pydantic_model_dump())
 
         secret_transformer = SecretTransformer(manifest=manifest, user_profile=self.user_profile)
@@ -147,6 +149,7 @@ class TestSmarterSecretTransformer(TestAccountMixin):
         """
         filespec = self.get_data_full_filepath("secret-good.yaml")
         loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         manifest = SAMSecret(**loader.pydantic_model_dump())
         secret_transformer = SecretTransformer(manifest=manifest, user_profile=self.user_profile)
 
@@ -159,6 +162,7 @@ class TestSmarterSecretTransformer(TestAccountMixin):
         """
         filespec = self.get_data_full_filepath("secret-good-update.yaml")
         loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         manifest = SAMSecret(**loader.pydantic_model_dump())
         secret_transformer = SecretTransformer(manifest=manifest, user_profile=self.user_profile)
 
@@ -212,6 +216,7 @@ class TestSmarterSecretTransformer(TestAccountMixin):
         """
         filespec = self.get_data_full_filepath("secret-good-update.yaml")
         loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         manifest = SAMSecret(**loader.pydantic_model_dump())
         secret_transformer = SecretTransformer(manifest=manifest, user_profile=self.user_profile)
         self.assertIsInstance(secret_transformer, SecretTransformer)
@@ -238,6 +243,7 @@ class TestSmarterSecretTransformer(TestAccountMixin):
         """
         filespec = self.get_data_full_filepath("secret-good-update.yaml")
         loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         manifest = SAMSecret(**loader.pydantic_model_dump())
         secret_transformer = SecretTransformer(manifest=manifest, user_profile=self.user_profile)
         secret_transformer.create()
@@ -255,6 +261,7 @@ class TestSmarterSecretTransformer(TestAccountMixin):
         """
         filespec = self.get_data_full_filepath("secret-good-update.yaml")
         loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         manifest = SAMSecret(**loader.pydantic_model_dump())
         secret_transformer = SecretTransformer(manifest=manifest, user_profile=self.user_profile)
         secret_transformer.create()
@@ -278,6 +285,7 @@ class TestSmarterSecretTransformer(TestAccountMixin):
         """
         filespec = self.get_data_full_filepath("secret-good-update.yaml")
         loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         manifest = SAMSecret(**loader.pydantic_model_dump())
         secret_transformer = SecretTransformer(manifest=manifest, user_profile=self.user_profile)
         secret_transformer.create()
@@ -300,6 +308,7 @@ class TestSmarterSecretTransformer(TestAccountMixin):
         """
         filespec = self.get_data_full_filepath("secret-good-update.yaml")
         loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         manifest = SAMSecret(**loader.pydantic_model_dump())
         secret_transformer = SecretTransformer(manifest=manifest, user_profile=self.user_profile)
         secret_transformer.create()
@@ -323,6 +332,7 @@ class TestSmarterSecretTransformer(TestAccountMixin):
         """
         filespec = self.get_data_full_filepath("secret-good-update.yaml")
         loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         manifest = SAMSecret(**loader.pydantic_model_dump())
         secret_transformer = SecretTransformer(manifest=manifest, user_profile=self.user_profile)
         secret_transformer.create()
@@ -340,6 +350,7 @@ class TestSmarterSecretTransformer(TestAccountMixin):
         """
         filespec = self.get_data_full_filepath("secret-good-update.yaml")
         loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         manifest = SAMSecret(**loader.pydantic_model_dump())
         secret_transformer = SecretTransformer(manifest=manifest, user_profile=self.user_profile)
         secret_transformer.create()
