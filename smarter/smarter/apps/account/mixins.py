@@ -40,10 +40,12 @@ class AccountMixin(SmarterHelperMixin):
 
     def __init__(
         self,
+        *args,
         user: UserType = None,
         account: Account = None,
         account_number: str = None,
         request: WSGIRequest = None,
+        **kwargs,
     ):
         self._account: Account = None
         self._user: UserType = None
