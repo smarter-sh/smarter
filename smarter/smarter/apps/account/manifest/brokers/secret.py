@@ -394,15 +394,14 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
     def deploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.deploy.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(f"{self.kind} not implemented", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotImplemented(f"{command} not implemented", thing=self.kind, command=command)
 
     def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
         command = SmarterJournalCliCommands(command)
-        raise SAMBrokerErrorNotImplemented(f"{self.kind} not implemented", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotImplemented(f"{command} not implemented", thing=self.kind, command=command)
 
     def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
-        data = {}
-        return self.json_response_ok(command=command, data=data)
+        raise SAMBrokerErrorNotImplemented(f"{command} not implemented", thing=self.kind, command=command)
