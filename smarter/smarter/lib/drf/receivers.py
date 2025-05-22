@@ -3,7 +3,7 @@
 
 import logging
 
-from django.db.models.signals import post_save
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from smarter.common.helpers.console_helpers import formatted_text
@@ -39,6 +39,17 @@ def smarter_auth_token_save(sender, instance, created, **kwargs):
             instance,
             created,
         )
+
+
+@receiver(post_delete, sender=SmarterAuthToken)
+def smarter_auth_token_delete(sender, instance, **kwargs):
+    """Signal receiver for deleted of SmarterAuthToken model."""
+    logger.info(
+        "%s.%s SmarterAuthToken post_delete signal received. instance: %s",
+        module_prefix,
+        formatted_text("smarter_auth_token_delete()"),
+        instance,
+    )
 
 
 @receiver(smarter_token_authentication_request)

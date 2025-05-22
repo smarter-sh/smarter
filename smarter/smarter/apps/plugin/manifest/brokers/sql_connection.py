@@ -203,6 +203,7 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
                 model_dump[SAMSqlConnectionSpecConnectionKeys.PASSWORD.value] = self.password_secret
                 self._sql_connection = SqlConnection(**model_dump)
                 self._sql_connection.save()
+                self._created = True
 
         return self._sql_connection
 
@@ -270,7 +271,7 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
     def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
-        name: str = kwargs.get("name", None)
+        name: str = kwargs.get(SAMMetadataKeys.NAME.value, None)
         data = []
 
         # generate a QuerySet of SqlConnection objects that match our search criteria

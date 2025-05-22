@@ -176,6 +176,7 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
 
                 self._api_connection = ApiConnection(**model_dump)
                 self._api_connection.save()
+                self._created = True
 
         return self._api_connection
 
@@ -219,7 +220,7 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
     def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
-        name: str = kwargs.get(SAMMetadataKeys.NAME, None)
+        name: str = kwargs.get(SAMMetadataKeys.NAME.value, None)
         data = []
 
         # generate a QuerySet of ApiConnection objects that match our search criteria

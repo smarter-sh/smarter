@@ -213,8 +213,13 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
     def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
+        name: str = kwargs.get(SAMMetadataKeys.NAME.value, None)
         data = []
-        user_profiles = UserProfile.objects.filter(account=self.account)
+
+        if name:
+            user_profiles = UserProfile.objects.filter(account=self.account, user__username=name)
+        else:
+            user_profiles = UserProfile.objects.filter(account=self.account)
         users = [user_profile.user for user_profile in user_profiles]
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin

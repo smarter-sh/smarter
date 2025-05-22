@@ -118,4 +118,4 @@ class SmarterAuthToken(AuthToken, TimestampedModel):
             self.save()
 
     def __str__(self):
-        return self.identifier
+        return str(self.name) + " (" + str(self.user) + ") " + str(self.identifier)

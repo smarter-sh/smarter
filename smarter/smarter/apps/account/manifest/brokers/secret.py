@@ -33,7 +33,12 @@ from smarter.lib.manifest.broker import (
     SAMBrokerErrorNotImplemented,
     SAMBrokerErrorNotReady,
 )
-from smarter.lib.manifest.enum import SAMKeys, SCLIResponseGet, SCLIResponseGetData
+from smarter.lib.manifest.enum import (
+    SAMKeys,
+    SAMMetadataKeys,
+    SCLIResponseGet,
+    SCLIResponseGetData,
+)
 from smarter.lib.manifest.loader import SAMLoader
 
 
@@ -265,8 +270,13 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
     def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
+        name = kwargs.get(SAMMetadataKeys.NAME.value, None)
         data = []
-        secrets = Secret.objects.filter(user_profile=self.user_profile)
+
+        if name:
+            secrets = Secret.objects.filter(user_profile=self.user_profile, name=name)
+        else:
+            secrets = Secret.objects.filter(user_profile=self.user_profile)
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for secret in secrets:
@@ -336,7 +346,7 @@ class SAMSecretBroker(AbstractBroker, AccountMixin):
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
         param_name = request.GET.get("name", None)
-        kwarg_name = kwargs.get("name", None)
+        kwarg_name = kwargs.get(SAMSecretMetadataKeys.NAME.value, None)
         secret_name = param_name or kwarg_name or self.name
         self._name = secret_name
 

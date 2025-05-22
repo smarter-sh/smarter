@@ -141,6 +141,7 @@ class AbstractBroker(ABC, SmarterHelperMixin):
     _kind: str = None
     _validated: bool = False
     _thing: SmarterJournalThings = None
+    _created: bool = False
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -180,6 +181,7 @@ class AbstractBroker(ABC, SmarterHelperMixin):
             pass
 
         self._kind = kind or self.loader.manifest_kind if self.loader else None
+        self._created = False
 
     ###########################################################################
     # Class Instance Properties
@@ -222,6 +224,11 @@ class AbstractBroker(ABC, SmarterHelperMixin):
             url += f"?{params}"
 
         return url
+
+    @property
+    def created(self) -> bool:
+        """Return True if the broker was created successfully."""
+        return self._created
 
     @property
     def is_valid(self) -> bool:
@@ -437,7 +444,9 @@ class AbstractBroker(ABC, SmarterHelperMixin):
 
         return retval
 
-    def json_response_ok(self, command: SmarterJournalCliCommands, data: dict = None) -> SmarterJournaledJsonResponse:
+    def json_response_ok(
+        self, command: SmarterJournalCliCommands, data: dict = None, message: str = None
+    ) -> SmarterJournaledJsonResponse:
         """Return a common success response."""
         data = data or {}
 
@@ -445,16 +454,16 @@ class AbstractBroker(ABC, SmarterHelperMixin):
 
         if command == SmarterJournalCliCommands.GET:
             kind = inflect_engine.plural(self.kind)
-            message = f"{kind} {operated} successfully"
+            message = message or f"{kind} {operated} successfully"
         elif command == SmarterJournalCliCommands.LOGS:
             kind = self.kind
-            message = f"{kind} {self.name} successfully retrieved logs"
+            message = message or f"{kind} {self.name} successfully retrieved logs"
         elif command == SmarterJournalCliCommands.MANIFEST_EXAMPLE:
             kind = self.kind
-            message = f"{kind} example manifest successfully generated"
+            message = message or f"{kind} example manifest successfully generated"
         else:
             kind = self.kind
-            message = f"{kind} {self.name} {operated} successfully"
+            message = message or f"{kind} {self.name} {operated} successfully"
         retval = self._retval(data=data, message=message)
         return SmarterJournaledJsonResponse(
             request=self.request, thing=self.thing, command=command, data=retval, status=HTTPStatus.OK, safe=False
