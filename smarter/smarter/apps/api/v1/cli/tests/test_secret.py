@@ -289,6 +289,9 @@ class TestApiCliV1Secret(ApiV1TestBase):
         path = f"{reverse(ApiV1CliReverseViews.delete, kwargs=self.kwargs)}"
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
+
+        logger.info("response=%s", response)
+
         self.assertEqual(status, HTTPStatus.OK, msg=f"path={path} response={response}")
         self.assertIsInstance(response, dict)
         self.assertEqual(response["message"], f"Secret {self.name} deleted successfully")
@@ -299,6 +302,8 @@ class TestApiCliV1Secret(ApiV1TestBase):
         """Test deploy command"""
         path = reverse(ApiV1CliReverseViews.deploy, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
+
+        logger.info("response=%s", response)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED.value)
@@ -319,6 +324,8 @@ class TestApiCliV1Secret(ApiV1TestBase):
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED.value)
         self.assertIsInstance(response, dict)
 
+        logger.info("response=%s", response)
+
         error = response["error"]
 
         self.assertIn("description", error.keys())
@@ -331,5 +338,13 @@ class TestApiCliV1Secret(ApiV1TestBase):
         response, status = self.get_response(path=path)
 
         # validate the response and status are both good
-        self.assertEqual(status, HTTPStatus.OK.value)
+        self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED.value)
         self.assertIsInstance(response, dict)
+
+        logger.info("response=%s", response)
+
+        error = response["error"]
+
+        self.assertIn("description", error.keys())
+        self.assertIn("errorClass", error.keys())
+        self.assertIn("Smarter API Secret manifest broker: logs() not implemented", error["description"])
