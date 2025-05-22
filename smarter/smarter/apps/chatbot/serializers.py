@@ -28,6 +28,24 @@ class ChatBotSerializer(SmarterCamelCaseSerializer):
         return obj.default_system_role_enhanced
 
 
+class ChatBotConfigSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the smarter.apps.chatapp.views.ChatConfigView
+    which should not be camelCased.
+    """
+
+    url_chatbot = serializers.ReadOnlyField()
+    account = AccountMiniSerializer()
+    default_system_role = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ChatBot
+        fields = "__all__"
+
+    def get_default_system_role(self, obj: ChatBot):
+        return obj.default_system_role_enhanced
+
+
 class ChatBotAPIKeySerializer(SmarterCamelCaseSerializer):
 
     class Meta:

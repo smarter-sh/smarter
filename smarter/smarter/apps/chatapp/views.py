@@ -31,7 +31,10 @@ from smarter.apps.chatbot.models import (
     ChatBotRequestsSerializer,
     get_cached_chatbot_by_request,
 )
-from smarter.apps.chatbot.serializers import ChatBotPluginSerializer, ChatBotSerializer
+from smarter.apps.chatbot.serializers import (
+    ChatBotConfigSerializer,
+    ChatBotPluginSerializer,
+)
 from smarter.apps.plugin.models import (
     PluginSelectorHistory,
     PluginSelectorHistorySerializer,
@@ -269,7 +272,9 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
         React context for all templates that render
         a React app.
         """
-        chatbot_serializer = ChatBotSerializer(self.chatbot, context={"request": request}) if self.chatbot else None
+        chatbot_serializer = (
+            ChatBotConfigSerializer(self.chatbot, context={"request": request}) if self.chatbot else None
+        )
 
         # plugins context. the main thing we need here is to constrain the number of plugins
         # returned to some reasonable number, since we'll probaably have cases where
