@@ -136,6 +136,15 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
 
         return self._smarter_auth_token
 
+    def to_json(self) -> dict:
+        """
+        A dictionary representation of the SmarterAuthToken object.
+        This is used to serialize the object to JSON for the API response.
+        """
+        if self.smarter_auth_token:
+            return SmarterAuthTokenSerializer(self.smarter_auth_token).data
+        return {}
+
     @property
     def token_key(self) -> str:
         """
@@ -318,7 +327,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
             ) from e
         if self.created:
             message = f"Successfully created {self.kind} {self.smarter_auth_token.name} with secret token {self.token_key}. Please store this token securely. It will not be shown again."
-        return self.json_response_ok(command=command, data={}, message=message)
+        return self.json_response_ok(command=command, data=self.to_json(), message=message)
 
     def chat(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__
@@ -366,7 +375,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
                 self.smarter_auth_token.save()
         else:
             raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
-        return self.json_response_ok(command=command, data={})
+        return self.json_response_ok(command=command, data=self.to_json())
 
     def undeploy(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.undeploy.__name__
@@ -379,13 +388,9 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
                 self.smarter_auth_token.save()
         else:
             raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
-        return self.json_response_ok(command=command, data={})
+        return self.json_response_ok(command=command, data=self.to_json())
 
     def logs(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
-        command = self.delete.__name__
+        command = self.logs.__name__
         command = SmarterJournalCliCommands(command)
-        self.set_and_verify_name_param(command=command)
-        if self.smarter_auth_token:
-            data = {}
-            return self.json_response_ok(command=command, data=data)
-        raise SAMBrokerErrorNotReady(f"{self.kind} {self.name} is not ready", thing=self.kind, command=command)
+        raise SAMBrokerErrorNotImplemented(message="Logs are not implemented", thing=self.kind, command=command)
