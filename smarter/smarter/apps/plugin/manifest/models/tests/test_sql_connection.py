@@ -49,12 +49,12 @@ class TestSqlConnection(TestConnectionBase):
         }
 
     def test_validate_db_engine_invalid_value(self):
-        """Test that the db_engine validator raises an error for invalid values."""
+        """Test that the dbEngine validator raises an error for invalid values."""
         self.load_manifest(filename="sql-connection-ssh.yaml")
-        logger.info("Testing db_engine validator:\n%s", self.manifest)
+        logger.info("Testing dbEngine validator:\n%s", self.manifest)
 
         invalid_db_engine = "invalid_engine"
-        self._manifest["spec"]["connection"]["db_engine"] = invalid_db_engine
+        self._manifest["spec"]["connection"]["dbEngine"] = invalid_db_engine
         self._loader = None
         self._model = None
         with self.assertRaises(SAMValidationError) as context:
@@ -136,10 +136,10 @@ class TestSqlConnection(TestConnectionBase):
         self.assertEqual(self.model.spec.connection.timeout, valid_timeout)
 
     def test_validate_proxy_host_invalid_value(self):
-        """Test that the proxy_host validator raises an error for invalid values."""
+        """Test that the proxyHost validator raises an error for invalid values."""
         self.load_manifest(filename="sql-connection-ssh.yaml")
         invalid_proxy_host = "/invalid_proxy$$--"
-        self._manifest["spec"]["connection"]["proxy_host"] = invalid_proxy_host
+        self._manifest["spec"]["connection"]["proxyHost"] = invalid_proxy_host
         self._loader = None
         self._model = None
         with self.assertRaises(SAMValidationError) as context:
@@ -150,14 +150,14 @@ class TestSqlConnection(TestConnectionBase):
         )
 
     def test_validate_proxy_host_valid_value(self):
-        """Test that the proxy_host validator accepts valid values."""
+        """Test that the proxyHost validator accepts valid values."""
         self.load_manifest(filename="sql-connection-ssh.yaml")
         valid_proxy_host = "proxy.example.com"
-        self._manifest["spec"]["connection"]["proxy_host"] = valid_proxy_host
+        self._manifest["spec"]["connection"]["proxyHost"] = valid_proxy_host
         self._loader = None
         self._model = None
         self.model
-        self.assertEqual(self.model.spec.connection.proxy_host, valid_proxy_host)
+        self.assertEqual(self.model.spec.connection.proxyHost, valid_proxy_host)
 
     def test_validate_proxy_port_invalid_value(self):
         """Test that the proxy_port validator raises an error for invalid values."""
@@ -250,10 +250,10 @@ class TestSqlConnection(TestConnectionBase):
         self.assertEqual(self.model.spec.connection.authentication_method, valid_auth_method)
 
     def test_validate_use_ssl_invalid_value(self):
-        """Test that the use_ssl validator raises an error for invalid values."""
+        """Test that the useSsl validator raises an error for invalid values."""
         self.load_manifest(filename="sql-connection-ssh.yaml")
         invalid_use_ssl = "not_a_boolean"
-        self._manifest["spec"]["connection"]["use_ssl"] = invalid_use_ssl
+        self._manifest["spec"]["connection"]["useSsl"] = invalid_use_ssl
         self._loader = None
         self._model = None
         with self.assertRaises(ValidationError) as context:
@@ -261,14 +261,14 @@ class TestSqlConnection(TestConnectionBase):
         self.assertIn("Input should be a valid boolean, unable to interpret input", str(context.exception))
 
     def test_validate_use_ssl_valid_value(self):
-        """Test that the use_ssl validator accepts valid values."""
+        """Test that the useSsl validator accepts valid values."""
         self.load_manifest(filename="sql-connection-ssh.yaml")
         valid_use_ssl = True
-        self._manifest["spec"]["connection"]["use_ssl"] = valid_use_ssl
+        self._manifest["spec"]["connection"]["useSsl"] = valid_use_ssl
         self._loader = None
         self._model = None
         self.model
-        self.assertEqual(self.model.spec.connection.use_ssl, valid_use_ssl)
+        self.assertEqual(self.model.spec.connection.useSsl, valid_use_ssl)
 
     def test_model_tcpip(self):
         """Test that the Loader can load the manifest."""
@@ -279,7 +279,7 @@ class TestSqlConnection(TestConnectionBase):
         self.assertIsNotNone(self.loader.manifest_metadata)
         self.assertIsNotNone(self.model.spec)
 
-        self.assertEqual(self.model.spec.connection.db_engine, "django.db.backends.mysql")
+        self.assertEqual(self.model.spec.connection.dbEngine, "django.db.backends.mysql")
         self.assertEqual(self.model.spec.connection.hostname, "smarter-mysql")
         self.assertEqual(self.model.spec.connection.port, 3306)
         self.assertEqual(self.model.spec.connection.username, "smarter")
@@ -314,7 +314,7 @@ class TestSqlConnection(TestConnectionBase):
         snake_case_name = camel_to_snake(self.model.metadata.name)
         self.assertEqual(django_model.name, snake_case_name)
 
-        self.assertEqual(django_model.db_engine, self.model.spec.connection.db_engine)
+        self.assertEqual(django_model.db_engine, self.model.spec.connection.dbEngine)
         self.assertEqual(django_model.hostname, self.model.spec.connection.hostname)
         self.assertEqual(django_model.port, self.model.spec.connection.port)
         self.assertEqual(django_model.username, self.model.spec.connection.username)
@@ -352,17 +352,17 @@ class TestSqlConnection(TestConnectionBase):
         self.assertIsNotNone(self.loader.manifest_metadata)
         self.assertIsNotNone(self.model.spec)
 
-        self.assertEqual(self.model.spec.connection.db_engine, "django.db.backends.mysql")
+        self.assertEqual(self.model.spec.connection.dbEngine, "django.db.backends.mysql")
         self.assertEqual(self.model.spec.connection.hostname, "smarter-mysql")
         self.assertEqual(self.model.spec.connection.port, 3306)
         self.assertEqual(self.model.spec.connection.username, "smarter")
         self.assertEqual(self.model.spec.connection.password, "smarter")
         self.assertEqual(self.model.spec.connection.database, "smarter")
         self.assertEqual(self.model.spec.connection.timeout, 30)
-        self.assertEqual(self.model.spec.connection.use_ssl, True)
-        self.assertEqual(self.model.spec.connection.ssl_cert, "/path/to/cert.pem")
-        self.assertEqual(self.model.spec.connection.ssl_key, "/path/to/key.pem")
-        self.assertEqual(self.model.spec.connection.ssl_ca, "/path/to/ca.pem")
+        self.assertEqual(self.model.spec.connection.useSsl, True)
+        self.assertEqual(self.model.spec.connection.sslCert, "/path/to/cert.pem")
+        self.assertEqual(self.model.spec.connection.sslKey, "/path/to/key.pem")
+        self.assertEqual(self.model.spec.connection.sslCa, "/path/to/ca.pem")
         self.assertEqual(self.model.spec.connection.authentication_method, "tcpip")
 
     def test_django_orm_tcpip_ssl(self):
@@ -389,7 +389,7 @@ class TestSqlConnection(TestConnectionBase):
         snake_case_name = camel_to_snake(self.model.metadata.name)
         self.assertEqual(django_model.name, snake_case_name)
 
-        self.assertEqual(django_model.db_engine, self.model.spec.connection.db_engine)
+        self.assertEqual(django_model.db_engine, self.model.spec.connection.dbEngine)
         self.assertEqual(django_model.hostname, self.model.spec.connection.hostname)
         self.assertEqual(django_model.port, self.model.spec.connection.port)
         self.assertEqual(django_model.username, self.model.spec.connection.username)
@@ -397,9 +397,9 @@ class TestSqlConnection(TestConnectionBase):
         self.assertEqual(django_model.database, self.model.spec.connection.database)
         self.assertEqual(django_model.timeout, self.model.spec.connection.timeout)
         self.assertEqual(django_model.use_ssl, True)
-        self.assertEqual(django_model.ssl_cert, self.model.spec.connection.ssl_cert)
-        self.assertEqual(django_model.ssl_key, self.model.spec.connection.ssl_key)
-        self.assertEqual(django_model.ssl_ca, self.model.spec.connection.ssl_ca)
+        self.assertEqual(django_model.ssl_cert, self.model.spec.connection.sslCert)
+        self.assertEqual(django_model.ssl_key, self.model.spec.connection.sslKey)
+        self.assertEqual(django_model.ssl_ca, self.model.spec.connection.sslCa)
         self.assertEqual(django_model.authentication_method, self.model.spec.connection.authentication_method)
         self.assertEqual(django_model.pool_size, self.model.spec.connection.pool_size)
         self.assertEqual(django_model.max_overflow, self.model.spec.connection.max_overflow)
@@ -424,26 +424,26 @@ class TestSqlConnection(TestConnectionBase):
         self.assertIsNotNone(self.loader.manifest_metadata)
         self.assertIsNotNone(self.model.spec)
 
-        self.assertEqual(self.model.spec.connection.db_engine, "django.db.backends.mysql")
+        self.assertEqual(self.model.spec.connection.dbEngine, "django.db.backends.mysql")
         self.assertEqual(self.model.spec.connection.hostname, "smarter-mysql")
         self.assertEqual(self.model.spec.connection.port, 3306)
         self.assertEqual(self.model.spec.connection.username, "smarter")
         self.assertEqual(self.model.spec.connection.password, "smarter")
         self.assertEqual(self.model.spec.connection.database, "smarter")
         self.assertEqual(self.model.spec.connection.timeout, 30)
-        self.assertEqual(self.model.spec.connection.proxy_host, "proxy.example.com")
+        self.assertEqual(self.model.spec.connection.proxyHost, "proxy.example.com")
         self.assertEqual(self.model.spec.connection.proxy_port, 8080)
-        self.assertEqual(self.model.spec.connection.proxy_username, "proxyUser")
+        self.assertEqual(self.model.spec.connection.proxyUsername, "proxyUser")
         self.assertEqual(self.model.spec.connection.proxy_password, "proxyPass")
         self.assertEqual(self.model.spec.connection.ssh_known_hosts, "/path/to/known_hosts")
         self.assertEqual(self.model.spec.connection.authentication_method, "tcpip_ssh")
         self.assertEqual(self.model.spec.connection.pool_size, 5)
         self.assertEqual(self.model.spec.connection.max_overflow, 10)
         self.assertEqual(self.model.spec.connection.authentication_method, "tcpip_ssh")
-        self.assertEqual(self.model.spec.connection.use_ssl, False)
-        self.assertEqual(self.model.spec.connection.ssl_cert, None)
-        self.assertEqual(self.model.spec.connection.ssl_key, None)
-        self.assertEqual(self.model.spec.connection.ssl_ca, None)
+        self.assertEqual(self.model.spec.connection.useSsl, False)
+        self.assertEqual(self.model.spec.connection.sslCert, None)
+        self.assertEqual(self.model.spec.connection.sslKey, None)
+        self.assertEqual(self.model.spec.connection.sslCa, None)
 
     def test_django_orm_tcpip_ssh(self):
         """Test that the Django model can be initialized from the Pydantic model."""
@@ -477,16 +477,16 @@ class TestSqlConnection(TestConnectionBase):
         snake_case_name = camel_to_snake(self.model.metadata.name)
         self.assertEqual(django_model.name, snake_case_name)
 
-        self.assertEqual(django_model.db_engine, self.model.spec.connection.db_engine)
+        self.assertEqual(django_model.db_engine, self.model.spec.connection.dbEngine)
         self.assertEqual(django_model.hostname, self.model.spec.connection.hostname)
         self.assertEqual(django_model.port, self.model.spec.connection.port)
         self.assertEqual(django_model.username, self.model.spec.connection.username)
         self.assertEqual(django_model.password.get_secret(), self.model.spec.connection.password)
         self.assertEqual(django_model.database, self.model.spec.connection.database)
         self.assertEqual(django_model.timeout, self.model.spec.connection.timeout)
-        self.assertEqual(django_model.proxy_host, self.model.spec.connection.proxy_host)
+        self.assertEqual(django_model.proxy_host, self.model.spec.connection.proxyHost)
         self.assertEqual(django_model.proxy_port, self.model.spec.connection.proxy_port)
-        self.assertEqual(django_model.proxy_username, self.model.spec.connection.proxy_username)
+        self.assertEqual(django_model.proxy_username, self.model.spec.connection.proxyUsername)
         self.assertEqual(django_model.proxy_password.get_secret(), self.model.spec.connection.proxy_password)
         self.assertEqual(django_model.ssh_known_hosts, self.model.spec.connection.ssh_known_hosts)
         self.assertEqual(django_model.authentication_method, self.model.spec.connection.authentication_method)

@@ -97,7 +97,7 @@ class TestApiCliV1ApiConnection(ApiV1TestBase):
         self.assertIn(SAMKeys.SPEC.value, data.keys())
         spec = data[SAMKeys.SPEC.value]
         connection = spec["connection"]
-        config_fields = ["db_engine", "hostname", "port", "username", "password", "database"]
+        config_fields = ["dbEngine", "hostname", "port", "username", "password", "database"]
         for field in config_fields:
             assert field in connection.keys(), f"{field} not found in config keys: {connection.keys()}"
 

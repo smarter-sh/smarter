@@ -59,7 +59,7 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
         connection_model_dump["name"] = connection_model.metadata.name
         connection_model_dump["description"] = connection_model.metadata.description
 
-        if connection_model.spec.connection.api_key:
+        if connection_model.spec.connection.apiKey:
             clear_api_key = connection_model_dump.pop("api_key")
             secret_name = f"test_secret_{cls.hash_suffix}"
             secret = secret_factory(user_profile=cls.user_profile, name=secret_name, value=clear_api_key)
