@@ -8,3 +8,9 @@ class ApiConfig(AppConfig):
 
     default_auto_field = "django.db.models.BigAutoField"
     name = "smarter.apps.api"
+
+    # pylint: disable=import-outside-toplevel,unused-import
+    def ready(self):
+        """Import signals."""
+        from . import receivers  # noqa
+        from . import signals  # noqa
