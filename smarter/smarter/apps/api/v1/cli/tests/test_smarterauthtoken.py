@@ -1,19 +1,21 @@
 """Test Api v1 CLI commands for SmarterAuthToken"""
 
+import json
 from http import HTTPStatus
 from logging import getLogger
 from urllib.parse import urlencode
 
-import yaml
 from django.urls import reverse
 
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.common.api import SmarterApiVersions
+from smarter.lib.drf.manifest.brokers.auth_token import SAMSmarterAuthToken
 from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
+from smarter.lib.manifest.loader import SAMLoader
 
 
 KIND = SAMKinds.AUTH_TOKEN.value
@@ -26,7 +28,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
 
     This class is a subclass of ApiV1TestBase, which gives us access to the
     setUpClass and tearDownClass methods, which are used to uniformly
-    create and delete a user, account, user_profile and token record for
+    create and delete a user, account, user_profile and test_token record for
     testing purposes. ApiV1CliTestBase gives us access to the abstract methods
     that we need to implement in order to test the Api v1 CLI commands for
     Account.
@@ -38,17 +40,17 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         self.kwargs = {SAMKeys.KIND.value: KIND}
         self.query_params = urlencode({"name": self.name})
         self.user = self.admin_user
-        self.token_record, self.token = self.auth_token_factory()
+        self.test_token_record, self.test_token = self.auth_token_factory()
 
     def tearDown(self) -> None:
         """Tear down test fixtures."""
 
         try:
-            if self.token_record:
-                self.token_record.delete()
+            if self.test_token_record:
+                self.test_token_record.delete()
         # pylint: disable=W0718
         except Exception as e:
-            logger.error("Error deleting token record: %s", e)
+            logger.error("Error deleting test_token record: %s", e)
 
         super().tearDown()
 
@@ -130,6 +132,28 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         response, status = self.get_response(path=url_with_query_params)
 
         logger.info("Response: %s", response)
+        # pylint: disable=W0612
+        expected_output = {
+            "data": {
+                "apiVersion": "smarter.sh/v1",
+                "kind": "AuthToken",
+                "metadata": {
+                    "name": "test03b41ac45632817b",
+                    "description": "TestApiCliV1SmarterAuthToken Test API Key",
+                    "version": "1.0.0",
+                },
+                "spec": {"config": {"isActive": True, "username": "testAdminUser_67dc143ec3cae0c1"}},
+                "status": {
+                    "created": "2025-05-22T13:22:38.473613+00:00",
+                    "modified": "2025-05-22T13:22:38.473628+00:00",
+                    "lastUsedAt": None,
+                },
+            },
+            "message": "AuthToken test03b41ac45632817b described successfully",
+            "api": "smarter.sh/v1",
+            "thing": "AuthToken",
+            "metadata": {"key": "353caf5c9b603e3c093c1d5a9e80bb4774e74da4e64a0d1601350fcdb48c370f"},
+        }
 
         self.assertEqual(status, HTTPStatus.OK)
         self.validate_response(response)
@@ -140,49 +164,34 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
     def test_apply(self) -> None:
         """Test apply command"""
 
-        # retrieve the current manifest by calling 'describe'
-        kwargs = {"kind": KIND}
-        path = reverse(ApiV1CliReverseViews.describe, kwargs=kwargs)
-        query_params = urlencode({"name": self.token_record.name})
-        url_with_query_params = f"{path}?{query_params}"
-        response, status = self.get_response(path=url_with_query_params)
+        # load the manifest from the yaml file
+        loader = SAMLoader(file_path="smarter/lib/drf/tests/data/auth-token.yaml")
 
-        # validate the response and status are both good
-        self.assertEqual(status, HTTPStatus.OK)
-        self.assertIsInstance(response, dict)
+        # use the manifest to creata a new sqlconnection Pydantic model
+        manifest = SAMSmarterAuthToken(**loader.pydantic_model_dump())
 
-        # muck up the manifest with some test data
-        data = response[SmarterJournalApiResponseKeys.DATA]
-        data[SAMKeys.SPEC.value] = {
-            "config": {
-                "username": self.user.username,
-                "isActive": True,
-            }
-        }
-        data[SAMKeys.METADATA.value]["description"] = "new description"
+        # dump the manifest to json
+        manifest_json = json.loads(manifest.model_dump_json())
 
-        # pop the status bc its read-only
-        data.pop(SAMKeys.STATUS.value)
-
-        # convert the data back to yaml, since this is what the cli usually sends
-        manifest = yaml.dump(data)
+        # retrieve the current manifest by calling "describe"
         path = reverse(ApiV1CliReverseViews.apply)
-        response, status = self.get_response(path=path, manifest=manifest)
-        self.assertEqual(status, HTTPStatus.OK)
-        self.assertIsInstance(response, dict)
+        response, status = self.get_response(path=path, data=manifest_json)
 
-        # requery and validate our changes
-        kwargs = {"kind": KIND}
-        path = reverse(ApiV1CliReverseViews.describe, kwargs=kwargs)
-        query_params = urlencode({"name": self.token_record.name})
-        url_with_query_params = f"{path}?{query_params}"
-        response, status = self.get_response(path=url_with_query_params)
-        self.assertEqual(status, HTTPStatus.OK)
-        self.assertIsInstance(response, dict)
+        logger.info("Response: %s", response)
+        expected_output = {
+            "message": "Successfully created AuthToken test_auth_token with secret token <-- 64-CHARACTER SECRET TOKEN VALUE -->. Please store this token securely. It will not be shown again.",
+            "api": "smarter.sh/v1",
+            "thing": "AuthToken",
+            "metadata": {"key": "5f8a81d3a12d12f6b780b096c4f6602c28bebd609962b634a92181943d034754"},
+        }
 
-        # validate our changes
-        data = response[SmarterJournalApiResponseKeys.DATA]
-        self.assertEqual(data[SAMKeys.METADATA.value]["description"], "new description")
+        self.assertEqual(status, HTTPStatus.OK)
+
+        try:
+            test_auth_token = SmarterAuthToken.objects.get(name="test_auth_token", user=self.admin_user)
+            test_auth_token.delete()
+        except SmarterAuthToken.DoesNotExist:
+            self.fail("Test auth test_token was not created")
 
     def test_get(self) -> None:
         """Test get command"""
@@ -248,37 +257,37 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         """Test deploy command"""
         kwargs = {"kind": KIND}
         path = reverse(ApiV1CliReverseViews.deploy, kwargs=kwargs)
-        query_params = urlencode({"name": self.token_record.name})
+        query_params = urlencode({"name": self.test_token_record.name})
         url_with_query_params = f"{path}?{query_params}"
         _, status = self.get_response(path=url_with_query_params)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
-        self.token_record.refresh_from_db()
-        self.assertTrue(self.token_record.is_active)
+        self.test_token_record.refresh_from_db()
+        self.assertTrue(self.test_token_record.is_active)
 
     def test_undeploy(self) -> None:
         """Test undeploy command"""
         kwargs = {"kind": KIND}
         path = reverse(ApiV1CliReverseViews.undeploy, kwargs=kwargs)
-        query_params = urlencode({"name": self.token_record.name})
+        query_params = urlencode({"name": self.test_token_record.name})
         url_with_query_params = f"{path}?{query_params}"
         _, status = self.get_response(path=url_with_query_params)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
-        self.token_record.refresh_from_db()
-        self.assertFalse(self.token_record.is_active)
+        self.test_token_record.refresh_from_db()
+        self.assertFalse(self.test_token_record.is_active)
 
-        # re-deploy the token so that it can be deleted
-        self.token_record.is_active = True
-        self.token_record.save()
+        # re-deploy the test_token so that it can be deleted
+        self.test_token_record.is_active = True
+        self.test_token_record.save()
 
     def test_logs(self) -> None:
         """Test logs command"""
         kwargs = {"kind": KIND}
         path = reverse(ApiV1CliReverseViews.logs, kwargs=kwargs)
-        query_params = urlencode({"name": self.token_record.name})
+        query_params = urlencode({"name": self.test_token_record.name})
         url_with_query_params = f"{path}?{query_params}"
         response, status = self.get_response(path=url_with_query_params)
 

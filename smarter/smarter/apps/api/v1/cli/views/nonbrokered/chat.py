@@ -32,7 +32,7 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonErrorResponse,
     SmarterJournaledJsonResponse,
 )
-from smarter.lib.manifest.enum import SCLIResponseGet
+from smarter.lib.manifest.enum import SAMMetadataKeys, SCLIResponseGet
 
 from ..base import APIV1CLIViewError, CliBaseApiView
 
@@ -194,7 +194,7 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         # calling this here in order to initialize the parent mixins.
         super().dispatch(request, *args, **kwargs)
 
-        self._name = kwargs.get("name")
+        self._name = kwargs.get(SAMMetadataKeys.NAME.value)
         logger.info("%s Chat view name: %s", self.formatted_class_name, self.name)
 
         try:

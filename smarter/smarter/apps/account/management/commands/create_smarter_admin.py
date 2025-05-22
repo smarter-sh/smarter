@@ -100,6 +100,6 @@ class Command(BaseCommand):
         # ensure that the Smarter admin user has at least one auth token (api key)
         if not SmarterAuthToken.objects.filter(user=user).exists():
             _, token_key = SmarterAuthToken.objects.create(
-                name="smarterAdminKey", user=user, description="created by manage.py"
+                name="smarter-admin-key", user=user, description="created by manage.py"
             )
             self.stdout.write(self.style.SUCCESS(f"created API key: {token_key}"))
