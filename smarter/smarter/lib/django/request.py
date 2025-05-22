@@ -101,7 +101,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
 
     __slots__ = ("_smarter_request", "_timestamp", "_session_key", "_data", "_url", "_url_urlunparse_without_params")
 
-    def init(self, request: WSGIRequest):
+    def init(self, request: WSGIRequest, *args, **kwargs):
         """
         validate, standardize and parse the request url string into a ParseResult.
         Note that the setter and getter both work with strings
@@ -111,7 +111,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         parent of Classes that do not necessarily initialize with a request object.
         For example, Django Views do not pass a request object to the __init__ method.
         """
-        logger.info("SmarterRequestMixin.init() - %s", request.build_absolute_uri())
+        logger.info("%s.init() - %s", self.formatted_class_name, request.build_absolute_uri())
         if self._smarter_request:
             # we've already been initialized. nothing to do.
             return None

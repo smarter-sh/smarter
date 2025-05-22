@@ -105,7 +105,7 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
                 smarter_token_authentication_success.send(
                     sender=self.__class__,
                     user=user,
-                    token="i'm from middleware",
+                    token=self.masked_token,
                 )
             else:
                 raise AuthenticationFailed(
@@ -118,7 +118,7 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
             smarter_token_authentication_failure.send(
                 sender=self.__class__,
                 user=None,
-                token="i'm from middleware",
+                token=self.masked_token,
             )
             try:
                 raise SmarterTokenAuthenticationError("Authentication failed.") from auth_failed

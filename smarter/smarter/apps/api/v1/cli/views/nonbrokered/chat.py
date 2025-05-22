@@ -141,38 +141,10 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
 
     def validate(self):
         """
-        Validate the request body and url parameters. Note that we are not necessarily expecting a complete
-        set of messages. The message list + the prompt will be sent to the chatbot, which is responsible
-        for ensuring that the system prompt is included in the request.
-
-        example request body:
-        {
-            "session_key": "45089cdcbcbc2ded87da784afd0e368ddece23ca9fb61260cf43c58a708e05e1",
-            "messages": [
-                {
-                "role": "user",
-                "content": "hello world"
-                }
-            ],
-            "prompt": "who's your daddy?"
-        }
+        common validations for the chat views. This is called before dispatch() and is used to
         """
-        if not self.prompt and not self.is_config_view:
-            raise APIV1CLIChatViewError("Internal error. 'prompt' key is missing from the request body.")
-        messages = self.data.get("messages", None)
-        if messages:
-            try:
-                messages = messages if isinstance(messages, list) else json.loads(messages)
-            except json.JSONDecodeError as e:
-                raise APIV1CLIChatViewError(f"Internal error. Failed to decode messages: {messages}") from e
-            if not isinstance(messages, list):
-                raise APIV1CLIChatViewError(f"Internal error. Messages must be a list: {messages}")
-        session_key = self.data.get(SMARTER_CHAT_SESSION_KEY_NAME, None)
-        if session_key:
-            if not re.match(r"^[a-f0-9]{64}$", session_key):
-                raise APIV1CLIChatViewError("Invalid session_key format. Must be a 64-character hexadecimal string.")
 
-    def dispatch(self, request: WSGIRequest, *args, **kwargs):
+    def setup(self, request: WSGIRequest, *args, **kwargs):
         """
         Base dispatch method for the Chat views. This method will attempt to
         extract the session_key from the request body. If the session_key is
@@ -191,9 +163,7 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
             distinguished from the manifest text based on the url path.
 
         """
-        # calling this here in order to initialize the parent mixins.
-        super().dispatch(request, *args, **kwargs)
-
+        super().setup(request, *args, **kwargs)
         self._name = kwargs.get(SAMMetadataKeys.NAME.value)
         logger.info("%s Chat view name: %s", self.formatted_class_name, self.name)
 
@@ -208,9 +178,11 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
         except json.JSONDecodeError:
             pass
 
+    def dispatch(self, request, *args, **kwargs):
+
         if not self.uid:
             raise APIV1CLIChatViewError(
-                "Internal error. UID is missing. This is intended to be a unique identifier for the client, passed as a url param named 'uid'."
+                f"Internal error. UID is missing. This is intended to be a unique identifier for the client, passed as a url param named 'uid'. url: {request.build_absolute_uri()}"
             )
 
         self.cache_key = (self.__class__.__name__, self.request.user.username, self.name, self.uid)
@@ -241,6 +213,7 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
             request._body = new_body.encode("utf-8")
 
         self.validate()
+
         return super().dispatch(request, *args, **kwargs)
 
 
@@ -478,6 +451,40 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
             thing=SmarterJournalThings(SmarterJournalThings.CHAT),
             command=SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT),
         )
+
+    def validate(self):
+        """
+        Validate the request body and url parameters. Note that we are not necessarily expecting a complete
+        set of messages. The message list + the prompt will be sent to the chatbot, which is responsible
+        for ensuring that the system prompt is included in the request.
+
+        example request body:
+        {
+            "session_key": "45089cdcbcbc2ded87da784afd0e368ddece23ca9fb61260cf43c58a708e05e1",
+            "messages": [
+                {
+                "role": "user",
+                "content": "hello world"
+                }
+            ],
+            "prompt": "who's your daddy?"
+        }
+        """
+        super().validate()
+        if not self.prompt and not self.is_config_view:
+            raise APIV1CLIChatViewError("Internal error. 'prompt' key is missing from the request body.")
+        messages = self.data.get("messages", None)
+        if messages:
+            try:
+                messages = messages if isinstance(messages, list) else json.loads(messages)
+            except json.JSONDecodeError as e:
+                raise APIV1CLIChatViewError(f"Internal error. Failed to decode messages: {messages}") from e
+            if not isinstance(messages, list):
+                raise APIV1CLIChatViewError(f"Internal error. Messages must be a list: {messages}")
+        session_key = self.data.get(SMARTER_CHAT_SESSION_KEY_NAME, None)
+        if session_key:
+            if not re.match(r"^[a-f0-9]{64}$", session_key):
+                raise APIV1CLIChatViewError("Invalid session_key format. Must be a 64-character hexadecimal string.")
 
     # pylint: disable=too-many-locals
     @csrf_exempt

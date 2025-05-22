@@ -60,6 +60,8 @@ from smarter.lib.journal.http import (
     SmarterJournaledJsonResponse,
 )
 
+from .signals import chat_config_invoked, chat_session_invoked
+
 
 # from rest_framework.permissions import IsAuthenticated
 
@@ -107,11 +109,13 @@ class SmarterChatSession(SmarterRequestMixin, SmarterHelperMixin):
         if waffle.switch_is_active(SmarterWaffleSwitches.CHATBOT_LOGGING):
             logger.info("%s - session established: %s", self.formatted_class_name, self.session_key)
 
+        chat_session_invoked.send(sender=self.__class__, instance=self, request=request)
+
     def __str__(self):
         return self.__repr__()
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(session_key={self.session_key}, chatbot={self.chatbot})"
+        return f"{self.__class__.__name__}(chatbot={self.chatbot}) - session_key={self.session_key}"
 
     @property
     def chatbot(self):
@@ -156,7 +160,7 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
     _chatbot: ChatBot = None
 
     @property
-    def chatbot(self):
+    def chatbot(self) -> ChatBot:
         return self._chatbot
 
     @property
@@ -238,6 +242,9 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
         self.command = SmarterJournalCliCommands(SmarterJournalCliCommands.CHAT_CONFIG)
         return super().dispatch(request, *args, **kwargs)
 
+    def __str__(self):
+        return str(self.chatbot) if self.chatbot else "ChatConfigView"
+
     # pylint: disable=unused-argument
     def post(self, request, *args, **kwargs):
         """
@@ -313,6 +320,7 @@ class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
                 },
             },
         }
+        chat_config_invoked.send(sender=self.__class__, instance=self, request=request)
         return retval
 
 

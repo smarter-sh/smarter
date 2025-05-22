@@ -113,7 +113,11 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         parameters to the broker.
         """
         if not self._params:
-            self._params = QueryDict(self.smarter_request.META.get("QUERY_STRING", "")) or {}
+            try:
+                self._params = QueryDict(self.smarter_request.META.get("QUERY_STRING", "")) or {}
+            except AttributeError as e:
+                logger.error("%s.params() Could not parse query string parameters: %s", self.formatted_class_name, e)
+                return {}
         return self._params
 
     @property
@@ -228,6 +232,16 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             return SmarterJournalCliCommands(_command)
         raise APIV1CLIViewError(f"Could not determine command from url: {self.url}")
 
+    def setup(self, request, *args, **kwargs):
+        """
+        Setup the view. This is called before dispatch() and is used to
+        set up the view for the request.
+        """
+        super().setup(request, *args, **kwargs)
+        logger.info("CliBaseApiView.setup() - %s", self.formatted_class_name)
+        self.init(*args, request=request, **kwargs)
+        logger.info("CliBaseApiView.setup() - %s init() has run %s", self.formatted_class_name, self.smarter_request)
+
     def initial(self, request, *args, **kwargs):
         logger.info("%s.initial()", self.formatted_class_name)
 
@@ -245,10 +259,17 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             raise SmarterAPIV1CLIViewErrorNotAuthenticated(
                 "Smarter api v1 command-line interface error: authentication failed"
             ) from e
+        logger.info("CliBaseApiView().initial() - %s", self.formatted_class_name)
 
         # this is a hacky way to get SmarterRequestMixin request object
         # initialized.
-        self.init(request=request)
+        self.init(*args, request=request, **kwargs)
+        if self.smarter_request is None:
+            self._smarter_request = request
+            logger.warning(
+                "%s.initial() - self.smarter_request request object was None. This should not happen.",
+                self.formatted_class_name,
+            )
 
         # Manifest parsing and broker instantiation are lazy implementations.
         # So for now, we'll only set the private class variable _manifest_data
@@ -399,4 +420,5 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 stack_trace=traceback.format_exc(),
             )
 
+        logger.info("CliBaseApiView.dispatch() - %s", self.formatted_class_name)
         return response
