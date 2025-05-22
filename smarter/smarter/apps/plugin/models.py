@@ -43,6 +43,11 @@ from .manifest.enum import SAMPluginCommonMetadataClassValues
 # plugin stuff
 from .manifest.models.common import Parameter, RequestHeader, TestValue, UrlParam
 from .manifest.models.sql_connection.enum import DbEngines, DBMSAuthenticationMethods
+from .signals import (
+    plugin_sql_connection_attempted,
+    plugin_sql_connection_failed,
+    plugin_sql_connection_success,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -407,10 +412,22 @@ class SqlConnection(TimestampedModel):
         (DBMSAuthenticationMethods.TCPIP_SSH.value, "Standard TCP/IP over SSH"),
         (DBMSAuthenticationMethods.LDAP_USER_PWD.value, "LDAP User/Password"),
     ]
+
     name = models.CharField(
         help_text="The name of the connection, without spaces. Example: 'HRDatabase', 'SalesDatabase', 'InventoryDatabase'.",
         max_length=255,
         validators=[SmarterValidator.validate_snake_case, validate_no_spaces],
+    )
+    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="sql_connections_account")
+    description = models.TextField(
+        help_text="A brief description of the connection. Be verbose, but not too verbose.", blank=True, null=True
+    )
+    version = models.CharField(
+        help_text="The version of the connection. Example: '1.0.0'.",
+        max_length=255,
+        default="1.0.0",
+        blank=True,
+        null=True,
     )
     db_engine = models.CharField(
         help_text="The type of database management system. Example: 'MySQL', 'PostgreSQL', 'MS SQL Server', 'Oracle'.",
@@ -431,10 +448,6 @@ class SqlConnection(TimestampedModel):
         default=DBMS_DEFAULT_TIMEOUT,
         validators=[MinValueValidator(1)],
         blank=True,
-    )
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="sql_connections_account")
-    description = models.TextField(
-        help_text="A brief description of the connection. Be verbose, but not too verbose.", blank=True, null=True
     )
 
     # SSL/TLS fields
@@ -515,25 +528,19 @@ class SqlConnection(TimestampedModel):
     @property
     def db_options(self) -> dict:
         """Return the database connection options."""
-        retval = {
-            "pool_size": self.pool_size,
-            "max_overflow": self.max_overflow,
-            "ssl": (
-                {
-                    "ca": self.ssl_ca,
-                    "cert": self.ssl_cert,
-                    "key": self.ssl_key,
-                }
-                if self.use_ssl
-                else {}
-            ),
-        }
+        retval = {}
+        if self.use_ssl:
+            retval["ssl"] = {
+                "ca": self.ssl_ca,
+                "cert": self.ssl_cert,
+                "key": self.ssl_key,
+            }
         if self.authentication_method == "ldap_user_pwd":
             retval["authentication"] = "LDAP"
         return retval
 
     @property
-    def django_databases(self) -> dict:
+    def django_db_connection(self) -> dict:
         """Return the database connection settings for Django."""
         return {
             "ENGINE": self.db_engine,
@@ -550,11 +557,14 @@ class SqlConnection(TimestampedModel):
         Establish a database connection using Standard TCP/IP.
         """
         try:
-            connection_handler = ConnectionHandler(self.django_databases)
+            connection_handler = ConnectionHandler({"default": self.django_db_connection})
             connection: BaseDatabaseWrapper = connection_handler["default"]
+            plugin_sql_connection_attempted.send(sender=self.__class__, connection=self)
             connection.ensure_connection()
+            plugin_sql_connection_success.send(sender=self.__class__, connection=self)
             return connection
         except (DatabaseError, ImproperlyConfigured) as e:
+            plugin_sql_connection_failed.send(sender=self.__class__, connection=self)
             logger.error("db test connection failed: %s", e)
             return False
 
@@ -564,6 +574,7 @@ class SqlConnection(TimestampedModel):
         """
 
         try:
+            plugin_sql_connection_attempted.send(sender=self.__class__, connection=self)
             ssh_client = paramiko.SSHClient()
             if self.ssh_known_hosts:
                 known_hosts_file = io.StringIO(self.ssh_known_hosts)
@@ -592,16 +603,18 @@ class SqlConnection(TimestampedModel):
             # Forward the remote database port to the local port
             transport.request_port_forward("127.0.0.1", local_port, self.hostname, self.port)
 
-            connection_handler = ConnectionHandler(self.django_databases)
+            connection_handler = ConnectionHandler(self.django_db_connection)
             connection: BaseDatabaseWrapper = connection_handler["default"]
             connection.ensure_connection()
 
             # Close the SSH connection after ensuring the database connection
             ssh_client.close()
+            plugin_sql_connection_success.send(sender=self.__class__, connection=self)
             return connection
 
         # pylint: disable=W0718
         except Exception as e:
+            plugin_sql_connection_failed.send(sender=self.__class__, connection=self)
             logger.error("TCP/IP over SSH connection failed: %s", e)
             return False
 
@@ -611,13 +624,16 @@ class SqlConnection(TimestampedModel):
         """
         try:
             # Example: Customize the connection string for LDAP authentication
-            databases = self.django_databases
+            plugin_sql_connection_attempted.send(sender=self.__class__, connection=self)
+            databases = self.django_db_connection
             connection_handler = ConnectionHandler(databases)
             connection: BaseDatabaseWrapper = connection_handler["default"]
             connection.ensure_connection()
+            plugin_sql_connection_success.send(sender=self.__class__, connection=self)
             return connection
         # pylint: disable=W0718
         except Exception as e:
+            plugin_sql_connection_failed.send(sender=self.__class__, connection=self)
             logger.error("LDAP User/Password connection failed: %s", e)
             return False
 
@@ -687,8 +703,10 @@ class SqlConnection(TimestampedModel):
                 snake_case_name,
             )
             self.name = snake_case_name
-        self.validate()
-        super().save(*args, **kwargs)
+        if self.validate():
+            super().save(*args, **kwargs)
+        else:
+            raise SmarterValueError(f"SqlConnection.save(): connection {self.name} is not valid.")
 
     def __str__(self) -> str:
         return self.name + " - " + self.get_connection_string()
@@ -925,6 +943,13 @@ class ApiConnection(TimestampedModel):
     )
     description = models.TextField(
         help_text="A brief description of the API connection. Be verbose, but not too verbose.",
+    )
+    version = models.CharField(
+        help_text="The version of the connection. Example: '1.0.0'.",
+        max_length=255,
+        default="1.0.0",
+        blank=True,
+        null=True,
     )
     base_url = models.URLField(
         help_text="The root domain of the API. Example: 'https://api.example.com'.",

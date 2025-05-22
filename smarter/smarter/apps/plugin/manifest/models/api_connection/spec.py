@@ -27,11 +27,11 @@ class ApiConnection(SmarterBasePydanticModel):
         ...,
         description="The root domain of the API. Example: 'https://api.example.com'.",
     )
-    api_key: Optional[str] = Field(
+    apiKey: Optional[str] = Field(
         None,
         description="The API key for authentication, if required.",
     )
-    auth_method: str = Field(
+    authMethod: str = Field(
         "none",
         description="The authentication method to use. Example: 'Basic Auth', 'Token Auth'.",
     )
@@ -42,23 +42,23 @@ class ApiConnection(SmarterBasePydanticModel):
     )
 
     # Proxy fields
-    proxy_protocol: Optional[str] = Field(
+    proxyProtocol: Optional[str] = Field(
         None,
         description="The protocol of the proxy connection. Example: 'http', 'https'.",
     )
-    proxy_host: Optional[str] = Field(
+    proxyHost: Optional[str] = Field(
         None,
         description="The remote host of the proxy connection.",
     )
-    proxy_port: Optional[int] = Field(
+    proxyPort: Optional[int] = Field(
         None,
         description="The port of the proxy connection.",
     )
-    proxy_username: Optional[str] = Field(
+    proxyUsername: Optional[str] = Field(
         None,
         description="The username for the proxy connection.",
     )
-    proxy_password: Optional[str] = Field(
+    proxyPassword: Optional[str] = Field(
         None,
         description="The password for the proxy connection.",
     )
@@ -69,11 +69,11 @@ class ApiConnection(SmarterBasePydanticModel):
             return v
         raise SAMValidationError(f"Invalid root domain or protocol: {v}. Must be a valid domain on http or https.")
 
-    @field_validator("api_key")
+    @field_validator("apiKey")
     def validate_api_key(cls, v):
         return v
 
-    @field_validator("auth_method")
+    @field_validator("authMethod")
     def validate_auth_method(cls, v):
         valid_methods = AuthMethods.all_values()
         if v not in valid_methods:
@@ -86,32 +86,32 @@ class ApiConnection(SmarterBasePydanticModel):
             raise SAMValidationError("Timeout must be greater than or equal to 1.")
         return v
 
-    @field_validator("proxy_protocol")
+    @field_validator("proxyProtocol")
     def validate_proxy_protocol(cls, v):
         valid_protocols = ["http", "https"]
         if v is not None and v not in valid_protocols:
             raise SAMValidationError(f"Invalid protocol {v}. Proxy protocol must be in {valid_protocols}")
         return v
 
-    @field_validator("proxy_host")
+    @field_validator("proxyHost")
     def validate_proxy_host(cls, v):
         if v is not None and not SmarterValidator.is_valid_domain(v):
             raise SAMValidationError(f"Invalid proxy host: {v}. Must be a valid URL.")
         return v
 
-    @field_validator("proxy_port")
+    @field_validator("proxyPort")
     def validate_proxy_port(cls, v):
         if v is not None and (v < 1 or v > 65535):
             raise SAMValidationError(f"Invalid proxy host: {v}. Must be between 1 and 65535.")
         return v
 
-    @field_validator("proxy_username")
+    @field_validator("proxyUsername")
     def validate_proxy_username(cls, v):
         if v is not None and not SmarterValidator.is_valid_cleanstring(v):
             raise SAMValidationError("Proxy username cannot contain illegal characters.")
         return v
 
-    @field_validator("proxy_password")
+    @field_validator("proxyPassword")
     def validate_proxy_password(cls, v):
         return v
 

@@ -42,14 +42,14 @@ class TestApiConnection(TestConnectionBase):
 
         self.assertEqual(self.model.metadata.description, "points to smarter api localhost")
         self.assertEqual(self.model.spec.connection.base_url, "http://localhost:8000/")
-        self.assertEqual(self.model.spec.connection.api_key, "12345-abcde-67890-fghij")
+        self.assertEqual(self.model.spec.connection.apiKey, "12345-abcde-67890-fghij")
         self.assertEqual(self.model.spec.connection.timeout, 10)
-        self.assertEqual(self.model.spec.connection.auth_method, AuthMethods.TOKEN.value)
-        self.assertEqual(self.model.spec.connection.proxy_protocol, "http")
-        self.assertEqual(self.model.spec.connection.proxy_host, "proxy.example.com")
-        self.assertEqual(self.model.spec.connection.proxy_port, 8080)
-        self.assertEqual(self.model.spec.connection.proxy_username, "proxyUser")
-        self.assertEqual(self.model.spec.connection.proxy_password, "proxyPass")
+        self.assertEqual(self.model.spec.connection.authMethod, AuthMethods.TOKEN.value)
+        self.assertEqual(self.model.spec.connection.proxyProtocol, "http")
+        self.assertEqual(self.model.spec.connection.proxyHost, "proxy.example.com")
+        self.assertEqual(self.model.spec.connection.proxyPort, 8080)
+        self.assertEqual(self.model.spec.connection.proxyUsername, "proxyUser")
+        self.assertEqual(self.model.spec.connection.proxyPassword, "proxyPass")
 
     def test_validate_base_url_invalid_value(self):
         """Test that the base_url validator raises an error for invalid values."""
@@ -92,11 +92,11 @@ class TestApiConnection(TestConnectionBase):
         self.assertIsNotNone(self.model)
 
     def test_validate_auth_method_invalid_value(self):
-        """Test that the auth_method validator raises an error for invalid values."""
+        """Test that the authMethod validator raises an error for invalid values."""
         self.load_manifest(filename="api-connection.yaml")
 
         invalid_auth_method = "nonsense"
-        self._manifest["spec"]["connection"]["auth_method"] = invalid_auth_method
+        self._manifest["spec"]["connection"]["authMethod"] = invalid_auth_method
         self._loader = None
         self._model = None
         with self.assertRaises(SAMValidationError) as context:
@@ -123,11 +123,11 @@ class TestApiConnection(TestConnectionBase):
         )
 
     def test_validate_proxy_port_invalid_type(self):
-        """Test that the proxy_port validator raises an error for non-integer values."""
+        """Test that the proxyPort validator raises an error for non-integer values."""
         self.load_manifest(filename="api-connection.yaml")
 
         invalid_proxy_port = "not-a-number"
-        self._manifest["spec"]["connection"]["proxy_port"] = invalid_proxy_port
+        self._manifest["spec"]["connection"]["proxyPort"] = invalid_proxy_port
         self._loader = None
         self._model = None
         with self.assertRaises(ValidationError) as context:
@@ -138,31 +138,31 @@ class TestApiConnection(TestConnectionBase):
         )
 
     def test_validate_proxy_port_empty_value(self):
-        """Test that the proxy_port validator allow missing values."""
+        """Test that the proxyPort validator allow missing values."""
         self.load_manifest(filename="api-connection.yaml")
 
         invalid_proxy_port = None
-        self._manifest["spec"]["connection"]["proxy_port"] = invalid_proxy_port
+        self._manifest["spec"]["connection"]["proxyPort"] = invalid_proxy_port
         self._loader = None
         self._model = None
         self.assertIsNotNone(self.model)
 
     def test_validate_proxy_username_empty_value(self):
-        """Test that the proxy_username validator allows empty values."""
+        """Test that the proxyUsername validator allows empty values."""
         self.load_manifest(filename="api-connection.yaml")
 
         invalid_proxy_password = None
-        self._manifest["spec"]["connection"]["proxy_username"] = invalid_proxy_password
+        self._manifest["spec"]["connection"]["proxyUsername"] = invalid_proxy_password
         self._loader = None
         self._model = None
         self.assertIsNotNone(self.model)
 
     def test_validate_proxy_password_empty_value(self):
-        """Test that the proxy_password validator allows empty values."""
+        """Test that the proxyPassword validator allows empty values."""
         self.load_manifest(filename="api-connection.yaml")
 
         invalid_proxy_password = None
-        self._manifest["spec"]["connection"]["proxy_password"] = invalid_proxy_password
+        self._manifest["spec"]["connection"]["proxyPassword"] = invalid_proxy_password
         self._loader = None
         self._model = None
         self.assertIsNotNone(self.model)
@@ -198,11 +198,11 @@ class TestApiConnection(TestConnectionBase):
         )
 
     def test_validate_auth_method_empty_value(self):
-        """Test that the auth_method validator raises an error for an empty value."""
+        """Test that the authMethod validator raises an error for an empty value."""
         self.load_manifest(filename="api-connection.yaml")
 
         invalid_auth_method = ""
-        self._manifest["spec"]["connection"]["auth_method"] = invalid_auth_method
+        self._manifest["spec"]["connection"]["authMethod"] = invalid_auth_method
         self._loader = None
         self._model = None
         with self.assertRaises(SAMValidationError) as context:
@@ -213,11 +213,11 @@ class TestApiConnection(TestConnectionBase):
         )
 
     def test_validate_proxy_protocol_invalid_value(self):
-        """Test that the proxy_protocol validator raises an error for invalid values."""
+        """Test that the proxyProtocol validator raises an error for invalid values."""
         self.load_manifest(filename="api-connection.yaml")
 
         invalid_proxy_protocol = "unsupported-protocol"
-        self._manifest["spec"]["connection"]["proxy_protocol"] = invalid_proxy_protocol
+        self._manifest["spec"]["connection"]["proxyProtocol"] = invalid_proxy_protocol
         self._loader = None
         self._model = None
         with self.assertRaises(SAMValidationError) as context:
@@ -229,21 +229,21 @@ class TestApiConnection(TestConnectionBase):
         )
 
     def test_validate_proxy_host_null_value(self):
-        """Test that the proxy_host validator allows null values."""
+        """Test that the proxyHost validator allows null values."""
         self.load_manifest(filename="api-connection.yaml")
 
         invalid_proxy_host = None
-        self._manifest["spec"]["connection"]["proxy_host"] = invalid_proxy_host
+        self._manifest["spec"]["connection"]["proxyHost"] = invalid_proxy_host
         self._loader = None
         self._model = None
         self.assertIsNotNone(self.model)
 
     def test_validate_proxy_port_out_of_range(self):
-        """Test that the proxy_port validator raises an error for out-of-range values."""
+        """Test that the proxyPort validator raises an error for out-of-range values."""
         self.load_manifest(filename="api-connection.yaml")
 
         invalid_proxy_port = 70000  # Port numbers must be between 1 and 65535
-        self._manifest["spec"]["connection"]["proxy_port"] = invalid_proxy_port
+        self._manifest["spec"]["connection"]["proxyPort"] = invalid_proxy_port
         self._loader = None
         self._model = None
         with self.assertRaises(SAMValidationError) as context:
@@ -254,21 +254,21 @@ class TestApiConnection(TestConnectionBase):
         )
 
     def test_validate_api_key_null_value(self):
-        """Test that the api_key validator allows null values."""
+        """Test that the apiKey validator allows null values."""
         self.load_manifest(filename="api-connection.yaml")
 
         invalid_api_key = None
-        self._manifest["spec"]["connection"]["api_key"] = invalid_api_key
+        self._manifest["spec"]["connection"]["apiKey"] = invalid_api_key
         self._loader = None
         self._model = None
         self.assertIsNotNone(self.model)
 
     def test_validate_api_key_empty_value(self):
-        """Test that the api_key validator allows an empty string."""
+        """Test that the apiKey validator allows an empty string."""
         self.load_manifest(filename="api-connection.yaml")
 
         invalid_api_key = ""
-        self._manifest["spec"]["connection"]["api_key"] = invalid_api_key
+        self._manifest["spec"]["connection"]["apiKey"] = invalid_api_key
         self._loader = None
         self._model = None
         self.assertIsNotNone(self.model)
@@ -282,14 +282,14 @@ class TestApiConnection(TestConnectionBase):
         model_dump["name"] = self.model.metadata.name
         model_dump["description"] = self.model.metadata.description
 
-        if self.model.spec.connection.api_key:
-            clear_api_key = model_dump.pop("api_key")
+        if self.model.spec.connection.apiKey:
+            clear_api_key = model_dump.pop("apiKey")
             secret_name = f"test_secret_{self.hash_suffix}"
             secret = secret_factory(user_profile=self.user_profile, name=secret_name, value=clear_api_key)
-            model_dump["api_key"] = secret
+            model_dump["apiKey"] = secret
 
-        if self.model.spec.connection.proxy_password:
-            clear_proxy_password = model_dump.pop("proxy_password")
+        if self.model.spec.connection.proxyPassword:
+            clear_proxy_password = model_dump.pop("proxyPassword")
             proxy_secret_name = f"test_proxy_secret_{self.hash_suffix}"
             proxy_secret = secret_factory(
                 user_profile=self.user_profile, name=proxy_secret_name, value=clear_proxy_password
@@ -306,14 +306,14 @@ class TestApiConnection(TestConnectionBase):
         self.assertEqual(django_model.name, snake_case_name)
 
         self.assertEqual(django_model.base_url, self.model.spec.connection.base_url)
-        self.assertEqual(django_model.api_key.get_secret(), self.model.spec.connection.api_key)
-        self.assertEqual(django_model.auth_method, self.model.spec.connection.auth_method)
+        self.assertEqual(django_model.apiKey.get_secret(), self.model.spec.connection.apiKey)
+        self.assertEqual(django_model.auth_method, self.model.spec.connection.authMethod)
         self.assertEqual(django_model.timeout, self.model.spec.connection.timeout)
-        self.assertEqual(django_model.proxy_protocol, self.model.spec.connection.proxy_protocol)
-        self.assertEqual(django_model.proxy_host, self.model.spec.connection.proxy_host)
-        self.assertEqual(django_model.proxy_port, self.model.spec.connection.proxy_port)
-        self.assertEqual(django_model.proxy_username, self.model.spec.connection.proxy_username)
-        self.assertEqual(django_model.proxy_password.get_secret(), self.model.spec.connection.proxy_password)
+        self.assertEqual(django_model.proxy_protocol, self.model.spec.connection.proxyProtocol)
+        self.assertEqual(django_model.proxy_host, self.model.spec.connection.proxyHost)
+        self.assertEqual(django_model.proxy_port, self.model.spec.connection.proxyPort)
+        self.assertEqual(django_model.proxy_username, self.model.spec.connection.proxyUsername)
+        self.assertEqual(django_model.proxy_password.get_secret(), self.model.spec.connection.proxyPassword)
         try:
             django_model.delete()
             secret.delete()

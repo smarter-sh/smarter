@@ -31,6 +31,9 @@ from .signals import (
     plugin_deleted,
     plugin_ready,
     plugin_selected,
+    plugin_sql_connection_attempted,
+    plugin_sql_connection_failed,
+    plugin_sql_connection_success,
     plugin_updated,
 )
 from .tasks import create_plugin_selector_history
@@ -267,3 +270,47 @@ def handle_plugin_data_sql_created(sender, instance, created, **kwargs):
             formatted_text("PluginDataSql() updated"),
             formatted_json(model_to_dict(instance)),
         )
+
+
+# ------------------------------------------------------------------------------
+# plugin sql connection signals.
+# ------------------------------------------------------------------------------
+def masked_dict(dic: dict) -> dict:
+    """Mask sensitive data in a dictionary."""
+    masked = dic.copy()
+    if "PASSWORD" in masked:
+        masked["PASSWORD"] = "********"
+    return masked
+
+
+@receiver(plugin_sql_connection_attempted, dispatch_uid="plugin_sql_connection_attempted")
+def handle_plugin_sql_connection_attempted(sender, connection: SqlConnection, **kwargs):
+    """Handle plugin SQL connection attempted signal."""
+
+    logger.info(
+        "%s - %s",
+        formatted_text("plugin_sql_connection_attempted"),
+        formatted_json(masked_dict(connection.django_db_connection)),
+    )
+
+
+@receiver(plugin_sql_connection_success, dispatch_uid="plugin_sql_connection_success")
+def handle_plugin_sql_connection_success(sender, connection: SqlConnection, **kwargs):
+    """Handle plugin SQL connection success signal."""
+
+    logger.info(
+        "%s - %s",
+        formatted_text("plugin_sql_connection_success"),
+        formatted_json(masked_dict(connection.django_db_connection)),
+    )
+
+
+@receiver(plugin_sql_connection_failed, dispatch_uid="plugin_sql_connection_failed")
+def handle_plugin_sql_connection_failed(sender, connection: SqlConnection, **kwargs):
+    """Handle plugin SQL connection failed signal."""
+
+    logger.info(
+        "%s - %s",
+        formatted_text("plugin_sql_connection_failed"),
+        formatted_json(masked_dict(connection.django_db_connection)),
+    )

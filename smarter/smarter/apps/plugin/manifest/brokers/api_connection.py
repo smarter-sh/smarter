@@ -133,12 +133,12 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
         config_dump[SAMMetadataKeys.NAME.value] = self.manifest.metadata.name
         config_dump[SAMMetadataKeys.DESCRIPTION.value] = self.manifest.metadata.description
 
-        # retrieve the api_key Secret
+        # retrieve the apiKey Secret
         config_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = self.get_or_create_secret(
             user_profile=self.user_profile, name=config_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value]
         )
 
-        # retrieve the proxy_username Secret, if it exists
+        # retrieve the proxyUsername Secret, if it exists
         if config_dump.get(SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value):
             config_dump[SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value] = self.get_or_create_secret(
                 user_profile=self.user_profile,
@@ -160,17 +160,17 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
                 model_dump[SAMMetadataKeys.NAME.value] = self.manifest.metadata.name
                 model_dump[SAMMetadataKeys.DESCRIPTION.value] = self.manifest.metadata.description
 
-                # retrieve the api_key Secret
-                api_key = self.get_or_create_secret(
-                    user_profile=self.user_profile, name=self.manifest.spec.connection.api_key
+                # retrieve the apiKey Secret
+                apiKey = self.get_or_create_secret(
+                    user_profile=self.user_profile, name=self.manifest.spec.connection.apiKey
                 )
-                model_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = api_key
+                model_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = apiKey
 
-                # retrieve the proxy_username Secret, if it exists
-                if self.manifest.spec.connection.proxy_password:
+                # retrieve the proxyPassword Secret, if it exists
+                if self.manifest.spec.connection.proxyPassword:
                     proxy_password = self.get_or_create_secret(
                         user_profile=self.user_profile,
-                        name=self.manifest.spec.connection.proxy_password,
+                        name=self.manifest.spec.connection.proxyPassword,
                     )
                     model_dump[SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value] = proxy_password
 

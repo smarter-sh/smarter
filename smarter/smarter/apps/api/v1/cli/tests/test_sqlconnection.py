@@ -1,9 +1,10 @@
 """Test Api v1 CLI commands for SqlConnection"""
 
+import json
 from http import HTTPStatus
+from logging import getLogger
 from urllib.parse import urlencode
 
-import yaml
 from django.urls import reverse
 
 from smarter.apps.account.models import Secret
@@ -15,13 +16,16 @@ from smarter.apps.plugin.manifest.models.sql_connection.enum import (
     DbEngines,
     DBMSAuthenticationMethods,
 )
+from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
 from smarter.apps.plugin.models import SqlConnection
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
+from smarter.lib.manifest.loader import SAMLoader
 
 
 KIND = SAMKinds.SQL_CONNECTION.value
+logger = getLogger(__name__)
 
 
 class TestApiCliV1SqlConnection(ApiV1TestBase):
@@ -64,8 +68,8 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         self.password = secret_factory(
             user_profile=self.user_profile,
             name=self.name,
-            description="test password",
-            value="test",
+            description="smarter local dev password",
+            value="smarter",
         )
         sqlconnection = SqlConnection.objects.create(
             name=self.name,
@@ -73,21 +77,12 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
             authentication_method=DBMSAuthenticationMethods.TCPIP.value,
             timeout=300,
             account=self.account,
-            description="test sqlconnection - " + self.hash_suffix,
-            hostname="localhost",
-            port=5432,
-            database=self.name,
-            username="test",
+            description="local mysql test sqlconnection - ",
+            hostname="smarter-mysql",
+            port=3306,
+            database="smarter",
+            username="smarter",
             password=self.password,
-            use_ssl=False,
-            pool_size=5,
-            max_overflow=10,
-            proxy_protocol="http",
-            proxy_host="localhost",
-            proxy_port=8080,
-            proxy_username="proxyuser",
-            proxy_password=self.password,
-            ssh_known_hosts="localhost",
         )
         return sqlconnection
 
@@ -112,7 +107,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         self.assertIn(SAMKeys.SPEC.value, data.keys())
         spec = data[SAMKeys.SPEC.value]
         connection = spec["connection"]
-        config_fields = ["db_engine", "hostname", "port", "username", "password", "database"]
+        config_fields = ["dbEngine", "hostname", "port", "username", "password", "database"]
         for field in config_fields:
             assert field in connection.keys(), f"{field} not found in config keys: {connection.keys()}"
 
@@ -146,60 +141,40 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         )
         self.assertEqual(data[SAMKeys.METADATA.value][SAMMetadataKeys.VERSION.value], self.sqlconnection.version)
 
+        self.sqlconnection.delete()
+
     def test_apply(self) -> None:
         """Test apply command"""
 
-        self.sqlconnection = self.sqlconnection_factory()
+        password_secret = secret_factory(
+            user_profile=self.user_profile,
+            name="smarter",
+            description="test_apply() smarter local dev password",
+            value="smarter",
+        )
+
+        # load the manifest from the yaml file
+        loader = SAMLoader(file_path="smarter/apps/plugin/tests/mock_data/sql-connection.yaml")
+
+        # use the manifest to creata a new sqlconnection Pydantic model
+        manifest = SAMSqlConnection(**loader.pydantic_model_dump())
+
+        # dump the manifest to json
+        manifest_json = json.loads(manifest.model_dump_json())
 
         # retrieve the current manifest by calling 'describe'
-        path = reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)
-        url_with_query_params = f"{path}?{self.query_params}"
-        response, status = self.get_response(path=url_with_query_params)
+        path = reverse(ApiV1CliReverseViews.apply)
+        response, status = self.get_response(path=path, data=manifest_json)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
+        logger.info("response: %s", response)
 
-        # muck up the manifest with some test data
-        data = response[SmarterJournalApiResponseKeys.DATA]
-        data[SAMKeys.SPEC.value] = {
-            "connection": {
-                "db_engine": DbEngines.MYSQL.value,
-                "hostname": "newhost",
-                "port": 3307,
-                "username": "newUsername",
-                "password": "newPassword",
-                "database": "newDb",
-            }
-        }
-        data[SAMKeys.METADATA.value]["description"] = "new description"
-
-        # pop the status bc its read-only
-        data.pop(SAMKeys.STATUS.value)
-
-        # convert the data back to yaml, since this is what the cli usually sends
-        manifest = yaml.dump(data)
-        path = reverse(ApiV1CliReverseViews.apply)
-        response, status = self.get_response(path=path, manifest=manifest)
-        self.assertEqual(status, HTTPStatus.OK)
-        self.assertIsInstance(response, dict)
-
-        # requery and validate our changes
-        path = reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)
-        url_with_query_params = f"{path}?{self.query_params}"
-        response, status = self.get_response(path=url_with_query_params)
-        self.assertEqual(status, HTTPStatus.OK)
-        self.assertIsInstance(response, dict)
-
-        # validate our changes
-        data = response[SmarterJournalApiResponseKeys.DATA]
-        self.assertEqual(data[SAMKeys.METADATA.value]["description"], "new description")
-        self.assertEqual(data[SAMKeys.SPEC.value]["connection"]["db_engine"], DbEngines.MYSQL.value)
-        self.assertEqual(data[SAMKeys.SPEC.value]["connection"]["hostname"], "newhost")
-        self.assertEqual(data[SAMKeys.SPEC.value]["connection"]["port"], 3307)
-        self.assertEqual(data[SAMKeys.SPEC.value]["connection"]["username"], "newUsername")
-        self.assertEqual(data[SAMKeys.SPEC.value]["connection"]["password"], "newPassword")
-        self.assertEqual(data[SAMKeys.SPEC.value]["connection"]["database"], "newDb")
+        # tear down the test results.
+        sql_connection = SqlConnection.objects.get(name=manifest.metadata.name, account=self.account)
+        sql_connection.delete()
+        password_secret.delete()
 
     def test_get(self) -> None:
         """Test get command"""

@@ -2,12 +2,14 @@
 """Smarter Api SqlConnection Manifest handler"""
 
 import json
+from logging import getLogger
 from typing import Type
 
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
 from smarter.apps.account.mixins import Account, AccountMixin
+from smarter.apps.account.models import Secret
 from smarter.apps.plugin.manifest.enum import (
     SAMSqlConnectionSpecConnectionKeys,
     SAMSqlConnectionSpecKeys,
@@ -40,6 +42,9 @@ from ..models.sql_connection.model import SAMSqlConnection
 from . import SAMConnectionBrokerError
 
 
+logger = getLogger(__name__)
+
+
 class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
     """
     Smarter API SqlConnection Manifest Broker.This class is responsible for
@@ -54,6 +59,8 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
     _manifest: SAMSqlConnection = None
     _pydantic_model: Type[SAMSqlConnection] = SAMSqlConnection
     _sql_connection: SqlConnection = None
+    _password_secret: Secret = None
+    _proxy_password_secret: Secret = None
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -129,10 +136,54 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
         """
         config_dump = self.manifest.spec.connection.model_dump()
         config_dump = self.camel_to_snake(config_dump)
-        config_dump[SAMMetadataKeys.NAME] = self.manifest.metadata.name
-        config_dump[SAMMetadataKeys.DESCRIPTION] = self.manifest.metadata.description
-        config_dump[SAMMetadataKeys.VERSION] = self.manifest.metadata.version
+        config_dump[SAMMetadataKeys.NAME.value] = self.manifest.metadata.name
+        config_dump[SAMMetadataKeys.DESCRIPTION.value] = self.manifest.metadata.description
+        config_dump[SAMMetadataKeys.VERSION.value] = self.manifest.metadata.version
         return config_dump
+
+    @property
+    def password_secret(self) -> Secret:
+        """
+        Return the password secret for the SqlConnection.
+        """
+        if self._password_secret:
+            return self._password_secret
+        try:
+            self._password_secret = Secret.objects.get(
+                user_profile=self.user_profile,
+                name=self.manifest.spec.connection.password,
+            )
+            return self._password_secret
+        except Secret.DoesNotExist:
+            logger.warning(
+                "%s password Secret %s not found for account %s",
+                self.formatted_class_name,
+                self.manifest.spec.connection.password,
+                self.account,
+            )
+        return None
+
+    @property
+    def proxy_password_secret(self) -> Secret:
+        """
+        Return the proxy password secret for the SqlConnection.
+        """
+        if self._proxy_password_secret:
+            return self._proxy_password_secret
+        try:
+            self._proxy_password_secret = Secret.objects.get(
+                user_profile=self.user_profile,
+                name=self.manifest.spec.connection.proxyPassword,
+            )
+            return self._proxy_password_secret
+        except Secret.DoesNotExist:
+            logger.warning(
+                "%s proxy password Secret %s not found for account %s",
+                self.formatted_class_name,
+                self.manifest.spec.connection.proxyPassword,
+                self.account,
+            )
+        return None
 
     @property
     def sql_connection(self) -> SqlConnection:
@@ -144,10 +195,11 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
         except SqlConnection.DoesNotExist:
             if self.manifest:
                 model_dump = self.manifest.spec.connection.model_dump()
-                model_dump[SAMMetadataKeys.ACCOUNT] = self.account
-                model_dump[SAMMetadataKeys.NAME] = self.manifest.metadata.name
-                model_dump[SAMMetadataKeys.VERSION] = self.manifest.metadata.version
-                model_dump[SAMMetadataKeys.DESCRIPTION] = self.manifest.metadata.description
+                model_dump[SAMMetadataKeys.ACCOUNT.value] = self.account
+                model_dump[SAMMetadataKeys.NAME.value] = self.manifest.metadata.name
+                model_dump[SAMMetadataKeys.VERSION.value] = self.manifest.metadata.version
+                model_dump[SAMMetadataKeys.DESCRIPTION.value] = self.manifest.metadata.description
+                model_dump[SAMSqlConnectionSpecConnectionKeys.PASSWORD.value] = self.password_secret
                 self._sql_connection = SqlConnection(**model_dump)
                 self._sql_connection.save()
 
@@ -174,7 +226,6 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
                     SAMSqlConnectionSpecConnectionKeys.DB_ENGINE.value: DbEngines.MYSQL.value,
                     SAMSqlConnectionSpecConnectionKeys.AUTHENTICATION_METHOD.value: DBMSAuthenticationMethods.TCPIP.value,
                     SAMSqlConnectionSpecConnectionKeys.TIMEOUT.value: 30,
-                    SAMSqlConnectionSpecConnectionKeys.ACCOUNT.value: self.account.account_number,
                     SAMSqlConnectionSpecConnectionKeys.DESCRIPTION.value: "example database connection",
                     SAMSqlConnectionSpecConnectionKeys.USE_SSL.value: False,
                     SAMSqlConnectionSpecConnectionKeys.SSL_CERT.value: "",
@@ -258,7 +309,12 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
             for field in readonly_fields:
                 data.pop(field, None)
             for key, value in data.items():
-                setattr(self.sql_connection, key, value)
+                if key == SAMSqlConnectionSpecConnectionKeys.PASSWORD.value:
+                    setattr(self.sql_connection, key, self.password_secret)
+                elif key == SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value:
+                    setattr(self.sql_connection, key, self.proxy_password_secret)
+                else:
+                    setattr(self.sql_connection, key, value)
             self.sql_connection.save()
         except Exception as e:
             raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
@@ -282,23 +338,22 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
         if self.sql_connection:
             try:
                 data = model_to_dict(self.sql_connection)
+                data = self.snake_to_camel(data)
                 data.pop("id")
-                data.pop(SAMMetadataKeys.ACCOUNT)
-                data.pop(SAMMetadataKeys.NAME)
-                data.pop(SAMMetadataKeys.DESCRIPTION)
-                data.pop(SAMMetadataKeys.VERSION)
+                data.pop(SAMMetadataKeys.NAME.value)
+                data.pop(SAMMetadataKeys.DESCRIPTION.value)
                 retval = {
-                    SAMKeys.APIVERSION: self.api_version,
-                    SAMKeys.KIND: self.kind,
-                    SAMKeys.METADATA: {
-                        SAMMetadataKeys.NAME: self.sql_connection.name,
-                        SAMMetadataKeys.DESCRIPTION: self.sql_connection.description,
-                        SAMMetadataKeys.VERSION: self.sql_connection.version,
+                    SAMKeys.APIVERSION.value: self.api_version,
+                    SAMKeys.KIND.value: self.kind,
+                    SAMKeys.METADATA.value: {
+                        SAMMetadataKeys.NAME.value: self.sql_connection.name,
+                        SAMMetadataKeys.DESCRIPTION.value: self.sql_connection.description,
+                        SAMMetadataKeys.VERSION.value: self.sql_connection.version,
                     },
-                    SAMKeys.SPEC: {SAMSqlConnectionSpecKeys.CONNECTION: data},
-                    SAMKeys.STATUS: {
-                        SAMSqlConnectionStatusKeys.CONNECTION_STRING: self.sql_connection.get_connection_string(),
-                        SAMSqlConnectionStatusKeys.IS_VALID: is_valid,
+                    SAMKeys.SPEC.value: {SAMSqlConnectionSpecKeys.CONNECTION.value: data},
+                    SAMKeys.STATUS.value: {
+                        SAMSqlConnectionStatusKeys.CONNECTION_STRING.value: self.sql_connection.get_connection_string(),
+                        SAMSqlConnectionStatusKeys.IS_VALID.value: is_valid,
                     },
                 }
 

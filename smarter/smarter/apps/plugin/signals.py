@@ -11,3 +11,7 @@ plugin_called = Signal()
 
 plugin_ready = Signal()
 plugin_selected = Signal()
+
+plugin_sql_connection_attempted = Signal()
+plugin_sql_connection_success = Signal()
+plugin_sql_connection_failed = Signal()

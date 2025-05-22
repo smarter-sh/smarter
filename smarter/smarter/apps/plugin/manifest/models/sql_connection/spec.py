@@ -22,7 +22,7 @@ SMARTER_PLUGIN_MAX_SYSTEM_ROLE_LENGTH = 2048
 class SqlConnection(SmarterBasePydanticModel):
     """Smarter API - generic SQL Connection class."""
 
-    db_engine: str = Field(
+    dbEngine: str = Field(
         ...,
         description=f"A valid SQL database engine. Common db_engines: {DbEngines.all_values()}",
     )
@@ -32,7 +32,7 @@ class SqlConnection(SmarterBasePydanticModel):
     )
     port: Optional[int] = Field(
         None,
-        description="The port of the SQL connection. Default values are assigned based on the db_engine.",
+        description="The port of the SQL connection. Default values are assigned based on the dbEngine.",
     )
     database: str = Field(..., description="The name of the database to connect to. Examples: 'sales' or 'mydb'.")
     username: Optional[str] = Field(False, description="The database username.")
@@ -41,23 +41,23 @@ class SqlConnection(SmarterBasePydanticModel):
         SqlConnectionORM.DBMS_DEFAULT_TIMEOUT,
         description="The timeout for the database connection in seconds. Default is 30 seconds.",
     )
-    use_ssl: bool = Field(
+    useSsl: bool = Field(
         False,
         description="Whether to use SSL/TLS for the connection.",
     )
-    ssl_cert: Optional[str] = Field(
+    sslCert: Optional[str] = Field(
         None,
         description="The SSL certificate for the connection, if required.",
     )
-    ssl_key: Optional[str] = Field(
+    sslKey: Optional[str] = Field(
         None,
         description="The SSL key for the connection, if required.",
     )
-    ssl_ca: Optional[str] = Field(
+    sslCa: Optional[str] = Field(
         None,
         description="The Certificate Authority (CA) certificate for verifying the server.",
     )
-    proxy_host: Optional[str] = Field(
+    proxyHost: Optional[str] = Field(
         None,
         description="The remote host of the SQL proxy connection. Should be a valid internet domain name.",
     )
@@ -65,8 +65,8 @@ class SqlConnection(SmarterBasePydanticModel):
         None,
         description="The port of the SQL proxy connection.",
     )
-    proxy_username: Optional[str] = Field(None, description="The username for the proxy connection.")
-    proxy_password: Optional[str] = Field(None, description="The password for the proxy connection.")
+    proxyUsername: Optional[str] = Field(None, description="The username for the proxy connection.")
+    proxyPassword: Optional[str] = Field(None, description="The password for the proxy connection.")
     ssh_known_hosts: Optional[str] = Field(
         None,
         description="The known_hosts file content for verifying SSH connections.",
@@ -84,7 +84,7 @@ class SqlConnection(SmarterBasePydanticModel):
         description="The authentication method to use for the connection. Example: 'Standard TCP/IP', 'Standard TCP/IP over SSH', 'LDAP User/Password'.",
     )
 
-    @field_validator("db_engine")
+    @field_validator("dbEngine")
     def validate_db_engine(cls, v) -> str:
         if v in DbEngines.all_values():
             return v
@@ -100,7 +100,7 @@ class SqlConnection(SmarterBasePydanticModel):
     def validate_port(cls, v, values) -> int:
         if v is None:
             default_port = next(
-                (port for engine, port in SqlConnectionORM.DBMS_CHOICES if engine == values.get("db_engine")), None
+                (port for engine, port in SqlConnectionORM.DBMS_CHOICES if engine == values.get("dbEngine")), None
             )
             if default_port is not None:
                 return default_port
@@ -133,7 +133,7 @@ class SqlConnection(SmarterBasePydanticModel):
             return v
         raise SAMValidationError(f"Invalid timeout: {v}. Must be greater than 0.")
 
-    @field_validator("proxy_host")
+    @field_validator("proxyHost")
     def validate_proxy_host(cls, v) -> str:
         if v is None:
             return v
@@ -173,13 +173,13 @@ class SqlConnection(SmarterBasePydanticModel):
             f"Invalid authentication method: {v}. Must be one of {DBMSAuthenticationMethods.all_values()}"
         )
 
-    @field_validator("use_ssl")
+    @field_validator("useSsl")
     def validate_use_ssl(cls, v) -> bool:
         if isinstance(v, bool):
             return v
-        raise SAMValidationError(f"Invalid use_ssl value: {v}. Must be a boolean.")
+        raise SAMValidationError(f"Invalid useSsl value: {v}. Must be a boolean.")
 
-    @field_validator("ssl_cert", "ssl_key", "ssl_ca")
+    @field_validator("sslCert", "sslKey", "sslCa")
     def validate_ssl_fields(cls, v) -> Optional[str]:
         return v
 
