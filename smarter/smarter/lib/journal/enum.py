@@ -66,7 +66,7 @@ class SmarterJournalThings(SmarterEnumAbstract):
     API_CONNECTION = "ApiConnection"
     SQL_CONNECTION = "SqlConnection"
     ACCOUNT = "Account"
-    APIKEY = "SmarterAuthToken"
+    AUTH_TOKEN = "AuthToken"
     USER = "User"
     CHAT = "Chat"
     CHAT_CONFIG = "ChatConfig"
@@ -86,7 +86,7 @@ class SmarterJournalThings(SmarterEnumAbstract):
             (cls.API_CONNECTION, cls.API_CONNECTION),
             (cls.SQL_CONNECTION, cls.SQL_CONNECTION),
             (cls.ACCOUNT, cls.ACCOUNT),
-            (cls.APIKEY, cls.APIKEY),
+            (cls.AUTH_TOKEN, cls.AUTH_TOKEN),
             (cls.USER, cls.USER),
             (cls.CHAT, cls.CHAT),
             (cls.CHAT_CONFIG, cls.CHAT_CONFIG),

@@ -254,7 +254,8 @@ class AbstractBroker(ABC, SmarterHelperMixin):
 
     @property
     def loader(self) -> SAMLoader:
-        return self._loader
+        if self._loader and self._loader.ready:
+            return self._loader
 
     def __str__(self):
         return f"{self.manifest.apiVersion} {self.kind} Broker"
@@ -282,7 +283,7 @@ class AbstractBroker(ABC, SmarterHelperMixin):
         """
         if self._manifest:
             return self._manifest
-        if self.loader:
+        if self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = AbstractSAMBase(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,

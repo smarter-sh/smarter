@@ -2,6 +2,7 @@
 """Smarter API SmarterAuthToken Manifest handler"""
 
 import typing
+from logging import getLogger
 
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
@@ -35,6 +36,7 @@ if typing.TYPE_CHECKING:
     from smarter.apps.account.models import Account
 
 MAX_RESULTS = 1000
+logger = getLogger(__name__)
 
 
 class SAMSmarterAuthTokenBrokerError(SAMBrokerError):
@@ -165,9 +167,15 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
                 },
             },
             SAMKeys.STATUS.value: {
-                "created": self.smarter_auth_token.created_at.isoformat(),
-                "modified": self.smarter_auth_token.updated_at.isoformat(),
-                "lastUsedAt": self.smarter_auth_token.last_used_at.isoformat(),
+                "created": (
+                    self.smarter_auth_token.created_at.isoformat() if self.smarter_auth_token.created_at else None
+                ),
+                "modified": (
+                    self.smarter_auth_token.updated_at.isoformat() if self.smarter_auth_token.updated_at else None
+                ),
+                "lastUsedAt": (
+                    self.smarter_auth_token.last_used_at.isoformat() if self.smarter_auth_token.last_used_at else None
+                ),
             },
         }
         return data
@@ -192,7 +200,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         """
         if self._manifest:
             return self._manifest
-        if self.loader:
+        if self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = SAMSmarterAuthToken(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
@@ -216,7 +224,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: "camelCaseName",
+                SAMMetadataKeys.NAME.value: "snake-case-name",
                 SAMMetadataKeys.DESCRIPTION.value: "An example Smarter API manifest for a SmarterAuthToken",
                 SAMMetadataKeys.VERSION.value: "1.0.0",
             },
@@ -232,8 +240,16 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
     def get(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.get.__name__
         command = SmarterJournalCliCommands(command)
+
         data = []
-        smarter_auth_tokens = SmarterAuthToken.objects.filter(user=self.user)
+        name = kwargs.get("name", self.name)
+        name = self.clean_cli_param(param=name, param_name="name", url=request.build_absolute_uri())
+
+        if name:
+            # if the name is not None, then we are looking for a specific SmarterAuthToken
+            smarter_auth_tokens = SmarterAuthToken.objects.filter(user=self.user, name=name)
+        else:
+            smarter_auth_tokens = SmarterAuthToken.objects.filter(user=self.user)
 
         # iterate over the QuerySet and use the manifest controller to create a Pydantic model dump for each Plugin
         for smarter_auth_token in smarter_auth_tokens:

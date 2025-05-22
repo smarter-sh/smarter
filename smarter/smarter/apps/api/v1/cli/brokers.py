@@ -47,7 +47,7 @@ class Brokers:
 
     _brokers: Dict[str, Type[AbstractBroker]] = {
         SAMKinds.ACCOUNT.value: SAMAccountBroker,
-        SAMKinds.APIKEY.value: SAMSmarterAuthTokenBroker,
+        SAMKinds.AUTH_TOKEN.value: SAMSmarterAuthTokenBroker,
         SAMKinds.CHAT.value: SAMChatBroker,
         SAMKinds.CHAT_HISTORY.value: SAMChatHistoryBroker,
         SAMKinds.CHAT_PLUGIN_USAGE.value: SAMChatPluginUsageBroker,
