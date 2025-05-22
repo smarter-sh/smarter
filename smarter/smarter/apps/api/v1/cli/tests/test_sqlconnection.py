@@ -51,13 +51,15 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
     def tearDown(self):
         if self.sqlconnection is not None:
             try:
-                self.sqlconnection.delete()
-            except SqlConnection.DoesNotExist:
+                if self.sqlconnection.id is not None:
+                    self.sqlconnection.delete()
+            except (SqlConnection.DoesNotExist, ValueError):
                 pass
         if self.password is not None:
             try:
-                self.password.delete()
-            except Secret.DoesNotExist:
+                if self.password.id is not None:
+                    self.password.delete()
+            except (Secret.DoesNotExist, ValueError):
                 pass
         super().tearDown()
 
@@ -162,7 +164,7 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         # dump the manifest to json
         manifest_json = json.loads(manifest.model_dump_json())
 
-        # retrieve the current manifest by calling 'describe'
+        # retrieve the current manifest by calling "describe"
         path = reverse(ApiV1CliReverseViews.apply)
         response, status = self.get_response(path=path, data=manifest_json)
 
@@ -179,47 +181,114 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
     def test_get(self) -> None:
         """Test get command"""
 
-        # create a sqlconnection so that we have something to get.
+        # this is for reference only, the test will create a new sqlconnection
+        # pylint: disable=W0612
+        expected_output = {
+            "data": {
+                "apiVersion": "smarter.sh/v1",
+                "kind": "SqlConnection",
+                "name": None,
+                "metadata": {"count": 1},
+                "kwargs": {},
+                "data": {
+                    "titles": [
+                        {"name": "name", "type": "CharField"},
+                        {"name": "description", "type": "CharField"},
+                        {"name": "hostname", "type": "CharField"},
+                        {"name": "port", "type": "IntegerField"},
+                        {"name": "database", "type": "CharField"},
+                        {"name": "username", "type": "CharField"},
+                        {"name": "password", "type": "PrimaryKeyRelatedField"},
+                        {"name": "proxyProtocol", "type": "ChoiceField"},
+                        {"name": "proxyHost", "type": "CharField"},
+                        {"name": "proxyPort", "type": "IntegerField"},
+                        {"name": "proxyUsername", "type": "CharField"},
+                        {"name": "proxyPassword", "type": "PrimaryKeyRelatedField"},
+                    ],
+                    "items": [
+                        {
+                            "name": "test8cecb5d1d50957c4",
+                            "description": "local mysql test sqlconnection - ",
+                            "hostname": "smarter-mysql",
+                            "port": 3306,
+                            "database": "smarter",
+                            "username": "smarter",
+                            "password": 1004,
+                            "proxyProtocol": "http",
+                            "proxyHost": None,
+                            "proxyPort": None,
+                            "proxyUsername": None,
+                            "proxyPassword": None,
+                        }
+                    ],
+                },
+            },
+            "message": "SqlConnections got successfully",
+            "api": "smarter.sh/v1",
+            "thing": "SqlConnection",
+            "metadata": {"key": "693d98d68199fa8a67e60132007bea249e48fae8fa41a14ae5a16bd4dc039bd6"},
+        }
+
         self.sqlconnection = self.sqlconnection_factory()
-
-        def validate_titles(data):
-            if "titles" not in data:
-                return False
-
-            for item in data["titles"]:
-                if not isinstance(item, dict):
-                    return False
-                if "name" not in item or "type" not in item:
-                    return False
-
-            return True
-
-        def validate_items(data):
-            if "items" not in data or "titles" not in data:
-                raise ValueError("items not found in data")
-
-            if "titles" not in data:
-                raise ValueError("titles not found in data")
-
-            title_names = {title["name"] for title in data["titles"]}
-
-            for item in data["items"]:
-                if not isinstance(item, dict):
-                    raise ValueError(f"item is not a dict: {item}")
-                if set(item.keys()) != title_names:
-                    difference = list(set(item.keys()).symmetric_difference(title_names))
-                    raise ValueError(f"item keys do not match titles: {difference}")
-
-            return True
-
         path = reverse(ApiV1CliReverseViews.get, kwargs=self.kwargs)
-        response, status = self.get_response(path=path)
+        url_with_query_params = f"{path}?{self.query_params}"
+        response, status = self.get_response(path=url_with_query_params)
+        logger.info("response: %s", response)
+
+        self.assertEqual(status, HTTPStatus.OK)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
 
+        # validate top-level keys
+        self.assertIn("message", response)
+        self.assertEqual(response["message"], "SqlConnections got successfully")
+        self.assertIn("thing", response)
+        self.assertEqual(response["thing"], "SqlConnection")
+        self.assertIn("metadata", response)
+        self.assertIn("key", response["metadata"])
+        self.assertIsInstance(response["metadata"]["key"], str)
+
+        # validate titles
+        expected_titles = [
+            {"name": "name", "type": "CharField"},
+            {"name": "description", "type": "CharField"},
+            {"name": "hostname", "type": "CharField"},
+            {"name": "port", "type": "IntegerField"},
+            {"name": "database", "type": "CharField"},
+            {"name": "username", "type": "CharField"},
+            {"name": "password", "type": "PrimaryKeyRelatedField"},
+            {"name": "proxyProtocol", "type": "ChoiceField"},
+            {"name": "proxyHost", "type": "CharField"},
+            {"name": "proxyPort", "type": "IntegerField"},
+            {"name": "proxyUsername", "type": "CharField"},
+            {"name": "proxyPassword", "type": "PrimaryKeyRelatedField"},
+        ]
+
+        # other structural checks
         self.assertIn(SmarterJournalApiResponseKeys.DATA, response.keys())
+
+        data = response["data"][SmarterJournalApiResponseKeys.DATA]
+        self.assertEqual(data["titles"], expected_titles)
+
+        # validate items
+        self.assertEqual(len(data["items"]), 1)
+        item = data["items"][0]
+        self.assertEqual(item["name"], self.sqlconnection.name)
+        self.assertEqual(item["description"], self.sqlconnection.description)
+        self.assertEqual(item["hostname"], self.sqlconnection.hostname)
+        self.assertEqual(item["port"], self.sqlconnection.port)
+        self.assertEqual(item["database"], self.sqlconnection.database)
+        self.assertEqual(item["username"], self.sqlconnection.username)
+        self.assertEqual(item["password"], self.sqlconnection.password.id)
+        self.assertEqual(item["proxyProtocol"], "http")
+        self.assertIsNone(item["proxyHost"])
+        self.assertIsNone(item["proxyPort"])
+        self.assertIsNone(item["proxyUsername"])
+        self.assertIsNone(item["proxyPassword"])
+
+        # legacy validations, pre May-2025
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
         self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.SQL_CONNECTION.value)
@@ -236,11 +305,8 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         self.assertIn("titles", data.keys())
         self.assertIn("items", data.keys())
 
-        if not validate_titles(data):
-            self.fail(f"Titles are not valid: {data}")
-
-        if not validate_items(data):
-            self.fail(f"Items are not valid: {data}")
+        self.sqlconnection.delete()
+        self.password.delete()
 
     def test_deploy(self) -> None:
         """Test deploy command"""
@@ -249,7 +315,9 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
 
         path = reverse(ApiV1CliReverseViews.deploy, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
-        _, status = self.get_response(path=url_with_query_params)
+        response, status = self.get_response(path=url_with_query_params)
+
+        logger.info("response: %s", response)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
@@ -262,7 +330,9 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
 
         path = reverse(ApiV1CliReverseViews.undeploy, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
-        _, status = self.get_response(path=url_with_query_params)
+        response, status = self.get_response(path=url_with_query_params)
+
+        logger.info("response: %s", response)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
@@ -271,7 +341,9 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
         """Test logs command"""
         path = reverse(ApiV1CliReverseViews.logs, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
-        _, status = self.get_response(path=url_with_query_params)
+        response, status = self.get_response(path=url_with_query_params)
+
+        logger.info("response: %s", response)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
@@ -283,7 +355,9 @@ class TestApiCliV1SqlConnection(ApiV1TestBase):
 
         path = reverse(ApiV1CliReverseViews.delete, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
-        _, status = self.get_response(path=url_with_query_params)
+        response, status = self.get_response(path=url_with_query_params)
+
+        logger.info("response: %s", response)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
