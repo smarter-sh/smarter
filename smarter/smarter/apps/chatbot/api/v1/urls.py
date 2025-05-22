@@ -23,6 +23,7 @@ urlpatterns = [
     # TO DO: add paths for langchain, openai and other chatbot providers
     path("", ChatBotListView.as_view(), name="chatbot-api"),
     path("<int:chatbot_id>/", ChatBotView.as_view(), name="chatbot-api"),
+    path("<int:chatbot_id>/config/", ChatConfigView.as_view(), name="chatbot-api-chatbot"),
     path("<int:chatbot_id>/chat/", DefaultChatBotApiView.as_view(), name="chatbot-api-chatbot"),
     path("<int:chatbot_id>/chat/config/", ChatConfigView.as_view(), name="chatbot-api-chatbot"),
     path("<int:chatbot_id>/plugins/", ChatBotPluginListView.as_view(), name="chatbot-api-plugins"),
