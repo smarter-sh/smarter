@@ -375,6 +375,35 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         self.assertFalse(self.test_token_record.is_active)
         self.assertFalse(response[SmarterJournalApiResponseKeys.DATA]["is_active"])
 
+    def test_delete(self) -> None:
+        """Test delete command"""
+        path = reverse(ApiV1CliReverseViews.delete, kwargs=self.kwargs)
+        url_with_query_params = f"{path}?{self.query_params}"
+        response, status = self.get_response(path=url_with_query_params)
+
+        logger.info("Response: %s", response)
+        # pylint: disable=W0612
+        exected_output = {
+            "message": "AuthToken test06bfeb5de52cd5d3 deleted successfully",
+            "api": "smarter.sh/v1",
+            "thing": "AuthToken",
+            "metadata": {"key": "bb31badf5706e7484c199e99a2985a1494802861c5ce62130fb3a8aa1185b694"},
+        }
+
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertIn("deleted successfully", response["message"])
+        self.assertEqual(response["thing"], "AuthToken")
+        self.assertEqual(response["api"], "smarter.sh/v1")
+        self.assertIn("metadata", response.keys())
+        self.assertIn("key", response["metadata"].keys())
+
+        # verify the SmarterAuthToken was deleted
+        try:
+            SmarterAuthToken.objects.get(name=self.name, user=self.admin_user)
+            self.fail("SqlConnection was not deleted")
+        except SmarterAuthToken.DoesNotExist:
+            pass
+
     def test_logs(self) -> None:
         """Test logs command"""
         path = reverse(ApiV1CliReverseViews.logs, kwargs=self.kwargs)
