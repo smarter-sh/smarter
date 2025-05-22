@@ -4,13 +4,20 @@
 import logging
 
 from django.contrib.auth.signals import user_logged_in
-from django.db.models.signals import post_save
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from smarter.common.helpers.console_helpers import formatted_text
 
+from .manifest.transformers.secret import SecretTransformer
 from .models import Account, Charge, DailyBillingRecord, Secret, UserProfile
-from .signals import secret_created, secret_edited
+from .signals import (
+    secret_created,
+    secret_deleted,
+    secret_edited,
+    secret_inializing,
+    secret_ready,
+)
 from .utils import get_cached_default_account, get_cached_user_profile
 
 
@@ -102,12 +109,24 @@ def secret_post_save(sender, instance, created, **kwargs):
         secret_edited.send(sender=Secret, secret=instance)
 
 
+@receiver(post_delete, sender=Secret)
+def secret_post_delete(sender, instance, **kwargs):
+    """Signal receiver for deleted of Secret model."""
+    logger.info(
+        "%s Secret post_delete signal received. instance: %s, id: %s",
+        formatted_text("secret_post_delete()"),
+        instance,
+        instance.id,
+    )
+
+
 @receiver(secret_created)
 def secret_created_receiver(sender, secret, **kwargs):
     """Signal receiver for secret_created signal."""
     logger.info(
-        "%s secret_created signal received. instance: %s id: %s",
+        "%s.%s secret_created signal received. instance: %s id: %s",
         formatted_text("secret_created_receiver()"),
+        sender,
         secret,
         secret.id,
     )
@@ -117,8 +136,45 @@ def secret_created_receiver(sender, secret, **kwargs):
 def secret_edited_receiver(sender, secret, **kwargs):
     """Signal receiver for secret_edited signal."""
     logger.info(
-        "%s secret_edited signal received. instance: %s, id: %s",
+        "%s.%s secret_edited signal received. instance: %s, id: %s",
         formatted_text("secret_edited_receiver()"),
+        sender,
         secret,
         secret.id,
+    )
+
+
+@receiver(secret_deleted)
+def secret_deleted_receiver(sender, secret_id, secret_name, **kwargs):
+    """Signal receiver for secret_deleted signal."""
+    logger.info(
+        "%s.%s secret_deleted signal received. instance: %s, name: %s",
+        formatted_text("secret_deleted_receiver()"),
+        sender,
+        secret_id,
+        secret_name,
+    )
+
+
+@receiver(secret_ready)
+def secret_ready_receiver(sender, secret: SecretTransformer, **kwargs):
+    """Signal receiver for secret_ready signal."""
+    logger.info(
+        "%s.%s secret_ready signal received. instance: %s, id: %s",
+        formatted_text("secret_ready_receiver()"),
+        sender,
+        secret,
+        secret.id,
+    )
+
+
+@receiver(secret_inializing)
+def secret_inializing_receiver(sender, secret_name: str, user_profile: UserProfile, **kwargs):
+    """Signal receiver for secret_inializing signal."""
+    logger.info(
+        "%s.%s secret_inializing signal received. name: %s, user_profile: %s",
+        formatted_text("secret_inializing_receiver()"),
+        sender,
+        secret_name,
+        user_profile,
     )

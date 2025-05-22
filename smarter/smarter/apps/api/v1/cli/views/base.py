@@ -229,7 +229,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         raise APIV1CLIViewError(f"Could not determine command from url: {self.url}")
 
     def initial(self, request, *args, **kwargs):
-        logger.info("CliBaseApiView().initial()")
+        logger.info("%s.initial()", self.formatted_class_name)
 
         try:
             super().initial(request, *args, **kwargs)

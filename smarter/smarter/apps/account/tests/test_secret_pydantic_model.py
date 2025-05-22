@@ -27,6 +27,7 @@ class TestSmarterSecretPydanticModel(TestAccountMixin):
 
         filespec = self.get_data_full_filepath("secret-good.yaml")
         loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
         pydantic_model = SAMSecret(**loader.pydantic_model_dump())
 
         # dump the pydantic model to a dictionary
@@ -44,6 +45,7 @@ class TestSmarterSecretPydanticModel(TestAccountMixin):
 
         filespec = self.get_data_full_filepath("secret-bad.yaml")
         loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
 
         with self.assertRaises(ValidationError) as context:
             SAMSecret(**loader.pydantic_model_dump())
@@ -72,6 +74,7 @@ class TestSmarterSecretPydanticModel(TestAccountMixin):
 
         filespec = self.get_data_full_filepath("secret-bad3.yaml")
         loader = SAMLoader(file_path=filespec)
+        self.assertTrue(loader.ready, msg="loader is not ready")
 
         with self.assertRaises(ValidationError) as context:
             SAMSecret(**loader.pydantic_model_dump())

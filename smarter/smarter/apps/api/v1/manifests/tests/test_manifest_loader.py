@@ -41,6 +41,7 @@ class TestSAMLoader(TestAccountMixin):
             kind=SAMKinds.STATIC_PLUGIN.value,
             file_path=self.good_manifest_path,
         )
+        self.assertTrue(loader.ready, msg="loader is not ready")
         loader.validate_manifest()
 
     def test_valid_manifest_properties(self):
@@ -51,6 +52,7 @@ class TestSAMLoader(TestAccountMixin):
             kind=SAMKinds.STATIC_PLUGIN.value,
             file_path=self.good_manifest_path,
         )
+        self.assertTrue(loader.ready, msg="loader is not ready")
         sam = loader
         self.assertTrue(sam.specification is not None, f"sam.specification is {sam.specification}")
         self.assertTrue(isinstance(sam.specification, dict), f"sam.specification is {type(sam.specification)}")
@@ -81,6 +83,7 @@ class TestSAMLoader(TestAccountMixin):
             kind=SAMKinds.STATIC_PLUGIN.value,
             file_path=self.good_manifest_path,
         )
+        self.assertTrue(loader.ready, msg="loader is not ready")
         sam = loader
         self.assertEqual(sam.get_key("apiVersion"), SmarterApiVersions.V1)
         self.assertEqual(sam.get_key("kind"), SAMKinds.STATIC_PLUGIN.value)
@@ -94,6 +97,7 @@ class TestSAMLoader(TestAccountMixin):
             kind=SAMKinds.STATIC_PLUGIN.value,
             file_path=self.good_manifest_path,
         )
+        self.assertTrue(loader.ready, msg="loader is not ready")
         sam = loader
         bad_json = sam.json_data
         bad_json.pop("apiVersion")

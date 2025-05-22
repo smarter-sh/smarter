@@ -92,6 +92,7 @@ class TestSAMChatbotBroker(TestAccountMixin):
 
         # load the yaml manifest into a SAMLoader object
         loader = SAMLoader(manifest=manifest)
+        self.assertTrue(loader.ready, msg="loader is not ready")
 
         # create a pydantic model from the loader
         pydantic_model = SAMChatbot(**loader.pydantic_model_dump())

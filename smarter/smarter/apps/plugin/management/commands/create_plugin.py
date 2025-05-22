@@ -40,6 +40,9 @@ class Command(BaseCommand):
             api_version=SmarterApiVersions.V1,
             file_path=file_path,
         )
+        if not loader.ready:
+            self.stdout.write(self.style.ERROR(f"manage.py create_plugin. SAMLoader is not ready."))
+            sys.exit(1)
         manifest = SAMStaticPlugin(**loader.pydantic_model_dump())
         controller = PluginController(account=account, manifest=manifest)
         plugin = controller.obj

@@ -145,6 +145,8 @@ class PluginBase(ABC):
                 kind=self.kind,
                 manifest=data,
             )
+            if not loader.ready:
+                raise SAMValidationError(f"Loader is not ready. SAMLoader is not ready.")
             self._manifest = SAMStaticPlugin(**loader.pydantic_model_dump())
             self.create()
 

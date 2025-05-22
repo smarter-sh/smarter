@@ -20,6 +20,7 @@ from smarter.apps.account.signals import (
     secret_created,
     secret_deleted,
     secret_edited,
+    secret_inializing,
     secret_ready,
 )
 from smarter.common.api import SmarterApiVersions
@@ -85,6 +86,7 @@ class SecretTransformer(SmarterHelperMixin):
                 f"Received name: {bool(name)} data: {bool(data)}, manifest: {bool(manifest)}, "
                 f"secret_id: {bool(secret_id)}, secret: {bool(secret)}."
             )
+        secret_inializing.send(sender=self.__class__, secret_name=name, user_profile=user_profile)
         self._user_profile = user_profile
         if not self._user_profile:
             raise SmarterSecretTransformerError("User profile is not set.")
@@ -119,6 +121,8 @@ class SecretTransformer(SmarterHelperMixin):
                 kind=self.kind,
                 manifest=data,
             )
+            if not loader.ready:
+                raise SAMValidationError("SAMLoader is not ready.")
             self._manifest = SAMSecret(**loader.pydantic_model_dump())
             self.create()
 
@@ -306,12 +310,7 @@ class SecretTransformer(SmarterHelperMixin):
         try:
             self._secret = Secret.objects.get(user_profile=self.user_profile, name=self.name)
         except Secret.DoesNotExist:
-            logger.warning(
-                "%s.secret() Secret %s does not exist for user_profile %s.",
-                self.formatted_class_name,
-                self.name,
-                self.user_profile,
-            )
+            pass
         return self._secret
 
     @property
@@ -376,25 +375,6 @@ class SecretTransformer(SmarterHelperMixin):
                 raise SmarterSecretTransformerError(
                     f"Cannot set name of secret to {value} when secret is set to {self._secret.name}."
                 )
-        else:
-            try:
-                self._secret = Secret.objects.get(user_profile=self.user_profile, name=value)
-                logger.info(
-                    "%s.name() Secret %s initialized for user_profile %s.",
-                    self.formatted_class_name,
-                    value,
-                    self.user_profile,
-                )
-            except Secret.DoesNotExist as e:
-                logger.warning(
-                    "%s.name() Secret %s does not exist for user_profile %s.",
-                    self.formatted_class_name,
-                    value,
-                    self.user_profile,
-                )
-                raise SmarterSecretTransformerError(
-                    f"No secret name {value} found for user_profile {self.user_profile}."
-                ) from e
 
         self._name = value
 
