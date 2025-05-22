@@ -13,6 +13,7 @@ from rest_framework.exceptions import NotAuthenticated
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
+from smarter.apps.api.signals import api_request_initiated
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
@@ -238,6 +239,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         set up the view for the request.
         """
         super().setup(request, *args, **kwargs)
+        api_request_initiated.send(sender=self.__class__, instance=self, request=request)
         logger.info("CliBaseApiView.setup() - %s", self.formatted_class_name)
         self.init(*args, request=request, **kwargs)
         logger.info("CliBaseApiView.setup() - %s init() has run %s", self.formatted_class_name, self.smarter_request)
