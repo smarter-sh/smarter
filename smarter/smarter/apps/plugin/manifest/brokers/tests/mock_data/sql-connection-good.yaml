@@ -7,13 +7,13 @@ metadata:
   version: 0.1.0
 spec:
   connection:
-    db_engine: django.db.backends.mysql
+    dbEngine: django.db.backends.mysql
     hostname: smarter-mysql
     port: 3306
     username: smarter
     password: smarter
     database: smarter
     timeout: 30
-    authentication_method: tcpip
-    pool_size: 15
-    max_overflow: 20
+    authenticationMethod: tcpip
+    poolSize: 15
+    maxOverflow: 20

@@ -195,6 +195,7 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
         except SqlConnection.DoesNotExist:
             if self.manifest:
                 model_dump = self.manifest.spec.connection.model_dump()
+                model_dump = self.camel_to_snake(model_dump)
                 model_dump[SAMMetadataKeys.ACCOUNT.value] = self.account
                 model_dump[SAMMetadataKeys.NAME.value] = self.manifest.metadata.name
                 model_dump[SAMMetadataKeys.VERSION.value] = self.manifest.metadata.version

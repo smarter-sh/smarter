@@ -7,15 +7,15 @@ metadata:
   version: 0.1.0
 spec:
   connection:
-    db_engine: django.db.backends.mysql
+    dbEngine: django.db.backends.mysql
     hostname: smarter-mysql
     port: 3306
     username: smarter
     password: smarter
     database: smarter
     timeout: 30
-    use_ssl: true
-    ssl_cert: /path/to/cert.pem
-    ssl_key: /path/to/key.pem
-    ssl_ca: /path/to/ca.pem
-    authentication_method: tcpip
+    useSsl: true
+    sslCert: /path/to/cert.pem
+    sslKey: /path/to/key.pem
+    sslCa: /path/to/ca.pem
+    authenticationMethod: tcpip

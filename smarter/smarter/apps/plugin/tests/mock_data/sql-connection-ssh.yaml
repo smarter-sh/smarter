@@ -7,18 +7,18 @@ metadata:
   version: 0.1.0
 spec:
   connection:
-    db_engine: django.db.backends.mysql
+    dbEngine: django.db.backends.mysql
     hostname: smarter-mysql
     port: 3306
     username: smarter
     password: smarter
     database: smarter
     timeout: 30
-    proxy_host: proxy.example.com
-    proxy_port: 8080
-    proxy_username: proxyUser
-    proxy_password: proxyPass
-    ssh_known_hosts: /path/to/known_hosts
-    pool_size: 5
-    max_overflow: 10
-    authentication_method: tcpip_ssh
+    proxyHost: proxy.example.com
+    proxyPort: 8080
+    proxyUsername: proxyUser
+    proxyPassword: proxyPass
+    sshKnownHosts: /path/to/known_hosts
+    poolSize: 5
+    maxOverflow: 10
+    authenticationMethod: tcpip_ssh
