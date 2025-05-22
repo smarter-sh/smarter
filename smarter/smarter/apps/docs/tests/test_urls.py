@@ -173,7 +173,7 @@ class TestDocsUrls(SmarterTestBase):
 
     def test_url_json_schema_apikey(self) -> None:
         """Test url for apikey JSON schema."""
-        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.APIKEY)}")
+        url = reverse(f"{namespace}:{json_schema_name(SAMKinds.AUTH_TOKEN)}")
         self.process_url(url)
 
     def test_url_json_schema_chat(self) -> None:
@@ -246,7 +246,7 @@ class TestDocsUrls(SmarterTestBase):
 
     def test_url_manifest_apikey(self) -> None:
         """Test url for apikey manifest."""
-        url = reverse(f"{namespace}:{manifest_name(SAMKinds.APIKEY)}")
+        url = reverse(f"{namespace}:{manifest_name(SAMKinds.AUTH_TOKEN)}")
         self.process_url(url)
 
     def test_url_manifest_chat(self) -> None:

@@ -44,8 +44,8 @@ class Migration(migrations.Migration):
                         smarter.lib.journal.enum.SmarterJournalThings["ACCOUNT"],
                     ),
                     (
-                        smarter.lib.journal.enum.SmarterJournalThings["APIKEY"],
-                        smarter.lib.journal.enum.SmarterJournalThings["APIKEY"],
+                        smarter.lib.journal.enum.SmarterJournalThings["AUTH_TOKEN"],
+                        smarter.lib.journal.enum.SmarterJournalThings["AUTH_TOKEN"],
                     ),
                     (
                         smarter.lib.journal.enum.SmarterJournalThings["USER"],

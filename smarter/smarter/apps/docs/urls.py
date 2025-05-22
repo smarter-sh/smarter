@@ -105,7 +105,11 @@ urlpatterns = [
     path(
         json_schema_path(SAMKinds.ACCOUNT), DocsJsonSchemaAccountView.as_view(), name=json_schema_name(SAMKinds.ACCOUNT)
     ),
-    path(json_schema_path(SAMKinds.APIKEY), DocsJsonSchemaApiKeyView.as_view(), name=json_schema_name(SAMKinds.APIKEY)),
+    path(
+        json_schema_path(SAMKinds.AUTH_TOKEN),
+        DocsJsonSchemaApiKeyView.as_view(),
+        name=json_schema_name(SAMKinds.AUTH_TOKEN),
+    ),
     path(json_schema_path(SAMKinds.CHAT), DocsJsonSchemaChatView.as_view(), name=json_schema_name(SAMKinds.CHAT)),
     path(
         json_schema_path(SAMKinds.CHAT_HISTORY),
@@ -158,7 +162,11 @@ urlpatterns = [
     path(
         manifest_path(SAMKinds.ACCOUNT), DocsExampleManifestAccountView.as_view(), name=manifest_name(SAMKinds.ACCOUNT)
     ),
-    path(manifest_path(SAMKinds.APIKEY), DocsExampleManifestApiKeyView.as_view(), name=manifest_name(SAMKinds.APIKEY)),
+    path(
+        manifest_path(SAMKinds.AUTH_TOKEN),
+        DocsExampleManifestApiKeyView.as_view(),
+        name=manifest_name(SAMKinds.AUTH_TOKEN),
+    ),
     path(manifest_path(SAMKinds.CHAT), DocsExampleManifestChatView.as_view(), name=manifest_name(SAMKinds.CHAT)),
     path(
         manifest_path(SAMKinds.CHAT_HISTORY),

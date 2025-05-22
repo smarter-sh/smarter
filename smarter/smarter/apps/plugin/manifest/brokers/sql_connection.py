@@ -206,6 +206,18 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
 
         return self._sql_connection
 
+    @property
+    def is_valid(self) -> bool:
+        """
+        Return True if the SqlConnection instance
+        exists and is valid.
+        """
+        try:
+            return self.sql_connection and self.sql_connection.validate()
+        except Exception as e:
+            logger.warning("%s is_valid() failed for %s %s", self.formatted_class_name, self.kind, str(e))
+        return False
+
     def example_manifest(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         """
         Return an example manifest for the SqlConnection model.
@@ -330,11 +342,6 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
         """Return a JSON response with the manifest data."""
         command = self.describe.__name__
         command = SmarterJournalCliCommands(command)
-        is_valid = False
-        try:
-            is_valid = self.sql_connection.validate()
-        except Exception:
-            pass
 
         if self.sql_connection:
             try:
@@ -354,7 +361,7 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
                     SAMKeys.SPEC.value: {SAMSqlConnectionSpecKeys.CONNECTION.value: data},
                     SAMKeys.STATUS.value: {
                         SAMSqlConnectionStatusKeys.CONNECTION_STRING.value: self.sql_connection.get_connection_string(),
-                        SAMSqlConnectionStatusKeys.IS_VALID.value: is_valid,
+                        SAMSqlConnectionStatusKeys.IS_VALID.value: self.is_valid,
                     },
                 }
 

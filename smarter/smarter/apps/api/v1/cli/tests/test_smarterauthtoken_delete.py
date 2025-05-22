@@ -14,7 +14,7 @@ from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
 
-KIND = SAMKinds.APIKEY.value
+KIND = SAMKinds.AUTH_TOKEN.value
 
 
 class TestApiCliV1SmarterAuthTokenDelete(ApiV1TestBase):
@@ -37,7 +37,7 @@ class TestApiCliV1SmarterAuthTokenDelete(ApiV1TestBase):
         self.assertIn(SmarterJournalApiResponseKeys.DATA, response.keys())
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
-        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.APIKEY.value)
+        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.AUTH_TOKEN.value)
 
         # validate the metadata
         self.assertIn(SmarterJournalApiResponseKeys.METADATA, data.keys())

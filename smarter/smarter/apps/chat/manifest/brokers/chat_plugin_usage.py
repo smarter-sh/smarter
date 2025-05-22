@@ -186,7 +186,7 @@ class SAMChatPluginUsageBroker(AbstractBroker, AccountMixin):
         """
         if self._manifest:
             return self._manifest
-        if self.loader:
+        if self.loader and self.loader.manifest_kind == self.kind:
             self._manifest = SAMChatPluginUsage(
                 apiVersion=self.loader.manifest_api_version,
                 kind=self.loader.manifest_kind,
@@ -206,7 +206,7 @@ class SAMChatPluginUsageBroker(AbstractBroker, AccountMixin):
             SAMKeys.APIVERSION.value: self.api_version,
             SAMKeys.KIND.value: self.kind,
             SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: "camelCaseName",
+                SAMMetadataKeys.NAME.value: "snake-case-name",
                 SAMMetadataKeys.DESCRIPTION.value: "An example Smarter API manifest for a ChatPluginUsage",
                 SAMMetadataKeys.VERSION.value: "1.0.0",
             },

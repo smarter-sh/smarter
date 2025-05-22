@@ -50,7 +50,7 @@ class DocsExampleManifestApiView(DocsExampleManifestBaseView):
 class DocsExampleManifestApiKeyView(DocsExampleManifestBaseView):
     """ApiKey JSON Schema view"""
 
-    kind = SAMKinds(SAMKinds.APIKEY)
+    kind = SAMKinds(SAMKinds.AUTH_TOKEN)
 
 
 class DocsExampleManifestChatView(DocsExampleManifestBaseView):

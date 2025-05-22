@@ -212,7 +212,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 SAMChatbotSpecKeys.CONFIG.value: chatbot_dict,
                 SAMChatbotSpecKeys.PLUGINS.value: plugin_names,
                 SAMChatbotSpecKeys.FUNCTIONS.value: function_names,
-                SAMChatbotSpecKeys.APIKEY.value: api_key.name if api_key else None,
+                SAMChatbotSpecKeys.AUTH_TOKEN.value: api_key.name if api_key else None,
             },
             SAMKeys.STATUS.value: {
                 "created": self.chatbot.created_at.isoformat(),
@@ -316,7 +316,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
                 },
                 SAMChatbotSpecKeys.PLUGINS.value: get_plugin_examples_by_name(),
                 SAMChatbotSpecKeys.FUNCTIONS.value: ["weather", "datemath", "stockprice"],
-                SAMChatbotSpecKeys.APIKEY.value: "camelCaseNameOfApiKey",
+                SAMChatbotSpecKeys.AUTH_TOKEN.value: "camelCaseNameOfApiKey",
             },
         }
         return self.json_response_ok(command=command, data=data)
@@ -326,7 +326,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         command = SmarterJournalCliCommands(command)
         # name: str = None, all_objects: bool = False, tags: str = None
         data = []
-        name = kwargs.get("name", None)
+        name = kwargs.get("name", self.name)
         name = self.clean_cli_param(param=name, param_name="name", url=request.build_absolute_uri())
 
         # generate a QuerySet of PluginMeta objects that match our search criteria

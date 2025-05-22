@@ -1,6 +1,7 @@
 """Test Api v1 CLI commands for SmarterAuthToken"""
 
 from http import HTTPStatus
+from logging import getLogger
 from urllib.parse import urlencode
 
 import yaml
@@ -10,11 +11,13 @@ from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.common.api import SmarterApiVersions
+from smarter.lib.drf.models import SmarterAuthToken
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
 
-KIND = SAMKinds.APIKEY.value
+KIND = SAMKinds.AUTH_TOKEN.value
+logger = getLogger(__name__)
 
 
 class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
@@ -29,6 +32,37 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
     Account.
     """
 
+    def setUp(self) -> None:
+        """Set up test fixtures."""
+        super().setUp()
+        self.kwargs = {SAMKeys.KIND.value: KIND}
+        self.query_params = urlencode({"name": self.name})
+        self.user = self.admin_user
+        self.token_record, self.token = self.auth_token_factory()
+
+    def tearDown(self) -> None:
+        """Tear down test fixtures."""
+
+        try:
+            if self.token_record:
+                self.token_record.delete()
+        # pylint: disable=W0718
+        except Exception as e:
+            logger.error("Error deleting token record: %s", e)
+
+        super().tearDown()
+
+    def auth_token_factory(self) -> SmarterAuthToken:
+        """Create a SmarterAuthToken record for testing"""
+
+        auth_token_record, secret_token = SmarterAuthToken.objects.create(
+            name=self.name,
+            user=self.admin_user,
+            description=f"{self.__class__.__name__} Test API Key",
+            is_active=True,
+        )
+        return auth_token_record, secret_token
+
     def validate_response(self, response: dict) -> None:
         # validate the response and status are both good
         self.assertIsInstance(response, dict)
@@ -37,7 +71,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         self.assertIn(SmarterJournalApiResponseKeys.DATA, response.keys())
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
-        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.APIKEY.value)
+        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.AUTH_TOKEN.value)
 
         # validate the metadata
         self.assertIn(SmarterJournalApiResponseKeys.METADATA, data.keys())
@@ -60,9 +94,30 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
     def test_example_manifest(self) -> None:
         """Test example-manifest command"""
 
+        # pylint: disable=W0612
+        expected_output = {
+            "data": {
+                "apiVersion": "smarter.sh/v1",
+                "kind": "AuthToken",
+                "metadata": {
+                    "name": "snake-case-name",
+                    "description": "An example Smarter API manifest for a AuthToken",
+                    "version": "1.0.0",
+                },
+                "spec": {"config": {"isActive": True, "username": "valid_smarter_username"}},
+            },
+            "message": "AuthToken example manifest successfully generated",
+            "api": "smarter.sh/v1",
+            "thing": "AuthToken",
+            "metadata": {"key": "bda17c93b9436934525733f32ad20279ca8868411954d69041b913627e931ad1"},
+        }
+
         kwargs = {"kind": KIND}
         path = reverse(ApiV1CliReverseViews.example_manifest, kwargs=kwargs)
         response, status = self.get_response(path=path)
+
+        logger.info("Response: %s", response)
+
         self.assertEqual(status, HTTPStatus.OK)
         self.validate_response(response)
         data = response[SmarterJournalApiResponseKeys.DATA]
@@ -70,11 +125,11 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
 
     def test_describe(self) -> None:
         """Test describe command"""
-        kwargs = {"kind": KIND}
-        path = reverse(ApiV1CliReverseViews.describe, kwargs=kwargs)
-        query_params = urlencode({"name": self.token_record.name})
-        url_with_query_params = f"{path}?{query_params}"
+        path = reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)
+        url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
+
+        logger.info("Response: %s", response)
 
         self.assertEqual(status, HTTPStatus.OK)
         self.validate_response(response)
@@ -169,7 +224,7 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         self.assertIn(SmarterJournalApiResponseKeys.DATA, response.keys())
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
-        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.APIKEY.value)
+        self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.AUTH_TOKEN.value)
 
         # validate the metadata
         self.assertIn(SmarterJournalApiResponseKeys.METADATA, data.keys())

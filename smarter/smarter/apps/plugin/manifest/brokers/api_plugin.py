@@ -157,7 +157,7 @@ class SAMApiPluginBroker(AbstractBroker, AccountMixin):
         command = SmarterJournalCliCommands(command)
 
         data = []
-        name = kwargs.get("name", None)
+        name = kwargs.get("name", self.name)
         name = self.clean_cli_param(param=name, param_name="name", url=request.build_absolute_uri())
 
         # generate a QuerySet of PluginMeta objects that match our search criteria

@@ -49,7 +49,7 @@ class DocsJsonSchemaApiView(DocsJsonSchemaBaseView):
 class DocsJsonSchemaApiKeyView(DocsJsonSchemaBaseView):
     """ApiKey JSON Schema view"""
 
-    kind = SAMKinds(SAMKinds.APIKEY)
+    kind = SAMKinds(SAMKinds.AUTH_TOKEN)
 
 
 class DocsJsonSchemaChatView(DocsJsonSchemaBaseView):
