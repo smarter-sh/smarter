@@ -26,7 +26,7 @@ class TestExpiringTokens(TestAccountMixin):
 
         # create an encoded link for a url pattern that expects a uidb64 and token
         encoded_link = expiring_token.encode_link(
-            request=request, user=self.admin_user, reverse_link="password_reset_link"
+            request=request, user=self.admin_user, reverse_link="account:password_reset_link"
         )
         decoded_user, _ = expiring_token.parse_link(url=encoded_link)
         self.assertEqual(decoded_user, self.admin_user)

@@ -68,7 +68,7 @@ class TestApiPlugin(TestPluginBase, ManifestTestsMixin, ApiConnectionTestMixin):
         with self.assertRaises(SAMValidationError) as context:
             print(self.model)
         self.assertIn(
-            "Connection must be a valid cleanstring",
+            "Smarter API Manifest validation error",
             str(context.exception),
         )
 

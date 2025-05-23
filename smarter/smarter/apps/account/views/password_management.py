@@ -59,7 +59,7 @@ class PasswordResetRequestView(SmarterNeverCachedWebView):
             return HttpResponse("", status=HTTPStatus.OK.value)
 
         password_reset_link = self.expiring_token.encode_link(
-            request=request, user=user, reverse_link="password_reset_link"
+            request=request, user=user, reverse_link="account:password_reset_link"
         )
         context = {"password_reset": {"url": password_reset_link}}
         body = self.render_clean_html(request, template_path=self.email_template_path, context=context)

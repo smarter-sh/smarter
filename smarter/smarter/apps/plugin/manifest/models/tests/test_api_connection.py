@@ -10,7 +10,7 @@ from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConne
 from smarter.apps.plugin.models import ApiConnection
 from smarter.apps.plugin.tests.base_classes import TestConnectionBase
 from smarter.apps.plugin.tests.factories import secret_factory
-from smarter.common.utils import camel_to_snake
+from smarter.common.utils import camel_to_snake, camel_to_snake_dict
 from smarter.lib.manifest.exceptions import SAMValidationError
 
 
@@ -296,6 +296,7 @@ class TestApiConnection(TestConnectionBase):
             )
             model_dump["proxyPassword"] = proxy_secret
 
+        model_dump = camel_to_snake_dict(model_dump)
         django_model = ApiConnection(**model_dump)
         django_model.save()
 

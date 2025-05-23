@@ -7,12 +7,12 @@ metadata:
   version: 0.1.1
 spec:
   connection:
-    base_url: http://localhost:8000/
-    api_key: test-api-key
-    auth_method: token
+    baseUrl: http://localhost:8000/
+    apiKey: test-api-key
+    authMethod: token
     timeout: 10
-    proxy_protocol: http
-    proxy_host: proxy.example.com
-    proxy_port: 8080
-    proxy_username: proxyUser
-    proxy_password: test-proxy-password
+    proxyProtocol: http
+    proxyHost: proxy.example.com
+    proxyPort: 8080
+    proxyUsername: proxyUser
+    proxyPassword: test-proxy-password

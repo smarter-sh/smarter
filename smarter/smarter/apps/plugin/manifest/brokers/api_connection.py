@@ -91,7 +91,8 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
             file_path=file_path,
             url=url,
         )
-        AccountMixin.__init__(self, account=account, user=request.user, request=request)
+        user = request.user if hasattr(request, "user") else None
+        AccountMixin.__init__(self, account=account, user=user, request=request)
 
     ###########################################################################
     # Smarter abstract property implementations

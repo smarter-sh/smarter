@@ -42,7 +42,7 @@ class SmarterTokenAuthentication(TokenAuthentication, SmarterHelperMixin):
         # authenticate the user using the normal token authentication
         # this will raise an AuthenticationFailed exception if the token is invalid
         if not isinstance(token, bytes):
-            raise AuthenticationFailed("Invalid token type. Expected bytess", 401)
+            raise AuthenticationFailed("Invalid token type. Expected bytes", 401)
         masked_token = mask_string(string=token)
         smarter_token_authentication_request.send(
             sender=self.__class__,
