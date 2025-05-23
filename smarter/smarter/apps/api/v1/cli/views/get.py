@@ -5,8 +5,6 @@ import logging
 
 from drf_yasg.utils import swagger_auto_schema
 
-from smarter.apps.api.signals import api_request_completed
-
 from .base import CliBaseApiView
 
 
@@ -51,5 +49,4 @@ The response from this endpoint is a JSON object.
         """
         logger.info("%s.post() %s", self.formatted_class_name, kwargs)
         response = self.broker.get(request=request, kwargs=kwargs)
-        api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
         return response
