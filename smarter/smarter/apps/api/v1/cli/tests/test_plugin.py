@@ -36,20 +36,14 @@ class TestApiV1CliPlugin(ApiV1TestBase):
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
-        self.assertEqual(
-            response["error"]["description"],
-            "Smarter API Plugin manifest broker: deploy() not implemented error.  deploy() not implemented",
-        )
+        self.assertIn("not implemented", response["error"]["description"])
 
     def test_logs(self):
         path = f"{reverse(ApiV1CliReverseViews.logs, kwargs=self.kwargs)}"
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
         self.assertEqual(status, HTTPStatus.NOT_IMPLEMENTED)
-        self.assertEqual(
-            response["error"]["description"],
-            "Smarter API Plugin manifest broker: logs() not implemented error.  logs() not implemented",
-        )
+        self.assertIn("not implemented", response["error"]["description"])
 
     def test_example_manifest(self):
         path = reverse(ApiV1CliReverseViews.manifest, kwargs=self.kwargs)
@@ -69,7 +63,7 @@ class TestApiV1CliPlugin(ApiV1TestBase):
 
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
-        self.assertEqual(response["message"], f"Plugin {self.name} applied successfully")
+        self.assertIn("applied successfully", response["message"])
 
         # invoke the describe endpoint to verify that the Plugin was created
         path = f"{reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)}"

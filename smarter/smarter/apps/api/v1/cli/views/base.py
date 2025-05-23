@@ -400,6 +400,11 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
         Our only objective in the base class is to accurately
         map exceptions to HTTP status codes, and where possible
         add context to the error message.
+
+        Ideally, the child views have handled their own exceptions
+        and returned their own SmarterJournaledJson response. Here
+        we're just trying to catch any unhandled exceptions and
+        return a generic error message with a bug report URL.
         """
         try:
             response = super().dispatch(request, *args, **kwargs)

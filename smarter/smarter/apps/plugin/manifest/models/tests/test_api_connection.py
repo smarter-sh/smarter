@@ -294,7 +294,7 @@ class TestApiConnection(TestConnectionBase):
             proxy_secret = secret_factory(
                 user_profile=self.user_profile, name=proxy_secret_name, value=clear_proxy_password
             )
-            model_dump["proxy_password"] = proxy_secret
+            model_dump["proxyPassword"] = proxy_secret
 
         django_model = ApiConnection(**model_dump)
         django_model.save()

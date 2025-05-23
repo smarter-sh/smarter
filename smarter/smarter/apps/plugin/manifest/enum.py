@@ -130,7 +130,7 @@ class SAMSqlConnectionSpecConnectionKeys(SmarterEnumAbstract):
     """Smarter API Plugin Spec Data keys enumeration."""
 
     DB_ENGINE = "dbEngine"
-    AUTHENTICATION_METHOD = "authentication_method"
+    AUTHENTICATION_METHOD = "authenticationMethod"
     TIMEOUT = "timeout"
     DESCRIPTION = "description"
     USE_SSL = "useSsl"
@@ -142,14 +142,14 @@ class SAMSqlConnectionSpecConnectionKeys(SmarterEnumAbstract):
     DATABASE = "database"
     USERNAME = "username"
     PASSWORD = "password"
-    POOL_SIZE = "pool_size"
-    MAX_OVERFLOW = "max_overflow"
+    POOL_SIZE = "poolSize"
+    MAX_OVERFLOW = "maxOverflow"
     PROXY_PROTOCOL = "proxyProtocol"
     PROXY_HOST = "proxyHost"
     PROXY_PORT = "proxyPort"
     PROXY_USERNAME = "proxyUsername"
     PROXY_PASSWORD = "proxyPassword"
-    SSH_KNOWN_HOSTS = "ssh_known_hosts"
+    SSH_KNOWN_HOSTS = "sshKnownHosts"
 
 
 class SAMSqlConnectionStatusKeys(SmarterEnumAbstract):

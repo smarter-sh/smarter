@@ -3,8 +3,7 @@
 import json
 import os
 
-from django.test import RequestFactory
-from rest_framework.test import force_authenticate
+from django.test import Client
 
 from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.common.const import PYTHON_ROOT
@@ -45,9 +44,13 @@ class TestAbstractBrokerClass(TestAccountMixin):
     def setUp(self):
         """Set up test fixtures."""
         super().setUp()
-        factory = RequestFactory()
-        request = factory.get("/")
-        force_authenticate(request, user=self.admin_user)
+        client = Client()
+        client.force_login(self.non_admin_user)
+        response = client.get("/")
+        request = response.wsgi_request
+
+        if not hasattr(request, "user"):
+            raise ValueError("Request does not have a user attribute")
 
         self.broker = SAMTestBroker(
             request=request,

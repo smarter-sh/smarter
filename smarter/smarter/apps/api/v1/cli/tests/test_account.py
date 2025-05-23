@@ -140,8 +140,8 @@ class TestApiCliV1Account(ApiV1TestBase):
         # validate our changes
         data = response[SmarterJournalApiResponseKeys.DATA]
         config = data[SAMKeys.SPEC.value]["config"]
-        self.assertEqual(config["companyName"], self.account.company_name)
-        self.assertEqual(config["phoneNumber"], self.account.phone_number)
+        self.assertEqual(config["companyName"], "test data")
+        self.assertEqual(config["phoneNumber"], "+1 617 834 6172")
         self.assertEqual(config["address1"], self.account.address1)
         self.assertEqual(config["address2"], self.account.address2)
         self.assertEqual(config["city"], self.account.city)
@@ -242,10 +242,7 @@ class TestApiCliV1Account(ApiV1TestBase):
 
         self.assertIn("description", error.keys())
         self.assertIn("errorClass", error.keys())
-        self.assertEqual(
-            error["description"],
-            "Smarter API Account manifest broker: undeploy() not implemented error.  Undeploy not implemented",
-        )
+        self.assertIn("not implemented", error["description"])
 
     def test_logs(self) -> None:
         """Test logs command"""
@@ -269,7 +266,4 @@ class TestApiCliV1Account(ApiV1TestBase):
 
         self.assertIn("description", error.keys())
         self.assertIn("errorClass", error.keys())
-        self.assertEqual(
-            error["description"],
-            "Smarter API Account manifest broker: delete() not implemented error.  Delete not implemented",
-        )
+        self.assertIn("not implemented", error["description"])

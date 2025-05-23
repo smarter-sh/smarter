@@ -61,25 +61,25 @@ class SqlConnection(SmarterBasePydanticModel):
         None,
         description="The remote host of the SQL proxy connection. Should be a valid internet domain name.",
     )
-    proxy_port: Optional[int] = Field(
+    proxyPort: Optional[int] = Field(
         None,
         description="The port of the SQL proxy connection.",
     )
     proxyUsername: Optional[str] = Field(None, description="The username for the proxy connection.")
     proxyPassword: Optional[str] = Field(None, description="The password for the proxy connection.")
-    ssh_known_hosts: Optional[str] = Field(
+    sshKnownHosts: Optional[str] = Field(
         None,
         description="The known_hosts file content for verifying SSH connections.",
     )
-    pool_size: int = Field(
+    poolSize: int = Field(
         5,
         description="The size of the connection pool.",
     )
-    max_overflow: int = Field(
+    maxOverflow: int = Field(
         10,
         description="The maximum number of connections to allow beyond the pool size.",
     )
-    authentication_method: str = Field(
+    authenticationMethod: str = Field(
         DBMSAuthenticationMethods.NONE.value,
         description="The authentication method to use for the connection. Example: 'Standard TCP/IP', 'Standard TCP/IP over SSH', 'LDAP User/Password'.",
     )
@@ -141,7 +141,7 @@ class SqlConnection(SmarterBasePydanticModel):
             raise SAMValidationError(f"Invalid SQL proxy host: {v}. Must be a valid domain, IPv4, or IPv6 address.")
         return v
 
-    @field_validator("proxy_port")
+    @field_validator("proxyPort")
     def validate_proxy_port(cls, v) -> int:
         if v is None:
             return v
@@ -149,7 +149,7 @@ class SqlConnection(SmarterBasePydanticModel):
             raise SAMValidationError(f"Invalid SQL proxy port: {v}. Must be between 1 and 65535.")
         return v
 
-    @field_validator("pool_size")
+    @field_validator("poolSize")
     def validate_pool_size(cls, v) -> int:
         if v is None:
             return v
@@ -157,7 +157,7 @@ class SqlConnection(SmarterBasePydanticModel):
             return v
         raise SAMValidationError(f"Invalid pool size: {v}. Must be greater than 0.")
 
-    @field_validator("max_overflow")
+    @field_validator("maxOverflow")
     def validate_max_overflow(cls, v) -> int:
         if v is None:
             return v
@@ -165,7 +165,7 @@ class SqlConnection(SmarterBasePydanticModel):
             return v
         raise SAMValidationError(f"Invalid max overflow: {v}. Must be 0 or greater.")
 
-    @field_validator("authentication_method")
+    @field_validator("authenticationMethod")
     def validate_authentication_method(cls, v) -> str:
         if v in DBMSAuthenticationMethods.all_values():
             return v
@@ -183,7 +183,7 @@ class SqlConnection(SmarterBasePydanticModel):
     def validate_ssl_fields(cls, v) -> Optional[str]:
         return v
 
-    @field_validator("ssh_known_hosts")
+    @field_validator("sshKnownHosts")
     def validate_ssh_known_hosts(cls, v) -> Optional[str]:
         return v
 
