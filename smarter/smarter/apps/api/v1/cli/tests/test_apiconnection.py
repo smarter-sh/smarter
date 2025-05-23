@@ -32,7 +32,7 @@ class TestApiCliV1ApiConnection(ApiV1TestBase):
     Account.
     """
 
-    sqlconnection: ApiConnection = None
+    apiconnection: ApiConnection = None
 
     def setUp(self):
         super().setUp()
@@ -41,9 +41,9 @@ class TestApiCliV1ApiConnection(ApiV1TestBase):
         self.api_key: Secret = None
 
     def tearDown(self):
-        if self.sqlconnection is not None:
+        if self.apiconnection is not None:
             try:
-                self.sqlconnection.delete()
+                self.apiconnection.delete()
             except ApiConnection.DoesNotExist:
                 pass
         if self.api_key is not None:
@@ -60,21 +60,21 @@ class TestApiCliV1ApiConnection(ApiV1TestBase):
             description="test password",
             value="test",
         )
-        sqlconnection = ApiConnection.objects.create(
+        apiconnection = ApiConnection.objects.create(
             account=self.account,
             name=self.name,
-            description="test sqlconnection",
-            base_url="http://api.example.com/",
+            description="test apiconnection",
+            base_url="http://localhost:8000/api/v1/cli/example_manifest/plugin/",
             api_key=self.api_key,
-            auth_method=ApiConnection.AUTH_METHOD_CHOICES[1][1],
+            auth_method=ApiConnection.AUTH_METHOD_CHOICES[1][0],
             timeout=30,
-            proxy_protocol=ApiConnection.PROXY_PROTOCOL_CHOICES[0][1],
+            proxy_protocol=ApiConnection.PROXY_PROTOCOL_CHOICES[0][0],
             proxy_host=None,
             proxy_port=None,
             proxy_username=None,
             proxy_password=None,
         )
-        return sqlconnection
+        return apiconnection
 
     def validate_response(self, response: dict) -> None:
         # validate the response and status are both good
@@ -97,7 +97,17 @@ class TestApiCliV1ApiConnection(ApiV1TestBase):
         self.assertIn(SAMKeys.SPEC.value, data.keys())
         spec = data[SAMKeys.SPEC.value]
         connection = spec["connection"]
-        config_fields = ["dbEngine", "hostname", "port", "username", "password", "database"]
+        config_fields = [
+            "baseUrl",
+            "apiKey",
+            "authMethod",
+            "timeout",
+            "proxyProtocol",
+            "proxyHost",
+            "proxyPort",
+            "proxyUsername",
+            "proxyPassword",
+        ]
         for field in config_fields:
             assert field in connection.keys(), f"{field} not found in config keys: {connection.keys()}"
 
@@ -113,28 +123,29 @@ class TestApiCliV1ApiConnection(ApiV1TestBase):
 
     def test_describe(self) -> None:
         """Test describe command"""
-        self.sqlconnection = self.apiconnection_factory()
+        self.apiconnection = self.apiconnection_factory()
 
         path = reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
+
         self.assertEqual(status, HTTPStatus.OK)
         self.validate_response(response)
 
         data = response[SmarterJournalApiResponseKeys.DATA]
         self.validate_spec(data)
 
-        # verify the data matches the sqlconnection
-        self.assertEqual(data[SAMKeys.METADATA.value][SAMMetadataKeys.NAME.value], self.sqlconnection.name)
+        # verify the data matches the apiconnection
+        self.assertEqual(data[SAMKeys.METADATA.value][SAMMetadataKeys.NAME.value], self.apiconnection.name)
         self.assertEqual(
-            data[SAMKeys.METADATA.value][SAMMetadataKeys.DESCRIPTION.value], self.sqlconnection.description
+            data[SAMKeys.METADATA.value][SAMMetadataKeys.DESCRIPTION.value], self.apiconnection.description
         )
-        self.assertEqual(data[SAMKeys.METADATA.value][SAMMetadataKeys.VERSION.value], self.sqlconnection.version)
+        self.assertEqual(data[SAMKeys.METADATA.value][SAMMetadataKeys.VERSION.value], self.apiconnection.version)
 
     def test_apply(self) -> None:
         """Test apply command"""
 
-        self.sqlconnection = self.apiconnection_factory()
+        self.apiconnection = self.apiconnection_factory()
 
         # retrieve the current manifest by calling 'describe'
         path = reverse(ApiV1CliReverseViews.describe, kwargs=self.kwargs)
@@ -181,8 +192,8 @@ class TestApiCliV1ApiConnection(ApiV1TestBase):
     def test_get(self) -> None:
         """Test get command"""
 
-        # create a sqlconnection so that we have something to get.
-        self.sqlconnection = self.apiconnection_factory()
+        # create a apiconnection so that we have something to get.
+        self.apiconnection = self.apiconnection_factory()
 
         def validate_titles(data):
             if "titles" not in data:
@@ -246,8 +257,8 @@ class TestApiCliV1ApiConnection(ApiV1TestBase):
 
     def test_deploy(self) -> None:
         """Test deploy command"""
-        # create a sqlconnection so that we have something to deploy
-        self.sqlconnection = self.apiconnection_factory()
+        # create a apiconnection so that we have something to deploy
+        self.apiconnection = self.apiconnection_factory()
 
         path = reverse(ApiV1CliReverseViews.deploy, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
@@ -259,8 +270,8 @@ class TestApiCliV1ApiConnection(ApiV1TestBase):
     def test_undeploy(self) -> None:
         """Test undeploy command"""
 
-        # create a sqlconnection so that we have something to undeploy
-        self.sqlconnection = self.apiconnection_factory()
+        # create a apiconnection so that we have something to undeploy
+        self.apiconnection = self.apiconnection_factory()
 
         path = reverse(ApiV1CliReverseViews.undeploy, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
@@ -280,8 +291,8 @@ class TestApiCliV1ApiConnection(ApiV1TestBase):
 
     def test_delete(self) -> None:
         """Test delete command"""
-        # create a sqlconnection so that we have something to delete
-        self.sqlconnection = self.apiconnection_factory()
+        # create a apiconnection so that we have something to delete
+        self.apiconnection = self.apiconnection_factory()
 
         path = reverse(ApiV1CliReverseViews.delete, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
@@ -290,7 +301,7 @@ class TestApiCliV1ApiConnection(ApiV1TestBase):
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
 
-        # verify the sqlconnection was deleted
+        # verify the apiconnection was deleted
         try:
             ApiConnection.objects.get(name=self.name)
             self.fail("ApiConnection was not deleted")

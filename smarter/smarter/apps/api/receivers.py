@@ -38,7 +38,12 @@ def handle_api_request_completed(sender, instance: CliBaseApiView, request: WSGI
         json_content = json.loads(response.content)
     # pylint: disable=W0718
     except Exception:
+        logger.warning("recasting json response.content failed. attempting to decode as utf-8")
         json_content = response.content.decode("utf-8", errors="replace")
+        try:
+            json_content = json.loads(json_content) if isinstance(json_content, str) else json_content
+        except Exception:
+            logger.error("failed to decode json content")
     logger.info(
         "%s - %s - %s\n%s",
         formatted_text("smarter.apps.api.receivers.api_request_completed"),

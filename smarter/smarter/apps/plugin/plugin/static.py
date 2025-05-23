@@ -103,7 +103,7 @@ class StaticPlugin(PluginBase):
             SAMKeys.APIVERSION.value: SmarterApiVersions.V1,
             SAMKeys.KIND.value: MANIFEST_KIND,
             SAMKeys.METADATA.value: {
-                SAMMetadataKeys.NAME.value: "EverlastingGobstopper",
+                SAMMetadataKeys.NAME.value: "everlasting_gobstopper",
                 SAMPluginCommonMetadataKeys.PLUGIN_CLASS.value: SAMPluginCommonMetadataClassValues.STATIC.value,
                 SAMMetadataKeys.DESCRIPTION.value: "Get additional information about the Everlasting Gobstopper product created by Willy Wonka Chocolate Factory. Information includes sales promotions, coupon codes, company contact information and biographical background on the company founder.",
                 SAMMetadataKeys.VERSION.value: "0.1.0",

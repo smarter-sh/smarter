@@ -149,16 +149,21 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
         if self._password_secret:
             return self._password_secret
         try:
+            name = (
+                self.manifest.spec.connection.password
+                if self.manifest
+                else self.sql_connection.password.name if self.sql_connection else None
+            )
             self._password_secret = Secret.objects.get(
                 user_profile=self.user_profile,
-                name=self.manifest.spec.connection.password,
+                name=name,
             )
             return self._password_secret
         except Secret.DoesNotExist:
             logger.warning(
                 "%s password Secret %s not found for account %s",
                 self.formatted_class_name,
-                self.manifest.spec.connection.password,
+                name or "(name is missing)",
                 self.account,
             )
         return None
@@ -171,16 +176,25 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
         if self._proxy_password_secret:
             return self._proxy_password_secret
         try:
+            name = (
+                self.manifest.spec.connection.proxyPassword
+                if self.manifest
+                else (
+                    self.sql_connection.proxy_password.name
+                    if self.sql_connection and self.sql_connection.proxy_password
+                    else None
+                )
+            )
             self._proxy_password_secret = Secret.objects.get(
                 user_profile=self.user_profile,
-                name=self.manifest.spec.connection.proxyPassword,
+                name=name,
             )
             return self._proxy_password_secret
         except Secret.DoesNotExist:
             logger.warning(
                 "%s proxy password Secret %s not found for account %s",
                 self.formatted_class_name,
-                self.manifest.spec.connection.proxyPassword,
+                name or "(name is missing)",
                 self.account,
             )
         return None
@@ -351,6 +365,15 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
                 data.pop("id")
                 data.pop(SAMMetadataKeys.NAME.value)
                 data.pop(SAMMetadataKeys.DESCRIPTION.value)
+
+                # swap out the password and proxy password secrets instance references for their str names
+                data[SAMSqlConnectionSpecConnectionKeys.PASSWORD.value] = (
+                    self.password_secret.name if self.password_secret else None
+                )
+                data[SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value] = (
+                    self.proxy_password_secret.name if self.proxy_password_secret else None
+                )
+
                 retval = {
                     SAMKeys.APIVERSION.value: self.api_version,
                     SAMKeys.KIND.value: self.kind,
@@ -365,7 +388,8 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
                         SAMSqlConnectionStatusKeys.IS_VALID.value: self.is_valid,
                     },
                 }
-
+                pydantic_model = self.pydantic_model(**retval)
+                data = pydantic_model.model_dump_json()
                 return self.json_response_ok(command=command, data=retval)
             except Exception as e:
                 raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
