@@ -9,7 +9,7 @@ from smarter.apps.account.tests.mixins import TestAccountMixin
 from smarter.apps.plugin.manifest.models.api_connection.model import SAMApiConnection
 from smarter.apps.plugin.manifest.models.sql_connection.model import SAMSqlConnection
 from smarter.apps.plugin.models import ApiConnection, SqlConnection
-from smarter.common.utils import get_readonly_yaml_file
+from smarter.common.utils import camel_to_snake_dict, get_readonly_yaml_file
 from smarter.lib.manifest.loader import SAMLoader
 
 from .factories import secret_factory
@@ -60,10 +60,10 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
         connection_model_dump["description"] = connection_model.metadata.description
 
         if connection_model.spec.connection.apiKey:
-            clear_api_key = connection_model_dump.pop("api_key")
+            clear_api_key = connection_model_dump.pop("apiKey")
             secret_name = f"test_secret_{cls.hash_suffix}"
             secret = secret_factory(user_profile=cls.user_profile, name=secret_name, value=clear_api_key)
-            connection_model_dump["api_key"] = secret
+            connection_model_dump["apiKey"] = secret
 
         if connection_model.spec.connection.proxyPassword:
             clear_proxy_password = connection_model_dump.pop("proxyPassword")
@@ -79,6 +79,7 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
         cls.connection_manifest_path = connection_manifest_path
         cls.connection_manifest = connection_manifest
         cls.connection_model = connection_model
+        connection_model_dump = camel_to_snake_dict(connection_model_dump)
         cls.connection_django_model = ApiConnection(**connection_model_dump)
         cls.connection_django_model.save()
 
@@ -160,6 +161,7 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
         cls.connection_manifest_path = connection_manifest_path
         cls.connection_manifest = connection_manifest
         cls.connection_model = connection_model
+        connection_model_dump = camel_to_snake_dict(connection_model_dump)
         cls.connection_django_model = SqlConnection(**connection_model_dump)
         cls.connection_django_model.save()
 

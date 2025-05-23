@@ -129,9 +129,9 @@ def chatbot_api_key_saved(sender, instance: ChatBotAPIKey, created: bool, **kwar
     """
     prefix = formatted_text(f"{module_prefix}.chatbot_api_key_saved()")
     if created:
-        logger.info("%s - created %s", prefix, instance.key)
+        logger.info("%s - created %s", prefix, instance.api_key)
     else:
-        logger.info("%s - updated %s", prefix, instance.key)
+        logger.info("%s - updated %s", prefix, instance.api_key)
 
 
 @receiver(post_save, sender=ChatBotPlugin)

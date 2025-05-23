@@ -182,7 +182,7 @@ class TestSqlPlugin(TestPluginBase, ManifestTestsMixin, SqlConnectionTestMixin):
         self.assertEqual(django_model.sql_query, self.model.spec.sqlData.sqlQuery)
         self.assertEqual(django_model.limit, self.model.spec.sqlData.limit)
 
-        pydantic_test_values = [param.model_dump() for param in self.model.spec.sqlData.test_values or []]
+        pydantic_test_values = [param.model_dump() for param in self.model.spec.sqlData.testValues or []]
         django_test_values = django_model.test_values or []
         self.assertEqual(pydantic_test_values, django_test_values)
 

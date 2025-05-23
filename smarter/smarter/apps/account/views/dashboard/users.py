@@ -67,7 +67,7 @@ class UserView(SmarterAdminWebView):
             target_user = user_form.save()
             target_user_profile = UserProfile.objects.create(user=target_user, account=user_profile.account)
             target_user_profile.save()
-            return redirect("account_user", user_id=target_user.id)
+            return redirect("account:account_user", user_id=target_user.id)
         return http.JsonResponse(status=HTTPStatus.BAD_REQUEST.value, data=user_form.errors)
 
     def _handle_write(self, request, user_id, data=None):

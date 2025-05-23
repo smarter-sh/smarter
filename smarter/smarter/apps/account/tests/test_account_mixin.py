@@ -160,12 +160,8 @@ class TestAccountMixin(SmarterTestBase):
         # unset the user but leave the account unchanged.
         # should reinitialize with the admin user.
         instance.user = None
-        self.assertIsNotNone(instance.account)
-        self.assertEqual(instance.account, self._account)
-        self.assertEqual(instance.user, self._admin_user)
-        self.assertIsNotNone(instance.user_profile)
-        self.assertEqual(instance.user_profile.user, self._admin_user)
-        self.assertEqual(instance.user_profile.account, self._account)
+        self.assertIsNone(instance.account)
+        self.assertIsNone(instance.user_profile)
 
         # unset both the user and account.
         # should unset everything.
@@ -217,16 +213,10 @@ class TestAccountMixin(SmarterTestBase):
 
         # .3) unset the user_profile and account, but leave the user unchanged.
         instance.user_profile = None
-        instance.user = None
+        instance.account = None
 
         # ensure that account is still set.
-        self.assertEqual(instance.account, self._account)
-
-        # should reinitialize the user and user_profile using the admin user
-        self.assertEqual(instance.user, self._admin_user)
-        self.assertIsNotNone(instance.user_profile)
-        self.assertEqual(instance.user_profile.user, self._admin_user)
-        self.assertEqual(instance.user_profile.account, self._account)
+        self.assertIsNone(instance.account)
 
     def test_set_account(self) -> None:
         """

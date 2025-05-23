@@ -17,7 +17,7 @@ class TestPaymentMethods(TestAccountMixin):
     def setUp(self):
         """Set up test fixtures."""
         super().setUp()
-        self.base_url = reverse("account_billing_payment_methods")
+        self.base_url = reverse("account:account_billing_payment_methods")
 
         self.username = self.non_admin_user.username
         self.password = "12345"

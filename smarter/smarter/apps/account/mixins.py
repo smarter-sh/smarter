@@ -53,7 +53,13 @@ class AccountMixin(SmarterHelperMixin):
 
         # evaluate these in reverse order, so that the first one wins.
         if request is not None:
-            logger.info("%s: received request %s", self.formatted_class_name, request.build_absolute_uri())
+            url: str = None
+            try:
+                url = request.build_absolute_uri() if hasattr(request, "build_absolute_uri") else request
+            # pylint: disable=W0718
+            except Exception:
+                url = request
+            logger.info("%s: received request %s", self.formatted_class_name, url)
             if hasattr(request, "user"):
                 self._user = request.user
                 logger.info("%s: received request user %s", self.formatted_class_name, self._user)
@@ -65,7 +71,6 @@ class AccountMixin(SmarterHelperMixin):
             if not self._account:
                 # if the account is not set, then try to get it from the request
                 # by parsing the URL.
-                url = request.build_absolute_uri()
                 account_number = account_number_from_url(url)
                 if account_number:
                     logger.info(
