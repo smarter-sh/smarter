@@ -90,7 +90,6 @@ class TestApiCliV1ChatConfig(ApiV1TestBase):
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
 
-        logger.info("Response: %s", response)
         # pylint: disable=W0612
         expected_output = {
             "data": {
