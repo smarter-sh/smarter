@@ -9,6 +9,7 @@ from botocore.exceptions import ClientError
 from django.http import JsonResponse
 from django_redis import get_redis_connection
 
+from smarter.apps.api.signals import api_request_completed
 from smarter.common.helpers.aws_helpers import aws_helper
 from smarter.lib.journal.enum import (
     SmarterJournalApiResponseKeys,
@@ -79,4 +80,6 @@ class ApiV1CliStatusApiView(CliBaseApiView):
 
     def post(self, request):
         """Get method for PluginManifestView."""
-        return self.status()
+        response = self.status()
+        api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
+        return response

@@ -15,6 +15,7 @@ from pandas.util._print_versions import show_versions as pandas_version
 from pydantic import VERSION as pydantic_version
 from rest_framework import __version__ as rest_framework_version
 
+from smarter.apps.api.signals import api_request_completed
 from smarter.apps.api.v1.cli.views.base import APIV1CLIViewError, CliBaseApiView
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.helpers.aws_helpers import aws_helper
@@ -78,4 +79,6 @@ class ApiV1CliVersionApiView(CliBaseApiView):
             return JsonResponse(data={"error": str(e)}, status=HTTPStatus.BAD_REQUEST.value)
 
     def post(self, request):
-        return self.info()
+        response = self.info()
+        api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
+        return response

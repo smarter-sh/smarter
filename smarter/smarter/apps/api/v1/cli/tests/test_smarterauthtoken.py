@@ -121,8 +121,6 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         path = reverse(ApiV1CliReverseViews.example_manifest, kwargs=kwargs)
         response, status = self.get_response(path=path)
 
-        logger.info("Response: %s", response)
-
         self.assertEqual(status, HTTPStatus.OK)
         self.validate_response(response)
         data = response[SmarterJournalApiResponseKeys.DATA]
@@ -134,7 +132,6 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
 
-        logger.info("Response: %s", response)
         # pylint: disable=W0612
         expected_output = {
             "data": {
@@ -181,7 +178,6 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         path = reverse(ApiV1CliReverseViews.apply)
         response, status = self.get_response(path=path, data=manifest_json)
 
-        logger.info("Response: %s", response)
         # pylint: disable=W0612
         expected_output = {
             "data": {
@@ -239,7 +235,6 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         path = reverse(ApiV1CliReverseViews.get, kwargs=self.kwargs)
         response, status = self.get_response(path=path)
 
-        logger.info("Response: %s", response)
         # pylint: disable=W0612
         expected_output = {
             "data": {
@@ -320,7 +315,6 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         url_with_query_params = f"{path}?{query_params}"
         response, status = self.get_response(path=url_with_query_params)
 
-        logger.info("Response: %s", response)
         # pylint: disable=W0612
         exected_output = {
             "data": {
@@ -352,7 +346,6 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         url_with_query_params = f"{path}?{query_params}"
         response, status = self.get_response(path=url_with_query_params)
 
-        logger.info("Response: %s", response)
         # pylint: disable=W0612
         expected_output = {
             "data": {
@@ -382,7 +375,6 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
 
-        logger.info("Response: %s", response)
         # pylint: disable=W0612
         exected_output = {
             "message": "AuthToken test06bfeb5de52cd5d3 deleted successfully",
@@ -411,7 +403,6 @@ class TestApiCliV1SmarterAuthToken(ApiV1TestBase):
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
 
-        logger.info("Response: %s", response)
         # pylint: disable=W0612
         expected_output = {
             "error": {

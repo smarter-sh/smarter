@@ -3,6 +3,8 @@
 
 from drf_yasg.utils import swagger_auto_schema
 
+from smarter.apps.api.signals import api_request_completed
+
 from .base import CliBaseApiView
 
 
@@ -42,4 +44,6 @@ The response from this endpoint is a JSON object.
         Returns:
         Response: A JSON object representing the result of the 'delete' operation.
         """
-        return self.broker.delete(request=request, kwargs=kwargs)
+        response = self.broker.delete(request=request, kwargs=kwargs)
+        api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
+        return response
