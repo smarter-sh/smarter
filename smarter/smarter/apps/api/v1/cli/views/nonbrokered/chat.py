@@ -16,7 +16,6 @@ from django.http import HttpRequest, JsonResponse
 from django.test import RequestFactory
 from django.views.decorators.csrf import csrf_exempt
 
-from smarter.apps.api.signals import api_request_completed
 from smarter.apps.chat.models import Chat, ChatHistory
 from smarter.apps.chat.providers.const import OpenAIMessageKeys
 from smarter.apps.chatapp.views import ChatConfigView
@@ -530,7 +529,6 @@ class ApiV1CliChatApiView(ApiV1CliChatBaseApiView):
         # pylint: disable=W0718
         try:
             response = self.handler(request, name, *args, **kwargs)
-            api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
             return response
         except Exception as e:
             return SmarterJournaledJsonErrorResponse(

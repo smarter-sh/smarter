@@ -7,8 +7,6 @@ Smarter API command-line interface 'apply' view
 from django.core.handlers.wsgi import WSGIRequest
 from drf_yasg.utils import swagger_auto_schema
 
-from smarter.apps.api.signals import api_request_completed
-
 from .base import CliBaseApiView
 
 
@@ -49,5 +47,4 @@ The response from this endpoint is a JSON object.
         Response: A JSON object representing the result of the 'apply' operation.
         """
         response = self.broker.apply(request=request, kwargs=kwargs)
-        api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
         return response

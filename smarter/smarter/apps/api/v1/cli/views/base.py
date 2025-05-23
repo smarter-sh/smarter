@@ -13,7 +13,7 @@ from rest_framework.exceptions import NotAuthenticated
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
-from smarter.apps.api.signals import api_request_initiated
+from smarter.apps.api.signals import api_request_completed, api_request_initiated
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
@@ -21,6 +21,7 @@ from smarter.apps.chatapp.views import SmarterChatappViewError
 from smarter.apps.chatbot.exceptions import SmarterChatBotException
 from smarter.apps.docs.views.base import DocsError
 from smarter.apps.plugin.plugin.base import SmarterPluginError
+from smarter.common.const import SMARTER_BUG_REPORT_URL, SMARTER_CUSTOMER_SUPPORT_EMAIL
 from smarter.common.exceptions import (
     SmarterBusinessRuleViolation,
     SmarterConfigurationError,
@@ -55,8 +56,8 @@ logger = logging.getLogger(__name__)
 
 BUG_REPORT = (
     "Encountered an unexpected error. "
-    "This is a bug. Please report to "
-    "https://github.com/smarter-sh/smarter/issues."
+    f"This is a bug. Please contact {SMARTER_CUSTOMER_SUPPORT_EMAIL} "
+    f"and/or report to {SMARTER_BUG_REPORT_URL}."
 )
 
 
@@ -85,6 +86,34 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     - Initializes the SAMLoader and AbstractBroker instances.
     - Resolves the manifest kind and broker for the yaml manifest document.
     - Sets the user profile for the request.
+
+    We want to take care of as
+    much housekeeping as possible in the base class. This includes
+    setting following attributes:
+
+    - manifest_name: the name identifier of the manifest could be passed
+        from insider the raw manifest data, or it could be passed as part of a url.
+
+    - manifest: the http request body might contain raw manifest text
+        in yaml or json format. The manifest text is passed to the SAMLoader that will load,
+        and partially validate and parse the manifest. This is then used to
+        fully initialize a Pydantic manifest model. The Pydantic manifest
+        model will be passed to a AbstractBroker for the manifest 'kind', which
+        implements the broker service pattern for the underlying object.
+
+    - kind: the kind of the manifest is used to identify the broker that will
+
+    - user/account: the user, account and user_profile are all derived from the
+        authenticated user in the Django request object.
+
+    - command: the command is derived from the request path. The command is
+        used to determine the type of operation that the view should perform.
+        For example, if the url path is '/api/v1/cli/apply/', then the command
+        will be SmarterJournalCliCommands.APPLY.
+
+    - broker: the broker is a class that implements the broker service pattern.
+        It provides a service interface that 'brokers' the http request for the
+        underlying object that provides the object-specific service (create, update, get, delete, etc).
     """
 
     authentication_classes = (SmarterTokenAuthentication,)
@@ -119,11 +148,11 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                     kind=self.manifest_kind,
                     manifest=self.manifest_data,
                 )
-                if not self._loader:
-                    raise APIV1CLIViewError("")
+                if not self._loader or not self._loader.ready:
+                    raise APIV1CLIViewError("SAMLoader is not ready.")
             except APIV1CLIViewError:
                 # not all endpoints require a manifest, so we
-                # should fail gracefully if the manifest is not provided.
+                # should fail quietly if the manifest is not provided.
                 self._manifest_load_failed = True
 
         return self._loader
@@ -140,7 +169,11 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
             try:
                 self._params = QueryDict(self.smarter_request.META.get("QUERY_STRING", "")) or {}
             except AttributeError as e:
-                logger.error("%s.params() Could not parse query string parameters: %s", self.formatted_class_name, e)
+                logger.error(
+                    "%s.params() internal error. Could not parse query string parameters: %s",
+                    self.formatted_class_name,
+                    e,
+                )
                 return {}
         return self._params
 
@@ -258,18 +291,26 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
 
     def setup(self, request, *args, **kwargs):
         """
-        Setup the view. This is called before dispatch() and is used to
+        Setup the view. This is called by Django before dispatch() and is used to
         set up the view for the request.
         """
         super().setup(request, *args, **kwargs)
+
+        # note: setup() is the earliest point in the request lifecycle where we can
+        # send signals.
         api_request_initiated.send(sender=self.__class__, instance=self, request=request)
-        logger.info("CliBaseApiView.setup() - %s", self.formatted_class_name)
         self.init(*args, request=request, **kwargs)
-        logger.info("CliBaseApiView.setup() - %s init() has run %s", self.formatted_class_name, self.smarter_request)
 
     def initial(self, request, *args, **kwargs):
-        logger.info("%s.initial()", self.formatted_class_name)
+        """
+        Initialize the view. This is called by DRF after setup() but before dispatch().
+        """
 
+        # Check if the request is authenticated. If not, raise an
+        # authentication error. see SmarterTokenAuthentication for details
+        # on how the token is validated.
+        # The token is passed in the Authorization header as a Bearer token
+        # of the form: 'Authorization: Token YOUR-64-CHARACTER-SMARTER-API-KEY'
         try:
             super().initial(request, *args, **kwargs)
         except NotAuthenticated as e:
@@ -280,20 +321,19 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                     e,
                 )
             else:
-                logger.error("CliBaseApiView().initial() - Authorization header is missing: %s", e)
+                logger.error(
+                    "CliBaseApiView().initial() - Authorization header is missing from the http request. Add and http header of the form, 'Authorization: Token YOUR-64-CHARACTER-SMARTER-API-KEY' or contact support@smarter.sh %s",
+                    e,
+                )
             raise SmarterAPIV1CLIViewErrorNotAuthenticated(
                 "Smarter api v1 command-line interface error: authentication failed"
             ) from e
-        logger.info("CliBaseApiView().initial() - %s", self.formatted_class_name)
 
-        # this is a hacky way to get SmarterRequestMixin request object
-        # initialized.
+        # FIX NOTE: do we need this 2nd call to init()?
         self.init(*args, request=request, **kwargs)
         if self.smarter_request is None:
-            self._smarter_request = request
-            logger.warning(
-                "%s.initial() - self.smarter_request request object was None. This should not happen.",
-                self.formatted_class_name,
+            raise SmarterConfigurationError(
+                f"{self.formatted_class_name}.smarter_request request object is not set. This should not happen."
             )
 
         # Manifest parsing and broker instantiation are lazy implementations.
@@ -352,254 +392,79 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
     # pylint: disable=too-many-return-statements,too-many-branches
     def dispatch(self, request, *args, **kwargs):
         """
-        Dispatch method for the CliBaseApiView. We want to take care of as
-        much housekeeping as possible in the base class. This includes
-        setting following attributes:
+        Dispatch the request to the appropriate handler method. This is
+        called by the Django REST framework when a request is received.
+        It is responsible for handling the request and returning a
+        response.
 
-        - manifest_name: the name identifier of the manifest could be passed
-            from insider the raw manifest data, or it could be passed as part of a url.
-
-        - manifest: the http request body might contain raw manifest text
-            in yaml or json format. The manifest text is passed to the SAMLoader that will load,
-            and partially validate and parse the manifest. This is then used to
-            fully initialize a Pydantic manifest model. The Pydantic manifest
-            model will be passed to a AbstractBroker for the manifest 'kind', which
-            implements the broker service pattern for the underlying object.
-
-        - kind: the kind of the manifest is used to identify the broker that will
-
-        - user/account: the user, account and user_profile are all derived from the
-            authenticated user in the Django request object.
-
-        - command: the command is derived from the request path. The command is
-            used to determine the type of operation that the view should perform.
-            For example, if the url path is '/api/v1/cli/apply/', then the command
-            will be SmarterJournalCliCommands.APPLY.
-
-        - broker: the broker is a class that implements the broker service pattern.
-            It provides a service interface that 'brokers' the http request for the
-            underlying object that provides the object-specific service (create, update, get, delete, etc).
+        Our only objective in the base class is to accurately
+        map exceptions to HTTP status codes, and where possible
+        add context to the error message.
         """
-        # generic exception handler that simply ensures that in all cases
-        # the response is a JsonResponse with a status code.
-        #
-        # note that we are combining the dictionary of parameters with the
-        # keyword arguments. This is because the keyword arguments are passed
-        # to the super class dispatch method, and the parameters are passed
-        # to the child view's post method.
         try:
             response = super().dispatch(request, *args, **kwargs)
-        except SAMBrokerErrorNotImplemented as not_implemented_error:
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                thing=self.manifest_kind,
-                command=self.command,
-                e=not_implemented_error.get_formatted_err_message,
-                status=HTTPStatus.NOT_IMPLEMENTED.value,
-                stack_trace=traceback.format_exc(),
-            )
-        except SAMBrokerErrorNotReady as not_ready_error:
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                thing=self.manifest_kind,
-                command=self.command,
-                e=not_ready_error.get_formatted_err_message,
-                status=HTTPStatus.SERVICE_UNAVAILABLE.value,
-                stack_trace=traceback.format_exc(),
-            )
-        except SAMBrokerErrorNotFound as not_found_error:
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                thing=self.manifest_kind,
-                command=self.command,
-                e=not_found_error.get_formatted_err_message,
-                status=HTTPStatus.NOT_FOUND.value,
-                stack_trace=traceback.format_exc(),
-            )
-        except SAMBrokerReadOnlyError as read_only_error:
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                thing=self.manifest_kind,
-                command=self.command,
-                e=read_only_error.get_formatted_err_message,
-                status=HTTPStatus.METHOD_NOT_ALLOWED.value,
-                stack_trace=traceback.format_exc(),
-            )
-        except SAMBrokerError as broker_error:
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                thing=self.manifest_kind,
-                command=self.command,
-                e=broker_error.get_formatted_err_message,
-                status=HTTPStatus.BAD_REQUEST.value,
-                stack_trace=traceback.format_exc(),
-            )
-        except SmarterAPIV1CLIViewErrorNotAuthenticated as not_authenticated_error:
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                thing=self.manifest_kind,
-                command=self.command,
-                e=not_authenticated_error.get_formatted_err_message,
-                status=HTTPStatus.FORBIDDEN.value,
-                stack_trace=traceback.format_exc(),
-            )
-        # ---------------------------------------------------------------------
-        # Smarter internal errors
-        # ---------------------------------------------------------------------
-        except SmarterChatappViewError as chatapp_error:
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                thing=self.manifest_kind,
-                command=self.command,
-                e=chatapp_error.get_formatted_err_message,
-                status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
-                stack_trace=traceback.format_exc(),
-                description="SmarterChatappViewError: " + BUG_REPORT + " " + str(chatapp_error),
-            )
-        except SmarterChatBotException as chatbot_error:
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                thing=self.manifest_kind,
-                command=self.command,
-                e=chatbot_error.get_formatted_err_message,
-                status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
-                stack_trace=traceback.format_exc(),
-                description="SmarterChatBotException: " + BUG_REPORT + " " + str(chatbot_error),
-            )
-        except DocsError as docs_error:
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                thing=self.manifest_kind,
-                command=self.command,
-                e=docs_error.get_formatted_err_message,
-                status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
-                stack_trace=traceback.format_exc(),
-                description="DocsError: " + BUG_REPORT + " " + str(docs_error),
-            )
-        except SmarterPluginError as plugin_error:
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                thing=self.manifest_kind,
-                command=self.command,
-                e=plugin_error.get_formatted_err_message,
-                status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
-                stack_trace=traceback.format_exc(),
-                description="SmarterPluginError: " + BUG_REPORT + " " + str(plugin_error),
-            )
-        except SmarterConfigurationError as config_error:
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                thing=self.manifest_kind,
-                command=self.command,
-                e=config_error.get_formatted_err_message,
-                status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
-                stack_trace=traceback.format_exc(),
-                description="SmarterConfigurationError: " + BUG_REPORT + " " + str(config_error),
-            )
-        except SmarterValueError as value_error:
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                thing=self.manifest_kind,
-                command=self.command,
-                e=value_error.get_formatted_err_message,
-                status=HTTPStatus.BAD_REQUEST.value,
-                stack_trace=traceback.format_exc(),
-                description="SmarterValueError: " + BUG_REPORT + " " + str(value_error),
-            )
-        except SmarterInvalidApiKeyError as invalid_api_key_error:
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                thing=self.manifest_kind,
-                command=self.command,
-                e=invalid_api_key_error.get_formatted_err_message,
-                status=HTTPStatus.FORBIDDEN.value,
-                stack_trace=traceback.format_exc(),
-                description="SmarterInvalidApiKeyError: " + str(invalid_api_key_error),
-            )
-        except SmarterIlligalInvocationError as illegal_invocation_error:
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                thing=self.manifest_kind,
-                command=self.command,
-                e=illegal_invocation_error.get_formatted_err_message,
-                status=HTTPStatus.BAD_REQUEST.value,
-                stack_trace=traceback.format_exc(),
-                description="SmarterIlligalInvocationError: " + BUG_REPORT + " " + str(illegal_invocation_error),
-            )
-        except SmarterBusinessRuleViolation as business_rule_error:
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                thing=self.manifest_kind,
-                command=self.command,
-                e=business_rule_error.get_formatted_err_message,
-                status=HTTPStatus.BAD_REQUEST.value,
-                stack_trace=traceback.format_exc(),
-                description="SmarterBusinessRuleViolation: " + BUG_REPORT + " " + str(business_rule_error),
-            )
-        except SmarterAWSError as aws_error:
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                thing=self.manifest_kind,
-                command=self.command,
-                e=aws_error.get_formatted_err_message,
-                status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
-                stack_trace=traceback.format_exc(),
-                description="SmarterAWSError: " + BUG_REPORT + " " + str(aws_error),
-            )
-        except KubernetesHelperException as k8s_error:
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                thing=self.manifest_kind,
-                command=self.command,
-                e=k8s_error.get_formatted_err_message,
-                status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
-                stack_trace=traceback.format_exc(),
-                description="KubernetesHelperException: " + BUG_REPORT + " " + str(k8s_error),
-            )
-        except SmarterTokenError as token_error:
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                thing=self.manifest_kind,
-                command=self.command,
-                e=token_error.get_formatted_err_message,
-                status=HTTPStatus.FORBIDDEN.value,
-                stack_trace=traceback.format_exc(),
-                description="SmarterTokenError: " + BUG_REPORT + " " + str(token_error),
-            )
-        except SmarterJournalEnumException as enum_error:
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                thing=self.manifest_kind,
-                command=self.command,
-                e=enum_error.get_formatted_err_message,
-                status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
-                stack_trace=traceback.format_exc(),
-                description="SmarterJournalEnumException: " + BUG_REPORT + " " + str(enum_error),
-            )
-        except SmarterExceptionBase as unknown_smarter_error:
-            return SmarterJournaledJsonErrorResponse(
-                request=request,
-                thing=self.manifest_kind,
-                command=self.command,
-                e=unknown_smarter_error.get_formatted_err_message,
-                status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
-                stack_trace=traceback.format_exc(),
-                description="SmarterExceptionBase: " + BUG_REPORT + " " + str(unknown_smarter_error),
-            )
-
-        # ---------------------------------------------------------------------
-        # error with unknown cause
-        # ---------------------------------------------------------------------
+            api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
+            return response
         # pylint: disable=broad-except
         except Exception as e:
+            status: str = HTTPStatus.INTERNAL_SERVER_ERROR.value
+            description_override: str = None
+
+            if type(e) in (SAMBrokerErrorNotImplemented,):
+                status = HTTPStatus.NOT_IMPLEMENTED.value
+            elif type(e) in (SAMBrokerErrorNotReady,):
+                status = HTTPStatus.SERVICE_UNAVAILABLE.value
+            elif type(e) in (SAMBrokerErrorNotFound,):
+                status = HTTPStatus.NOT_FOUND.value
+            elif type(e) in (SAMBrokerReadOnlyError,):
+                status = HTTPStatus.METHOD_NOT_ALLOWED.value
+            elif type(e) in (
+                SmarterAPIV1CLIViewErrorNotAuthenticated,
+                SmarterInvalidApiKeyError,
+                SmarterTokenError,
+            ):
+                status = HTTPStatus.FORBIDDEN.value
+            elif type(e) in (
+                SAMBrokerError,
+                SmarterValueError,
+                SmarterIlligalInvocationError,
+                SmarterBusinessRuleViolation,
+            ):
+                status = HTTPStatus.BAD_REQUEST.value
+            elif type(e) in (
+                SmarterChatappViewError,
+                SmarterChatBotException,
+                DocsError,
+                SmarterPluginError,
+                SmarterConfigurationError,
+                SmarterAWSError,
+                KubernetesHelperException,
+                SmarterJournalEnumException,
+                SmarterExceptionBase,
+            ):
+                status = HTTPStatus.INTERNAL_SERVER_ERROR.value
+
+            if status in (
+                HTTPStatus.INTERNAL_SERVER_ERROR.value,
+                HTTPStatus.BAD_REQUEST.value,
+                HTTPStatus.SERVICE_UNAVAILABLE.value,
+            ):
+                # if the error is not a known error, then we should
+                # log the error and return a generic error message with bug report instructions.
+                logger.error(
+                    "%s.dispatch() - %s: %s",
+                    self.formatted_class_name,
+                    type(e),
+                    str(e),
+                )
+                description_override = f"{type(e)}: " + BUG_REPORT + " " + str(e)
+
             return SmarterJournaledJsonErrorResponse(
                 request=request,
                 thing=self.manifest_kind,
                 command=self.command,
                 e=e,
-                status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
+                status=status,
                 stack_trace=traceback.format_exc(),
-                description=BUG_REPORT + " " + str(unknown_smarter_error),
+                description=description_override,
             )
-        logger.info("CliBaseApiView.dispatch() - %s", self.formatted_class_name)
-        return response

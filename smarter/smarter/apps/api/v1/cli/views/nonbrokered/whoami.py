@@ -6,7 +6,6 @@ from http import HTTPStatus
 from django.http import JsonResponse
 
 from smarter.apps.account.serializers import AccountSerializer
-from smarter.apps.api.signals import api_request_completed
 from smarter.common.conf import settings as smarter_settings
 from smarter.lib.django.serializers import UserSerializer
 from smarter.lib.journal.enum import (
@@ -43,5 +42,4 @@ class ApiV1CliWhoamiApiView(CliBaseApiView):
     def post(self, request):
         """Get method for PluginManifestView."""
         response = self.whoami()
-        api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
         return response

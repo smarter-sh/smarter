@@ -8,7 +8,6 @@ from django.core.cache import cache
 from django.http import HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 
-from smarter.apps.api.signals import api_request_completed
 from smarter.apps.chatapp.views import ChatConfigView
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
@@ -74,5 +73,4 @@ class ApiV1CliChatConfigApiView(ApiV1CliChatBaseApiView):
         except json.JSONDecodeError as e:
             raise APIV1CLIViewError("Misconfigured. Failed to cache session key for chat config view.") from e
 
-        api_request_completed.send(sender=self.__class__, instance=self, request=request, response=response)
         return response
