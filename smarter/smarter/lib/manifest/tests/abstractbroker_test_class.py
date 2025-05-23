@@ -8,17 +8,15 @@ from django.http import HttpRequest
 
 from smarter.apps.account.manifest.enum import SAMUserSpecKeys
 from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Account, UserProfile
+from smarter.apps.account.models import Account
 from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.django.user import UserType
-from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
     AbstractBroker,
     SAMBrokerError,
-    SAMBrokerErrorNotFound,
 )
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader

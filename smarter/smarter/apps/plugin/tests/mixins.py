@@ -65,13 +65,13 @@ class ApiConnectionTestMixin(ConnectionTextMixinBase):
             secret = secret_factory(user_profile=cls.user_profile, name=secret_name, value=clear_api_key)
             connection_model_dump["api_key"] = secret
 
-        if connection_model.spec.connection.proxy_password:
-            clear_proxy_password = connection_model_dump.pop("proxy_password")
+        if connection_model.spec.connection.proxyPassword:
+            clear_proxy_password = connection_model_dump.pop("proxyPassword")
             proxy_secret_name = f"test_proxy_secret_{cls.hash_suffix}"
             proxy_secret = secret_factory(
                 user_profile=cls.user_profile, name=proxy_secret_name, value=clear_proxy_password
             )
-            connection_model_dump["proxy_password"] = proxy_secret
+            connection_model_dump["proxyPassword"] = proxy_secret
 
         # 2.) initialize all of our class variables
         # ---------------------------------------------------------------------
@@ -146,13 +146,13 @@ class SqlConnectionTestMixin(ConnectionTextMixinBase):
             secret = secret_factory(user_profile=cls.user_profile, name=secret_name, value=clear_password)
             connection_model_dump["password"] = secret
 
-        if connection_model.spec.connection.proxy_password:
-            clear_proxy_password = connection_model_dump.pop("proxy_password")
+        if connection_model.spec.connection.proxyPassword:
+            clear_proxy_password = connection_model_dump.pop("proxyPassword")
             proxy_secret_name = f"test_proxy_secret_{cls.hash_suffix}"
             proxy_secret = secret_factory(
                 user_profile=cls.user_profile, name=proxy_secret_name, value=clear_proxy_password
             )
-            connection_model_dump["proxy_password"] = proxy_secret
+            connection_model_dump["proxyPassword"] = proxy_secret
 
         # 2.) initialize all of our class variables
         # ---------------------------------------------------------------------

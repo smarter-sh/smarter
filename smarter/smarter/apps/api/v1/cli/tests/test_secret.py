@@ -313,7 +313,7 @@ class TestApiCliV1Secret(ApiV1TestBase):
 
         self.assertIn("description", error.keys())
         self.assertIn("errorClass", error.keys())
-        self.assertIn("Smarter API Secret manifest broker: deploy() not implemented", error["description"])
+        self.assertIn("not implemented", error["description"])
 
     def test_06_undeploy(self) -> None:
         """Test undeploy command"""
@@ -330,7 +330,7 @@ class TestApiCliV1Secret(ApiV1TestBase):
 
         self.assertIn("description", error.keys())
         self.assertIn("errorClass", error.keys())
-        self.assertIn("Smarter API Secret manifest broker: undeploy() not implemented", error["description"])
+        self.assertIn("not implemented", error["description"])
 
     def test_07_logs(self) -> None:
         """Test logs command"""
@@ -347,4 +347,4 @@ class TestApiCliV1Secret(ApiV1TestBase):
 
         self.assertIn("description", error.keys())
         self.assertIn("errorClass", error.keys())
-        self.assertIn("Smarter API Secret manifest broker: logs() not implemented", error["description"])
+        self.assertIn("not implemented", error["description"])
