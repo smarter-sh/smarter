@@ -17,10 +17,27 @@ from smarter.apps.api.signals import api_request_initiated
 from smarter.apps.api.v1.cli.brokers import Brokers
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.manifests.version import SMARTER_API_VERSION
-from smarter.common.exceptions import SmarterExceptionBase
+from smarter.apps.chatapp.views import SmarterChatappViewError
+from smarter.apps.chatbot.exceptions import SmarterChatBotException
+from smarter.apps.docs.views.base import DocsError
+from smarter.apps.plugin.plugin.base import SmarterPluginError
+from smarter.common.exceptions import (
+    SmarterBusinessRuleViolation,
+    SmarterConfigurationError,
+    SmarterExceptionBase,
+    SmarterIlligalInvocationError,
+    SmarterInvalidApiKeyError,
+    SmarterValueError,
+)
+from smarter.common.helpers.aws.exceptions import SmarterAWSError
+from smarter.common.helpers.k8s_helpers import KubernetesHelperException
 from smarter.lib.django.request import SmarterRequestMixin
+from smarter.lib.django.token_generators import SmarterTokenError
 from smarter.lib.drf.token_authentication import SmarterTokenAuthentication
-from smarter.lib.journal.enum import SmarterJournalCliCommands
+from smarter.lib.journal.enum import (
+    SmarterJournalCliCommands,
+    SmarterJournalEnumException,
+)
 from smarter.lib.journal.http import SmarterJournaledJsonErrorResponse
 from smarter.lib.manifest.broker import (
     AbstractBroker,
@@ -35,6 +52,12 @@ from smarter.lib.manifest.loader import SAMLoader
 
 
 logger = logging.getLogger(__name__)
+
+BUG_REPORT = (
+    "Encountered an unexpected error. "
+    "This is a bug. Please report to "
+    "https://github.com/smarter-sh/smarter/issues."
+)
 
 
 class APIV1CLIViewError(SmarterExceptionBase):
@@ -411,6 +434,162 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 status=HTTPStatus.BAD_REQUEST.value,
                 stack_trace=traceback.format_exc(),
             )
+        except SmarterAPIV1CLIViewErrorNotAuthenticated as not_authenticated_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=not_authenticated_error.get_formatted_err_message,
+                status=HTTPStatus.FORBIDDEN.value,
+                stack_trace=traceback.format_exc(),
+            )
+        # ---------------------------------------------------------------------
+        # Smarter internal errors
+        # ---------------------------------------------------------------------
+        except SmarterChatappViewError as chatapp_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=chatapp_error.get_formatted_err_message,
+                status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
+                stack_trace=traceback.format_exc(),
+                description="SmarterChatappViewError: " + BUG_REPORT + " " + str(chatapp_error),
+            )
+        except SmarterChatBotException as chatbot_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=chatbot_error.get_formatted_err_message,
+                status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
+                stack_trace=traceback.format_exc(),
+                description="SmarterChatBotException: " + BUG_REPORT + " " + str(chatbot_error),
+            )
+        except DocsError as docs_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=docs_error.get_formatted_err_message,
+                status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
+                stack_trace=traceback.format_exc(),
+                description="DocsError: " + BUG_REPORT + " " + str(docs_error),
+            )
+        except SmarterPluginError as plugin_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=plugin_error.get_formatted_err_message,
+                status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
+                stack_trace=traceback.format_exc(),
+                description="SmarterPluginError: " + BUG_REPORT + " " + str(plugin_error),
+            )
+        except SmarterConfigurationError as config_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=config_error.get_formatted_err_message,
+                status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
+                stack_trace=traceback.format_exc(),
+                description="SmarterConfigurationError: " + BUG_REPORT + " " + str(config_error),
+            )
+        except SmarterValueError as value_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=value_error.get_formatted_err_message,
+                status=HTTPStatus.BAD_REQUEST.value,
+                stack_trace=traceback.format_exc(),
+                description="SmarterValueError: " + BUG_REPORT + " " + str(value_error),
+            )
+        except SmarterInvalidApiKeyError as invalid_api_key_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=invalid_api_key_error.get_formatted_err_message,
+                status=HTTPStatus.FORBIDDEN.value,
+                stack_trace=traceback.format_exc(),
+                description="SmarterInvalidApiKeyError: " + str(invalid_api_key_error),
+            )
+        except SmarterIlligalInvocationError as illegal_invocation_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=illegal_invocation_error.get_formatted_err_message,
+                status=HTTPStatus.BAD_REQUEST.value,
+                stack_trace=traceback.format_exc(),
+                description="SmarterIlligalInvocationError: " + BUG_REPORT + " " + str(illegal_invocation_error),
+            )
+        except SmarterBusinessRuleViolation as business_rule_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=business_rule_error.get_formatted_err_message,
+                status=HTTPStatus.BAD_REQUEST.value,
+                stack_trace=traceback.format_exc(),
+                description="SmarterBusinessRuleViolation: " + BUG_REPORT + " " + str(business_rule_error),
+            )
+        except SmarterAWSError as aws_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=aws_error.get_formatted_err_message,
+                status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
+                stack_trace=traceback.format_exc(),
+                description="SmarterAWSError: " + BUG_REPORT + " " + str(aws_error),
+            )
+        except KubernetesHelperException as k8s_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=k8s_error.get_formatted_err_message,
+                status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
+                stack_trace=traceback.format_exc(),
+                description="KubernetesHelperException: " + BUG_REPORT + " " + str(k8s_error),
+            )
+        except SmarterTokenError as token_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=token_error.get_formatted_err_message,
+                status=HTTPStatus.FORBIDDEN.value,
+                stack_trace=traceback.format_exc(),
+                description="SmarterTokenError: " + BUG_REPORT + " " + str(token_error),
+            )
+        except SmarterJournalEnumException as enum_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=enum_error.get_formatted_err_message,
+                status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
+                stack_trace=traceback.format_exc(),
+                description="SmarterJournalEnumException: " + BUG_REPORT + " " + str(enum_error),
+            )
+        except SmarterExceptionBase as unknown_smarter_error:
+            return SmarterJournaledJsonErrorResponse(
+                request=request,
+                thing=self.manifest_kind,
+                command=self.command,
+                e=unknown_smarter_error.get_formatted_err_message,
+                status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
+                stack_trace=traceback.format_exc(),
+                description="SmarterExceptionBase: " + BUG_REPORT + " " + str(unknown_smarter_error),
+            )
+
+        # ---------------------------------------------------------------------
+        # error with unknown cause
+        # ---------------------------------------------------------------------
         # pylint: disable=broad-except
         except Exception as e:
             return SmarterJournaledJsonErrorResponse(
@@ -420,7 +599,7 @@ class CliBaseApiView(APIView, SmarterRequestMixin):
                 e=e,
                 status=HTTPStatus.INTERNAL_SERVER_ERROR.value,
                 stack_trace=traceback.format_exc(),
+                description=BUG_REPORT + " " + str(unknown_smarter_error),
             )
-
         logger.info("CliBaseApiView.dispatch() - %s", self.formatted_class_name)
         return response

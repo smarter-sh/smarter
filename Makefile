@@ -135,7 +135,7 @@ docker-collectstatic:
 # docker exec smarter-app bash -c "./manage.py test smarter.apps.api.v1.cli.tests.test_secret.TestApiCliV1Secret.test_03_describe"
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "./manage.py test smarter.apps.api.v1.cli.tests.test_chat_config"
+	docker exec smarter-app bash -c "./manage.py test smarter.apps.api.v1.cli.tests.test_base_class.TestApiCliV1BaseClass.test_authentication_with_no_apikey_private"
 
 docker-prune:
 	make docker-check && \

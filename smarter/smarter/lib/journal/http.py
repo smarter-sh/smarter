@@ -189,17 +189,18 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
         command: SmarterJournalCliCommands = None,
         json_dumps_params=None,
         stack_trace: str = "No stack trace available.",
+        description: str = None,
         **kwargs,
     ):
         status = kwargs.get("status", None)
         error_class = e.__class__.__name__ if e else "Unknown Exception"
-        description: str = ""
-        if isinstance(e, Exception) and hasattr(e, "message"):
-            description = e.message
-        elif isinstance(e, dict) and hasattr(e, "args"):
-            description = e.args[0]
-        elif isinstance(e, str):
-            description = e
+        if description is None:
+            if isinstance(e, Exception) and hasattr(e, "message"):
+                description = e.message
+            elif isinstance(e, dict) and hasattr(e, "args"):
+                description = e.args[0]
+            elif isinstance(e, str):
+                description = e
 
         url = request.build_absolute_uri() if request else "Unknown URL"
         status = str(status) if status else e.status if hasattr(e, "status") else "500"
