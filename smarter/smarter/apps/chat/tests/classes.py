@@ -10,7 +10,7 @@ import sys
 import time
 from pathlib import Path
 from time import sleep
-from typing import Any, Callable
+from typing import Callable
 
 from django.test import Client
 
