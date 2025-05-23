@@ -25,6 +25,7 @@ class TestUrls(TestAccountMixin):
 
     def test_account_view(self):
         """test that we can see the account view and that it matches the account data."""
+        namespace = "account"
 
         def verify_response(reverse_name: str, status_code):
             url = reverse(reverse_name)
@@ -32,11 +33,11 @@ class TestUrls(TestAccountMixin):
             response = self.client.get(url)
             self.assertEqual(response.status_code, status_code)
 
-        verify_response("account_login", 200)
-        verify_response("account_logout", 302)
-        verify_response("account_register", 200)
-        verify_response("account_password_reset_request", 200)
-        verify_response("account_password_confirm", 200)
+        verify_response(f"{namespace}:account_login", 200)
+        verify_response(f"{namespace}:account_logout", 302)
+        verify_response(f"{namespace}:account_register", 200)
+        verify_response(f"{namespace}:account_password_reset_request", 200)
+        verify_response(f"{namespace}:account_password_confirm", 200)
 
         self.client.force_login(self.non_admin_user)
-        verify_response("account_deactivate", 200)
+        verify_response(f"{namespace}:account_deactivate", 200)

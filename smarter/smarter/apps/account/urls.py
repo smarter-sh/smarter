@@ -21,6 +21,7 @@ from .views.password_management import (
 )
 
 
+app_name = "account"
 urlpatterns = [
     path(
         "",

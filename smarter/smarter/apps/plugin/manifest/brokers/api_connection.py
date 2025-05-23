@@ -9,6 +9,7 @@ from django.forms.models import model_to_dict
 from django.http import HttpRequest
 
 from smarter.apps.account.mixins import Account, AccountMixin
+from smarter.apps.account.models import Secret
 from smarter.apps.plugin.manifest.enum import (
     SAMApiConnectionSpecConnectionKeys,
     SAMApiConnectionSpecKeys,
@@ -55,6 +56,8 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
     _manifest: SAMApiConnection = None
     _pydantic_model: Type[SAMApiConnection] = SAMApiConnection
     _api_connection: ApiConnection = None
+    _api_key_secret: Secret = None
+    _proxy_password_secret: Secret = None
 
     # pylint: disable=too-many-arguments
     def __init__(
@@ -147,6 +150,64 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
         return config_dump
 
     @property
+    def api_key_secret(self) -> Secret:
+        """
+        Return the api_key secret for the ApiConnection.
+        """
+        if self._api_key_secret:
+            return self._api_key_secret
+        try:
+            name = (
+                self.manifest.spec.connection.apiKey
+                if self.manifest
+                else self.api_connection.api_key.name if self.api_connection else None
+            )
+            self._api_key_secret = Secret.objects.get(
+                user_profile=self.user_profile,
+                name=name,
+            )
+            return self._api_key_secret
+        except Secret.DoesNotExist:
+            logger.warning(
+                "%s api_key Secret %s not found for account %s",
+                self.formatted_class_name,
+                name or "(name is missing)",
+                self.account,
+            )
+        return None
+
+    @property
+    def proxy_password_secret(self) -> Secret:
+        """
+        Return the proxy password secret for the SqlConnection.
+        """
+        if self._proxy_password_secret:
+            return self._proxy_password_secret
+        try:
+            name = (
+                self.manifest.spec.connection.proxyPassword
+                if self.manifest
+                else (
+                    self.api_connection.proxy_password.name
+                    if self.api_connection and self.api_connection.proxy_password
+                    else None
+                )
+            )
+            self._proxy_password_secret = Secret.objects.get(
+                user_profile=self.user_profile,
+                name=name,
+            )
+            return self._proxy_password_secret
+        except Secret.DoesNotExist:
+            logger.warning(
+                "%s proxy password Secret %s not found for account %s",
+                self.formatted_class_name,
+                name or "(name is missing)",
+                self.account,
+            )
+        return None
+
+    @property
     def api_connection(self) -> ApiConnection:
         if self._api_connection:
             return self._api_connection
@@ -156,23 +217,13 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
         except ApiConnection.DoesNotExist:
             if self.manifest:
                 model_dump = self.manifest.spec.connection.model_dump()
+                model_dump = self.camel_to_snake(model_dump)
+
                 model_dump[SAMMetadataKeys.ACCOUNT.value] = self.account
                 model_dump[SAMMetadataKeys.NAME.value] = self.manifest.metadata.name
+                model_dump[SAMMetadataKeys.VERSION.value] = self.manifest.metadata.version
                 model_dump[SAMMetadataKeys.DESCRIPTION.value] = self.manifest.metadata.description
-
-                # retrieve the apiKey Secret
-                apiKey = self.get_or_create_secret(
-                    user_profile=self.user_profile, name=self.manifest.spec.connection.apiKey
-                )
-                model_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = apiKey
-
-                # retrieve the proxyPassword Secret, if it exists
-                if self.manifest.spec.connection.proxyPassword:
-                    proxy_password = self.get_or_create_secret(
-                        user_profile=self.user_profile,
-                        name=self.manifest.spec.connection.proxyPassword,
-                    )
-                    model_dump[SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value] = proxy_password
+                model_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = self.api_key_secret
 
                 self._api_connection = ApiConnection(**model_dump)
                 self._api_connection.save()
@@ -272,7 +323,12 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
             for field in readonly_fields:
                 data.pop(field, None)
             for key, value in data.items():
-                setattr(self.api_connection, key, value)
+                if key == SAMApiConnectionSpecConnectionKeys.API_KEY.value:
+                    setattr(self.api_connection, key, self.api_key_secret)
+                elif key == SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value:
+                    setattr(self.api_connection, key, self.proxy_password_secret)
+                else:
+                    setattr(self.api_connection, key, value)
             self.api_connection.save()
         except Exception as e:
             raise SAMConnectionBrokerError(message=str(e), thing=self.kind, command=command) from e
@@ -296,17 +352,24 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
         if self.api_connection:
             try:
                 data = model_to_dict(self.api_connection)
+                data = self.snake_to_camel(data)
                 data.pop("id")
-                data.pop(SAMMetadataKeys.ACCOUNT.value)
                 data.pop(SAMMetadataKeys.NAME.value)
                 data.pop(SAMMetadataKeys.DESCRIPTION.value)
+                data[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = (
+                    self.api_key_secret.name if self.api_key_secret else None
+                )
+                data[SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value] = (
+                    self.proxy_password_secret.name if self.proxy_password_secret else None
+                )
+
                 retval = {
                     SAMKeys.APIVERSION.value: self.api_version,
                     SAMKeys.KIND.value: self.kind,
                     SAMKeys.METADATA.value: {
                         SAMMetadataKeys.NAME.value: self.api_connection.name,
                         SAMMetadataKeys.DESCRIPTION.value: self.api_connection.description,
-                        SAMMetadataKeys.VERSION.value: self.manifest.metadata.version,
+                        SAMMetadataKeys.VERSION.value: self.api_connection.version,
                     },
                     SAMKeys.SPEC.value: {SAMApiConnectionSpecKeys.CONNECTION.value: data},
                     SAMKeys.STATUS.value: {

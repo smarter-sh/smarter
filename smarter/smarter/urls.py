@@ -85,7 +85,7 @@ urlpatterns = [
     path("healthz/", HealthzView.as_view(), name="healthz"),
     path("readiness/", ReadinessView.as_view(), name="readiness"),
     # -----------------------------------
-    path("account/dashboard/", include("smarter.apps.account.views.dashboard.urls")),
+    path("account/", include("smarter.apps.account.urls", namespace="account")),
     path("api/", include("smarter.apps.api.urls")),
     path("chatbots/", include("smarter.apps.chatapp.urls")),
     path("dashboard/", include("smarter.apps.dashboard.urls")),
