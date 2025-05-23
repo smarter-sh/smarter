@@ -46,9 +46,6 @@ class ProviderBaseClass(TestAccountMixin):
 
     _provider: str = None
     handler: Callable
-    user: Any
-    account: Any
-    user_profile: Any
     plugin: StaticPlugin
     plugins: list[StaticPlugin]
     chatbot: ChatBot
@@ -71,9 +68,6 @@ class ProviderBaseClass(TestAccountMixin):
     def init(self):
         self._provider = None
         self.handler = None
-        self.admin_user = None
-        self.account = None
-        self.user_profile = None
         self.plugin = None
         self.plugins = None
         self.chatbot = None
