@@ -337,10 +337,13 @@ class TestSmarterSecretTransformer(TestAccountMixin):
         secret_transformer = SecretTransformer(manifest=manifest, user_profile=self.user_profile)
         secret_transformer.create()
 
+        # secrets can only be accessed by the user who created them
+        # or an admin from the same account.
         with self.assertRaises(SmarterSecretTransformerError):
             secret_transformer = SecretTransformer(
                 name=manifest.metadata.name, user_profile=self.non_admin_user_profile
             )
+            secret_transformer.secret.get_secret(update_last_accessed=False)
 
         secret_transformer.delete()
 

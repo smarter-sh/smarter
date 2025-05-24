@@ -132,12 +132,9 @@ docker-collectstatic:
 	(docker exec smarter-app bash -c "python manage.py  collectstatic --noinput") && \
 	docker-compose down
 
-# docker exec smarter-app bash -c "./manage.py test smarter.apps.api.v1.cli.tests.test_secret.TestApiCliV1Secret.test_03_describe"
-# smarter.apps.account.tests.test_api
-#
 docker-test:
 	make docker-check && \
-	docker exec smarter-app bash -c "./manage.py test"
+	docker exec smarter-app bash -c "./manage.py test smarter.apps.api.v1.cli.tests.test_apiconnection.TestApiCliV1ApiConnection.test_apply"
 
 docker-prune:
 	make docker-check && \

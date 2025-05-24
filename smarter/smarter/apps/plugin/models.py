@@ -1056,19 +1056,14 @@ class ApiConnection(TimestampedModel):
         self, endpoint: str, params: dict = None, limit: int = None
     ) -> Union[list[tuple[Any, ...]], bool]:
         """
-            Execute the API query and return the results.
-            This method constructs the full URL by combining the base URL and the endpoint,
-            and sends a GET request to the API with the provided parameters.
+        Execute the API query and return the results.
+        This method constructs the full URL by combining the base URL and the endpoint,
+        and sends a GET request to the API with the provided parameters.
 
-            :param endpoint: The API endpoint to query.
-            :param params: A dictionary of parameters to include in the API request.
-            :param limit: The maximum number of rows to return from the API response.
-            :return: The API response as a JSON object or False if the request fails.
-
-        plugin_api_connection_failed,
-        plugin_api_connection_query_success,
-        plugin_api_connection_query_failed,
-
+        :param endpoint: The API endpoint to query.
+        :param params: A dictionary of parameters to include in the API request.
+        :param limit: The maximum number of rows to return from the API response.
+        :return: The API response as a JSON object or False if the request fails.
         """
         params = params or {}
         url = urljoin(self.base_url, endpoint)

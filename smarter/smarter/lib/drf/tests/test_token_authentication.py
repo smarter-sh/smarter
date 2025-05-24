@@ -28,7 +28,7 @@ class TestSmarterTokenAuthentication(SmarterTestBase):
     def test_authenticate_credentials_active_token(self, mock_super_auth, mock_token_model):
         # Mock super().authenticate_credentials to return user and token
         mock_super_auth.return_value = (self.user, self.auth_token)
-        self.auth_token.token_key = "key123"
+        self.auth_token.token_key = b"key123"
         # Mock SmarterAuthToken.objects.get to return an active token
         mock_token_model.objects.get.return_value = self.smarter_auth_token
         self.smarter_auth_token.is_active = True
@@ -42,7 +42,7 @@ class TestSmarterTokenAuthentication(SmarterTestBase):
     @patch("smarter.lib.drf.token_authentication.TokenAuthentication.authenticate_credentials")
     def test_authenticate_credentials_inactive_token(self, mock_super_auth, mock_token_model):
         mock_super_auth.return_value = (self.user, self.auth_token)
-        self.auth_token.token_key = "key123"
+        self.auth_token.token_key = b"key123"
         mock_token_model.objects.get.return_value = self.smarter_auth_token
         self.smarter_auth_token.is_active = False
 

@@ -22,6 +22,7 @@ from smarter.apps.plugin.manifest.models.sql_connection.enum import (
 from smarter.apps.plugin.models import SqlConnection
 from smarter.apps.plugin.serializers import SqlConnectionSerializer
 from smarter.common.api import SmarterApiVersions
+from smarter.common.utils import camel_to_snake
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
@@ -334,13 +335,15 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
         command = SmarterJournalCliCommands(command)
         readonly_fields = ["id", "created_at", "updated_at"]
         try:
+            password_name = camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PASSWORD.value)
+            proxy_password_name = camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
             data = self.manifest_to_django_orm()
             for field in readonly_fields:
                 data.pop(field, None)
             for key, value in data.items():
-                if key == SAMSqlConnectionSpecConnectionKeys.PASSWORD.value:
+                if key == password_name:
                     setattr(self.sql_connection, key, self.password_secret)
-                elif key == SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value:
+                elif key == proxy_password_name:
                     setattr(self.sql_connection, key, self.proxy_password_secret)
                 else:
                     setattr(self.sql_connection, key, value)
@@ -368,10 +371,10 @@ class SAMSqlConnectionBroker(AbstractBroker, AccountMixin):
                 data.pop(SAMMetadataKeys.DESCRIPTION.value)
 
                 # swap out the password and proxy password secrets instance references for their str names
-                data[SAMSqlConnectionSpecConnectionKeys.PASSWORD.value] = (
+                data[camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PASSWORD.value)] = (
                     self.password_secret.name if self.password_secret else None
                 )
-                data[SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value] = (
+                data[camel_to_snake(SAMSqlConnectionSpecConnectionKeys.PROXY_PASSWORD.value)] = (
                     self.proxy_password_secret.name if self.proxy_password_secret else None
                 )
 
