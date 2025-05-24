@@ -54,10 +54,17 @@ class AccountMixin(SmarterHelperMixin):
         if request is not None:
             url: str = None
             try:
-                url = request.build_absolute_uri() if hasattr(request, "build_absolute_uri") else request
+                url = (
+                    request.build_absolute_uri()
+                    if hasattr(request, "build_absolute_uri")
+                    else request.url if hasattr(request, "url") else str(request)
+                )
             # pylint: disable=W0718
             except Exception:
-                url = request
+                # if the request is not a WSGIRequest, then we can't get the URL.
+                # this is a workaround for the fact that the request object is not always
+                # a WSGIRequest.
+                logger.warning("%s: unable to get url from request %s", self.formatted_class_name, str(request))
             logger.info("%s: received request %s", self.formatted_class_name, url)
             if hasattr(request, "user"):
                 self._user = request.user

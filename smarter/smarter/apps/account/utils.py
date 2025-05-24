@@ -63,6 +63,36 @@ def get_cached_default_account() -> Account:
     return account
 
 
+@cache_results()
+def _get_account_for_user(user):
+    if not user:
+        return None
+    try:
+        user_profiles = UserProfile.objects.filter(user=user)
+        if not user_profiles.exists():
+            logger.error("get_cached_account_for_user() no UserProfile found for user %s", user)
+            return None
+        for user_profile in user_profiles:
+            if user_profile.account.is_default_account:
+                logger.info(
+                    "get_cached_account_for_user() retrieving and caching default account %s for user %s",
+                    user_profile.account,
+                    user,
+                )
+                return user_profile.account
+        # If no default account is found, return the first account
+        user_profile = user_profiles.first()
+        logger.info(
+            "get_cached_default_account() retrieving and caching account %s user %s",
+            user_profile.account,
+            user_profile.user,
+        )
+    except UserProfile.DoesNotExist:
+        logger.error("get_cached_default_account() no UserProfile found for user %s", user)
+        return None
+    return user_profile.account
+
+
 def get_cached_account_for_user(user) -> Account:
     """
     Locates the account for a given user, or None if no account exists.
@@ -70,38 +100,21 @@ def get_cached_account_for_user(user) -> Account:
     if isinstance(user, AnonymousUser):
         return None
 
-    @cache_results()
-    def _get_account(user):
-        if not user:
-            return None
-        try:
-            user_profiles = UserProfile.objects.filter(user=user)
-            if not user_profiles.exists():
-                logger.error("get_cached_account_for_user() no UserProfile found for user %s", user)
-                return None
-            for user_profile in user_profiles:
-                if user_profile.account.is_default_account:
-                    logger.info(
-                        "get_cached_account_for_user() retrieving and caching default account %s for user %s",
-                        user_profile.account,
-                        user,
-                    )
-                    return user_profile.account
-            # If no default account is found, return the first account
-            user_profile = user_profiles.first()
-            logger.info(
-                "get_cached_default_account() retrieving and caching account %s user %s",
-                user_profile.account,
-                user_profile.user,
-            )
-        except UserProfile.DoesNotExist:
-            logger.error("get_cached_default_account() no UserProfile found for user %s", user)
-            return None
-        return user_profile.account
+    return _get_account_for_user(user)
 
-    get_cached_account_for_user.invalidate_cache = _get_account.invalidate_cache
 
-    return _get_account(user)
+get_cached_account_for_user.invalidate_cache = _get_account_for_user.invalidate_cache
+
+
+@cache_results()
+def _get_cached_user_profile(resolved_user, account):
+    try:
+        user_profile = UserProfile.objects.get(user=resolved_user, account=account)
+        logger.info("get_cached_user_profile() retrieving and caching UserProfile %s", user_profile)
+        return user_profile
+    except UserProfile.DoesNotExist:
+        logger.error("get_cached_user_profile() no UserProfile found for user %s", resolved_user)
+        return None
 
 
 def get_cached_user_profile(user: UserType, account: Account = None) -> UserProfile:
@@ -120,21 +133,12 @@ def get_cached_user_profile(user: UserType, account: Account = None) -> UserProf
         logger.error("get_cached_user_profile() no account found for user %s", user)
         return None
 
-    @cache_results()
-    def _get_user_profile(resolved_user, account):
-        try:
-            user_profile = UserProfile.objects.get(user=resolved_user, account=account)
-            logger.info("get_cached_user_profile() retrieving and caching UserProfile %s", user_profile)
-            return user_profile
-        except UserProfile.DoesNotExist:
-            logger.error("get_cached_user_profile() no UserProfile found for user %s", resolved_user)
-            return None
-
-    get_cached_user_profile.invalidate_cache = _get_user_profile.invalidate_cache
-
     # pylint: disable=W0212
     resolved_user = get_resolved_user(user)
-    return _get_user_profile(resolved_user, account)
+    return _get_cached_user_profile(resolved_user, account)
+
+
+get_cached_user_profile.invalidate_cache = _get_cached_user_profile.invalidate_cache
 
 
 @cache_results()
