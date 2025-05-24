@@ -54,7 +54,9 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
         # auth=[b'Token', b'd9d56ff4-- A 64-CHARACTER TOKEN --c8176']
         auth = self.authorization_header.split()
         auth = [a.decode() if isinstance(a, bytes) else a for a in auth]
-        prefix = str(knox_settings.AUTH_HEADER_PREFIX)
+        prefix = knox_settings.AUTH_HEADER_PREFIX
+        if isinstance(prefix, bytes):
+            prefix = prefix.decode()
 
         if not auth:
             return False
@@ -63,6 +65,9 @@ class SmarterTokenAuthenticationMiddleware(MiddlewareMixin, SmarterHelperMixin):
         # prefix=Token
         # auth=['Token', 'd9d56ff4-- A 64-CHARACTER TOKEN --c8176']
         auth_prefix = auth[0]
+        if isinstance(auth_prefix, bytes):
+            auth_prefix = auth_prefix.decode()
+
         if auth_prefix.lower() != prefix.lower():
             # Authorization header is possibly for another backend
             return False
