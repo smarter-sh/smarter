@@ -149,7 +149,16 @@ class SmarterJournaledJsonResponse(JsonResponse):
                 }
             # pylint: disable=broad-except
             except Exception as e:
-                logger.error("Could not create journal entry: %s", e)
+                logger.error(
+                    "user=%s, thing=%s, command=%s, status_code=%s\nrequest=%s\nresponse: %s",
+                    user,
+                    thing,
+                    command,
+                    status,
+                    request,
+                    serializable_data,
+                )
+                logger.error("SmarterJournaledJsonResponse()__init__() could not create journal entry: %s", e)
 
         super().__init__(data=data, encoder=encoder, safe=safe, json_dumps_params=json_dumps_params, **kwargs)
 

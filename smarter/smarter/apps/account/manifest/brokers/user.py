@@ -316,12 +316,20 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
     def delete(self, request: HttpRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.delete.__name__
         command = SmarterJournalCliCommands(command)
-        if self.user:
+
+        username = self.params.get("username")
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist as e:
+            raise SAMBrokerErrorNotFound(
+                f"Failed to delete {self.kind} {username}. Not found", thing=self.kind, command=command
+            ) from e
+
+        if user:
             try:
-                logger.info("Deleting user %s", self.user)
-                self.user.delete()
-                self.user = None
-                logger.info("Deleted user %s", self.user)
+                logger.info("Deleting user %s", user)
+                user.delete()
+                logger.info("Deleted user %s", username)
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 raise SAMUserBrokerError(

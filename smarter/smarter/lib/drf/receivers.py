@@ -56,8 +56,8 @@ def smarter_auth_token_delete(sender, instance, **kwargs):
 def authentication_request_receiver(sender, token, **kwargs):
     """Signal receiver for authentication request."""
     logger.info(
-        "%s smarter_token_authentication_request signal received. sender: %s, token: %s",
-        formatted_text(f"{module_prefix}.authentication_request_receiver()"),
+        "%s signal received. sender: %s, token: %s",
+        formatted_text(f"{module_prefix}.smarter_token_authentication_request()"),
         sender,
         token,
     )
@@ -67,8 +67,8 @@ def authentication_request_receiver(sender, token, **kwargs):
 def authorization_granted_receiver(sender, user, token, **kwargs):
     """Signal receiver for authorization granted."""
     logger.info(
-        "%s smarter_token_authentication_success signal received. sender: %s, user: %s, token: %s",
-        formatted_text(f"{module_prefix}.authorization_granted_receiver()"),
+        "%s signal received. sender: %s, user: %s, token: %s",
+        formatted_text(f"{module_prefix}.smarter_token_authentication_success()"),
         sender,
         user,
         token,
@@ -79,8 +79,8 @@ def authorization_granted_receiver(sender, user, token, **kwargs):
 def authorization_denied_receiver(sender, user, token, **kwargs):
     """Signal receiver for authorization denied."""
     logger.info(
-        "%s smarter_token_authentication_failure signal received. sender: %s, user: %s, token: %s",
-        formatted_text(f"{module_prefix}.authorization_denied_receiver()"),
+        "%s signal received. sender: %s, user: %s, token: %s",
+        formatted_text(f"{module_prefix}.smarter_token_authentication_failure()"),
         sender,
         user,
         token,

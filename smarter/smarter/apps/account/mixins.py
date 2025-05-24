@@ -147,8 +147,6 @@ class AccountMixin(SmarterHelperMixin):
         if not self._account:
             # unset the user_profile if the account is unset
             self._user_profile = None
-            get_cached_account.invalidate_cache(account_number=self.account_number)
-            get_cached_account_for_user.invalidate_cache(user=self.user)
             return
         if self._user:
             # If the user is already set, then we need to verify that the user is part of the account
@@ -203,7 +201,6 @@ class AccountMixin(SmarterHelperMixin):
         if self._user and not user:
             # unset the user_profile and account if the user is unset
             self.user_profile = None
-            get_cached_user_profile.invalidate_cache(user=self.user, account=self.account)
             self.account = None
             self._user = None
             return
