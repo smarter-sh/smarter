@@ -3,6 +3,7 @@
 
 import logging
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth.signals import user_logged_in
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
@@ -21,6 +22,7 @@ from .signals import (
 from .utils import get_cached_default_account, get_cached_user_profile
 
 
+User = get_user_model()
 logger = logging.getLogger(__name__)
 
 
@@ -38,6 +40,29 @@ def user_logged_in_receiver(sender, request, user, **kwargs):
         UserProfile.objects.create(user=user, account=account)
 
 
+@receiver(post_save, sender=User)
+def user_post_save(sender, instance, created, **kwargs):
+    """Signal receiver for created/saved of User model."""
+    if created:
+        logger.info(
+            "%s User post_save signal received. instance: %s, created: %s",
+            formatted_text("user_post_save()"),
+            instance,
+            created,
+        )
+
+
+@receiver(post_delete, sender=User)
+def user_post_delete(sender, instance, **kwargs):
+    """Signal receiver for deleted of User model."""
+    logger.info(
+        "%s User post_delete signal received. instance: %s, id: %s",
+        formatted_text("user_post_delete()"),
+        instance,
+        instance.id,
+    )
+
+
 @receiver(post_save, sender=UserProfile)
 def user_profile_post_save(sender, instance, created, **kwargs):
     """Signal receiver for created/saved of UserProfile model."""
@@ -50,6 +75,17 @@ def user_profile_post_save(sender, instance, created, **kwargs):
         )
 
 
+@receiver(post_delete, sender=UserProfile)
+def user_profile_post_delete(sender, instance, **kwargs):
+    """Signal receiver for deleted of UserProfile model."""
+    logger.info(
+        "%s UserProfile post_delete signal received. instance: %s, id: %s",
+        formatted_text("user_profile_post_delete()"),
+        instance,
+        instance.id,
+    )
+
+
 @receiver(post_save, sender=Account)
 def account_post_save(sender, instance, created, **kwargs):
     """Signal receiver for created/saved of Account model."""
@@ -60,6 +96,17 @@ def account_post_save(sender, instance, created, **kwargs):
             instance,
             created,
         )
+
+
+@receiver(post_delete, sender=Account)
+def account_post_delete(sender, instance, **kwargs):
+    """Signal receiver for deleted of Account model."""
+    logger.info(
+        "%s Account post_delete signal received. instance: %s, id: %s",
+        formatted_text("account_post_delete()"),
+        instance,
+        instance.id,
+    )
 
 
 @receiver(post_save, sender=Charge)

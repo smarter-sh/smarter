@@ -13,7 +13,6 @@ from .utils import (
     account_number_from_url,
     get_cached_account,
     get_cached_account_for_user,
-    get_cached_admin_user_for_account,
     get_cached_user_profile,
 )
 
@@ -148,6 +147,8 @@ class AccountMixin(SmarterHelperMixin):
         if not self._account:
             # unset the user_profile if the account is unset
             self._user_profile = None
+            get_cached_account.invalidate_cache(account_number=self.account_number)
+            get_cached_account_for_user.invalidate_cache(user=self.user)
             return
         if self._user:
             # If the user is already set, then we need to verify that the user is part of the account
@@ -190,18 +191,6 @@ class AccountMixin(SmarterHelperMixin):
             return self._user
         if self._user_profile:
             self._user = self._user_profile.user
-        elif self._account:
-            # if the account is set but the user is not then we'll substitute the admin user
-            # for the account. This could happen in cases where requests are not authenticated
-            # but we still need to identify a user, such as logging, creating billable charges,
-            # and journaling.
-            self._user = get_cached_admin_user_for_account(self._account)
-            logger.warning(
-                "%s: user not set, using admin user %s for account %s",
-                self.formatted_class_name,
-                self._user,
-                self._account,
-            )
         return self._user
 
     @user.setter
@@ -211,14 +200,16 @@ class AccountMixin(SmarterHelperMixin):
         management of user_profile, if the user is unset.
         Otherwise, initialize the account in which the user is contained.
         """
-        self._user = user
-        if user:
-            logger.info("%s: setting user %s", self.formatted_class_name, user)
-        else:
+        if self._user and not user:
             # unset the user_profile and account if the user is unset
-            self._user_profile = None
-            self._account = None
+            self.user_profile = None
+            get_cached_user_profile.invalidate_cache(user=self.user, account=self.account)
+            self.account = None
+            self._user = None
             return
+
+        logger.info("%s: setting user %s", self.formatted_class_name, user)
+        self._user = user
         if self._account:
             # If the account is already set, then we need to check if the user is part of the account
             # by attempting to fetch the user_profile.
@@ -254,15 +245,6 @@ class AccountMixin(SmarterHelperMixin):
                 ) from e
         if self.user:
             self._user_profile = get_cached_user_profile(user=self.user)
-        elif self.account:
-            user = get_cached_admin_user_for_account(self.account)
-            self._user_profile = get_cached_user_profile(user=user, account=self.account)
-            logger.warning(
-                "%s: user not set, using admin user %s for account %s",
-                self.formatted_class_name,
-                self._user,
-                self._account,
-            )
         return self._user_profile
 
     @user_profile.setter

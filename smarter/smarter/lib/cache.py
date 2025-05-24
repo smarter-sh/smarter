@@ -36,6 +36,16 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
                     logger.info("%s caching %s", formatted_text("cache_results()"), cache_key)
             return result
 
+        def invalidate_cache(*args, **kwargs):
+            sorted_kwargs = tuple(sorted(kwargs.items()))
+            key_data = pickle.dumps((func.__name__, args, sorted_kwargs))
+            cache_key = f"{func.__module__}.{func.__name__}()_" + hashlib.sha256(key_data).hexdigest()[:32]  # nosec
+            logger.info("%s invalidating %s", formatted_text("@cache_results()"), pickle.loads(key_data))  # nosec
+            cache.delete(cache_key)  # nosec
+            if logging_enabled and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
+                logger.info("%s invalidated %s", formatted_text("cache_results()"), cache_key)
+
+        wrapper.invalidate_cache = invalidate_cache
         return wrapper
 
     return decorator

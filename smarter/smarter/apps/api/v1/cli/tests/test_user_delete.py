@@ -1,10 +1,12 @@
 """Test Api v1 CLI commands for User"""
 
 from http import HTTPStatus
+from logging import getLogger
 from urllib.parse import urlencode
 
 from django.urls import reverse
 
+from smarter.apps.account.tests.factories import mortal_user_factory
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
@@ -13,6 +15,7 @@ from smarter.lib.manifest.enum import SAMKeys
 
 
 KIND = SAMKinds.USER.value
+logger = getLogger(__name__)
 
 
 class TestApiCliV1UserDelete(ApiV1TestBase):
@@ -30,21 +33,28 @@ class TestApiCliV1UserDelete(ApiV1TestBase):
     def setUp(self):
         super().setUp()
         self.kwargs = {SAMKeys.KIND.value: KIND}
-        self.query_params = urlencode({"username": self.non_admin_user.username})
 
     def test_delete(self) -> None:
         """Test delete command."""
-        username = self.non_admin_user.username
+        test_user, _, test_user_profile = mortal_user_factory(account=self.account)
+        username = test_user.username
+        self.query_params = urlencode({"username": username})
+
+        # ensure that the user exists before we delete it
+        user = User.objects.get(username=username)
+        self.assertIsInstance(user, User)
+
         path = reverse(ApiV1CliReverseViews.delete, kwargs=self.kwargs)
         url_with_query_params = f"{path}?{self.query_params}"
         response, status = self.get_response(path=url_with_query_params)
+        logger.info("response: %s", response)
 
         # validate the response and status are both good
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
 
         try:
-            User.objects.get(username=username)
-            self.fail("Token record was not deleted")
+            confirmed_test_user = User.objects.get(username=username)
+            self.fail(f"user {username} record was not deleted {confirmed_test_user}")
         except User.DoesNotExist:
             pass
