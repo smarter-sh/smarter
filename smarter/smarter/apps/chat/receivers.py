@@ -22,6 +22,8 @@ from .signals import (
     chat_provider_initialized,
     chat_response_failure,
     chat_started,
+    get_current_weather_request,
+    get_current_weather_response,
 )
 from .tasks import create_chat_history
 
@@ -281,3 +283,54 @@ def handle_chat_plugin_usage_post_save(sender, instance, created, **kwargs):
 
     if created:
         logger.debug("%s", formatted_text("ChatPluginUsage() record created."))
+
+
+# get_current_weather_request.send(sender=get_current_weather, location=location, unit=unit)
+@receiver(get_current_weather_request, dispatch_uid="get_current_weather_request")
+def handle_get_current_weather_request(sender, **kwargs):
+    """Handle get_current_weather() request signal."""
+
+    location = kwargs.get("location")
+    unit = kwargs.get("unit")
+    sender_name = sender.__name__
+
+    logger.info(
+        "signal received from %s %s for location: %s, unit: %s",
+        sender_name,
+        formatted_text("get_current_weather_request"),
+        location,
+        unit,
+    )
+
+
+@receiver(get_current_weather_response, dispatch_uid="get_current_weather_response")
+def handle_get_current_weather_response(sender, **kwargs):
+    """Handle get_current_weather() response signal."""
+
+    location = kwargs.get("location")
+    unit = kwargs.get("unit")
+    latitude = kwargs.get("latitude")
+    longitude = kwargs.get("longitude")
+    address = kwargs.get("address")
+    params = kwargs.get("params")
+    geocode_result = kwargs.get("geocode_result")
+    hourly_json = kwargs.get("hourly_json")
+
+    sender_name = sender.__name__
+
+    logger.info(
+        "signal received from %s %s for location: %s, unit: %s, latitude: %s, longitude: %s, address: %s",
+        sender_name,
+        formatted_text("get_current_weather_response"),
+        location,
+        unit,
+        latitude,
+        longitude,
+        address,
+    )
+    logger.info(
+        "response: %s, params: %s, geocode_result: %s",
+        formatted_json(hourly_json),
+        formatted_json(params),
+        formatted_json(geocode_result),
+    )
