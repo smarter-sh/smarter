@@ -57,7 +57,7 @@ class AccountMixin(SmarterHelperMixin):
                 url = (
                     request.build_absolute_uri()
                     if hasattr(request, "build_absolute_uri")
-                    else request.url if hasattr(request, "url") else str(request)
+                    else request.url if hasattr(request, "url") else None
                 )
             # pylint: disable=W0718
             except Exception:

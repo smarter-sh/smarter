@@ -227,9 +227,9 @@ class TestAccountMixin(SmarterTestBase):
         self.assertIsNotNone(instance.account)
         self.assertEqual(instance.account, self._account)
 
-        # verify that the user was defaulted to the admin user
-        self.assertEqual(instance.user, self._admin_user)
-        self.assertEqual(instance.user_profile.user, self._admin_user)
+        # verify that neither the user nor the user_profile are set.
+        self.assertIsNone(instance.user)
+        self.assertIsNone(instance.user_profile)
 
     def test_invalid_user_assignment(self) -> None:
         """Test setting an invalid user."""

@@ -79,7 +79,7 @@ class TestSmarterTokenAuthenticationMiddleware(SmarterTestBase):
     @patch("smarter.lib.drf.middleware.knox_settings")
     def test_is_token_auth_true(self, mock_knox_settings):
         mock_knox_settings.AUTH_HEADER_PREFIX = b"Token"
-        self.middleware.authorization_header = b"Token sometoken"  # <-- Add this line
+        self.middleware.authorization_header = b"Token sometoken"
         result = self.middleware.is_token_auth(self.request)
         self.assertTrue(result)
 
