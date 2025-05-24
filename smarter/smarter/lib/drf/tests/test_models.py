@@ -1,6 +1,7 @@
 """test SmarterAuthToken, SmarterAuthTokenManager class"""
 
 from datetime import datetime, timedelta
+from logging import getLogger
 from unittest.mock import Mock, patch
 
 from smarter.apps.account.tests.factories import (
@@ -10,6 +11,9 @@ from smarter.apps.account.tests.factories import (
 from smarter.lib.unittest.base_classes import SmarterTestBase
 
 from ..models import SmarterAuthToken
+
+
+logger = getLogger(__name__)
 
 
 class TestSmarterAuthTokenModels(SmarterTestBase):
@@ -103,4 +107,5 @@ class TestSmarterAuthTokenModels(SmarterTestBase):
 
     def test_str_returns_identifier(self):
         self.auth_token.digest = "digestvalue"
-        self.assertTrue(str(self.auth_token).startswith("******"))
+        logger.info(str(self.auth_token))
+        self.assertTrue(str(self.auth_token).endswith("******alue"))

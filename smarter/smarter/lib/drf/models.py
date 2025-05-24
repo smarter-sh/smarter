@@ -79,7 +79,7 @@ class SmarterAuthToken(AuthToken, TimestampedModel):
 
     @property
     def identifier(self):
-        return "******" + str(self.digest)[:8]
+        return "******" + str(self.digest)[-4:]
 
     def save(self, *args, **kwargs):
         if not self.user.is_staff:
