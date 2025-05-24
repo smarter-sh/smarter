@@ -1,6 +1,7 @@
 """Test Api v1 CLI commands for ApiConnection"""
 
 from http import HTTPStatus
+from logging import getLogger
 from urllib.parse import urlencode
 
 import yaml
@@ -11,6 +12,11 @@ from smarter.apps.account.tests.factories import secret_factory
 from smarter.apps.api.v1.cli.urls import ApiV1CliReverseViews
 from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
+from smarter.apps.plugin.manifest.enum import (
+    SAMApiConnectionSpecConnectionKeys,
+    SAMApiConnectionSpecKeys,
+    SAMApiConnectionStatusKeys,
+)
 from smarter.apps.plugin.models import ApiConnection
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.journal.enum import SmarterJournalApiResponseKeys
@@ -18,6 +24,7 @@ from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 
 
 KIND = SAMKinds.API_CONNECTION.value
+logger = getLogger(__name__)
 
 
 class TestApiCliV1ApiConnection(ApiV1TestBase):
@@ -157,23 +164,24 @@ class TestApiCliV1ApiConnection(ApiV1TestBase):
         self.assertIsInstance(response, dict)
 
         # muck up the manifest with some test data
+        new_url = "http://localhost:8000/api/v1/cli/example_manifest/chatbot/"
+        new_description = "new description"
         data = response[SmarterJournalApiResponseKeys.DATA]
-        data[SAMKeys.SPEC.value] = {
-            "connection": {
-                "name": "new_name",
-                "hostname": "http://new-host.com",
-            }
-        }
-        data[SAMKeys.METADATA.value]["description"] = "new description"
+        data[SAMKeys.SPEC.value][SAMApiConnectionSpecKeys.CONNECTION.value][
+            SAMApiConnectionSpecConnectionKeys.BASE_URL.value
+        ] = new_url
+        data[SAMKeys.METADATA.value]["description"] = new_description
 
         # pop the status bc its read-only
         data.pop(SAMKeys.STATUS.value)
 
         # convert the data back to yaml, since this is what the cli usually sends
         manifest = yaml.dump(data)
+        logger.info("Modified manifest:\n%s", manifest)
         path = reverse(ApiV1CliReverseViews.apply)
         response, status = self.get_response(path=path, manifest=manifest)
         self.assertEqual(status, HTTPStatus.OK)
+
         self.assertIsInstance(response, dict)
 
         # requery and validate our changes
@@ -185,9 +193,8 @@ class TestApiCliV1ApiConnection(ApiV1TestBase):
 
         # validate our changes
         data = response[SmarterJournalApiResponseKeys.DATA]
-        self.assertEqual(data[SAMKeys.METADATA.value]["description"], "new description")
-        self.assertEqual(data[SAMKeys.SPEC.value]["connection"]["name"], "new_name")
-        self.assertEqual(data[SAMKeys.SPEC.value]["connection"]["hostname"], "http://new-host.com")
+        self.assertEqual(data[SAMKeys.METADATA.value]["description"], new_description)
+        self.assertEqual(data[SAMKeys.SPEC.value]["connection"]["baseUrl"], new_url)
 
     def test_get(self) -> None:
         """Test get command"""

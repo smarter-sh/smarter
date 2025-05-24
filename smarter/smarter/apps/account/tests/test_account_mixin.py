@@ -216,7 +216,7 @@ class TestAccountMixin(SmarterTestBase):
         instance.account = None
 
         # ensure that account is still set.
-        self.assertIsNone(instance.account)
+        self.assertIsNotNone(instance.account)
 
     def test_set_account(self) -> None:
         """

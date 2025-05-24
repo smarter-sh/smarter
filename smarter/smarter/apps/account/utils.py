@@ -227,3 +227,25 @@ def account_number_from_url(url: str) -> str:
     pattern = SMARTER_ACCOUNT_NUMBER_REGEX
     match = re.search(pattern, url)
     return match.group(0) if match else None
+
+
+def get_users_for_account(account: Account) -> list[AbstractUser]:
+    """
+    Returns a list of users for the given account.
+    """
+    if not account:
+        raise SmarterValueError("Account is required")
+
+    users = User.objects.filter(userprofile__account=account)
+    return users
+
+
+def get_user_profiles_for_account(account: Account) -> list[UserProfile]:
+    """
+    Returns a list of user profiles for the given account.
+    """
+    if not account:
+        raise SmarterValueError("Account is required")
+
+    user_profiles = UserProfile.objects.filter(account=account)
+    return user_profiles

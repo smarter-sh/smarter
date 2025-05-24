@@ -19,6 +19,7 @@ from smarter.apps.plugin.manifest.models.api_connection.enum import AuthMethods
 from smarter.apps.plugin.models import ApiConnection
 from smarter.apps.plugin.serializers import ApiConnectionSerializer
 from smarter.common.api import SmarterApiVersions
+from smarter.common.utils import camel_to_snake
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
@@ -138,15 +139,17 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
         config_dump[SAMMetadataKeys.DESCRIPTION.value] = self.manifest.metadata.description
 
         # retrieve the apiKey Secret
+        api_key_name = camel_to_snake(SAMApiConnectionSpecConnectionKeys.API_KEY.value)
         config_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value] = self.get_or_create_secret(
-            user_profile=self.user_profile, name=config_dump[SAMApiConnectionSpecConnectionKeys.API_KEY.value]
+            user_profile=self.user_profile, name=config_dump[api_key_name]
         )
 
         # retrieve the proxyUsername Secret, if it exists
-        if config_dump.get(SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value):
-            config_dump[SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value] = self.get_or_create_secret(
+        proxy_password_name = camel_to_snake(SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
+        if config_dump.get(proxy_password_name):
+            config_dump[proxy_password_name] = self.get_or_create_secret(
                 user_profile=self.user_profile,
-                name=config_dump[SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value],
+                name=config_dump[proxy_password_name],
             )
         return config_dump
 
@@ -320,13 +323,15 @@ class SAMApiConnectionBroker(AbstractBroker, AccountMixin):
         command = SmarterJournalCliCommands(command)
         readonly_fields = ["id", "created_at", "updated_at"]
         try:
+            api_key_name = camel_to_snake(SAMApiConnectionSpecConnectionKeys.API_KEY.value)
+            proxy_password_name = camel_to_snake(SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value)
             data = self.manifest_to_django_orm()
             for field in readonly_fields:
                 data.pop(field, None)
             for key, value in data.items():
-                if key == SAMApiConnectionSpecConnectionKeys.API_KEY.value:
+                if key == api_key_name:
                     setattr(self.api_connection, key, self.api_key_secret)
-                elif key == SAMApiConnectionSpecConnectionKeys.PROXY_PASSWORD.value:
+                elif key == proxy_password_name:
                     setattr(self.api_connection, key, self.proxy_password_secret)
                 else:
                     setattr(self.api_connection, key, value)

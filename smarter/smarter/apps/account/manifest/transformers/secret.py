@@ -23,6 +23,7 @@ from smarter.apps.account.signals import (
     secret_inializing,
     secret_ready,
 )
+from smarter.apps.account.utils import get_user_profiles_for_account
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterExceptionBase
@@ -298,7 +299,7 @@ class SecretTransformer(SmarterHelperMixin):
             self._secret = None
             return
         try:
-            self._secret = Secret.objects.get(pk=value)
+            self._secret = Secret.objects.get(pk=value, user_profile=self.user_profile)
         except Secret.DoesNotExist as e:
             raise SmarterSecretTransformerError("Secret.DoesNotExist") from e
 
@@ -309,8 +310,20 @@ class SecretTransformer(SmarterHelperMixin):
             return self._secret
         try:
             self._secret = Secret.objects.get(user_profile=self.user_profile, name=self.name)
-        except Secret.DoesNotExist:
-            pass
+        except Secret.DoesNotExist as e:
+            # if the secret does not exist for the user profile, then we still need to check
+            # if the secret exists for the account, and if so, whether self.user_profile
+            # is at least a staff user. otherwise, we raise an error.
+            other_user_profiles = get_user_profiles_for_account(self.user_profile.account)
+            secret = Secret.objects.filter(user_profile__in=other_user_profiles, name=self.name).first()
+            if secret:
+                if not self.user_profile.user.is_staff and not self.user_profile.user.is_superuser:
+                    raise SmarterSecretTransformerError(
+                        f"Secret {self.name} exists for user profile {secret.user_profile.user.username} "
+                        f"but not for user profile {self.user_profile.user.username}."
+                    ) from e
+                self._secret = secret
+
         return self._secret
 
     @property
