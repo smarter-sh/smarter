@@ -7,6 +7,7 @@ import logging
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.forms.models import model_to_dict
+from requests import Response
 
 from smarter.common.const import SmarterWaffleSwitches
 from smarter.common.helpers.console_helpers import formatted_json, formatted_text
@@ -24,7 +25,13 @@ from .models import (
     SqlConnection,
 )
 from .plugin.static import StaticPlugin
-from .signals import (
+from .signals import (  # plugin signals; sql_connection signals; api_connection signals
+    plugin_api_connection_attempted,
+    plugin_api_connection_failed,
+    plugin_api_connection_query_attempted,
+    plugin_api_connection_query_failed,
+    plugin_api_connection_query_success,
+    plugin_api_connection_success,
     plugin_called,
     plugin_cloned,
     plugin_created,
@@ -33,6 +40,9 @@ from .signals import (
     plugin_selected,
     plugin_sql_connection_attempted,
     plugin_sql_connection_failed,
+    plugin_sql_connection_query_attempted,
+    plugin_sql_connection_query_failed,
+    plugin_sql_connection_query_success,
     plugin_sql_connection_success,
     plugin_updated,
 )
@@ -313,4 +323,108 @@ def handle_plugin_sql_connection_failed(sender, connection: SqlConnection, **kwa
         "%s - %s",
         formatted_text("plugin_sql_connection_failed"),
         formatted_json(masked_dict(connection.django_db_connection)),
+    )
+
+
+@receiver(plugin_sql_connection_query_attempted, dispatch_uid="plugin_sql_connection_query_attempted")
+def handle_plugin_sql_connection_query_attempted(sender, connection: SqlConnection, **kwargs):
+    """Handle plugin SQL connection query attempted signal."""
+
+    logger.info(
+        "%s - %s",
+        formatted_text("plugin_sql_connection_query_attempted"),
+        formatted_json(masked_dict(connection.django_db_connection)),
+    )
+
+
+@receiver(plugin_sql_connection_query_success, dispatch_uid="plugin_sql_connection_query_success")
+def handle_plugin_sql_connection_query_success(sender, connection: SqlConnection, **kwargs):
+    """Handle plugin SQL connection query success signal."""
+
+    logger.info(
+        "%s - %s",
+        formatted_text("plugin_sql_connection_query_success"),
+        formatted_json(masked_dict(connection.django_db_connection)),
+    )
+
+
+@receiver(plugin_sql_connection_query_failed, dispatch_uid="plugin_sql_connection_query_failed")
+def handle_plugin_sql_connection_query_failed(sender, connection: SqlConnection, **kwargs):
+    """Handle plugin SQL connection query failed signal."""
+
+    logger.info(
+        "%s - %s",
+        formatted_text("plugin_sql_connection_query_failed"),
+        formatted_json(masked_dict(connection.django_db_connection)),
+    )
+
+
+@receiver(plugin_api_connection_attempted, dispatch_uid="plugin_api_connection_attempted")
+def handle_plugin_api_connection_attempted(sender, connection: ApiConnection, **kwargs):
+    """Handle plugin API connection attempted signal."""
+
+    logger.info(
+        "%s - %s",
+        formatted_text("plugin_api_connection_attempted"),
+        formatted_json(masked_dict(connection.django_db_connection)),
+    )
+
+
+@receiver(plugin_api_connection_success, dispatch_uid="plugin_api_connection_success")
+def handle_plugin_api_connection_success(sender, connection: ApiConnection, **kwargs):
+    """Handle plugin API connection success signal."""
+
+    logger.info(
+        "%s - %s",
+        formatted_text("plugin_api_connection_success"),
+        formatted_json(masked_dict(connection.django_db_connection)),
+    )
+
+
+@receiver(plugin_api_connection_failed, dispatch_uid="plugin_api_connection_failed")
+def handle_plugin_api_connection_failed(sender, connection: ApiConnection, error: Exception = None, **kwargs):
+    """Handle plugin API connection failed signal."""
+
+    logger.info(
+        "%s - %s",
+        formatted_text("plugin_api_connection_failed"),
+        formatted_json(masked_dict(connection.django_db_connection)),
+    )
+
+
+@receiver(plugin_api_connection_query_attempted, dispatch_uid="plugin_api_connection_query_attempted")
+def handle_plugin_api_connection_query_attempted(sender, connection: ApiConnection, **kwargs):
+    """Handle plugin API connection query attempted signal."""
+
+    logger.info(
+        "%s - %s",
+        formatted_text("plugin_api_connection_query_attempted"),
+        formatted_json(masked_dict(connection.django_db_connection)),
+    )
+
+
+@receiver(plugin_api_connection_query_success, dispatch_uid="plugin_api_connection_query_success")
+def handle_plugin_api_connection_query_success(sender, connection: ApiConnection, response: Response = None, **kwargs):
+    """Handle plugin API connection query success signal."""
+
+    logger.info(
+        "%s - %s - response: %s",
+        formatted_text("plugin_api_connection_query_success"),
+        connection.get_connection_string(),
+        formatted_json(response.json()) if response else None,
+    )
+
+
+@receiver(plugin_api_connection_query_failed, dispatch_uid="plugin_api_connection_query_failed")
+def handle_plugin_api_connection_query_failed(
+    sender, connection: ApiConnection, response: Response = None, error: Exception = None, **kwargs
+):
+    """Handle plugin API connection query failed signal."""
+
+    logger.info(
+        "%s - %s - response: %s - error: %s",
+        formatted_text("plugin_api_connection_query_failed"),
+        formatted_json(masked_dict(connection.django_db_connection)),
+        formatted_json(response.json()) if response else None,
+        error,
     )

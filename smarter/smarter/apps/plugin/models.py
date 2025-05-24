@@ -44,8 +44,17 @@ from .manifest.enum import SAMPluginCommonMetadataClassValues
 from .manifest.models.common import Parameter, RequestHeader, TestValue, UrlParam
 from .manifest.models.sql_connection.enum import DbEngines, DBMSAuthenticationMethods
 from .signals import (
+    plugin_api_connection_attempted,
+    plugin_api_connection_failed,
+    plugin_api_connection_query_attempted,
+    plugin_api_connection_query_failed,
+    plugin_api_connection_query_success,
+    plugin_api_connection_success,
     plugin_sql_connection_attempted,
     plugin_sql_connection_failed,
+    plugin_sql_connection_query_attempted,
+    plugin_sql_connection_query_failed,
+    plugin_sql_connection_query_success,
     plugin_sql_connection_success,
 )
 
@@ -666,13 +675,22 @@ class SqlConnection(TimestampedModel):
         connection = self.connect()
         if not connection:
             return False
-        if limit is not None:
-            sql = sql.rstrip(";")  # Remove any trailing semicolon
-            sql += f" LIMIT {limit};"
-        with connection.cursor() as cursor:
-            cursor.execute(sql)
-            rows = cursor.fetchall()
-            return rows
+        plugin_sql_connection_query_attempted.send(sender=self.__class__, connection=self)
+        try:
+            if limit is not None:
+                sql = sql.rstrip(";")  # Remove any trailing semicolon
+                sql += f" LIMIT {limit};"
+            with connection.cursor() as cursor:
+                cursor.execute(sql)
+                rows = cursor.fetchall()
+                plugin_sql_connection_query_success.send(sender=self.__class__, connection=self)
+                return rows
+        except (DatabaseError, ImproperlyConfigured) as e:
+            plugin_sql_connection_query_failed.send(sender=self.__class__, connection=self)
+            logger.error("SQL query execution failed: %s", e)
+            return False
+        finally:
+            self.close()
 
     def test_proxy(self) -> bool:
         proxy_dict = {
@@ -1005,17 +1023,11 @@ class ApiConnection(TimestampedModel):
 
     def test_connection(self) -> bool:
         """Test the API connection by making a simple GET request to the root domain."""
-        headers = {}
-        if self.auth_method == "basic" and self.api_key:
-            headers["Authorization"] = f"Basic {self.api_key}"
-        elif self.auth_method == "token" and self.api_key:
-            headers["Authorization"] = f"Bearer {self.api_key}"
-
         try:
-            response = requests.get(self.base_url, headers=headers, timeout=self.timeout)
-            return response.status_code in [HTTPStatus.OK, HTTPStatus.PERMANENT_REDIRECT]
-        except requests.exceptions.RequestException as e:
-            logger.error("API test connection failed: %s", e)
+            result = self.execute_query(endpoint="/", params=None, limit=1)
+            return bool(result)
+        # pylint: disable=W0718
+        except Exception:
             return False
 
     def get_connection_string(self):
@@ -1039,6 +1051,63 @@ class ApiConnection(TimestampedModel):
         """Validate the API connection."""
         super().validate()
         return self.test_connection()
+
+    def execute_query(
+        self, endpoint: str, params: dict = None, limit: int = None
+    ) -> Union[list[tuple[Any, ...]], bool]:
+        """
+            Execute the API query and return the results.
+            This method constructs the full URL by combining the base URL and the endpoint,
+            and sends a GET request to the API with the provided parameters.
+
+            :param endpoint: The API endpoint to query.
+            :param params: A dictionary of parameters to include in the API request.
+            :param limit: The maximum number of rows to return from the API response.
+            :return: The API response as a JSON object or False if the request fails.
+
+        plugin_api_connection_failed,
+        plugin_api_connection_query_success,
+        plugin_api_connection_query_failed,
+
+        """
+        params = params or {}
+        url = urljoin(self.base_url, endpoint)
+        headers = {}
+        if self.auth_method == "basic" and self.api_key:
+            headers["Authorization"] = f"Basic {self.api_key}"
+        elif self.auth_method == "token" and self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+
+        try:
+            plugin_api_connection_attempted.send(sender=self.__class__, connection=self)
+            plugin_api_connection_query_attempted.send(sender=self.__class__, connection=self)
+            response = requests.get(url, headers=headers, params=params, timeout=self.timeout)
+            response.raise_for_status()
+            if response.status_code in [HTTPStatus.OK, HTTPStatus.PERMANENT_REDIRECT]:
+                plugin_api_connection_success.send(sender=self.__class__, connection=self)
+                plugin_api_connection_query_success.send(sender=self.__class__, connection=self, response=response)
+                if limit:
+                    response_data = response.json()
+                    if isinstance(response_data, list):
+                        response_data = response_data[:limit]
+                    elif isinstance(response_data, dict):
+                        response_data = {k: v[:limit] for k, v in response_data.items() if isinstance(v, list)}
+                    return response_data
+            else:
+                # we connected, but the query failed.
+                plugin_api_connection_query_success.send(sender=self.__class__, connection=self, response=response)
+                plugin_api_connection_failed.send(sender=self.__class__, connection=self, response=response, error=None)
+                return False
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+            # connection failed, and so by extension, so did the query
+            plugin_api_connection_query_failed.send(sender=self.__class__, connection=self, response=response, error=e)
+            plugin_api_connection_failed.send(sender=self.__class__, connection=self, response=response, error=e)
+            return False
+        except (requests.exceptions.HTTPError, requests.exceptions.RequestException) as e:
+            # query failed, but connection was successful
+            plugin_api_connection_success.send(sender=self.__class__, connection=self, response=response, error=e)
+            plugin_api_connection_query_failed.send(sender=self.__class__, connection=self, response=response, error=e)
+            return False
 
     def __str__(self) -> str:
         return self.name + " - " + self.get_connection_string()
