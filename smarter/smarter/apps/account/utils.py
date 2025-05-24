@@ -99,6 +99,8 @@ def get_cached_account_for_user(user) -> Account:
             return None
         return user_profile.account
 
+    get_cached_account_for_user.invalidate_cache = _get_account.invalidate_cache
+
     return _get_account(user)
 
 
@@ -127,6 +129,8 @@ def get_cached_user_profile(user: UserType, account: Account = None) -> UserProf
         except UserProfile.DoesNotExist:
             logger.error("get_cached_user_profile() no UserProfile found for user %s", resolved_user)
             return None
+
+    get_cached_user_profile.invalidate_cache = _get_user_profile.invalidate_cache
 
     # pylint: disable=W0212
     resolved_user = get_resolved_user(user)

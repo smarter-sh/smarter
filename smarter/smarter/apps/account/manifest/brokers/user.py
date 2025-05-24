@@ -2,6 +2,7 @@
 """Smarter API User Manifest handler"""
 
 import typing
+from logging import getLogger
 
 from django.forms.models import model_to_dict
 from django.http import HttpRequest
@@ -34,6 +35,7 @@ from smarter.lib.manifest.loader import SAMLoader
 
 User = get_user_model()
 MAX_RESULTS = 1000
+logger = getLogger(__name__)
 
 
 class SAMUserBrokerError(SAMBrokerError):
@@ -316,7 +318,10 @@ class SAMUserBroker(AbstractBroker, AccountMixin):
         command = SmarterJournalCliCommands(command)
         if self.user:
             try:
+                logger.info("Deleting user %s", self.user)
                 self.user.delete()
+                self.user = None
+                logger.info("Deleted user %s", self.user)
                 return self.json_response_ok(command=command, data={})
             except Exception as e:
                 raise SAMUserBrokerError(
