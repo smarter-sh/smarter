@@ -30,6 +30,8 @@ from retry_requests import retry
 
 from smarter.common.conf import settings
 
+from ..signals import get_current_weather_request, get_current_weather_response
+
 
 logger = getLogger(__name__)
 
@@ -56,6 +58,7 @@ openmeteo = openmeteo_requests.Client(session=WEATHER_API_RETRY_SESSION)
 # pylint: disable=too-many-locals
 def get_current_weather(location, unit="METRIC") -> str:
     """Get the current weather in a given location as a 24-hour forecast"""
+    get_current_weather_request.send(sender=get_current_weather, location=location, unit=unit)
     if gmaps is None:
         retval = {
             "error": "Google Maps Geolocation service is not initialized. Setup the Google Geolocation API service: https://developers.google.com/maps/documentation/geolocation/overview, and add your GOOGLE_MAPS_API_KEY to .env"
@@ -74,7 +77,6 @@ def get_current_weather(location, unit="METRIC") -> str:
         latitude = geocode_result[0]["geometry"]["location"]["lat"] or 0
         longitude = geocode_result[0]["geometry"]["location"]["lng"] or 0
         address = geocode_result[0]["formatted_address"]
-        logger.info("get_current_weather() gmaps returned geocodes for %s (%s, %s)", address, latitude, longitude)
     except googlemaps.exceptions.ApiError as api_error:
         logger.error("Google Maps API error getting geo coordinates for %s: %s", location, api_error)
     # pylint: disable=broad-exception-caught
@@ -111,7 +113,17 @@ def get_current_weather(location, unit="METRIC") -> str:
     hourly_dataframe = pd.DataFrame(data=hourly_data).head(24)  # Only return the first 24 hours
     hourly_dataframe["date"] = hourly_dataframe["date"].dt.strftime("%Y-%m-%d %H:%M")
     hourly_json = hourly_dataframe.to_json(orient="records")
-    logger.info("get_current_weather() openmeteo returned weather data for %s (%s, %s)", address, latitude, longitude)
+    get_current_weather_response.send(
+        sender=get_current_weather,
+        location=location,
+        unit=unit,
+        latitude=latitude,
+        longitude=longitude,
+        address=address,
+        params=params,
+        geocode_result=geocode_result,
+        hourly_json=hourly_json,
+    )
     return json.dumps(hourly_json)
 
 
