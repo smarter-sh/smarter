@@ -150,11 +150,11 @@ class ChatHelper(SmarterRequestMixin):
     _clean_url: str = None
 
     # FIX NOTE: remove session_key
-    def __init__(self, request: WSGIRequest, session_key: str, chatbot: ChatBot = None) -> None:
+    def __init__(self, request: WSGIRequest, session_key: str, *args, chatbot: ChatBot = None, **kwargs) -> None:
         if not request:
             logger.error("ChatHelper - request object is missing.")
         logger.info("%s - session_key: %s, chatbot: %s", self.formatted_class_name, session_key, chatbot)
-        SmarterRequestMixin.__init__(self, request=request)
+        SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
         self._chat: Chat = None
         self._chatbot: ChatBot = chatbot
         self.session_key = session_key

@@ -186,7 +186,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             self.__dict__.pop(prop, None)
 
     # pylint: disable=W0613
-    def __init__(self, *args, **kwargs):
+    def __init__(self, request: WSGIRequest, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._smarter_request: WSGIRequest = None
         self._timestamp = datetime.now()
@@ -198,14 +198,14 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         # validate, standardize and parse the request url string into a ParseResult.
         # Note that the setter and getter both work with strings
         # but we store the private instance variable _url as a ParseResult.
-        request: WSGIRequest = kwargs.get("request", None)
+        request: WSGIRequest = request or kwargs.get("request", None)
         if not request and args:
             request = args[0]
+        self._smarter_request = request
+
         if not request:
-            AccountMixin.__init__(self)
             logger.warning("%s - request is None. Ditching.", self.formatted_class_name)
             return None
-        AccountMixin.__init__(self, request=request)
         self.init(request=request)
 
     @property
@@ -326,7 +326,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             return None
 
         # 1.) http://example.api.localhost:8000/config
-        if self.is_chatbot_named_url:
+        if self.is_chatbot_named_url and self.parsed_url is not None:
             netloc_parts = self.parsed_url.netloc.split(".") if self.parsed_url and self.parsed_url.netloc else None
             retval = netloc_parts[0] if netloc_parts else None
             self.helper_logger(
@@ -463,6 +463,8 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
 
     @cached_property
     def is_environment_root_domain(self):
+        if not self.parsed_url:
+            return False
         retval = self.parsed_url.netloc == smarter_settings.environment_domain and self.parsed_url.path == "/"
         self.helper_logger(f"is_environment_root_domain={retval}")
         return retval
@@ -563,6 +565,8 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
             return False
         if not self.url:
             return False
+        if not self.parsed_url:
+            return False
 
         path_parts = self.url_path_parts
         # valid path_parts:
@@ -625,6 +629,8 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
           returns '/chatbot/'
         """
         if not self.url:
+            return None
+        if not self.parsed_url:
             return None
         if self.parsed_url.path == "":
             return "/"
@@ -696,6 +702,8 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         - https://hr.3141-5926-5359.alpha.api.smarter.sh/chatbot/
           returns 'hr.3141-5926-5359.alpha.api.smarter.sh'
         """
+        if not self.parsed_url:
+            return None
         return self.parsed_url.netloc if self.parsed_url else None
 
     # --------------------------------------------------------------------------

@@ -15,6 +15,7 @@ class AbstractController(abc.ABC, AccountMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        AccountMixin.__init__(self, *args, **kwargs)
 
     ###########################################################################
     # Abstract property implementations

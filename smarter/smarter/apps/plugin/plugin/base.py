@@ -19,6 +19,7 @@ from smarter.apps.account.models import UserProfile
 from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.chat.providers.const import OpenAIMessageKeys
 from smarter.common.api import SmarterApiVersions
+from smarter.common.classes import SmarterHelperMixin
 from smarter.common.exceptions import SmarterExceptionBase, SmarterValueError
 from smarter.lib.django.model_helpers import TimestampedModel
 from smarter.lib.django.user import UserType
@@ -63,7 +64,7 @@ class SmarterPluginError(SmarterExceptionBase):
 
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
-class PluginBase(ABC):
+class PluginBase(ABC, SmarterHelperMixin):
     """An abstract base class for working with plugins."""
 
     _api_version: str = SMARTER_API_MANIFEST_DEFAULT_VERSION
@@ -598,11 +599,17 @@ class PluginBase(ABC):
 
     def create(self):
         """Create a plugin from either yaml or a dictionary."""
+        logger.info("%s.create() creating plugin %s", self.formatted_class_name, self.manifest.metadata.name)
 
         def committed(plugin_id: int):
             self.id = plugin_id
             plugin_created.send(sender=self.__class__, plugin=self)
-            logger.debug("Created plugin %s: %s.", self.plugin_meta.name, self.plugin_meta.id)
+            logger.info(
+                "%s.create() created and committed plugin %s: %s.",
+                self.formatted_class_name,
+                self.plugin_meta.name,
+                self.plugin_meta.id,
+            )
 
         if not self.manifest:
             raise SmarterPluginError("Plugin manifest is not set.")
@@ -614,18 +621,26 @@ class PluginBase(ABC):
 
         if self.plugin_meta:
             self.id = self.plugin_meta.id
-            logger.info("Plugin %s already exists. Updating plugin %s.", meta_data["name"], self.plugin_meta.id)
+            logger.info(
+                "%s.create() Plugin %s already exists. Updating plugin %s.",
+                meta_data["name"],
+                self.formatted_class_name,
+                self.plugin_meta.id,
+            )
             return self.update()
 
         with transaction.atomic():
             plugin_meta = PluginMeta.objects.create(**meta_data)
+            logger.info("%s.create() created PluginMeta: %s", self.formatted_class_name, plugin_meta)
 
             selector[PLUGIN_KEY] = plugin_meta
             prompt[PLUGIN_KEY] = plugin_meta
             plugin_data[PLUGIN_KEY] = plugin_meta
 
-            PluginSelector.objects.create(**selector)
-            PluginPrompt.objects.create(**prompt)
+            plugin_selector = PluginSelector.objects.create(**selector)
+            logger.info("%s.create() created PluginSelector: %s", self.formatted_class_name, plugin_selector)
+            plugin_prompt = PluginPrompt.objects.create(**prompt)
+            logger.info("%s.create() created PluginPrompt: %s", self.formatted_class_name, plugin_prompt)
             self.plugin_data_class.objects.create(**plugin_data)
 
         transaction.on_commit(lambda: committed(plugin_id=plugin_meta.id))

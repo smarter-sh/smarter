@@ -7,14 +7,10 @@ from typing import Type
 from django.core.handlers.wsgi import WSGIRequest
 
 from smarter.apps.account.mixins import AccountMixin
-from smarter.apps.account.models import Account
-from smarter.apps.plugin.manifest.controller import PluginController
 from smarter.apps.plugin.manifest.models.static_plugin.const import MANIFEST_KIND
 from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlugin
 from smarter.apps.plugin.models import PluginMeta
-from smarter.apps.plugin.plugin.base import PluginBase
 from smarter.apps.plugin.plugin.static import StaticPlugin
-from smarter.common.api import SmarterApiVersions
 from smarter.lib.journal.enum import SmarterJournalCliCommands
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
 from smarter.lib.manifest.broker import (
@@ -29,7 +25,6 @@ from smarter.lib.manifest.enum import (
     SCLIResponseGet,
     SCLIResponseGetData,
 )
-from smarter.lib.manifest.loader import SAMLoader
 
 from . import PluginSerializer, SAMPluginBrokerError
 
@@ -50,21 +45,12 @@ class SAMStaticPluginBroker(AbstractBroker, AccountMixin):
     # override the base abstract manifest model with the StaticPlugin model
     _manifest: SAMStaticPlugin = None
     _pydantic_model: Type[SAMStaticPlugin] = SAMStaticPlugin
-    _plugin: PluginBase = None
-    _plugin_meta: PluginMeta = None
 
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        request: WSGIRequest,
-        account: Account,
-        api_version: str = SmarterApiVersions.V1,
-        name: str = None,
-        kind: str = None,
-        loader: SAMLoader = None,
-        manifest: str = None,
-        file_path: str = None,
-        url: str = None,
+        *args,
+        **kwargs,
     ):
         """
         Load, validate and parse the manifest. The parent will initialize
@@ -74,45 +60,8 @@ class SAMStaticPluginBroker(AbstractBroker, AccountMixin):
         to ensure that the manifest is a valid yaml file and that it contains
         the required top-level keys.
         """
-        super().__init__(
-            request=request,
-            account=account,
-            api_version=api_version,
-            name=name,
-            kind=kind,
-            loader=loader,
-            manifest=manifest,
-            file_path=file_path,
-            url=url,
-        )
-        user = request.user if hasattr(request, "user") else None
-        AccountMixin.__init__(self, account=account, user=user, request=request)
-
-    @property
-    def plugin_meta(self) -> PluginMeta:
-        if self.manifest:
-            # want the manifest to take precedence over the plugin_meta
-            return None
-        if self._plugin_meta:
-            return self._plugin_meta
-        if self.name and self.account:
-            try:
-                self._plugin_meta = PluginMeta.objects.get(account=self.account, name=self.name)
-            except PluginMeta.DoesNotExist:
-                pass
-        return self._plugin_meta
-
-    @property
-    def plugin(self) -> PluginBase:
-        """
-        PluginController() is a helper class to map the manifest model
-        metadata.plugin_class to an instance of the the correct plugin class.
-        """
-        if self._plugin:
-            return self._plugin
-        controller = PluginController(account=self.account, manifest=self.manifest, plugin_meta=self.plugin_meta)
-        self._plugin = controller.obj
-        return self._plugin
+        super().__init__(*args, **kwargs)
+        AccountMixin.__init__(self, *args, **kwargs)
 
     ###########################################################################
     # Smarter abstract property implementations
@@ -217,6 +166,13 @@ class SAMStaticPluginBroker(AbstractBroker, AccountMixin):
         try:
             self.plugin.create()
         except Exception as e:
+            logger.error(
+                "%s.apply() failed to create %s %s",
+                self.formatted_class_name,
+                self.kind,
+                self.plugin_meta.name,
+                exc_info=True,
+            )
             return self.json_response_err(command=command, e=e)
 
         if self.plugin.ready:
@@ -230,27 +186,14 @@ class SAMStaticPluginBroker(AbstractBroker, AccountMixin):
                 f"{self.formatted_class_name} {self.plugin_meta.name} not ready", thing=self.kind, command=command
             )
         except SAMBrokerErrorNotReady as err:
+            logger.error(
+                "%s.apply() failed to save %s %s",
+                self.formatted_class_name,
+                self.kind,
+                self.plugin_meta.name,
+                exc_info=True,
+            )
             return self.json_response_err(command=command, e=err)
-
-    def describe(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
-        command = self.describe.__name__
-        command = SmarterJournalCliCommands(command)
-        self.set_and_verify_name_param(command=command)
-        if self.plugin.ready:
-            try:
-                data = self.plugin.to_json()
-                data[SAMKeys.METADATA].pop(SAMMetadataKeys.ACCOUNT)
-                data[SAMKeys.METADATA].pop(SAMMetadataKeys.AUTHOR)
-                return self.json_response_ok(command=command, data=data)
-            except Exception as e:
-                raise SAMBrokerError(
-                    f"{self.formatted_class_name} {self.plugin_meta.name} describe failed",
-                    thing=self.kind,
-                    command=command,
-                ) from e
-        raise SAMBrokerErrorNotReady(
-            f"{self.formatted_class_name} {self.plugin_meta.name} not ready", thing=self.kind, command=command
-        )
 
     def chat(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__

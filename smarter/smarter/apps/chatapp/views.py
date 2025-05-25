@@ -40,7 +40,6 @@ from smarter.apps.plugin.models import (
     PluginSelectorHistorySerializer,
 )
 from smarter.common.api import SmarterApiVersions
-from smarter.common.classes import SmarterHelperMixin
 from smarter.common.conf import settings as smarter_settings
 from smarter.common.const import SMARTER_CHAT_SESSION_KEY_NAME, SmarterWaffleSwitches
 from smarter.common.exceptions import SmarterExceptionBase, SmarterValueError
@@ -80,7 +79,7 @@ class SmarterChatappViewError(SmarterExceptionBase):
         return "Smarter Chatapp error"
 
 
-class SmarterChatSession(SmarterRequestMixin, SmarterHelperMixin):
+class SmarterChatSession(SmarterRequestMixin):
     """
     Helper class that provides methods for creating a session key and client key.
     """
@@ -89,9 +88,8 @@ class SmarterChatSession(SmarterRequestMixin, SmarterHelperMixin):
     _chat_helper: ChatHelper = None
     _chatbot: ChatBot = None
 
-    def __init__(self, request, chatbot: ChatBot = None):
-        SmarterRequestMixin.__init__(self, request=request)
-        SmarterHelperMixin.__init__(self)
+    def __init__(self, request, *args, chatbot: ChatBot = None, **kwargs):
+        SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
 
         self._url = self.clean_url(request.build_absolute_uri())
 
@@ -141,7 +139,7 @@ class SmarterChatSession(SmarterRequestMixin, SmarterHelperMixin):
 
 # pylint: disable=R0902
 @method_decorator(csrf_exempt, name="dispatch")
-class ChatConfigView(View, SmarterRequestMixin, SmarterHelperMixin):
+class ChatConfigView(View, SmarterRequestMixin):
     """
     Chat config view for smarter web. This view is protected and requires the user
     to be authenticated. It works with any ChatBots but is aimed at chatbots running

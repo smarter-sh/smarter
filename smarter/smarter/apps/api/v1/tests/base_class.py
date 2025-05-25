@@ -50,7 +50,9 @@ class ApiV1TestBase(TestAccountMixin):
         headers = {"Authorization": f"Token {self.token_key}"}
 
         if manifest:
-            logger.info("ApiV1TestBase.get_response() with manifest: %s", manifest)
+            logger.info(
+                "ApiV1TestBase.get_response() with path: %s, headers: %s, manifest: %s", path, headers, manifest
+            )
             response = client.post(path=path, data=manifest, content_type="application/json", headers=headers)
         elif data:
             logger.info("ApiV1TestBase.get_response() with data: %s", data)
