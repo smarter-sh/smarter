@@ -182,7 +182,7 @@ class ApiV1CliChatBaseApiView(CliBaseApiView):
 
         if not self.uid:
             raise APIV1CLIChatViewError(
-                f"Internal error. UID is missing. This is intended to be a unique identifier for the client, passed as a url param named 'uid'. url: {request.build_absolute_uri() if hasattr(request, 'build_absolute_uri') else None}"
+                f"Internal error. UID is missing. This is intended to be a unique identifier for the client, passed as a url param named 'uid'. url: {self.smarter_build_absolute_uri(request)}"
             )
 
         self.cache_key = (self.__class__.__name__, self.request.user.username, self.name, self.uid)

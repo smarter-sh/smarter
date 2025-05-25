@@ -5,11 +5,11 @@ import json
 import logging
 from http import HTTPStatus
 
-from django.core.handlers.wsgi import WSGIRequest
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpRequest, JsonResponse
 
 from smarter.common.api import SmarterApiVersions
+from smarter.common.classes import SmarterHelperMixin
 from smarter.common.const import SmarterWaffleSwitches
 from smarter.lib.django import waffle
 from smarter.lib.django.http.serializers import (
@@ -30,7 +30,7 @@ from .models import SAMJournal
 logger = logging.getLogger(__name__)
 
 
-class SmarterJournaledJsonResponse(JsonResponse):
+class SmarterJournaledJsonResponse(JsonResponse, SmarterHelperMixin):
     """
     An enhanced HTTP response class that adds Smarter api manifest structural
     information and metadata.
@@ -88,7 +88,7 @@ class SmarterJournaledJsonResponse(JsonResponse):
             try:
                 return HttpAnonymousRequestSerializer(request).data
             except AttributeError:
-                url = request.build_absolute_uri() if isinstance(request, WSGIRequest) else "Unknown URL"
+                url = self.smarter_build_absolute_uri(request) or "Unknown URL"
                 logger.error(
                     "SmarterJournaledJsonResponse() HttpAnonymousRequestSerializer could not serialize request data for %s",
                     url,
@@ -102,7 +102,7 @@ class SmarterJournaledJsonResponse(JsonResponse):
             try:
                 return HttpAuthenticatedRequestSerializer(request).data
             except AttributeError:
-                url = request.build_absolute_uri() if isinstance(request, WSGIRequest) else "Unknown URL"
+                url = self.smarter_build_absolute_uri(request) or "Unknown URL"
                 logger.error(
                     "SmarterJournaledJsonResponse() HttpAuthenticatedRequestSerializer could not serialize request data for %s",
                     url,
@@ -211,7 +211,7 @@ class SmarterJournaledJsonErrorResponse(SmarterJournaledJsonResponse):
             elif isinstance(e, str):
                 description = e
 
-        url = request.build_absolute_uri() if request and hasattr(request, "build_absolute_uri") else "Unknown URL"
+        url = self.smarter_build_absolute_uri(request) or "Unknown URL"
         status = str(status) if status else e.status if hasattr(e, "status") else "500"
         args = e.args if isinstance(e, dict) and hasattr(e, "args") else "url=" + url
         cause = str(e.__cause__) if isinstance(e, dict) and hasattr(e, "__cause__") else "Python Exception"
