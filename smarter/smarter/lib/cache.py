@@ -21,8 +21,8 @@ logger_prefix = formatted_text("@cache_results()")
 def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
     """
     Caches the result of a function based on its arguments.
-    The cache key is generated using the function name, its arguments,
-    and the sorted keyword arguments.
+    The cache key is generated using a hash of the function name,
+    and the string values of its arguments and the sorted key-values.
 
     note:
     - The cache is invalidated when the function is called with the same arguments and keyword arguments.
@@ -43,7 +43,12 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
             Generates a raw cache key based on the function name, arguments, and sorted keyword arguments.
             """
             sorted_kwargs = generate_sorted_kwargs(kwargs)
-            key_data = pickle.dumps((func.__name__, args, sorted_kwargs))
+            try:
+                key_data = pickle.dumps((func.__name__, args, sorted_kwargs))
+            except pickle.PickleError as e:
+                logger.warning("%s Failed to pickle key data: %s", logger_prefix, e)
+                return None
+
             return key_data
 
         def generate_cache_key(func, key_data):
@@ -60,7 +65,7 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
                 return pickle.loads(key_data)  # nosec
             # pylint: disable=W0718
             except Exception as e:
-                logger.error("Failed to unpickle key data: %s", e)
+                logger.error("%s Failed to unpickle key data: %s", logger_prefix, e)
                 return None
 
         @wraps(func)
@@ -71,6 +76,12 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
             If the result is not cached, it calls the function and caches the result.
             """
             key_data = generate_key_data(func, args, kwargs)
+            # If key_data is None, we cannot generate a cache key, so we call the function directly
+            # and return the result without caching.
+            # This is a fallback to avoid breaking the application in case of pickling errors.
+            if key_data is None:
+                logger.error("%s Failed to generate cache key data for %s", logger_prefix, func.__name__)
+                return func(*args, **kwargs)
             cache_key = generate_cache_key(func, key_data)
             unpickled_cache_key = unpickle_key_data(key_data)
 
@@ -96,7 +107,7 @@ def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
             if result is not None and logging_enabled and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
                 logger.info("%s.invalidate_cache() invalidating %s", logger_prefix, unpickled_cache_key)
             else:
-                logger.warning("%s.invalidate_cache() no cache entry found for %s", logger_prefix, unpickled_cache_key)
+                logger.debug("%s.invalidate_cache() no cache entry found for %s", logger_prefix, unpickled_cache_key)
             cache.delete(cache_key)  # nosec
             if logging_enabled and waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
                 logger.info("%s.invalidate_cache() invalidated %s", logger_prefix, cache_key)

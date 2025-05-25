@@ -12,10 +12,12 @@ from django.core.cache import cache
 from django.db.utils import OperationalError
 
 from smarter.common.const import SMARTER_DEFAULT_CACHE_TIMEOUT
+from smarter.common.helpers.console_helpers import formatted_text
 
 
 logger = logging.getLogger(__name__)
 CACHE_EXPIRATION = 60  # seconds
+prefix = formatted_text("switch_is_active()")
 
 
 def cache_results(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT):
@@ -42,10 +44,10 @@ def switch_is_active(switch_name: str) -> bool:
     except OperationalError as e:
         # Handle the case where the database is not ready
         # or the switch does not exist
-        logger.error("Database not ready or switch does not exist: %s", e, exc_info=True)
+        logger.error("%s Database not ready or switch does not exist: %s", prefix, e, exc_info=True)
         return False
     # pylint: disable=W0718
     except Exception as e:
         # Handle any other exceptions
-        logger.error("An error occurred while checking switch %s: %s", switch_name, e, exc_info=True)
+        logger.error("%s An error occurred while checking switch %s: %s", prefix, switch_name, e, exc_info=True)
         return False
