@@ -220,7 +220,7 @@ class SAMChatBroker(AbstractBroker, AccountMixin):
         command = SmarterJournalCliCommands(command)
         session_key: str = kwargs.get("session_key", "")
         session_key = self.clean_cli_param(
-            param=session_key, param_name="session_key", url=request.build_absolute_uri()
+            param=session_key, param_name="session_key", url=self.smarter_build_absolute_uri(request)
         )
 
         data = []

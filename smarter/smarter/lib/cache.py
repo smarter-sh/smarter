@@ -127,7 +127,7 @@ def cache_request(timeout=SMARTER_DEFAULT_CACHE_TIMEOUT, logging_enabled=True):
     def decorator(func):
         @wraps(func)
         def wrapper(request: WSGIRequest, *args, **kwargs):
-            parsed_url = urlparse(request.build_absolute_uri())
+            parsed_url = urlparse(request.build_absolute_uri() if hasattr(request, "build_absolute_uri") else None)
             url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}"
             user_identifier = (
                 request.user.username if hasattr(request, "user") and request.user.is_authenticated else "anonymous"

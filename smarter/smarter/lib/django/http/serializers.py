@@ -53,7 +53,7 @@ class HttpAnonymousRequestSerializer(serializers.Serializer):
 
     def get_url(self, obj):
         if obj and hasattr(obj, "request") and obj.request:
-            _url = obj.request.build_absolute_uri()
+            _url = obj.request.build_absolute_uri() if hasattr(obj.request, "build_absolute_uri") else None
             return _url
         return None
 

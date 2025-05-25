@@ -67,7 +67,7 @@ class SmarterView(View, SmarterHelperMixin):
             logger.error(
                 "%s.render_clean_html(): %s, %s. error: %s",
                 self.formatted_class_name,
-                request.build_absolute_uri(),
+                self.smarter_build_absolute_uri(request),
                 template_path,
                 e,
             )

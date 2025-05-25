@@ -329,7 +329,7 @@ class SAMChatbotBroker(AbstractBroker, AccountMixin):
         # name: str = None, all_objects: bool = False, tags: str = None
         data = []
         name = kwargs.get(SAMMetadataKeys.NAME.value, None)
-        name = self.clean_cli_param(param=name, param_name="name", url=request.build_absolute_uri())
+        name = self.clean_cli_param(param=name, param_name="name", url=self.smarter_build_absolute_uri(request))
 
         # generate a QuerySet of PluginMeta objects that match our search criteria
         if name:

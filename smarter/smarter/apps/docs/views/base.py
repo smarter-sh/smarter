@@ -73,7 +73,7 @@ class DocsBaseView(SmarterWebHtmlView):
 
     def dispatch(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         self.context = {
-            "og_url": request.build_absolute_uri(),
+            "og_url": self.smarter_build_absolute_uri(request),
             "canonical": request.path,
         }
 

@@ -531,7 +531,7 @@ class ChatBotHelper(SmarterRequestMixin):
         :param environment: The environment to use for the URL. (for unit testing only)
         """
         self.init_slots()
-        SmarterRequestMixin.__init__(self, *args, request=request, **kwargs)
+        SmarterRequestMixin.__init__(self, request, *args, **kwargs)
 
         self._chatbot_id: int = self._chatbot_id or chatbot_id or self.smarter_request_chatbot_id
         self._name: str = self._name or name or self.smarter_request_chatbot_name

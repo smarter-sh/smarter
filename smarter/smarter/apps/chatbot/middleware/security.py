@@ -67,7 +67,7 @@ class SecurityMiddleware(DjangoSecurityMiddleware, SmarterHelperMixin):
                 )
             return None
 
-        url = request.build_absolute_uri()
+        url = self.smarter_build_absolute_uri(request)
         parsed_url = urlparse(url)
 
         # 3.) readiness and liveness checks
