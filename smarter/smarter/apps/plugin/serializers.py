@@ -27,7 +27,11 @@ class TagListSerializerField(serializers.ListField):
     child = serializers.CharField()
 
     def to_representation(self, data):
-        return [tag.name for tag in data.all()]
+        if hasattr(data, "all"):
+            tags = data.all()
+        else:
+            tags = data
+        return [str(tag) for tag in tags]
 
     def to_internal_value(self, data):
         return [Tag.objects.get_or_create(name=name)[0] for name in data]

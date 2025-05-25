@@ -1,9 +1,14 @@
 """Tests for manage.py create_plugin."""
 
+from logging import getLogger
+
 from django.core.management import call_command
 
 from smarter.apps.plugin.tests.base_classes import TestPluginClassBase
 from smarter.apps.plugin.tests.test_setup import get_test_file_path
+
+
+logger = getLogger(__name__)
 
 
 class ManageCommandCreatePluginTestCase(TestPluginClassBase):
@@ -12,37 +17,77 @@ class ManageCommandCreatePluginTestCase(TestPluginClassBase):
     # part of the abstract base class but not used for these tests
     model = None
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         """Set up test fixtures."""
-        self.file_path = get_test_file_path("everlasting-gobstopper.yaml")
-        self.plugin_name = "MYEverlastingSUPER-DUPERGobstopper"
+        super().setUpClass()
+        cls.file_path = get_test_file_path("everlasting-gobstopper.yaml")
+        cls.plugin_name = "my_everlasting_super_duper_gobbstopper"
 
     def test_create_plugin(self):
 
         call_command(
-            "create_plugin", "--account_number", f"{self.account.account_number}", "--file_path", f"{self.file_path}"
+            "create_plugin",
+            "--account_number",
+            f"{self.account.account_number}",
+            "--username",
+            f"{self.admin_user.username}",
+            "--file_path",
+            f"{self.file_path}",
         )
 
     def test_retrieve_plugin(self):
 
+        logger.info("test_retrieve_plugin() - creating plugin for account %s", self.account.account_number)
         call_command(
-            "create_plugin", "--account_number", f"{self.account.account_number}", "--file_path", f"{self.file_path}"
+            "create_plugin",
+            "--account_number",
+            f"{self.account.account_number}",
+            "--username",
+            f"{self.admin_user.username}",
+            "--file_path",
+            f"{self.file_path}",
         )
-        call_command("retrieve_plugin", f"{self.account.account_number}", f"{self.plugin_name}")
+        logger.info("test_retrieve_plugin() - retrieving plugin...")
+        call_command(
+            "retrieve_plugin",
+            "--account_number",
+            f"{self.account.account_number}",
+            "--username",
+            f"{self.admin_user.username}",
+            "--name",
+            f"{self.plugin_name}",
+        )
 
     def test_update_plugin(self):
 
         call_command(
-            "create_plugin", "--account_number", f"{self.account.account_number}", "--file_path", f"{self.file_path}"
+            "create_plugin",
+            "--account_number",
+            f"{self.account.account_number}",
+            "--username",
+            f"{self.admin_user.username}",
+            "--file_path",
+            f"{self.file_path}",
         )
-        call_command("update_plugin", f"{self.account.account_number}", f"{self.file_path}")
+        call_command(
+            "update_plugin", "--account_number", f"{self.account.account_number}", "--file_path", f"{self.file_path}"
+        )
 
     def test_delete_plugin(self):
 
         call_command(
-            "create_plugin", "--account_number", f"{self.account.account_number}", "--file_path", f"{self.file_path}"
+            "create_plugin",
+            "--account_number",
+            f"{self.account.account_number}",
+            "--username",
+            f"{self.admin_user.username}",
+            "--file_path",
+            f"{self.file_path}",
         )
-        call_command("delete_plugin", f"{self.account.account_number}", f"{self.plugin_name}")
+        call_command(
+            "delete_plugin", "--account_number", f"{self.account.account_number}", "--name", f"{self.plugin_name}"
+        )
 
     def test_add_plugin_examples(self):
 

@@ -5,7 +5,10 @@ Helper class to map to/from Pydantic manifest model, Plugin and Django ORM model
 from logging import getLogger
 from typing import Dict, Type, Union
 
+from smarter.apps.account.models import Account, UserProfile
+
 # lib manifest
+from smarter.lib.django.user import UserType
 from smarter.lib.manifest.controller import AbstractController
 from smarter.lib.manifest.exceptions import SAMExceptionBase
 
@@ -44,13 +47,16 @@ class PluginController(AbstractController):
 
     def __init__(
         self,
+        account: Account,
+        user: UserType,
         *args,
+        user_profile: UserProfile = None,
         manifest: Union[SAMStaticPlugin, SAMSqlPlugin, SAMApiPlugin] = None,
         plugin_meta: PluginMeta = None,
         name: str = None,
         **kwargs,
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(account, user, *args, user_profile, **kwargs)
         if (bool(manifest) and bool(plugin_meta)) or (not bool(manifest) and not bool(plugin_meta) and not bool(name)):
             raise SAMPluginControllerError(
                 f"One and only one of manifest or plugin_meta should be provided. Received? manifest: {bool(manifest)}, plugin_meta: {bool(plugin_meta)}, name: {bool(name)}."
