@@ -22,16 +22,17 @@ class Plugins:
     """A class for working with multiple plugins."""
 
     account: Account = None
+    user_profile: UserProfile = None
     plugins: list[StaticPlugin] = []
 
-    def __init__(self, user: UserType = None, account: Account = None):
+    def __init__(self, user: UserType, account: Account):
 
         self.plugins = []
-        if user or account:
-            self.account = account or UserProfile.objects.get(user=user).account
+        self.account = account or UserProfile.objects.get(user=user).account
+        self.user_profile = UserProfile.objects.get(user=user, account=account)
 
-            for plugin in PluginMeta.objects.filter(account=self.account):
-                self.plugins.append(StaticPlugin(plugin_id=plugin.id))
+        for plugin in PluginMeta.objects.filter(account=self.account):
+            self.plugins.append(StaticPlugin(user_profile=self.user_profile, plugin_id=plugin.id))
 
     @property
     def data(self) -> list[dict]:
