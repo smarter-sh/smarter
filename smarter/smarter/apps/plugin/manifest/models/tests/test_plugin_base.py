@@ -408,7 +408,7 @@ class TestPluginBase(TestAccountMixin):
 
         plugin = StaticPlugin(user_profile=self.user_profile, data=self.data)
         clone_id = plugin.clone()
-        plugin_clone = StaticPlugin(plugin_id=clone_id)
+        plugin_clone = StaticPlugin(user_profile=self.user_profile, plugin_id=clone_id)
 
         # sleep long enough to eliminate race situation
         # between the asynchronous commit and our assertion

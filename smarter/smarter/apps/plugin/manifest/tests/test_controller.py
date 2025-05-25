@@ -33,7 +33,9 @@ class TestPluginController(TestPluginClassBase):
         self.model = SAMStaticPlugin(**self.loader.pydantic_model_dump())
         self.assertIsInstance(self.model, SAMStaticPlugin)
 
-        controller = PluginController(account=self.account, manifest=self.model)
+        controller = PluginController(
+            account=self.account, user=self.admin_user, user_profile=self.user_profile, manifest=self.model
+        )
         self.assertIsInstance(controller, PluginController)
 
     def test_controller_api_plugin(self):
@@ -47,7 +49,9 @@ class TestPluginController(TestPluginClassBase):
         self.model = SAMApiPlugin(**self.loader.pydantic_model_dump())
         self.assertIsInstance(self.model, SAMApiPlugin)
 
-        controller = PluginController(account=self.account, manifest=self.model)
+        controller = PluginController(
+            account=self.account, user=self.admin_user, user_profile=self.user_profile, manifest=self.model
+        )
         self.assertIsInstance(controller, PluginController)
 
     def test_controller_sql_plugin(self):
@@ -61,5 +65,7 @@ class TestPluginController(TestPluginClassBase):
         self.model = SAMSqlPlugin(**self.loader.pydantic_model_dump())
         self.assertIsInstance(self.model, SAMSqlPlugin)
 
-        controller = PluginController(account=self.account, manifest=self.model)
+        controller = PluginController(
+            account=self.account, user=self.admin_user, user_profile=self.user_profile, manifest=self.model
+        )
         self.assertIsInstance(controller, PluginController)
