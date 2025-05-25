@@ -14,9 +14,7 @@ from django.db import transaction
 from rest_framework import serializers
 
 # smarter stuff
-from smarter.apps.account.manifest.models.user_profile import UserProfileModel
 from smarter.apps.account.models import UserProfile
-from smarter.apps.account.utils import get_cached_smarter_admin_user_profile
 from smarter.apps.chat.providers.const import OpenAIMessageKeys
 from smarter.common.api import SmarterApiVersions
 from smarter.common.classes import SmarterHelperMixin
@@ -84,6 +82,7 @@ class PluginBase(ABC, SmarterHelperMixin):
     _params: dict = None
 
     _session_key: str = None
+    _user_profile: UserProfile = None
 
     # abstract properties
     _plugin_data: Any = TimestampedModel
@@ -92,6 +91,7 @@ class PluginBase(ABC, SmarterHelperMixin):
     # pylint: disable=too-many-arguments,too-many-branches
     def __init__(
         self,
+        *args,
         user_profile: UserProfile = None,
         selected: bool = False,
         api_version: str = None,
@@ -100,6 +100,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         plugin_meta: PluginMeta = None,
         data: Union[dict, str] = None,
         session_key: str = None,
+        **kwargs,
     ):
         """
         Options for initialization are:
@@ -108,6 +109,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         - yaml manifest or json representation of a yaml manifest
         see ./data/sample-plugins/everlasting-gobstopper.yaml for an example.
         """
+        super().__init__(*args, **kwargs)
         if sum([bool(data), bool(manifest), bool(plugin_id), bool(plugin_meta)]) != 1:
             raise SmarterPluginError(
                 f"Must specify one and only one of: manifest, data, plugin_id, or plugin_meta. "
@@ -297,9 +299,10 @@ class PluginBase(ABC, SmarterHelperMixin):
         """Return the plugin meta."""
         if self._plugin_meta:
             return self._plugin_meta
-        self._plugin_meta = PluginMeta.objects.filter(
-            account=self.user_profile.account, name=self.manifest.metadata.name
-        ).first()
+        if self.user_profile and self.manifest:
+            self._plugin_meta = PluginMeta.objects.filter(
+                account=self.user_profile.account, name=self.manifest.metadata.name
+            ).first()
         return self._plugin_meta
 
     @property
@@ -315,6 +318,8 @@ class PluginBase(ABC, SmarterHelperMixin):
         """Return a dict for loading the plugin meta Django ORM model."""
         if not self.manifest:
             return None
+        if not self.user_profile:
+            raise SmarterPluginError("UserProfile is not set.")
         return {
             "id": self.id,
             "account": self.user_profile.account,
@@ -380,9 +385,9 @@ class PluginBase(ABC, SmarterHelperMixin):
     def user_profile(self) -> UserProfile:
         """Return the user profile."""
         if not self._user_profile:
-            self._user_profile = get_cached_smarter_admin_user_profile()
             logger.warning(
-                "PluginBase.user_profile(). session_key=%s UserProfile not set. Falling back to Smarter admin user profile.",
+                "%s.user_profile() was accessed prior to being set. session_key=%s.",
+                self.formatted_class_name,
                 self.session_key,
             )
         return self._user_profile
@@ -438,13 +443,9 @@ class PluginBase(ABC, SmarterHelperMixin):
 
         # recast data types from Pydantic models to Django ORM models
         if not isinstance(self.user_profile, UserProfile):
-            # if the user_profile is a Pydantic model, convert it to a Django ORM model.
-            if isinstance(self.user_profile, UserProfileModel):
-                self._user_profile = UserProfile.objects.get(id=self.user_profile.id)
-            else:
-                raise SmarterPluginError(
-                    f"Expected type of {UserProfile} for self.user_profile, but got {type(self.user_profile)}."
-                )
+            raise SmarterPluginError(
+                f"Expected type of {UserProfile} for self.user_profile, but got {type(self.user_profile)}."
+            )
 
         return True
 
@@ -567,7 +568,7 @@ class PluginBase(ABC, SmarterHelperMixin):
             retval = json.dumps(retval)
             plugin_called.send(
                 sender=self.function_calling_plugin,
-                plugin=self.plugin_meta,
+                plugin=self,
                 inquiry_type=inquiry_type,
                 inquiry_return=retval,
             )
@@ -575,7 +576,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         except KeyError:
             plugin_called.send(
                 sender=self.function_calling_plugin,
-                plugin=self.plugin_meta,
+                plugin=self,
                 inquiry_type=inquiry_type,
                 inquiry_return="KeyError",
             )
@@ -712,7 +713,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         """Delete a plugin."""
 
         def committed():
-            plugin_deleted.send(sender=self.__class__, plugin_id=plugin_id, plugin_name=plugin_name)
+            plugin_deleted.send(sender=self.__class__, plugin=self)
             logger.debug("Deleted plugin %s: %s.", plugin_id, plugin_name)
 
         if not self.ready:
@@ -743,7 +744,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         """Clone a plugin."""
 
         def committed(new_plugin_id: int):
-            plugin_cloned.send(sender=self.__class__, plugin_id=new_plugin_id)
+            plugin_cloned.send(sender=self.__class__, plugin=self)
             logger.debug(
                 "Cloned plugin %s: %s to %s: %s", self.id, self.name, plugin_meta_copy.id, plugin_meta_copy.name
             )

@@ -16,7 +16,9 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         """Add arguments to the command."""
-        parser.add_argument("account_number", type=str, help="Account number that will own the new plugin.")
+        parser.add_argument(
+            "-a", "--account_number", type=str, nargs="?", help="Account number that will own the new plugin."
+        )
         parser.add_argument("plugin_file_path", type=str, help="The path to the plugin YAML file")
 
     def handle(self, *args, **options):
