@@ -91,7 +91,7 @@ class SmarterChatSession(SmarterRequestMixin):
     def __init__(self, request, *args, chatbot: ChatBot = None, **kwargs):
         SmarterRequestMixin.__init__(self, request=request, *args, **kwargs)
 
-        self._url = self.clean_url(request.build_absolute_uri()) if hasattr(request, "build_absolute_uri") else None
+        self._url = self.smarter_build_absolute_uri(request)
 
         if chatbot:
             self._chatbot = chatbot
