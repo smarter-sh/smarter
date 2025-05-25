@@ -80,6 +80,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         self,
         request: HttpRequest,
         account: "Account",
+        *args,
         api_version: str = SmarterApiVersions.V1,
         name: str = None,
         kind: str = None,
@@ -87,6 +88,7 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
         manifest: str = None,
         file_path: str = None,
         url: str = None,
+        **kwargs,
     ):
         """
         Load, validate and parse the manifest. The parent will initialize
@@ -107,7 +109,8 @@ class SAMSmarterAuthTokenBroker(AbstractBroker, AccountMixin):
             file_path=file_path,
             url=url,
         )
-        user = request.user if hasattr(request, "user") else None
+        account = account or kwargs.get("account")
+        user = kwargs.get("user")
         AccountMixin.__init__(self, account=account, user=user, request=request)
 
     @property

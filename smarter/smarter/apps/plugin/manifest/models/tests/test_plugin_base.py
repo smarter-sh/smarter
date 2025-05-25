@@ -117,7 +117,7 @@ class TestPluginBase(TestAccountMixin):
         plugin_created.connect(self.plugin_created_signal_handler, dispatch_uid="plugin_created_test_create")
         plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_create")
 
-        plugin = StaticPlugin(data=self.data)
+        plugin = StaticPlugin(user_profile=self.user_profile, data=self.data)
 
         # sleep long enough to eliminate race situation
         # between the asynchronous commit and our assertion
@@ -255,7 +255,7 @@ class TestPluginBase(TestAccountMixin):
         plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_delete")
         plugin_deleted.connect(self.plugin_deleted_signal_handler, dispatch_uid="plugin_deleted_test_delete")
 
-        plugin = StaticPlugin(data=self.data)
+        plugin = StaticPlugin(user_profile=self.user_profile, data=self.data)
         plugin_id = plugin.id
         plugin.delete()
 
@@ -406,7 +406,7 @@ class TestPluginBase(TestAccountMixin):
         plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_clone")
         plugin_cloned.connect(self.plugin_cloned_signal_handler, dispatch_uid="plugin_cloned_test_clone")
 
-        plugin = StaticPlugin(data=self.data)
+        plugin = StaticPlugin(user_profile=self.user_profile, data=self.data)
         clone_id = plugin.clone()
         plugin_clone = StaticPlugin(plugin_id=clone_id)
 
@@ -443,7 +443,7 @@ class TestPluginBase(TestAccountMixin):
         """Test that the StaticPlugin generates correct JSON output."""
         plugin_ready.connect(self.plugin_ready_signal_handler, dispatch_uid="plugin_ready_test_json_serialization")
 
-        plugin = StaticPlugin(data=self.data)
+        plugin = StaticPlugin(user_profile=self.user_profile, data=self.data)
         to_json = plugin.to_json()
 
         # verify that signal was sent
@@ -509,7 +509,7 @@ class TestPluginBase(TestAccountMixin):
         """Test the plugin_called signal."""
         plugin_called.connect(self.plugin_called_signal_handler, dispatch_uid="plugin_called_test_plugin_called_signal")
 
-        plugin = StaticPlugin(data=self.data)
+        plugin = StaticPlugin(user_profile=self.user_profile, data=self.data)
         plugin.function_calling_plugin(inquiry_type="sales_promotions")
 
         self.assertTrue(self.signals["plugin_called"])
@@ -531,7 +531,7 @@ class TestPluginBase(TestAccountMixin):
             },
         ]
 
-        plugin = StaticPlugin(data=self.data)
+        plugin = StaticPlugin(user_profile=self.user_profile, data=self.data)
         plugin.selected(user=self.admin_user, messages=messages)
         self.assertTrue(self.signals["plugin_selected"])
 

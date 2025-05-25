@@ -121,7 +121,8 @@ class ChatProviders(SmarterHelperMixin):
             return result
 
         result = self.openai.handler(chat=chat, data=data, plugins=plugins, user=user)
-        cache.set(cache_key, self.openai, timeout=CACHE_TIMEOUT)
+        # raised Can't pickle <function capfirst at 0x7ffffa408540>: it's not the same object as django.utils.text.capfirst
+        # cache.set(cache_key, self.openai, timeout=CACHE_TIMEOUT)
         if waffle.switch_is_active(SmarterWaffleSwitches.CACHE_LOGGING):
             self.logger_helper("caching", cache_key)
         self._openai = None

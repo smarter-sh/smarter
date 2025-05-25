@@ -18,7 +18,12 @@ class AbstractController(abc.ABC, AccountMixin):
     def __init__(self, account: Account, user: UserType, *args, **kwargs):
         super().__init__(*args, **kwargs)
         user_profile = kwargs.pop("user_profile", None)
-        AccountMixin.__init__(self, account=account, user=user, user_profile=user_profile, *args, **kwargs)
+        request = kwargs.pop("request", None)
+        if not account.pk or not user.pk:
+            raise ValueError("unsaved data was padded to the controller")
+        AccountMixin.__init__(
+            self, account=account, user=user, user_profile=user_profile, request=request, *args, **kwargs
+        )
 
     ###########################################################################
     # Abstract property implementations
