@@ -14,10 +14,7 @@ from smarter.apps.plugin.manifest.models.static_plugin.model import SAMStaticPlu
 from smarter.common.api import SmarterApiVersions
 from smarter.lib.django.user import UserType
 from smarter.lib.journal.http import SmarterJournaledJsonResponse
-from smarter.lib.manifest.broker import (
-    AbstractBroker,
-    SAMBrokerError,
-)
+from smarter.lib.manifest.broker import AbstractBroker, SAMBrokerError
 from smarter.lib.manifest.enum import SAMKeys, SAMMetadataKeys
 from smarter.lib.manifest.loader import SAMLoader
 

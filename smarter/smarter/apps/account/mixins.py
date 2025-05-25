@@ -50,6 +50,23 @@ class AccountMixin(SmarterHelperMixin):
         self._user: UserType = None
         self._user_profile: UserProfile = None
 
+        account_arg: Account = account or kwargs.get("account")
+        user_arg: UserType = user or kwargs.get("user")
+        request: WSGIRequest = request or kwargs.get("request")
+        self._user_profile: UserProfile = None
+        if account_number is not None:
+            logger.info("%s: received account_number %s", self.formatted_class_name, account_number)
+            self._account = get_cached_account(account_number=account_number) if account_number else account
+        if account_arg is not None:
+            logger.info("%s: received account %s", self.formatted_class_name, account_arg)
+            self._account = account_arg
+        if user_arg is not None:
+            self._user = user_arg
+            logger.info("%s: received user %s", self.formatted_class_name, user_arg)
+            self._account = get_cached_account_for_user(user_arg)
+            if self._account:
+                logger.info("%s: set account to %s", self.formatted_class_name, self._account)
+
         # evaluate these in reverse order, so that the first one wins.
         if request is not None:
             url: str = None
@@ -92,19 +109,6 @@ class AccountMixin(SmarterHelperMixin):
                     logger.warning(
                         "%s: unable to locate an account number from the request url %s", self.formatted_class_name, url
                     )
-
-        if account_number is not None:
-            logger.info("%s: received account_number %s", self.formatted_class_name, account_number)
-            self._account = get_cached_account(account_number=account_number) if account_number else account
-        if account is not None:
-            logger.info("%s: received account %s", self.formatted_class_name, account)
-            self._account = account
-        if user is not None:
-            self._user = user
-            logger.info("%s: received user %s", self.formatted_class_name, user)
-            self._account = get_cached_account_for_user(user)
-            if self._account:
-                logger.info("%s: set account to %s", self.formatted_class_name, self._account)
 
         if self._user and self._account:
             logger.info(

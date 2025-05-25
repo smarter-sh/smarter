@@ -88,32 +88,6 @@ class SAMSqlPluginBroker(AbstractBroker, AccountMixin):
         user = request.user if hasattr(request, "user") else None
         AccountMixin.__init__(self, account=account, user=user, request=request)
 
-    @property
-    def plugin_meta(self) -> PluginMeta:
-        if self.manifest:
-            # want the manifest to take precedence over the plugin_meta
-            return None
-        if self._plugin_meta:
-            return self._plugin_meta
-        if self.name and self.account:
-            try:
-                self._plugin_meta = PluginMeta.objects.get(account=self.account, name=self.name)
-            except PluginMeta.DoesNotExist:
-                pass
-        return self._plugin_meta
-
-    @property
-    def plugin(self) -> PluginBase:
-        """
-        PluginController() is a helper class to map the manifest model
-        metadata.pluginClass to an instance of the the correct plugin class.
-        """
-        if self._plugin:
-            return self._plugin
-        controller = PluginController(account=self.account, manifest=self.manifest, plugin_meta=self.plugin_meta)
-        self._plugin = controller.obj
-        return self._plugin
-
     ###########################################################################
     # Smarter abstract property implementations
     ###########################################################################
@@ -236,32 +210,6 @@ class SAMSqlPluginBroker(AbstractBroker, AccountMixin):
             )
         except SAMBrokerErrorNotReady as err:
             return self.json_response_err(command=command, e=err)
-
-    def describe(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
-        command = self.describe.__name__
-        command = SmarterJournalCliCommands(command)
-        self.set_and_verify_name_param(command=command)
-        if self.plugin.ready:
-            try:
-                data: dict = self.plugin.to_json()
-                data[SAMKeys.METADATA].pop(SAMMetadataKeys.ACCOUNT)
-                data[SAMKeys.METADATA].pop(SAMMetadataKeys.AUTHOR)
-
-                # round-trip the model dump through the Pydantic model to ensure that
-                # it is valid and to serialize it to JSON
-                pydantic_model = self.pydantic_model(**data)
-                data = pydantic_model.model_dump_json()
-
-                return self.json_response_ok(command=command, data=data)
-            except Exception as e:
-                raise SAMBrokerError(
-                    f"{self.formatted_class_name} {self.plugin_meta.name} describe failed",
-                    thing=self.kind,
-                    command=command,
-                ) from e
-        raise SAMBrokerErrorNotReady(
-            f"{self.formatted_class_name} {self.plugin_meta.name} not ready", thing=self.kind, command=command
-        )
 
     def chat(self, request: WSGIRequest, kwargs: dict) -> SmarterJournaledJsonResponse:
         command = self.chat.__name__

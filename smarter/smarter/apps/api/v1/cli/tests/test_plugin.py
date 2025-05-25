@@ -12,11 +12,11 @@ from smarter.apps.api.v1.manifests.enum import SAMKinds
 from smarter.apps.api.v1.tests.base_class import ApiV1TestBase
 from smarter.apps.plugin.models import PluginMeta
 from smarter.common.api import SmarterApiVersions
-from smarter.common.const import PYTHON_ROOT
 from smarter.lib.manifest.enum import SAMKeys, SCLIResponseGet, SCLIResponseGetData
 
 
 KIND = SAMKinds.STATIC_PLUGIN.value
+HERE = os.path.abspath(os.path.dirname(__file__))
 
 
 class TestApiV1CliPlugin(ApiV1TestBase):
@@ -24,11 +24,11 @@ class TestApiV1CliPlugin(ApiV1TestBase):
 
     def setUp(self):
         super().setUp()
-        self.path = os.path.join(PYTHON_ROOT, "smarter/apps/api/v1/cli/tests/data")
+        self.path = os.path.join(HERE, "data")
         self.good_manifest_path = os.path.join(self.path, "good-plugin-manifest.yaml")
         self.good_manifest_text = self.get_readonly_yaml_file(self.good_manifest_path)
         self.kwargs = {SAMKeys.KIND.value: KIND}
-        self.query_params = urlencode({"name": self.name})
+        self.query_params = urlencode({"name": "cli_test_plugin"})
 
     def test_deploy(self):
 
@@ -76,7 +76,7 @@ class TestApiV1CliPlugin(ApiV1TestBase):
         self.assertEqual(data[SAMKeys.APIVERSION.value], SmarterApiVersions.V1)
         self.assertEqual(data[SAMKeys.KIND.value], SAMKinds.STATIC_PLUGIN.value)
         self.assertIsInstance(data.get(SAMKeys.METADATA.value, None), dict)
-        self.assertEqual(data.get(SAMKeys.METADATA.value, {}).get("name", None), self.name)
+        self.assertEqual(data.get(SAMKeys.METADATA.value, {}).get("name", None), "cli_test_plugin")
 
         # we should also be able to get the Plugin by name
         path = f"{reverse(ApiV1CliReverseViews.get, kwargs=self.kwargs)}"
@@ -93,6 +93,6 @@ class TestApiV1CliPlugin(ApiV1TestBase):
         response, status = self.get_response(path=url_with_query_params)
         self.assertEqual(status, HTTPStatus.OK)
         self.assertIsInstance(response, dict)
-        self.assertEqual(response["message"], f"Plugin {self.name} deleted successfully")
+        self.assertEqual(response["message"], "Plugin cli_test_plugin deleted successfully")
         with self.assertRaises(PluginMeta.DoesNotExist):
             PluginMeta.objects.get(name=self.name, account=self.account)
