@@ -299,7 +299,7 @@ class PluginBase(ABC, SmarterHelperMixin):
         """Return the plugin meta."""
         if self._plugin_meta:
             return self._plugin_meta
-        if self.user_profile and self.manifest:
+        if self._user_profile and self._manifest:
             self._plugin_meta = PluginMeta.objects.filter(
                 account=self.user_profile.account, name=self.manifest.metadata.name
             ).first()
