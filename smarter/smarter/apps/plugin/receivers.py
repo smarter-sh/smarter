@@ -297,7 +297,7 @@ def handle_plugin_sql_connection_attempted(sender, connection: SqlConnection, **
     logger.info(
         "%s - %s",
         formatted_text(prefix + "plugin_sql_connection_attempted"),
-        formatted_json(masked_dict(connection.get_connection_string())),
+        formatted_json(connection.get_connection_string()),
     )
 
 
@@ -308,7 +308,7 @@ def handle_plugin_sql_connection_success(sender, connection: SqlConnection, **kw
     logger.info(
         "%s - %s",
         formatted_text(prefix + "plugin_sql_connection_success"),
-        formatted_json(masked_dict(connection.get_connection_string())),
+        formatted_json(connection.get_connection_string()),
     )
 
 
@@ -319,7 +319,7 @@ def handle_plugin_sql_connection_failed(sender, connection: SqlConnection, **kwa
     logger.info(
         "%s - %s",
         formatted_text(prefix + "plugin_sql_connection_failed"),
-        formatted_json(masked_dict(connection.get_connection_string())),
+        formatted_json(connection.get_connection_string()),
     )
 
 
@@ -330,7 +330,7 @@ def handle_plugin_sql_connection_query_attempted(sender, connection: SqlConnecti
     logger.info(
         "%s - %s",
         formatted_text(prefix + "plugin_sql_connection_query_attempted"),
-        formatted_json(masked_dict(connection.get_connection_string())),
+        formatted_json(connection.get_connection_string()),
     )
 
 
@@ -341,7 +341,7 @@ def handle_plugin_sql_connection_query_success(sender, connection: SqlConnection
     logger.info(
         "%s - %s",
         formatted_text(prefix + "plugin_sql_connection_query_success"),
-        formatted_json(masked_dict(connection.get_connection_string())),
+        formatted_json(connection.get_connection_string()),
     )
 
 
@@ -352,7 +352,7 @@ def handle_plugin_sql_connection_query_failed(sender, connection: SqlConnection,
     logger.info(
         "%s - %s",
         formatted_text(prefix + "plugin_sql_connection_query_failed"),
-        formatted_json(masked_dict(connection.get_connection_string())),
+        formatted_json(connection.get_connection_string()),
     )
 
 
@@ -363,7 +363,7 @@ def handle_plugin_api_connection_attempted(sender, connection: ApiConnection, **
     logger.info(
         "%s - %s",
         formatted_text(prefix + "plugin_api_connection_attempted"),
-        formatted_json(masked_dict(connection.get_connection_string())),
+        formatted_json(connection.get_connection_string()),
     )
 
 
@@ -374,7 +374,7 @@ def handle_plugin_api_connection_success(sender, connection: ApiConnection, **kw
     logger.info(
         "%s - %s",
         formatted_text(prefix + "plugin_api_connection_success"),
-        formatted_json(masked_dict(connection.get_connection_string())),
+        formatted_json(connection.get_connection_string()),
     )
 
 
@@ -385,7 +385,7 @@ def handle_plugin_api_connection_failed(sender, connection: ApiConnection, error
     logger.info(
         "%s - %s",
         formatted_text(prefix + "plugin_api_connection_failed"),
-        formatted_json(masked_dict(connection.get_connection_string())),
+        formatted_json(connection.get_connection_string()),
     )
 
 
@@ -396,7 +396,7 @@ def handle_plugin_api_connection_query_attempted(sender, connection: ApiConnecti
     logger.info(
         "%s - %s",
         formatted_text(prefix + "plugin_api_connection_query_attempted"),
-        formatted_json(masked_dict(connection.get_connection_string())),
+        formatted_json(connection.get_connection_string()),
     )
 
 
@@ -421,7 +421,7 @@ def handle_plugin_api_connection_query_failed(
     logger.info(
         "%s - %s - response: %s - error: %s",
         formatted_text(prefix + "plugin_api_connection_query_failed"),
-        formatted_json(masked_dict(connection.get_connection_string())),
+        formatted_json(connection.get_connection_string()),
         formatted_json(response.json()) if response else None,
         error,
     )

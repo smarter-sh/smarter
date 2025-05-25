@@ -19,7 +19,7 @@ class TestStaticPlugin(TestAccountMixin):
         plugin_json = get_readonly_yaml_file(config_path)
         plugin_json["user_profile"] = self.user_profile
 
-        self.plugin = StaticPlugin(data=plugin_json)
+        self.plugin = StaticPlugin(user_profile=self.user_profile, data=plugin_json)
 
     def tearDown(self):
         """Tear down test fixtures."""

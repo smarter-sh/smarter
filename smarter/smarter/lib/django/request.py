@@ -111,7 +111,7 @@ class SmarterRequestMixin(AccountMixin, SmarterHelperMixin):
         parent of Classes that do not necessarily initialize with a request object.
         For example, Django Views do not pass a request object to the __init__ method.
         """
-        logger.info("%s.init() - %s", self.formatted_class_name, request.build_absolute_uri())
+        logger.info("%s.init()", self.formatted_class_name)
         if self._smarter_request:
             # we've already been initialized. nothing to do.
             return None

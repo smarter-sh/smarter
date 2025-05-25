@@ -95,4 +95,4 @@ class ManageCommandCreatePluginTestCase(TestPluginClassBase):
 
     def test_get_plugins(self):
 
-        call_command("get_plugins", f"{self.account.account_number}")
+        call_command("get_plugins", "--account_number", f"{self.account.account_number}")
